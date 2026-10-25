@@ -62,10 +62,7 @@ from pathlib import Path
 
 from tests.fixtures.pipeline_fixtures import load_fixture
 from tests.integration.pipelines._harness.dataset_split import (
-    DR_BOOTSTRAP_SCENARIOS,
-    INDIVIDUAL_EXTRACTION_SCENARIOS,
-    RELABELED_ARXIV_SCENARIOS,
-    WAVE4_INFORMAL_SCENARIOS,
+    REPLAY_SCENARIOS,
 )
 
 # Cassette location for the grounded_v1 variant's calls (per-chunk typing
@@ -83,26 +80,13 @@ _CASSETTE_DIR = (
 
 def union_scenarios() -> list[str]:
     """
-    Return the ordered, de-duplicated union of every corpus scenario to record.
+    Return every corpus scenario to record, in stable order.
 
-    Union of `INDIVIDUAL_EXTRACTION_SCENARIOS` (the dev/holdout split),
-    `DR_BOOTSTRAP_SCENARIOS` (Wave 1 diagnostics), `WAVE4_INFORMAL_SCENARIOS` (Wave 4 diagnostics),
-    and `RELABELED_ARXIV_SCENARIOS` -- every scenario the Loop B `grounded_v1` variant will be
-    replayed against. Order preserved for stable output; duplicates dropped (the lists are
-    disjoint today, but the de-dup keeps this correct if that ever changes).
+    This is `dataset_split.REPLAY_SCENARIOS` -- the same list the tournament's
+    replay guard requires a cassette for before it registers the variant (see
+    `quality_tournament.py`), so the recorder and the guard cannot drift.
     """
-    seen: set[str] = set()
-    ordered: list[str] = []
-    for scenario in (
-        list(INDIVIDUAL_EXTRACTION_SCENARIOS)
-        + list(DR_BOOTSTRAP_SCENARIOS)
-        + list(WAVE4_INFORMAL_SCENARIOS)
-        + list(RELABELED_ARXIV_SCENARIOS)
-    ):
-        if scenario not in seen:
-            seen.add(scenario)
-            ordered.append(scenario)
-    return ordered
+    return list(REPLAY_SCENARIOS)
 
 
 def cassette_path_for(scenario: str) -> Path:

@@ -55,9 +55,9 @@ export interface LayeredLayout {
 
 /** Grid geometry for the layered layout, in canvas units. */
 export const LAYERED_CELL_WIDTH = 168;
-export const LAYERED_ROW_HEIGHT = 42;
-export const LAYERED_BAND_GAP = 64;
-export const LAYERED_HEADER_OFFSET = 44;
+const LAYERED_ROW_HEIGHT = 42;
+const LAYERED_BAND_GAP = 64;
+const LAYERED_HEADER_OFFSET = 44;
 /** Four columns keep a band inside a ~700px canvas pane at 1× zoom. */
 export const LAYERED_MAX_COLUMNS = 4;
 
@@ -111,7 +111,7 @@ export function defaultNodeKind(view: GraphView): NodeKindFilter {
 }
 
 /** Keep only edges whose two endpoints are among `nodes`. */
-export function edgesWithin(nodes: GraphViewNode[], edges: GraphViewEdge[]): GraphViewEdge[] {
+function edgesWithin(nodes: GraphViewNode[], edges: GraphViewEdge[]): GraphViewEdge[] {
   const ids = new Set(nodes.map((n) => n.id));
   return edges.filter((e) => ids.has(e.source) && ids.has(e.target));
 }

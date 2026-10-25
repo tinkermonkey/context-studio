@@ -4,7 +4,7 @@ import type { ApplyParams, ApplyRunRequest, RecognitionDecision } from "@/api/se
 import type { ReviewKind } from "./useExtractionReviewRuns";
 import { mentionKey } from "@/components/pipeline/extraction-review/reviewUtils";
 
-export type { ApplyRunResponse, MergedMention } from "@/api/services/pipeline";
+export type { ApplyRunResponse, MergedMention, SkipReason } from "@/api/services/pipeline";
 
 /** A review decision. "yes" = accept / merge, "no" = reject / keep separate. */
 export type ReviewDecisionValue = "yes" | "no" | "pending";

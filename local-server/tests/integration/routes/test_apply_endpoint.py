@@ -113,9 +113,15 @@ def client(pipeline_repo, batch_repo, ontology_repo, ontology_service):
     app.state.individual_extraction_apply_svc = IndividualExtractionApplyService(
         ontology_service, ontology_repo
     )
-    app.state.schema_grounding_apply_svc = SchemaGroundingApplyService(ontology_repo)
-    app.state.schema_definition_apply_svc = SchemaDefinitionRefinementApplyService(ontology_repo)
-    app.state.schema_connection_apply_svc = SchemaConnectionRefinementApplyService(ontology_repo)
+    app.state.schema_grounding_apply_svc = SchemaGroundingApplyService(
+        ontology_service, ontology_repo
+    )
+    app.state.schema_definition_apply_svc = SchemaDefinitionRefinementApplyService(
+        ontology_service, ontology_repo
+    )
+    app.state.schema_connection_apply_svc = SchemaConnectionRefinementApplyService(
+        ontology_service, ontology_repo
+    )
 
     return TestClient(app)
 

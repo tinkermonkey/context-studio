@@ -171,9 +171,11 @@ class TestIndividualAcceptedCandidates:
         run = _run({"triples": [_triple("Alice", 0.9), _triple("Bob", 0.2)]})
         result = svc.apply(run, confidence_threshold=0.5)
         assert result.individuals_created == 1
-        assert result.individuals_skipped == 1
+        # Below-threshold triples are not counted as "could not be applied".
+        assert result.individuals_skipped == 0
         assert result.applied_candidate_ids == ["triple-0"]
         assert result.skipped_candidate_ids == ["triple-1"]
+        assert result.skip_reasons == {"triple-1": "below_threshold"}
         assert _titles(repo) == ["Alice"]
 
     def test_selection_overrides_threshold_both_ways(self, svc, repo):
@@ -183,7 +185,8 @@ class TestIndividualAcceptedCandidates:
         assert _titles(repo) == ["Bob"]
         assert result.applied_candidate_ids == ["triple-1"]
         assert result.skipped_candidate_ids == ["triple-0"]
-        assert result.individuals_skipped == 1
+        assert result.skip_reasons == {"triple-0": "not_selected"}
+        assert result.individuals_skipped == 0
 
     def test_empty_selection_applies_nothing(self, svc, repo):
         run = _run({"triples": [_triple("Alice")]})
@@ -379,3 +382,95 @@ class TestApplyResultValidation:
     def test_candidate_cannot_be_applied_and_skipped(self):
         with pytest.raises(ValueError, match="both applied and skipped"):
             ApplyResult(applied_candidate_ids=["triple-0"], skipped_candidate_ids=["triple-0"])
+
+    def test_skip_reasons_must_match_skipped_candidates(self):
+        with pytest.raises(ValueError, match="skip_reasons"):
+            ApplyResult(skipped_candidate_ids=["triple-0"])
+        result = ApplyResult()
+        result.skip("triple-0", "not_selected")
+        assert result.skipped_candidate_ids == ["triple-0"]
+        assert result.skip_reasons == {"triple-0": "not_selected"}
+
+
+# ---------------------------------------------------------------------------
+# Per-candidate skip reasons
+# ---------------------------------------------------------------------------
+
+
+class TestSchemaSkipReasons:
+    def test_each_unappliable_candidate_reports_its_reason(self, schema_svc, repo):
+        repo.save_property_definition(
+            PropertyDefinition(id="p-uses", identifier="uses", title="uses")
+        )
+        repo.save_property_definition(
+            PropertyDefinition(id="p-invokes", identifier="invokes", title="calls")
+        )
+        connections = [
+            ("Ghost", "uses", "Service"),
+            ("Service", "calls", "Person"),
+            ("Service", "uses", "Service"),
+        ]
+        summary = {
+            "candidates": [
+                {"kind": "class", "label": "Service", "confidence": 0.9},
+                {"kind": "class", "label": "  ", "confidence": 0.9},
+                {"kind": "class", "label": "Low", "confidence": 0.1},
+                {"kind": "property_definition", "label": "calls", "confidence": 0.9},
+            ],
+            "connections": [
+                {"subject_ref": s, "predicate": p, "object_ref": o, "confidence": 0.9}
+                for s, p, o in connections
+            ],
+        }
+        run = _run(summary, PipelineType.SCHEMA_EXTRACTION)
+
+        result = schema_svc.apply(run, SCHEME_ID, TAXONOMY_ID, confidence_threshold=0.5)
+
+        assert result.applied_candidate_ids == ["class-0"]
+        assert result.skip_reasons == {
+            "class-1": "invalid",
+            "class-2": "below_threshold",
+            "property-0": "title_conflict",
+            "connection-0": "unresolved_endpoint",
+            "connection-1": "unresolved_predicate",
+            "connection-2": "self_loop",
+        }
+
+    def test_unaccepted_candidates_are_not_selected(self, schema_svc, repo):
+        run = _run(_schema_summary(), PipelineType.SCHEMA_EXTRACTION)
+        result = schema_svc.apply(
+            run, SCHEME_ID, TAXONOMY_ID, accepted_candidate_ids=["class-0", "connection-0"]
+        )
+        assert result.skip_reasons == {
+            "class-1": "not_selected",
+            "property-0": "not_selected",
+            # Accepted, but its subject class (Client) was neither accepted nor present.
+            "connection-0": "unresolved_endpoint",
+        }
+
+
+class TestIndividualSkipReasons:
+    def test_each_unappliable_triple_reports_its_reason(self, svc, repo):
+        not_individual = _triple("Person")
+        not_individual["subject"]["kind"] = "class"
+        unknown_class = _triple("Dana")
+        unknown_class["subject"]["class_ids"] = ["cls-missing"]
+        triples = [
+            _triple("Alice"),
+            not_individual,
+            unknown_class,
+            _triple("  "),
+            _triple("Bob", 0.1),
+        ]
+
+        result = svc.apply(_run({"triples": triples}), confidence_threshold=0.5)
+
+        assert result.applied_candidate_ids == ["triple-0"]
+        assert result.skip_reasons == {
+            "triple-1": "invalid",
+            "triple-2": "missing_class",
+            "triple-3": "invalid",
+            "triple-4": "below_threshold",
+        }
+        # Only selected triples that could not be applied are counted.
+        assert result.individuals_skipped == 3

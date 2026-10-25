@@ -48,6 +48,9 @@ from tests.integration.pipelines._harness.cassettes import (
     RecordingHTTPTransport,
     RecordingLLMProvider,
 )
+from domain.ontology.services import OntologyService
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
+from tests.fakes.fake_event_publisher import FakeEventPublisher
 
 _test_file = os.path.abspath(__file__)
 _test_dir = os.path.dirname(_test_file)
@@ -414,7 +417,10 @@ class TestQualitySchemaNodeGrounding:
         )
 
         # Step 1: Apply grounding
-        apply_service = SchemaGroundingApplyService(ontology_repo)
+        apply_service = SchemaGroundingApplyService(
+            OntologyService(ontology_repo, FakeEmbeddingService(), FakeEventPublisher()),
+            ontology_repo,
+        )
         result1 = apply_service.apply(grounding_run, cls.id)
 
         assert result1.external_references_created == 2

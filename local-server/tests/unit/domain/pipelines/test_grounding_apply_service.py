@@ -24,6 +24,12 @@ def mock_ontology_repo():
 
 
 @pytest.fixture
+def mock_ontology_service():
+    """Create a mock OntologyService (the write path for apply)."""
+    return Mock()
+
+
+@pytest.fixture
 def sample_class():
     """Create a sample Class entity for testing."""
     return Class(
@@ -78,11 +84,11 @@ class TestSchemaGroundingApplyServiceBasic:
     """Basic functionality tests for grounding apply service."""
 
     def test_apply_with_valid_groundings(
-        self, mock_ontology_repo, sample_class, sample_pipeline_run
+        self, mock_ontology_repo, mock_ontology_service, sample_class, sample_pipeline_run
     ):
         """Applying groundings creates new external references."""
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaGroundingApplyService(mock_ontology_repo)
+        service = SchemaGroundingApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(sample_pipeline_run, sample_class.id)
 
@@ -92,10 +98,11 @@ class TestSchemaGroundingApplyServiceBasic:
         assert result.external_references_skipped == 0
         assert len(result.created_external_reference_ids) == 3
 
-        # Verify repository was called to save the class
-        mock_ontology_repo.save_class.assert_called_once()
+        # Verify the class was updated through OntologyService (so events fire)
+        mock_ontology_service.update_class.assert_called_once()
+        mock_ontology_repo.save_class.assert_not_called()
 
-    def test_uri_deduplication(self, mock_ontology_repo):
+    def test_uri_deduplication(self, mock_ontology_repo, mock_ontology_service):
         """Duplicate URIs are not added twice."""
         # Create a class with one existing reference
         # Note: the service sets identifier=uri, so they should match
@@ -149,7 +156,7 @@ class TestSchemaGroundingApplyServiceBasic:
         )
 
         mock_ontology_repo.get_class.return_value = cls
-        service = SchemaGroundingApplyService(mock_ontology_repo)
+        service = SchemaGroundingApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(run, cls.id)
 
@@ -158,11 +165,11 @@ class TestSchemaGroundingApplyServiceBasic:
         assert result.external_references_skipped == 1
 
     def test_confidence_threshold_filtering(
-        self, mock_ontology_repo, sample_class, sample_pipeline_run
+        self, mock_ontology_repo, mock_ontology_service, sample_class, sample_pipeline_run
     ):
         """Groundings below confidence threshold are skipped."""
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaGroundingApplyService(mock_ontology_repo)
+        service = SchemaGroundingApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(sample_pipeline_run, sample_class.id, confidence_threshold=0.90)
 
@@ -170,7 +177,7 @@ class TestSchemaGroundingApplyServiceBasic:
         assert result.external_references_created == 1
         assert result.external_references_skipped == 2
 
-    def test_empty_groundings_list(self, mock_ontology_repo, sample_class):
+    def test_empty_groundings_list(self, mock_ontology_repo, mock_ontology_service, sample_class):
         """Applying with no groundings results in no changes."""
         run = PipelineRun(
             id="run-456",
@@ -183,18 +190,18 @@ class TestSchemaGroundingApplyServiceBasic:
         )
 
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaGroundingApplyService(mock_ontology_repo)
+        service = SchemaGroundingApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(run, sample_class.id)
 
         assert result.external_references_created == 0
         assert result.external_references_skipped == 0
         # Should not save if nothing created
-        mock_ontology_repo.save_class.assert_not_called()
+        mock_ontology_service.update_class.assert_not_called()
 
-    def test_missing_node_id_raises_error(self, mock_ontology_repo):
+    def test_missing_node_id_raises_error(self, mock_ontology_repo, mock_ontology_service):
         """Missing node_id raises ValueError."""
-        service = SchemaGroundingApplyService(mock_ontology_repo)
+        service = SchemaGroundingApplyService(mock_ontology_service, mock_ontology_repo)
         run = PipelineRun(
             id="run-789",
             batch_run_id="batch-789",
@@ -208,10 +215,10 @@ class TestSchemaGroundingApplyServiceBasic:
         with pytest.raises(ValueError, match="node_id is required"):
             service.apply(run, "")
 
-    def test_class_not_found_raises_error(self, mock_ontology_repo):
+    def test_class_not_found_raises_error(self, mock_ontology_repo, mock_ontology_service):
         """Non-existent class raises ValueError."""
         mock_ontology_repo.get_class.return_value = None
-        service = SchemaGroundingApplyService(mock_ontology_repo)
+        service = SchemaGroundingApplyService(mock_ontology_service, mock_ontology_repo)
         run = PipelineRun(
             id="run-999",
             batch_run_id="batch-999",
@@ -229,7 +236,9 @@ class TestSchemaGroundingApplyServiceBasic:
 class TestSchemaGroundingApplyServiceEdgeCases:
     """Edge case tests for grounding apply service."""
 
-    def test_whitespace_only_uri_is_skipped(self, mock_ontology_repo, sample_class):
+    def test_whitespace_only_uri_is_skipped(
+        self, mock_ontology_repo, mock_ontology_service, sample_class
+    ):
         """URIs with only whitespace are treated as empty."""
         run = PipelineRun(
             id="run-ws",
@@ -246,14 +255,16 @@ class TestSchemaGroundingApplyServiceEdgeCases:
         )
 
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaGroundingApplyService(mock_ontology_repo)
+        service = SchemaGroundingApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(run, sample_class.id)
 
         assert result.external_references_created == 0
         assert result.external_references_skipped == 1
 
-    def test_missing_uri_field_is_skipped(self, mock_ontology_repo, sample_class):
+    def test_missing_uri_field_is_skipped(
+        self, mock_ontology_repo, mock_ontology_service, sample_class
+    ):
         """Groundings without a URI field are skipped."""
         run = PipelineRun(
             id="run-no-uri",
@@ -270,14 +281,16 @@ class TestSchemaGroundingApplyServiceEdgeCases:
         )
 
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaGroundingApplyService(mock_ontology_repo)
+        service = SchemaGroundingApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(run, sample_class.id)
 
         assert result.external_references_created == 0
         assert result.external_references_skipped == 1
 
-    def test_missing_confidence_defaults_to_zero(self, mock_ontology_repo, sample_class):
+    def test_missing_confidence_defaults_to_zero(
+        self, mock_ontology_repo, mock_ontology_service, sample_class
+    ):
         """Missing confidence field defaults to 0.0."""
         run = PipelineRun(
             id="run-no-conf",
@@ -298,7 +311,7 @@ class TestSchemaGroundingApplyServiceEdgeCases:
         )
 
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaGroundingApplyService(mock_ontology_repo)
+        service = SchemaGroundingApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(run, sample_class.id, confidence_threshold=0.1)
 
@@ -306,7 +319,7 @@ class TestSchemaGroundingApplyServiceEdgeCases:
         assert result.external_references_skipped == 1
 
     def test_zero_confidence_accepted_with_default_threshold(
-        self, mock_ontology_repo, sample_class
+        self, mock_ontology_repo, mock_ontology_service, sample_class
     ):
         """Zero confidence is accepted when threshold is 0.0."""
         run = PipelineRun(
@@ -328,14 +341,16 @@ class TestSchemaGroundingApplyServiceEdgeCases:
         )
 
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaGroundingApplyService(mock_ontology_repo)
+        service = SchemaGroundingApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(run, sample_class.id, confidence_threshold=0.0)
 
         assert result.external_references_created == 1
         assert result.external_references_skipped == 0
 
-    def test_missing_source_field_defaults_to_unknown(self, mock_ontology_repo, sample_class):
+    def test_missing_source_field_defaults_to_unknown(
+        self, mock_ontology_repo, mock_ontology_service, sample_class
+    ):
         """Missing source field defaults to 'unknown'."""
         run = PipelineRun(
             id="run-no-source",
@@ -356,22 +371,22 @@ class TestSchemaGroundingApplyServiceEdgeCases:
         )
 
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaGroundingApplyService(mock_ontology_repo)
+        service = SchemaGroundingApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(run, sample_class.id)
 
         assert result.external_references_created == 1
         # Verify the created reference has the default source
-        saved_class = mock_ontology_repo.save_class.call_args[0][0]
-        new_refs = [ref for ref in saved_class.external_references if ref.source == "unknown"]
+        saved_refs = mock_ontology_service.update_class.call_args.kwargs["external_references"]
+        new_refs = [ref for ref in saved_refs if ref.source == "unknown"]
         assert len(new_refs) > 0
 
     def test_apply_result_created_ids_tracking(
-        self, mock_ontology_repo, sample_class, sample_pipeline_run
+        self, mock_ontology_repo, mock_ontology_service, sample_class, sample_pipeline_run
     ):
         """ApplyResult correctly tracks created_external_reference_ids."""
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaGroundingApplyService(mock_ontology_repo)
+        service = SchemaGroundingApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(sample_pipeline_run, sample_class.id)
 
@@ -380,10 +395,12 @@ class TestSchemaGroundingApplyServiceEdgeCases:
         assert "https://dbpedia.org/resource/Service" in result.created_external_reference_ids
         assert "https://schema.org/Service" in result.created_external_reference_ids
 
-    def test_threshold_exact_boundary(self, mock_ontology_repo, sample_class, sample_pipeline_run):
+    def test_threshold_exact_boundary(
+        self, mock_ontology_repo, mock_ontology_service, sample_class, sample_pipeline_run
+    ):
         """Threshold exact boundary: >= threshold included, < threshold excluded."""
         mock_ontology_repo.get_class.return_value = sample_class
-        service = SchemaGroundingApplyService(mock_ontology_repo)
+        service = SchemaGroundingApplyService(mock_ontology_service, mock_ontology_repo)
 
         result = service.apply(sample_pipeline_run, sample_class.id, confidence_threshold=0.85)
 

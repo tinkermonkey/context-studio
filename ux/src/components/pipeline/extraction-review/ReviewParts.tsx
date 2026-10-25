@@ -11,7 +11,7 @@ import type {
   ApplyRunResponse,
   ReviewDecisionValue,
 } from "@/api/hooks/pipeline/useApplyReviewedRun";
-import { drLayerOf, isLocated } from "./reviewUtils";
+import { SKIP_REASON_LABEL, drLayerOf, failedSkips, isLocated } from "./reviewUtils";
 import "./ExtractionReview.css";
 
 // ---- Provenance list (inspector) ----------------------------------------
@@ -230,11 +230,9 @@ export function applyResultRows(
       ["relationships", result.relationships_created],
     ] as [string, number][]
   ).filter(([, n]) => n > 0);
-  // skipped_candidate_ids also lists everything not selected: surface only the
-  // accepted candidates the server could not write.
   const appliedCount = (result.applied_candidate_ids ?? []).length;
-  const skippedIds = new Set(result.skipped_candidate_ids ?? []);
-  const skipped = accepted.filter((id) => skippedIds.has(id));
+  // Accepted candidates the server could not write, with its reason.
+  const skipped = failedSkips(result);
   const merged = result.merged_mentions ?? [];
   // Accepted items satisfied by an entity already in the graph: nothing was
   // created for them, so revert leaves them in place.
@@ -290,16 +288,13 @@ export function applyResultRows(
             value: (
               <div className="xr-stack-sm" data-testid="extraction-review-apply-result-skipped">
                 <span className="xr-chip-row">
-                  {skipped.map((id) => (
+                  {skipped.map(([id, reason]) => (
                     <Chip key={id} variant="amber">
-                      {labelFor(id)}
+                      {labelFor(id)} — {SKIP_REASON_LABEL[reason] ?? reason}
                     </Chip>
                   ))}
                 </span>
-                <span className="xr-mono-muted">
-                  Accepted but not written, e.g. a relationship whose predicate or endpoint class
-                  was neither accepted nor already in the graph.
-                </span>
+                <span className="xr-mono-muted">Accepted but not written.</span>
               </div>
             ),
           },

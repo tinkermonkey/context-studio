@@ -34,6 +34,7 @@ vi.mock("@/api/hooks/ontology/useClasses", () => ({
   useClasses: () => ({
     data: { items: [{ id: "cls-1", title: "Neuron" }] },
   }),
+  useClassesByIds: () => ({ data: { items: [] } }),
 }));
 
 vi.mock("@/api/hooks/ontology/useProperties", () => ({

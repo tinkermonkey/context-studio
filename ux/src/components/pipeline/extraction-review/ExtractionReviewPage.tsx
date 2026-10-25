@@ -19,9 +19,11 @@ import {
   useSchemaExtractionCandidates,
 } from "@/api/hooks/pipeline/useExtractionCandidates";
 import {
+  reviewKindOf,
   useExtractionReviewRuns,
   type ReviewKind,
 } from "@/api/hooks/pipeline/useExtractionReviewRuns";
+import { usePipelineRun } from "@/api/hooks/pipeline/usePipelineRuns";
 import { SchemaCandidateReview } from "./SchemaCandidateReview";
 import { IndividualCandidateReview } from "./IndividualCandidateReview";
 import "./ExtractionReview.css";
@@ -71,9 +73,14 @@ const pairedConfig = (configs: ConfigLike[] | undefined, partner?: ConfigLike) =
 
 export interface ExtractionReviewPageProps {
   onOpenRunHistory?: () => void;
+  /** An existing schema/individual extraction run to open for review. */
+  initialRunId?: string;
 }
 
-export function ExtractionReviewPage({ onOpenRunHistory }: ExtractionReviewPageProps) {
+export function ExtractionReviewPage({
+  onOpenRunHistory,
+  initialRunId,
+}: ExtractionReviewPageProps) {
   const [text, setText] = useState("");
   const [taxonomyChoice, setTaxonomyChoice] = useState("");
   const [schemeChoice, setSchemeChoice] = useState("");
@@ -123,6 +130,34 @@ export function ExtractionReviewPage({ onOpenRunHistory }: ExtractionReviewPageP
   const individualConfig = pairedConfig(individualConfigs, schemaConfig);
 
   const runs = useExtractionReviewRuns();
+
+  // Open a run passed by id (from run history) once it loads.
+  const { data: initialRun } = usePipelineRun(initialRunId ?? "");
+  const [openedRunId, setOpenedRunId] = useState<string | null>(null);
+  const { open: openRun } = runs;
+  useEffect(() => {
+    if (!initialRun || openedRunId === initialRun.id) return;
+    const kind = reviewKindOf(initialRun.pipeline_type);
+    if (!kind) return;
+    const input = (initialRun.input_summary ?? {}) as Record<string, unknown>;
+    const asText = (v: unknown) => (typeof v === "string" ? v : "");
+    setOpenedRunId(initialRun.id);
+    setTab(kind);
+    // Point the scope pickers at the run's scope so its labels resolve.
+    setTaxonomyChoice(asText(input.taxonomy_id));
+    setSchemeChoice(asText(input.concept_scheme_id));
+    setScope({
+      taxonomyId: asText(input.taxonomy_id),
+      taxonomyLabel: asText(input.taxonomy_name) || asText(input.taxonomy_id) || "—",
+      conceptSchemeId: asText(input.concept_scheme_id),
+      conceptSchemeLabel: asText(input.concept_scheme_id) || "—",
+    });
+    openRun(initialRun);
+  }, [initialRun, openedRunId, openRun]);
+  const showingOpenedRun =
+    !!openedRunId &&
+    !runs.lastRequest &&
+    (runs.schema.run?.id === openedRunId || runs.individual.run?.id === openedRunId);
   const runText = runs.lastRequest?.text ?? "";
   const anyRunning = runs.schema.status === "running" || runs.individual.status === "running";
 
@@ -165,12 +200,23 @@ export function ExtractionReviewPage({ onOpenRunHistory }: ExtractionReviewPageP
     });
   };
 
-  const reviewScope: ReviewScope = scope ?? {
-    taxonomyId: "",
-    taxonomyLabel: "—",
-    conceptSchemeId: "",
-    conceptSchemeLabel: "—",
+  const reviewScope: ReviewScope = {
+    ...(scope ?? {
+      taxonomyId: "",
+      taxonomyLabel: "—",
+      conceptSchemeId: "",
+      conceptSchemeLabel: "—",
+    }),
   };
+  // An opened run only carries its scope ids; use the picker labels once they load.
+  if (showingOpenedRun) {
+    if (taxonomy?.id === reviewScope.taxonomyId) {
+      reviewScope.taxonomyLabel = `${taxonomy.title} · ${taxonomy.identifier}`;
+    }
+    if (scheme?.id === reviewScope.conceptSchemeId) {
+      reviewScope.conceptSchemeLabel = `${scheme.title} · ${scheme.identifier}`;
+    }
+  }
 
   return (
     <div data-testid="extraction-review-page">
@@ -316,6 +362,16 @@ export function ExtractionReviewPage({ onOpenRunHistory }: ExtractionReviewPageP
           </>
         )}
       </Panel>
+
+      {showingOpenedRun && (
+        <>
+          <div className="xr-gap-sm" />
+          <FormCallout variant="info" icon="info" data-testid="extraction-review-opened-run">
+            Reviewing run <code>{openedRunId}</code> from run history. The source paragraph is not
+            stored with a run, so provenance highlights are unavailable.
+          </FormCallout>
+        </>
+      )}
 
       <div className="xr-gap" />
       <TabBar

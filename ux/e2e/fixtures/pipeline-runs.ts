@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import { Page, Route } from "@playwright/test";
 import { apiRequest } from "./api-client";
+import { TEST_DB_URLS } from "./test-db";
 
 /**
  * Pipeline-run seeding for E2E — completed extraction runs WITHOUT live LLM calls.
@@ -22,15 +23,8 @@ const UX_DIR = process.cwd();
 const BACKEND_DIR = resolve(UX_DIR, "../local-server");
 const VENV_PYTHON = resolve(BACKEND_DIR, ".venv/bin/python");
 const SEED_SCRIPT = resolve(UX_DIR, "e2e/fixtures/seed_pipeline_run.py");
-const TEST_LOCAL_DB_URL = "sqlite:///./datafiles/e2e-test/local.db";
 
 export type ExtractionPipelineType = "schema_extraction" | "individual_extraction";
-
-export interface SourceSpan {
-  quote: string;
-  start: number | null;
-  end: number | null;
-}
 
 export interface SeededRun {
   id: string;
@@ -45,12 +39,6 @@ export interface SeededRun {
 export interface InterceptedRun {
   request: Record<string, unknown>;
   run: SeededRun;
-}
-
-/** Locate `quote` in `text` as a provenance span (start/end null when absent, i.e. unlocated). */
-export function spanIn(text: string, quote: string): SourceSpan {
-  const at = text.indexOf(quote);
-  return at < 0 ? { quote, start: null, end: null } : { quote, start: at, end: at + quote.length };
 }
 
 async function configurationVersion(
@@ -82,7 +70,7 @@ export async function seedCompletedRun(
   const stdout = execFileSync(VENV_PYTHON, [SEED_SCRIPT], {
     cwd: BACKEND_DIR,
     input: JSON.stringify({
-      db_url: TEST_LOCAL_DB_URL,
+      db_url: TEST_DB_URLS.local,
       pipeline_type: pipelineType,
       request,
       configuration_version: version,

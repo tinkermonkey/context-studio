@@ -211,4 +211,36 @@ describe("ExtractionReviewPage", () => {
     await userEvent.type(textarea, " More.");
     expect(screen.getByTestId("extraction-review-stale")).toHaveClass("form-callout--warn");
   });
+
+  it("opens an existing run passed by id in its tab without starting a run", async () => {
+    mockRuns("ok");
+    let runPosts = 0;
+    server.use(
+      http.post("*/api/pipelines/:type/run", () => {
+        runPosts += 1;
+        return HttpResponse.json(makeRun());
+      }),
+      http.get("*/api/pipelines/runs/run-i", () =>
+        HttpResponse.json(
+          makeRun({
+            id: "run-i",
+            pipeline_type: "individual_extraction",
+            input_summary: { taxonomy_id: "tax-dr", taxonomy_name: "Documentation Robotics" },
+          }),
+        ),
+      ),
+    );
+    renderWithProviders(<ExtractionReviewPage initialRunId="run-i" />);
+
+    expect(await screen.findByTestId("extraction-review-triples")).toBeInTheDocument();
+    const tabs = screen.getByTestId("extraction-review-tabs");
+    expect(within(tabs).getByRole("tab", { name: /Individual extraction/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByTestId("extraction-review-opened-run")).toHaveClass("form-callout--info");
+    expect(screen.getByTestId("extraction-review-opened-run")).toHaveTextContent("run-i");
+    expect(screen.getByTestId("extraction-review-schema-idle")).toBeInTheDocument();
+    expect(runPosts).toBe(0);
+  });
 });

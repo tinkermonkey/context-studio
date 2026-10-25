@@ -2,12 +2,42 @@ import { describe, it, expect } from "vitest";
 import {
   countDecisions,
   drLayerOf,
+  failedSkips,
   locateMention,
   mentionKey,
   pct,
   segmentText,
 } from "../reviewUtils";
-import { planReviewApply } from "@/api/hooks/pipeline/useApplyReviewedRun";
+import { planReviewApply, type ApplyRunResponse } from "@/api/hooks/pipeline/useApplyReviewedRun";
+
+describe("failedSkips", () => {
+  const response = (fields: Partial<ApplyRunResponse>) =>
+    ({ run_id: "r", pipeline_type: "schema_extraction", ...fields }) as ApplyRunResponse;
+
+  it("keeps selected-but-unapplied candidates in server order, dropping unselected ones", () => {
+    expect(
+      failedSkips(
+        response({
+          skipped_candidate_ids: ["class-1", "connection-0", "class-2", "property-0"],
+          skip_reasons: {
+            "class-1": "not_selected",
+            "connection-0": "unresolved_endpoint",
+            "class-2": "below_threshold",
+            "property-0": "title_conflict",
+          },
+        }),
+      ),
+    ).toEqual([
+      ["connection-0", "unresolved_endpoint"],
+      ["property-0", "title_conflict"],
+    ]);
+  });
+
+  it("returns nothing when the response has no skip reasons", () => {
+    expect(failedSkips(response({ skipped_candidate_ids: ["class-1"] }))).toEqual([]);
+    expect(failedSkips(response({}))).toEqual([]);
+  });
+});
 
 describe("segmentText", () => {
   const text = "abcdefghij";

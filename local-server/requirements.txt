@@ -7,6 +7,14 @@ pydantic
 sentence-transformers
 scikit-learn
 spacy
+# spaCy's compiled helpers, pinned to the last versions CI loaded en_core_web_sm with.
+# cymem 2.0.16 / murmurhash 1.0.16 / preshed 3.0.14 / srsly 2.5.5 (released
+# 2026-10-24/25) make spacy.load raise "OverflowError: Python int too large to
+# convert to C ssize_t" in Language.from_disk. Lift once upstream is fixed.
+cymem==2.0.13
+murmurhash==1.0.15
+preshed==3.0.13
+srsly==2.5.4
 # spaCy English model used by the NLP adapter (open-extraction POS/dependency parsing).
 # If the pinned URL is unreachable, install with: python -m spacy download en_core_web_sm
 en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl

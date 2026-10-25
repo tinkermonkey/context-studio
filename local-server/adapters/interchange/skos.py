@@ -136,7 +136,7 @@ class SKOSSerializer(OntologySerializer):
 
     def _serialize_whole_graph(self) -> None:
         """Serialize all taxonomies, concept schemes, and classes."""
-        taxonomies = self.ontology_repo.list_taxonomies()
+        taxonomies = self.ontology_repo.list_taxonomies(limit=None)
         for taxonomy in taxonomies:
             self._add_taxonomy_to_graph(taxonomy)
 
@@ -215,7 +215,7 @@ class SKOSSerializer(OntologySerializer):
             self.graph.add((tax_uri, SKOS.definition, Literal(taxonomy.description)))
 
         # Add concept schemes that belong to this taxonomy
-        schemes = self.ontology_repo.list_concept_schemes(taxonomy_id=taxonomy.id)
+        schemes = self.ontology_repo.list_concept_schemes(taxonomy_id=taxonomy.id, limit=None)
         for scheme in schemes:
             self._add_concept_scheme_to_graph(scheme, include_parent_taxonomy=True)
 
@@ -248,7 +248,7 @@ class SKOSSerializer(OntologySerializer):
 
         # Add classes that belong to this scheme only if include_descendants is True
         if include_descendants:
-            classes = self.ontology_repo.list_classes(concept_scheme_id=scheme.id)
+            classes = self.ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None)
             for class_entity in classes:
                 self._add_class_to_graph(class_entity)
 
@@ -857,7 +857,7 @@ class SKOSDeserializer(OntologyDeserializer):
     def _find_by_external_reference(self, source: str, identifier: str) -> Optional[str]:
         """Find an existing entity by external reference (searches classes and individuals)."""
         if self._classes_cache is None:
-            self._classes_cache = self.ontology_repo.list_classes()
+            self._classes_cache = self.ontology_repo.list_classes(limit=None)
 
         for class_entity in self._classes_cache:
             for ext_ref in class_entity.external_references:
@@ -866,7 +866,7 @@ class SKOSDeserializer(OntologyDeserializer):
 
         # Also search individuals (cached on first access)
         if self._individuals_cache is None:
-            self._individuals_cache = self.ontology_repo.list_individuals()
+            self._individuals_cache = self.ontology_repo.list_individuals(limit=None)
 
         for individual in self._individuals_cache:
             for ext_ref in individual.external_references:
@@ -877,7 +877,9 @@ class SKOSDeserializer(OntologyDeserializer):
 
     def _find_class_by_title(self, title: str, concept_scheme_id: Optional[str]) -> Optional[Class]:
         """Find an existing class by title (and optional scheme)."""
-        all_classes = self.ontology_repo.list_classes(concept_scheme_id=concept_scheme_id)
+        all_classes = self.ontology_repo.list_classes(
+            concept_scheme_id=concept_scheme_id, limit=None
+        )
         for class_entity in all_classes:
             if class_entity.title == title:
                 return class_entity

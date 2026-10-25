@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
 import {
@@ -17,12 +17,11 @@ import { deleteFailureMessage } from "@/api/mutationErrors";
 import { SchemeDrawer } from "@/components/ontology/SchemeDrawer";
 import { useSchemes, useDeleteScheme, useMoveScheme } from "@/api/hooks/ontology/useSchemes";
 import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
-import { useClasses } from "@/api/hooks/ontology/useClasses";
-import { useProperties } from "@/api/hooks/ontology/useProperties";
-import { useRelationships } from "@/api/hooks/ontology/useRelationships";
+import { useListPaging } from "@/hooks/useListPaging";
 import { schemesCopy } from "./schemes/-copy";
+import { useSchemaTabs } from "./-useSchemaTabs";
 import type { components } from "@/api/types";
-import { LIST_FETCH_ALL_LIMIT } from "@/api/config";
+import { SMALL_SET_LIMIT } from "@/api/config";
 
 type ConceptSchemeResponse = components["schemas"]["ConceptSchemeResponse"];
 
@@ -34,7 +33,8 @@ export function SchemesIndexPage() {
   const surfaceRef = useRef<EntitySurfaceHandle>(null);
   const navigate = useNavigate();
   const { toast } = useToasts();
-  const [searchFilter, setSearchFilter] = useState("");
+  const paging = useListPaging();
+  const { tabs: schemaTabs, onSelectTab: handleTabNavigate, counts } = useSchemaTabs();
 
   const searchParams = useSearch({ from: "/app/schema/schemes/" });
   const createForTaxonomy = searchParams.createForTaxonomy;
@@ -43,7 +43,7 @@ export function SchemesIndexPage() {
     data: taxonomiesResponse,
     error: taxonomiesError,
     refetch: refetchTaxonomies,
-  } = useTaxonomies({ limit: LIST_FETCH_ALL_LIMIT });
+  } = useTaxonomies({ limit: SMALL_SET_LIMIT });
   const taxonomies = taxonomiesResponse?.items ?? [];
   const taxonomiesById = new Map(taxonomies.map((t) => [t.id, t.title]));
 
@@ -52,10 +52,7 @@ export function SchemesIndexPage() {
     isLoading,
     error,
     refetch,
-  } = useSchemes(undefined, { limit: LIST_FETCH_ALL_LIMIT });
-  const { data: classesData } = useClasses({ limit: LIST_FETCH_ALL_LIMIT });
-  const { data: propsData } = useProperties(undefined, { limit: LIST_FETCH_ALL_LIMIT });
-  const { data: relsData } = useRelationships({ limit: LIST_FETCH_ALL_LIMIT });
+  } = useSchemes(undefined, paging.params, { keepPrevious: true });
 
   const deleteMutation = useDeleteScheme();
   const moveMutation = useMoveScheme();
@@ -69,37 +66,11 @@ export function SchemesIndexPage() {
     }
   }, [createForTaxonomy, navigate]);
 
-  const allData = listResponse?.items ?? [];
-  const hasFilter = !!searchFilter;
-  const filteredData = allData.filter(
-    (scheme: ConceptSchemeResponse) =>
-      scheme.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      (scheme.description?.toLowerCase().includes(searchFilter.toLowerCase()) ?? false) ||
-      scheme.id.toLowerCase().includes(searchFilter.toLowerCase()),
-  );
-
-  const schemaTabs = [
-    { id: "taxonomies", label: "Taxonomies", count: taxonomiesResponse?.total },
-    { id: "schemes", label: "Schemes", count: listResponse?.total },
-    { id: "classes", label: "Classes", count: classesData?.total },
-    { id: "properties", label: "Properties", count: propsData?.total },
-    {
-      id: "relationships",
-      label: "Relationships",
-      count: relsData?.total,
-    },
-  ];
-
-  function handleTabNavigate(tabId: string) {
-    const routes: Record<string, string> = {
-      taxonomies: "/app/schema/taxonomies",
-      schemes: "/app/schema/schemes",
-      classes: "/app/schema/classes",
-      properties: "/app/schema/properties",
-      relationships: "/app/schema/relationships",
-    };
-    navigate({ to: routes[tabId] as any });
-  }
+  const total = listResponse?.total;
+  const { clampToTotal } = paging;
+  useEffect(() => clampToTotal(total), [total, clampToTotal]);
+  const pageData = listResponse?.items ?? [];
+  const hasFilter = paging.hasSearch;
 
   async function handleDelete(ids: string[]) {
     const results = await Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync(id)));
@@ -222,7 +193,7 @@ export function SchemesIndexPage() {
     },
   ];
 
-  const filteredEmpty = hasFilter && allData.length > 0 && filteredData.length === 0;
+  const filteredEmpty = hasFilter && total === 0 && (counts.schemes ?? 0) > 0;
   const emptyStateTitle = filteredEmpty
     ? schemesCopy.filteredEmpty.title
     : schemesCopy.emptyState.title;
@@ -274,18 +245,21 @@ export function SchemesIndexPage() {
 
           <FilterBar
             data-testid="schema-filter-bar"
-            onSearchChange={setSearchFilter}
-            searchPlaceholder="Search by title or description…"
-            showingCount={filteredData.length}
-            totalCount={allData.length}
+            onSearchChange={paging.setSearch}
+            searchPlaceholder="Search by title or identifier…"
+            showingCount={total ?? 0}
+            totalCount={counts.schemes ?? total ?? 0}
           />
 
           <EntitySurface
             ref={surfaceRef}
             entityType="scheme"
-            data={filteredData}
+            data={pageData}
             isLoading={isLoading}
             columns={schemeColumns}
+            pagination={paging.pagination(total)}
+            onSort={paging.onSort}
+            onCreateSuccess={paging.resetPage}
             renderInspector={(entity) => (
               <SchemeDrawer
                 key={entity.id}

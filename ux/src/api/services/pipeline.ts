@@ -12,6 +12,8 @@ type PipelineRunRequest = components["schemas"]["PipelineRunRequest"];
 type PipelineRunResponse = components["schemas"]["PipelineRunResponse"];
 type ListPipelineRuns = components["schemas"]["ListResponse_PipelineRunResponse_"];
 export type ApplyRunResponse = components["schemas"]["ApplyRunResponse"];
+/** Why apply skipped a candidate (values of ApplyRunResponse.skip_reasons). */
+export type SkipReason = NonNullable<ApplyRunResponse["skip_reasons"]>[string];
 export type ApplyRunRequest = components["schemas"]["ApplyRunRequest"];
 export type RecognitionDecision = components["schemas"]["RecognitionDecisionSchema"];
 export type MergedMention = components["schemas"]["MergedMentionSchema"];

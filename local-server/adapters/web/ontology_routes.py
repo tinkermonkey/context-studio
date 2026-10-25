@@ -135,6 +135,10 @@ async def create_taxonomy(
         raise HTTPException(status_code=status_code, detail=message)
 
 
+# Maximum number of values accepted by an `ids` list filter.
+MAX_ID_FILTER = 500
+
+
 @router.get("/taxonomies", response_model=ListResponse[TaxonomyResponse])
 async def list_taxonomies(
     limit: int = Query(100, ge=1, le=5000, description="Maximum number of results"),
@@ -550,20 +554,40 @@ async def list_classes(
     ),
     limit: int = Query(100, ge=1, le=5000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
+    sort_by: Optional[str] = Query(
+        None,
+        pattern="^(title|created_at|last_modified)$",
+        description="Field to sort by (title, created_at, last_modified)",
+    ),
+    sort_order: str = Query("asc", pattern="^(asc|desc)$", description="Sort direction"),
+    q: Optional[str] = Query(
+        None,
+        max_length=200,
+        description="Case-insensitive text search on title or identifier",
+    ),
+    ids: Optional[list[str]] = Query(
+        None,
+        max_length=MAX_ID_FILTER,
+        description=f"Restrict results to these IDs (repeat the parameter; at most {MAX_ID_FILTER})",
+    ),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[ClassResponse]:
     """
-    Retrieve classes with optional filtering and pagination.
+    Retrieve classes with optional filtering, sorting, text search and pagination.
 
     Args:
         concept_scheme_id: Optional concept scheme ID to filter by
         parent_class_id: Optional parent class ID to filter by
         limit: Maximum number of results (1-5000, default 100)
         offset: Number of results to skip (default 0)
+        sort_by: Field to sort by (title, created_at, last_modified)
+        sort_order: Sort direction (asc or desc, default asc)
+        q: Case-insensitive text search on title or identifier
+        ids: Restrict results to these class IDs
         service: OntologyService from dependency injection
 
     Returns:
-        ListResponse containing matching classes
+        ListResponse containing matching classes; total counts every match
     """
     try:
         classes = service.list_classes(
@@ -571,8 +595,17 @@ async def list_classes(
             parent_class_id=parent_class_id,
             limit=limit,
             offset=offset,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            query=q,
+            ids=ids,
         )
-        total = service.count_classes(concept_scheme_id=concept_scheme_id)
+        total = service.count_classes(
+            concept_scheme_id=concept_scheme_id,
+            parent_class_id=parent_class_id,
+            query=q,
+            ids=ids,
+        )
         return ListResponse(
             items=[ClassResponse.model_validate(c) for c in classes],
             total=total,
@@ -754,6 +787,14 @@ async def list_relationships(
         None, pattern="^created_at$", description="Field to sort by (created_at)"
     ),
     sort_order: str = Query("asc", pattern="^(asc|desc)$", description="Sort direction"),
+    q: Optional[str] = Query(
+        None,
+        max_length=200,
+        description=(
+            "Case-insensitive text search on the source title, target title, "
+            "or property definition title/identifier"
+        ),
+    ),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[RelationshipResponse]:
     """
@@ -767,6 +808,7 @@ async def list_relationships(
         offset: Number of results to skip (default 0)
         sort_by: Field to sort by (created_at)
         sort_order: Sort direction (asc or desc, default asc)
+        q: Text search on source/target title or property title/identifier
         service: OntologyService from dependency injection
 
     Returns:
@@ -782,13 +824,14 @@ async def list_relationships(
             offset=offset,
             sort_by=sort_by,
             sort_order=sort_order,
-            query=None,
+            query=q,
         )
         total = await run_sync_in_executor(
             service.count_relationships,
             source_id=source_id,
             target_id=target_id,
             property_id=property_id,
+            query=q,
         )
         return ListResponse(
             items=[RelationshipResponse.model_validate(r) for r in relationships],
@@ -900,7 +943,16 @@ async def list_property_definitions(
         description="Field to sort by (title, created_at, last_modified)",
     ),
     sort_order: str = Query("asc", pattern="^(asc|desc)$", description="Sort direction"),
-    q: Optional[str] = Query(None, description="Text search query on title"),
+    q: Optional[str] = Query(
+        None,
+        max_length=200,
+        description="Case-insensitive text search on title or identifier",
+    ),
+    ids: Optional[list[str]] = Query(
+        None,
+        max_length=MAX_ID_FILTER,
+        description=f"Restrict results to these IDs (repeat the parameter; at most {MAX_ID_FILTER})",
+    ),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[PropertyDefinitionResponse]:
     """
@@ -912,7 +964,8 @@ async def list_property_definitions(
         offset: Number of results to skip (default 0)
         sort_by: Field to sort by (title, created_at, last_modified)
         sort_order: Sort direction (asc or desc, default asc)
-        q: Text query for LIKE search on title
+        q: Case-insensitive text search on title or identifier
+        ids: Restrict results to these property definition IDs
         service: OntologyService from dependency injection
 
     Returns:
@@ -927,11 +980,13 @@ async def list_property_definitions(
             sort_by=sort_by,
             sort_order=sort_order,
             query=q,
+            ids=ids,
         )
         total = await run_sync_in_executor(
             service.count_property_definitions,
             is_relevant=is_relevant,
             query=q,
+            ids=ids,
         )
         return ListResponse(
             items=[PropertyDefinitionResponse.model_validate(p) for p in properties],
@@ -1263,25 +1318,54 @@ async def list_individuals(
     class_id: Optional[str] = Query(None, description="Optional class ID to filter by"),
     limit: int = Query(100, ge=1, le=5000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
+    sort_by: Optional[str] = Query(
+        None,
+        pattern="^(title|created_at|last_modified)$",
+        description="Field to sort by (title, created_at, last_modified)",
+    ),
+    sort_order: str = Query("asc", pattern="^(asc|desc)$", description="Sort direction"),
+    q: Optional[str] = Query(
+        None,
+        max_length=200,
+        description="Case-insensitive text search on title or identifier",
+    ),
+    ids: Optional[list[str]] = Query(
+        None,
+        max_length=MAX_ID_FILTER,
+        description=f"Restrict results to these IDs (repeat the parameter; at most {MAX_ID_FILTER})",
+    ),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[IndividualResponse]:
     """
-    Retrieve individuals with optional filtering and pagination.
+    Retrieve individuals with optional filtering, sorting, text search and pagination.
 
     Args:
         class_id: Optional class ID to filter by (returns Individuals having this Class as a parent)
         limit: Maximum number of results (1-5000, default 100)
         offset: Number of results to skip (default 0)
+        sort_by: Field to sort by (title, created_at, last_modified)
+        sort_order: Sort direction (asc or desc, default asc)
+        q: Case-insensitive text search on title or identifier
+        ids: Restrict results to these individual IDs
         service: OntologyService from dependency injection
 
     Returns:
-        ListResponse containing matching individuals
+        ListResponse containing matching individuals; total counts every match
     """
     try:
         individuals = await run_sync_in_executor(
-            service.list_individuals, class_id, limit, offset
+            service.list_individuals,
+            class_id=class_id,
+            limit=limit,
+            offset=offset,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            query=q,
+            ids=ids,
         )
-        total = await run_sync_in_executor(service.count_individuals, class_id)
+        total = await run_sync_in_executor(
+            service.count_individuals, class_id=class_id, query=q, ids=ids
+        )
         return ListResponse(
             items=[IndividualResponse.model_validate(i) for i in individuals],
             total=total,

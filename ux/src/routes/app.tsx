@@ -13,21 +13,13 @@ import { createStaticPaletteActions } from "@/config/staticPaletteActions";
 import { getWorkspacePath } from "@/lib/workspaceStorage";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
 import { useHealth, useConfig } from "@/api/hooks/admin";
-import {
-  useClasses,
-  useIndividuals,
-  useTaxonomies,
-  useSchemes,
-  useProperties,
-  useRelationships,
-} from "@/api/hooks/ontology";
+import { useEntityCounts } from "@/api/hooks/ontology/useEntityCounts";
 import {
   NAV_ACTIONS,
   SIDEBAR_PATH_MAP,
   getActiveItemId,
   getBreadcrumbLabels,
 } from "./-app-navigation";
-import { LIST_FETCH_ALL_LIMIT } from "@/api/config";
 
 export const Route = createFileRoute("/app")({
   beforeLoad: () => {
@@ -85,19 +77,14 @@ function AppShell() {
 
   const { data: health, isError } = useHealth();
   const { data: config } = useConfig();
-  const { data: classes } = useClasses({ limit: LIST_FETCH_ALL_LIMIT });
-  const { data: individuals } = useIndividuals({ limit: LIST_FETCH_ALL_LIMIT });
-  const { data: taxonomies } = useTaxonomies({ limit: LIST_FETCH_ALL_LIMIT });
-  const { data: schemes } = useSchemes(undefined, { limit: LIST_FETCH_ALL_LIMIT });
-  const { data: properties } = useProperties(undefined, { limit: LIST_FETCH_ALL_LIMIT });
-  const { data: relationships } = useRelationships({ limit: LIST_FETCH_ALL_LIMIT });
-
-  const classCount = classes?.total ?? 0;
-  const individualCount = individuals?.total ?? 0;
-  const taxonomyCount = taxonomies?.total ?? 0;
-  const schemeCount = schemes?.total ?? 0;
-  const propertyCount = properties?.total ?? 0;
-  const relationshipCount = relationships?.total ?? 0;
+  // Sidebar counts: limit=1 requests that read each collection's `total`.
+  const counts = useEntityCounts();
+  const classCount = counts.classes ?? 0;
+  const individualCount = counts.individuals ?? 0;
+  const taxonomyCount = counts.taxonomies ?? 0;
+  const schemeCount = counts.schemes ?? 0;
+  const propertyCount = counts.properties ?? 0;
+  const relationshipCount = counts.relationships ?? 0;
 
   const workspaceName = (() => {
     const displayName = config?.sections?.workspace?.display_name;

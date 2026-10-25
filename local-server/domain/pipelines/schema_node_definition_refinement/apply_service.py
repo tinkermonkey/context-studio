@@ -2,8 +2,10 @@
 Apply service for schema node definition refinement pipeline.
 
 Applies the highest-confidence refined definition candidate from a completed
-definition refinement run to an existing ontology Class entity.
-Idempotent: re-applying the same run overwrites the description with the same value.
+definition refinement run to an existing ontology Class entity. The write goes through
+OntologyService.update_class, so a ClassUpdated event (and thus a ChangeEvent with the
+previous description) is recorded and reverting the run restores it.
+Idempotent: re-applying the same run leaves the description unchanged.
 """
 
 from __future__ import annotations
@@ -17,6 +19,7 @@ _logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from domain.ontology.ports import OntologyRepository
+    from domain.ontology.services import OntologyService
     from domain.pipelines.entities import PipelineRun
 
 
@@ -25,7 +28,10 @@ class SchemaDefinitionRefinementApplyService:
     Applies the best definition candidate from a definition refinement run to a Class.
     """
 
-    def __init__(self, ontology_repo: "OntologyRepository") -> None:
+    def __init__(
+        self, ontology_service: "OntologyService", ontology_repo: "OntologyRepository"
+    ) -> None:
+        self._ontology_service = ontology_service
         self._repo = ontology_repo
 
     def apply(
@@ -72,8 +78,7 @@ class SchemaDefinitionRefinementApplyService:
             result.validate()
             return result
 
-        cls.description = new_definition
-        self._repo.save_class(cls)
+        self._ontology_service.update_class(node_id, description=new_definition)
         result.classes_updated += 1
         result.validate()
         return result

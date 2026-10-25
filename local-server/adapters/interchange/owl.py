@@ -152,24 +152,24 @@ class OWLSerializer(OntologySerializer):
     def _serialize_whole_graph(self) -> None:
         """Serialize all taxonomies, concept schemes, classes, individuals, and properties."""
         # Add all property definitions first (referenced by relationships)
-        properties = self.ontology_repo.list_property_definitions()
+        properties = self.ontology_repo.list_property_definitions(limit=None)
         for prop in properties:
             self._add_property_to_graph(prop)
 
         # Add all taxonomies and their descendants
-        taxonomies = self.ontology_repo.list_taxonomies()
+        taxonomies = self.ontology_repo.list_taxonomies(limit=None)
         for taxonomy in taxonomies:
             self._add_taxonomy_to_graph(taxonomy)
 
         # Add all individuals and relationships only if not in split (TBox-only) mode
         if not self.split_mode:
             # Add all individuals
-            individuals = self.ontology_repo.list_individuals()
+            individuals = self.ontology_repo.list_individuals(limit=None)
             for individual in individuals:
                 self._add_individual_to_graph(individual)
 
             # Add all relationships
-            relationships = self.ontology_repo.list_relationships()
+            relationships = self.ontology_repo.list_relationships(limit=None)
             for relationship in relationships:
                 self._add_relationship_to_graph(relationship)
 
@@ -253,7 +253,7 @@ class OWLSerializer(OntologySerializer):
             self.graph.add((tax_uri, SKOS.definition, Literal(taxonomy.description)))
 
         # Add concept schemes that belong to this taxonomy
-        schemes = self.ontology_repo.list_concept_schemes(taxonomy_id=taxonomy.id)
+        schemes = self.ontology_repo.list_concept_schemes(taxonomy_id=taxonomy.id, limit=None)
         for scheme in schemes:
             self._add_concept_scheme_to_graph(scheme, include_parent_taxonomy=True)
 
@@ -285,7 +285,7 @@ class OWLSerializer(OntologySerializer):
 
         # Add classes that belong to this scheme only if include_descendants is True
         if include_descendants:
-            classes = self.ontology_repo.list_classes(concept_scheme_id=scheme.id)
+            classes = self.ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None)
             for class_entity in classes:
                 self._add_class_to_graph(class_entity)
 
@@ -971,8 +971,8 @@ class OWLDeserializer(OntologyDeserializer):
         """
         conflicts = []
         # Pre-populate caches to avoid O(N) database queries per entity
-        classes_cache = self.ontology_repo.list_classes()
-        individuals_cache = self.ontology_repo.list_individuals()
+        classes_cache = self.ontology_repo.list_classes(limit=None)
+        individuals_cache = self.ontology_repo.list_individuals(limit=None)
 
         for entity_id, entity_dict in self.incoming_entities.items():
             # Skip relationships early — they have no external references and can't match by title
@@ -1056,9 +1056,9 @@ class OWLDeserializer(OntologyDeserializer):
         """Find an existing entity by external reference using cached lists."""
         # Use cached lists if provided, otherwise fetch from repository
         if classes_cache is None:
-            classes_cache = self.ontology_repo.list_classes()
+            classes_cache = self.ontology_repo.list_classes(limit=None)
         if individuals_cache is None:
-            individuals_cache = self.ontology_repo.list_individuals()
+            individuals_cache = self.ontology_repo.list_individuals(limit=None)
 
         for class_entity in classes_cache:
             for ext_ref in class_entity.external_references:
@@ -1074,7 +1074,9 @@ class OWLDeserializer(OntologyDeserializer):
 
     def _find_class_by_title(self, title: str, concept_scheme_id: Optional[str]) -> Optional[Class]:
         """Find an existing class by title (and optional scheme)."""
-        all_classes = self.ontology_repo.list_classes(concept_scheme_id=concept_scheme_id)
+        all_classes = self.ontology_repo.list_classes(
+            concept_scheme_id=concept_scheme_id, limit=None
+        )
         for class_entity in all_classes:
             if class_entity.title == title:
                 return class_entity

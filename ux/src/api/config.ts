@@ -1,9 +1,22 @@
+/** Page sizes offered by the server-paginated list pages; the first is the default. */
+export const LIST_PAGE_SIZES = [50, 100, 250] as const;
+
 /**
- * Page size the schema/data list pages and the app shell request so they
- * receive the whole data set (matches the backend's maximum `limit`).
- * Stopgap: server-side pagination is the long-term replacement.
+ * Bounded fetch for the small, curated sets a view needs in full: taxonomies
+ * and concept schemes (title maps, scheme filters, move targets) and the
+ * classes of one scheme. Unbounded collections (all classes, individuals,
+ * properties, relationships) are paged or searched server-side instead.
  */
-export const LIST_FETCH_ALL_LIMIT = 5000;
+export const SMALL_SET_LIMIT = 500;
+
+/** Result count for a server-side "find any entity" picker search. */
+export const ENTITY_SEARCH_LIMIT = 20;
+
+/**
+ * Heimdall RelationshipBuilder offers predicates as a fixed list with no
+ * search, so relationship forms load a bounded, title-sorted set of them.
+ */
+export const PREDICATE_CHOICES_LIMIT = 500;
 
 export const QUERY_KEYS = {
   // Admin
