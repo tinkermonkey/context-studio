@@ -1,14 +1,10 @@
-import {
-  PageHeader,
-  ConfigTile,
-  TabBar,
-  Field,
-  TextInput,
-  Select,
-} from "@tinkermonkey/heimdall-ui";
+import { PageHeader, ConfigTile, TabBar, Field, TextInput } from "@tinkermonkey/heimdall-ui";
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/api/config";
 import { useConfig, useUpdateConfig } from "@/api/hooks/admin";
+import { useChatStatus } from "@/api/hooks/chat";
 import { useToasts } from "@/components/ui/Toast";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { COPY } from "./settings/copy";
@@ -22,15 +18,33 @@ export function SettingsPage() {
   const { data: config, isLoading, error, refetch } = useConfig();
   const updateMutation = useUpdateConfig();
 
+  const { data: chatStatus } = useChatStatus();
+  const queryClient = useQueryClient();
+
   const [activeTab, setActiveTab] = useState("general");
+  const [chatModelError, setChatModelError] = useState<string | undefined>();
 
   const handleFieldBlur = async (section: string, key: string, value: string) => {
     try {
       await updateMutation.mutateAsync({ section, data: { updates: { [key]: value } } });
       toast("success", COPY.settingsUpdatedSuccess(section));
+      return true;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : COPY.failedToSaveSettings;
       toast("error", errorMsg);
+      return false;
+    }
+  };
+
+  const handleChatModelBlur = async (value: string) => {
+    const model = value.trim();
+    if (!model) {
+      setChatModelError(COPY.chatModelRequired);
+      return;
+    }
+    if (model === String(config?.sections?.chat?.model ?? "")) return;
+    if (await handleFieldBlur("chat", "model", model)) {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chatStatus });
     }
   };
 
@@ -68,7 +82,7 @@ export function SettingsPage() {
 
   const sections = config?.sections || {};
   const workspaceConfig = sections.workspace || {};
-  const llmConfig = sections.llm || {};
+  const chatConfig = sections.chat || {};
   const embeddingConfig = sections.embedding || {};
 
   return (
@@ -85,7 +99,7 @@ export function SettingsPage() {
       <div style={{ marginBottom: "var(--space-4)" }}>
         <TabBar
           tabs={[
-            { id: "general", label: "General", count: 5 },
+            { id: "general", label: "General", count: 4 },
             { id: "storage", label: "Storage", count: 0 },
             { id: "members", label: "Members", count: 0 },
             { id: "integrations", label: "Integrations", count: 0 },
@@ -128,25 +142,31 @@ export function SettingsPage() {
               />
             </Field>
 
-            <Field label={COPY.llmProviderLabel}>
-              <Select
-                data-testid="settings-llm-provider-select"
-                defaultValue={String(llmConfig.provider || "")}
-              >
-                <option value="">{COPY.selectOptionPlaceholder}</option>
-                <option value="anthropic">{COPY.llmProviderAnthropicOption}</option>
-                <option value="openai">{COPY.llmProviderOpenAIOption}</option>
-                <option value="ollama">{COPY.llmProviderOllamaOption}</option>
-              </Select>
-            </Field>
-
-            <Field label={COPY.llmModelLabel}>
+            <Field
+              label={COPY.chatModelLabel}
+              htmlFor="settings-chat-model"
+              hint={chatModelError ? undefined : COPY.chatModelHint}
+              error={chatModelError}
+              errorId="settings-chat-model-error"
+            >
               <TextInput
-                data-testid="settings-llm-model-input"
-                defaultValue={String(llmConfig.model || "")}
-                placeholder={COPY.llmModelPlaceholder}
-                onBlur={(e) => handleFieldBlur("llm", "model", e.target.value)}
+                id="settings-chat-model"
+                data-testid="settings-chat-model-input"
+                mono
+                list="settings-chat-model-options"
+                defaultValue={String(chatConfig.model || "")}
+                placeholder={COPY.chatModelPlaceholder}
+                error={Boolean(chatModelError)}
+                aria-invalid={Boolean(chatModelError)}
+                aria-describedby={chatModelError ? "settings-chat-model-error" : undefined}
+                onChange={() => setChatModelError(undefined)}
+                onBlur={(e) => handleChatModelBlur(e.target.value)}
               />
+              <datalist id="settings-chat-model-options" data-testid="settings-chat-model-options">
+                {(chatStatus?.available_models ?? []).map((model) => (
+                  <option key={model} value={model} />
+                ))}
+              </datalist>
             </Field>
 
             <Field label={COPY.embeddingModelNameLabel}>

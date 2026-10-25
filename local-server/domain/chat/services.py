@@ -126,6 +126,7 @@ class ChatService:
             model=model,
             available=self._model.supports_model(model),
             max_tool_rounds=self._settings.max_tool_rounds(),
+            available_models=tuple(self._model.list_models()),
         )
 
     async def create_conversation(self) -> Conversation:

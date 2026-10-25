@@ -256,3 +256,21 @@ class TestRouterSupportsModel:
 
         router._rejected_providers.add("anthropic")
         assert not router.supports_model(MODEL)
+
+    def test_list_models_from_chat_capable_providers(self):
+        class ListingProvider(StubProvider):
+            def list_available_models(self):
+                return list(self._models)
+
+        router = _router(
+            {
+                "openai": ListingProvider(["gpt-4o"]),
+                "anthropic": ListingProvider([MODEL, "claude-opus-4-7"]),
+                "openrouter": ListingProvider([]),
+            },
+            {"anthropic": FakeChatModel(), "openrouter": FakeChatModel()},
+        )
+
+        assert router.list_models() == [MODEL, "claude-opus-4-7"]
+        router._rejected_providers.add("anthropic")
+        assert router.list_models() == []

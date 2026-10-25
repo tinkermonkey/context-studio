@@ -6,7 +6,16 @@ import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import { SettingsPage } from "../settings";
 
-const server = setupServer();
+const server = setupServer(
+  http.get("*/api/chat/status", () =>
+    HttpResponse.json({
+      model: "claude-sonnet-5-5",
+      available: true,
+      max_tool_rounds: 8,
+      available_models: ["claude-sonnet-5-5", "claude-opus-4-7"],
+    }),
+  ),
+);
 
 beforeAll(() => {
   server.listen({ onUnhandledRequest: "error" });
@@ -37,7 +46,7 @@ describe("Settings Page", () => {
           HttpResponse.json({
             sections: {
               workspace: { display_name: "My Workspace", path: "/workspace" },
-              llm: { provider: "anthropic", model: "claude-3-opus" },
+              chat: { model: "claude-3-opus" },
               embedding: { model_name: "all-MiniLM-L6-v2", vector_dimensions: 384 },
             },
           }),
@@ -69,7 +78,7 @@ describe("Settings Page", () => {
           HttpResponse.json({
             sections: {
               workspace: { display_name: "My Workspace", path: "/workspace" },
-              llm: { provider: "anthropic" },
+              chat: { model: "claude-sonnet-5-5" },
               embedding: { model_name: "all-MiniLM-L6-v2" },
             },
           }),
@@ -196,7 +205,7 @@ describe("Settings Page", () => {
           HttpResponse.json({
             sections: {
               workspace: { display_name: "My Workspace", path: "/workspace" },
-              llm: { provider: "anthropic", model: "claude-3-opus" },
+              chat: { model: "claude-3-opus" },
               embedding: { model_name: "all-MiniLM-L6-v2" },
             },
           }),
@@ -214,26 +223,92 @@ describe("Settings Page", () => {
       expect(screen.getByDisplayValue("all-MiniLM-L6-v2")).toBeInTheDocument();
     });
 
-    it("reflects a different LLM model in the model input", async () => {
+    it("has no dead LLM provider or model fields", async () => {
       server.use(
         http.get("*/api/v1/admin/configuration", () =>
-          HttpResponse.json({
-            sections: {
-              workspace: { display_name: "My Workspace", path: "/workspace" },
-              llm: { provider: "openai", model: "gpt-4" },
-            },
-          }),
+          HttpResponse.json({ sections: { chat: { model: "claude-sonnet-5-5" } } }),
         ),
       );
 
       render(<SettingsPage />);
 
-      await waitFor(() => {
-        expect(screen.getByDisplayValue("gpt-4")).toBeInTheDocument();
-      });
+      await screen.findByTestId("settings-chat-model-input");
+      expect(screen.queryByTestId("settings-llm-provider-select")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("settings-llm-model-input")).not.toBeInTheDocument();
+    });
+  });
 
-      // The provider select reflects the configured provider.
-      expect(screen.getByTestId("settings-llm-provider-select")).toHaveValue("openai");
+  // ========================================================================
+  // Chat model field
+  // ========================================================================
+  describe("chat model", () => {
+    const configWithChat = () =>
+      http.get("*/api/v1/admin/configuration", () =>
+        HttpResponse.json({ sections: { chat: { model: "claude-sonnet-5-5" } } }),
+      );
+
+    it("offers the provider's models and accepts free text", async () => {
+      server.use(configWithChat());
+
+      render(<SettingsPage />);
+
+      const input = await screen.findByTestId("settings-chat-model-input");
+      expect(input).toHaveValue("claude-sonnet-5-5");
+      expect(input).toHaveAttribute("list", "settings-chat-model-options");
+      await waitFor(() => {
+        const options = screen
+          .getByTestId("settings-chat-model-options")
+          .querySelectorAll("option");
+        expect(Array.from(options).map((o) => o.value)).toEqual([
+          "claude-sonnet-5-5",
+          "claude-opus-4-7",
+        ]);
+      });
+    });
+
+    it("saves a new model to the chat section on blur", async () => {
+      let patched: { section?: string; body?: unknown } = {};
+      server.use(
+        configWithChat(),
+        http.patch("*/api/v1/admin/configuration/:section", async ({ params, request }) => {
+          patched = { section: String(params.section), body: await request.json() };
+          return HttpResponse.json({ sections: { chat: { model: "anthropic/claude-opus-4-7" } } });
+        }),
+      );
+      const user = userEvent.setup();
+
+      render(<SettingsPage />);
+
+      const input = await screen.findByTestId("settings-chat-model-input");
+      await user.clear(input);
+      await user.type(input, "anthropic/claude-opus-4-7");
+      await user.tab();
+
+      await waitFor(() => {
+        expect(patched).toEqual({
+          section: "chat",
+          body: { updates: { model: "anthropic/claude-opus-4-7" } },
+        });
+      });
+    });
+
+    it("rejects an empty model and clears the error as soon as the user types", async () => {
+      server.use(configWithChat());
+      const user = userEvent.setup();
+
+      render(<SettingsPage />);
+
+      const input = await screen.findByTestId("settings-chat-model-input");
+      await user.clear(input);
+      await user.tab();
+
+      expect(await screen.findByText("Enter a model id")).toBeInTheDocument();
+      expect(input).toHaveAttribute("aria-invalid", "true");
+
+      await user.type(input, "c");
+
+      expect(screen.queryByText("Enter a model id")).not.toBeInTheDocument();
+      expect(input).toHaveAttribute("aria-invalid", "false");
     });
   });
 });

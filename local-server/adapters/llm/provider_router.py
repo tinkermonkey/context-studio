@@ -193,6 +193,14 @@ class LLMProviderRouter:
             for name, provider in self._providers.items()
         )
 
+    def list_models(self) -> list[str]:
+        """Known model ids of the chat-capable providers that haven't rejected their key."""
+        models: list[str] = []
+        for name, provider in self._providers.items():
+            if name in self._chat_models and name not in self._rejected_providers:
+                models.extend(m for m in provider.list_available_models() if m not in models)
+        return models
+
     async def stream_chat(
         self,
         *,

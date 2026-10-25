@@ -8458,6 +8458,14 @@
           "max_tool_rounds": {
             "type": "integer",
             "title": "Max Tool Rounds"
+          },
+          "available_models": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Available Models",
+            "description": "Known model ids of the configured chat providers; OpenRouter ids also work"
           }
         },
         "type": "object",

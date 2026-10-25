@@ -72,11 +72,18 @@ class ChatStatusResponse(BaseModel):
     model: str = Field(..., description="Configured chat model (config.json chat.model)")
     available: bool = Field(..., description="Whether a configured provider serves the model")
     max_tool_rounds: int
+    available_models: list[str] = Field(
+        default_factory=list,
+        description="Known model ids of the configured chat providers; OpenRouter ids also work",
+    )
 
     @classmethod
     def from_domain(cls, status: ChatStatus) -> "ChatStatusResponse":
         return cls(
-            model=status.model, available=status.available, max_tool_rounds=status.max_tool_rounds
+            model=status.model,
+            available=status.available,
+            max_tool_rounds=status.max_tool_rounds,
+            available_models=list(status.available_models),
         )
 
 

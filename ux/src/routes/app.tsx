@@ -13,6 +13,9 @@ import { createStaticPaletteActions } from "@/config/staticPaletteActions";
 import { getWorkspacePath } from "@/lib/workspaceStorage";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
 import { useBreadcrumbStore } from "@/stores/breadcrumbs";
+import { useChatPanelStore } from "@/stores/chatPanel";
+import { ChatPanel } from "@/components/chat/ChatPanel";
+import { useChatEntryPoints } from "@/components/chat/useChatEntryPoints";
 import { useHealth, useConfig } from "@/api/hooks/admin";
 import { useEntityCounts } from "@/api/hooks/ontology/useEntityCounts";
 import {
@@ -75,6 +78,15 @@ function AppShell() {
   const navigate = useNavigate();
   const { location } = useRouterState();
   useCommandPaletteActions();
+  useChatEntryPoints();
+  const chatOpen = useChatPanelStore((s) => s.open);
+  const toggleChat = useChatPanelStore((s) => s.togglePanel);
+  // Mount the panel the first time it opens, then keep it mounted (hidden when
+  // closed) so a streaming answer and the conversation survive closing it.
+  const [chatMounted, setChatMounted] = useState(chatOpen);
+  useEffect(() => {
+    if (chatOpen) setChatMounted(true);
+  }, [chatOpen]);
 
   const { data: health, isError } = useHealth();
   const { data: config } = useConfig();
@@ -203,6 +215,18 @@ function AppShell() {
             <button
               type="button"
               className="topbar-iconbtn"
+              aria-label="Chat assistant (⌘J)"
+              title="Chat assistant (⌘J)"
+              aria-pressed={chatOpen}
+              aria-controls="chat-panel"
+              onClick={toggleChat}
+              data-testid="topbar-chat-button"
+            >
+              <Icon name="bot" size={16} />
+            </button>
+            <button
+              type="button"
+              className="topbar-iconbtn"
               aria-label="Notifications"
               data-testid="topbar-notifications"
             >
@@ -278,9 +302,17 @@ function AppShell() {
         right: statusbarRight,
       }}
     >
-      <ErrorBoundary>
-        <Outlet />
-      </ErrorBoundary>
+      <div
+        className={chatOpen ? "app-chat-layout app-chat-layout--open" : "app-chat-layout"}
+        data-testid="app-chat-layout"
+      >
+        <div className="app-chat-layout__page">
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
+        </div>
+        {chatMounted && <ChatPanel />}
+      </div>
     </ShellLayout>
   );
 }

@@ -6,7 +6,16 @@ import { render } from "@/test/test-utils";
 import { createAppConfiguration } from "@/api/services/__tests__/fixtures/admin.fixtures";
 import { SettingsPage } from "../../settings";
 
-const server = setupServer();
+const server = setupServer(
+  http.get("*/api/chat/status", () =>
+    HttpResponse.json({
+      model: "claude-sonnet-5-5",
+      available: true,
+      max_tool_rounds: 8,
+      available_models: ["claude-sonnet-5-5", "claude-opus-4-7"],
+    }),
+  ),
+);
 
 beforeAll(() => {
   server.listen({ onUnhandledRequest: "error" });
@@ -96,7 +105,7 @@ describe("Settings Page", () => {
             createAppConfiguration({
               sections: {
                 workspace: { display_name: "My Workspace", path: "/path/to/workspace" },
-                llm: { provider: "anthropic", model: "claude-3-sonnet" },
+                chat: { model: "claude-3-sonnet" },
                 embedding: { model_name: "sentence-transformers/all-MiniLM-L6-v2" },
               },
             }),
@@ -120,7 +129,7 @@ describe("Settings Page", () => {
             createAppConfiguration({
               sections: {
                 workspace: { display_name: "My Workspace", path: "/path/to/workspace" },
-                llm: { provider: "anthropic", model: "claude-3-sonnet" },
+                chat: { model: "claude-3-sonnet" },
                 embedding: { model_name: "sentence-transformers/all-MiniLM-L6-v2" },
               },
             }),

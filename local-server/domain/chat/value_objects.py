@@ -165,6 +165,7 @@ class ChatStatus:
     model: str
     available: bool
     max_tool_rounds: int
+    available_models: tuple[str, ...] = ()
 
 
 # ============================================================================

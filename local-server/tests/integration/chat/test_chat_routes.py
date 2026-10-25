@@ -48,6 +48,9 @@ class DrScriptedModel:
     def supports_model(self, model):
         return model == "claude-sonnet-5-5"
 
+    def list_models(self):
+        return ["claude-sonnet-5-5"]
+
     async def stream_chat(self, *, system, messages, tools, model, max_tokens=16000):
         self.requests.append(list(messages))
         last = messages[-1]
@@ -222,6 +225,7 @@ def test_status(client):
         "model": "claude-sonnet-5-5",
         "available": True,
         "max_tool_rounds": 8,
+        "available_models": ["claude-sonnet-5-5"],
     }
 
 
