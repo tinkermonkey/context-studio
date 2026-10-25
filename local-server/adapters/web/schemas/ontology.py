@@ -119,6 +119,36 @@ class PublishDiffStats(BaseModel):
     removed: int = Field(..., description="Number of classes that will be removed")
 
 
+class SchemeCountsResponse(BaseModel):
+    """Content counts for one concept scheme."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    scheme_id: str = Field(..., description="Concept scheme ID")
+    class_count: int = Field(..., description="Classes in the scheme")
+    individual_count: int = Field(
+        ..., description="Distinct individuals typed by at least one of the scheme's classes"
+    )
+    property_definition_count: int = Field(
+        ..., description="Property definitions whose domain is one of the scheme's classes"
+    )
+
+
+class ClassCountsResponse(BaseModel):
+    """Content counts for one class."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    class_id: str = Field(..., description="Class ID")
+    individual_count: int = Field(..., description="Individuals typed by the class")
+    property_definition_count: int = Field(
+        ..., description="Property definitions with the class as domain"
+    )
+    relationship_count: int = Field(
+        ..., description="Relationships whose source is an individual of the class"
+    )
+
+
 class TaxonomyResponse(BaseModel):
     """Response containing taxonomy data."""
 
@@ -364,6 +394,12 @@ class PropertyDefinitionCreateRequest(BaseModel):
             "'navigates-to') — the form extraction clamps predicates to"
         ),
     )
+    domain_class_id: Optional[str] = Field(
+        None, description="Class the relationship's source must belong to"
+    )
+    range_class_id: Optional[str] = Field(
+        None, description="Class the relationship's target must belong to"
+    )
 
 
 class PropertyDefinitionUpdateRequest(BaseModel):
@@ -399,6 +435,12 @@ class PropertyDefinitionResponse(BaseModel):
             "Bare canonical relation verb this property represents (e.g. "
             "'navigates-to'), or null if not set"
         ),
+    )
+    domain_class_id: Optional[str] = Field(
+        None, description="Class the relationship's source must belong to, if constrained"
+    )
+    range_class_id: Optional[str] = Field(
+        None, description="Class the relationship's target must belong to, if constrained"
     )
     is_relevant: Optional[bool] = Field(
         None,

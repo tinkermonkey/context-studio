@@ -23,7 +23,7 @@ from .entities import (
     Relationship,
     Taxonomy,
 )
-from .value_objects import SearchCriteria
+from .value_objects import ClassCounts, SchemeCounts, SearchCriteria
 
 SchemaKind = Literal["class", "property_definition", "relationship", "individual"]
 MatchedField = Literal["title", "definition"]
@@ -440,6 +440,7 @@ class OntologyRepository(Protocol):
         sort_order: Literal["asc", "desc"] = "asc",
         query: str | None = None,
         ids: list[str] | None = None,
+        domain_class_id: str | None = None,
     ) -> list[PropertyDefinition]:
         """
         Retrieve property definitions with optional filtering, pagination, sorting, and text search.
@@ -452,6 +453,7 @@ class OntologyRepository(Protocol):
             sort_order: Sort direction (asc or desc)
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of property definition IDs to restrict results to
+            domain_class_id: Optional class ID the property's domain must equal
 
         Returns:
             List of PropertyDefinition entities
@@ -487,6 +489,7 @@ class OntologyRepository(Protocol):
         is_relevant: bool | None = None,
         query: str | None = None,
         ids: list[str] | None = None,
+        domain_class_id: str | None = None,
     ) -> int:
         """
         Count property definitions, optionally filtered by relevance, text search or ids.
@@ -495,6 +498,7 @@ class OntologyRepository(Protocol):
             is_relevant: Optional filter for relevant property definitions
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of property definition IDs to restrict the count to
+            domain_class_id: Optional class ID the property's domain must equal
 
         Returns:
             Total count of property definitions
@@ -528,6 +532,30 @@ class OntologyRepository(Protocol):
         Returns:
             Count of property definitions with domain_class_id or range_class_id
             equal to class_id
+        """
+        ...
+
+    def count_by_scheme(self, taxonomy_id: str) -> list[SchemeCounts]:
+        """
+        Count each concept scheme's classes, individuals and property definitions.
+
+        Args:
+            taxonomy_id: The taxonomy whose schemes to count
+
+        Returns:
+            One SchemeCounts per scheme in the taxonomy (zeros included)
+        """
+        ...
+
+    def count_by_class(self, concept_scheme_id: str) -> list[ClassCounts]:
+        """
+        Count each class's individuals, domain property definitions and outgoing relationships.
+
+        Args:
+            concept_scheme_id: The concept scheme whose classes to count
+
+        Returns:
+            One ClassCounts per class in the scheme (zeros included)
         """
         ...
 

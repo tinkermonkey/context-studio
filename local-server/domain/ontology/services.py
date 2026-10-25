@@ -66,9 +66,11 @@ from .ports import (
 )
 from .snapshots import entity_snapshot
 from .value_objects import (
+    ClassCounts,
     DataPropertyValue,
     DataType,
     ExternalReference,
+    SchemeCounts,
     Status,
     validate_default_value_against_allowed_values,
 )
@@ -676,6 +678,38 @@ class OntologyService:
             )
 
         return scheme
+
+    def get_scheme_counts(self, taxonomy_id: str) -> list[SchemeCounts]:
+        """
+        Count the classes, individuals and property definitions of each scheme in a taxonomy.
+
+        Args:
+            taxonomy_id: The ID of the taxonomy
+
+        Returns:
+            One SchemeCounts per concept scheme in the taxonomy
+
+        Raises:
+            EntityNotFoundError: If the taxonomy does not exist
+        """
+        self.get_taxonomy(taxonomy_id)
+        return self._repository.count_by_scheme(taxonomy_id)
+
+    def get_class_counts(self, concept_scheme_id: str) -> list[ClassCounts]:
+        """
+        Count the individuals, domain property definitions and outgoing relationships per class.
+
+        Args:
+            concept_scheme_id: The ID of the concept scheme
+
+        Returns:
+            One ClassCounts per class in the scheme
+
+        Raises:
+            EntityNotFoundError: If the scheme does not exist
+        """
+        self.get_concept_scheme(concept_scheme_id)
+        return self._repository.count_by_class(concept_scheme_id)
 
     def get_concept_scheme(self, concept_scheme_id: str) -> ConceptScheme:
         """
@@ -1946,6 +1980,7 @@ class OntologyService:
         sort_order: Literal["asc", "desc"] = "asc",
         query: str | None = None,
         ids: list[str] | None = None,
+        domain_class_id: str | None = None,
     ) -> list[PropertyDefinition]:
         """
         Retrieve property definitions with optional filtering, pagination, sorting, and text search.
@@ -1958,6 +1993,7 @@ class OntologyService:
             sort_order: Sort direction (asc or desc)
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of property definition IDs to restrict results to
+            domain_class_id: Optional class ID the property's domain must equal
 
         Returns:
             List of PropertyDefinition entities
@@ -1970,6 +2006,7 @@ class OntologyService:
             sort_order=sort_order,
             query=query,
             ids=ids,
+            domain_class_id=domain_class_id,
         )
 
     def count_property_definitions(
@@ -1977,20 +2014,22 @@ class OntologyService:
         is_relevant: bool | None = None,
         query: str | None = None,
         ids: list[str] | None = None,
+        domain_class_id: str | None = None,
     ) -> int:
         """
-        Count property definitions, optionally filtered by relevance, text search or ids.
+        Count property definitions, optionally filtered by relevance, text search, ids or domain.
 
         Args:
             is_relevant: Optional filter for relevant property definitions
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of property definition IDs to restrict the count to
+            domain_class_id: Optional class ID the property's domain must equal
 
         Returns:
             Total count of property definitions
         """
         return self._repository.count_property_definitions(
-            is_relevant=is_relevant, query=query, ids=ids
+            is_relevant=is_relevant, query=query, ids=ids, domain_class_id=domain_class_id
         )
 
     def update_property_definition(

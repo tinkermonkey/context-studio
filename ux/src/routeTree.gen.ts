@@ -30,7 +30,11 @@ import { Route as AppPipelinesReviewRouteImport } from './routes/app/pipelines/r
 import { Route as AppDataIndividualsRouteImport } from './routes/app/data/individuals'
 import { Route as AppDataDatasetsRouteImport } from './routes/app/data/datasets'
 import { Route as AppSchemaSchemesIndexRouteImport } from './routes/app/schema/schemes.index'
+import { Route as AppSchemaTaxonomiesIdRouteImport } from './routes/app/schema/taxonomies_.$id'
+import { Route as AppSchemaSchemesIdRouteImport } from './routes/app/schema/schemes_.$id'
+import { Route as AppSchemaClassesIdRouteImport } from './routes/app/schema/classes_.$id'
 import { Route as AppPipelinesBatchesBatchIdRouteImport } from './routes/app/pipelines/batches/$batchId'
+import { Route as AppDataIndividualsIdRouteImport } from './routes/app/data/individuals_.$id'
 import { Route as AppPipelinesTypesTypeIndexRouteImport } from './routes/app/pipelines/types/$type.index'
 import { Route as AppPipelinesTypesTypeRunRouteImport } from './routes/app/pipelines/types/$type/run'
 
@@ -139,12 +143,32 @@ const AppSchemaSchemesIndexRoute = AppSchemaSchemesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppSchemaSchemesRoute,
 } as any)
+const AppSchemaTaxonomiesIdRoute = AppSchemaTaxonomiesIdRouteImport.update({
+  id: '/schema/taxonomies_/$id',
+  path: '/schema/taxonomies/$id',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSchemaSchemesIdRoute = AppSchemaSchemesIdRouteImport.update({
+  id: '/schema/schemes_/$id',
+  path: '/schema/schemes/$id',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSchemaClassesIdRoute = AppSchemaClassesIdRouteImport.update({
+  id: '/schema/classes_/$id',
+  path: '/schema/classes/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPipelinesBatchesBatchIdRoute =
   AppPipelinesBatchesBatchIdRouteImport.update({
     id: '/pipelines/batches/$batchId',
     path: '/pipelines/batches/$batchId',
     getParentRoute: () => AppRoute,
   } as any)
+const AppDataIndividualsIdRoute = AppDataIndividualsIdRouteImport.update({
+  id: '/data/individuals_/$id',
+  path: '/data/individuals/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPipelinesTypesTypeIndexRoute =
   AppPipelinesTypesTypeIndexRouteImport.update({
     id: '/pipelines/types/$type/',
@@ -179,7 +203,11 @@ export interface FileRoutesByFullPath {
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
   '/app/graph/': typeof AppGraphIndexRoute
   '/app/pipelines/': typeof AppPipelinesIndexRoute
+  '/app/data/individuals/$id': typeof AppDataIndividualsIdRoute
   '/app/pipelines/batches/$batchId': typeof AppPipelinesBatchesBatchIdRoute
+  '/app/schema/classes/$id': typeof AppSchemaClassesIdRoute
+  '/app/schema/schemes/$id': typeof AppSchemaSchemesIdRoute
+  '/app/schema/taxonomies/$id': typeof AppSchemaTaxonomiesIdRoute
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
   '/app/pipelines/types/$type/run': typeof AppPipelinesTypesTypeRunRoute
   '/app/pipelines/types/$type/': typeof AppPipelinesTypesTypeIndexRoute
@@ -203,7 +231,11 @@ export interface FileRoutesByTo {
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
   '/app/graph': typeof AppGraphIndexRoute
   '/app/pipelines': typeof AppPipelinesIndexRoute
+  '/app/data/individuals/$id': typeof AppDataIndividualsIdRoute
   '/app/pipelines/batches/$batchId': typeof AppPipelinesBatchesBatchIdRoute
+  '/app/schema/classes/$id': typeof AppSchemaClassesIdRoute
+  '/app/schema/schemes/$id': typeof AppSchemaSchemesIdRoute
+  '/app/schema/taxonomies/$id': typeof AppSchemaTaxonomiesIdRoute
   '/app/schema/schemes': typeof AppSchemaSchemesIndexRoute
   '/app/pipelines/types/$type/run': typeof AppPipelinesTypesTypeRunRoute
   '/app/pipelines/types/$type': typeof AppPipelinesTypesTypeIndexRoute
@@ -230,7 +262,11 @@ export interface FileRoutesById {
   '/app/schema/taxonomies': typeof AppSchemaTaxonomiesRoute
   '/app/graph/': typeof AppGraphIndexRoute
   '/app/pipelines/': typeof AppPipelinesIndexRoute
+  '/app/data/individuals_/$id': typeof AppDataIndividualsIdRoute
   '/app/pipelines/batches/$batchId': typeof AppPipelinesBatchesBatchIdRoute
+  '/app/schema/classes_/$id': typeof AppSchemaClassesIdRoute
+  '/app/schema/schemes_/$id': typeof AppSchemaSchemesIdRoute
+  '/app/schema/taxonomies_/$id': typeof AppSchemaTaxonomiesIdRoute
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
   '/app/pipelines/types/$type/run': typeof AppPipelinesTypesTypeRunRoute
   '/app/pipelines/types/$type/': typeof AppPipelinesTypesTypeIndexRoute
@@ -258,7 +294,11 @@ export interface FileRouteTypes {
     | '/app/schema/taxonomies'
     | '/app/graph/'
     | '/app/pipelines/'
+    | '/app/data/individuals/$id'
     | '/app/pipelines/batches/$batchId'
+    | '/app/schema/classes/$id'
+    | '/app/schema/schemes/$id'
+    | '/app/schema/taxonomies/$id'
     | '/app/schema/schemes/'
     | '/app/pipelines/types/$type/run'
     | '/app/pipelines/types/$type/'
@@ -282,7 +322,11 @@ export interface FileRouteTypes {
     | '/app/schema/taxonomies'
     | '/app/graph'
     | '/app/pipelines'
+    | '/app/data/individuals/$id'
     | '/app/pipelines/batches/$batchId'
+    | '/app/schema/classes/$id'
+    | '/app/schema/schemes/$id'
+    | '/app/schema/taxonomies/$id'
     | '/app/schema/schemes'
     | '/app/pipelines/types/$type/run'
     | '/app/pipelines/types/$type'
@@ -308,7 +352,11 @@ export interface FileRouteTypes {
     | '/app/schema/taxonomies'
     | '/app/graph/'
     | '/app/pipelines/'
+    | '/app/data/individuals_/$id'
     | '/app/pipelines/batches/$batchId'
+    | '/app/schema/classes_/$id'
+    | '/app/schema/schemes_/$id'
+    | '/app/schema/taxonomies_/$id'
     | '/app/schema/schemes/'
     | '/app/pipelines/types/$type/run'
     | '/app/pipelines/types/$type/'
@@ -469,11 +517,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSchemaSchemesIndexRouteImport
       parentRoute: typeof AppSchemaSchemesRoute
     }
+    '/app/schema/taxonomies_/$id': {
+      id: '/app/schema/taxonomies_/$id'
+      path: '/schema/taxonomies/$id'
+      fullPath: '/app/schema/taxonomies/$id'
+      preLoaderRoute: typeof AppSchemaTaxonomiesIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/schema/schemes_/$id': {
+      id: '/app/schema/schemes_/$id'
+      path: '/schema/schemes/$id'
+      fullPath: '/app/schema/schemes/$id'
+      preLoaderRoute: typeof AppSchemaSchemesIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/schema/classes_/$id': {
+      id: '/app/schema/classes_/$id'
+      path: '/schema/classes/$id'
+      fullPath: '/app/schema/classes/$id'
+      preLoaderRoute: typeof AppSchemaClassesIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/pipelines/batches/$batchId': {
       id: '/app/pipelines/batches/$batchId'
       path: '/pipelines/batches/$batchId'
       fullPath: '/app/pipelines/batches/$batchId'
       preLoaderRoute: typeof AppPipelinesBatchesBatchIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/data/individuals_/$id': {
+      id: '/app/data/individuals_/$id'
+      path: '/data/individuals/$id'
+      fullPath: '/app/data/individuals/$id'
+      preLoaderRoute: typeof AppDataIndividualsIdRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/pipelines/types/$type/': {
@@ -522,7 +598,11 @@ interface AppRouteChildren {
   AppSchemaTaxonomiesRoute: typeof AppSchemaTaxonomiesRoute
   AppGraphIndexRoute: typeof AppGraphIndexRoute
   AppPipelinesIndexRoute: typeof AppPipelinesIndexRoute
+  AppDataIndividualsIdRoute: typeof AppDataIndividualsIdRoute
   AppPipelinesBatchesBatchIdRoute: typeof AppPipelinesBatchesBatchIdRoute
+  AppSchemaClassesIdRoute: typeof AppSchemaClassesIdRoute
+  AppSchemaSchemesIdRoute: typeof AppSchemaSchemesIdRoute
+  AppSchemaTaxonomiesIdRoute: typeof AppSchemaTaxonomiesIdRoute
   AppPipelinesTypesTypeRunRoute: typeof AppPipelinesTypesTypeRunRoute
   AppPipelinesTypesTypeIndexRoute: typeof AppPipelinesTypesTypeIndexRoute
 }
@@ -545,7 +625,11 @@ const AppRouteChildren: AppRouteChildren = {
   AppSchemaTaxonomiesRoute: AppSchemaTaxonomiesRoute,
   AppGraphIndexRoute: AppGraphIndexRoute,
   AppPipelinesIndexRoute: AppPipelinesIndexRoute,
+  AppDataIndividualsIdRoute: AppDataIndividualsIdRoute,
   AppPipelinesBatchesBatchIdRoute: AppPipelinesBatchesBatchIdRoute,
+  AppSchemaClassesIdRoute: AppSchemaClassesIdRoute,
+  AppSchemaSchemesIdRoute: AppSchemaSchemesIdRoute,
+  AppSchemaTaxonomiesIdRoute: AppSchemaTaxonomiesIdRoute,
   AppPipelinesTypesTypeRunRoute: AppPipelinesTypesTypeRunRoute,
   AppPipelinesTypesTypeIndexRoute: AppPipelinesTypesTypeIndexRoute,
 }

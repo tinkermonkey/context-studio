@@ -59,6 +59,15 @@ export function useClass(id: string) {
   });
 }
 
+/** A class's attribute definitions (under the class key, so class mutations refresh it). */
+export function useClassAttributeDefinitions(classId: string) {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.class(classId), "attribute-definitions"],
+    queryFn: () => ontologyService.listClassAttributeDefinitions(classId, { limit: 500 }),
+    enabled: !!classId,
+  });
+}
+
 export function useCreateClass() {
   const queryClient = useQueryClient();
   return useMutation({

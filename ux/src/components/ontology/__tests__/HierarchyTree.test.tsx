@@ -209,6 +209,49 @@ describe("HierarchyTree", () => {
     });
   });
 
+  describe("navigator mode", () => {
+    it("opens the expandIds path instead of the default seeding", () => {
+      renderTree({ expandIds: ["tax-2"], selectedId: "tax-2", onSelectNode: vi.fn() });
+      expect(screen.getByTestId("hierarchy-node-scheme-3")).toBeInTheDocument();
+      expect(screen.queryByTestId("hierarchy-node-scheme-1")).not.toBeInTheDocument();
+    });
+
+    it("highlights the selected node of any kind", () => {
+      renderTree({ expandIds: ["tax-1"], selectedId: "scheme-2", onSelectNode: vi.fn() });
+      expect(screen.getByTestId("hierarchy-node-scheme-2")).toHaveClass("hierarchy-row--selected");
+      expect(screen.getByTestId("hierarchy-node-tax-1")).not.toHaveClass("hierarchy-row--selected");
+    });
+
+    it("exposes expanded state on container rows", () => {
+      renderTree({ expandIds: ["tax-1"], selectedId: "tax-1", onSelectNode: vi.fn() });
+      expect(screen.getByTestId("hierarchy-node-tax-1")).toHaveAttribute("aria-expanded", "true");
+      expect(screen.getByTestId("hierarchy-node-tax-2")).toHaveAttribute("aria-expanded", "false");
+    });
+
+    it("reports a chosen row and opens it", async () => {
+      const onSelectNode = vi.fn();
+      const user = userEvent.setup();
+      renderTree({ expandIds: ["tax-1"], selectedId: "tax-1", onSelectNode });
+
+      await user.click(screen.getByTestId("hierarchy-node-scheme-2"));
+      expect(onSelectNode).toHaveBeenCalledWith("scheme", "scheme-2");
+      expect(screen.getByTestId("hierarchy-node-class-3")).toBeInTheDocument();
+
+      await user.click(screen.getByTestId("hierarchy-node-class-3"));
+      expect(onSelectNode).toHaveBeenCalledWith("class", "class-3");
+    });
+
+    it("toggles the already-selected row instead of reporting it again", async () => {
+      const onSelectNode = vi.fn();
+      const user = userEvent.setup();
+      renderTree({ expandIds: ["tax-1"], selectedId: "tax-1", onSelectNode });
+
+      await user.click(screen.getByTestId("hierarchy-node-tax-1"));
+      expect(onSelectNode).not.toHaveBeenCalled();
+      expect(screen.queryByTestId("hierarchy-node-scheme-1")).not.toBeInTheDocument();
+    });
+  });
+
   describe("loading state", () => {
     it("renders skeleton loaders when loading", () => {
       const { container } = render(<HierarchyTree loading />);

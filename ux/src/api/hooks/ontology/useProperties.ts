@@ -46,6 +46,8 @@ export function useCreateProperty() {
     mutationFn: (data: PropertyDefinitionCreateRequest) => ontologyService.createProperty(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });
+      // Scheme and class pages count property definitions by domain class.
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.contentCountsRoot });
     },
   });
 }
@@ -58,6 +60,8 @@ export function useUpdateProperty() {
     onSuccess: (_result, { id }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.property(id) });
+      // Scheme and class pages count property definitions by domain class.
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.contentCountsRoot });
     },
   });
 }
@@ -81,6 +85,8 @@ export function useDeleteProperty() {
     mutationFn: (id: string) => ontologyService.deleteProperty(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });
+      // Scheme and class pages count property definitions by domain class.
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.contentCountsRoot });
     },
     // The drawer defers this delete behind an undo window and shows an
     // optimistic "deleted" toast up front. The backend rejects deleting a

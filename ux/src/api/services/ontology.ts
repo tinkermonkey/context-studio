@@ -16,6 +16,7 @@ type ClassCreateRequest = components["schemas"]["ClassCreateRequest"];
 type ClassUpdateRequest = components["schemas"]["ClassUpdateRequest"];
 type ClassMoveRequest = components["schemas"]["ClassMoveRequest"];
 type ListClasses = components["schemas"]["ListResponse_ClassResponse_"];
+type ListAttributeDefinitions = components["schemas"]["ListResponse_AttributeDefinitionResponse_"];
 
 type IndividualResponse = components["schemas"]["IndividualResponse"];
 type IndividualCreateRequest = components["schemas"]["IndividualCreateRequest"];
@@ -32,6 +33,9 @@ type ListProperties = components["schemas"]["ListResponse_PropertyDefinitionResp
 type RelationshipResponse = components["schemas"]["RelationshipResponse"];
 type RelationshipCreateRequest = components["schemas"]["RelationshipCreateRequest"];
 type ListRelationships = components["schemas"]["ListResponse_RelationshipResponse_"];
+
+type SchemeCountsResponse = components["schemas"]["SchemeCountsResponse"];
+type ClassCountsResponse = components["schemas"]["ClassCountsResponse"];
 
 /** Paging, text search and sort params shared by the list endpoints. */
 export interface ListPageParams {
@@ -57,7 +61,10 @@ export interface IndividualListParams extends ListPageParams, IdsFilterParams {
   class_id?: string;
 }
 
-export interface PropertyListParams extends ListPageParams, IdsFilterParams {}
+export interface PropertyListParams extends ListPageParams, IdsFilterParams {
+  /** Only property definitions with this class as domain. */
+  domain_class_id?: string;
+}
 
 export interface RelationshipListParams extends Omit<ListPageParams, "sort_by"> {
   source_id?: string;
@@ -101,6 +108,11 @@ class OntologyService extends BaseService {
     });
   }
 
+  /** Class, individual and property-definition counts for each scheme in a taxonomy. */
+  async getSchemeCounts(taxonomyId: string): Promise<SchemeCountsResponse[]> {
+    return this.get<SchemeCountsResponse[]>(`/api/taxonomies/${taxonomyId}/scheme-counts`);
+  }
+
   // Concept Schemes
   async listSchemes(taxonomyId?: string, params?: ListPageParams): Promise<ListSchemes> {
     const query = { ...(taxonomyId ? { taxonomy_id: taxonomyId } : {}), ...params };
@@ -126,6 +138,11 @@ class OntologyService extends BaseService {
     return this.delete<void>(`/api/schemes/${id}`);
   }
 
+  /** Individual, property-definition and relationship counts for each class in a scheme. */
+  async getClassCounts(schemeId: string): Promise<ClassCountsResponse[]> {
+    return this.get<ClassCountsResponse[]>(`/api/schemes/${schemeId}/class-counts`);
+  }
+
   // Classes
   async listClasses(params?: ClassListParams): Promise<ListClasses> {
     return this.get<ListClasses>("/api/classes", params as Record<string, unknown>);
@@ -133,6 +150,16 @@ class OntologyService extends BaseService {
 
   async getClass(id: string): Promise<ClassResponse> {
     return this.get<ClassResponse>(`/api/classes/${id}`);
+  }
+
+  async listClassAttributeDefinitions(
+    classId: string,
+    params?: Pick<ListPageParams, "limit" | "offset">,
+  ): Promise<ListAttributeDefinitions> {
+    return this.get<ListAttributeDefinitions>(
+      `/api/classes/${classId}/attribute-definitions`,
+      params as Record<string, unknown>,
+    );
   }
 
   async createClass(schemeId: string, data: ClassCreateRequest): Promise<ClassResponse> {

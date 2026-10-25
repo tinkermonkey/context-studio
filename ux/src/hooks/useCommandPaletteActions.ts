@@ -5,6 +5,7 @@ import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useClassSearch, useIndividualSearch } from "@/api/hooks/ontology/useEntitySearch";
 import { useDebounce } from "@/hooks/useDebounce";
+import { entityPath } from "@/lib/entityPaths";
 
 /** Entity "Go to" actions offered per entity type. */
 const ACTIONS_PER_TYPE = 5;
@@ -42,7 +43,7 @@ export function useCommandPaletteActions() {
         label: `Go to taxonomy · ${taxonomy.title}`,
         description: describe(taxonomy.identifier, "Taxonomy"),
         onSelect: () => {
-          navigate({ to: `/app/schema/taxonomies/${taxonomy.id}` }).catch(() => {});
+          navigate({ to: entityPath("taxonomy", taxonomy.id) });
         },
       });
     });
@@ -53,7 +54,7 @@ export function useCommandPaletteActions() {
         label: `Go to class · ${classItem.title}`,
         description: describe(classItem.identifier, classItem.description || "Class"),
         onSelect: () => {
-          navigate({ to: `/app/schema/classes/${classItem.id}` }).catch(() => {});
+          navigate({ to: entityPath("class", classItem.id) });
         },
       });
     });
@@ -64,7 +65,7 @@ export function useCommandPaletteActions() {
         label: `Go to individual · ${individual.title}`,
         description: individual.description || "Individual",
         onSelect: () => {
-          navigate({ to: `/app/data/individuals/${individual.id}` }).catch(() => {});
+          navigate({ to: entityPath("individual", individual.id) });
         },
       });
     });
@@ -75,7 +76,7 @@ export function useCommandPaletteActions() {
         label: `Go to scheme · ${scheme.title}`,
         description: describe(scheme.identifier, scheme.description || "Scheme"),
         onSelect: () => {
-          navigate({ to: `/app/schema/schemes/${scheme.id}` }).catch(() => {});
+          navigate({ to: entityPath("scheme", scheme.id) });
         },
       });
     });

@@ -227,3 +227,39 @@ class SearchCriteria:
     use_semantic_search: bool = False
     limit: int = 20
     offset: int = 0
+
+
+@dataclass(frozen=True)
+class SchemeCounts:
+    """
+    Content counts for one concept scheme.
+
+    Attributes:
+        scheme_id: The concept scheme the counts belong to
+        class_count: Classes in the scheme
+        individual_count: Distinct individuals typed by at least one of its classes
+        property_definition_count: Property definitions whose domain is one of its classes
+    """
+
+    scheme_id: str
+    class_count: int
+    individual_count: int
+    property_definition_count: int
+
+
+@dataclass(frozen=True)
+class ClassCounts:
+    """
+    Content counts for one class.
+
+    Attributes:
+        class_id: The class the counts belong to
+        individual_count: Individuals typed by the class
+        property_definition_count: Property definitions with the class as domain
+        relationship_count: Relationships whose source is an individual of the class
+    """
+
+    class_id: str
+    individual_count: int
+    property_definition_count: int
+    relationship_count: int

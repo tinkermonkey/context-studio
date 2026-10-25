@@ -21,7 +21,21 @@ export interface HierarchyTreeProps {
   loading?: boolean;
   error?: Error | null;
   onSelectClass?: (classId: string) => void;
+  /**
+   * Navigator mode: called when any row is chosen. A taxonomy or scheme row
+   * then opens (and toggles when it is already the selected node) instead of
+   * only toggling.
+   */
+  onSelectNode?: (kind: HierarchyNodeKind, id: string) => void;
+  /** Highlight this node (taxonomy, scheme or class id), e.g. the open entity page. */
+  selectedId?: string;
+  /** Rows to open, e.g. the selected node's ancestors; replaces the default seeding. */
+  expandIds?: string[];
+  /** Narrow column (the Navigator): rows show no description. */
+  compact?: boolean;
 }
+
+export type HierarchyNodeKind = "taxonomy" | "scheme" | "class";
 
 function countLabel(n: number, singular: string, plural: string): string {
   return `${n} ${n === 1 ? singular : plural}`;
@@ -31,9 +45,10 @@ interface ClassRowsProps {
   classes: ClassResponse[];
   selectedClassId?: string;
   onSelect: (classId: string) => void;
+  compact?: boolean;
 }
 
-function ClassRows({ classes, selectedClassId, onSelect }: ClassRowsProps) {
+function ClassRows({ classes, selectedClassId, onSelect, compact }: ClassRowsProps) {
   return (
     <>
       {classes.map((cls) => (
@@ -43,7 +58,7 @@ function ClassRows({ classes, selectedClassId, onSelect }: ClassRowsProps) {
           domain="default"
           kind="class"
           label={cls.title}
-          description={cls.description ?? ""}
+          description={compact ? undefined : (cls.description ?? "")}
           selected={selectedClassId === cls.id}
           onSelect={() => onSelect(cls.id)}
           data-testid={`hierarchy-node-${cls.id}`}
@@ -73,6 +88,10 @@ export function HierarchyTree({
   loading = false,
   error = null,
   onSelectClass,
+  onSelectNode,
+  selectedId,
+  expandIds,
+  compact = false,
 }: HierarchyTreeProps) {
   const sortedTaxonomies = useMemo(
     () => [...(taxonomies ?? [])].sort((a, b) => a.title.localeCompare(b.title)),
@@ -106,9 +125,18 @@ export function HierarchyTree({
   const [seeded, setSeeded] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<string | undefined>(undefined);
   const [demoPickerOpen, setDemoPickerOpen] = useState(false);
+  const expandKey = expandIds?.join("|") ?? null;
+  const [appliedExpandKey, setAppliedExpandKey] = useState<string | null>(null);
 
-  // Seed the first taxonomy and its first scheme open, matching the reference design.
-  if (!seeded && sortedTaxonomies.length > 0) {
+  // Open the requested rows whenever they change (keeping rows the user opened).
+  if (expandKey !== null && expandKey !== appliedExpandKey) {
+    setExpandedIds((prev) => new Set([...prev, ...(expandIds ?? [])]));
+    setAppliedExpandKey(expandKey);
+    setSeeded(true);
+  }
+
+  // Otherwise seed the first taxonomy and its first scheme open, matching the reference design.
+  if (!seeded && expandKey === null && sortedTaxonomies.length > 0) {
     const firstTaxonomy = sortedTaxonomies[0];
     const firstScheme = schemesByTaxonomy.get(firstTaxonomy.id)?.[0];
     const initial = new Set<string>([firstTaxonomy.id]);
@@ -129,7 +157,19 @@ export function HierarchyTree({
   const handleSelectClass = (classId: string) => {
     setSelectedClassId(classId);
     onSelectClass?.(classId);
+    onSelectNode?.("class", classId);
   };
+
+  // Navigator mode opens a row and reports it; a second click on the selected row toggles it.
+  const handleSelectContainer = (kind: HierarchyNodeKind, id: string) => {
+    if (!onSelectNode || selectedId === id) {
+      toggle(id);
+      return;
+    }
+    setExpandedIds((prev) => new Set(prev).add(id));
+    onSelectNode(kind, id);
+  };
+  const highlightedClassId = selectedId ?? selectedClassId;
 
   if (error) {
     return (
@@ -189,8 +229,10 @@ export function HierarchyTree({
               kind="taxonomy"
               label={taxonomy.title}
               meta={countLabel(taxonomySchemes.length, "scheme", "schemes")}
-              description={taxonomy.description ?? ""}
-              onSelect={() => toggle(taxonomy.id)}
+              description={compact ? undefined : (taxonomy.description ?? "")}
+              selected={selectedId === taxonomy.id}
+              aria-expanded={taxonomyOpen}
+              onSelect={() => handleSelectContainer("taxonomy", taxonomy.id)}
               data-testid={`hierarchy-node-${taxonomy.id}`}
             />
             {taxonomyOpen &&
@@ -206,22 +248,26 @@ export function HierarchyTree({
                       kind="scheme"
                       label={scheme.title}
                       meta={countLabel(classCount, "class", "classes")}
-                      description={scheme.description ?? ""}
-                      onSelect={() => toggle(scheme.id)}
+                      description={compact ? undefined : (scheme.description ?? "")}
+                      selected={selectedId === scheme.id}
+                      aria-expanded={schemeOpen}
+                      onSelect={() => handleSelectContainer("scheme", scheme.id)}
                       data-testid={`hierarchy-node-${scheme.id}`}
                     />
                     {schemeOpen &&
                       (lazy ? (
                         <LazySchemeClasses
                           schemeId={scheme.id}
-                          selectedClassId={selectedClassId}
+                          selectedClassId={highlightedClassId}
                           onSelect={handleSelectClass}
+                          compact={compact}
                         />
                       ) : (
                         <ClassRows
                           classes={schemeClasses}
-                          selectedClassId={selectedClassId}
+                          selectedClassId={highlightedClassId}
                           onSelect={handleSelectClass}
+                          compact={compact}
                         />
                       ))}
                   </Fragment>

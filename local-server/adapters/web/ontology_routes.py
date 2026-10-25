@@ -28,6 +28,7 @@ from adapters.web.schemas.ontology import (
     AttributeDefinitionCreateRequest,
     AttributeDefinitionResponse,
     AttributeDefinitionUpdateRequest,
+    ClassCountsResponse,
     ClassCreateRequest,
     ClassMoveRequest,
     ClassResponse,
@@ -48,6 +49,7 @@ from adapters.web.schemas.ontology import (
     PublishDiffStats,
     RelationshipCreateRequest,
     RelationshipResponse,
+    SchemeCountsResponse,
     TaxonomyCreateRequest,
     TaxonomyPublishRequest,
     TaxonomyResponse,
@@ -272,6 +274,34 @@ async def delete_taxonomy(
         raise HTTPException(status_code=status_code, detail=message)
 
 
+@router.get(
+    "/taxonomies/{taxonomy_id}/scheme-counts", response_model=list[SchemeCountsResponse]
+)
+async def get_taxonomy_scheme_counts(
+    taxonomy_id: str,
+    service: OntologyService = Depends(get_ontology_service),
+) -> list[SchemeCountsResponse]:
+    """
+    Count the classes, individuals and property definitions of each scheme in a taxonomy.
+
+    Args:
+        taxonomy_id: The taxonomy ID
+        service: OntologyService from dependency injection
+
+    Returns:
+        One entry per concept scheme in the taxonomy, ordered by scheme title
+
+    Raises:
+        HTTPException: 404 if the taxonomy is not found
+    """
+    try:
+        counts = await run_sync_in_executor(service.get_scheme_counts, taxonomy_id)
+        return [SchemeCountsResponse.model_validate(c) for c in counts]
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
 @router.get("/taxonomies/{taxonomy_id}/publish-diff", response_model=PublishDiffStats)
 async def get_publish_diff_stats(
     taxonomy_id: str,
@@ -418,6 +448,32 @@ async def list_concept_schemes(
             limit=limit,
             offset=offset,
         )
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/schemes/{scheme_id}/class-counts", response_model=list[ClassCountsResponse])
+async def get_scheme_class_counts(
+    scheme_id: str,
+    service: OntologyService = Depends(get_ontology_service),
+) -> list[ClassCountsResponse]:
+    """
+    Count the individuals, domain property definitions and outgoing relationships per class.
+
+    Args:
+        scheme_id: The concept scheme ID
+        service: OntologyService from dependency injection
+
+    Returns:
+        One entry per class in the scheme, ordered by class title
+
+    Raises:
+        HTTPException: 404 if the scheme is not found
+    """
+    try:
+        counts = await run_sync_in_executor(service.get_class_counts, scheme_id)
+        return [ClassCountsResponse.model_validate(c) for c in counts]
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -926,6 +982,8 @@ async def create_property_definition(
             title=request.title,
             description=request.description,
             canonical_predicate=request.canonical_predicate,
+            domain_class_id=request.domain_class_id,
+            range_class_id=request.range_class_id,
         )
         return PropertyDefinitionResponse.model_validate(prop_def)
     except Exception as exc:
@@ -937,6 +995,9 @@ async def create_property_definition(
 async def list_property_definitions(
     is_relevant: Optional[bool] = Query(
         None, description="Optional filter for relevant properties"
+    ),
+    domain_class_id: Optional[str] = Query(
+        None, description="Only property definitions with this class as domain"
     ),
     limit: int = Query(100, ge=1, le=5000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
@@ -963,6 +1024,7 @@ async def list_property_definitions(
 
     Args:
         is_relevant: Optional filter for relevant properties
+        domain_class_id: Optional domain class ID to filter by
         limit: Maximum number of results (1-5000, default 100)
         offset: Number of results to skip (default 0)
         sort_by: Field to sort by (title, created_at, last_modified)
@@ -984,12 +1046,14 @@ async def list_property_definitions(
             sort_order=sort_order,
             query=q,
             ids=ids,
+            domain_class_id=domain_class_id,
         )
         total = await run_sync_in_executor(
             service.count_property_definitions,
             is_relevant=is_relevant,
             query=q,
             ids=ids,
+            domain_class_id=domain_class_id,
         )
         return ListResponse(
             items=[PropertyDefinitionResponse.model_validate(p) for p in properties],
