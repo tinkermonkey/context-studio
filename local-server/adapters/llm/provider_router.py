@@ -3,7 +3,9 @@ LLM provider router implementation.
 
 Routes requests to the appropriate LLM provider based on the model identifier.
 Manages multiple LLM providers (OpenAI, Anthropic, etc.) and routes completion
-requests to the appropriate provider based on model availability.
+requests to the appropriate provider based on model availability. When a provider
+rejects its API key (HTTP 401/403), the request falls through to the next provider
+that supports the model, and the rejecting provider is skipped from then on.
 
 This adapter implements the LLMProvider port and is used by the Knowledge Extraction
 and LLM Pipeline services.
@@ -20,6 +22,16 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+# HTTP statuses meaning "this provider will not accept our API key". The OpenAI and
+# Anthropic SDK errors (AuthenticationError / PermissionDeniedError) carry them as
+# `status_code`.
+_AUTH_FAILURE_STATUSES = (401, 403)
+
+
+def _is_auth_failure(error: Exception) -> bool:
+    """Return True if the error is a provider rejecting its API key."""
+    return getattr(error, "status_code", None) in _AUTH_FAILURE_STATUSES
+
 
 class LLMProviderRouter:
     """
@@ -29,6 +41,11 @@ class LLMProviderRouter:
     provider based on which models are available. Initialization errors are logged
     and tolerated as long as at least one configured provider succeeds. A ValueError
     is raised if all configured providers fail to initialize.
+
+    Providers are tried in registration order (openai, anthropic, openrouter). If a
+    provider rejects its API key, the router logs a warning, stops using that
+    provider, and tries the next provider that supports the model. Other errors are
+    raised unchanged.
     """
 
     def __init__(
@@ -49,6 +66,7 @@ class LLMProviderRouter:
             ValueError: If no API keys are provided or all configured providers fail to initialize
         """
         self._providers: dict[str, LLMProvider] = {}
+        self._rejected_providers: set[str] = set()
         init_errors: dict[str, Exception] = {}
 
         if not openai_api_key and not anthropic_api_key and not openrouter_api_key:
@@ -127,36 +145,68 @@ class LLMProviderRouter:
 
         Raises:
             ValueError: If no provider is available for the requested model
+            Exception: The provider's own error for non-auth failures, or the last
+                provider's auth error if every supporting provider rejected its key
         """
-        provider = self._route_to_provider(model)
-        return provider.complete(
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-            model=model,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            response_format=response_format,
-            timeout=timeout,
-            seed=seed,
-        )
+        auth_error: Exception | None = None
+        for name, provider in self._providers_for(model):
+            try:
+                return provider.complete(
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                    model=model,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    response_format=response_format,
+                    timeout=timeout,
+                    seed=seed,
+                )
+            except Exception as e:
+                if not _is_auth_failure(e):
+                    raise
+                self._reject_provider(name, e)
+                auth_error = e
+        # Every supporting provider rejected its API key
+        assert auth_error is not None
+        raise auth_error
 
-    def _route_to_provider(self, model: str) -> LLMProvider:
+    def _providers_for(self, model: str) -> list[tuple[str, LLMProvider]]:
         """
-        Find the appropriate provider for a model.
+        List the usable providers that support a model, in registration order.
+
+        Providers that have rejected their API key are excluded.
 
         Args:
             model: Model identifier to route
 
         Returns:
-            LLMProvider instance that supports the model
+            Non-empty list of (provider name, provider) pairs
 
         Raises:
-            ValueError: If no provider supports the model
+            ValueError: If no usable provider supports the model
         """
-        for provider in self._providers.values():
-            if provider.is_model_available(model):
-                return provider
-        raise ValueError(f"No provider available for model: {model}")
+        candidates = [
+            (name, provider)
+            for name, provider in self._providers.items()
+            if name not in self._rejected_providers and provider.is_model_available(model)
+        ]
+        if not candidates:
+            message = f"No provider available for model: {model}"
+            if self._rejected_providers:
+                rejected = ", ".join(sorted(self._rejected_providers))
+                message += f" (providers that rejected their API key: {rejected})"
+            raise ValueError(message)
+        return candidates
+
+    def _reject_provider(self, name: str, error: Exception) -> None:
+        """Stop routing to a provider that rejected its API key, with a warning."""
+        self._rejected_providers.add(name)
+        logger.warning(
+            f"LLM provider '{name}' rejected its API key"
+            f" (HTTP {getattr(error, 'status_code', '?')}: {type(error).__name__});"
+            " skipping it for the rest of this session and trying the next provider"
+            " that supports the model, if any."
+        )
 
     def is_model_available(self, model: str) -> bool:
         """
@@ -224,30 +274,41 @@ class LLMProviderRouter:
 
         Raises:
             ValueError: If no provider is available for the requested model
+            Exception: The provider's own error for non-auth failures, or the last
+                provider's auth error if every supporting provider rejected its key
         """
-        provider = self._route_to_provider(model)
-        # Check if provider has async method and use it, otherwise fallback to sync
-        if hasattr(provider, "complete_async"):
-            return await provider.complete_async(
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-                model=model,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                response_format=response_format,
-                timeout=timeout,
-                seed=seed,
-            )
-        else:
-            # Fallback for providers without async support — run sync method in executor
-            return await run_sync_in_executor(
-                provider.complete,
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-                model=model,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                response_format=response_format,
-                timeout=timeout,
-                seed=seed,
-            )
+        auth_error: Exception | None = None
+        for name, provider in self._providers_for(model):
+            try:
+                # Use the provider's async method if it has one, otherwise run the
+                # sync method in an executor
+                if hasattr(provider, "complete_async"):
+                    return await provider.complete_async(
+                        system_prompt=system_prompt,
+                        user_prompt=user_prompt,
+                        model=model,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        response_format=response_format,
+                        timeout=timeout,
+                        seed=seed,
+                    )
+                return await run_sync_in_executor(
+                    provider.complete,
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                    model=model,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    response_format=response_format,
+                    timeout=timeout,
+                    seed=seed,
+                )
+            except Exception as e:
+                if not _is_auth_failure(e):
+                    raise
+                self._reject_provider(name, e)
+                auth_error = e
+        # Every supporting provider rejected its API key
+        assert auth_error is not None
+        raise auth_error

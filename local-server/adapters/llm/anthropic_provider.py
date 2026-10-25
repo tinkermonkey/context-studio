@@ -46,6 +46,13 @@ class AnthropicProvider:
     # at a fixed internal temperature and do not accept sampling overrides.
     MODELS_WITHOUT_TEMPERATURE = {"claude-opus-4-7"}
 
+    # The anthropic SDK 1.x removed `temperature` from `messages.create()`
+    # (passing it is a TypeError), but the API version it sends (2023-06-01)
+    # still honours it on the models above that accept it. So it goes through
+    # `extra_body`, which the SDK merges into the request JSON as-is. API
+    # version 2026-10-21 rejects `temperature` on every model; drop this when
+    # the SDK moves to it.
+
     def __init__(self, api_key: str) -> None:
         """
         Initialize Anthropic provider with API key.
@@ -84,8 +91,7 @@ class AnthropicProvider:
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output (not used by Anthropic)
             timeout: Request timeout in seconds (passed to Anthropic client)
-            seed: Optional random seed for reproducible generation (passed to Anthropic API if
-            supported)
+            seed: Ignored — the Anthropic Messages API has no seed parameter
 
         Returns:
             LLMResponse with generated content and metadata
@@ -112,10 +118,9 @@ class AnthropicProvider:
                 }
 
                 if model not in self.MODELS_WITHOUT_TEMPERATURE:
-                    kwargs["temperature"] = temperature
+                    kwargs["extra_body"] = {"temperature": temperature}
 
-                if seed is not None:
-                    kwargs["seed"] = seed
+                # `seed` is not sent: the Anthropic Messages API has no seed parameter.
 
                 if timeout is not None:
                     kwargs["timeout"] = timeout
@@ -190,8 +195,7 @@ class AnthropicProvider:
             max_tokens: Maximum tokens to generate
             response_format: Optional JSON schema for structured output (not used by Anthropic)
             timeout: Request timeout in seconds (passed to Anthropic client)
-            seed: Optional random seed for reproducible generation (passed to Anthropic API if
-            supported)
+            seed: Ignored — the Anthropic Messages API has no seed parameter
 
         Returns:
             LLMResponse with generated content and metadata

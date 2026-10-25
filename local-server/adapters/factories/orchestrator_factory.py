@@ -29,6 +29,7 @@ from domain.pipelines.schema_extraction.open_orchestrator import (
 from domain.pipelines.schema_extraction.orchestrator import (
     SchemaExtractionOrchestrator,
     SchemaExtractionState,
+    join_documents,
 )
 from domain.pipelines.schema_node_connection_refinement.orchestrator import (
     ConnectionRefinementOrchestrator,
@@ -286,7 +287,10 @@ def build_run_specific_data(
     """
     if pipeline_type == PipelineType.INDIVIDUAL_EXTRACTION:
         text = input_data.get("text", "")
-        specific: dict[str, Any] = {"source_text_hash": sha256(text.encode()).hexdigest()}
+        specific: dict[str, Any] = {
+            "source_text_hash": sha256(text.encode()).hexdigest(),
+            "source_text": text,
+        }
         source_document_uri = input_data.get("source_document_uri")
         if source_document_uri:
             specific["source_document_uri"] = source_document_uri
@@ -322,7 +326,12 @@ def build_run_specific_data(
         if concept_scheme_id:
             schema_input_summary["concept_scheme_id"] = str(concept_scheme_id)
 
+        schema_specific: dict[str, Any] = {}
+        documents = input_data.get("documents")
+        if documents:
+            schema_specific["source_text"] = join_documents(documents)
         if schema_input_summary:
-            return {"input_summary": schema_input_summary}
+            schema_specific["input_summary"] = schema_input_summary
+        return schema_specific
 
     return {}

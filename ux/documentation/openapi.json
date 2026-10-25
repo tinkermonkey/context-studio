@@ -11814,6 +11814,18 @@
             ],
             "title": "Failure Reason",
             "description": "Failure reason if status=FAILED"
+          },
+          "source_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Text",
+            "description": "Input text the run extracted from; provenance span offsets index into it. Returned by run detail and run execution; omitted (null) in run lists."
           }
         },
         "type": "object",

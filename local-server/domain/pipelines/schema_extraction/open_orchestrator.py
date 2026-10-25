@@ -49,6 +49,7 @@ from domain.pipelines.schema_extraction.orchestrator import (
     CandidateClass,
     CandidateConnection,
     CandidatePropertyDefinition,
+    join_documents,
 )
 
 _logger = logging.getLogger(__name__)
@@ -119,7 +120,7 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
             raise PipelineInputError(
                 "documents is required and must contain at least one non-empty document"
             )
-        source_text = " ".join(d for d in documents if isinstance(d, str))
+        source_text = join_documents(documents)
 
         try:
             open_result = self._nlp.process_open(source_text)

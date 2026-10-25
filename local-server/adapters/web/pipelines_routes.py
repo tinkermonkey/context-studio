@@ -538,12 +538,14 @@ def _fetch_and_validate_run(
 # ==================== Response Mapping ====================
 
 
-def _to_response(run: PipelineRun) -> PipelineRunResponse:
+def _to_response(run: PipelineRun, include_source_text: bool = True) -> PipelineRunResponse:
     """
     Convert a domain PipelineRun to a response schema.
 
     Args:
         run: Domain PipelineRun entity
+        include_source_text: Whether to return the run's input text (left out
+            of list responses to keep pages small)
 
     Returns:
         PipelineRunResponse for JSON serialization
@@ -565,6 +567,7 @@ def _to_response(run: PipelineRun) -> PipelineRunResponse:
             "updated_at": None,
             "started_at": run.started_at,
             "failure_reason": run.failure_reason,
+            "source_text": run.source_text if include_source_text else None,
         }
     )
 
@@ -1560,7 +1563,7 @@ async def list_pipeline_runs(
         offset=offset,
     )
 
-    responses = [_to_response(run) for run in filtered_runs]
+    responses = [_to_response(run, include_source_text=False) for run in filtered_runs]
     return ListResponse(items=responses, total=total, limit=limit, offset=offset)
 
 

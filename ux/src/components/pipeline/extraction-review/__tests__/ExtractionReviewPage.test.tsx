@@ -252,5 +252,43 @@ describe("ExtractionReviewPage", () => {
     expect(screen.getByTestId("extraction-review-opened-run")).toHaveTextContent("run-i");
     expect(screen.getByTestId("extraction-review-schema-idle")).toBeInTheDocument();
     expect(runPosts).toBe(0);
+    // A run without stored text cannot locate its provenance.
+    expect(screen.getByTestId("extraction-review-opened-run")).toHaveTextContent(
+      "provenance highlights are unavailable",
+    );
+    expect(screen.queryByTestId("extraction-review-span")).not.toBeInTheDocument();
+  });
+
+  it("shows the stored paragraph and its highlights when reopening a run", async () => {
+    mockRuns("ok");
+    server.use(
+      http.get("*/api/pipelines/runs/run-i", () =>
+        HttpResponse.json(
+          makeRun({
+            id: "run-i",
+            pipeline_type: "individual_extraction",
+            input_summary: { taxonomy_id: "tax-dr", taxonomy_name: "Documentation Robotics" },
+            source_text: XR_TEXT,
+          }),
+        ),
+      ),
+    );
+    renderWithProviders(<ExtractionReviewPage initialRunId="run-i" />);
+
+    const source = await screen.findByTestId("extraction-review-individual-source");
+    const marks = within(source).getAllByTestId("extraction-review-span");
+    expect(marks.length).toBeGreaterThan(0);
+    expect(marks[0]).toHaveClass("xr-span");
+    expect(marks[0]).toHaveAttribute("role", "button");
+    expect(source).toHaveTextContent(XR_TEXT);
+    expect(screen.getByTestId("extraction-review-text")).toHaveValue(XR_TEXT);
+    expect(screen.getByTestId("extraction-review-opened-run")).toHaveTextContent(
+      "Highlights show the paragraph the run read.",
+    );
+    expect(screen.queryByTestId("extraction-review-stale")).not.toBeInTheDocument();
+
+    // Editing the paragraph keeps the run's highlights and flags them as stale.
+    await userEvent.type(screen.getByTestId("extraction-review-text"), " More.");
+    expect(screen.getByTestId("extraction-review-stale")).toHaveClass("form-callout--warn");
   });
 });
