@@ -69,21 +69,29 @@ def _serialize_provenance(spans: list[SourceSpan]) -> list[dict[str, Any]]:
 _MAX_QUALIFIER_WORDS = 3
 
 
+def _is_false(value: Any) -> bool:
+    """True for a boolean false or a string the LLM used to mean false."""
+    if isinstance(value, str):
+        return value.strip().lower() in {"false", "no", "0"}
+    return value is False
+
+
 def _in_text_senses(raw_senses: Any) -> list[tuple[str, str | None]]:
     """
     Normalize a disambiguation reply's senses to ``(qualifier, definition)`` pairs,
     keeping only senses the text uses.
 
-    Structured senses carry ``used_in_text``; a sense marked false is dropped.
-    Plain-string senses (the older reply shape) count as used. Qualifiers are
-    capped at three words so a definition can never become a label; a longer or
-    missing qualifier falls back to "sense N". Duplicate qualifiers are dropped.
+    Structured senses carry ``used_in_text``; a sense marked false (boolean or
+    the strings "false"/"no"/"0") is dropped. Plain-string senses (the older reply
+    shape) count as used. Qualifiers are capped at three words so a definition can
+    never become a label; a longer or missing qualifier falls back to "sense N",
+    numbered among the kept senses. Duplicate qualifiers are dropped.
     """
     pairs: list[tuple[str, str | None]] = []
     seen: set[str] = set()
-    for index, sense in enumerate(raw_senses if isinstance(raw_senses, list) else []):
+    for sense in raw_senses if isinstance(raw_senses, list) else []:
         if isinstance(sense, dict):
-            if sense.get("used_in_text") is False:
+            if _is_false(sense.get("used_in_text")):
                 continue
             qualifier = str(sense.get("qualifier") or "").strip()
             definition = str(sense.get("definition") or "").strip() or None
@@ -91,7 +99,7 @@ def _in_text_senses(raw_senses: Any) -> list[tuple[str, str | None]]:
             qualifier = str(sense or "").strip()
             definition = qualifier or None
         if not qualifier or len(qualifier.split()) > _MAX_QUALIFIER_WORDS:
-            qualifier = f"sense {index + 1}"
+            qualifier = f"sense {len(pairs) + 1}"
         if qualifier.lower() in seen:
             continue
         seen.add(qualifier.lower())
@@ -719,8 +727,8 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
 
     async def _stage_disambiguation(self, state: SchemaExtractionState) -> SchemaExtractionState:
         """
-        Stage 6: Split a term into separate candidates only when the text itself
-        uses it in more than one sense.
+        Stage 6: Add sense candidates for a term only when the text itself uses
+        it in more than one sense. The original term is kept.
 
         Senses the text does not use (dictionary meanings such as "Python (a
         snake)" in a programming text) are dropped. A term with fewer than two
@@ -773,7 +781,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                 for ambig in parsed.get("ambiguous_terms", []) or []:
                     if not isinstance(ambig, dict):
                         continue
-                    term = str(ambig.get("term", "")).strip()
+                    term = str(ambig.get("term") or "").strip()
                     rationale = ambig.get("rationale", "") or ""
                     senses = _in_text_senses(ambig.get("senses", []))
 
@@ -789,7 +797,12 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                         continue
 
                     original = disambiguated[original_idx]
-                    split = [
+                    # Keep the original term: connection proposal (stage 5) ran
+                    # before this stage and refers to it by label, so removing it
+                    # would leave those connections pointing at no class and apply
+                    # would silently drop them. The senses follow it as narrower
+                    # candidates the reviewer can accept or reject.
+                    split = [original] + [
                         CandidateClass(
                             label=f"{original.label} ({qualifier})",
                             proposed_definition=definition or original.proposed_definition,

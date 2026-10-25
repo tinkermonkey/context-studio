@@ -454,12 +454,19 @@ class TestDisambiguation:
         )
         classes = await _disambiguate(reply, "Event Loop")
 
-        assert [c.label for c in classes] == ["Event Loop (asyncio)", "Event Loop (GUI)"]
+        # The original term stays (connections proposed earlier refer to it).
+        assert [c.label for c in classes] == [
+            "Event Loop",
+            "Event Loop (asyncio)",
+            "Event Loop (GUI)",
+        ]
         assert [c.proposed_definition for c in classes] == [
+            "Event Loop definition",
             "The asyncio scheduler that runs coroutines",
             "A UI framework loop dispatching events",
         ]
-        assert all(c.disambiguation_rationale.endswith("two uses") for c in classes)
+        assert classes[0].disambiguation_rationale is None
+        assert all(c.disambiguation_rationale.endswith("two uses") for c in classes[1:])
 
     @pytest.mark.asyncio
     async def test_long_qualifier_never_becomes_a_label(self):
@@ -472,8 +479,32 @@ class TestDisambiguation:
         )
         classes = await _disambiguate(reply, "Task")
 
-        assert [c.label for c in classes] == ["Task (sense 1)", "Task (unit of work)"]
-        assert classes[0].proposed_definition == "Wraps a coroutine"
+        assert [c.label for c in classes] == ["Task", "Task (sense 1)", "Task (unit of work)"]
+        assert classes[1].proposed_definition == "Wraps a coroutine"
+
+    @pytest.mark.asyncio
+    async def test_string_false_drops_a_sense_and_fallback_counts_kept_senses(self):
+        reply = (
+            '{"ambiguous_terms": [{"term": "Future", "rationale": "r", "senses": ['
+            '{"qualifier": "dictionary meaning", "used_in_text": "false"},'
+            '{"qualifier": "", "definition": "An asyncio Future", "used_in_text": true},'
+            '{"qualifier": "concurrent.futures object", "used_in_text": "yes"}'
+            "]}]}"
+        )
+        classes = await _disambiguate(reply, "Future")
+
+        assert [c.label for c in classes] == [
+            "Future",
+            "Future (sense 1)",
+            "Future (concurrent.futures object)",
+        ]
+
+    @pytest.mark.asyncio
+    async def test_null_term_matches_nothing(self):
+        reply = '{"ambiguous_terms": [{"term": null, "senses": ["a", "b"]}]}'
+        classes = await _disambiguate(reply, "None", "Coroutine")
+
+        assert [c.label for c in classes] == ["None", "Coroutine"]
 
     @pytest.mark.asyncio
     async def test_no_ambiguous_terms_leaves_candidates_unchanged(self):
