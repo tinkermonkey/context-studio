@@ -4,12 +4,16 @@ import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import { entityPageHandlers } from "@/test/entityPageHandlers";
 import { useBreadcrumbStore } from "@/stores/breadcrumbs";
+import { useNavigatorStore } from "@/stores/navigator";
 import { IndividualPage } from "../individuals_.$id";
 
 const server = setupServer(...entityPageHandlers);
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+  server.resetHandlers();
+  useNavigatorStore.setState({ expandedIds: new Set() });
+});
 afterAll(() => server.close());
 
 describe("IndividualPage", () => {
@@ -80,8 +84,9 @@ describe("IndividualPage", () => {
   it("highlights the individual's class in the navigator", async () => {
     render(<IndividualPage id="ind-1" />);
 
-    const row = await screen.findByTestId("hierarchy-node-class-1");
-    expect(row).toHaveClass("hierarchy-row--selected");
+    await waitFor(() =>
+      expect(screen.getByTestId("hierarchy-node-class-1")).toHaveClass("hierarchy-row--selected"),
+    );
   });
 
   it("shows not found for an unknown individual", async () => {

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { describe, it, expect, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -209,21 +210,45 @@ describe("HierarchyTree", () => {
     });
   });
 
-  describe("navigator mode", () => {
-    it("opens the expandIds path instead of the default seeding", () => {
-      renderTree({ expandIds: ["tax-2"], selectedId: "tax-2", onSelectNode: vi.fn() });
+  describe("navigator mode (controlled expansion)", () => {
+    function ControlledTree({
+      initial,
+      ...props
+    }: { initial: string[] } & Partial<Parameters<typeof HierarchyTree>[0]>) {
+      const [open, setOpen] = useState<Set<string>>(new Set(initial));
+      return (
+        <HierarchyTree
+          taxonomies={taxonomies}
+          schemes={schemes}
+          classes={classes}
+          expandedIds={open}
+          onExpandedChange={(id, isOpen) =>
+            setOpen((prev) => {
+              const next = new Set(prev);
+              if (isOpen) next.add(id);
+              else next.delete(id);
+              return next;
+            })
+          }
+          {...props}
+        />
+      );
+    }
+
+    it("shows exactly the controlled rows open, with no default seeding", () => {
+      render(<ControlledTree initial={["tax-2"]} onSelectNode={vi.fn()} />);
       expect(screen.getByTestId("hierarchy-node-scheme-3")).toBeInTheDocument();
       expect(screen.queryByTestId("hierarchy-node-scheme-1")).not.toBeInTheDocument();
     });
 
     it("highlights the selected node of any kind", () => {
-      renderTree({ expandIds: ["tax-1"], selectedId: "scheme-2", onSelectNode: vi.fn() });
+      render(<ControlledTree initial={["tax-1"]} selectedId="scheme-2" onSelectNode={vi.fn()} />);
       expect(screen.getByTestId("hierarchy-node-scheme-2")).toHaveClass("hierarchy-row--selected");
       expect(screen.getByTestId("hierarchy-node-tax-1")).not.toHaveClass("hierarchy-row--selected");
     });
 
     it("exposes expanded state on container rows", () => {
-      renderTree({ expandIds: ["tax-1"], selectedId: "tax-1", onSelectNode: vi.fn() });
+      render(<ControlledTree initial={["tax-1"]} onSelectNode={vi.fn()} />);
       expect(screen.getByTestId("hierarchy-node-tax-1")).toHaveAttribute("aria-expanded", "true");
       expect(screen.getByTestId("hierarchy-node-tax-2")).toHaveAttribute("aria-expanded", "false");
     });
@@ -231,7 +256,7 @@ describe("HierarchyTree", () => {
     it("reports a chosen row and opens it", async () => {
       const onSelectNode = vi.fn();
       const user = userEvent.setup();
-      renderTree({ expandIds: ["tax-1"], selectedId: "tax-1", onSelectNode });
+      render(<ControlledTree initial={["tax-1"]} selectedId="tax-1" onSelectNode={onSelectNode} />);
 
       await user.click(screen.getByTestId("hierarchy-node-scheme-2"));
       expect(onSelectNode).toHaveBeenCalledWith("scheme", "scheme-2");
@@ -244,11 +269,29 @@ describe("HierarchyTree", () => {
     it("toggles the already-selected row instead of reporting it again", async () => {
       const onSelectNode = vi.fn();
       const user = userEvent.setup();
-      renderTree({ expandIds: ["tax-1"], selectedId: "tax-1", onSelectNode });
+      render(<ControlledTree initial={["tax-1"]} selectedId="tax-1" onSelectNode={onSelectNode} />);
 
       await user.click(screen.getByTestId("hierarchy-node-tax-1"));
       expect(onSelectNode).not.toHaveBeenCalled();
       expect(screen.queryByTestId("hierarchy-node-scheme-1")).not.toBeInTheDocument();
+    });
+
+    it("reports open/close through onExpandedChange", async () => {
+      const onExpandedChange = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <HierarchyTree
+          taxonomies={taxonomies}
+          schemes={schemes}
+          classes={classes}
+          expandedIds={new Set(["tax-1"])}
+          onExpandedChange={onExpandedChange}
+        />,
+      );
+      await user.click(screen.getByTestId("hierarchy-node-tax-1"));
+      expect(onExpandedChange).toHaveBeenCalledWith("tax-1", false);
+      await user.click(screen.getByTestId("hierarchy-node-tax-2"));
+      expect(onExpandedChange).toHaveBeenCalledWith("tax-2", true);
     });
   });
 

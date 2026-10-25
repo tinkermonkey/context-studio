@@ -29,6 +29,8 @@ import { classesCopy } from "./classes/-copy";
 import { useSchemaTabs } from "./-useSchemaTabs";
 import type { components } from "@/api/types";
 import { SMALL_SET_LIMIT } from "@/api/config";
+import { EntityNavigator } from "@/components/entity/EntityNavigator";
+import { EntityPageLayout } from "@/components/entity/EntityPageParts";
 
 type ClassResponse = components["schemas"]["ClassResponse"];
 
@@ -236,97 +238,99 @@ export function ClassesPage() {
     : classesCopy.emptyState.description;
 
   return (
-    <div className="stack" data-testid="classes-page">
-      <PageHeader
-        eyebrow="SCHEMA · node_type · class"
-        title="Classes"
-        idChip="/schema/classes"
-        subtitle="Classes are the structural nodes of the graph. Each belongs to a concept scheme, inherits from a parent class, and carries data-property definitions populated by pipelines or curators."
-        actions={
+    <EntityPageLayout navigator={<EntityNavigator />} data-testid="schema-navigator-layout">
+      <div className="stack" data-testid="classes-page">
+        <PageHeader
+          eyebrow="SCHEMA · node_type · class"
+          title="Classes"
+          idChip="/schema/classes"
+          subtitle="Classes are the structural nodes of the graph. Each belongs to a concept scheme, inherits from a parent class, and carries data-property definitions populated by pipelines or curators."
+          actions={
+            <>
+              <Button variant="ghost" onClick={() => {}}>
+                <Icon name="download" size={13} /> Export
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => surfaceRef.current?.startCreate()}
+                data-testid="class-add-button"
+              >
+                <Icon name="plus" size={13} /> New class
+              </Button>
+            </>
+          }
+        />
+
+        <TabBar tabs={schemaTabs} activeTabId="classes" onSelectTab={handleTabNavigate} />
+
+        {error ? (
+          <ErrorBanner error={error} onRetry={() => refetch()} message="Failed to load classes" />
+        ) : (
           <>
-            <Button variant="ghost" onClick={() => {}}>
-              <Icon name="download" size={13} /> Export
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => surfaceRef.current?.startCreate()}
-              data-testid="class-add-button"
-            >
-              <Icon name="plus" size={13} /> New class
-            </Button>
-          </>
-        }
-      />
-
-      <TabBar tabs={schemaTabs} activeTabId="classes" onSelectTab={handleTabNavigate} />
-
-      {error ? (
-        <ErrorBanner error={error} onRetry={() => refetch()} message="Failed to load classes" />
-      ) : (
-        <>
-          {schemesError && (
-            <ErrorBanner
-              error={schemesError as Error}
-              onRetry={() => refetchSchemes()}
-              message="Failed to load domains"
-              compact
-            />
-          )}
-
-          <FilterBar
-            data-testid="schema-filter-bar"
-            onSearchChange={paging.setSearch}
-            searchPlaceholder="Search classes by title or identifier…"
-            showingCount={total ?? 0}
-            totalCount={counts.classes ?? total ?? 0}
-          >
-            {/* A segmented control only fits a few schemes; past that it crowds out
-                the search input, so the domain filter becomes a dropdown. */}
-            {schemes.length > 0 && schemes.length <= MAX_SEGMENTED_DOMAINS && (
-              <SegmentedControl
-                value={domainFilter}
-                onChange={(v) => setDomainFilter(v as string)}
-                options={domainOptions}
+            {schemesError && (
+              <ErrorBanner
+                error={schemesError as Error}
+                onRetry={() => refetchSchemes()}
+                message="Failed to load domains"
+                compact
               />
             )}
-            {schemes.length > MAX_SEGMENTED_DOMAINS && (
-              <Select
-                value={domainFilter}
-                onChange={setDomainFilter}
-                ariaLabel="Filter by domain"
-                data-testid="class-domain-filter"
-              >
-                {domainOptions.map((o) => (
-                  <Select.Item key={o.value} value={o.value}>
-                    {o.label}
-                  </Select.Item>
-                ))}
-              </Select>
-            )}
-          </FilterBar>
 
-          <EntitySurface
-            ref={surfaceRef}
-            entityType="class"
-            data={pageData}
-            isLoading={isLoading}
-            columns={classColumns}
-            pagination={paging.pagination(total)}
-            onSort={paging.onSort}
-            onCreateSuccess={paging.resetPage}
-            renderInspector={(entity) => <ClassDrawer key={entity.id} classData={entity} />}
-            rowMenuActions={rowMenuActions}
-            onRowMenuAction={handleRowMenuAction}
-            onDeleteEntity={handleDelete}
-            bulkActions={bulkActions}
-            emptyStateTitle={emptyStateTitle}
-            emptyStateDescription={emptyStateDescription}
-            emptyStateShowAction={!filteredEmpty}
-            testId="classes-surface"
-          />
-        </>
-      )}
-    </div>
+            <FilterBar
+              data-testid="schema-filter-bar"
+              onSearchChange={paging.setSearch}
+              searchPlaceholder="Search classes by title or identifier…"
+              showingCount={total ?? 0}
+              totalCount={counts.classes ?? total ?? 0}
+            >
+              {/* A segmented control only fits a few schemes; past that it crowds out
+                the search input, so the domain filter becomes a dropdown. */}
+              {schemes.length > 0 && schemes.length <= MAX_SEGMENTED_DOMAINS && (
+                <SegmentedControl
+                  value={domainFilter}
+                  onChange={(v) => setDomainFilter(v as string)}
+                  options={domainOptions}
+                />
+              )}
+              {schemes.length > MAX_SEGMENTED_DOMAINS && (
+                <Select
+                  value={domainFilter}
+                  onChange={setDomainFilter}
+                  ariaLabel="Filter by domain"
+                  data-testid="class-domain-filter"
+                >
+                  {domainOptions.map((o) => (
+                    <Select.Item key={o.value} value={o.value}>
+                      {o.label}
+                    </Select.Item>
+                  ))}
+                </Select>
+              )}
+            </FilterBar>
+
+            <EntitySurface
+              ref={surfaceRef}
+              entityType="class"
+              data={pageData}
+              isLoading={isLoading}
+              columns={classColumns}
+              pagination={paging.pagination(total)}
+              onSort={paging.onSort}
+              onCreateSuccess={paging.resetPage}
+              renderInspector={(entity) => <ClassDrawer key={entity.id} classData={entity} />}
+              rowMenuActions={rowMenuActions}
+              onRowMenuAction={handleRowMenuAction}
+              onDeleteEntity={handleDelete}
+              bulkActions={bulkActions}
+              emptyStateTitle={emptyStateTitle}
+              emptyStateDescription={emptyStateDescription}
+              emptyStateShowAction={!filteredEmpty}
+              testId="classes-surface"
+            />
+          </>
+        )}
+      </div>
+    </EntityPageLayout>
   );
 }
 

@@ -127,7 +127,18 @@ export const entityPageHandlers = [
       ? HttpResponse.json(cls)
       : HttpResponse.json({ detail: "Class not found" }, { status: 404 });
   }),
-  http.get("*/api/classes", ({ request }) => list(byIds(classes, new URL(request.url)))),
+  http.get("*/api/classes", ({ request }) => {
+    const url = new URL(request.url);
+    const q = url.searchParams.get("q")?.toLowerCase();
+    const schemeId = url.searchParams.get("concept_scheme_id");
+    return list(
+      byIds(classes, url).filter(
+        (c) =>
+          (!q || c.title.toLowerCase().includes(q)) &&
+          (!schemeId || c.concept_scheme_id === schemeId),
+      ),
+    );
+  }),
   http.get("*/api/individuals/:id", ({ params }) => {
     const ind = individuals.find((i) => i.id === params.id);
     return ind

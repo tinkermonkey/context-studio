@@ -1463,6 +1463,19 @@ body.dark-canvas .diff-added {
   padding: 6px 4px;
 }
 
+.entity-navigator__filter {
+  padding: 10px 12px 4px;
+}
+
+.entity-navigator__filter .text-input,
+.entity-navigator__filter input {
+  width: 100%;
+}
+
+.entity-navigator__note {
+  padding: 8px 14px;
+}
+
 /* One column of pills that truncate their label instead of overflowing the column. */
 .entity-navigator__tree .hierarchy-row {
   grid-template-columns: minmax(0, 1fr);
