@@ -1492,6 +1492,38 @@ body.dark-canvas .diff-added {
   text-overflow: ellipsis;
 }
 
+/* Heimdall's HierarchyRow has no 'individual' kind: individual rows hide the
+   class badge and draw their own in the same style. */
+.hierarchy-row--individual .hierarchy-row__label::before {
+  content: "individual";
+  margin-right: 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(var(--status-emerald));
+}
+
+.hierarchy-row--individual .hierarchy-row__label {
+  font-weight: 500;
+}
+
+/* "+ N more" row: a quiet action, not a node. */
+.hierarchy-row--more .hierarchy-row__pill {
+  border-style: dashed;
+  background: transparent;
+}
+
+.hierarchy-row--more .hierarchy-row__label {
+  font-weight: 400;
+  color: var(--accent-cyan);
+}
+
+.hierarchy-row--more .hierarchy-row__swatch {
+  display: none;
+}
+
 .entity-page__main {
   display: flex;
   flex-direction: column;

@@ -139,11 +139,18 @@ export function IndividualPage({ id }: { id: string }) {
       : null,
   );
 
-  // Schema mode: the tree stops at classes, so it highlights the individual's (first) class.
+  // Data mode shows the individual under its (first) class; Schema mode stops at
+  // classes, so there it highlights that class.
   const navigator = (
     <EntityNavigator
-      selectedId={primaryClass?.id}
-      expandIds={primaryClass ? [primaryClass.taxonomy_id, primaryClass.concept_scheme_id] : []}
+      defaultMode="data"
+      selectedId={id}
+      schemaSelectedId={primaryClass?.id}
+      expandIds={
+        primaryClass
+          ? [primaryClass.taxonomy_id, primaryClass.concept_scheme_id, primaryClass.id]
+          : []
+      }
     />
   );
 
