@@ -26,6 +26,7 @@ from domain.ontology.entities import (
     Taxonomy,
 )
 from domain.ontology.value_objects import ExternalReference
+from domain.versioning.exceptions import RevertConflictError
 from domain.versioning.revert_service import RevertService
 from domain.versioning.value_objects import ChangeOperation
 from tests.fakes.fake_change_repository import FakeChangeRepository
@@ -172,6 +173,31 @@ def test_revert_class_update(ontology_repo, change_repo, revert_svc):
 
     # Verify previous state is restored
     assert ontology_repo.get_class("cls-1").description == "An organism"
+
+
+def test_revert_chained_updates_restores_oldest_state(ontology_repo, change_repo, revert_svc):
+    """Two updates in one run revert newest first, ending at the original state."""
+    cls = Class(
+        id="cls-1",
+        concept_scheme_id="scheme-1",
+        taxonomy_id="tx-1",
+        title="Animal",
+        description="C",
+    )
+    ontology_repo.save_class(cls)
+    for previous, new in (("A", "B"), ("B", "C")):
+        change_repo.record_change(
+            entity_id="cls-1",
+            entity_type="class",
+            operation=ChangeOperation.UPDATE,
+            previous_state={"description": previous},
+            new_state={"description": new},
+            batch_run_id="run-1",
+        )
+
+    assert revert_svc.revert("run-1") == 2
+
+    assert ontology_repo.get_class("cls-1").description == "A"
 
 
 # ============================================================================
@@ -1136,3 +1162,27 @@ def test_revert_with_summary_delete_operations_count_as_restored(
     assert result.events_reverted == 1
     assert result.entities_restored == 1
     assert ontology_repo.get_class("cls-restored") is not None
+
+
+def test_revert_refused_when_entities_outside_the_run_depend_on_it(
+    ontology_repo, change_repo, revert_svc
+):
+    """A revert that would delete a class another run's individual uses changes nothing."""
+    ontology_repo.save_class(
+        Class(id="cls-1", concept_scheme_id="scheme-1", taxonomy_id="tx-1", title="Service")
+    )
+    change_repo.record_change(
+        entity_id="cls-1",
+        entity_type="class",
+        operation=ChangeOperation.CREATE,
+        new_state={"id": "cls-1"},
+        batch_run_id="run-1",
+    )
+    ontology_repo.save_individual(Individual(id="ind-1", class_ids=["cls-1"], title="API"))
+
+    with pytest.raises(RevertConflictError) as excinfo:
+        revert_svc.revert("run-1")
+
+    assert excinfo.value.blocking == [("individual", "ind-1", "cls-1")]
+    assert ontology_repo.get_class("cls-1") is not None
+    assert change_repo.get_changes(limit=None).total == 1

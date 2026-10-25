@@ -865,6 +865,9 @@ class TestMigrationDataSurvival:
             engine = create_engine(f"sqlite:///{db_path}")
             SessionLocal = sessionmaker(bind=engine)
             session = SessionLocal()
+            # change_events at this revision still has the stale entity_id FK
+            # (dropped by a170a80121f2); seed without an ontology entity.
+            session.execute(text("PRAGMA foreign_keys=OFF"))
 
             now = datetime.now(timezone.utc)
             import_run_id = str(uuid4())

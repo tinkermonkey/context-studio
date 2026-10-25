@@ -45,6 +45,10 @@ def _seed(factory, individuals):
         )
         for ind_id, title, class_ids in individuals:
             session.add(OntologyEntity(id=ind_id, node_type="individual", title=title))
+        # No ORM relationship links these tables, so flush the entities before
+        # their memberships to satisfy the foreign keys.
+        session.flush()
+        for ind_id, title, class_ids in individuals:
             for pos, cid in enumerate(class_ids):
                 session.add(IndividualClass(individual_id=ind_id, class_id=cid, position=pos))
         session.commit()

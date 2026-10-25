@@ -17,7 +17,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
-from uuid import uuid4
 
 import pytest
 from fastapi import FastAPI, status
@@ -58,6 +57,7 @@ from domain.pipelines.schema_node_grounding.apply_service import SchemaGrounding
 from domain.versioning.revert_service import RevertService
 from domain.versioning.services import VersioningService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
+from tests.utils.parent_rows import create_batch_row
 
 TAXONOMY_ID = "tx-ref"
 SCHEME_ID = "cs-ref"
@@ -167,7 +167,7 @@ def client(session_factory, pipeline_repo, ontology_repo, change_repo):
 
 def _completed_run(pipeline_repo, pipeline_type, output_summary):
     run = pipeline_repo.create(
-        batch_run_id=str(uuid4()),
+        batch_run_id=create_batch_row(pipeline_repo._session_factory),
         pipeline_type=pipeline_type,
         implementation_id="default",
         configuration_ref="refinement-default",

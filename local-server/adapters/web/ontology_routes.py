@@ -56,6 +56,7 @@ from adapters.web.schemas.ontology import (
 from domain.ontology.exceptions import (
     CircularReferenceError,
     DuplicateEntityError,
+    EntityInUseError,
     EntityNotFoundError,
     IdentifierConflictError,
     OntologyError,
@@ -89,6 +90,8 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     elif isinstance(exc, DuplicateEntityError):
         return (status.HTTP_409_CONFLICT, str(exc))
     elif isinstance(exc, IdentifierConflictError):
+        return (status.HTTP_409_CONFLICT, str(exc))
+    elif isinstance(exc, EntityInUseError):
         return (status.HTTP_409_CONFLICT, str(exc))
     elif isinstance(exc, OntologyError):
         return (status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc))
@@ -1076,7 +1079,7 @@ async def delete_property_definition(
         service: OntologyService from dependency injection
 
     Raises:
-        HTTPException: 404 if not found, 422 if property is in use by relationships
+        HTTPException: 404 if not found, 409 if property is in use by relationships
     """
     try:
         service.delete_property_definition(property_id)

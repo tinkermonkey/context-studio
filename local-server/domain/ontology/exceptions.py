@@ -49,3 +49,9 @@ class IdentifierConflictError(OntologyError):
     def __init__(self, identifier: str):
         self.identifier = identifier
         super().__init__(f"Identifier '{identifier}' is already in use")
+
+
+class EntityInUseError(OntologyError):
+    """Raised when deleting an entity that other entities still reference."""
+
+    pass

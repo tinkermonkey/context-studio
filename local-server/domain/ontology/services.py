@@ -53,6 +53,7 @@ from .events import (
 from .exceptions import (
     CircularReferenceError,
     DuplicateEntityError,
+    EntityInUseError,
     EntityNotFoundError,
     IdentifierConflictError,
     OntologyError,
@@ -1184,10 +1185,8 @@ class OntologyService:
             )
 
         # Check for property definitions referencing this class as domain/range.
-        # SQLite foreign keys are not enforced in this application (see
-        # connection.py), so the declared ondelete="SET NULL" never fires —
-        # deleting without this check would leave dangling domain_class_id/
-        # range_class_id references instead.
+        # The foreign keys would SET NULL those references silently; refuse
+        # instead so the user decides what happens to the properties.
         referencing_count = self._repository.count_property_definitions_referencing_class(class_id)
         if referencing_count:
             raise OntologyError(
@@ -2108,7 +2107,7 @@ class OntologyService:
 
         Raises:
             EntityNotFoundError: If the property does not exist
-            OntologyError: If the property is in use by relationships
+            EntityInUseError: If the property is in use by relationships
         """
         prop_def = self._repository.get_property_definition(property_id)
         if prop_def is None:
@@ -2117,7 +2116,7 @@ class OntologyService:
         # Check if property is in use
         relationships = self._repository.list_relationships(property_id=property_id, limit=None)
         if relationships:
-            raise OntologyError(
+            raise EntityInUseError(
                 f"PropertyDefinition '{property_id}' is in use by {len(relationships)}"
                 " relationship(s)"
             )

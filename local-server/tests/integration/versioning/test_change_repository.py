@@ -423,11 +423,26 @@ class TestChangesetOperations:
         assert set(retrieved.event_ids) == {event_id_1, event_id_3, event_id_4}
 
 
+def _create_changeset(repository, changeset_id: str) -> None:
+    """Create the changeset a proposal belongs to (proposals have an FK to it)."""
+    now = datetime.now(timezone.utc)
+    repository.create_changeset(
+        Changeset(
+            id=changeset_id,
+            name=changeset_id,
+            _state=ChangeState.PROPOSED,
+            created_at=now,
+            updated_at=now,
+        )
+    )
+
+
 class TestProposalOperations:
     """Test Proposal persistence operations."""
 
     def test_create_proposal(self, repository) -> None:
         """Test creating a proposal."""
+        _create_changeset(repository, "cs1")
         proposal = Proposal(
             id="prop1",
             changeset_id="cs1",
@@ -442,6 +457,7 @@ class TestProposalOperations:
 
     def test_get_proposal(self, repository) -> None:
         """Test retrieving a proposal."""
+        _create_changeset(repository, "cs1")
         proposal = Proposal(
             id="prop1",
             changeset_id="cs1",
@@ -459,6 +475,7 @@ class TestProposalOperations:
 
     def test_update_proposal(self, repository) -> None:
         """Test updating a proposal."""
+        _create_changeset(repository, "cs1")
         proposal = Proposal(
             id="prop1",
             changeset_id="cs1",
@@ -628,6 +645,7 @@ class TestAtomicUpdateOperations:
 
     def test_atomic_update_raises_if_changeset_not_found(self, repository) -> None:
         """Test that atomic update raises if changeset doesn't exist."""
+        _create_changeset(repository, "cs1")
         proposal = Proposal(
             id="prop1",
             changeset_id="cs1",

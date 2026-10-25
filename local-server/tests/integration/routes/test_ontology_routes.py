@@ -675,6 +675,35 @@ class TestPropertyDefinitionCRUD:
         response = client.delete(f"/api/properties/{property_id}")
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
+    def test_delete_property_definition_in_use_returns_409(self, client):
+        """DELETE /api/properties/{id} returns 409 while a relationship uses it."""
+        property_id = client.post(
+            "/api/properties",
+            json={"identifier": "in_use_prop", "title": "In Use Property"},
+        ).json()["id"]
+        taxonomy_id = client.post("/api/taxonomies", json={"title": "Tax"}).json()["id"]
+        scheme_id = client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "Scheme"}
+        ).json()["id"]
+        class_ids = [
+            client.post(f"/api/schemes/{scheme_id}/classes", json={"title": title}).json()["id"]
+            for title in ("Class 1", "Class 2")
+        ]
+        created = client.post(
+            "/api/relationships",
+            json={
+                "source_id": class_ids[0],
+                "target_id": class_ids[1],
+                "relationship_type": "in_use_prop",
+            },
+        )
+        assert created.json()["property_definition_id"] == property_id
+
+        response = client.delete(f"/api/properties/{property_id}")
+
+        assert response.status_code == status.HTTP_409_CONFLICT
+        assert client.get(f"/api/properties/{property_id}").status_code == status.HTTP_200_OK
+
 
 class TestAutoCreatePropertyDefinition:
     """Integration tests for auto-creation of property definitions during relationship creation."""

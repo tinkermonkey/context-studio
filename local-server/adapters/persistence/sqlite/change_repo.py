@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional, cast
 
-from sqlalchemy import func, select
+from sqlalchemy import func, literal_column, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -164,7 +164,11 @@ class SQLiteChangeRepository:
             total_count = session.execute(count_query).scalar() or 0
 
             # Apply ordering and limit to get paginated results
-            paginated_query = base_query.order_by(ChangeEvent.timestamp.desc()).limit(limit)
+            # rowid breaks timestamp ties in insertion order, so revert (which walks
+            # this newest first) undoes same-timestamp events in the right order.
+            paginated_query = base_query.order_by(
+                ChangeEvent.timestamp.desc(), literal_column("change_events.rowid").desc()
+            ).limit(limit)
             orm_events = session.execute(paginated_query).scalars().all()
 
             events = [self._to_domain_change_event(e) for e in orm_events]
@@ -276,7 +280,9 @@ class SQLiteChangeRepository:
             query = (
                 select(ChangeEvent)
                 .where(~ChangeEvent.processed)
-                .order_by(ChangeEvent.timestamp.asc())
+                .order_by(
+                    ChangeEvent.timestamp.asc(), literal_column("change_events.rowid").asc()
+                )
                 .limit(limit)
             )
 

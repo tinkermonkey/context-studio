@@ -7,7 +7,6 @@ provider to allow observation mid-flight.
 """
 
 import asyncio
-from uuid import uuid4
 
 import pytest
 from sqlalchemy import create_engine
@@ -20,6 +19,7 @@ from domain.pipelines.orchestration.noop import (
     NoOpPipelineOrchestrator,
     NoOpPipelineState,
 )
+from tests.utils.parent_rows import create_batch_row
 
 
 class BlockingFakeLLMProvider:
@@ -166,7 +166,7 @@ class TestRunningStatusObservation:
         """
         # Create a pipeline run in the database
         db_run = pipeline_repo.create(
-            batch_run_id=str(uuid4()),
+            batch_run_id=create_batch_row(pipeline_repo._session_factory),
             pipeline_type=PipelineType.NO_OP,
             implementation_id="default",
             configuration_ref="noop-default@1",
@@ -249,7 +249,7 @@ class TestRunningStatusObservation:
         """Multiple executions with blocking provider can be observed sequentially."""
         # First execution
         db_run_1 = pipeline_repo.create(
-            batch_run_id=str(uuid4()),
+            batch_run_id=create_batch_row(pipeline_repo._session_factory),
             pipeline_type=PipelineType.NO_OP,
             implementation_id="default",
             configuration_ref="noop-default@1",
@@ -280,7 +280,7 @@ class TestRunningStatusObservation:
 
         # Second execution
         db_run_2 = pipeline_repo.create(
-            batch_run_id=str(uuid4()),
+            batch_run_id=create_batch_row(pipeline_repo._session_factory),
             pipeline_type=PipelineType.NO_OP,
             implementation_id="default",
             configuration_ref="noop-default@1",

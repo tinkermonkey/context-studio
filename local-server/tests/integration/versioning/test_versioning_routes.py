@@ -192,6 +192,17 @@ class TestVersioningRoutes:
         )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
+    def test_create_changeset_with_unknown_event_id_returns_422(self, client):
+        """POST /api/v1/versioning/changesets naming a missing change event returns 422."""
+        response = client.post(
+            "/api/v1/versioning/changesets",
+            json={"name": "Test Changeset", "event_ids": ["no-such-event"]},
+        )
+
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert "no-such-event" in response.json()["detail"]
+        assert client.get("/api/v1/versioning/changesets").json() == []
+
     def test_get_changeset_returns_404_not_found(self, client):
         """GET /api/v1/versioning/changesets/{id} returns 404 for nonexistent changeset."""
         response = client.get("/api/v1/versioning/changesets/nonexistent-id")

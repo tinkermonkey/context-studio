@@ -1667,7 +1667,7 @@
           "ontology"
         ],
         "summary": "Delete Property Definition",
-        "description": "Delete a property definition.\n\nArgs:\n    property_id: The property definition ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found, 422 if property is in use by relationships",
+        "description": "Delete a property definition.\n\nArgs:\n    property_id: The property definition ID\n    service: OntologyService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found, 409 if property is in use by relationships",
         "operationId": "delete_property_definition_api_properties__property_id__delete",
         "parameters": [
           {
@@ -4408,7 +4408,7 @@
           "pipelines"
         ],
         "summary": "Revert Pipeline Run",
-        "description": "Revert all changes made by a specific pipeline run.\n\nWalks the change_events for the given run in reverse order and applies\nthe inverse of each operation. This restores the ontology to its state\nbefore the run was applied.\n\nThe operation is idempotent \u2014 calling revert twice produces the same state\nwithout error.\n\nThis endpoint only supports reverting runs from single-run batches. For multi-run\nbatches, use the batch revert endpoint instead.\n\nArgs:\n    run_id: ID of the pipeline run to revert\n\nReturns:\n    RevertRunResponse with count of events reverted\n\nRaises:\n    HTTPException: 404 if run not found, 422 if batch has multiple runs, 500 for errors",
+        "description": "Revert all changes made by a specific pipeline run.\n\nWalks the change_events for the given run in reverse order and applies\nthe inverse of each operation. This restores the ontology to its state\nbefore the run was applied.\n\nThe operation is idempotent \u2014 calling revert twice produces the same state\nwithout error.\n\nArgs:\n    run_id: ID of the pipeline run to revert\n\nReturns:\n    RevertRunResponse with count of events reverted\n\nRaises:\n    HTTPException: 404 if run not found, 409 if entities outside the run depend on\n        entities it created (nothing is reverted), 500 for errors",
         "operationId": "revert_pipeline_run_api_pipelines_runs__run_id__revert_post",
         "parameters": [
           {
@@ -5369,7 +5369,7 @@
           "versioning"
         ],
         "summary": "Create Changeset",
-        "description": "Create a new changeset.\n\nArgs:\n    request: ChangesetCreateRequest with changeset details\n    service: VersioningService from dependency injection\n\nReturns:\n    Created ChangesetResponse with server-generated id\n\nRaises:\n    HTTPException: 400 for invalid input, 500 for internal errors",
+        "description": "Create a new changeset.\n\nArgs:\n    request: ChangesetCreateRequest with changeset details\n    service: VersioningService from dependency injection\n\nReturns:\n    Created ChangesetResponse with server-generated id\n\nRaises:\n    HTTPException: 422 for unknown change event ids, 500 for internal errors",
         "operationId": "create_changeset_api_v1_versioning_changesets_post",
         "requestBody": {
           "required": true,

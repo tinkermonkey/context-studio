@@ -28,6 +28,7 @@ from domain.interchange.value_objects import (
 from domain.ontology.services import OntologyService
 from domain.versioning.value_objects import ChangeOperation
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
+from tests.utils.parent_rows import create_batch_run_row
 
 
 @pytest.fixture
@@ -106,7 +107,7 @@ def test_change_events_outside_import_have_null_batch_run_id(change_repo):
     assert retrieved_event.batch_run_id is None
 
 
-def test_change_events_inside_import_have_batch_run_id(change_repo):
+def test_change_events_inside_import_have_batch_run_id(change_repo, session_factory):
     """Change events inside an import have the batch_run_id set."""
     # Create an import run and set context
     import_service = ImportRunService()
@@ -118,6 +119,9 @@ def test_change_events_inside_import_have_batch_run_id(change_repo):
         source_uri="test.skos",
         created_by="test-user",
     )
+
+    # start_run does not persist; change events need the run's batch_runs row
+    create_batch_run_row(session_factory, import_run.id)
 
     # Set the correlation context
     set_import_run_context(import_run.id)
@@ -159,7 +163,7 @@ def test_context_cleared_after_import(session_factory):
     assert get_current_batch_run_id() is None
 
 
-def test_multiple_events_in_same_import_linked_to_same_run(change_repo):
+def test_multiple_events_in_same_import_linked_to_same_run(change_repo, session_factory):
     """Multiple operations in the same import are linked to the same run."""
     # Create an import run and set context
     import_service = ImportRunService()
@@ -170,6 +174,8 @@ def test_multiple_events_in_same_import_linked_to_same_run(change_repo):
         scope=scope,
         source_uri="test.skos",
     )
+    # start_run does not persist; change events need the run's batch_runs row
+    create_batch_run_row(session_factory, import_run.id)
 
     set_import_run_context(import_run.id)
 
@@ -216,7 +222,7 @@ def test_multiple_events_in_same_import_linked_to_same_run(change_repo):
 
 
 def test_change_event_recorder_auto_correlation_from_context(
-    change_recorder, db_engine, change_repo
+    change_recorder, db_engine, change_repo, session_factory
 ):
     """ChangeEventRecorder automatically reads batch_run_id from context."""
     # Create an import run and set context
@@ -228,6 +234,9 @@ def test_change_event_recorder_auto_correlation_from_context(
         scope=scope,
         source_uri="test.skos",
     )
+
+    # start_run does not persist; change events need the run's batch_runs row
+    create_batch_run_row(session_factory, import_run.id)
 
     # Set the correlation context
     set_import_run_context(import_run.id)

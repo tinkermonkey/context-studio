@@ -623,7 +623,7 @@ export interface paths {
      *         service: OntologyService from dependency injection
      *
      *     Raises:
-     *         HTTPException: 404 if not found, 422 if property is in use by relationships
+     *         HTTPException: 404 if not found, 409 if property is in use by relationships
      */
     delete: operations["delete_property_definition_api_properties__property_id__delete"];
     options?: never;
@@ -2075,9 +2075,6 @@ export interface paths {
      *     The operation is idempotent — calling revert twice produces the same state
      *     without error.
      *
-     *     This endpoint only supports reverting runs from single-run batches. For multi-run
-     *     batches, use the batch revert endpoint instead.
-     *
      *     Args:
      *         run_id: ID of the pipeline run to revert
      *
@@ -2085,7 +2082,8 @@ export interface paths {
      *         RevertRunResponse with count of events reverted
      *
      *     Raises:
-     *         HTTPException: 404 if run not found, 422 if batch has multiple runs, 500 for errors
+     *         HTTPException: 404 if run not found, 409 if entities outside the run depend on
+     *             entities it created (nothing is reverted), 500 for errors
      */
     post: operations["revert_pipeline_run_api_pipelines_runs__run_id__revert_post"];
     delete?: never;
@@ -2702,7 +2700,7 @@ export interface paths {
      *         Created ChangesetResponse with server-generated id
      *
      *     Raises:
-     *         HTTPException: 400 for invalid input, 500 for internal errors
+     *         HTTPException: 422 for unknown change event ids, 500 for internal errors
      */
     post: operations["create_changeset_api_v1_versioning_changesets_post"];
     delete?: never;

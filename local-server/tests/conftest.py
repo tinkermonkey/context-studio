@@ -1,7 +1,11 @@
 """Root conftest for test configuration."""
 
+import sqlite3
 import sys
 from pathlib import Path
+
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
 
 # Add the project root to sys.path so that utils, adapters, and domain modules can be imported
 # This is needed because pytest may be run from different directories
@@ -20,3 +24,19 @@ except ImportError:
 
 # Note: Pydantic validation errors are handled by FastAPI's default behavior
 # which returns 422 (UNPROCESSABLE_ENTITY). No custom patching is needed.
+
+
+@event.listens_for(Engine, "connect")
+def _enforce_sqlite_foreign_keys(dbapi_connection, connection_record):  # type: ignore[no-untyped-def]
+    """Enforce foreign keys on every SQLite engine a test creates.
+
+    Production engines get this from connection.py. Many tests build their own
+    engine with create_engine(), so this keeps them on the same rules. Alembic
+    turns foreign keys back off on its own connection (see env.py).
+    """
+    if isinstance(dbapi_connection, sqlite3.Connection):
+        cursor = dbapi_connection.cursor()
+        try:
+            cursor.execute("PRAGMA foreign_keys=ON")
+        finally:
+            cursor.close()
