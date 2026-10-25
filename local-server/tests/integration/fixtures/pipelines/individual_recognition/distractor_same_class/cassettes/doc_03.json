@@ -1,5 +1,5 @@
 {
-  "88208bfab2ffa6411257c9025fef4d2bac59542445f0e29563ec8c01c2353d52": {
+  "dd88d8c48fdafc9e669341a63a52c4862620260f745469358e70fc1539e18a9c": {
     "content": "{\"triples\": [{\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"Beacon Primary Node\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"technology.node\"}, \"confidence\": 0.95}, {\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"Beacon Standby Node\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"technology.node\"}, \"confidence\": 0.95}]}",
     "tokens_in": 1,
     "tokens_out": 1,

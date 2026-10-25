@@ -1739,6 +1739,20 @@ class OntologyService:
 
     # PropertyDefinition operations
 
+    def _property_definition_with_title(
+        self, title: str, exclude_id: str | None = None
+    ) -> PropertyDefinition | None:
+        """
+        Return a property definition whose title exactly equals ``title``, if any.
+
+        Narrows with the repository's "title or identifier contains" text query,
+        then compares exactly, so the check stays cheap as the table grows.
+        """
+        for prop in self._repository.list_property_definitions(query=title, limit=None):
+            if prop.title == title and prop.id != exclude_id:
+                return prop
+        return None
+
     def create_property_definition(
         self,
         identifier: str,
@@ -1787,13 +1801,13 @@ class OntologyService:
         if not title or not title.strip():
             raise ValueError("Title cannot be empty")
 
-        # Check for duplicate identifier and title
-        existing_props = self._repository.list_property_definitions(limit=None)
-        if any(p.identifier == identifier for p in existing_props):
+        # Check for duplicate identifier and title with targeted lookups rather than
+        # listing every property definition (which made bulk imports quadratic).
+        if self._repository.get_property_definition_by_identifier(identifier) is not None:
             raise DuplicateEntityError(
                 f"PropertyDefinition with identifier '{identifier}' already exists"
             )
-        if any(p.title == title for p in existing_props):
+        if self._property_definition_with_title(title) is not None:
             raise DuplicateEntityError(f"PropertyDefinition with title '{title}' already exists")
 
         if domain_class_id is not None and self._repository.get_class(domain_class_id) is None:
@@ -2044,8 +2058,7 @@ class OntologyService:
         if title_changed:
             if not title or not title.strip():
                 raise ValueError("Title cannot be empty")
-            existing_props = self._repository.list_property_definitions(limit=None)
-            if any(p.id != property_id and p.title == title for p in existing_props):
+            if self._property_definition_with_title(title, exclude_id=property_id) is not None:
                 raise DuplicateEntityError(
                     f"PropertyDefinition with title '{title}' already exists"
                 )

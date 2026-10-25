@@ -1,5 +1,5 @@
 {
-  "b5bda4abb2f9306238efc85299eab572024699a77776c6293e2e8ca940715cbc": {
+  "2408227afbe0bd10b6d66e803f9ed0ea7cdd9c703400d0c04479927504783f5f": {
     "content": "{\"triples\": [{\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"K8s\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"technology.systemsoftware\"}, \"confidence\": 0.95}, {\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"the Nextflow engine\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"application.applicationcomponent\"}, \"confidence\": 0.95}, {\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"Nf-PEAK\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"application.applicationcomponent\"}, \"confidence\": 0.95}, {\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"RAPL counters\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"technology.systemsoftware\"}, \"confidence\": 0.95}]}",
     "tokens_in": 1,
     "tokens_out": 1,

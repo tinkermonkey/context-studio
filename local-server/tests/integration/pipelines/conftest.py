@@ -50,19 +50,17 @@ from tests.integration.pipelines._harness.cassettes import (
     RecordingLLMProvider,
 )
 from tests.integration.pipelines._harness.dataset_split import OntologyContext
-
-# Candidate locations for the sibling `documentation_robotics/spec` checkout
-# (an external, versioned dependency — see
-# documentation/karpathy_loop_dr_ontology_design.md §4). Not every environment
-# has it; the DR_SPEC ontology_factory branch skips when neither is found.
-_DR_SPEC_DIR_CANDIDATES = [
-    Path(__file__).resolve().parents[5] / "documentation_robotics" / "spec",
-    Path("/reference/documentation_robotics/spec"),
-]
-
+from tests.integration.pipelines._harness.dr_spec import pinned_dr_spec_dir
 
 def _find_dr_spec_dir() -> Path | None:
-    return next((p for p in _DR_SPEC_DIR_CANDIDATES if p.is_dir()), None)
+    """
+    The pinned DR spec snapshot (see tests/integration/fixtures/dr_spec/).
+
+    Always the committed snapshot, never the live sibling `documentation_robotics`
+    checkout, so DR_SPEC row counts and recorded cassettes cannot drift. Typed
+    Optional so callers (and tests that monkeypatch it) can model "unavailable".
+    """
+    return pinned_dr_spec_dir()
 
 
 def _build_placeholder_ontology():
@@ -109,15 +107,11 @@ def _build_dr_spec_ontology():
     The imported DR spec ontology (~1,750 rows), in-memory.
 
     Reuses the Phase 1 DR-spec transform (scripts.dr_ontology_loader) rather
-    than duplicating any translation logic. Skips if the sibling DR spec
-    checkout isn't available in this environment.
+    than duplicating any translation logic, against the pinned spec snapshot.
     """
     spec_dir = _find_dr_spec_dir()
     if spec_dir is None:
-        pytest.skip(
-            "documentation_robotics/spec checkout not found (checked "
-            f"{[str(p) for p in _DR_SPEC_DIR_CANDIDATES]}); skipping DR_SPEC ontology tests"
-        )
+        pytest.skip("DR spec snapshot unavailable; skipping DR_SPEC ontology tests")
 
     engine = create_local_db_engine("sqlite:///:memory:")
     Base.metadata.create_all(engine)
