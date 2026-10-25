@@ -75,7 +75,7 @@ Screenshot pairs are saved in `/screenshots/audit/`.
 | ST-2 | ✅ 2026-05-24 | Title | No route path badge (should show `/settings`). |
 | ST-3 | ✅ 2026-05-24 | `TabBar` | Tabs present but no counts (General **6**, Pipelines **4**, etc.). |
 | ST-4 | ✅ 2026-05-25 | Eyebrow | Added `.page-header__eyebrow { text-transform: none; }` override to `studio.css` (app layer wins over heimdall layer). Eyebrow now renders casing as passed. Behavioral test (ST-4) confirms. |
-| ST-5 | ⚠️ n/a | `Modal` footer | Settings page auto-saves inline (no modal); `EditConfigModal` is unused dead code. The `hintFooter` prop exists on `Modal` but there is no modal to attach it to. Not applicable to current architecture. |
+| ST-5 | ⚠️ n/a | `Modal` footer | Settings page auto-saves inline (no modal); the unused `EditConfigModal` was removed (#1292). The `hintFooter` prop exists on `Modal` but there is no modal to attach it to. Not applicable to current architecture. |
 
 ---
 
