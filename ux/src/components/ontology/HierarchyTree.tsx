@@ -29,8 +29,14 @@ export interface HierarchyTreeProps {
   onSelectNode?: (kind: HierarchyNodeKind, id: string) => void;
   /** Highlight this node (taxonomy, scheme or class id), e.g. the open entity page. */
   selectedId?: string;
-  /** Rows to open, e.g. the selected node's ancestors; replaces the default seeding. */
-  expandIds?: string[];
+  /**
+   * Controlled expansion (the Navigator keeps it in a store so it survives
+   * page changes). Omit it and the tree manages its own, seeding the first
+   * taxonomy and scheme open.
+   */
+  expandedIds?: ReadonlySet<string>;
+  /** Called when a row opens or closes under controlled expansion. */
+  onExpandedChange?: (id: string, open: boolean) => void;
   /** Narrow column (the Navigator): rows show no description. */
   compact?: boolean;
 }
@@ -90,7 +96,8 @@ export function HierarchyTree({
   onSelectClass,
   onSelectNode,
   selectedId,
-  expandIds,
+  expandedIds: controlledExpandedIds,
+  onExpandedChange,
   compact = false,
 }: HierarchyTreeProps) {
   const sortedTaxonomies = useMemo(
@@ -121,38 +128,36 @@ export function HierarchyTree({
     return map;
   }, [classes]);
 
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [localExpandedIds, setLocalExpandedIds] = useState<Set<string>>(new Set());
   const [seeded, setSeeded] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<string | undefined>(undefined);
   const [demoPickerOpen, setDemoPickerOpen] = useState(false);
-  const expandKey = expandIds?.join("|") ?? null;
-  const [appliedExpandKey, setAppliedExpandKey] = useState<string | null>(null);
+  const controlled = controlledExpandedIds !== undefined;
+  const expandedIds: ReadonlySet<string> = controlledExpandedIds ?? localExpandedIds;
 
-  // Open the requested rows whenever they change (keeping rows the user opened).
-  if (expandKey !== null && expandKey !== appliedExpandKey) {
-    setExpandedIds((prev) => new Set([...prev, ...(expandIds ?? [])]));
-    setAppliedExpandKey(expandKey);
-    setSeeded(true);
-  }
-
-  // Otherwise seed the first taxonomy and its first scheme open, matching the reference design.
-  if (!seeded && expandKey === null && sortedTaxonomies.length > 0) {
+  // Uncontrolled: seed the first taxonomy and its first scheme open, matching the reference design.
+  if (!controlled && !seeded && sortedTaxonomies.length > 0) {
     const firstTaxonomy = sortedTaxonomies[0];
     const firstScheme = schemesByTaxonomy.get(firstTaxonomy.id)?.[0];
     const initial = new Set<string>([firstTaxonomy.id]);
     if (firstScheme) initial.add(firstScheme.id);
-    setExpandedIds(initial);
+    setLocalExpandedIds(initial);
     setSeeded(true);
   }
 
-  const toggle = (id: string) => {
-    setExpandedIds((prev) => {
+  const setOpen = (id: string, open: boolean) => {
+    if (controlled) {
+      onExpandedChange?.(id, open);
+      return;
+    }
+    setLocalExpandedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (open) next.add(id);
+      else next.delete(id);
       return next;
     });
   };
+  const toggle = (id: string) => setOpen(id, !expandedIds.has(id));
 
   const handleSelectClass = (classId: string) => {
     setSelectedClassId(classId);
@@ -166,7 +171,7 @@ export function HierarchyTree({
       toggle(id);
       return;
     }
-    setExpandedIds((prev) => new Set(prev).add(id));
+    setOpen(id, true);
     onSelectNode(kind, id);
   };
   const highlightedClassId = selectedId ?? selectedClassId;

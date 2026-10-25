@@ -7,6 +7,7 @@ import { render } from "@/test/test-utils";
 import { entityPageHandlers } from "@/test/entityPageHandlers";
 import { ASK_ABOUT_EVENT } from "@/components/entity/EntityPageParts";
 import { useBreadcrumbStore } from "@/stores/breadcrumbs";
+import { useNavigatorStore } from "@/stores/navigator";
 import { TaxonomyPage } from "../taxonomies_.$id";
 import { SchemePage } from "../schemes_.$id";
 import { ClassPage } from "../classes_.$id";
@@ -14,7 +15,10 @@ import { ClassPage } from "../classes_.$id";
 const server = setupServer(...entityPageHandlers);
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+  server.resetHandlers();
+  useNavigatorStore.setState({ expandedIds: new Set() });
+});
 afterAll(() => server.close());
 
 describe("TaxonomyPage", () => {

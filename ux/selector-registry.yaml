@@ -2633,6 +2633,18 @@ selectors:
   - selector: entity-navigator
     component: src/components/entity/EntityNavigator.tsx
     description: Navigator tree beside an entity page; rows are hierarchy-node-{id}
+  - selector: navigator-filter
+    component: src/components/entity/EntityNavigator.tsx
+    description: Type-to-filter box above the Navigator tree (taxonomy/scheme titles, server-searched classes)
+  - selector: navigator-no-matches
+    component: src/components/entity/EntityNavigator.tsx
+    description: Navigator message when the filter matches nothing
+  - selector: taxonomies-surface
+    component: src/routes/app/schema/taxonomies.tsx
+    description: Taxonomies table surface (EntitySurface testId)
+  - selector: schema-navigator-layout
+    component: src/routes/app/schema/taxonomies.tsx
+    description: Navigator column beside the schema list pages (taxonomies, concept schemes, classes)
   - selector: entity-header
     component: src/components/entity/EntityPageParts.tsx
     description: Entity page header (eyebrow, title, identifier chip, description, actions)

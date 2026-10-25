@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
@@ -14,6 +14,9 @@ import {
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { serverSideList, pageRequests } from "@/test/serverSideList";
 import { TaxonomiesPage } from "../taxonomies";
+
+// The schema Navigator also lists taxonomies, so table assertions look inside the surface.
+const surface = () => within(screen.getByTestId("taxonomies-surface"));
 
 const server = setupServer(
   http.get("*/api/schemes", () => HttpResponse.json(createListSchemes([]))),
@@ -197,19 +200,19 @@ describe("Taxonomies Schema Page", () => {
       render(<TaxonomiesPage />);
 
       await waitFor(() => {
-        expect(screen.getByText("Biology")).toBeInTheDocument();
-        expect(screen.getByText("Chemistry")).toBeInTheDocument();
-        expect(screen.getByText("Physics")).toBeInTheDocument();
+        expect(surface().getByText("Biology")).toBeInTheDocument();
+        expect(surface().getByText("Chemistry")).toBeInTheDocument();
+        expect(surface().getByText("Physics")).toBeInTheDocument();
       });
 
       const searchInput = screen.getByPlaceholderText(/search/i);
       await userEvent.type(searchInput, "Biology");
 
       await waitFor(() => {
-        expect(screen.queryByText("Chemistry")).not.toBeInTheDocument();
+        expect(surface().queryByText("Chemistry")).not.toBeInTheDocument();
       });
       expect(pageRequests(requests).at(-1)!.get("q")).toBe("Biology");
-      expect(screen.queryByText("Physics")).not.toBeInTheDocument();
+      expect(surface().queryByText("Physics")).not.toBeInTheDocument();
     });
 
     it("clears filter when search term is removed", async () => {
@@ -230,22 +233,22 @@ describe("Taxonomies Schema Page", () => {
       render(<TaxonomiesPage />);
 
       await waitFor(() => {
-        expect(screen.getByText("Biology")).toBeInTheDocument();
+        expect(surface().getByText("Biology")).toBeInTheDocument();
       });
 
       const searchInput = screen.getByPlaceholderText(/search/i) as HTMLInputElement;
       await userEvent.type(searchInput, "Biology");
 
       await waitFor(() => {
-        expect(screen.queryByText("Chemistry")).not.toBeInTheDocument();
+        expect(surface().queryByText("Chemistry")).not.toBeInTheDocument();
       });
       expect(pageRequests(requests).at(-1)!.get("q")).toBe("Biology");
 
       await userEvent.clear(searchInput);
 
       await waitFor(() => {
-        expect(screen.getByText("Biology")).toBeInTheDocument();
-        expect(screen.getByText("Chemistry")).toBeInTheDocument();
+        expect(surface().getByText("Biology")).toBeInTheDocument();
+        expect(surface().getByText("Chemistry")).toBeInTheDocument();
       });
     });
   });

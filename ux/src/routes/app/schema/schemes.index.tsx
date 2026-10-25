@@ -22,6 +22,8 @@ import { schemesCopy } from "./schemes/-copy";
 import { useSchemaTabs } from "./-useSchemaTabs";
 import type { components } from "@/api/types";
 import { SMALL_SET_LIMIT } from "@/api/config";
+import { EntityNavigator } from "@/components/entity/EntityNavigator";
+import { EntityPageLayout } from "@/components/entity/EntityPageParts";
 
 type ConceptSchemeResponse = components["schemas"]["ConceptSchemeResponse"];
 
@@ -202,83 +204,85 @@ export function SchemesIndexPage() {
     : schemesCopy.emptyState.description;
 
   return (
-    <div className="stack" data-testid="schemes-page">
-      <PageHeader
-        eyebrow="SCHEMA · node_type · concept_scheme"
-        title="Concept Schemes"
-        idChip="/schema/schemes"
-        subtitle="A concept scheme is a focused vocabulary inside a taxonomy. Classes belong to exactly one scheme."
-        actions={
-          <>
-            <Button variant="ghost" onClick={() => {}} data-testid="scheme-export-button">
-              <Icon name="download" size={13} /> Export
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => surfaceRef.current?.startCreate()}
-              data-testid="scheme-add-button"
-            >
-              <Icon name="plus" size={13} /> New scheme
-            </Button>
-          </>
-        }
-      />
-
-      <TabBar tabs={schemaTabs} activeTabId="schemes" onSelectTab={handleTabNavigate} />
-
-      {error ? (
-        <ErrorBanner
-          error={error}
-          onRetry={() => refetch()}
-          message="Failed to load concept schemes"
+    <EntityPageLayout navigator={<EntityNavigator />} data-testid="schema-navigator-layout">
+      <div className="stack" data-testid="schemes-page">
+        <PageHeader
+          eyebrow="SCHEMA · node_type · concept_scheme"
+          title="Concept Schemes"
+          idChip="/schema/schemes"
+          subtitle="A concept scheme is a focused vocabulary inside a taxonomy. Classes belong to exactly one scheme."
+          actions={
+            <>
+              <Button variant="ghost" onClick={() => {}} data-testid="scheme-export-button">
+                <Icon name="download" size={13} /> Export
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => surfaceRef.current?.startCreate()}
+                data-testid="scheme-add-button"
+              >
+                <Icon name="plus" size={13} /> New scheme
+              </Button>
+            </>
+          }
         />
-      ) : (
-        <>
-          {taxonomiesError && (
-            <ErrorBanner
-              error={taxonomiesError}
-              onRetry={() => refetchTaxonomies()}
-              message="Failed to load parent taxonomies"
-              compact
-            />
-          )}
 
-          <FilterBar
-            data-testid="schema-filter-bar"
-            onSearchChange={paging.setSearch}
-            searchPlaceholder="Search by title or identifier…"
-            showingCount={total ?? 0}
-            totalCount={counts.schemes ?? total ?? 0}
+        <TabBar tabs={schemaTabs} activeTabId="schemes" onSelectTab={handleTabNavigate} />
+
+        {error ? (
+          <ErrorBanner
+            error={error}
+            onRetry={() => refetch()}
+            message="Failed to load concept schemes"
           />
-
-          <EntitySurface
-            ref={surfaceRef}
-            entityType="scheme"
-            data={pageData}
-            isLoading={isLoading}
-            columns={schemeColumns}
-            pagination={paging.pagination(total)}
-            onSort={paging.onSort}
-            onCreateSuccess={paging.resetPage}
-            renderInspector={(entity) => (
-              <SchemeDrawer
-                key={entity.id}
-                scheme={entity}
-                taxonomyName={taxonomiesById.get(entity.taxonomy_id) || "—"}
+        ) : (
+          <>
+            {taxonomiesError && (
+              <ErrorBanner
+                error={taxonomiesError}
+                onRetry={() => refetchTaxonomies()}
+                message="Failed to load parent taxonomies"
+                compact
               />
             )}
-            rowMenuActions={rowMenuActions}
-            onRowMenuAction={handleRowMenuAction}
-            onDeleteEntity={handleDelete}
-            bulkActions={bulkActions}
-            emptyStateTitle={emptyStateTitle}
-            emptyStateDescription={emptyStateDescription}
-            emptyStateShowAction={!filteredEmpty}
-            testId="schemes-surface"
-          />
-        </>
-      )}
-    </div>
+
+            <FilterBar
+              data-testid="schema-filter-bar"
+              onSearchChange={paging.setSearch}
+              searchPlaceholder="Search by title or identifier…"
+              showingCount={total ?? 0}
+              totalCount={counts.schemes ?? total ?? 0}
+            />
+
+            <EntitySurface
+              ref={surfaceRef}
+              entityType="scheme"
+              data={pageData}
+              isLoading={isLoading}
+              columns={schemeColumns}
+              pagination={paging.pagination(total)}
+              onSort={paging.onSort}
+              onCreateSuccess={paging.resetPage}
+              renderInspector={(entity) => (
+                <SchemeDrawer
+                  key={entity.id}
+                  scheme={entity}
+                  taxonomyName={taxonomiesById.get(entity.taxonomy_id) || "—"}
+                />
+              )}
+              rowMenuActions={rowMenuActions}
+              onRowMenuAction={handleRowMenuAction}
+              onDeleteEntity={handleDelete}
+              bulkActions={bulkActions}
+              emptyStateTitle={emptyStateTitle}
+              emptyStateDescription={emptyStateDescription}
+              emptyStateShowAction={!filteredEmpty}
+              testId="schemes-surface"
+            />
+          </>
+        )}
+      </div>
+    </EntityPageLayout>
   );
 }
 

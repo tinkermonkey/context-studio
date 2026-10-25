@@ -12,6 +12,8 @@ import { taxonomiesCopy } from "./taxonomies/-copy";
 import type { components } from "@/api/types";
 import { useListPaging } from "@/hooks/useListPaging";
 import { useSchemaTabs } from "./-useSchemaTabs";
+import { EntityNavigator } from "@/components/entity/EntityNavigator";
+import { EntityPageLayout } from "@/components/entity/EntityPageParts";
 
 type TaxonomyResponse = components["schemas"]["TaxonomyResponse"];
 
@@ -141,64 +143,70 @@ export function TaxonomiesPage() {
     : taxonomiesCopy.emptyState.description;
 
   return (
-    <div className="stack" data-testid="taxonomies-page">
-      <PageHeader
-        eyebrow="SCHEMA · node_type · taxonomy"
-        title="Taxonomies"
-        idChip="/schema/taxonomies"
-        subtitle="A taxonomy is the top-level domain. It groups concept schemes — each scheme is a focused area of knowledge."
-        actions={
+    <EntityPageLayout navigator={<EntityNavigator />} data-testid="schema-navigator-layout">
+      <div className="stack" data-testid="taxonomies-page">
+        <PageHeader
+          eyebrow="SCHEMA · node_type · taxonomy"
+          title="Taxonomies"
+          idChip="/schema/taxonomies"
+          subtitle="A taxonomy is the top-level domain. It groups concept schemes — each scheme is a focused area of knowledge."
+          actions={
+            <>
+              <Button variant="ghost" onClick={() => {}} data-testid="taxonomy-export-button">
+                <Icon name="download" size={13} /> Export
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => surfaceRef.current?.startCreate()}
+                data-testid="taxonomy-add-button"
+              >
+                <Icon name="plus" size={13} /> New taxonomy
+              </Button>
+            </>
+          }
+        />
+
+        <TabBar tabs={schemaTabs} activeTabId="taxonomies" onSelectTab={handleTabNavigate} />
+
+        {error ? (
+          <ErrorBanner
+            error={error}
+            onRetry={() => refetch()}
+            message="Failed to load taxonomies"
+          />
+        ) : (
           <>
-            <Button variant="ghost" onClick={() => {}} data-testid="taxonomy-export-button">
-              <Icon name="download" size={13} /> Export
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => surfaceRef.current?.startCreate()}
-              data-testid="taxonomy-add-button"
-            >
-              <Icon name="plus" size={13} /> New taxonomy
-            </Button>
+            <FilterBar
+              data-testid="schema-filter-bar"
+              onSearchChange={paging.setSearch}
+              searchPlaceholder="Search by title or identifier…"
+              showingCount={total ?? 0}
+              totalCount={counts.taxonomies ?? total ?? 0}
+            />
+
+            <EntitySurface
+              ref={surfaceRef}
+              entityType="taxonomy"
+              data={pageData}
+              isLoading={isLoading}
+              columns={taxonomyColumns}
+              pagination={paging.pagination(total)}
+              onSort={paging.onSort}
+              onCreateSuccess={paging.resetPage}
+              renderInspector={(entity) => <TaxonomyDrawer key={entity.id} taxonomy={entity} />}
+              rowMenuActions={rowMenuActions}
+              onRowMenuAction={handleRowMenuAction}
+              onDeleteEntity={handleDelete}
+              bulkActions={bulkActions}
+              emptyStateTitle={emptyStateTitle}
+              emptyStateDescription={emptyStateDescription}
+              emptyStateShowAction={!filteredEmpty}
+              testId="taxonomies-surface"
+            />
           </>
-        }
-      />
-
-      <TabBar tabs={schemaTabs} activeTabId="taxonomies" onSelectTab={handleTabNavigate} />
-
-      {error ? (
-        <ErrorBanner error={error} onRetry={() => refetch()} message="Failed to load taxonomies" />
-      ) : (
-        <>
-          <FilterBar
-            data-testid="schema-filter-bar"
-            onSearchChange={paging.setSearch}
-            searchPlaceholder="Search by title or identifier…"
-            showingCount={total ?? 0}
-            totalCount={counts.taxonomies ?? total ?? 0}
-          />
-
-          <EntitySurface
-            ref={surfaceRef}
-            entityType="taxonomy"
-            data={pageData}
-            isLoading={isLoading}
-            columns={taxonomyColumns}
-            pagination={paging.pagination(total)}
-            onSort={paging.onSort}
-            onCreateSuccess={paging.resetPage}
-            renderInspector={(entity) => <TaxonomyDrawer key={entity.id} taxonomy={entity} />}
-            rowMenuActions={rowMenuActions}
-            onRowMenuAction={handleRowMenuAction}
-            onDeleteEntity={handleDelete}
-            bulkActions={bulkActions}
-            emptyStateTitle={emptyStateTitle}
-            emptyStateDescription={emptyStateDescription}
-            emptyStateShowAction={!filteredEmpty}
-            testId="taxonomies-surface"
-          />
-        </>
-      )}
-    </div>
+        )}
+      </div>
+    </EntityPageLayout>
   );
 }
 
