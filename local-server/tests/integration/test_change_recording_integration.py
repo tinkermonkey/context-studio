@@ -459,7 +459,7 @@ class TestChangeRecordingIntegration:
             assert len(change_events) == 1
             change_event = change_events[0]
             assert change_event.operation == ChangeOperation.DELETE
-            assert change_event.previous_state["taxonomy_id"] == taxonomy_id
+            assert change_event.previous_state["id"] == taxonomy_id
             assert change_event.previous_state["title"] == "Biology"
             assert change_event.change_reason == "Taxonomy deleted"
         finally:

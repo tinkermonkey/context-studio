@@ -8,6 +8,7 @@ from adapters.events.change_recorder import ChangeEventRecorder
 from domain.extraction.events import ExtractionCompleted
 from domain.interchange.services import set_batch_run_context
 from domain.ontology.events import (
+    AttributeDefinitionDeleted,
     ClassCreated,
     ClassDeleted,
     ClassMoved,
@@ -474,6 +475,7 @@ class TestOntologyHandlers:
             concept_scheme_id="scheme-1",
             title="My Concept Scheme",
             taxonomy_id="tax-1",
+            snapshot={"id": "scheme-1", "taxonomy_id": "tax-1", "title": "My Concept Scheme"},
         )
 
         recorder.on_scheme_deleted(event)
@@ -483,14 +485,16 @@ class TestOntologyHandlers:
         assert call_args.kwargs["entity_id"] == "scheme-1"
         assert call_args.kwargs["entity_type"] == "concept_scheme"
         assert call_args.kwargs["operation"] == "delete"
-        assert call_args.kwargs["previous_state"]["concept_scheme_id"] == "scheme-1"
-        assert call_args.kwargs["previous_state"]["title"] == "My Concept Scheme"
-        assert call_args.kwargs["previous_state"]["taxonomy_id"] == "tax-1"
+        assert call_args.kwargs["previous_state"] == event.snapshot
 
     def test_on_taxonomy_deleted(self, recorder, mock_change_repo):
         """Test TaxonomyDeleted event recording."""
         mock_change_repo.record_change.return_value = "change-123"
-        event = TaxonomyDeleted(taxonomy_id="tax-1", title="My Taxonomy")
+        event = TaxonomyDeleted(
+            taxonomy_id="tax-1",
+            title="My Taxonomy",
+            snapshot={"id": "tax-1", "title": "My Taxonomy"},
+        )
 
         recorder.on_taxonomy_deleted(event)
 
@@ -499,19 +503,21 @@ class TestOntologyHandlers:
         assert call_args.kwargs["entity_id"] == "tax-1"
         assert call_args.kwargs["entity_type"] == "taxonomy"
         assert call_args.kwargs["operation"] == "delete"
-        assert call_args.kwargs["previous_state"]["title"] == "My Taxonomy"
+        assert call_args.kwargs["previous_state"] == event.snapshot
 
     def test_on_class_deleted(self, recorder, mock_change_repo):
         """Test ClassDeleted event recording."""
         mock_change_repo.record_change.return_value = "change-456"
-        event = ClassDeleted(class_id="class-1", title="My Class")
+        event = ClassDeleted(
+            class_id="class-1", title="My Class", snapshot={"id": "class-1", "title": "My Class"}
+        )
 
         recorder.on_class_deleted(event)
 
         call_args = mock_change_repo.record_change.call_args
         assert call_args.kwargs["entity_id"] == "class-1"
         assert call_args.kwargs["operation"] == "delete"
-        assert call_args.kwargs["previous_state"]["title"] == "My Class"
+        assert call_args.kwargs["previous_state"] == event.snapshot
 
     def test_on_relationship_deleted(self, recorder, mock_change_repo):
         """Test RelationshipDeleted event recording."""
@@ -521,6 +527,12 @@ class TestOntologyHandlers:
             source_id="source-1",
             target_id="target-1",
             property_definition_id="prop-1",
+            snapshot={
+                "id": "rel-1",
+                "source_id": "source-1",
+                "target_id": "target-1",
+                "property_definition_id": "prop-1",
+            },
         )
 
         recorder.on_relationship_deleted(event)
@@ -528,7 +540,7 @@ class TestOntologyHandlers:
         call_args = mock_change_repo.record_change.call_args
         assert call_args.kwargs["entity_id"] == "rel-1"
         assert call_args.kwargs["operation"] == "delete"
-        assert call_args.kwargs["previous_state"]["source_id"] == "source-1"
+        assert call_args.kwargs["previous_state"] == event.snapshot
 
     def test_on_property_definition_deleted(self, recorder, mock_change_repo):
         """Test PropertyDefinitionDeleted event recording."""
@@ -537,6 +549,7 @@ class TestOntologyHandlers:
             property_id="prop-1",
             identifier="hasChild",
             title="Has Child",
+            snapshot={"id": "prop-1", "identifier": "hasChild", "title": "Has Child"},
         )
 
         recorder.on_property_definition_deleted(event)
@@ -546,13 +559,36 @@ class TestOntologyHandlers:
         assert call_args.kwargs["entity_id"] == "prop-1"
         assert call_args.kwargs["entity_type"] == "property_definition"
         assert call_args.kwargs["operation"] == "delete"
-        assert call_args.kwargs["previous_state"]["identifier"] == "hasChild"
+        assert call_args.kwargs["previous_state"] == event.snapshot
         assert call_args.kwargs["previous_state"]["title"] == "Has Child"
+
+    def test_on_attribute_definition_deleted(self, recorder, mock_change_repo):
+        """Test AttributeDefinitionDeleted event recording."""
+        mock_change_repo.record_change.return_value = "change-222"
+        event = AttributeDefinitionDeleted(
+            attribute_definition_id="attr-1",
+            class_id="class-1",
+            identifier="legs",
+            title="Legs",
+            snapshot={"id": "attr-1", "class_id": "class-1", "identifier": "legs"},
+        )
+
+        recorder.on_attribute_definition_deleted(event)
+
+        call_args = mock_change_repo.record_change.call_args
+        assert call_args.kwargs["entity_id"] == "attr-1"
+        assert call_args.kwargs["entity_type"] == "attribute_definition"
+        assert call_args.kwargs["operation"] == "delete"
+        assert call_args.kwargs["previous_state"] == event.snapshot
 
     def test_on_individual_deleted(self, recorder, mock_change_repo):
         """Test IndividualDeleted event recording."""
         mock_change_repo.record_change.return_value = "change-111"
-        event = IndividualDeleted(individual_id="individual-1", title="John Doe")
+        event = IndividualDeleted(
+            individual_id="individual-1",
+            title="John Doe",
+            snapshot={"id": "individual-1", "class_ids": ["class-1"], "title": "John Doe"},
+        )
 
         recorder.on_individual_deleted(event)
 
@@ -561,5 +597,4 @@ class TestOntologyHandlers:
         assert call_args.kwargs["entity_id"] == "individual-1"
         assert call_args.kwargs["entity_type"] == "individual"
         assert call_args.kwargs["operation"] == "delete"
-        assert call_args.kwargs["previous_state"]["individual_id"] == "individual-1"
-        assert call_args.kwargs["previous_state"]["title"] == "John Doe"
+        assert call_args.kwargs["previous_state"] == event.snapshot
