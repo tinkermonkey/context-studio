@@ -118,6 +118,8 @@ class PipelineRun:
         created_at: UTC timestamp of run creation
         started_at: UTC timestamp when run actually started executing (RUNNING status)
         failure_reason: String description of failure reason if status=FAILED
+        source_text: Input text the run extracted from (None for pipeline types
+            without a text input); provenance span offsets index into it
     """
 
     id: str = field(default_factory=lambda: str(uuid4()))
@@ -134,6 +136,7 @@ class PipelineRun:
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     started_at: datetime | None = None
     failure_reason: str | None = None
+    source_text: str | None = None
 
     def __post_init__(self) -> None:
         if not self.batch_run_id:

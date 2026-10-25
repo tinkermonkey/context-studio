@@ -21,6 +21,7 @@ from domain.pipelines.ports import LLMResponse
 from domain.pipelines.schema_extraction.orchestrator import (
     SchemaExtractionOrchestrator,
     SchemaExtractionState,
+    join_documents,
 )
 
 
@@ -511,3 +512,16 @@ class TestDisambiguation:
         classes = await _disambiguate('{"ambiguous_terms": []}', "Coroutine", "Task")
 
         assert [c.label for c in classes] == ["Coroutine", "Task"]
+
+
+class TestJoinDocuments:
+    """join_documents builds the text that schema provenance offsets index into."""
+
+    def test_joins_documents_with_a_space(self):
+        assert join_documents(["First.", "Second."]) == "First. Second."
+
+    def test_skips_non_string_documents(self):
+        assert join_documents(["Only.", 3, None]) == "Only."
+
+    def test_non_list_input_is_empty(self):
+        assert join_documents("not a list") == ""

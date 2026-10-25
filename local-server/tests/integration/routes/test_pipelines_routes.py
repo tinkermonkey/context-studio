@@ -27,6 +27,9 @@ from domain.pipelines.exceptions import (
     PipelineInputError,
     PipelineStorageError,
 )
+from domain.pipelines.individual_extraction.orchestrator import (
+    IndividualExtractionOrchestrator,
+)
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -1268,6 +1271,73 @@ class TestRunStatusLifecycle:
         assert (
             "timeout" in run.failure_reason.lower() or "unavailable" in run.failure_reason.lower()
         )
+
+
+class TestRunSourceText:
+    """Runs persist their input text so a reopened review can show span highlights."""
+
+    @staticmethod
+    def _completed_orchestrator():
+        mock_orchestrator = AsyncMock()
+        mock_state = MagicMock()
+        mock_state.current_status = PipelineRunStatus.COMPLETED
+        mock_state.result = {}
+        mock_state.parse_warnings = []
+        mock_orchestrator.execute.return_value = mock_state
+        return mock_orchestrator
+
+    def _run(self, client, registries, ptype, orchestrator_class, body):
+        registries["implementation_registry"].register_impl(ptype, "default", orchestrator_class)
+        registries["config_registry"].register(ptype, "default", "default", {"model": "m"})
+        with patch(ORCHESTRATOR_PATCH_PATH, return_value=self._completed_orchestrator()):
+            response = client.post(
+                f"/api/pipelines/{ptype.value}/run",
+                json={"implementation_id": "default", "configuration_ref": "default", **body},
+            )
+        assert response.status_code == status.HTTP_201_CREATED
+        return response.json()
+
+    def test_individual_run_detail_returns_input_text(self, client, registries):
+        """GET /runs/{id} returns the text an individual extraction ran on."""
+        text = "Ada Lovelace wrote the first program."
+        created = self._run(
+            client,
+            registries,
+            PipelineType.INDIVIDUAL_EXTRACTION,
+            IndividualExtractionOrchestrator,
+            {"text": text, "ontology_id": "tax-1"},
+        )
+        assert created["source_text"] == text
+
+        detail = client.get(f"/api/pipelines/runs/{created['id']}").json()
+        assert detail["source_text"] == text
+
+    def test_schema_run_detail_returns_joined_documents(self, client, registries):
+        """Schema runs store the documents joined exactly as the pipeline reads them."""
+        created = self._run(
+            client,
+            registries,
+            PipelineType.SCHEMA_EXTRACTION,
+            SchemaExtractionOrchestrator,
+            {"documents": ["First doc.", "Second doc."]},
+        )
+
+        detail = client.get(f"/api/pipelines/runs/{created['id']}").json()
+        assert detail["source_text"] == "First doc. Second doc."
+
+    def test_run_list_omits_input_text(self, client, registries):
+        """GET /runs leaves source_text null to keep list pages small."""
+        self._run(
+            client,
+            registries,
+            PipelineType.SCHEMA_EXTRACTION,
+            SchemaExtractionOrchestrator,
+            {"documents": ["Some document."]},
+        )
+
+        items = client.get("/api/pipelines/runs").json()["items"]
+        assert len(items) == 1
+        assert items[0]["source_text"] is None
 
 
 class TestRevertEndpoint:

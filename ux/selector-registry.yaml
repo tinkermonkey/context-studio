@@ -2570,10 +2570,10 @@ selectors:
     description: "Resolved configuration refs and versions for the two pipeline types"
   - selector: extraction-review-stale
     component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
-    description: "Warning shown when the paragraph changed since the last run"
+    description: "Warning shown when the paragraph changed since the last run or the opened run"
   - selector: extraction-review-opened-run
     component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
-    description: "Notice shown when a run is opened by id (?runId=) from run history; source highlights are unavailable"
+    description: "Notice shown when a run is opened by id (?runId=) from run history; highlights use the run's stored source text (unavailable for runs without it)"
   - selector: extraction-review-tabs
     component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
     description: "Tab bar switching between schema and individual review"

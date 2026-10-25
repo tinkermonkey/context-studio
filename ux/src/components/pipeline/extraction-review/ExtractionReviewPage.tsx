@@ -143,6 +143,8 @@ export function ExtractionReviewPage({
     const asText = (v: unknown) => (typeof v === "string" ? v : "");
     setOpenedRunId(initialRun.id);
     setTab(kind);
+    // Show the paragraph the run read; its highlights index into it.
+    setText(initialRun.source_text ?? "");
     // Point the scope pickers at the run's scope so its labels resolve.
     setTaxonomyChoice(asText(input.taxonomy_id));
     setSchemeChoice(asText(input.concept_scheme_id));
@@ -158,7 +160,9 @@ export function ExtractionReviewPage({
     !!openedRunId &&
     !runs.lastRequest &&
     (runs.schema.run?.id === openedRunId || runs.individual.run?.id === openedRunId);
-  const runText = runs.lastRequest?.text ?? "";
+  // Highlights index into the text that was run: the live request, or the opened run's stored text.
+  const openedRunText = showingOpenedRun ? (initialRun?.source_text ?? "") : "";
+  const runText = runs.lastRequest?.text ?? openedRunText;
   const anyRunning = runs.schema.status === "running" || runs.individual.status === "running";
 
   const schemaCount = useSchemaExtractionCandidates(
@@ -352,7 +356,7 @@ export function ExtractionReviewPage({
             )}
           </div>
         </div>
-        {runs.lastRequest && text !== runText && (
+        {runText && text !== runText && (
           <>
             <div className="xr-gap-sm" />
             <FormCallout variant="warn" icon="alert" data-testid="extraction-review-stale">
@@ -367,8 +371,10 @@ export function ExtractionReviewPage({
         <>
           <div className="xr-gap-sm" />
           <FormCallout variant="info" icon="info" data-testid="extraction-review-opened-run">
-            Reviewing run <code>{openedRunId}</code> from run history. The source paragraph is not
-            stored with a run, so provenance highlights are unavailable.
+            Reviewing run <code>{openedRunId}</code> from run history.
+            {openedRunText
+              ? " Highlights show the paragraph the run read."
+              : " This run has no stored source paragraph, so provenance highlights are unavailable."}
           </FormCallout>
         </>
       )}
