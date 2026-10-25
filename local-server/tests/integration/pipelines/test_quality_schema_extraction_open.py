@@ -7,8 +7,11 @@ fully deterministically and OFFLINE (no LLM, no network). It asserts a valid
 output contract and an honest rule-mode baseline, and prints the metric table.
 
 Rule mode is a free, deterministic baseline that does NOT meet the production
-class_jaccard>=0.60 floor — exact-string-match against hand-labeled CamelCase
-ground truth requires the llm/hybrid synthesis modes (recorded cassettes) and
+class_jaccard>=0.60 floor. Labels are compared via
+test_quality_schema_extraction.normalize_label (case, spacing and punctuation
+ignored, since 2026-10-24; earlier quality-loop rows used exact string match and
+are not directly comparable), but recall against the small hand-labeled
+ground truth still needs the llm/hybrid synthesis modes (recorded cassettes) and
 closed-loop knob tuning. This test pins the baseline and proves the open
 pipeline assembles the correct contract; the floor itself is driven by Phase 6.
 """

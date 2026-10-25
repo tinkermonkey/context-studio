@@ -49,7 +49,8 @@ class MetricsEmitter:
             config_ref: Configuration reference
             config_version: Configuration version number
             metrics: Dict of metric_name → metric_value pairs
-            mode: Execution mode ("cassette" or "live")
+            mode: Execution mode: "cassette" or "live", with a "-diagnostic" suffix
+                for scenarios reported but not gated (e.g. "cassette-diagnostic")
             source: Source of metrics ("automated" or "human_eval")
             duration_ms: Execution duration in milliseconds
             tokens_in: Input token count

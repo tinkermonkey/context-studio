@@ -56,12 +56,55 @@ def _serialize_provenance(spans: list[SourceSpan]) -> list[dict[str, Any]]:
     for span in spans:
         # Include all spans that have a quote, whether or not they have offsets
         if span.quote is not None:
-            provenance_dicts.append({
-                "quote": span.quote,
-                "start": span.start,
-                "end": span.end,
-            })
+            provenance_dicts.append(
+                {
+                    "quote": span.quote,
+                    "start": span.start,
+                    "end": span.end,
+                }
+            )
     return provenance_dicts
+
+
+_MAX_QUALIFIER_WORDS = 3
+
+
+def _is_false(value: Any) -> bool:
+    """True for a boolean false or a string the LLM used to mean false."""
+    if isinstance(value, str):
+        return value.strip().lower() in {"false", "no", "0"}
+    return value is False
+
+
+def _in_text_senses(raw_senses: Any) -> list[tuple[str, str | None]]:
+    """
+    Normalize a disambiguation reply's senses to ``(qualifier, definition)`` pairs,
+    keeping only senses the text uses.
+
+    Structured senses carry ``used_in_text``; a sense marked false (boolean or
+    the strings "false"/"no"/"0") is dropped. Plain-string senses (the older reply
+    shape) count as used. Qualifiers are capped at three words so a definition can
+    never become a label; a longer or missing qualifier falls back to "sense N",
+    numbered among the kept senses. Duplicate qualifiers are dropped.
+    """
+    pairs: list[tuple[str, str | None]] = []
+    seen: set[str] = set()
+    for sense in raw_senses if isinstance(raw_senses, list) else []:
+        if isinstance(sense, dict):
+            if _is_false(sense.get("used_in_text")):
+                continue
+            qualifier = str(sense.get("qualifier") or "").strip()
+            definition = str(sense.get("definition") or "").strip() or None
+        else:
+            qualifier = str(sense or "").strip()
+            definition = qualifier or None
+        if not qualifier or len(qualifier.split()) > _MAX_QUALIFIER_WORDS:
+            qualifier = f"sense {len(pairs) + 1}"
+        if qualifier.lower() in seen:
+            continue
+        seen.add(qualifier.lower())
+        pairs.append((qualifier, definition))
+    return pairs
 
 
 @dataclass
@@ -626,9 +669,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                             ),
                             "fallback_action": "use connection without concrete provenance",
                         }
-                        state = replace(
-                            state, parse_warnings=state.parse_warnings + [warning]
-                        )
+                        state = replace(state, parse_warnings=state.parse_warnings + [warning])
 
                     conn = CandidateConnection(
                         subject_ref=subject,
@@ -686,26 +727,40 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
 
     async def _stage_disambiguation(self, state: SchemaExtractionState) -> SchemaExtractionState:
         """
-        Stage 6: Handle multi-sense terms by creating separate candidates with rationale.
+        Stage 6: Add sense candidates for a term only when the text itself uses
+        it in more than one sense. The original term is kept.
+
+        Senses the text does not use (dictionary meanings such as "Python (a
+        snake)" in a programming text) are dropped. A term with fewer than two
+        in-text senses is left as it is. When a term is split, each sense's
+        definition goes into ``proposed_definition``; the label stays the term
+        plus a short qualifier (at most three words), never the definition.
         """
         if not state.candidate_classes:
             return replace(state, steps_completed=state.steps_completed + ["disambiguation"])
 
         system_prompt = (
-            "You are an expert in word sense disambiguation. "
-            "Identify if any of the given terms have multiple meanings or senses in the context. "
+            "You are an expert in word sense disambiguation for ontology design. "
+            "Report only terms that the given text itself uses in MORE THAN ONE distinct "
+            "sense. Ignore senses that do not occur in the text, such as everyday or "
+            "dictionary meanings unrelated to its subject. "
             "Return a JSON object with ambiguous terms and their senses."
         )
 
         labels = [c.label for c in state.candidate_classes]
         user_prompt = (
-            f"Check these terms for multiple senses:\n\n"
+            f"Check these terms for multiple senses used in the text:\n\n"
             f"Terms: {', '.join(labels)}\n\n"
             f"Context: {state.normalized_text[:3000]}\n\n"
+            "Most terms have a single sense in the text; return an empty list then.\n"
             "Return JSON:\n"
             "{\n"
             '  "ambiguous_terms": [\n'
-            '    {"term": "Term1", "senses": ["Sense A", "Sense B"], "rationale": "Explanation"}\n'
+            '    {"term": "Term1", "rationale": "Why the text uses it in several senses",\n'
+            '     "senses": [\n'
+            '       {"qualifier": "1-3 word sense name", "definition": "One-sentence '
+            'definition of this sense", "used_in_text": true}\n'
+            "     ]}\n"
             "  ]\n"
             "}"
         )
@@ -723,33 +778,43 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         try:
             parsed = extract_json(response.content)
             if isinstance(parsed, dict):
-                for ambig in parsed.get("ambiguous_terms", []):
-                    term = ambig.get("term", "")
-                    senses = ambig.get("senses", [])
-                    rationale = ambig.get("rationale", "")
+                for ambig in parsed.get("ambiguous_terms", []) or []:
+                    if not isinstance(ambig, dict):
+                        continue
+                    term = str(ambig.get("term") or "").strip()
+                    rationale = ambig.get("rationale", "") or ""
+                    senses = _in_text_senses(ambig.get("senses", []))
 
                     original_idx = next(
-                        (i for i, c in enumerate(disambiguated) if c.label == term), -1
+                        (
+                            i
+                            for i, c in enumerate(disambiguated)
+                            if c.label.strip().lower() == term.lower()
+                        ),
+                        -1,
                     )
-                    if original_idx >= 0 and len(senses) > 1:
-                        original = disambiguated[original_idx]
-                        disambiguated_candidates = []
-                        for i, sense in enumerate(senses):
-                            new_label = f"{term} ({sense})" if sense else term
-                            candidate = CandidateClass(
-                                label=new_label,
-                                proposed_definition=original.proposed_definition,
-                                confidence=max(0.0, original.confidence - 0.1),
-                                provenance=original.provenance,
-                                disambiguation_rationale=f"Sense {i+1}: {rationale}",
-                            )
-                            disambiguated_candidates.append(candidate)
+                    if original_idx < 0 or len(senses) < 2:
+                        continue
 
-                        disambiguated = (
-                            disambiguated[:original_idx]
-                            + disambiguated_candidates
-                            + disambiguated[original_idx + 1 :]
+                    original = disambiguated[original_idx]
+                    # Keep the original term: connection proposal (stage 5) ran
+                    # before this stage and refers to it by label, so removing it
+                    # would leave those connections pointing at no class and apply
+                    # would silently drop them. The senses follow it as narrower
+                    # candidates the reviewer can accept or reject.
+                    split = [original] + [
+                        CandidateClass(
+                            label=f"{original.label} ({qualifier})",
+                            proposed_definition=definition or original.proposed_definition,
+                            confidence=max(0.0, original.confidence - 0.1),
+                            provenance=original.provenance,
+                            disambiguation_rationale=f"Sense {i + 1}: {rationale}",
                         )
+                        for i, (qualifier, definition) in enumerate(senses)
+                    ]
+                    disambiguated = (
+                        disambiguated[:original_idx] + split + disambiguated[original_idx + 1 :]
+                    )
             else:
                 warning = {
                     "stage": "disambiguation",
