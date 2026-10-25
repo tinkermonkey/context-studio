@@ -1,0 +1,75 @@
+name: Unit and Frontend Checks
+
+"on":
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend-unit:
+    name: Backend unit tests + domain purity
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: local-server
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+        cache-dependency-path: |
+          local-server/requirements.txt
+          local-server/requirements-dev.txt
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+
+    - name: Check domain imports
+      run: python scripts/check_domain_imports.py
+
+    - name: Run unit tests
+      run: pytest tests/unit --tb=short -q
+      env:
+        HF_HUB_OFFLINE: '1'
+        TRANSFORMERS_OFFLINE: '1'
+
+  frontend:
+    name: Frontend typecheck, selectors, vitest
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: ux
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24'
+        cache: 'npm'
+        cache-dependency-path: ux/package-lock.json
+
+    - name: Install dependencies
+      run: npm ci
+      env:
+        HUSKY: '0'
+
+    - name: Typecheck
+      run: npm run typecheck
+
+    - name: Validate selector contract
+      run: npm run validate-selectors
+
+    - name: Run vitest
+      run: npx vitest run
