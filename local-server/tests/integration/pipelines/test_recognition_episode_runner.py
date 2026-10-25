@@ -226,9 +226,34 @@ def dr_ontology_dir() -> Path:
     return cast(Path, spec_dir)
 
 
+@pytest.fixture(scope="module")
+def real_embedding_service():
+    """
+    Real (offline, cached) embeddings, as in the Level 1 harness.
+
+    The surface-variant tests need them: only casing-only variants resolve by
+    the exact-label tier; plural variants ("Data Object" / "data objects",
+    "RAPL Counter" / "RAPL counters") resolve only by vector similarity, and
+    FakeEmbeddingService's hash vectors carry no semantic signal (cosine 0.45
+    and 0.83 for those pairs, under the 0.90 recognition threshold).
+    """
+    os.environ.setdefault("HF_HUB_OFFLINE", "1")
+    os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+    from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
+
+    try:
+        emb = SentenceTransformerEmbedding()
+        emb.embed("warmup")
+    except OSError as exc:
+        pytest.skip(f"SentenceTransformer unavailable offline: {exc}")
+    return emb
+
+
 class TestRunFullPipelineEpisode:
     @pytest.mark.asyncio
-    async def test_state_accumulates_across_documents(self, dr_ontology_dir, tmp_path):
+    async def test_state_accumulates_across_documents(
+        self, dr_ontology_dir, real_embedding_service, tmp_path
+    ):
         """
         A mention in doc_02 resolves to the individual created while applying doc_01
         -- the graph, individual index, and ontology repo persist across the run.
@@ -238,7 +263,7 @@ class TestRunFullPipelineEpisode:
         await _record_episode_cassettes(dr_ontology_dir, episode_dir, cassette_dir)
 
         result = await run_full_pipeline_episode(
-            "surface_variants", cassette_dir, dr_ontology_dir, FakeEmbeddingService()
+            "surface_variants", cassette_dir, dr_ontology_dir, real_embedding_service
         )
 
         assert not result.extraction_misses
@@ -259,7 +284,9 @@ class TestRunFullPipelineEpisode:
         assert next(iter(node_ids)) in doc_01.apply_result.created_individual_ids
 
     @pytest.mark.asyncio
-    async def test_recognition_metrics_over_surface_variants(self, dr_ontology_dir, tmp_path):
+    async def test_recognition_metrics_over_surface_variants(
+        self, dr_ontology_dir, real_embedding_service, tmp_path
+    ):
         """The full-pipeline mapping scores identically to the Level 1 (GT-mention) replay
         when the LLM extracts every ground-truth mention -- casing/pluralization variants
         merge perfectly."""
@@ -268,7 +295,7 @@ class TestRunFullPipelineEpisode:
         await _record_episode_cassettes(dr_ontology_dir, episode_dir, cassette_dir)
 
         result = await run_full_pipeline_episode(
-            "surface_variants", cassette_dir, dr_ontology_dir, FakeEmbeddingService()
+            "surface_variants", cassette_dir, dr_ontology_dir, real_embedding_service
         )
         metrics = recognition_metrics(result.mentions)
 
