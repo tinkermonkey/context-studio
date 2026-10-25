@@ -1746,6 +1746,9 @@ selectors:
   - selector: schema-grounding-nodes
     component: components/pipeline/wizards/SchemaGroundingWizard.tsx
     description: Target nodes entity picker in schema grounding wizard
+  - selector: schema-grounding-nodes-list
+    component: components/pipeline/EntitySearchPicker.tsx
+    description: Selected target-node chips of the schema grounding wizard's multi-select entity picker
   - selector: schema-grounding-sources
     component: components/pipeline/wizards/SchemaGroundingWizard.tsx
     description: Knowledge sources multi-select checkboxes in schema grounding wizard
