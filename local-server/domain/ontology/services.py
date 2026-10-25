@@ -1236,6 +1236,7 @@ class OntologyService:
                     class_id=attr_def.class_id,
                     identifier=attr_def.identifier,
                     title=attr_def.title,
+                    snapshot=entity_snapshot(attr_def),
                 )
             )
             if failures:
@@ -3253,6 +3254,7 @@ class OntologyService:
                 class_id=attr_def.class_id,
                 identifier=attr_def.identifier,
                 title=attr_def.title,
+                snapshot=entity_snapshot(attr_def),
             )
         )
         if failures:

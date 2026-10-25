@@ -91,6 +91,7 @@ from domain.extraction.services import ExtractionService
 from domain.graph.services import GraphAnalysisService
 from domain.interchange.services import ImportRunService
 from domain.ontology.events import (
+    AttributeDefinitionDeleted,
     ClassCreated,
     ClassDeleted,
     ClassMoved,
@@ -677,6 +678,14 @@ async def lifespan(app: FastAPI):
         event_publisher.subscribe(IndividualDeleted, change_recorder.on_individual_deleted)
         logger.info(
             "Event subscription: IndividualDeleted ->" " ChangeEventRecorder.on_individual_deleted"
+        )
+
+        event_publisher.subscribe(
+            AttributeDefinitionDeleted, change_recorder.on_attribute_definition_deleted
+        )
+        logger.info(
+            "Event subscription: AttributeDefinitionDeleted ->"
+            " ChangeEventRecorder.on_attribute_definition_deleted"
         )
 
         # --- Store services in app.state for dependency injection ---

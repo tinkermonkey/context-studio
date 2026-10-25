@@ -34,6 +34,7 @@ from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIn
 from adapters.recognition.individual_recognizer import CascadeIndividualRecognizer
 from domain.interchange.services import set_batch_run_context
 from domain.ontology.entities import (
+    AttributeDefinition,
     Class,
     ConceptScheme,
     Individual,
@@ -41,6 +42,7 @@ from domain.ontology.entities import (
     Taxonomy,
 )
 from domain.ontology.events import (
+    AttributeDefinitionDeleted,
     ClassDeleted,
     ClassUpdated,
     IndividualCreated,
@@ -53,6 +55,7 @@ from domain.ontology.events import (
 from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import (
     DataPropertyValue,
+    DataType,
     ExternalReference,
     LexicalSense,
     Status,
@@ -136,6 +139,7 @@ def ontology_service(ontology_repo, change_repo, embedding, schema_index, indivi
     publisher.subscribe(IndividualDeleted, recorder.on_individual_deleted)
     publisher.subscribe(ClassUpdated, recorder.on_class_updated)
     publisher.subscribe(ClassDeleted, recorder.on_class_deleted)
+    publisher.subscribe(AttributeDefinitionDeleted, recorder.on_attribute_definition_deleted)
     publisher.subscribe(PropertyDefinitionDeleted, recorder.on_property_definition_deleted)
     publisher.subscribe(RelationshipCreated, recorder.on_relationship_created)
     publisher.subscribe(RelationshipDeleted, recorder.on_relationship_deleted)
@@ -370,7 +374,11 @@ def test_delete_then_revert_restores_individual_exactly_with_its_relationships(
 def test_delete_then_revert_restores_class_exactly_with_its_relationships(
     pipeline_repo, ontology_repo, ontology_service, schema_index, embedding, revert_service
 ):
-    """create -> delete -> revert round-trips a class and the relationships deleted with it."""
+    """
+    create -> delete -> revert round-trips a class plus the relationships and
+    attribute definitions deleted with it. Undo runs newest first, so the class
+    is restored before the attribute definitions and relationships that need it.
+    """
     ontology_repo.save_property_definition(
         PropertyDefinition(id=PROP_ID, identifier="supplies", title="supplies")
     )
@@ -391,14 +399,50 @@ def test_delete_then_revert_restores_class_exactly_with_its_relationships(
         )
     )
     ontology_service.create_relationship(OTHER_CLASS_ID, CLASS_ID, PROP_ID)
+    ontology_repo.save_attribute_definition(
+        AttributeDefinition(
+            id="attr-tier",
+            class_id=OTHER_CLASS_ID,
+            identifier="tier",
+            title="Tier",
+            datatype=DataType.INTEGER,
+            description="Supplier tier.",
+            is_required=True,
+            default_value="1",
+            sort_order=2,
+            external_references=[ExternalReference(source="dr", identifier="tier")],
+            status=Status.PUBLISHED,
+        )
+    )
+    ontology_repo.save_attribute_definition(
+        AttributeDefinition(
+            id="attr-region",
+            class_id=OTHER_CLASS_ID,
+            identifier="region",
+            title="Region",
+            datatype=DataType.STRING,
+            allowed_values=["emea", "apac"],
+        )
+    )
     before = ontology_repo.get_class(OTHER_CLASS_ID)
     relationships_before = ontology_repo.list_relationships(source_id=OTHER_CLASS_ID, limit=None)
+    attributes_before = ontology_repo.list_attribute_definitions(
+        class_id=OTHER_CLASS_ID, limit=None
+    )
+    assert len(attributes_before) == 2
 
     run = _new_run(pipeline_repo)
     _in_run(run.id, lambda: ontology_service.delete_class(OTHER_CLASS_ID))
     assert ontology_repo.get_class(OTHER_CLASS_ID) is None
+    assert ontology_repo.get_attribute_definition("attr-tier") is None
 
-    revert_service.revert_with_summary(run.id)
+    result = revert_service.revert_with_summary(run.id)
+
+    assert result.entities_restored == 4
+    attributes_after = ontology_repo.list_attribute_definitions(class_id=OTHER_CLASS_ID, limit=None)
+    assert sorted(map(_without_bookkeeping, attributes_after), key=lambda a: a.id) == sorted(
+        map(_without_bookkeeping, attributes_before), key=lambda a: a.id
+    )
 
     after = ontology_repo.get_class(OTHER_CLASS_ID)
     assert after is not None

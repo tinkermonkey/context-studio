@@ -8,6 +8,7 @@ from adapters.events.change_recorder import ChangeEventRecorder
 from domain.extraction.events import ExtractionCompleted
 from domain.interchange.services import set_batch_run_context
 from domain.ontology.events import (
+    AttributeDefinitionDeleted,
     ClassCreated,
     ClassDeleted,
     ClassMoved,
@@ -560,6 +561,25 @@ class TestOntologyHandlers:
         assert call_args.kwargs["operation"] == "delete"
         assert call_args.kwargs["previous_state"] == event.snapshot
         assert call_args.kwargs["previous_state"]["title"] == "Has Child"
+
+    def test_on_attribute_definition_deleted(self, recorder, mock_change_repo):
+        """Test AttributeDefinitionDeleted event recording."""
+        mock_change_repo.record_change.return_value = "change-222"
+        event = AttributeDefinitionDeleted(
+            attribute_definition_id="attr-1",
+            class_id="class-1",
+            identifier="legs",
+            title="Legs",
+            snapshot={"id": "attr-1", "class_id": "class-1", "identifier": "legs"},
+        )
+
+        recorder.on_attribute_definition_deleted(event)
+
+        call_args = mock_change_repo.record_change.call_args
+        assert call_args.kwargs["entity_id"] == "attr-1"
+        assert call_args.kwargs["entity_type"] == "attribute_definition"
+        assert call_args.kwargs["operation"] == "delete"
+        assert call_args.kwargs["previous_state"] == event.snapshot
 
     def test_on_individual_deleted(self, recorder, mock_change_repo):
         """Test IndividualDeleted event recording."""

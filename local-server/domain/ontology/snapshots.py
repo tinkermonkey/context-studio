@@ -14,6 +14,7 @@ from enum import Enum
 from typing import Any, Callable
 
 from domain.ontology.entities import (
+    AttributeDefinition,
     Class,
     ConceptScheme,
     Individual,
@@ -23,6 +24,7 @@ from domain.ontology.entities import (
 )
 from domain.ontology.value_objects import (
     DataPropertyValue,
+    DataType,
     ExternalReference,
     LexicalSense,
     OntologyMapping,
@@ -36,6 +38,7 @@ _ENTITY_TYPES: dict[str, type] = {
     "individual": Individual,
     "relationship": Relationship,
     "property_definition": PropertyDefinition,
+    "attribute_definition": AttributeDefinition,
 }
 
 _EXCLUDED_FIELDS = {"embedding"}
@@ -47,6 +50,7 @@ def _parse_datetime(value: str) -> datetime:
 
 _DECODERS: dict[str, Callable[[Any], Any]] = {
     "status": Status,
+    "datatype": DataType,
     "created_at": _parse_datetime,
     "last_modified": _parse_datetime,
     "external_references": lambda refs: [ExternalReference.from_dict(r) for r in refs],

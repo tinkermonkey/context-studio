@@ -18,6 +18,7 @@ sys.path.append(
 import pytest
 
 from domain.ontology.entities import (
+    AttributeDefinition,
     Class,
     ConceptScheme,
     Individual,
@@ -25,7 +26,8 @@ from domain.ontology.entities import (
     Relationship,
     Taxonomy,
 )
-from domain.ontology.value_objects import ExternalReference
+from domain.ontology.snapshots import entity_snapshot
+from domain.ontology.value_objects import DataType, ExternalReference
 from domain.versioning.exceptions import RevertConflictError
 from domain.versioning.revert_service import RevertService
 from domain.versioning.value_objects import ChangeOperation
@@ -1386,3 +1388,31 @@ def test_revert_of_create_then_update_does_not_index_the_deleted_entity(
 
     assert ontology_repo.get_class("cls-1") is None
     assert "cls-1" not in schema_index._entities
+
+
+def test_inverse_delete_attribute_definition(ontology_repo, change_repo, revert_svc):
+    """Reverting an attribute definition's delete recreates it from its snapshot."""
+    ontology_repo.save_class(
+        Class(id="cls-1", concept_scheme_id="scheme-1", taxonomy_id="tx-1", title="Animal")
+    )
+    attr = AttributeDefinition(
+        id="attr-1",
+        class_id="cls-1",
+        identifier="legs",
+        title="Legs",
+        datatype=DataType.INTEGER,
+        allowed_values=["2", "4"],
+    )
+    change_repo.record_change(
+        entity_id="attr-1",
+        entity_type="attribute_definition",
+        operation=ChangeOperation.DELETE,
+        new_state={},
+        previous_state=entity_snapshot(attr),
+        batch_run_id="run-1",
+    )
+
+    result = revert_svc.revert_with_summary("run-1")
+
+    assert result.entities_restored == 1
+    assert ontology_repo.get_attribute_definition("attr-1") == attr

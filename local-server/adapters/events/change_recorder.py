@@ -15,6 +15,7 @@ from typing import Optional
 from domain.extraction.events import ExtractionCompleted
 from domain.interchange.services import get_current_batch_run_id
 from domain.ontology.events import (
+    AttributeDefinitionDeleted,
     ClassCreated,
     ClassDeleted,
     ClassMoved,
@@ -348,6 +349,16 @@ class ChangeEventRecorder:
             operation=ChangeOperation.DELETE,
             previous_state=event.snapshot,
             change_reason="Property definition deleted",
+        )
+
+    def on_attribute_definition_deleted(self, event: AttributeDefinitionDeleted) -> None:
+        """Handle AttributeDefinitionDeleted events."""
+        self._record(
+            entity_id=event.attribute_definition_id,
+            entity_type="attribute_definition",
+            operation=ChangeOperation.DELETE,
+            previous_state=event.snapshot,
+            change_reason="Attribute definition deleted",
         )
 
     # --- Individual Event Handlers ---

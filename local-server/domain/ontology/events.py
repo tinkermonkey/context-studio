@@ -429,6 +429,8 @@ class AttributeDefinitionDeleted(DomainEvent):
         class_id: ID of the parent class
         identifier: Machine-readable identifier for the attribute
         title: Display name for the attribute
+        snapshot: Every field of the deleted entity (see domain.ontology.snapshots),
+            so the delete can be reverted
     """
 
     _aggregate_id_field: ClassVar[str] = "attribute_definition_id"
@@ -436,3 +438,4 @@ class AttributeDefinitionDeleted(DomainEvent):
     class_id: str = ""
     identifier: str = ""
     title: str = ""
+    snapshot: dict[str, Any] = field(default_factory=dict)

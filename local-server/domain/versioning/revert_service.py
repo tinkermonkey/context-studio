@@ -449,6 +449,7 @@ class RevertService:
             "individual": self._ontology_repo.save_individual,
             "relationship": self._ontology_repo.save_relationship,
             "property_definition": self._ontology_repo.save_property_definition,
+            "attribute_definition": self._ontology_repo.save_attribute_definition,
         }
         save = savers.get(entity_type)
         if save is None:
@@ -482,6 +483,7 @@ class RevertService:
         normalized = entity_type.lower()
         normalized = normalized.replace("conceptscheme", "concept_scheme")
         normalized = normalized.replace("propertydefinition", "property_definition")
+        normalized = normalized.replace("attributedefinition", "attribute_definition")
         return normalized
 
     @staticmethod

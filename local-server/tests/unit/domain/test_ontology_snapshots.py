@@ -8,6 +8,7 @@ from types import MappingProxyType
 import pytest
 
 from domain.ontology.entities import (
+    AttributeDefinition,
     Class,
     ConceptScheme,
     Individual,
@@ -18,6 +19,7 @@ from domain.ontology.entities import (
 from domain.ontology.snapshots import entity_from_snapshot, entity_snapshot
 from domain.ontology.value_objects import (
     DataPropertyValue,
+    DataType,
     ExternalReference,
     LexicalSense,
     OntologyMapping,
@@ -121,6 +123,25 @@ ENTITIES = [
             is_relevant=True,
             lexical_senses=[SENSE],
             status=Status.PUBLISHED,
+        ),
+    ),
+    (
+        "attribute_definition",
+        AttributeDefinition(
+            id="attr-1",
+            class_id="cls-1",
+            identifier="legs",
+            title="Legs",
+            datatype=DataType.INTEGER,
+            description="Number of legs",
+            is_required=True,
+            allowed_values=["2", "4"],
+            default_value="4",
+            sort_order=1,
+            external_references=[REF],
+            created_at=NOW,
+            status=Status.PUBLISHED,
+            source_run_id="run-1",
         ),
     ),
 ]
