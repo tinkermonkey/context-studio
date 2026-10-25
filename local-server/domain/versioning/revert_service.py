@@ -17,7 +17,11 @@ from domain.versioning.exceptions import RevertConflictError
 from domain.versioning.value_objects import ChangeOperation
 
 if TYPE_CHECKING:
-    from domain.ontology.ports import OntologyRepository
+    from domain.ontology.ports import (
+        IndividualVectorIndex,
+        OntologyRepository,
+        SchemaVectorIndex,
+    )
     from domain.versioning.ports import ChangeRepository
 
 _logger = logging.getLogger(__name__)
@@ -32,16 +36,29 @@ class RevertService:
     Emits new change_events tagged with the originating batch_run_id for auditability.
     """
 
-    def __init__(self, change_repo: ChangeRepository, ontology_repo: OntologyRepository) -> None:
+    def __init__(
+        self,
+        change_repo: ChangeRepository,
+        ontology_repo: OntologyRepository,
+        schema_index: SchemaVectorIndex | None = None,
+        individual_index: IndividualVectorIndex | None = None,
+    ) -> None:
         """
         Initialize the RevertService.
 
         Args:
             change_repo: Repository for persisting and retrieving change events
             ontology_repo: Repository for ontology entities
+            schema_index: Optional schema vector index, re-synced for every class,
+                property definition and individual the revert restores or modifies
+            individual_index: Optional recognition index, re-synced for every
+                individual the revert restores or modifies and cleared for every
+                individual it deletes
         """
         self._change_repo = change_repo
         self._ontology_repo = ontology_repo
+        self._schema_index = schema_index
+        self._individual_index = individual_index
 
     def revert(self, batch_run_id: str) -> int:
         """
@@ -108,11 +125,13 @@ class RevertService:
         # get_changes returns newest first, which is the order to undo in: a
         # relationship is removed before the property it uses, and chained
         # updates unwind back to the oldest previous state.
+        touched: dict[str, str] = {}
         for event in pending:
             try:
                 if self._apply_inverse(event, batch_run_id):
                     reverted_count += 1
                     self._update_summary(event, summary)
+                    touched[event.entity_id] = self._normalize_entity_type(event.entity_type)
             except Exception as exc:
                 _logger.error(
                     f"Failed to revert event {event.id} for entity {event.entity_id}. "
@@ -120,6 +139,9 @@ class RevertService:
                     exc_info=exc,
                 )
                 raise
+
+        for entity_id, entity_type in touched.items():
+            self._sync_indexes(entity_id, entity_type)
 
         _logger.info(f"Reverted {reverted_count} events for batch run {batch_run_id}")
         return RevertResult(
@@ -156,8 +178,7 @@ class RevertService:
                 self._REVERT_MARKER not in reason
                 or existing_event.entity_id != event.entity_id
                 or existing_event.operation != inverse_op
-                or self._normalize_entity_type(existing_event.entity_type)
-                != normalized_entity_type
+                or self._normalize_entity_type(existing_event.entity_type) != normalized_entity_type
             ):
                 continue
             reverted_event_id = self._reverted_event_id(reason)
@@ -194,6 +215,49 @@ class RevertService:
         ]
         if blocking:
             raise RevertConflictError(batch_run_id, blocking)
+
+    def _sync_indexes(self, entity_id: str, entity_type: str) -> None:
+        """
+        Bring the vector indexes in line with an entity's state after the revert.
+
+        The revert writes through the repository, which stores text but not the
+        embeddings derived from it, so (as OntologyService does after its writes)
+        each surviving class, property definition and individual is re-embedded
+        from its current title/description, and a deleted individual is dropped
+        from the recognition index. Called once per entity after all its events
+        are undone, so the final state is what gets indexed.
+
+        Best-effort with the same contract as OntologyService's index sync: a
+        failure is logged and does not fail the already-applied revert; the
+        entity is unsearchable until the next reindex.
+        """
+        try:
+            if entity_type == "individual":
+                individual = self._ontology_repo.get_individual(entity_id)
+                if individual is None:
+                    if self._individual_index is not None:
+                        self._individual_index.remove_individual(entity_id)
+                    return
+                if self._individual_index is not None:
+                    self._individual_index.index_individual(
+                        entity_id, individual.title, individual.description
+                    )
+                entity = individual
+            elif entity_type == "class":
+                entity = self._ontology_repo.get_class(entity_id)
+            elif entity_type == "property_definition":
+                entity = self._ontology_repo.get_property_definition(entity_id)
+            else:
+                return
+            if entity is not None and self._schema_index is not None:
+                self._schema_index.index_entity(entity_id, entity.title, entity.description)
+        except Exception:  # noqa: BLE001 - index sync must not fail the revert
+            _logger.error(
+                "Vector index sync failed for %s %s after revert; not searchable until reindex.",
+                entity_type,
+                entity_id,
+                exc_info=True,
+            )
 
     _REVERT_MARKER = "_reverted_"
 
