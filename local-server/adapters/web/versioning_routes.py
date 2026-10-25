@@ -41,6 +41,7 @@ from domain.versioning.exceptions import (
     ConflictResolutionError,
     ProposalStateError,
     SyncError,
+    UnknownChangeEventError,
     VersionNotFoundError,
 )
 from domain.versioning.services import VersioningService
@@ -67,6 +68,8 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
     """
     if isinstance(exc, VersionNotFoundError):
         return (status.HTTP_404_NOT_FOUND, str(exc))
+    elif isinstance(exc, UnknownChangeEventError):
+        return (status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc))
     elif isinstance(exc, ChangesetStateError):
         return (status.HTTP_409_CONFLICT, str(exc))
     elif isinstance(exc, ProposalStateError):
@@ -223,7 +226,7 @@ async def create_changeset(
         Created ChangesetResponse with server-generated id
 
     Raises:
-        HTTPException: 400 for invalid input, 500 for internal errors
+        HTTPException: 422 for unknown change event ids, 500 for internal errors
     """
     try:
         changeset = await run_sync_in_executor(

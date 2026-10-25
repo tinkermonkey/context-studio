@@ -501,6 +501,23 @@ class OntologyRepository(Protocol):
         """
         ...
 
+    def find_references(self, entity_ids: Sequence[str]) -> list[EntityReference]:
+        """
+        Find rows that reference any of the given entities through a foreign key.
+
+        Covers scheme/class/individual/property links to their taxonomy, scheme,
+        parent class, structural property and domain/range classes, individual
+        class memberships, relationship endpoints and properties, and attribute
+        definitions. An entity's reference to itself is not reported.
+
+        Args:
+            entity_ids: IDs of the entities that would be deleted
+
+        Returns:
+            One EntityReference per (dependent, referenced entity) pair
+        """
+        ...
+
     def count_property_definitions_referencing_class(self, class_id: str) -> int:
         """
         Count property definitions that reference a class as domain or range.
@@ -725,6 +742,21 @@ class EmbeddingService(Protocol):
             Similarity score as float (typically 0.0 to 1.0)
         """
         ...
+
+
+@dataclass(frozen=True)
+class EntityReference:
+    """A row that references an ontology entity through a foreign key.
+
+    Attributes:
+        referenced_id: The entity being referenced
+        dependent_id: The entity (or relationship / attribute definition) holding the reference
+        dependent_kind: What the dependent is, e.g. "class", "individual", "relationship"
+    """
+
+    referenced_id: str
+    dependent_id: str
+    dependent_kind: str
 
 
 @dataclass(frozen=True)

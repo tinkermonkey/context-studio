@@ -1185,10 +1185,8 @@ class OntologyService:
             )
 
         # Check for property definitions referencing this class as domain/range.
-        # SQLite foreign keys are not enforced in this application (see
-        # connection.py), so the declared ondelete="SET NULL" never fires —
-        # deleting without this check would leave dangling domain_class_id/
-        # range_class_id references instead.
+        # The foreign keys would SET NULL those references silently; refuse
+        # instead so the user decides what happens to the properties.
         referencing_count = self._repository.count_property_definitions_referencing_class(class_id)
         if referencing_count:
             raise OntologyError(

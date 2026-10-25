@@ -13,7 +13,7 @@ Key responsibilities:
 """
 
 from datetime import datetime, timezone
-from typing import Any, Literal, Optional, cast
+from typing import Any, Literal, Optional, Sequence, cast
 
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
@@ -55,11 +55,25 @@ from domain.ontology.exceptions import (
     EntityInUseError,
     IdentifierConflictError,
 )
+from domain.ontology.ports import EntityReference
 from domain.ontology.value_objects import DataType, NodeType, SearchCriteria, Status
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+# ontology_entities columns that are foreign keys to ontology_entities.id
+_ENTITY_REFERENCE_COLUMNS = (
+    "taxonomy_id",
+    "concept_scheme_id",
+    "class_id",
+    "parent_class_id",
+    "structural_property_id",
+    "domain_class_id",
+    "range_class_id",
+)
+# Stay well under SQLite's bound-parameter limit in IN (...) clauses
+_SQLITE_IN_CHUNK = 500
 
 
 def _text_match(query: str) -> Any:
@@ -1146,6 +1160,55 @@ class SQLiteOntologyRepository:
                 q = q.filter(OntologyEntity.id.in_(set(ids)))
 
             return q.count()
+
+    def find_references(self, entity_ids: Sequence[str]) -> list[EntityReference]:
+        """
+        Find rows that reference any of the given entities through a foreign key.
+
+        Mirrors every foreign key into ontology_entities, so a caller can tell
+        before a delete which rows CASCADE, SET NULL or RESTRICT would touch.
+
+        Args:
+            entity_ids: IDs of the entities that would be deleted
+
+        Returns:
+            One EntityReference per (dependent, referenced entity) pair
+        """
+        ids = list(dict.fromkeys(entity_ids))
+        found: set[EntityReference] = set()
+        with self.session_factory() as session:
+            for start in range(0, len(ids), _SQLITE_IN_CHUNK):
+                chunk = ids[start : start + _SQLITE_IN_CHUNK]
+                for column in _ENTITY_REFERENCE_COLUMNS:
+                    ref_col = getattr(OntologyEntity, column)
+                    rows = session.query(
+                        OntologyEntity.id, OntologyEntity.node_type, ref_col
+                    ).filter(ref_col.in_(chunk), OntologyEntity.id != ref_col)
+                    found.update(
+                        EntityReference(ref, dep, str(getattr(kind, "value", kind)))
+                        for dep, kind, ref in rows
+                    )
+                memberships = session.query(
+                    IndividualClass.individual_id, IndividualClass.class_id
+                ).filter(IndividualClass.class_id.in_(chunk))
+                found.update(EntityReference(ref, dep, "individual") for dep, ref in memberships)
+                for column in ("source_id", "target_id", "property_definition_id"):
+                    ref_col = getattr(RelationshipORM, column)
+                    rows = session.query(RelationshipORM.id, ref_col).filter(ref_col.in_(chunk))
+                    found.update(EntityReference(ref, dep, "relationship") for dep, ref in rows)
+                for column in ("domain_class_id", "range_class_id"):
+                    ref_col = getattr(PropertyDefinitionORM, column)
+                    rows = session.query(PropertyDefinitionORM.id, ref_col).filter(
+                        ref_col.in_(chunk), PropertyDefinitionORM.id != ref_col
+                    )
+                    found.update(
+                        EntityReference(ref, dep, "property_definition") for dep, ref in rows
+                    )
+                rows = session.query(
+                    AttributeDefinitionORM.id, AttributeDefinitionORM.class_id
+                ).filter(AttributeDefinitionORM.class_id.in_(chunk))
+                found.update(EntityReference(ref, dep, "attribute_definition") for dep, ref in rows)
+        return sorted(found, key=lambda r: (r.referenced_id, r.dependent_kind, r.dependent_id))
 
     def count_property_definitions_referencing_class(self, class_id: str) -> int:
         """

@@ -77,6 +77,7 @@ from adapters.web.schemas.pipelines import (
 )
 from adapters.web.schemas.versioning import VersioningChangeEventResponse
 from domain.interchange.services import set_batch_run_context
+from domain.ontology.exceptions import EntityInUseError
 from domain.pipelines.apply_selection import RecognitionDecision
 from domain.pipelines.candidate_ids import (
     enumerate_items,
@@ -101,6 +102,7 @@ from domain.pipelines.registry import (
     PipelineImplementationRegistry,
     PipelineTypeRegistry,
 )
+from domain.versioning.exceptions import RevertConflictError
 from domain.versioning.services import VersioningService
 from utils.logger import get_logger
 
@@ -1941,7 +1943,8 @@ async def revert_pipeline_run(
         RevertRunResponse with count of events reverted
 
     Raises:
-        HTTPException: 404 if run not found, 500 for errors
+        HTTPException: 404 if run not found, 409 if entities outside the run depend on
+            entities it created (nothing is reverted), 500 for errors
     """
     repo = request.app.state.pipeline_run_repo
     run = repo.get(run_id)
@@ -1954,6 +1957,8 @@ async def revert_pipeline_run(
     revert_svc = request.app.state.revert_service
     try:
         revert_result = revert_svc.revert_with_summary(run.id)
+    except (RevertConflictError, EntityInUseError) as exc:
+        raise HTTPException(status_code=http_status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     except (PipelineStorageError, IntegrityError, OperationalError) as exc:
         _logger.error(f"Storage/database error reverting run {run_id}: {exc}")
         status_code, message = _handle_domain_error(

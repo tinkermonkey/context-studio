@@ -1502,6 +1502,131 @@ class TestRevertEndpoint:
         assert ontology_repo.get_class("cls-1") is None
         assert ontology_repo.get_class("cls-2") is not None
 
+    def _seed_scheme(self, ontology_repo):
+        from domain.ontology.entities import ConceptScheme, Taxonomy
+
+        ontology_repo.save_taxonomy(Taxonomy(id="tx-1", identifier="test_tax", title="Tax"))
+        ontology_repo.save_concept_scheme(
+            ConceptScheme(id="scheme-1", taxonomy_id="tx-1", identifier="scheme", title="Scheme")
+        )
+
+    def _new_run(self, pipeline_run_repo):
+        from domain.pipelines.entities import PipelineType
+
+        return pipeline_run_repo.create(
+            batch_run_id=create_batch_row(pipeline_run_repo._session_factory),
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="default",
+            configuration_slug="default",
+            configuration_version=1,
+        )
+
+    def _record_create(self, change_repo, run, entity_id, entity_type):
+        from domain.versioning.value_objects import ChangeOperation
+
+        change_repo.record_change(
+            entity_id=entity_id,
+            entity_type=entity_type,
+            operation=ChangeOperation.CREATE,
+            new_state={"id": entity_id},
+            batch_run_id=run.id,
+        )
+
+    def test_revert_refused_when_another_run_typed_individuals_into_its_class(
+        self, revert_client, pipeline_run_repo, change_repo, ontology_repo
+    ):
+        """Reverting a schema run whose class now holds another run's individuals is a 409.
+
+        With foreign keys on, deleting the class would CASCADE-delete the
+        individuals' class memberships, so the revert must change nothing.
+        """
+        from domain.ontology.entities import Class, Individual
+
+        self._seed_scheme(ontology_repo)
+        schema_run = self._new_run(pipeline_run_repo)
+        ontology_repo.save_class(
+            Class(id="cls-1", concept_scheme_id="scheme-1", taxonomy_id="tx-1", title="Service")
+        )
+        self._record_create(change_repo, schema_run, "cls-1", "class")
+        individual_run = self._new_run(pipeline_run_repo)
+        ontology_repo.save_individual(Individual(id="ind-1", class_ids=["cls-1"], title="API"))
+        self._record_create(change_repo, individual_run, "ind-1", "individual")
+        events_before = change_repo.get_changes(limit=None).total
+
+        response = revert_client.post(f"/api/pipelines/runs/{schema_run.id}/revert")
+
+        assert response.status_code == status.HTTP_409_CONFLICT
+        assert "individual ind-1 -> cls-1" in response.json()["detail"]
+        assert ontology_repo.get_class("cls-1") is not None
+        assert ontology_repo.get_individual("ind-1").class_ids == ["cls-1"]
+        assert change_repo.get_changes(limit=None).total == events_before
+
+    def test_revert_refused_when_its_property_is_used_by_other_relationships(
+        self, revert_client, pipeline_run_repo, change_repo, ontology_repo
+    ):
+        """Reverting a run whose property definition is used outside the run is a 409."""
+        from domain.ontology.entities import Class, PropertyDefinition, Relationship
+
+        self._seed_scheme(ontology_repo)
+        for class_id in ("cls-1", "cls-2"):
+            ontology_repo.save_class(
+                Class(id=class_id, concept_scheme_id="scheme-1", taxonomy_id="tx-1", title=class_id)
+            )
+        run = self._new_run(pipeline_run_repo)
+        ontology_repo.save_property_definition(
+            PropertyDefinition(id="prop-1", identifier="calls", title="calls")
+        )
+        self._record_create(change_repo, run, "prop-1", "property_definition")
+        ontology_repo.save_relationship(
+            Relationship(
+                id="rel-1", source_id="cls-1", target_id="cls-2", property_definition_id="prop-1"
+            )
+        )
+
+        response = revert_client.post(f"/api/pipelines/runs/{run.id}/revert")
+
+        assert response.status_code == status.HTTP_409_CONFLICT
+        assert "relationship rel-1 -> prop-1" in response.json()["detail"]
+        assert ontology_repo.get_property_definition("prop-1") is not None
+        assert ontology_repo.get_relationship("rel-1") is not None
+
+    def test_revert_succeeds_when_dependents_were_created_by_the_same_run(
+        self, revert_client, pipeline_run_repo, change_repo, ontology_repo
+    ):
+        """Dependents the run created itself do not block its revert."""
+        from domain.ontology.entities import Class, Individual, PropertyDefinition, Relationship
+
+        self._seed_scheme(ontology_repo)
+        run = self._new_run(pipeline_run_repo)
+        ontology_repo.save_class(
+            Class(id="cls-1", concept_scheme_id="scheme-1", taxonomy_id="tx-1", title="Service")
+        )
+        self._record_create(change_repo, run, "cls-1", "class")
+        ontology_repo.save_property_definition(
+            PropertyDefinition(
+                id="prop-1", identifier="calls", title="calls", domain_class_id="cls-1"
+            )
+        )
+        self._record_create(change_repo, run, "prop-1", "property_definition")
+        ontology_repo.save_individual(Individual(id="ind-1", class_ids=["cls-1"], title="API"))
+        self._record_create(change_repo, run, "ind-1", "individual")
+        ontology_repo.save_relationship(
+            Relationship(
+                id="rel-1", source_id="ind-1", target_id="cls-1", property_definition_id="prop-1"
+            )
+        )
+        self._record_create(change_repo, run, "rel-1", "relationship")
+
+        response = revert_client.post(f"/api/pipelines/runs/{run.id}/revert")
+
+        assert response.status_code == status.HTTP_200_OK, response.text
+        assert response.json()["events_reverted"] == 4
+        assert ontology_repo.get_class("cls-1") is None
+        assert ontology_repo.get_property_definition("prop-1") is None
+        assert ontology_repo.get_individual("ind-1") is None
+        assert ontology_repo.get_relationship("rel-1") is None
+
     def test_revert_single_run_batch_succeeds(self, revert_client, pipeline_run_repo):
         """POST /api/pipelines/runs/{run_id}/revert for run in single-run batch succeeds."""
         from domain.pipelines.entities import PipelineType

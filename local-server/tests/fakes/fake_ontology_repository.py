@@ -5,7 +5,7 @@ Supports all CRUD operations for Taxonomies, ConceptSchemes, and Classes.
 Individual operations are deferred to Phase 2 and raise NotImplementedError.
 """
 
-from typing import Any
+from typing import Any, Sequence
 from uuid import uuid4
 
 from domain.ontology.entities import (
@@ -18,6 +18,7 @@ from domain.ontology.entities import (
     Taxonomy,
 )
 from domain.ontology.exceptions import DuplicateEntityError
+from domain.ontology.ports import EntityReference
 from domain.ontology.value_objects import SearchCriteria
 
 
@@ -409,6 +410,37 @@ class FakeOntologyRepository:
                 is_relevant=is_relevant, limit=None, query=query, ids=ids
             )
         )
+
+    def find_references(self, entity_ids: Sequence[str]) -> list[EntityReference]:
+        """Rows that reference any of the given entities, as the SQLite FKs see them."""
+        ids = set(entity_ids)
+        links: list[tuple[str, str, str | None]] = []
+        for scheme in self._schemes.values():
+            links.append(("concept_scheme", scheme.id, scheme.taxonomy_id))
+        for cls in self._classes.values():
+            for ref in (
+                cls.taxonomy_id,
+                cls.concept_scheme_id,
+                cls.parent_class_id,
+                cls.structural_property_id,
+            ):
+                links.append(("class", cls.id, ref))
+        for ind in self._individuals.values():
+            links.extend(("individual", ind.id, class_id) for class_id in ind.class_ids)
+        for prop in self._property_definitions.values():
+            links.append(("property_definition", prop.id, prop.domain_class_id))
+            links.append(("property_definition", prop.id, prop.range_class_id))
+        for rel in self._relationships.values():
+            for ref in (rel.source_id, rel.target_id, rel.property_definition_id):
+                links.append(("relationship", rel.id, ref))
+        for attr in self._attribute_definitions.values():
+            links.append(("attribute_definition", attr.id, attr.class_id))
+        found = {
+            EntityReference(ref, dep, kind)
+            for kind, dep, ref in links
+            if ref in ids and ref != dep
+        }
+        return sorted(found, key=lambda r: (r.referenced_id, r.dependent_kind, r.dependent_id))
 
     def count_property_definitions_referencing_class(self, class_id: str) -> int:
         return sum(

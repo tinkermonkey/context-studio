@@ -2082,7 +2082,8 @@ export interface paths {
      *         RevertRunResponse with count of events reverted
      *
      *     Raises:
-     *         HTTPException: 404 if run not found, 500 for errors
+     *         HTTPException: 404 if run not found, 409 if entities outside the run depend on
+     *             entities it created (nothing is reverted), 500 for errors
      */
     post: operations["revert_pipeline_run_api_pipelines_runs__run_id__revert_post"];
     delete?: never;
@@ -2699,7 +2700,7 @@ export interface paths {
      *         Created ChangesetResponse with server-generated id
      *
      *     Raises:
-     *         HTTPException: 400 for invalid input, 500 for internal errors
+     *         HTTPException: 422 for unknown change event ids, 500 for internal errors
      */
     post: operations["create_changeset_api_v1_versioning_changesets_post"];
     delete?: never;
