@@ -5,7 +5,14 @@ import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { renderWithProviders } from "@/test/test-utils";
 import { ExtractionReviewPage } from "../ExtractionReviewPage";
-import { SCHEMA_CANDIDATES, TRIPLES, RECOGNITION, XR_TEXT, makeRun } from "./fixtures";
+import {
+  SCHEMA_CANDIDATES,
+  SCHEMA_RECOGNITION,
+  TRIPLES,
+  RECOGNITION,
+  XR_TEXT,
+  makeRun,
+} from "./fixtures";
 
 const server = setupServer();
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
@@ -81,6 +88,9 @@ function mockRuns(individual: "ok" | "fail") {
     ),
     http.post("*/api/pipelines/runs/run-i/recognition-preview", () =>
       HttpResponse.json(RECOGNITION),
+    ),
+    http.post("*/api/pipelines/runs/run-s/recognition-preview", () =>
+      HttpResponse.json(SCHEMA_RECOGNITION),
     ),
   );
 }

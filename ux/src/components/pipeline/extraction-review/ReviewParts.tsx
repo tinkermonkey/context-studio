@@ -1,5 +1,13 @@
 import type { ReactNode } from "react";
-import { Button, Chip, FormCallout, Icon, KVGrid, Panel } from "@tinkermonkey/heimdall-ui";
+import {
+  Button,
+  Chip,
+  FormCallout,
+  Icon,
+  KVGrid,
+  Panel,
+  type StatusColor,
+} from "@tinkermonkey/heimdall-ui";
 import type { NodeReference, SourceSpan } from "@/api/hooks/pipeline/useExtractionCandidates";
 import { useClass } from "@/api/hooks/ontology/useClasses";
 import type {
@@ -13,6 +21,13 @@ import type {
 } from "@/api/hooks/pipeline/useApplyReviewedRun";
 import { SKIP_REASON_LABEL, drLayerOf, failedSkips, isLocated } from "./reviewUtils";
 import "./ExtractionReview.css";
+
+/** Chip colour per recognition match method, shared by the individual and schema tabs. */
+export const MATCH_METHOD_VARIANT: Record<string, StatusColor> = {
+  exact: "emerald",
+  vector: "cyan",
+  llm: "violet",
+};
 
 // ---- Provenance list (inspector) ----------------------------------------
 export function ProvenanceList({ provenance }: { provenance: SourceSpan[] }) {

@@ -10,7 +10,6 @@ import {
   StatGrid,
   StatTile,
   Table,
-  type StatusColor,
 } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
@@ -35,6 +34,7 @@ import {
   ApplyBar,
   applyResultRows,
   ClassLabel,
+  MATCH_METHOD_VARIANT,
   NodeRefCell,
   ProvenanceList,
   RunMeta,
@@ -50,11 +50,6 @@ const PIPELINE_TYPE = "individual_extraction";
 const PREVIEW_THRESHOLDS = {
   confidence_threshold: 0,
   recognition_threshold: REVIEW_RECOGNITION_THRESHOLD,
-};
-const METHOD_VARIANT: Record<string, StatusColor> = {
-  exact: "emerald",
-  vector: "cyan",
-  llm: "violet",
 };
 
 export interface TripleRow {
@@ -587,7 +582,9 @@ function IndividualCandidateReviewBody({
                     width: "84px",
                     render: (v) =>
                       v ? (
-                        <Chip variant={METHOD_VARIANT[String(v)] ?? "neutral"}>{String(v)}</Chip>
+                        <Chip variant={MATCH_METHOD_VARIANT[String(v)] ?? "neutral"}>
+                          {String(v)}
+                        </Chip>
                       ) : (
                         <span className="xr-mono-muted">—</span>
                       ),

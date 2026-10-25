@@ -6,7 +6,7 @@ import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { renderWithProviders } from "@/test/test-utils";
 import { SchemaCandidateReview } from "../SchemaCandidateReview";
-import { SCHEMA_CANDIDATES, SCOPE, XR_TEXT, makeRun } from "./fixtures";
+import { SCHEMA_CANDIDATES, SCHEMA_RECOGNITION, SCOPE, XR_TEXT, makeRun } from "./fixtures";
 
 const { toastSpy } = vi.hoisted(() => ({ toastSpy: vi.fn() }));
 vi.mock("@/components/ui/Toast", () => ({
@@ -21,11 +21,18 @@ afterAll(() => server.close());
 
 const completed = { status: "completed" as const, run: makeRun() };
 
-function renderReady() {
+let previewBody: unknown = null;
+
+function renderReady(recognition: () => Response = () => HttpResponse.json(SCHEMA_RECOGNITION)) {
+  previewBody = null;
   server.use(
     http.get("*/api/pipelines/runs/run-s/schema-extraction-candidates", () =>
       HttpResponse.json(SCHEMA_CANDIDATES),
     ),
+    http.post("*/api/pipelines/runs/run-s/recognition-preview", async ({ request }) => {
+      previewBody = await request.json();
+      return recognition();
+    }),
   );
   renderWithProviders(
     <SchemaCandidateReview slot={completed} text={XR_TEXT} scope={SCOPE} onRetry={() => {}} />,
@@ -83,7 +90,7 @@ describe("SchemaCandidateReview — run states", () => {
 describe("SchemaCandidateReview — review", () => {
   it("lists candidates of the active type with stat tiles and run meta", async () => {
     const panel = await renderReady();
-    expect(within(panel).getByText("Policyholder")).toBeInTheDocument();
+    expect(within(panel).getAllByText("Policyholder")[0]).toHaveClass("xr-strong");
     expect(within(panel).queryByText("submits")).not.toBeInTheDocument();
     expect(screen.getByTestId("extraction-review-schema-run-meta")).toHaveTextContent("run-s");
     expect(screen.getByTestId("extraction-review-schema-run-meta")).toHaveTextContent(
@@ -302,5 +309,78 @@ describe("SchemaCandidateReview — review", () => {
         expect.stringContaining("run-s"),
       ),
     );
+  });
+});
+
+describe("SchemaCandidateReview — existing-match hints", () => {
+  it("requests the preview for the target concept scheme and labels each class", async () => {
+    await renderReady();
+    const exists = await screen.findByTestId("extraction-review-schema-existing-class-0");
+    expect(previewBody).toEqual({ confidence_threshold: 0, concept_scheme_id: "scheme-app" });
+
+    expect(within(exists).getByText("exists")).toHaveClass("chip--emerald");
+    expect(exists).toHaveTextContent("Policyholder");
+    expect(exists).toHaveTextContent("reused on apply");
+
+    const similar = screen.getByTestId("extraction-review-schema-existing-class-1");
+    expect(within(similar).getByText("similar")).toHaveClass("chip--cyan");
+    expect(similar).toHaveTextContent("Claim");
+    expect(similar).toHaveTextContent("93% · created as new");
+
+    const fresh = screen.getByTestId("extraction-review-schema-existing-class-2");
+    expect(within(fresh).getByText("new")).toHaveClass("chip--amber");
+  });
+
+  it("shows the existing match in the inspector for the selected candidate", async () => {
+    const panel = await renderReady();
+    await screen.findByTestId("extraction-review-schema-existing-class-0");
+    expect(screen.getByTestId("extraction-review-schema-inspector-match")).toHaveTextContent(
+      "exists · reused on apply",
+    );
+    await userEvent.click(within(panel).getByText("Insurance Claim"));
+    const match = screen.getByTestId("extraction-review-schema-inspector-match");
+    expect(match).toHaveTextContent("similar existing class · created as new");
+    expect(match).toHaveTextContent("cls_claim");
+    expect(within(match).getByText("vector")).toHaveClass("chip--cyan");
+  });
+
+  it("labels properties and connections that do not exist as new", async () => {
+    const panel = await renderReady();
+    await screen.findByTestId("extraction-review-schema-existing-class-0");
+    await userEvent.click(within(panel).getByRole("radio", { name: /Connections/ }));
+    const cell = screen.getByTestId("extraction-review-schema-existing-connection-0");
+    expect(within(cell).getByText("new")).toHaveClass("chip--amber");
+  });
+
+  it("does not warn about a connection whose unaccepted endpoint class already exists", async () => {
+    await renderReady();
+    await screen.findByTestId("extraction-review-schema-existing-class-0");
+    // Policyholder (exists) is left pending; Insurance Claim is accepted.
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-1-yes"));
+    const panel = screen.getByTestId("extraction-review-schema-candidates");
+    await userEvent.click(within(panel).getByRole("radio", { name: /Connections/ }));
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-connection-0-yes"));
+    await userEvent.click(screen.getByTestId("extraction-review-schema-apply"));
+    expect(screen.getByTestId("extraction-review-schema-confirm")).toBeInTheDocument();
+    expect(screen.queryByTestId("extraction-review-schema-orphan-warning")).not.toBeInTheDocument();
+  });
+
+  it("counts accepted candidates that reuse an existing entity in the confirm dialog", async () => {
+    await renderReady();
+    await screen.findByTestId("extraction-review-schema-existing-class-0");
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-0-yes"));
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-1-yes"));
+    await userEvent.click(screen.getByTestId("extraction-review-schema-apply"));
+    const confirm = screen.getByTestId("extraction-review-schema-confirm");
+    expect(within(confirm).getByText("1 reuse existing")).toHaveClass("chip--emerald");
+  });
+
+  it("keeps the review usable when the preview fails", async () => {
+    const panel = await renderReady(() => HttpResponse.json({ detail: "boom" }, { status: 500 }));
+    expect(await within(panel).findByText(/Existing-match preview failed/)).toBeInTheDocument();
+    expect(within(panel).getByText("Policyholder")).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId("extraction-review-schema-existing-class-0")).getByText("—"),
+    ).toBeInTheDocument();
   });
 });
