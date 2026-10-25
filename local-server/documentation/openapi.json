@@ -7053,6 +7053,284 @@
           }
         }
       }
+    },
+    "/api/chat/status": {
+      "get": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "Get Status",
+        "description": "Report the configured chat model and whether a configured provider serves it.",
+        "operationId": "get_status_api_chat_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chat/conversations": {
+      "post": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "Create Conversation",
+        "description": "Start an empty conversation.",
+        "operationId": "create_conversation_api_chat_conversations_post",
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "List Conversations",
+        "description": "List conversations, most recently updated first (the first is the one to resume).",
+        "operationId": "list_conversations_api_chat_conversations_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ConversationResponse"
+                  },
+                  "title": "Response List Conversations Api Chat Conversations Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chat/conversations/{conversation_id}": {
+      "get": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "Get Conversation",
+        "description": "Return a conversation with its messages, for resuming it.",
+        "operationId": "get_conversation_api_chat_conversations__conversation_id__get",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "Delete Conversation",
+        "description": "Delete a conversation and its messages.",
+        "operationId": "delete_conversation_api_chat_conversations__conversation_id__delete",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chat/conversations/{conversation_id}/messages": {
+      "post": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "Send Message",
+        "description": "Send a user message and stream the assistant's turn as Server-Sent Events.\n\nAnswers cite entities as `[Title](entity:<kind>/<id>)`. A link is valid when\nits id appeared in a `tool_end` event's `entities` (or in the conversation's\nstored tool results) or is the entity in a message's `page_context`.",
+        "operationId": "send_message_api_chat_conversations__conversation_id__messages_post",
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/event-stream": {
+                "itemSchema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "string",
+                      "contentMediaType": "application/json",
+                      "contentSchema": {
+                        "oneOf": [
+                          {
+                            "$ref": "#/components/schemas/MessageStartEvent"
+                          },
+                          {
+                            "$ref": "#/components/schemas/TextDeltaEvent"
+                          },
+                          {
+                            "$ref": "#/components/schemas/ToolStartEvent"
+                          },
+                          {
+                            "$ref": "#/components/schemas/ToolEndEvent"
+                          },
+                          {
+                            "$ref": "#/components/schemas/MessageEndEvent"
+                          },
+                          {
+                            "$ref": "#/components/schemas/ErrorEvent"
+                          }
+                        ],
+                        "discriminator": {
+                          "propertyName": "type",
+                          "mapping": {
+                            "message_start": "#/components/schemas/MessageStartEvent",
+                            "text_delta": "#/components/schemas/TextDeltaEvent",
+                            "tool_start": "#/components/schemas/ToolStartEvent",
+                            "tool_end": "#/components/schemas/ToolEndEvent",
+                            "message_end": "#/components/schemas/MessageEndEvent",
+                            "error": "#/components/schemas/ErrorEvent"
+                          }
+                        },
+                        "title": "Streamitem Send Message Api Chat Conversations  Conversation Id  Messages Post"
+                      }
+                    },
+                    "event": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "retry": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conversation not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -8095,6 +8373,102 @@
         "title": "ChangesetResponse",
         "description": "Response representing a changeset"
       },
+      "ChatMessageResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "seq": {
+            "type": "integer",
+            "title": "Seq"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role"
+          },
+          "blocks": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/TextBlockSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/ToolUseBlockSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/ToolResultBlockSchema"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "type",
+                "mapping": {
+                  "text": "#/components/schemas/TextBlockSchema",
+                  "tool_result": "#/components/schemas/ToolResultBlockSchema",
+                  "tool_use": "#/components/schemas/ToolUseBlockSchema"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Blocks"
+          },
+          "page_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PageContextSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "seq",
+          "role",
+          "blocks",
+          "created_at"
+        ],
+        "title": "ChatMessageResponse",
+        "description": "A stored message with its displayable blocks."
+      },
+      "ChatStatusResponse": {
+        "properties": {
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "description": "Configured chat model (config.json chat.model)"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available",
+            "description": "Whether a configured provider serves the model"
+          },
+          "max_tool_rounds": {
+            "type": "integer",
+            "title": "Max Tool Rounds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "model",
+          "available",
+          "max_tool_rounds"
+        ],
+        "title": "ChatStatusResponse",
+        "description": "Whether chat can run with the configured model."
+      },
       "ClassCountsResponse": {
         "properties": {
           "class_id": {
@@ -8750,6 +9124,86 @@
         "title": "ConflictResponse",
         "description": "Response representing a detected conflict"
       },
+      "ConversationDetailResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/ChatMessageResponse"
+            },
+            "type": "array",
+            "title": "Messages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "model",
+          "created_at",
+          "updated_at",
+          "messages"
+        ],
+        "title": "ConversationDetailResponse",
+        "description": "A conversation with its messages in order."
+      },
+      "ConversationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "model",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ConversationResponse",
+        "description": "A stored conversation."
+      },
       "CycleCheckRequest": {
         "properties": {
           "source_id": {
@@ -9286,6 +9740,37 @@
         "title": "EnrichFromReferencesRequest",
         "description": "Request to enrich extracted entities with external reference knowledge."
       },
+      "EntityRefSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "taxonomy",
+              "scheme",
+              "class",
+              "individual",
+              "property"
+            ],
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "title"
+        ],
+        "title": "EntityRefSchema",
+        "description": "An entity a tool returned; answers may link to it as entity:<kind>/<id>."
+      },
       "EntityVersionResponse": {
         "properties": {
           "entity_id": {
@@ -9338,6 +9823,25 @@
         ],
         "title": "EntityVersionResponse",
         "description": "Response representing an entity version"
+      },
+      "ErrorEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "error",
+            "title": "Type",
+            "default": "error"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "ErrorEvent"
       },
       "ExportRequest": {
         "properties": {
@@ -11328,6 +11832,61 @@
         "title": "MergedMentionSchema",
         "description": "An extracted mention that apply merged into a pre-existing individual."
       },
+      "MessageEndEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "message_end",
+            "title": "Type",
+            "default": "message_end"
+          },
+          "stop_reason": {
+            "type": "string",
+            "enum": [
+              "end_turn",
+              "tool_use",
+              "max_tokens",
+              "refusal",
+              "other"
+            ],
+            "title": "Stop Reason"
+          },
+          "tokens_in": {
+            "type": "integer",
+            "title": "Tokens In"
+          },
+          "tokens_out": {
+            "type": "integer",
+            "title": "Tokens Out"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stop_reason",
+          "tokens_in",
+          "tokens_out"
+        ],
+        "title": "MessageEndEvent"
+      },
+      "MessageStartEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "message_start",
+            "title": "Type",
+            "default": "message_start"
+          },
+          "conversation_id": {
+            "type": "string",
+            "title": "Conversation Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "conversation_id"
+        ],
+        "title": "MessageStartEvent"
+      },
       "NeighborsResponse": {
         "properties": {
           "node_id": {
@@ -11455,6 +12014,55 @@
         ],
         "title": "NodeReference",
         "description": "Reference to an extracted node (individual/class/literal) in individual extraction.\n\nIdentifies a subject or object node with optional mapping to existing ontology.\nNon-empty id means mapped to existing ontology entity; empty/None means new candidate."
+      },
+      "PageContextSchema": {
+        "properties": {
+          "route": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Route",
+            "description": "Current app route"
+          },
+          "entity_kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "taxonomy",
+                  "scheme",
+                  "class",
+                  "individual",
+                  "property"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Kind",
+            "description": "Kind of the viewed entity"
+          },
+          "entity_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Id",
+            "description": "Id of the viewed entity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "route"
+        ],
+        "title": "PageContextSchema",
+        "description": "The page the user is viewing when sending a message."
       },
       "PathResultResponse": {
         "properties": {
@@ -13657,6 +14265,32 @@
         "title": "SchemeCountsResponse",
         "description": "Content counts for one concept scheme."
       },
+      "SendMessageRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 8000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "page_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PageContextSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "SendMessageRequest",
+        "description": "A user message, with the page the user is viewing."
+      },
       "SerializationScopeRequest": {
         "properties": {
           "scope_type": {
@@ -14351,6 +14985,184 @@
         "type": "object",
         "title": "TaxonomyUpdateRequest",
         "description": "Request to update a taxonomy. Identifier is immutable post-create."
+      },
+      "TextBlockSchema": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "text",
+            "title": "Type",
+            "default": "text"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "TextBlockSchema"
+      },
+      "TextDeltaEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "text_delta",
+            "title": "Type",
+            "default": "text_delta"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "TextDeltaEvent"
+      },
+      "ToolEndEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "tool_end",
+            "title": "Type",
+            "default": "tool_end"
+          },
+          "tool_use_id": {
+            "type": "string",
+            "title": "Tool Use Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "is_error": {
+            "type": "boolean",
+            "title": "Is Error"
+          },
+          "entities": {
+            "items": {
+              "$ref": "#/components/schemas/EntityRefSchema"
+            },
+            "type": "array",
+            "title": "Entities"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tool_use_id",
+          "name",
+          "summary",
+          "is_error",
+          "entities"
+        ],
+        "title": "ToolEndEvent",
+        "description": "A tool finished; `entities` are the ids answers may link to."
+      },
+      "ToolResultBlockSchema": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "tool_result",
+            "title": "Type",
+            "default": "tool_result"
+          },
+          "tool_use_id": {
+            "type": "string",
+            "title": "Tool Use Id"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "is_error": {
+            "type": "boolean",
+            "title": "Is Error"
+          },
+          "entities": {
+            "items": {
+              "$ref": "#/components/schemas/EntityRefSchema"
+            },
+            "type": "array",
+            "title": "Entities"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tool_use_id",
+          "summary",
+          "is_error",
+          "entities"
+        ],
+        "title": "ToolResultBlockSchema"
+      },
+      "ToolStartEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "tool_start",
+            "title": "Type",
+            "default": "tool_start"
+          },
+          "tool_use_id": {
+            "type": "string",
+            "title": "Tool Use Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "input": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Input"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tool_use_id",
+          "name",
+          "input"
+        ],
+        "title": "ToolStartEvent"
+      },
+      "ToolUseBlockSchema": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "tool_use",
+            "title": "Type",
+            "default": "tool_use"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "input": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Input"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "input"
+        ],
+        "title": "ToolUseBlockSchema"
       },
       "TripleCandidate": {
         "properties": {

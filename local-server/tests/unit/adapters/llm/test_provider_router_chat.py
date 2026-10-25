@@ -236,3 +236,23 @@ class TestRouterMultiTurnToolExchange:
         assert second[-1].stop_reason == StopReason.END_TURN
         answer = "".join(e.text for e in second if isinstance(e, TextDelta))
         assert "(entity:class/6f1c2a9e-0000-4000-8000-000000000001)" in answer
+
+
+@pytest.mark.llm
+class TestRouterSupportsModel:
+    def test_only_chat_capable_unrejected_providers_count(self):
+        router = _router(
+            {
+                "openai": StubProvider(["gpt-4o"]),
+                "anthropic": StubProvider([MODEL]),
+                "openrouter": StubProvider(["openai/gpt-5"]),
+            },
+            {"anthropic": FakeChatModel(), "openrouter": FakeChatModel()},
+        )
+
+        assert router.supports_model(MODEL)
+        assert router.supports_model("openai/gpt-5")
+        assert not router.supports_model("gpt-4o")  # OpenAI has no chat adapter
+
+        router._rejected_providers.add("anthropic")
+        assert not router.supports_model(MODEL)

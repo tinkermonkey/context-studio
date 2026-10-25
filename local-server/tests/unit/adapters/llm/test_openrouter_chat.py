@@ -17,6 +17,7 @@ from domain.chat.entities import ChatMessage
 from domain.chat.exceptions import ChatModelError
 from domain.chat.value_objects import (
     ChatRole,
+    ContextBlock,
     ModelTurnEnded,
     ReasoningBlock,
     StopReason,
@@ -257,6 +258,7 @@ class TestOpenRouterChatRequest:
                 2,
                 ChatRole.USER,
                 ToolResultBlock(tool_use_id="call_1", content="[]"),
+                ContextBlock("Note for the model."),
                 TextBlock("Also check schemes."),
             ),
         ]
@@ -295,7 +297,7 @@ class TestOpenRouterChatRequest:
                 "reasoning_details": reasoning["reasoning_details"],
             },
             {"role": "tool", "tool_call_id": "call_1", "content": "[]"},
-            {"role": "user", "content": "Also check schemes."},
+            {"role": "user", "content": "Note for the model.\n\nAlso check schemes."},
         ]
 
     async def test_prefixed_model_id_passes_through_and_no_tools_key(self):

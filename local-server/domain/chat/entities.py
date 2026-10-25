@@ -11,6 +11,30 @@ from typing import Optional
 from domain.chat.value_objects import ChatRole, ContentBlock, PageContext
 
 
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+@dataclass
+class Conversation:
+    """
+    A stored chat conversation.
+
+    Attributes:
+        id: Unique conversation identifier
+        title: Short title, taken from the first user message
+        model: Model that answered the latest turn
+        created_at: When the conversation was created
+        updated_at: When a message was last added
+    """
+
+    id: str
+    title: str
+    model: str
+    created_at: datetime = field(default_factory=_now)
+    updated_at: datetime = field(default_factory=_now)
+
+
 @dataclass
 class ChatMessage:
     """
@@ -36,4 +60,4 @@ class ChatMessage:
     page_context: Optional[PageContext] = None
     tokens_in: int = 0
     tokens_out: int = 0
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=_now)

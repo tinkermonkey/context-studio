@@ -16,6 +16,7 @@ from adapters.llm.anthropic_chat import AnthropicChatModel
 from domain.chat.entities import ChatMessage
 from domain.chat.value_objects import (
     ChatRole,
+    ContextBlock,
     ModelTurnEnded,
     ReasoningBlock,
     StopReason,
@@ -145,7 +146,12 @@ class TestAnthropicChatRequest:
                 TextBlock("Searching."),
                 ToolUseBlock(id="toolu_1", name="search_entities", input={"query": "API"}),
             ),
-            _message(2, ChatRole.USER, ToolResultBlock(tool_use_id="toolu_1", content="[]")),
+            _message(
+                2,
+                ChatRole.USER,
+                ToolResultBlock(tool_use_id="toolu_1", content="[]"),
+                ContextBlock("Note for the model."),
+            ),
         ]
 
         await _collect(model, messages)
@@ -186,7 +192,8 @@ class TestAnthropicChatRequest:
                         "tool_use_id": "toolu_1",
                         "content": "[]",
                         "is_error": False,
-                    }
+                    },
+                    {"type": "text", "text": "Note for the model."},
                 ],
             },
         ]

@@ -25,6 +25,7 @@ from domain.chat.exceptions import ChatModelError
 from domain.chat.value_objects import (
     ChatRole,
     ContentBlock,
+    ContextBlock,
     ModelEvent,
     ModelTurnEnded,
     ReasoningBlock,
@@ -209,7 +210,9 @@ def _assistant_message(message: ChatMessage) -> dict[str, Any]:
 
 
 def _joined_text(message: ChatMessage) -> str:
-    return "".join(b.text for b in message.blocks if isinstance(b, TextBlock))
+    return "\n\n".join(
+        b.text for b in message.blocks if isinstance(b, (TextBlock, ContextBlock)) and b.text
+    )
 
 
 async def _sse_chunks(response: httpx.Response) -> AsyncIterator[dict[str, Any]]:

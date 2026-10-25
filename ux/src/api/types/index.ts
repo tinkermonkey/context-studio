@@ -3900,6 +3900,98 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/chat/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Status
+     * @description Report the configured chat model and whether a configured provider serves it.
+     */
+    get: operations["get_status_api_chat_status_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/chat/conversations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Conversations
+     * @description List conversations, most recently updated first (the first is the one to resume).
+     */
+    get: operations["list_conversations_api_chat_conversations_get"];
+    put?: never;
+    /**
+     * Create Conversation
+     * @description Start an empty conversation.
+     */
+    post: operations["create_conversation_api_chat_conversations_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/chat/conversations/{conversation_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Conversation
+     * @description Return a conversation with its messages, for resuming it.
+     */
+    get: operations["get_conversation_api_chat_conversations__conversation_id__get"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete Conversation
+     * @description Delete a conversation and its messages.
+     */
+    delete: operations["delete_conversation_api_chat_conversations__conversation_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/chat/conversations/{conversation_id}/messages": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Send Message
+     * @description Send a user message and stream the assistant's turn as Server-Sent Events.
+     *
+     *     Answers cite entities as `[Title](entity:<kind>/<id>)`. A link is valid when
+     *     its id appeared in a `tool_end` event's `entities` (or in the conversation's
+     *     stored tool results) or is the entity in a message's `page_context`.
+     */
+    post: operations["send_message_api_chat_conversations__conversation_id__messages_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4576,6 +4668,51 @@ export interface components {
       event_ids?: string[];
     };
     /**
+     * ChatMessageResponse
+     * @description A stored message with its displayable blocks.
+     */
+    ChatMessageResponse: {
+      /** Id */
+      id: string;
+      /** Seq */
+      seq: number;
+      /**
+       * Role
+       * @enum {string}
+       */
+      role: "user" | "assistant";
+      /** Blocks */
+      blocks: (
+        | components["schemas"]["TextBlockSchema"]
+        | components["schemas"]["ToolUseBlockSchema"]
+        | components["schemas"]["ToolResultBlockSchema"]
+      )[];
+      page_context?: components["schemas"]["PageContextSchema"] | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
+    /**
+     * ChatStatusResponse
+     * @description Whether chat can run with the configured model.
+     */
+    ChatStatusResponse: {
+      /**
+       * Model
+       * @description Configured chat model (config.json chat.model)
+       */
+      model: string;
+      /**
+       * Available
+       * @description Whether a configured provider serves the model
+       */
+      available: boolean;
+      /** Max Tool Rounds */
+      max_tool_rounds: number;
+    };
+    /**
      * ClassCountsResponse
      * @description Content counts for one class.
      */
@@ -4956,6 +5093,52 @@ export interface components {
       resolution_strategy?: components["schemas"]["MergeStrategy"] | null;
     };
     /**
+     * ConversationDetailResponse
+     * @description A conversation with its messages in order.
+     */
+    ConversationDetailResponse: {
+      /** Id */
+      id: string;
+      /** Title */
+      title: string;
+      /** Model */
+      model: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /** Messages */
+      messages: components["schemas"]["ChatMessageResponse"][];
+    };
+    /**
+     * ConversationResponse
+     * @description A stored conversation.
+     */
+    ConversationResponse: {
+      /** Id */
+      id: string;
+      /** Title */
+      title: string;
+      /** Model */
+      model: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
      * CycleCheckRequest
      * @description Request to check if adding an edge would create a cycle.
      */
@@ -5313,6 +5496,21 @@ export interface components {
       extracted_entities: components["schemas"]["ExtractedEntitySchema"][];
     };
     /**
+     * EntityRefSchema
+     * @description An entity a tool returned; answers may link to it as entity:<kind>/<id>.
+     */
+    EntityRefSchema: {
+      /** Id */
+      id: string;
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: "taxonomy" | "scheme" | "class" | "individual" | "property";
+      /** Title */
+      title: string;
+    };
+    /**
      * EntityVersionResponse
      * @description Response representing an entity version
      */
@@ -5350,6 +5548,16 @@ export interface components {
        * @description Version number of parent; None if this is the first version
        */
       parent_version?: number | null;
+    };
+    /** ErrorEvent */
+    ErrorEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "error";
+      /** Message */
+      message: string;
     };
     /**
      * ExportRequest
@@ -6586,6 +6794,33 @@ export interface components {
        */
       source: "decision" | "recognition" | "existing_title";
     };
+    /** MessageEndEvent */
+    MessageEndEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "message_end";
+      /**
+       * Stop Reason
+       * @enum {string}
+       */
+      stop_reason: "end_turn" | "tool_use" | "max_tokens" | "refusal" | "other";
+      /** Tokens In */
+      tokens_in: number;
+      /** Tokens Out */
+      tokens_out: number;
+    };
+    /** MessageStartEvent */
+    MessageStartEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "message_start";
+      /** Conversation Id */
+      conversation_id: string;
+    };
     /**
      * NeighborsResponse
      * @description Response containing neighbor nodes.
@@ -6656,6 +6891,27 @@ export interface components {
        * @description Literal data type URI (only for kind=literal)
        */
       datatype?: string | null;
+    };
+    /**
+     * PageContextSchema
+     * @description The page the user is viewing when sending a message.
+     */
+    PageContextSchema: {
+      /**
+       * Route
+       * @description Current app route
+       */
+      route: string;
+      /**
+       * Entity Kind
+       * @description Kind of the viewed entity
+       */
+      entity_kind?: ("taxonomy" | "scheme" | "class" | "individual" | "property") | null;
+      /**
+       * Entity Id
+       * @description Id of the viewed entity
+       */
+      entity_id?: string | null;
     };
     /**
      * PathResultResponse
@@ -8083,6 +8339,15 @@ export interface components {
       property_definition_count: number;
     };
     /**
+     * SendMessageRequest
+     * @description A user message, with the page the user is viewing.
+     */
+    SendMessageRequest: {
+      /** Text */
+      text: string;
+      page_context?: components["schemas"]["PageContextSchema"] | null;
+    };
+    /**
      * SerializationScopeRequest
      * @description Request to specify what to export.
      */
@@ -8469,6 +8734,95 @@ export interface components {
        * @description New hex color '#rrggbb' or null to clear
        */
       color?: string | null;
+    };
+    /** TextBlockSchema */
+    TextBlockSchema: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "text";
+      /** Text */
+      text: string;
+    };
+    /** TextDeltaEvent */
+    TextDeltaEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "text_delta";
+      /** Text */
+      text: string;
+    };
+    /**
+     * ToolEndEvent
+     * @description A tool finished; `entities` are the ids answers may link to.
+     */
+    ToolEndEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "tool_end";
+      /** Tool Use Id */
+      tool_use_id: string;
+      /** Name */
+      name: string;
+      /** Summary */
+      summary: string;
+      /** Is Error */
+      is_error: boolean;
+      /** Entities */
+      entities: components["schemas"]["EntityRefSchema"][];
+    };
+    /** ToolResultBlockSchema */
+    ToolResultBlockSchema: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "tool_result";
+      /** Tool Use Id */
+      tool_use_id: string;
+      /** Summary */
+      summary: string;
+      /** Is Error */
+      is_error: boolean;
+      /** Entities */
+      entities: components["schemas"]["EntityRefSchema"][];
+    };
+    /** ToolStartEvent */
+    ToolStartEvent: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "tool_start";
+      /** Tool Use Id */
+      tool_use_id: string;
+      /** Name */
+      name: string;
+      /** Input */
+      input: {
+        [key: string]: unknown;
+      };
+    };
+    /** ToolUseBlockSchema */
+    ToolUseBlockSchema: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: "tool_use";
+      /** Id */
+      id: string;
+      /** Name */
+      name: string;
+      /** Input */
+      input: {
+        [key: string]: unknown;
+      };
     };
     /**
      * TripleCandidate
@@ -13029,6 +13383,179 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["ListResponse_InterchangeChangeEventResponse_"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_status_api_chat_status_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChatStatusResponse"];
+        };
+      };
+    };
+  };
+  list_conversations_api_chat_conversations_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConversationResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_conversation_api_chat_conversations_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConversationResponse"];
+        };
+      };
+    };
+  };
+  get_conversation_api_chat_conversations__conversation_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        conversation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConversationDetailResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_conversation_api_chat_conversations__conversation_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        conversation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  send_message_api_chat_conversations__conversation_id__messages_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        conversation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SendMessageRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "text/event-stream": unknown;
+        };
+      };
+      /** @description Conversation not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
