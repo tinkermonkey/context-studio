@@ -2698,6 +2698,18 @@ selectors:
   - selector: navigator-filter
     component: src/components/entity/EntityNavigator.tsx
     description: Type-to-filter box above the Navigator tree (taxonomy/scheme titles, server-searched classes)
+  - selector: navigator-mode
+    component: src/components/entity/EntityNavigator.tsx
+    description: Schema | Data toggle in the Navigator header (Data adds individuals and counts individuals)
+  - selector: hierarchy-more-*
+    component: src/components/ontology/HierarchyTree.tsx
+    description: "'+ N more in <class>' row that loads the next page of a class's individuals (suffix is class id)"
+  - selector: individuals-surface
+    component: src/routes/app/data/individuals.tsx
+    description: Individuals table surface (EntitySurface testId)
+  - selector: data-navigator-layout
+    component: src/routes/app/data/individuals.tsx
+    description: Navigator column (Data mode) beside the individuals list page
   - selector: navigator-no-matches
     component: src/components/entity/EntityNavigator.tsx
     description: Navigator message when the filter matches nothing

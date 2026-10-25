@@ -204,7 +204,10 @@ export function SchemesIndexPage() {
     : schemesCopy.emptyState.description;
 
   return (
-    <EntityPageLayout navigator={<EntityNavigator />} data-testid="schema-navigator-layout">
+    <EntityPageLayout
+      navigator={<EntityNavigator defaultMode="schema" />}
+      data-testid="schema-navigator-layout"
+    >
       <div className="stack" data-testid="schemes-page">
         <PageHeader
           eyebrow="SCHEMA · node_type · concept_scheme"

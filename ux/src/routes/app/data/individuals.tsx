@@ -11,6 +11,8 @@ import { useIndividuals, useDeleteIndividual } from "@/api/hooks/ontology/useInd
 import { useClassesByIds } from "@/api/hooks/ontology/useClasses";
 import { useListPaging } from "@/hooks/useListPaging";
 import { individualsCopy } from "./individuals/-copy";
+import { EntityNavigator } from "@/components/entity/EntityNavigator";
+import { EntityPageLayout } from "@/components/entity/EntityPageParts";
 import type { components } from "@/api/types";
 
 type IndividualResponse = components["schemas"]["IndividualResponse"];
@@ -151,76 +153,81 @@ export function IndividualsPage() {
     : individualsCopy.emptyState.description;
 
   return (
-    <div className="stack" data-testid="individuals-page">
-      <PageHeader
-        eyebrow="DATA · node_type · individual"
-        title={individualsCopy.pageTitle}
-        idChip="/data/individuals"
-        subtitle={individualsCopy.subtitle}
-        actions={
-          <Button
-            variant="primary"
-            onClick={() => surfaceRef.current?.startCreate()}
-            data-testid="individual-add-button"
-          >
-            <Icon name="plus" size={13} /> {individualsCopy.create.buttonLabel}
-          </Button>
-        }
-      />
-
-      {error ? (
-        <ErrorBanner
-          error={error}
-          onRetry={() => refetch()}
-          message={individualsCopy.errors.failedToLoad}
+    <EntityPageLayout
+      navigator={<EntityNavigator defaultMode="data" />}
+      data-testid="data-navigator-layout"
+    >
+      <div className="stack" data-testid="individuals-page">
+        <PageHeader
+          eyebrow="DATA · node_type · individual"
+          title={individualsCopy.pageTitle}
+          idChip="/data/individuals"
+          subtitle={individualsCopy.subtitle}
+          actions={
+            <Button
+              variant="primary"
+              onClick={() => surfaceRef.current?.startCreate()}
+              data-testid="individual-add-button"
+            >
+              <Icon name="plus" size={13} /> {individualsCopy.create.buttonLabel}
+            </Button>
+          }
         />
-      ) : (
-        <>
-          {classesError && (
-            <ErrorBanner
-              error={classesError}
-              onRetry={() => refetchClasses()}
-              message={individualsCopy.errors.failedToLoadClasses}
-              compact
-            />
-          )}
 
-          <FilterBar
-            data-testid="schema-filter-bar"
-            onSearchChange={paging.setSearch}
-            searchPlaceholder="Search by title or identifier…"
-            showingCount={total ?? 0}
-            totalCount={allCount ?? total ?? 0}
+        {error ? (
+          <ErrorBanner
+            error={error}
+            onRetry={() => refetch()}
+            message={individualsCopy.errors.failedToLoad}
           />
-
-          <EntitySurface
-            ref={surfaceRef}
-            entityType="individual"
-            data={pageData}
-            isLoading={isLoading}
-            columns={individualColumns}
-            pagination={paging.pagination(total)}
-            onSort={paging.onSort}
-            onCreateSuccess={paging.resetPage}
-            renderInspector={(entity, { selectEntity }) => (
-              <IndividualDrawer
-                key={entity.id}
-                individualId={entity.id}
-                onSelectIndividual={selectEntity}
+        ) : (
+          <>
+            {classesError && (
+              <ErrorBanner
+                error={classesError}
+                onRetry={() => refetchClasses()}
+                message={individualsCopy.errors.failedToLoadClasses}
+                compact
               />
             )}
-            rowMenuActions={rowMenuActions}
-            onDeleteEntity={handleDelete}
-            bulkActions={bulkActions}
-            emptyStateTitle={emptyStateTitle}
-            emptyStateDescription={emptyStateDescription}
-            emptyStateShowAction={!filteredEmpty}
-            emptyStateActionLabel={individualsCopy.emptyState.actionLabel}
-            testId="individuals-surface"
-          />
-        </>
-      )}
-    </div>
+
+            <FilterBar
+              data-testid="schema-filter-bar"
+              onSearchChange={paging.setSearch}
+              searchPlaceholder="Search by title or identifier…"
+              showingCount={total ?? 0}
+              totalCount={allCount ?? total ?? 0}
+            />
+
+            <EntitySurface
+              ref={surfaceRef}
+              entityType="individual"
+              data={pageData}
+              isLoading={isLoading}
+              columns={individualColumns}
+              pagination={paging.pagination(total)}
+              onSort={paging.onSort}
+              onCreateSuccess={paging.resetPage}
+              renderInspector={(entity, { selectEntity }) => (
+                <IndividualDrawer
+                  key={entity.id}
+                  individualId={entity.id}
+                  onSelectIndividual={selectEntity}
+                />
+              )}
+              rowMenuActions={rowMenuActions}
+              onDeleteEntity={handleDelete}
+              bulkActions={bulkActions}
+              emptyStateTitle={emptyStateTitle}
+              emptyStateDescription={emptyStateDescription}
+              emptyStateShowAction={!filteredEmpty}
+              emptyStateActionLabel={individualsCopy.emptyState.actionLabel}
+              testId="individuals-surface"
+            />
+          </>
+        )}
+      </div>
+    </EntityPageLayout>
   );
 }
 

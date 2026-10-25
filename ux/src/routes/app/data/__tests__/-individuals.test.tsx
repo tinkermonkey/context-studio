@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
@@ -9,11 +9,20 @@ import {
   createIndividual,
   createListClasses,
   createClass,
+  createListTaxonomies,
+  createListSchemes,
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { serverSideList, pageRequests } from "@/test/serverSideList";
 import { IndividualsPage } from "../individuals";
 
-const server = setupServer();
+const server = setupServer(
+  // The Navigator beside the page lists the hierarchy; it is empty here.
+  http.get("*/api/taxonomies", () => HttpResponse.json(createListTaxonomies([]))),
+  http.get("*/api/schemes", () => HttpResponse.json(createListSchemes([]))),
+);
+
+// The Navigator has its own empty state, so empty-state assertions look inside the surface.
+const surface = () => within(screen.getByTestId("individuals-surface"));
 
 beforeAll(() => {
   server.listen({ onUnhandledRequest: "error" });
@@ -115,7 +124,7 @@ describe("Individuals Data Page", () => {
         expect(screen.getByText("No individuals yet")).toBeInTheDocument();
       });
 
-      const actionButton = screen.getByTestId("empty-state-action");
+      const actionButton = surface().getByTestId("empty-state-action");
       expect(actionButton).toBeInTheDocument();
       expect(actionButton).toHaveTextContent("+ New individual");
     });
@@ -129,7 +138,7 @@ describe("Individuals Data Page", () => {
       render(<IndividualsPage />);
 
       await waitFor(() => {
-        expect(screen.getByTestId("empty-state")).toBeInTheDocument();
+        expect(surface().getByTestId("empty-state")).toBeInTheDocument();
       });
     });
   });
