@@ -30,7 +30,9 @@ from domain.versioning.exceptions import RevertConflictError
 from domain.versioning.revert_service import RevertService
 from domain.versioning.value_objects import ChangeOperation
 from tests.fakes.fake_change_repository import FakeChangeRepository
+from tests.fakes.fake_individual_vector_index import FakeIndividualVectorIndex
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
+from tests.fakes.fake_schema_vector_index import FakeSchemaVectorIndex
 
 # ============================================================================
 # Fixtures
@@ -1186,3 +1188,201 @@ def test_revert_refused_when_entities_outside_the_run_depend_on_it(
     assert excinfo.value.blocking == [("individual", "ind-1", "cls-1")]
     assert ontology_repo.get_class("cls-1") is not None
     assert change_repo.get_changes(limit=None).total == 1
+
+
+# ============================================================================
+# Vector index sync (#1293)
+# ============================================================================
+
+
+@pytest.fixture()
+def schema_index():
+    return FakeSchemaVectorIndex()
+
+
+@pytest.fixture()
+def individual_index(ontology_repo):
+    return FakeIndividualVectorIndex(repo=ontology_repo)
+
+
+@pytest.fixture()
+def indexed_revert_svc(change_repo, ontology_repo, schema_index, individual_index):
+    return RevertService(
+        change_repo,
+        ontology_repo,
+        schema_index=schema_index,
+        individual_index=individual_index,
+    )
+
+
+def _save_parent_class(ontology_repo):
+    ontology_repo.save_class(
+        Class(id="cls-1", concept_scheme_id="scheme-1", taxonomy_id="tx-1", title="Animal")
+    )
+
+
+def test_revert_create_removes_individual_from_recognition_index(
+    ontology_repo, change_repo, individual_index, indexed_revert_svc
+):
+    """A reverted (deleted) individual no longer appears in the recognition index."""
+    _save_parent_class(ontology_repo)
+    ontology_repo.save_individual(Individual(id="ind-1", class_ids=["cls-1"], title="Rex"))
+    individual_index.index_individual("ind-1", "Rex", None)
+    change_repo.record_change(
+        entity_id="ind-1",
+        entity_type="individual",
+        operation=ChangeOperation.CREATE,
+        new_state={"id": "ind-1", "class_ids": ["cls-1"], "title": "Rex"},
+        batch_run_id="run-1",
+    )
+
+    indexed_revert_svc.revert("run-1")
+
+    assert "ind-1" not in individual_index._individuals
+
+
+def test_revert_update_reindexes_individual_with_restored_title(
+    ontology_repo, change_repo, schema_index, individual_index, indexed_revert_svc
+):
+    """Restoring an individual's title re-embeds it in both indexes."""
+    _save_parent_class(ontology_repo)
+    ontology_repo.save_individual(
+        Individual(id="ind-1", class_ids=["cls-1"], title="Rex the Dog", description="New")
+    )
+    individual_index.index_individual("ind-1", "Rex the Dog", "New")
+    schema_index.index_entity("ind-1", "Rex the Dog", "New")
+    change_repo.record_change(
+        entity_id="ind-1",
+        entity_type="individual",
+        operation=ChangeOperation.UPDATE,
+        previous_state={"title": "Rex", "description": "Old"},
+        new_state={"title": "Rex the Dog", "description": "New"},
+        batch_run_id="run-1",
+    )
+
+    indexed_revert_svc.revert("run-1")
+
+    assert individual_index._individuals["ind-1"] == ("Rex", ["cls-1"], "Old")
+    assert schema_index._entities["ind-1"] == ("Rex", "Old")
+
+
+def test_revert_update_reindexes_class_with_restored_definition(
+    ontology_repo, change_repo, schema_index, indexed_revert_svc
+):
+    """Restoring a class definition re-embeds it in the schema index."""
+    ontology_repo.save_class(
+        Class(
+            id="cls-1",
+            concept_scheme_id="scheme-1",
+            taxonomy_id="tx-1",
+            title="Animal",
+            description="A living being",
+        )
+    )
+    schema_index.index_entity("cls-1", "Animal", "A living being")
+    change_repo.record_change(
+        entity_id="cls-1",
+        entity_type="class",
+        operation=ChangeOperation.UPDATE,
+        previous_state={"description": "An organism"},
+        new_state={"description": "A living being"},
+        batch_run_id="run-1",
+    )
+
+    indexed_revert_svc.revert("run-1")
+
+    assert schema_index._entities["cls-1"] == ("Animal", "An organism")
+
+
+def test_revert_update_reindexes_property_definition(
+    ontology_repo, change_repo, schema_index, indexed_revert_svc
+):
+    """Restoring a property definition's title re-embeds it in the schema index."""
+    ontology_repo.save_property_definition(
+        PropertyDefinition(id="prop-1", identifier="uses", title="makes use of")
+    )
+    change_repo.record_change(
+        entity_id="prop-1",
+        entity_type="property_definition",
+        operation=ChangeOperation.UPDATE,
+        previous_state={"title": "uses"},
+        new_state={"title": "makes use of"},
+        batch_run_id="run-1",
+    )
+
+    indexed_revert_svc.revert("run-1")
+
+    assert schema_index._entities["prop-1"] == ("uses", None)
+
+
+def test_revert_delete_indexes_restored_individual(
+    ontology_repo, change_repo, schema_index, individual_index, indexed_revert_svc
+):
+    """A restored individual is indexed again so recognition can find it."""
+    _save_parent_class(ontology_repo)
+    change_repo.record_change(
+        entity_id="ind-1",
+        entity_type="individual",
+        operation=ChangeOperation.DELETE,
+        new_state={},
+        previous_state={"id": "ind-1", "class_ids": ["cls-1"], "title": "Rex"},
+        batch_run_id="run-1",
+    )
+
+    indexed_revert_svc.revert("run-1")
+
+    assert individual_index._individuals["ind-1"] == ("Rex", ["cls-1"], None)
+    assert schema_index._entities["ind-1"] == ("Rex", None)
+
+
+def test_revert_delete_indexes_restored_class(
+    ontology_repo, change_repo, schema_index, indexed_revert_svc
+):
+    """A restored class is indexed again so schema retrieval can find it."""
+    change_repo.record_change(
+        entity_id="cls-1",
+        entity_type="class",
+        operation=ChangeOperation.DELETE,
+        new_state={},
+        previous_state={
+            "id": "cls-1",
+            "concept_scheme_id": "scheme-1",
+            "taxonomy_id": "tx-1",
+            "title": "Animal",
+            "description": "An organism",
+        },
+        batch_run_id="run-1",
+    )
+
+    indexed_revert_svc.revert("run-1")
+
+    assert schema_index._entities["cls-1"] == ("Animal", "An organism")
+
+
+def test_revert_of_create_then_update_does_not_index_the_deleted_entity(
+    ontology_repo, change_repo, schema_index, indexed_revert_svc
+):
+    """An entity created and then updated by the run ends deleted, so nothing re-indexes it."""
+    ontology_repo.save_class(
+        Class(id="cls-1", concept_scheme_id="scheme-1", taxonomy_id="tx-1", title="Beast")
+    )
+    change_repo.record_change(
+        entity_id="cls-1",
+        entity_type="class",
+        operation=ChangeOperation.CREATE,
+        new_state={"id": "cls-1", "title": "Animal"},
+        batch_run_id="run-1",
+    )
+    change_repo.record_change(
+        entity_id="cls-1",
+        entity_type="class",
+        operation=ChangeOperation.UPDATE,
+        previous_state={"title": "Animal"},
+        new_state={"title": "Beast"},
+        batch_run_id="run-1",
+    )
+
+    indexed_revert_svc.revert("run-1")
+
+    assert ontology_repo.get_class("cls-1") is None
+    assert "cls-1" not in schema_index._entities
