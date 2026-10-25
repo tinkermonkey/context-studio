@@ -7,6 +7,9 @@ const axiosInstance = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  // Serialize arrays as repeated keys (`ids=a&ids=b`), which is what FastAPI
+  // list query params expect; axios' default is `ids[]=a&ids[]=b`.
+  paramsSerializer: { indexes: null },
 });
 
 applyInterceptors(axiosInstance);

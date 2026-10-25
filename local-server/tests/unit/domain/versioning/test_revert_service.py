@@ -25,6 +25,7 @@ from domain.ontology.entities import (
     Relationship,
     Taxonomy,
 )
+from domain.ontology.value_objects import ExternalReference
 from domain.versioning.revert_service import RevertService
 from domain.versioning.value_objects import ChangeOperation
 from tests.fakes.fake_change_repository import FakeChangeRepository
@@ -733,6 +734,74 @@ def test_inverse_delete_relationship(ontology_repo, change_repo, revert_svc):
     assert recreated.source_id == "cls-1"
     assert recreated.target_id == "cls-2"
     assert recreated.property_definition_id == "prop-1"
+
+
+def test_inverse_delete_relationship_from_recorder_previous_state(
+    ontology_repo, change_repo, revert_svc
+):
+    """A recorder-style DELETE (snapshot in previous_state, empty new_state) reverts."""
+    change_repo.record_change(
+        entity_id="rel-removed",
+        entity_type="relationship",
+        operation=ChangeOperation.DELETE,
+        new_state={},
+        previous_state={
+            "relationship_id": "rel-removed",
+            "source_id": "cls-1",
+            "target_id": "cls-2",
+            "property_definition_id": "prop-1",
+        },
+        batch_run_id="run-recorder-delete",
+    )
+
+    assert revert_svc.revert("run-recorder-delete") == 1
+
+    recreated = ontology_repo.get_relationship("rel-removed")
+    assert recreated is not None
+    assert recreated.source_id == "cls-1"
+    assert recreated.target_id == "cls-2"
+    # The inverse audit row carries the restored snapshot.
+    inverse = [
+        e
+        for e in change_repo.get_changes(batch_run_id="run-recorder-delete", limit=None).events
+        if e.operation == ChangeOperation.CREATE
+    ]
+    assert inverse and inverse[0].previous_state["source_id"] == "cls-1"
+
+
+def test_inverse_update_restores_external_references(ontology_repo, change_repo, revert_svc):
+    """UPDATE events carrying external_references as dicts restore ExternalReference objects."""
+    ontology_repo.save_class(
+        Class(
+            id="cls-grounded",
+            concept_scheme_id="scheme-1",
+            taxonomy_id="tx-1",
+            title="Grounded",
+            external_references=[
+                ExternalReference(source="wikidata", identifier="Q1", uri="u1"),
+                ExternalReference(source="dbpedia", identifier="D1", uri="u2"),
+            ],
+        )
+    )
+    change_repo.record_change(
+        entity_id="cls-grounded",
+        entity_type="class",
+        operation=ChangeOperation.UPDATE,
+        new_state={"external_references": []},
+        previous_state={
+            "external_references": [
+                {"source": "wikidata", "identifier": "Q1", "uri": "u1", "metadata": None}
+            ]
+        },
+        batch_run_id="run-grounding",
+    )
+
+    assert revert_svc.revert("run-grounding") == 1
+
+    restored = ontology_repo.get_class("cls-grounded")
+    assert restored.external_references == [
+        ExternalReference(source="wikidata", identifier="Q1", uri="u1")
+    ]
 
 
 def test_inverse_delete_property_definition(ontology_repo, change_repo, revert_svc):

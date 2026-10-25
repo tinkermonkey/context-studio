@@ -1,6 +1,7 @@
 import { spawn, execSync } from "node:child_process";
 import { openSync, mkdirSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
+import { TEST_DB_URLS } from "./fixtures/test-db";
 
 /**
  * E2E harness — boots an ISOLATED test stack so specs never touch the dev
@@ -52,10 +53,7 @@ export default async function globalSetup() {
 
   // 1. Bring the isolated test DBs up to the current schema (base → head).
   console.log("[e2e] migrating test databases…");
-  for (const [target, url] of [
-    ["local", "sqlite:///./datafiles/e2e-test/local.db"],
-    ["operations", "sqlite:///./datafiles/e2e-test/operations.db"],
-  ] as const) {
+  for (const [target, url] of Object.entries(TEST_DB_URLS)) {
     const flag = target === "local" ? "--local-db-url" : "--operations-db-url";
     execSync(`${VENV_PYTHON} scripts/run_migrations.py ${target} upgrade head ${flag} ${url}`, {
       cwd: BACKEND_DIR,

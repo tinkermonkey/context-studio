@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Button, Icon, Chip } from "@tinkermonkey/heimdall-ui";
+import { hasRunStatus } from "@/api/hooks/pipeline/runStatus";
 import type { components } from "@/api/types";
 import "./PipelineTypeCard.css";
 
@@ -15,18 +16,11 @@ interface PipelineTypeCardProps {
 type StatusVariant = "emerald" | "rose" | "cyan" | "amber" | "neutral";
 
 const getRunStatusDisplay = (status: string): { label: string; variant: StatusVariant } => {
-  switch (status.toUpperCase()) {
-    case "COMPLETED":
-      return { label: "Completed", variant: "emerald" };
-    case "FAILED":
-      return { label: "Failed", variant: "rose" };
-    case "RUNNING":
-      return { label: "Running", variant: "cyan" };
-    case "PENDING":
-      return { label: "Pending", variant: "amber" };
-    default:
-      return { label: status, variant: "neutral" };
-  }
+  if (hasRunStatus(status, "completed")) return { label: "Completed", variant: "emerald" };
+  if (hasRunStatus(status, "failed")) return { label: "Failed", variant: "rose" };
+  if (hasRunStatus(status, "running")) return { label: "Running", variant: "cyan" };
+  if (hasRunStatus(status, "pending")) return { label: "Pending", variant: "amber" };
+  return { label: status, variant: "neutral" };
 };
 
 const formatTimestamp = (dateString?: string | null) => {

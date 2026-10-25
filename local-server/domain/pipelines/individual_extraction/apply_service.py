@@ -164,18 +164,19 @@ class IndividualExtractionApplyService:
             obj = triple.get("object", {})
             confidence = triple.get("confidence", 0.0)
 
+            # Unselected triples are reported in skip_reasons only; individuals_skipped
+            # counts selected triples that could not be applied.
             if selected is not None:
                 if candidate_id not in selected:
-                    result.individuals_skipped += 1
-                    result.skipped_candidate_ids.append(candidate_id)
+                    result.skip(candidate_id, "not_selected")
                     continue
             elif confidence < confidence_threshold:
-                result.individuals_skipped += 1
-                result.skipped_candidate_ids.append(candidate_id)
+                result.skip(candidate_id, "below_threshold")
                 continue
 
             if subject.get("kind") != "individual":
-                result.skipped_candidate_ids.append(candidate_id)
+                result.individuals_skipped += 1
+                result.skip(candidate_id, "invalid")
                 continue
 
             subject_label = (subject.get("label") or "").strip()
@@ -211,7 +212,7 @@ class IndividualExtractionApplyService:
             if resolved_id is None:
                 if not subject_label:
                     result.individuals_skipped += 1
-                    result.skipped_candidate_ids.append(candidate_id)
+                    result.skip(candidate_id, "invalid")
                     continue
 
                 # Verify all class_ids exist; class_ids may legitimately be empty
@@ -222,7 +223,7 @@ class IndividualExtractionApplyService:
                 ]
                 if class_ids and not valid_classes:
                     result.individuals_skipped += 1
-                    result.skipped_candidate_ids.append(candidate_id)
+                    result.skip(candidate_id, "missing_class")
                     continue
                 valid_class_ids = [cls.id for cls in valid_classes]
                 taxonomy_id = valid_classes[0].taxonomy_id if valid_classes else None
@@ -260,7 +261,7 @@ class IndividualExtractionApplyService:
                 elif not valid_class_ids:
                     # No recognizable match and nothing to type it as — nothing to do.
                     result.individuals_skipped += 1
-                    result.skipped_candidate_ids.append(candidate_id)
+                    result.skip(candidate_id, "missing_class")
                     continue
                 else:
                     try:

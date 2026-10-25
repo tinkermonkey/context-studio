@@ -53,15 +53,15 @@ Field names used are all in `components["schemas"]` of `ux/src/api/types/index.t
 ```ts
 {
   candidates: [
-    { kind: "class", label: "Application Interface", confidence: 0.9,  proposed_definition: "An access point where application services are made available.", provenance: [spanIn(TEXT, "Checkout API")] }, // class-0 (exists → reused)
-    { kind: "class", label: "Event Stream",          confidence: 0.82, proposed_definition: "An ordered channel of published domain events.", provenance: [spanIn(TEXT, "order events")] },                 // class-1
-    { kind: "class", label: "Billing System",        confidence: 0.41, proposed_definition: null, provenance: [spanIn(TEXT, "Billing Engine")] },                                                              // class-2
+    { kind: "class", label: "Application Interface", confidence: 0.9,  proposed_definition: "An access point where application services are made available.", provenance: [locateMention(TEXT, "Checkout API")] }, // class-0 (exists → reused)
+    { kind: "class", label: "Event Stream",          confidence: 0.82, proposed_definition: "An ordered channel of published domain events.", provenance: [locateMention(TEXT, "order events")] },                 // class-1
+    { kind: "class", label: "Billing System",        confidence: 0.41, proposed_definition: null, provenance: [locateMention(TEXT, "Billing Engine")] },                                                              // class-2
     { kind: "property_definition", label: "publishes", confidence: 0.86, proposed_definition: "The subject emits events onto the object.",
-      proposed_domain: "Application Service", proposed_range: "Event Stream", provenance: [spanIn(TEXT, "publishes")] },                                                                                       // property-0
+      proposed_domain: "Application Service", proposed_range: "Event Stream", provenance: [locateMention(TEXT, "publishes")] },                                                                                       // property-0
   ],
   connections: [
-    { subject_ref: "Application Service", predicate: "publishes", object_ref: "Event Stream", confidence: 0.8,  provenance: [spanIn(TEXT, "Order Service publishes order events")] }, // connection-0
-    { subject_ref: "Billing System",      predicate: "publishes", object_ref: "Event Stream", confidence: 0.52, provenance: [spanIn(TEXT, "to the Billing Engine")] },               // connection-1
+    { subject_ref: "Application Service", predicate: "publishes", object_ref: "Event Stream", confidence: 0.8,  provenance: [locateMention(TEXT, "Order Service publishes order events")] }, // connection-0
+    { subject_ref: "Billing System",      predicate: "publishes", object_ref: "Event Stream", confidence: 0.52, provenance: [locateMention(TEXT, "to the Billing Engine")] },               // connection-1
   ],
 }
 ```
@@ -81,7 +81,7 @@ Schema-tab highlight segments (`extraction-review-span`, `data-span-keys`):
 
 ### Individual output summary (`individualOutput(seed)`), provenance is a **single span object** (a list for `triple-0`)
 
-The production pipelines store triple provenance as one `{quote,start,end}` object (`domain/extraction/services.py` serializes the SourceSpan to a dict). Apply also accepts a list of spans (or a bare string) since the D3 fix, so `triple-0` uses `[spanIn(...)]` to keep that shape covered; the other triples use the production single-object shape. Triple order matters: `triple-0` mints "Checkout API" so `triple-1` can resolve it as its object.
+The production pipelines store triple provenance as one `{quote,start,end}` object (`domain/extraction/services.py` serializes the SourceSpan to a dict). Apply also accepts a list of spans (or a bare string) since the D3 fix, so `triple-0` uses `[locateMention(...)]` to keep that shape covered; the other triples use the production single-object shape. Triple order matters: `triple-0` mints "Checkout API" so `triple-1` can resolve it as its object.
 
 ```ts
 {
@@ -89,19 +89,19 @@ The production pipelines store triple provenance as one `{quote,start,end}` obje
     { subject: { kind: "individual", id: "", label: "Checkout API",       class_ids: [interfaceClass.id] },
       predicate: { property_definition_id: null, label: "is_a" },
       object: { kind: "class", id: interfaceClass.id, label: "Application Interface" },
-      confidence: 0.9,  provenance: [spanIn(TEXT, "Checkout API")] },                            // triple-0
+      confidence: 0.9,  provenance: [locateMention(TEXT, "Checkout API")] },                            // triple-0
     { subject: { kind: "individual", id: "", label: "Order Service",      class_ids: [serviceClass.id] },
       predicate: { property_definition_id: exposes.id, label: "exposes" },
       object: { kind: "individual", id: "", label: "Checkout API", class_ids: [interfaceClass.id] },
-      confidence: 0.92, provenance: spanIn(TEXT, "Order Service exposes the Checkout API") },    // triple-1
+      confidence: 0.92, provenance: locateMention(TEXT, "Order Service exposes the Checkout API") },    // triple-1
     { subject: { kind: "individual", id: "", label: "Storefront Web App", class_ids: [componentClass.id] },
       predicate: { property_definition_id: null, label: "calls" },
       object: { kind: "individual", id: "", label: "Checkout API", class_ids: [interfaceClass.id] },
-      confidence: 0.85, provenance: spanIn(TEXT, "the Storefront Web App calls") },              // triple-2
+      confidence: 0.85, provenance: locateMention(TEXT, "the Storefront Web App calls") },              // triple-2
     { subject: { kind: "individual", id: "", label: "Billing Engine",     class_ids: [componentClass.id] },
       predicate: { property_definition_id: null, label: "receives" },
       object: { kind: "literal", id: "", label: "order events" },
-      confidence: 0.6,  provenance: spanIn(TEXT, "order events to the Billing Engine") },        // triple-3
+      confidence: 0.6,  provenance: locateMention(TEXT, "order events to the Billing Engine") },        // triple-3
   ],
 }
 ```
@@ -177,8 +177,8 @@ Individual-tab highlight segments:
   10. Click `extraction-review-schema-apply`. Assert `extraction-review-schema-confirm` is visible and `extraction-review-schema-orphan-warning` contains `1 accepted connection points at a proposed class you did not accept` and `Billing System → publishes → Event Stream`.
   11. Start the apply request/response wait, then click the dialog button `Apply 5 accepted`.
   12. Request: query `taxonomy_id === tax.id`, `concept_scheme_id === scheme.id`, no `confidence_threshold`. Body `accepted_candidate_ids` (sorted) equals `["class-0","class-1","connection-0","connection-1","property-0"]` and has no `recognition_decisions`.
-  13. Response (200): `classes_created 1`, `classes_skipped 2`, `properties_created 1`, `relationships_created 1`, `applied_candidate_ids ["class-0","class-1","property-0","connection-0"]`, `skipped_candidate_ids ["class-2","connection-1"]`.
-  14. UI: `extraction-review-apply-result-created` contains `4 of 5 accepted applied`, `1 classes created`, `1 properties created`, `1 relationships created`. `extraction-review-apply-result-skipped` contains `Billing System → publishes → Event Stream` and has no chip whose exact text is `Billing System` (rejected candidates are not listed). `extraction-review-schema-revert` is visible and `extraction-review-schema-apply` has count 0. A toast titled `Schema candidates applied` contains `4 applied · 1 accepted skipped`.
+  13. Response (200): `classes_created 1`, `classes_skipped 2`, `properties_created 1`, `relationships_created 1`, `applied_candidate_ids ["class-0","class-1","property-0","connection-0"]`, `skipped_candidate_ids ["class-2","connection-1"]`, `skip_reasons { "class-2": "not_selected", "connection-1": "unresolved_endpoint" }`.
+  14. UI: `extraction-review-apply-result-created` contains `4 of 5 accepted applied`, `1 classes created`, `1 properties created`, `1 relationships created`. `extraction-review-apply-result-skipped` contains `Billing System → publishes → Event Stream — endpoint not accepted or in the graph` and has no chip whose exact text is `Billing System` (rejected candidates are not listed). `extraction-review-schema-revert` is visible and `extraction-review-schema-apply` has count 0. A toast titled `Schema candidates applied` contains `4 applied · 1 accepted skipped`.
   15. Persistence via API:
       - `GET /api/classes?concept_scheme_id={scheme.id}` titles (sorted) equal `["Application Component","Application Interface","Application Service","Event Stream"]`. "Application Interface" appears once (reused, not duplicated) and there is no "Billing System".
       - `GET /api/properties?limit=1000` contains exactly one item with `identifier === "publishes"`.
@@ -214,7 +214,7 @@ Individual-tab highlight segments:
   8. Click `extraction-review-individual-apply`. Assert `extraction-review-individual-confirm` contains `3 accepted triples`, `1 merge into existing`, `0 kept separate`, `1 same title · merges automatically`, and does not contain `left to recognition`.
   9. Start the apply wait, then click the dialog button `Apply 3 accepted`.
   10. Request: query `taxonomy_id === tax.id`, `recognition_threshold === "0.9"`. Body `accepted_candidate_ids` (sorted) equals `["triple-0","triple-1","triple-2"]`, and `recognition_decisions` equals `[{ mention_label: "Order Service", decision: "merge", individual_id: orderService.id }]` (no decision is sent for the undecided Storefront Web App hit).
-  11. Response (200): `individuals_created 1`, `relationships_created 1`, `applied_candidate_ids ["triple-0","triple-1","triple-2"]`, `skipped_candidate_ids ["triple-3"]`, `merged_mentions [{ mention_label: "Order Service", individual_id: orderService.id, source: "decision" }, { mention_label: "Storefront Web App", individual_id: storefront.id, source: "existing_title" }]`.
+  11. Response (200): `individuals_created 1`, `relationships_created 1`, `applied_candidate_ids ["triple-0","triple-1","triple-2"]`, `skipped_candidate_ids ["triple-3"]`, `skip_reasons { "triple-3": "not_selected" }`, `merged_mentions [{ mention_label: "Order Service", individual_id: orderService.id, source: "decision" }, { mention_label: "Storefront Web App", individual_id: storefront.id, source: "existing_title" }]`.
   12. UI: `extraction-review-apply-result-created` contains `3 of 3 accepted applied`, `1 individuals created`, `1 relationships created`. `extraction-review-apply-result-merged` contains `Order Service → Order Service` with chip `your merge`, and `Storefront Web App → Storefront Web App` with chip `same title`. `extraction-review-apply-result-skipped` has count 0 (triple-3 was rejected, not accepted-but-skipped). `extraction-review-individual-revert` is visible. A toast titled `Individuals applied` contains `3 applied · 0 accepted skipped`.
   13. Persistence via API:
       - `GET /api/individuals?class_id={interfaceClass.id}` has exactly one item, titled `Checkout API` (record its id as `checkoutId`).
@@ -318,7 +318,7 @@ No registry gaps: every selector this plan needs is registered. Non-blocking que
 
 - `createTaxonomy` (decoy taxonomy), `createClass` (x3), `createPropertyDefinition` (`exposes`), `createIndividual` (x2), `clearTestData` (afterEach), all from `ux/e2e/fixtures/factories.ts`.
 - `apiRequest` from `ux/e2e/fixtures/api-client.ts`: `dr_spec` taxonomy and `application` scheme (the factories do not pass `identifier`), plus every persistence/verification read.
-- `routeRunsToSeededOutput`, `routeRunToFailure`, `spanIn` from `ux/e2e/fixtures/pipeline-runs.ts`.
+- `routeRunsToSeededOutput`, `routeRunToFailure` from `ux/e2e/fixtures/pipeline-runs.ts`; `locateMention` from `ux/src/components/pipeline/extraction-review/reviewUtils.ts`.
 - `test`, `expect` from `ux/e2e/fixtures/app-test.ts`.
 - Spec-local helpers only (no new fixtures): `seedDrScope`, `schemaOutput`, `individualOutput`, `selectOption`, `confirmDialog(kind)`, `countRunPosts(page)`.
 - Suggested file: `ux/e2e/tests/pipelines/extraction-review.spec.ts`.

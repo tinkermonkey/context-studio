@@ -1,17 +1,54 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueries, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
 import { ontologyService, type ClassListParams } from "@/api/services/ontology";
 import type { components } from "@/api/types";
+import { listQueryOptions, type ListQueryOptions } from "./listQueryOptions";
 
 type ClassCreateRequest = components["schemas"]["ClassCreateRequest"];
 type ClassUpdateRequest = components["schemas"]["ClassUpdateRequest"];
 type ClassMoveRequest = components["schemas"]["ClassMoveRequest"];
 
-export function useClasses(params?: ClassListParams) {
+export function useClasses(params?: ClassListParams, options?: ListQueryOptions) {
   return useQuery({
     queryKey: QUERY_KEYS.classes(params),
     queryFn: () => ontologyService.listClasses(params),
+    ...listQueryOptions(options),
   });
+}
+
+/**
+ * Fetch exactly the classes with these ids (e.g. to resolve titles for the
+ * rows on one table page). Skips the request when there are no ids.
+ */
+export function useClassesByIds(ids: Array<string | null | undefined>) {
+  const unique = [...new Set(ids.filter((id): id is string => !!id))].sort();
+  return useClasses(
+    { ids: unique, limit: Math.max(unique.length, 1) },
+    { enabled: unique.length > 0, keepPrevious: true },
+  );
+}
+
+/**
+ * Class count per concept scheme, from one `limit=1` request per scheme that
+ * reads the response `total`. Returns a map of scheme id → count (missing
+ * while loading).
+ */
+export function useClassCountsByScheme(schemeIds: string[]): Record<string, number> {
+  const results = useQueries({
+    queries: schemeIds.map((schemeId) => {
+      const params: ClassListParams = { concept_scheme_id: schemeId, limit: 1 };
+      return {
+        queryKey: QUERY_KEYS.classes(params),
+        queryFn: () => ontologyService.listClasses(params),
+      };
+    }),
+  });
+  const counts: Record<string, number> = {};
+  schemeIds.forEach((id, i) => {
+    const total = results[i]?.data?.total;
+    if (total !== undefined) counts[id] = total;
+  });
+  return counts;
 }
 
 export function useClass(id: string) {

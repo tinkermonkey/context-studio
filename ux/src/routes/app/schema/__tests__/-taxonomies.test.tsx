@@ -12,6 +12,7 @@ import {
   createListProperties,
   createListRelationships,
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
+import { serverSideList, pageRequests } from "@/test/serverSideList";
 import { TaxonomiesPage } from "../taxonomies";
 
 const server = setupServer(
@@ -190,7 +191,8 @@ describe("Taxonomies Schema Page", () => {
         }),
       ]);
 
-      server.use(http.get("*/api/taxonomies", () => HttpResponse.json(mockTaxonomies)));
+      const requests: URLSearchParams[] = [];
+      server.use(serverSideList("/api/taxonomies", mockTaxonomies.items, requests));
 
       render(<TaxonomiesPage />);
 
@@ -203,8 +205,10 @@ describe("Taxonomies Schema Page", () => {
       const searchInput = screen.getByPlaceholderText(/search/i);
       await userEvent.type(searchInput, "Biology");
 
-      expect(screen.getByText("Biology")).toBeInTheDocument();
-      expect(screen.queryByText("Chemistry")).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.queryByText("Chemistry")).not.toBeInTheDocument();
+      });
+      expect(pageRequests(requests).at(-1)!.get("q")).toBe("Biology");
       expect(screen.queryByText("Physics")).not.toBeInTheDocument();
     });
 
@@ -220,7 +224,8 @@ describe("Taxonomies Schema Page", () => {
         }),
       ]);
 
-      server.use(http.get("*/api/taxonomies", () => HttpResponse.json(mockTaxonomies)));
+      const requests: URLSearchParams[] = [];
+      server.use(serverSideList("/api/taxonomies", mockTaxonomies.items, requests));
 
       render(<TaxonomiesPage />);
 
@@ -231,12 +236,17 @@ describe("Taxonomies Schema Page", () => {
       const searchInput = screen.getByPlaceholderText(/search/i) as HTMLInputElement;
       await userEvent.type(searchInput, "Biology");
 
-      expect(screen.queryByText("Chemistry")).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.queryByText("Chemistry")).not.toBeInTheDocument();
+      });
+      expect(pageRequests(requests).at(-1)!.get("q")).toBe("Biology");
 
       await userEvent.clear(searchInput);
 
-      expect(screen.getByText("Biology")).toBeInTheDocument();
-      expect(screen.getByText("Chemistry")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText("Biology")).toBeInTheDocument();
+        expect(screen.getByText("Chemistry")).toBeInTheDocument();
+      });
     });
   });
 });

@@ -15,7 +15,7 @@ import {
   useCreateProperty,
 } from "@/api/hooks/ontology/useProperties";
 import { useRelationships } from "@/api/hooks/ontology/useRelationships";
-import { useClasses } from "@/api/hooks/ontology/useClasses";
+import { useClassesByIds } from "@/api/hooks/ontology/useClasses";
 import { useToasts } from "@/components/ui/Toast";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { propertiesCopy } from "@/routes/app/schema/properties/-copy";
@@ -59,9 +59,16 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
   const deleteMutation = useDeleteProperty();
   const createMutation = useCreateProperty();
 
-  const { data: relationshipsResponse } = useRelationships({ property_id: property?.id });
+  // The five most recent usages plus the server total; titles resolve by id.
+  const { data: relationshipsResponse } = useRelationships(
+    { property_id: property?.id, limit: 5, sort_by: "created_at", sort_order: "desc" },
+    { enabled: !!property?.id },
+  );
   const propertyRelationships = relationshipsResponse?.items || [];
-  const { data: classesResponse } = useClasses();
+  const relationshipTotal = relationshipsResponse?.total ?? propertyRelationships.length;
+  const { data: classesResponse } = useClassesByIds(
+    propertyRelationships.flatMap((rel) => [rel.source_id, rel.target_id]),
+  );
   const classMap = new Map((classesResponse?.items || []).map((c) => [c.id, c.title]));
 
   const { performDelete, undo } = useUndoDelete({
@@ -168,8 +175,8 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
               ) : (
                 <KVGrid
                   rows={[
-                    { key: "Total", value: String(propertyRelationships.length) },
-                    ...propertyRelationships.slice(0, 5).map((rel) => ({
+                    { key: "Total", value: String(relationshipTotal) },
+                    ...propertyRelationships.map((rel) => ({
                       key: classMap.get(rel.source_id) ?? rel.source_id.slice(0, 8),
                       value: `→ ${classMap.get(rel.target_id) ?? rel.target_id.slice(0, 8)}`,
                     })),

@@ -29,6 +29,12 @@ def mock_ontology_repo():
 
 
 @pytest.fixture
+def mock_ontology_service():
+    """Create a mock OntologyService (the write path for apply)."""
+    return Mock()
+
+
+@pytest.fixture
 def sample_classes():
     """Create sample Class entities for testing."""
     return {
@@ -86,6 +92,7 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
     def test_add_operation_creates_new_relationship(
         self,
         mock_ontology_repo,
+        mock_ontology_service,
         sample_classes,
         sample_property_definition,
         sample_scope_id,
@@ -126,16 +133,17 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
             },
         )
 
-        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        service = SchemaConnectionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
         result = service.apply(run)
 
         assert result.relationships_created == 1
         assert result.relationships_skipped == 0
-        mock_ontology_repo.save_relationship.assert_called_once()
+        mock_ontology_service.create_relationship.assert_called_once()
 
     def test_remove_operation_deletes_existing_relationship(
         self,
         mock_ontology_repo,
+        mock_ontology_service,
         sample_classes,
         sample_property_definition,
         sample_scope_id,
@@ -180,16 +188,17 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
             },
         )
 
-        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        service = SchemaConnectionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
         result = service.apply(run)
 
         assert result.relationships_removed == 1
         assert result.relationships_skipped == 0
-        mock_ontology_repo.delete_relationship.assert_called_once_with("rel-1")
+        mock_ontology_service.delete_relationship.assert_called_once_with("rel-1")
 
     def test_modify_operation_tracks_without_applying(
         self,
         mock_ontology_repo,
+        mock_ontology_service,
         sample_classes,
         sample_property_definition,
         sample_scope_id,
@@ -234,18 +243,19 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
             },
         )
 
-        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        service = SchemaConnectionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
         result = service.apply(run)
 
         assert result.relationships_modified == 1
         assert result.relationships_skipped == 0
         # Modify should not save or delete
-        mock_ontology_repo.save_relationship.assert_not_called()
-        mock_ontology_repo.delete_relationship.assert_not_called()
+        mock_ontology_service.create_relationship.assert_not_called()
+        mock_ontology_service.delete_relationship.assert_not_called()
 
     def test_self_loop_prevention(
         self,
         mock_ontology_repo,
+        mock_ontology_service,
         sample_classes,
         sample_property_definition,
         sample_scope_id,
@@ -289,16 +299,17 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
             },
         )
 
-        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        service = SchemaConnectionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
         result = service.apply(run)
 
         assert result.relationships_created == 0
         assert result.relationships_skipped == 1
-        mock_ontology_repo.save_relationship.assert_not_called()
+        mock_ontology_service.create_relationship.assert_not_called()
 
     def test_confidence_threshold_filtering(
         self,
         mock_ontology_repo,
+        mock_ontology_service,
         sample_classes,
         sample_property_definition,
         sample_scope_id,
@@ -335,12 +346,12 @@ class TestSchemaConnectionRefinementApplyServiceBasic:
             },
         )
 
-        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        service = SchemaConnectionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
         result = service.apply(run, confidence_threshold=0.90)
 
         assert result.relationships_created == 0
         assert result.relationships_skipped == 1
-        mock_ontology_repo.save_relationship.assert_not_called()
+        mock_ontology_service.create_relationship.assert_not_called()
 
 
 class TestSchemaConnectionRefinementApplyServiceResolution:
@@ -349,6 +360,7 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
     def test_class_resolution_by_id(
         self,
         mock_ontology_repo,
+        mock_ontology_service,
         sample_classes,
         sample_property_definition,
         sample_scope_id,
@@ -392,7 +404,7 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
             },
         )
 
-        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        service = SchemaConnectionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
         result = service.apply(run)
 
         # Should create because resolution by ID succeeds
@@ -401,6 +413,7 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
     def test_class_resolution_by_label(
         self,
         mock_ontology_repo,
+        mock_ontology_service,
         sample_classes,
         sample_property_definition,
         sample_scope_id,
@@ -442,7 +455,7 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
             },
         )
 
-        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        service = SchemaConnectionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
         result = service.apply(run)
 
         # Should create because resolution by label succeeds
@@ -451,6 +464,7 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
     def test_property_definition_resolution_via_slugification(
         self,
         mock_ontology_repo,
+        mock_ontology_service,
         sample_classes,
         sample_property_definition,
         sample_scope_id,
@@ -488,7 +502,7 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
             },
         )
 
-        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        service = SchemaConnectionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
         result = service.apply(run)
 
         assert result.relationships_created == 1
@@ -498,6 +512,7 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
     def test_unresolvable_class_skips_delta(
         self,
         mock_ontology_repo,
+        mock_ontology_service,
         sample_classes,
         sample_property_definition,
         sample_scope_id,
@@ -534,14 +549,14 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
             },
         )
 
-        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        service = SchemaConnectionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
         result = service.apply(run)
 
         assert result.relationships_created == 0
         assert result.relationships_skipped == 1
 
     def test_unresolvable_property_skips_delta(
-        self, mock_ontology_repo, sample_classes, sample_scope_id
+        self, mock_ontology_repo, mock_ontology_service, sample_classes, sample_scope_id
     ):
         """Delta skipped if property definition cannot be resolved."""
 
@@ -572,7 +587,7 @@ class TestSchemaConnectionRefinementApplyServiceResolution:
             },
         )
 
-        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        service = SchemaConnectionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
         result = service.apply(run)
 
         assert result.relationships_created == 0
@@ -585,6 +600,7 @@ class TestSchemaConnectionRefinementApplyServiceScoping:
     def test_scoped_class_lookup_prevents_title_collision(
         self,
         mock_ontology_repo,
+        mock_ontology_service,
         sample_property_definition,
         sample_scope_id,
     ):
@@ -675,7 +691,7 @@ class TestSchemaConnectionRefinementApplyServiceScoping:
             },
         )
 
-        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        service = SchemaConnectionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
         result = service.apply(run)
 
         # Should create relationship using class_in_scope (not class_in_other_scheme)
@@ -684,14 +700,14 @@ class TestSchemaConnectionRefinementApplyServiceScoping:
         # Verify list_classes was called with the scope's concept_scheme_id
         mock_ontology_repo.list_classes.assert_called_with(concept_scheme_id=scheme_id, limit=None)
         # Verify the relationship was created with the correct classes
-        saved_rel_call = mock_ontology_repo.save_relationship.call_args
-        saved_rel = saved_rel_call[0][0]
-        assert saved_rel.source_id == class_in_scope.id
-        assert saved_rel.target_id == class_in_scope_2.id
+        saved_rel = mock_ontology_service.create_relationship.call_args.kwargs
+        assert saved_rel["source_id"] == class_in_scope.id
+        assert saved_rel["target_id"] == class_in_scope_2.id
 
     def test_unscoped_lookup_without_scope_id(
         self,
         mock_ontology_repo,
+        mock_ontology_service,
         sample_classes,
         sample_property_definition,
     ):
@@ -728,7 +744,7 @@ class TestSchemaConnectionRefinementApplyServiceScoping:
             },
         )
 
-        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        service = SchemaConnectionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
         result = service.apply(run)
 
         # Should still work (backward compatible)
@@ -743,6 +759,7 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
     def test_add_existing_relationship_skipped(
         self,
         mock_ontology_repo,
+        mock_ontology_service,
         sample_classes,
         sample_property_definition,
         sample_scope_id,
@@ -786,16 +803,17 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
             },
         )
 
-        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        service = SchemaConnectionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
         result = service.apply(run)
 
         assert result.relationships_created == 0
         assert result.relationships_skipped == 1
-        mock_ontology_repo.save_relationship.assert_not_called()
+        mock_ontology_service.create_relationship.assert_not_called()
 
     def test_remove_nonexistent_relationship_skipped(
         self,
         mock_ontology_repo,
+        mock_ontology_service,
         sample_classes,
         sample_property_definition,
         sample_scope_id,
@@ -832,16 +850,17 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
             },
         )
 
-        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        service = SchemaConnectionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
         result = service.apply(run)
 
         assert result.relationships_removed == 0
         assert result.relationships_skipped == 1
-        mock_ontology_repo.delete_relationship.assert_not_called()
+        mock_ontology_service.delete_relationship.assert_not_called()
 
     def test_missing_confidence_defaults_to_zero(
         self,
         mock_ontology_repo,
+        mock_ontology_service,
         sample_classes,
         sample_property_definition,
         sample_scope_id,
@@ -877,7 +896,7 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
             },
         )
 
-        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        service = SchemaConnectionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
         result = service.apply(run, confidence_threshold=0.1)
 
         assert result.relationships_created == 0
@@ -886,6 +905,7 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
     def test_invalid_operation_type_skipped(
         self,
         mock_ontology_repo,
+        mock_ontology_service,
         sample_classes,
         sample_property_definition,
         sample_scope_id,
@@ -921,7 +941,7 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
             },
         )
 
-        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        service = SchemaConnectionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
         result = service.apply(run)
 
         assert result.relationships_created == 0
@@ -930,6 +950,7 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
     def test_unresolvable_scope_id_skips_all_deltas(
         self,
         mock_ontology_repo,
+        mock_ontology_service,
         sample_property_definition,
     ):
         """Unresolvable scope_id causes all deltas to be skipped (early-return path)."""
@@ -968,7 +989,7 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
             },
         )
 
-        service = SchemaConnectionRefinementApplyService(mock_ontology_repo)
+        service = SchemaConnectionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
         result = service.apply(run)
 
         # Verify all deltas are skipped (early-return on unresolvable scope)
@@ -977,8 +998,8 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
         assert result.relationships_modified == 0
         assert result.relationships_skipped == 0  # No individual deltas are processed
         # Verify repository write methods are never called
-        mock_ontology_repo.save_relationship.assert_not_called()
-        mock_ontology_repo.delete_relationship.assert_not_called()
+        mock_ontology_service.create_relationship.assert_not_called()
+        mock_ontology_service.delete_relationship.assert_not_called()
         # Verify all result counters are zero (empty ApplyResult)
         assert result.classes_created == 0
         assert result.classes_updated == 0

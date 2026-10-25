@@ -18,7 +18,7 @@ import re
 from typing import TYPE_CHECKING
 
 from domain.ontology.exceptions import DuplicateEntityError
-from domain.pipelines.apply_result import ApplyResult
+from domain.pipelines.apply_result import ApplyResult, SkipReason
 from domain.pipelines.apply_selection import check_accepted_ids
 from domain.pipelines.candidate_ids import (
     enumerate_schema_candidates,
@@ -115,8 +115,10 @@ class SchemaExtractionApplyService:
                 return candidate_id in selected
             return confidence >= confidence_threshold
 
-        def _skip(candidate_id: str) -> None:
-            result.skipped_candidate_ids.append(candidate_id)
+        # Reason for a candidate that was never selected.
+        unselected_reason: SkipReason = (
+            "not_selected" if selected is not None else "below_threshold"
+        )
 
         def _already_present(candidate_id: str) -> None:
             result.applied_candidate_ids.append(candidate_id)
@@ -132,9 +134,13 @@ class SchemaExtractionApplyService:
         for candidate_id, candidate in class_candidates:
             label = candidate.get("label", "").strip()
             confidence = candidate.get("confidence", 0.0)
-            if not label or not _is_selected(candidate_id, confidence):
+            if not _is_selected(candidate_id, confidence):
                 result.classes_skipped += 1
-                _skip(candidate_id)
+                result.skip(candidate_id, unselected_reason)
+                continue
+            if not label:
+                result.classes_skipped += 1
+                result.skip(candidate_id, "invalid")
                 continue
             if label.lower() in class_title_to_id:
                 result.classes_skipped += 1
@@ -159,9 +165,13 @@ class SchemaExtractionApplyService:
             label = candidate.get("label", "").strip()
             confidence = candidate.get("confidence", 0.0)
             identifier = _slugify(label)
-            if not identifier or not _is_selected(candidate_id, confidence):
+            if not _is_selected(candidate_id, confidence):
                 result.properties_skipped += 1
-                _skip(candidate_id)
+                result.skip(candidate_id, unselected_reason)
+                continue
+            if not identifier:
+                result.properties_skipped += 1
+                result.skip(candidate_id, "invalid")
                 continue
             if self._repo.get_property_definition_by_identifier(identifier) is not None:
                 result.properties_skipped += 1
@@ -183,7 +193,7 @@ class SchemaExtractionApplyService:
                     label,
                 )
                 result.properties_skipped += 1
-                _skip(candidate_id)
+                result.skip(candidate_id, "title_conflict")
                 continue
             result.properties_created += 1
             result.created_property_definition_ids.append(new_prop.id)
@@ -194,7 +204,7 @@ class SchemaExtractionApplyService:
             confidence = connection.get("confidence", 0.0)
             if not _is_selected(candidate_id, confidence):
                 result.relationships_skipped += 1
-                _skip(candidate_id)
+                result.skip(candidate_id, unselected_reason)
                 continue
 
             subject_ref = (connection.get("subject_ref") or "").strip().lower()
@@ -210,9 +220,16 @@ class SchemaExtractionApplyService:
                 else None
             )
 
-            if not src_id or not tgt_id or not prop_def or src_id == tgt_id:
+            unresolved: SkipReason | None = None
+            if not src_id or not tgt_id:
+                unresolved = "unresolved_endpoint"
+            elif not prop_def:
+                unresolved = "unresolved_predicate"
+            elif src_id == tgt_id:
+                unresolved = "self_loop"
+            if unresolved is not None:
                 result.relationships_skipped += 1
-                _skip(candidate_id)
+                result.skip(candidate_id, unresolved)
                 continue
 
             existing_rels = self._repo.list_relationships(

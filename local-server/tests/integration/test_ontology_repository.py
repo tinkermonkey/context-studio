@@ -10,7 +10,7 @@ Tests the adapter against a real in-memory SQLite database to verify:
 """
 
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 
 from adapters.persistence.sqlite.models import Base
@@ -729,6 +729,38 @@ class TestRelationshipCRUD:
         deleted = repo.delete_relationship("rel-1")
         assert deleted is True
         assert repo.get_relationship("rel-1") is None
+
+
+class TestGetEntityTitles:
+    """Tests for the batch title read."""
+
+    def test_returns_titles_for_classes_and_individuals(self, repo, sample_class):
+        repo.save_individual(Individual(id="ind-t1", class_ids=[sample_class.id], title="Fido"))
+        repo.save_individual(Individual(id="ind-t2", class_ids=[sample_class.id], title="Rex"))
+
+        titles = repo.get_entity_titles([sample_class.id, "ind-t1", "ind-t2", "missing"])
+
+        assert titles == {sample_class.id: sample_class.title, "ind-t1": "Fido", "ind-t2": "Rex"}
+
+    def test_empty_ids_returns_empty_dict(self, repo):
+        assert repo.get_entity_titles([]) == {}
+
+    def test_uses_a_single_query(self, repo, db_engine, sample_class):
+        repo.save_individual(Individual(id="ind-t3", class_ids=[sample_class.id], title="Spot"))
+        statements: list[str] = []
+
+        def _count(conn, cursor, statement, *args):
+            if statement.lstrip().upper().startswith("SELECT"):
+                statements.append(statement)
+
+        event.listen(db_engine, "before_cursor_execute", _count)
+        try:
+            repo.get_entity_titles([sample_class.id, "ind-t3"])
+        finally:
+            event.remove(db_engine, "before_cursor_execute", _count)
+
+        assert len(statements) == 1
+        assert " IN " in statements[0].upper()
 
 
 class TestStatusPersistence:

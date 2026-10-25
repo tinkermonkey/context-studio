@@ -9,11 +9,7 @@ export {
   useRecognitionPreview,
 } from "./useExtractionCandidates";
 export { useExtractionReviewRuns } from "./useExtractionReviewRuns";
-export {
-  useApplyReviewedRun,
-  planReviewApply,
-  REVIEW_RECOGNITION_THRESHOLD,
-} from "./useApplyReviewedRun";
+export { useApplyReviewedRun, REVIEW_RECOGNITION_THRESHOLD } from "./useApplyReviewedRun";
 export {
   useCreateConfiguration,
   useUpdateConfiguration,

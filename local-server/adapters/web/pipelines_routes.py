@@ -1145,28 +1145,22 @@ def _mapped_node_titles(triples: list[dict[str, Any]], ontology_repo: Any) -> di
     """
     Look up canonical titles for triple subjects/objects mapped to existing nodes.
 
-    Read-only display enrichment: each distinct id is fetched once; ids that do
-    not resolve (or no repo configured) are simply omitted.
+    Read-only display enrichment: all distinct ids are fetched in one batch
+    read; ids that do not resolve (or no repo configured) are simply omitted.
     """
     if ontology_repo is None:
         return {}
-    wanted: dict[str, str] = {}
+    wanted: set[str] = set()
     for triple in triples:
         for role in ("subject", "object"):
             node = triple.get(role) or {}
             node_id = node.get("id")
             if node_id and node.get("kind") in ("individual", "class"):
-                wanted.setdefault(str(node_id), node["kind"])
-    titles: dict[str, str] = {}
-    for node_id, kind in wanted.items():
-        entity = (
-            ontology_repo.get_individual(node_id)
-            if kind == "individual"
-            else ontology_repo.get_class(node_id)
-        )
-        if entity is not None and getattr(entity, "title", None):
-            titles[node_id] = entity.title
-    return titles
+                wanted.add(str(node_id))
+    if not wanted:
+        return {}
+    titles: dict[str, str] = ontology_repo.get_entity_titles(sorted(wanted))
+    return {node_id: title for node_id, title in titles.items() if title}
 
 
 def _extract_individual_extraction_candidates(
@@ -1810,6 +1804,7 @@ async def apply_pipeline_run(
         recognized_individual_ids=apply_result.recognized_individual_ids,
         applied_candidate_ids=apply_result.applied_candidate_ids,
         skipped_candidate_ids=apply_result.skipped_candidate_ids,
+        skip_reasons=apply_result.skip_reasons,
         existing_candidate_ids=apply_result.existing_candidate_ids,
         merged_mentions=[
             MergedMentionSchema(

@@ -55,6 +55,9 @@ from domain.pipelines.schema_node_connection_refinement.orchestrator import (
 from tests.integration.pipelines._harness.cassettes import CassetteLLMProvider
 from tests.integration.pipelines._harness.metrics import precision_recall_f1
 from tests.integration.pipelines._harness.report import FloorGate, MetricsEmitter
+from domain.ontology.services import OntologyService
+from tests.fakes.fake_embedding_service import FakeEmbeddingService
+from tests.fakes.fake_event_publisher import FakeEventPublisher
 
 _logger = logging.getLogger(__name__)
 
@@ -592,7 +595,10 @@ class TestQualityConnectionRefinement:
             },
         )
 
-        apply_service = SchemaConnectionRefinementApplyService(ontology_repo)
+        apply_service = SchemaConnectionRefinementApplyService(
+            OntologyService(ontology_repo, FakeEmbeddingService(), FakeEventPublisher()),
+            ontology_repo,
+        )
 
         # First apply
         apply_result1 = apply_service.apply(mock_run)

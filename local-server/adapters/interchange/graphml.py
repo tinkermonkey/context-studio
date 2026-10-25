@@ -119,12 +119,12 @@ class GraphMLSerializer(OntologySerializer):
     def _serialize_whole_graph(self) -> None:
         """Serialize all entities and relationships."""
         # Add all taxonomies
-        taxonomies = self.ontology_repo.list_taxonomies()
+        taxonomies = self.ontology_repo.list_taxonomies(limit=None)
         for taxonomy in taxonomies:
             self._add_taxonomy(taxonomy)
 
         # Add all concept schemes
-        schemes = self.ontology_repo.list_concept_schemes()
+        schemes = self.ontology_repo.list_concept_schemes(limit=None)
         for scheme in schemes:
             self._add_concept_scheme(scheme)
 
@@ -134,12 +134,12 @@ class GraphMLSerializer(OntologySerializer):
             self._add_class(cls)
 
         # Add all property definitions
-        properties = self.ontology_repo.list_property_definitions()
+        properties = self.ontology_repo.list_property_definitions(limit=None)
         for prop in properties:
             self._add_property_definition(prop)
 
         # Add all individuals
-        individuals = self.ontology_repo.list_individuals()
+        individuals = self.ontology_repo.list_individuals(limit=None)
         for individual in individuals:
             self._add_individual(individual)
 
@@ -147,7 +147,7 @@ class GraphMLSerializer(OntologySerializer):
         self._add_structural_edges(taxonomies, schemes, classes, individuals)
 
         # Add relationships
-        relationships = self.ontology_repo.list_relationships()
+        relationships = self.ontology_repo.list_relationships(limit=None)
         for rel in relationships:
             self._add_relationship(rel)
 
@@ -160,7 +160,7 @@ class GraphMLSerializer(OntologySerializer):
         self._add_taxonomy(taxonomy)
 
         # Add concept schemes in this taxonomy
-        schemes = self.ontology_repo.list_concept_schemes(taxonomy_id=taxonomy.id)
+        schemes = self.ontology_repo.list_concept_schemes(taxonomy_id=taxonomy.id, limit=None)
         for scheme in schemes:
             self._add_concept_scheme(scheme)
             # Add classes in this scheme (without limit to ensure complete export)
@@ -1050,7 +1050,7 @@ class GraphMLDeserializer(OntologyDeserializer):
                     return class_entity.id
 
         if self._individuals_cache is None:
-            self._individuals_cache = self.ontology_repo.list_individuals()
+            self._individuals_cache = self.ontology_repo.list_individuals(limit=None)
 
         for individual in self._individuals_cache:
             for ext_ref in individual.external_references:

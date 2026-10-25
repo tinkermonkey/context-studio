@@ -2,7 +2,7 @@ import { TextInput as Input, Button } from "@tinkermonkey/heimdall-ui";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
-import { useClasses } from "@/api/hooks/ontology/useClasses";
+import { useClassSearch } from "@/api/hooks/ontology/useEntitySearch";
 import { useShortestPath } from "@/api/hooks/graph";
 import { COPY } from "@/routes/app/graph/-copy";
 import type { components } from "@/api/types";
@@ -18,7 +18,6 @@ interface NodeTypeaheadProps {
   selectedNode: ClassResponse | null;
   onSelect: (node: ClassResponse) => void;
   onClear: () => void;
-  allClasses: ClassResponse[];
   testIdPrefix: string;
 }
 
@@ -29,21 +28,16 @@ function NodeTypeahead({
   selectedNode,
   onSelect,
   onClear,
-  allClasses,
   testIdPrefix,
 }: NodeTypeaheadProps) {
   const [search, setSearch] = useState("");
   const [showOptions, setShowOptions] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
 
-  const filteredClasses =
-    search.length >= MIN_SEARCH_CHARS
-      ? allClasses.filter(
-          (cls) =>
-            cls.title.toLowerCase().includes(search.toLowerCase()) ||
-            cls.id.toLowerCase().includes(search.toLowerCase()),
-        )
-      : [];
+  // Server-side search (debounced) once the user has typed enough characters.
+  const searchEnabled = search.trim().length >= MIN_SEARCH_CHARS;
+  const { data: searchResponse } = useClassSearch(search, undefined, { enabled: searchEnabled });
+  const filteredClasses = searchEnabled ? (searchResponse?.items ?? []) : [];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
@@ -154,16 +148,12 @@ function NodeTypeahead({
 }
 
 export function PathFinder({ onNodeSelect }: PathFinderProps) {
-  const [sourceId, setSourceId] = useState<string>("");
-  const [targetId, setTargetId] = useState<string>("");
-
-  const { data: classesResponse } = useClasses();
-  const allClasses = classesResponse?.items || [];
+  const [selectedSource, setSelectedSource] = useState<ClassResponse | null>(null);
+  const [selectedTarget, setSelectedTarget] = useState<ClassResponse | null>(null);
+  const sourceId = selectedSource?.id ?? "";
+  const targetId = selectedTarget?.id ?? "";
 
   const { data: pathResult, isPending: isLoading, error, mutate } = useShortestPath();
-
-  const selectedSource = sourceId ? allClasses.find((c) => c.id === sourceId) : null;
-  const selectedTarget = targetId ? allClasses.find((c) => c.id === targetId) : null;
 
   const handleFindPath = () => {
     if (sourceId && targetId) {
@@ -172,11 +162,11 @@ export function PathFinder({ onNodeSelect }: PathFinderProps) {
   };
 
   const handleClearSource = () => {
-    setSourceId("");
+    setSelectedSource(null);
   };
 
   const handleClearTarget = () => {
-    setTargetId("");
+    setSelectedTarget(null);
   };
 
   const renderNodeBadge = (nodeId: string, index: number) => (
@@ -201,18 +191,16 @@ export function PathFinder({ onNodeSelect }: PathFinderProps) {
       <NodeTypeahead
         label={COPY.SOURCE_NODE_LABEL}
         selectedNode={selectedSource || null}
-        onSelect={(cls) => setSourceId(cls.id)}
+        onSelect={setSelectedSource}
         onClear={handleClearSource}
-        allClasses={allClasses}
         testIdPrefix="path-finder-source"
       />
 
       <NodeTypeahead
         label={COPY.TARGET_NODE_LABEL}
         selectedNode={selectedTarget || null}
-        onSelect={(cls) => setTargetId(cls.id)}
+        onSelect={setSelectedTarget}
         onClear={handleClearTarget}
-        allClasses={allClasses}
         testIdPrefix="path-finder-target"
       />
 

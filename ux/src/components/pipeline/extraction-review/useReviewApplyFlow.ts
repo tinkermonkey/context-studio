@@ -7,6 +7,7 @@ import {
   type ReviewApplyInput,
 } from "@/api/hooks/pipeline/useApplyReviewedRun";
 import { ApiError } from "@/api/client/interceptors";
+import { failedSkips } from "./reviewUtils";
 
 function reason(err: unknown): string {
   if (err instanceof ApiError) return err.detail;
@@ -27,11 +28,7 @@ export function useReviewApplyFlow(labels: { applied: string; reverted: string }
     try {
       const response = await applyReviewed(input);
       setResult(response);
-      // skipped_candidate_ids also lists unselected candidates; count only accepted ones.
-      const skippedIds = new Set(response.skipped_candidate_ids ?? []);
-      const acceptedSkipped = Object.entries(input.decisions).filter(
-        ([id, v]) => v === "yes" && skippedIds.has(id),
-      ).length;
+      const acceptedSkipped = failedSkips(response).length;
       toast(
         acceptedSkipped > 0 ? "warning" : "success",
         labels.applied,

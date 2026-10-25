@@ -100,6 +100,7 @@ from tests.integration.pipelines._harness.dataset_split import (
     INDIVIDUAL_EXTRACTION_SCENARIOS,
     RECOGNITION_EPISODES,
     RELABELED_ARXIV_SCENARIOS,
+    REPLAY_SCENARIOS,
     WAVE4_INFORMAL_SCENARIOS,
     ontology_context_for,
     split_for,
@@ -251,25 +252,15 @@ def _grounded_cassette_provider(scenario: str) -> CassetteLLMProvider | None:
 
 
 # Every scenario the `default` variant is asked to replay across a full
-# tournament run: the dev/holdout corpus plus the always-reported Wave 1
-# bootstrap and Wave 4 informal diagnostic groups (see `_run_variant`). The
-# guard in `build_registry` only admits `default` once a cassette exists for
-# every one of these, so an admitted variant can never crash mid-tournament on
-# a missing recording.
-_DEFAULT_REPLAY_SCENARIOS = (
-    list(INDIVIDUAL_EXTRACTION_SCENARIOS)
-    + list(DR_BOOTSTRAP_SCENARIOS)
-    + list(WAVE4_INFORMAL_SCENARIOS)
-    + list(RELABELED_ARXIV_SCENARIOS)
-)
+# tournament run: the dev/holdout corpus plus the always-reported diagnostic
+# groups (see `_run_variant` and `dataset_split.REPLAY_SCENARIOS`). The guard in
+# `build_registry` only admits `default` once a cassette exists for every one of
+# these, so an admitted variant can never crash mid-tournament on a missing
+# recording.
+_DEFAULT_REPLAY_SCENARIOS = list(REPLAY_SCENARIOS)
 
 # Every scenario the `grounded_v1` variant is asked to replay (identical to default).
-_GROUNDED_REPLAY_SCENARIOS = (
-    list(INDIVIDUAL_EXTRACTION_SCENARIOS)
-    + list(DR_BOOTSTRAP_SCENARIOS)
-    + list(WAVE4_INFORMAL_SCENARIOS)
-    + list(RELABELED_ARXIV_SCENARIOS)
-)
+_GROUNDED_REPLAY_SCENARIOS = list(REPLAY_SCENARIOS)
 
 RunScenario = Callable[[dict[str, Any], str], Awaitable[list[dict]]]
 

@@ -40,6 +40,12 @@
     gap: 12px;
   }
 
+  .run-detail-review-hint {
+    margin: 0;
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-2));
+  }
+
   .run-detail-results-item strong {
     display: block;
   }

@@ -3,10 +3,19 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { GroundingWorkflowForm } from "../GroundingWorkflowForm";
 import * as hooks from "@/api/hooks";
+import * as classHooks from "@/api/hooks/ontology/useClasses";
+import * as searchHooks from "@/api/hooks/ontology/useEntitySearch";
 
 vi.mock("@/api/hooks", () => ({
   useReferenceStatus: vi.fn(),
-  useClasses: vi.fn(),
+}));
+
+vi.mock("@/api/hooks/ontology/useClasses", () => ({
+  useClassesByIds: vi.fn(),
+}));
+
+vi.mock("@/api/hooks/ontology/useEntitySearch", () => ({
+  useClassSearch: vi.fn(),
 }));
 
 describe("GroundingWorkflowForm", () => {
@@ -22,7 +31,7 @@ describe("GroundingWorkflowForm", () => {
         ],
       },
     } as any);
-    vi.mocked(hooks.useClasses).mockReturnValue({
+    const classesResult = {
       data: {
         items: [
           {
@@ -43,7 +52,22 @@ describe("GroundingWorkflowForm", () => {
           },
         ],
       },
-    } as any);
+    } as any;
+    vi.mocked(classHooks.useClassesByIds).mockReturnValue(classesResult);
+    vi.mocked(searchHooks.useClassSearch).mockReturnValue(classesResult);
+  });
+
+  it("searches classes server-side with the typed scope text", async () => {
+    const user = userEvent.setup();
+    render(<GroundingWorkflowForm onSubmit={mockOnSubmit} />);
+
+    const scopeInput = screen.getByTestId("workflow-scope-input");
+    await user.click(scopeInput);
+    await user.type(scopeInput, "Cla");
+
+    expect(searchHooks.useClassSearch).toHaveBeenLastCalledWith("Cla", undefined, {
+      enabled: true,
+    });
   });
 
   it("renders form with title, source, and scope fields", () => {

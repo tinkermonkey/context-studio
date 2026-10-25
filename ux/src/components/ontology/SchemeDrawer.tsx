@@ -11,6 +11,7 @@ import { EditableField } from "@/components/ui/EditableField";
 import { SuggestField } from "@/components/ontology/suggesters/SuggestField";
 import { useUpdateScheme, useDeleteScheme, useCreateScheme } from "@/api/hooks/ontology/useSchemes";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
+import { SMALL_SET_LIMIT } from "@/api/config";
 import { useToasts } from "@/components/ui/Toast";
 import { useUndoDelete } from "@/hooks/useUndoDelete";
 import { schemesCopy } from "@/routes/app/schema/schemes/-copy";
@@ -36,10 +37,13 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
   const updateMutation = useUpdateScheme();
   const deleteMutation = useDeleteScheme();
   const createMutation = useCreateScheme();
-  const { data: classesResponse } = useClasses({
-    concept_scheme_id: scheme?.id,
-  });
+  // One scheme's classes are a small, known set: a scoped fetch with an explicit bound.
+  const { data: classesResponse } = useClasses(
+    { concept_scheme_id: scheme?.id, limit: SMALL_SET_LIMIT },
+    { enabled: !!scheme?.id },
+  );
   const classes = classesResponse?.items || [];
+  const classCount = classesResponse?.total ?? classes.length;
 
   const { performDelete, undo } = useUndoDelete({
     onDelete: (id: string) => deleteMutation.mutateAsync(id),
@@ -94,11 +98,9 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
   };
 
   const classCountText =
-    classes.length === 1
-      ? "This will delete 1 class"
-      : `This will delete ${classes.length} classes`;
+    classCount === 1 ? "This will delete 1 class" : `This will delete ${classCount} classes`;
   const deleteMessage =
-    classes.length > 0 ? classCountText + " and cannot be undone." : "This cannot be undone.";
+    classCount > 0 ? classCountText + " and cannot be undone." : "This cannot be undone.";
 
   return (
     <>
@@ -130,7 +132,7 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
                 ]}
               />
             </InspectorPanel.Section>
-            <InspectorPanel.Section title={`Classes (${classes.length})`}>
+            <InspectorPanel.Section title={`Classes (${classCount})`}>
               {classes.length === 0 ? (
                 <p className="drawer-empty-note" data-testid="scheme-classes-empty">
                   No classes

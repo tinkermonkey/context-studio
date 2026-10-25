@@ -10,7 +10,7 @@ import {
   createListClasses,
   createClass,
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
-import { LIST_FETCH_ALL_LIMIT } from "@/api/config";
+import { serverSideList, pageRequests } from "@/test/serverSideList";
 import { IndividualsPage } from "../individuals";
 
 const server = setupServer();
@@ -174,30 +174,66 @@ describe("Individuals Data Page", () => {
       });
     });
 
-    it("requests individuals and classes with the fetch-all limit", async () => {
-      const requestedLimits: Record<string, string | null> = {};
+    it("requests one server page and resolves class chips with an ids lookup", async () => {
+      const individualRequests: URLSearchParams[] = [];
+      const classRequests: URLSearchParams[] = [];
       server.use(
-        http.get("*/api/individuals", ({ request }) => {
-          requestedLimits.individuals = new URL(request.url).searchParams.get("limit");
-          return HttpResponse.json(
-            createListIndividuals([createIndividual({ id: "ind-1", title: "John Doe" })]),
-          );
-        }),
-        http.get("*/api/classes", ({ request }) => {
-          requestedLimits.classes = new URL(request.url).searchParams.get("limit");
-          return HttpResponse.json(createListClasses([]));
-        }),
+        serverSideList(
+          "/api/individuals",
+          [createIndividual({ id: "ind-1", title: "John Doe", class_ids: ["class-person"] })],
+          individualRequests,
+        ),
+        serverSideList(
+          "/api/classes",
+          [createClass({ id: "class-person", title: "Person" })],
+          classRequests,
+        ),
       );
 
       render(<IndividualsPage />);
 
       await waitFor(() => {
-        expect(screen.getByText("John Doe")).toBeInTheDocument();
+        expect(screen.getByTestId("individual-class-chip-class-person")).toHaveTextContent(
+          "Person",
+        );
       });
-      expect(requestedLimits).toEqual({
-        individuals: String(LIST_FETCH_ALL_LIMIT),
-        classes: String(LIST_FETCH_ALL_LIMIT),
+      const page = pageRequests(individualRequests)[0];
+      expect(page.get("limit")).toBe("50");
+      expect(page.get("offset")).toBe("0");
+      expect(page.get("sort_by")).toBe("created_at");
+      expect(page.get("sort_order")).toBe("desc");
+      // Class titles come from an ids lookup for this page, not a fetch-all.
+      expect(classRequests.map((r) => r.getAll("ids"))).toContainEqual(["class-person"]);
+      expect(classRequests.every((r) => r.getAll("ids").length > 0)).toBe(true);
+      // The total count comes from a limit=1 request.
+      expect(individualRequests.some((r) => r.get("limit") === "1")).toBe(true);
+    });
+
+    it("pages through individuals with the pager", async () => {
+      const requests: URLSearchParams[] = [];
+      server.use(
+        serverSideList(
+          "/api/individuals",
+          Array.from({ length: 60 }, (_, i) =>
+            createIndividual({ id: `ind-${i}`, title: `Person ${i}`, class_ids: [] }),
+          ),
+          requests,
+        ),
+        http.get("*/api/classes", () => HttpResponse.json(createListClasses([]))),
+      );
+
+      render(<IndividualsPage />);
+
+      expect(await screen.findByTestId("list-pager-range")).toHaveTextContent("1–50 of 60");
+      expect(screen.getByTestId("list-pager-prev")).toBeDisabled();
+      expect(screen.getByTestId("list-pager-prev")).toHaveAttribute("aria-disabled", "true");
+      await userEvent.click(screen.getByTestId("list-pager-next"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("list-pager-range")).toHaveTextContent("51–60 of 60");
       });
+      expect(pageRequests(requests).at(-1)!.get("offset")).toBe("50");
+      expect(screen.getByTestId("list-pager-next")).toBeDisabled();
     });
 
     it("displays mono ID truncated to 8 characters in first column", async () => {
@@ -365,35 +401,18 @@ describe("Individuals Data Page", () => {
   // Filtered State
   // ========================================================================
   describe("filtered/search state", () => {
-    it("filters individuals by search term in title", async () => {
-      const mockIndividuals = createListIndividuals([
-        createIndividual({
-          id: "ind-001",
-          title: "John Doe",
-          class_ids: ["class-person"],
-        }),
-        createIndividual({
-          id: "ind-002",
-          title: "Jane Smith",
-          class_ids: ["class-person"],
-        }),
-        createIndividual({
-          id: "ind-003",
-          title: "Alice Brown",
-          class_ids: ["class-person"],
-        }),
-      ]);
+    const people = [
+      createIndividual({ id: "ind-001", title: "John Doe", class_ids: ["class-person"] }),
+      createIndividual({ id: "ind-002", title: "Jane Smith", class_ids: ["class-person"] }),
+      createIndividual({ id: "ind-003", title: "Alice Brown", class_ids: ["class-person"] }),
+    ];
+    const personClass = createListClasses([createClass({ id: "class-person", title: "Person" })]);
 
-      const mockClasses = createListClasses([
-        createClass({
-          id: "class-person",
-          title: "Person",
-        }),
-      ]);
-
+    it("sends the search text to the server as q and shows only the matches", async () => {
+      const requests: URLSearchParams[] = [];
       server.use(
-        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
-        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        serverSideList("/api/individuals", people, requests),
+        http.get("*/api/classes", () => HttpResponse.json(personClass)),
       );
 
       render(<IndividualsPage />);
@@ -402,38 +421,22 @@ describe("Individuals Data Page", () => {
         expect(screen.getByText("John Doe")).toBeInTheDocument();
       });
 
-      const searchInput = screen.getByPlaceholderText(/search/i);
-      await userEvent.type(searchInput, "John");
+      await userEvent.type(screen.getByPlaceholderText(/search/i), "John");
 
+      await waitFor(() => {
+        expect(screen.queryByText("Jane Smith")).not.toBeInTheDocument();
+      });
       expect(screen.getByText("John Doe")).toBeInTheDocument();
-      expect(screen.queryByText("Jane Smith")).not.toBeInTheDocument();
       expect(screen.queryByText("Alice Brown")).not.toBeInTheDocument();
+      const last = pageRequests(requests).at(-1)!;
+      expect(last.get("q")).toBe("John");
+      expect(last.get("offset")).toBe("0");
     });
 
     it("displays 'no results' empty state when search yields no matches", async () => {
-      const mockIndividuals = createListIndividuals([
-        createIndividual({
-          id: "ind-001",
-          title: "John Doe",
-          class_ids: ["class-person"],
-        }),
-        createIndividual({
-          id: "ind-002",
-          title: "Jane Smith",
-          class_ids: ["class-person"],
-        }),
-      ]);
-
-      const mockClasses = createListClasses([
-        createClass({
-          id: "class-person",
-          title: "Person",
-        }),
-      ]);
-
       server.use(
-        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
-        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        serverSideList("/api/individuals", people),
+        http.get("*/api/classes", () => HttpResponse.json(personClass)),
       );
 
       render(<IndividualsPage />);
@@ -442,8 +445,7 @@ describe("Individuals Data Page", () => {
         expect(screen.getByText("John Doe")).toBeInTheDocument();
       });
 
-      const searchInput = screen.getByPlaceholderText(/search/i);
-      await userEvent.type(searchInput, "NonexistentIndividual");
+      await userEvent.type(screen.getByPlaceholderText(/search/i), "NonexistentIndividual");
 
       await waitFor(() => {
         expect(screen.getByText("No matching individuals")).toBeInTheDocument();
@@ -451,29 +453,10 @@ describe("Individuals Data Page", () => {
     });
 
     it("clears filter when search input is cleared", async () => {
-      const mockIndividuals = createListIndividuals([
-        createIndividual({
-          id: "ind-001",
-          title: "John Doe",
-          class_ids: ["class-person"],
-        }),
-        createIndividual({
-          id: "ind-002",
-          title: "Jane Smith",
-          class_ids: ["class-person"],
-        }),
-      ]);
-
-      const mockClasses = createListClasses([
-        createClass({
-          id: "class-person",
-          title: "Person",
-        }),
-      ]);
-
+      const requests: URLSearchParams[] = [];
       server.use(
-        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
-        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
+        serverSideList("/api/individuals", people, requests),
+        http.get("*/api/classes", () => HttpResponse.json(personClass)),
       );
 
       render(<IndividualsPage />);
@@ -485,53 +468,17 @@ describe("Individuals Data Page", () => {
       const searchInput = screen.getByPlaceholderText(/search/i) as HTMLInputElement;
       await userEvent.type(searchInput, "John");
 
-      expect(screen.queryByText("Jane Smith")).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.queryByText("Jane Smith")).not.toBeInTheDocument();
+      });
 
       await userEvent.clear(searchInput);
 
-      expect(screen.getByText("John Doe")).toBeInTheDocument();
-      expect(screen.getByText("Jane Smith")).toBeInTheDocument();
-    });
-
-    it("filters individuals by description text", async () => {
-      const mockIndividuals = createListIndividuals([
-        createIndividual({
-          id: "ind-001",
-          title: "Individual A",
-          description: "CEO of the company",
-          class_ids: ["class-person"],
-        }),
-        createIndividual({
-          id: "ind-002",
-          title: "Individual B",
-          description: "Software engineer",
-          class_ids: ["class-person"],
-        }),
-      ]);
-
-      const mockClasses = createListClasses([
-        createClass({
-          id: "class-person",
-          title: "Person",
-        }),
-      ]);
-
-      server.use(
-        http.get("*/api/individuals", () => HttpResponse.json(mockIndividuals)),
-        http.get("*/api/classes", () => HttpResponse.json(mockClasses)),
-      );
-
-      render(<IndividualsPage />);
-
       await waitFor(() => {
-        expect(screen.getByText("Individual A")).toBeInTheDocument();
+        expect(screen.getByText("Jane Smith")).toBeInTheDocument();
       });
-
-      const searchInput = screen.getByPlaceholderText(/search/i);
-      await userEvent.type(searchInput, "CEO");
-
-      expect(screen.getByText("Individual A")).toBeInTheDocument();
-      expect(screen.queryByText("Individual B")).not.toBeInTheDocument();
+      expect(screen.getByText("John Doe")).toBeInTheDocument();
+      expect(pageRequests(requests).at(-1)!.has("q")).toBe(false);
     });
   });
 

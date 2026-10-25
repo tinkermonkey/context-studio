@@ -16,45 +16,6 @@ export type Delta = {
   after?: string;
 };
 
-export interface SchemaExtractionOutputSummary {
-  classes?: Array<{
-    uri: string;
-    label: string;
-    description?: string;
-    confidence: number;
-    source: string;
-  }>;
-  properties?: Array<{
-    uri: string;
-    label: string;
-    description?: string;
-    confidence: number;
-    source: string;
-    kind?: string;
-  }>;
-  relationships?: Array<{
-    source_uri: string;
-    source_label: string;
-    target_uri: string;
-    target_label: string;
-    relationship_type: string;
-    confidence: number;
-    source: string;
-  }>;
-}
-
-export interface IndividualExtractionOutputSummary {
-  triples?: Array<{
-    subject: string;
-    subject_label?: string;
-    predicate: string;
-    object: string;
-    object_label?: string;
-    confidence: number;
-    source: string;
-  }>;
-}
-
 export interface SchemaNodeGroundingOutputSummary {
   node_label?: string;
   groundings?: Array<{

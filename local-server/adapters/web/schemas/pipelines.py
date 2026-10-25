@@ -43,6 +43,7 @@ from typing import Annotated, Any, Literal, Optional, Union
 from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag, model_validator
 
 from adapters.web.schemas.extraction import SourceSpanSchema
+from domain.pipelines.apply_result import SkipReason
 
 
 class PipelineTypeResponse(BaseModel):
@@ -266,7 +267,12 @@ class ApplyRunResponse(BaseModel):
     )
     individuals_created: int = Field(default=0, description="Individual entities created")
     individuals_skipped: int = Field(
-        default=0, description="Individual candidates skipped (already exist)"
+        default=0,
+        description=(
+            "Selected triples that could not be applied (invalid subject, missing "
+            "class). Unselected or below-threshold triples are not counted; they "
+            "appear in skip_reasons as not_selected / below_threshold."
+        ),
     )
     individuals_recognized: int = Field(
         default=0,
@@ -307,6 +313,20 @@ class ApplyRunResponse(BaseModel):
         description=(
             "candidate_ids not applied: not selected, below confidence_threshold, or "
             "unresolvable (e.g. a connection whose endpoint class does not exist)"
+        ),
+    )
+    skip_reasons: dict[str, SkipReason] = Field(
+        default_factory=dict,
+        description=(
+            "Why each skipped_candidate_id was skipped (one entry per id). "
+            "not_selected / below_threshold: never selected for apply. Every other "
+            "reason means the candidate was selected but could not be applied: "
+            "invalid (malformed candidate), unresolved_endpoint (a relationship "
+            "endpoint is neither accepted nor in the graph), unresolved_predicate "
+            "(the property definition does not exist), title_conflict (an existing "
+            "entity owns the title), missing_class (no existing class to type an "
+            "individual), self_loop (source and target are the same entity). "
+            "Populated for schema_extraction and individual_extraction."
         ),
     )
     existing_candidate_ids: list[str] = Field(

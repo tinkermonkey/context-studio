@@ -42,13 +42,13 @@ class FakeOntologyRepo:
     def get_taxonomy(self, taxonomy_id):
         return self.taxonomies.get(taxonomy_id)
 
-    def list_taxonomies(self):
+    def list_taxonomies(self, **kwargs):
         return list(self.taxonomies.values())
 
     def get_concept_scheme(self, scheme_id):
         return self.schemes.get(scheme_id)
 
-    def list_concept_schemes(self, taxonomy_id=None):
+    def list_concept_schemes(self, taxonomy_id=None, **kwargs):
         if taxonomy_id is None:
             return list(self.schemes.values())
         return [s for s in self.schemes.values() if s.taxonomy_id == taxonomy_id]

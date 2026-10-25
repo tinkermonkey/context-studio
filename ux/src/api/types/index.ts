@@ -325,17 +325,21 @@ export interface paths {
     };
     /**
      * List Classes
-     * @description Retrieve classes with optional filtering and pagination.
+     * @description Retrieve classes with optional filtering, sorting, text search and pagination.
      *
      *     Args:
      *         concept_scheme_id: Optional concept scheme ID to filter by
      *         parent_class_id: Optional parent class ID to filter by
      *         limit: Maximum number of results (1-5000, default 100)
      *         offset: Number of results to skip (default 0)
+     *         sort_by: Field to sort by (title, created_at, last_modified)
+     *         sort_order: Sort direction (asc or desc, default asc)
+     *         q: Case-insensitive text search on title or identifier
+     *         ids: Restrict results to these class IDs
      *         service: OntologyService from dependency injection
      *
      *     Returns:
-     *         ListResponse containing matching classes
+     *         ListResponse containing matching classes; total counts every match
      */
     get: operations["list_classes_api_classes_get"];
     put?: never;
@@ -452,6 +456,7 @@ export interface paths {
      *         offset: Number of results to skip (default 0)
      *         sort_by: Field to sort by (created_at)
      *         sort_order: Sort direction (asc or desc, default asc)
+     *         q: Text search on source/target title or property title/identifier
      *         service: OntologyService from dependency injection
      *
      *     Returns:
@@ -538,7 +543,8 @@ export interface paths {
      *         offset: Number of results to skip (default 0)
      *         sort_by: Field to sort by (title, created_at, last_modified)
      *         sort_order: Sort direction (asc or desc, default asc)
-     *         q: Text query for LIKE search on title
+     *         q: Case-insensitive text search on title or identifier
+     *         ids: Restrict results to these property definition IDs
      *         service: OntologyService from dependency injection
      *
      *     Returns:
@@ -737,16 +743,20 @@ export interface paths {
     };
     /**
      * List Individuals
-     * @description Retrieve individuals with optional filtering and pagination.
+     * @description Retrieve individuals with optional filtering, sorting, text search and pagination.
      *
      *     Args:
      *         class_id: Optional class ID to filter by (returns Individuals having this Class as a parent)
      *         limit: Maximum number of results (1-5000, default 100)
      *         offset: Number of results to skip (default 0)
+     *         sort_by: Field to sort by (title, created_at, last_modified)
+     *         sort_order: Sort direction (asc or desc, default asc)
+     *         q: Case-insensitive text search on title or identifier
+     *         ids: Restrict results to these individual IDs
      *         service: OntologyService from dependency injection
      *
      *     Returns:
-     *         ListResponse containing matching individuals
+     *         ListResponse containing matching individuals; total counts every match
      */
     get: operations["list_individuals_api_individuals_get"];
     put?: never;
@@ -3957,7 +3967,7 @@ export interface components {
       individuals_created: number;
       /**
        * Individuals Skipped
-       * @description Individual candidates skipped (already exist)
+       * @description Selected triples that could not be applied (invalid subject, missing class). Unselected or below-threshold triples are not counted; they appear in skip_reasons as not_selected / below_threshold.
        * @default 0
        */
       individuals_skipped: number;
@@ -4019,6 +4029,21 @@ export interface components {
        * @description candidate_ids not applied: not selected, below confidence_threshold, or unresolvable (e.g. a connection whose endpoint class does not exist)
        */
       skipped_candidate_ids?: string[];
+      /**
+       * Skip Reasons
+       * @description Why each skipped_candidate_id was skipped (one entry per id). not_selected / below_threshold: never selected for apply. Every other reason means the candidate was selected but could not be applied: invalid (malformed candidate), unresolved_endpoint (a relationship endpoint is neither accepted nor in the graph), unresolved_predicate (the property definition does not exist), title_conflict (an existing entity owns the title), missing_class (no existing class to type an individual), self_loop (source and target are the same entity). Populated for schema_extraction and individual_extraction.
+       */
+      skip_reasons?: {
+        [key: string]:
+          | "not_selected"
+          | "below_threshold"
+          | "invalid"
+          | "unresolved_endpoint"
+          | "unresolved_predicate"
+          | "title_conflict"
+          | "missing_class"
+          | "self_loop";
+      };
       /**
        * Existing Candidate Ids
        * @description Subset of applied_candidate_ids satisfied by an entity that already existed (class title in scheme, property identifier, or relationship triple). Nothing was created for these, so revert will not remove them. Populated by schema_extraction; individual_extraction reports these via merged_mentions.
@@ -8900,6 +8925,14 @@ export interface operations {
         limit?: number;
         /** @description Number of results to skip */
         offset?: number;
+        /** @description Field to sort by (title, created_at, last_modified) */
+        sort_by?: string | null;
+        /** @description Sort direction */
+        sort_order?: string;
+        /** @description Case-insensitive text search on title or identifier */
+        q?: string | null;
+        /** @description Restrict results to these IDs (repeat the parameter; at most 500) */
+        ids?: string[] | null;
       };
       header?: never;
       path?: never;
@@ -9074,6 +9107,8 @@ export interface operations {
         sort_by?: string | null;
         /** @description Sort direction */
         sort_order?: string;
+        /** @description Case-insensitive text search on the source title, target title, or property definition title/identifier */
+        q?: string | null;
       };
       header?: never;
       path?: never;
@@ -9207,8 +9242,10 @@ export interface operations {
         sort_by?: string | null;
         /** @description Sort direction */
         sort_order?: string;
-        /** @description Text search query on title */
+        /** @description Case-insensitive text search on title or identifier */
         q?: string | null;
+        /** @description Restrict results to these IDs (repeat the parameter; at most 500) */
+        ids?: string[] | null;
       };
       header?: never;
       path?: never;
@@ -9539,6 +9576,14 @@ export interface operations {
         limit?: number;
         /** @description Number of results to skip */
         offset?: number;
+        /** @description Field to sort by (title, created_at, last_modified) */
+        sort_by?: string | null;
+        /** @description Sort direction */
+        sort_order?: string;
+        /** @description Case-insensitive text search on title or identifier */
+        q?: string | null;
+        /** @description Restrict results to these IDs (repeat the parameter; at most 500) */
+        ids?: string[] | null;
       };
       header?: never;
       path?: never;

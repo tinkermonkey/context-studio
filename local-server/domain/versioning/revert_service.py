@@ -12,6 +12,7 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 
+from domain.ontology.value_objects import ExternalReference
 from domain.versioning.value_objects import ChangeOperation
 
 if TYPE_CHECKING:
@@ -128,27 +129,52 @@ class RevertService:
         )
 
     def _should_skip_revert(self, event, all_events) -> bool:
-        """Check if an event should be skipped during revert (already reverted)."""
-        # Skip if this event is itself a revert event (has _reverted_ in change_reason)
-        if "_reverted_" in (event.change_reason or ""):
+        """
+        Check if an event should be skipped during revert.
+
+        Revert events themselves are skipped. An original event is skipped when a
+        revert event names it (``_reverted_from_<run>:<event id>``). Older revert
+        events carry no event id; one of those only covers original events recorded
+        before it, so re-applying a run after a revert (which records new events on
+        the same entities) and reverting again still undoes the new events.
+        """
+        if self._REVERT_MARKER in (event.change_reason or ""):
             return True
 
-        # Check if a corresponding revert event already exists for this original event
-        # by looking for a revert event for the same entity with the inverse operation
         inverse_op = self._inverse_operation(event.operation)
         normalized_entity_type = self._normalize_entity_type(event.entity_type)
 
         for existing_event in all_events:
-            normalized_existing_type = self._normalize_entity_type(existing_event.entity_type)
+            reason = existing_event.change_reason or ""
             if (
-                existing_event.entity_id == event.entity_id
-                and existing_event.operation == inverse_op
-                and normalized_existing_type == normalized_entity_type
-                and "_reverted_" in (existing_event.change_reason or "")
+                self._REVERT_MARKER not in reason
+                or existing_event.entity_id != event.entity_id
+                or existing_event.operation != inverse_op
+                or self._normalize_entity_type(existing_event.entity_type)
+                != normalized_entity_type
             ):
+                continue
+            reverted_event_id = self._reverted_event_id(reason)
+            if reverted_event_id is not None:
+                if reverted_event_id == event.id:
+                    return True
+            elif existing_event.timestamp >= event.timestamp:
                 return True
 
         return False
+
+    _REVERT_MARKER = "_reverted_"
+
+    @staticmethod
+    def _revert_reason(batch_run_id: str, event_id: str) -> str:
+        """change_reason for the inverse of ``event_id`` recorded by a revert of a run."""
+        return f"_reverted_from_{batch_run_id}:{event_id}"
+
+    @staticmethod
+    def _reverted_event_id(change_reason: str) -> str | None:
+        """The original event id a revert's change_reason names, or None for older reverts."""
+        _, sep, event_id = change_reason.rpartition(":")
+        return event_id if sep and event_id else None
 
     def _apply_inverse(self, event, batch_run_id: str) -> bool:
         """
@@ -170,7 +196,9 @@ class RevertService:
                     entity_id, entity_type, event.previous_state
                 )
             elif operation == ChangeOperation.DELETE:
-                operation_applied = self._inverse_delete(entity_id, entity_type, event.new_state)
+                operation_applied = self._inverse_delete(
+                    entity_id, entity_type, self._deleted_state(event)
+                )
 
             if operation_applied:
                 self._change_repo.record_change(
@@ -178,8 +206,12 @@ class RevertService:
                     entity_type=event.entity_type,
                     operation=self._inverse_operation(operation),
                     new_state={},
-                    previous_state=event.new_state,
-                    change_reason=f"_reverted_from_{batch_run_id}",
+                    previous_state=(
+                        self._deleted_state(event)
+                        if operation == ChangeOperation.DELETE
+                        else event.new_state
+                    ),
+                    change_reason=self._revert_reason(batch_run_id, event.id),
                     batch_run_id=batch_run_id,
                 )
             return operation_applied
@@ -189,6 +221,18 @@ class RevertService:
                 exc_info=exc,
             )
             raise
+
+    @staticmethod
+    def _deleted_state(event) -> dict:
+        """
+        Return the snapshot of a deleted entity.
+
+        The ChangeEventRecorder stores a deletion's snapshot in ``previous_state``
+        (``new_state`` is empty); older or hand-recorded events carry it in
+        ``new_state``. Note the recorder's snapshots are minimal (e.g. a relationship
+        keeps only its id, endpoints and property definition), so restores are lossy.
+        """
+        return event.new_state or event.previous_state or {}
 
     def _inverse_create(self, entity_id: str, entity_type: str) -> bool:
         """
@@ -377,6 +421,9 @@ class RevertService:
         for key, value in state.items():
             if not hasattr(entity, key):
                 raise ValueError(f"Entity {type(entity).__name__} has no field {key}")
+            if key == "external_references":
+                # Change events carry references as JSON dicts (see ClassUpdated).
+                value = [ExternalReference.from_dict(ref) for ref in value or []]
             try:
                 setattr(entity, key, value)
             except Exception as exc:
