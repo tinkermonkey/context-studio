@@ -148,7 +148,11 @@ export const entityPageHandlers = [
   http.get("*/api/individuals", ({ request }) => {
     const url = new URL(request.url);
     const classId = url.searchParams.get("class_id");
-    const items = byIds(individuals, url).filter((i) => !classId || i.class_ids.includes(classId));
+    const q = url.searchParams.get("q")?.toLowerCase();
+    const items = byIds(individuals, url).filter(
+      (i) =>
+        (!classId || i.class_ids.includes(classId)) && (!q || i.title.toLowerCase().includes(q)),
+    );
     return list(items);
   }),
   http.get("*/api/properties", ({ request }) => {

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import { entityPageHandlers } from "@/test/entityPageHandlers";
@@ -12,7 +13,7 @@ const server = setupServer(...entityPageHandlers);
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
   server.resetHandlers();
-  useNavigatorStore.setState({ expandedIds: new Set() });
+  useNavigatorStore.setState({ expandedIds: new Set(), mode: "schema" });
 });
 afterAll(() => server.close());
 
@@ -81,12 +82,31 @@ describe("IndividualPage", () => {
     );
   });
 
-  it("highlights the individual's class in the navigator", async () => {
+  it("opens the navigator in Data mode with the individual under its class", async () => {
     render(<IndividualPage id="ind-1" />);
+
+    expect(
+      within(screen.getByTestId("navigator-mode")).getByRole("radio", { name: "Data" }),
+    ).toHaveAttribute("aria-checked", "true");
+    await waitFor(() =>
+      expect(screen.getByTestId("hierarchy-node-ind-1")).toHaveClass("hierarchy-row--selected"),
+    );
+    expect(screen.getByTestId("hierarchy-node-class-1")).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("highlights the individual's class in Schema mode", async () => {
+    const user = userEvent.setup();
+    render(<IndividualPage id="ind-1" />);
+    await screen.findByTestId("hierarchy-node-ind-1");
+
+    await user.click(
+      within(screen.getByTestId("navigator-mode")).getByRole("radio", { name: "Schema" }),
+    );
 
     await waitFor(() =>
       expect(screen.getByTestId("hierarchy-node-class-1")).toHaveClass("hierarchy-row--selected"),
     );
+    expect(screen.queryByTestId("hierarchy-node-ind-1")).not.toBeInTheDocument();
   });
 
   it("shows not found for an unknown individual", async () => {

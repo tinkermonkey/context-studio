@@ -17,7 +17,7 @@ const server = setupServer(...entityPageHandlers);
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
   server.resetHandlers();
-  useNavigatorStore.setState({ expandedIds: new Set() });
+  useNavigatorStore.setState({ expandedIds: new Set(), mode: "schema" });
 });
 afterAll(() => server.close());
 
