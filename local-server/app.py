@@ -519,8 +519,10 @@ async def lifespan(app: FastAPI):
         revert_service = RevertService(
             change_repo=change_repo,
             ontology_repo=cast(OntologyRepository, ontology_repo),
+            schema_index=schema_vector_index,
+            individual_index=individual_vector_index,
         )
-        logger.info("RevertService created and wired with change and ontology repositories")
+        logger.info("RevertService created and wired with repositories and vector indexes")
 
         # Interchange service for import run tracking
         import_run_service = ImportRunService()

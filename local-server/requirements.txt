@@ -23,7 +23,10 @@ rdflib
 duckdb
 pyarrow
 openai
-anthropic
+# anthropic SDK pinned to the version AnthropicProvider is verified against. 1.x
+# removed `temperature` from messages.create() (the provider sends it via
+# extra_body); re-check the provider's request kwargs before bumping.
+anthropic==1.5.0
 httpx
 python-dotenv
 boto3

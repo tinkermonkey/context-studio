@@ -1251,9 +1251,6 @@ selectors:
   - selector: settings-page
     component: routes/app/settings.tsx
     description: Root container for the settings page
-  - selector: edit-config-modal
-    component: components/settings/EditConfigModal.tsx
-    description: Modal dialog for editing a configuration section (workspace, LLM, embedding, NLP, sync)
   - selector: config-tile-workspace
     component: routes/app/settings.tsx
     description: Workspace configuration tile
@@ -1290,54 +1287,6 @@ selectors:
   - selector: config-tile-sync-button
     component: components/settings/ConfigTile.tsx
     description: Edit button for sync target settings tile
-  - selector: workspace-edit-modal-save
-    component: components/settings/EditConfigModal.tsx
-    description: Save button in workspace edit modal
-  - selector: workspace-display_name-input
-    component: components/settings/EditConfigModal.tsx
-    description: Display name input field in workspace settings
-  - selector: workspace-path-input
-    component: components/settings/EditConfigModal.tsx
-    description: Path input field in workspace settings (read-only)
-  - selector: llmprovider-edit-modal-save
-    component: components/settings/EditConfigModal.tsx
-    description: Save button in LLM provider edit modal
-  - selector: llmprovider-provider-select
-    component: components/settings/EditConfigModal.tsx
-    description: Provider select dropdown in LLM settings
-  - selector: llmprovider-model-input
-    component: components/settings/EditConfigModal.tsx
-    description: Model name input field in LLM settings
-  - selector: llmprovider-api_key-input
-    component: components/settings/EditConfigModal.tsx
-    description: API key input field in LLM settings
-  - selector: llmprovider-base_url-input
-    component: components/settings/EditConfigModal.tsx
-    description: Base URL input field in LLM settings (Ollama only)
-  - selector: embedding-edit-modal-save
-    component: components/settings/EditConfigModal.tsx
-    description: Save button in embedding model edit modal
-  - selector: embedding-model_name-input
-    component: components/settings/EditConfigModal.tsx
-    description: Model name input field in embedding settings
-  - selector: embedding-vector_dimensions-input
-    component: components/settings/EditConfigModal.tsx
-    description: Vector dimensions input field in embedding settings (read-only)
-  - selector: nlp-edit-modal-save
-    component: components/settings/EditConfigModal.tsx
-    description: Save button in NLP model edit modal
-  - selector: nlp-model_name-input
-    component: components/settings/EditConfigModal.tsx
-    description: Model name input field in NLP settings
-  - selector: sync-edit-modal-save
-    component: components/settings/EditConfigModal.tsx
-    description: Save button in sync target edit modal
-  - selector: sync-target_type-select
-    component: components/settings/EditConfigModal.tsx
-    description: Target type select dropdown in sync settings
-  - selector: sync-path-input
-    component: components/settings/EditConfigModal.tsx
-    description: Path input field in sync settings
 
   # PageHeader (Heimdall)
   - selector: page-header
