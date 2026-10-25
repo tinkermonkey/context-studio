@@ -155,6 +155,26 @@ class RecognitionConfig(BaseModel):
     )
 
 
+class ChatConfig(BaseModel):
+    """Chat assistant configuration section"""
+
+    model: str = Field(
+        default="claude-sonnet-5-5",
+        min_length=1,
+        description=(
+            "Model the chat assistant uses. A bare Claude id routes to Anthropic"
+            " when its key works, else to OpenRouter; OpenRouter ids"
+            " ('vendor/model') route to OpenRouter."
+        ),
+    )
+    max_tool_rounds: int = Field(
+        default=8,
+        ge=1,
+        le=50,
+        description="Maximum model-to-tools round trips in one chat turn",
+    )
+
+
 class S3Config(BaseModel):
     """S3 synchronization configuration section"""
 
@@ -230,6 +250,7 @@ class Settings(BaseModel):
     embedding: dict = Field(default_factory=dict, description="Embedding model configuration")
     reference: ReferenceConfig = Field(default_factory=ReferenceConfig)
     recognition: RecognitionConfig = Field(default_factory=RecognitionConfig)
+    chat: ChatConfig = Field(default_factory=ChatConfig)
     sync: Optional[SyncConfig] = Field(default=None, description="Synchronization configuration")
     telemetry: TelemetryConfig = Field(default_factory=TelemetryConfig)
 

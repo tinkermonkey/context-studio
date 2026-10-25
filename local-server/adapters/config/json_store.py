@@ -59,6 +59,7 @@ class JSONFileConfigStore:
                 embedding=settings.embedding if settings.embedding else {},
                 reference_sources=(settings.reference.model_dump() if settings.reference else {}),
                 sync=settings.sync.model_dump() if settings.sync else None,
+                chat=settings.chat.model_dump(),
             )
         except (RuntimeError, AttributeError, TypeError) as e:
             raise ConfigurationError(f"Failed to load configuration: {e}") from e
@@ -151,6 +152,7 @@ class JSONFileConfigStore:
                     default_settings.reference.model_dump() if default_settings.reference else {}
                 ),
                 sync=(default_settings.sync.model_dump() if default_settings.sync else None),
+                chat=default_settings.chat.model_dump(),
             )
 
             # Preserve credentials from current config for each section
@@ -230,6 +232,7 @@ class JSONFileConfigStore:
                 "llm": config.llm or {},
                 "nlp": config.nlp or {},
                 "embedding": config.embedding or {},
+                "chat": config.chat or {},
             }
             # Add optional sections only if they exist
             if config.reference_sources is not None:

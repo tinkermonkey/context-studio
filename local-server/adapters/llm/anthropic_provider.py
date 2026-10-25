@@ -35,6 +35,7 @@ class AnthropicProvider:
     """
 
     AVAILABLE_MODELS = [
+        "claude-sonnet-5-5",
         "claude-opus-4-7",
         "claude-opus-4-6",
         "claude-sonnet-4-6",
@@ -44,7 +45,8 @@ class AnthropicProvider:
     # Models that reject an explicit `temperature` (the API returns a 400
     # "temperature is deprecated for this model" error) — these models reason
     # at a fixed internal temperature and do not accept sampling overrides.
-    MODELS_WITHOUT_TEMPERATURE = {"claude-opus-4-7"}
+    # Claude Sonnet 5.5 rejects any non-default value, including 0.0.
+    MODELS_WITHOUT_TEMPERATURE = {"claude-opus-4-7", "claude-sonnet-5-5"}
 
     # The anthropic SDK 1.x removed `temperature` from `messages.create()`
     # (passing it is a TypeError), but the API version it sends (2023-06-01)
