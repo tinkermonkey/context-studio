@@ -11,24 +11,17 @@ export const COPY = {
   workspacePathLabel: "Workspace Path",
   workspaceUnnamed: "Unnamed",
 
-  // LLM Provider section
-  llmProviderTileTitle: "LLM Provider",
-  llmProviderTileDescription: "Language model configuration",
-  llmProviderLabel: "Provider",
-  llmProviderAnthropicOption: "Anthropic",
-  llmProviderOpenAIOption: "OpenAI",
-  llmProviderOllamaOption: "Ollama",
-  llmModelLabel: "Model Name",
-  llmModelPlaceholder: "e.g., claude-3-5-sonnet, gpt-4-turbo",
-  llmApiKeyLabel: "API Key",
-  llmApiKeyPlaceholder: "Enter API key (write-only)",
-  llmBaseUrlLabel: "Base URL",
-  llmBaseUrlPlaceholder: "http://localhost:11434",
+  // Chat assistant
+  chatModelLabel: "Chat model",
+  chatModelPlaceholder: "claude-sonnet-5-5",
+  chatModelHint:
+    "Model the chat assistant uses. Pick a listed model or enter an OpenRouter id (vendor/model).",
+  chatModelRequired: "Enter a model id",
 
   // Embedding Model section
   embeddingModelTileTitle: "Embedding Model",
   embeddingModelTileDescription: "Vector embedding configuration",
-  embeddingModelNameLabel: "Model Name",
+  embeddingModelNameLabel: "Embedding model",
   embeddingModelNamePlaceholder: "e.g., sentence-transformers/all-MiniLM-L6-v2",
   embeddingVectorDimensionsLabel: "Vector Dimensions",
   embeddingDimensionsMeta: (dimensions: number) => `${dimensions} dimensions`,

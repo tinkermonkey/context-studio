@@ -1368,12 +1368,12 @@ selectors:
   - selector: settings-workspace-path-input
     component: routes/app/settings.tsx
     description: Workspace path input (General tab)
-  - selector: settings-llm-provider-select
+  - selector: settings-chat-model-input
     component: routes/app/settings.tsx
-    description: LLM provider select (General tab)
-  - selector: settings-llm-model-input
+    description: Chat model input (General tab); writes chat.model, suggests the providers' models
+  - selector: settings-chat-model-options
     component: routes/app/settings.tsx
-    description: LLM model input (General tab)
+    description: Datalist of known chat model ids offered by the chat model input
   - selector: settings-embedding-model-input
     component: routes/app/settings.tsx
     description: Embedding model input (General tab)
@@ -1602,6 +1602,68 @@ selectors:
   - selector: topbar-docs
     component: src/routes/app.tsx
     description: Topbar documentation/help icon button
+  - selector: topbar-chat-button
+    component: src/routes/app.tsx
+    description: Topbar button that opens/closes the chat panel (⌘J); aria-pressed reflects open state
+  - selector: app-chat-layout
+    component: src/routes/app.tsx
+    description: Canvas wrapper that docks the chat column (app-chat-layout--open when open)
+
+  # Chat panel
+  - selector: chat-panel
+    component: src/components/chat/ChatPanel.tsx
+    description: Docked chat column (complementary region "Chat assistant"); hidden when closed
+  - selector: chat-model-chip
+    component: src/components/chat/ChatPanel.tsx
+    description: Chip with the configured chat model in the panel header
+  - selector: chat-new-button
+    component: src/components/chat/ChatPanel.tsx
+    description: Starts a new conversation
+  - selector: chat-close-button
+    component: src/components/chat/ChatPanel.tsx
+    description: Closes the chat panel
+  - selector: chat-setup-required
+    component: src/components/chat/ChatPanel.tsx
+    description: Empty state shown when no configured provider serves the chat model
+  - selector: chat-thread
+    component: src/components/chat/ChatPanel.tsx
+    description: Heimdall ChatContainer holding the conversation thread and composer
+  - selector: chat-composer
+    component: src/components/chat/ChatPanel.tsx
+    description: 'Heimdall ChatComposer with the removable "Viewing: X" page-context chip'
+  - selector: chat-loading
+    component: src/components/chat/ChatPanel.tsx
+    description: Shown while the latest conversation loads
+  - selector: chat-empty-thread
+    component: src/components/chat/ChatPanel.tsx
+    description: Empty-thread intro with suggestion chips
+  - selector: chat-suggestions
+    component: src/components/chat/ChatPanel.tsx
+    description: Heimdall ChatSuggestions on an empty thread
+  - selector: chat-message-user
+    component: src/components/chat/ChatPanel.tsx
+    description: A user message in the thread
+  - selector: chat-message-assistant
+    component: src/components/chat/ChatPanel.tsx
+    description: An assistant turn (tool blocks, then the answer)
+  - selector: chat-tool-block
+    component: src/components/chat/ChatPanel.tsx
+    description: Heimdall ToolBlock for one tool call; data-status is running, success or error
+  - selector: chat-pending
+    component: src/components/chat/ChatPanel.tsx
+    description: 'Thinking… placeholder before the first streamed output'
+  - selector: chat-turn-error
+    component: src/components/chat/ChatPanel.tsx
+    description: Inline error for a failed turn (role=alert)
+  - selector: chat-answer
+    component: src/components/chat/ChatAnswer.tsx
+    description: Markdown-rendered answer text
+  - selector: chat-entity-link
+    component: src/components/chat/ChatAnswer.tsx
+    description: Entity-page link in an answer (id came from a tool result or page context); data-entity-kind/id
+  - selector: chat-entity-text
+    component: src/components/chat/ChatAnswer.tsx
+    description: An entity link rendered as plain text (unknown id, or a property, which has no page)
 
   - selector: taxonomy-identifier-input
     component: src/components/schema/TaxonomyForm.tsx

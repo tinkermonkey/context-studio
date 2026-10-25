@@ -91,4 +91,6 @@ export const QUERY_KEYS = {
     ["pipeline-runs", runId, "change-events", options] as const,
   pipelineBatches: ["pipeline-batches"] as const,
   pipelineBatch: (batchId: string) => ["pipeline-batches", batchId] as const,
+  // Chat
+  chatStatus: ["chat-status"] as const,
 } as const;

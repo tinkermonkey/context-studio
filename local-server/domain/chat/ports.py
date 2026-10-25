@@ -36,6 +36,10 @@ class ChatModel(Protocol):
         """Whether a configured chat provider can serve the model."""
         ...
 
+    def list_models(self) -> list[str]:
+        """Known model ids the configured chat providers serve (others may also work)."""
+        ...
+
 
 class ChatTool(Protocol):
     """Port for a read-only tool the assistant can call."""

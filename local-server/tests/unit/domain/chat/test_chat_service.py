@@ -49,6 +49,9 @@ class ScriptedModel:
     def supports_model(self, model):
         return model in self._supported
 
+    def list_models(self):
+        return list(self._supported)
+
     async def stream_chat(self, *, system, messages, tools, model, max_tokens=16000):
         self.requests.append(
             {
@@ -418,6 +421,7 @@ class TestConversations:
             True,
             8,
         )
+        assert status.available_models == ("claude-sonnet-5-5",)
 
         unsupported, _ = make_service(ScriptedModel(supported=()))
         assert unsupported.status().available is False

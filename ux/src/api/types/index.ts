@@ -4711,6 +4711,11 @@ export interface components {
       available: boolean;
       /** Max Tool Rounds */
       max_tool_rounds: number;
+      /**
+       * Available Models
+       * @description Known model ids of the configured chat providers; OpenRouter ids also work
+       */
+      available_models?: string[];
     };
     /**
      * ClassCountsResponse
