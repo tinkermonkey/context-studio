@@ -12,6 +12,7 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 
+from domain.ontology.snapshots import entity_from_snapshot
 from domain.ontology.value_objects import ExternalReference
 from domain.versioning.exceptions import RevertConflictError
 from domain.versioning.value_objects import ChangeOperation
@@ -323,10 +324,9 @@ class RevertService:
         """
         Return the snapshot of a deleted entity.
 
-        The ChangeEventRecorder stores a deletion's snapshot in ``previous_state``
-        (``new_state`` is empty); older or hand-recorded events carry it in
-        ``new_state``. Note the recorder's snapshots are minimal (e.g. a relationship
-        keeps only its id, endpoints and property definition), so restores are lossy.
+        The ChangeEventRecorder stores a deletion's full snapshot in
+        ``previous_state`` (``new_state`` is empty); older or hand-recorded events
+        carry it in ``new_state``.
         """
         return event.new_state or event.previous_state or {}
 
@@ -426,87 +426,35 @@ class RevertService:
             raise ValueError(f"Unknown entity type for update revert: {entity_type}")
         return False
 
-    def _inverse_delete(self, entity_id: str, entity_type: str, new_state: dict) -> bool:
+    def _inverse_delete(self, entity_id: str, entity_type: str, snapshot: dict) -> bool:
         """
-        Inverse of DELETE: recreate the entity from new_state.
+        Inverse of DELETE: recreate the entity, with the same id, from its snapshot.
 
         Returns:
             True if the entity was successfully recreated
+
+        Raises:
+            ValueError: If the snapshot is missing, or too incomplete to rebuild
+                the entity (e.g. an older minimal snapshot without class_ids)
         """
-        if not new_state:
+        if not snapshot:
             raise ValueError(
                 f"Cannot revert DELETE for {entity_type} {entity_id}: "
-                "new_state is missing from change event"
+                "no snapshot of the deleted entity in the change event"
             )
-
-        from domain.ontology.entities import (
-            Class,
-            ConceptScheme,
-            Individual,
-            PropertyDefinition,
-            Relationship,
-            Taxonomy,
-        )
-        from domain.ontology.value_objects import Status
-
+        savers = {
+            "taxonomy": self._ontology_repo.save_taxonomy,
+            "concept_scheme": self._ontology_repo.save_concept_scheme,
+            "class": self._ontology_repo.save_class,
+            "individual": self._ontology_repo.save_individual,
+            "relationship": self._ontology_repo.save_relationship,
+            "property_definition": self._ontology_repo.save_property_definition,
+        }
+        save = savers.get(entity_type)
+        if save is None:
+            raise ValueError(f"Unknown entity type for delete revert: {entity_type}")
         try:
-            if entity_type == "taxonomy":
-                tax = Taxonomy(
-                    id=new_state.get("id", entity_id),
-                    title=new_state.get("title", ""),
-                    identifier=new_state.get("identifier"),
-                    description=new_state.get("description"),
-                    color=new_state.get("color"),
-                    status=Status(new_state.get("status", "draft")),
-                )
-                self._ontology_repo.save_taxonomy(tax)
-            elif entity_type == "concept_scheme":
-                scheme = ConceptScheme(
-                    id=new_state.get("id", entity_id),
-                    taxonomy_id=new_state.get("taxonomy_id", ""),
-                    title=new_state.get("title", ""),
-                    identifier=new_state.get("identifier"),
-                    description=new_state.get("description"),
-                    status=Status(new_state.get("status", "draft")),
-                )
-                self._ontology_repo.save_concept_scheme(scheme)
-            elif entity_type == "class":
-                cls = Class(
-                    id=new_state.get("id", entity_id),
-                    taxonomy_id=new_state.get("taxonomy_id", ""),
-                    concept_scheme_id=new_state.get("concept_scheme_id", ""),
-                    title=new_state.get("title", ""),
-                    description=new_state.get("description"),
-                    status=Status(new_state.get("status", "draft")),
-                )
-                self._ontology_repo.save_class(cls)
-            elif entity_type == "individual":
-                ind = Individual(
-                    id=new_state.get("id", entity_id),
-                    class_ids=new_state.get("class_ids", []),
-                    title=new_state.get("title", ""),
-                    status=Status(new_state.get("status", "draft")),
-                )
-                self._ontology_repo.save_individual(ind)
-            elif entity_type == "relationship":
-                rel = Relationship(
-                    id=new_state.get("id", entity_id),
-                    source_id=new_state.get("source_id", ""),
-                    target_id=new_state.get("target_id", ""),
-                    property_definition_id=new_state.get("property_definition_id", ""),
-                )
-                self._ontology_repo.save_relationship(rel)
-            elif entity_type == "property_definition":
-                prop = PropertyDefinition(
-                    id=new_state.get("id", entity_id),
-                    identifier=new_state.get("identifier", ""),
-                    title=new_state.get("title", ""),
-                    description=new_state.get("description"),
-                    status=Status(new_state.get("status", "draft")),
-                )
-                self._ontology_repo.save_property_definition(prop)
-            else:
-                raise ValueError(f"Unknown entity type for delete revert: {entity_type}")
+            save(entity_from_snapshot(entity_type, snapshot, entity_id))
             return True
         except Exception as exc:
             _logger.error(f"Failed to recreate {entity_type} {entity_id}: {exc}", exc_info=exc)

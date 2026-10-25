@@ -1,5 +1,6 @@
 """
-Integration tests: reverting a run keeps the recognition and schema indexes in sync (#1293).
+Integration tests: reverting a run restores entities exactly and keeps the
+recognition and schema indexes in sync (#1293, #1295).
 
 Real SQLite with the real SqliteIndividualVectorIndex and SqliteSchemaVectorIndex,
 an in-process event publisher wired to the ChangeEventRecorder, the real
@@ -14,7 +15,9 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import tempfile
+from dataclasses import replace
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 from sqlalchemy import create_engine
@@ -30,26 +33,43 @@ from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from adapters.recognition.individual_recognizer import CascadeIndividualRecognizer
 from domain.interchange.services import set_batch_run_context
-from domain.ontology.entities import Class, ConceptScheme, Taxonomy
+from domain.ontology.entities import (
+    Class,
+    ConceptScheme,
+    Individual,
+    PropertyDefinition,
+    Taxonomy,
+)
 from domain.ontology.events import (
+    ClassDeleted,
     ClassUpdated,
     IndividualCreated,
     IndividualDeleted,
     IndividualUpdated,
+    PropertyDefinitionDeleted,
+    RelationshipCreated,
+    RelationshipDeleted,
 )
 from domain.ontology.services import OntologyService
+from domain.ontology.value_objects import (
+    DataPropertyValue,
+    ExternalReference,
+    LexicalSense,
+    Status,
+)
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.apply_service import (
     IndividualExtractionApplyService,
 )
 from domain.versioning.revert_service import RevertService
-from domain.versioning.value_objects import ChangeOperation
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.utils.parent_rows import create_batch_row
 
 TAXONOMY_ID = "tx-idx"
 SCHEME_ID = "cs-idx"
 CLASS_ID = "cls-org"
+OTHER_CLASS_ID = "cls-other"
+PROP_ID = "prop-link"
 SAME_TEXT = 0.999
 
 
@@ -115,6 +135,10 @@ def ontology_service(ontology_repo, change_repo, embedding, schema_index, indivi
     publisher.subscribe(IndividualUpdated, recorder.on_individual_updated)
     publisher.subscribe(IndividualDeleted, recorder.on_individual_deleted)
     publisher.subscribe(ClassUpdated, recorder.on_class_updated)
+    publisher.subscribe(ClassDeleted, recorder.on_class_deleted)
+    publisher.subscribe(PropertyDefinitionDeleted, recorder.on_property_definition_deleted)
+    publisher.subscribe(RelationshipCreated, recorder.on_relationship_created)
+    publisher.subscribe(RelationshipDeleted, recorder.on_relationship_deleted)
     return OntologyService(
         repository=ontology_repo,
         embedding_service=embedding,
@@ -247,33 +271,12 @@ def test_reverted_class_definition_update_restores_its_embedding(
 
 
 def test_reverted_individual_delete_is_recognizable_again(
-    pipeline_repo,
-    ontology_repo,
-    change_repo,
-    ontology_service,
-    recognizer,
-    individual_index,
-    embedding,
-    revert_service,
+    pipeline_repo, ontology_service, recognizer, individual_index, embedding, revert_service
 ):
-    """
-    An individual restored by a revert is back in the recognition index.
-
-    The DELETE event is recorded with a full snapshot by hand: the recorder's
-    IndividualDeleted snapshot does not carry class_ids yet (#1295), so a
-    recorder-driven delete cannot be restored at all today.
-    """
+    """An individual restored by a revert is back in the recognition index."""
     original = ontology_service.create_individual(title="Umbrella Corp", class_ids=[CLASS_ID])
     run = _new_run(pipeline_repo)
-    ontology_repo.delete_individual(original.id)
-    change_repo.record_change(
-        entity_id=original.id,
-        entity_type="individual",
-        operation=ChangeOperation.DELETE,
-        new_state={},
-        previous_state={"id": original.id, "class_ids": [CLASS_ID], "title": "Umbrella Corp"},
-        batch_run_id=run.id,
-    )
+    _in_run(run.id, lambda: ontology_service.delete_individual(original.id))
     assert recognizer.recognize("Umbrella Corp", "", [CLASS_ID]) is None
 
     revert_service.revert_with_summary(run.id)
@@ -281,3 +284,161 @@ def test_reverted_individual_delete_is_recognizable_again(
     assert _individual_hits(individual_index, embedding, "Umbrella Corp") == [original.id]
     match = recognizer.recognize("Umbrella Corp", "", [CLASS_ID])
     assert match is not None and match.individual_id == original.id
+
+
+def _relationship_fields(relationships):
+    return sorted((r.id, r.source_id, r.target_id, r.property_definition_id) for r in relationships)
+
+
+def _without_bookkeeping(entity):
+    """Entity fields minus the ones a save always resets (timestamps, version)."""
+    return replace(entity, created_at=None, last_modified=None, version=1)
+
+
+def test_delete_then_revert_restores_individual_exactly_with_its_relationships(
+    pipeline_repo,
+    ontology_repo,
+    ontology_service,
+    individual_index,
+    schema_index,
+    embedding,
+    revert_service,
+):
+    """create -> delete -> revert round-trips the individual and its cascaded relationships."""
+    ontology_repo.save_class(
+        Class(
+            id=OTHER_CLASS_ID,
+            concept_scheme_id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            identifier="company",
+            title="Company",
+        )
+    )
+    ontology_repo.save_property_definition(
+        PropertyDefinition(id=PROP_ID, identifier="partners_with", title="partners with")
+    )
+    ontology_repo.save_individual(
+        Individual(
+            id="ind-acme",
+            class_ids=[CLASS_ID, OTHER_CLASS_ID],
+            title="Acme Corp",
+            description="Maker of anvils.",
+            data_properties=[
+                DataPropertyValue("founded", 1949, "xsd:integer"),
+                DataPropertyValue("public", True),
+            ],
+            external_references=[
+                ExternalReference(
+                    source="wikidata",
+                    identifier="Q123",
+                    uri="https://www.wikidata.org/wiki/Q123",
+                    metadata=MappingProxyType({"label": "Acme"}),
+                )
+            ],
+            status=Status.PUBLISHED,
+        )
+    )
+    individual_index.index_individual("ind-acme", "Acme Corp", "Maker of anvils.")
+    partner = ontology_service.create_individual(title="Globex", class_ids=[CLASS_ID])
+    ontology_service.create_relationship("ind-acme", partner.id, PROP_ID)
+    ontology_service.create_relationship(partner.id, "ind-acme", PROP_ID)
+    before = ontology_repo.get_individual("ind-acme")
+    relationships_before = ontology_repo.list_relationships(
+        source_id="ind-acme", limit=None
+    ) + ontology_repo.list_relationships(target_id="ind-acme", limit=None)
+    assert len(relationships_before) == 2
+
+    run = _new_run(pipeline_repo)
+    _in_run(run.id, lambda: ontology_service.delete_individual("ind-acme"))
+    assert ontology_repo.get_individual("ind-acme") is None
+    assert ontology_repo.list_relationships(source_id=partner.id, limit=None) == []
+
+    result = revert_service.revert_with_summary(run.id)
+
+    assert result.entities_restored == 3
+    after = ontology_repo.get_individual("ind-acme")
+    assert after is not None
+    assert _without_bookkeeping(after) == _without_bookkeeping(before)
+    relationships_after = ontology_repo.list_relationships(
+        source_id="ind-acme", limit=None
+    ) + ontology_repo.list_relationships(target_id="ind-acme", limit=None)
+    assert _relationship_fields(relationships_after) == _relationship_fields(relationships_before)
+    assert _individual_hits(individual_index, embedding, "Acme Corp") == ["ind-acme"]
+    assert _schema_hits(schema_index, embedding, "Maker of anvils.", "individual") == ["ind-acme"]
+
+
+def test_delete_then_revert_restores_class_exactly_with_its_relationships(
+    pipeline_repo, ontology_repo, ontology_service, schema_index, embedding, revert_service
+):
+    """create -> delete -> revert round-trips a class and the relationships deleted with it."""
+    ontology_repo.save_property_definition(
+        PropertyDefinition(id=PROP_ID, identifier="supplies", title="supplies")
+    )
+    ontology_repo.save_class(
+        Class(
+            id=OTHER_CLASS_ID,
+            concept_scheme_id=SCHEME_ID,
+            taxonomy_id=TAXONOMY_ID,
+            identifier="supplier",
+            title="Supplier",
+            description="Provides goods to an organization.",
+            color="#aabbcc",
+            parent_class_id=CLASS_ID,
+            external_references=[ExternalReference(source="wikidata", identifier="Q7")],
+            lexical_senses=[LexicalSense("supplier", "en", "synset")],
+            data_properties=[DataPropertyValue("tier", 1)],
+            status=Status.PUBLISHED,
+        )
+    )
+    ontology_service.create_relationship(OTHER_CLASS_ID, CLASS_ID, PROP_ID)
+    before = ontology_repo.get_class(OTHER_CLASS_ID)
+    relationships_before = ontology_repo.list_relationships(source_id=OTHER_CLASS_ID, limit=None)
+
+    run = _new_run(pipeline_repo)
+    _in_run(run.id, lambda: ontology_service.delete_class(OTHER_CLASS_ID))
+    assert ontology_repo.get_class(OTHER_CLASS_ID) is None
+
+    revert_service.revert_with_summary(run.id)
+
+    after = ontology_repo.get_class(OTHER_CLASS_ID)
+    assert after is not None
+    assert _without_bookkeeping(after) == _without_bookkeeping(before)
+    relationships_after = ontology_repo.list_relationships(source_id=OTHER_CLASS_ID, limit=None)
+    assert _relationship_fields(relationships_after) == _relationship_fields(relationships_before)
+    assert _schema_hits(schema_index, embedding, "Provides goods to an organization.", "class") == [
+        OTHER_CLASS_ID
+    ]
+
+
+def test_delete_then_revert_restores_property_definition_exactly(
+    pipeline_repo, ontology_repo, ontology_service, schema_index, embedding, revert_service
+):
+    """create -> delete -> revert round-trips a property definition."""
+    ontology_repo.save_property_definition(
+        PropertyDefinition(
+            id=PROP_ID,
+            identifier="employs",
+            title="employs",
+            description="Has as an employee.",
+            canonical_predicate="employs",
+            domain_class_id=CLASS_ID,
+            range_class_id=CLASS_ID,
+            external_references=[ExternalReference(source="schema.org", identifier="employee")],
+            is_relevant=True,
+            status=Status.PUBLISHED,
+        )
+    )
+    before = ontology_repo.get_property_definition(PROP_ID)
+
+    run = _new_run(pipeline_repo)
+    _in_run(run.id, lambda: ontology_service.delete_property_definition(PROP_ID))
+    assert ontology_repo.get_property_definition(PROP_ID) is None
+
+    revert_service.revert_with_summary(run.id)
+
+    after = ontology_repo.get_property_definition(PROP_ID)
+    assert after is not None
+    assert _without_bookkeeping(after) == _without_bookkeeping(before)
+    assert _schema_hits(schema_index, embedding, "Has as an employee.", "property_definition") == [
+        PROP_ID
+    ]

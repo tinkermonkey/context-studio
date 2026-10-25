@@ -92,11 +92,14 @@ class ClassDeleted(DomainEvent):
     Attributes:
         class_id: ID of the deleted class
         title: Title of the deleted class
+        snapshot: Every field of the deleted entity (see domain.ontology.snapshots),
+            so the delete can be reverted
     """
 
     _aggregate_id_field: ClassVar[str] = "class_id"
     class_id: str = ""
     title: str = ""
+    snapshot: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -145,6 +148,8 @@ class RelationshipDeleted(DomainEvent):
         source_id: ID of the source entity
         target_id: ID of the target entity
         property_definition_id: ID of the property definition for this relationship type
+        snapshot: Every field of the deleted entity (see domain.ontology.snapshots),
+            so the delete can be reverted
     """
 
     _aggregate_id_field: ClassVar[str] = "relationship_id"
@@ -152,6 +157,7 @@ class RelationshipDeleted(DomainEvent):
     source_id: str = ""
     target_id: str = ""
     property_definition_id: str = ""
+    snapshot: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -200,11 +206,14 @@ class TaxonomyDeleted(DomainEvent):
     Attributes:
         taxonomy_id: ID of the deleted taxonomy
         title: Title of the deleted taxonomy
+        snapshot: Every field of the deleted entity (see domain.ontology.snapshots),
+            so the delete can be reverted
     """
 
     _aggregate_id_field: ClassVar[str] = "taxonomy_id"
     taxonomy_id: str = ""
     title: str = ""
+    snapshot: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -237,12 +246,15 @@ class SchemeDeleted(DomainEvent):
         concept_scheme_id: ID of the deleted concept scheme
         taxonomy_id: ID of the parent taxonomy
         title: Title of the deleted concept scheme
+        snapshot: Every field of the deleted entity (see domain.ontology.snapshots),
+            so the delete can be reverted
     """
 
     _aggregate_id_field: ClassVar[str] = "concept_scheme_id"
     concept_scheme_id: str = ""
     taxonomy_id: str = ""
     title: str = ""
+    snapshot: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -271,12 +283,15 @@ class PropertyDefinitionDeleted(DomainEvent):
         property_id: ID of the deleted property definition
         identifier: Identifier/name of the deleted property definition
         title: Title of the deleted property definition
+        snapshot: Every field of the deleted entity (see domain.ontology.snapshots),
+            so the delete can be reverted
     """
 
     _aggregate_id_field: ClassVar[str] = "property_id"
     property_id: str = ""
     identifier: str = ""
     title: str = ""
+    snapshot: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -341,11 +356,14 @@ class IndividualDeleted(DomainEvent):
     Attributes:
         individual_id: ID of the deleted individual
         title: Title of the deleted individual
+        snapshot: Every field of the deleted entity (see domain.ontology.snapshots),
+            so the delete can be reverted
     """
 
     _aggregate_id_field: ClassVar[str] = "individual_id"
     individual_id: str = ""
     title: str = ""
+    snapshot: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

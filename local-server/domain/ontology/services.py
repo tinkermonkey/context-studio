@@ -64,6 +64,7 @@ from .ports import (
     OntologyRepository,
     SchemaVectorIndex,
 )
+from .snapshots import entity_snapshot
 from .value_objects import (
     DataPropertyValue,
     DataType,
@@ -498,6 +499,7 @@ class OntologyService:
             TaxonomyDeleted(
                 taxonomy_id=taxonomy_id,
                 title=taxonomy.title,
+                snapshot=entity_snapshot(taxonomy),
             )
         )
         if failures:
@@ -836,6 +838,7 @@ class OntologyService:
                 concept_scheme_id=concept_scheme_id,
                 taxonomy_id=scheme.taxonomy_id,
                 title=scheme.title,
+                snapshot=entity_snapshot(scheme),
             )
         )
         if failures:
@@ -1207,6 +1210,7 @@ class OntologyService:
                     source_id=relationship.source_id,
                     target_id=relationship.target_id,
                     property_definition_id=relationship.property_definition_id,
+                    snapshot=entity_snapshot(relationship),
                 )
             )
             if failures:
@@ -1250,6 +1254,7 @@ class OntologyService:
             ClassDeleted(
                 class_id=class_id,
                 title=cls.title,
+                snapshot=entity_snapshot(cls),
             )
         )
         if failures:
@@ -1671,6 +1676,7 @@ class OntologyService:
                 source_id=relationship.source_id,
                 target_id=relationship.target_id,
                 property_definition_id=relationship.property_definition_id,
+                snapshot=entity_snapshot(relationship),
             )
         )
         if failures:
@@ -2141,6 +2147,7 @@ class OntologyService:
                 property_id=property_id,
                 identifier=prop_def.identifier,
                 title=prop_def.title,
+                snapshot=entity_snapshot(prop_def),
             )
         )
         if failures:
@@ -2630,6 +2637,7 @@ class OntologyService:
                     source_id=relationship.source_id,
                     target_id=relationship.target_id,
                     property_definition_id=relationship.property_definition_id,
+                    snapshot=entity_snapshot(relationship),
                 )
             )
             if failures:
@@ -2649,6 +2657,7 @@ class OntologyService:
             IndividualDeleted(
                 individual_id=individual_id,
                 title=individual.title,
+                snapshot=entity_snapshot(individual),
             )
         )
         if failures:

@@ -306,7 +306,7 @@ class ChangeEventRecorder:
             entity_id=event.taxonomy_id,
             entity_type="taxonomy",
             operation=ChangeOperation.DELETE,
-            previous_state={"taxonomy_id": event.taxonomy_id, "title": event.title},
+            previous_state=event.snapshot,
             change_reason="Taxonomy deleted",
         )
 
@@ -316,11 +316,7 @@ class ChangeEventRecorder:
             entity_id=event.concept_scheme_id,
             entity_type="concept_scheme",
             operation=ChangeOperation.DELETE,
-            previous_state={
-                "concept_scheme_id": event.concept_scheme_id,
-                "title": event.title,
-                "taxonomy_id": event.taxonomy_id,
-            },
+            previous_state=event.snapshot,
             change_reason="Concept scheme deleted",
         )
 
@@ -330,7 +326,7 @@ class ChangeEventRecorder:
             entity_id=event.class_id,
             entity_type="class",
             operation=ChangeOperation.DELETE,
-            previous_state={"class_id": event.class_id, "title": event.title},
+            previous_state=event.snapshot,
             change_reason="Class deleted",
         )
 
@@ -340,12 +336,7 @@ class ChangeEventRecorder:
             entity_id=event.relationship_id,
             entity_type="relationship",
             operation=ChangeOperation.DELETE,
-            previous_state={
-                "relationship_id": event.relationship_id,
-                "source_id": event.source_id,
-                "target_id": event.target_id,
-                "property_definition_id": event.property_definition_id,
-            },
+            previous_state=event.snapshot,
             change_reason="Relationship deleted",
         )
 
@@ -355,11 +346,7 @@ class ChangeEventRecorder:
             entity_id=event.property_id,
             entity_type="property_definition",
             operation=ChangeOperation.DELETE,
-            previous_state={
-                "property_id": event.property_id,
-                "identifier": event.identifier,
-                "title": event.title,
-            },
+            previous_state=event.snapshot,
             change_reason="Property definition deleted",
         )
 
@@ -397,9 +384,6 @@ class ChangeEventRecorder:
             entity_id=event.individual_id,
             entity_type="individual",
             operation=ChangeOperation.DELETE,
-            previous_state={
-                "individual_id": event.individual_id,
-                "title": event.title,
-            },
+            previous_state=event.snapshot,
             change_reason="Individual deleted",
         )

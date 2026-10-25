@@ -930,7 +930,7 @@ def test_inverse_delete_with_missing_state_raises_error(ontology_repo, change_re
     )
 
     # Revert should raise an error
-    with pytest.raises(ValueError, match="new_state is missing"):
+    with pytest.raises(ValueError, match="no snapshot of the deleted entity"):
         revert_svc.revert("run-bad")
 
 
