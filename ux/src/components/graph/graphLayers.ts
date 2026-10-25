@@ -19,6 +19,14 @@ export const FORCE_LAYOUT_MAX_NODES = 250;
 export const MIN_FOCUS_DEPTH = 1;
 export const MAX_FOCUS_DEPTH = 3;
 
+/** Graph page deep-link params: entity pages open it focused on a node or on given layers. */
+export interface GraphSearchParams {
+  /** Node to select and focus (one hop) on load. */
+  focus?: string;
+  /** Layer (concept scheme) ids to show on load. */
+  layers?: string[];
+}
+
 export type NodeKindFilter = "all" | "class" | "individual";
 export type GraphLayoutMode = "layered" | "force";
 

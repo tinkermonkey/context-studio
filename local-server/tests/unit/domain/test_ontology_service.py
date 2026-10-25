@@ -3865,3 +3865,73 @@ class TestExistingServiceMethodsCompatibility:
 
         properties = service.get_individual_properties(individual.id)
         assert isinstance(properties, list)
+
+
+def _seed_counted_model(service):
+    """A taxonomy with two schemes: one with linked classes and individuals, one empty."""
+    tax = service.create_taxonomy(title="Architecture")
+    app = service.create_scheme(tax.id, title="Application")
+    empty = service.create_scheme(tax.id, title="Business")
+    component = service.create_class(app.id, title="Component")
+    service_cls = service.create_class(app.id, title="Service")
+    realizes = service.create_property_definition(
+        identifier="realizes",
+        title="Realizes",
+        domain_class_id=component.id,
+        range_class_id=service_cls.id,
+    )
+    service.create_property_definition(
+        identifier="uses", title="Uses", domain_class_id=component.id
+    )
+    router = service.create_individual(class_ids=[component.id], title="Router")
+    both = service.create_individual(class_ids=[component.id, service_cls.id], title="Gateway")
+    api = service.create_individual(class_ids=[service_cls.id], title="API")
+    service.create_relationship(router.id, api.id, realizes.id)
+    service.create_relationship(both.id, api.id, realizes.id)
+    return tax, app, empty, component, service_cls
+
+
+class TestSchemeAndClassCounts:
+    """Tests for get_scheme_counts and get_class_counts."""
+
+    def test_scheme_counts_per_scheme_including_empty(self, service):
+        tax, app, empty, _, _ = _seed_counted_model(service)
+
+        counts = {c.scheme_id: c for c in service.get_scheme_counts(tax.id)}
+
+        assert counts[app.id].class_count == 2
+        # Gateway is in both classes but counts once for the scheme.
+        assert counts[app.id].individual_count == 3
+        assert counts[app.id].property_definition_count == 2
+        assert counts[empty.id].class_count == 0
+        assert counts[empty.id].individual_count == 0
+
+    def test_scheme_counts_unknown_taxonomy_raises(self, service):
+        with pytest.raises(EntityNotFoundError):
+            service.get_scheme_counts("missing")
+
+    def test_class_counts_per_class(self, service):
+        _, app, _, component, service_cls = _seed_counted_model(service)
+
+        counts = {c.class_id: c for c in service.get_class_counts(app.id)}
+
+        assert counts[component.id].individual_count == 2
+        assert counts[component.id].property_definition_count == 2
+        assert counts[component.id].relationship_count == 2
+        assert counts[service_cls.id].individual_count == 2
+        assert counts[service_cls.id].property_definition_count == 0
+        # Gateway (also a Service) is the source of one relationship.
+        assert counts[service_cls.id].relationship_count == 1
+
+    def test_class_counts_unknown_scheme_raises(self, service):
+        with pytest.raises(EntityNotFoundError):
+            service.get_class_counts("missing")
+
+    def test_property_definitions_filter_by_domain_class(self, service):
+        _, _, _, component, service_cls = _seed_counted_model(service)
+
+        props = service.list_property_definitions(domain_class_id=component.id)
+
+        assert {p.identifier for p in props} == {"realizes", "uses"}
+        assert service.count_property_definitions(domain_class_id=component.id) == 2
+        assert service.count_property_definitions(domain_class_id=service_cls.id) == 0

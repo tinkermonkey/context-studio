@@ -1957,3 +1957,100 @@ class TestTaxonomyAndSchemeQueryMatchesIdentifier:
         body = client.get("/api/schemes", params={"q": "motor"}).json()
         assert [s["title"] for s in body["items"]] == ["Engines"]
         assert body["total"] == 1
+
+
+class TestEntityPageCounts:
+    """Counts and domain filters the entity pages read."""
+
+    @pytest.fixture
+    def model(self, ontology_service):
+        tax = ontology_service.create_taxonomy(title="Architecture")
+        scheme = ontology_service.create_scheme(taxonomy_id=tax.id, title="Application")
+        component = ontology_service.create_class(concept_scheme_id=scheme.id, title="Component")
+        target = ontology_service.create_class(concept_scheme_id=scheme.id, title="Service")
+        prop = ontology_service.create_property_definition(
+            identifier="realizes",
+            title="Realizes",
+            domain_class_id=component.id,
+            range_class_id=target.id,
+        )
+        router_ind = ontology_service.create_individual(component.id, title="Router")
+        api = ontology_service.create_individual(target.id, title="API")
+        ontology_service.create_relationship(router_ind.id, api.id, prop.id)
+        return {"taxonomy": tax, "scheme": scheme, "component": component, "target": target}
+
+    def test_scheme_counts(self, client, model):
+        response = client.get(f"/api/taxonomies/{model['taxonomy'].id}/scheme-counts")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == [
+            {
+                "scheme_id": model["scheme"].id,
+                "class_count": 2,
+                "individual_count": 2,
+                "property_definition_count": 1,
+            }
+        ]
+
+    def test_scheme_counts_unknown_taxonomy_404(self, client):
+        response = client.get("/api/taxonomies/missing/scheme-counts")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_class_counts(self, client, model):
+        response = client.get(f"/api/schemes/{model['scheme'].id}/class-counts")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == [
+            {
+                "class_id": model["component"].id,
+                "individual_count": 1,
+                "property_definition_count": 1,
+                "relationship_count": 1,
+            },
+            {
+                "class_id": model["target"].id,
+                "individual_count": 1,
+                "property_definition_count": 0,
+                "relationship_count": 0,
+            },
+        ]
+
+    def test_class_counts_unknown_scheme_404(self, client):
+        response = client.get("/api/schemes/missing/class-counts")
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_properties_filter_by_domain_class_and_expose_domain_range(self, client, model):
+        body = client.get(
+            "/api/properties", params={"domain_class_id": model["component"].id}
+        ).json()
+
+        assert body["total"] == 1
+        item = body["items"][0]
+        assert item["identifier"] == "realizes"
+        assert item["domain_class_id"] == model["component"].id
+        assert item["range_class_id"] == model["target"].id
+        empty = client.get("/api/properties", params={"domain_class_id": model["target"].id})
+        assert empty.json()["total"] == 0
+
+    def test_create_property_with_domain_and_range(self, client, model):
+        response = client.post(
+            "/api/properties",
+            json={
+                "identifier": "uses",
+                "title": "Uses",
+                "domain_class_id": model["component"].id,
+                "range_class_id": model["target"].id,
+            },
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        body = response.json()
+        assert body["domain_class_id"] == model["component"].id
+        assert body["range_class_id"] == model["target"].id
+
+    def test_create_property_with_unknown_domain_404(self, client, model):
+        response = client.post(
+            "/api/properties",
+            json={"identifier": "uses", "title": "Uses", "domain_class_id": "missing"},
+        )
+        assert response.status_code == status.HTTP_404_NOT_FOUND

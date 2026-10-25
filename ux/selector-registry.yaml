@@ -2628,3 +2628,110 @@ selectors:
   - selector: extraction-review-individual-*
     component: src/components/pipeline/extraction-review/ReviewParts.tsx
     description: "Individual tab run state and apply bar (extraction-review-individual-{idle,running,failed,empty,retry,apply-bar,apply,revert})"
+
+  # Entity pages (taxonomy / scheme / class / individual)
+  - selector: entity-navigator
+    component: src/components/entity/EntityNavigator.tsx
+    description: Navigator tree beside an entity page; rows are hierarchy-node-{id}
+  - selector: entity-header
+    component: src/components/entity/EntityPageParts.tsx
+    description: Entity page header (eyebrow, title, identifier chip, description, actions)
+  - selector: entity-eyebrow
+    component: src/components/entity/EntityPageParts.tsx
+    description: Eyebrow above the entity title (area · kind · parent link, status, version)
+  - selector: entity-parent-link
+    component: src/routes/app/schema/schemes_.$id.tsx
+    description: Link in the eyebrow to the entity's parent (scheme → taxonomy, class → scheme)
+  - selector: entity-status
+    component: src/components/entity/EntityPageParts.tsx
+    description: Status chip (draft / published) in the entity eyebrow
+  - selector: entity-version
+    component: src/components/entity/EntityPageParts.tsx
+    description: Version pill in the entity eyebrow
+  - selector: entity-open-graph
+    component: src/components/entity/EntityPageParts.tsx
+    description: Opens the graph view focused on the entity (or its layers)
+  - selector: entity-ask-about
+    component: src/components/entity/EntityPageParts.tsx
+    description: Ask about this entity (dispatches the context-studio:ask-about window event for chat)
+  - selector: entity-create
+    component: src/components/entity/EntityPageParts.tsx
+    description: Primary create action (new scheme / class / individual for this entity)
+  - selector: entity-stats
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: Key-count stat tiles on an entity page
+  - selector: entity-identity
+    component: src/components/entity/EntityPageParts.tsx
+    description: Identity side card (ids, parents, status, version, dates, external references)
+  - selector: taxonomy-page
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: Taxonomy entity page root
+  - selector: taxonomy-schemes-panel
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: Concept schemes table with class, individual and relationship-type counts
+  - selector: taxonomy-scheme-link-*
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: Link to a concept scheme page in the taxonomy's schemes table (suffix is scheme id)
+  - selector: scheme-page
+    component: src/routes/app/schema/schemes_.$id.tsx
+    description: Concept scheme entity page root
+  - selector: scheme-classes-panel
+    component: src/routes/app/schema/schemes_.$id.tsx
+    description: Classes table with definitions and individual counts
+  - selector: scheme-class-link-*
+    component: src/routes/app/schema/schemes_.$id.tsx
+    description: Link to a class page in the scheme's classes table (suffix is class id)
+  - selector: class-page
+    component: src/routes/app/schema/classes_.$id.tsx
+    description: Class entity page root
+  - selector: class-definition-panel
+    component: src/routes/app/schema/classes_.$id.tsx
+    description: Definition panel on the class page
+  - selector: class-definition-text
+    component: src/routes/app/schema/classes_.$id.tsx
+    description: The class definition text
+  - selector: class-definition-edit
+    component: src/routes/app/schema/classes_.$id.tsx
+    description: Starts editing the class definition
+  - selector: class-definition-input
+    component: src/routes/app/schema/classes_.$id.tsx
+    description: Definition text area while editing
+  - selector: class-definition-save
+    component: src/routes/app/schema/classes_.$id.tsx
+    description: Saves the edited class definition
+  - selector: class-individuals-panel
+    component: src/routes/app/schema/classes_.$id.tsx
+    description: Individuals of the class
+  - selector: class-individuals-show-all
+    component: src/routes/app/schema/classes_.$id.tsx
+    description: Shows every individual of the class instead of the first few
+  - selector: class-individual-link-*
+    component: src/routes/app/schema/classes_.$id.tsx
+    description: Link to an individual page from the class page (suffix is individual id)
+  - selector: class-relationship-types-panel
+    component: src/routes/app/schema/classes_.$id.tsx
+    description: Outgoing relationship types (property definitions with this class as domain)
+  - selector: class-relationship-types-show-all
+    component: src/routes/app/schema/classes_.$id.tsx
+    description: Shows every outgoing relationship type instead of the first few
+  - selector: class-attributes-panel
+    component: src/routes/app/schema/classes_.$id.tsx
+    description: Attribute definitions of the class
+  - selector: individual-page
+    component: src/routes/app/data/individuals_.$id.tsx
+    description: Individual entity page root
+  - selector: individual-class-chip-*
+    component: src/routes/app/data/individuals_.$id.tsx
+    description: Class chip link in the individual's eyebrow (suffix is class id)
+  - selector: individual-relationships-panel
+    component: src/routes/app/data/individuals_.$id.tsx
+    description: Relationships grouped outgoing / incoming as sentences
+  - selector: individual-relationship-*
+    component: src/routes/app/data/individuals_.$id.tsx
+    description: One relationship sentence (suffix is relationship id)
+  - selector: individual-data-properties-panel
+    component: src/routes/app/data/individuals_.$id.tsx
+    description: Data property values of the individual
+  - selector: individual-provenance-panel
+    component: src/routes/app/data/individuals_.$id.tsx
+    description: Where the individual came from (import source, dates)

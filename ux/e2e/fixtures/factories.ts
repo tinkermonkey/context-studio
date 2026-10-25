@@ -201,7 +201,14 @@ export async function createClass(
  */
 export async function createPropertyDefinition(
   page: Page,
-  overrides?: { title?: string; description?: string; identifier?: string },
+  overrides?: {
+    title?: string;
+    description?: string;
+    identifier?: string;
+    canonical_predicate?: string;
+    domain_class_id?: string;
+    range_class_id?: string;
+  },
 ): Promise<PropertyDefinition> {
   const timestamp = getRunTimestamp();
   const identifier = overrides?.identifier || `prop-${timestamp}`;
@@ -214,6 +221,9 @@ export async function createPropertyDefinition(
       identifier,
       title,
       description,
+      canonical_predicate: overrides?.canonical_predicate,
+      domain_class_id: overrides?.domain_class_id,
+      range_class_id: overrides?.range_class_id,
     },
   });
 
@@ -348,11 +358,12 @@ async function drainCollection(page: Page, path: string): Promise<void> {
  * failures are swallowed (a test may not have created data).
  */
 export async function clearTestData(page: Page): Promise<void> {
-  await drainCollection(page, "/api/individuals");
   await drainCollection(page, "/api/relationships");
+  await drainCollection(page, "/api/individuals");
+  // Property definitions can name a class as domain/range, so they go before classes.
+  await drainCollection(page, "/api/properties");
   await drainCollection(page, "/api/classes"); // multi-pass clears the hierarchy leaf-first
   await drainCollection(page, "/api/schemes");
-  await drainCollection(page, "/api/properties");
   await drainCollection(page, "/api/taxonomies");
 }
 

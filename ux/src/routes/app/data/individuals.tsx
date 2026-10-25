@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useToasts } from "@/components/ui/Toast";
 import { Button, PageHeader, FilterBar, Icon, Chip, VersionPill } from "@tinkermonkey/heimdall-ui";
 import type { Column } from "@tinkermonkey/heimdall-ui";
@@ -15,9 +15,25 @@ import type { components } from "@/api/types";
 
 type IndividualResponse = components["schemas"]["IndividualResponse"];
 
+interface IndividualsSearchParams {
+  createForClass?: string;
+}
+
 export function IndividualsPage() {
   const surfaceRef = useRef<EntitySurfaceHandle>(null);
+  const navigate = useNavigate();
   const { toast } = useToasts();
+  const { createForClass } = useSearch({
+    from: "/app/data/individuals",
+  }) as IndividualsSearchParams;
+
+  // Cross-page create: a class page's "New individual" opens the create drawer for that class.
+  useEffect(() => {
+    if (createForClass && surfaceRef.current) {
+      surfaceRef.current.startCreate({ classIds: [createForClass] }, false);
+      navigate({ to: "/app/data/individuals", search: {}, replace: true });
+    }
+  }, [createForClass, navigate]);
   const paging = useListPaging();
   // Unfiltered total for "showing X of Y" (a limit=1 request).
   const { data: unfilteredCount } = useIndividuals({ limit: 1 });
@@ -209,5 +225,8 @@ export function IndividualsPage() {
 }
 
 export const Route = createFileRoute("/app/data/individuals")({
+  validateSearch: (search: Record<string, unknown>): IndividualsSearchParams => ({
+    createForClass: typeof search.createForClass === "string" ? search.createForClass : undefined,
+  }),
   component: IndividualsPage,
 });

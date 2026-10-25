@@ -170,6 +170,11 @@ const DYNAMIC_ROUTE_LABELS: Array<{
     pattern: /^\/app\/pipelines\/batches\/([^/]+)$/,
     labels: (m) => ["Pipelines", "Runs", `Batch ${decodeSegment(m[1])}`],
   },
+  // Entity pages replace these with their place in the hierarchy once loaded.
+  { pattern: /^\/app\/schema\/taxonomies\/[^/]+$/, labels: () => ["Schema", "Taxonomy"] },
+  { pattern: /^\/app\/schema\/schemes\/[^/]+$/, labels: () => ["Schema", "Concept scheme"] },
+  { pattern: /^\/app\/schema\/classes\/[^/]+$/, labels: () => ["Schema", "Class"] },
+  { pattern: /^\/app\/data\/individuals\/[^/]+$/, labels: () => ["Data", "Individual"] },
 ];
 
 export function getBreadcrumbLabels(pathname: string): string[] {

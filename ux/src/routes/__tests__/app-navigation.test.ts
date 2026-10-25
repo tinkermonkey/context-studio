@@ -80,6 +80,16 @@ describe("app navigation — pipelines", () => {
     ]);
   });
 
+  it.each([
+    ["/app/schema/taxonomies/t1", ["Schema", "Taxonomy"], "schema-taxonomies"],
+    ["/app/schema/schemes/s1", ["Schema", "Concept scheme"], "schema-schemes"],
+    ["/app/schema/classes/c1", ["Schema", "Class"], "schema-classes"],
+    ["/app/data/individuals/i1", ["Data", "Individual"], "data"],
+  ])("labels entity page %s until it supplies its own crumbs", (path, labels, sidebarId) => {
+    expect(getBreadcrumbLabels(path)).toEqual(labels);
+    expect(getActiveItemId(path)).toBe(sidebarId);
+  });
+
   it("keeps existing labels and falls back to the pathname", () => {
     expect(getBreadcrumbLabels("/app")).toEqual(["Dashboard"]);
     expect(getBreadcrumbLabels("/app/unknown")).toEqual(["/app/unknown"]);

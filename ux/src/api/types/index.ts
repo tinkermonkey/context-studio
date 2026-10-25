@@ -105,6 +105,36 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/taxonomies/{taxonomy_id}/scheme-counts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Taxonomy Scheme Counts
+     * @description Count the classes, individuals and property definitions of each scheme in a taxonomy.
+     *
+     *     Args:
+     *         taxonomy_id: The taxonomy ID
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         One entry per concept scheme in the taxonomy, ordered by scheme title
+     *
+     *     Raises:
+     *         HTTPException: 404 if the taxonomy is not found
+     */
+    get: operations["get_taxonomy_scheme_counts_api_taxonomies__taxonomy_id__scheme_counts_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/taxonomies/{taxonomy_id}/publish-diff": {
     parameters: {
       query?: never;
@@ -221,6 +251,36 @@ export interface paths {
      *         ListResponse containing matching concept schemes
      */
     get: operations["list_concept_schemes_api_schemes_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/schemes/{scheme_id}/class-counts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Scheme Class Counts
+     * @description Count the individuals, domain property definitions and outgoing relationships per class.
+     *
+     *     Args:
+     *         scheme_id: The concept scheme ID
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         One entry per class in the scheme, ordered by class title
+     *
+     *     Raises:
+     *         HTTPException: 404 if the scheme is not found
+     */
+    get: operations["get_scheme_class_counts_api_schemes__scheme_id__class_counts_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -539,6 +599,7 @@ export interface paths {
      *
      *     Args:
      *         is_relevant: Optional filter for relevant properties
+     *         domain_class_id: Optional domain class ID to filter by
      *         limit: Maximum number of results (1-5000, default 100)
      *         offset: Number of results to skip (default 0)
      *         sort_by: Field to sort by (title, created_at, last_modified)
@@ -4515,6 +4576,32 @@ export interface components {
       event_ids?: string[];
     };
     /**
+     * ClassCountsResponse
+     * @description Content counts for one class.
+     */
+    ClassCountsResponse: {
+      /**
+       * Class Id
+       * @description Class ID
+       */
+      class_id: string;
+      /**
+       * Individual Count
+       * @description Individuals typed by the class
+       */
+      individual_count: number;
+      /**
+       * Property Definition Count
+       * @description Property definitions with the class as domain
+       */
+      property_definition_count: number;
+      /**
+       * Relationship Count
+       * @description Relationships whose source is an individual of the class
+       */
+      relationship_count: number;
+    };
+    /**
      * ClassCreateRequest
      * @description Request to create a new class.
      */
@@ -6987,6 +7074,16 @@ export interface components {
        * @description Bare canonical relation verb this property represents (e.g. 'navigates-to') — the form extraction clamps predicates to
        */
       canonical_predicate?: string | null;
+      /**
+       * Domain Class Id
+       * @description Class the relationship's source must belong to
+       */
+      domain_class_id?: string | null;
+      /**
+       * Range Class Id
+       * @description Class the relationship's target must belong to
+       */
+      range_class_id?: string | null;
     };
     /**
      * PropertyDefinitionResponse
@@ -7018,6 +7115,16 @@ export interface components {
        * @description Bare canonical relation verb this property represents (e.g. 'navigates-to'), or null if not set
        */
       canonical_predicate?: string | null;
+      /**
+       * Domain Class Id
+       * @description Class the relationship's source must belong to, if constrained
+       */
+      domain_class_id?: string | null;
+      /**
+       * Range Class Id
+       * @description Class the relationship's target must belong to, if constrained
+       */
+      range_class_id?: string | null;
       /**
        * Is Relevant
        * @description Relevance flag (None=not evaluated, True=relevant, False=irrelevant)
@@ -7950,6 +8057,32 @@ export interface components {
       match_score?: number | null;
     };
     /**
+     * SchemeCountsResponse
+     * @description Content counts for one concept scheme.
+     */
+    SchemeCountsResponse: {
+      /**
+       * Scheme Id
+       * @description Concept scheme ID
+       */
+      scheme_id: string;
+      /**
+       * Class Count
+       * @description Classes in the scheme
+       */
+      class_count: number;
+      /**
+       * Individual Count
+       * @description Distinct individuals typed by at least one of the scheme's classes
+       */
+      individual_count: number;
+      /**
+       * Property Definition Count
+       * @description Property definitions whose domain is one of the scheme's classes
+       */
+      property_definition_count: number;
+    };
+    /**
      * SerializationScopeRequest
      * @description Request to specify what to export.
      */
@@ -8704,6 +8837,37 @@ export interface operations {
       };
     };
   };
+  get_taxonomy_scheme_counts_api_taxonomies__taxonomy_id__scheme_counts_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SchemeCountsResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   get_publish_diff_stats_api_taxonomies__taxonomy_id__publish_diff_get: {
     parameters: {
       query?: never;
@@ -8834,6 +8998,37 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ListResponse_ConceptSchemeResponse_"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_scheme_class_counts_api_schemes__scheme_id__class_counts_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        scheme_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ClassCountsResponse"][];
         };
       };
       /** @description Validation Error */
@@ -9297,6 +9492,8 @@ export interface operations {
       query?: {
         /** @description Optional filter for relevant properties */
         is_relevant?: boolean | null;
+        /** @description Only property definitions with this class as domain */
+        domain_class_id?: string | null;
         /** @description Maximum number of results */
         limit?: number;
         /** @description Number of results to skip */

@@ -15,9 +15,9 @@ Key responsibilities:
 from datetime import datetime, timezone
 from typing import Any, Literal, Optional, Sequence, cast
 
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session, aliased, sessionmaker
 
 from adapters.persistence.sqlite.mappers import (
     deserialize_data_properties,
@@ -56,7 +56,14 @@ from domain.ontology.exceptions import (
     IdentifierConflictError,
 )
 from domain.ontology.ports import EntityReference
-from domain.ontology.value_objects import DataType, NodeType, SearchCriteria, Status
+from domain.ontology.value_objects import (
+    ClassCounts,
+    DataType,
+    NodeType,
+    SchemeCounts,
+    SearchCriteria,
+    Status,
+)
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
@@ -1091,6 +1098,7 @@ class SQLiteOntologyRepository:
         sort_order: Literal["asc", "desc"] = "asc",
         query: Optional[str] = None,
         ids: Optional[list[str]] = None,
+        domain_class_id: Optional[str] = None,
     ) -> list[PropertyDefinition]:
         """
         Retrieve property definitions with optional filtering, pagination, sorting, and text search.
@@ -1103,24 +1111,13 @@ class SQLiteOntologyRepository:
             sort_order: Sort direction (asc or desc)
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of property definition IDs to restrict results to
+            domain_class_id: Optional class ID the property's domain must equal
 
         Returns:
             Sequence of PropertyDefinition entities
         """
         with self.session_factory() as session:
-            q = session.query(OntologyEntity).filter(
-                OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION
-            )
-
-            if is_relevant is not None:
-                q = q.filter(OntologyEntity.is_relevant == is_relevant)
-
-            if query:
-                q = q.filter(_text_match(query))
-
-            if ids is not None:
-                q = q.filter(OntologyEntity.id.in_(set(ids)))
-
+            q = self._property_definition_query(session, is_relevant, query, ids, domain_class_id)
             q = _apply_entity_sort(q, sort_by, sort_order)
 
             if limit is not None:
@@ -1128,38 +1125,155 @@ class SQLiteOntologyRepository:
             orm_entities = q.offset(offset).all()
             return [cast(PropertyDefinition, map_orm_to_domain(e)) for e in orm_entities]
 
+    @staticmethod
+    def _property_definition_query(
+        session: Session,
+        is_relevant: Optional[bool],
+        query: Optional[str],
+        ids: Optional[list[str]],
+        domain_class_id: Optional[str],
+    ) -> Any:
+        """Base query for property definitions with the list/count filters applied."""
+        q = session.query(OntologyEntity).filter(
+            OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION
+        )
+        if is_relevant is not None:
+            q = q.filter(OntologyEntity.is_relevant == is_relevant)
+        if query:
+            q = q.filter(_text_match(query))
+        if ids is not None:
+            q = q.filter(OntologyEntity.id.in_(set(ids)))
+        if domain_class_id is not None:
+            q = q.filter(OntologyEntity.domain_class_id == domain_class_id)
+        return q
+
     def count_property_definitions(
         self,
         is_relevant: Optional[bool] = None,
         query: Optional[str] = None,
         ids: Optional[list[str]] = None,
+        domain_class_id: Optional[str] = None,
     ) -> int:
         """
-        Count property definitions, optionally filtered by relevance, text search or ids.
+        Count property definitions, optionally filtered by relevance, text search, ids or domain.
 
         Args:
             is_relevant: Optional filter for relevant property definitions
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of property definition IDs to restrict the count to
+            domain_class_id: Optional class ID the property's domain must equal
 
         Returns:
             Total count of property definitions
         """
         with self.session_factory() as session:
-            q = session.query(OntologyEntity).filter(
-                OntologyEntity.node_type == NodeType.PROPERTY_DEFINITION
+            q = self._property_definition_query(session, is_relevant, query, ids, domain_class_id)
+            return int(q.count())
+
+    def count_by_scheme(self, taxonomy_id: str) -> list[SchemeCounts]:
+        """
+        Count each concept scheme's classes, individuals and property definitions.
+
+        Three grouped queries over the taxonomy's classes, independent of model size.
+
+        Args:
+            taxonomy_id: The taxonomy whose schemes to count
+
+        Returns:
+            One SchemeCounts per scheme in the taxonomy (zeros included), by title
+        """
+        cls = OntologyEntity
+        prop = aliased(OntologyEntity)
+        in_taxonomy = (cls.node_type == NodeType.CLASS, cls.taxonomy_id == taxonomy_id)
+        with self.session_factory() as session:
+            scheme_ids = [
+                row[0]
+                for row in session.query(cls.id)
+                .filter(cls.node_type == NodeType.CONCEPT_SCHEME, cls.taxonomy_id == taxonomy_id)
+                .order_by(cls.title)
+            ]
+            class_counts = dict(
+                session.query(cls.concept_scheme_id, func.count(cls.id))
+                .filter(*in_taxonomy)
+                .group_by(cls.concept_scheme_id)
+                .all()
             )
+            individual_counts = dict(
+                session.query(
+                    cls.concept_scheme_id, func.count(func.distinct(IndividualClass.individual_id))
+                )
+                .join(IndividualClass, IndividualClass.class_id == cls.id)
+                .filter(*in_taxonomy)
+                .group_by(cls.concept_scheme_id)
+                .all()
+            )
+            property_counts = dict(
+                session.query(cls.concept_scheme_id, func.count(prop.id))
+                .join(prop, prop.domain_class_id == cls.id)
+                .filter(*in_taxonomy, prop.node_type == NodeType.PROPERTY_DEFINITION)
+                .group_by(cls.concept_scheme_id)
+                .all()
+            )
+        return [
+            SchemeCounts(
+                scheme_id=str(scheme_id),
+                class_count=int(class_counts.get(scheme_id, 0)),
+                individual_count=int(individual_counts.get(scheme_id, 0)),
+                property_definition_count=int(property_counts.get(scheme_id, 0)),
+            )
+            for scheme_id in scheme_ids
+        ]
 
-            if is_relevant is not None:
-                q = q.filter(OntologyEntity.is_relevant == is_relevant)
+    def count_by_class(self, concept_scheme_id: str) -> list[ClassCounts]:
+        """
+        Count each class's individuals, domain property definitions and outgoing relationships.
 
-            if query:
-                q = q.filter(_text_match(query))
+        Three grouped queries over the scheme's classes, independent of model size.
 
-            if ids is not None:
-                q = q.filter(OntologyEntity.id.in_(set(ids)))
+        Args:
+            concept_scheme_id: The concept scheme whose classes to count
 
-            return q.count()
+        Returns:
+            One ClassCounts per class in the scheme (zeros included), by title
+        """
+        cls = OntologyEntity
+        prop = aliased(OntologyEntity)
+        in_scheme = (cls.node_type == NodeType.CLASS, cls.concept_scheme_id == concept_scheme_id)
+        with self.session_factory() as session:
+            class_ids = [
+                row[0] for row in session.query(cls.id).filter(*in_scheme).order_by(cls.title)
+            ]
+            individual_counts = dict(
+                session.query(cls.id, func.count(IndividualClass.individual_id))
+                .join(IndividualClass, IndividualClass.class_id == cls.id)
+                .filter(*in_scheme)
+                .group_by(cls.id)
+                .all()
+            )
+            relationship_counts = dict(
+                session.query(cls.id, func.count(RelationshipORM.id))
+                .join(IndividualClass, IndividualClass.class_id == cls.id)
+                .join(RelationshipORM, RelationshipORM.source_id == IndividualClass.individual_id)
+                .filter(*in_scheme)
+                .group_by(cls.id)
+                .all()
+            )
+            property_counts = dict(
+                session.query(cls.id, func.count(prop.id))
+                .join(prop, prop.domain_class_id == cls.id)
+                .filter(*in_scheme, prop.node_type == NodeType.PROPERTY_DEFINITION)
+                .group_by(cls.id)
+                .all()
+            )
+        return [
+            ClassCounts(
+                class_id=str(class_id),
+                individual_count=int(individual_counts.get(class_id, 0)),
+                property_definition_count=int(property_counts.get(class_id, 0)),
+                relationship_count=int(relationship_counts.get(class_id, 0)),
+            )
+            for class_id in class_ids
+        ]
 
     def find_references(self, entity_ids: Sequence[str]) -> list[EntityReference]:
         """

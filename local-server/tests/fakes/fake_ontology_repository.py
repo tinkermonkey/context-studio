@@ -19,7 +19,7 @@ from domain.ontology.entities import (
 )
 from domain.ontology.exceptions import DuplicateEntityError
 from domain.ontology.ports import EntityReference
-from domain.ontology.value_objects import SearchCriteria
+from domain.ontology.value_objects import ClassCounts, SchemeCounts, SearchCriteria
 
 
 def _text_matches(entity: Any, query: str | None) -> bool:
@@ -369,10 +369,13 @@ class FakeOntologyRepository:
         sort_order: str = "asc",
         query: str | None = None,
         ids: list[str] | None = None,
+        domain_class_id: str | None = None,
     ) -> list[PropertyDefinition]:
         results = list(self._property_definitions.values())
         if is_relevant is not None:
             results = [p for p in results if p.is_relevant == is_relevant]
+        if domain_class_id is not None:
+            results = [p for p in results if p.domain_class_id == domain_class_id]
 
         results = [p for p in results if _text_matches(p, query)]
         if ids is not None:
@@ -404,12 +407,65 @@ class FakeOntologyRepository:
         is_relevant: bool | None = None,
         query: str | None = None,
         ids: list[str] | None = None,
+        domain_class_id: str | None = None,
     ) -> int:
         return len(
             self.list_property_definitions(
-                is_relevant=is_relevant, limit=None, query=query, ids=ids
+                is_relevant=is_relevant,
+                limit=None,
+                query=query,
+                ids=ids,
+                domain_class_id=domain_class_id,
             )
         )
+
+    def count_by_scheme(self, taxonomy_id: str) -> list[SchemeCounts]:
+        schemes = sorted(
+            (s for s in self._schemes.values() if s.taxonomy_id == taxonomy_id),
+            key=lambda s: s.title,
+        )
+        counts = []
+        for scheme in schemes:
+            class_ids = {c.id for c in self._classes.values() if c.concept_scheme_id == scheme.id}
+            counts.append(
+                SchemeCounts(
+                    scheme_id=scheme.id,
+                    class_count=len(class_ids),
+                    individual_count=sum(
+                        1 for i in self._individuals.values() if class_ids & set(i.class_ids)
+                    ),
+                    property_definition_count=sum(
+                        1
+                        for p in self._property_definitions.values()
+                        if p.domain_class_id in class_ids
+                    ),
+                )
+            )
+        return counts
+
+    def count_by_class(self, concept_scheme_id: str) -> list[ClassCounts]:
+        classes = sorted(
+            (c for c in self._classes.values() if c.concept_scheme_id == concept_scheme_id),
+            key=lambda c: c.title,
+        )
+        counts = []
+        for cls in classes:
+            member_ids = {i.id for i in self._individuals.values() if cls.id in i.class_ids}
+            counts.append(
+                ClassCounts(
+                    class_id=cls.id,
+                    individual_count=len(member_ids),
+                    property_definition_count=sum(
+                        1
+                        for p in self._property_definitions.values()
+                        if p.domain_class_id == cls.id
+                    ),
+                    relationship_count=sum(
+                        1 for r in self._relationships.values() if r.source_id in member_ids
+                    ),
+                )
+            )
+        return counts
 
     def find_references(self, entity_ids: Sequence[str]) -> list[EntityReference]:
         """Rows that reference any of the given entities, as the SQLite FKs see them."""

@@ -12,6 +12,7 @@ import { useCommandPaletteActions } from "@/hooks/useCommandPaletteActions";
 import { createStaticPaletteActions } from "@/config/staticPaletteActions";
 import { getWorkspacePath } from "@/lib/workspaceStorage";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
+import { useBreadcrumbStore } from "@/stores/breadcrumbs";
 import { useHealth, useConfig } from "@/api/hooks/admin";
 import { useEntityCounts } from "@/api/hooks/ontology/useEntityCounts";
 import {
@@ -121,8 +122,14 @@ function AppShell() {
 
   const pathname = location.pathname;
   const activeItemId = getActiveItemId(pathname);
-  const crumbs = getBreadcrumbLabels(pathname);
-  const breadcrumbs = [{ label: workspaceName }, ...crumbs.map((label) => ({ label }))];
+  const pageCrumbs = useBreadcrumbStore((s) => (s.pathname === pathname ? s.crumbs : null));
+  const crumbs = pageCrumbs
+    ? pageCrumbs.map(({ label, to }) => ({
+        label,
+        onClick: to ? () => navigate({ to }) : undefined,
+      }))
+    : getBreadcrumbLabels(pathname).map((label) => ({ label }));
+  const breadcrumbs = [{ label: workspaceName }, ...crumbs];
 
   const isHealthy = !isError && health?.status === "healthy";
   const isDegraded = !isError && health?.status === "degraded";

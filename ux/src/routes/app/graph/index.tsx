@@ -11,6 +11,7 @@ import {
   filterGraphView,
   neighborhood,
   type GraphFilter,
+  type GraphSearchParams,
   type GraphLayoutMode,
 } from "@/components/graph/graphLayers";
 import { MetricsPanel } from "@/components/graph/MetricsPanel";
@@ -24,28 +25,55 @@ import { COPY } from "./-copy";
 import "@/design-system/graph.css";
 
 export const Route = createFileRoute("/app/graph/")({
-  component: GraphPage,
+  validateSearch: (search: Record<string, unknown>): GraphSearchParams => ({
+    focus: typeof search.focus === "string" ? search.focus : undefined,
+    layers: Array.isArray(search.layers)
+      ? search.layers.filter((id): id is string => typeof id === "string")
+      : undefined,
+  }),
+  component: GraphRoute,
 });
+
+function GraphRoute() {
+  const { focus, layers } = Route.useSearch();
+  // Remount on a new deep link so the initial focus/layers apply again.
+  return (
+    <GraphPage
+      key={`${focus ?? ""}|${layers?.join(",") ?? ""}`}
+      initialFocusId={focus}
+      initialLayerIds={layers}
+    />
+  );
+}
 
 const NODE_TAB = "node";
 const GRAPH_SPLIT_PERCENT = 68;
 const GRAPH_MIN_WIDTH_PX = 360;
 const GRAPH_MAX_WIDTH_PX = 4000;
 
-export function GraphPage() {
+interface GraphPageProps {
+  initialFocusId?: string;
+  initialLayerIds?: string[];
+}
+
+export function GraphPage({ initialFocusId, initialLayerIds }: GraphPageProps = {}) {
   const graphView = useGraphView();
   const buildGraph = useBuildGraph();
   const { toast } = useToasts();
 
-  const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>();
+  const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>(initialFocusId);
   const [activeTab, setActiveTab] = useState<string>(NODE_TAB);
   // null until the user changes the layer selection; falls back to the default subset.
-  const [layerIds, setLayerIds] = useState<string[] | null>(null);
+  const [layerIds, setLayerIds] = useState<string[] | null>(
+    initialLayerIds?.length ? initialLayerIds : null,
+  );
   const [classIds, setClassIds] = useState<string[]>([]);
   // null until the user picks a kind; defaults to individuals when the graph has any.
   const [nodeKind, setNodeKind] = useState<GraphFilter["nodeKind"] | null>(null);
   const [layout, setLayout] = useState<GraphLayoutMode>("layered");
-  const [focus, setFocus] = useState<GraphFocus | null>(null);
+  const [focus, setFocus] = useState<GraphFocus | null>(
+    initialFocusId ? { nodeId: initialFocusId, depth: 1 } : null,
+  );
 
   const view = graphView.data;
 

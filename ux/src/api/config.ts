@@ -39,6 +39,11 @@ export const QUERY_KEYS = {
   classesRoot: ["classes"] as const,
   classes: (params?: object) => ["classes", params] as const,
   class: (id: string) => ["classes", id] as const,
+  // Content counts live under the classes root: class, individual and
+  // relationship mutations already invalidate it.
+  contentCountsRoot: ["classes", "counts"] as const,
+  schemeCounts: (taxonomyId: string) => ["classes", "counts", "by-scheme", taxonomyId] as const,
+  classCounts: (schemeId: string) => ["classes", "counts", "by-class", schemeId] as const,
   individualsRoot: ["individuals"] as const,
   individuals: (params?: object) => ["individuals", params] as const,
   individual: (id: string, resource?: string) =>
