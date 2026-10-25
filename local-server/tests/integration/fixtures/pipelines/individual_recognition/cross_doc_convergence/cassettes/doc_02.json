@@ -1,5 +1,5 @@
 {
-  "0bf44f7a5fa58afcbef30128545fd6ae3f5e0c41fd6dfacb9fd18643f3f89473": {
+  "1108aaf98ff0fbf3330b062e1e812fb5a30d56970d010a983ad09585280b8372": {
     "content": "{\"triples\": [{\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"ingest worker\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"application.applicationcomponent\"}, \"confidence\": 0.95}, {\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"Metrics Store\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"application.dataobject\"}, \"confidence\": 0.95}]}",
     "tokens_in": 1,
     "tokens_out": 1,

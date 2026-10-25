@@ -1,5 +1,5 @@
 {
-  "0c08eff5abf6a25d2ae94a525b34def419d0fb12b00a0217c2974b76e7ea8b82": {
+  "c9771f4d3ded5366f9724496fc2aa3c36eb489269a1e6412b337e1936a70b911": {
     "content": "{\"triples\": [{\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"Kubernetes\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"technology.systemsoftware\"}, \"confidence\": 0.95}, {\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"Nf-PEAK\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"application.applicationcomponent\"}, \"confidence\": 0.95}, {\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"RAPL Counter\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"technology.systemsoftware\"}, \"confidence\": 0.95}, {\"subject\": {\"kind\": \"individual\", \"id\": \"\", \"label\": \"Data Object\"}, \"predicate\": {\"label\": \"is_a\"}, \"object\": {\"kind\": \"class\", \"label\": \"application.dataobject\"}, \"confidence\": 0.95}]}",
     "tokens_in": 1,
     "tokens_out": 1,
