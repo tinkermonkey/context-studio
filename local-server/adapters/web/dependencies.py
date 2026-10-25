@@ -36,6 +36,7 @@ from sqlalchemy.orm import Session
 from adapters.persistence.sqlite.connection import DatabaseManager
 from domain.admin.demo_dataset_service import LoadDemoDataset
 from domain.admin.services import AdminService
+from domain.chat.services import ChatService
 from domain.extraction.ports import ReferenceSource
 from domain.extraction.services import ExtractionService
 from domain.graph.services import GraphAnalysisService
@@ -81,6 +82,19 @@ async def get_graph_service(request: Request) -> GraphAnalysisService:
     service = getattr(request.app.state, "graph_service", None)
     if service is None:
         raise RuntimeError("GraphAnalysisService not initialized in app.state")
+    return service
+
+
+async def get_chat_service(request: Request) -> ChatService:
+    """
+    Extract the ChatService from app state.
+
+    Raises:
+        RuntimeError: If service is not initialized in app.state
+    """
+    service = getattr(request.app.state, "chat_service", None)
+    if service is None:
+        raise RuntimeError("ChatService not initialized in app.state")
     return service
 
 

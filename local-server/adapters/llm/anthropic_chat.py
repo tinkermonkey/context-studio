@@ -16,6 +16,7 @@ import anthropic
 from domain.chat.entities import ChatMessage
 from domain.chat.value_objects import (
     ContentBlock,
+    ContextBlock,
     ModelEvent,
     ModelTurnEnded,
     ReasoningBlock,
@@ -104,7 +105,7 @@ def to_anthropic_message(message: ChatMessage) -> dict[str, Any]:
     """Convert a chat message to an Anthropic Messages API message."""
     content: list[dict[str, Any]] = []
     for block in message.blocks:
-        if isinstance(block, TextBlock):
+        if isinstance(block, (TextBlock, ContextBlock)):
             if block.text:
                 content.append({"type": "text", "text": block.text})
         elif isinstance(block, ToolUseBlock):

@@ -22,6 +22,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from adapters.chat.context import ConfigChatSettings, OntologyWorkspaceContext
+from adapters.chat.tools import build_chat_tools
 from adapters.clustering.sklearn_clusterer import SklearnClusterer
 
 # Import admin adapters and services
@@ -37,6 +39,7 @@ from adapters.metrics.system_collector import SystemMetricsCollector
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from adapters.persistence.sqlite.batch_repo import BatchRepository
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
+from adapters.persistence.sqlite.chat_repo import SqliteConversationRepository
 
 # Import adapters
 from adapters.persistence.sqlite.connection import DatabaseManager
@@ -71,6 +74,7 @@ from adapters.sync.s3_sync import S3SyncAdapter
 from adapters.telemetry import setup_telemetry
 from adapters.telemetry.log_bridge import OTLPLogHandler
 from adapters.web.admin_routes import router as admin_router
+from adapters.web.chat_routes import router as chat_router
 from adapters.web.extraction_routes import router as extraction_router
 from adapters.web.graph_routes import router as graph_router
 from adapters.web.interchange_routes import router as interchange_router
@@ -85,6 +89,7 @@ from config import SyncAdapterType, get_config_manager, get_settings
 from domain.admin.demo_dataset_service import LoadDemoDataset
 from domain.admin.exceptions import ConfigurationError
 from domain.admin.services import AdminService
+from domain.chat.services import ChatService
 from domain.extraction.events import ExtractionCompleted
 from domain.extraction.ports import ReferenceSource
 from domain.extraction.services import ExtractionService
@@ -751,6 +756,21 @@ async def lifespan(app: FastAPI):
         app.state.clusterer = clusterer
         app.state.schema_vector_index = schema_vector_index
 
+        # Chat assistant: read-only tools over the ontology and graph services
+        app.state.chat_service = ChatService(
+            model=llm_router,
+            tools=build_chat_tools(
+                ontology_service,
+                graph_service,
+                embedding=embedding_service,
+                schema_index=schema_vector_index,
+                individual_index=individual_vector_index,
+            ),
+            repository=SqliteConversationRepository(operations_session_factory),
+            settings=ConfigChatSettings(config_manager),
+            workspace=OntologyWorkspaceContext(ontology_service),
+        )
+
         logger.info("Services registered in app.state for dependency injection")
 
         # Instrument app after FastAPI and database are initialized
@@ -805,6 +825,7 @@ app.include_router(reference_router)
 app.include_router(versioning_router)
 app.include_router(admin_router)
 app.include_router(interchange_router)
+app.include_router(chat_router)
 
 
 # ==================== Exception Handlers ====================

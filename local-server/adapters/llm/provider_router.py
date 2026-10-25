@@ -184,6 +184,15 @@ class LLMProviderRouter:
         assert auth_error is not None
         raise auth_error
 
+    def supports_model(self, model: str) -> bool:
+        """Whether a chat-capable provider that hasn't rejected its key serves the model."""
+        return any(
+            name in self._chat_models
+            and name not in self._rejected_providers
+            and provider.is_model_available(model)
+            for name, provider in self._providers.items()
+        )
+
     async def stream_chat(
         self,
         *,

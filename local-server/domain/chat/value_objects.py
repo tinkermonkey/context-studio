@@ -2,7 +2,8 @@
 Value objects for the Chat bounded context.
 
 Content blocks make up chat messages in a provider-neutral form. Model events
-are what a ChatModel yields while streaming one model turn.
+are what a ChatModel yields while streaming one model turn; chat events are
+what ChatService yields while running one user turn.
 """
 
 from __future__ import annotations
@@ -10,6 +11,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Mapping, Optional, Union
+
+# Entity kinds the assistant links to, as `entity:<kind>/<id>`. Each maps to an
+# entity page in the UI (property definitions have no page yet).
+ENTITY_KINDS = ("taxonomy", "scheme", "class", "individual", "property")
 
 
 class ChatRole(str, Enum):
@@ -29,6 +34,15 @@ class StopReason(str, Enum):
     OTHER = "other"
 
 
+@dataclass(frozen=True)
+class EntityRef:
+    """A workspace entity a tool returned, so answers can link to its page."""
+
+    id: str
+    kind: str
+    title: str
+
+
 # ============================================================================
 # Content blocks
 # ============================================================================
@@ -37,6 +51,20 @@ class StopReason(str, Enum):
 @dataclass(frozen=True)
 class TextBlock:
     """Plain text written by the user or the model."""
+
+    text: str
+
+
+@dataclass(frozen=True)
+class ContextBlock:
+    """
+    Text the app adds to a user message for the model only.
+
+    Carries the workspace summary and the page the user is viewing. Sent to the
+    model as text, never shown as the user's words. Kept in the stored message
+    (rather than the system prompt) so earlier requests stay unchanged, which
+    models that replay reasoning blocks require.
+    """
 
     text: str
 
@@ -52,11 +80,23 @@ class ToolUseBlock:
 
 @dataclass(frozen=True)
 class ToolResultBlock:
-    """The result of a tool call, sent back to the model."""
+    """
+    The result of a tool call, sent back to the model.
+
+    Attributes:
+        tool_use_id: The tool call this answers
+        content: Text sent to the model
+        is_error: Whether the tool failed
+        summary: Short human-readable summary for the UI (not sent to the model)
+        entities: Entities the result mentions, so stored conversations can
+            still validate entity links (not sent to the model)
+    """
 
     tool_use_id: str
     content: str
     is_error: bool = False
+    summary: str = ""
+    entities: tuple[EntityRef, ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)
@@ -74,7 +114,7 @@ class ReasoningBlock:
     data: Mapping[str, Any]
 
 
-ContentBlock = Union[TextBlock, ToolUseBlock, ToolResultBlock, ReasoningBlock]
+ContentBlock = Union[TextBlock, ContextBlock, ToolUseBlock, ToolResultBlock, ReasoningBlock]
 
 
 # ============================================================================
@@ -101,15 +141,6 @@ class PageContext:
 
 
 @dataclass(frozen=True)
-class EntityRef:
-    """A workspace entity a tool returned, so answers can link to its page."""
-
-    id: str
-    kind: str
-    title: str
-
-
-@dataclass(frozen=True)
 class ToolOutcome:
     """
     What a tool returns.
@@ -125,6 +156,15 @@ class ToolOutcome:
     summary: str
     entities: tuple[EntityRef, ...] = field(default_factory=tuple)
     is_error: bool = False
+
+
+@dataclass(frozen=True)
+class ChatStatus:
+    """Whether chat can run: the configured model and whether a provider serves it."""
+
+    model: str
+    available: bool
+    max_tool_rounds: int
 
 
 # ============================================================================
@@ -166,3 +206,47 @@ class ModelTurnEnded:
 
 
 ModelEvent = Union[TextDelta, ToolCallRequested, ModelTurnEnded]
+
+
+# ============================================================================
+# Chat events (yielded by ChatService.send); TextDelta is shared
+# ============================================================================
+
+
+@dataclass(frozen=True)
+class ToolStarted:
+    """A tool began running."""
+
+    tool_use_id: str
+    name: str
+    input: Mapping[str, Any]
+
+
+@dataclass(frozen=True)
+class ToolFinished:
+    """A tool finished; `entities` are the refs answers may link to."""
+
+    tool_use_id: str
+    name: str
+    summary: str
+    entities: tuple[EntityRef, ...]
+    is_error: bool
+
+
+@dataclass(frozen=True)
+class TurnCompleted:
+    """The assistant finished answering the user's message."""
+
+    stop_reason: StopReason
+    tokens_in: int
+    tokens_out: int
+
+
+@dataclass(frozen=True)
+class ChatFailed:
+    """The turn failed; `message` is safe to show the user."""
+
+    message: str
+
+
+ChatEvent = Union[TextDelta, ToolStarted, ToolFinished, TurnCompleted, ChatFailed]

@@ -4,7 +4,17 @@ SQLAlchemy ORM models for operations.db.
 
 from typing import Optional
 
-from sqlalchemy import Boolean, Column, Float, Integer, String, Text
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import declarative_base
 
 OperationsBase = declarative_base()  # type: ignore[valid-type]
@@ -38,3 +48,43 @@ class PipelineConfiguration(OperationsBase):  # type: ignore[valid-type,misc]
     deleted_at: Optional[str] = Column(String)  # type: ignore[assignment]
     created_at: str = Column(String, nullable=False)  # type: ignore[assignment]
     updated_at: str = Column(String, nullable=False)  # type: ignore[assignment]
+
+
+class ChatConversation(OperationsBase):  # type: ignore[valid-type,misc]
+    """A conversation with the chat assistant."""
+
+    __tablename__ = "chat_conversations"
+
+    id: str = Column(String, primary_key=True)  # type: ignore[assignment]
+    title: str = Column(String, nullable=False)  # type: ignore[assignment]
+    model: str = Column(String, nullable=False)  # type: ignore[assignment]
+    created_at: str = Column(String, nullable=False)  # type: ignore[assignment]
+    updated_at: str = Column(String, nullable=False, index=True)  # type: ignore[assignment]
+
+
+class ChatMessageRecord(OperationsBase):  # type: ignore[valid-type,misc]
+    """
+    One message in a chat conversation.
+
+    `blocks` holds the message content as a JSON list of typed blocks (text,
+    context, tool_use, tool_result, reasoning); `page_context` the page the user
+    was viewing, for user messages.
+    """
+
+    __tablename__ = "chat_messages"
+    __table_args__ = (UniqueConstraint("conversation_id", "seq", name="uk_chat_message_seq"),)
+
+    id: str = Column(String, primary_key=True)  # type: ignore[assignment]
+    conversation_id: str = Column(  # type: ignore[assignment]
+        String,
+        ForeignKey("chat_conversations.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    seq: int = Column(Integer, nullable=False)  # type: ignore[assignment]
+    role: str = Column(String, nullable=False)  # type: ignore[assignment]
+    blocks: list = Column(JSON, nullable=False)  # type: ignore[assignment]
+    page_context: Optional[dict] = Column(JSON)  # type: ignore[assignment]
+    tokens_in: int = Column(Integer, nullable=False, default=0)  # type: ignore[assignment]
+    tokens_out: int = Column(Integer, nullable=False, default=0)  # type: ignore[assignment]
+    created_at: str = Column(String, nullable=False)  # type: ignore[assignment]
