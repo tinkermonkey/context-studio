@@ -1570,6 +1570,13 @@ class TestCreatePropertyDefinition:
         with pytest.raises(DuplicateEntityError, match="title"):
             service.create_property_definition(identifier="also_is_a", title="Is A")
 
+    def test_create_property_definition_overlapping_title_is_not_duplicate(self, service):
+        """Titles that merely contain (or are contained in) an existing title are distinct."""
+        service.create_property_definition(identifier="is_a", title="Is A")
+        longer = service.create_property_definition(identifier="is_a_type", title="Is A Type")
+        shorter = service.create_property_definition(identifier="is", title="Is")
+        assert {longer.title, shorter.title} == {"Is A Type", "Is"}
+
     def test_create_property_definition_empty_identifier_raises(self, service):
         """Empty identifier raises ValueError."""
         with pytest.raises(ValueError, match="Identifier cannot be empty"):
