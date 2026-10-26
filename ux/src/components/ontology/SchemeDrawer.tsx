@@ -75,7 +75,8 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
   const handleSaveDescription = async (value: string) => {
     if (value === (scheme.description ?? "")) return;
     try {
-      await updateMutation.mutateAsync({ id: scheme.id, data: { description: value || null } });
+      // "" clears the scope note; null would mean "leave unchanged".
+      await updateMutation.mutateAsync({ id: scheme.id, data: { description: value } });
     } catch (error) {
       const message = error instanceof ApiError ? error.detail : "Failed to save description";
       toast("error", message);

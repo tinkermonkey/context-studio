@@ -76,6 +76,8 @@ describe("TaxonomyPage", () => {
     const summary = await screen.findByTestId("taxonomy-summary-text");
     expect(summary).toHaveClass("entity-definition");
     expect(summary).toHaveTextContent("Architecture ontology");
+    // The header no longer repeats the summary.
+    expect(screen.getAllByText("Architecture ontology")).toHaveLength(1);
     const vision = screen.getByTestId("taxonomy-vision-text");
     expect(vision).toHaveClass("intent-markdown");
     expect(within(vision).getByRole("heading", { name: "Design charter" })).toBeInTheDocument();

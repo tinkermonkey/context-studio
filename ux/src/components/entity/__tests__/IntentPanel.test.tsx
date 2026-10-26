@@ -30,13 +30,21 @@ describe("IntentPanel", () => {
     expect(screen.getByTestId("taxonomy-summary-edit")).toHaveTextContent("Edit summary");
   });
 
-  it("renders markdown when asked", () => {
-    renderPanel({ title: "Vision", markdown: true, value: "## Purpose\n\n- one\n- two" });
+  it("renders markdown in a focusable region, headings below the page title", () => {
+    renderPanel({
+      title: "Vision",
+      markdown: true,
+      value: "# Charter\n\n## Purpose\n\n- one\n- two\n\n![diagram](docs/x.png)",
+    });
 
-    const text = screen.getByTestId("taxonomy-summary-text");
-    expect(text).toHaveClass("intent-markdown");
-    expect(screen.getByRole("heading", { name: "Purpose" })).toBeInTheDocument();
+    const region = screen.getByRole("region", { name: "Vision" });
+    expect(region).toHaveClass("intent-markdown");
+    expect(region).toHaveAttribute("tabindex", "0");
+    expect(screen.getByRole("heading", { name: "Charter", level: 3 })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Purpose", level: 4 })).toBeInTheDocument();
     expect(screen.getAllByRole("listitem")).toHaveLength(2);
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    expect(screen.getByText("[diagram]")).toBeInTheDocument();
   });
 
   it("opens absolute links in a new tab and shows relative links as text", () => {
@@ -88,11 +96,55 @@ describe("IntentPanel", () => {
 
   it("keeps the editor open when saving fails", async () => {
     const user = userEvent.setup();
-    renderPanel({ onSave: vi.fn().mockRejectedValue(new Error("boom")) });
+    const onSave = vi.fn().mockRejectedValue(new Error("boom"));
+    renderPanel({ onSave });
+
+    await user.click(screen.getByTestId("taxonomy-summary-edit"));
+    await user.type(screen.getByTestId("taxonomy-summary-input"), " more");
+    await user.click(screen.getByTestId("taxonomy-summary-save"));
+
+    expect(onSave).toHaveBeenCalledWith("A household knowledge graph. more");
+    expect(await screen.findByTestId("taxonomy-summary-input")).toHaveValue(
+      "A household knowledge graph. more",
+    );
+  });
+
+  it("closes without saving when nothing changed", async () => {
+    const user = userEvent.setup();
+    const { onSave } = renderPanel({ value: "A household knowledge graph.\n" });
 
     await user.click(screen.getByTestId("taxonomy-summary-edit"));
     await user.click(screen.getByTestId("taxonomy-summary-save"));
 
-    expect(await screen.findByTestId("taxonomy-summary-input")).toBeInTheDocument();
+    expect(onSave).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("taxonomy-summary-input")).not.toBeInTheDocument();
+  });
+
+  it("saves an empty string to clear the value", async () => {
+    const user = userEvent.setup();
+    const { onSave } = renderPanel();
+
+    await user.click(screen.getByTestId("taxonomy-summary-edit"));
+    await user.clear(screen.getByTestId("taxonomy-summary-input"));
+    await user.click(screen.getByTestId("taxonomy-summary-save"));
+
+    expect(onSave).toHaveBeenCalledWith("");
+  });
+
+  it("disables Save and Cancel while saving", async () => {
+    const user = userEvent.setup();
+    let finish: () => void = () => {};
+    renderPanel({ onSave: vi.fn(() => new Promise<void>((resolve) => (finish = resolve))) });
+
+    await user.click(screen.getByTestId("taxonomy-summary-edit"));
+    await user.type(screen.getByTestId("taxonomy-summary-input"), "!");
+    await user.click(screen.getByTestId("taxonomy-summary-save"));
+
+    expect(screen.getByTestId("taxonomy-summary-save")).toBeDisabled();
+    expect(screen.getByTestId("taxonomy-summary-cancel")).toBeDisabled();
+    finish();
+    await vi.waitFor(() =>
+      expect(screen.queryByTestId("taxonomy-summary-input")).not.toBeInTheDocument(),
+    );
   });
 });

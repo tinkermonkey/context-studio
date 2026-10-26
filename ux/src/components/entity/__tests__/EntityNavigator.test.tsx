@@ -153,7 +153,9 @@ describe("EntityNavigator — Data mode", () => {
   });
 
   it("highlights non-zero individual counts, and only in Data mode", async () => {
-    const { unmount } = render(<EntityNavigator defaultMode="data" expandIds={["tax-1", "scheme-1"]} />);
+    const { unmount } = render(
+      <EntityNavigator defaultMode="data" expandIds={["tax-1", "scheme-1"]} />,
+    );
 
     expect((await screen.findAllByText("2 individuals"))[0].closest(".hierarchy-row")).toHaveClass(
       "hierarchy-row--has-individuals",

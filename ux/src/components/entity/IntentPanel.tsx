@@ -1,8 +1,6 @@
 import { useState } from "react";
 import Markdown, { type Components } from "react-markdown";
 import { Button, Panel, TextArea } from "@tinkermonkey/heimdall-ui";
-import { ApiError } from "@/api/client/interceptors";
-import { useToasts } from "@/components/ui/Toast";
 
 interface IntentPanelProps {
   /** Root test id; the controls derive theirs from it (`-edit`, `-input`, `-save`, `-text`). */
@@ -16,7 +14,7 @@ interface IntentPanelProps {
   /** Render the value as markdown (a vision) rather than plain text (a summary or scope note). */
   markdown?: boolean;
   rows?: number;
-  /** Saves the edited text; '' clears it. */
+  /** Saves the edited text; '' clears it. A rejection keeps the editor open (the app-wide toast reports it). */
   onSave: (value: string) => Promise<unknown>;
 }
 
@@ -34,6 +32,12 @@ const markdownComponents: Components = {
     ) : (
       <span>{children}</span>
     ),
+  // Images would point into the project's repo or load from elsewhere: show their alt text.
+  img: ({ alt }) => (alt ? <span>[{alt}]</span> : null),
+  // The page title is the h1, so the vision's own headings start a level below it.
+  h1: ({ children }) => <h3>{children}</h3>,
+  h2: ({ children }) => <h4>{children}</h4>,
+  h3: ({ children }) => <h5>{children}</h5>,
 };
 
 /**
@@ -50,7 +54,6 @@ export function IntentPanel({
   rows = 4,
   onSave,
 }: IntentPanelProps) {
-  const { toast } = useToasts();
   const [draft, setDraft] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const editing = draft !== null;
@@ -58,12 +61,18 @@ export function IntentPanel({
 
   const save = async () => {
     if (draft === null) return;
+    const next = draft.trim();
+    // Nothing changed: close without saving, so no empty change lands in the history.
+    if (next === (value ?? "").trim()) {
+      setDraft(null);
+      return;
+    }
     setSaving(true);
     try {
-      await onSave(draft.trim());
+      await onSave(next);
       setDraft(null);
-    } catch (error) {
-      toast("error", error instanceof ApiError ? error.detail : `Failed to save the ${label}`);
+    } catch {
+      // The app-wide mutation error toast reports the failure; keep the draft to retry.
     } finally {
       setSaving(false);
     }
@@ -111,6 +120,7 @@ export function IntentPanel({
               variant="ghost"
               size="sm"
               onClick={() => setDraft(null)}
+              disabled={saving}
               data-testid={`${testId}-cancel`}
             >
               Cancel
@@ -124,7 +134,13 @@ export function IntentPanel({
               {emptyText}
             </p>
           ) : markdown ? (
-            <div className="intent-markdown" data-testid={`${testId}-text`}>
+            <div
+              className="intent-markdown"
+              role="region"
+              aria-label={title}
+              tabIndex={0}
+              data-testid={`${testId}-text`}
+            >
               <Markdown components={markdownComponents}>{value}</Markdown>
             </div>
           ) : (

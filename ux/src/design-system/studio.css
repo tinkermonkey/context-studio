@@ -1719,23 +1719,23 @@ body.dark-canvas .hierarchy-row--has-individuals .hierarchy-row__meta {
   margin-top: 0;
 }
 
-.intent-markdown h1,
-.intent-markdown h2,
-.intent-markdown h3 {
+.intent-markdown h3,
+.intent-markdown h4,
+.intent-markdown h5 {
   margin: 16px 0 6px;
   font-weight: 600;
   line-height: 1.3;
 }
 
-.intent-markdown h1 {
+.intent-markdown h3 {
   font-size: 16px;
 }
 
-.intent-markdown h2 {
+.intent-markdown h4 {
   font-size: 14.5px;
 }
 
-.intent-markdown h3 {
+.intent-markdown h5 {
   font-size: 13.5px;
 }
 
@@ -1765,6 +1765,11 @@ body.dark-canvas .hierarchy-row--has-individuals .hierarchy-row__meta {
 
 .intent-markdown a {
   color: var(--accent-cyan);
+}
+
+.intent-markdown:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
 }
 
 .entity-identity {

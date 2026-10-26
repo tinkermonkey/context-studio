@@ -91,7 +91,8 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
   const handleSaveDescription = async (value: string) => {
     if (value === (taxonomy.description ?? "")) return;
     try {
-      await updateMutation.mutateAsync({ id: taxonomy.id, data: { description: value || null } });
+      // "" clears the summary; null would mean "leave unchanged".
+      await updateMutation.mutateAsync({ id: taxonomy.id, data: { description: value } });
     } catch (error) {
       const message = error instanceof ApiError ? error.detail : "Failed to save description";
       toast("error", message);

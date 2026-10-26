@@ -47,9 +47,8 @@ export function useUpdateScheme() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: ConceptSchemeUpdateRequest }) =>
       ontologyService.updateScheme(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemesRoot });
-    },
+    // Returning the refetch keeps mutateAsync pending until the page shows the new value.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.schemesRoot }),
   });
 }
 
