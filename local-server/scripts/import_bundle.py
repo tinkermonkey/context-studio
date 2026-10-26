@@ -3,9 +3,9 @@ Load a Context Studio bundle (v0) into the workspace ontology.
 
 A bundle describes another project's ontology (see scripts/bundle_loader.py
 for the format). Loading is idempotent: run it again after the project's
-bundle changes and only the differences are written. Every change is recorded
-as a change event. Entities the bundle no longer contains are reported, never
-deleted.
+bundle changes and only the differences are written. Changes are recorded as
+change events (attribute definitions not yet). Entities the bundle no longer
+contains are reported, never deleted.
 
 Usage (from local-server/, venv active):
     python scripts/import_bundle.py PATH/TO/project.bundle.json
@@ -46,6 +46,7 @@ from domain.ontology.events import (
     TaxonomyCreated,
     TaxonomyUpdated,
 )
+from domain.ontology.exceptions import OntologyError
 from domain.ontology.ports import EmbeddingService, OntologyRepository
 from domain.ontology.services import OntologyService
 from scripts.bundle_loader import (
@@ -127,7 +128,8 @@ def main() -> int:
     print(f"Loading bundle {args.bundle} into {settings.database.local_db_path} ...")
     try:
         summary = load_bundle(service, repo, bundle)
-    except BundleError as exc:
+    except (BundleError, OntologyError, ValueError) as exc:
+        # Writes before the failure stay applied (and recorded); fix the bundle and reload.
         print(f"Load failed: {exc}", file=sys.stderr)
         return 1
     print_summary(summary)

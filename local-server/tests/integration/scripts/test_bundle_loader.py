@@ -198,7 +198,10 @@ def test_entities_dropped_from_the_bundle_are_reported_not_deleted(service, repo
 
     summary = load_bundle(service, repo, smaller)
 
-    assert summary.stale == ["Individual 'Vacuuming' (vacuuming)"]
+    assert summary.stale == [
+        "Individual 'Vacuuming' (vacuuming)",
+        "Relationship 'Vacuuming' house_activity_is_a_activity 'Cleaning'",
+    ]
     activity = repo.get_by_identifier("house_activity")
     assert len(repo.list_individuals(class_id=activity.id, limit=None)) == 2
 
@@ -233,3 +236,80 @@ def test_read_bundle_checks_the_header(tmp_path):
 
     with pytest.raises(BundleError, match="not a context-studio-bundle v0"):
         read_bundle(path)
+
+
+def test_dropping_an_attributes_enum_and_description_applies_once(service, repo):
+    bundle = _bundle()
+    bundle["classes"][2]["attributes"][0].update(
+        {"description": "Typical minutes.", "allowed_values": ["5", "10"]}
+    )
+    load_bundle(service, repo, bundle)
+
+    first = load_bundle(service, repo, _bundle())
+    second = load_bundle(service, repo, _bundle())
+
+    activity = repo.get_by_identifier("house_activity")
+    [attribute] = service.list_attribute_definitions(class_id=activity.id, limit=None)
+    assert not attribute.allowed_values
+    assert not attribute.description
+    assert first.kind("attribute").updated == 1
+    assert second.changed == 0
+
+
+def test_class_moves_to_another_scheme_and_parent(service, repo):
+    load_bundle(service, repo, _bundle())
+    moved = _bundle()
+    moved["schemes"].append({"identifier": "house_spaces", "title": "Spaces"})
+    moved["classes"][1]["scheme"] = "house_spaces"  # Place
+    moved["classes"][0]["scheme"] = "house_spaces"  # Room, still under Place
+
+    summary = load_bundle(service, repo, moved)
+
+    spaces = repo.get_by_identifier("house_spaces")
+    place = repo.get_by_identifier("house_place")
+    room = repo.get_by_identifier("house_room")
+    assert place.concept_scheme_id == spaces.id
+    assert room.concept_scheme_id == spaces.id
+    assert room.parent_class_id == place.id
+    assert summary.kind("class").updated == 2
+    assert load_bundle(service, repo, moved).changed == 0
+
+
+def test_dropped_relationships_and_attributes_are_reported(service, repo):
+    load_bundle(service, repo, _bundle())
+    smaller = _bundle(relationships=[])
+    smaller["classes"][2]["attributes"] = []
+
+    summary = load_bundle(service, repo, smaller)
+
+    assert "Relationship 'Vacuuming' house_activity_is_a_activity 'Cleaning'" in summary.stale
+    assert (
+        "AttributeDefinition 'Estimate (minutes)' (house_estimate_minutes) on 'Activity'"
+        in summary.stale
+    )
+
+
+def test_existing_class_gets_the_source_reference_through_the_service(
+    service, repo, session_factory
+):
+    """A class made by hand is adopted: its reference is added as a recorded change."""
+    taxonomy = service.create_taxonomy(title="House", identifier="house")
+    scheme = service.create_scheme(
+        taxonomy_id=taxonomy.id, title="Kinds", identifier="house_kinds", description="Node kinds."
+    )
+    service.create_class(
+        concept_scheme_id=scheme.id,
+        title="Place",
+        description="A room or area where tasks happen.",
+        identifier="house_place",
+    )
+
+    load_bundle(service, repo, _bundle())
+
+    place = repo.get_by_identifier("house_place")
+    assert [(r.source, r.identifier) for r in place.external_references] == [
+        ("house", "house_place")
+    ]
+    with session_factory() as session:
+        recorded = session.query(ChangeEvent).filter(ChangeEvent.entity_id == place.id).all()
+    assert any("external_references" in (e.new_state or {}) for e in recorded)

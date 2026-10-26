@@ -19,7 +19,8 @@ ontology workbench reuses the same format for export.
       "relationships": [{"source", "property", "target"}]
     }
 
-Every write goes through OntologyService, so changes are evented. Idempotent:
+Every write goes through OntologyService, so changes are evented (attribute
+definition changes are not recorded as change events yet). Idempotent:
 schemes, classes and properties are keyed on `identifier`; classes, properties
 and individuals also carry an ExternalReference(source, identifier or id).
 Relationships are keyed on their (source, property, target) triple. Re-loading
@@ -31,8 +32,9 @@ What v0 cannot model yet is carried, not dropped: a property's `constraints`
 metadata, out of the definitions that drive vector matching. Relationships
 with attributes are rejected.
 
-The loader never deletes. Entities that carry this source's reference but are
-no longer in the bundle are reported as stale.
+The loader never deletes. Classes, relationship types and individuals that
+carry this source's reference, attributes on its classes, and relationships
+between its individuals that are no longer in the bundle are reported as stale.
 """
 
 from __future__ import annotations
@@ -41,7 +43,7 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, Callable, Iterable
+from typing import Any, Iterable
 
 from domain.ontology.entities import (
     Class,
@@ -134,6 +136,8 @@ class _Loader:
         self._bundle = bundle
         self._source = bundle["source"]
         self.summary = BundleImportSummary(source=self._source)
+        self._stale: list[str] = []
+        self._bundle_triples: set[tuple[str, str, str]] = set()
 
     # ------------------------------------------------------------------ run
 
@@ -246,17 +250,17 @@ class _Loader:
                     parent_class_id=parent_id,
                     identifier=identifier,
                 )
+                cls = self._ensure_class_reference(cls, identifier)
                 counts.record("created")
             else:
-                cls, outcome = self._update_class(existing, spec, parent_id)
+                cls, outcome = self._update_class(existing, spec, scheme_id, parent_id)
                 counts.record(outcome)
-            self._ensure_reference(cls, identifier, self._repo.save_class)
             ids[identifier] = cls.id
-            self._upsert_attributes(cls.id, spec.get("attributes", []))
+            self._upsert_attributes(cls, spec.get("attributes", []))
         return ids
 
     def _update_class(
-        self, existing: Class, spec: dict[str, Any], parent_id: str | None
+        self, existing: Class, spec: dict[str, Any], scheme_id: str, parent_id: str | None
     ) -> tuple[Class, str]:
         cls, outcome = existing, "unchanged"
         if (existing.title, existing.description or "") != (
@@ -267,39 +271,54 @@ class _Loader:
                 existing.id, title=spec["title"], description=spec.get("description") or ""
             )
             outcome = "updated"
+        # Scheme first: the new parent (loaded earlier, parents first) is already there.
+        if existing.concept_scheme_id != scheme_id:
+            cls = self._service.move_class_to_scheme(existing.id, scheme_id)
+            outcome = "updated"
         if existing.parent_class_id != parent_id:
             cls = self._service.move_class(existing.id, parent_id)
             outcome = "updated"
+        if not self._has_reference(cls, spec["identifier"]):
+            cls = self._ensure_class_reference(cls, spec["identifier"])
+            outcome = "updated"
         return cls, outcome
 
-    def _upsert_attributes(self, class_id: str, specs: list[dict[str, Any]]) -> None:
+    def _upsert_attributes(self, cls: Class, specs: list[dict[str, Any]]) -> None:
         counts = self.summary.kind("attribute")
         current = {
             a.identifier: a
-            for a in self._service.list_attribute_definitions(class_id=class_id, limit=None)
+            for a in self._service.list_attribute_definitions(class_id=cls.id, limit=None)
         }
+        wanted_identifiers = {spec["identifier"] for spec in specs}
+        for identifier, attribute in current.items():
+            if identifier not in wanted_identifiers:
+                self._stale.append(
+                    f"AttributeDefinition {attribute.title!r} ({identifier}) on {cls.title!r}"
+                )
         for order, spec in enumerate(specs):
+            # "" and [] (not None) so that dropping a description or an enum clears it:
+            # the service reads None as "leave unchanged".
             wanted = {
                 "title": spec["title"],
-                "description": spec.get("description"),
+                "description": spec.get("description") or "",
                 "datatype": spec["datatype"],
                 "is_required": bool(spec.get("required", False)),
-                "allowed_values": spec.get("allowed_values"),
+                "allowed_values": spec.get("allowed_values") or [],
                 "sort_order": order,
             }
             existing = current.get(spec["identifier"])
             if existing is None:
                 self._service.create_attribute_definition(
-                    class_id=class_id, identifier=spec["identifier"], **wanted
+                    class_id=cls.id, identifier=spec["identifier"], **wanted
                 )
                 counts.record("created")
                 continue
             have = {
                 "title": existing.title,
-                "description": existing.description,
+                "description": existing.description or "",
                 "datatype": str(getattr(existing.datatype, "value", existing.datatype)),
                 "is_required": existing.is_required,
-                "allowed_values": existing.allowed_values,
+                "allowed_values": existing.allowed_values or [],
                 "sort_order": existing.sort_order,
             }
             if have == wanted:
@@ -469,6 +488,7 @@ class _Loader:
                 property_id = property_ids[spec["property"]]
             except KeyError as exc:
                 raise BundleError(f"Relationship {spec} names unknown {exc}") from None
+            self._bundle_triples.add((source_id, property_id, target_id))
             if self._repo.list_relationships(
                 source_id=source_id, target_id=target_id, property_id=property_id, limit=None
             ):
@@ -487,12 +507,30 @@ class _Loader:
         individual_ids: dict[str, str],
     ) -> None:
         loaded = {*class_ids.values(), *property_ids.values(), *individual_ids.values()}
+        owned_individuals = self._owned_individuals(taxonomy_id)
         candidates: Iterable[Any] = (
             *self._taxonomy_classes(taxonomy_id),
             *self._repo.list_property_definitions(limit=None),
-            *self._owned_individuals(taxonomy_id).values(),
+            *owned_individuals.values(),
         )
-        self.summary.stale = stale_entities(candidates, self._source, loaded)
+        titles = {i.id: i.title for i in owned_individuals.values()}
+        predicates = {prop_id: identifier for identifier, prop_id in property_ids.items()}
+        dropped_relationships = [
+            f"Relationship {titles[rel.source_id]!r} {predicates[rel.property_definition_id]}"
+            f" {titles.get(rel.target_id, rel.target_id)!r}"
+            for individual_id in titles
+            for rel in self._repo.list_relationships(source_id=individual_id, limit=None)
+            if rel.property_definition_id in predicates
+            and (rel.source_id, rel.property_definition_id, rel.target_id)
+            not in self._bundle_triples
+        ]
+        self.summary.stale = sorted(
+            [
+                *stale_entities(candidates, self._source, loaded),
+                *self._stale,
+                *dropped_relationships,
+            ]
+        )
 
     # -------------------------------------------------------------- helpers
 
@@ -513,16 +551,23 @@ class _Loader:
         others = [r for r in references if r.source != self._source]
         return [*others, reference]
 
-    def _ensure_reference(self, entity: Any, identifier: str, save: Callable[[Any], Any]) -> None:
-        if any(
+    def _has_reference(self, entity: Any, identifier: str) -> bool:
+        return any(
             r.source == self._source and r.identifier == identifier
             for r in entity.external_references
-        ):
-            return
-        entity.external_references.append(
-            ExternalReference(source=self._source, identifier=identifier)
         )
-        save(entity)
+
+    def _ensure_class_reference(self, cls: Class, identifier: str) -> Class:
+        """Add this source's reference to a class through the service, so it is evented."""
+        if self._has_reference(cls, identifier):
+            return cls
+        return self._service.update_class(
+            cls.id,
+            external_references=[
+                *cls.external_references,
+                ExternalReference(source=self._source, identifier=identifier),
+            ],
+        )
 
     def _taxonomy_classes(self, taxonomy_id: str) -> list[Class]:
         return [
