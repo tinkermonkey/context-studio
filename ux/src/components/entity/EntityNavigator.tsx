@@ -26,6 +26,11 @@ export const NAVIGATOR_MATCH_LIMIT = 100;
 const FILTER_DEBOUNCE_MS = 250;
 const NO_EXPANSION: string[] = [];
 
+/** Schema list pages: switching to Data opens the individuals list. */
+export const SCHEMA_LIST_MODE_LINKS = { data: "/app/data/individuals" } as const;
+/** Data list pages: switching to Schema opens the taxonomies list. */
+export const DATA_LIST_MODE_LINKS = { schema: "/app/schema/taxonomies" } as const;
+
 const MODE_OPTIONS = [
   { value: "schema", label: "Schema" },
   { value: "data", label: "Data" },
@@ -47,6 +52,12 @@ interface EntityNavigatorProps {
   schemaSelectedId?: string;
   /** Ancestors of the selected node, opened so it is visible. */
   expandIds?: string[];
+  /**
+   * Where switching to a mode takes the user, for pages that belong to one area
+   * (list pages, the individual page), so the page and the sidebar match the
+   * mode. Taxonomy, scheme and class pages omit it: they work in both modes.
+   */
+  modeLinks?: Partial<Record<HierarchyMode, string>>;
 }
 
 interface FilteredTree {
@@ -113,6 +124,7 @@ export function EntityNavigator({
   selectedId,
   schemaSelectedId,
   expandIds = NO_EXPANSION,
+  modeLinks,
 }: EntityNavigatorProps) {
   const navigate = useNavigate();
   const treeRef = useRef<HTMLDivElement>(null);
@@ -209,6 +221,11 @@ export function EntityNavigator({
   }, [highlightedId, mode]);
 
   const openNode = (kind: HierarchyNodeKind, id: string) => navigate({ to: entityPath(kind, id) });
+  const changeMode = (next: HierarchyMode) => {
+    setMode(next);
+    const to = modeLinks?.[next];
+    if (to) navigate({ to });
+  };
   const fetching = classesFetching || (dataMode && individualsFetching);
   const truncated: string[] = [];
   if ((classMatches?.total ?? 0) > (classMatches?.items.length ?? 0)) truncated.push("classes");
@@ -224,7 +241,7 @@ export function EntityNavigator({
         headerAction={
           <SegmentedControl
             value={mode}
-            onChange={(value) => setMode(value as HierarchyMode)}
+            onChange={(value) => changeMode(value as HierarchyMode)}
             options={MODE_OPTIONS}
             aria-label="Tree mode"
             data-testid="navigator-mode"

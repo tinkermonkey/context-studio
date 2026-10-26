@@ -70,6 +70,18 @@ function individualsLabel(n: number | undefined): string | undefined {
   return n === undefined ? undefined : countLabel(n, "individual", "individuals");
 }
 
+type RowLevel = "taxonomy" | "scheme" | "class";
+
+/**
+ * Row classes: one per level, so each level's pill has its own color, and one
+ * marking a non-zero individual count (Data mode) so it stands out from zeros.
+ */
+function rowClassName(level: RowLevel, individualCount?: number): string {
+  const classes = [`hierarchy-row--${level}`];
+  if (individualCount) classes.push("hierarchy-row--has-individuals");
+  return classes.join(" ");
+}
+
 /** What class rows need from the tree, shared by the lazy and eager variants. */
 interface ClassRowContext {
   mode: HierarchyMode;
@@ -160,18 +172,17 @@ function ClassRows({ classes, ctx, individualCounts, individualsByClass }: Class
     <>
       {classes.map((cls) => {
         const open = dataMode && ctx.expandedIds.has(cls.id);
+        const individualCount =
+          dataMode && !ctx.hideCounts ? individualCounts?.get(cls.id) : undefined;
         return (
           <Fragment key={cls.id}>
             <HierarchyRow
               depth={2}
               domain="default"
               kind="class"
+              className={rowClassName("class", individualCount)}
               label={cls.title}
-              meta={
-                dataMode && !ctx.hideCounts
-                  ? individualsLabel(individualCounts?.get(cls.id))
-                  : undefined
-              }
+              meta={individualsLabel(individualCount)}
               description={ctx.compact ? undefined : (cls.description ?? "")}
               selected={ctx.selectedId === cls.id}
               aria-expanded={dataMode ? open : undefined}
@@ -370,9 +381,18 @@ export function HierarchyTree({
     );
   }
 
+  // Data mode individual counts (undefined while loading, filtering, or in Schema mode).
+  const schemeIndividuals = (scheme: ConceptSchemeResponse): number | undefined =>
+    dataMode && !hideCounts ? schemeCounts.get(scheme.id)?.individual_count : undefined;
+  const taxonomyIndividuals = (taxonomySchemes: ConceptSchemeResponse[]): number | undefined => {
+    if (!dataMode || hideCounts) return undefined;
+    const counts = taxonomySchemes.map((s) => schemeCounts.get(s.id)?.individual_count);
+    if (counts.some((n) => n === undefined)) return undefined;
+    return counts.reduce<number>((sum, n) => sum + (n ?? 0), 0);
+  };
   const schemeMeta = (scheme: ConceptSchemeResponse): string | undefined => {
     if (hideCounts) return undefined;
-    if (dataMode) return individualsLabel(schemeCounts.get(scheme.id)?.individual_count);
+    if (dataMode) return individualsLabel(schemeIndividuals(scheme));
     const count = lazy
       ? (lazyClassCounts[scheme.id] ?? 0)
       : (classesByScheme.get(scheme.id) ?? []).length;
@@ -381,9 +401,7 @@ export function HierarchyTree({
   const taxonomyMeta = (taxonomySchemes: ConceptSchemeResponse[]): string | undefined => {
     if (hideCounts) return undefined;
     if (!dataMode) return countLabel(taxonomySchemes.length, "scheme", "schemes");
-    const counts = taxonomySchemes.map((s) => schemeCounts.get(s.id)?.individual_count);
-    if (counts.some((n) => n === undefined)) return undefined;
-    return individualsLabel(counts.reduce<number>((sum, n) => sum + (n ?? 0), 0));
+    return individualsLabel(taxonomyIndividuals(taxonomySchemes));
   };
 
   return (
@@ -397,6 +415,7 @@ export function HierarchyTree({
               depth={0}
               domain="default"
               kind="taxonomy"
+              className={rowClassName("taxonomy", taxonomyIndividuals(taxonomySchemes))}
               label={taxonomy.title}
               meta={taxonomyMeta(taxonomySchemes)}
               description={compact ? undefined : (taxonomy.description ?? "")}
@@ -414,6 +433,7 @@ export function HierarchyTree({
                       depth={1}
                       domain="default"
                       kind="scheme"
+                      className={rowClassName("scheme", schemeIndividuals(scheme))}
                       label={scheme.title}
                       meta={schemeMeta(scheme)}
                       description={compact ? undefined : (scheme.description ?? "")}

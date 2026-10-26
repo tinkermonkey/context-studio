@@ -21,6 +21,13 @@
   --dom-software: 129 140 248;
   --dom-default: 34 211 238;
 
+  /* ---- Hierarchy levels (raw RGB): one color per level in the Navigator tree.
+     Deep shades on the light canvas so the 9px kind labels stay readable. ---- */
+  --level-taxonomy: 109 40 217;
+  --level-scheme: 14 116 144;
+  --level-class: 29 78 216;
+  --level-individual: 4 120 87;
+
   /* ---- Semantic Accent Color Aliases (map to Heimdall semantic colors with rgb() wrapper) ---- */
   --accent-cyan: rgb(var(--status-cyan));
   --accent-cyan-deep: rgb(var(--status-cyan-deep));
@@ -53,6 +60,11 @@ body.dark-canvas {
      amber / rose tint that keeps canvas-fg-1 text readable. */
   --status-warn-bg: 58 45 18;
   --status-error-bg: 72 24 36;
+  /* Brighter hierarchy level colors for the dark canvas. */
+  --level-taxonomy: 167 139 250;
+  --level-scheme: 34 211 238;
+  --level-class: 96 165 250;
+  --level-individual: 52 211 153;
 }
 
 /* Heimdall .hierarchy-row pins the pill column at 220px, but the pill

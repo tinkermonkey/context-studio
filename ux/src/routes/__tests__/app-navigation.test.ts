@@ -4,7 +4,29 @@ import {
   SIDEBAR_PATH_MAP,
   getActiveItemId,
   getBreadcrumbLabels,
+  isSharedEntityPage,
 } from "../-app-navigation";
+
+describe("app navigation — Navigator mode", () => {
+  it.each([
+    ["/app/schema/taxonomies/t1", "schema", "schema-taxonomies"],
+    ["/app/schema/classes/c1", "schema", "schema-classes"],
+    ["/app/schema/classes/c1", "data", "data"],
+    ["/app/schema/schemes/s1", "data", "data"],
+    // List pages and individual pages keep their own area.
+    ["/app/schema/classes", "data", "schema-classes"],
+    ["/app/data/individuals/i1", "schema", "data"],
+  ] as const)("highlights %s in %s mode as %s", (path, mode, id) => {
+    expect(getActiveItemId(path, mode)).toBe(id);
+  });
+
+  it("treats only taxonomy, scheme and class pages as shared by both modes", () => {
+    expect(isSharedEntityPage("/app/schema/classes/c1")).toBe(true);
+    expect(isSharedEntityPage("/app/schema/classes")).toBe(false);
+    expect(isSharedEntityPage("/app/schema/properties/p1")).toBe(false);
+    expect(isSharedEntityPage("/app/data/individuals/i1")).toBe(false);
+  });
+});
 
 describe("app navigation — pipelines", () => {
   it("maps pipelines sidebar items to their routes", () => {

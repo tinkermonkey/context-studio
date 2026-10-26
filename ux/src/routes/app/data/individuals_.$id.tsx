@@ -139,13 +139,16 @@ export function IndividualPage({ id }: { id: string }) {
       : null,
   );
 
-  // Data mode shows the individual under its (first) class; Schema mode stops at
-  // classes, so there it highlights that class.
+  // Data mode shows the individual under its (first) class. Individuals are
+  // data, so switching to Schema opens that class's page instead.
   const navigator = (
     <EntityNavigator
       defaultMode="data"
       selectedId={id}
       schemaSelectedId={primaryClass?.id}
+      modeLinks={{
+        schema: primaryClass ? entityPath("class", primaryClass.id) : "/app/schema/classes",
+      }}
       expandIds={
         primaryClass
           ? [primaryClass.taxonomy_id, primaryClass.concept_scheme_id, primaryClass.id]
