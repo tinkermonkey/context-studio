@@ -165,6 +165,17 @@ class TestTaxonomyCRUD:
         assert updated.version == old_version + 1
 
 
+    def test_taxonomy_vision_persists(self, repo, sample_taxonomy):
+        """The vision column is written, read back and cleared."""
+        sample_taxonomy.vision = "# Vision\n\nFirst."
+        repo.save_taxonomy(sample_taxonomy)
+        assert repo.get_taxonomy(sample_taxonomy.id).vision == "# Vision\n\nFirst."
+
+        sample_taxonomy.vision = None
+        repo.save_taxonomy(sample_taxonomy)
+        assert repo.get_taxonomy(sample_taxonomy.id).vision is None
+
+
 class TestConceptSchemeCRUD:
     """Tests for ConceptScheme CRUD operations."""
 

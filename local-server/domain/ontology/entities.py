@@ -34,7 +34,11 @@ class Taxonomy:
         id: Unique identifier (UUID as string)
         title: Display name for the taxonomy
         identifier: Slug-style identifier (optional); must be unique if provided
-        description: Optional longer description
+        description: The one-paragraph summary of what the taxonomy is for. Short
+            enough to go into every agent's and pipeline's context.
+        vision: The full vision statement (markdown): what the taxonomy is for,
+            what its classes and relationships model, and how changes are judged.
+            Given to strong reasoners (judges, labellers), not to every call.
         color: Optional hex color string (e.g. '#a3f2e4')
         created_at: Timestamp of creation
         last_modified: Timestamp of last modification
@@ -46,6 +50,7 @@ class Taxonomy:
     title: str
     identifier: str | None = None
     description: str | None = None
+    vision: str | None = None
     color: str | None = None
     created_at: datetime | None = None
     last_modified: datetime | None = None
@@ -83,7 +88,7 @@ class ConceptScheme:
         taxonomy_id: ID of the parent taxonomy
         title: Display name for the scheme
         identifier: Slug-style identifier (optional); must be unique if provided
-        description: Optional longer description
+        description: The scheme's scope note: what belongs in it and what does not
         color: Optional hex color string (e.g. '#a3f2e4')
         created_at: Timestamp of creation
         last_modified: Timestamp of last modification

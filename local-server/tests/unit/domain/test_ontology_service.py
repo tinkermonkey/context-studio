@@ -101,6 +101,59 @@ class TestCreateTaxonomy:
             service.create_taxonomy(title="   ")
 
 
+class TestTaxonomyVision:
+    """Tests for the taxonomy vision statement (#1334)."""
+
+    def test_create_with_vision(self, service):
+        """A vision given at creation is stored next to the summary."""
+        tax = service.create_taxonomy(
+            title="House", description="Household tasks.", vision="# House\n\nLong form."
+        )
+
+        retrieved = service.get_taxonomy(tax.id)
+        assert retrieved.vision == "# House\n\nLong form."
+        assert retrieved.description == "Household tasks."
+
+    def test_create_with_blank_vision_stores_none(self, service):
+        """A whitespace-only vision is treated as absent."""
+        tax = service.create_taxonomy(title="House", vision="   ")
+
+        assert service.get_taxonomy(tax.id).vision is None
+
+    def test_update_vision_publishes_old_and_new_values(self, service):
+        """Changing the vision publishes TaxonomyUpdated with both versions."""
+        tax = service.create_taxonomy(title="House", vision="Draft")
+        service._event_publisher.clear()
+
+        updated = service.update_taxonomy(tax.id, vision="Final")
+
+        assert updated.vision == "Final"
+        events = service._event_publisher.get_events_of_type(TaxonomyUpdated)
+        assert len(events) == 1
+        assert events[0].changed_fields == ("vision",)
+        assert events[0].old_values == {"vision": "Draft"}
+        assert events[0].new_values == {"vision": "Final"}
+
+    def test_update_with_empty_vision_clears_it(self, service):
+        """An empty string clears the vision; None leaves it untouched."""
+        tax = service.create_taxonomy(title="House", vision="Draft")
+
+        service.update_taxonomy(tax.id, description="Summary only")
+        assert service.get_taxonomy(tax.id).vision == "Draft"
+
+        cleared = service.update_taxonomy(tax.id, vision="")
+        assert cleared.vision is None
+
+    def test_update_with_same_vision_is_a_no_op(self, service):
+        """Re-sending the current vision publishes no event."""
+        tax = service.create_taxonomy(title="House", vision="Draft")
+        service._event_publisher.clear()
+
+        service.update_taxonomy(tax.id, vision="Draft")
+
+        assert service._event_publisher.get_events_of_type(TaxonomyUpdated) == []
+
+
 class TestCreateScheme:
     """Tests for create_scheme."""
 
@@ -1830,7 +1883,7 @@ class TestUpdateConceptScheme:
 
     def test_update_title_success(self, service):
         """Update the title of a concept scheme."""
-        from domain.ontology.events import ConceptSchemeUpdated
+        from domain.ontology.events import SchemeUpdated
 
         tax = service.create_taxonomy(title="Biology")
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
@@ -1842,10 +1895,66 @@ class TestUpdateConceptScheme:
         retrieved = service.get_concept_scheme(scheme.id)
         assert retrieved.title == "Animal Kingdom"
 
-        events = service._event_publisher.get_events_of_type(ConceptSchemeUpdated)
+        events = service._event_publisher.get_events_of_type(SchemeUpdated)
         assert len(events) == 1
         assert events[0].concept_scheme_id == scheme.id
-        assert events[0].title == "Animal Kingdom"
+        assert events[0].taxonomy_id == tax.id
+        assert events[0].changed_fields == ("title",)
+        assert events[0].old_values == {"title": "Animals"}
+        assert events[0].new_values == {"title": "Animal Kingdom"}
+
+    def test_update_scope_note_records_old_and_new_values(self, service):
+        """A scope-note (description) edit publishes the previous and new text, so it can be reverted."""
+        from domain.ontology.events import SchemeUpdated
+
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(
+            taxonomy_id=tax.id, title="Animals", description="Multicellular organisms"
+        )
+        service._event_publisher.clear()
+
+        service.update_concept_scheme(
+            concept_scheme_id=scheme.id, description="Animals, excluding protists"
+        )
+
+        events = service._event_publisher.get_events_of_type(SchemeUpdated)
+        assert len(events) == 1
+        assert events[0].changed_fields == ("description",)
+        assert events[0].old_values == {"description": "Multicellular organisms"}
+        assert events[0].new_values == {"description": "Animals, excluding protists"}
+
+    def test_update_move_records_taxonomy_change(self, service):
+        """Moving a scheme to another taxonomy records the old and new taxonomy ids."""
+        from domain.ontology.events import SchemeUpdated
+
+        source = service.create_taxonomy(title="Biology")
+        target = service.create_taxonomy(title="Zoology")
+        scheme = service.create_scheme(taxonomy_id=source.id, title="Animals")
+        service._event_publisher.clear()
+
+        service.update_concept_scheme(concept_scheme_id=scheme.id, taxonomy_id=target.id)
+
+        events = service._event_publisher.get_events_of_type(SchemeUpdated)
+        assert len(events) == 1
+        assert events[0].changed_fields == ("taxonomy_id",)
+        assert events[0].old_values == {"taxonomy_id": source.id}
+        assert events[0].new_values == {"taxonomy_id": target.id}
+        assert events[0].taxonomy_id == target.id
+
+    def test_update_with_same_values_is_a_no_op(self, service):
+        """An update that changes nothing publishes no event."""
+        from domain.ontology.events import SchemeUpdated
+
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals", description="Note")
+        service._event_publisher.clear()
+
+        result = service.update_concept_scheme(
+            concept_scheme_id=scheme.id, title="Animals", description="Note"
+        )
+
+        assert result.title == "Animals"
+        assert service._event_publisher.get_events_of_type(SchemeUpdated) == []
 
     def test_update_description_success(self, service):
         """Update the description of a concept scheme."""

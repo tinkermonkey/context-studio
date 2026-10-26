@@ -295,21 +295,6 @@ class PropertyDefinitionDeleted(DomainEvent):
 
 
 @dataclass(frozen=True)
-class ConceptSchemeUpdated(DomainEvent):
-    """
-    Event emitted when a concept scheme is updated.
-
-    Attributes:
-        concept_scheme_id: ID of the updated concept scheme
-        title: New title of the concept scheme
-    """
-
-    _aggregate_id_field: ClassVar[str] = "concept_scheme_id"
-    concept_scheme_id: str = ""
-    title: str = ""
-
-
-@dataclass(frozen=True)
 class IndividualCreated(DomainEvent):
     """
     Event emitted when a new individual is created.

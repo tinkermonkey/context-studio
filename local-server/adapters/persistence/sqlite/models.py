@@ -56,7 +56,8 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
         id: UUID as string, primary key
         node_type: Discriminator column determining entity type
         title: Display name (required)
-        description: Longer description (optional)
+        description: Longer description (optional); a taxonomy's one-paragraph summary
+        vision: Full vision statement in markdown (for taxonomy, optional)
         created_at: Timestamp of creation (UTC, auto-set)
         last_modified: Timestamp of last modification (UTC, auto-set)
         version: Version number for optimistic concurrency control
@@ -88,6 +89,11 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
     )
     title = Column(String(255), nullable=False, index=True)
     description = Column(Text, nullable=True)
+    vision = Column(
+        Text,
+        nullable=True,
+        doc="Full vision statement in markdown (for taxonomy); description holds its summary",
+    )
     created_at = Column(
         DateTime(timezone=True),
         nullable=False,

@@ -253,6 +253,7 @@ def map_orm_to_domain(
             identifier=entity_identifier or fallback_id_slug,
             title=entity_title,
             description=entity_description,
+            vision=cast(str | None, orm_entity.vision),
             color=entity_color,
             created_at=entity_created_at,
             last_modified=entity_last_modified,
@@ -369,6 +370,7 @@ def map_domain_to_orm(
             **common_args,
             node_type=NodeType.TAXONOMY,
             identifier=entity.identifier,
+            vision=entity.vision,
             color=entity.color,
         )
 

@@ -76,7 +76,10 @@ class TaxonomyCreateRequest(BaseModel):
         None,
         description="Optional slug-style identifier (e.g. 'tax_life'); auto-generated from title",
     )
-    description: Optional[str] = Field(None, description="Optional longer description")
+    description: Optional[str] = Field(
+        None, description="One-paragraph summary of what the taxonomy is for"
+    )
+    vision: Optional[str] = Field(None, description="Full vision statement (markdown)")
     color: Optional[str] = Field(None, description="Optional hex color '#rrggbb'")
 
     @field_validator("title")
@@ -96,7 +99,10 @@ class TaxonomyUpdateRequest(BaseModel):
     """Request to update a taxonomy. Identifier is immutable post-create."""
 
     title: Optional[str] = Field(None, description="New title for the taxonomy", min_length=1)
-    description: Optional[str] = Field(None, description="New description")
+    description: Optional[str] = Field(None, description="New one-paragraph summary")
+    vision: Optional[str] = Field(
+        None, description="New vision statement (markdown); empty string clears it"
+    )
     color: Optional[str] = Field(None, description="New hex color '#rrggbb' or null to clear")
 
     @field_validator("color")
@@ -157,7 +163,8 @@ class TaxonomyResponse(BaseModel):
     id: str = Field(..., description="Unique identifier (UUID)")
     identifier: str = Field(..., description="Slug-style identifier (e.g. 'tax_life')")
     title: str = Field(..., description="Display name")
-    description: Optional[str] = Field(None, description="Optional description")
+    description: Optional[str] = Field(None, description="One-paragraph summary")
+    vision: Optional[str] = Field(None, description="Full vision statement (markdown)")
     color: Optional[str] = Field(None, description="Optional hex color '#rrggbb'")
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
     last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
@@ -178,7 +185,9 @@ class ConceptSchemeCreateRequest(BaseModel):
         None,
         description="Optional slug-style identifier (e.g. 'scheme_ecology'); auto-generated",
     )
-    description: Optional[str] = Field(None, description="Optional longer description")
+    description: Optional[str] = Field(
+        None, description="Scope note: what belongs in the scheme and what does not"
+    )
 
     @field_validator("title")
     @classmethod
@@ -192,7 +201,7 @@ class ConceptSchemeUpdateRequest(BaseModel):
     """Request to update a concept scheme. Identifier is immutable post-create."""
 
     title: Optional[str] = Field(None, description="New title", min_length=1)
-    description: Optional[str] = Field(None, description="New description")
+    description: Optional[str] = Field(None, description="New scope note")
     color: Optional[str] = Field(None, description="New hex color '#rrggbb' or null to clear")
     taxonomy_id: Optional[str] = Field(None, description="Move scheme to a different taxonomy")
 
@@ -211,7 +220,7 @@ class ConceptSchemeResponse(BaseModel):
     taxonomy_id: str = Field(..., description="Parent taxonomy ID")
     identifier: str = Field(..., description="Slug-style identifier (e.g. 'scheme_ecology')")
     title: str = Field(..., description="Display name")
-    description: Optional[str] = Field(None, description="Optional description")
+    description: Optional[str] = Field(None, description="Scope note")
     color: Optional[str] = Field(None, description="Optional hex color '#rrggbb'")
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
     last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")

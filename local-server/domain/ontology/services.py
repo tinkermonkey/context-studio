@@ -33,7 +33,6 @@ from .events import (
     ClassDeleted,
     ClassMoved,
     ClassUpdated,
-    ConceptSchemeUpdated,
     GraphInvalidated,
     IndividualCreated,
     IndividualDeleted,
@@ -89,6 +88,11 @@ def _serialize_external_references(refs: list[ExternalReference]) -> list[dict[s
         }
         for ref in refs
     ]
+
+
+def _blank_to_none(text: str | None) -> str | None:
+    """Treat empty or whitespace-only text as absent."""
+    return text if text and text.strip() else None
 
 
 class OntologyService:
@@ -183,6 +187,7 @@ class OntologyService:
         description: str | None = None,
         color: str | None = None,
         identifier: str | None = None,
+        vision: str | None = None,
     ) -> Taxonomy:
         """
         Create a new taxonomy.
@@ -192,10 +197,11 @@ class OntologyService:
 
         Args:
             title: Display name for the taxonomy
-            description: Optional longer description
+            description: Optional one-paragraph summary
             color: Optional hex color string for the swatch
             identifier: (Optional) globally-unique slug identifier;
                 auto-generated from title if not provided
+            vision: Optional full vision statement (markdown); blank is stored as None
 
         Returns:
             The created Taxonomy
@@ -224,6 +230,7 @@ class OntologyService:
             title=title,
             identifier=identifier,
             description=description,
+            vision=_blank_to_none(vision),
             color=color,
             created_at=now,
             last_modified=now,
@@ -312,17 +319,19 @@ class OntologyService:
         title: str | None = None,
         description: str | None = None,
         color: str | None = None,
+        vision: str | None = None,
     ) -> Taxonomy:
         """
-        Update a taxonomy's title, description, and/or color.
+        Update a taxonomy's title, summary (description), vision, and/or color.
 
         Identifier is immutable post-create and cannot be updated.
 
         Args:
             taxonomy_id: The taxonomy ID
             title: New title (optional)
-            description: New description (optional)
+            description: New one-paragraph summary (optional)
             color: New hex color string (optional, '' or None clears)
+            vision: New vision statement (optional; None leaves it, '' clears it)
 
         Returns:
             The updated Taxonomy
@@ -339,6 +348,7 @@ class OntologyService:
         # Capture old values before modification
         old_title = taxonomy.title
         old_description = taxonomy.description
+        old_vision = taxonomy.vision
         old_color = taxonomy.color
 
         # Check if new title is unique
@@ -353,6 +363,9 @@ class OntologyService:
         if description is not None:
             taxonomy.description = description
 
+        if vision is not None:
+            taxonomy.vision = _blank_to_none(vision)
+
         if color is not None:
             # Re-validate via the entity's helper by reassigning + post-init equivalent.
             from .value_objects import validate_hex_color as _vc
@@ -362,9 +375,10 @@ class OntologyService:
         # Guard against no-op updates
         title_changed = title is not None and title != old_title
         desc_changed = description is not None and description != old_description
+        vision_changed = vision is not None and taxonomy.vision != old_vision
         color_changed = color is not None and taxonomy.color != old_color
 
-        if not (title_changed or desc_changed or color_changed):
+        if not (title_changed or desc_changed or vision_changed or color_changed):
             return taxonomy
 
         taxonomy.last_modified = datetime.now(timezone.utc)
@@ -376,6 +390,7 @@ class OntologyService:
             for f, was_changed in [
                 ("title", title_changed),
                 ("description", desc_changed),
+                ("vision", vision_changed),
                 ("color", color_changed),
             ]
             if was_changed
@@ -389,6 +404,9 @@ class OntologyService:
         if desc_changed:
             old_values["description"] = old_description
             new_values["description"] = description
+        if vision_changed:
+            old_values["vision"] = old_vision
+            new_values["vision"] = taxonomy.vision
         if color_changed:
             old_values["color"] = old_color
             new_values["color"] = taxonomy.color
@@ -2232,6 +2250,12 @@ class OntologyService:
             raise EntityNotFoundError("ConceptScheme", concept_scheme_id)
 
         original_taxonomy_id = scheme.taxonomy_id
+        old_values: dict[str, str | None] = {
+            "title": scheme.title,
+            "description": scheme.description,
+            "color": scheme.color,
+            "taxonomy_id": scheme.taxonomy_id,
+        }
 
         # Resolve the effective taxonomy for uniqueness checks
         effective_taxonomy_id = taxonomy_id if taxonomy_id is not None else scheme.taxonomy_id
@@ -2273,19 +2297,32 @@ class OntologyService:
 
             scheme.color = _vc(color)
 
+        current_values: dict[str, str | None] = {
+            "title": scheme.title,
+            "description": scheme.description,
+            "color": scheme.color,
+            "taxonomy_id": scheme.taxonomy_id,
+        }
+        changed = tuple(f for f in old_values if current_values[f] != old_values[f])
+        if not changed:
+            return scheme
+
         scheme.last_modified = datetime.now(timezone.utc)
         scheme = self._repository.save_concept_scheme(scheme)
 
         failures = self._event_publisher.publish(
-            ConceptSchemeUpdated(
+            SchemeUpdated(
                 concept_scheme_id=concept_scheme_id,
-                title=scheme.title,
+                taxonomy_id=scheme.taxonomy_id,
+                changed_fields=changed,
+                old_values={f: old_values[f] for f in changed},
+                new_values={f: current_values[f] for f in changed},
             )
         )
         if failures:
             handler_names = ", ".join(name for name, _ in failures)
             _logger.warning(
-                "Event handlers failed for ConceptSchemeUpdated (concept_scheme_id=%s):"
+                "Event handlers failed for SchemeUpdated (concept_scheme_id=%s):"
                 " %s. Scheme is updated but audit trail may have gaps.",
                 concept_scheme_id,
                 handler_names,

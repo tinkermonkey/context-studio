@@ -203,7 +203,7 @@
           "ontology"
         ],
         "summary": "Update Taxonomy",
-        "description": "Update a taxonomy's title, description, and/or color.\n\nArgs:\n    taxonomy_id: The taxonomy ID\n    request: TaxonomyUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated TaxonomyResponse\n\nRaises:\n    HTTPException: 400 if invalid input, 404 if not found, 409 if title exists",
+        "description": "Update a taxonomy's title, summary (description), vision, and/or color.\n\nArgs:\n    taxonomy_id: The taxonomy ID\n    request: TaxonomyUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated TaxonomyResponse\n\nRaises:\n    HTTPException: 400 if invalid input, 404 if not found, 409 if title exists",
         "operationId": "update_taxonomy_api_taxonomies__taxonomy_id__put",
         "parameters": [
           {
@@ -8864,7 +8864,7 @@
               }
             ],
             "title": "Description",
-            "description": "Optional longer description"
+            "description": "Scope note: what belongs in the scheme and what does not"
           }
         },
         "type": "object",
@@ -8906,7 +8906,7 @@
               }
             ],
             "title": "Description",
-            "description": "Optional description"
+            "description": "Scope note"
           },
           "color": {
             "anyOf": [
@@ -8998,7 +8998,7 @@
               }
             ],
             "title": "Description",
-            "description": "New description"
+            "description": "New scope note"
           },
           "color": {
             "anyOf": [
@@ -14819,7 +14819,19 @@
               }
             ],
             "title": "Description",
-            "description": "Optional longer description"
+            "description": "One-paragraph summary of what the taxonomy is for"
+          },
+          "vision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vision",
+            "description": "Full vision statement (markdown)"
           },
           "color": {
             "anyOf": [
@@ -14884,7 +14896,19 @@
               }
             ],
             "title": "Description",
-            "description": "Optional description"
+            "description": "One-paragraph summary"
+          },
+          "vision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vision",
+            "description": "Full vision statement (markdown)"
           },
           "color": {
             "anyOf": [
@@ -14975,7 +14999,19 @@
               }
             ],
             "title": "Description",
-            "description": "New description"
+            "description": "New one-paragraph summary"
+          },
+          "vision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vision",
+            "description": "New vision statement (markdown); empty string clears it"
           },
           "color": {
             "anyOf": [
