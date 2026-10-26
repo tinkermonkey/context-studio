@@ -1042,16 +1042,9 @@ class BatchRun(Base):  # type: ignore[valid-type,misc]
     __mapper_args__: Dict[str, Any] = {
         "polymorphic_on": run_type,
     }
-    __table_args__ = (
-        CheckConstraint(
-            "run_type IN ('import', 'extraction', 'individual_extraction', "
-            "'schema_extraction', 'schema_node_grounding', "
-            "'schema_node_definition_refinement', 'schema_node_connection_refinement', "
-            "'no_op')",
-            name="check_valid_run_type",
-        ),
-        Index("idx_run_type_status", "run_type", "status"),
-    )
+    # No CHECK on run_type: the subclasses' polymorphic identities are the only
+    # values ever written, and new run types (e.g. 'proposal') need no table rebuild.
+    __table_args__ = (Index("idx_run_type_status", "run_type", "status"),)
 
     def __repr__(self) -> str:
         return f"<BatchRun(id={self.id}, type={self.run_type}, status={self.status})>"
@@ -1475,6 +1468,100 @@ class SchemaConnectionRefinementRun(PipelineRun):
 
     def __repr__(self) -> str:
         return f"<SchemaConnectionRefinementRun(id={self.id}, status={self.status})>"
+
+
+class ChangeProposalRun(BatchRun):
+    """
+    A change proposal: ontology changes proposed by an agent, pipeline, bundle
+    import or person, decided per operation.
+
+    The proposal's id is its batch run id, so change events of applied
+    operations are tagged with it and reverting the run undoes them. Status
+    (open, done, reverted) lives in batch_runs.status.
+
+    Attributes:
+        id: UUID as string, primary key (FK to batch_runs.id)
+        taxonomy_id: The taxonomy the changes are about (no FK: the history
+            outlives a deleted taxonomy)
+        title: Short summary
+        rationale: Why these changes, as a whole
+        source: chat, mcp, pipeline, bundle or user
+        source_detail: More about the source (MCP client, conversation, file)
+    """
+
+    __tablename__ = "change_proposals"
+
+    id = Column(
+        String(36),
+        ForeignKey("batch_runs.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+    taxonomy_id = Column(String(36), nullable=False, index=True)
+    title = Column(String(255), nullable=False)
+    rationale = Column(Text, nullable=True)
+    source = Column(String(20), nullable=False, index=True)
+    source_detail = Column(String(255), nullable=True)
+
+    __mapper_args__: Dict[str, Any] = {
+        "polymorphic_identity": "proposal",
+    }
+
+    def __repr__(self) -> str:
+        return f"<ChangeProposalRun(id={self.id}, source={self.source}, status={self.status})>"
+
+
+class ProposalOperation(Base):  # type: ignore[valid-type,misc]
+    """
+    One proposed create, update, move or delete of one ontology entity, with its outcome.
+
+    Attributes:
+        id: UUID as string, primary key
+        proposal_id: FK to change_proposals.id
+        seq: Position in the proposal; operations apply in this order
+        op: create, update, move or delete
+        kind: taxonomy, scheme, class, property, attribute, individual or relationship
+        target_id: The existing entity (update, move, delete)
+        ref: Name a create gives its new entity for "$ref" use later in the proposal
+        fields: JSON of the fields set (all for a create, changed ones otherwise)
+        base: JSON of the touched fields' values when proposed (whole entity for a delete)
+        rationale: Why this change
+        evidence: JSON list of {quote, url, entity_id}
+        probability: Proposer's confidence, 0 to 1
+        scope: editorial, additive or breaking
+        status: pending, applied, rejected or failed
+        result_entity_id: Entity created or changed, once applied
+        reason: Why it failed or was rejected
+    """
+
+    __tablename__ = "proposal_operations"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    proposal_id = Column(
+        String(36),
+        ForeignKey("change_proposals.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    seq = Column(Integer, nullable=False)
+    op = Column(String(10), nullable=False)
+    kind = Column(String(20), nullable=False)
+    target_id = Column(String(36), nullable=True, index=True)
+    ref = Column(String(100), nullable=True)
+    fields = Column(JSON, nullable=False, default=dict)
+    base = Column(JSON, nullable=False, default=dict)
+    rationale = Column(Text, nullable=True)
+    evidence = Column(JSON, nullable=False, default=list)
+    probability = Column(Float, nullable=True)
+    scope = Column(String(10), nullable=False)
+    status = Column(String(10), nullable=False, default="pending", index=True)
+    result_entity_id = Column(String(36), nullable=True)
+    reason = Column(Text, nullable=True)
+
+    __table_args__ = (UniqueConstraint("proposal_id", "seq", name="uq_proposal_operation_seq"),)
+
+    def __repr__(self) -> str:
+        return f"<ProposalOperation(proposal={self.proposal_id}, seq={self.seq}, op={self.op})>"
 
 
 class GroundingWorkflow(Base):  # type: ignore[valid-type,misc]

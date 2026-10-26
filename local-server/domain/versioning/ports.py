@@ -6,6 +6,12 @@ from datetime import datetime
 from typing import Optional, Protocol, Sequence
 
 from domain.versioning.entities import ChangeEvent, Changeset, EntityVersion, Proposal
+from domain.versioning.proposals import (
+    ChangeProposal,
+    ProposalSource,
+    ProposalStatus,
+    ProposedOperation,
+)
 from domain.versioning.value_objects import (
     ChangeHistoryResult,
     ChangeOperation,
@@ -257,4 +263,44 @@ class SyncTarget(Protocol):
 
     def get_sync_status(self) -> SyncStatus:
         """Get the status of remote synchronization."""
+        ...
+
+
+class ChangeProposalRepository(Protocol):
+    """Port for storing change proposals and the outcome of each operation."""
+
+    def create(self, proposal: ChangeProposal) -> ChangeProposal:
+        """Store a new proposal with its operations; its id becomes a batch run id."""
+        ...
+
+    def get(self, proposal_id: str) -> Optional[ChangeProposal]:
+        """Return the proposal with its operations in seq order, or None."""
+        ...
+
+    def list_proposals(
+        self,
+        taxonomy_id: Optional[str] = None,
+        status: Optional[ProposalStatus] = None,
+        source: Optional[ProposalSource] = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[ChangeProposal]:
+        """Return proposals, newest first, optionally filtered."""
+        ...
+
+    def count_proposals(
+        self,
+        taxonomy_id: Optional[str] = None,
+        status: Optional[ProposalStatus] = None,
+        source: Optional[ProposalSource] = None,
+    ) -> int:
+        """Count proposals matching the filters."""
+        ...
+
+    def save_operations(self, proposal_id: str, operations: Sequence[ProposedOperation]) -> None:
+        """Persist the status, result and reason of these operations."""
+        ...
+
+    def set_status(self, proposal_id: str, status: ProposalStatus) -> None:
+        """Persist the proposal's status."""
         ...
