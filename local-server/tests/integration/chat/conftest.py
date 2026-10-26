@@ -49,6 +49,9 @@ HEALTH_MONITORING_ID = "a0000000-0000-4000-8000-000000000007"
 REALIZES_ID = "a0000000-0000-4000-8000-000000000008"
 RELATIONSHIP_ID = "a0000000-0000-4000-8000-000000000009"
 LIST_CLASSES_ID = "a0000000-0000-4000-8000-00000000000a"
+DR_VISION = (
+    "# Design charter\n\nAn element is a named architectural fact a maintainer would point to."
+)
 
 
 @dataclass
@@ -76,6 +79,7 @@ def dr_workspace():
                 title="Documentation Robotics",
                 identifier="dr_spec",
                 description="Architecture model layers",
+                vision=DR_VISION,
             )
         )
         for scheme_id, title, identifier in (

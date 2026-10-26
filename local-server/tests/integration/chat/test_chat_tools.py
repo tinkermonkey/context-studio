@@ -8,7 +8,7 @@ import json
 
 import pytest
 
-from adapters.chat.tools import MAX_RESULT_CHARS, build_chat_tools
+from adapters.chat.tools import MAX_RESULT_CHARS, MAX_VISION_CHARS, build_chat_tools
 from adapters.persistence.sqlite.individual_vector_index import SqliteIndividualVectorIndex
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from domain.chat.value_objects import EntityRef
@@ -16,6 +16,7 @@ from domain.ontology.entities import Individual
 from tests.integration.chat.conftest import (
     ADMIN_HEALTH_ID,
     API_SCHEME_ID,
+    DR_VISION,
     HEALTH_MONITORING_ID,
     LIST_CLASSES_ID,
     OPERATION_ID,
@@ -39,8 +40,9 @@ def ref_ids(outcome):
     return {e.id for e in outcome.entities}
 
 
-def test_seven_tools_with_schemas(tools):
+def test_read_tools_with_schemas(tools):
     assert list(tools) == [
+        "list_taxonomies",
         "search_entities",
         "get_entity",
         "list_children",
@@ -145,7 +147,37 @@ async def test_search_uses_vector_indexes_for_meaning(dr_workspace):
     assert individuals["results"][0]["id"] == ADMIN_HEALTH_ID
 
 
+class TestListTaxonomies:
+    async def test_lists_taxonomies_with_summary_and_vision_flag(self, tools):
+        outcome, result = await call(tools, "list_taxonomies")
+
+        assert result["total"] == 1
+        [taxonomy] = result["taxonomies"]
+        assert taxonomy["id"] == TAXONOMY_ID and taxonomy["kind"] == "taxonomy"
+        assert taxonomy["summary"] == "Architecture model layers"
+        assert taxonomy["has_vision"] is True
+        assert taxonomy["schemes"] == 2
+        assert ref_ids(outcome) == {TAXONOMY_ID}
+
+
 class TestGetEntity:
+    async def test_taxonomy_details_include_vision(self, tools):
+        outcome, result = await call(tools, "get_entity", id=TAXONOMY_ID)
+
+        assert result["kind"] == "taxonomy"
+        assert result["description"] == "Architecture model layers"
+        assert result["vision"] == DR_VISION
+        assert result["counts"]["schemes"] == 2
+        assert ref_ids(outcome) == {TAXONOMY_ID}
+
+    async def test_long_vision_is_capped_with_a_note(self, tools, dr_workspace):
+        dr_workspace.ontology.update_taxonomy(TAXONOMY_ID, vision="x" * (MAX_VISION_CHARS + 500))
+
+        _, result = await call(tools, "get_entity", id=TAXONOMY_ID)
+
+        assert result["vision"].startswith("x" * MAX_VISION_CHARS)
+        assert f"truncated at {MAX_VISION_CHARS}" in result["vision"]
+
     async def test_class_details(self, tools):
         outcome, result = await call(tools, "get_entity", id=OPERATION_ID)
 
