@@ -24,6 +24,11 @@ _SUMMARY_TAXONOMIES = 20
 _TAXONOMY_SUMMARY_CHARS = 400
 
 
+def _one_line_summary(description: str) -> str:
+    """A summary on one line (so it stays one bullet), cut to _TAXONOMY_SUMMARY_CHARS."""
+    return shortened(" ".join(description.split()), _TAXONOMY_SUMMARY_CHARS) or ""
+
+
 class ConfigChatSettings:
     """ChatSettings port over config.json."""
 
@@ -64,7 +69,7 @@ class OntologyWorkspaceContext:
         if taxonomies:
             lines = [
                 (
-                    f"- {t.title}: {shortened(' '.join(t.description.split()), _TAXONOMY_SUMMARY_CHARS)}"
+                    f"- {t.title}: {_one_line_summary(t.description)}"
                     if t.description
                     else f"- {t.title}"
                 )
