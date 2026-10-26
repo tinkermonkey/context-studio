@@ -8,7 +8,8 @@ graph service and the vector indexes. Every entity in a result carries `id`,
 the outcome lists those entities so answers can link to them.
 
 Results are compact JSON capped at about 4,000 characters: when a result is
-longer, its item list is cut and the result says so.
+longer, its item list is cut and the result says so. A taxonomy's vision has its
+own cap (MAX_VISION_CHARS) because it is meant to be read whole.
 """
 
 from __future__ import annotations
@@ -26,6 +27,10 @@ from domain.ontology.services import OntologyService
 from utils.async_executor import run_sync_in_executor
 
 MAX_RESULT_CHARS = 4000
+# A taxonomy's vision is returned whole up to this size, beyond MAX_RESULT_CHARS.
+MAX_VISION_CHARS = 16000
+# list_taxonomies shows this much of each summary; get_entity has the rest.
+LISTING_SUMMARY_CHARS = 300
 DEFAULT_LIMIT = 20
 MAX_LIMIT = 50
 # Minimum cosine similarity for a vector-search hit to be returned.
@@ -269,6 +274,40 @@ _LIMIT_SCHEMA = {
 # ============================================================================
 
 
+class ListTaxonomiesTool(_Tool):
+    """Every taxonomy with its summary."""
+
+    name = "list_taxonomies"
+    description = (
+        "List every taxonomy in the workspace: id, title, identifier, the start of its"
+        " one-paragraph summary, whether a vision statement exists, and the number of"
+        " concept schemes. Start here to see what the workspace holds; read a"
+        " taxonomy's full summary and vision with get_entity."
+    )
+    input_schema = {"type": "object", "properties": {}}
+
+    def run(self, args: dict[str, Any]) -> ToolOutcome:
+        taxonomies = self._ontology.list_taxonomies(limit=None, sort_by="title")
+        items = [
+            {
+                **_ref_dict(ref_of(t)),
+                "identifier": t.identifier,
+                "summary": _shortened(t.description, LISTING_SUMMARY_CHARS),
+                "has_vision": bool(t.vision),
+                "schemes": self._ontology.count_concept_schemes(taxonomy_id=t.id),
+            }
+            for t in taxonomies
+        ]
+        # Never cut the list: workspaces hold a handful of taxonomies, and a missing
+        # one would be invisible. Shortened summaries keep the result small.
+        return _outcome(
+            {"taxonomies": items, "total": len(items)},
+            None,
+            f"{len(items)} taxonomies",
+            [ref_of(t) for t in taxonomies],
+        )
+
+
 class SearchEntitiesTool(_Tool):
     """Find entities by title text and by meaning."""
 
@@ -390,7 +429,9 @@ class GetEntityTool(_Tool):
     description = (
         "Get one entity by id: title, identifier, description, parents (taxonomy,"
         " scheme, parent class), classes of an individual, data properties, and counts"
-        " of children and relationships."
+        " of children and relationships. For a taxonomy, description is its"
+        " one-paragraph summary and vision is its full vision statement: what it is"
+        " for, what its classes and relationships model, and how changes are judged."
     )
     input_schema = {
         "type": "object",
@@ -416,6 +457,7 @@ class GetEntityTool(_Tool):
             result[field] = [_ref_dict(r) for r in refs]
 
         if isinstance(entity, Taxonomy):
+            result["vision"] = _capped_vision(entity.vision)
             counts["schemes"] = self._ontology.count_concept_schemes(taxonomy_id=entity.id)
         elif isinstance(entity, ConceptScheme):
             link("parents", [entity.taxonomy_id])
@@ -437,6 +479,23 @@ class GetEntityTool(_Tool):
             counts["relationships_in"] = self._ontology.count_relationships(target_id=entity.id)
         result["counts"] = counts
         return _outcome(result, None, f"{ref.title} ({ref.kind})", related)
+
+
+def _shortened(text: Optional[str], limit: int) -> Optional[str]:
+    """The text cut to `limit` characters at a word boundary, marked with an ellipsis."""
+    if text is None or len(text) <= limit:
+        return text
+    return text[:limit].rsplit(" ", 1)[0] + "…"
+
+
+def _capped_vision(vision: Optional[str]) -> Optional[str]:
+    """The vision text, cut at MAX_VISION_CHARS with a note saying so."""
+    if vision is None or len(vision) <= MAX_VISION_CHARS:
+        return vision
+    return (
+        vision[:MAX_VISION_CHARS]
+        + f"\n\n[vision truncated at {MAX_VISION_CHARS} of {len(vision)} characters]"
+    )
 
 
 def _data_properties(entity: Class | Individual) -> dict[str, Any]:
@@ -738,9 +797,15 @@ def build_chat_tools(
     schema_index: Optional[SchemaVectorIndex] = None,
     individual_index: Optional[IndividualVectorIndex] = None,
 ) -> list[_Tool]:
-    """The seven read-only v1 tools, in the order offered to the model."""
+    """
+    The read-only tools, in the order offered to the model.
+
+    The same list serves the in-app chat and the MCP server, so both can do the
+    same things.
+    """
     resolver = EntityResolver(ontology)
     return [
+        ListTaxonomiesTool(ontology, resolver),
         SearchEntitiesTool(ontology, resolver, embedding, schema_index, individual_index),
         GetEntityTool(ontology, resolver),
         ListChildrenTool(ontology, resolver),

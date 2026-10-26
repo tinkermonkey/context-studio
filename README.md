@@ -49,6 +49,18 @@ The domain layer (`domain/`) has zero infrastructure imports — no FastAPI, no 
 
 The front end is built strictly after the corresponding back-end API is implemented and validated — API contracts and generated types come first, then hooks and services, then the UX workflows that use them.
 
+### MCP server (`/mcp`)
+
+The running back end serves an MCP server at `/mcp`, so Claude Code and other MCP clients can read the workspace. It offers the same read-only tools as the in-app chat (`list_taxonomies`, `search_entities`, `get_entity`, and the list, neighbor and path tools), plus each taxonomy's vision statement as a markdown resource. Tool results include links to the entity pages in the app (base URL from `server.ui_base_url` in `config.json`; null turns links off).
+
+Connect Claude Code while the back end is running:
+
+```bash
+claude mcp add --transport http context-studio http://127.0.0.1:8000/mcp
+```
+
+The server only starts when `server.host` is a loopback address, and it refuses requests whose `Host` or `Origin` header is not local, so a web page cannot reach it through the browser.
+
 ## Status
 
 The back end is an active greenfield rebuild replacing a frozen legacy implementation (kept under `/legacy` for reference only, with no backwards-compatibility requirement). The front end is being built out page by page against the new API as each capability lands on the back end.

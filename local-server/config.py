@@ -77,6 +77,13 @@ class ServerConfig(BaseModel):
     host: str = Field(default="127.0.0.1", description="Server host address")
     port: int = Field(default=8000, ge=1024, le=65535, description="Server port")
     cors_origins: List[str] = Field(default=["*"], description="CORS allowed origins")
+    ui_base_url: Optional[str] = Field(
+        default="http://localhost:3100",
+        description=(
+            "Base URL of the UI, used to give MCP clients links to entity pages;"
+            " null leaves links out"
+        ),
+    )
 
 
 class DatabaseConfig(BaseModel):

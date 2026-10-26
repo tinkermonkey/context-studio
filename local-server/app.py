@@ -13,7 +13,7 @@ Architecture:
 """
 
 import logging
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import cast
@@ -35,6 +35,14 @@ from adapters.events.in_process import InProcessEventPublisher
 from adapters.graph.networkx_engine import NetworkXGraphEngine
 from adapters.graph.rdflib_engine import RDFLibQueryEngine
 from adapters.llm.provider_router import LLMProviderRouter
+from adapters.mcp.links import EntityLinks
+from adapters.mcp.server import (
+    McpEndpoint,
+    build_mcp_server,
+    build_session_manager,
+    is_loopback_host,
+    loopback_security,
+)
 from adapters.metrics.system_collector import SystemMetricsCollector
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from adapters.persistence.sqlite.batch_repo import BatchRepository
@@ -163,6 +171,10 @@ logger = get_logger(__name__)
 # Domain code logs through std logging (it can't import utils.logger); attach the
 # log file handler to the "domain" package logger so those records reach it too.
 get_logger("domain")
+
+
+# MCP endpoint at /mcp: mounted below, given its session manager in the lifespan.
+mcp_endpoint = McpEndpoint()
 
 
 # ==================== Event Handlers ====================
@@ -755,16 +767,18 @@ async def lifespan(app: FastAPI):
         app.state.clusterer = clusterer
         app.state.schema_vector_index = schema_vector_index
 
-        # Chat assistant: read-only tools over the ontology and graph services
+        # Read-only tools over the ontology and graph services, shared by the chat
+        # assistant and the MCP server so both can do the same things
+        read_tools = build_chat_tools(
+            ontology_service,
+            graph_service,
+            embedding=embedding_service,
+            schema_index=schema_vector_index,
+            individual_index=individual_vector_index,
+        )
         app.state.chat_service = ChatService(
             model=llm_router,
-            tools=build_chat_tools(
-                ontology_service,
-                graph_service,
-                embedding=embedding_service,
-                schema_index=schema_vector_index,
-                individual_index=individual_vector_index,
-            ),
+            tools=read_tools,
             repository=SqliteConversationRepository(operations_session_factory),
             settings=ConfigChatSettings(config_manager),
             workspace=OntologyWorkspaceContext(ontology_service),
@@ -775,7 +789,25 @@ async def lifespan(app: FastAPI):
         # Instrument app after FastAPI and database are initialized
         telemetry.instrument_app(app, db_engine=db_manager.get_local_engine())
 
-        yield
+        async with AsyncExitStack() as mcp_stack:
+            # MCP server for Claude Code and other MCP clients, loopback hosts only
+            if is_loopback_host(settings.server.host):
+                mcp_server = build_mcp_server(
+                    read_tools, ontology_service, EntityLinks(settings.server.ui_base_url)
+                )
+                session_manager = build_session_manager(mcp_server, loopback_security())
+                await mcp_stack.enter_async_context(session_manager.run())
+                mcp_endpoint.session_manager = session_manager
+                logger.info("MCP server available at /mcp")
+            else:
+                logger.warning(
+                    "MCP server not started: server.host %r is not a loopback address",
+                    settings.server.host,
+                )
+
+            yield
+
+            mcp_endpoint.session_manager = None
 
         logger.info("Shutting down Context Studio server")
 
@@ -825,6 +857,8 @@ app.include_router(versioning_router)
 app.include_router(admin_router)
 app.include_router(interchange_router)
 app.include_router(chat_router)
+# A route rather than a mount, so POST /mcp is served without a redirect to /mcp/
+app.add_route("/mcp", mcp_endpoint, include_in_schema=False)
 
 
 # ==================== Exception Handlers ====================
