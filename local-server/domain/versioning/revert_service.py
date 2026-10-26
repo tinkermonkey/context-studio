@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Optional
 
 from domain.ontology.events import GraphInvalidated
 from domain.ontology.snapshots import entity_from_snapshot
-from domain.ontology.value_objects import ExternalReference
+from domain.ontology.value_objects import DataType, ExternalReference
 from domain.versioning.exceptions import RevertConflictError
 from domain.versioning.value_objects import ChangeOperation
 
@@ -403,6 +403,10 @@ class RevertService:
             if prop:
                 self._ontology_repo.delete_property_definition(entity_id)
                 return True
+        elif entity_type == "attribute_definition":
+            if self._ontology_repo.get_attribute_definition(entity_id):
+                self._ontology_repo.delete_attribute_definition(entity_id)
+                return True
         else:
             raise ValueError(f"Unknown entity type for create revert: {entity_type}")
         return False
@@ -458,6 +462,12 @@ class RevertService:
                 self._restore_entity_state(prop, previous_state)
                 self._ontology_repo.save_property_definition(prop)
                 return True
+        elif entity_type == "attribute_definition":
+            attr = self._ontology_repo.get_attribute_definition(entity_id)
+            if attr:
+                self._restore_entity_state(attr, previous_state)
+                self._ontology_repo.save_attribute_definition(attr)
+                return True
         else:
             raise ValueError(f"Unknown entity type for update revert: {entity_type}")
         return False
@@ -505,6 +515,9 @@ class RevertService:
             if key == "external_references":
                 # Change events carry references as JSON dicts (see ClassUpdated).
                 value = [ExternalReference.from_dict(ref) for ref in value or []]
+            elif key == "datatype" and value is not None:
+                # An attribute's datatype is stored in the change event as its plain value.
+                value = DataType(value)
             try:
                 setattr(entity, key, value)
             except Exception as exc:

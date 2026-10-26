@@ -3,9 +3,9 @@ Load a Context Studio bundle (v0) into the workspace ontology.
 
 A bundle describes another project's ontology (see scripts/bundle_loader.py
 for the format). Loading is idempotent: run it again after the project's
-bundle changes and only the differences are written. Changes are recorded as
-change events (attribute definitions not yet). Entities the bundle no longer
-contains are reported, never deleted.
+bundle changes and only the differences are written. Every change is recorded
+as a change event. Entities the bundle no longer contains are reported, never
+deleted.
 
 Usage (from local-server/, venv active):
     python scripts/import_bundle.py PATH/TO/project.bundle.json
@@ -33,6 +33,8 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from config import get_config_manager
 from domain.ontology.events import (
+    AttributeDefinitionCreated,
+    AttributeDefinitionUpdated,
     ClassCreated,
     ClassMoved,
     ClassUpdated,
@@ -76,6 +78,8 @@ def build_import_service(
         (IndividualCreated, recorder.on_individual_created),
         (IndividualUpdated, recorder.on_individual_updated),
         (RelationshipCreated, recorder.on_relationship_created),
+        (AttributeDefinitionCreated, recorder.on_attribute_definition_created),
+        (AttributeDefinitionUpdated, recorder.on_attribute_definition_updated),
     ):
         publisher.subscribe(event, handler)
     return OntologyService(
