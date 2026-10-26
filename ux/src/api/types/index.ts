@@ -73,7 +73,7 @@ export interface paths {
     get: operations["get_taxonomy_api_taxonomies__taxonomy_id__get"];
     /**
      * Update Taxonomy
-     * @description Update a taxonomy's title, description, and/or color.
+     * @description Update a taxonomy's title, summary (description), vision, and/or color.
      *
      *     Args:
      *         taxonomy_id: The taxonomy ID
@@ -4936,7 +4936,7 @@ export interface components {
       identifier?: string | null;
       /**
        * Description
-       * @description Optional longer description
+       * @description Scope note: what belongs in the scheme and what does not
        */
       description?: string | null;
     };
@@ -4967,7 +4967,7 @@ export interface components {
       title: string;
       /**
        * Description
-       * @description Optional description
+       * @description Scope note
        */
       description?: string | null;
       /**
@@ -5011,7 +5011,7 @@ export interface components {
       title?: string | null;
       /**
        * Description
-       * @description New description
+       * @description New scope note
        */
       description?: string | null;
       /**
@@ -8645,9 +8645,14 @@ export interface components {
       identifier?: string | null;
       /**
        * Description
-       * @description Optional longer description
+       * @description One-paragraph summary of what the taxonomy is for
        */
       description?: string | null;
+      /**
+       * Vision
+       * @description Full vision statement (markdown)
+       */
+      vision?: string | null;
       /**
        * Color
        * @description Optional hex color '#rrggbb'
@@ -8687,9 +8692,14 @@ export interface components {
       title: string;
       /**
        * Description
-       * @description Optional description
+       * @description One-paragraph summary
        */
       description?: string | null;
+      /**
+       * Vision
+       * @description Full vision statement (markdown)
+       */
+      vision?: string | null;
       /**
        * Color
        * @description Optional hex color '#rrggbb'
@@ -8731,9 +8741,14 @@ export interface components {
       title?: string | null;
       /**
        * Description
-       * @description New description
+       * @description New one-paragraph summary
        */
       description?: string | null;
+      /**
+       * Vision
+       * @description New vision statement (markdown); empty string clears it
+       */
+      vision?: string | null;
       /**
        * Color
        * @description New hex color '#rrggbb' or null to clear

@@ -13,7 +13,6 @@ from domain.ontology.events import (
     ClassDeleted,
     ClassMoved,
     ClassUpdated,
-    ConceptSchemeUpdated,
     IndividualCreated,
     IndividualDeleted,
     IndividualUpdated,
@@ -424,24 +423,6 @@ class TestOntologyHandlers:
         assert call_args.kwargs["entity_type"] == "property_definition"
         assert call_args.kwargs["operation"] == "update"
         assert call_args.kwargs["new_state"]["title"] == "Updated Title"
-        assert "title" in call_args.kwargs["change_reason"]
-
-    def test_on_concept_scheme_updated(self, recorder, mock_change_repo):
-        """Test ConceptSchemeUpdated event recording."""
-        mock_change_repo.record_change.return_value = "change-123"
-        event = ConceptSchemeUpdated(
-            concept_scheme_id="scheme-1",
-            title="New Scheme Title",
-        )
-
-        recorder.on_concept_scheme_updated(event)
-
-        mock_change_repo.record_change.assert_called_once()
-        call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs["entity_id"] == "scheme-1"
-        assert call_args.kwargs["entity_type"] == "concept_scheme"
-        assert call_args.kwargs["operation"] == "update"
-        assert call_args.kwargs["new_state"]["title"] == "New Scheme Title"
         assert "title" in call_args.kwargs["change_reason"]
 
     def test_on_individual_updated(self, recorder, mock_change_repo):

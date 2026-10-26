@@ -155,6 +155,33 @@ class TestTaxonomyCRUD:
         assert body["title"] == "Updated Title"
         assert body["version"] == 2
 
+    def test_taxonomy_vision_round_trips_through_the_api(self, client):
+        """POST and PUT accept a vision, GET returns it, and an empty string clears it."""
+        create_response = client.post(
+            "/api/taxonomies",
+            json={
+                "title": "Vision Test Taxonomy",
+                "description": "One-paragraph summary.",
+                "vision": "# Vision\n\nWhat the taxonomy is for.",
+            },
+        )
+        assert create_response.status_code == status.HTTP_201_CREATED
+        taxonomy_id = create_response.json()["id"]
+        assert create_response.json()["vision"] == "# Vision\n\nWhat the taxonomy is for."
+
+        update_response = client.put(
+            f"/api/taxonomies/{taxonomy_id}", json={"vision": "# Vision\n\nRevised."}
+        )
+        assert update_response.status_code == status.HTTP_200_OK
+        assert update_response.json()["vision"] == "# Vision\n\nRevised."
+        assert update_response.json()["description"] == "One-paragraph summary."
+
+        body = client.get(f"/api/taxonomies/{taxonomy_id}").json()
+        assert body["vision"] == "# Vision\n\nRevised."
+
+        cleared = client.put(f"/api/taxonomies/{taxonomy_id}", json={"vision": ""}).json()
+        assert cleared["vision"] is None
+
     def test_delete_taxonomy_returns_204(self, client):
         """DELETE /api/taxonomies/{id} returns 204."""
         create_response = client.post("/api/taxonomies", json={"title": "Delete Test Taxonomy"})

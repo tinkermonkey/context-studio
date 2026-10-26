@@ -101,7 +101,6 @@ from domain.ontology.events import (
     ClassDeleted,
     ClassMoved,
     ClassUpdated,
-    ConceptSchemeUpdated,
     GraphInvalidated,
     IndividualCreated,
     IndividualDeleted,
@@ -669,12 +668,6 @@ async def lifespan(app: FastAPI):
 
         event_publisher.subscribe(SchemeDeleted, change_recorder.on_scheme_deleted)
         logger.info("Event subscription: SchemeDeleted -> ChangeEventRecorder.on_scheme_deleted")
-
-        event_publisher.subscribe(ConceptSchemeUpdated, change_recorder.on_concept_scheme_updated)
-        logger.info(
-            "Event subscription: ConceptSchemeUpdated ->"
-            " ChangeEventRecorder.on_concept_scheme_updated"
-        )
 
         event_publisher.subscribe(IndividualCreated, change_recorder.on_individual_created)
         logger.info(

@@ -304,6 +304,7 @@ class SQLiteOntologyRepository:
                     identifier=taxonomy.identifier,
                     title=taxonomy.title,
                     description=taxonomy.description,
+                    vision=taxonomy.vision,
                     color=taxonomy.color,
                     created_at=datetime.now(timezone.utc),
                     last_modified=datetime.now(timezone.utc),
@@ -314,6 +315,7 @@ class SQLiteOntologyRepository:
                 # Update existing — identifier is immutable post-create
                 orm_entity.title = taxonomy.title  # type: ignore[assignment]
                 orm_entity.description = taxonomy.description  # type: ignore[assignment]
+                orm_entity.vision = taxonomy.vision  # type: ignore[assignment]
                 orm_entity.color = taxonomy.color  # type: ignore[assignment]
                 orm_entity.status = taxonomy.status.value  # type: ignore[assignment]
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]

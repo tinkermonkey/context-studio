@@ -133,6 +133,7 @@ async def create_taxonomy(
             request.description,
             request.color,
             request.identifier,
+            request.vision,
         )
         return TaxonomyResponse.model_validate(taxonomy)
     except Exception as exc:
@@ -225,7 +226,7 @@ async def update_taxonomy(
     service: OntologyService = Depends(get_ontology_service),
 ) -> TaxonomyResponse:
     """
-    Update a taxonomy's title, description, and/or color.
+    Update a taxonomy's title, summary (description), vision, and/or color.
 
     Args:
         taxonomy_id: The taxonomy ID
@@ -245,6 +246,7 @@ async def update_taxonomy(
             title=request.title,
             description=request.description,
             color=request.color,
+            vision=request.vision,
         )
         return TaxonomyResponse.model_validate(taxonomy)
     except Exception as exc:

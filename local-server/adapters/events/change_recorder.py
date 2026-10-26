@@ -20,7 +20,6 @@ from domain.ontology.events import (
     ClassDeleted,
     ClassMoved,
     ClassUpdated,
-    ConceptSchemeUpdated,
     IndividualCreated,
     IndividualDeleted,
     IndividualUpdated,
@@ -285,18 +284,6 @@ class ChangeEventRecorder:
                 "description": event.description,
             },
             change_reason="Property definition updated: title, description",
-        )
-
-    def on_concept_scheme_updated(self, event: ConceptSchemeUpdated) -> None:
-        """Handle ConceptSchemeUpdated events."""
-        self._record(
-            entity_id=event.concept_scheme_id,
-            entity_type="concept_scheme",
-            operation=ChangeOperation.UPDATE,
-            new_state={
-                "title": event.title,
-            },
-            change_reason="Concept scheme updated: title",
         )
 
     # --- DELETE Pattern Handlers ---

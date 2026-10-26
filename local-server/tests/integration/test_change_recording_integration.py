@@ -24,7 +24,6 @@ from domain.ontology.events import (
     ClassDeleted,
     ClassMoved,
     ClassUpdated,
-    ConceptSchemeUpdated,
     PropertyDefinitionCreated,
     PropertyDefinitionDeleted,
     PropertyDefinitionUpdated,
@@ -110,7 +109,6 @@ def change_recorder(change_repo, event_publisher):
     event_publisher.subscribe(TaxonomyDeleted, recorder.on_taxonomy_deleted)
     event_publisher.subscribe(SchemeUpdated, recorder.on_scheme_updated)
     event_publisher.subscribe(SchemeDeleted, recorder.on_scheme_deleted)
-    event_publisher.subscribe(ConceptSchemeUpdated, recorder.on_concept_scheme_updated)
     event_publisher.subscribe(ExtractionCompleted, recorder.on_extraction_completed)
 
     return recorder
