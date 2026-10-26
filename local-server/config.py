@@ -96,6 +96,14 @@ class LoggingConfig(BaseModel):
     backup_count: int = Field(default=5, description="Number of backup log files")
 
 
+# LLM key fields that fall back to an environment variable when config.json leaves them empty.
+LLM_KEY_ENV_FALLBACKS = {
+    "openai_api_key": "OPENAI_API_KEY",
+    "anthropic_api_key": "ANTHROPIC_API_KEY",
+    "openrouter_api_key": "OPENROUTER_API_KEY",
+}
+
+
 class LLMConfig(BaseModel):
     """LLM provider configuration section"""
 
@@ -105,13 +113,26 @@ class LLMConfig(BaseModel):
 
     @model_validator(mode="after")
     def apply_env_fallbacks(self) -> "LLMConfig":
-        if not self.openai_api_key:
-            self.openai_api_key = os.environ.get("OPENAI_API_KEY", "")
-        if not self.anthropic_api_key:
-            self.anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-        if not self.openrouter_api_key:
-            self.openrouter_api_key = os.environ.get("OPENROUTER_API_KEY", "")
+        for field_name, env_var in LLM_KEY_ENV_FALLBACKS.items():
+            if not getattr(self, field_name):
+                setattr(self, field_name, os.environ.get(env_var, ""))
         return self
+
+
+def without_env_derived_keys(settings_dump: dict) -> dict:
+    """
+    Blank LLM keys whose value came from the environment, before writing config.json.
+
+    The env fallback fills empty keys at load time; writing those values back
+    would copy secrets from .env into config.json (which may be committed).
+    """
+    llm = settings_dump.get("llm")
+    if isinstance(llm, dict):
+        for field_name, env_var in LLM_KEY_ENV_FALLBACKS.items():
+            value = llm.get(field_name)
+            if value and value == os.environ.get(env_var):
+                llm[field_name] = ""
+    return settings_dump
 
 
 class ReferenceConfig(BaseModel):
@@ -321,7 +342,7 @@ class ConfigurationManager:
             if config_dir:
                 os.makedirs(config_dir, exist_ok=True)
             with open(self.config_file, "w") as f:
-                json.dump(self.settings.model_dump(), f, indent=2)
+                json.dump(without_env_derived_keys(self.settings.model_dump()), f, indent=2)
             _config_logger.info(f"Successfully saved configuration to {self.config_file}")
             return True
         except PermissionError as e:
