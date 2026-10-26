@@ -292,7 +292,7 @@ class ListTaxonomiesTool(_Tool):
             {
                 **_ref_dict(ref_of(t)),
                 "identifier": t.identifier,
-                "summary": _shortened(t.description, LISTING_SUMMARY_CHARS),
+                "summary": shortened(t.description, LISTING_SUMMARY_CHARS),
                 "has_vision": bool(t.vision),
                 "schemes": self._ontology.count_concept_schemes(taxonomy_id=t.id),
             }
@@ -481,7 +481,7 @@ class GetEntityTool(_Tool):
         return _outcome(result, None, f"{ref.title} ({ref.kind})", related)
 
 
-def _shortened(text: Optional[str], limit: int) -> Optional[str]:
+def shortened(text: Optional[str], limit: int) -> Optional[str]:
     """The text cut to `limit` characters at a word boundary, marked with an ellipsis."""
     if text is None or len(text) <= limit:
         return text

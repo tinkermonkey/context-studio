@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from adapters.chat.tools import EntityResolver, kind_of
+from adapters.chat.tools import EntityResolver, kind_of, shortened
 from config import ConfigurationManager
 from domain.chat.value_objects import PageContext
 from domain.ontology.exceptions import EntityNotFoundError
@@ -20,6 +20,8 @@ from utils.async_executor import run_sync_in_executor
 
 # Taxonomies named in the workspace summary.
 _SUMMARY_TAXONOMIES = 20
+# Each taxonomy's one-paragraph summary is cut to this length in the workspace summary.
+_TAXONOMY_SUMMARY_CHARS = 400
 
 
 class ConfigChatSettings:
@@ -58,10 +60,17 @@ class OntologyWorkspaceContext:
             f" relationships {self._ontology.count_relationships()},"
             f" relationship types {self._ontology.count_property_definitions()}"
         )
-        names = ", ".join(t.title for t in taxonomies)
         summary = f"Workspace counts: {counts}."
-        if names:
-            summary += f" Taxonomies: {names}."
+        if taxonomies:
+            lines = [
+                (
+                    f"- {t.title}: {shortened(t.description, _TAXONOMY_SUMMARY_CHARS)}"
+                    if t.description
+                    else f"- {t.title}"
+                )
+                for t in taxonomies
+            ]
+            summary += " Taxonomies, with their one-paragraph summaries:\n" + "\n".join(lines)
         return summary
 
     def _describe_page(self, page_context: PageContext) -> Optional[str]:
