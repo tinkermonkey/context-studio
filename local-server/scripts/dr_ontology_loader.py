@@ -7,6 +7,12 @@ Context Studio's ontology domain model: one Taxonomy for the spec as a whole,
 one ConceptScheme per DR layer, one Class per node schema, and one
 PropertyDefinition per relationship schema.
 
+The spec's design charter (`spec/DESIGN_CHARTER.md`) becomes the taxonomy's
+vision, and its "In one paragraph" section the taxonomy's summary
+(description). Each layer file's description (`spec/layers/*.layer.json`)
+becomes its scheme's scope note. Entities from an earlier import that the spec
+no longer defines are reported as stale, never deleted.
+
 This module is shared by the CLI import script (`import_dr_ontology.py`) and
 by test fixtures that need the same DR-backed ontology built in-process, so
 the DR-spec-transform logic is not duplicated between them.
@@ -22,7 +28,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections import Counter, defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Iterable, Iterator
 
@@ -30,10 +36,14 @@ from domain.ontology.entities import Taxonomy
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import ExternalReference
+from scripts.bundle_loader import stale_entities
 
 DR_SOURCE = "documentation_robotics"
 DR_TAXONOMY_IDENTIFIER = "dr_spec"
 DR_TAXONOMY_TITLE = "Documentation Robotics"
+
+CHARTER_FILE = "DESIGN_CHARTER.md"
+_SUMMARY_HEADING = "## In one paragraph"
 
 _IDENTIFIER_MAX_LENGTH = 64
 _TRUNCATED_LENGTH = 59
@@ -80,6 +90,8 @@ class ImportSummary:
     classes_updated: int = 0
     property_definitions_created: int = 0
     property_definitions_updated: int = 0
+    charter_found: bool = False
+    stale: list[str] = field(default_factory=list)
 
 
 def _load_json(path: Path) -> Any:
@@ -98,6 +110,43 @@ def read_manifest(spec_dir: Path) -> tuple[str, list[dict[str, Any]]]:
         return manifest["specVersion"], manifest["layers"]
     except KeyError as exc:
         raise ValueError(f"Manifest {manifest_path} is missing required key {exc}") from exc
+
+
+def read_charter(spec_dir: Path) -> tuple[str | None, str | None]:
+    """
+    The spec's design charter as (vision, summary).
+
+    The vision is the whole file; the summary is the text under "## In one
+    paragraph", unwrapped into one line. Both are None when the spec has no
+    charter (older spec versions); the summary is None if the file has no such
+    section.
+    """
+    path = spec_dir / CHARTER_FILE
+    if not path.is_file():
+        return None, None
+    vision = path.read_text()
+    lines = vision.splitlines()
+    try:
+        start = next(i for i, line in enumerate(lines) if line.strip() == _SUMMARY_HEADING)
+    except StopIteration:
+        return vision, None
+    body: list[str] = []
+    for line in lines[start + 1 :]:
+        if line.startswith("## "):
+            break
+        if line.strip():
+            body.append(line.strip())
+    return vision, " ".join(body) or None
+
+
+def read_layer_descriptions(spec_dir: Path) -> dict[str, str]:
+    """Each layer's description from spec/layers/*.layer.json, by layer id."""
+    descriptions: dict[str, str] = {}
+    for path in sorted((spec_dir / "layers").glob("*.layer.json")):
+        data = _load_json(path)
+        if data.get("id") and data.get("description"):
+            descriptions[data["id"]] = data["description"]
+    return descriptions
 
 
 def iter_node_schemas(spec_dir: Path) -> Iterator[NodeSchemaRecord]:
@@ -226,23 +275,33 @@ def compress_relationship_identifiers(
 def _upsert_taxonomy(
     service: OntologyService,
     repo: OntologyRepository,
+    spec_dir: Path,
     spec_version: str,
     summary: ImportSummary,
 ) -> Taxonomy:
-    description = (
-        f"Documentation Robotics 12-layer architecture ontology (spec version {spec_version})"
-    )
+    """
+    Create or update the DR taxonomy. With a charter, its summary and vision are
+    written; without one (older specs), an existing summary and vision are left
+    as they are.
+    """
+    vision, charter_summary = read_charter(spec_dir)
+    summary.charter_found = vision is not None
     existing = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
     if existing is None:
         taxonomy = service.create_taxonomy(
             title=DR_TAXONOMY_TITLE,
-            description=description,
+            description=charter_summary
+            or f"Documentation Robotics architecture ontology (spec version {spec_version})",
             identifier=DR_TAXONOMY_IDENTIFIER,
+            vision=vision,
         )
         summary.taxonomies_created += 1
     else:
         taxonomy = service.update_taxonomy(
-            existing.id, title=DR_TAXONOMY_TITLE, description=description
+            existing.id,
+            title=DR_TAXONOMY_TITLE,
+            description=charter_summary,
+            vision=vision,
         )
         summary.taxonomies_updated += 1
     return taxonomy  # type: ignore[return-value]
@@ -253,6 +312,7 @@ def _upsert_concept_schemes(
     repo: OntologyRepository,
     taxonomy_id: str,
     layers: list[dict[str, Any]],
+    layer_descriptions: dict[str, str],
     summary: ImportSummary,
 ) -> dict[str, str]:
     scheme_id_by_layer: dict[str, str] = {}
@@ -260,7 +320,9 @@ def _upsert_concept_schemes(
         layer_id = layer["id"]
         identifier = layer_id.replace("-", "_")
         title = layer["name"]
-        description = (
+        # The layer's own description is the scheme's scope note; older specs
+        # without one get a generated line.
+        description = layer_descriptions.get(layer_id) or (
             f"DR spec layer '{layer_id}': {layer['nodeTypeCount']} node types, "
             f"{layer['relationshipCount']} relationship types"
         )
@@ -344,7 +406,8 @@ def _upsert_property_definitions(
     class_id_by_spec_node_id: dict[str, str],
     spec_dir: Path,
     summary: ImportSummary,
-) -> None:
+) -> set[str]:
+    property_ids: set[str] = set()
     records = list(iter_relationship_schemas(spec_dir))
     compressed_by_full_id = compress_relationship_identifiers(records)
 
@@ -369,7 +432,7 @@ def _upsert_property_definitions(
         if existing is None:
             # New entity: safe to set the external reference directly at creation time,
             # there is nothing pre-existing that a wholesale write could discard.
-            service.create_property_definition(
+            prop = service.create_property_definition(
                 identifier=identifier,
                 title=title,
                 description=record.description,
@@ -398,6 +461,8 @@ def _upsert_property_definitions(
             )
             summary.property_definitions_updated += 1
             _sync_external_reference(repo.save_property_definition, prop, record.full_identifier)
+        property_ids.add(prop.id)
+    return property_ids
 
 
 def import_dr_ontology(
@@ -416,15 +481,31 @@ def import_dr_ontology(
     spec_version, layers = read_manifest(spec_dir)
     summary = ImportSummary(spec_version=spec_version)
 
-    taxonomy = _upsert_taxonomy(ontology_service, ontology_repo, spec_version, summary)
+    taxonomy = _upsert_taxonomy(ontology_service, ontology_repo, spec_dir, spec_version, summary)
     scheme_id_by_layer = _upsert_concept_schemes(
-        ontology_service, ontology_repo, taxonomy.id, layers, summary
+        ontology_service,
+        ontology_repo,
+        taxonomy.id,
+        layers,
+        read_layer_descriptions(spec_dir),
+        summary,
     )
     class_id_by_spec_node_id = _upsert_classes(
         ontology_service, ontology_repo, scheme_id_by_layer, spec_dir, summary
     )
-    _upsert_property_definitions(
+    property_ids = _upsert_property_definitions(
         ontology_service, ontology_repo, class_id_by_spec_node_id, spec_dir, summary
     )
 
+    # Spec entities from an earlier import that this spec version no longer defines.
+    dr_classes = [
+        cls
+        for scheme in ontology_repo.list_concept_schemes(taxonomy_id=taxonomy.id, limit=None)
+        for cls in ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None)
+    ]
+    summary.stale = stale_entities(
+        [*dr_classes, *ontology_repo.list_property_definitions(limit=None)],
+        DR_SOURCE,
+        {*class_id_by_spec_node_id.values(), *property_ids},
+    )
     return summary

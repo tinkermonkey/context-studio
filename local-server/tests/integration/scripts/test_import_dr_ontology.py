@@ -366,3 +366,75 @@ class TestImportDrOntologyExternalReferencePreservation:
         prop = repo.get_property_definition_by_identifier("stakeholder_associated_with_goal")
         sources = {ref.source for ref in prop.external_references}
         assert sources == {"documentation_robotics", "manual"}
+
+
+CHARTER = """# Documentation Robotics Design Charter
+
+**Status:** Adopted.
+
+## In one paragraph
+
+Documentation Robotics models a software system
+as a federated set of elements.
+
+## What the specification is
+
+The long form.
+"""
+
+
+class TestDesignCharterAndLayerIntent:
+    """#1340: the charter becomes vision and summary; layer files give scope notes."""
+
+    def test_charter_sets_vision_and_unwrapped_summary(self, ontology_service, repo, spec_dir):
+        (spec_dir / "DESIGN_CHARTER.md").write_text(CHARTER)
+
+        summary = import_dr_ontology(ontology_service, repo, spec_dir)
+
+        taxonomy = repo.get_by_identifier("dr_spec")
+        assert summary.charter_found is True
+        assert taxonomy.vision == CHARTER
+        assert taxonomy.description == (
+            "Documentation Robotics models a software system as a federated set of elements."
+        )
+
+    def test_spec_without_charter_leaves_vision_and_summary_alone(
+        self, ontology_service, repo, spec_dir
+    ):
+        (spec_dir / "DESIGN_CHARTER.md").write_text(CHARTER)
+        import_dr_ontology(ontology_service, repo, spec_dir)
+        (spec_dir / "DESIGN_CHARTER.md").unlink()
+
+        summary = import_dr_ontology(ontology_service, repo, spec_dir)
+
+        taxonomy = repo.get_by_identifier("dr_spec")
+        assert summary.charter_found is False
+        assert taxonomy.vision == CHARTER
+        assert taxonomy.description.startswith("Documentation Robotics models")
+
+    def test_layer_description_becomes_the_scheme_scope_note(
+        self, ontology_service, repo, spec_dir
+    ):
+        layers = spec_dir / "layers"
+        layers.mkdir()
+        (layers / "01-motivation.layer.json").write_text(
+            json.dumps({"id": "motivation", "description": "Captures why the system exists."})
+        )
+
+        import_dr_ontology(ontology_service, repo, spec_dir)
+
+        assert repo.get_by_identifier("motivation").description == (
+            "Captures why the system exists."
+        )
+        assert repo.get_by_identifier("business").description.startswith("DR spec layer")
+
+    def test_entities_the_spec_dropped_are_reported_stale(self, ontology_service, repo, spec_dir):
+        import_dr_ontology(ontology_service, repo, spec_dir)
+        for path in (spec_dir / "schemas" / "relationships").rglob("*realizes*.json"):
+            path.unlink()
+
+        summary = import_dr_ontology(ontology_service, repo, spec_dir)
+
+        assert len(summary.stale) == 1
+        assert summary.stale[0].startswith("PropertyDefinition")
+        assert "motivation.goal.realizes.business.businessservice" in summary.stale[0]

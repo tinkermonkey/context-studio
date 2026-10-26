@@ -172,6 +172,19 @@ def main() -> int:
         f"updated={summary.property_definitions_updated:4d}"
     )
 
+    if summary.charter_found:
+        print("Design charter: taxonomy vision and summary set from DESIGN_CHARTER.md")
+    else:
+        print("Design charter: none in this spec; existing vision and summary left as they were")
+    if summary.stale:
+        print(
+            f"Stale (from an earlier import, not in this spec; not deleted): {len(summary.stale)}"
+        )
+        for entry in summary.stale:
+            print(f"  - {entry}")
+    else:
+        print("Stale: none")
+
     print("Reindexing schema vector index ...")
     vector_index = SqliteSchemaVectorIndex(session_factory, embedding_service)
     reindexed = vector_index.reindex_all()
