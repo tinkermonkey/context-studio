@@ -64,7 +64,7 @@ class OntologyWorkspaceContext:
         if taxonomies:
             lines = [
                 (
-                    f"- {t.title}: {shortened(t.description, _TAXONOMY_SUMMARY_CHARS)}"
+                    f"- {t.title}: {shortened(' '.join(t.description.split()), _TAXONOMY_SUMMARY_CHARS)}"
                     if t.description
                     else f"- {t.title}"
                 )

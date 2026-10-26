@@ -33,3 +33,12 @@ async def test_taxonomy_without_a_summary_is_listed_by_title(dr_workspace):
     summary = await context.summarize()
 
     assert "\n- House" in summary
+
+
+async def test_multi_line_summary_stays_on_one_bullet(dr_workspace):
+    dr_workspace.ontology.update_taxonomy(TAXONOMY_ID, description="First line.\n- Second line.")
+    context = OntologyWorkspaceContext(dr_workspace.ontology)
+
+    summary = await context.summarize()
+
+    assert "- Documentation Robotics: First line. - Second line." in summary
