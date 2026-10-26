@@ -70,6 +70,43 @@ describe("TaxonomyPage", () => {
     });
   });
 
+  it("shows the summary and renders the vision as markdown", async () => {
+    render(<TaxonomyPage id="tax-1" />);
+
+    const summary = await screen.findByTestId("taxonomy-summary-text");
+    expect(summary).toHaveClass("entity-definition");
+    expect(summary).toHaveTextContent("Architecture ontology");
+    const vision = screen.getByTestId("taxonomy-vision-text");
+    expect(vision).toHaveClass("intent-markdown");
+    expect(within(vision).getByRole("heading", { name: "Design charter" })).toBeInTheDocument();
+    expect(
+      within(vision).getByText("An element is a named architectural fact."),
+    ).toBeInTheDocument();
+  });
+
+  it("edits the vision in place", async () => {
+    let saved: unknown;
+    server.use(
+      http.put("*/api/taxonomies/:id", async ({ request }) => {
+        saved = await request.json();
+        return HttpResponse.json({});
+      }),
+    );
+    const user = userEvent.setup();
+    render(<TaxonomyPage id="tax-1" />);
+    await screen.findByTestId("taxonomy-vision-text");
+
+    await user.click(screen.getByTestId("taxonomy-vision-edit"));
+    const input = screen.getByTestId("taxonomy-vision-input");
+    expect(input).toHaveAttribute("aria-label", "Vision");
+    await user.clear(input);
+    await user.type(input, "# Revised");
+    await user.click(screen.getByTestId("taxonomy-vision-save"));
+
+    await vi.waitFor(() => expect(saved).toEqual({ vision: "# Revised" }));
+    expect(screen.queryByTestId("taxonomy-vision-input")).not.toBeInTheDocument();
+  });
+
   it("shows not found for an unknown taxonomy", async () => {
     render(<TaxonomyPage id="missing" />);
     expect(await screen.findByText("Taxonomy not found")).toBeInTheDocument();
@@ -107,6 +144,30 @@ describe("SchemePage", () => {
     const panel = screen.getByTestId("scheme-classes-panel");
     expect(within(panel).getByText("Modular, deployable part of a system")).toBeInTheDocument();
     expect(screen.getByTestId("entity-create")).toHaveTextContent("New class");
+  });
+
+  it("shows the scope note and edits it in place", async () => {
+    let saved: unknown;
+    server.use(
+      http.put("*/api/schemes/:id", async ({ request }) => {
+        saved = await request.json();
+        return HttpResponse.json({});
+      }),
+    );
+    const user = userEvent.setup();
+    render(<SchemePage id="scheme-1" />);
+
+    const note = await screen.findByTestId("scheme-scope-note-text");
+    expect(note).toHaveTextContent("Application layer");
+    await user.click(screen.getByTestId("scheme-scope-note-edit"));
+    const input = screen.getByTestId("scheme-scope-note-input");
+    await user.clear(input);
+    await user.type(input, "Application services and components");
+    await user.click(screen.getByTestId("scheme-scope-note-save"));
+
+    await vi.waitFor(() =>
+      expect(saved).toEqual({ description: "Application services and components" }),
+    );
   });
 });
 

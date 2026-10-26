@@ -70,7 +70,7 @@ const taxonomyColumns: Column<TaxonomyResponse>[] = [
   },
   {
     key: "description",
-    label: "Description",
+    label: "Summary",
     render: (value) => <span className="taxonomy-desc-cell">{(value as string) || "—"}</span>,
   },
   {

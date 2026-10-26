@@ -1704,6 +1704,69 @@ body.dark-canvas .hierarchy-row--has-individuals .hierarchy-row__meta {
   color: rgb(var(--canvas-fg-3));
 }
 
+/* A taxonomy's vision: rendered markdown, scrolling inside its panel when long. */
+.intent-markdown {
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 6px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: rgb(var(--canvas-fg-1));
+  overflow-wrap: anywhere;
+}
+
+.intent-markdown > :first-child {
+  margin-top: 0;
+}
+
+.intent-markdown h1,
+.intent-markdown h2,
+.intent-markdown h3 {
+  margin: 16px 0 6px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.intent-markdown h1 {
+  font-size: 16px;
+}
+
+.intent-markdown h2 {
+  font-size: 14.5px;
+}
+
+.intent-markdown h3 {
+  font-size: 13.5px;
+}
+
+.intent-markdown p,
+.intent-markdown ul,
+.intent-markdown ol {
+  margin: 0 0 8px;
+}
+
+.intent-markdown ul,
+.intent-markdown ol {
+  padding-left: 18px;
+}
+
+.intent-markdown ul {
+  list-style: disc;
+}
+
+.intent-markdown ol {
+  list-style: decimal;
+}
+
+.intent-markdown code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.intent-markdown a {
+  color: var(--accent-cyan);
+}
+
 .entity-identity {
   display: flex;
   flex-direction: column;

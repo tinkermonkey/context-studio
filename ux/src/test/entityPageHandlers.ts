@@ -19,6 +19,7 @@ export const taxonomy = createTaxonomy({
   identifier: "dr_spec",
   title: "Documentation Robotics",
   description: "Architecture ontology",
+  vision: "# Design charter\n\nAn element is a named architectural fact.",
 });
 export const scheme = createConceptScheme({
   id: "scheme-1",

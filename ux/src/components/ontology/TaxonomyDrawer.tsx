@@ -134,7 +134,7 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
               <KVGrid
                 rows={[
                   { key: "Title", value: taxonomy.title },
-                  { key: "Description", value: taxonomy.description || "—" },
+                  { key: "Summary", value: taxonomy.description || "—" },
                   { key: "Status", value: taxonomy.status },
                   {
                     key: "Version",
@@ -202,7 +202,7 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
                     }
                   }}
                 >
-                  <label className="form-group-label">Description</label>
+                  <label className="form-group-label">Summary</label>
                   <SuggestField
                     entityId={taxonomy.id}
                     value={descriptionDraft}
