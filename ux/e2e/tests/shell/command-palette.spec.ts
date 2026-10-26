@@ -1,4 +1,5 @@
 import { test, expect } from "../../fixtures/app-test";
+import { createClass, createConceptScheme, createTaxonomy } from "../../fixtures/factories";
 
 // The app wraps Heimdall's CommandPalette. When open it renders inside the
 // `command-palette` wrapper as `.command-palette` (role=dialog) with a
@@ -178,21 +179,36 @@ test.describe("Command Palette", () => {
     await expect(firstItem).toHaveClass(/command-palette__item--selected/);
   });
 
-  test("Test Case 10: Reopen via Topbar Search (⌘K hint)", async ({ page }) => {
-    const palette = page.locator(PALETTE);
+  test("Test Case 10: Typing in the Topbar Search Hands the Text to the Palette", async ({
+    page,
+  }) => {
+    const taxonomy = await createTaxonomy(page, { title: "Palette Handoff Model" });
+    const scheme = await createConceptScheme(page, taxonomy.id, { title: "Handoff Layer" });
+    await createClass(page, scheme.id, { title: "ApplicationService" });
+    await page.reload();
+    await page.waitForLoadState("networkidle");
 
-    // The Topbar search field opens the palette on input (searchHint "⌘K";
-    // Heimdall wires the search <input> onChange → onSearch → openPalette).
+    const palette = page.locator(PALETTE);
+    const input = page.locator(INPUT);
+    // Heimdall's Topbar search <input> calls onSearch on every change; the app
+    // moves the text into the palette and clears the topbar field.
     const topbarSearch = page.locator(".topbar__search");
     await expect(topbarSearch).toBeVisible();
-    await topbarSearch.pressSequentially("k");
+    await topbarSearch.click();
+    // Typed at full speed: keystrokes that land before the palette input has
+    // focus must still reach the query.
+    await page.keyboard.type("ApplicationService");
 
     await expect(palette).toBeVisible();
-    await expect(page.locator(INPUT)).toBeFocused();
+    await expect(input).toBeFocused();
+    await expect(input).toHaveValue("ApplicationService");
+    await expect(page.locator(ITEM).filter({ hasText: "ApplicationService" }).first()).toBeVisible();
+    await expect(topbarSearch).toHaveValue("");
 
-    const firstItem = page.locator(ITEM).first();
-    await expect(firstItem).toBeVisible();
-    await expect(firstItem).toHaveClass(/command-palette__item--selected/);
+    // Closing leaves nothing behind in either field.
+    await page.keyboard.press("Escape");
+    await expect(palette).not.toBeVisible();
+    await expect(topbarSearch).toHaveValue("");
   });
 
   test("Test Case 11: Empty State (No Results Match Query)", async ({ page }) => {

@@ -1444,7 +1444,16 @@ body.dark-canvas .diff-added {
 }
 
 /* ============ Entity pages (taxonomy / scheme / class / individual) ============ */
-/* Navigator tree beside the page; the page body puts sections beside an Identity card. */
+/* Navigator tree beside the page; the page body puts sections beside an Identity card.
+   Breakpoints are container queries, not media queries: the docked chat column
+   narrows the page canvas without changing the viewport. `.entity-page-frame`
+   (the page's width) sizes the navigator column; `.entity-page__main` (the
+   content column) decides whether the Identity card and header actions fit beside
+   the content or stack under it. */
+.entity-page-frame {
+  container: entity-page / inline-size;
+}
+
 .entity-page {
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);
@@ -1455,6 +1464,26 @@ body.dark-canvas .diff-added {
 .entity-page__navigator {
   position: sticky;
   top: 0;
+}
+
+@container entity-page (max-width: 999px) {
+  .entity-page {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+}
+
+/* Too narrow for a side column: the navigator sits above the page, shorter. */
+@container entity-page (max-width: 759px) {
+  .entity-page {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  .entity-page__navigator {
+    position: static;
+  }
+  .entity-page__navigator .entity-navigator__tree {
+    max-height: 200px;
+  }
 }
 
 .entity-navigator__tree {
@@ -1525,6 +1554,7 @@ body.dark-canvas .diff-added {
 }
 
 .entity-page__main {
+  container: entity-main / inline-size;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -1550,18 +1580,23 @@ body.dark-canvas .diff-added {
   min-width: 0;
 }
 
-@media (max-width: 1280px) {
+/* A narrow content column keeps a readable width: the Identity card moves under
+   the sections, header actions wrap under the title, and list pages' detail
+   drawers get narrower. */
+@container entity-main (max-width: 759px) {
   .entity-page__body {
     grid-template-columns: minmax(0, 1fr);
   }
-}
-
-@media (max-width: 1024px) {
-  .entity-page {
-    grid-template-columns: minmax(0, 1fr);
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
-  .entity-page__navigator {
-    position: static;
+  .page-header__actions {
+    flex-wrap: wrap;
+  }
+  .split-2 {
+    --inspector-width: 300px;
   }
 }
 
@@ -1692,10 +1727,14 @@ body.dark-canvas .diff-added {
 
 /* ------------ Chat panel (docked right column) ------------ */
 /* Open: the canvas stops scrolling and padding itself; the page pane and the
-   chat column each fill the canvas height (page scrolls, chat thread scrolls). */
+   chat column each fill the canvas height (page scrolls, chat thread scrolls).
+   Heimdall gives the canvas min-width: 1100px; with the chat column inside it,
+   that pushed the chat off-screen on viewports under ~1360px, so it is dropped
+   while chat is open (the page pane adapts through container queries). */
 .shell-layout__canvas:has(> .app-chat-layout--open) {
   padding: 0;
   overflow: hidden;
+  min-width: 0;
 }
 
 /* Closed: the wrappers add no boxes, so pages lay out exactly as without chat. */

@@ -177,7 +177,8 @@ class GraphViewEdge:
     A directed, typed edge between two graph view nodes.
 
     edge_type is one of:
-        relationship — an asserted Relationship (predicate = property definition title)
+        relationship — an asserted Relationship (predicate = the property definition's
+                       canonical predicate, else its title)
         schema       — a property definition's domain class -> range class
         instance_of  — individual -> class membership
         subclass_of  — class -> parent class

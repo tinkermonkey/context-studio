@@ -4,6 +4,7 @@ Unit tests for ChatService (the agent loop), using in-memory fakes for every por
 
 import copy
 import json
+import logging
 
 import pytest
 
@@ -410,6 +411,33 @@ class TestFailures:
         events = await run(service, conversation.id)
 
         assert isinstance(events[-1], ChatFailed)
+
+    async def test_model_error_is_logged_with_exception_info(self, caplog):
+        error = RuntimeError("connection reset")
+        service, _ = make_service(ScriptedModel([error]))
+        conversation = await service.create_conversation()
+
+        with caplog.at_level(logging.ERROR, logger="domain.chat.services"):
+            await run(service, conversation.id)
+
+        [record] = [r for r in caplog.records if r.name == "domain.chat.services"]
+        assert record.levelno == logging.ERROR
+        assert conversation.id in record.getMessage()
+        assert "RuntimeError: connection reset" in record.getMessage()
+        assert record.exc_info is not None and record.exc_info[1] is error
+
+    async def test_stream_without_turn_end_is_logged(self, caplog):
+        service, _ = make_service(ScriptedModel([TextDelta("x")]))
+        conversation = await service.create_conversation()
+
+        with caplog.at_level(logging.ERROR, logger="domain.chat.services"):
+            await run(service, conversation.id)
+
+        assert any(
+            "ended without finishing" in r.getMessage()
+            for r in caplog.records
+            if r.name == "domain.chat.services"
+        )
 
 
 class TestConversations:

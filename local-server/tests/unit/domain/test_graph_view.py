@@ -171,6 +171,19 @@ class TestGetGraphView:
         assert subclass_of.edge_type == "subclass_of"
         assert subclass_of.target == "cls_service"
 
+    def test_edges_are_labelled_with_canonical_predicate_when_set(
+        self, service, layered_repository
+    ):
+        repo = layered_repository
+        prop = repo.get_property_definition("prop_realized_by")
+        prop.canonical_predicate = "realizes"
+        repo.save_property_definition(prop)
+
+        edges = {e.id: e for e in service.get_graph_view().edges}
+
+        assert edges["rel_1"].predicate == "realizes"
+        assert edges["prop_realized_by"].predicate == "realizes"
+
     def test_edges_with_missing_endpoints_or_no_range_are_dropped(self, service):
         edge_ids = {e.id for e in service.get_graph_view().edges}
         assert "prop_dangling" not in edge_ids

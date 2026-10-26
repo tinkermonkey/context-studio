@@ -15,6 +15,12 @@ interface CommandPaletteState {
   query: string;
   actions: PaletteAction[];
   openPalette: (query?: string) => void;
+  /**
+   * Hand text typed outside the palette (the topbar search) to it: opens the
+   * palette with that text, or appends it to the query when already open, so
+   * keystrokes that land before the palette input takes focus are kept.
+   */
+  typeIntoPalette: (text: string) => void;
   closePalette: () => void;
   togglePalette: () => void;
   /** Text typed into the palette; drives the server-side entity search. */
@@ -28,6 +34,8 @@ export const useCommandPaletteStore = create<CommandPaletteState>((set) => ({
   query: "",
   actions: [],
   openPalette: (query = "") => set({ open: true, query }),
+  typeIntoPalette: (text) =>
+    set((state) => ({ open: true, query: state.open ? state.query + text : text })),
   closePalette: () => set({ open: false, query: "" }),
   togglePalette: () =>
     set((state) => ({ open: !state.open, query: state.open ? "" : state.query })),

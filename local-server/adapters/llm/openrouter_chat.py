@@ -19,6 +19,7 @@ from typing import Any, AsyncIterator, Optional, Sequence
 
 import httpx
 
+from adapters.llm.anthropic_provider import AnthropicProvider
 from adapters.llm.openrouter_provider import OpenRouterProvider
 from domain.chat.entities import ChatMessage
 from domain.chat.exceptions import ChatModelError
@@ -94,6 +95,18 @@ class OpenRouterChatModel:
         self._api_key = api_key
         self._transport = transport
         self._timeout = timeout
+
+    def list_models(self) -> list[str]:
+        """
+        Known model ids to suggest (OpenRouter serves many more).
+
+        The Claude ids, which route here by their bare names, then OpenRouter's
+        default model.
+        """
+        models = list(AnthropicProvider.AVAILABLE_MODELS)
+        if OpenRouterProvider.DEFAULT_MODEL not in models:
+            models.append(OpenRouterProvider.DEFAULT_MODEL)
+        return models
 
     async def stream_chat(
         self,

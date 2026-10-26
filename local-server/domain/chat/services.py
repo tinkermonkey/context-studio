@@ -228,10 +228,25 @@ class ChatService:
                     elif isinstance(event, ModelTurnEnded):
                         ended = event
             except Exception as e:  # noqa: BLE001 - any model failure ends the turn
-                logger.warning("Chat model request failed: %s: %s", type(e).__name__, e)
+                logger.error(
+                    "Chat turn failed in conversation %s (model %s, round %d): %s: %s",
+                    conversation.id,
+                    model,
+                    round_index,
+                    type(e).__name__,
+                    e,
+                    exc_info=True,
+                )
                 yield ChatFailed(message=_failure_message(e))
                 return
             if ended is None:
+                logger.error(
+                    "Chat turn failed in conversation %s (model %s, round %d):"
+                    " the model stream ended without finishing the turn",
+                    conversation.id,
+                    model,
+                    round_index,
+                )
                 yield ChatFailed(message="The model stream ended before the answer finished.")
                 return
 
@@ -264,6 +279,11 @@ class ChatService:
             if round_index == max_rounds:
                 await self._append(
                     conversation, history, ChatRole.USER, _unrun(tool_uses, _NOT_RUN_LIMIT)
+                )
+                logger.warning(
+                    "Chat turn in conversation %s used all %d tool rounds without an answer",
+                    conversation.id,
+                    max_rounds,
                 )
                 yield ChatFailed(
                     message=(
@@ -339,6 +359,7 @@ class ChatService:
     async def _run_tool(self, tool_use: ToolUseBlock) -> ToolOutcome:
         tool = self._tools.get(tool_use.name)
         if tool is None:
+            logger.warning("Chat model called unknown tool %r", tool_use.name)
             known = ", ".join(sorted(self._tools))
             return ToolOutcome(
                 content=json.dumps({"error": f"Unknown tool {tool_use.name!r}. Tools: {known}"}),

@@ -47,6 +47,14 @@ _NODE_TYPE_MAP = {
 _VALID_CENTRALITY_ALGORITHMS = ["pagerank", "betweenness", "closeness", "degree"]
 
 
+def _predicate_label(prop: PropertyDefinition) -> str:
+    """
+    Short label for a property definition's edges: its canonical predicate
+    ("accesses"), else its title, matching how the entity pages name it.
+    """
+    return prop.canonical_predicate or prop.title
+
+
 class GraphAnalysisService:
     """
     Domain service for knowledge graph analysis.
@@ -262,7 +270,7 @@ class GraphAnalysisService:
         prop_defs = [e for e in entities if isinstance(e, PropertyDefinition)]
 
         class_by_id = {str(c.id): c for c in classes}
-        prop_title_by_id = {str(p.id): p.title for p in prop_defs}
+        predicate_by_id = {str(p.id): _predicate_label(p) for p in prop_defs}
 
         nodes: list[GraphViewNode] = [
             GraphViewNode(
@@ -309,7 +317,7 @@ class GraphAnalysisService:
                     target=str(rel.target_id),
                     edge_type="relationship",
                     predicate_id=predicate_id,
-                    predicate=prop_title_by_id.get(predicate_id),
+                    predicate=predicate_by_id.get(predicate_id),
                 )
             )
         for prop in prop_defs:
@@ -321,7 +329,7 @@ class GraphAnalysisService:
                         target=str(prop.range_class_id),
                         edge_type="schema",
                         predicate_id=str(prop.id),
-                        predicate=prop.title,
+                        predicate=_predicate_label(prop),
                     )
                 )
         for ind in individuals:
