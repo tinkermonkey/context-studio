@@ -2339,7 +2339,28 @@ class OntologyService:
                 handler_names,
             )
 
+        if "taxonomy_id" in changed:
+            # The scheme and its classes left one taxonomy's graph and joined another's
+            self._publish_graph_invalidated(
+                [str(old_values["taxonomy_id"]), scheme.taxonomy_id], "concept_scheme_moved"
+            )
+
         return scheme
+
+    def _publish_graph_invalidated(self, taxonomy_ids: list[str], reason: str) -> None:
+        """Publish GraphInvalidated for each taxonomy, logging any handler failures."""
+        for taxonomy_id in taxonomy_ids:
+            failures = self._event_publisher.publish(
+                GraphInvalidated(taxonomy_id=taxonomy_id, reason=reason)
+            )
+            if failures:
+                handler_names = ", ".join(name for name, _ in failures)
+                _logger.warning(
+                    "Event handlers failed for GraphInvalidated (taxonomy_id=%s): %s. "
+                    "Graph caches may be stale until the next invalidation.",
+                    taxonomy_id,
+                    handler_names,
+                )
 
     def count_classes(
         self,

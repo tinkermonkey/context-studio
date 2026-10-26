@@ -165,6 +165,9 @@ class FakeOntologyRepository:
                     f"ConceptScheme with title '{scheme.title}' already exists in this" " taxonomy"
                 )
         self._schemes[scheme.id] = scheme
+        for cls in self._classes.values():
+            if cls.concept_scheme_id == scheme.id:
+                cls.taxonomy_id = scheme.taxonomy_id
         return scheme
 
     def delete_concept_scheme(self, concept_scheme_id: str) -> bool:

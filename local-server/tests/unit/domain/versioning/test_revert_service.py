@@ -26,12 +26,14 @@ from domain.ontology.entities import (
     Relationship,
     Taxonomy,
 )
+from domain.ontology.events import GraphInvalidated
 from domain.ontology.snapshots import entity_snapshot
 from domain.ontology.value_objects import DataType, ExternalReference
 from domain.versioning.exceptions import RevertConflictError
 from domain.versioning.revert_service import RevertService
 from domain.versioning.value_objects import ChangeOperation
 from tests.fakes.fake_change_repository import FakeChangeRepository
+from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_individual_vector_index import FakeIndividualVectorIndex
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_schema_vector_index import FakeSchemaVectorIndex
@@ -670,6 +672,67 @@ def test_inverse_delete_concept_scheme(ontology_repo, change_repo, revert_svc):
     assert recreated is not None
     assert recreated.title == "Deleted Scheme"
     assert recreated.taxonomy_id == "tx-1"
+
+
+def _move_scheme_in_run(ontology_repo, change_repo):
+    """Move scheme-1 (with one class) from tx-1 to tx-2 and record it in run-move."""
+    ontology_repo.save_taxonomy(Taxonomy(id="tx-2", identifier="other_tax", title="Other"))
+    ontology_repo.save_class(
+        Class(id="cls-1", concept_scheme_id="scheme-1", taxonomy_id="tx-1", title="Animal")
+    )
+    scheme = ontology_repo.get_concept_scheme("scheme-1")
+    scheme.taxonomy_id = "tx-2"
+    ontology_repo.save_concept_scheme(scheme)
+    change_repo.record_change(
+        entity_id="scheme-1",
+        entity_type="concept_scheme",
+        operation=ChangeOperation.UPDATE,
+        previous_state={"taxonomy_id": "tx-1"},
+        new_state={"taxonomy_id": "tx-2"},
+        batch_run_id="run-move",
+    )
+
+
+def test_revert_scheme_move_restores_scheme_and_classes(ontology_repo, change_repo, revert_svc):
+    """Reverting a run that moved a scheme moves it, and its classes, back."""
+    _move_scheme_in_run(ontology_repo, change_repo)
+    assert ontology_repo.get_class("cls-1").taxonomy_id == "tx-2"
+
+    assert revert_svc.revert("run-move") == 1
+
+    assert ontology_repo.get_concept_scheme("scheme-1").taxonomy_id == "tx-1"
+    assert ontology_repo.get_class("cls-1").taxonomy_id == "tx-1"
+
+
+def test_revert_scheme_move_invalidates_graph_for_both_taxonomies(ontology_repo, change_repo):
+    """The graph is rebuilt after a revert moves a scheme back."""
+    publisher = FakeEventPublisher()
+    revert_svc = RevertService(change_repo, ontology_repo, event_publisher=publisher)
+    _move_scheme_in_run(ontology_repo, change_repo)
+
+    revert_svc.revert("run-move")
+
+    invalidated = publisher.get_events_of_type(GraphInvalidated)
+    assert sorted(e.taxonomy_id for e in invalidated) == ["tx-1", "tx-2"]
+
+
+def test_revert_without_a_move_leaves_the_graph_alone(ontology_repo, change_repo):
+    """Reverting a scheme text edit does not invalidate the graph."""
+    publisher = FakeEventPublisher()
+    revert_svc = RevertService(change_repo, ontology_repo, event_publisher=publisher)
+    change_repo.record_change(
+        entity_id="scheme-1",
+        entity_type="concept_scheme",
+        operation=ChangeOperation.UPDATE,
+        previous_state={"description": "Old"},
+        new_state={"description": "New"},
+        batch_run_id="run-edit",
+    )
+
+    revert_svc.revert("run-edit")
+
+    assert ontology_repo.get_concept_scheme("scheme-1").description == "Old"
+    assert publisher.get_events_of_type(GraphInvalidated) == []
 
 
 def test_inverse_delete_class(ontology_repo, change_repo, revert_svc):

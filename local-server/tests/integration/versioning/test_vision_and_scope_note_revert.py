@@ -1,6 +1,6 @@
 """
-Integration tests (#1334): taxonomy vision and scheme scope-note edits are stored,
-recorded as change events with old and new values, and restored by a revert.
+Integration tests (#1334): taxonomy vision, scheme scope-note edits and scheme moves
+are stored, recorded as change events with old and new values, and restored by a revert.
 
 Real SQLite with the ChangeEventRecorder wired to an in-process publisher and the
 RevertService wired as in app.py.
@@ -150,20 +150,45 @@ def test_reverting_a_run_restores_vision_and_scope_note(
 
 
 def test_scheme_history_matches_what_was_stored(ontology_service, ontology_repo, change_repo):
-    """A move request is recorded only if the repository actually stored the move."""
+    """A move is stored and recorded once, with the old and new taxonomy."""
     source = ontology_service.create_taxonomy(title="House")
     target = ontology_service.create_taxonomy(title="Garden")
     scheme = ontology_service.create_scheme(taxonomy_id=source.id, title="Places")
 
     ontology_service.update_concept_scheme(scheme.id, taxonomy_id=target.id)
 
-    stored_taxonomy_id = ontology_repo.get_concept_scheme(scheme.id).taxonomy_id
+    assert ontology_repo.get_concept_scheme(scheme.id).taxonomy_id == target.id
     moves = [
         c
         for c in change_repo.get_changes(entity_id=scheme.id).events
         if "taxonomy_id" in (c.new_state or {})
     ]
-    if stored_taxonomy_id == source.id:
-        assert moves == []
-    else:
-        assert [m.new_state["taxonomy_id"] for m in moves] == [target.id]
+    assert [(m.previous_state, m.new_state) for m in moves] == [
+        ({"taxonomy_id": source.id}, {"taxonomy_id": target.id})
+    ]
+
+
+def test_reverting_a_run_moves_the_scheme_and_its_classes_back(
+    ontology_service, ontology_repo, pipeline_repo, revert_service
+):
+    """A scheme moved in a run returns, with its classes and counts, when the run is reverted."""
+    house = ontology_service.create_taxonomy(title="House")
+    garden = ontology_service.create_taxonomy(title="Garden")
+    scheme = ontology_service.create_scheme(taxonomy_id=house.id, title="Places")
+    room = ontology_service.create_class(concept_scheme_id=scheme.id, title="Room")
+    ontology_service.create_individual(title="Main kitchen", class_ids=[room.id])
+    run = _new_run(pipeline_repo)
+
+    _in_run(
+        run.id, lambda: ontology_service.update_concept_scheme(scheme.id, taxonomy_id=garden.id)
+    )
+    assert ontology_repo.get_class(room.id).taxonomy_id == garden.id
+
+    result = revert_service.revert_with_summary(run.id)
+
+    assert result.events_reverted == 1
+    assert ontology_repo.get_concept_scheme(scheme.id).taxonomy_id == house.id
+    assert ontology_repo.get_class(room.id).taxonomy_id == house.id
+    [counts] = ontology_repo.count_by_scheme(house.id)
+    assert (counts.class_count, counts.individual_count) == (1, 1)
+    assert ontology_repo.count_by_scheme(garden.id) == []
