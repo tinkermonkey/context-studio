@@ -231,12 +231,26 @@ class TestOpenRouterChatErrors:
     async def test_timeout_raises_chat_model_error(self):
         model, _ = _chat_model(error=httpx.ReadTimeout("slow"))
 
-        with pytest.raises(ChatModelError, match="ReadTimeout"):
+        with pytest.raises(ChatModelError, match="ReadTimeout") as exc_info:
             await _collect(model, [USER_QUESTION])
+
+        # The router detects connection failures through the original error
+        assert isinstance(exc_info.value.__cause__, httpx.ReadTimeout)
 
     def test_empty_api_key_rejected(self):
         with pytest.raises(ValueError):
             OpenRouterChatModel("")
+
+
+@pytest.mark.llm
+class TestOpenRouterChatModels:
+    def test_lists_claude_models_and_default_without_duplicates(self):
+        models = OpenRouterChatModel("k").list_models()
+
+        assert models[0] == "claude-sonnet-5-5"
+        assert "claude-opus-4-7" in models
+        assert "google/gemini-3-flash-preview" in models
+        assert len(models) == len(set(models))
 
 
 @pytest.mark.llm

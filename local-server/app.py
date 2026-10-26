@@ -161,6 +161,9 @@ from domain.versioning.services import VersioningService
 from utils.logger import get_logger, register_otlp_handler
 
 logger = get_logger(__name__)
+# Domain code logs through std logging (it can't import utils.logger); attach the
+# log file handler to the "domain" package logger so those records reach it too.
+get_logger("domain")
 
 
 # ==================== Event Handlers ====================

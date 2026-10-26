@@ -132,6 +132,20 @@ class TestAnthropicChatStream:
 
 
 @pytest.mark.llm
+class TestAnthropicChatClient:
+    def test_short_connect_timeout_and_one_retry(self):
+        """An unreachable API must fail fast so the router can fall through."""
+        client = AnthropicChatModel("test-key")._client
+
+        assert client.timeout.connect == 3.0
+        assert client.timeout.read == 600.0
+        assert client.max_retries == 1
+
+    def test_lists_known_claude_models(self):
+        assert "claude-sonnet-5-5" in AnthropicChatModel("test-key").list_models()
+
+
+@pytest.mark.llm
 class TestAnthropicChatRequest:
     async def test_request_carries_tools_system_caching_and_replayed_blocks(self):
         model, requests = _chat_model("anthropic_answer.sse")

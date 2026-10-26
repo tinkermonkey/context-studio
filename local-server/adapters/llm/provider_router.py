@@ -5,13 +5,18 @@ Routes requests to the appropriate LLM provider based on the model identifier.
 Manages multiple LLM providers (OpenAI, Anthropic, etc.) and routes completion
 requests to the appropriate provider based on model availability. When a provider
 rejects its API key (HTTP 401/403), the request falls through to the next provider
-that supports the model, and the rejecting provider is skipped from then on.
+that supports the model, and the rejecting provider is skipped from then on. Chat
+turns also fall through, for that call only, when a provider can't be reached.
 
 This adapter implements the LLMProvider port and is used by the Knowledge Extraction
 and LLM Pipeline services.
 """
 
 from typing import AsyncIterator, Literal, Sequence
+
+import anthropic
+import httpx
+import openai
 
 from adapters.llm.anthropic_chat import AnthropicChatModel
 from adapters.llm.anthropic_provider import AnthropicProvider
@@ -38,6 +43,22 @@ def _is_auth_failure(error: Exception) -> bool:
     return getattr(error, "status_code", None) in _AUTH_FAILURE_STATUSES
 
 
+# Errors meaning "the provider could not be reached or did not answer in time":
+# the SDKs' connection errors (their timeout errors subclass them) and httpx's
+# transport errors (connect errors and timeouts), which the OpenRouter chat
+# adapter wraps in a ChatModelError raised from the original.
+_CONNECTION_ERRORS = (anthropic.APIConnectionError, openai.APIConnectionError, httpx.TransportError)
+
+
+def _is_connection_failure(error: BaseException | None) -> bool:
+    """Return True if the error, or an error it was raised from, is a connection failure."""
+    while error is not None:
+        if isinstance(error, _CONNECTION_ERRORS):
+            return True
+        error = error.__cause__
+    return False
+
+
 class LLMProviderRouter:
     """
     Routes LLM requests to appropriate providers based on model.
@@ -54,7 +75,9 @@ class LLMProviderRouter:
 
     `stream_chat` implements the ChatModel port for tool-calling chat with the same
     provider order and auth fallback, over the providers that have a streaming chat
-    adapter (Anthropic and OpenRouter).
+    adapter (Anthropic and OpenRouter). Chat also falls through when a provider
+    can't be reached (connection error or timeout), without rejecting it, since
+    that may be transient.
     """
 
     def __init__(
@@ -194,11 +217,11 @@ class LLMProviderRouter:
         )
 
     def list_models(self) -> list[str]:
-        """Known model ids of the chat-capable providers that haven't rejected their key."""
+        """Known model ids of the chat providers that haven't rejected their key, deduplicated."""
         models: list[str] = []
-        for name, provider in self._providers.items():
-            if name in self._chat_models and name not in self._rejected_providers:
-                models.extend(m for m in provider.list_available_models() if m not in models)
+        for name, chat_model in self._chat_models.items():
+            if name not in self._rejected_providers:
+                models.extend(m for m in chat_model.list_models() if m not in models)
         return models
 
     async def stream_chat(
@@ -214,17 +237,19 @@ class LLMProviderRouter:
         Stream one tool-calling chat turn from the first provider that supports the model.
 
         Implements the ChatModel port. Providers are tried in the same order as
-        `complete`, and a provider that rejects its API key falls through to the
-        next one, but only before the first event is yielded: once output has
-        streamed, a retry elsewhere would duplicate it, so later errors propagate.
+        `complete`. A provider that rejects its API key, or can't be reached
+        (connection error or timeout), falls through to the next one, but only
+        before the first event is yielded: once output has streamed, a retry
+        elsewhere would duplicate it, so later errors propagate. Only a rejected
+        key stops the provider being used again.
 
         Raises:
             ValueError: If no chat-capable provider supports the model
-            Exception: The provider's own error for non-auth failures or failures
-                after streaming started, or the last auth error if every supporting
-                provider rejected its key
+            Exception: The provider's own error for other failures or failures
+                after streaming started, or the last fall-through error if every
+                supporting provider failed
         """
-        auth_error: Exception | None = None
+        last_error: Exception | None = None
         candidates = [
             (name, self._chat_models[name])
             for name, _ in self._providers_for(model)
@@ -249,13 +274,22 @@ class LLMProviderRouter:
                     yield event
                 return
             except Exception as e:
-                if started or not _is_auth_failure(e):
+                if started:
                     raise
-                self._reject_provider(name, e)
-                auth_error = e
-        # Every supporting provider rejected its API key
-        assert auth_error is not None
-        raise auth_error
+                if _is_auth_failure(e):
+                    self._reject_provider(name, e)
+                elif _is_connection_failure(e):
+                    logger.warning(
+                        f"LLM provider '{name}' could not be reached for chat"
+                        f" ({type(e).__name__}: {e}); trying the next provider that"
+                        " supports the model, if any."
+                    )
+                else:
+                    raise
+                last_error = e
+        # Every supporting provider rejected its key or could not be reached
+        assert last_error is not None
+        raise last_error
 
     def _providers_for(self, model: str) -> list[tuple[str, LLMProvider]]:
         """

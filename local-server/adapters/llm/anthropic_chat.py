@@ -13,6 +13,7 @@ from typing import Any, AsyncIterator, Sequence
 
 import anthropic
 
+from adapters.llm.anthropic_provider import AnthropicProvider
 from domain.chat.entities import ChatMessage
 from domain.chat.value_objects import (
     ContentBlock,
@@ -32,6 +33,12 @@ from domain.chat.value_objects import (
 PROVIDER = "anthropic"
 
 _REASONING_BLOCK_TYPES = ("thinking", "redacted_thinking")
+
+# A short connect timeout and one retry, so an unreachable API fails within
+# seconds and the router can fall through to the next provider; reads keep the
+# SDK's long default, since a turn can stream for minutes.
+_TIMEOUT = anthropic.Timeout(600.0, connect=3.0)
+_MAX_RETRIES = 1
 
 _STOP_REASONS = {
     "end_turn": StopReason.END_TURN,
@@ -53,7 +60,13 @@ class AnthropicChatModel:
             api_key: Anthropic API key
             http_client: Optional HTTP client for the SDK (tests inject a mock transport)
         """
-        self._client = anthropic.AsyncAnthropic(api_key=api_key, http_client=http_client)
+        self._client = anthropic.AsyncAnthropic(
+            api_key=api_key, http_client=http_client, timeout=_TIMEOUT, max_retries=_MAX_RETRIES
+        )
+
+    def list_models(self) -> list[str]:
+        """Known Claude model ids (others may also work)."""
+        return list(AnthropicProvider.AVAILABLE_MODELS)
 
     async def stream_chat(
         self,

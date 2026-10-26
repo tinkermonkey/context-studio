@@ -4,13 +4,18 @@ Unit tests for LLMProviderRouter.stream_chat.
 Tests verify:
 - Chat routes to the first chat-capable provider that supports the model
 - A 401/403 before the first event falls through to the next provider
-- Errors after streaming started, and non-auth errors, propagate unchanged
+- A connection error or timeout before the first event falls through for that call
+  only, with a warning, without rejecting the provider
+- Errors after streaming started, and other errors, propagate unchanged
 - A model only a non-chat provider (OpenAI) supports is rejected clearly
 - A multi-turn tool-calling exchange runs end to end over recorded OpenRouter streams
+- Model suggestions come from the chat adapters, deduplicated
 """
 
+import logging
 from pathlib import Path
 
+import anthropic
 import httpx
 import pytest
 
@@ -49,11 +54,15 @@ class StubProvider:
 class FakeChatModel:
     """Chat model that yields events, optionally raising before or after them."""
 
-    def __init__(self, events=(), error=None, raise_after_events=False):
+    def __init__(self, events=(), error=None, raise_after_events=False, models=()):
         self._events = list(events)
         self._error = error
         self._raise_after_events = raise_after_events
+        self._models = list(models)
         self.calls = 0
+
+    def list_models(self):
+        return list(self._models)
 
     async def stream_chat(self, **kwargs):
         self.calls += 1
@@ -160,6 +169,87 @@ class TestRouterStreamChat:
         assert openrouter.calls == 0
         assert router._rejected_providers == set()
 
+    @pytest.mark.parametrize(
+        "error",
+        [
+            anthropic.APITimeoutError(request=httpx.Request("POST", "https://api.anthropic.com")),
+            anthropic.APIConnectionError(
+                request=httpx.Request("POST", "https://api.anthropic.com")
+            ),
+            httpx.ConnectError("no route"),
+            httpx.ReadTimeout("slow"),
+        ],
+        ids=["anthropic-timeout", "anthropic-connection", "httpx-connect", "httpx-timeout"],
+    )
+    async def test_connection_failure_falls_through_without_rejecting(self, error, caplog):
+        anthropic_model = FakeChatModel(error=error)
+        openrouter = FakeChatModel([TextDelta("r"), _end("r")])
+        router = _router(
+            {"anthropic": StubProvider([MODEL]), "openrouter": StubProvider([MODEL])},
+            {"anthropic": anthropic_model, "openrouter": openrouter},
+        )
+
+        with caplog.at_level(logging.WARNING, logger="adapters.llm.provider_router"):
+            events = await _collect(router)
+            await _collect(router)
+
+        assert events[0] == TextDelta("r")
+        assert anthropic_model.calls == 2  # not rejected: tried again on the next turn
+        assert router._rejected_providers == set()
+        warnings = [r.getMessage() for r in caplog.records if r.levelno == logging.WARNING]
+        assert any("'anthropic' could not be reached" in w for w in warnings)
+
+    async def test_wrapped_connection_failure_falls_through(self):
+        """The OpenRouter adapter wraps httpx errors in a ChatModelError raised from them."""
+        try:
+            try:
+                raise httpx.ConnectTimeout("connect timed out")
+            except httpx.ConnectTimeout as e:
+                raise ChatModelError("OpenRouter request failed") from e
+        except ChatModelError as wrapped:
+            error = wrapped
+        first = FakeChatModel(error=error)
+        second = FakeChatModel([_end("ok")])
+        router = _router(
+            {"openrouter": StubProvider([MODEL]), "other": StubProvider([MODEL])},
+            {"openrouter": first, "other": second},
+        )
+
+        events = await _collect(router)
+
+        assert events[-1] == _end("ok")
+        assert router._rejected_providers == set()
+
+    async def test_connection_failure_after_streaming_started_propagates(self):
+        error = httpx.ReadTimeout("stalled")
+        anthropic_model = FakeChatModel([TextDelta("partial")], error=error, raise_after_events=True)
+        openrouter = FakeChatModel([_end()])
+        router = _router(
+            {"anthropic": StubProvider([MODEL]), "openrouter": StubProvider([MODEL])},
+            {"anthropic": anthropic_model, "openrouter": openrouter},
+        )
+
+        with pytest.raises(httpx.ReadTimeout):
+            await _collect(router)
+
+        assert openrouter.calls == 0
+
+    async def test_every_provider_unreachable_raises_last_error(self):
+        last = httpx.ConnectError("down too")
+        router = _router(
+            {"anthropic": StubProvider([MODEL]), "openrouter": StubProvider([MODEL])},
+            {
+                "anthropic": FakeChatModel(error=httpx.ConnectError("down")),
+                "openrouter": FakeChatModel(error=last),
+            },
+        )
+
+        with pytest.raises(httpx.ConnectError) as exc_info:
+            await _collect(router)
+
+        assert exc_info.value is last
+        assert router._rejected_providers == set()
+
     async def test_all_providers_rejecting_raises_last_auth_error(self):
         last = ChatModelError("bad", status_code=401)
         router = _router(
@@ -257,20 +347,28 @@ class TestRouterSupportsModel:
         router._rejected_providers.add("anthropic")
         assert not router.supports_model(MODEL)
 
-    def test_list_models_from_chat_capable_providers(self):
-        class ListingProvider(StubProvider):
-            def list_available_models(self):
-                return list(self._models)
-
+    def test_list_models_from_chat_adapters_deduplicated(self):
         router = _router(
             {
-                "openai": ListingProvider(["gpt-4o"]),
-                "anthropic": ListingProvider([MODEL, "claude-opus-4-7"]),
-                "openrouter": ListingProvider([]),
+                "openai": StubProvider(["gpt-4o"]),
+                "anthropic": StubProvider([MODEL]),
+                "openrouter": StubProvider([MODEL]),
             },
-            {"anthropic": FakeChatModel(), "openrouter": FakeChatModel()},
+            {
+                "anthropic": FakeChatModel(models=[MODEL, "claude-opus-4-7"]),
+                "openrouter": FakeChatModel(models=[MODEL, "google/gemini-3-flash-preview"]),
+            },
         )
 
-        assert router.list_models() == [MODEL, "claude-opus-4-7"]
+        assert router.list_models() == [MODEL, "claude-opus-4-7", "google/gemini-3-flash-preview"]
         router._rejected_providers.add("anthropic")
-        assert router.list_models() == []
+        assert router.list_models() == [MODEL, "google/gemini-3-flash-preview"]
+
+    def test_openrouter_only_router_suggests_claude_models(self):
+        router = LLMProviderRouter(openrouter_api_key="r-key")
+
+        models = router.list_models()
+
+        assert "claude-sonnet-5-5" in models and "claude-opus-4-7" in models
+        assert len(models) == len(set(models))
+        assert all(router.supports_model(m) for m in models)

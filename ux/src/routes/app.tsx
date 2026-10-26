@@ -12,6 +12,7 @@ import { useCommandPaletteActions } from "@/hooks/useCommandPaletteActions";
 import { createStaticPaletteActions } from "@/config/staticPaletteActions";
 import { getWorkspacePath } from "@/lib/workspaceStorage";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
+import { handTopbarSearchToPalette } from "@/components/shell/topbarSearch";
 import { useBreadcrumbStore } from "@/stores/breadcrumbs";
 import { useChatPanelStore } from "@/stores/chatPanel";
 import { ChatPanel } from "@/components/chat/ChatPanel";
@@ -74,7 +75,7 @@ function SidebarUserFooter({ workspaceName }: SidebarUserFooterProps) {
 
 function AppShell() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const { registerActions, unregisterActions, openPalette } = useCommandPaletteStore();
+  const { registerActions, unregisterActions } = useCommandPaletteStore();
   const navigate = useNavigate();
   const { location } = useRouterState();
   useCommandPaletteActions();
@@ -208,7 +209,7 @@ function AppShell() {
         ),
         breadcrumbs,
         searchPlaceholder: "Search workspace, run command, jump to…",
-        onSearch: () => openPalette(),
+        onSearch: handTopbarSearchToPalette,
         searchHint: "⌘K",
         children: (
           <div className="topbar-actions" data-testid="topbar-actions">

@@ -53,16 +53,22 @@ interface EntityPageLayoutProps {
   "data-testid": string;
 }
 
-/** Navigator column beside the entity page. */
+/**
+ * Navigator column beside the entity page. The frame is a size container, so
+ * the columns adapt to the canvas width (which the chat column narrows), not
+ * the viewport's.
+ */
 export function EntityPageLayout({
   navigator,
   children,
   "data-testid": testId,
 }: EntityPageLayoutProps) {
   return (
-    <div className="entity-page" data-testid={testId}>
-      <aside className="entity-page__navigator">{navigator}</aside>
-      <div className="entity-page__main">{children}</div>
+    <div className="entity-page-frame">
+      <div className="entity-page" data-testid={testId}>
+        <aside className="entity-page__navigator">{navigator}</aside>
+        <div className="entity-page__main">{children}</div>
+      </div>
     </div>
   );
 }
