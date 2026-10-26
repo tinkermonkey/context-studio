@@ -2303,12 +2303,23 @@ class OntologyService:
             "color": scheme.color,
             "taxonomy_id": scheme.taxonomy_id,
         }
-        changed = tuple(f for f in old_values if current_values[f] != old_values[f])
-        if not changed:
+        if all(current_values[f] == old_values[f] for f in old_values):
             return scheme
 
         scheme.last_modified = datetime.now(timezone.utc)
         scheme = self._repository.save_concept_scheme(scheme)
+
+        # Record what the repository actually stored, so the change history never
+        # claims a change (such as a move it does not persist) that did not happen.
+        saved_values: dict[str, str | None] = {
+            "title": scheme.title,
+            "description": scheme.description,
+            "color": scheme.color,
+            "taxonomy_id": scheme.taxonomy_id,
+        }
+        changed = tuple(f for f in old_values if saved_values[f] != old_values[f])
+        if not changed:
+            return scheme
 
         failures = self._event_publisher.publish(
             SchemeUpdated(
@@ -2316,7 +2327,7 @@ class OntologyService:
                 taxonomy_id=scheme.taxonomy_id,
                 changed_fields=changed,
                 old_values={f: old_values[f] for f in changed},
-                new_values={f: current_values[f] for f in changed},
+                new_values={f: saved_values[f] for f in changed},
             )
         )
         if failures:

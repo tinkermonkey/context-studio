@@ -147,3 +147,23 @@ def test_reverting_a_run_restores_vision_and_scope_note(
 
     assert ontology_repo.get_taxonomy(taxonomy.id).vision == "Original vision"
     assert ontology_repo.get_concept_scheme(scheme.id).description == "Rooms and areas."
+
+
+def test_scheme_history_matches_what_was_stored(ontology_service, ontology_repo, change_repo):
+    """A move request is recorded only if the repository actually stored the move."""
+    source = ontology_service.create_taxonomy(title="House")
+    target = ontology_service.create_taxonomy(title="Garden")
+    scheme = ontology_service.create_scheme(taxonomy_id=source.id, title="Places")
+
+    ontology_service.update_concept_scheme(scheme.id, taxonomy_id=target.id)
+
+    stored_taxonomy_id = ontology_repo.get_concept_scheme(scheme.id).taxonomy_id
+    moves = [
+        c
+        for c in change_repo.get_changes(entity_id=scheme.id).events
+        if "taxonomy_id" in (c.new_state or {})
+    ]
+    if stored_taxonomy_id == source.id:
+        assert moves == []
+    else:
+        assert [m.new_state["taxonomy_id"] for m in moves] == [target.id]
