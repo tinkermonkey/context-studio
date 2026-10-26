@@ -1,12 +1,13 @@
 import { useMemo } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Panel, StatGrid, StatTile, Table, type Column } from "@tinkermonkey/heimdall-ui";
-import { useTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
+import { useTaxonomy, useUpdateTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useSchemeCounts } from "@/api/hooks/ontology/useContentCounts";
 import { SMALL_SET_LIMIT } from "@/api/config";
 import { EntityNavigator } from "@/components/entity/EntityNavigator";
 import { EntityLink } from "@/components/entity/EntityLink";
+import { IntentPanel } from "@/components/entity/IntentPanel";
 import {
   EntityActions,
   EntityBody,
@@ -72,6 +73,7 @@ export function TaxonomyPage({ id }: { id: string }) {
   const { data: taxonomy, error, refetch } = useTaxonomy(id);
   const { data: schemesResponse } = useSchemes(id, { limit: SMALL_SET_LIMIT, sort_by: "title" });
   const { data: counts } = useSchemeCounts(id);
+  const updateTaxonomy = useUpdateTaxonomy();
 
   const schemes = useMemo(() => schemesResponse?.items ?? [], [schemesResponse]);
   const countsByScheme = useMemo(
@@ -129,7 +131,6 @@ export function TaxonomyPage({ id }: { id: string }) {
         }
         title={taxonomy.title}
         identifier={taxonomy.identifier}
-        description={taxonomy.description}
         actions={
           <EntityActions
             entity={{ kind: "taxonomy", id, title: taxonomy.title }}
@@ -177,6 +178,25 @@ export function TaxonomyPage({ id }: { id: string }) {
           />
         }
       >
+        <IntentPanel
+          title="Summary"
+          note="One paragraph on what this taxonomy is for. Chat and Claude Code see it in every conversation."
+          value={taxonomy.description}
+          emptyText="No summary yet."
+          rows={4}
+          onSave={(value) => updateTaxonomy.mutateAsync({ id, data: { description: value } })}
+          data-testid="taxonomy-summary"
+        />
+        <IntentPanel
+          title="Vision"
+          note="What the taxonomy is for, what its classes and relationships model, and how a change is judged. Read before proposing changes."
+          value={taxonomy.vision}
+          emptyText="No vision statement yet."
+          markdown
+          rows={16}
+          onSave={(value) => updateTaxonomy.mutateAsync({ id, data: { vision: value } })}
+          data-testid="taxonomy-vision"
+        />
         <Panel
           title={`Concept schemes · ${formatCount(schemesResponse?.total)}`}
           subtitle="Open a scheme to see its classes"

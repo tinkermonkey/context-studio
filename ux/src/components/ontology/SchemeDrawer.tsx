@@ -75,7 +75,8 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
   const handleSaveDescription = async (value: string) => {
     if (value === (scheme.description ?? "")) return;
     try {
-      await updateMutation.mutateAsync({ id: scheme.id, data: { description: value || null } });
+      // "" clears the scope note; null would mean "leave unchanged".
+      await updateMutation.mutateAsync({ id: scheme.id, data: { description: value } });
     } catch (error) {
       const message = error instanceof ApiError ? error.detail : "Failed to save description";
       toast("error", message);
@@ -124,7 +125,7 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
                 rows={[
                   { key: "Title", value: scheme.title },
                   { key: "Parent Taxonomy", value: taxonomyName },
-                  { key: "Description", value: scheme.description || "—" },
+                  { key: "Scope note", value: scheme.description || "—" },
                   {
                     key: "Created",
                     value: new Date(scheme.created_at ?? "").toLocaleDateString(),
@@ -194,7 +195,7 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
                     }
                   }}
                 >
-                  <label className="form-group-label">Description</label>
+                  <label className="form-group-label">Scope note</label>
                   <SuggestField
                     entityId={scheme.id}
                     value={descriptionDraft}

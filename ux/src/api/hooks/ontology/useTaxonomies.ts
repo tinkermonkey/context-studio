@@ -38,10 +38,12 @@ export function useUpdateTaxonomy() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: TaxonomyUpdateRequest }) =>
       ontologyService.updateTaxonomy(id, data),
-    onSuccess: (_result, { id }) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.taxonomies });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.taxonomy(id) });
-    },
+    // Returning the refetch keeps mutateAsync pending until the page shows the new value.
+    onSuccess: (_result, { id }) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.taxonomies }),
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.taxonomy(id) }),
+      ]),
   });
 }
 

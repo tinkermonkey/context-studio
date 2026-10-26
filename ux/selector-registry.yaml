@@ -2785,6 +2785,69 @@ selectors:
   - selector: class-definition-save
     component: src/routes/app/schema/classes_.$id.tsx
     description: Saves the edited class definition
+  - selector: taxonomy-summary
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: Panel showing the taxonomy summary (one paragraph) (IntentPanel)
+  - selector: taxonomy-summary-text
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: The taxonomy summary (one paragraph) text
+  - selector: taxonomy-summary-empty
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: Shown when there is no taxonomy summary (one paragraph) yet
+  - selector: taxonomy-summary-edit
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: Starts editing the taxonomy summary (one paragraph)
+  - selector: taxonomy-summary-input
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: Text area for the taxonomy summary (one paragraph) while editing
+  - selector: taxonomy-summary-save
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: Saves the edited taxonomy summary (one paragraph)
+  - selector: taxonomy-summary-cancel
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: Discards edits to the taxonomy summary (one paragraph)
+  - selector: taxonomy-vision
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: Panel showing the taxonomy vision statement (markdown) (IntentPanel)
+  - selector: taxonomy-vision-text
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: The taxonomy vision statement (markdown) text
+  - selector: taxonomy-vision-empty
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: Shown when there is no taxonomy vision statement (markdown) yet
+  - selector: taxonomy-vision-edit
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: Starts editing the taxonomy vision statement (markdown)
+  - selector: taxonomy-vision-input
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: Text area for the taxonomy vision statement (markdown) while editing
+  - selector: taxonomy-vision-save
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: Saves the edited taxonomy vision statement (markdown)
+  - selector: taxonomy-vision-cancel
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: Discards edits to the taxonomy vision statement (markdown)
+  - selector: scheme-scope-note
+    component: src/routes/app/schema/schemes_.$id.tsx
+    description: Panel showing the concept scheme scope note (IntentPanel)
+  - selector: scheme-scope-note-text
+    component: src/routes/app/schema/schemes_.$id.tsx
+    description: The concept scheme scope note text
+  - selector: scheme-scope-note-empty
+    component: src/routes/app/schema/schemes_.$id.tsx
+    description: Shown when there is no concept scheme scope note yet
+  - selector: scheme-scope-note-edit
+    component: src/routes/app/schema/schemes_.$id.tsx
+    description: Starts editing the concept scheme scope note
+  - selector: scheme-scope-note-input
+    component: src/routes/app/schema/schemes_.$id.tsx
+    description: Text area for the concept scheme scope note while editing
+  - selector: scheme-scope-note-save
+    component: src/routes/app/schema/schemes_.$id.tsx
+    description: Saves the edited concept scheme scope note
+  - selector: scheme-scope-note-cancel
+    component: src/routes/app/schema/schemes_.$id.tsx
+    description: Discards edits to the concept scheme scope note
   - selector: class-individuals-panel
     component: src/routes/app/schema/classes_.$id.tsx
     description: Individuals of the class

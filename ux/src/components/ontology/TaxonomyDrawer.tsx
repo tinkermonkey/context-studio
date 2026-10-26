@@ -91,7 +91,8 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
   const handleSaveDescription = async (value: string) => {
     if (value === (taxonomy.description ?? "")) return;
     try {
-      await updateMutation.mutateAsync({ id: taxonomy.id, data: { description: value || null } });
+      // "" clears the summary; null would mean "leave unchanged".
+      await updateMutation.mutateAsync({ id: taxonomy.id, data: { description: value } });
     } catch (error) {
       const message = error instanceof ApiError ? error.detail : "Failed to save description";
       toast("error", message);
@@ -134,7 +135,7 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
               <KVGrid
                 rows={[
                   { key: "Title", value: taxonomy.title },
-                  { key: "Description", value: taxonomy.description || "—" },
+                  { key: "Summary", value: taxonomy.description || "—" },
                   { key: "Status", value: taxonomy.status },
                   {
                     key: "Version",
@@ -202,7 +203,7 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
                     }
                   }}
                 >
-                  <label className="form-group-label">Description</label>
+                  <label className="form-group-label">Summary</label>
                   <SuggestField
                     entityId={taxonomy.id}
                     value={descriptionDraft}

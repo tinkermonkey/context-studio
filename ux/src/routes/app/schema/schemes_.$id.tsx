@@ -1,13 +1,14 @@
 import { useMemo } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Panel, StatGrid, StatTile, Table, type Column } from "@tinkermonkey/heimdall-ui";
-import { useScheme } from "@/api/hooks/ontology/useSchemes";
+import { useScheme, useUpdateScheme } from "@/api/hooks/ontology/useSchemes";
 import { useTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
 import { useClasses } from "@/api/hooks/ontology/useClasses";
 import { useClassCounts, useSchemeCounts } from "@/api/hooks/ontology/useContentCounts";
 import { SMALL_SET_LIMIT } from "@/api/config";
 import { EntityNavigator } from "@/components/entity/EntityNavigator";
 import { EntityLink } from "@/components/entity/EntityLink";
+import { IntentPanel } from "@/components/entity/IntentPanel";
 import {
   EntityActions,
   EntityBody,
@@ -58,6 +59,7 @@ const classColumns: Column<ClassRow>[] = [
 export function SchemePage({ id }: { id: string }) {
   const navigate = useNavigate();
   const { data: scheme, error, refetch } = useScheme(id);
+  const updateScheme = useUpdateScheme();
   const { data: taxonomy } = useTaxonomy(scheme?.taxonomy_id ?? "");
   const { data: classesResponse } = useClasses({
     concept_scheme_id: id,
@@ -137,7 +139,6 @@ export function SchemePage({ id }: { id: string }) {
         }
         title={scheme.title}
         identifier={scheme.identifier}
-        description={scheme.description}
         actions={
           <EntityActions
             entity={{ kind: "scheme", id, title: scheme.title }}
@@ -200,6 +201,15 @@ export function SchemePage({ id }: { id: string }) {
           </IdentityCard>
         }
       >
+        <IntentPanel
+          title="Scope note"
+          note="What belongs in this scheme and what does not."
+          value={scheme.description}
+          emptyText="No scope note yet."
+          rows={3}
+          onSave={(value) => updateScheme.mutateAsync({ id, data: { description: value } })}
+          data-testid="scheme-scope-note"
+        />
         <Panel
           title={`Classes · ${formatCount(classesResponse?.total)}`}
           subtitle="Sorted by title"

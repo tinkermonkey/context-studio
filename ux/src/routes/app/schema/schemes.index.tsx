@@ -112,7 +112,7 @@ export function SchemesIndexPage() {
     },
     {
       key: "description",
-      label: "Description",
+      label: "Scope note",
       render: (value) => (
         <span style={{ color: "rgb(var(--canvas-fg-3))", fontSize: 12.5 }}>
           {(value as string) || "—"}
