@@ -29,6 +29,8 @@ from utils.async_executor import run_sync_in_executor
 MAX_RESULT_CHARS = 4000
 # A taxonomy's vision is returned whole up to this size, beyond MAX_RESULT_CHARS.
 MAX_VISION_CHARS = 16000
+# list_taxonomies shows this much of each summary; get_entity has the rest.
+LISTING_SUMMARY_CHARS = 300
 DEFAULT_LIMIT = 20
 MAX_LIMIT = 50
 # Minimum cosine similarity for a vector-search hit to be returned.
@@ -277,10 +279,10 @@ class ListTaxonomiesTool(_Tool):
 
     name = "list_taxonomies"
     description = (
-        "List the taxonomies in the workspace: id, title, identifier, the one-paragraph"
-        " summary, whether a vision statement exists, and the number of concept"
-        " schemes. Start here to see what the workspace holds; read a taxonomy's"
-        " vision with get_entity."
+        "List every taxonomy in the workspace: id, title, identifier, the start of its"
+        " one-paragraph summary, whether a vision statement exists, and the number of"
+        " concept schemes. Start here to see what the workspace holds; read a"
+        " taxonomy's full summary and vision with get_entity."
     )
     input_schema = {"type": "object", "properties": {}}
 
@@ -290,15 +292,17 @@ class ListTaxonomiesTool(_Tool):
             {
                 **_ref_dict(ref_of(t)),
                 "identifier": t.identifier,
-                "summary": t.description,
+                "summary": _shortened(t.description, LISTING_SUMMARY_CHARS),
                 "has_vision": bool(t.vision),
                 "schemes": self._ontology.count_concept_schemes(taxonomy_id=t.id),
             }
             for t in taxonomies
         ]
+        # Never cut the list: workspaces hold a handful of taxonomies, and a missing
+        # one would be invisible. Shortened summaries keep the result small.
         return _outcome(
             {"taxonomies": items, "total": len(items)},
-            "taxonomies",
+            None,
             f"{len(items)} taxonomies",
             [ref_of(t) for t in taxonomies],
         )
@@ -475,6 +479,13 @@ class GetEntityTool(_Tool):
             counts["relationships_in"] = self._ontology.count_relationships(target_id=entity.id)
         result["counts"] = counts
         return _outcome(result, None, f"{ref.title} ({ref.kind})", related)
+
+
+def _shortened(text: Optional[str], limit: int) -> Optional[str]:
+    """The text cut to `limit` characters at a word boundary, marked with an ellipsis."""
+    if text is None or len(text) <= limit:
+        return text
+    return text[:limit].rsplit(" ", 1)[0] + "…"
 
 
 def _capped_vision(vision: Optional[str]) -> Optional[str]:

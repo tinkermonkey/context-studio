@@ -8,7 +8,12 @@ import json
 
 import pytest
 
-from adapters.chat.tools import MAX_RESULT_CHARS, MAX_VISION_CHARS, build_chat_tools
+from adapters.chat.tools import (
+    LISTING_SUMMARY_CHARS,
+    MAX_RESULT_CHARS,
+    MAX_VISION_CHARS,
+    build_chat_tools,
+)
 from adapters.persistence.sqlite.individual_vector_index import SqliteIndividualVectorIndex
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from domain.chat.value_objects import EntityRef
@@ -158,6 +163,23 @@ class TestListTaxonomies:
         assert taxonomy["has_vision"] is True
         assert taxonomy["schemes"] == 2
         assert ref_ids(outcome) == {TAXONOMY_ID}
+
+    async def test_lists_every_taxonomy_even_with_long_summaries(self, tools, dr_workspace):
+        """No taxonomy is dropped to fit the result; long summaries are shortened instead."""
+        long_summary = "A paragraph-long summary of what this taxonomy is for. " * 15
+        for i in range(12):
+            dr_workspace.ontology.create_taxonomy(
+                title=f"Taxonomy {i:02d}", description=long_summary
+            )
+
+        outcome, result = await call(tools, "list_taxonomies")
+
+        assert result["total"] == 13
+        assert len(result["taxonomies"]) == 13
+        assert "truncated" not in result
+        summary = next(t for t in result["taxonomies"] if t["title"] == "Taxonomy 00")["summary"]
+        assert len(summary) <= LISTING_SUMMARY_CHARS + 1 and summary.endswith("…")
+        assert len(outcome.entities) == 13
 
 
 class TestGetEntity:
