@@ -214,7 +214,8 @@ def test_page_context_names_the_viewed_entity_for_the_model(client, dr_workspace
     notes = [b.text for b in user.blocks if type(b).__name__ == "ContextBlock"]
     assert notes[0] == (
         "Workspace counts: taxonomies 1, concept schemes 2, classes 2, individuals 3,"
-        " relationships 1, relationship types 1. Taxonomies: Documentation Robotics."
+        " relationships 1, relationship types 1. Taxonomies, with their one-paragraph"
+        " summaries:\n- Documentation Robotics: Architecture model layers"
     )
     assert f"entity:class/{OPERATION_ID}" in notes[1]
     assert "Operation" in notes[1]
