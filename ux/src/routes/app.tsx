@@ -14,16 +14,19 @@ import { getWorkspacePath } from "@/lib/workspaceStorage";
 import { useCommandPaletteStore } from "@/stores/commandPalette";
 import { handTopbarSearchToPalette } from "@/components/shell/topbarSearch";
 import { useBreadcrumbStore } from "@/stores/breadcrumbs";
+import { useNavigatorStore } from "@/stores/navigator";
 import { useChatPanelStore } from "@/stores/chatPanel";
 import { ChatPanel } from "@/components/chat/ChatPanel";
 import { useChatEntryPoints } from "@/components/chat/useChatEntryPoints";
 import { useHealth, useConfig } from "@/api/hooks/admin";
 import { useEntityCounts } from "@/api/hooks/ontology/useEntityCounts";
 import {
+  DATA_AREA_CRUMB,
   NAV_ACTIONS,
   SIDEBAR_PATH_MAP,
   getActiveItemId,
   getBreadcrumbLabels,
+  isSharedEntityPage,
 } from "./-app-navigation";
 
 export const Route = createFileRoute("/app")({
@@ -134,10 +137,16 @@ function AppShell() {
   }, [registerActions, unregisterActions]);
 
   const pathname = location.pathname;
-  const activeItemId = getActiveItemId(pathname);
+  const navigatorMode = useNavigatorStore((s) => s.mode);
+  const activeItemId = getActiveItemId(pathname, navigatorMode);
   const pageCrumbs = useBreadcrumbStore((s) => (s.pathname === pathname ? s.crumbs : null));
-  const crumbs = pageCrumbs
-    ? pageCrumbs.map(({ label, to }) => ({
+  // Taxonomy, scheme and class pages root their breadcrumbs in the Navigator's area.
+  const areaCrumbs =
+    pageCrumbs && navigatorMode === "data" && isSharedEntityPage(pathname)
+      ? [DATA_AREA_CRUMB, ...pageCrumbs.slice(1)]
+      : pageCrumbs;
+  const crumbs = areaCrumbs
+    ? areaCrumbs.map(({ label, to }) => ({
         label,
         onClick: to ? () => navigate({ to }) : undefined,
       }))

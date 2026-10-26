@@ -136,7 +136,23 @@ export const SIDEBAR_PATH_MAP: Record<string, string> = {
   settings: "/app/settings",
 };
 
-export function getActiveItemId(pathname: string): string {
+/** Breadcrumb root for pages browsed in the Navigator's Data mode. */
+export const DATA_AREA_CRUMB = { label: "Data", to: "/app/data/individuals" };
+
+/** Taxonomy, concept scheme and class pages: shown in both Navigator modes. */
+const SHARED_ENTITY_PAGE = /^\/app\/schema\/(taxonomies|schemes|classes)\/[^/]+$/;
+
+/** True on a page that belongs to whichever area (Schema or Data) the Navigator is in. */
+export function isSharedEntityPage(pathname: string): boolean {
+  return SHARED_ENTITY_PAGE.test(pathname);
+}
+
+/**
+ * The sidebar item to highlight. Taxonomy, scheme and class pages follow the
+ * Navigator's mode, so browsing them in Data mode keeps Data selected.
+ */
+export function getActiveItemId(pathname: string, navigatorMode?: "schema" | "data"): string {
+  if (navigatorMode === "data" && isSharedEntityPage(pathname)) return "data";
   for (const { prefix, id } of ROUTE_TO_SIDEBAR_ID) {
     if (pathname === prefix || pathname.startsWith(prefix + "/")) {
       return id;

@@ -11,7 +11,7 @@ import { useIndividuals, useDeleteIndividual } from "@/api/hooks/ontology/useInd
 import { useClassesByIds } from "@/api/hooks/ontology/useClasses";
 import { useListPaging } from "@/hooks/useListPaging";
 import { individualsCopy } from "./individuals/-copy";
-import { EntityNavigator } from "@/components/entity/EntityNavigator";
+import { DATA_LIST_MODE_LINKS, EntityNavigator } from "@/components/entity/EntityNavigator";
 import { EntityPageLayout } from "@/components/entity/EntityPageParts";
 import type { components } from "@/api/types";
 
@@ -154,7 +154,7 @@ export function IndividualsPage() {
 
   return (
     <EntityPageLayout
-      navigator={<EntityNavigator defaultMode="data" />}
+      navigator={<EntityNavigator defaultMode="data" modeLinks={DATA_LIST_MODE_LINKS} />}
       data-testid="data-navigator-layout"
     >
       <div className="stack" data-testid="individuals-page">

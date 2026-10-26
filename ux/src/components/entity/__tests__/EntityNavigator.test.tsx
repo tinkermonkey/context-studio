@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import userEvent from "@testing-library/user-event";
@@ -6,13 +6,20 @@ import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import { entityPageHandlers } from "@/test/entityPageHandlers";
 import { useNavigatorStore } from "@/stores/navigator";
-import { EntityNavigator } from "../EntityNavigator";
+import { EntityNavigator, SCHEMA_LIST_MODE_LINKS } from "../EntityNavigator";
+
+const mockNavigate = vi.hoisted(() => vi.fn());
+vi.mock("@tanstack/react-router", async () => {
+  const actual = await vi.importActual("@tanstack/react-router");
+  return { ...actual, useNavigate: () => mockNavigate };
+});
 
 const server = setupServer(...entityPageHandlers);
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
   server.resetHandlers();
+  mockNavigate.mockClear();
   useNavigatorStore.setState({ expandedIds: new Set(), mode: "schema" });
 });
 afterAll(() => server.close());
@@ -143,6 +150,48 @@ describe("EntityNavigator — Data mode", () => {
     // A schema list page switches back to Schema.
     render(<EntityNavigator defaultMode="schema" />);
     expect(dataRadio()).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("highlights non-zero individual counts, and only in Data mode", async () => {
+    const { unmount } = render(<EntityNavigator defaultMode="data" expandIds={["tax-1", "scheme-1"]} />);
+
+    expect((await screen.findAllByText("2 individuals"))[0].closest(".hierarchy-row")).toHaveClass(
+      "hierarchy-row--has-individuals",
+    );
+    expect(screen.getByTestId("hierarchy-node-scheme-1")).toHaveClass(
+      "hierarchy-row--scheme",
+      "hierarchy-row--has-individuals",
+    );
+    unmount();
+
+    render(<EntityNavigator defaultMode="schema" expandIds={["tax-1", "scheme-1"]} />);
+    expect(await screen.findByTestId("hierarchy-node-scheme-1")).not.toHaveClass(
+      "hierarchy-row--has-individuals",
+    );
+  });
+
+  it("follows a page's mode link when the mode is switched there", async () => {
+    const user = userEvent.setup();
+    render(<EntityNavigator defaultMode="schema" modeLinks={SCHEMA_LIST_MODE_LINKS} />);
+
+    await user.click(
+      within(screen.getByTestId("navigator-mode")).getByRole("radio", { name: "Data" }),
+    );
+
+    expect(useNavigatorStore.getState().mode).toBe("data");
+    expect(mockNavigate).toHaveBeenCalledWith({ to: "/app/data/individuals" });
+  });
+
+  it("switches mode in place on pages without mode links", async () => {
+    const user = userEvent.setup();
+    render(<EntityNavigator selectedId="class-1" />);
+
+    await user.click(
+      within(screen.getByTestId("navigator-mode")).getByRole("radio", { name: "Data" }),
+    );
+
+    expect(useNavigatorStore.getState().mode).toBe("data");
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it("opens a class to show its individuals and opens an individual's page", async () => {

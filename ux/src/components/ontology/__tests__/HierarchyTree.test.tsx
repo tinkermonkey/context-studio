@@ -134,6 +134,17 @@ describe("HierarchyTree", () => {
       expect(screen.getByTestId("hierarchy-node-class-1")).toHaveAttribute("data-kind", "class");
     });
 
+    it("gives each level its own row class, for its pill color", () => {
+      renderTree();
+      expect(screen.getByTestId("hierarchy-node-tax-1")).toHaveClass("hierarchy-row--taxonomy");
+      expect(screen.getByTestId("hierarchy-node-scheme-1")).toHaveClass("hierarchy-row--scheme");
+      expect(screen.getByTestId("hierarchy-node-class-1")).toHaveClass("hierarchy-row--class");
+      // Schema mode counts schemes and classes, never highlighted as individuals.
+      expect(screen.getByTestId("hierarchy-node-tax-1")).not.toHaveClass(
+        "hierarchy-row--has-individuals",
+      );
+    });
+
     it("uses the default domain swatch for all rows", () => {
       renderTree();
       expect(screen.getByTestId("hierarchy-node-tax-1")).toHaveAttribute("data-domain", "default");

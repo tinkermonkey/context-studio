@@ -1521,6 +1521,51 @@ body.dark-canvas .diff-added {
   text-overflow: ellipsis;
 }
 
+/* Each hierarchy level gets its own pill color (tokens in app-overrides.css). */
+.hierarchy-row--taxonomy {
+  --level-color: var(--level-taxonomy);
+}
+.hierarchy-row--scheme {
+  --level-color: var(--level-scheme);
+}
+.hierarchy-row--class {
+  --level-color: var(--level-class);
+}
+.hierarchy-row--individual {
+  --level-color: var(--level-individual);
+}
+
+.hierarchy-row--taxonomy .hierarchy-row__pill,
+.hierarchy-row--scheme .hierarchy-row__pill,
+.hierarchy-row--class .hierarchy-row__pill,
+.hierarchy-row--individual .hierarchy-row__pill {
+  background-color: rgb(var(--level-color) / 0.08);
+  border-color: rgb(var(--level-color) / 0.35);
+}
+
+.hierarchy-row--taxonomy .hierarchy-row__swatch,
+.hierarchy-row--scheme .hierarchy-row__swatch,
+.hierarchy-row--class .hierarchy-row__swatch,
+.hierarchy-row--individual .hierarchy-row__swatch {
+  background-color: rgb(var(--level-color));
+}
+
+.hierarchy-row--taxonomy .hierarchy-row__kind,
+.hierarchy-row--scheme .hierarchy-row__kind,
+.hierarchy-row--class .hierarchy-row__kind {
+  color: rgb(var(--level-color));
+}
+
+/* Non-zero individual counts (Data mode) in the primary highlight color; zeros
+   keep Heimdall's muted meta style. Deep amber on the light canvas for contrast. */
+.hierarchy-row--has-individuals .hierarchy-row__meta {
+  color: rgb(var(--accent-primary-deep));
+  font-weight: var(--font-weight-semibold);
+}
+body.dark-canvas .hierarchy-row--has-individuals .hierarchy-row__meta {
+  color: rgb(var(--accent-primary));
+}
+
 /* Heimdall's HierarchyRow has no 'individual' kind: individual rows hide the
    class badge and draw their own in the same style. */
 .hierarchy-row--individual .hierarchy-row__label::before {
@@ -1531,7 +1576,7 @@ body.dark-canvas .diff-added {
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgb(var(--status-emerald));
+  color: rgb(var(--level-color));
 }
 
 .hierarchy-row--individual .hierarchy-row__label {

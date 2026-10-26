@@ -22,7 +22,7 @@ import { schemesCopy } from "./schemes/-copy";
 import { useSchemaTabs } from "./-useSchemaTabs";
 import type { components } from "@/api/types";
 import { SMALL_SET_LIMIT } from "@/api/config";
-import { EntityNavigator } from "@/components/entity/EntityNavigator";
+import { EntityNavigator, SCHEMA_LIST_MODE_LINKS } from "@/components/entity/EntityNavigator";
 import { EntityPageLayout } from "@/components/entity/EntityPageParts";
 
 type ConceptSchemeResponse = components["schemas"]["ConceptSchemeResponse"];
@@ -205,7 +205,7 @@ export function SchemesIndexPage() {
 
   return (
     <EntityPageLayout
-      navigator={<EntityNavigator defaultMode="schema" />}
+      navigator={<EntityNavigator defaultMode="schema" modeLinks={SCHEMA_LIST_MODE_LINKS} />}
       data-testid="schema-navigator-layout"
     >
       <div className="stack" data-testid="schemes-page">
