@@ -223,26 +223,28 @@ class JSONFileConfigStore:
             ConfigurationError: If persistence fails
         """
         try:
-            # Reconstruct Settings object from config sections
-            # Map AppConfiguration fields to Settings constructor arguments
-            settings_dict = {
-                "server": config.server or {},
-                "database": config.database or {},
-                "logging": config.logging or {},
-                "llm": config.llm or {},
-                "nlp": config.nlp or {},
-                "embedding": config.embedding or {},
-                "chat": config.chat or {},
-            }
-            # Add optional sections only if they exist
+            # Start from every current section, then override the ones the domain
+            # manages, so sections it doesn't model (e.g. recognition, telemetry)
+            # are kept instead of being reset to defaults on every save.
+            settings_dict = self._mgr.get_settings().model_dump()
+            settings_dict.update(
+                {
+                    "server": config.server or {},
+                    "database": config.database or {},
+                    "logging": config.logging or {},
+                    "llm": config.llm or {},
+                    "nlp": config.nlp or {},
+                    "embedding": config.embedding or {},
+                    "chat": config.chat or {},
+                }
+            )
             if config.reference_sources is not None:
                 settings_dict["reference"] = config.reference_sources
-
             if config.sync is not None:
                 settings_dict["sync"] = config.sync
 
             # Pydantic will convert dicts to config classes
-            new_settings = Settings(**settings_dict)  # type: ignore[arg-type]
+            new_settings = Settings(**settings_dict)
             self._mgr.settings = new_settings
 
             if not self._mgr.save():

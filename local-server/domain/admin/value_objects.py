@@ -26,6 +26,7 @@ CREDENTIAL_FIELD_NAMES = frozenset(
     {
         "openai_api_key",
         "anthropic_api_key",
+        "openrouter_api_key",
         "s3_access_key",
         "s3_secret_key",
     }

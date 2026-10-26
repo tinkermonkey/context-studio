@@ -10,6 +10,7 @@ import os
 import tempfile
 
 from adapters.config.json_store import JSONFileConfigStore
+from adapters.web.schemas.admin import AppConfigurationResponse
 from config import ConfigurationManager
 from domain.admin.entities import AppConfiguration
 from domain.admin.services import AdminService
@@ -459,3 +460,86 @@ def test_chat_section_defaults_updates_and_resets():
 
         reset = store.reset_to_defaults()
         assert reset.sections["chat"]["model"] == "claude-sonnet-5-5"
+
+
+def _write_config(tmpdir: str, extra: dict) -> str:
+    """Write a minimal config file with the given extra sections; return its path."""
+    config_file = os.path.join(tmpdir, "config.json")
+    config_data = {
+        "server": {"host": "127.0.0.1", "port": 8000, "cors_origins": ["*"]},
+        "database": {"local_db_path": "./local.db", "operations_db_path": "./operations.db"},
+        "logging": {"log_level": "INFO", "max_bytes": 10485760, "backup_count": 5},
+        "llm": {"openai_api_key": "", "anthropic_api_key": "", "openrouter_api_key": ""},
+        **extra,
+    }
+    with open(config_file, "w") as f:
+        json.dump(config_data, f)
+    return config_file
+
+
+def test_saving_keeps_sections_the_domain_does_not_model():
+    """Saving any section keeps recognition and telemetry as configured (#1324)."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        config_file = _write_config(
+            tmpdir,
+            {
+                "recognition": {"individual_match_threshold": 0.8},
+                "telemetry": {"enabled": True, "otlp_endpoint_grpc": "http://collector:4317"},
+            },
+        )
+        store = JSONFileConfigStore(ConfigurationManager(config_file=config_file))
+
+        store.update_config({"chat": {"model": "claude-opus-4-7"}})
+
+        with open(config_file) as f:
+            saved = json.load(f)
+        assert saved["chat"]["model"] == "claude-opus-4-7"
+        assert saved["recognition"]["individual_match_threshold"] == 0.8
+        assert saved["telemetry"]["enabled"] is True
+        assert saved["telemetry"]["otlp_endpoint_grpc"] == "http://collector:4317"
+
+
+def test_saving_never_writes_keys_that_came_from_the_environment(monkeypatch):
+    """Env-derived API keys stay out of config.json; keys set in the file are kept."""
+    monkeypatch.setenv("OPENROUTER_API_KEY", "env-openrouter-key")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "env-anthropic-key")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        config_file = _write_config(tmpdir, {})
+        with open(config_file) as f:
+            data = json.load(f)
+        data["llm"]["openai_api_key"] = "file-openai-key"
+        with open(config_file, "w") as f:
+            json.dump(data, f)
+        mgr = ConfigurationManager(config_file=config_file)
+        store = JSONFileConfigStore(mgr)
+        # The env fallback still supplies the keys at runtime.
+        assert store.load().llm["openrouter_api_key"] == "env-openrouter-key"
+
+        store.update_config({"chat": {"max_tool_rounds": 5}})
+
+        with open(config_file) as f:
+            saved = json.load(f)
+        assert saved["llm"]["openrouter_api_key"] == ""
+        assert saved["llm"]["anthropic_api_key"] == ""
+        assert saved["llm"]["openai_api_key"] == "file-openai-key"
+        assert mgr.get_settings().llm.openrouter_api_key == "env-openrouter-key"
+
+
+def test_openrouter_key_is_a_credential(monkeypatch):
+    """The OpenRouter key is masked in responses and kept across a reset."""
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        config_file = _write_config(tmpdir, {})
+        with open(config_file) as f:
+            data = json.load(f)
+        data["llm"]["openrouter_api_key"] = "file-openrouter-key"
+        with open(config_file, "w") as f:
+            json.dump(data, f)
+        store = JSONFileConfigStore(ConfigurationManager(config_file=config_file))
+
+        response = AppConfigurationResponse.from_domain(store.load())
+        assert response.sections["llm"]["openrouter_api_key"] != "file-openrouter-key"
+
+        reset = store.reset_to_defaults()
+        assert reset.llm["openrouter_api_key"] == "file-openrouter-key"
