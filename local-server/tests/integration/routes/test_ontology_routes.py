@@ -279,6 +279,27 @@ class TestConceptSchemeCRUD:
         body = response.json()
         assert body["title"] == "Updated Scheme Title"
 
+    def test_move_concept_scheme_moves_it_and_its_classes(self, client):
+        """PUT /api/schemes/{id} with taxonomy_id moves the scheme and its classes, and counts follow."""
+        source_id = client.post("/api/taxonomies", json={"title": "House"}).json()["id"]
+        target_id = client.post("/api/taxonomies", json={"title": "Garden"}).json()["id"]
+        scheme_id = client.post(
+            f"/api/taxonomies/{source_id}/schemes", json={"title": "Places"}
+        ).json()["id"]
+        class_id = client.post(f"/api/schemes/{scheme_id}/classes", json={"title": "Room"}).json()[
+            "id"
+        ]
+
+        response = client.put(f"/api/schemes/{scheme_id}", json={"taxonomy_id": target_id})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["taxonomy_id"] == target_id
+        assert client.get(f"/api/schemes/{scheme_id}").json()["taxonomy_id"] == target_id
+        assert client.get(f"/api/classes/{class_id}").json()["taxonomy_id"] == target_id
+        counts = client.get(f"/api/taxonomies/{target_id}/scheme-counts").json()
+        assert [(c["scheme_id"], c["class_count"]) for c in counts] == [(scheme_id, 1)]
+        assert client.get(f"/api/taxonomies/{source_id}/scheme-counts").json() == []
+
     def test_delete_concept_scheme_returns_204(self, client):
         """DELETE /api/schemes/{id} returns 204."""
         tax_response = client.post("/api/taxonomies", json={"title": "Test Taxonomy"})

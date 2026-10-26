@@ -183,6 +183,10 @@ class OntologyRepository(Protocol):
         """
         Persist a concept scheme (create or update).
 
+        An update stores ``taxonomy_id`` too, and in the same transaction sets
+        every class in the scheme to that taxonomy, so a moved scheme's classes
+        move with it.
+
         Args:
             scheme: The ConceptScheme entity to save
 

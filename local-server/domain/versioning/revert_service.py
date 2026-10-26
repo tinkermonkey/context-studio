@@ -12,6 +12,7 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 
+from domain.ontology.events import GraphInvalidated
 from domain.ontology.snapshots import entity_from_snapshot
 from domain.ontology.value_objects import ExternalReference
 from domain.versioning.exceptions import RevertConflictError
@@ -23,6 +24,7 @@ if TYPE_CHECKING:
         OntologyRepository,
         SchemaVectorIndex,
     )
+    from domain.ports import EventPublisher
     from domain.versioning.ports import ChangeRepository
 
 _logger = logging.getLogger(__name__)
@@ -43,6 +45,7 @@ class RevertService:
         ontology_repo: OntologyRepository,
         schema_index: SchemaVectorIndex | None = None,
         individual_index: IndividualVectorIndex | None = None,
+        event_publisher: EventPublisher | None = None,
     ) -> None:
         """
         Initialize the RevertService.
@@ -55,11 +58,14 @@ class RevertService:
             individual_index: Optional recognition index, re-synced for every
                 individual the revert restores or modifies and cleared for every
                 individual it deletes
+            event_publisher: Optional publisher; GraphInvalidated is published for
+                both taxonomies of every scheme move the revert undoes
         """
         self._change_repo = change_repo
         self._ontology_repo = ontology_repo
         self._schema_index = schema_index
         self._individual_index = individual_index
+        self._event_publisher = event_publisher
 
     def revert(self, batch_run_id: str) -> int:
         """
@@ -127,12 +133,14 @@ class RevertService:
         # relationship is removed before the property it uses, and chained
         # updates unwind back to the oldest previous state.
         touched: dict[str, str] = {}
+        moved_between: set[str] = set()
         for event in pending:
             try:
                 if self._apply_inverse(event, batch_run_id):
                     reverted_count += 1
                     self._update_summary(event, summary)
                     touched[event.entity_id] = self._normalize_entity_type(event.entity_type)
+                    moved_between.update(self._scheme_move_taxonomies(event))
             except Exception as exc:
                 _logger.error(
                     f"Failed to revert event {event.id} for entity {event.entity_id}. "
@@ -143,6 +151,7 @@ class RevertService:
 
         for entity_id, entity_type in touched.items():
             self._sync_indexes(entity_id, entity_type)
+        self._invalidate_graphs(sorted(moved_between))
 
         _logger.info(f"Reverted {reverted_count} events for batch run {batch_run_id}")
         return RevertResult(
@@ -259,6 +268,33 @@ class RevertService:
                 entity_id,
                 exc_info=True,
             )
+
+    def _scheme_move_taxonomies(self, event) -> set[str]:
+        """The taxonomies a concept scheme UPDATE event moved the scheme between, if any."""
+        if (
+            event.operation != ChangeOperation.UPDATE
+            or self._normalize_entity_type(event.entity_type) != "concept_scheme"
+        ):
+            return set()
+        before = (event.previous_state or {}).get("taxonomy_id")
+        after = (event.new_state or {}).get("taxonomy_id")
+        return {t for t in (before, after) if t} if before != after else set()
+
+    def _invalidate_graphs(self, taxonomy_ids: list[str]) -> None:
+        """Publish GraphInvalidated for each taxonomy a reverted scheme move touched."""
+        if self._event_publisher is None:
+            return
+        for taxonomy_id in taxonomy_ids:
+            failures = self._event_publisher.publish(
+                GraphInvalidated(taxonomy_id=taxonomy_id, reason="concept_scheme_move_reverted")
+            )
+            if failures:
+                _logger.warning(
+                    "Event handlers failed for GraphInvalidated (taxonomy_id=%s): %s. "
+                    "Graph caches may be stale until the next invalidation.",
+                    taxonomy_id,
+                    ", ".join(name for name, _ in failures),
+                )
 
     _REVERT_MARKER = "_reverted_"
 

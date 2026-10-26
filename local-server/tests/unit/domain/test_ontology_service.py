@@ -1941,6 +1941,42 @@ class TestUpdateConceptScheme:
         assert events[0].new_values == {"taxonomy_id": target.id}
         assert events[0].taxonomy_id == target.id
 
+    def test_move_carries_the_schemes_classes_to_the_new_taxonomy(self, service):
+        """A moved scheme's classes belong to the new taxonomy too."""
+        source = service.create_taxonomy(title="Biology")
+        target = service.create_taxonomy(title="Zoology")
+        scheme = service.create_scheme(taxonomy_id=source.id, title="Animals")
+        cls = service.create_class(concept_scheme_id=scheme.id, title="Mammal")
+
+        moved = service.update_concept_scheme(concept_scheme_id=scheme.id, taxonomy_id=target.id)
+
+        assert moved.taxonomy_id == target.id
+        assert service.get_concept_scheme(scheme.id).taxonomy_id == target.id
+        assert service._repository.get_class(cls.id).taxonomy_id == target.id
+
+    def test_move_invalidates_the_graph_for_both_taxonomies(self, service):
+        """Graph caches built from either taxonomy are stale after a move."""
+        source = service.create_taxonomy(title="Biology")
+        target = service.create_taxonomy(title="Zoology")
+        scheme = service.create_scheme(taxonomy_id=source.id, title="Animals")
+        service._event_publisher.clear()
+
+        service.update_concept_scheme(concept_scheme_id=scheme.id, taxonomy_id=target.id)
+
+        invalidated = service._event_publisher.get_events_of_type(GraphInvalidated)
+        assert sorted(e.taxonomy_id for e in invalidated) == sorted([source.id, target.id])
+        assert {e.reason for e in invalidated} == {"concept_scheme_moved"}
+
+    def test_edit_without_move_leaves_the_graph_alone(self, service):
+        """Changing only a scheme's text does not invalidate the graph."""
+        tax = service.create_taxonomy(title="Biology")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Animals")
+        service._event_publisher.clear()
+
+        service.update_concept_scheme(concept_scheme_id=scheme.id, description="Revised")
+
+        assert service._event_publisher.get_events_of_type(GraphInvalidated) == []
+
     def test_update_with_same_values_is_a_no_op(self, service):
         """An update that changes nothing publishes no event."""
         from domain.ontology.events import SchemeUpdated

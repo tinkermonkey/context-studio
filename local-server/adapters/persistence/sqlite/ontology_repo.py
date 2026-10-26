@@ -502,6 +502,13 @@ class SQLiteOntologyRepository:
                 session.add(orm_entity)
             else:
                 # Update existing — identifier is immutable post-create
+                if orm_entity.taxonomy_id != scheme.taxonomy_id:
+                    # A move: the scheme's classes belong to its taxonomy too
+                    session.query(OntologyEntity).filter(
+                        OntologyEntity.node_type == NodeType.CLASS,
+                        OntologyEntity.concept_scheme_id == scheme.id,
+                    ).update({OntologyEntity.taxonomy_id: scheme.taxonomy_id})
+                    orm_entity.taxonomy_id = scheme.taxonomy_id  # type: ignore[assignment]
                 orm_entity.title = scheme.title  # type: ignore[assignment]
                 orm_entity.description = scheme.description  # type: ignore[assignment]
                 orm_entity.color = scheme.color  # type: ignore[assignment]
