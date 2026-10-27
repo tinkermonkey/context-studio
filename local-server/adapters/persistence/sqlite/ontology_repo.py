@@ -306,7 +306,7 @@ class SQLiteOntologyRepository:
                     description=taxonomy.description,
                     vision=taxonomy.vision,
                     color=taxonomy.color,
-                    created_at=datetime.now(timezone.utc),
+                    created_at=taxonomy.created_at or datetime.now(timezone.utc),
                     last_modified=datetime.now(timezone.utc),
                     version=1,
                 )
@@ -495,7 +495,7 @@ class SQLiteOntologyRepository:
                     title=scheme.title,
                     description=scheme.description,
                     color=scheme.color,
-                    created_at=datetime.now(timezone.utc),
+                    created_at=scheme.created_at or datetime.now(timezone.utc),
                     last_modified=datetime.now(timezone.utc),
                     version=1,
                 )
@@ -723,7 +723,7 @@ class SQLiteOntologyRepository:
             if orm_entity is None:
                 # Create new
                 orm_entity = map_domain_to_orm(cls)
-                orm_entity.created_at = datetime.now(timezone.utc)  # type: ignore[assignment]
+                orm_entity.created_at = cls.created_at or datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.version = 1  # type: ignore[assignment]
                 session.add(orm_entity)
@@ -984,7 +984,7 @@ class SQLiteOntologyRepository:
             if orm_entity is None:
                 # Create new
                 orm_entity = map_domain_to_orm(individual)
-                orm_entity.created_at = datetime.now(timezone.utc)  # type: ignore[assignment]
+                orm_entity.created_at = individual.created_at or datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.version = 1  # type: ignore[assignment]
                 session.add(orm_entity)
@@ -1479,7 +1479,7 @@ class SQLiteOntologyRepository:
             if orm_entity is None:
                 # Create new
                 orm_entity = map_domain_to_orm(prop)
-                orm_entity.created_at = datetime.now(timezone.utc)  # type: ignore[assignment]
+                orm_entity.created_at = prop.created_at or datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.version = 1  # type: ignore[assignment]
                 session.add(orm_entity)
@@ -1494,7 +1494,7 @@ class SQLiteOntologyRepository:
                     domain_class_id=prop.domain_class_id,
                     range_class_id=prop.range_class_id,
                     is_relevant=prop.is_relevant,
-                    created_at=datetime.now(timezone.utc),
+                    created_at=orm_entity.created_at,
                     last_modified=datetime.now(timezone.utc),
                     version=1,
                 )
@@ -1927,7 +1927,7 @@ class SQLiteOntologyRepository:
             if orm_attr is None:
                 # Create new
                 orm_attr = self._map_attribute_definition_domain_to_orm(attr_def)
-                orm_attr.created_at = datetime.now(timezone.utc)  # type: ignore[assignment]
+                orm_attr.created_at = attr_def.created_at or datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_attr.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_attr.version = 1  # type: ignore[assignment]
                 session.add(orm_attr)

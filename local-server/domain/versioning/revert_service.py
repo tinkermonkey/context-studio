@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 
 from domain.ontology.events import GraphInvalidated
-from domain.ontology.snapshots import entity_from_snapshot
+from domain.ontology.snapshots import entity_field_names, entity_from_snapshot
 from domain.ontology.value_objects import DataType, ExternalReference
 from domain.versioning.exceptions import RevertConflictError
 from domain.versioning.value_objects import ChangeOperation
@@ -81,7 +81,10 @@ class RevertService:
             Count of events successfully reverted
 
         Raises:
-            ValueError: If batch_run_id is empty
+            ValueError: If batch_run_id is empty, or an event can't be undone; nothing
+                is changed
+            RevertConflictError: If entities outside the run depend on entities it
+                created; nothing is changed
         """
         result = self.revert_with_summary(batch_run_id)
         return result.events_reverted
@@ -100,7 +103,8 @@ class RevertService:
             RevertResult with event count and detailed breakdown by entity type
 
         Raises:
-            ValueError: If batch_run_id is empty
+            ValueError: If batch_run_id is empty, or an event can't be undone (no
+                previous state, an unknown field, no snapshot); nothing is changed
             RevertConflictError: If entities outside the run depend on entities it
                 created; nothing is changed
         """
@@ -116,6 +120,7 @@ class RevertService:
             return RevertResult(run_id=batch_run_id, events_reverted=0)
 
         pending = [event for event in events if not self._should_skip_revert(event, events)]
+        self._check_restorable(batch_run_id, pending)
         self._check_no_outside_dependents(batch_run_id, pending)
 
         reverted_count = 0
@@ -199,6 +204,47 @@ class RevertService:
                 return True
 
         return False
+
+    def _check_restorable(self, batch_run_id: str, pending: list) -> None:
+        """
+        Refuse the revert, before changing anything, if an event can't be undone.
+
+        An update needs its previous state, naming only fields of its entity, and
+        a delete needs a snapshot complete enough to rebuild the entity. Checking up front keeps a bad event from
+        stopping the revert partway through the run.
+
+        Raises:
+            ValueError: listing each event that can't be undone
+        """
+        problems = []
+        for event in pending:
+            entity_type = self._normalize_entity_type(event.entity_type)
+            label = f"{entity_type} {event.entity_id} (event {event.id})"
+            if event.operation == ChangeOperation.UPDATE:
+                if not event.previous_state:
+                    problems.append(f"{label}: no previous state")
+                    continue
+                try:
+                    unknown = sorted(set(event.previous_state) - entity_field_names(entity_type))
+                except ValueError:
+                    problems.append(f"{label}: unknown entity type")
+                    continue
+                if unknown:
+                    problems.append(f"{label}: unknown fields {unknown}")
+            elif event.operation == ChangeOperation.DELETE:
+                snapshot = self._deleted_state(event)
+                if not snapshot:
+                    problems.append(f"{label}: no snapshot of the deleted entity")
+                    continue
+                try:
+                    entity_from_snapshot(entity_type, snapshot, event.entity_id)
+                except ValueError as exc:
+                    problems.append(f"{label}: {exc}")
+        if problems:
+            raise ValueError(
+                f"Cannot revert batch run {batch_run_id}; nothing was changed. "
+                + "; ".join(problems)
+            )
 
     def _check_no_outside_dependents(self, batch_run_id: str, pending: list) -> None:
         """

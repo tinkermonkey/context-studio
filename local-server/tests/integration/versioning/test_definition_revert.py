@@ -1,7 +1,7 @@
 """
-Integration tests (#1352): attribute-definition creates and updates, and
-property-definition updates, are recorded as change events and undone by
-reverting their run.
+Integration tests (#1352): attribute-definition creates, updates and deletes,
+property-definition updates and class moves are recorded as change events and
+undone by reverting their run.
 
 Real SQLite (foreign keys enforced, as in the app) with the ChangeEventRecorder
 wired as in app.py.
@@ -28,8 +28,10 @@ from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from domain.interchange.services import set_batch_run_context
 from domain.ontology.events import (
     AttributeDefinitionCreated,
+    AttributeDefinitionDeleted,
     AttributeDefinitionUpdated,
     ClassCreated,
+    ClassMoved,
     PropertyDefinitionUpdated,
 )
 from domain.ontology.services import OntologyService
@@ -65,7 +67,9 @@ def service(ontology_repo, change_repo):
     recorder = ChangeEventRecorder(change_repo)
     publisher.subscribe(AttributeDefinitionCreated, recorder.on_attribute_definition_created)
     publisher.subscribe(AttributeDefinitionUpdated, recorder.on_attribute_definition_updated)
+    publisher.subscribe(AttributeDefinitionDeleted, recorder.on_attribute_definition_deleted)
     publisher.subscribe(ClassCreated, recorder.on_class_created)
+    publisher.subscribe(ClassMoved, recorder.on_class_moved)
     publisher.subscribe(PropertyDefinitionUpdated, recorder.on_property_definition_updated)
     return OntologyService(
         repository=ontology_repo,
@@ -222,3 +226,33 @@ def test_property_definition_update_in_a_run_is_restored_by_reverting_it(
     assert restored.canonical_predicate is None
     assert restored.is_relevant is None
     assert restored.domain_class_id is None
+
+
+def test_class_moved_in_a_run_is_moved_back_by_reverting_it(
+    service, ontology_repo, scheme, activity, run_id, revert_service
+):
+    cleaning = service.create_class(
+        concept_scheme_id=scheme.id, title="Cleaning", parent_class_id=activity.id
+    )
+    _in_run(run_id, lambda: service.move_class(cleaning.id, None))
+    assert ontology_repo.get_class(cleaning.id).parent_class_id is None
+
+    revert_service.revert_with_summary(run_id)
+
+    assert ontology_repo.get_class(cleaning.id).parent_class_id == activity.id
+
+
+def test_attribute_deleted_in_a_run_comes_back_as_it_was(
+    service, ontology_repo, activity, run_id, revert_service
+):
+    attribute = service.create_attribute_definition(
+        class_id=activity.id, identifier="estimate_minutes", title="Estimate", datatype="integer"
+    )
+    created_at = ontology_repo.get_attribute_definition(attribute.id).created_at
+    _in_run(run_id, lambda: service.delete_attribute_definition(attribute.id))
+
+    revert_service.revert_with_summary(run_id)
+
+    restored = ontology_repo.get_attribute_definition(attribute.id)
+    assert restored.identifier == "estimate_minutes"
+    assert restored.created_at == created_at

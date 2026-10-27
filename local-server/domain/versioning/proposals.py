@@ -10,7 +10,8 @@ records its own outcome.
 Scope follows the DR design charter's vocabulary. The system classifies it
 (`classify_scope`); an agent's claim can only make it stricter:
 
-- editorial: wording only (title, description, vision, color)
+- editorial: wording or presentation only (title, description, vision, color,
+  sort order)
 - additive: something new, or more of something (a create, an extra allowed
   value, an extra class on an individual, a new reference)
 - breaking: anything that removes, moves or redefines (a delete, a move, an
@@ -89,12 +90,19 @@ class OperationStatus(str, Enum):
     FAILED = "failed"
 
 
-# Fields whose change is wording only.
-EDITORIAL_FIELDS = frozenset({"title", "description", "vision", "color"})
+# Fields whose change is wording or presentation only.
+EDITORIAL_FIELDS = frozenset({"title", "description", "vision", "color", "sort_order"})
 # List fields where a superset of the current value only adds.
 ADDITIVE_LIST_FIELDS = frozenset(
     {"allowed_values", "class_ids", "external_references", "lexical_senses"}
 )
+
+# What a move can change, per kind: a scheme moves to another taxonomy, and a
+# class to another parent, another scheme, or both. Nothing else can move.
+MOVE_FIELDS = {
+    OperationKind.SCHEME: frozenset({"taxonomy_id"}),
+    OperationKind.CLASS: frozenset({"parent_class_id", "concept_scheme_id"}),
+}
 
 
 def classify_scope(
@@ -158,8 +166,9 @@ class ProposedOperation:
         target_id: The existing entity (update, move, delete)
         ref: A name a create gives its new entity, so later operations in the
             same proposal can point at it with "$<ref>"
-        fields: For a create, every field; for an update or move, only the
-            changed ones
+        fields: For a create, every field; for an update, only the changed ones;
+            for a move, only MOVE_FIELDS (a scheme's taxonomy_id; a class's
+            parent_class_id and/or concept_scheme_id)
         base: The current values of the touched fields when proposed (for a
             delete, the whole entity); compared at apply time to detect that
             the target changed since
@@ -195,8 +204,22 @@ class ProposedOperation:
                 raise ValueError("A create has no target_id; name it with ref instead")
         elif not self.target_id:
             raise ValueError(f"An {self.op.value} needs a target_id")
-        if self.op is OperationType.UPDATE and not self.fields:
-            raise ValueError("An update needs at least one field")
+        if self.op is OperationType.UPDATE:
+            if not self.fields:
+                raise ValueError("An update needs at least one field")
+            if self.kind is OperationKind.RELATIONSHIP:
+                raise ValueError("A relationship can't be updated; delete it and create another")
+            moving = sorted(MOVE_FIELDS.get(self.kind, frozenset()) & set(self.fields))
+            if moving:
+                raise ValueError(f"Use a move to change {', '.join(moving)}")
+        if self.op is OperationType.MOVE:
+            move_fields = MOVE_FIELDS.get(self.kind)
+            if move_fields is None:
+                raise ValueError(f"A {self.kind.value} can't be moved")
+            if not self.fields or not set(self.fields) <= move_fields:
+                raise ValueError(
+                    f"A {self.kind.value} move sets only {', '.join(sorted(move_fields))}"
+                )
         if self.ref is not None and self.op is not OperationType.CREATE:
             raise ValueError("Only a create can carry a ref")
         if self.probability is not None and not 0.0 <= self.probability <= 1.0:

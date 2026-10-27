@@ -9,13 +9,17 @@ Tests the adapter against a real in-memory SQLite database to verify:
 - Cascade deletion
 """
 
+from datetime import datetime
+
 import pytest
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 
 from adapters.persistence.sqlite.models import Base
+from adapters.persistence.sqlite.models import PropertyDefinition as PropertyDefinitionORM
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.ontology.entities import (
+    AttributeDefinition,
     Class,
     ConceptScheme,
     Individual,
@@ -26,6 +30,7 @@ from domain.ontology.entities import (
 from domain.ontology.exceptions import EntityInUseError
 from domain.ontology.value_objects import (
     DataPropertyValue,
+    DataType,
     ExternalReference,
     SearchCriteria,
     Status,
@@ -904,3 +909,70 @@ class TestStatusPersistence:
         retrieved = repo.get_property_definition(saved.id)
         assert retrieved is not None
         assert retrieved.status == Status.PUBLISHED
+
+
+ORIGINAL_CREATED_AT = datetime(2026, 1, 2, 3, 4, 5)
+
+
+def test_new_entities_keep_a_given_created_at(
+    repo, session_factory, sample_concept_scheme, sample_class
+):
+    """Saving a new entity that already has a created_at (as a reverted delete
+    does) keeps it, in both property-definition tables too."""
+    saved = {
+        "taxonomy": repo.save_taxonomy(
+            Taxonomy(id="tax-2", identifier="t2", title="T2", created_at=ORIGINAL_CREATED_AT)
+        ),
+        "scheme": repo.save_concept_scheme(
+            ConceptScheme(
+                id="scheme-2",
+                taxonomy_id="tax-1",
+                identifier="s2",
+                title="S2",
+                created_at=ORIGINAL_CREATED_AT,
+            )
+        ),
+        "class": repo.save_class(
+            Class(
+                id="class-2",
+                concept_scheme_id=sample_concept_scheme.id,
+                taxonomy_id="tax-1",
+                identifier="c2",
+                title="C2",
+                created_at=ORIGINAL_CREATED_AT,
+            )
+        ),
+        "individual": repo.save_individual(
+            Individual(
+                id="ind-2", class_ids=[sample_class.id], title="I2", created_at=ORIGINAL_CREATED_AT
+            )
+        ),
+        "property": repo.save_property_definition(
+            PropertyDefinition(
+                id="prop-2", identifier="p2", title="P2", created_at=ORIGINAL_CREATED_AT
+            )
+        ),
+    }
+    saved["attribute"] = repo.save_attribute_definition(
+        AttributeDefinition(
+            id="attr-2",
+            class_id=sample_class.id,
+            identifier="a2",
+            title="A2",
+            datatype=DataType.STRING,
+            created_at=ORIGINAL_CREATED_AT,
+        )
+    )
+    getters = {
+        "taxonomy": repo.get_taxonomy,
+        "scheme": repo.get_concept_scheme,
+        "class": repo.get_class,
+        "individual": repo.get_individual,
+        "property": repo.get_property_definition,
+        "attribute": repo.get_attribute_definition,
+    }
+    for kind, entity in saved.items():
+        assert getters[kind](entity.id).created_at.replace(tzinfo=None) == ORIGINAL_CREATED_AT, kind
+    with session_factory() as session:
+        row = session.get(PropertyDefinitionORM, "prop-2")
+        assert row.created_at.replace(tzinfo=None) == ORIGINAL_CREATED_AT

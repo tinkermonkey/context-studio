@@ -271,10 +271,10 @@ class ChangeEventRecorder:
             entity_type="class",
             operation=ChangeOperation.UPDATE,
             new_state={
-                "parent_id": event.new_parent_id,
+                "parent_class_id": event.new_parent_id,
             },
             previous_state={
-                "parent_id": event.old_parent_id,
+                "parent_class_id": event.old_parent_id,
             },
             change_reason=(
                 f"Class moved from parent {event.old_parent_id} to" f" {event.new_parent_id}"
