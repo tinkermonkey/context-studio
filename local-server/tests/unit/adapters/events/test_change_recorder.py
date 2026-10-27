@@ -7,8 +7,11 @@ import pytest
 from adapters.events.change_recorder import ChangeEventRecorder
 from domain.extraction.events import ExtractionCompleted
 from domain.interchange.services import set_batch_run_context
+from domain.ontology.value_objects import DataType
 from domain.ontology.events import (
+    AttributeDefinitionCreated,
     AttributeDefinitionDeleted,
+    AttributeDefinitionUpdated,
     ClassCreated,
     ClassDeleted,
     ClassMoved,
@@ -411,8 +414,9 @@ class TestOntologyHandlers:
         mock_change_repo.record_change.return_value = "change-789"
         event = PropertyDefinitionUpdated(
             property_id="prop-1",
-            title="Updated Title",
-            description="Updated Description",
+            changed_fields=("title",),
+            old_values={"title": "Old Title"},
+            new_values={"title": "Updated Title"},
         )
 
         recorder.on_property_definition_updated(event)
@@ -423,6 +427,7 @@ class TestOntologyHandlers:
         assert call_args.kwargs["entity_type"] == "property_definition"
         assert call_args.kwargs["operation"] == "update"
         assert call_args.kwargs["new_state"]["title"] == "Updated Title"
+        assert call_args.kwargs["previous_state"] == {"title": "Old Title"}
         assert "title" in call_args.kwargs["change_reason"]
 
     def test_on_individual_updated(self, recorder, mock_change_repo):
@@ -542,6 +547,46 @@ class TestOntologyHandlers:
         assert call_args.kwargs["operation"] == "delete"
         assert call_args.kwargs["previous_state"] == event.snapshot
         assert call_args.kwargs["previous_state"]["title"] == "Has Child"
+
+    def test_on_attribute_definition_created(self, recorder, mock_change_repo):
+        """AttributeDefinitionCreated is recorded as a create of the attribute."""
+        mock_change_repo.record_change.return_value = "change-220"
+        event = AttributeDefinitionCreated(
+            attribute_definition_id="attr-1",
+            class_id="class-1",
+            identifier="estimate_minutes",
+            title="Estimate (minutes)",
+        )
+
+        recorder.on_attribute_definition_created(event)
+
+        call_args = mock_change_repo.record_change.call_args
+        assert call_args.kwargs["entity_id"] == "attr-1"
+        assert call_args.kwargs["entity_type"] == "attribute_definition"
+        assert call_args.kwargs["operation"] == "create"
+        assert call_args.kwargs["new_state"]["class_id"] == "class-1"
+
+    def test_on_attribute_definition_updated_stores_plain_values(self, recorder, mock_change_repo):
+        """Old and new values are recorded, with the DataType enum as its plain value."""
+        mock_change_repo.record_change.return_value = "change-221"
+        event = AttributeDefinitionUpdated(
+            attribute_definition_id="attr-1",
+            changed_fields=("datatype", "allowed_values"),
+            old_values={"datatype": DataType.STRING, "allowed_values": None},
+            new_values={"datatype": DataType.INTEGER, "allowed_values": ["5", "10"]},
+        )
+
+        recorder.on_attribute_definition_updated(event)
+
+        call_args = mock_change_repo.record_change.call_args
+        assert call_args.kwargs["operation"] == "update"
+        assert call_args.kwargs["previous_state"] == {"datatype": "string", "allowed_values": None}
+        assert call_args.kwargs["new_state"] == {
+            "datatype": "integer",
+            "allowed_values": ["5", "10"],
+        }
+        assert type(call_args.kwargs["new_state"]["datatype"]) is str
+        assert "datatype, allowed_values" in call_args.kwargs["change_reason"]
 
     def test_on_attribute_definition_deleted(self, recorder, mock_change_repo):
         """Test AttributeDefinitionDeleted event recording."""

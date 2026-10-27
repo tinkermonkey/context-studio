@@ -264,14 +264,16 @@ class PropertyDefinitionUpdated(DomainEvent):
 
     Attributes:
         property_id: ID of the updated property definition
-        title: New title of the property definition
-        description: New description of the property definition
+        changed_fields: Tuple of field names that changed
+        old_values: Dictionary of field names to their previous values
+        new_values: Dictionary of field names to their new values
     """
 
     _aggregate_id_field: ClassVar[str] = "property_id"
     property_id: str = ""
-    title: str = ""
-    description: str | None = None
+    changed_fields: tuple[str, ...] = field(default_factory=tuple)
+    old_values: dict[str, object] = field(default_factory=dict)
+    new_values: dict[str, object] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

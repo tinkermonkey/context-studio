@@ -19,8 +19,7 @@ ontology workbench reuses the same format for export.
       "relationships": [{"source", "property", "target"}]
     }
 
-Every write goes through OntologyService, so changes are evented (attribute
-definition changes are not recorded as change events yet). Idempotent:
+Every write goes through OntologyService, so changes are evented. Idempotent:
 schemes, classes and properties are keyed on `identifier`; classes, properties
 and individuals also carry an ExternalReference(source, identifier or id).
 Relationships are keyed on their (source, property, target) triple. Re-loading

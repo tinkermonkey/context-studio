@@ -10,12 +10,15 @@ add other event consumers (e.g., notifications, graph cache invalidation)
 without modifying domain code.
 """
 
-from typing import Optional
+from enum import Enum
+from typing import Any, Optional
 
 from domain.extraction.events import ExtractionCompleted
 from domain.interchange.services import get_current_batch_run_id
 from domain.ontology.events import (
+    AttributeDefinitionCreated,
     AttributeDefinitionDeleted,
+    AttributeDefinitionUpdated,
     ClassCreated,
     ClassDeleted,
     ClassMoved,
@@ -40,6 +43,11 @@ from domain.versioning.value_objects import ChangeOperation
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+def _json_safe(values: dict[str, Any]) -> dict[str, Any]:
+    """Event values with enums (e.g. an attribute's DataType) stored as their plain value."""
+    return {k: v.value if isinstance(v, Enum) else v for k, v in values.items()}
 
 
 class ChangeEventRecorder:
@@ -279,11 +287,9 @@ class ChangeEventRecorder:
             entity_id=event.property_id,
             entity_type="property_definition",
             operation=ChangeOperation.UPDATE,
-            new_state={
-                "title": event.title,
-                "description": event.description,
-            },
-            change_reason="Property definition updated: title, description",
+            new_state=event.new_values,
+            previous_state=event.old_values,
+            change_reason=f"Property definition updated: {', '.join(event.changed_fields)}",
         )
 
     # --- DELETE Pattern Handlers ---
@@ -336,6 +342,32 @@ class ChangeEventRecorder:
             operation=ChangeOperation.DELETE,
             previous_state=event.snapshot,
             change_reason="Property definition deleted",
+        )
+
+    def on_attribute_definition_created(self, event: AttributeDefinitionCreated) -> None:
+        """Handle AttributeDefinitionCreated events."""
+        self._record(
+            entity_id=event.attribute_definition_id,
+            entity_type="attribute_definition",
+            operation=ChangeOperation.CREATE,
+            new_state={
+                "attribute_definition_id": event.attribute_definition_id,
+                "class_id": event.class_id,
+                "identifier": event.identifier,
+                "title": event.title,
+            },
+            change_reason="Attribute definition created",
+        )
+
+    def on_attribute_definition_updated(self, event: AttributeDefinitionUpdated) -> None:
+        """Handle AttributeDefinitionUpdated events."""
+        self._record(
+            entity_id=event.attribute_definition_id,
+            entity_type="attribute_definition",
+            operation=ChangeOperation.UPDATE,
+            new_state=_json_safe(event.new_values),
+            previous_state=_json_safe(event.old_values),
+            change_reason=f"Attribute definition updated: {', '.join(event.changed_fields)}",
         )
 
     def on_attribute_definition_deleted(self, event: AttributeDefinitionDeleted) -> None:
