@@ -53,6 +53,8 @@ class FakeChangeProposalRepository:
         return len(self._matching(taxonomy_id, status, source))
 
     def save_operations(self, proposal_id: str, operations: Sequence[ProposedOperation]) -> None:
+        if proposal_id not in self._proposals:
+            raise ValueError(f"No proposal {proposal_id}")
         stored = {o.id: o for o in self._proposals[proposal_id].operations}
         missing = [o.id for o in operations if o.id not in stored]
         if missing:

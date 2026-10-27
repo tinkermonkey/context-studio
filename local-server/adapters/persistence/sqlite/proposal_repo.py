@@ -14,7 +14,7 @@ from typing import Optional, Sequence
 
 from sqlalchemy.orm import Session, sessionmaker
 
-from adapters.persistence.sqlite.models import ChangeProposalRun, ProposalOperation
+from adapters.persistence.sqlite.models import BatchRun, ChangeProposalRun, ProposalOperation
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
@@ -35,10 +35,13 @@ class SQLiteChangeProposalRepository:
 
     def create(self, proposal: ChangeProposal) -> ChangeProposal:
         with self._session_factory() as session:
+            if session.get(BatchRun, proposal.id) is not None:
+                raise ValueError(f"Proposal {proposal.id} already exists")
             session.add(
                 ChangeProposalRun(
                     id=proposal.id,
-                    created_at=proposal.created_at,
+                    # SQLite keeps the wall-clock time and drops the offset; store UTC.
+                    created_at=proposal.created_at.astimezone(timezone.utc),
                     status=proposal.status.value,
                     affected_entity_ids=[],
                     taxonomy_id=proposal.taxonomy_id,
@@ -72,7 +75,7 @@ class SQLiteChangeProposalRepository:
         with self._session_factory() as session:
             runs = (
                 _filtered(session, taxonomy_id, status, source)
-                .order_by(ChangeProposalRun.created_at.desc(), ChangeProposalRun.id)
+                .order_by(ChangeProposalRun.created_at.desc(), ChangeProposalRun.id.desc())
                 .offset(offset)
                 .limit(limit)
                 .all()
@@ -91,6 +94,8 @@ class SQLiteChangeProposalRepository:
 
     def save_operations(self, proposal_id: str, operations: Sequence[ProposedOperation]) -> None:
         with self._session_factory() as session:
+            if session.get(ChangeProposalRun, proposal_id) is None:
+                raise ValueError(f"No proposal {proposal_id}")
             rows = {
                 row.id: row
                 for row in session.query(ProposalOperation).filter(
@@ -190,7 +195,7 @@ def _operation_to_domain(row: ProposalOperation) -> ProposedOperation:
 
 def _to_domain(run: ChangeProposalRun, operations: list[ProposedOperation]) -> ChangeProposal:
     created_at = run.created_at
-    if created_at is not None and created_at.tzinfo is None:  # SQLite drops the zone
+    if created_at is not None and created_at.tzinfo is None:  # stored as UTC, zone dropped
         created_at = created_at.replace(tzinfo=timezone.utc)
     return ChangeProposal(
         id=run.id,  # type: ignore[arg-type]

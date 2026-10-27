@@ -63,8 +63,14 @@ class TestClassifyScope:
         )
         assert scope is ChangeScope.BREAKING
 
-    def test_list_with_unknown_base_counts_as_growing(self):
-        assert classify_scope(OperationType.UPDATE, {"class_ids": ["c1"]}) is ChangeScope.ADDITIVE
+    def test_list_with_unknown_base_is_breaking(self):
+        assert classify_scope(OperationType.UPDATE, {"class_ids": ["c1"]}) is ChangeScope.BREAKING
+
+    def test_list_with_empty_base_is_additive(self):
+        scope = classify_scope(
+            OperationType.UPDATE, {"class_ids": ["c1"]}, base={"class_ids": None}
+        )
+        assert scope is ChangeScope.ADDITIVE
 
     def test_mixed_update_takes_the_strictest_field(self):
         scope = classify_scope(OperationType.UPDATE, {"title": "Den", "datatype": "integer"})
@@ -99,7 +105,18 @@ class TestProposedOperation:
     def test_only_creates_carry_a_ref(self):
         with pytest.raises(ValueError, match="Only a create"):
             ProposedOperation(
-                seq=0, op=OperationType.UPDATE, kind=OperationKind.CLASS, target_id="c1", ref="x"
+                seq=0,
+                op=OperationType.UPDATE,
+                kind=OperationKind.CLASS,
+                target_id="c1",
+                ref="x",
+                fields={"title": "Den"},
+            )
+
+    def test_an_update_needs_fields(self):
+        with pytest.raises(ValueError, match="at least one field"):
+            ProposedOperation(
+                seq=0, op=OperationType.UPDATE, kind=OperationKind.CLASS, target_id="c1"
             )
 
     @pytest.mark.parametrize("probability", [-0.1, 1.5])
@@ -110,6 +127,7 @@ class TestProposedOperation:
                 op=OperationType.UPDATE,
                 kind=OperationKind.CLASS,
                 target_id="c1",
+                fields={"title": "Den"},
                 probability=probability,
             )
 
@@ -120,6 +138,7 @@ def _operation(seq, status=OperationStatus.PENDING):
         op=OperationType.UPDATE,
         kind=OperationKind.CLASS,
         target_id=f"c{seq}",
+        fields={"title": f"Class {seq}"},
         status=status,
     )
 
@@ -149,6 +168,16 @@ class TestChangeProposal:
                 source=ProposalSource.USER,
                 created_at=NOW,
                 operations=[_operation(0), _operation(0)],
+            )
+
+    def test_created_at_must_be_timezone_aware(self):
+        with pytest.raises(ValueError, match="timezone-aware"):
+            ChangeProposal(
+                id="p",
+                taxonomy_id="t",
+                title="T",
+                source=ProposalSource.USER,
+                created_at=datetime(2026, 10, 26, 12),
             )
 
     def test_settles_to_done_once_nothing_is_pending(self):

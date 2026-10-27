@@ -141,6 +141,32 @@ def test_list_filters_and_orders_newest_first(repo):
     assert len(repo.list_proposals(limit=2)) == 2
 
 
+def test_ties_on_created_at_order_by_id_descending(repo):
+    for proposal_id in ("a", "b", "c"):
+        repo.create(_proposal(proposal_id))
+
+    assert [p.id for p in repo.list_proposals()] == ["c", "b", "a"]
+
+
+def test_created_at_with_an_offset_keeps_its_instant(repo):
+    pacific = timezone(timedelta(hours=-7))
+    repo.create(_proposal(created_at=datetime(2026, 10, 26, 5, tzinfo=pacific)))
+
+    assert repo.get("p1").created_at == datetime(2026, 10, 26, 12, tzinfo=timezone.utc)
+
+
+def test_creating_an_existing_proposal_is_rejected(repo):
+    repo.create(_proposal())
+
+    with pytest.raises(ValueError, match="already exists"):
+        repo.create(_proposal())
+
+
+def test_save_operations_on_an_unknown_proposal_is_rejected(repo):
+    with pytest.raises(ValueError, match="No proposal"):
+        repo.save_operations("missing", [])
+
+
 def test_save_operations_records_outcomes(repo):
     created = repo.create(_proposal())
     furniture, credenza, _ = created.operations

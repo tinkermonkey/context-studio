@@ -109,8 +109,9 @@ def classify_scope(
     Args:
         op: What the operation does
         fields: The fields it sets (for an update, only the changed ones)
-        base: The current values of those fields, when known; lets a list field
-            that only grows count as additive
+        base: The current values of those fields; a list field counts as
+            additive only when its current value is given and every item of it
+            is kept (a field missing from base is unknown, so breaking)
         claimed: A scope the proposer asserted, if any
 
     Returns:
@@ -131,7 +132,7 @@ def _computed_scope(op: OperationType, fields: dict[str, Any], base: dict[str, A
     for name, value in fields.items():
         if name in EDITORIAL_FIELDS:
             continue
-        if name in ADDITIVE_LIST_FIELDS and _only_adds(base.get(name), value):
+        if name in ADDITIVE_LIST_FIELDS and name in base and _only_adds(base[name], value):
             scope = ChangeScope.ADDITIVE
             continue
         return ChangeScope.BREAKING
@@ -139,7 +140,7 @@ def _computed_scope(op: OperationType, fields: dict[str, Any], base: dict[str, A
 
 
 def _only_adds(current: Any, proposed: Any) -> bool:
-    """Whether a list field keeps every current item (unknown current counts as empty)."""
+    """Whether a list field keeps every current item (a None current value is empty)."""
     if not isinstance(proposed, list):
         return False
     return all(item in proposed for item in current or [])
@@ -194,6 +195,8 @@ class ProposedOperation:
                 raise ValueError("A create has no target_id; name it with ref instead")
         elif not self.target_id:
             raise ValueError(f"An {self.op.value} needs a target_id")
+        if self.op is OperationType.UPDATE and not self.fields:
+            raise ValueError("An update needs at least one field")
         if self.ref is not None and self.op is not OperationType.CREATE:
             raise ValueError("Only a create can carry a ref")
         if self.probability is not None and not 0.0 <= self.probability <= 1.0:
@@ -236,6 +239,8 @@ class ChangeProposal:
     def __post_init__(self) -> None:
         if not self.title or not self.title.strip():
             raise ValueError("A proposal needs a title")
+        if self.created_at.tzinfo is None:
+            raise ValueError("created_at must be timezone-aware")
         seqs = [o.seq for o in self.operations]
         if len(seqs) != len(set(seqs)):
             raise ValueError("Operation seq values must be unique within a proposal")

@@ -267,10 +267,18 @@ class SyncTarget(Protocol):
 
 
 class ChangeProposalRepository(Protocol):
-    """Port for storing change proposals and the outcome of each operation."""
+    """
+    Port for storing change proposals and the outcome of each operation.
+
+    Not to be confused with ``entities.Proposal``, the request to merge a
+    changeset handled by the changeset methods above.
+    """
 
     def create(self, proposal: ChangeProposal) -> ChangeProposal:
-        """Store a new proposal with its operations; its id becomes a batch run id."""
+        """Store a new proposal with its operations; its id becomes a batch run id.
+
+        Raises ValueError if a batch run with that id already exists.
+        """
         ...
 
     def get(self, proposal_id: str) -> Optional[ChangeProposal]:
@@ -298,7 +306,10 @@ class ChangeProposalRepository(Protocol):
         ...
 
     def save_operations(self, proposal_id: str, operations: Sequence[ProposedOperation]) -> None:
-        """Persist the status, result and reason of these operations."""
+        """Persist the status, result and reason of these operations.
+
+        Raises ValueError for an unknown proposal or operation.
+        """
         ...
 
     def set_status(self, proposal_id: str, status: ProposalStatus) -> None:
