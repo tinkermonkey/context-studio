@@ -1021,6 +1021,45 @@ def test_inverse_delete_multiple_entities(ontology_repo, change_repo, revert_svc
     assert ontology_repo.get_individual("ind-del-1") is not None
 
 
+def test_revert_changes_nothing_when_a_delete_snapshot_is_incomplete(
+    ontology_repo, change_repo, revert_svc
+):
+    """A snapshot too thin to rebuild its entity is caught before anything is undone."""
+    ontology_repo.save_class(
+        Class(
+            id="cls-1",
+            concept_scheme_id="scheme-1",
+            taxonomy_id="tx-1",
+            title="Animal",
+            description="A living being",
+        )
+    )
+    # Undone last (oldest): the individual's snapshot lacks class_ids.
+    change_repo.record_change(
+        entity_id="ind-1",
+        entity_type="individual",
+        operation=ChangeOperation.DELETE,
+        new_state={},
+        previous_state={"id": "ind-1", "title": "Rex"},
+        batch_run_id="run-1",
+    )
+    # Undone first (newest): fine on its own.
+    change_repo.record_change(
+        entity_id="cls-1",
+        entity_type="class",
+        operation=ChangeOperation.UPDATE,
+        previous_state={"description": "An organism"},
+        new_state={"description": "A living being"},
+        batch_run_id="run-1",
+    )
+
+    with pytest.raises(ValueError, match="nothing was changed.*snapshot is incomplete"):
+        revert_svc.revert("run-1")
+
+    assert ontology_repo.get_class("cls-1").description == "A living being"
+    assert ontology_repo.get_individual("ind-1") is None
+
+
 def test_inverse_delete_with_missing_state_raises_error(ontology_repo, change_repo, revert_svc):
     """Test _inverse_delete raises error when new_state is missing."""
     # Record a DELETE event with empty new_state

@@ -97,9 +97,12 @@ ADDITIVE_LIST_FIELDS = frozenset(
     {"allowed_values", "class_ids", "external_references", "lexical_senses"}
 )
 
-# What a move changes, per kind: a scheme moves to another taxonomy and a class
-# to another parent. Nothing else can move.
-MOVE_FIELDS = {OperationKind.SCHEME: "taxonomy_id", OperationKind.CLASS: "parent_class_id"}
+# What a move can change, per kind: a scheme moves to another taxonomy, and a
+# class to another parent, another scheme, or both. Nothing else can move.
+MOVE_FIELDS = {
+    OperationKind.SCHEME: frozenset({"taxonomy_id"}),
+    OperationKind.CLASS: frozenset({"parent_class_id", "concept_scheme_id"}),
+}
 
 
 def classify_scope(
@@ -164,8 +167,8 @@ class ProposedOperation:
         ref: A name a create gives its new entity, so later operations in the
             same proposal can point at it with "$<ref>"
         fields: For a create, every field; for an update, only the changed ones;
-            for a move, only its MOVE_FIELDS entry (a scheme's taxonomy_id or a
-            class's parent_class_id)
+            for a move, only MOVE_FIELDS (a scheme's taxonomy_id; a class's
+            parent_class_id and/or concept_scheme_id)
         base: The current values of the touched fields when proposed (for a
             delete, the whole entity); compared at apply time to detect that
             the target changed since
@@ -206,14 +209,17 @@ class ProposedOperation:
                 raise ValueError("An update needs at least one field")
             if self.kind is OperationKind.RELATIONSHIP:
                 raise ValueError("A relationship can't be updated; delete it and create another")
-            if MOVE_FIELDS.get(self.kind) in self.fields:
-                raise ValueError(f"Use a move to change {MOVE_FIELDS[self.kind]}")
+            moving = sorted(MOVE_FIELDS.get(self.kind, frozenset()) & set(self.fields))
+            if moving:
+                raise ValueError(f"Use a move to change {', '.join(moving)}")
         if self.op is OperationType.MOVE:
-            move_field = MOVE_FIELDS.get(self.kind)
-            if move_field is None:
+            move_fields = MOVE_FIELDS.get(self.kind)
+            if move_fields is None:
                 raise ValueError(f"A {self.kind.value} can't be moved")
-            if set(self.fields) != {move_field}:
-                raise ValueError(f"A {self.kind.value} move sets only {move_field}")
+            if not self.fields or not set(self.fields) <= move_fields:
+                raise ValueError(
+                    f"A {self.kind.value} move sets only {', '.join(sorted(move_fields))}"
+                )
         if self.ref is not None and self.op is not OperationType.CREATE:
             raise ValueError("Only a create can carry a ref")
         if self.probability is not None and not 0.0 <= self.probability <= 1.0:

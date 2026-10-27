@@ -127,9 +127,11 @@ class TestProposedOperation:
         [
             (OperationKind.SCHEME, {"taxonomy_id": "t2"}),
             (OperationKind.CLASS, {"parent_class_id": None}),
+            (OperationKind.CLASS, {"concept_scheme_id": "s2"}),
+            (OperationKind.CLASS, {"concept_scheme_id": "s2", "parent_class_id": None}),
         ],
     )
-    def test_a_scheme_or_class_moves_by_its_parent(self, kind, fields):
+    def test_a_scheme_or_class_can_move(self, kind, fields):
         op = ProposedOperation(
             seq=0, op=OperationType.MOVE, kind=kind, target_id="x", fields=fields
         )
@@ -152,8 +154,8 @@ class TestProposedOperation:
             )
 
     @pytest.mark.parametrize("fields", [{}, {"parent_class_id": "c2", "title": "Den"}])
-    def test_a_move_sets_only_its_parent(self, fields):
-        with pytest.raises(ValueError, match="sets only parent_class_id"):
+    def test_a_move_sets_only_its_move_fields(self, fields):
+        with pytest.raises(ValueError, match="sets only concept_scheme_id, parent_class_id"):
             ProposedOperation(
                 seq=0,
                 op=OperationType.MOVE,
@@ -170,6 +172,16 @@ class TestProposedOperation:
                 kind=OperationKind.SCHEME,
                 target_id="s1",
                 fields={"taxonomy_id": "t2"},
+            )
+
+    def test_an_update_cannot_move_a_class_to_another_scheme(self):
+        with pytest.raises(ValueError, match="Use a move to change concept_scheme_id"):
+            ProposedOperation(
+                seq=0,
+                op=OperationType.UPDATE,
+                kind=OperationKind.CLASS,
+                target_id="c1",
+                fields={"title": "Den", "concept_scheme_id": "s2"},
             )
 
     def test_a_relationship_cannot_be_updated(self):

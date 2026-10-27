@@ -81,7 +81,10 @@ class RevertService:
             Count of events successfully reverted
 
         Raises:
-            ValueError: If batch_run_id is empty
+            ValueError: If batch_run_id is empty, or an event can't be undone; nothing
+                is changed
+            RevertConflictError: If entities outside the run depend on entities it
+                created; nothing is changed
         """
         result = self.revert_with_summary(batch_run_id)
         return result.events_reverted
@@ -207,7 +210,7 @@ class RevertService:
         Refuse the revert, before changing anything, if an event can't be undone.
 
         An update needs its previous state, naming only fields of its entity, and
-        a delete needs its snapshot. Checking up front keeps a bad event from
+        a delete needs a snapshot complete enough to rebuild the entity. Checking up front keeps a bad event from
         stopping the revert partway through the run.
 
         Raises:
@@ -228,8 +231,15 @@ class RevertService:
                     continue
                 if unknown:
                     problems.append(f"{label}: unknown fields {unknown}")
-            elif event.operation == ChangeOperation.DELETE and not self._deleted_state(event):
-                problems.append(f"{label}: no snapshot of the deleted entity")
+            elif event.operation == ChangeOperation.DELETE:
+                snapshot = self._deleted_state(event)
+                if not snapshot:
+                    problems.append(f"{label}: no snapshot of the deleted entity")
+                    continue
+                try:
+                    entity_from_snapshot(entity_type, snapshot, event.entity_id)
+                except ValueError as exc:
+                    problems.append(f"{label}: {exc}")
         if problems:
             raise ValueError(
                 f"Cannot revert batch run {batch_run_id}; nothing was changed. "
