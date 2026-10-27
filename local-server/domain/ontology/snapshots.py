@@ -83,6 +83,19 @@ def entity_snapshot(entity: Any) -> dict[str, Any]:
     }
 
 
+def entity_field_names(entity_type: str) -> frozenset[str]:
+    """
+    The field names of an entity type ("class", "concept_scheme", ...).
+
+    Raises:
+        ValueError: If the entity type is unknown
+    """
+    entity_cls = _ENTITY_TYPES.get(entity_type)
+    if entity_cls is None:
+        raise ValueError(f"Unknown entity type: {entity_type}")
+    return frozenset(f.name for f in fields(entity_cls))
+
+
 def entity_from_snapshot(entity_type: str, snapshot: dict[str, Any], entity_id: str) -> Any:
     """
     Rebuild an ontology entity from its snapshot.

@@ -348,8 +348,8 @@ class TestOntologyHandlers:
         assert call_args.kwargs["entity_type"] == "class"
         assert call_args.kwargs["operation"] == "update"
         # Verify the unique mapping logic: parent IDs are captured in state
-        assert call_args.kwargs["new_state"]["parent_id"] == "parent-2"
-        assert call_args.kwargs["previous_state"]["parent_id"] == "parent-1"
+        assert call_args.kwargs["new_state"]["parent_class_id"] == "parent-2"
+        assert call_args.kwargs["previous_state"]["parent_class_id"] == "parent-1"
         # Verify the change reason mentions both old and new parent
         assert "parent-1" in call_args.kwargs["change_reason"]
         assert "parent-2" in call_args.kwargs["change_reason"]
@@ -367,8 +367,8 @@ class TestOntologyHandlers:
 
         mock_change_repo.record_change.assert_called_once()
         call_args = mock_change_repo.record_change.call_args
-        assert call_args.kwargs["new_state"]["parent_id"] == "parent-2"
-        assert call_args.kwargs["previous_state"]["parent_id"] is None
+        assert call_args.kwargs["new_state"]["parent_class_id"] == "parent-2"
+        assert call_args.kwargs["previous_state"]["parent_class_id"] is None
 
     def test_on_taxonomy_updated(self, recorder, mock_change_repo):
         """Test TaxonomyUpdated event recording with change tracking."""

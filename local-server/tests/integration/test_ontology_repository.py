@@ -9,6 +9,8 @@ Tests the adapter against a real in-memory SQLite database to verify:
 - Cascade deletion
 """
 
+from datetime import datetime
+
 import pytest
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
@@ -904,3 +906,57 @@ class TestStatusPersistence:
         retrieved = repo.get_property_definition(saved.id)
         assert retrieved is not None
         assert retrieved.status == Status.PUBLISHED
+
+
+ORIGINAL_CREATED_AT = datetime(2026, 1, 2, 3, 4, 5)
+
+
+def test_new_entities_keep_a_given_created_at(repo, sample_concept_scheme, sample_class):
+    """Saving a new entity that already has a created_at (as a reverted delete
+    does) keeps it; without one, the save stamps the time."""
+    saved = {
+        "taxonomy": repo.save_taxonomy(
+            Taxonomy(id="tax-2", identifier="t2", title="T2", created_at=ORIGINAL_CREATED_AT)
+        ),
+        "scheme": repo.save_concept_scheme(
+            ConceptScheme(
+                id="scheme-2",
+                taxonomy_id="tax-1",
+                identifier="s2",
+                title="S2",
+                created_at=ORIGINAL_CREATED_AT,
+            )
+        ),
+        "class": repo.save_class(
+            Class(
+                id="class-2",
+                concept_scheme_id=sample_concept_scheme.id,
+                taxonomy_id="tax-1",
+                identifier="c2",
+                title="C2",
+                created_at=ORIGINAL_CREATED_AT,
+            )
+        ),
+        "individual": repo.save_individual(
+            Individual(
+                id="ind-2", class_ids=[sample_class.id], title="I2", created_at=ORIGINAL_CREATED_AT
+            )
+        ),
+        "property": repo.save_property_definition(
+            PropertyDefinition(
+                id="prop-2", identifier="p2", title="P2", created_at=ORIGINAL_CREATED_AT
+            )
+        ),
+    }
+    getters = {
+        "taxonomy": repo.get_taxonomy,
+        "scheme": repo.get_concept_scheme,
+        "class": repo.get_class,
+        "individual": repo.get_individual,
+        "property": repo.get_property_definition,
+    }
+    for kind, entity in saved.items():
+        assert getters[kind](entity.id).created_at.replace(tzinfo=None) == ORIGINAL_CREATED_AT, kind
+
+    fresh = repo.save_taxonomy(Taxonomy(id="tax-3", identifier="t3", title="T3"))
+    assert repo.get_taxonomy(fresh.id).created_at is not None

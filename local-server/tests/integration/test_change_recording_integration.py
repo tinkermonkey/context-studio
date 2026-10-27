@@ -283,14 +283,14 @@ class TestChangeRecordingIntegration:
             for event in change_events:
                 if (
                     event.operation == ChangeOperation.UPDATE
-                    and event.new_state.get("parent_id") == parent2.id
+                    and event.new_state.get("parent_class_id") == parent2.id
                 ):
                     parent_change = event
                     break
 
             assert parent_change is not None
-            assert parent_change.previous_state["parent_id"] == parent1.id
-            assert parent_change.new_state["parent_id"] == parent2.id
+            assert parent_change.previous_state["parent_class_id"] == parent1.id
+            assert parent_change.new_state["parent_class_id"] == parent2.id
             # The change reason includes the actual parent IDs, not the names
             assert parent1.id in parent_change.change_reason
             assert parent2.id in parent_change.change_reason

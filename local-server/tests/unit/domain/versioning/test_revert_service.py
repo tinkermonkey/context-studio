@@ -181,6 +181,44 @@ def test_revert_class_update(ontology_repo, change_repo, revert_svc):
     assert ontology_repo.get_class("cls-1").description == "An organism"
 
 
+def test_revert_changes_nothing_when_an_event_cannot_be_undone(
+    ontology_repo, change_repo, revert_svc
+):
+    """An event the revert can't undo is caught before any other event is undone."""
+    ontology_repo.save_class(
+        Class(
+            id="cls-1",
+            concept_scheme_id="scheme-1",
+            taxonomy_id="tx-1",
+            title="Animal",
+            description="A living being",
+        )
+    )
+    # Undone last (oldest): names a field the class doesn't have.
+    change_repo.record_change(
+        entity_id="cls-1",
+        entity_type="class",
+        operation=ChangeOperation.UPDATE,
+        previous_state={"parent_id": None},
+        new_state={"parent_id": "cls-0"},
+        batch_run_id="run-1",
+    )
+    # Undone first (newest): fine on its own.
+    change_repo.record_change(
+        entity_id="cls-1",
+        entity_type="class",
+        operation=ChangeOperation.UPDATE,
+        previous_state={"description": "An organism"},
+        new_state={"description": "A living being"},
+        batch_run_id="run-1",
+    )
+
+    with pytest.raises(ValueError, match=r"nothing was changed.*unknown fields \['parent_id'\]"):
+        revert_svc.revert("run-1")
+
+    assert ontology_repo.get_class("cls-1").description == "A living being"
+
+
 def test_revert_chained_updates_restores_oldest_state(ontology_repo, change_repo, revert_svc):
     """Two updates in one run revert newest first, ending at the original state."""
     cls = Class(

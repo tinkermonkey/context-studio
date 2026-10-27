@@ -31,6 +31,9 @@ class TestClassifyScope:
             ChangeScope.EDITORIAL
         )
 
+    def test_sort_order_is_editorial(self):
+        assert classify_scope(OperationType.UPDATE, {"sort_order": 3}) is ChangeScope.EDITORIAL
+
     def test_create_is_additive(self):
         assert classify_scope(OperationType.CREATE, {"title": "Furniture"}) is ChangeScope.ADDITIVE
 
@@ -117,6 +120,66 @@ class TestProposedOperation:
         with pytest.raises(ValueError, match="at least one field"):
             ProposedOperation(
                 seq=0, op=OperationType.UPDATE, kind=OperationKind.CLASS, target_id="c1"
+            )
+
+    @pytest.mark.parametrize(
+        "kind, fields",
+        [
+            (OperationKind.SCHEME, {"taxonomy_id": "t2"}),
+            (OperationKind.CLASS, {"parent_class_id": None}),
+        ],
+    )
+    def test_a_scheme_or_class_moves_by_its_parent(self, kind, fields):
+        op = ProposedOperation(
+            seq=0, op=OperationType.MOVE, kind=kind, target_id="x", fields=fields
+        )
+        assert op.fields == fields
+
+    @pytest.mark.parametrize(
+        "kind",
+        [
+            OperationKind.TAXONOMY,
+            OperationKind.PROPERTY,
+            OperationKind.ATTRIBUTE,
+            OperationKind.INDIVIDUAL,
+            OperationKind.RELATIONSHIP,
+        ],
+    )
+    def test_nothing_else_can_move(self, kind):
+        with pytest.raises(ValueError, match="can't be moved"):
+            ProposedOperation(
+                seq=0, op=OperationType.MOVE, kind=kind, target_id="x", fields={"class_id": "c2"}
+            )
+
+    @pytest.mark.parametrize("fields", [{}, {"parent_class_id": "c2", "title": "Den"}])
+    def test_a_move_sets_only_its_parent(self, fields):
+        with pytest.raises(ValueError, match="sets only parent_class_id"):
+            ProposedOperation(
+                seq=0,
+                op=OperationType.MOVE,
+                kind=OperationKind.CLASS,
+                target_id="c1",
+                fields=fields,
+            )
+
+    def test_an_update_cannot_move(self):
+        with pytest.raises(ValueError, match="Use a move to change taxonomy_id"):
+            ProposedOperation(
+                seq=0,
+                op=OperationType.UPDATE,
+                kind=OperationKind.SCHEME,
+                target_id="s1",
+                fields={"taxonomy_id": "t2"},
+            )
+
+    def test_a_relationship_cannot_be_updated(self):
+        with pytest.raises(ValueError, match="relationship can't be updated"):
+            ProposedOperation(
+                seq=0,
+                op=OperationType.UPDATE,
+                kind=OperationKind.RELATIONSHIP,
+                target_id="r1",
+                fields={"target_id": "c2"},
             )
 
     @pytest.mark.parametrize("probability", [-0.1, 1.5])
