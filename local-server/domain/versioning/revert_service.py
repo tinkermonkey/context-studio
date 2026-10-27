@@ -35,8 +35,11 @@ class RevertService:
     Reverts the effects of a batch run by inverting change events.
 
     Given a batch_run_id, walks change_events for that batch in reverse and applies
-    the inverse of each event. Already-reverted events are skipped (idempotent).
-    Emits new change_events tagged with the originating batch_run_id for auditability.
+    the inverse of each event. Already-reverted events are skipped (idempotent), as
+    are events that only record the run's output (an extraction run's
+    extraction_result). Emits new change_events tagged with the originating
+    batch_run_id for auditability, and invalidates the graph caches when anything
+    changed.
     """
 
     def __init__(
@@ -59,7 +62,7 @@ class RevertService:
                 individual the revert restores or modifies and cleared for every
                 individual it deletes
             event_publisher: Optional publisher; GraphInvalidated is published for
-                both taxonomies of every scheme move the revert undoes
+                every taxonomy whenever the revert changes anything
         """
         self._change_repo = change_repo
         self._ontology_repo = ontology_repo
@@ -119,7 +122,12 @@ class RevertService:
             _logger.info(f"No events found for batch run {batch_run_id}")
             return RevertResult(run_id=batch_run_id, events_reverted=0)
 
-        pending = [event for event in events if not self._should_skip_revert(event, events)]
+        pending = [
+            event
+            for event in events
+            if self._normalize_entity_type(event.entity_type) not in self._RECORD_ONLY_TYPES
+            and not self._should_skip_revert(event, events)
+        ]
         self._check_restorable(batch_run_id, pending)
         self._check_no_outside_dependents(batch_run_id, pending)
 
@@ -138,14 +146,12 @@ class RevertService:
         # relationship is removed before the property it uses, and chained
         # updates unwind back to the oldest previous state.
         touched: dict[str, str] = {}
-        moved_between: set[str] = set()
         for event in pending:
             try:
                 if self._apply_inverse(event, batch_run_id):
                     reverted_count += 1
                     self._update_summary(event, summary)
                     touched[event.entity_id] = self._normalize_entity_type(event.entity_type)
-                    moved_between.update(self._scheme_move_taxonomies(event))
             except Exception as exc:
                 _logger.error(
                     f"Failed to revert event {event.id} for entity {event.entity_id}. "
@@ -156,7 +162,8 @@ class RevertService:
 
         for entity_id, entity_type in touched.items():
             self._sync_indexes(entity_id, entity_type)
-        self._invalidate_graphs(sorted(moved_between))
+        if reverted_count:
+            self._invalidate_graphs(pending)
 
         _logger.info(f"Reverted {reverted_count} events for batch run {batch_run_id}")
         return RevertResult(
@@ -209,9 +216,10 @@ class RevertService:
         """
         Refuse the revert, before changing anything, if an event can't be undone.
 
-        An update needs its previous state, naming only fields of its entity, and
-        a delete needs a snapshot complete enough to rebuild the entity. Checking up front keeps a bad event from
-        stopping the revert partway through the run.
+        Every event must name a known ontology entity type, an update needs its
+        previous state, naming only fields of its entity, and a delete needs a
+        snapshot complete enough to rebuild the entity. Checking up front keeps a
+        bad event from stopping the revert partway through the run.
 
         Raises:
             ValueError: listing each event that can't be undone
@@ -220,15 +228,16 @@ class RevertService:
         for event in pending:
             entity_type = self._normalize_entity_type(event.entity_type)
             label = f"{entity_type} {event.entity_id} (event {event.id})"
+            try:
+                field_names = entity_field_names(entity_type)
+            except ValueError:
+                problems.append(f"{label}: unknown entity type")
+                continue
             if event.operation == ChangeOperation.UPDATE:
                 if not event.previous_state:
                     problems.append(f"{label}: no previous state")
                     continue
-                try:
-                    unknown = sorted(set(event.previous_state) - entity_field_names(entity_type))
-                except ValueError:
-                    problems.append(f"{label}: unknown entity type")
-                    continue
+                unknown = sorted(set(event.previous_state) - field_names)
                 if unknown:
                     problems.append(f"{label}: unknown fields {unknown}")
             elif event.operation == ChangeOperation.DELETE:
@@ -315,24 +324,32 @@ class RevertService:
                 exc_info=True,
             )
 
-    def _scheme_move_taxonomies(self, event) -> set[str]:
-        """The taxonomies a concept scheme UPDATE event moved the scheme between, if any."""
-        if (
-            event.operation != ChangeOperation.UPDATE
-            or self._normalize_entity_type(event.entity_type) != "concept_scheme"
-        ):
-            return set()
-        before = (event.previous_state or {}).get("taxonomy_id")
-        after = (event.new_state or {}).get("taxonomy_id")
-        return {t for t in (before, after) if t} if before != after else set()
+    def _invalidate_graphs(self, reverted: list) -> None:
+        """
+        Publish GraphInvalidated for every taxonomy after a revert that changed something.
 
-    def _invalidate_graphs(self, taxonomy_ids: list[str]) -> None:
-        """Publish GraphInvalidated for each taxonomy a reverted scheme move touched."""
+        Every taxonomy is invalidated rather than only the ones the reverted
+        entities belong to: working out an entity's taxonomy after the revert has
+        deleted it (and maybe the class it hung off) would mean reading each
+        entity before undoing it, and a property definition need not belong to
+        any taxonomy yet its relationships appear in every graph. The graph and
+        RDF caches are rebuilt for the whole workspace on any GraphInvalidated
+        anyway, and a workspace has few taxonomies. Taxonomies the reverted
+        events name are included too, so one the revert deleted (or a scheme's
+        old home) is invalidated as well.
+        """
         if self._event_publisher is None:
             return
-        for taxonomy_id in taxonomy_ids:
+        taxonomy_ids = {t.id for t in self._ontology_repo.list_taxonomies(limit=None)}
+        for event in reverted:
+            if self._normalize_entity_type(event.entity_type) == "taxonomy":
+                taxonomy_ids.add(event.entity_id)
+            for state in (event.previous_state, event.new_state):
+                if (state or {}).get("taxonomy_id"):
+                    taxonomy_ids.add(state["taxonomy_id"])
+        for taxonomy_id in sorted(taxonomy_ids):
             failures = self._event_publisher.publish(
-                GraphInvalidated(taxonomy_id=taxonomy_id, reason="concept_scheme_move_reverted")
+                GraphInvalidated(taxonomy_id=taxonomy_id, reason="batch_run_reverted")
             )
             if failures:
                 _logger.warning(
@@ -341,6 +358,12 @@ class RevertService:
                     taxonomy_id,
                     ", ".join(name for name, _ in failures),
                 )
+
+    # Entity types whose change events record a run's output rather than an
+    # ontology entity. An extraction run's only event is an extraction_result
+    # CREATE naming the run itself; the run record is history, so a revert
+    # leaves it in place.
+    _RECORD_ONLY_TYPES = frozenset({"extraction_result"})
 
     _REVERT_MARKER = "_reverted_"
 
