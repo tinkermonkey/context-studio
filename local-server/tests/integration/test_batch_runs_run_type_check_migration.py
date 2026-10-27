@@ -2,7 +2,8 @@
 Integration tests for migration eae4e30702d2 (restore batch_runs run_type CHECK).
 
 Tests verify, against real file-based SQLite databases migrated with Alembic:
-- A fresh database at head carries the named check_valid_run_type constraint
+- A fresh database at this revision carries the named check_valid_run_type constraint
+  (8de28edb4953 drops it again; see test_change_proposals_migration.py)
 - Valid run types insert; unknown run types fail the CHECK
 - A database carrying the old narrow ('import', 'extraction') constraint is
   upgraded to the full constraint with its batch_runs rows and child rows intact
@@ -78,10 +79,10 @@ def db_path(tmp_path):
 
 
 class TestFreshDatabase:
-    """A database migrated from scratch to head enforces the model's run_type CHECK."""
+    """A database migrated from scratch to this revision enforces the run_type CHECK."""
 
     def test_named_constraint_and_indexes_present(self, db_path):
-        upgrade(_alembic_config(db_path), "head")
+        upgrade(_alembic_config(db_path), REVISION)
 
         ddl = _batch_runs_ddl(db_path)
         assert "CONSTRAINT check_valid_run_type CHECK" in ddl
@@ -97,7 +98,7 @@ class TestFreshDatabase:
         }
 
     def test_schema_extraction_run_type_accepted(self, db_path):
-        upgrade(_alembic_config(db_path), "head")
+        upgrade(_alembic_config(db_path), REVISION)
 
         with sqlite3.connect(db_path) as conn:
             _insert_batch_run(conn, "run-1", "schema_extraction")
@@ -105,7 +106,7 @@ class TestFreshDatabase:
         assert count == 1
 
     def test_unknown_run_type_rejected(self, db_path):
-        upgrade(_alembic_config(db_path), "head")
+        upgrade(_alembic_config(db_path), REVISION)
 
         with sqlite3.connect(db_path) as conn:
             with pytest.raises(sqlite3.IntegrityError, match="check_valid_run_type"):
@@ -134,7 +135,7 @@ class TestNarrowConstraintDatabase:
         return db_path
 
     def test_upgrade_widens_constraint_and_preserves_rows(self, narrow_db):
-        upgrade(_alembic_config(narrow_db), "head")
+        upgrade(_alembic_config(narrow_db), REVISION)
 
         ddl = _batch_runs_ddl(narrow_db)
         assert "'schema_node_connection_refinement'" in ddl
@@ -151,14 +152,14 @@ class TestNarrowConstraintDatabase:
 
     def test_downgrade_then_upgrade_round_trips_rows(self, narrow_db):
         config = _alembic_config(narrow_db)
-        upgrade(config, "head")
+        upgrade(config, REVISION)
         with sqlite3.connect(narrow_db) as conn:
             _insert_batch_run(conn, "schema-run", "schema_extraction")
 
         downgrade(config, PREVIOUS_REVISION)
         assert "check_valid_run_type" not in _batch_runs_ddl(narrow_db)
 
-        upgrade(config, "head")
+        upgrade(config, REVISION)
         assert "CONSTRAINT check_valid_run_type CHECK" in _batch_runs_ddl(narrow_db)
         with sqlite3.connect(narrow_db) as conn:
             count = conn.execute("SELECT COUNT(*) FROM batch_runs").fetchone()[0]
