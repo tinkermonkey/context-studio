@@ -414,8 +414,9 @@ class TestOntologyHandlers:
         mock_change_repo.record_change.return_value = "change-789"
         event = PropertyDefinitionUpdated(
             property_id="prop-1",
-            title="Updated Title",
-            description="Updated Description",
+            changed_fields=("title",),
+            old_values={"title": "Old Title"},
+            new_values={"title": "Updated Title"},
         )
 
         recorder.on_property_definition_updated(event)
@@ -426,6 +427,7 @@ class TestOntologyHandlers:
         assert call_args.kwargs["entity_type"] == "property_definition"
         assert call_args.kwargs["operation"] == "update"
         assert call_args.kwargs["new_state"]["title"] == "Updated Title"
+        assert call_args.kwargs["previous_state"] == {"title": "Old Title"}
         assert "title" in call_args.kwargs["change_reason"]
 
     def test_on_individual_updated(self, recorder, mock_change_repo):

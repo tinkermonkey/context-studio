@@ -1708,7 +1708,9 @@ class TestUpdatePropertyDefinition:
         events = service._event_publisher.get_events_of_type(PropertyDefinitionUpdated)
         assert len(events) == 1
         assert events[0].property_id == prop.id
-        assert events[0].title == "Is A Type"
+        assert events[0].changed_fields == ("title",)
+        assert events[0].old_values == {"title": "Is A"}
+        assert events[0].new_values == {"title": "Is A Type"}
 
     def test_update_description_success(self, service):
         """Update description of a property definition."""

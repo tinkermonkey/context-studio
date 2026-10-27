@@ -90,6 +90,19 @@ def _serialize_external_references(refs: list[ExternalReference]) -> list[dict[s
     ]
 
 
+def _property_event_values(prop_def: PropertyDefinition) -> dict[str, object]:
+    """The updatable fields of a property definition, as an event payload records them."""
+    return {
+        "title": prop_def.title,
+        "description": prop_def.description,
+        "canonical_predicate": prop_def.canonical_predicate,
+        "is_relevant": prop_def.is_relevant,
+        "domain_class_id": prop_def.domain_class_id,
+        "range_class_id": prop_def.range_class_id,
+        "external_references": _serialize_external_references(prop_def.external_references),
+    }
+
+
 def _blank_to_none(text: str | None) -> str | None:
     """Treat empty or whitespace-only text as absent."""
     return text if text and text.strip() else None
@@ -2114,6 +2127,7 @@ class OntologyService:
         prop_def = self._repository.get_property_definition(property_id)
         if prop_def is None:
             raise EntityNotFoundError("PropertyDefinition", property_id)
+        before = _property_event_values(prop_def)
 
         title_changed = title is not None and title != prop_def.title
         desc_changed = description is not None and description != prop_def.description
@@ -2150,6 +2164,11 @@ class OntologyService:
         if external_references is not None:
             prop_def.external_references = external_references
 
+        after = _property_event_values(prop_def)
+        changed_fields = tuple(name for name in before if before[name] != after[name])
+        if not changed_fields:
+            return prop_def
+
         prop_def.last_modified = datetime.now(timezone.utc)
         prop_def = self._repository.save_property_definition(prop_def)
         # Only re-embed when the embedded text actually changed; updating just
@@ -2160,8 +2179,9 @@ class OntologyService:
         failures = self._event_publisher.publish(
             PropertyDefinitionUpdated(
                 property_id=property_id,
-                title=prop_def.title,
-                description=prop_def.description,
+                changed_fields=changed_fields,
+                old_values={name: before[name] for name in changed_fields},
+                new_values={name: after[name] for name in changed_fields},
             )
         )
         if failures:

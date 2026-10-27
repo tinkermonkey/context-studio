@@ -711,8 +711,8 @@ async def lifespan(app: FastAPI):
             AttributeDefinitionUpdated, change_recorder.on_attribute_definition_updated
         )
         logger.info(
-            "Event subscription: AttributeDefinitionDeleted ->"
-            " ChangeEventRecorder.on_attribute_definition_deleted"
+            "Event subscription: AttributeDefinitionCreated/Updated/Deleted ->"
+            " ChangeEventRecorder.on_attribute_definition_*"
         )
 
         # --- Store services in app.state for dependency injection ---

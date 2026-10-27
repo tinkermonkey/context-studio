@@ -287,11 +287,9 @@ class ChangeEventRecorder:
             entity_id=event.property_id,
             entity_type="property_definition",
             operation=ChangeOperation.UPDATE,
-            new_state={
-                "title": event.title,
-                "description": event.description,
-            },
-            change_reason="Property definition updated: title, description",
+            new_state=event.new_values,
+            previous_state=event.old_values,
+            change_reason=f"Property definition updated: {', '.join(event.changed_fields)}",
         )
 
     # --- DELETE Pattern Handlers ---
