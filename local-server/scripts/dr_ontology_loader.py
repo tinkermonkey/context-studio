@@ -477,6 +477,25 @@ def _existing_property_definitions(
     return found
 
 
+def _endpoint_classes(
+    record: RelationshipSchemaRecord, class_id_by_spec_node_id: dict[str, str]
+) -> tuple[str, str]:
+    """The (domain, range) class ids of a relationship schema."""
+    domain_class_id = class_id_by_spec_node_id.get(record.source_spec_node_id)
+    if domain_class_id is None:
+        raise ValueError(
+            f"Relationship '{record.full_identifier}' references source node type "
+            f"'{record.source_spec_node_id}', which has no matching node schema"
+        )
+    range_class_id = class_id_by_spec_node_id.get(record.destination_spec_node_id)
+    if range_class_id is None:
+        raise ValueError(
+            f"Relationship '{record.full_identifier}' references destination node type "
+            f"'{record.destination_spec_node_id}', which has no matching node schema"
+        )
+    return domain_class_id, range_class_id
+
+
 def _upsert_property_definitions(
     service: OntologyService,
     repo: OntologyRepository,
@@ -486,6 +505,11 @@ def _upsert_property_definitions(
 ) -> set[str]:
     property_ids: set[str] = set()
     records = list(iter_relationship_schemas(spec_dir))
+    # Every record must resolve before any write, so a bad spec changes nothing here.
+    endpoints = {
+        record.full_identifier: _endpoint_classes(record, class_id_by_spec_node_id)
+        for record in records
+    }
     existing_by_full_id = _existing_property_definitions(repo, records)
     identifier_by_full_id = assign_relationship_identifiers(
         records,
@@ -505,19 +529,7 @@ def _upsert_property_definitions(
     for record in records:
         identifier = identifier_by_full_id[record.full_identifier]
         title = f"{record.source_spec_node_id} {record.predicate} {record.destination_spec_node_id}"
-
-        domain_class_id = class_id_by_spec_node_id.get(record.source_spec_node_id)
-        if domain_class_id is None:
-            raise ValueError(
-                f"Relationship '{record.full_identifier}' references source node type "
-                f"'{record.source_spec_node_id}', which has no matching node schema"
-            )
-        range_class_id = class_id_by_spec_node_id.get(record.destination_spec_node_id)
-        if range_class_id is None:
-            raise ValueError(
-                f"Relationship '{record.full_identifier}' references destination node type "
-                f"'{record.destination_spec_node_id}', which has no matching node schema"
-            )
+        domain_class_id, range_class_id = endpoints[record.full_identifier]
 
         existing = existing_by_full_id.get(record.full_identifier)
         if existing is None:

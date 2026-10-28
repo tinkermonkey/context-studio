@@ -554,3 +554,22 @@ def test_reimport_after_a_rename_out_of_a_collision_group(parts, tmp_path):
         "view_uses_applicationservice"
     )
     assert after[twin.id] == "view_serves_applicationservice"  # left alone, so un-hashed
+
+
+def test_a_spec_with_an_unknown_node_fails_before_any_identifier_moves(parts, tmp_path):
+    """The rename puts the twin's identifier on the move; a bad record must stop that first."""
+    ontology, repo, proposals = parts
+    old, new = "ux.view.serves.business.businessrole", "ux.view.realizes.api.response"
+    proposal = import_reflection_plan(plan_with(rename(1, old, new)), proposals, repo)
+    assert apply_all(proposals, proposal).operations[0].status is OperationStatus.APPLIED
+    spec = spec_after(tmp_path, {old: new})
+    broken = sorted((spec / "schemas" / "relationships").glob("*/*.relationship.schema.json"))[-1]
+    data = json.loads(broken.read_text())
+    data["properties"]["source_spec_node_id"]["const"] = "testing.nosuchnode"
+    broken.write_text(json.dumps(data))
+    before = {p.id: p.identifier for p in repo.list_property_definitions(limit=None)}
+
+    with pytest.raises(ValueError, match="testing.nosuchnode"):
+        import_dr_ontology(ontology, repo, spec)
+
+    assert {p.id: p.identifier for p in repo.list_property_definitions(limit=None)} == before
