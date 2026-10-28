@@ -4,6 +4,7 @@ import sqlite3
 import sys
 from pathlib import Path
 
+import pytest
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
@@ -13,6 +14,8 @@ from sqlalchemy.engine import Engine
 project_root = Path(__file__).parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
+
+from domain.interchange.services import set_batch_run_context  # noqa: E402
 
 # Pre-import utils to ensure it's available when other modules need it
 try:
@@ -24,6 +27,17 @@ except ImportError:
 
 # Note: Pydantic validation errors are handled by FastAPI's default behavior
 # which returns 422 (UNPROCESSABLE_ENTITY). No custom patching is needed.
+
+
+@pytest.fixture(autouse=True)
+def _clear_batch_run_context():
+    """Clear the batch-run correlation context (also the import-run context) after each test.
+
+    It is one process-wide ContextVar. A test that leaves it set makes later tests
+    record change events against a batch run their database does not have.
+    """
+    yield
+    set_batch_run_context(None)
 
 
 @event.listens_for(Engine, "connect")

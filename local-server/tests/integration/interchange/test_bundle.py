@@ -24,7 +24,6 @@ from adapters.persistence.sqlite import models
 from adapters.persistence.sqlite.models import Base, ChangeEvent
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.interchange.bundle import BundleError, BundleExporter, load_bundle
-from domain.interchange.services import set_batch_run_context
 from scripts.import_bundle import build_import_service, read_bundle
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 
@@ -100,18 +99,6 @@ BUNDLE = {
         {"source": "vacuuming", "property": "house_activity_is_a_activity", "target": "cleaning"}
     ],
 }
-
-
-@pytest.fixture(autouse=True)
-def no_batch_run_context():
-    """
-    Clear the batch-run correlation context. A unit test earlier in a full run
-    leaves it set, so change events would name a batch run this database lacks
-    and fail their foreign key.
-    """
-    set_batch_run_context(None)
-    yield
-    set_batch_run_context(None)
 
 
 @pytest.fixture()
