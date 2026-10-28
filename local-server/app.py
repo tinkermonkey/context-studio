@@ -553,7 +553,7 @@ async def lifespan(app: FastAPI):
         )
 
         proposal_service = ProposalService(
-            proposals=SQLiteChangeProposalRepository(local_session_factory),
+            proposals=SQLiteChangeProposalRepository(shared_session_factory),
             ontology_service=ontology_service,
             ontology_repo=cast(OntologyRepository, ontology_repo),
             revert_service=revert_service,

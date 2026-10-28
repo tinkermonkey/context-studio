@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 from contextlib import nullcontext
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Callable, Optional
 
 from domain.ontology.events import GraphInvalidated
 from domain.ontology.snapshots import entity_field_names, entity_from_snapshot, entity_snapshot
@@ -106,7 +106,11 @@ class RevertService:
         result = self.revert_with_summary(batch_run_id)
         return result.events_reverted
 
-    def revert_with_summary(self, batch_run_id: str) -> RevertResult:
+    def revert_with_summary(
+        self,
+        batch_run_id: str,
+        on_reverted: Callable[[RevertResult], None] | None = None,
+    ) -> RevertResult:
         """
         Revert all changes made by a specific batch run and return detailed summary.
 
@@ -115,6 +119,9 @@ class RevertService:
 
         Args:
             batch_run_id: ID of the batch run to revert
+            on_reverted: Called with the result once every inverse is applied, inside
+                the same transaction, for the caller's own bookkeeping writes (a
+                proposal's status, say); if it raises, the whole revert rolls back
 
         Returns:
             RevertResult with event count and detailed breakdown by entity type
@@ -151,8 +158,6 @@ class RevertService:
 
                 if not events:
                     _logger.info(f"No events found for batch run {batch_run_id}")
-                    return RevertResult(run_id=batch_run_id, events_reverted=0)
-
                 pending = [
                     event
                     for event in events
@@ -185,6 +190,20 @@ class RevertService:
                             exc_info=exc,
                         )
                         raise
+
+                result = RevertResult(
+                    run_id=batch_run_id,
+                    events_reverted=reverted_count,
+                    classes_deleted=summary["classes_deleted"],
+                    individuals_deleted=summary["individuals_deleted"],
+                    relationships_deleted=summary["relationships_deleted"],
+                    properties_deleted=summary["properties_deleted"],
+                    taxonomies_deleted=summary["taxonomies_deleted"],
+                    concept_schemes_deleted=summary["concept_schemes_deleted"],
+                    entities_restored=summary["entities_restored"],
+                )
+                if on_reverted is not None:
+                    on_reverted(result)
             committed = True
         finally:
             # Index writes and graph invalidation stay out of the transaction, after
@@ -198,17 +217,7 @@ class RevertService:
                     self._invalidate_graphs(pending)
 
         _logger.info(f"Reverted {reverted_count} events for batch run {batch_run_id}")
-        return RevertResult(
-            run_id=batch_run_id,
-            events_reverted=reverted_count,
-            classes_deleted=summary["classes_deleted"],
-            individuals_deleted=summary["individuals_deleted"],
-            relationships_deleted=summary["relationships_deleted"],
-            properties_deleted=summary["properties_deleted"],
-            taxonomies_deleted=summary["taxonomies_deleted"],
-            concept_schemes_deleted=summary["concept_schemes_deleted"],
-            entities_restored=summary["entities_restored"],
-        )
+        return result
 
     def _should_skip_revert(self, event, all_events) -> bool:
         """
@@ -322,6 +331,12 @@ class RevertService:
         for event in pending:
             entity_type = self._normalize_entity_type(event.entity_type)
             if event.operation == ChangeOperation.UPDATE and event.previous_state:
+                # Undoing an update of an entity that is gone (and not recreated
+                # earlier in the revert) changes nothing, so it puts nothing back.
+                if event.entity_id not in restored and not self._exists(
+                    event.entity_id, entity_type
+                ):
+                    continue
                 restored.setdefault(event.entity_id, {}).update(event.previous_state)
                 restored_type[event.entity_id] = entity_type
             elif event.operation == ChangeOperation.DELETE:
@@ -346,6 +361,18 @@ class RevertService:
                 gone.add(created)
         if blocking:
             raise RevertConflictError(batch_run_id, blocking)
+
+    def _exists(self, entity_id: str, entity_type: str) -> bool:
+        getter = {
+            "taxonomy": self._ontology_repo.get_taxonomy,
+            "concept_scheme": self._ontology_repo.get_concept_scheme,
+            "class": self._ontology_repo.get_class,
+            "individual": self._ontology_repo.get_individual,
+            "relationship": self._ontology_repo.get_relationship,
+            "property_definition": self._ontology_repo.get_property_definition,
+            "attribute_definition": self._ontology_repo.get_attribute_definition,
+        }.get(entity_type)
+        return getter is not None and getter(entity_id) is not None
 
     def _still_references(self, ref, restored: dict[str, dict]) -> bool:
         """

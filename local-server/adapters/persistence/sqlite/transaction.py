@@ -8,6 +8,10 @@ scope's one session, their commits only flush, and the scope commits once at
 the end or rolls everything back if the block raises. No repository method
 changes.
 
+A repository that rolls back inside a scope (on an IntegrityError, say) rolls
+back the whole scope. The scope then refuses to commit, even if the caller
+caught the error and carried on, so a partial result is never kept.
+
 The scope starts with BEGIN IMMEDIATE, so its reads and writes see one
 consistent database and it holds the write lock from the start (other writers
 wait up to busy_timeout). Use it on file databases: with an in-memory
@@ -19,16 +23,27 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from contextvars import ContextVar
+from dataclasses import dataclass
 from typing import Any, Iterator
 
 from sqlalchemy.orm import Session, sessionmaker
 
 
+class TransactionAbortedError(RuntimeError):
+    """A scope was rolled back from inside, so nothing in it was committed."""
+
+
+@dataclass
+class _Scope:
+    session: Session
+    rolled_back: bool = False
+
+
 class _JoinedSession:
     """The scope's session as a repository method sees it: commit flushes, close is a no-op."""
 
-    def __init__(self, session: Session) -> None:
-        self._session = session
+    def __init__(self, scope: _Scope) -> None:
+        self._scope = scope
 
     def __enter__(self) -> "_JoinedSession":
         return self
@@ -40,13 +55,17 @@ class _JoinedSession:
         return None
 
     def commit(self) -> None:
-        self._session.flush()
+        self._scope.session.flush()
         # Database-level cascades (ON DELETE CASCADE / SET NULL) don't touch the
         # identity map; expire it so later reads in the scope see the database.
-        self._session.expire_all()
+        self._scope.session.expire_all()
+
+    def rollback(self) -> None:
+        self._scope.rolled_back = True
+        self._scope.session.rollback()
 
     def __getattr__(self, name: str) -> Any:
-        return getattr(self._session, name)
+        return getattr(self._scope.session, name)
 
 
 class SharedSessionFactory:
@@ -58,15 +77,15 @@ class SharedSessionFactory:
 
     def __init__(self, factory: sessionmaker) -> None:
         self._factory = factory
-        self._current: ContextVar[Session | None] = ContextVar(
+        self._current: ContextVar[_Scope | None] = ContextVar(
             f"shared_session_{id(self)}", default=None
         )
 
     def __call__(self, **kwargs: Any) -> Any:
-        session = self._current.get()
-        if session is None:
+        scope = self._current.get()
+        if scope is None:
             return self._factory(**kwargs)
-        return _JoinedSession(session)
+        return _JoinedSession(scope)
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self._factory, name)
@@ -76,18 +95,22 @@ class SharedSessionFactory:
         if self._current.get() is not None:
             yield  # nested: join the outer scope
             return
-        session = self._factory()
-        token = self._current.set(session)
+        scope = _Scope(self._factory())
+        token = self._current.set(scope)
         try:
-            session.connection().exec_driver_sql("BEGIN IMMEDIATE")
+            scope.session.connection().exec_driver_sql("BEGIN IMMEDIATE")
             yield
-            session.commit()
+            if scope.rolled_back:
+                raise TransactionAbortedError(
+                    "A write inside the transaction was rolled back; nothing was committed"
+                )
+            scope.session.commit()
         except BaseException:
-            session.rollback()
+            scope.session.rollback()
             raise
         finally:
             self._current.reset(token)
-            session.close()
+            scope.session.close()
 
 
 class SqliteTransactionScope:

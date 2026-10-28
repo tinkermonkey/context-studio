@@ -58,7 +58,7 @@ def parts(session_factory):
     wire_change_recorder(publisher, change_repo)
     ontology = OntologyService(ontology_repo, FakeEmbeddingService(), publisher)
     service = ProposalService(
-        SQLiteChangeProposalRepository(session_factory),
+        SQLiteChangeProposalRepository(shared),
         ontology,
         ontology_repo,
         RevertService(
@@ -467,3 +467,70 @@ def test_the_execution_time_check_refuses_and_rolls_back_what_the_walk_missed(pa
     assert ("class", outsider.id, new_id) in caught.value.blocking
     assert graph_state(repo, change_repo) == before
     assert repo.get_class(keep.id).description == "After"
+
+
+def test_an_update_of_an_entity_deleted_since_puts_nothing_back(parts):
+    """
+    As the forced-retype case, but Den is deleted outside before the revert:
+    undoing seq 2 has nothing to restore, so deleting C is safe.
+    """
+    ontology, repo, _, service = parts
+    tax = ontology.create_taxonomy(title="House")
+    scheme = ontology.create_scheme(taxonomy_id=tax.id, title="Rooms")
+    a = ontology.create_class(scheme.id, "A")
+    b = ontology.create_class(scheme.id, "B")
+    den = ontology.create_individual(a.id, "Den")
+    proposal = service.propose(
+        tax.id,
+        "Retype",
+        [
+            OperationDraft(
+                1, T.CREATE, K.CLASS, ref="c", fields={"concept_scheme_id": scheme.id, "title": "C"}
+            ),
+            OperationDraft(2, T.UPDATE, K.INDIVIDUAL, den.id, fields={"class_ids": [b.id]}),
+        ],
+        ProposalSource.USER,
+    )
+    c_id = apply_seq(service, proposal, 1)[1].result_entity_id
+    ontology.add_class_to_individual(den.id, c_id)
+    ontology.remove_class_from_individual(den.id, a.id)
+    apply_seq(service, proposal, 2, force=True)
+    ontology.delete_individual(den.id)
+
+    service.revert(proposal.id)
+
+    assert repo.get_class(c_id) is None
+    assert repo.get_individual(den.id) is None
+    assert service.get(proposal.id).status is ProposalStatus.REVERTED
+
+
+def test_a_failing_status_write_rolls_the_revert_back(parts, monkeypatch):
+    ontology, repo, change_repo, service = parts
+    tax = ontology.create_taxonomy(title="House")
+    scheme = ontology.create_scheme(taxonomy_id=tax.id, title="Rooms")
+    room = ontology.create_class(scheme.id, "Room", description="A room")
+    proposal = service.propose(
+        tax.id,
+        "Edit",
+        [
+            OperationDraft(1, T.UPDATE, K.CLASS, room.id, fields={"description": "Any room"}),
+            OperationDraft(
+                2, T.CREATE, K.CLASS, fields={"concept_scheme_id": scheme.id, "title": "Den"}
+            ),
+        ],
+        ProposalSource.USER,
+    )
+    service.apply(proposal.id, [o.id for o in proposal.operations])
+    before = graph_state(repo, change_repo)
+
+    def broken(*args, **kwargs):
+        raise RuntimeError("status write failed")
+
+    monkeypatch.setattr(service._proposals, "set_status", broken)
+    with pytest.raises(RuntimeError, match="status write failed"):
+        service.revert(proposal.id)
+    monkeypatch.undo()
+
+    assert graph_state(repo, change_repo) == before
+    assert service.get(proposal.id).status is ProposalStatus.DONE
+    assert repo.get_class(room.id).description == "Any room"

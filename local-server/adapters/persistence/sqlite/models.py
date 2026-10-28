@@ -135,6 +135,7 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
         String(36),
         ForeignKey("ontology_entities.id", ondelete="CASCADE"),
         nullable=True,
+        index=True,
         doc="Class being instantiated (for individual, rdf:type)",
     )
     parent_class_id = Column(
@@ -148,6 +149,7 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
         String(36),
         ForeignKey("ontology_entities.id", ondelete="SET NULL"),
         nullable=True,
+        index=True,
         doc="Primary structural property definition (for class)",
     )
     domain_class_id = Column(

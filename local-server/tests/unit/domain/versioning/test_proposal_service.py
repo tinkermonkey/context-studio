@@ -39,11 +39,14 @@ class StubRevertService:
         self.reverted: list[str] = []
         self.error = error
 
-    def revert_with_summary(self, run_id: str) -> RevertResult:
+    def revert_with_summary(self, run_id: str, on_reverted=None) -> RevertResult:
         if self.error is not None:
             raise self.error
         self.reverted.append(run_id)
-        return RevertResult(run_id=run_id, events_reverted=0)
+        result = RevertResult(run_id=run_id, events_reverted=0)
+        if on_reverted is not None:
+            on_reverted(result)
+        return result
 
 
 class RunTagRecorder:

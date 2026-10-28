@@ -707,15 +707,18 @@ class ProposalService:
         """
         with self._lock(proposal_id):
             proposal = self._get(proposal_id)
-            result = self._revert.revert_with_summary(proposal.id)
-            undecided = proposal.pending
-            for operation in undecided:
-                operation.status = OperationStatus.REJECTED
-                operation.reason = REVERTED_REASON
-            if undecided:
-                self._proposals.save_operations(proposal.id, undecided)
-            self._proposals.set_status(proposal.id, ProposalStatus.REVERTED)
-            return result
+
+            def close_proposal(_result: RevertResult) -> None:
+                # Inside the revert's transaction: the status commits with the revert.
+                undecided = proposal.pending
+                for operation in undecided:
+                    operation.status = OperationStatus.REJECTED
+                    operation.reason = REVERTED_REASON
+                if undecided:
+                    self._proposals.save_operations(proposal.id, undecided)
+                self._proposals.set_status(proposal.id, ProposalStatus.REVERTED)
+
+            return self._revert.revert_with_summary(proposal.id, on_reverted=close_proposal)
 
     # ------------------------------------------------------------------ helpers
 
