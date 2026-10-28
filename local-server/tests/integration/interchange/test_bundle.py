@@ -11,6 +11,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from types import MappingProxyType
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -24,6 +25,7 @@ from adapters.persistence.sqlite import models
 from adapters.persistence.sqlite.models import Base, ChangeEvent
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from domain.interchange.bundle import BundleError, BundleExporter, load_bundle
+from domain.ontology.value_objects import ExternalReference
 from scripts.import_bundle import build_import_service, read_bundle
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 
@@ -428,6 +430,32 @@ def test_house_bundle_round_trip_writes_nothing(service, repo, session_factory):
     )
 
     assert _normalized(exported) == _normalized(house)
+
+
+def test_reference_identifier_that_differs_from_the_key_is_kept(service, repo, session_factory):
+    """The DR importer keys references by spec id, not by the entity identifier."""
+    load_bundle(service, repo, _bundle())
+    prop = repo.get_property_definition_by_identifier("house_activity_is_a_activity")
+    spec_reference = ExternalReference(
+        source="house",
+        identifier="house.activity.is-a.activity",
+        uri="https://example.test/is-a",
+        metadata=MappingProxyType({"hierarchy": True, "acyclic": True}),
+    )
+    service.update_property_definition(prop.id, external_references=[spec_reference])
+
+    exported = _assert_round_trip_writes_nothing(
+        service, repo, session_factory, _taxonomy_id(repo, "house")
+    )
+    [spec] = exported["properties"]
+    spec["constraints"] = {"hierarchy": True}
+    load_bundle(service, repo, exported)
+
+    [reference] = repo.get_property_definition_by_identifier(
+        "house_activity_is_a_activity"
+    ).external_references
+    assert (reference.identifier, reference.uri) == (spec_reference.identifier, spec_reference.uri)
+    assert dict(reference.metadata) == {"hierarchy": True}
 
 
 @pytest.fixture()

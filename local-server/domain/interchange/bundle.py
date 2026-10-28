@@ -29,10 +29,10 @@ Context Studio exports its UUID as its `id`. Relationships are matched on their
 
 References. A class, property or individual the loader creates carries an
 ExternalReference(source, identifier or id). A matched property or individual
-has its source reference set only if it already has one or the bundle carries
-`constraints` or `data` for it; otherwise its references are left alone. A
-relationship type that is not the source's is matched only if every end it has
-lies in this taxonomy. What
+that already has the source's reference keeps it, identifier included, and only
+its metadata is set; one without gets a reference only if the bundle carries
+`constraints` or `data` for it. A relationship type that is not the source's is
+matched only if every end it has lies in this taxonomy. What
 v0 cannot model is carried in that reference's metadata, out of the
 definitions that drive vector matching: a property's `constraints` and an
 individual's `data`. Relationships with attributes are rejected.
@@ -49,7 +49,7 @@ data properties have no v0 field, so they do not travel to another workspace.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Iterable, TypeVar
 
@@ -591,21 +591,18 @@ class _Loader:
         """
         The entity's references after a load.
 
-        This source's reference is set (in place) when the entity already has one or
-        the bundle carries metadata for it; otherwise the references are left alone.
+        If the entity already has this source's reference, only that reference's
+        metadata is set: its identifier may differ from the bundle key (the DR importer
+        keys references by spec id) and is kept. Otherwise a reference is added only
+        when the bundle carries metadata for the entity.
         """
-        if not metadata and not self._owns(entity):
-            return list(entity.external_references)
-        reference = self._reference(identifier, metadata)
-        result: list[ExternalReference] = []
-        for existing in entity.external_references:
-            if existing.source != self._source:
-                result.append(existing)
-            elif reference not in result:
-                result.append(reference)
-        if reference not in result:
-            result.append(reference)
-        return result
+        references = list(entity.external_references)
+        wanted = self._reference(identifier, metadata)
+        for position, existing in enumerate(references):
+            if existing.source == self._source:
+                references[position] = replace(existing, metadata=wanted.metadata)
+                return references
+        return [*references, wanted] if metadata else references
 
     def _taxonomy_classes(self, taxonomy_id: str) -> list[Class]:
         return _taxonomy_classes(self._repo, taxonomy_id)
