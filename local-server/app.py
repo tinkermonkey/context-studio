@@ -37,11 +37,13 @@ from adapters.graph.rdflib_engine import RDFLibQueryEngine
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.mcp.links import EntityLinks
 from adapters.mcp.server import (
+    McpConnection,
     McpEndpoint,
     build_mcp_server,
     build_session_manager,
     is_loopback_host,
     loopback_security,
+    mcp_url,
 )
 from adapters.metrics.system_collector import SystemMetricsCollector
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
@@ -805,8 +807,14 @@ async def lifespan(app: FastAPI):
                 )
                 session_manager = build_session_manager(mcp_server, loopback_security())
                 await mcp_stack.enter_async_context(session_manager.run())
+                auth_token = config_manager.ensure_mcp_auth_token()
+                mcp_endpoint.auth_token = auth_token
                 mcp_endpoint.session_manager = session_manager
-                logger.info("MCP server available at /mcp")
+                app.state.mcp_connection = McpConnection(
+                    url=mcp_url(settings.server.host, settings.server.port),
+                    auth_token=auth_token,
+                )
+                logger.info("MCP server available at /mcp (bearer token required)")
             else:
                 logger.warning(
                     "MCP server not started: server.host %r is not a loopback address",
@@ -816,6 +824,7 @@ async def lifespan(app: FastAPI):
             yield
 
             mcp_endpoint.session_manager = None
+            mcp_endpoint.auth_token = None
 
         logger.info("Shutting down Context Studio server")
 

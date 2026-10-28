@@ -30,9 +30,10 @@ Usage in route handlers:
 from collections.abc import AsyncGenerator
 from typing import cast
 
-from fastapi import Request
+from fastapi import HTTPException, Request, status
 from sqlalchemy.orm import Session
 
+from adapters.mcp.server import McpConnection, is_loopback_host
 from adapters.persistence.sqlite.connection import DatabaseManager
 from domain.admin.demo_dataset_service import LoadDemoDataset
 from domain.admin.services import AdminService
@@ -287,3 +288,28 @@ async def get_interchange_repo(request: Request) -> BatchRunRepository:
     if repo is None:
         raise RuntimeError("InterchangeRepository not initialized in app.state")
     return repo
+
+
+async def get_mcp_connection(request: Request) -> McpConnection:
+    """
+    Extract the MCP connection details from app state, for local callers only.
+
+    The response carries the MCP bearer token, so like /mcp itself it is served
+    only on a loopback host, to a loopback client, under a loopback Host header
+    (the last refuses DNS-rebinding pages that resolve their own name to 127.0.0.1).
+
+    Raises:
+        HTTPException 403: If the MCP server is not running or the caller is not local
+    """
+    connection = getattr(request.app.state, "mcp_connection", None)
+    client_host = request.client.host if request.client else ""
+    if (
+        connection is None
+        or not is_loopback_host(client_host)
+        or not is_loopback_host(request.url.hostname or "")
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="MCP connection details are only available to local clients.",
+        )
+    return connection

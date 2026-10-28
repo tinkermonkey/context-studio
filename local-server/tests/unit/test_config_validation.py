@@ -6,7 +6,11 @@ Tests cover:
 - Case-insensitive adapter type matching
 - DuckDBConfig output_dir requirement
 - SyncConfig validation
+- CORS origins default and the MCP section
 """
+
+import json
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -14,12 +18,16 @@ from pydantic import ValidationError
 from config import (
     ChatConfig,
     DuckDBConfig,
+    McpConfig,
     RecognitionConfig,
     S3Config,
+    ServerConfig,
     Settings,
     SyncAdapterType,
     SyncConfig,
 )
+
+SHIPPED_CONFIG = Path(__file__).resolve().parents[2] / "config.json"
 
 
 class TestSyncAdapterTypeEnum:
@@ -272,3 +280,40 @@ class TestChatConfigValidation:
         """The chat model id cannot be empty."""
         with pytest.raises(ValidationError):
             ChatConfig(model="")
+
+
+class TestCorsOriginsDefault:
+    """server.cors_origins defaults to the UI origin rather than every origin."""
+
+    def test_defaults_to_the_ui_base_url(self) -> None:
+        assert ServerConfig().cors_origins == ["http://localhost:3100"]
+
+    def test_follows_a_configured_ui_base_url(self) -> None:
+        config = ServerConfig(ui_base_url="http://localhost:4000")
+        assert config.cors_origins == ["http://localhost:4000"]
+
+    def test_is_empty_when_there_is_no_ui(self) -> None:
+        assert ServerConfig(ui_base_url=None).cors_origins == []
+
+    def test_explicit_origins_win(self) -> None:
+        config = ServerConfig(cors_origins=["*"], ui_base_url="http://localhost:4000")
+        assert config.cors_origins == ["*"]
+
+    def test_settings_loaded_from_a_section_without_cors_origins(self) -> None:
+        settings = Settings(server={"host": "127.0.0.1", "port": 8000})
+        assert settings.server.cors_origins == ["http://localhost:3100"]
+
+    def test_shipped_config_allows_only_the_vite_dev_origin(self) -> None:
+        """The repo's config.json leaves cors_origins to the default: the UI on :3100."""
+        with open(SHIPPED_CONFIG) as f:
+            settings = Settings(**json.load(f))
+        assert settings.server.cors_origins == ["http://localhost:3100"]
+
+
+class TestMcpConfig:
+    def test_auth_token_defaults_to_empty(self) -> None:
+        assert McpConfig().auth_token == ""
+        assert Settings().mcp.auth_token == ""
+
+    def test_auth_token_is_read_from_the_mcp_section(self) -> None:
+        assert Settings(mcp={"auth_token": "abc"}).mcp.auth_token == "abc"

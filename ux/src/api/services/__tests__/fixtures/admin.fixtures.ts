@@ -81,6 +81,16 @@ export function createAppConfiguration(
   };
 }
 
+export function createMcpConnection(
+  overrides?: Partial<components["schemas"]["McpConnectionResponse"]>,
+): components["schemas"]["McpConnectionResponse"] {
+  return {
+    url: "http://127.0.0.1:8000/mcp",
+    auth_token: "test-token-abc123",
+    ...overrides,
+  };
+}
+
 export function createConfigSectionUpdateRequest(
   overrides?: Partial<components["schemas"]["ConfigSectionUpdateRequest"]>,
 ): components["schemas"]["ConfigSectionUpdateRequest"] {

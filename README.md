@@ -53,13 +53,22 @@ The front end is built strictly after the corresponding back-end API is implemen
 
 The running back end serves an MCP server at `/mcp`, so Claude Code and other MCP clients can read the workspace. It offers the same read-only tools as the in-app chat (`list_taxonomies`, `search_entities`, `get_entity`, and the list, neighbor and path tools), plus each taxonomy's vision statement as a markdown resource. Tool results include links to the entity pages in the app (base URL from `server.ui_base_url` in `config.json`; null turns links off).
 
-Connect Claude Code while the back end is running:
+Every request to `/mcp` needs a bearer token: without `Authorization: Bearer <token>` it gets a 401. On first start the back end generates the token and saves it as `mcp.auth_token` in `config.json`. To issue a new one, clear the value and restart; registered clients then need the new token.
+
+To connect Claude Code, open **Settings → Integrations** in the app. It shows the token and a ready-to-paste command for this server's host and port:
 
 ```bash
-claude mcp add --transport http context-studio http://127.0.0.1:8000/mcp
+claude mcp add --transport http context-studio http://127.0.0.1:8000/mcp \
+  --header "Authorization: Bearer <token from Settings → Integrations>"
 ```
 
-The server only starts when `server.host` is a loopback address, and it refuses requests whose `Host` or `Origin` header is not local, so a web page cannot reach it through the browser.
+The server only starts when `server.host` is a loopback address. It also refuses requests whose `Host` or `Origin` header is not local, so a web page cannot reach it through the browser. The settings endpoint that hands the token to the UI (`GET /api/v1/admin/mcp`) has the same limits: it answers only local clients under a loopback `Host` header.
+
+### CORS and the REST API
+
+`server.cors_origins` defaults to the UI origin (`server.ui_base_url`, `http://localhost:3100`), not `*`. If you open the UI at another origin, such as `http://127.0.0.1:3100`, add that origin to `server.cors_origins` in `config.json`.
+
+**Residual risk:** the REST API (`/api/...`) is still unauthenticated. Anything that can reach the back end's port can read and change the workspace, including other processes on the same machine. CORS limits what other web pages can do in a browser; it is not authentication. Keep `server.host` on a loopback address.
 
 ## Status
 

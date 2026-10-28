@@ -4,14 +4,17 @@ MCP server for Context Studio.
 Serves the same read-only tools as the in-app chat, so an MCP client such as
 Claude Code can do everything the chat can. Each taxonomy's vision statement is
 also offered as a markdown resource. The server runs over streamable HTTP,
-mounted at /mcp on the running app, and only on a loopback host.
+mounted at /mcp on the running app, and only on a loopback host. Every request
+must carry the configured bearer token.
 """
 
 from __future__ import annotations
 
+import hmac
 import ipaddress
 import logging
 import re
+from dataclasses import dataclass
 from typing import Any, Iterable, Optional, Sequence
 
 from mcp import types
@@ -20,6 +23,7 @@ from mcp.server.lowlevel.helper_types import ReadResourceContents
 from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 from mcp.server.transport_security import TransportSecuritySettings
 from pydantic import AnyUrl
+from starlette.datastructures import Headers
 from starlette.responses import JSONResponse
 from starlette.types import Receive, Scope, Send
 
@@ -143,6 +147,21 @@ def is_loopback_host(host: str) -> bool:
         return False
 
 
+@dataclass(frozen=True)
+class McpConnection:
+    """What an MCP client needs to connect: the endpoint URL and the bearer token."""
+
+    url: str
+    auth_token: str
+
+
+def mcp_url(host: str, port: int) -> str:
+    """The /mcp URL for a server bound to host and port."""
+    if ":" in host:  # IPv6 literal
+        host = f"[{host}]"
+    return f"http://{host}:{port}/mcp"
+
+
 def loopback_security(ui_origins: Sequence[str] = ()) -> TransportSecuritySettings:
     """
     DNS-rebinding protection: accept only loopback Host headers, and Origin
@@ -170,18 +189,35 @@ class McpEndpoint:
     """
     ASGI app for /mcp.
 
-    It is mounted when the app module loads, but the session manager only
-    exists inside the lifespan, so requests are refused until one is attached.
+    It is mounted when the app module loads, but the session manager and the
+    auth token only exist inside the lifespan, so requests are refused until
+    they are attached. Every request, reads included, needs
+    ``Authorization: Bearer <auth_token>``.
     """
 
     def __init__(self) -> None:
         self.session_manager: Optional[StreamableHTTPSessionManager] = None
+        self.auth_token: Optional[str] = None
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if self.session_manager is None:
+        if self.session_manager is None or not self.auth_token:
             response = JSONResponse(
                 {"detail": "The MCP server is not running on this host."}, status_code=503
             )
             await response(scope, receive, send)
             return
+        if not self._is_authorized(Headers(scope=scope)):
+            response = JSONResponse(
+                {"detail": "Missing or invalid MCP bearer token."},
+                status_code=401,
+                headers={"WWW-Authenticate": 'Bearer realm="context-studio"'},
+            )
+            await response(scope, receive, send)
+            return
         await self.session_manager.handle_request(scope, receive, send)
+
+    def _is_authorized(self, headers: Headers) -> bool:
+        scheme, _, token = headers.get("authorization", "").partition(" ")
+        if scheme.lower() != "bearer" or not token:
+            return False
+        return hmac.compare_digest(token.strip().encode(), (self.auth_token or "").encode())

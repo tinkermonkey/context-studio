@@ -72,4 +72,23 @@ export const COPY = {
   // Toast messages
   settingsUpdatedSuccess: (section: string) => `${section} settings updated`,
   failedToSaveSettings: "Failed to save settings",
+
+  // Integrations tab: MCP connection
+  mcpPanelTitle: "Claude Code (MCP)",
+  mcpPanelSubtitle: "Connect Claude Code or another MCP client to this workspace",
+  mcpUrlLabel: "MCP endpoint",
+  mcpTokenLabel: "Bearer token",
+  mcpTokenHint: "Sent as an Authorization header",
+  mcpShowToken: "Show token",
+  mcpHideToken: "Hide token",
+  mcpCommandLabel: "Register with Claude Code",
+  mcpCopyButton: "Copy",
+  mcpCopyCommand: "Copy the claude mcp add command",
+  mcpCommandCopied: "Command copied to clipboard",
+  mcpCommandCopyFailed: "Failed to copy the command",
+  mcpConnectionLoadFailed: "MCP connection details are only available when the app runs locally",
+  mcpConnectionNote:
+    "Anyone with this token can use the MCP tools. It is stored as mcp.auth_token in config.json; clear it and restart the server to issue a new one.",
+  mcpAddCommand: (url: string, token: string) =>
+    `claude mcp add --transport http context-studio ${url} --header "Authorization: Bearer ${token}"`,
 };

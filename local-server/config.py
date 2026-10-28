@@ -5,6 +5,7 @@ Configuration settings for the Context Studio Local Server.
 import json
 import logging
 import os
+import secrets
 from enum import Enum
 from typing import List, Optional
 
@@ -76,12 +77,27 @@ class ServerConfig(BaseModel):
 
     host: str = Field(default="127.0.0.1", description="Server host address")
     port: int = Field(default=8000, ge=1024, le=65535, description="Server port")
-    cors_origins: List[str] = Field(default=["*"], description="CORS allowed origins")
     ui_base_url: Optional[str] = Field(
         default="http://localhost:3100",
         description=(
             "Base URL of the UI, used to give MCP clients links to entity pages;"
             " null leaves links out"
+        ),
+    )
+    # Declared after ui_base_url: its default is built from that validated value
+    cors_origins: List[str] = Field(
+        default_factory=lambda data: [data["ui_base_url"]] if data.get("ui_base_url") else [],
+        description="CORS allowed origins; defaults to the UI origin (ui_base_url)",
+    )
+
+
+class McpConfig(BaseModel):
+    """MCP server configuration section"""
+
+    auth_token: str = Field(
+        default="",
+        description=(
+            "Bearer token MCP clients must send; generated and saved on startup when empty"
         ),
     )
 
@@ -279,6 +295,7 @@ class Settings(BaseModel):
     reference: ReferenceConfig = Field(default_factory=ReferenceConfig)
     recognition: RecognitionConfig = Field(default_factory=RecognitionConfig)
     chat: ChatConfig = Field(default_factory=ChatConfig)
+    mcp: McpConfig = Field(default_factory=McpConfig)
     sync: Optional[SyncConfig] = Field(default=None, description="Synchronization configuration")
     telemetry: TelemetryConfig = Field(default_factory=TelemetryConfig)
 
@@ -373,6 +390,51 @@ class ConfigurationManager:
                 f" {type(e).__name__}: {e}"
             )
             return False
+
+    def ensure_mcp_auth_token(self) -> str:
+        """
+        Return the MCP bearer token, generating and saving one if it is empty.
+
+        Only mcp.auth_token is written: config.json is read raw, the key set and
+        the file written back, so its other content is kept as it is rather than
+        replaced by a dump of every default (which save() would do).
+        """
+        settings = self.get_settings()
+        if settings.mcp.auth_token:
+            return settings.mcp.auth_token
+
+        token = secrets.token_urlsafe(32)
+        settings.mcp.auth_token = token
+        try:
+            self._write_mcp_auth_token(token)
+        except (OSError, ValueError) as e:
+            # Keep the token for this run; clients must re-register after a restart
+            _config_logger.error(
+                f"Could not save the MCP auth token to {self.config_file}: {e}."
+                " The token only lasts until the server restarts."
+            )
+            return token
+        _config_logger.info(f"Generated an MCP auth token and saved it to {self.config_file}")
+        return token
+
+    def _write_mcp_auth_token(self, token: str) -> None:
+        """Set mcp.auth_token in config.json, leaving the rest of the file as it is."""
+        text = ""
+        if os.path.exists(self.config_file):
+            with open(self.config_file, "r") as f:
+                text = f.read()
+        config_data = json.loads(text) if text.strip() else {}
+        mcp_section = config_data.get("mcp")
+        if not isinstance(mcp_section, dict):
+            mcp_section = config_data["mcp"] = {}
+        mcp_section["auth_token"] = token
+        config_dir = os.path.dirname(self.config_file)
+        if config_dir:
+            os.makedirs(config_dir, exist_ok=True)
+        with open(self.config_file, "w") as f:
+            json.dump(config_data, f, indent=2)
+            if not text or text.endswith("\n"):
+                f.write("\n")
 
     def get_settings(self) -> Settings:
         """Get the current settings"""

@@ -2884,3 +2884,24 @@ selectors:
   - selector: individual-provenance-panel
     component: src/routes/app/data/individuals_.$id.tsx
     description: Where the individual came from (import source, dates)
+  - selector: mcp-connection-panel
+    component: src/components/settings/McpConnectionPanel.tsx
+    description: Settings Integrations tab panel showing how to connect an MCP client
+  - selector: mcp-connection-url
+    component: src/components/settings/McpConnectionPanel.tsx
+    description: Read-only MCP endpoint URL
+  - selector: mcp-connection-token
+    component: src/components/settings/McpConnectionPanel.tsx
+    description: Read-only MCP bearer token input, masked until revealed
+  - selector: mcp-connection-token-toggle
+    component: src/components/settings/McpConnectionPanel.tsx
+    description: Show/hide toggle for the MCP bearer token (aria-pressed)
+  - selector: mcp-connection-command
+    component: src/components/settings/McpConnectionPanel.tsx
+    description: Ready-to-paste claude mcp add command (token masked until revealed)
+  - selector: mcp-connection-copy-command
+    component: src/components/settings/McpConnectionPanel.tsx
+    description: Copies the claude mcp add command with the real token
+  - selector: mcp-connection-note
+    component: src/components/settings/McpConnectionPanel.tsx
+    description: Info callout about the MCP token and where it is stored

@@ -21,7 +21,12 @@ from adapters.mcp.server import (
 )
 from tests.integration.chat.conftest import DR_VISION, OPERATION_ID, TAXONOMY_ID
 
-HEADERS = {"accept": "application/json, text/event-stream", "content-type": "application/json"}
+TOKEN = "test-mcp-token"
+HEADERS = {
+    "accept": "application/json, text/event-stream",
+    "content-type": "application/json",
+    "authorization": f"Bearer {TOKEN}",
+}
 UI = "http://localhost:3100"
 
 
@@ -40,6 +45,7 @@ async def mcp_client(workspace):
     app = Starlette(routes=[Route("/mcp", endpoint)])
     async with manager.run():
         endpoint.session_manager = manager
+        endpoint.auth_token = TOKEN
         transport = httpx.ASGITransport(app=app)
         async with httpx.AsyncClient(transport=transport, base_url="http://127.0.0.1:8000") as c:
             yield c
@@ -184,3 +190,45 @@ async def test_endpoint_refuses_requests_before_the_server_runs():
         response = await rpc(c, "tools/list")
 
     assert response.status_code == 503
+
+
+async def test_request_without_a_token_is_refused(dr_workspace):
+    async with mcp_client(dr_workspace) as client:
+        response = await rpc(client, "tools/list", headers={"authorization": ""})
+
+        assert response.status_code == 401
+        assert response.headers["www-authenticate"].startswith("Bearer")
+
+
+async def test_request_with_a_wrong_token_is_refused(dr_workspace):
+    async with mcp_client(dr_workspace) as client:
+        response = await rpc(client, "tools/list", headers={"authorization": "Bearer nope"})
+
+        assert response.status_code == 401
+
+
+async def test_request_with_a_non_bearer_scheme_is_refused(dr_workspace):
+    async with mcp_client(dr_workspace) as client:
+        response = await rpc(client, "tools/list", headers={"authorization": f"Basic {TOKEN}"})
+
+        assert response.status_code == 401
+
+
+async def test_resource_reads_need_the_token_too(dr_workspace):
+    async with mcp_client(dr_workspace) as client:
+        response = await rpc(
+            client,
+            "resources/read",
+            {"uri": f"contextstudio://taxonomies/{TAXONOMY_ID}/vision"},
+            headers={"authorization": ""},
+        )
+
+        assert response.status_code == 401
+
+
+async def test_request_with_the_token_is_served(dr_workspace):
+    async with mcp_client(dr_workspace) as client:
+        response = await rpc(client, "tools/list", headers={"authorization": f"bearer {TOKEN}"})
+
+        assert response.status_code == 200
+        assert response.json()["result"]["tools"]

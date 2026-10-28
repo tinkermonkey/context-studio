@@ -7,6 +7,7 @@ import { useConfig, useUpdateConfig } from "@/api/hooks/admin";
 import { useChatStatus } from "@/api/hooks/chat";
 import { useToasts } from "@/components/ui/Toast";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { McpConnectionPanel } from "@/components/settings/McpConnectionPanel";
 import { COPY } from "./settings/copy";
 
 export const Route = createFileRoute("/app/settings")({
@@ -102,7 +103,7 @@ export function SettingsPage() {
             { id: "general", label: "General", count: 4 },
             { id: "storage", label: "Storage", count: 0 },
             { id: "members", label: "Members", count: 0 },
-            { id: "integrations", label: "Integrations", count: 0 },
+            { id: "integrations", label: "Integrations", count: 1 },
           ]}
           activeTabId={activeTab}
           onSelectTab={setActiveTab}
@@ -219,6 +220,9 @@ export function SettingsPage() {
           </div>
         </div>
       )}
+
+      {/* Integrations tab — mounted only when open, so its request is lazy */}
+      {activeTab === "integrations" && <McpConnectionPanel />}
     </div>
   );
 }
