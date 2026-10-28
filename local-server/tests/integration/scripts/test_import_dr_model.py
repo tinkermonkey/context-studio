@@ -5,10 +5,12 @@ Imports a tiny synthetic DR spec into a fresh in-memory SQLite database first
 (via import_dr_ontology), then a tiny synthetic DR model — neither the real
 spec checkout nor the repo's documentation-robotics/model/. Covers individual
 and relationship rows, change events recorded through the service, idempotent
-re-import, and the batch reindex the script runs afterwards.
+re-import, the batch reindex the script runs afterwards, and pruning relationships
+the model no longer has.
 """
 
 import os
+import subprocess
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -23,7 +25,7 @@ from adapters.persistence.sqlite.models import Base, ChangeEvent, OntologyEntity
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from scripts.dr_model_loader import import_dr_model
 from scripts.dr_ontology_loader import import_dr_ontology
-from scripts.import_dr_model import build_import_service
+from scripts.import_dr_model import build_import_service, report_and_prune
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.integration.scripts.test_import_dr_ontology import spec_dir  # noqa: F401  (fixture)
 
@@ -178,3 +180,120 @@ class TestImportDrModel:
 
         assert indexed == 3
         assert _count(session_factory, OntologyEntity, node_type="individual", is_indexed=True) == 3
+
+
+# The two RELATIONSHIPS entries that resolve against the synthetic spec.
+ASSOCIATED = RELATIONSHIPS[0]  # stakeholder.km associated-with goal.reuse
+REALIZES = RELATIONSHIPS[1]  # goal.reuse realizes businessservice.curation
+
+
+def _commit_model(viewer_dir, relationships):
+    """Write relationships.yaml and commit the model, as a DR checkout would."""
+    model_dir = viewer_dir / "documentation-robotics" / "model"
+    (model_dir / "relationships.yaml").write_text(yaml.safe_dump(relationships))
+    git = ["git", "-C", str(viewer_dir)]
+    subprocess.run([*git, "init", "-q"], check=True)
+    subprocess.run([*git, "add", "-A"], check=True)
+    subprocess.run(
+        [
+            *git,
+            "-c",
+            "user.name=test",
+            "-c",
+            "user.email=test@example.com",
+            "-c",
+            "commit.gpgsign=false",
+            "commit",
+            "-q",
+            "-m",
+            "model",
+        ],
+        check=True,
+    )
+
+
+def _relationship_titles(repo):
+    """(source title, predicate, target title) for every relationship in the DB."""
+    titles = {i.id: i.title for i in repo.list_individuals(limit=None)}
+    return sorted(
+        (
+            titles[r.source_id],
+            repo.get_property_definition(r.property_definition_id).canonical_predicate,
+            titles[r.target_id],
+        )
+        for r in repo.list_relationships(limit=None)
+    )
+
+
+class TestPruneRelationshipsNoLongerInModel:
+    def _import_then_drop_realizes(self, ontology_service, repo, viewer_dir):
+        _commit_model(viewer_dir, [ASSOCIATED, REALIZES])
+        import_dr_model(ontology_service, repo, viewer_dir)
+        _commit_model(viewer_dir, [ASSOCIATED])
+        import_dr_model(ontology_service, repo, viewer_dir)
+
+    def test_prune_deletes_a_relationship_whose_triple_left_the_model(
+        self, ontology_service, repo, viewer_dir, session_factory, capsys
+    ):
+        self._import_then_drop_realizes(ontology_service, repo, viewer_dir)
+
+        assert report_and_prune(ontology_service, repo, viewer_dir, prune=True)
+
+        assert _relationship_titles(repo) == [
+            ("Knowledge Manager", "associated-with", "Knowledge Reuse")
+        ]
+        assert (
+            _count(session_factory, ChangeEvent, entity_type="relationship", operation="delete")
+            == 1
+        )
+        out = capsys.readouterr().out
+        assert "Pruned 1 relationship(s)" in out
+        assert "motivation.goal.reuse --realizes--> business.businessservice.curation" in out
+
+    def test_without_prune_the_relationship_is_only_reported(
+        self, ontology_service, repo, viewer_dir, session_factory, capsys
+    ):
+        self._import_then_drop_realizes(ontology_service, repo, viewer_dir)
+
+        assert report_and_prune(ontology_service, repo, viewer_dir, prune=False)
+
+        assert len(_relationship_titles(repo)) == 2
+        assert (
+            _count(session_factory, ChangeEvent, entity_type="relationship", operation="delete")
+            == 0
+        )
+        out = capsys.readouterr().out
+        assert "Would prune 1 relationship(s)" in out
+        assert "motivation.goal.reuse --realizes--> business.businessservice.curation" in out
+
+    def test_relationships_not_from_the_model_are_never_touched(
+        self, ontology_service, repo, viewer_dir, capsys
+    ):
+        # The model only ever had `associated-with`; a user draws `realizes`
+        # between the same DR individuals, with a DR relationship type.
+        _commit_model(viewer_dir, [ASSOCIATED])
+        import_dr_model(ontology_service, repo, viewer_dir)
+        goal = repo.get_by_identifier("motivation_goal")
+        service_class = repo.get_by_identifier("business_businessservice")
+        goal_individual = repo.list_individuals(class_id=goal.id, limit=None)[0]
+        curation = repo.list_individuals(class_id=service_class.id, limit=None)[0]
+        realizes = repo.get_property_definition_by_identifier("goal_realizes_businessservice")
+        ontology_service.create_relationship(goal_individual.id, curation.id, realizes.id)
+
+        # The model then drops `associated-with`, so prune has work to do.
+        _commit_model(viewer_dir, [])
+        import_dr_model(ontology_service, repo, viewer_dir)
+        assert report_and_prune(ontology_service, repo, viewer_dir, prune=True)
+
+        assert _relationship_titles(repo) == [("Knowledge Reuse", "realizes", "Curation Service")]
+        assert "Pruned 1 relationship(s)" in capsys.readouterr().out
+
+    def test_without_model_history_nothing_is_checked_or_deleted(
+        self, ontology_service, repo, viewer_dir, capsys
+    ):
+        import_dr_model(ontology_service, repo, viewer_dir)  # viewer_dir is not a git checkout
+
+        assert not report_and_prune(ontology_service, repo, viewer_dir, prune=True)
+
+        assert len(_relationship_titles(repo)) == 2
+        assert "Prune check failed" in capsys.readouterr().err

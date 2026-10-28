@@ -22,10 +22,20 @@ Idempotent: each individual carries an ExternalReference
 updates individuals in place. A relationship is identified by its
 (source, target, property definition) triple, so a re-run leaves existing ones
 untouched. All writes go through `OntologyService`.
+
+The import only adds. When the model drops or re-points a relationship (DR's
+`dr upgrade` rewrites retired types; DR walks rename and retarget them), the
+old row stays behind. `find_prunable_relationships` finds those rows and
+`prune_relationships` deletes them. Relationship rows carry no provenance, so
+the model file's git history is what separates an imported edge from one a
+user drew between two DR individuals: a relationship counts as the model's
+only if its (source path, predicate, target path) triple appears in a
+committed version of `relationships.yaml`.
 """
 
 from __future__ import annotations
 
+import subprocess
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -47,6 +57,11 @@ from scripts.dr_ontology_loader import (
 
 _REQUIRED_ELEMENT_FIELDS = ("path", "spec_node_id", "layer_id", "name")
 _REQUIRED_RELATIONSHIP_FIELDS = ("source", "target", "predicate")
+# relationships.yaml relative to the viewer dir, in the `<rev>:./<path>` form `show` accepts.
+_RELATIONSHIPS_REV_PATH = f"./{(MODEL_SUBDIR / 'relationships.yaml').as_posix()}"
+
+# (source element path, predicate, target element path)
+Triple = tuple[str, str, str]
 
 
 @dataclass
@@ -88,6 +103,16 @@ class ModelImportSummary:
             counts.individuals_skipped += 1
         else:
             counts.relationships_skipped += 1
+
+
+@dataclass(frozen=True)
+class PrunableRelationship:
+    """An imported relationship whose triple is no longer in the model."""
+
+    relationship_id: str
+    source: str
+    predicate: str
+    target: str
 
 
 def read_model_spec_version(viewer_dir: Path) -> str | None:
@@ -318,3 +343,92 @@ def import_dr_model(
         summary,
     )
     return summary
+
+
+def _triples(relationships: list[dict[str, Any]]) -> set[Triple]:
+    return {
+        (r["source"], r["predicate"], r["target"])
+        for r in relationships
+        if all(r.get(name) for name in _REQUIRED_RELATIONSHIP_FIELDS)
+    }
+
+
+def _run_git(viewer_dir: Path, *args: str) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(viewer_dir), *args], capture_output=True, text=True, check=True
+    )
+    return result.stdout
+
+
+def committed_model_triples(viewer_dir: Path) -> set[Triple]:
+    """
+    Every relationship triple in any committed version of the model's relationships.yaml.
+
+    Raises:
+        ValueError: If the file's history cannot be read (git missing, `viewer_dir`
+            outside a git work tree, or relationships.yaml never committed).
+    """
+    try:
+        # --diff-filter=d skips commits that delete the file; they have no version to read.
+        shas = _run_git(
+            viewer_dir, "log", "--format=%H", "--diff-filter=d", "--", _RELATIONSHIPS_REV_PATH
+        ).split()
+        triples: set[Triple] = set()
+        for sha in shas:
+            content = _run_git(viewer_dir, "show", f"{sha}:{_RELATIONSHIPS_REV_PATH}")
+            triples |= _triples(yaml.safe_load(content) or [])
+    except (OSError, subprocess.CalledProcessError) as exc:
+        detail = getattr(exc, "stderr", None) or exc
+        raise ValueError(
+            f"Cannot read the history of {_RELATIONSHIPS_REV_PATH} in {viewer_dir}: {detail}"
+        ) from exc
+    if not shas:
+        raise ValueError(f"{_RELATIONSHIPS_REV_PATH} has no committed version in {viewer_dir}")
+    return triples
+
+
+def find_prunable_relationships(
+    repo: OntologyRepository, viewer_dir: Path
+) -> list[PrunableRelationship]:
+    """
+    Relationships the DR model put in the database that the model no longer has.
+
+    A relationship qualifies only when all hold:
+      - both endpoints are DR model individuals (they carry a DR element path);
+      - it came from the DR model: its type is a DR PropertyDefinition and its
+        (source, predicate, target) triple is in a committed version of
+        relationships.yaml (`committed_model_triples`);
+      - that triple is not in the current relationships.yaml.
+
+    Raises:
+        ValueError: If the model's history cannot be read.
+    """
+    retired = committed_model_triples(viewer_dir) - _triples(load_relationships(viewer_dir))
+    if not retired:
+        return []
+
+    path_by_individual_id = {
+        individual.id: min(paths)
+        for individual in repo.list_individuals(class_id=None, limit=None)
+        if (paths := _dr_identifiers(individual))
+    }
+    predicate_by_property_id = {
+        prop.id: prop.canonical_predicate
+        for prop in repo.list_property_definitions(limit=None)
+        if prop.canonical_predicate and _dr_identifiers(prop)
+    }
+
+    prunable = []
+    for relationship in repo.list_relationships(limit=None):
+        source = path_by_individual_id.get(relationship.source_id)
+        predicate = predicate_by_property_id.get(relationship.property_definition_id)
+        target = path_by_individual_id.get(relationship.target_id)
+        if source and predicate and target and (source, predicate, target) in retired:
+            prunable.append(PrunableRelationship(relationship.id, source, predicate, target))
+    return sorted(prunable, key=lambda r: (r.source, r.predicate, r.target))
+
+
+def prune_relationships(service: OntologyService, prunable: list[PrunableRelationship]) -> None:
+    """Delete `prunable` relationships through the service, so each delete is recorded."""
+    for relationship in prunable:
+        service.delete_relationship(relationship.relationship_id)

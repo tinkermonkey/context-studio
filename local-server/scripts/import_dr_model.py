@@ -17,8 +17,15 @@ change-event recorder subscribed; vector indexes are rebuilt once at the end.
 Stop (or restart) a running server around the import so its in-memory graph
 cache picks up the new individuals.
 
+The import only adds rows. After it, relationships the model put in the
+database but no longer has (dropped, or re-pointed by `dr upgrade` or a DR
+walk) are listed; `--prune` deletes them, recording a change event for each.
+A relationship counts as the model's only if its triple appears in a committed
+version of relationships.yaml, so the viewer dir must be a git checkout.
+Relationships users drew between DR individuals are never touched.
+
 Usage (from local-server/, venv active):
-    python scripts/import_dr_model.py [--viewer-dir PATH]
+    python scripts/import_dr_model.py [--viewer-dir PATH] [--prune]
 """
 
 import argparse
@@ -41,10 +48,20 @@ from adapters.persistence.sqlite.individual_vector_index import SqliteIndividual
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from config import get_config_manager
-from domain.ontology.events import IndividualCreated, IndividualUpdated, RelationshipCreated
+from domain.ontology.events import (
+    IndividualCreated,
+    IndividualUpdated,
+    RelationshipCreated,
+    RelationshipDeleted,
+)
 from domain.ontology.ports import EmbeddingService, OntologyRepository
 from domain.ontology.services import OntologyService
-from scripts.dr_model_loader import ModelImportSummary, import_dr_model
+from scripts.dr_model_loader import (
+    ModelImportSummary,
+    find_prunable_relationships,
+    import_dr_model,
+    prune_relationships,
+)
 
 # local-server/scripts/../.. == the context-studio repo root, which holds
 # documentation-robotics/model/.
@@ -57,7 +74,8 @@ def build_import_service(
     """
     OntologyService wired for a bulk DR import.
 
-    Individual and relationship changes are recorded as change events.
+    Individual and relationship changes (including prune deletes) are recorded
+    as change events.
     Per-entity vector indexing is off (both indexes None); callers rebuild the
     indexes once, in batch, after the import.
     """
@@ -66,6 +84,7 @@ def build_import_service(
     event_publisher.subscribe(IndividualCreated, change_recorder.on_individual_created)
     event_publisher.subscribe(IndividualUpdated, change_recorder.on_individual_updated)
     event_publisher.subscribe(RelationshipCreated, change_recorder.on_relationship_created)
+    event_publisher.subscribe(RelationshipDeleted, change_recorder.on_relationship_deleted)
     return OntologyService(
         repository=cast(OntologyRepository, SQLiteOntologyRepository(session_factory)),
         embedding_service=embedding_service,
@@ -84,6 +103,11 @@ def parse_args() -> argparse.Namespace:
         help=(
             "Directory containing documentation-robotics/model/ " f"(default: {DEFAULT_VIEWER_DIR})"
         ),
+    )
+    parser.add_argument(
+        "--prune",
+        action="store_true",
+        help="Delete relationships the model no longer has (without it, they are only listed)",
     )
     return parser.parse_args()
 
@@ -124,6 +148,35 @@ def print_summary(summary: ModelImportSummary) -> None:
         print(f"  {count:4d}  {kind:<12} {reason}")
 
 
+def report_and_prune(
+    service: OntologyService, repo: OntologyRepository, viewer_dir: Path, prune: bool
+) -> bool:
+    """
+    List relationships the model no longer has; delete them when `prune` is set.
+
+    Returns False when the model's history cannot be read, so nothing could be checked.
+    """
+    try:
+        prunable = find_prunable_relationships(repo, viewer_dir)
+    except ValueError as exc:
+        print(f"Prune check failed: {exc}", file=sys.stderr)
+        return False
+    if not prunable:
+        print("Relationships no longer in the model: none")
+        return True
+    if prune:
+        prune_relationships(service, prunable)
+        print(f"Pruned {len(prunable)} relationship(s) no longer in the model:")
+    else:
+        print(
+            f"Would prune {len(prunable)} relationship(s) no longer in the model "
+            "(re-run with --prune to delete):"
+        )
+    for relationship in prunable:
+        print(f"  {relationship.source} --{relationship.predicate}--> {relationship.target}")
+    return True
+
+
 def main() -> int:
     args = parse_args()
     viewer_dir = args.viewer_dir.resolve()
@@ -149,6 +202,9 @@ def main() -> int:
         print(f"Import failed: {exc}", file=sys.stderr)
         return 1
     print_summary(summary)
+    prune_check_ok = report_and_prune(
+        ontology_service, cast(OntologyRepository, ontology_repo), viewer_dir, args.prune
+    )
 
     print("Reindexing individual and schema vector indexes ...")
     individuals_indexed = SqliteIndividualVectorIndex(
@@ -156,7 +212,7 @@ def main() -> int:
     ).reindex_all_individuals()
     schema_indexed = SqliteSchemaVectorIndex(session_factory, embedding_service).reindex_all()
     print(f"Indexed {individuals_indexed} individuals; reindexed {schema_indexed} schema entities.")
-    return 0
+    return 0 if prune_check_ok or not args.prune else 1
 
 
 if __name__ == "__main__":
