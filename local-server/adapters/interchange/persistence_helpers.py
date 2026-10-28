@@ -122,6 +122,7 @@ def _persist_class(
         identifier=entity_dict.get("identifier") or _slugify(entity_dict["title"]),
         title=entity_dict["title"],
         description=entity_dict.get("description"),
+        color=entity_dict.get("color"),
         parent_class_id=entity_dict.get("parent_class_id"),
         external_references=[
             ExternalReference(
@@ -146,6 +147,7 @@ def _persist_concept_scheme(
         identifier=entity_dict.get("identifier") or _slugify(entity_dict["title"]),
         title=entity_dict["title"],
         description=entity_dict.get("description"),
+        color=entity_dict.get("color"),
     )
     ontology_repo.save_concept_scheme(scheme)
 
@@ -160,6 +162,8 @@ def _persist_taxonomy(
         identifier=entity_dict.get("identifier") or _slugify(entity_dict["title"]),
         title=entity_dict["title"],
         description=entity_dict.get("description"),
+        vision=entity_dict.get("vision"),
+        color=entity_dict.get("color"),
     )
     ontology_repo.save_taxonomy(taxonomy)
 

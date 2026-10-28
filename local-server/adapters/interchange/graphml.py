@@ -259,7 +259,10 @@ class GraphMLSerializer(OntologySerializer):
             {
                 "kind": "taxonomy",
                 "cs:title": taxonomy.title,
+                "cs:identifier": taxonomy.identifier or "",
                 "cs:description": taxonomy.description or "",
+                "cs:vision": taxonomy.vision or "",
+                "cs:color": taxonomy.color or "",
                 "cs:created_at": taxonomy.created_at.isoformat() if taxonomy.created_at else "",
                 "cs:last_modified": (
                     taxonomy.last_modified.isoformat() if taxonomy.last_modified else ""
@@ -278,7 +281,9 @@ class GraphMLSerializer(OntologySerializer):
             {
                 "kind": "concept_scheme",
                 "cs:title": scheme.title,
+                "cs:identifier": scheme.identifier or "",
                 "cs:description": scheme.description or "",
+                "cs:color": scheme.color or "",
                 "cs:created_at": scheme.created_at.isoformat() if scheme.created_at else "",
                 "cs:last_modified": (
                     scheme.last_modified.isoformat() if scheme.last_modified else ""
@@ -309,7 +314,9 @@ class GraphMLSerializer(OntologySerializer):
             {
                 "kind": "class",
                 "cs:title": cls.title,
+                "cs:identifier": cls.identifier or "",
                 "cs:description": cls.description or "",
+                "cs:color": cls.color or "",
                 "cs:created_at": cls.created_at.isoformat() if cls.created_at else "",
                 "cs:last_modified": cls.last_modified.isoformat() if cls.last_modified else "",
                 "cs:external_references": ext_refs_json,
@@ -714,6 +721,9 @@ class GraphMLDeserializer(OntologyDeserializer):
         known_keys = {
             "kind",
             "cs:title",
+            "cs:identifier",
+            "cs:vision",
+            "cs:color",
             "cs:description",
             "cs:created_at",
             "cs:last_modified",
@@ -724,6 +734,9 @@ class GraphMLDeserializer(OntologyDeserializer):
             "id": node_id,
             "title": title,
             "description": attrs.get("cs:description") or None,
+            "identifier": attrs.get("cs:identifier") or None,
+            "vision": attrs.get("cs:vision") or None,
+            "color": attrs.get("cs:color") or None,
             "type": "taxonomy",
         }
         self.incoming_entities[node_id] = entity_dict
@@ -751,6 +764,8 @@ class GraphMLDeserializer(OntologyDeserializer):
         known_keys = {
             "kind",
             "cs:title",
+            "cs:identifier",
+            "cs:color",
             "cs:description",
             "cs:created_at",
             "cs:last_modified",
@@ -761,6 +776,8 @@ class GraphMLDeserializer(OntologyDeserializer):
             "id": node_id,
             "title": title,
             "description": attrs.get("cs:description") or None,
+            "identifier": attrs.get("cs:identifier") or None,
+            "color": attrs.get("cs:color") or None,
             "type": "concept_scheme",
             "taxonomy_id": taxonomy_id,
         }
@@ -820,6 +837,8 @@ class GraphMLDeserializer(OntologyDeserializer):
         known_keys = {
             "kind",
             "cs:title",
+            "cs:identifier",
+            "cs:color",
             "cs:description",
             "cs:created_at",
             "cs:last_modified",
@@ -831,6 +850,8 @@ class GraphMLDeserializer(OntologyDeserializer):
             "id": node_id,
             "title": title,
             "description": attrs.get("cs:description") or None,
+            "identifier": attrs.get("cs:identifier") or None,
+            "color": attrs.get("cs:color") or None,
             "type": "class",
             "concept_scheme_id": concept_scheme_id,
             "parent_class_id": parent_class_id,

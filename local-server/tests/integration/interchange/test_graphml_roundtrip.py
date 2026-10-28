@@ -316,6 +316,72 @@ class TestGraphMLEmptyDatabaseRoundTrip:
         assert imported_property_count == len(original_properties)
 
 
+class TestGraphMLVisionColorIdentifier:
+    """Taxonomy vision, plus color and identifier, survive a committed round-trip."""
+
+    def test_vision_color_and_identifier_survive_roundtrip(self, ontology_repo):
+        """Export, import into an empty DB with commit, and compare the persisted fields."""
+        taxonomy = ontology_repo.save_taxonomy(
+            Taxonomy(
+                id=str(uuid.uuid4()),
+                identifier="vision_taxonomy",
+                title="Vision Taxonomy",
+                description="One-paragraph summary",
+                vision="# Vision\n\nWhat this taxonomy is for, with <markup> & \"quotes\".",
+                color="#a3f2e4",
+            )
+        )
+        scheme = ontology_repo.save_concept_scheme(
+            ConceptScheme(
+                id=str(uuid.uuid4()),
+                identifier="vision_scheme",
+                taxonomy_id=taxonomy.id,
+                title="Vision Scheme",
+                color="#112233",
+            )
+        )
+        cls = ontology_repo.save_class(
+            Class(
+                id=str(uuid.uuid4()),
+                identifier="vision_class",
+                concept_scheme_id=scheme.id,
+                taxonomy_id=taxonomy.id,
+                title="Vision Class",
+                color="#445566",
+            )
+        )
+        plain_taxonomy = ontology_repo.save_taxonomy(
+            Taxonomy(id=str(uuid.uuid4()), identifier="plain_taxonomy", title="Plain")
+        )
+
+        exported = GraphMLSerializer(ontology_repo).serialize(
+            SerializationScope(scope_type=SerializationScopeType.WHOLE_GRAPH)
+        )
+
+        fresh_engine = create_engine(
+            "sqlite:///:memory:", connect_args={"check_same_thread": False}
+        )
+        Base.metadata.create_all(fresh_engine)
+        fresh_repo = SQLiteOntologyRepository(sessionmaker(bind=fresh_engine))
+        deserializer = GraphMLDeserializer(fresh_repo)
+        deserializer.deserialize(exported, dry_run=False)
+
+        imported_taxonomy = fresh_repo.get_taxonomy(taxonomy.id)
+        assert imported_taxonomy.vision == taxonomy.vision
+        assert imported_taxonomy.color == "#a3f2e4"
+        assert imported_taxonomy.identifier == "vision_taxonomy"
+        imported_scheme = fresh_repo.get_concept_scheme(scheme.id)
+        assert imported_scheme.color == "#112233"
+        assert imported_scheme.identifier == "vision_scheme"
+        imported_class = fresh_repo.get_class(cls.id)
+        assert imported_class.color == "#445566"
+        assert imported_class.identifier == "vision_class"
+
+        imported_plain = fresh_repo.get_taxonomy(plain_taxonomy.id)
+        assert imported_plain.vision is None
+        assert imported_plain.color is None
+
+
 class TestGraphMLMultiClassIndividual:
     """Test round-trip of multi-class Individual with ordering."""
 
