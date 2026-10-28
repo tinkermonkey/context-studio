@@ -1,9 +1,13 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
-import { createAppConfiguration } from "@/api/services/__tests__/fixtures/admin.fixtures";
+import {
+  createAppConfiguration,
+  createMcpConnection,
+} from "@/api/services/__tests__/fixtures/admin.fixtures";
 import { SettingsPage } from "../../settings";
 
 const server = setupServer(
@@ -191,6 +195,37 @@ describe("Settings Page", () => {
       await waitFor(() => {
         expect(screen.getByTestId("config-tile-telemetry")).toBeInTheDocument();
       });
+    });
+  });
+
+  // ========================================================================
+  // Integrations tab
+  // ========================================================================
+  describe("integrations tab", () => {
+    it("shows the MCP connection panel, fetched only once the tab is opened", async () => {
+      const user = userEvent.setup();
+      let mcpRequests = 0;
+      server.use(
+        http.get("*/api/v1/admin/configuration", () => HttpResponse.json(createAppConfiguration())),
+        http.get("*/api/v1/admin/mcp", () => {
+          mcpRequests += 1;
+          return HttpResponse.json(createMcpConnection());
+        }),
+      );
+
+      render(<SettingsPage />);
+      await screen.findByTestId("settings-general-form");
+      expect(screen.queryByTestId("mcp-connection-panel")).not.toBeInTheDocument();
+      expect(mcpRequests).toBe(0);
+
+      await user.click(screen.getByRole("tab", { name: /integrations/i }));
+
+      expect(screen.getByTestId("mcp-connection-panel")).toBeInTheDocument();
+      expect(await screen.findByTestId("mcp-connection-url")).toHaveValue(
+        "http://127.0.0.1:8000/mcp",
+      );
+      expect(mcpRequests).toBe(1);
+      expect(screen.queryByTestId("settings-general-form")).not.toBeInTheDocument();
     });
   });
 });

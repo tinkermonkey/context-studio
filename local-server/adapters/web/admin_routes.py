@@ -14,6 +14,7 @@ Endpoints:
 - GET  /api/v1/admin/tasks                  - List background tasks
 - GET  /api/v1/admin/tasks/{task_id}        - Get background task details
 - GET  /api/v1/admin/stats/trends           - Get rolling daily creation counts per entity type
+- GET  /api/v1/admin/mcp                    - MCP endpoint URL and bearer token (local only)
 
 All route handlers use run_sync_in_executor to prevent blocking the async event loop
 when calling synchronous domain service methods.
@@ -26,10 +27,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from adapters.mcp.server import McpConnection
 from adapters.web.dependencies import (
     get_admin_service,
     get_load_demo_dataset,
     get_local_db_session,
+    get_mcp_connection,
     get_operations_db_session,
 )
 from adapters.web.schemas.admin import (
@@ -44,6 +47,7 @@ from adapters.web.schemas.admin import (
     DatasetUpdateRequest,
     DemoDatasetDescriptorResponse,
     DemoDatasetLoadResponse,
+    McpConnectionResponse,
     ServiceMetricsResponse,
     StatsTrendsResponse,
     SystemHealthResponse,
@@ -333,6 +337,20 @@ async def reset_configuration(
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/mcp", response_model=McpConnectionResponse)
+async def get_mcp_connection_details(
+    connection: McpConnection = Depends(get_mcp_connection),
+) -> McpConnectionResponse:
+    """
+    Return the MCP endpoint URL and bearer token, so the settings page can show
+    how to register an MCP client. Local callers only.
+
+    Raises:
+        HTTPException 403: If the MCP server is not running or the caller is not local
+    """
+    return McpConnectionResponse(url=connection.url, auth_token=connection.auth_token)
 
 
 @router.get("/tasks", response_model=list[BackgroundTaskResponse])

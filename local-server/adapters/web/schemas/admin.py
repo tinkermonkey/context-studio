@@ -298,3 +298,12 @@ class DemoDatasetLoadResponse(BaseModel):
     external_references: int = Field(..., description="Number of external references attached")
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class McpConnectionResponse(BaseModel):
+    """What an MCP client such as Claude Code needs to connect to /mcp."""
+
+    url: str = Field(..., description="URL of the MCP endpoint")
+    auth_token: str = Field(
+        ..., description="Bearer token to send as 'Authorization: Bearer <token>'"
+    )

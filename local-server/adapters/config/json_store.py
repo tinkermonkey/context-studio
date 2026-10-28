@@ -8,7 +8,7 @@ without direct dependency on the config.py module or Pydantic.
 
 from pydantic import ValidationError
 
-from config import ConfigurationManager, Settings
+from config import ConfigurationManager, Settings, default_cors_origins
 from domain.admin.entities import AppConfiguration
 from domain.admin.exceptions import ConfigurationError
 from domain.admin.value_objects import CREDENTIAL_FIELD_NAMES
@@ -212,6 +212,21 @@ class JSONFileConfigStore:
                 # Recursively preserve credentials in nested dicts
                 self._preserve_credentials_recursive(value, default[key])
 
+    @staticmethod
+    def _without_default_cors(server: dict, current: Settings) -> dict:
+        """
+        Drop cors_origins from a server section when it is just the derived
+        default (for the current or the new ui_base_url), so the saved file
+        leaves it out and it keeps following ui_base_url.
+        """
+        defaults = (
+            default_cors_origins(current.server.ui_base_url),
+            default_cors_origins(server.get("ui_base_url")),
+        )
+        if server.get("cors_origins") in defaults:
+            return {k: v for k, v in server.items() if k != "cors_origins"}
+        return server
+
     def _persist_config(self, config: AppConfiguration) -> None:
         """
         Internal helper to persist configuration to storage.
@@ -226,10 +241,11 @@ class JSONFileConfigStore:
             # Start from every current section, then override the ones the domain
             # manages, so sections it doesn't model (e.g. recognition, telemetry)
             # are kept instead of being reset to defaults on every save.
-            settings_dict = self._mgr.get_settings().model_dump()
+            current = self._mgr.get_settings()
+            settings_dict = current.model_dump()
             settings_dict.update(
                 {
-                    "server": config.server or {},
+                    "server": self._without_default_cors(config.server or {}, current),
                     "database": config.database or {},
                     "logging": config.logging or {},
                     "llm": config.llm or {},

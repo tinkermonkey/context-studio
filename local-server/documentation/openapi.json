@@ -6318,6 +6318,28 @@
         }
       }
     },
+    "/api/v1/admin/mcp": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Mcp Connection Details",
+        "description": "Return the MCP endpoint URL and bearer token, so the settings page can show\nhow to register an MCP client. Local callers only.\n\nRaises:\n    HTTPException 403: If the MCP server is not running or the caller is not local",
+        "operationId": "get_mcp_connection_details_api_v1_admin_mcp_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpConnectionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/tasks": {
       "get": {
         "tags": [
@@ -11757,6 +11779,27 @@
           "offset"
         ],
         "title": "ListResponse[VersioningChangeEventResponse]"
+      },
+      "McpConnectionResponse": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "Url",
+            "description": "URL of the MCP endpoint"
+          },
+          "auth_token": {
+            "type": "string",
+            "title": "Auth Token",
+            "description": "Bearer token to send as 'Authorization: Bearer <token>'"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url",
+          "auth_token"
+        ],
+        "title": "McpConnectionResponse",
+        "description": "What an MCP client such as Claude Code needs to connect to /mcp."
       },
       "MergeResultResponse": {
         "properties": {

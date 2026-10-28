@@ -10,6 +10,7 @@ type DatasetResponse = components["schemas"]["DatasetResponse"];
 type DatasetCreateRequest = components["schemas"]["DatasetCreateRequest"];
 type DatasetUpdateRequest = components["schemas"]["DatasetUpdateRequest"];
 type StatsTrendsResponse = components["schemas"]["StatsTrendsResponse"];
+type McpConnectionResponse = components["schemas"]["McpConnectionResponse"];
 
 class AdminService extends BaseService {
   async getHealth(): Promise<SystemHealthResponse> {
@@ -37,6 +38,10 @@ class AdminService extends BaseService {
     data: ConfigSectionUpdateRequest,
   ): Promise<AppConfigurationResponse> {
     return this.patch<AppConfigurationResponse>(`/api/v1/admin/configuration/${section}`, data);
+  }
+
+  async getMcpConnection(): Promise<McpConnectionResponse> {
+    return this.get<McpConnectionResponse>("/api/v1/admin/mcp");
   }
 
   async resetConfig(): Promise<AppConfigurationResponse> {

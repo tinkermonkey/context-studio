@@ -23,6 +23,7 @@ export const QUERY_KEYS = {
   health: ["health"] as const,
   metrics: ["metrics"] as const,
   config: ["config"] as const,
+  mcpConnection: ["mcp-connection"] as const,
   backgroundTasks: ["background-tasks"] as const,
   statsTrends: (days?: number) => ["stats-trends", days] as const,
   datasets: () => ["datasets"] as const,

@@ -1,0 +1,36 @@
+@layer app {
+  .mcp-connection {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .mcp-connection-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mcp-connection-row > :first-child {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mcp-connection-command {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.55;
+    color: rgb(var(--canvas-fg-2));
+    padding: 8px;
+    background: rgb(var(--canvas-bg));
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 4px;
+  }
+
+  .mcp-connection-skeleton {
+    height: 160px;
+  }
+}

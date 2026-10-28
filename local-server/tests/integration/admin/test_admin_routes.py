@@ -12,8 +12,10 @@ These tests exercise the complete stack: routes → domain service → adapters.
 
 import pytest
 from fastapi import FastAPI, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.testclient import TestClient
 
+from adapters.mcp.server import McpConnection, mcp_url
 from adapters.web.admin_routes import router
 from domain.admin.exceptions import AdminError, ConfigurationError, TaskNotFoundError
 from domain.admin.services import AdminService
@@ -807,3 +809,89 @@ class TestDatasetRoutes:
         assert response.status_code == status.HTTP_404_NOT_FOUND
         body = response.json()
         assert "detail" in body
+
+
+class TestMcpConnectionEndpoint:
+    """Tests for GET /api/v1/admin/mcp, which hands the MCP token to local callers only."""
+
+    CONNECTION = McpConnection(
+        url="http://127.0.0.1:8000/mcp",
+        auth_token="secret-token",
+        ui_origins=frozenset({"http://localhost:3100"}),
+    )
+
+    @staticmethod
+    def _client(connection, client_host="127.0.0.1", base_url="http://127.0.0.1:8000", cors=None):
+        app = FastAPI()
+        if cors is not None:
+            app.add_middleware(
+                CORSMiddleware,
+                allow_origins=cors,
+                allow_credentials=True,
+                allow_methods=["*"],
+                allow_headers=["*"],
+            )
+        app.include_router(router)
+        if connection is not None:
+            app.state.mcp_connection = connection
+        return TestClient(app, base_url=base_url, client=(client_host, 50000))
+
+    def test_returns_url_and_token_to_a_local_client(self):
+        response = self._client(self.CONNECTION).get("/api/v1/admin/mcp")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == {
+            "url": "http://127.0.0.1:8000/mcp",
+            "auth_token": "secret-token",
+        }
+
+    def test_localhost_host_header_is_accepted(self):
+        client = self._client(self.CONNECTION, base_url="http://localhost:8000")
+        assert client.get("/api/v1/admin/mcp").status_code == status.HTTP_200_OK
+
+    def test_remote_client_is_refused(self):
+        client = self._client(self.CONNECTION, client_host="192.168.1.20")
+        assert client.get("/api/v1/admin/mcp").status_code == status.HTTP_403_FORBIDDEN
+
+    def test_foreign_host_header_is_refused(self):
+        """DNS rebinding: a page whose own name resolves to 127.0.0.1 is refused."""
+        client = self._client(self.CONNECTION, base_url="http://attacker.example:8000")
+        assert client.get("/api/v1/admin/mcp").status_code == status.HTTP_403_FORBIDDEN
+
+    def test_cross_origin_page_is_refused_even_when_cors_allows_every_origin(self):
+        """With cors_origins ["*"] and credentials, Starlette echoes any Origin back."""
+        client = self._client(self.CONNECTION, cors=["*"])
+
+        response = client.get("/api/v1/admin/mcp", headers={"Origin": "https://evil.example"})
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert "secret-token" not in response.text
+
+    @pytest.mark.parametrize("origin", ["null", "http://localhost:3101", "http://127.0.0.1:3100"])
+    def test_origins_other_than_the_ui_are_refused(self, origin):
+        client = self._client(self.CONNECTION, cors=["*"])
+        response = client.get("/api/v1/admin/mcp", headers={"Origin": origin})
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_the_ui_origin_is_served(self):
+        client = self._client(self.CONNECTION, cors=["*"])
+
+        response = client.get("/api/v1/admin/mcp", headers={"Origin": "http://localhost:3100"})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["auth_token"] == "secret-token"
+
+    def test_refused_when_the_mcp_server_is_not_running(self):
+        response = self._client(None).get("/api/v1/admin/mcp")
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    @pytest.mark.parametrize(
+        ("host", "expected"),
+        [
+            ("127.0.0.1", "http://127.0.0.1:8000/mcp"),
+            ("localhost", "http://localhost:8000/mcp"),
+            ("::1", "http://[::1]:8000/mcp"),
+        ],
+    )
+    def test_mcp_url_uses_the_server_host_and_port(self, host, expected):
+        assert mcp_url(host, 8000) == expected

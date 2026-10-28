@@ -213,7 +213,7 @@ def test_reset_to_defaults_preserves_credentials():
         # Verify non-credential settings are reset to defaults
         assert reset_config.sections["server"]["host"] == "127.0.0.1"
         assert reset_config.sections["server"]["port"] == 8000
-        assert reset_config.sections["server"]["cors_origins"] == ["*"]
+        assert reset_config.sections["server"]["cors_origins"] == ["http://localhost:3100"]
 
         assert reset_config.sections["logging"]["log_level"] == "INFO"
         assert reset_config.sections["logging"]["max_bytes"] == 10 * 1024 * 1024
@@ -543,3 +543,51 @@ def test_openrouter_key_is_a_credential(monkeypatch):
 
         reset = store.reset_to_defaults()
         assert reset.llm["openrouter_api_key"] == "file-openrouter-key"
+
+
+def test_config_updates_and_reset_keep_the_mcp_auth_token(tmp_path):
+    """The MCP token is not a domain-managed section, so PATCH and reset must keep it."""
+    config_file = tmp_path / "config.json"
+    config_file.write_text(json.dumps({"server": {"port": 8000}}))
+    config_mgr = ConfigurationManager(config_file=str(config_file))
+    token = config_mgr.ensure_mcp_auth_token()
+    store = JSONFileConfigStore(config_mgr)
+
+    store.update_config({"server": {"port": 8001}})
+    assert json.loads(config_file.read_text())["mcp"]["auth_token"] == token
+
+    store.reset_to_defaults()
+    assert json.loads(config_file.read_text())["mcp"]["auth_token"] == token
+    assert config_mgr.get_settings().mcp.auth_token == token
+
+
+def test_defaulted_cors_origins_stay_out_of_the_file_and_follow_ui_base_url(tmp_path):
+    """Saving through the settings API must not freeze the derived CORS default."""
+    config_file = tmp_path / "config.json"
+    config_file.write_text(json.dumps({"server": {"host": "127.0.0.1", "port": 8000}}))
+    config_mgr = ConfigurationManager(config_file=str(config_file))
+    store = JSONFileConfigStore(config_mgr)
+
+    store.update_config({"logging": {"log_level": "DEBUG"}})
+    assert "cors_origins" not in json.loads(config_file.read_text())["server"]
+
+    store.update_config({"server": {"ui_base_url": "http://localhost:4000/"}})
+    assert config_mgr.get_settings().server.cors_origins == ["http://localhost:4000"]
+    assert "cors_origins" not in json.loads(config_file.read_text())["server"]
+
+    store.reset_to_defaults()
+    assert config_mgr.get_settings().server.cors_origins == ["http://localhost:3100"]
+    assert "cors_origins" not in json.loads(config_file.read_text())["server"]
+
+
+def test_explicit_cors_origins_are_saved(tmp_path):
+    config_file = tmp_path / "config.json"
+    config_file.write_text(json.dumps({"server": {"cors_origins": ["http://localhost:5173"]}}))
+    config_mgr = ConfigurationManager(config_file=str(config_file))
+    store = JSONFileConfigStore(config_mgr)
+
+    store.update_config({"server": {"ui_base_url": "http://localhost:4000"}})
+
+    saved = json.loads(config_file.read_text())["server"]
+    assert saved["cors_origins"] == ["http://localhost:5173"]
+    assert config_mgr.get_settings().server.cors_origins == ["http://localhost:5173"]

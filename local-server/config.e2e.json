@@ -4,7 +4,8 @@
     "port": 8888,
     "cors_origins": [
       "*"
-    ]
+    ],
+    "ui_base_url": "http://localhost:3888"
   },
   "database": {
     "local_db_path": "./datafiles/e2e-test/local.db",
@@ -22,5 +23,8 @@
   "reference": {
     "cache_db_path": "./datafiles/e2e-test/reference_api_cache.db",
     "reference_db_path": "./datafiles/e2e-test/reference.db"
+  },
+  "mcp": {
+    "auth_token": "e2e-test-token"
   }
 }

@@ -14,6 +14,7 @@ import {
   createBackgroundTaskSummary,
   createAppConfiguration,
   createConfigSectionUpdateRequest,
+  createMcpConnection,
   createBackgroundTask,
   createBackgroundTaskArray,
 } from "./fixtures/admin.fixtures";
@@ -218,6 +219,31 @@ describe("AdminService - Health & Metrics", () => {
 // ============================================================================
 
 describe("AdminService - Configuration Management", () => {
+  describe("getMcpConnection", () => {
+    it("returns the MCP URL and token from GET /api/v1/admin/mcp", async () => {
+      const mockConnection = createMcpConnection();
+
+      server.use(http.get("*/api/v1/admin/mcp", () => HttpResponse.json(mockConnection)));
+
+      const result = await adminService.getMcpConnection();
+
+      expect(result).toEqual(mockConnection);
+    });
+
+    it("throws ApiError on 403 for a non-local caller", async () => {
+      server.use(
+        http.get("*/api/v1/admin/mcp", () =>
+          HttpResponse.json({ detail: "Local clients only" }, { status: 403 }),
+        ),
+      );
+
+      await expect(adminService.getMcpConnection()).rejects.toMatchObject({
+        name: "ApiError",
+        status: 403,
+      });
+    });
+  });
+
   describe("getConfig", () => {
     it("returns application configuration from GET /api/v1/admin/configuration", async () => {
       const mockConfig = createAppConfiguration();

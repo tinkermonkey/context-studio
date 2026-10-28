@@ -35,14 +35,7 @@ from adapters.events.in_process import InProcessEventPublisher
 from adapters.graph.networkx_engine import NetworkXGraphEngine
 from adapters.graph.rdflib_engine import RDFLibQueryEngine
 from adapters.llm.provider_router import LLMProviderRouter
-from adapters.mcp.links import EntityLinks
-from adapters.mcp.server import (
-    McpEndpoint,
-    build_mcp_server,
-    build_session_manager,
-    is_loopback_host,
-    loopback_security,
-)
+from adapters.mcp.server import McpEndpoint, is_loopback_host, start_mcp_server
 from adapters.metrics.system_collector import SystemMetricsCollector
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from adapters.persistence.sqlite.batch_repo import BatchRepository
@@ -800,13 +793,10 @@ async def lifespan(app: FastAPI):
         async with AsyncExitStack() as mcp_stack:
             # MCP server for Claude Code and other MCP clients, loopback hosts only
             if is_loopback_host(settings.server.host):
-                mcp_server = build_mcp_server(
-                    read_tools, ontology_service, EntityLinks(settings.server.ui_base_url)
+                await start_mcp_server(
+                    mcp_stack, mcp_endpoint, app.state, config_manager, read_tools, ontology_service
                 )
-                session_manager = build_session_manager(mcp_server, loopback_security())
-                await mcp_stack.enter_async_context(session_manager.run())
-                mcp_endpoint.session_manager = session_manager
-                logger.info("MCP server available at /mcp")
+                logger.info("MCP server available at /mcp (bearer token required)")
             else:
                 logger.warning(
                     "MCP server not started: server.host %r is not a loopback address",
@@ -816,6 +806,7 @@ async def lifespan(app: FastAPI):
             yield
 
             mcp_endpoint.session_manager = None
+            mcp_endpoint.auth_token = None
 
         logger.info("Shutting down Context Studio server")
 

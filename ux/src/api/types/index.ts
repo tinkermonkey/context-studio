@@ -3456,6 +3456,30 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/admin/mcp": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Mcp Connection Details
+     * @description Return the MCP endpoint URL and bearer token, so the settings page can show
+     *     how to register an MCP client. Local callers only.
+     *
+     *     Raises:
+     *         HTTPException 403: If the MCP server is not running or the caller is not local
+     */
+    get: operations["get_mcp_connection_details_api_v1_admin_mcp_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/admin/tasks": {
     parameters: {
       query?: never;
@@ -6738,6 +6762,22 @@ export interface components {
        * @description Offset applied
        */
       offset: number;
+    };
+    /**
+     * McpConnectionResponse
+     * @description What an MCP client such as Claude Code needs to connect to /mcp.
+     */
+    McpConnectionResponse: {
+      /**
+       * Url
+       * @description URL of the MCP endpoint
+       */
+      url: string;
+      /**
+       * Auth Token
+       * @description Bearer token to send as 'Authorization: Bearer <token>'
+       */
+      auth_token: string;
     };
     /**
      * MergeResultResponse
@@ -12925,6 +12965,26 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["AppConfigurationResponse"];
+        };
+      };
+    };
+  };
+  get_mcp_connection_details_api_v1_admin_mcp_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["McpConnectionResponse"];
         };
       };
     };
