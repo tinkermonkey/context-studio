@@ -276,30 +276,39 @@ class RevertService:
         }
         if not deleted_ids:
             return
-        # The fields each entity the run updated get back on revert: per field,
-        # the previous state of the oldest update that touched it.
+        outside: dict[str, list] = {}
+        for ref in self._ontology_repo.find_references(sorted(deleted_ids)):
+            if ref.dependent_id not in deleted_ids:
+                outside.setdefault(ref.referenced_id, []).append(ref)
+        if not outside:
+            return
+
+        # Walk the events in the order their inverses run (newest first). When a
+        # create is reached its entity gets deleted, so each outside dependent
+        # must have stopped pointing at it by then: only the run's updates undone
+        # so far (newer than the create) count. Per entity, `restored` holds the
+        # fields those undone updates have put back.
         restored: dict[str, dict] = {}
-        for event in pending:  # newest first, so older updates overwrite newer ones
+        blocking = []
+        for event in pending:
             if event.operation == ChangeOperation.UPDATE and event.previous_state:
                 restored.setdefault(event.entity_id, {}).update(event.previous_state)
-        blocking = [
-            (ref.dependent_kind, ref.dependent_id, ref.referenced_id)
-            for ref in self._ontology_repo.find_references(sorted(deleted_ids))
-            if ref.dependent_id not in deleted_ids
-            and self._still_references_after_revert(ref, restored)
-        ]
+            elif event.operation == ChangeOperation.CREATE:
+                for ref in outside.pop(event.entity_id, []):
+                    if self._still_references(ref, restored):
+                        blocking.append((ref.dependent_kind, ref.dependent_id, ref.referenced_id))
         if blocking:
             raise RevertConflictError(batch_run_id, blocking)
 
-    def _still_references_after_revert(self, ref, restored: dict[str, dict]) -> bool:
+    def _still_references(self, ref, restored: dict[str, dict]) -> bool:
         """
-        Whether the dependent still points at the referenced entity once the run's
-        updates to it are undone. A run that typed an existing individual into a
-        class it created, say, takes that membership away again on revert.
+        Whether the dependent still points at the referenced entity once the
+        updates in `restored` are undone. A run that typed an existing individual
+        into a class it created, say, takes that membership away again first.
+
+        A class's taxonomy_id follows its scheme: undoing a scheme's move takes
+        the scheme's classes back with it.
         """
-        fields = restored.get(ref.dependent_id)
-        if fields is None:
-            return True
         getter = {
             "taxonomy": self._ontology_repo.get_taxonomy,
             "concept_scheme": self._ontology_repo.get_concept_scheme,
@@ -311,7 +320,11 @@ class RevertService:
         entity = getter(ref.dependent_id) if getter is not None else None
         if entity is None:
             return True
-        state = {**entity_snapshot(entity), **fields}
+        state = {**entity_snapshot(entity), **restored.get(ref.dependent_id, {})}
+        if ref.dependent_kind == "class":
+            scheme_fields = restored.get(state.get("concept_scheme_id"), {})
+            if "taxonomy_id" in scheme_fields:
+                state["taxonomy_id"] = scheme_fields["taxonomy_id"]
         return any(
             value == ref.referenced_id or (isinstance(value, list) and ref.referenced_id in value)
             for value in state.values()

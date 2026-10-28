@@ -13,6 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 import dataclasses
 import tempfile
+import time
 from pathlib import Path
 
 import pytest
@@ -25,18 +26,11 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from domain.ontology.services import OntologyService
+from domain.versioning.exceptions import RevertConflictError
 from domain.versioning.proposal_service import OperationDraft, ProposalService
-from domain.versioning.proposals import (
-    OperationKind as K,
-)
-from domain.versioning.proposals import (
-    OperationStatus,
-    ProposalSource,
-    ProposalStatus,
-)
-from domain.versioning.proposals import (
-    OperationType as T,
-)
+from domain.versioning.proposals import OperationKind as K
+from domain.versioning.proposals import OperationStatus, ProposalSource, ProposalStatus
+from domain.versioning.proposals import OperationType as T
 from domain.versioning.revert_service import RevertService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.utils.change_recording import wire_change_recorder
@@ -162,3 +156,138 @@ def test_apply_in_two_goes_then_revert_restores_the_graph(parts):
     seven = next(o for o in closed.operations if o.seq == 7)
     assert (seven.status, seven.reason) == (OperationStatus.REJECTED, "proposal reverted")
     assert repo.get_class(tool.id).title == "Tool"
+
+
+# A revert may let an outside dependent through only when undoing the run's own
+# update removes the reference BEFORE the entity it references is deleted.
+
+
+def apply_in_order(service, proposal, *seqs):
+    """Apply one op per call, a moment apart, so their change events are ordered by seq."""
+    ops = {o.seq: o for o in proposal.operations}
+    result = None
+    for seq in seqs:
+        time.sleep(0.01)
+        result = service.apply(proposal.id, [ops[seq].id])
+    time.sleep(0.01)
+    return {o.seq: o for o in result.operations}
+
+
+def test_revert_refused_when_an_outside_move_puts_a_class_in_a_scheme_the_run_made(parts):
+    """Seq 1 moves X; seq 2 creates a scheme; then X is moved into it outside the proposal."""
+    ontology, repo, _, service = parts
+    tax = ontology.create_taxonomy(title="House")
+    s0 = ontology.create_scheme(taxonomy_id=tax.id, title="S0")
+    s1 = ontology.create_scheme(taxonomy_id=tax.id, title="S1")
+    x = ontology.create_class(s0.id, "X")
+    den = ontology.create_individual(x.id, "Den")
+    proposal = service.propose(
+        tax.id,
+        "Reorg",
+        [
+            OperationDraft(
+                1,
+                T.MOVE,
+                K.CLASS,
+                x.id,
+                fields={"concept_scheme_id": s1.id, "parent_class_id": None},
+            ),
+            OperationDraft(
+                2, T.CREATE, K.SCHEME, ref="new", fields={"taxonomy_id": tax.id, "title": "New"}
+            ),
+        ],
+        ProposalSource.USER,
+    )
+    ops = apply_in_order(service, proposal, 1, 2)
+    ontology.move_class_to_scheme(x.id, ops[2].result_entity_id)
+
+    with pytest.raises(RevertConflictError) as caught:
+        service.revert(proposal.id)
+
+    assert ("class", x.id, ops[2].result_entity_id) in caught.value.blocking
+    assert repo.get_class(x.id).concept_scheme_id == ops[2].result_entity_id
+    assert repo.get_individual(den.id).class_ids == [x.id]
+    assert service.get(proposal.id).status is ProposalStatus.DONE
+
+
+def test_revert_refused_when_an_outside_retype_uses_a_class_the_run_made(parts):
+    """Seq 1 retypes Den A -> B; seq 2 creates C; outside, Den becomes only a C."""
+    ontology, repo, _, service = parts
+    tax = ontology.create_taxonomy(title="House")
+    s0 = ontology.create_scheme(taxonomy_id=tax.id, title="S0")
+    a = ontology.create_class(s0.id, "A")
+    b = ontology.create_class(s0.id, "B")
+    den = ontology.create_individual(a.id, "Den")
+    proposal = service.propose(
+        tax.id,
+        "Retype",
+        [
+            OperationDraft(1, T.UPDATE, K.INDIVIDUAL, den.id, fields={"class_ids": [b.id]}),
+            OperationDraft(
+                2, T.CREATE, K.CLASS, ref="c", fields={"concept_scheme_id": s0.id, "title": "C"}
+            ),
+        ],
+        ProposalSource.USER,
+    )
+    ops = apply_in_order(service, proposal, 1, 2)
+    c_id = ops[2].result_entity_id
+    ontology.add_class_to_individual(den.id, c_id)
+    ontology.remove_class_from_individual(den.id, b.id)
+
+    with pytest.raises(RevertConflictError):
+        service.revert(proposal.id)
+
+    assert repo.get_class(c_id) is not None
+    assert repo.get_individual(den.id).class_ids == [c_id]
+    assert service.get(proposal.id).status is ProposalStatus.DONE
+
+
+def test_revert_refused_when_an_outside_move_puts_a_scheme_in_a_taxonomy_the_run_made(parts):
+    """Seq 1 moves scheme S to T1; seq 2 creates taxonomy $t; outside, S moves into $t."""
+    ontology, repo, _, service = parts
+    t0 = ontology.create_taxonomy(title="House")
+    t1 = ontology.create_taxonomy(title="Garden")
+    scheme = ontology.create_scheme(taxonomy_id=t0.id, title="Plants")
+    plant = ontology.create_class(scheme.id, "Plant")
+    proposal = service.propose(
+        t0.id,
+        "Split",
+        [
+            OperationDraft(1, T.MOVE, K.SCHEME, scheme.id, fields={"taxonomy_id": t1.id}),
+            OperationDraft(2, T.CREATE, K.TAXONOMY, ref="t", fields={"title": "Orchard"}),
+        ],
+        ProposalSource.USER,
+    )
+    ops = apply_in_order(service, proposal, 1, 2)
+    ontology.update_concept_scheme(scheme.id, taxonomy_id=ops[2].result_entity_id)
+
+    with pytest.raises(RevertConflictError):
+        service.revert(proposal.id)
+
+    assert repo.get_concept_scheme(scheme.id).taxonomy_id == ops[2].result_entity_id
+    assert repo.get_class(plant.id) is not None
+
+
+def test_new_taxonomy_plus_moving_a_non_empty_scheme_into_it_reverts(parts):
+    """Undoing the scheme move takes its classes back too, so deleting the taxonomy is safe."""
+    ontology, repo, _, service = parts
+    tax = ontology.create_taxonomy(title="House")
+    scheme = ontology.create_scheme(taxonomy_id=tax.id, title="Plants")
+    plant = ontology.create_class(scheme.id, "Plant")
+    proposal = service.propose(
+        tax.id,
+        "Split",
+        [
+            OperationDraft(1, T.CREATE, K.TAXONOMY, ref="t", fields={"title": "Garden"}),
+            OperationDraft(2, T.MOVE, K.SCHEME, scheme.id, fields={"taxonomy_id": "$t"}),
+        ],
+        ProposalSource.USER,
+    )
+    ops = apply_in_order(service, proposal, 1, 2)
+    assert repo.get_class(plant.id).taxonomy_id == ops[1].result_entity_id
+
+    service.revert(proposal.id)
+
+    assert repo.get_taxonomy(ops[1].result_entity_id) is None
+    assert repo.get_concept_scheme(scheme.id).taxonomy_id == tax.id
+    assert repo.get_class(plant.id).taxonomy_id == tax.id
