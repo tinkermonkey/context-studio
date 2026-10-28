@@ -38,6 +38,7 @@ from adapters.llm.provider_router import LLMProviderRouter
 from adapters.mcp.server import McpEndpoint, is_loopback_host, start_mcp_server
 from adapters.metrics.system_collector import SystemMetricsCollector
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
+from adapters.persistence.sqlite.approval_policy_repo import SQLiteApprovalPolicyRepository
 from adapters.persistence.sqlite.batch_repo import BatchRepository
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.chat_repo import SqliteConversationRepository
@@ -160,6 +161,7 @@ from domain.pipelines.schema_node_grounding.apply_service import (
     SchemaGroundingApplyService,
 )
 from domain.pipelines.schema_node_grounding.scoring import GroundingScorer
+from domain.versioning.approval_policy import ApprovalPolicyService
 from domain.versioning.events import ChangesetMerged, SyncCompleted
 from domain.versioning.ports import SyncTarget
 from domain.versioning.proposal_service import ProposalService
@@ -553,13 +555,18 @@ async def lifespan(app: FastAPI):
             "RevertService created and wired with repositories, vector indexes and event publisher"
         )
 
+        approval_policy_repo = SQLiteApprovalPolicyRepository(shared_session_factory)
         proposal_service = ProposalService(
             proposals=SQLiteChangeProposalRepository(shared_session_factory),
             ontology_service=ontology_service,
             ontology_repo=cast(OntologyRepository, ontology_repo),
             revert_service=revert_service,
+            approval_policies=approval_policy_repo,
         )
-        logger.info("ProposalService created")
+        approval_policy_service = ApprovalPolicyService(
+            approval_policy_repo, cast(OntologyRepository, ontology_repo)
+        )
+        logger.info("ProposalService and ApprovalPolicyService created")
 
         # Interchange service for import run tracking
         import_run_service = ImportRunService()
@@ -732,6 +739,7 @@ async def lifespan(app: FastAPI):
         app.state.versioning_service = versioning_service
         app.state.revert_service = revert_service
         app.state.proposal_service = proposal_service
+        app.state.approval_policy_service = approval_policy_service
         app.state.admin_service = admin_service
         app.state.load_demo_dataset = load_demo_dataset
         app.state.db_manager = db_manager

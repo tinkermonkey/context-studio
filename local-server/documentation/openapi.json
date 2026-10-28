@@ -7714,6 +7714,106 @@
           }
         }
       }
+    },
+    "/api/taxonomies/{taxonomy_id}/approval-policy": {
+      "get": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Get Approval Policy",
+        "description": "The taxonomy's approval policy; empty (nothing auto-applies) if none is set.",
+        "operationId": "get_approval_policy_api_taxonomies__taxonomy_id__approval_policy_get",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalPolicyResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Set Approval Policy",
+        "description": "Replace the taxonomy's approval policy.\n\nOperations proposed afterwards apply as soon as they are proposed, under the\nproposal's run, when they reach min_probability and matching rules cover\nevery class their entity will have (a rule matches when every key it sets\ndoes; one without a class covers any). Never auto-applied: breaking\noperations, deletes, taxonomy creates, property-definition changes, and\nanything that touches or points at an entity outside this taxonomy.",
+        "operationId": "set_approval_policy_api_taxonomies__taxonomy_id__approval_policy_put",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalPolicyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalPolicyResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -7989,6 +8089,57 @@
         ],
         "title": "ApplyRunResponse",
         "description": "Response from applying a pipeline run's output to the ontology."
+      },
+      "ApprovalPolicyRequest": {
+        "properties": {
+          "auto_apply": {
+            "items": {
+              "$ref": "#/components/schemas/AutoApplyRuleSchema"
+            },
+            "type": "array",
+            "title": "Auto Apply",
+            "description": "Operations the matching rules cover may auto-apply; breaking ones, deletes, taxonomy creates and anything outside this taxonomy never do"
+          },
+          "min_probability": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Min Probability",
+            "description": "An operation also needs at least this probability",
+            "default": 0.0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ApprovalPolicyRequest",
+        "description": "A taxonomy's approval policy; replaces the current one."
+      },
+      "ApprovalPolicyResponse": {
+        "properties": {
+          "taxonomy_id": {
+            "type": "string",
+            "title": "Taxonomy Id"
+          },
+          "auto_apply": {
+            "items": {
+              "$ref": "#/components/schemas/AutoApplyRuleSchema"
+            },
+            "type": "array",
+            "title": "Auto Apply"
+          },
+          "min_probability": {
+            "type": "number",
+            "title": "Min Probability"
+          }
+        },
+        "type": "object",
+        "required": [
+          "taxonomy_id",
+          "auto_apply",
+          "min_probability"
+        ],
+        "title": "ApprovalPolicyResponse",
+        "description": "A taxonomy's approval policy; empty (nothing auto-applies) until one is set."
       },
       "AttributeDefinitionCreateRequest": {
         "properties": {
@@ -8318,6 +8469,59 @@
         "type": "object",
         "title": "AttributeDefinitionUpdateRequest",
         "description": "Request to update an attribute definition (partial update)."
+      },
+      "AutoApplyRuleSchema": {
+        "properties": {
+          "op": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OperationType"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only this operation type"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OperationKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only this kind of entity"
+          },
+          "class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class",
+            "description": "Only entities typed by this class (id or identifier): an individual's classes, an attribute's class, or the class itself"
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChangeScope"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only this scope"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "AutoApplyRuleSchema",
+        "description": "Operations matching every key set here may apply as soon as they are proposed."
       },
       "AutoResolveConflictsRequest": {
         "properties": {

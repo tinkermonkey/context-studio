@@ -26,6 +26,7 @@ from uuid import uuid4
 from domain.interchange.services import get_current_batch_run_id, set_batch_run_context
 from domain.ontology.exceptions import OntologyError
 from domain.ontology.snapshots import decode_field, entity_snapshot
+from domain.versioning.approval_policy import auto_apply_ids
 from domain.versioning.exceptions import (
     ChangeProposalNotFoundError,
     ChangeProposalStateError,
@@ -47,7 +48,7 @@ from domain.versioning.proposals import (
 if TYPE_CHECKING:
     from domain.ontology.ports import OntologyRepository
     from domain.ontology.services import OntologyService
-    from domain.versioning.ports import ChangeProposalRepository
+    from domain.versioning.ports import ApprovalPolicyRepository, ChangeProposalRepository
     from domain.versioning.revert_service import RevertResult, RevertService
 
 _logger = logging.getLogger(__name__)
@@ -278,6 +279,7 @@ class ProposalService:
         ontology_service: OntologyService,
         ontology_repo: OntologyRepository,
         revert_service: RevertService,
+        approval_policies: ApprovalPolicyRepository | None = None,
     ) -> None:
         """
         Args:
@@ -285,11 +287,14 @@ class ProposalService:
             ontology_service: The write path for every change an operation makes
             ontology_repo: Reads targets for validation, base capture and staleness
             revert_service: Undoes everything applied under a proposal's run id
+            approval_policies: Taxonomies' approval policies; without them
+                nothing auto-applies
         """
         self._proposals = proposals
         self._ontology = ontology_service
         self._repo = ontology_repo
         self._revert = revert_service
+        self._policies = approval_policies
         # One lock per proposal: a desktop app runs one process, so two requests
         # deciding on the same proposal are serialized here.
         self._locks: dict[str, threading.Lock] = {}
@@ -317,8 +322,11 @@ class ProposalService:
         `base` captured from the target's current values (its whole snapshot
         for a delete).
 
+        Operations the taxonomy's approval policy allows are then applied at
+        once, under the proposal's run (see `domain.versioning.approval_policy`).
+
         Returns:
-            The stored proposal
+            The stored proposal, with any auto-applied outcomes
 
         Raises:
             ProposalValidationError: With every problem found; nothing is stored
@@ -369,7 +377,121 @@ class ProposalService:
             errors.append(OperationError(None, "invalid", str(exc)))
         if errors:
             raise ProposalValidationError(errors)
-        return self._proposals.create(proposal)
+        return self._auto_apply(self._proposals.create(proposal))
+
+    # --------------------------------------------------------------- auto-apply
+
+    def _auto_apply(self, proposal: ChangeProposal) -> ChangeProposal:
+        """
+        Apply what the taxonomy's approval policy allows, under the proposal's run.
+
+        Never raises: the proposal is already stored, so an error (a stored
+        policy that no longer parses, a failing repository) is logged and the
+        proposal returned as it stands, its status settled, for review.
+        """
+        if self._policies is None:
+            return proposal
+        try:
+            policy = self._policies.get(proposal.taxonomy_id)
+            auto = auto_apply_ids(
+                policy,
+                proposal.operations,
+                self._classes,
+                lambda operation: self._inside_taxonomy(operation, proposal.taxonomy_id),
+                id_fields=frozenset(_ID_FIELDS),
+            )
+            # apply takes the proposal's lock itself; propose never holds it.
+            return self.apply(proposal.id, auto) if auto else proposal
+        except Exception:  # noqa: BLE001 - the stored proposal must reach the caller
+            _logger.exception("Auto-apply of proposal %s failed; left for review", proposal.id)
+        try:
+            with self._lock(proposal.id):
+                current = self._get(proposal.id)
+                current.settle_status()
+                self._proposals.set_status(current.id, current.status)
+                return current
+        except Exception:  # noqa: BLE001
+            _logger.exception("Could not re-read proposal %s after auto-apply", proposal.id)
+            return proposal
+
+    def _classes(self, operation: ProposedOperation) -> list[set[str]]:
+        """
+        Per class the operation's entity will be typed by, its id and identifier:
+        an individual's current classes plus any it is given, an attribute's
+        class, or a class itself. A "$ref" class gets an empty set (no rule
+        names it).
+        """
+        target, fields = operation.target_id, operation.fields
+        class_ids: list[Any] = []
+        if operation.kind is K.INDIVIDUAL:
+            individual = self._repo.get_individual(target) if target else None
+            class_ids = list(individual.class_ids if individual else [])
+            class_ids += [c for c in fields.get("class_ids") or [] if c not in class_ids]
+        elif operation.kind is K.ATTRIBUTE:
+            attribute = self._repo.get_attribute_definition(target) if target else None
+            class_ids = [attribute.class_id if attribute else fields.get("class_id")]
+        elif operation.kind is K.CLASS and target:
+            class_ids = [target]
+        classes: list[set[str]] = []
+        for class_id in class_ids:
+            if not isinstance(class_id, str) or _is_ref(class_id):
+                classes.append(set())
+                continue
+            cls = self._repo.get_class(class_id)
+            identifier = cls.identifier if cls is not None else None
+            classes.append({class_id, identifier} if identifier else {class_id})
+        return classes
+
+    def _inside_taxonomy(self, operation: ProposedOperation, taxonomy_id: str) -> bool:
+        """
+        Whether the operation's target and every existing entity its id fields
+        point at belong to this taxonomy alone. "$ref" values are skipped (their
+        creates are checked themselves). Property definitions are global: an
+        operation on one is never inside, but a relationship may use one.
+        """
+        if operation.kind is K.PROPERTY:
+            return False
+        if operation.kind is K.TAXONOMY:
+            return operation.op is not OperationType.CREATE and operation.target_id == taxonomy_id
+        if operation.target_id is not None and self._taxonomies(
+            (operation.kind,), operation.target_id
+        ) != {taxonomy_id}:
+            return False
+        for name, value in operation.fields.items():
+            kinds = _ID_FIELDS.get(name)
+            if kinds is None or value is None or name == "property_definition_id":
+                continue
+            for item in value if isinstance(value, list) else [value]:
+                if _is_ref(item):
+                    continue
+                if self._taxonomies(kinds, item) != {taxonomy_id}:
+                    return False
+        return True
+
+    def _taxonomies(self, kinds: tuple[OperationKind, ...], entity_id: Any) -> set[str]:
+        """The taxonomies an entity of one of these kinds belongs to (empty if none or missing)."""
+        for kind in kinds:
+            entity = self._load(kind, entity_id)
+            if entity is None:
+                continue
+            if kind is K.TAXONOMY:
+                return {entity.id}
+            if kind in (K.SCHEME, K.CLASS):
+                return {entity.taxonomy_id}
+            if kind is K.ATTRIBUTE:
+                return self._taxonomies((K.CLASS,), entity.class_id)
+            if kind is K.INDIVIDUAL:
+                found: set[str] = set()
+                for class_id in entity.class_ids:
+                    found |= self._taxonomies((K.CLASS,), class_id)
+                return found
+            if kind is K.RELATIONSHIP:
+                ends = (K.CLASS, K.INDIVIDUAL)
+                return self._taxonomies(ends, entity.source_id) | self._taxonomies(
+                    ends, entity.target_id
+                )
+            return set()  # a property definition is global
+        return set()
 
     def _validated(
         self, draft: OperationDraft, refs: dict[str, OperationKind]

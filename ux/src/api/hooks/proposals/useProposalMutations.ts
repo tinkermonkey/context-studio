@@ -7,7 +7,7 @@ import {
   type ChangeProposalRejectRequest,
 } from "@/api/services/proposals";
 
-/** Apply and revert change the ontology: refresh everything a proposal can touch. */
+/** Create (auto-apply), apply and revert change the ontology: refresh all a proposal can touch. */
 function invalidateOntology(queryClient: QueryClient) {
   for (const queryKey of [
     QUERY_KEYS.changeProposalsRoot,
@@ -28,9 +28,8 @@ export function useCreateChangeProposal() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: ChangeProposalCreateRequest) => proposalsService.createProposal(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.changeProposalsRoot });
-    },
+    // The taxonomy's approval policy may apply operations as soon as they are proposed.
+    onSuccess: () => invalidateOntology(queryClient),
   });
 }
 

@@ -7,6 +7,8 @@ export type ChangeProposalCreateRequest = components["schemas"]["ChangeProposalC
 export type ChangeProposalApplyRequest = components["schemas"]["ChangeProposalApplyRequest"];
 export type ChangeProposalRejectRequest = components["schemas"]["ChangeProposalRejectRequest"];
 export type ChangeProposalRevertResponse = components["schemas"]["ChangeProposalRevertResponse"];
+export type ApprovalPolicy = components["schemas"]["ApprovalPolicyResponse"];
+export type ApprovalPolicyRequest = components["schemas"]["ApprovalPolicyRequest"];
 type ChangeProposalList = components["schemas"]["ListResponse_ChangeProposalResponse_"];
 
 export interface ChangeProposalListParams {
@@ -43,6 +45,17 @@ class ProposalsService extends BaseService {
 
   async revertProposal(id: string): Promise<ChangeProposalRevertResponse> {
     return this.post<ChangeProposalRevertResponse>(`/api/proposals/${id}/revert`);
+  }
+
+  async getApprovalPolicy(taxonomyId: string): Promise<ApprovalPolicy> {
+    return this.get<ApprovalPolicy>(`/api/taxonomies/${taxonomyId}/approval-policy`);
+  }
+
+  async setApprovalPolicy(
+    taxonomyId: string,
+    data: ApprovalPolicyRequest,
+  ): Promise<ApprovalPolicy> {
+    return this.put<ApprovalPolicy>(`/api/taxonomies/${taxonomyId}/approval-policy`, data);
   }
 }
 

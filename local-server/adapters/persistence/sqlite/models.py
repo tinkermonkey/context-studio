@@ -1566,6 +1566,36 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
         return f"<ProposalOperation(proposal={self.proposal_id}, seq={self.seq}, op={self.op})>"
 
 
+class ApprovalPolicyRecord(Base):  # type: ignore[valid-type,misc]
+    """
+    A taxonomy's approval policy: which proposed operations may apply on their own.
+
+    Attributes:
+        taxonomy_id: The taxonomy it governs (deleted with it)
+        rules: {"auto_apply": [{"op", "kind", "class", "scope"}, ...], "min_probability": n}
+        updated_at: When the policy was last set
+    """
+
+    __tablename__ = "approval_policies"
+
+    taxonomy_id = Column(
+        String(36),
+        ForeignKey("ontology_entities.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+    rules = Column(JSON, nullable=False, default=dict)
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    def __repr__(self) -> str:
+        return f"<ApprovalPolicyRecord(taxonomy={self.taxonomy_id})>"
+
+
 class GroundingWorkflow(Base):  # type: ignore[valid-type,misc]
     """
     Configuration record for a grounding workflow.

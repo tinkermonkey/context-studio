@@ -42,7 +42,8 @@ else:
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    # Keep the app's loggers: migrations also run in-process (tests, startup).
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 # Set target_metadata for local database if not already set
 if x_args.get("db") != "operations":
