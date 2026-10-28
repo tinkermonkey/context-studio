@@ -724,7 +724,15 @@ class ProposalService:
         return self._get(proposal_id)
 
     def _lock(self, proposal_id: str) -> threading.Lock:
-        """The lock that serializes apply, reject and revert of one proposal (in-process)."""
+        """
+        The lock that serializes apply, reject and revert of one proposal
+        (in-process). Only an existing proposal gets one, so the map holds at
+        most one lock per proposal decided on in this process.
+
+        Raises:
+            ChangeProposalNotFoundError: If the proposal does not exist
+        """
+        self._get(proposal_id)
         with self._locks_guard:
             return self._locks.setdefault(proposal_id, threading.Lock())
 

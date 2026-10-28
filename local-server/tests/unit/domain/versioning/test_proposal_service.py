@@ -829,3 +829,13 @@ class TestConcurrency:
             thread.join()
         assert sorted(outcomes) == ["applied", "refused"]
         assert len(calls) == 1
+
+    def test_unknown_proposals_get_no_lock(self, service):
+        for action in (
+            lambda: service.apply("nope", []),
+            lambda: service.reject("nope", []),
+            lambda: service.revert("nope"),
+        ):
+            with pytest.raises(ChangeProposalNotFoundError):
+                action()
+        assert service._locks == {}

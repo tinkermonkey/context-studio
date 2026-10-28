@@ -25,6 +25,7 @@ from adapters.persistence.sqlite.connection import create_local_db_engine
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
+from adapters.persistence.sqlite.transaction import SharedSessionFactory, SqliteTransactionScope
 from domain.ontology.services import OntologyService
 from domain.versioning.exceptions import RevertConflictError
 from domain.versioning.proposal_service import OperationDraft, ProposalService
@@ -49,8 +50,10 @@ def session_factory():
 
 @pytest.fixture()
 def parts(session_factory):
-    ontology_repo = SQLiteOntologyRepository(session_factory=session_factory)
-    change_repo = SQLiteChangeRepository(session_factory=session_factory)
+    """Wired as in app.py: both repositories share one transaction while a revert runs."""
+    shared = SharedSessionFactory(session_factory)
+    ontology_repo = SQLiteOntologyRepository(session_factory=shared)
+    change_repo = SQLiteChangeRepository(session_factory=shared)
     publisher = InProcessEventPublisher()
     wire_change_recorder(publisher, change_repo)
     ontology = OntologyService(ontology_repo, FakeEmbeddingService(), publisher)
@@ -58,7 +61,11 @@ def parts(session_factory):
         SQLiteChangeProposalRepository(session_factory),
         ontology,
         ontology_repo,
-        RevertService(change_repo=change_repo, ontology_repo=ontology_repo),
+        RevertService(
+            change_repo=change_repo,
+            ontology_repo=ontology_repo,
+            transaction_scope=SqliteTransactionScope(shared),
+        ),
     )
     return ontology, ontology_repo, change_repo, service
 
@@ -291,3 +298,172 @@ def test_new_taxonomy_plus_moving_a_non_empty_scheme_into_it_reverts(parts):
     assert repo.get_taxonomy(ops[1].result_entity_id) is None
     assert repo.get_concept_scheme(scheme.id).taxonomy_id == tax.id
     assert repo.get_class(plant.id).taxonomy_id == tax.id
+
+
+# References the revert itself puts back must be gone before what they point at
+# is deleted (review round 3).
+
+
+def apply_seq(service, proposal, seq, force=False):
+    time.sleep(0.01)
+    op = {o.seq: o for o in service.get(proposal.id).operations}[seq]
+    result = service.apply(proposal.id, [op.id], force_stale=[op.id] if force else ())
+    time.sleep(0.01)
+    return {o.seq: o for o in result.operations}
+
+
+def graph_state(repo, change_repo):
+    """Every ontology entity and relationship, and the number of change events."""
+    entities, relationships = repo.get_all_entities_and_relationships()
+    return (
+        sorted(str(snap(entity)) for entity in entities),
+        sorted(str(snap(rel)) for rel in relationships),
+        sorted(str(snap(prop)) for prop in repo.list_property_definitions(limit=None)),
+        change_repo.get_changes(limit=None).total,
+    )
+
+
+def test_a_restored_class_follows_its_scheme_not_its_snapshot(parts):
+    """
+    The run deleted X while an outside move had put X's scheme under the run's
+    new taxonomy; the scheme has since moved back. X comes back under its
+    scheme's taxonomy, so undoing the taxonomy's create can't take X with it.
+    """
+    ontology, repo, _, service = parts
+    tax = ontology.create_taxonomy(title="House")
+    scheme = ontology.create_scheme(taxonomy_id=tax.id, title="Rooms")
+    x = ontology.create_class(scheme.id, "X")
+    proposal = service.propose(
+        tax.id,
+        "Tidy",
+        [
+            OperationDraft(1, T.CREATE, K.TAXONOMY, ref="t", fields={"title": "Garden"}),
+            OperationDraft(2, T.DELETE, K.CLASS, x.id),
+        ],
+        ProposalSource.USER,
+    )
+    garden = apply_seq(service, proposal, 1)[1].result_entity_id
+    ontology.update_concept_scheme(scheme.id, taxonomy_id=garden)
+    assert apply_seq(service, proposal, 2)[2].status is OperationStatus.APPLIED
+    ontology.update_concept_scheme(scheme.id, taxonomy_id=tax.id)
+
+    service.revert(proposal.id)
+
+    restored = repo.get_class(x.id)
+    assert restored is not None
+    assert (restored.concept_scheme_id, restored.taxonomy_id) == (scheme.id, tax.id)
+    assert repo.get_taxonomy(garden) is None
+
+
+def test_revert_refused_when_it_would_put_back_a_reference_to_what_it_then_deletes(parts):
+    """
+    Seq 1 creates C; outside, Den becomes only a C; seq 2 (forced) retypes Den
+    to B. Undoing seq 2 gives Den [C] back, and undoing seq 1 would then delete C.
+    """
+    ontology, repo, change_repo, service = parts
+    tax = ontology.create_taxonomy(title="House")
+    scheme = ontology.create_scheme(taxonomy_id=tax.id, title="Rooms")
+    a = ontology.create_class(scheme.id, "A")
+    b = ontology.create_class(scheme.id, "B")
+    den = ontology.create_individual(a.id, "Den")
+    proposal = service.propose(
+        tax.id,
+        "Retype",
+        [
+            OperationDraft(
+                1, T.CREATE, K.CLASS, ref="c", fields={"concept_scheme_id": scheme.id, "title": "C"}
+            ),
+            OperationDraft(2, T.UPDATE, K.INDIVIDUAL, den.id, fields={"class_ids": [b.id]}),
+        ],
+        ProposalSource.USER,
+    )
+    c_id = apply_seq(service, proposal, 1)[1].result_entity_id
+    ontology.add_class_to_individual(den.id, c_id)
+    ontology.remove_class_from_individual(den.id, a.id)
+    assert apply_seq(service, proposal, 2)[2].reason.startswith("target_changed")
+    assert apply_seq(service, proposal, 2, force=True)[2].status is OperationStatus.APPLIED
+    before = graph_state(repo, change_repo)
+
+    with pytest.raises(RevertConflictError) as caught:
+        service.revert(proposal.id)
+
+    assert ("individual", den.id, c_id) in caught.value.blocking
+    assert graph_state(repo, change_repo) == before
+    assert service.get(proposal.id).status is ProposalStatus.DONE
+
+
+# Atomic revert: a failure partway rolls every inverse back.
+
+
+def test_a_revert_that_fails_partway_changes_nothing(parts, monkeypatch):
+    ontology, repo, change_repo, service = parts
+    tax = ontology.create_taxonomy(title="House")
+    scheme = ontology.create_scheme(taxonomy_id=tax.id, title="Rooms")
+    room = ontology.create_class(scheme.id, "Room", description="A room")
+    hall = ontology.create_class(scheme.id, "Hall", description="A hall")
+    proposal = service.propose(
+        tax.id,
+        "Edit",
+        [
+            OperationDraft(1, T.UPDATE, K.CLASS, room.id, fields={"description": "Any room"}),
+            OperationDraft(2, T.UPDATE, K.CLASS, hall.id, fields={"description": "Any hall"}),
+            OperationDraft(
+                3, T.CREATE, K.CLASS, fields={"concept_scheme_id": scheme.id, "title": "Den"}
+            ),
+        ],
+        ProposalSource.USER,
+    )
+    service.apply(proposal.id, [o.id for o in proposal.operations])
+    before = graph_state(repo, change_repo)
+
+    real_save = repo.save_class
+    calls = []
+
+    def fail_on_second(cls):
+        calls.append(cls.id)
+        if len(calls) == 2:
+            raise RuntimeError("disk full")
+        return real_save(cls)
+
+    monkeypatch.setattr(repo, "save_class", fail_on_second)
+    with pytest.raises(RuntimeError, match="disk full"):
+        service.revert(proposal.id)
+
+    assert len(calls) == 2  # the class create was undone and one update restored first
+    assert graph_state(repo, change_repo) == before
+    assert service.get(proposal.id).status is ProposalStatus.DONE
+
+
+def test_the_execution_time_check_refuses_and_rolls_back_what_the_walk_missed(parts, monkeypatch):
+    """
+    With the predictive check switched off, deleting a scheme someone else has
+    since put a class in is still refused, and the update undone before it is
+    rolled back.
+    """
+    ontology, repo, change_repo, service = parts
+    tax = ontology.create_taxonomy(title="House")
+    s0 = ontology.create_scheme(taxonomy_id=tax.id, title="S0")
+    keep = ontology.create_class(s0.id, "Keep", description="Before")
+    proposal = service.propose(
+        tax.id,
+        "Reorg",
+        [
+            OperationDraft(
+                1, T.CREATE, K.SCHEME, ref="new", fields={"taxonomy_id": tax.id, "title": "New"}
+            ),
+            OperationDraft(2, T.UPDATE, K.CLASS, keep.id, fields={"description": "After"}),
+        ],
+        ProposalSource.USER,
+    )
+    new_id = apply_seq(service, proposal, 1)[1].result_entity_id
+    apply_seq(service, proposal, 2)
+    outsider = ontology.create_class(new_id, "Outsider")
+    before = graph_state(repo, change_repo)
+    monkeypatch.setattr(RevertService, "_check_no_outside_dependents", lambda *args: None)
+
+    with pytest.raises(RevertConflictError) as caught:
+        service.revert(proposal.id)
+
+    assert ("class", outsider.id, new_id) in caught.value.blocking
+    assert graph_state(repo, change_repo) == before
+    assert repo.get_class(keep.id).description == "After"

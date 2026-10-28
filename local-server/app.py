@@ -61,6 +61,7 @@ from adapters.persistence.sqlite.pipeline_config_repo import (
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
+from adapters.persistence.sqlite.transaction import SharedSessionFactory, SqliteTransactionScope
 from adapters.recognition.individual_recognizer import CascadeIndividualRecognizer
 from adapters.reference.cache import CachedReferenceSource
 from adapters.reference.conceptnet import ConceptNetSource
@@ -236,8 +237,11 @@ async def lifespan(app: FastAPI):
         # Repositories receive session factories, not sessions.
         # Per-request sessions are created in route dependencies.
         local_session_factory = db_manager.get_local_session_factory()
+        # The ontology and change repositories share sessions inside a
+        # transaction scope, so a revert commits as one unit.
+        shared_session_factory = SharedSessionFactory(local_session_factory)
         ontology_repo: OntologyRepository = cast(
-            OntologyRepository, SQLiteOntologyRepository(local_session_factory)
+            OntologyRepository, SQLiteOntologyRepository(shared_session_factory)
         )
         extraction_repo = SQLiteExtractionRepository(local_session_factory)
         extraction_run_repo = SQLiteExtractionRunRepository(local_session_factory)
@@ -300,7 +304,7 @@ async def lifespan(app: FastAPI):
         logger.info("Event publisher created")
 
         # Change event recorder for audit trail
-        change_repo = SQLiteChangeRepository(local_session_factory)
+        change_repo = SQLiteChangeRepository(shared_session_factory)
         change_recorder = ChangeEventRecorder(change_repo)
         logger.info("ChangeEventRecorder created")
 
@@ -542,6 +546,7 @@ async def lifespan(app: FastAPI):
             schema_index=schema_vector_index,
             individual_index=individual_vector_index,
             event_publisher=event_publisher,
+            transaction_scope=SqliteTransactionScope(shared_session_factory),
         )
         logger.info(
             "RevertService created and wired with repositories, vector indexes and event publisher"

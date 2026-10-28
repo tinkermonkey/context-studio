@@ -9,6 +9,7 @@ the originating batch_run_id for auditability.
 from __future__ import annotations
 
 import logging
+from contextlib import nullcontext
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 
@@ -24,10 +25,17 @@ if TYPE_CHECKING:
         OntologyRepository,
         SchemaVectorIndex,
     )
-    from domain.ports import EventPublisher
+    from domain.ports import EventPublisher, TransactionScope
     from domain.versioning.ports import ChangeRepository
 
 _logger = logging.getLogger(__name__)
+
+
+def _mentions(values, entity_id: str) -> bool:
+    """Whether any of these field values is, or is a list containing, the entity id."""
+    return any(
+        value == entity_id or (isinstance(value, list) and entity_id in value) for value in values
+    )
 
 
 class RevertService:
@@ -49,6 +57,7 @@ class RevertService:
         schema_index: SchemaVectorIndex | None = None,
         individual_index: IndividualVectorIndex | None = None,
         event_publisher: EventPublisher | None = None,
+        transaction_scope: TransactionScope | None = None,
     ) -> None:
         """
         Initialize the RevertService.
@@ -63,12 +72,17 @@ class RevertService:
                 individual it deletes
             event_publisher: Optional publisher; GraphInvalidated is published for
                 every taxonomy whenever the revert changes anything
+            transaction_scope: Makes the revert atomic: every inverse and the
+                change events recording them commit together, or none do. Both
+                repositories must take part in it. Without one, a revert that
+                fails partway keeps what it already undid.
         """
         self._change_repo = change_repo
         self._ontology_repo = ontology_repo
         self._schema_index = schema_index
         self._individual_index = individual_index
         self._event_publisher = event_publisher
+        self._transaction_scope = transaction_scope
 
     def revert(self, batch_run_id: str) -> int:
         """
@@ -114,23 +128,6 @@ class RevertService:
         if not batch_run_id:
             raise ValueError("batch_run_id is required for revert")
 
-        # Filter by batch_run_id at query level to avoid memory overhead
-        events_result = self._change_repo.get_changes(batch_run_id=batch_run_id, limit=None)
-        events = list(events_result.events)
-
-        if not events:
-            _logger.info(f"No events found for batch run {batch_run_id}")
-            return RevertResult(run_id=batch_run_id, events_reverted=0)
-
-        pending = [
-            event
-            for event in events
-            if self._normalize_entity_type(event.entity_type) not in self._RECORD_ONLY_TYPES
-            and not self._should_skip_revert(event, events)
-        ]
-        self._check_restorable(batch_run_id, pending)
-        self._check_no_outside_dependents(batch_run_id, pending)
-
         reverted_count = 0
         summary = {
             "classes_deleted": 0,
@@ -141,32 +138,64 @@ class RevertService:
             "concept_schemes_deleted": 0,
             "entities_restored": 0,
         }
-
-        # get_changes returns newest first, which is the order to undo in: a
-        # relationship is removed before the property it uses, and chained
-        # updates unwind back to the oldest previous state.
         touched: dict[str, str] = {}
+        pending: list = []
+        committed = False
+
+        scope = self._transaction_scope.atomic() if self._transaction_scope else nullcontext()
         try:
-            for event in pending:
-                try:
-                    if self._apply_inverse(event, batch_run_id):
-                        reverted_count += 1
-                        self._update_summary(event, summary)
-                        touched[event.entity_id] = self._normalize_entity_type(event.entity_type)
-                except Exception as exc:
-                    _logger.error(
-                        f"Failed to revert event {event.id} for entity {event.entity_id}. "
-                        f"Partially reverted {reverted_count} events before failure.",
-                        exc_info=exc,
-                    )
-                    raise
+            with scope:
+                # Filter by batch_run_id at query level to avoid memory overhead
+                events_result = self._change_repo.get_changes(batch_run_id=batch_run_id, limit=None)
+                events = list(events_result.events)
+
+                if not events:
+                    _logger.info(f"No events found for batch run {batch_run_id}")
+                    return RevertResult(run_id=batch_run_id, events_reverted=0)
+
+                pending = [
+                    event
+                    for event in events
+                    if self._normalize_entity_type(event.entity_type) not in self._RECORD_ONLY_TYPES
+                    and not self._should_skip_revert(event, events)
+                ]
+                self._check_restorable(batch_run_id, pending)
+                self._check_no_outside_dependents(batch_run_id, pending)
+
+                # get_changes returns newest first, which is the order to undo in: a
+                # relationship is removed before the property it uses, and chained
+                # updates unwind back to the oldest previous state.
+                for event in pending:
+                    try:
+                        if self._apply_inverse(event, batch_run_id):
+                            reverted_count += 1
+                            self._update_summary(event, summary)
+                            touched[event.entity_id] = self._normalize_entity_type(
+                                event.entity_type
+                            )
+                    except Exception as exc:
+                        _logger.error(
+                            f"Failed to revert event {event.id} for entity {event.entity_id} "
+                            f"after undoing {reverted_count} events"
+                            + (
+                                "; the revert is rolled back."
+                                if self._transaction_scope
+                                else "; those stay undone."
+                            ),
+                            exc_info=exc,
+                        )
+                        raise
+            committed = True
         finally:
-            # Each inverse is committed as it is applied, so even after a failure
-            # partway through, the indexes and graph caches must follow what changed.
-            for entity_id, entity_type in touched.items():
-                self._sync_indexes(entity_id, entity_type)
-            if reverted_count:
-                self._invalidate_graphs(pending)
+            # Index writes and graph invalidation stay out of the transaction, after
+            # the commit. In a transaction scope a failed revert changed nothing, so
+            # there is nothing to follow; without one each inverse is committed as it
+            # is applied, so they follow even a revert that failed partway.
+            if committed or self._transaction_scope is None:
+                for entity_id, entity_type in touched.items():
+                    self._sync_indexes(entity_id, entity_type)
+                if reverted_count:
+                    self._invalidate_graphs(pending)
 
         _logger.info(f"Reverted {reverted_count} events for batch run {batch_run_id}")
         return RevertResult(
@@ -280,23 +309,41 @@ class RevertService:
         for ref in self._ontology_repo.find_references(sorted(deleted_ids)):
             if ref.dependent_id not in deleted_ids:
                 outside.setdefault(ref.referenced_id, []).append(ref)
-        if not outside:
-            return
 
         # Walk the events in the order their inverses run (newest first). When a
-        # create is reached its entity gets deleted, so each outside dependent
-        # must have stopped pointing at it by then: only the run's updates undone
-        # so far (newer than the create) count. Per entity, `restored` holds the
-        # fields those undone updates have put back.
-        restored: dict[str, dict] = {}
-        blocking = []
+        # create is reached its entity gets deleted, so by then nothing may point
+        # at it: neither an outside dependent that the updates undone so far
+        # haven't detached, nor anything the revert itself has put back (fields
+        # restored by an undone update, an entity recreated from its snapshot).
+        restored: dict[str, dict] = {}  # entity -> fields the undone updates put back
+        restored_type: dict[str, str] = {}
+        gone: set[str] = set()  # run-created entities deleted so far
+        blocking: list[tuple[str, str, str]] = []
         for event in pending:
+            entity_type = self._normalize_entity_type(event.entity_type)
             if event.operation == ChangeOperation.UPDATE and event.previous_state:
                 restored.setdefault(event.entity_id, {}).update(event.previous_state)
+                restored_type[event.entity_id] = entity_type
+            elif event.operation == ChangeOperation.DELETE:
+                snapshot = dict(self._deleted_state(event))
+                snapshot.pop("id", None)
+                if entity_type == "class":
+                    snapshot.pop("taxonomy_id", None)  # follows the scheme when restored
+                restored[event.entity_id] = snapshot
+                restored_type[event.entity_id] = entity_type
             elif event.operation == ChangeOperation.CREATE:
-                for ref in outside.pop(event.entity_id, []):
+                created = event.entity_id
+                for ref in outside.pop(created, []):
                     if self._still_references(ref, restored):
                         blocking.append((ref.dependent_kind, ref.dependent_id, ref.referenced_id))
+                for holder, fields in restored.items():
+                    if holder == created or holder in gone:
+                        continue
+                    if _mentions(fields.values(), created):
+                        entry = (restored_type[holder], holder, created)
+                        if entry not in blocking:
+                            blocking.append(entry)
+                gone.add(created)
         if blocking:
             raise RevertConflictError(batch_run_id, blocking)
 
@@ -325,10 +372,8 @@ class RevertService:
             scheme_fields = restored.get(state.get("concept_scheme_id"), {})
             if "taxonomy_id" in scheme_fields:
                 state["taxonomy_id"] = scheme_fields["taxonomy_id"]
-        return any(
-            value == ref.referenced_id or (isinstance(value, list) and ref.referenced_id in value)
-            for value in state.values()
-        )
+        state.pop("id", None)
+        return _mentions(state.values(), ref.referenced_id)
 
     def _sync_indexes(self, entity_id: str, entity_type: str) -> None:
         """
@@ -441,6 +486,7 @@ class RevertService:
         try:
             operation_applied = False
             if operation == ChangeOperation.CREATE:
+                self._refuse_if_referenced(batch_run_id, entity_id)
                 operation_applied = self._inverse_create(entity_id, entity_type)
             elif operation == ChangeOperation.UPDATE:
                 operation_applied = self._inverse_update(
@@ -483,6 +529,27 @@ class RevertService:
         carry it in ``new_state``.
         """
         return event.new_state or event.previous_state or {}
+
+    def _refuse_if_referenced(self, batch_run_id: str, entity_id: str) -> None:
+        """
+        Right before undoing a create, nothing may point at the entity any more:
+        inverses run newest first, so whatever the run made or changed to point
+        at it has been undone already, and anything still pointing at it is
+        outside the run. Deleting it would cascade into that, so the revert is
+        refused (and, in a transaction scope, rolled back).
+        """
+        refs = self._ontology_repo.find_references([entity_id])
+        if refs:
+            raise RevertConflictError(
+                batch_run_id, [(r.dependent_kind, r.dependent_id, r.referenced_id) for r in refs]
+            )
+
+    def _with_scheme_taxonomy(self, cls):  # type: ignore[no-untyped-def]
+        """A class's taxonomy_id follows its scheme as it stands now, not as recorded."""
+        scheme = self._ontology_repo.get_concept_scheme(cls.concept_scheme_id)
+        if scheme is not None:
+            cls.taxonomy_id = scheme.taxonomy_id
+        return cls
 
     def _inverse_create(self, entity_id: str, entity_type: str) -> bool:
         """
@@ -560,7 +627,7 @@ class RevertService:
             cls = self._ontology_repo.get_class(entity_id)
             if cls:
                 self._restore_entity_state(cls, previous_state)
-                self._ontology_repo.save_class(cls)
+                self._ontology_repo.save_class(self._with_scheme_taxonomy(cls))
                 return True
         elif entity_type == "individual":
             ind = self._ontology_repo.get_individual(entity_id)
@@ -619,7 +686,10 @@ class RevertService:
         if save is None:
             raise ValueError(f"Unknown entity type for delete revert: {entity_type}")
         try:
-            save(entity_from_snapshot(entity_type, snapshot, entity_id))
+            entity = entity_from_snapshot(entity_type, snapshot, entity_id)
+            if entity_type == "class":
+                entity = self._with_scheme_taxonomy(entity)
+            save(entity)
             return True
         except Exception as exc:
             _logger.error(f"Failed to recreate {entity_type} {entity_id}: {exc}", exc_info=exc)
