@@ -291,11 +291,52 @@ class RevertService:
                     entity_from_snapshot(entity_type, snapshot, event.entity_id)
                 except ValueError as exc:
                     problems.append(f"{label}: {exc}")
+        problems.extend(self._identifier_problems(pending))
         if problems:
             raise RevertRefusedError(
                 f"Cannot revert batch run {batch_run_id}; nothing was changed. "
                 + "; ".join(problems)
             )
+
+    def _identifier_problems(self, pending: list) -> list[str]:
+        """
+        Identifiers the revert gives back must be free: a property definition's
+        old identifier, or a deleted entity's. One held since by another property
+        definition, taxonomy, scheme or class blocks the revert, unless that
+        holder is deleted or given another identifier by the same revert.
+        """
+        restored: dict[str, str] = {}  # entity -> the identifier it gets back
+        deleted = set()  # entities the revert deletes (the run created them)
+        for event in pending:  # newest first, so the oldest previous state wins
+            if event.operation == ChangeOperation.CREATE:
+                deleted.add(event.entity_id)
+                continue
+            if event.operation == ChangeOperation.UPDATE:
+                if self._normalize_entity_type(event.entity_type) != "property_definition":
+                    continue
+                identifier = (event.previous_state or {}).get("identifier")
+            elif event.operation == ChangeOperation.DELETE:
+                identifier = self._deleted_state(event).get("identifier")
+            else:
+                continue
+            if identifier:
+                restored[event.entity_id] = identifier
+
+        problems = []
+        for entity_id, identifier in restored.items():
+            holders = (
+                self._ontology_repo.get_property_definition_by_identifier(identifier),
+                self._ontology_repo.get_by_identifier(identifier),
+            )
+            for holder in holders:
+                if holder is None or holder.id == entity_id or holder.id in deleted:
+                    continue
+                if restored.get(holder.id, identifier) != identifier:
+                    continue  # the revert gives the holder its own old identifier back
+                problems.append(
+                    f"{entity_id}: identifier '{identifier}' is now held by {holder.id}"
+                )
+        return problems
 
     def _check_no_outside_dependents(self, batch_run_id: str, pending: list) -> None:
         """
