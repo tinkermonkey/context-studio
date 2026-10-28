@@ -8,6 +8,7 @@ import os
 import secrets
 from enum import Enum
 from typing import List, Optional
+from urllib.parse import urlsplit
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
@@ -72,6 +73,37 @@ class TelemetryConfig(BaseModel):
     )
 
 
+_DEFAULT_PORTS = {"http": 80, "https": 443}
+
+
+def url_origin(url: Optional[str]) -> Optional[str]:
+    """
+    The origin of a URL as a browser sends it in an Origin header:
+    scheme://host, plus :port unless it is the scheme's default. Any path,
+    query or trailing slash is dropped. None when the URL has no origin.
+    """
+    if not url:
+        return None
+    parts = urlsplit(url.strip())
+    scheme = parts.scheme.lower()
+    if not scheme or not parts.hostname:
+        return None
+    try:
+        port = parts.port
+    except ValueError:
+        return None
+    host = f"[{parts.hostname}]" if ":" in parts.hostname else parts.hostname
+    if port is not None and port != _DEFAULT_PORTS.get(scheme):
+        host = f"{host}:{port}"
+    return f"{scheme}://{host}"
+
+
+def default_cors_origins(ui_base_url: Optional[str]) -> List[str]:
+    """The CORS origins used when none are configured: the UI's own origin."""
+    origin = url_origin(ui_base_url)
+    return [origin] if origin else []
+
+
 class ServerConfig(BaseModel):
     """Server configuration section"""
 
@@ -84,11 +116,20 @@ class ServerConfig(BaseModel):
             " null leaves links out"
         ),
     )
-    # Declared after ui_base_url: its default is built from that validated value
+    # Declared after ui_base_url: its default is built from that validated value.
+    # Left out of config.json while defaulted, so it keeps following ui_base_url.
     cors_origins: List[str] = Field(
-        default_factory=lambda data: [data["ui_base_url"]] if data.get("ui_base_url") else [],
+        default_factory=lambda data: default_cors_origins(data.get("ui_base_url")),
         description="CORS allowed origins; defaults to the UI origin (ui_base_url)",
     )
+
+    def ui_origins(self) -> frozenset[str]:
+        """
+        Origins the app's own UI may call from: ui_base_url's origin and each
+        listed CORS origin, normalised. A '*' entry is never included.
+        """
+        origins = (url_origin(o) for o in [self.ui_base_url, *self.cors_origins] if o != "*")
+        return frozenset(o for o in origins if o)
 
 
 class McpConfig(BaseModel):

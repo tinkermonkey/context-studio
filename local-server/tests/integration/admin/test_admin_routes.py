@@ -12,6 +12,7 @@ These tests exercise the complete stack: routes → domain service → adapters.
 
 import pytest
 from fastapi import FastAPI, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.testclient import TestClient
 
 from adapters.mcp.server import McpConnection, mcp_url
@@ -813,11 +814,23 @@ class TestDatasetRoutes:
 class TestMcpConnectionEndpoint:
     """Tests for GET /api/v1/admin/mcp, which hands the MCP token to local callers only."""
 
-    CONNECTION = McpConnection(url="http://127.0.0.1:8000/mcp", auth_token="secret-token")
+    CONNECTION = McpConnection(
+        url="http://127.0.0.1:8000/mcp",
+        auth_token="secret-token",
+        ui_origins=frozenset({"http://localhost:3100"}),
+    )
 
     @staticmethod
-    def _client(connection, client_host="127.0.0.1", base_url="http://127.0.0.1:8000"):
+    def _client(connection, client_host="127.0.0.1", base_url="http://127.0.0.1:8000", cors=None):
         app = FastAPI()
+        if cors is not None:
+            app.add_middleware(
+                CORSMiddleware,
+                allow_origins=cors,
+                allow_credentials=True,
+                allow_methods=["*"],
+                allow_headers=["*"],
+            )
         app.include_router(router)
         if connection is not None:
             app.state.mcp_connection = connection
@@ -844,6 +857,29 @@ class TestMcpConnectionEndpoint:
         """DNS rebinding: a page whose own name resolves to 127.0.0.1 is refused."""
         client = self._client(self.CONNECTION, base_url="http://attacker.example:8000")
         assert client.get("/api/v1/admin/mcp").status_code == status.HTTP_403_FORBIDDEN
+
+    def test_cross_origin_page_is_refused_even_when_cors_allows_every_origin(self):
+        """With cors_origins ["*"] and credentials, Starlette echoes any Origin back."""
+        client = self._client(self.CONNECTION, cors=["*"])
+
+        response = client.get("/api/v1/admin/mcp", headers={"Origin": "https://evil.example"})
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert "secret-token" not in response.text
+
+    @pytest.mark.parametrize("origin", ["null", "http://localhost:3101", "http://127.0.0.1:3100"])
+    def test_origins_other_than_the_ui_are_refused(self, origin):
+        client = self._client(self.CONNECTION, cors=["*"])
+        response = client.get("/api/v1/admin/mcp", headers={"Origin": origin})
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_the_ui_origin_is_served(self):
+        client = self._client(self.CONNECTION, cors=["*"])
+
+        response = client.get("/api/v1/admin/mcp", headers={"Origin": "http://localhost:3100"})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["auth_token"] == "secret-token"
 
     def test_refused_when_the_mcp_server_is_not_running(self):
         response = self._client(None).get("/api/v1/admin/mcp")

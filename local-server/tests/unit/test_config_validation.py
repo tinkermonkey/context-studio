@@ -25,6 +25,7 @@ from config import (
     Settings,
     SyncAdapterType,
     SyncConfig,
+    url_origin,
 )
 
 SHIPPED_CONFIG = Path(__file__).resolve().parents[2] / "config.json"
@@ -295,6 +296,13 @@ class TestCorsOriginsDefault:
     def test_is_empty_when_there_is_no_ui(self) -> None:
         assert ServerConfig(ui_base_url=None).cors_origins == []
 
+    @pytest.mark.parametrize(
+        "ui_base_url",
+        ["http://localhost:3100/", "http://localhost:3100/app/settings", "HTTP://LocalHost:3100"],
+    )
+    def test_ui_base_url_is_reduced_to_its_origin(self, ui_base_url: str) -> None:
+        assert ServerConfig(ui_base_url=ui_base_url).cors_origins == ["http://localhost:3100"]
+
     def test_explicit_origins_win(self) -> None:
         config = ServerConfig(cors_origins=["*"], ui_base_url="http://localhost:4000")
         assert config.cors_origins == ["*"]
@@ -317,3 +325,35 @@ class TestMcpConfig:
 
     def test_auth_token_is_read_from_the_mcp_section(self) -> None:
         assert Settings(mcp={"auth_token": "abc"}).mcp.auth_token == "abc"
+
+
+class TestUrlOrigin:
+    @pytest.mark.parametrize(
+        ("url", "origin"),
+        [
+            ("http://localhost:3100/", "http://localhost:3100"),
+            ("https://example.com:443/path?q=1", "https://example.com"),
+            ("http://example.com:80", "http://example.com"),
+            ("http://[::1]:3100/app", "http://[::1]:3100"),
+            ("null", None),
+            ("", None),
+            (None, None),
+        ],
+    )
+    def test_url_origin(self, url, origin) -> None:
+        assert url_origin(url) == origin
+
+
+class TestUiOrigins:
+    def test_ui_origin_plus_listed_origins_without_wildcard(self) -> None:
+        config = ServerConfig(
+            ui_base_url="http://localhost:3100/",
+            cors_origins=["*", "http://localhost:5173/"],
+        )
+        assert config.ui_origins() == {"http://localhost:3100", "http://localhost:5173"}
+
+    def test_wildcard_alone_allows_only_the_ui(self) -> None:
+        assert ServerConfig(cors_origins=["*"]).ui_origins() == {"http://localhost:3100"}
+
+    def test_no_ui_and_wildcard_allows_nothing(self) -> None:
+        assert ServerConfig(ui_base_url=None, cors_origins=["*"]).ui_origins() == frozenset()

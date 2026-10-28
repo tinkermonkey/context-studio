@@ -62,7 +62,7 @@ claude mcp add --transport http context-studio http://127.0.0.1:8000/mcp \
   --header "Authorization: Bearer <token from Settings → Integrations>"
 ```
 
-The server only starts when `server.host` is a loopback address. It also refuses requests whose `Host` or `Origin` header is not local, so a web page cannot reach it through the browser. The settings endpoint that hands the token to the UI (`GET /api/v1/admin/mcp`) has the same limits: it answers only local clients under a loopback `Host` header.
+The server only starts when `server.host` is a loopback address. It also refuses requests whose `Host` or `Origin` header is not local, so a web page cannot reach it through the browser. The settings endpoint that hands the token to the UI (`GET /api/v1/admin/mcp`) is narrower still, and it does not rely on CORS. It only answers while the MCP server runs, to a loopback client under a loopback `Host` header. The request must also carry either no `Origin` header (same-origin and command-line callers) or the UI's own origin: `server.ui_base_url`, or an entry in `server.cors_origins` other than `*`.
 
 ### CORS and the REST API
 

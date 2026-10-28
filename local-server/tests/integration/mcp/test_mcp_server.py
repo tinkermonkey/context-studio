@@ -5,7 +5,8 @@ workspace in SQLite.
 """
 
 import json
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
+from types import SimpleNamespace
 
 import httpx
 from starlette.applications import Starlette
@@ -18,7 +19,9 @@ from adapters.mcp.server import (
     build_mcp_server,
     build_session_manager,
     loopback_security,
+    start_mcp_server,
 )
+from config import ConfigurationManager
 from tests.integration.chat.conftest import DR_VISION, OPERATION_ID, TAXONOMY_ID
 
 TOKEN = "test-mcp-token"
@@ -232,3 +235,36 @@ async def test_request_with_the_token_is_served(dr_workspace):
 
         assert response.status_code == 200
         assert response.json()["result"]["tools"]
+
+
+async def test_startup_generates_the_token_and_wires_endpoint_and_state(dr_workspace, tmp_path):
+    """The lifespan helper: ensure_mcp_auth_token, then the endpoint and app.state."""
+    config_file = tmp_path / "config.json"
+    config_file.write_text(json.dumps({"server": {"host": "127.0.0.1", "port": 8123}}))
+    config_manager = ConfigurationManager(config_file=str(config_file))
+    tools = build_chat_tools(dr_workspace.ontology, dr_workspace.graph)
+    endpoint = McpEndpoint()
+    state = SimpleNamespace()
+
+    async with AsyncExitStack() as stack:
+        connection = await start_mcp_server(
+            stack, endpoint, state, config_manager, tools, dr_workspace.ontology
+        )
+
+        token = json.loads(config_file.read_text())["mcp"]["auth_token"]
+        assert token and endpoint.auth_token == token
+        assert state.mcp_connection is connection
+        assert connection.url == "http://127.0.0.1:8123/mcp"
+        assert connection.auth_token == token
+        assert connection.ui_origins == frozenset({"http://localhost:3100"})
+
+        app = Starlette(routes=[Route("/mcp", endpoint)])
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://127.0.0.1:8123") as c:
+            body = {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}
+            refused = await c.post("/mcp", json=body, headers={**HEADERS, "authorization": ""})
+            served = await c.post(
+                "/mcp", json=body, headers={**HEADERS, "authorization": f"Bearer {token}"}
+            )
+        assert refused.status_code == 401
+        assert served.status_code == 200

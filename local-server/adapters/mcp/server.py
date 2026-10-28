@@ -14,6 +14,7 @@ import hmac
 import ipaddress
 import logging
 import re
+from contextlib import AsyncExitStack
 from dataclasses import dataclass
 from typing import Any, Iterable, Optional, Sequence
 
@@ -28,6 +29,7 @@ from starlette.responses import JSONResponse
 from starlette.types import Receive, Scope, Send
 
 from adapters.mcp.links import EntityLinks
+from config import ConfigurationManager
 from domain.chat.ports import ChatTool
 from domain.ontology.entities import Taxonomy
 from domain.ontology.exceptions import EntityNotFoundError
@@ -149,10 +151,16 @@ def is_loopback_host(host: str) -> bool:
 
 @dataclass(frozen=True)
 class McpConnection:
-    """What an MCP client needs to connect: the endpoint URL and the bearer token."""
+    """
+    What an MCP client needs to connect: the endpoint URL and the bearer token.
+
+    ui_origins are the browser origins allowed to read it (the app's own UI);
+    they are not part of the connection details handed out.
+    """
 
     url: str
     auth_token: str
+    ui_origins: frozenset[str] = frozenset()
 
 
 def mcp_url(host: str, port: int) -> str:
@@ -221,3 +229,35 @@ class McpEndpoint:
         if scheme.lower() != "bearer" or not token:
             return False
         return hmac.compare_digest(token.strip().encode(), (self.auth_token or "").encode())
+
+
+async def start_mcp_server(
+    stack: AsyncExitStack,
+    endpoint: McpEndpoint,
+    state: Any,
+    config_manager: ConfigurationManager,
+    tools: Sequence[ChatTool],
+    ontology: OntologyService,
+) -> McpConnection:
+    """
+    Start the MCP server for the app lifespan and attach it to /mcp.
+
+    Runs the session manager inside `stack`, makes sure an auth token exists
+    (generating and saving one if config.json has none), arms the endpoint
+    with it, and stores the connection details on `state` (app.state) for
+    the settings endpoint.
+    """
+    settings = config_manager.get_settings()
+    server = build_mcp_server(tools, ontology, EntityLinks(settings.server.ui_base_url))
+    session_manager = build_session_manager(server, loopback_security())
+    await stack.enter_async_context(session_manager.run())
+    auth_token = config_manager.ensure_mcp_auth_token()
+    endpoint.auth_token = auth_token
+    endpoint.session_manager = session_manager
+    connection = McpConnection(
+        url=mcp_url(settings.server.host, settings.server.port),
+        auth_token=auth_token,
+        ui_origins=settings.server.ui_origins(),
+    )
+    state.mcp_connection = connection
+    return connection
