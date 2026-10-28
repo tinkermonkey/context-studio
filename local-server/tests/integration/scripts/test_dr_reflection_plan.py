@@ -2,11 +2,12 @@
 Integration tests (#1366): a DR reflection plan (`dr-reflection-plan/1`) becomes
 a change proposal on dr_spec; applying it renames, reverses, retargets and
 deletes relationship types (in-use ones keep their relationships); reverting
-it restores them exactly; and the decisions export in DR's shape.
+it restores them exactly; the decisions export in DR's shape; and the DR spec
+re-imports cleanly after DR applies the same change.
 
 Built on the pinned DR spec snapshot (0.8.4) on real SQLite with foreign keys
-enforced and change events recorded. The plan fixture is six operations of
-DR's api-layer plan (commit 495ab6b0 of documentation_robotics).
+enforced and change events recorded. The plan fixture is DR's api-layer plan,
+unedited (documentation_robotics commit 9b4dc9d6).
 """
 
 import os
@@ -17,7 +18,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 import copy
 import dataclasses
 import json
+import shutil
 import tempfile
+from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -30,7 +33,6 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from domain.ontology.services import OntologyService
-from domain.versioning.exceptions import ProposalValidationError
 from domain.versioning.proposal_service import ProposalService
 from domain.versioning.proposals import (
     ChangeScope,
@@ -38,6 +40,7 @@ from domain.versioning.proposals import (
     OperationStatus,
     OperationType,
     ProposalSource,
+    ProposalStatus,
 )
 from domain.versioning.revert_service import RevertService
 from scripts.dr_ontology_loader import DR_SOURCE, import_dr_ontology
@@ -46,7 +49,9 @@ from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.integration.pipelines._harness.dr_spec import pinned_dr_spec_dir
 from tests.utils.change_recording import wire_change_recorder
 
-PLAN_FILE = Path(__file__).resolve().parents[1] / "fixtures" / "dr_reflection_plan" / "api.json"
+PLAN_FILE = (
+    Path(__file__).resolve().parents[1] / "fixtures" / "dr_reflection_plan" / "api_full.json"
+)
 DELIVERS = "api.operation.delivers.api.response"
 IN_USE = 3
 
@@ -132,6 +137,14 @@ def plan_with(*operations):
     return plan
 
 
+def plan_for(*seqs):
+    """The fixture plan cut down to these seqs."""
+    plan = read_plan(PLAN_FILE)
+    plan["operations"] = [o for o in plan["operations"] if o["seq"] in seqs]
+    assert len(plan["operations"]) == len(seqs)
+    return plan
+
+
 def operation(seq, op, target_id, **fields):
     return {
         "seq": seq,
@@ -150,16 +163,64 @@ def operation(seq, op, target_id, **fields):
     }
 
 
-def test_fixture_imports_as_a_proposal_with_mapped_operations(parts):
+def rename(seq, old_id, new_id):
+    """An update moving a relationship type from one DR id to another."""
+    old, new = old_id.split("."), new_id.split(".")
+    fields = {"title": f"{new[0]}.{new[1]} {new[2]} {new[3]}.{new[4]}"}
+    if new[2] != old[2]:
+        fields["predicate"] = new[2]
+    if new[:2] != old[:2]:
+        fields["source_spec_node_id"] = f"{new[0]}.{new[1]}"
+    if new[3:] != old[3:]:
+        fields["destination_spec_node_id"] = f"{new[3]}.{new[4]}"
+    return operation(seq, "update", old_id, **fields)
+
+
+def apply_all(proposals, proposal):
+    return proposals.apply(proposal.id, [o.id for o in proposal.operations])
+
+
+def spec_after(tmp_path, renames):
+    """A copy of the pinned spec in which DR has applied these {old id: new id} renames."""
+    spec = tmp_path / "spec"
+    shutil.copytree(pinned_dr_spec_dir(), spec)
+    pending = dict(renames)
+    for path in (spec / "schemas" / "relationships").glob("*/*.relationship.schema.json"):
+        data = json.loads(path.read_text())
+        props = data["properties"]
+        full = ".".join(
+            [
+                props["source_spec_node_id"]["const"],
+                props["predicate"]["const"],
+                props["destination_spec_node_id"]["const"],
+            ]
+        )
+        if full not in pending:
+            continue
+        new = pending.pop(full).split(".")
+        props["source_spec_node_id"]["const"] = f"{new[0]}.{new[1]}"
+        props["source_layer"]["const"] = new[0]
+        props["predicate"]["const"] = new[2]
+        props["destination_spec_node_id"]["const"] = f"{new[3]}.{new[4]}"
+        props["destination_layer"]["const"] = new[3]
+        path.write_text(json.dumps(data))
+    assert not pending, pending
+    return spec
+
+
+# ------------------------------------------------------------- import, apply
+
+
+def test_fixture_operations_map_onto_property_definitions(parts):
     _, repo, proposals = parts
-    plan = read_plan(PLAN_FILE)
+    plan = plan_for(1, 13, 14, 28)
     proposal = import_reflection_plan(plan, proposals, repo)
 
     assert proposal.taxonomy_id == repo.get_by_identifier("dr_spec").id
     assert proposal.source is ProposalSource.PIPELINE
     assert proposal.title == plan["title"] and proposal.rationale == plan["rationale"]
     ops = {o.seq: o for o in proposal.operations}
-    assert sorted(ops) == [o["seq"] for o in plan["operations"]] == [1, 13, 14, 28, 56, 63]
+    assert sorted(ops) == [1, 13, 14, 28]
     assert all(
         o.kind is OperationKind.PROPERTY and o.scope is ChangeScope.BREAKING for o in ops.values()
     )
@@ -170,11 +231,12 @@ def test_fixture_imports_as_a_proposal_with_mapped_operations(parts):
     assert delete.target_id == prop_by_dr_id(repo, "api.mediatype.aggregates.api.encoding").id
     assert delete.base["title"] == "api.mediatype aggregates api.encoding"  # CS's own snapshot
 
-    rename = ops[14]
+    renamed = ops[14]
     delivers = prop_by_dr_id(repo, DELIVERS)
-    assert rename.target_id == delivers.id
-    assert rename.fields == {
+    assert renamed.target_id == delivers.id
+    assert renamed.fields == {
         "title": "api.operation aggregates api.response",
+        "description": "Defines relationship: api.operation aggregates api.response",
         "canonical_predicate": "aggregates",
         "identifier": "operation_aggregates_response",
         "external_references": [
@@ -186,11 +248,11 @@ def test_fixture_imports_as_a_proposal_with_mapped_operations(parts):
             }
         ],
     }
-    assert rename.base["identifier"] == delivers.identifier
+    assert renamed.base["identifier"] == delivers.identifier
     source_plan = next(o for o in plan["operations"] if o["seq"] == 14)
-    assert rename.rationale == source_plan["rationale"]
-    assert rename.evidence == source_plan["evidence"]
-    assert rename.probability == source_plan["probability"]
+    assert renamed.rationale == source_plan["rationale"]
+    assert renamed.evidence == source_plan["evidence"]
+    assert renamed.probability == source_plan["probability"]
 
     retarget = ops[28]  # api.mediatype -> api.encoding as the source
     assert retarget.fields["domain_class_id"] == class_by_dr_id(repo, "api.encoding").id
@@ -198,34 +260,53 @@ def test_fixture_imports_as_a_proposal_with_mapped_operations(parts):
     assert retarget.fields["identifier"] == "encoding_associated_with_header"
 
 
+def test_the_whole_fixture_imports_and_applies(parts):
+    _, repo, proposals = parts
+    plan = read_plan(PLAN_FILE)
+    proposal = import_reflection_plan(plan, proposals, repo)
+    assert [o.seq for o in proposal.operations] == [o["seq"] for o in plan["operations"]]
+    assert Counter(o.op.value for o in proposal.operations) == {"delete": 43, "update": 20}
+
+    applied = apply_all(proposals, proposal)
+
+    assert {o.seq: o.reason for o in applied.operations if o.reason} == {}
+    assert applied.status is ProposalStatus.DONE
+    for item in plan["operations"]:
+        if item["op"] == "delete":
+            assert prop_by_dr_id(repo, item["target_id"]) is None, item["seq"]
+        else:
+            old = item["target_id"].split(".")
+            fields = item["fields"]
+            new_id = ".".join(
+                [
+                    fields.get("source_spec_node_id", f"{old[0]}.{old[1]}"),
+                    fields.get("predicate", old[2]),
+                    fields.get("destination_spec_node_id", f"{old[3]}.{old[4]}"),
+                ]
+            )
+            moved = prop_by_dr_id(repo, new_id)
+            assert moved is not None and prop_by_dr_id(repo, item["target_id"]) is None
+            assert moved.title == fields["title"] and moved.description == fields["description"]
+
+
 def test_apply_then_revert_restores_every_property_and_relationship(parts):
     ontology, repo, proposals = parts
     delivers, rel_ids = put_delivers_in_use(ontology, repo)
-    reverse = operation(
-        70,
-        "update",
-        "api.ratelimit.serves.api.pathitem",
-        source_spec_node_id="api.pathitem",
-        destination_spec_node_id="api.ratelimit",
-        title="api.pathitem serves api.ratelimit",
+    plan = plan_for(1, 13, 14, 28)
+    plan["operations"].append(
+        rename(70, "api.ratelimit.serves.api.pathitem", "api.pathitem.serves.api.ratelimit")
     )
-    plan = read_plan(PLAN_FILE)
-    plan["operations"].append(reverse)
     targets = {o["target_id"] for o in plan["operations"]}
     before = {t: snap(prop_by_dr_id(repo, t)) for t in targets}
     rels_before = {r: snap(repo.get_relationship(r)) for r in rel_ids}
 
     proposal = import_reflection_plan(plan, proposals, repo)
-    applied = proposals.apply(proposal.id, [o.id for o in proposal.operations])
+    applied = apply_all(proposals, proposal)
     ops = {o.seq: o for o in applied.operations}
 
-    for seq in (1, 13, 14, 28, 70):
-        assert ops[seq].status is OperationStatus.APPLIED, (seq, ops[seq].reason)
-    # 56 and 63 rename onto a schema that already exists; the title is taken.
-    for seq in (56, 63):
-        assert ops[seq].status is OperationStatus.FAILED
-        assert ops[seq].reason.startswith("error: PropertyDefinition with title")
-
+    assert all(o.status is OperationStatus.APPLIED for o in ops.values()), [
+        (o.seq, o.reason) for o in ops.values()
+    ]
     assert repo.get_property_definition(ops[1].target_id) is None
     renamed = repo.get_property_definition(delivers.id)
     assert renamed.identifier == "operation_aggregates_response"
@@ -263,63 +344,6 @@ def test_deleting_an_in_use_relationship_type_fails_and_changes_nothing(parts):
     assert all(repo.get_relationship(r) is not None for r in rel_ids)
 
 
-def test_unresolvable_operations_are_listed_and_nothing_is_proposed(parts):
-    _, repo, proposals = parts
-    plan = plan_with(
-        operation(1, "delete", "api.nothing.serves.api.nowhere"),
-        operation(2, "update", DELIVERS, source_spec_node_id="api.unknown"),
-        operation(3, "update", DELIVERS, cardinality="many"),
-    )
-    with pytest.raises(PlanError) as caught:
-        import_reflection_plan(plan, proposals, repo)
-    problems = caught.value.problems
-    assert len(problems) == 3
-    assert problems[0].startswith("seq 1 (delete api.nothing.serves.api.nowhere): no property")
-    assert "no class for spec node api.unknown" in problems[1]
-    assert "unknown fields ['cardinality']" in problems[2]
-
-
-def test_two_deletes_of_one_relationship_type_are_refused(parts):
-    _, repo, proposals = parts
-    target = "api.mediatype.aggregates.api.encoding"
-    plan = plan_with(operation(32, "delete", target), operation(52, "delete", target))
-    with pytest.raises(ProposalValidationError) as caught:
-        import_reflection_plan(plan, proposals, repo)
-    assert [(e.seq, e.code) for e in caught.value.errors] == [(52, "conflicting_op")]
-
-
-def test_decisions_export_in_drs_shape(parts):
-    _, repo, proposals = parts
-    proposal = import_reflection_plan(read_plan(PLAN_FILE), proposals, repo)
-    ops = {o.seq: o for o in proposal.operations}
-    proposals.apply(proposal.id, [ops[1].id, ops[14].id, ops[56].id])
-    proposals.reject(proposal.id, [ops[13].id], note="Keep references")
-
-    decisions = decisions_for(proposals.get(proposal.id))
-
-    by_seq = {d["seq"]: d for d in decisions}
-    assert [d["seq"] for d in decisions] == [1, 13, 14, 28, 56, 63]
-    assert all(
-        set(d) == {"seq", "op_id", "status", "reason", "result_entity_id"} for d in decisions
-    )
-    assert by_seq[1] == {
-        "seq": 1,
-        "op_id": ops[1].id,
-        "status": "applied",
-        "reason": None,
-        "result_entity_id": ops[1].target_id,
-    }
-    assert by_seq[13]["status"] == "rejected" and by_seq[13]["reason"] == "Keep references"
-    assert by_seq[14]["status"] == "applied"
-    assert by_seq[56]["status"] == "failed" and by_seq[56]["reason"].startswith("error:")
-    assert by_seq[28]["status"] == by_seq[63]["status"] == "pending"
-    json.dumps(decisions)  # serializable as written
-
-    proposals.revert(proposal.id)
-    with pytest.raises(ValueError, match="reverted"):
-        decisions_for(proposals.get(proposal.id))
-
-
 def test_create_maps_onto_a_new_property_definition(parts):
     _, repo, proposals = parts
     create = operation(
@@ -346,3 +370,187 @@ def test_create_maps_onto_a_new_property_definition(parts):
     assert made.domain_class_id == class_by_dr_id(repo, "api.tag").id
     assert made.range_class_id == class_by_dr_id(repo, "api.ratelimit").id
     assert prop_by_dr_id(repo, "api.tag.governs.api.ratelimit").id == made.id
+
+
+# --------------------------------------------------------- refused at import
+
+
+def test_unresolvable_operations_are_listed_and_nothing_is_proposed(parts):
+    _, repo, proposals = parts
+    plan = plan_with(
+        operation(1, "delete", "api.nothing.serves.api.nowhere"),
+        operation(2, "update", DELIVERS, source_spec_node_id="api.unknown"),
+        operation(3, "update", DELIVERS, cardinality="many"),
+    )
+    with pytest.raises(PlanError) as caught:
+        import_reflection_plan(plan, proposals, repo)
+    problems = caught.value.problems
+    assert len(problems) == 3
+    assert problems[0].startswith("seq 1 (delete api.nothing.serves.api.nowhere): no property")
+    assert "no class for spec node api.unknown" in problems[1]
+    assert "unknown fields ['cardinality']" in problems[2]
+    assert proposals._proposals.count_proposals() == 0
+
+
+def test_two_operations_on_one_relationship_type_are_refused_naming_both(parts):
+    _, repo, proposals = parts
+    target = "api.mediatype.aggregates.api.encoding"
+    plan = plan_with(operation(32, "delete", target), operation(52, "delete", target))
+    with pytest.raises(PlanError) as caught:
+        import_reflection_plan(plan, proposals, repo)
+    assert caught.value.problems == [f"seqs 32 and 52 both target {target}"]
+
+
+def test_renames_onto_an_existing_or_shared_triple_are_refused_by_seq(parts):
+    _, repo, proposals = parts
+    existing = "api.components.aggregates.api.response"
+    assert prop_by_dr_id(repo, existing) is not None
+    plan = plan_with(
+        rename(55, "api.components.composes.api.response", existing),
+        rename(6, "api.components.composes.api.parameter", "api.components.uses.api.parameter"),
+        rename(60, "api.components.composes.api.header", "api.components.uses.api.parameter"),
+    )
+    with pytest.raises(PlanError) as caught:
+        import_reflection_plan(plan, proposals, repo)
+    assert caught.value.problems == [
+        f"seq 55 (update api.components.composes.api.response): {existing} already exists",
+        "seqs 6 and 60 both produce api.components.uses.api.parameter",
+    ]
+
+
+@pytest.mark.parametrize("plan", [[], "plan", {"format": "dr-reflection-plan/1", "operations": 5}])
+def test_a_malformed_plan_is_a_plan_error(parts, plan):
+    _, repo, proposals = parts
+    with pytest.raises(PlanError):
+        import_reflection_plan(plan, proposals, repo)
+
+
+def test_a_malformed_operation_is_listed(parts):
+    _, repo, proposals = parts
+    with pytest.raises(PlanError) as caught:
+        import_reflection_plan(plan_with("delete everything", None), proposals, repo)
+    assert caught.value.problems == [
+        "operation 1: not an object",
+        "operation 2: not an object",
+    ]
+
+
+# ----------------------------------------------------------- revert, export
+
+
+def test_revert_refused_when_an_old_identifier_was_taken_meanwhile(parts):
+    ontology, repo, proposals = parts
+    proposal = import_reflection_plan(plan_for(13, 14), proposals, repo)
+    applied = apply_all(proposals, proposal)
+    assert applied.status is ProposalStatus.DONE
+    param = next(o for o in applied.operations if o.seq == 13)
+    old_identifier = param.base["identifier"]
+    assert old_identifier == "parameter_references_schema"
+    ontology.create_property_definition(identifier=old_identifier, title="someone else")
+    after_apply = {
+        o.target_id: snap(repo.get_property_definition(o.target_id)) for o in applied.operations
+    }
+
+    with pytest.raises(ValueError, match="parameter_references_schema"):
+        proposals.revert(proposal.id)
+
+    assert {
+        o.target_id: snap(repo.get_property_definition(o.target_id)) for o in applied.operations
+    } == after_apply
+    assert proposals.get(proposal.id).status is ProposalStatus.DONE
+
+
+def test_decisions_export_in_drs_shape(parts):
+    ontology, repo, proposals = parts
+    proposal = import_reflection_plan(plan_for(1, 9, 13, 14, 28), proposals, repo)
+    ops = {o.seq: o for o in proposal.operations}
+    ontology.update_property_definition(ops[28].target_id, description="Edited meanwhile")
+    proposals.apply(proposal.id, [ops[1].id, ops[14].id, ops[28].id])
+    proposals.reject(proposal.id, [ops[13].id], note="Keep references")
+
+    decisions = decisions_for(proposals.get(proposal.id))
+
+    by_seq = {d["seq"]: d for d in decisions}
+    assert [d["seq"] for d in decisions] == [1, 9, 13, 14, 28]
+    assert all(
+        set(d) == {"seq", "op_id", "status", "reason", "result_entity_id"} for d in decisions
+    )
+    assert by_seq[1] == {
+        "seq": 1,
+        "op_id": ops[1].id,
+        "status": "applied",
+        "reason": None,
+        "result_entity_id": ops[1].target_id,
+    }
+    assert by_seq[13]["status"] == "rejected" and by_seq[13]["reason"] == "Keep references"
+    assert by_seq[14]["status"] == "applied"
+    assert by_seq[28]["status"] == "failed"
+    assert by_seq[28]["reason"].startswith("target_changed:")
+    assert by_seq[9]["status"] == "pending"
+    json.dumps(decisions)  # serializable as written
+
+    proposals.revert(proposal.id)
+    with pytest.raises(ValueError, match="reverted"):
+        decisions_for(proposals.get(proposal.id))
+
+
+# ------------------------------------------------- DR applies, CS re-imports
+
+
+def reimport_after(parts, tmp_path, old_id, new_id):
+    """Propose and apply the rename, then re-import the spec DR produced from it."""
+    ontology, repo, proposals = parts
+    proposal = import_reflection_plan(plan_with(rename(1, old_id, new_id)), proposals, repo)
+    applied = apply_all(proposals, proposal)
+    assert applied.operations[0].status is OperationStatus.APPLIED, applied.operations[0].reason
+    renamed = repo.get_property_definition(applied.operations[0].target_id)
+    before = {p.id: p.identifier for p in repo.list_property_definitions(limit=None)}
+
+    summary = import_dr_ontology(ontology, repo, spec_after(tmp_path, {old_id: new_id}))
+
+    after = {p.id: p.identifier for p in repo.list_property_definitions(limit=None)}
+    assert set(after) == set(before)  # nothing created, nothing lost
+    assert len(set(after.values())) == len(after)
+    assert summary.stale == []
+    assert summary.property_definitions_created == 0
+    assert after[renamed.id] == renamed.identifier  # the proposal chose what the loader computes
+    return before, after
+
+
+def test_reimport_after_a_rename_updates_in_place(parts, tmp_path):
+    before, after = reimport_after(
+        parts, tmp_path, DELIVERS, "api.operation.aggregates.api.response"
+    )
+    assert before == after
+
+
+def test_reimport_after_a_rename_into_a_collision_group(parts, tmp_path):
+    _, repo, _ = parts
+    twin = prop_by_dr_id(repo, "data-store.view.realizes.api.response")
+    assert twin.identifier == "view_realizes_response"
+
+    before, after = reimport_after(
+        parts, tmp_path, "ux.view.serves.business.businessrole", "ux.view.realizes.api.response"
+    )
+
+    # Both now share a stripped form, so the loader hashes both, the twin in place.
+    assert after[twin.id] != "view_realizes_response"
+    assert after[twin.id].startswith("view_realizes_response_")
+    changed = {i for i in after if after[i] != before[i]}
+    assert changed == {twin.id}
+
+
+def test_reimport_after_a_rename_out_of_a_collision_group(parts, tmp_path):
+    _, repo, _ = parts
+    old = "ux.view.serves.application.applicationservice"
+    twin = prop_by_dr_id(repo, "data-store.view.serves.application.applicationservice")
+    assert twin is not None and twin.identifier != "view_serves_applicationservice"
+
+    before, after = reimport_after(
+        parts, tmp_path, old, "ux.view.uses.application.applicationservice"
+    )
+
+    assert after[prop_by_dr_id(repo, "ux.view.uses.application.applicationservice").id] == (
+        "view_uses_applicationservice"
+    )
+    assert after[twin.id] == "view_serves_applicationservice"  # left alone, so un-hashed

@@ -31,9 +31,10 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Iterable, Iterator
+from uuid import uuid4
 
 from domain.interchange.bundle import stale_entities
-from domain.ontology.entities import Taxonomy
+from domain.ontology.entities import PropertyDefinition, Taxonomy
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import ExternalReference
@@ -221,32 +222,61 @@ def _hashed_relationship_identifier(record: RelationshipSchemaRecord) -> str:
     return f"{stripped[:_TRUNCATED_LENGTH]}_{digest}"
 
 
-def relationship_identifier(
-    record: RelationshipSchemaRecord, is_taken: Callable[[str], bool]
-) -> str:
+def dr_property_definitions(repo: OntologyRepository) -> dict[str, PropertyDefinition]:
+    """The workspace's property definitions by their DR relationship id (external reference)."""
+    return {
+        ref.identifier: prop
+        for prop in repo.list_property_definitions(limit=None)
+        for ref in prop.external_references
+        if ref.source == DR_SOURCE
+    }
+
+
+def assign_relationship_identifiers(
+    records: Iterable[RelationshipSchemaRecord],
+    repo: OntologyRepository,
+    owners: dict[str, str | None],
+) -> dict[str, str]:
     """
-    The compressed identifier for one new or renamed relationship schema: the
-    layer-stripped form, or the hashed fallback when that is too long or
-    `is_taken` says another entity already has it.
+    The identifier each relationship schema of a spec gets, as the loader assigns it.
+
+    Like `compress_relationship_identifiers`, plus: a form held by an entity
+    outside this spec's own property definitions (a non-DR or stale property
+    definition, a taxonomy, scheme or class) falls back to the hashed form.
+    The reflection-plan importer calls this on the spec a plan would produce,
+    so the identifiers it proposes are the ones a re-import computes.
+
+    Args:
+        records: Every relationship schema of the spec
+        repo: The workspace
+        owners: Each record's full id -> the property definition that holds it
+            (None for a schema with none yet)
     """
-    stripped = _stripped_relationship_identifier(record)
-    if len(stripped) <= _IDENTIFIER_MAX_LENGTH and not is_taken(stripped):
-        return stripped
-    return _hashed_relationship_identifier(record)
+    own = {prop_id for prop_id in owners.values() if prop_id}
+
+    def taken(identifier: str) -> bool:
+        holder = repo.get_property_definition_by_identifier(identifier)
+        if holder is not None:
+            return holder.id not in own
+        return repo.get_by_identifier(identifier) is not None
+
+    return compress_relationship_identifiers(records, taken)
 
 
 def compress_relationship_identifiers(
     records: Iterable[RelationshipSchemaRecord],
+    is_taken: Callable[[str], bool] = lambda identifier: False,
 ) -> dict[str, str]:
     """
     Map each relationship record's full long-form id to a compressed identifier
     that is <=64 chars and globally unique across all records.
 
-    Two independent reasons a compressed id needs the hash-suffix fallback:
-    - the layer-stripped form alone exceeds 64 chars, or
+    Three independent reasons a compressed id needs the hash-suffix fallback:
+    - the layer-stripped form alone exceeds 64 chars,
     - two distinct relationships (different source/destination layers) strip
       down to the identical short form (e.g. 'ux.view' and 'data-store.view'
-      both stripping to 'view').
+      both stripping to 'view'), or
+    - `is_taken` says something outside these records already holds the form.
 
     Raises:
         ValueError: If compression cannot produce a fully unique, <=64-char
@@ -273,6 +303,15 @@ def compress_relationship_identifiers(
         if len(full_ids) > 1:
             for full_id in full_ids:
                 compressed[full_id] = _hashed_relationship_identifier(by_full_id[full_id])
+
+    for full_id, compressed_id in compressed.items():
+        if is_taken(compressed_id):
+            compressed[full_id] = _hashed_relationship_identifier(by_full_id[full_id])
+            if is_taken(compressed[full_id]):
+                raise ValueError(
+                    f"Relationship '{full_id}': identifiers '{compressed_id}' and "
+                    f"'{compressed[full_id]}' are both held by other entities"
+                )
 
     final_ids = list(compressed.values())
     if len(final_ids) != len(set(final_ids)):
@@ -414,6 +453,30 @@ def _upsert_classes(
     return class_id_by_spec_node_id
 
 
+def _existing_property_definitions(
+    repo: OntologyRepository, records: list[RelationshipSchemaRecord]
+) -> dict[str, PropertyDefinition]:
+    """
+    The property definition each relationship schema already has: the one whose
+    DR reference names it (it follows renames applied in Context Studio), else
+    one without any DR reference that holds its plain compressed identifier.
+    """
+    by_reference = dr_property_definitions(repo)
+    plain = compress_relationship_identifiers(records)
+    found: dict[str, PropertyDefinition] = {}
+    for record in records:
+        prop = by_reference.get(record.full_identifier)
+        if prop is None:
+            holder = repo.get_property_definition_by_identifier(plain[record.full_identifier])
+            if holder is not None and not any(
+                ref.source == DR_SOURCE for ref in holder.external_references
+            ):
+                prop = holder
+        if prop is not None:
+            found[record.full_identifier] = prop
+    return found
+
+
 def _upsert_property_definitions(
     service: OntologyService,
     repo: OntologyRepository,
@@ -423,10 +486,24 @@ def _upsert_property_definitions(
 ) -> set[str]:
     property_ids: set[str] = set()
     records = list(iter_relationship_schemas(spec_dir))
-    compressed_by_full_id = compress_relationship_identifiers(records)
+    existing_by_full_id = _existing_property_definitions(repo, records)
+    identifier_by_full_id = assign_relationship_identifiers(
+        records,
+        repo,
+        {full_id: prop.id for full_id, prop in existing_by_full_id.items()},
+    )
+    # Identifiers move in two steps, so properties trading identifiers in one
+    # load (a rename into or out of a hash-collision group) never collide.
+    moving = [
+        (prop, identifier_by_full_id[full_id])
+        for full_id, prop in existing_by_full_id.items()
+        if prop.identifier != identifier_by_full_id[full_id]
+    ]
+    for prop, _ in moving:
+        service.update_property_definition(prop.id, identifier=f"tmp_{uuid4().hex}")
 
     for record in records:
-        identifier = compressed_by_full_id[record.full_identifier]
+        identifier = identifier_by_full_id[record.full_identifier]
         title = f"{record.source_spec_node_id} {record.predicate} {record.destination_spec_node_id}"
 
         domain_class_id = class_id_by_spec_node_id.get(record.source_spec_node_id)
@@ -442,7 +519,7 @@ def _upsert_property_definitions(
                 f"'{record.destination_spec_node_id}', which has no matching node schema"
             )
 
-        existing = repo.get_property_definition_by_identifier(identifier)
+        existing = existing_by_full_id.get(record.full_identifier)
         if existing is None:
             # New entity: safe to set the external reference directly at creation time,
             # there is nothing pre-existing that a wholesale write could discard.
@@ -464,6 +541,7 @@ def _upsert_property_definitions(
             # would silently discard any non-DR reference some other source had attached.
             prop = service.update_property_definition(
                 existing.id,
+                identifier=identifier,
                 title=title,
                 description=record.description,
                 canonical_predicate=record.predicate,
