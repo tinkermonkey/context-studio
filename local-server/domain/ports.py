@@ -8,6 +8,7 @@ and other cross-cutting concerns. Using typing.Protocol enables structural subty
 
 from __future__ import annotations
 
+from contextlib import AbstractContextManager
 from typing import Callable, Protocol, TypeVar
 
 from .events import DomainEvent
@@ -89,5 +90,20 @@ class EventPublisher(Protocol):
         Args:
             event_type: The DomainEvent subclass to subscribe to
             handler: Callable that will handle the event
+        """
+        ...
+
+
+class TransactionScope(Protocol):
+    """
+    Port for running several repository writes as one unit: all of them are
+    kept, or none.
+    """
+
+    def atomic(self) -> AbstractContextManager[None]:
+        """
+        A context in which repository writes join one transaction, committed
+        when the block ends and rolled back if it raises. A nested call joins
+        the outer one.
         """
         ...

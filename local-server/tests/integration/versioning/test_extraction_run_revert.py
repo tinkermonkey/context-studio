@@ -27,6 +27,7 @@ from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionReposito
 from adapters.persistence.sqlite.extraction_run_repo import SQLiteExtractionRunRepository
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from adapters.persistence.sqlite.transaction import SharedSessionFactory, SqliteTransactionScope
 from domain.extraction.events import ExtractionCompleted
 from domain.extraction.services import ExtractionService
 from domain.ontology.entities import Class, ConceptScheme, Taxonomy
@@ -42,12 +43,14 @@ from tests.fakes.fake_reference_source import FakeReferenceSource
 TAXONOMY_ID = "tx-extract"
 
 
-@pytest.fixture()
-def session_factory():
+@pytest.fixture(params=["plain", "atomic"])
+def session_factory(request):
+    """Plain sessions, or the shared factory app.py uses so the revert runs in one transaction."""
     with tempfile.TemporaryDirectory() as tmpdir:
         engine = create_engine(f"sqlite:///{Path(tmpdir) / 'local.db'}")
         Base.metadata.create_all(engine)
-        yield sessionmaker(bind=engine)
+        factory = sessionmaker(bind=engine)
+        yield SharedSessionFactory(factory) if request.param == "atomic" else factory
         engine.dispose()
 
 
@@ -97,7 +100,9 @@ def extraction_service(session_factory, ontology_repo, change_repo, extraction_r
     )
 
 
-def test_revert_extraction_run(extraction_service, change_repo, ontology_repo, extraction_run_repo):
+def test_revert_extraction_run(
+    extraction_service, change_repo, ontology_repo, extraction_run_repo, session_factory
+):
     """Reverting a completed extraction run succeeds and changes nothing."""
     extraction_service.extract_triples(
         text="Ada Lovelace wrote the first program.",
@@ -112,7 +117,14 @@ def test_revert_extraction_run(extraction_service, change_repo, ontology_repo, e
     assert events[0].operation == ChangeOperation.CREATE
 
     publisher = FakeEventPublisher()
-    revert_service = RevertService(change_repo, ontology_repo, event_publisher=publisher)
+    scope = (
+        SqliteTransactionScope(session_factory)
+        if isinstance(session_factory, SharedSessionFactory)
+        else None
+    )
+    revert_service = RevertService(
+        change_repo, ontology_repo, event_publisher=publisher, transaction_scope=scope
+    )
     result = revert_service.revert_with_summary(run_id)
 
     assert result.events_reverted == 0

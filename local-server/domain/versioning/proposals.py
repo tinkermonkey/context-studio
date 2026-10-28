@@ -227,8 +227,11 @@ class ProposedOperation:
 
     @property
     def decided(self) -> bool:
-        """Whether a decision has been made (anything but pending)."""
-        return self.status is not OperationStatus.PENDING
+        """
+        Whether the operation is settled: applied or rejected. A failed one is
+        not; it can be applied again (e.g. forced past a stale target) or rejected.
+        """
+        return self.status in (OperationStatus.APPLIED, OperationStatus.REJECTED)
 
 
 @dataclass
@@ -271,11 +274,14 @@ class ChangeProposal:
 
     @property
     def pending(self) -> list[ProposedOperation]:
-        """Operations still awaiting a decision."""
+        """Operations still awaiting a decision: pending or failed."""
         return [o for o in self.operations if not o.decided]
 
     def settle_status(self) -> ProposalStatus:
-        """Mark the proposal done once no operation is pending (a reverted one stays reverted)."""
+        """
+        Mark the proposal done once every operation is applied or rejected (a
+        failed one keeps it open; a reverted proposal stays reverted).
+        """
         if self.status is ProposalStatus.OPEN and not self.pending:
             self.status = ProposalStatus.DONE
         return self.status

@@ -1,5 +1,8 @@
 """Exceptions for versioning domain."""
 
+from dataclasses import dataclass
+from typing import Optional
+
 
 class VersioningError(Exception):
     """Base exception for versioning domain errors."""
@@ -69,3 +72,49 @@ class RevertConflictError(VersioningError):
             f"Cannot revert run {run_id}: entities outside this run depend on entities it "
             f"created ({summary}). Nothing was changed. Examples: {examples}{more}"
         )
+
+
+class ChangeProposalNotFoundError(VersioningError):
+    """Raised when a change proposal does not exist."""
+
+    def __init__(self, proposal_id: str):
+        self.proposal_id = proposal_id
+        super().__init__(f"Change proposal {proposal_id} not found")
+
+
+class ChangeProposalStateError(VersioningError):
+    """Raised when a change proposal or its operations can't take the requested decision."""
+
+    pass
+
+
+@dataclass(frozen=True)
+class OperationError:
+    """
+    Why one proposed operation is invalid.
+
+    Attributes:
+        seq: The operation's seq, or None for a problem with the proposal as a whole
+        code: A stable machine-readable code (e.g. target_not_found, unknown_ref)
+        message: What is wrong, for a person or an agent to fix
+    """
+
+    seq: Optional[int]
+    code: str
+    message: str
+
+
+class ProposalValidationError(VersioningError):
+    """Raised when a change proposal is invalid; nothing is stored.
+
+    Attributes:
+        errors: Every problem found, per operation
+    """
+
+    def __init__(self, errors: list[OperationError]):
+        self.errors = errors
+        detail = "; ".join(
+            f"{'seq ' + str(e.seq) if e.seq is not None else 'proposal'}: {e.code}: {e.message}"
+            for e in errors
+        )
+        super().__init__(f"Invalid change proposal ({len(errors)} errors): {detail}")

@@ -26,6 +26,7 @@ sys.path.append(
 )
 
 from adapters.persistence.sqlite.connection import (
+    BUSY_TIMEOUT_MS,
     _is_memory_url,
     create_local_db_engine,
     create_session_factory,
@@ -89,7 +90,7 @@ def test_file_engine_enables_wal_and_busy_timeout():
                 journal_mode = conn.exec_driver_sql("PRAGMA journal_mode").scalar()
                 busy_timeout = conn.exec_driver_sql("PRAGMA busy_timeout").scalar()
             assert journal_mode.lower() == "wal"
-            assert busy_timeout == 5000
+            assert busy_timeout == BUSY_TIMEOUT_MS == 30000
         finally:
             engine.dispose()
 

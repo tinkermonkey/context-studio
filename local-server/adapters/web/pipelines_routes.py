@@ -1940,7 +1940,7 @@ async def preview_recognition(
     response_model=RevertRunResponse,
     status_code=http_status.HTTP_200_OK,
 )
-async def revert_pipeline_run(
+def revert_pipeline_run(
     run_id: str,
     request: Request,
 ) -> RevertRunResponse:

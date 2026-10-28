@@ -83,6 +83,12 @@ def entity_snapshot(entity: Any) -> dict[str, Any]:
     }
 
 
+def decode_field(name: str, value: Any) -> Any:
+    """Decode one snapshot-encoded field value (e.g. reference dicts) back to its domain type."""
+    decoder = _DECODERS.get(name)
+    return decoder(value) if decoder is not None and value is not None else value
+
+
 def entity_field_names(entity_type: str) -> frozenset[str]:
     """
     The field names of an entity type ("class", "concept_scheme", ...).
