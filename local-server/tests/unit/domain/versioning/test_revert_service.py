@@ -754,10 +754,49 @@ def test_revert_scheme_move_invalidates_graph_for_both_taxonomies(ontology_repo,
     assert sorted(e.taxonomy_id for e in invalidated) == ["tx-1", "tx-2"]
 
 
-def test_revert_without_a_move_leaves_the_graph_alone(ontology_repo, change_repo):
-    """Reverting a scheme text edit does not invalidate the graph."""
+def _publishing_revert_svc(change_repo, ontology_repo):
     publisher = FakeEventPublisher()
-    revert_svc = RevertService(change_repo, ontology_repo, event_publisher=publisher)
+    return RevertService(change_repo, ontology_repo, event_publisher=publisher), publisher
+
+
+def _invalidated_taxonomies(publisher):
+    return sorted(e.taxonomy_id for e in publisher.get_events_of_type(GraphInvalidated))
+
+
+def test_revert_class_reparent_invalidates_graph(ontology_repo, change_repo):
+    """Undoing a class re-parent rebuilds the graph."""
+    revert_svc, publisher = _publishing_revert_svc(change_repo, ontology_repo)
+    for cls_id in ("cls-a", "cls-b"):
+        ontology_repo.save_class(
+            Class(id=cls_id, concept_scheme_id="scheme-1", taxonomy_id="tx-1", title=cls_id)
+        )
+    ontology_repo.save_class(
+        Class(
+            id="cls-child",
+            concept_scheme_id="scheme-1",
+            taxonomy_id="tx-1",
+            title="Child",
+            parent_class_id="cls-b",
+        )
+    )
+    change_repo.record_change(
+        entity_id="cls-child",
+        entity_type="class",
+        operation=ChangeOperation.UPDATE,
+        previous_state={"parent_class_id": "cls-a"},
+        new_state={"parent_class_id": "cls-b"},
+        batch_run_id="run-reparent",
+    )
+
+    revert_svc.revert("run-reparent")
+
+    assert ontology_repo.get_class("cls-child").parent_class_id == "cls-a"
+    assert _invalidated_taxonomies(publisher) == ["tx-1"]
+
+
+def test_revert_text_edit_invalidates_graph(ontology_repo, change_repo):
+    """Any revert that changes the ontology rebuilds the graph, text edits included."""
+    revert_svc, publisher = _publishing_revert_svc(change_repo, ontology_repo)
     change_repo.record_change(
         entity_id="scheme-1",
         entity_type="concept_scheme",
@@ -770,7 +809,172 @@ def test_revert_without_a_move_leaves_the_graph_alone(ontology_repo, change_repo
     revert_svc.revert("run-edit")
 
     assert ontology_repo.get_concept_scheme("scheme-1").description == "Old"
+    assert _invalidated_taxonomies(publisher) == ["tx-1"]
+
+
+def test_revert_individual_create_invalidates_every_taxonomy(ontology_repo, change_repo):
+    """Every taxonomy is invalidated, not only the one the reverted individual was in."""
+    revert_svc, publisher = _publishing_revert_svc(change_repo, ontology_repo)
+    ontology_repo.save_taxonomy(Taxonomy(id="tx-2", identifier="other_tax", title="Other"))
+    ontology_repo.save_class(
+        Class(id="cls-1", concept_scheme_id="scheme-1", taxonomy_id="tx-1", title="Animal")
+    )
+    ontology_repo.save_individual(Individual(id="ind-1", class_ids=["cls-1"], title="Rex"))
+    change_repo.record_change(
+        entity_id="ind-1",
+        entity_type="individual",
+        operation=ChangeOperation.CREATE,
+        new_state={"title": "Rex", "class_ids": ["cls-1"]},
+        batch_run_id="run-ind",
+    )
+
+    revert_svc.revert("run-ind")
+
+    assert ontology_repo.get_individual("ind-1") is None
+    assert _invalidated_taxonomies(publisher) == ["tx-1", "tx-2"]
+
+
+def test_revert_taxonomy_create_invalidates_the_deleted_taxonomy(ontology_repo, change_repo):
+    """A taxonomy the revert deletes is still invalidated."""
+    revert_svc, publisher = _publishing_revert_svc(change_repo, ontology_repo)
+    ontology_repo.save_taxonomy(Taxonomy(id="tx-new", identifier="new_tax", title="New"))
+    change_repo.record_change(
+        entity_id="tx-new",
+        entity_type="taxonomy",
+        operation=ChangeOperation.CREATE,
+        new_state={"title": "New"},
+        batch_run_id="run-tax",
+    )
+
+    revert_svc.revert("run-tax")
+
+    assert ontology_repo.get_taxonomy("tx-new") is None
+    assert _invalidated_taxonomies(publisher) == ["tx-1", "tx-new"]
+
+
+def test_revert_that_fails_partway_still_invalidates_graph(ontology_repo, change_repo):
+    """Inverses applied before a failure are committed, so the graph is still invalidated."""
+    revert_svc, publisher = _publishing_revert_svc(change_repo, ontology_repo)
+    for cls_id in ("cls-first", "cls-second"):
+        ontology_repo.save_class(
+            Class(id=cls_id, concept_scheme_id="scheme-1", taxonomy_id="tx-1", title=cls_id)
+        )
+        change_repo.record_change(
+            entity_id=cls_id,
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"title": cls_id},
+            batch_run_id="run-fail",
+        )
+    delete_class = ontology_repo.delete_class
+
+    def failing_delete(class_id):
+        if class_id == "cls-first":
+            raise RuntimeError("database is locked")
+        return delete_class(class_id)
+
+    ontology_repo.delete_class = failing_delete
+
+    with pytest.raises(RuntimeError):
+        revert_svc.revert("run-fail")
+
+    # Newest first: cls-second was deleted before cls-first failed.
+    assert ontology_repo.get_class("cls-second") is None
+    assert _invalidated_taxonomies(publisher) == ["tx-1"]
+
+
+def test_revert_that_changes_nothing_leaves_the_graph_alone(ontology_repo, change_repo):
+    """A revert whose entities are already gone does not invalidate the graph."""
+    revert_svc, publisher = _publishing_revert_svc(change_repo, ontology_repo)
+    change_repo.record_change(
+        entity_id="cls-gone",
+        entity_type="class",
+        operation=ChangeOperation.CREATE,
+        new_state={"title": "Gone"},
+        batch_run_id="run-gone",
+    )
+
+    assert revert_svc.revert("run-gone") == 0
     assert publisher.get_events_of_type(GraphInvalidated) == []
+
+
+# ============================================================================
+# Extraction runs
+# ============================================================================
+
+
+def _record_extraction_completed(change_repo, run_id):
+    """The event ChangeEventRecorder writes when an extraction run completes."""
+    change_repo.record_change(
+        entity_id=run_id,
+        entity_type="extraction_result",
+        operation=ChangeOperation.CREATE,
+        new_state={"result_id": run_id, "entity_count": 13, "duration_ms": 21066},
+        change_reason="Extraction processing completed",
+        batch_run_id=run_id,
+    )
+
+
+def test_revert_extraction_run_skips_its_extraction_result(ontology_repo, change_repo):
+    """An extraction run reverts cleanly: its record-only event is left alone."""
+    revert_svc, publisher = _publishing_revert_svc(change_repo, ontology_repo)
+    _record_extraction_completed(change_repo, "run-extract")
+
+    result = revert_svc.revert_with_summary("run-extract")
+
+    assert result.events_reverted == 0
+    events = change_repo.get_changes(batch_run_id="run-extract", limit=None).events
+    assert [e.entity_type for e in events] == ["extraction_result"]
+    assert publisher.get_events_of_type(GraphInvalidated) == []
+    # Reverting again is still fine.
+    assert revert_svc.revert("run-extract") == 0
+
+
+def test_revert_run_with_extraction_result_undoes_its_ontology_changes(
+    ontology_repo, change_repo, revert_svc
+):
+    """Ontology events in the same run as an extraction_result are still undone."""
+    ontology_repo.save_class(
+        Class(id="cls-x", concept_scheme_id="scheme-1", taxonomy_id="tx-1", title="X")
+    )
+    change_repo.record_change(
+        entity_id="cls-x",
+        entity_type="class",
+        operation=ChangeOperation.CREATE,
+        new_state={"title": "X"},
+        batch_run_id="run-mixed",
+    )
+    _record_extraction_completed(change_repo, "run-mixed")
+
+    assert revert_svc.revert("run-mixed") == 1
+    assert ontology_repo.get_class("cls-x") is None
+
+
+def test_revert_refuses_unknown_entity_type_before_changing_anything(
+    ontology_repo, change_repo, revert_svc
+):
+    """A CREATE of an unknown type is caught by the pre-check, not halfway through."""
+    ontology_repo.save_class(
+        Class(id="cls-y", concept_scheme_id="scheme-1", taxonomy_id="tx-1", title="Y")
+    )
+    change_repo.record_change(
+        entity_id="cls-y",
+        entity_type="class",
+        operation=ChangeOperation.CREATE,
+        new_state={"title": "Y"},
+        batch_run_id="run-odd",
+    )
+    change_repo.record_change(
+        entity_id="thing-1",
+        entity_type="mystery_thing",
+        operation=ChangeOperation.CREATE,
+        new_state={},
+        batch_run_id="run-odd",
+    )
+
+    with pytest.raises(ValueError, match="unknown entity type"):
+        revert_svc.revert("run-odd")
+    assert ontology_repo.get_class("cls-y") is not None
 
 
 def test_inverse_delete_class(ontology_repo, change_repo, revert_svc):
