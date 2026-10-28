@@ -510,6 +510,27 @@ def test_authored_taxonomy_round_trip_writes_nothing(service, repo, session_fact
     assert repo.get_individual(tomato.id).external_references == []
 
 
+def test_retitling_tied_attributes_settles_in_one_load(service, repo, authored):
+    """Sun and Soil both sit at sort_order 0; renaming Sun would flip the tie-break."""
+    taxonomy_id = authored["taxonomy"].id
+    bundle = BundleExporter(repo).export(taxonomy_id)
+    [bed] = [c for c in bundle["classes"] if c["identifier"] == "garden_bed"]
+    assert [a["identifier"] for a in bed["attributes"]] == ["garden_soil", "garden_sun"]
+    bed["attributes"][1]["title"] = "Aspect"
+
+    first = load_bundle(service, repo, bundle)
+    second = load_bundle(service, repo, bundle)
+
+    assert first.kind("attribute").updated >= 1
+    assert second.changed == 0
+    [bed] = [
+        c
+        for c in BundleExporter(repo).export(taxonomy_id)["classes"]
+        if c["identifier"] == "garden_bed"
+    ]
+    assert [a["identifier"] for a in bed["attributes"]] == ["garden_soil", "garden_sun"]
+
+
 def test_authored_bundle_reproduces_in_another_workspace(repo, authored):
     exported = BundleExporter(repo).export(authored["taxonomy"].id)
     engine = create_engine("sqlite:///:memory:")

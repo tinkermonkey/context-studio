@@ -308,12 +308,8 @@ class _Loader:
                 self._stale.append(
                     f"AttributeDefinition {attribute.title!r} ({identifier}) on {cls.title!r}"
                 )
-        # Attributes authored in Context Studio may all have sort_order 0. If the
-        # bundle lists them in the order they already sort in, keep their sort_order.
-        keep_order = [a.identifier for a in _attribute_order(current.values())] == (
-            wanted_identifiers
-        )
-        for position, spec in enumerate(specs):
+        sort_orders = _sort_orders(current, specs)
+        for spec in specs:
             existing = current.get(spec["identifier"])
             # "" and [] (not None) so that dropping a description or an enum clears it:
             # the service reads None as "leave unchanged".
@@ -323,7 +319,7 @@ class _Loader:
                 "datatype": spec["datatype"],
                 "is_required": bool(spec.get("required", False)),
                 "allowed_values": spec.get("allowed_values") or [],
-                "sort_order": existing.sort_order if keep_order and existing else position,
+                "sort_order": sort_orders[spec["identifier"]],
             }
             if existing is None:
                 self._service.create_attribute_definition(
@@ -851,6 +847,27 @@ def _taxonomy_classes(repo: OntologyRepository, taxonomy_id: str) -> list[Class]
 
 def _attribute_order(attributes: Iterable[AttributeDefinition]) -> list[AttributeDefinition]:
     return sorted(attributes, key=lambda a: (a.sort_order, a.title))
+
+
+def _sort_orders(
+    current: dict[str, AttributeDefinition], specs: list[dict[str, Any]]
+) -> dict[str, int]:
+    """
+    The sort_order each bundle attribute should have: its position in the bundle.
+
+    Attributes authored in Context Studio may all sit at sort_order 0, ordered by
+    title. When the bundle lists them in the order they already sort in, their
+    sort_order is kept, unless they tie and a title changes: the tie would then
+    break differently on the next load, so positions (all distinct) are written.
+    """
+    positions = {spec["identifier"]: position for position, spec in enumerate(specs)}
+    if [a.identifier for a in _attribute_order(current.values())] != list(positions):
+        return positions
+    tied = len({a.sort_order for a in current.values()}) < len(current)
+    retitled = any(current[spec["identifier"]].title != spec["title"] for spec in specs)
+    if tied and retitled:
+        return positions
+    return {identifier: attribute.sort_order for identifier, attribute in current.items()}
 
 
 def stale_entities(entities: Iterable[Any], source: str, loaded_ids: set[str]) -> list[str]:
