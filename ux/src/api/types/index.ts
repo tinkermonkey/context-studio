@@ -4134,6 +4134,34 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/taxonomies/{taxonomy_id}/approval-policy": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Approval Policy
+     * @description The taxonomy's approval policy; empty (nothing auto-applies) if none is set.
+     */
+    get: operations["get_approval_policy_api_taxonomies__taxonomy_id__approval_policy_get"];
+    /**
+     * Set Approval Policy
+     * @description Replace the taxonomy's approval policy.
+     *
+     *     Operations proposed afterwards that match a rule (every key the rule sets)
+     *     and reach min_probability apply as soon as they are proposed, under the
+     *     proposal's run. Breaking operations and deletes never auto-apply.
+     */
+    put: operations["set_approval_policy_api_taxonomies__taxonomy_id__approval_policy_put"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4352,6 +4380,35 @@ export interface components {
       merged_mentions?: components["schemas"]["MergedMentionSchema"][];
     };
     /**
+     * ApprovalPolicyRequest
+     * @description A taxonomy's approval policy; replaces the current one.
+     */
+    ApprovalPolicyRequest: {
+      /**
+       * Auto Apply
+       * @description An operation matching any rule may auto-apply; breaking operations and deletes never do
+       */
+      auto_apply?: components["schemas"]["AutoApplyRuleSchema"][];
+      /**
+       * Min Probability
+       * @description An operation also needs at least this probability
+       * @default 0
+       */
+      min_probability: number;
+    };
+    /**
+     * ApprovalPolicyResponse
+     * @description A taxonomy's approval policy; empty (nothing auto-applies) until one is set.
+     */
+    ApprovalPolicyResponse: {
+      /** Taxonomy Id */
+      taxonomy_id: string;
+      /** Auto Apply */
+      auto_apply: components["schemas"]["AutoApplyRuleSchema"][];
+      /** Min Probability */
+      min_probability: number;
+    };
+    /**
      * AttributeDefinitionCreateRequest
      * @description Request to create a new attribute definition.
      */
@@ -4530,6 +4587,23 @@ export interface components {
        * @description Update display order
        */
       sort_order?: number | null;
+    };
+    /**
+     * AutoApplyRuleSchema
+     * @description Operations matching every key set here may apply as soon as they are proposed.
+     */
+    AutoApplyRuleSchema: {
+      /** @description Only this operation type */
+      op?: components["schemas"]["OperationType"] | null;
+      /** @description Only this kind of entity */
+      kind?: components["schemas"]["OperationKind"] | null;
+      /**
+       * Class
+       * @description Only entities typed by this class (id or identifier): an individual's classes, an attribute's class, or the class itself
+       */
+      class?: string | null;
+      /** @description Only this scope */
+      scope?: components["schemas"]["ChangeScope"] | null;
     };
     /**
      * AutoResolveConflictsRequest
@@ -14389,6 +14463,86 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["ChangeProposalRevertConflictResponse"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_approval_policy_api_taxonomies__taxonomy_id__approval_policy_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApprovalPolicyResponse"];
+        };
+      };
+      /** @description Taxonomy not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  set_approval_policy_api_taxonomies__taxonomy_id__approval_policy_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ApprovalPolicyRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ApprovalPolicyResponse"];
+        };
+      };
+      /** @description Taxonomy not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {

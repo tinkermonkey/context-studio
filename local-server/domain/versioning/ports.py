@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional, Protocol, Sequence
 
+from domain.versioning.approval_policy import ApprovalPolicy
 from domain.versioning.entities import ChangeEvent, Changeset, EntityVersion, Proposal
 from domain.versioning.proposals import (
     ChangeProposal,
@@ -314,4 +315,16 @@ class ChangeProposalRepository(Protocol):
 
     def set_status(self, proposal_id: str, status: ProposalStatus) -> None:
         """Persist the proposal's status."""
+        ...
+
+
+class ApprovalPolicyRepository(Protocol):
+    """Port for each taxonomy's approval policy (at most one per taxonomy)."""
+
+    def get(self, taxonomy_id: str) -> Optional[ApprovalPolicy]:
+        """Return the taxonomy's policy, or None if none is set."""
+        ...
+
+    def save(self, policy: ApprovalPolicy) -> ApprovalPolicy:
+        """Create or replace the policy of policy.taxonomy_id."""
         ...

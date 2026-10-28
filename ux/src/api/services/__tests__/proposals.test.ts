@@ -155,4 +155,32 @@ describe("ProposalsService", () => {
     expect(bodies.reject).toEqual({ note: "no" });
     expect(revert.proposal.status).toBe("reverted");
   });
+
+  it("reads and replaces a taxonomy's approval policy", async () => {
+    const policy = {
+      taxonomy_id: "tax-1",
+      auto_apply: [{ op: "create" as const, kind: "individual" as const, class: "house_activity" }],
+      min_probability: 0.5,
+    };
+    let body: unknown;
+    server.use(
+      http.get("*/api/taxonomies/tax-1/approval-policy", () =>
+        HttpResponse.json({ taxonomy_id: "tax-1", auto_apply: [], min_probability: 0 }),
+      ),
+      http.put("*/api/taxonomies/tax-1/approval-policy", async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json(policy);
+      }),
+    );
+
+    const empty = await proposalsService.getApprovalPolicy("tax-1");
+    const saved = await proposalsService.setApprovalPolicy("tax-1", {
+      auto_apply: policy.auto_apply,
+      min_probability: 0.5,
+    });
+
+    expect(empty.auto_apply).toEqual([]);
+    expect(body).toEqual({ auto_apply: policy.auto_apply, min_probability: 0.5 });
+    expect(saved).toEqual(policy);
+  });
 });

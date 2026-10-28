@@ -72,6 +72,7 @@ export const QUERY_KEYS = {
   changeProposalsRoot: ["change-proposals"] as const,
   changeProposals: (params?: object) => ["change-proposals", "list", params] as const,
   changeProposal: (id: string) => ["change-proposals", id] as const,
+  approvalPolicy: (taxonomyId: string) => ["approval-policy", taxonomyId] as const,
   // Reference
   referenceSearch: (q?: string) => ["reference-search", q] as const,
   referenceStatus: ["reference-status"] as const,

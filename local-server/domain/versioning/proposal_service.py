@@ -26,6 +26,7 @@ from uuid import uuid4
 from domain.interchange.services import get_current_batch_run_id, set_batch_run_context
 from domain.ontology.exceptions import OntologyError
 from domain.ontology.snapshots import decode_field, entity_snapshot
+from domain.versioning.approval_policy import auto_apply_ids
 from domain.versioning.exceptions import (
     ChangeProposalNotFoundError,
     ChangeProposalStateError,
@@ -47,7 +48,7 @@ from domain.versioning.proposals import (
 if TYPE_CHECKING:
     from domain.ontology.ports import OntologyRepository
     from domain.ontology.services import OntologyService
-    from domain.versioning.ports import ChangeProposalRepository
+    from domain.versioning.ports import ApprovalPolicyRepository, ChangeProposalRepository
     from domain.versioning.revert_service import RevertResult, RevertService
 
 _logger = logging.getLogger(__name__)
@@ -278,6 +279,7 @@ class ProposalService:
         ontology_service: OntologyService,
         ontology_repo: OntologyRepository,
         revert_service: RevertService,
+        approval_policies: ApprovalPolicyRepository | None = None,
     ) -> None:
         """
         Args:
@@ -285,11 +287,14 @@ class ProposalService:
             ontology_service: The write path for every change an operation makes
             ontology_repo: Reads targets for validation, base capture and staleness
             revert_service: Undoes everything applied under a proposal's run id
+            approval_policies: Taxonomies' approval policies; without them
+                nothing auto-applies
         """
         self._proposals = proposals
         self._ontology = ontology_service
         self._repo = ontology_repo
         self._revert = revert_service
+        self._policies = approval_policies
         # One lock per proposal: a desktop app runs one process, so two requests
         # deciding on the same proposal are serialized here.
         self._locks: dict[str, threading.Lock] = {}
@@ -317,8 +322,11 @@ class ProposalService:
         `base` captured from the target's current values (its whole snapshot
         for a delete).
 
+        Operations the taxonomy's approval policy allows are then applied at
+        once, under the proposal's run (see `domain.versioning.approval_policy`).
+
         Returns:
-            The stored proposal
+            The stored proposal, with any auto-applied outcomes
 
         Raises:
             ProposalValidationError: With every problem found; nothing is stored
@@ -369,7 +377,10 @@ class ProposalService:
             errors.append(OperationError(None, "invalid", str(exc)))
         if errors:
             raise ProposalValidationError(errors)
-        return self._proposals.create(proposal)
+        stored = self._proposals.create(proposal)
+        policy = self._policies.get(taxonomy_id) if self._policies is not None else None
+        auto = auto_apply_ids(policy, stored.operations, self._class_keys)
+        return self.apply(stored.id, auto) if auto else stored
 
     def _validated(
         self, draft: OperationDraft, refs: dict[str, OperationKind]
@@ -425,6 +436,32 @@ class ProposalService:
             operation.base = {name: snapshot.get(name) for name in operation.fields}
         operation.scope = classify_scope(op, operation.fields, operation.base, claimed)
         return operation
+
+    def _class_keys(self, operation: ProposedOperation) -> set[str]:
+        """
+        Ids and identifiers of the classes an operation's entity is typed by: an
+        individual's classes, an attribute's class, or a class itself. An
+        existing entity counts as it is now; a create, as its fields say.
+        """
+        target, fields = operation.target_id, operation.fields
+        class_ids: list[Any] = []
+        if operation.kind is K.INDIVIDUAL:
+            current = self._repo.get_individual(target) if target else None
+            class_ids = list(current.class_ids if current else fields.get("class_ids") or [])
+        elif operation.kind is K.ATTRIBUTE:
+            current = self._repo.get_attribute_definition(target) if target else None
+            class_ids = [current.class_id if current else fields.get("class_id")]
+        elif operation.kind is K.CLASS and target:
+            class_ids = [target]
+        keys: set[str] = set()
+        for class_id in class_ids:
+            if not isinstance(class_id, str) or _is_ref(class_id):
+                continue
+            keys.add(class_id)
+            cls = self._repo.get_class(class_id)
+            if cls is not None and cls.identifier:
+                keys.add(cls.identifier)
+        return keys
 
     @staticmethod
     def _check_field_names(operation: ProposedOperation) -> None:

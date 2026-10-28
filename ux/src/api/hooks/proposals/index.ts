@@ -5,3 +5,4 @@ export {
   useRejectChangeProposal,
   useRevertChangeProposal,
 } from "./useProposalMutations";
+export { useApprovalPolicy, useSetApprovalPolicy } from "./useApprovalPolicy";

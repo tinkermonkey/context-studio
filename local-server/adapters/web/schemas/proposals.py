@@ -10,6 +10,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from domain.versioning.approval_policy import ApprovalPolicy
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
@@ -213,3 +214,58 @@ class ChangeProposalRevertResponse(BaseModel):
     concept_schemes_deleted: int = 0
     entities_restored: int = 0
     proposal: ChangeProposalResponse
+
+
+# ==================== Approval policy ====================
+
+
+class AutoApplyRuleSchema(BaseModel):
+    """Operations matching every key set here may apply as soon as they are proposed."""
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    op: Optional[OperationType] = Field(None, description="Only this operation type")
+    kind: Optional[OperationKind] = Field(None, description="Only this kind of entity")
+    class_: Optional[str] = Field(
+        None,
+        alias="class",
+        description="Only entities typed by this class (id or identifier): an individual's "
+        "classes, an attribute's class, or the class itself",
+    )
+    scope: Optional[ChangeScope] = Field(None, description="Only this scope")
+
+
+class ApprovalPolicyRequest(BaseModel):
+    """A taxonomy's approval policy; replaces the current one."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    auto_apply: list[AutoApplyRuleSchema] = Field(
+        default_factory=list,
+        description="An operation matching any rule may auto-apply; breaking operations "
+        "and deletes never do",
+    )
+    min_probability: float = Field(
+        0.0, ge=0.0, le=1.0, description="An operation also needs at least this probability"
+    )
+
+    def to_rules(self) -> dict[str, Any]:
+        """The rules JSON the domain parses."""
+        return self.model_dump(by_alias=True, exclude_none=True, mode="json")
+
+
+class ApprovalPolicyResponse(BaseModel):
+    """A taxonomy's approval policy; empty (nothing auto-applies) until one is set."""
+
+    taxonomy_id: str
+    auto_apply: list[AutoApplyRuleSchema]
+    min_probability: float
+
+    @classmethod
+    def from_domain(cls, policy: ApprovalPolicy) -> "ApprovalPolicyResponse":
+        rules = policy.to_rules()
+        return cls(
+            taxonomy_id=policy.taxonomy_id,
+            auto_apply=[AutoApplyRuleSchema.model_validate(r) for r in rules["auto_apply"]],
+            min_probability=rules["min_probability"],
+        )

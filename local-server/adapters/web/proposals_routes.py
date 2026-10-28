@@ -11,9 +11,11 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from adapters.persistence.sqlite.transaction import TransactionAbortedError
-from adapters.web.dependencies import get_proposal_service
+from adapters.web.dependencies import get_approval_policy_service, get_proposal_service
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.proposals import (
+    ApprovalPolicyRequest,
+    ApprovalPolicyResponse,
     ChangeProposalApplyRequest,
     ChangeProposalCreateRequest,
     ChangeProposalRejectRequest,
@@ -22,6 +24,8 @@ from adapters.web.schemas.proposals import (
     ChangeProposalRevertResponse,
     ChangeProposalValidationErrorResponse,
 )
+from domain.ontology.exceptions import EntityNotFoundError
+from domain.versioning.approval_policy import ApprovalPolicyService
 from domain.versioning.exceptions import (
     ChangeProposalNotFoundError,
     ChangeProposalStateError,
@@ -315,3 +319,63 @@ async def revert_proposal(
         return await run_sync_in_executor(run)
     except Exception as exc:
         raise _http_error(exc) from exc
+
+
+# ==================== Approval policy ====================
+# Set by a person only: never exposed as an agent (chat or MCP) tool.
+
+_TAXONOMY_NOT_FOUND = {404: {"description": "Taxonomy not found"}}
+
+
+def _policy_error(exc: Exception) -> HTTPException:
+    """A missing taxonomy is a 404; anything else is logged as a 500."""
+    if isinstance(exc, EntityNotFoundError):
+        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    return _http_error(exc)
+
+
+@router.get(
+    "/taxonomies/{taxonomy_id}/approval-policy",
+    response_model=ApprovalPolicyResponse,
+    response_model_exclude_none=True,
+    responses=_TAXONOMY_NOT_FOUND,
+)
+async def get_approval_policy(
+    taxonomy_id: str,
+    service: ApprovalPolicyService = Depends(get_approval_policy_service),
+) -> ApprovalPolicyResponse:
+    """The taxonomy's approval policy; empty (nothing auto-applies) if none is set."""
+    try:
+        policy = await run_sync_in_executor(service.get, taxonomy_id)
+    except Exception as exc:
+        raise _policy_error(exc) from exc
+    return ApprovalPolicyResponse.from_domain(policy)
+
+
+@router.put(
+    "/taxonomies/{taxonomy_id}/approval-policy",
+    response_model=ApprovalPolicyResponse,
+    response_model_exclude_none=True,
+    responses=_TAXONOMY_NOT_FOUND,
+)
+async def set_approval_policy(
+    taxonomy_id: str,
+    request: ApprovalPolicyRequest,
+    service: ApprovalPolicyService = Depends(get_approval_policy_service),
+) -> ApprovalPolicyResponse:
+    """
+    Replace the taxonomy's approval policy.
+
+    Operations proposed afterwards that match a rule (every key the rule sets)
+    and reach min_probability apply as soon as they are proposed, under the
+    proposal's run. Breaking operations and deletes never auto-apply.
+    """
+    try:
+        policy = await run_sync_in_executor(service.set, taxonomy_id, request.to_rules())
+    except ValueError as exc:  # rules the domain refuses
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
+        ) from exc
+    except Exception as exc:
+        raise _policy_error(exc) from exc
+    return ApprovalPolicyResponse.from_domain(policy)
