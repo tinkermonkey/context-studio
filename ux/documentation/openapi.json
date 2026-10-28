@@ -7353,6 +7353,367 @@
           }
         }
       }
+    },
+    "/api/proposals": {
+      "get": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "List Proposals",
+        "description": "List proposals, newest first, each operation with its stale flag.",
+        "operationId": "list_proposals_api_proposals_get",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only proposals about this taxonomy",
+              "title": "Taxonomy Id"
+            },
+            "description": "Only proposals about this taxonomy"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ProposalStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "open, done or reverted",
+              "title": "Status"
+            },
+            "description": "open, done or reverted"
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ProposalSource"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Who or what proposed them",
+              "title": "Source"
+            },
+            "description": "Who or what proposed them"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Maximum number of results",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of results"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of results to skip",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of results to skip"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResponse_ChangeProposalResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Create Proposal",
+        "description": "Propose changes to a taxonomy; every operation starts pending.\n\nThe proposal is validated as a whole against the current graph. If any\noperation is invalid nothing is stored and the 422 lists each problem with\nits operation's seq and a stable code.",
+        "operationId": "create_proposal_api_proposals_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeProposalCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeProposalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The proposal is invalid; detail.errors lists every problem by operation seq, and nothing was stored",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeProposalValidationErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proposals/{proposal_id}": {
+      "get": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Get Proposal",
+        "description": "A proposal; each pending or failed operation says whether it is stale.",
+        "operationId": "get_proposal_api_proposals__proposal_id__get",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeProposalResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Change proposal not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proposals/{proposal_id}/apply": {
+      "post": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Apply Proposal",
+        "description": "Apply the chosen operations in seq order under the proposal's run.\n\nEach operation records its own outcome; one that fails (e.g. \"target_changed\")\ndoes not undo the others. Pass a stale operation in force_stale to apply it\nanyway.",
+        "operationId": "apply_proposal_api_proposals__proposal_id__apply_post",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeProposalApplyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeProposalResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Change proposal not found"
+          },
+          "409": {
+            "description": "The proposal is reverted, or an operation is already decided"
+          },
+          "422": {
+            "description": "An operation id is not in the proposal"
+          }
+        }
+      }
+    },
+    "/api/proposals/{proposal_id}/reject": {
+      "post": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Reject Proposal",
+        "description": "Reject operations, or without operation_ids every pending or failed one.",
+        "operationId": "reject_proposal_api_proposals__proposal_id__reject_post",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeProposalRejectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeProposalResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Change proposal not found"
+          },
+          "409": {
+            "description": "An operation is already applied or rejected"
+          },
+          "422": {
+            "description": "An operation id is not in the proposal"
+          }
+        }
+      }
+    },
+    "/api/proposals/{proposal_id}/revert": {
+      "post": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Revert Proposal",
+        "description": "Undo everything applied from the proposal and mark it reverted.\n\nPending and failed operations are rejected, in the same transaction. A\nrefused revert is a 409 and changes nothing: entities made outside the\nproposal depend on ones it created (detail.blocking names them), or an event\ncan't be undone. Any other error (including an aborted transaction) is a\nlogged 500; the revert's transaction is rolled back.",
+        "operationId": "revert_proposal_api_proposals__proposal_id__revert_post",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeProposalRevertResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Change proposal not found"
+          },
+          "409": {
+            "description": "Refused, nothing changed: entities outside the proposal depend on ones it created (detail.blocking lists them), or an event can't be undone (blocking is empty)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeProposalRevertConflictResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -8286,6 +8647,328 @@
         ],
         "title": "ChangeOperation",
         "description": "Types of operations on entities."
+      },
+      "ChangeProposalApplyRequest": {
+        "properties": {
+          "operation_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Operation Ids",
+            "description": "Operations to apply"
+          },
+          "force_stale": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Force Stale",
+            "description": "Operations to apply even though their target changed since proposed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "operation_ids"
+        ],
+        "title": "ChangeProposalApplyRequest",
+        "description": "Operations to apply, in seq order, under the proposal's run."
+      },
+      "ChangeProposalCreateRequest": {
+        "properties": {
+          "taxonomy_id": {
+            "type": "string",
+            "title": "Taxonomy Id",
+            "description": "The taxonomy the changes are about"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Title",
+            "description": "A short summary"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rationale",
+            "description": "Why these changes, as a whole"
+          },
+          "source": {
+            "$ref": "#/components/schemas/ProposalSource",
+            "description": "Who or what proposed them",
+            "default": "user"
+          },
+          "source_detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Detail",
+            "description": "More about the source (MCP client, conversation id, bundle file)"
+          },
+          "operations": {
+            "items": {
+              "$ref": "#/components/schemas/ProposedOperationRequest"
+            },
+            "type": "array",
+            "title": "Operations",
+            "description": "The operations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "taxonomy_id",
+          "title",
+          "operations"
+        ],
+        "title": "ChangeProposalCreateRequest",
+        "description": "A new change proposal, validated as a whole; nothing is stored if any operation fails."
+      },
+      "ChangeProposalRejectRequest": {
+        "properties": {
+          "operation_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operation Ids",
+            "description": "Operations to reject"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note",
+            "description": "Why; stored as each operation's reason"
+          }
+        },
+        "type": "object",
+        "title": "ChangeProposalRejectRequest",
+        "description": "Operations to reject; without operation_ids, every pending or failed one."
+      },
+      "ChangeProposalResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Also the batch run id its applied changes are tagged with"
+          },
+          "taxonomy_id": {
+            "type": "string",
+            "title": "Taxonomy Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rationale"
+          },
+          "source": {
+            "$ref": "#/components/schemas/ProposalSource"
+          },
+          "source_detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Detail"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ProposalStatus"
+          },
+          "operations": {
+            "items": {
+              "$ref": "#/components/schemas/ProposedOperationResponse"
+            },
+            "type": "array",
+            "title": "Operations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "taxonomy_id",
+          "title",
+          "source",
+          "created_at",
+          "status",
+          "operations"
+        ],
+        "title": "ChangeProposalResponse",
+        "description": "A change proposal with its operations in seq order."
+      },
+      "ChangeProposalRevertConflictDetail": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "blocking": {
+            "items": {
+              "$ref": "#/components/schemas/RevertBlocker"
+            },
+            "type": "array",
+            "title": "Blocking"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "ChangeProposalRevertConflictDetail",
+        "description": "Why a proposal can't be reverted; nothing was changed."
+      },
+      "ChangeProposalRevertConflictResponse": {
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/ChangeProposalRevertConflictDetail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ChangeProposalRevertConflictResponse",
+        "description": "409 body of POST /api/proposals/{id}/revert."
+      },
+      "ChangeProposalRevertResponse": {
+        "properties": {
+          "events_reverted": {
+            "type": "integer",
+            "title": "Events Reverted"
+          },
+          "classes_deleted": {
+            "type": "integer",
+            "title": "Classes Deleted",
+            "default": 0
+          },
+          "individuals_deleted": {
+            "type": "integer",
+            "title": "Individuals Deleted",
+            "default": 0
+          },
+          "relationships_deleted": {
+            "type": "integer",
+            "title": "Relationships Deleted",
+            "default": 0
+          },
+          "properties_deleted": {
+            "type": "integer",
+            "title": "Properties Deleted",
+            "default": 0
+          },
+          "taxonomies_deleted": {
+            "type": "integer",
+            "title": "Taxonomies Deleted",
+            "default": 0
+          },
+          "concept_schemes_deleted": {
+            "type": "integer",
+            "title": "Concept Schemes Deleted",
+            "default": 0
+          },
+          "entities_restored": {
+            "type": "integer",
+            "title": "Entities Restored",
+            "default": 0
+          },
+          "proposal": {
+            "$ref": "#/components/schemas/ChangeProposalResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "events_reverted",
+          "proposal"
+        ],
+        "title": "ChangeProposalRevertResponse",
+        "description": "What reverting a proposal undid, and the proposal afterwards."
+      },
+      "ChangeProposalValidationDetail": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/OperationErrorResponse"
+            },
+            "type": "array",
+            "title": "Errors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "errors"
+        ],
+        "title": "ChangeProposalValidationDetail",
+        "description": "Every problem found with a proposal; nothing was stored."
+      },
+      "ChangeProposalValidationErrorResponse": {
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/ChangeProposalValidationDetail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ChangeProposalValidationErrorResponse",
+        "description": "422 body of POST /api/proposals."
+      },
+      "ChangeScope": {
+        "type": "string",
+        "enum": [
+          "editorial",
+          "additive",
+          "breaking"
+        ],
+        "title": "ChangeScope",
+        "description": "How much a change can break, in increasing order."
       },
       "ChangeState": {
         "type": "string",
@@ -11395,6 +12078,41 @@
         ],
         "title": "ListResponse[AttributeDefinitionResponse]"
       },
+      "ListResponse_ChangeProposalResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ChangeProposalResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total number of items"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Limit applied"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Offset applied"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "ListResponse[ChangeProposalResponse]"
+      },
       "ListResponse_ClassResponse_": {
         "properties": {
           "items": {
@@ -12065,6 +12783,75 @@
         ],
         "title": "NodeReference",
         "description": "Reference to an extracted node (individual/class/literal) in individual extraction.\n\nIdentifies a subject or object node with optional mapping to existing ontology.\nNon-empty id means mapped to existing ontology entity; empty/None means new candidate."
+      },
+      "OperationErrorResponse": {
+        "properties": {
+          "seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seq",
+            "description": "The operation, or null for the whole proposal"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "Stable code, e.g. target_not_found, unknown_ref, missing_field"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "What is wrong and how to fix it"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "OperationErrorResponse",
+        "description": "Why one proposed operation is invalid."
+      },
+      "OperationKind": {
+        "type": "string",
+        "enum": [
+          "taxonomy",
+          "scheme",
+          "class",
+          "property",
+          "attribute",
+          "individual",
+          "relationship"
+        ],
+        "title": "OperationKind",
+        "description": "The kind of ontology entity an operation targets."
+      },
+      "OperationStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "applied",
+          "rejected",
+          "failed"
+        ],
+        "title": "OperationStatus",
+        "description": "Where an operation stands."
+      },
+      "OperationType": {
+        "type": "string",
+        "enum": [
+          "create",
+          "update",
+          "move",
+          "delete"
+        ],
+        "title": "OperationType",
+        "description": "What an operation does to its target."
       },
       "PageContextSchema": {
         "properties": {
@@ -13036,6 +13823,18 @@
         "title": "ProposalResponse",
         "description": "Response representing a proposal"
       },
+      "ProposalSource": {
+        "type": "string",
+        "enum": [
+          "chat",
+          "mcp",
+          "pipeline",
+          "bundle",
+          "user"
+        ],
+        "title": "ProposalSource",
+        "description": "Who or what made the proposal."
+      },
       "ProposalState": {
         "type": "string",
         "enum": [
@@ -13046,6 +13845,245 @@
         ],
         "title": "ProposalState",
         "description": "Valid states for a proposal."
+      },
+      "ProposalStatus": {
+        "type": "string",
+        "enum": [
+          "open",
+          "done",
+          "reverted"
+        ],
+        "title": "ProposalStatus",
+        "description": "A proposal is open while any operation awaits a decision."
+      },
+      "ProposedOperationRequest": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "title": "Seq",
+            "description": "Position in the proposal; operations apply in this order"
+          },
+          "op": {
+            "$ref": "#/components/schemas/OperationType",
+            "description": "create, update, move or delete"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/OperationKind",
+            "description": "The kind of entity targeted"
+          },
+          "target_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Id",
+            "description": "The existing entity (update, move, delete); omit for a create"
+          },
+          "ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref",
+            "description": "A name a create gives its new entity; later operations point at it as \"$<ref>\""
+          },
+          "fields": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Fields",
+            "description": "For a create, every field; for an update, only the changed ones; for a move, the new parent, scheme or taxonomy"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rationale",
+            "description": "Why this change"
+          },
+          "evidence": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Evidence",
+            "description": "Supporting {\"quote\", \"url\", \"entity_id\"} items"
+          },
+          "probability": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Probability",
+            "description": "The proposer's confidence, 0 to 1"
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChangeScope"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A claimed scope; it can only make the computed scope stricter"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seq",
+          "op",
+          "kind"
+        ],
+        "title": "ProposedOperationRequest",
+        "description": "One operation as proposed."
+      },
+      "ProposedOperationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "seq": {
+            "type": "integer",
+            "title": "Seq"
+          },
+          "op": {
+            "$ref": "#/components/schemas/OperationType"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/OperationKind"
+          },
+          "target_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Id"
+          },
+          "ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref"
+          },
+          "fields": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Fields"
+          },
+          "base": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Base",
+            "description": "The touched fields' values when proposed (a delete: the whole entity)"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rationale"
+          },
+          "evidence": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Evidence"
+          },
+          "probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Probability"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/ChangeScope"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OperationStatus"
+          },
+          "result_entity_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Entity Id",
+            "description": "The entity made or changed"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Why it failed (\"<code>: <detail>\") or was rejected"
+          },
+          "stale": {
+            "type": "boolean",
+            "title": "Stale",
+            "description": "Pending or failed, and its target is gone or a field it touches changed since proposed; applying it needs force_stale",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "seq",
+          "op",
+          "kind",
+          "scope",
+          "status"
+        ],
+        "title": "ProposedOperationResponse",
+        "description": "One proposed operation and its outcome."
       },
       "PublishDiffStats": {
         "properties": {
@@ -13841,6 +14879,32 @@
         ],
         "title": "ResumeBatchResponse",
         "description": "Response from batch resume operation."
+      },
+      "RevertBlocker": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "description": "What depends (e.g. relationship, individual)"
+          },
+          "dependent_id": {
+            "type": "string",
+            "title": "Dependent Id"
+          },
+          "referenced_id": {
+            "type": "string",
+            "title": "Referenced Id",
+            "description": "The entity the proposal created"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "dependent_id",
+          "referenced_id"
+        ],
+        "title": "RevertBlocker",
+        "description": "An entity outside the proposal that depends on one the proposal created."
       },
       "RevertRunResponse": {
         "properties": {

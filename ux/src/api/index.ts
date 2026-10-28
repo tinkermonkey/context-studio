@@ -4,6 +4,7 @@ export { ontologyService } from "./services/ontology";
 export { graphService } from "./services/graph";
 export { versioningService } from "./services/versioning";
 export { referenceService } from "./services/reference";
+export { proposalsService } from "./services/proposals";
 
 // Hooks
 export * from "./hooks";

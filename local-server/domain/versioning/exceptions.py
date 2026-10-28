@@ -48,6 +48,15 @@ class UnknownChangeEventError(VersioningError):
         super().__init__(f"Unknown change event ids: {', '.join(missing_ids)}")
 
 
+class RevertRefusedError(VersioningError, ValueError):
+    """Raised before a revert changes anything, when an event of the run can't be undone.
+
+    A ValueError too, so existing callers that catch ValueError still do.
+    """
+
+    pass
+
+
 class RevertConflictError(VersioningError):
     """Raised when a revert would delete entities that others still depend on.
 

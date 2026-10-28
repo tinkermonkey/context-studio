@@ -67,6 +67,11 @@ export const QUERY_KEYS = {
     proposalId ? (["proposals", proposalId] as const) : (["proposals"] as const),
   proposalConflicts: (proposalId: string) => ["proposals", proposalId, "conflicts"] as const,
   syncStatus: ["sync-status"] as const,
+  // Change proposals (/api/proposals); "proposals" above is the changeset surface.
+  changesRoot: ["changes"] as const,
+  changeProposalsRoot: ["change-proposals"] as const,
+  changeProposals: (params?: object) => ["change-proposals", "list", params] as const,
+  changeProposal: (id: string) => ["change-proposals", id] as const,
   // Reference
   referenceSearch: (q?: string) => ["reference-search", q] as const,
   referenceStatus: ["reference-status"] as const,

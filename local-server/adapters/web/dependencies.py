@@ -45,6 +45,7 @@ from domain.graph.services import GraphAnalysisService
 from domain.interchange.ports import BatchRunRepository
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
+from domain.versioning.proposal_service import ProposalService
 from domain.versioning.services import VersioningService
 from utils.async_executor import run_sync_in_executor
 
@@ -212,6 +213,19 @@ async def get_versioning_service(request: Request) -> VersioningService:
     service = getattr(request.app.state, "versioning_service", None)
     if service is None:
         raise RuntimeError("VersioningService not initialized in app.state")
+    return service
+
+
+async def get_proposal_service(request: Request) -> ProposalService:
+    """
+    Extract the ProposalService from app state.
+
+    Raises:
+        RuntimeError: If service is not initialized in app.state
+    """
+    service = getattr(request.app.state, "proposal_service", None)
+    if service is None:
+        raise RuntimeError("ProposalService not initialized in app.state")
     return service
 
 
