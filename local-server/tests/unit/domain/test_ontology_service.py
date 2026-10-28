@@ -37,6 +37,7 @@ from domain.ontology.exceptions import (
     CircularReferenceError,
     DuplicateEntityError,
     EntityNotFoundError,
+    IdentifierConflictError,
     OntologyError,
 )
 from domain.ontology.services import OntologyService
@@ -1878,6 +1879,80 @@ class TestUpdatePropertyDefinition:
                 range_class_id="nonexistent",
                 update_range_class_id=True,
             )
+
+
+class TestUpdatePropertyIdentifier:
+    """A property definition's identifier can change (#1366); its relationships stay."""
+
+    @pytest.fixture()
+    def in_use(self, service):
+        taxonomy = service.create_taxonomy(title="API")
+        scheme = service.create_scheme(taxonomy_id=taxonomy.id, title="Api", identifier="api")
+        operation = service.create_class(scheme.id, "Operation", identifier="api_operation")
+        response = service.create_class(scheme.id, "Response", identifier="api_response")
+        prop = service.create_property_definition(
+            identifier="operation_delivers_response",
+            title="api.operation delivers api.response",
+            domain_class_id=operation.id,
+            range_class_id=response.id,
+        )
+        first = service.create_individual(operation.id, "GET /a")
+        second = service.create_individual(response.id, "200")
+        rel = service.create_relationship(first.id, second.id, prop.id)
+        service._event_publisher.clear()
+        return prop, rel, operation, response
+
+    def test_rename_keeps_relationships_and_records_the_old_identifier(self, service, in_use):
+        from domain.ontology.events import PropertyDefinitionUpdated
+
+        prop, rel, *_ = in_use
+        updated = service.update_property_definition(
+            prop.id,
+            identifier="operation_aggregates_response",
+            title="api.operation aggregates api.response",
+            canonical_predicate="aggregates",
+            update_canonical_predicate=True,
+        )
+
+        assert updated.identifier == "operation_aggregates_response"
+        assert service.get_relationship(rel.id).property_definition_id == prop.id
+        event = service._event_publisher.get_events_of_type(PropertyDefinitionUpdated)[0]
+        assert set(event.changed_fields) == {"identifier", "title", "canonical_predicate"}
+        assert event.old_values["identifier"] == "operation_delivers_response"
+        assert event.new_values["identifier"] == "operation_aggregates_response"
+
+    def test_reverse_swaps_domain_and_range(self, service, in_use):
+        prop, rel, operation, response = in_use
+        updated = service.update_property_definition(
+            prop.id,
+            identifier="response_delivers_operation",
+            domain_class_id=response.id,
+            range_class_id=operation.id,
+            update_domain_class_id=True,
+            update_range_class_id=True,
+        )
+        assert (updated.domain_class_id, updated.range_class_id) == (response.id, operation.id)
+        assert service.get_relationship(rel.id).property_definition_id == prop.id
+
+    def test_identifier_taken_by_another_entity_is_refused(self, service, in_use):
+        prop, *_ = in_use
+        service.create_property_definition(identifier="other_prop", title="Other")
+        for taken in ("other_prop", "api_operation"):
+            with pytest.raises(IdentifierConflictError):
+                service.update_property_definition(prop.id, identifier=taken)
+        assert service.get_property_definition(prop.id).identifier == "operation_delivers_response"
+
+    def test_invalid_identifier_is_refused(self, service, in_use):
+        prop, *_ = in_use
+        with pytest.raises(ValueError, match="Identifier"):
+            service.update_property_definition(prop.id, identifier="Not a slug!")
+
+    def test_same_identifier_is_a_no_op(self, service, in_use):
+        from domain.ontology.events import PropertyDefinitionUpdated
+
+        prop, *_ = in_use
+        service.update_property_definition(prop.id, identifier="operation_delivers_response")
+        assert service._event_publisher.get_events_of_type(PropertyDefinitionUpdated) == []
 
 
 class TestUpdateConceptScheme:

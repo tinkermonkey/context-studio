@@ -221,6 +221,20 @@ def _hashed_relationship_identifier(record: RelationshipSchemaRecord) -> str:
     return f"{stripped[:_TRUNCATED_LENGTH]}_{digest}"
 
 
+def relationship_identifier(
+    record: RelationshipSchemaRecord, is_taken: Callable[[str], bool]
+) -> str:
+    """
+    The compressed identifier for one new or renamed relationship schema: the
+    layer-stripped form, or the hashed fallback when that is too long or
+    `is_taken` says another entity already has it.
+    """
+    stripped = _stripped_relationship_identifier(record)
+    if len(stripped) <= _IDENTIFIER_MAX_LENGTH and not is_taken(stripped):
+        return stripped
+    return _hashed_relationship_identifier(record)
+
+
 def compress_relationship_identifiers(
     records: Iterable[RelationshipSchemaRecord],
 ) -> dict[str, str]:
