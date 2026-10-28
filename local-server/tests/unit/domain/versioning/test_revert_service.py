@@ -1536,6 +1536,60 @@ def test_revert_refused_when_entities_outside_the_run_depend_on_it(
     assert change_repo.get_changes(limit=None).total == 1
 
 
+def _run_types_existing_individual_into_new_class(ontology_repo, change_repo, other_change):
+    """Run-1 creates cls-1 and adds it to the existing ind-1; optionally another field changes."""
+    ontology_repo.save_individual(Individual(id="ind-1", class_ids=["cls-0"], title="API"))
+    ontology_repo.save_class(
+        Class(id="cls-1", concept_scheme_id="scheme-1", taxonomy_id="tx-1", title="Service")
+    )
+    change_repo.record_change(
+        entity_id="cls-1",
+        entity_type="class",
+        operation=ChangeOperation.CREATE,
+        new_state={"id": "cls-1"},
+        batch_run_id="run-1",
+    )
+    previous, new = (
+        ({"title": "API"}, {"title": "Public API"})
+        if other_change
+        else ({"class_ids": ["cls-0"]}, {"class_ids": ["cls-0", "cls-1"]})
+    )
+    change_repo.record_change(
+        entity_id="ind-1",
+        entity_type="individual",
+        operation=ChangeOperation.UPDATE,
+        new_state=new,
+        previous_state=previous,
+        batch_run_id="run-1",
+    )
+    ind = ontology_repo.get_individual("ind-1")
+    ind.class_ids = ["cls-0", "cls-1"]
+    ind.title = new.get("title", ind.title)
+    ontology_repo.save_individual(ind)
+
+
+def test_revert_allowed_when_the_run_itself_added_the_dependency(
+    ontology_repo, change_repo, revert_svc
+):
+    """Undoing the run's own membership change removes the dependency before the delete."""
+    _run_types_existing_individual_into_new_class(ontology_repo, change_repo, other_change=False)
+
+    assert revert_svc.revert("run-1") == 2
+    assert ontology_repo.get_class("cls-1") is None
+    assert ontology_repo.get_individual("ind-1").class_ids == ["cls-0"]
+
+
+def test_revert_refused_when_the_run_changed_the_dependent_but_not_the_reference(
+    ontology_repo, change_repo, revert_svc
+):
+    """The run only retitled the individual; its membership of cls-1 survives the revert."""
+    _run_types_existing_individual_into_new_class(ontology_repo, change_repo, other_change=True)
+
+    with pytest.raises(RevertConflictError) as excinfo:
+        revert_svc.revert("run-1")
+    assert excinfo.value.blocking == [("individual", "ind-1", "cls-1")]
+
+
 # ============================================================================
 # Vector index sync (#1293)
 # ============================================================================

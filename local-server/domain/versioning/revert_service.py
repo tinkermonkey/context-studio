@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 
 from domain.ontology.events import GraphInvalidated
-from domain.ontology.snapshots import entity_field_names, entity_from_snapshot
+from domain.ontology.snapshots import entity_field_names, entity_from_snapshot, entity_snapshot
 from domain.ontology.value_objects import DataType, ExternalReference
 from domain.versioning.exceptions import RevertConflictError
 from domain.versioning.value_objects import ChangeOperation
@@ -276,13 +276,46 @@ class RevertService:
         }
         if not deleted_ids:
             return
+        # The fields each entity the run updated get back on revert: per field,
+        # the previous state of the oldest update that touched it.
+        restored: dict[str, dict] = {}
+        for event in pending:  # newest first, so older updates overwrite newer ones
+            if event.operation == ChangeOperation.UPDATE and event.previous_state:
+                restored.setdefault(event.entity_id, {}).update(event.previous_state)
         blocking = [
             (ref.dependent_kind, ref.dependent_id, ref.referenced_id)
             for ref in self._ontology_repo.find_references(sorted(deleted_ids))
             if ref.dependent_id not in deleted_ids
+            and self._still_references_after_revert(ref, restored)
         ]
         if blocking:
             raise RevertConflictError(batch_run_id, blocking)
+
+    def _still_references_after_revert(self, ref, restored: dict[str, dict]) -> bool:
+        """
+        Whether the dependent still points at the referenced entity once the run's
+        updates to it are undone. A run that typed an existing individual into a
+        class it created, say, takes that membership away again on revert.
+        """
+        fields = restored.get(ref.dependent_id)
+        if fields is None:
+            return True
+        getter = {
+            "taxonomy": self._ontology_repo.get_taxonomy,
+            "concept_scheme": self._ontology_repo.get_concept_scheme,
+            "class": self._ontology_repo.get_class,
+            "individual": self._ontology_repo.get_individual,
+            "property_definition": self._ontology_repo.get_property_definition,
+            "attribute_definition": self._ontology_repo.get_attribute_definition,
+        }.get(ref.dependent_kind)
+        entity = getter(ref.dependent_id) if getter is not None else None
+        if entity is None:
+            return True
+        state = {**entity_snapshot(entity), **fields}
+        return any(
+            value == ref.referenced_id or (isinstance(value, list) and ref.referenced_id in value)
+            for value in state.values()
+        )
 
     def _sync_indexes(self, entity_id: str, entity_type: str) -> None:
         """

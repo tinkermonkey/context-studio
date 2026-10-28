@@ -59,6 +59,7 @@ from adapters.persistence.sqlite.pipeline_config_repo import (
     PipelineConfigurationRepository as PipelineConfigRepo,
 )
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
+from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from adapters.recognition.individual_recognizer import CascadeIndividualRecognizer
 from adapters.reference.cache import CachedReferenceSource
@@ -159,6 +160,7 @@ from domain.pipelines.schema_node_grounding.apply_service import (
 from domain.pipelines.schema_node_grounding.scoring import GroundingScorer
 from domain.versioning.events import ChangesetMerged, SyncCompleted
 from domain.versioning.ports import SyncTarget
+from domain.versioning.proposal_service import ProposalService
 from domain.versioning.services import VersioningService
 from utils.logger import get_logger, register_otlp_handler
 
@@ -545,6 +547,14 @@ async def lifespan(app: FastAPI):
             "RevertService created and wired with repositories, vector indexes and event publisher"
         )
 
+        proposal_service = ProposalService(
+            proposals=SQLiteChangeProposalRepository(local_session_factory),
+            ontology_service=ontology_service,
+            ontology_repo=cast(OntologyRepository, ontology_repo),
+            revert_service=revert_service,
+        )
+        logger.info("ProposalService created")
+
         # Interchange service for import run tracking
         import_run_service = ImportRunService()
         logger.info("ImportRunService created")
@@ -715,6 +725,7 @@ async def lifespan(app: FastAPI):
         app.state.extraction_service = extraction_service
         app.state.versioning_service = versioning_service
         app.state.revert_service = revert_service
+        app.state.proposal_service = proposal_service
         app.state.admin_service = admin_service
         app.state.load_demo_dataset = load_demo_dataset
         app.state.db_manager = db_manager
