@@ -328,8 +328,37 @@ def test_unrelated_relationship_type_is_refused(service, repo):
         identifier="house_activity_is_a_activity", title="Someone else's is_a"
     )
 
-    with pytest.raises(BundleError, match="does not belong to this taxonomy"):
+    with pytest.raises(BundleError, match="does not lie within this taxonomy"):
         load_bundle(service, repo, _bundle())
+
+
+def test_relationship_type_reaching_another_taxonomy_is_refused_not_retargeted(service, repo):
+    """A type with one end here and one elsewhere is not this bundle's to rewrite."""
+    load_bundle(service, repo, _bundle())
+    other = service.create_taxonomy(title="Other", identifier="other")
+    scheme = service.create_scheme(taxonomy_id=other.id, title="Kinds", identifier="other_kinds")
+    site = service.create_class(concept_scheme_id=scheme.id, title="Site", identifier="other_site")
+    activity = repo.get_by_identifier("house_activity")
+    service.create_property_definition(
+        identifier="house_done_at",
+        title="done at (a Site)",
+        domain_class_id=activity.id,
+        range_class_id=site.id,
+    )
+    bundle = _bundle()
+    bundle["properties"].append(
+        {
+            "identifier": "house_done_at",
+            "title": "done at",
+            "domain": "house_activity",
+            "range": "house_place",
+        }
+    )
+
+    with pytest.raises(BundleError, match="house_done_at"):
+        load_bundle(service, repo, bundle)
+    prop = repo.get_property_definition_by_identifier("house_done_at")
+    assert (prop.title, prop.range_class_id) == ("done at (a Site)", site.id)
 
 
 # ---------------------------------------------------------------- round trips

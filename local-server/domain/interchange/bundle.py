@@ -30,7 +30,9 @@ Context Studio exports its UUID as its `id`. Relationships are matched on their
 References. A class, property or individual the loader creates carries an
 ExternalReference(source, identifier or id). A matched property or individual
 has its source reference set only if it already has one or the bundle carries
-`constraints` or `data` for it; otherwise its references are left alone. What
+`constraints` or `data` for it; otherwise its references are left alone. A
+relationship type that is not the source's is matched only if every end it has
+lies in this taxonomy. What
 v0 cannot model is carried in that reference's metadata, out of the
 definitions that drive vector matching: a property's `constraints` and an
 individual's `data`. Relationships with attributes are rejected.
@@ -361,12 +363,11 @@ class _Loader:
             range_id = self._class_ref(class_ids, spec.get("range"), f"property {identifier}")
             existing = self._repo.get_property_definition_by_identifier(identifier)
             if existing is not None and not (
-                self._owns(existing)
-                or {existing.domain_class_id, existing.range_class_id} & taxonomy_class_ids
+                self._owns(existing) or _within(existing, taxonomy_class_ids)
             ):
                 raise BundleError(
                     f"Relationship type {identifier!r} already exists, was not loaded from"
-                    f" {self._source!r} and does not belong to this taxonomy; prefix the"
+                    f" {self._source!r} and does not lie within this taxonomy; prefix the"
                     " bundle's identifiers"
                 )
             if existing is None:
@@ -782,6 +783,12 @@ class BundleExporter:
             if rel.target_id in individual_keys and rel.property_definition_id in property_keys
         }
         return [{"source": s, "property": p, "target": t} for s, p, t in sorted(triples)]
+
+
+def _within(prop: PropertyDefinition, class_ids: set[str] | dict[str, str]) -> bool:
+    """Whether a property has an end and every end it has is one of these classes."""
+    ends = [end for end in (prop.domain_class_id, prop.range_class_id) if end is not None]
+    return bool(ends) and all(end in class_ids for end in ends)
 
 
 def _source_reference(entity: Any, source: str) -> ExternalReference | None:
