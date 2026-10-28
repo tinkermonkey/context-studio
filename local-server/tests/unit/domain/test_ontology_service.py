@@ -26,6 +26,7 @@ from domain.ontology.events import (
     PropertyDefinitionCreated,
     RelationshipCreated,
     RelationshipDeleted,
+    RelationshipUpdated,
     SchemeCreated,
     SchemeDeleted,
     SchemeUpdated,
@@ -4157,3 +4158,88 @@ class TestSchemeAndClassCounts:
         assert {p.identifier for p in props} == {"realizes", "uses"}
         assert service.count_property_definitions(domain_class_id=component.id) == 2
         assert service.count_property_definitions(domain_class_id=service_cls.id) == 0
+
+
+class TestRelationshipAttributes:
+    """Relationship attributes (#1365): allowed by the property's edge_properties."""
+
+    @pytest.fixture
+    def kit(self, service):
+        tax = service.create_taxonomy(title="House")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Kinds")
+        activity = service.create_class(concept_scheme_id=scheme.id, title="Activity")
+        resource = service.create_class(concept_scheme_id=scheme.id, title="Resource")
+        requires = service.create_property_definition(
+            identifier="requires",
+            title="requires",
+            external_references=[
+                ExternalReference(
+                    source="house",
+                    identifier="requires",
+                    metadata={"edge_properties": ["quantity", "unit", "optional"]},
+                )
+            ],
+        )
+        hang = service.create_individual(activity.id, "Hang a picture")
+        hooks = service.create_individual(resource.id, "Picture hooks")
+        return service, hang.id, hooks.id, requires.id
+
+    def test_create_carries_allowed_attributes_into_the_event(self, kit):
+        service, hang, hooks, requires = kit
+        rel = service.create_relationship(
+            hang, hooks, requires, attributes={"quantity": 2, "unit": "each", "optional": False}
+        )
+
+        assert service.get_relationship(rel.id).attributes == {
+            "quantity": 2,
+            "unit": "each",
+            "optional": False,
+        }
+        [event] = service._event_publisher.get_events_of_type(RelationshipCreated)
+        assert event.attributes == {"quantity": 2, "unit": "each", "optional": False}
+
+    def test_create_refuses_names_the_property_does_not_allow(self, kit):
+        service, hang, hooks, requires = kit
+        with pytest.raises(ValueError, match=r"does not allow attributes \['colour'\]"):
+            service.create_relationship(hang, hooks, requires, attributes={"colour": "red"})
+
+    def test_a_property_without_edge_properties_allows_none(self, kit):
+        service, hang, hooks, _ = kit
+        near = service.create_property_definition(identifier="near", title="near")
+        with pytest.raises(ValueError, match="allowed: none"):
+            service.create_relationship(hang, hooks, near.id, attributes={"quantity": 1})
+
+    def test_create_refuses_non_scalar_values(self, kit):
+        service, hang, hooks, requires = kit
+        with pytest.raises(ValueError, match="string, number, boolean or null"):
+            service.create_relationship(hang, hooks, requires, attributes={"quantity": [1]})
+
+    def test_update_replaces_attributes_and_records_old_and_new(self, kit):
+        service, hang, hooks, requires = kit
+        rel = service.create_relationship(hang, hooks, requires, attributes={"quantity": 2})
+
+        updated = service.update_relationship(rel.id, {"quantity": 3, "unit": "each"})
+
+        assert updated.attributes == {"quantity": 3, "unit": "each"}
+        assert service.get_relationship(rel.id).attributes == {"quantity": 3, "unit": "each"}
+        [event] = service._event_publisher.get_events_of_type(RelationshipUpdated)
+        assert event.relationship_id == rel.id
+        assert event.changed_fields == ("attributes",)
+        assert event.old_values == {"attributes": {"quantity": 2}}
+        assert event.new_values == {"attributes": {"quantity": 3, "unit": "each"}}
+
+    def test_unchanged_update_writes_nothing(self, kit):
+        service, hang, hooks, requires = kit
+        rel = service.create_relationship(hang, hooks, requires, attributes={"quantity": 2})
+
+        service.update_relationship(rel.id, {"quantity": 2})
+
+        assert service._event_publisher.get_events_of_type(RelationshipUpdated) == []
+
+    def test_update_refuses_unknown_names_and_missing_relationships(self, kit):
+        service, hang, hooks, requires = kit
+        rel = service.create_relationship(hang, hooks, requires)
+        with pytest.raises(ValueError, match="does not allow"):
+            service.update_relationship(rel.id, {"brand": "Acme"})
+        with pytest.raises(EntityNotFoundError):
+            service.update_relationship("missing", {})

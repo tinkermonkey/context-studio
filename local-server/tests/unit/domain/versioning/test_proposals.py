@@ -34,6 +34,28 @@ class TestClassifyScope:
     def test_sort_order_is_editorial(self):
         assert classify_scope(OperationType.UPDATE, {"sort_order": 3}) is ChangeScope.EDITORIAL
 
+    def test_adding_relationship_attributes_is_additive(self):
+        scope = classify_scope(
+            OperationType.UPDATE,
+            {"attributes": {"quantity": 2, "unit": "each"}},
+            base={"attributes": {"quantity": 2}},
+        )
+        assert scope is ChangeScope.ADDITIVE
+
+    @pytest.mark.parametrize(
+        "proposed", [{"quantity": 3}, {"unit": "each"}, {}], ids=["changed", "removed", "cleared"]
+    )
+    def test_changing_or_removing_a_relationship_attribute_is_breaking(self, proposed):
+        scope = classify_scope(
+            OperationType.UPDATE, {"attributes": proposed}, base={"attributes": {"quantity": 2}}
+        )
+        assert scope is ChangeScope.BREAKING
+
+    def test_relationship_attributes_without_a_base_are_breaking(self):
+        assert classify_scope(OperationType.UPDATE, {"attributes": {"quantity": 2}}) is (
+            ChangeScope.BREAKING
+        )
+
     def test_create_is_additive(self):
         assert classify_scope(OperationType.CREATE, {"title": "Furniture"}) is ChangeScope.ADDITIVE
 
@@ -190,15 +212,28 @@ class TestProposedOperation:
                 fields={"title": "Den", "concept_scheme_id": "s2"},
             )
 
-    def test_a_relationship_cannot_be_updated(self):
-        with pytest.raises(ValueError, match="relationship can't be updated"):
+    @pytest.mark.parametrize(
+        "fields", [{"target_id": "c2"}, {"attributes": {"quantity": 1}, "source_id": "c1"}]
+    )
+    def test_a_relationship_update_sets_only_attributes(self, fields):
+        with pytest.raises(ValueError, match="relationship update sets only attributes"):
             ProposedOperation(
                 seq=0,
                 op=OperationType.UPDATE,
                 kind=OperationKind.RELATIONSHIP,
                 target_id="r1",
-                fields={"target_id": "c2"},
+                fields=fields,
             )
+
+    def test_a_relationship_attributes_update_is_allowed(self):
+        operation = ProposedOperation(
+            seq=0,
+            op=OperationType.UPDATE,
+            kind=OperationKind.RELATIONSHIP,
+            target_id="r1",
+            fields={"attributes": {"quantity": 2}},
+        )
+        assert operation.fields == {"attributes": {"quantity": 2}}
 
     @pytest.mark.parametrize("probability", [-0.1, 1.5])
     def test_probability_is_bounded(self, probability):

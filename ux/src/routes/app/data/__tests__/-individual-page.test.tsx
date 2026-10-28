@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
-import { entityPageHandlers } from "@/test/entityPageHandlers";
+import { entityPageHandlers, relationship } from "@/test/entityPageHandlers";
 import { useBreadcrumbStore } from "@/stores/breadcrumbs";
 import { useNavigatorStore } from "@/stores/navigator";
 import { IndividualPage } from "../individuals_.$id";
@@ -41,6 +42,40 @@ describe("IndividualPage", () => {
     expect(
       within(screen.getByTestId("individual-relationships-panel")).getByText("Outgoing"),
     ).toBeInTheDocument();
+  });
+
+  it("shows a relationship's attributes read-only on its row", async () => {
+    server.use(
+      http.get("*/api/relationships", ({ request }) => {
+        const source = new URL(request.url).searchParams.get("source_id");
+        const items =
+          source === "ind-1"
+            ? [{ ...relationship, attributes: { quantity: 2, unit: "each", optional: false } }]
+            : [];
+        return HttpResponse.json({ items, total: items.length, limit: 500, offset: 0 });
+      }),
+    );
+    render(<IndividualPage id="ind-1" />);
+
+    const attributes = await screen.findByTestId("individual-relationship-attributes-rel-1");
+    expect(attributes).toHaveClass("relationship-attributes");
+    expect(attributes).toHaveAttribute("role", "list");
+    expect(
+      within(attributes)
+        .getAllByRole("listitem")
+        .map((i) => i.textContent),
+    ).toEqual(["optional no", "quantity 2", "unit each"]);
+    expect(within(attributes).getByRole("listitem", { name: "quantity: 2" })).toBeInTheDocument();
+    expect(within(attributes).queryByRole("textbox")).not.toBeInTheDocument();
+  });
+
+  it("shows no attribute list for a relationship without attributes", async () => {
+    render(<IndividualPage id="ind-1" />);
+
+    await screen.findByTestId("individual-relationship-rel-1");
+    expect(
+      screen.queryByTestId("individual-relationship-attributes-rel-1"),
+    ).not.toBeInTheDocument();
   });
 
   it("reads incoming relationships from the target's side", async () => {

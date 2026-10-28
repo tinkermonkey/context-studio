@@ -16,7 +16,7 @@ reading and writing files is left to the scripts.
       "properties": [{"identifier", "title", "description", "predicate",
                       "domain", "range", "constraints": {}}],
       "individuals": [{"id", "classes": [...], "title", "description", "data": {}}],
-      "relationships": [{"source", "property", "target"}]
+      "relationships": [{"source", "property", "target", "attributes": {}}]
     }
 
 Loading. Every write goes through OntologyService, so changes are evented, and
@@ -25,7 +25,9 @@ bundle writes nothing. The taxonomy, schemes, classes and properties are
 matched on `identifier`. Individuals are matched on the source's
 ExternalReference identifier, then on their UUID: an individual created in
 Context Studio exports its UUID as its `id`. Relationships are matched on their
-(source, property, target) triple.
+(source, property, target) triple; their `attributes` (JSON scalars, e.g. a
+kit's quantity, unit and optional) may use only the names the property lists in
+`constraints.edge_properties`.
 
 References. A class, property or individual the loader creates carries an
 ExternalReference(source, identifier or id). A matched property or individual
@@ -35,7 +37,7 @@ its metadata is set; one without gets a reference only if the bundle carries
 matched only if every end it has lies in this taxonomy. What
 v0 cannot model is carried in that reference's metadata, out of the
 definitions that drive vector matching: a property's `constraints` and an
-individual's `data`. Relationships with attributes are rejected.
+individual's `data`.
 
 The loader never deletes. Classes, relationship types and individuals that
 carry this source's reference, attributes on its classes, and relationships
@@ -60,6 +62,7 @@ from domain.ontology.entities import (
     Individual,
     PropertyDefinition,
     Taxonomy,
+    validate_relationship_attributes,
 )
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.value_objects import ExternalReference
@@ -69,7 +72,7 @@ if TYPE_CHECKING:
 
 BUNDLE_FORMAT = "context-studio-bundle"
 BUNDLE_VERSION = 0
-_RELATIONSHIP_KEYS = {"source", "property", "target"}
+_RELATIONSHIP_KEYS = {"source", "property", "target", "attributes"}
 _Keyed = TypeVar("_Keyed", ConceptScheme, Class)
 
 
@@ -154,6 +157,10 @@ class _Loader:
     # ------------------------------------------------------------------ run
 
     def run(self) -> BundleImportSummary:
+        # Checked before anything is written: a bad edge refuses the whole bundle.
+        edge_properties = _edge_properties(self._bundle)
+        for spec in self._bundle.get("relationships", []):
+            _relationship_attributes(spec, edge_properties)
         taxonomy = self._upsert_taxonomy(self._bundle["taxonomy"])
         scheme_ids = self._upsert_schemes(taxonomy.id, self._bundle.get("schemes", []))
         class_ids = self._upsert_classes(taxonomy.id, scheme_ids, self._bundle.get("classes", []))
@@ -512,13 +519,9 @@ class _Loader:
         specs: list[dict[str, Any]],
     ) -> None:
         counts = self.summary.kind("relationship")
+        edge_properties = _edge_properties(self._bundle)
         for spec in specs:
-            extra = set(spec) - _RELATIONSHIP_KEYS
-            if extra:
-                raise BundleError(
-                    f"Relationship {spec} carries attributes {sorted(extra)}; v0 bundles"
-                    " cannot load relationships with attributes"
-                )
+            attributes = _relationship_attributes(spec, edge_properties)
             try:
                 source_id = individual_ids[spec["source"]]
                 target_id = individual_ids[spec["target"]]
@@ -526,13 +529,19 @@ class _Loader:
             except KeyError as exc:
                 raise BundleError(f"Relationship {spec} names unknown {exc}") from None
             self._bundle_triples.add((source_id, property_id, target_id))
-            if self._repo.list_relationships(
+            existing = self._repo.list_relationships(
                 source_id=source_id, target_id=target_id, property_id=property_id, limit=None
-            ):
+            )
+            if not existing:
+                self._service.create_relationship(
+                    source_id, target_id, property_id, attributes=attributes
+                )
+                counts.record("created")
+            elif existing[0].attributes == attributes:
                 counts.record("unchanged")
-                continue
-            self._service.create_relationship(source_id, target_id, property_id)
-            counts.record("created")
+            else:
+                self._service.update_relationship(existing[0].id, attributes)
+                counts.record("updated")
 
     # ---------------------------------------------------------------- stale
 
@@ -764,18 +773,66 @@ class BundleExporter:
 
     def _relationships(
         self, individual_keys: dict[str, str], property_keys: dict[str, str]
-    ) -> list[dict[str, str]]:
-        triples = {
+    ) -> list[dict[str, Any]]:
+        by_triple = {
             (
                 individual_keys[rel.source_id],
                 property_keys[rel.property_definition_id],
                 individual_keys[rel.target_id],
-            )
+            ): rel.attributes
             for individual_id in individual_keys
             for rel in self._repo.list_relationships(source_id=individual_id, limit=None)
             if rel.target_id in individual_keys and rel.property_definition_id in property_keys
         }
-        return [{"source": s, "property": p, "target": t} for s, p, t in sorted(triples)]
+        relationships: list[dict[str, Any]] = []
+        for (source, prop, target), attributes in sorted(by_triple.items()):
+            spec: dict[str, Any] = {"source": source, "property": prop, "target": target}
+            if attributes:
+                spec["attributes"] = dict(sorted(attributes.items()))
+            relationships.append(spec)
+        return relationships
+
+
+def _edge_properties(bundle: dict[str, Any]) -> dict[str, list[str]]:
+    """Per bundle property identifier, the attribute names its constraints allow."""
+    return {
+        prop["identifier"]: (prop.get("constraints") or {}).get("edge_properties") or []
+        for prop in bundle.get("properties", [])
+    }
+
+
+def _relationship_attributes(
+    spec: dict[str, Any], edge_properties: dict[str, list[str]]
+) -> dict[str, Any]:
+    """
+    A bundle relationship's attributes, checked against its property's edge_properties.
+
+    Raises:
+        BundleError: For keys other than source, property, target and attributes,
+            attributes that are not an object of JSON scalars, or names the
+            property's constraints.edge_properties does not list
+    """
+    extra = set(spec) - _RELATIONSHIP_KEYS
+    if extra:
+        raise BundleError(
+            f"Relationship {spec} has unknown keys {sorted(extra)}; edge values go in"
+            " 'attributes'"
+        )
+    attributes = spec.get("attributes") or {}
+    try:
+        validate_relationship_attributes(attributes)
+    except ValueError as exc:
+        raise BundleError(f"Relationship {spec}: {exc}") from None
+    allowed = edge_properties.get(str(spec.get("property")), [])
+    unknown = sorted(set(attributes) - set(allowed))
+    if unknown:
+        listed = ", ".join(allowed) if allowed else "none"
+        raise BundleError(
+            f"Relationship {spec} carries attributes {unknown} that property"
+            f" {spec.get('property')!r} does not list in constraints.edge_properties"
+            f" (allowed: {listed})"
+        )
+    return dict(attributes)
 
 
 def _within(prop: PropertyDefinition, class_ids: set[str] | dict[str, str]) -> bool:

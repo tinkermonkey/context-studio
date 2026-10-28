@@ -221,12 +221,154 @@ def test_identifier_owned_by_another_taxonomy_is_refused(service, repo):
         load_bundle(service, repo, _bundle())
 
 
-def test_relationship_with_attributes_is_rejected(service, repo):
+def test_relationship_with_unknown_keys_is_rejected(service, repo):
     bundle = _bundle()
     bundle["relationships"][0]["quantity"] = 2
 
-    with pytest.raises(BundleError, match="attributes"):
+    with pytest.raises(BundleError, match=r"unknown keys \['quantity'\]; edge values go in"):
         load_bundle(service, repo, bundle)
+
+
+def test_relationship_attributes_the_property_does_not_list_are_refused(service, repo):
+    bundle = _bundle()
+    bundle["relationships"][0]["attributes"] = {"quantity": 2}
+
+    with pytest.raises(BundleError, match=r"carries attributes \['quantity'\].*allowed: none"):
+        load_bundle(service, repo, bundle)
+    assert repo.get_by_identifier("house") is None  # refused before anything was written
+
+
+def test_relationship_attributes_must_be_scalars(service, repo):
+    bundle = _kit_bundle()
+    bundle["relationships"][-1]["attributes"] = {"quantity": {"value": 2}}
+
+    with pytest.raises(BundleError, match="string, number, boolean or null"):
+        load_bundle(service, repo, bundle)
+
+
+def _kit_bundle():
+    """The test bundle plus resources and a kit: hanging a picture requires hooks and a level."""
+    bundle = _bundle()
+    bundle["classes"].append(
+        {
+            "identifier": "house_resource",
+            "scheme": "house_kinds",
+            "title": "Resource",
+            "description": "A kind of thing you use.",
+        }
+    )
+    bundle["properties"].append(
+        {
+            "identifier": "house_activity_requires_resource",
+            "title": "activity requires resource",
+            "description": "What an activity needs.",
+            "predicate": "requires",
+            "domain": "house_activity",
+            "range": "house_resource",
+            "constraints": {"edge_properties": ["quantity", "unit", "optional"]},
+        }
+    )
+    bundle["individuals"] += [
+        {"id": "hang", "classes": ["house_activity"], "title": "Hang a picture"},
+        {
+            "id": "hooks",
+            "classes": ["house_resource"],
+            "title": "Picture hooks",
+            "description": "Small hooks.",
+            "data": {},
+        },
+        {
+            "id": "level",
+            "classes": ["house_resource"],
+            "title": "Level",
+            "description": "A spirit level.",
+            "data": {},
+        },
+    ]
+    requires = "house_activity_requires_resource"
+    bundle["relationships"] += [
+        {
+            "source": "hang",
+            "property": requires,
+            "target": "hooks",
+            "attributes": {"quantity": 2, "unit": "each"},
+        },
+        {
+            "source": "hang",
+            "property": requires,
+            "target": "level",
+            "attributes": {"optional": True},
+        },
+    ]
+    return bundle
+
+
+def _kit(repo):
+    """The kit's relationships' attributes by target title."""
+    hang = next(
+        i
+        for i in repo.list_individuals(
+            class_id=repo.get_by_identifier("house_activity").id, limit=None
+        )
+        if i.title == "Hang a picture"
+    )
+    return {
+        repo.get_individual(rel.target_id).title: rel.attributes
+        for rel in repo.list_relationships(source_id=hang.id, limit=None)
+    }
+
+
+def test_relationship_attributes_load_reload_and_update(service, repo, session_factory):
+    summary = load_bundle(service, repo, _kit_bundle())
+    assert summary.kind("relationship").created == 3
+    assert _kit(repo) == {
+        "Picture hooks": {"quantity": 2, "unit": "each"},
+        "Level": {"optional": True},
+    }
+
+    before = _written(session_factory)
+    assert load_bundle(service, repo, _kit_bundle()).changed == 0
+    assert _written(session_factory) == before
+
+    changed = _kit_bundle()
+    changed["relationships"][1]["attributes"] = {"quantity": 3, "unit": "each"}
+    del changed["relationships"][2]["attributes"]
+    summary = load_bundle(service, repo, changed)
+
+    assert summary.kind("relationship").updated == 2
+    assert _kit(repo) == {"Picture hooks": {"quantity": 3, "unit": "each"}, "Level": {}}
+    with session_factory() as session:
+        updates = (
+            session.query(ChangeEvent)
+            .filter(ChangeEvent.entity_type == "relationship", ChangeEvent.operation == "update")
+            .all()
+        )
+    assert sorted(e.previous_state["attributes"].get("quantity", 0) for e in updates) == [0, 2]
+
+
+def test_relationship_attributes_are_exported_and_round_trip(service, repo, session_factory):
+    load_bundle(service, repo, _kit_bundle())
+
+    exported = _assert_round_trip_writes_nothing(
+        service, repo, session_factory, _taxonomy_id(repo, "house")
+    )
+
+    kit = [r for r in exported["relationships"] if r["source"] == "hang"]
+    assert kit == [
+        {
+            "source": "hang",
+            "property": "house_activity_requires_resource",
+            "target": "hooks",
+            "attributes": {"quantity": 2, "unit": "each"},
+        },
+        {
+            "source": "hang",
+            "property": "house_activity_requires_resource",
+            "target": "level",
+            "attributes": {"optional": True},
+        },
+    ]
+    assert "attributes" not in next(r for r in exported["relationships"] if r["source"] != "hang")
 
 
 def test_class_hierarchy_cycle_is_rejected(service, repo):
@@ -423,6 +565,70 @@ def _assert_round_trip_writes_nothing(service, repo, session_factory, taxonomy_i
 
 def test_house_bundle_round_trip_writes_nothing(service, repo, session_factory):
     house = read_bundle(HOUSE_BUNDLE)
+    load_bundle(service, repo, house)
+
+    exported = _assert_round_trip_writes_nothing(
+        service, repo, session_factory, _taxonomy_id(repo, "house")
+    )
+
+    assert _normalized(exported) == _normalized(house)
+
+
+def house_with_kits():
+    """
+    The real House bundle plus kits as House emits them: resources, and `requires`
+    edges from starter activities carrying quantity, unit and optional.
+    """
+    house = read_bundle(HOUSE_BUNDLE)
+    house["individuals"] += [
+        {
+            "id": "kit_hooks",
+            "classes": ["house_resource_supply"],
+            "title": "Picture hooks",
+            "description": "Small hooks.",
+            "data": {},
+        },
+        {
+            "id": "kit_hammer",
+            "classes": ["house_resource_tool"],
+            "title": "Hammer",
+            "description": "A claw hammer.",
+            "data": {},
+        },
+        {
+            "id": "kit_level",
+            "classes": ["house_resource_tool"],
+            "title": "Level",
+            "description": "A spirit level.",
+            "data": {},
+        },
+    ]
+    requires = "house_activity_requires_resource"
+    house["relationships"] += [
+        {
+            "source": "starter_hang_a_picture",
+            "property": requires,
+            "target": "kit_hooks",
+            "attributes": {"quantity": 2, "unit": "each", "optional": False},
+        },
+        {
+            "source": "starter_hang_a_picture",
+            "property": requires,
+            "target": "kit_hammer",
+            "attributes": {"quantity": 1, "unit": "each"},
+        },
+        {
+            "source": "starter_hang_a_shelf",
+            "property": requires,
+            "target": "kit_level",
+            "attributes": {"optional": True},
+        },
+    ]
+    return house
+
+
+def test_house_bundle_with_kits_round_trip_writes_nothing(service, repo, session_factory):
+    house = house_with_kits()
     load_bundle(service, repo, house)
 
     exported = _assert_round_trip_writes_nothing(

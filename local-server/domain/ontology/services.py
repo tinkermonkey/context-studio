@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import Literal
+from typing import Any, Literal
 from uuid import uuid4
 
 from domain.ports import EventPublisher
@@ -24,6 +24,7 @@ from .entities import (
     PropertyDefinition,
     Relationship,
     Taxonomy,
+    validate_relationship_attributes,
 )
 from .events import (
     AttributeDefinitionCreated,
@@ -42,6 +43,7 @@ from .events import (
     PropertyDefinitionUpdated,
     RelationshipCreated,
     RelationshipDeleted,
+    RelationshipUpdated,
     SchemeCreated,
     SchemeDeleted,
     SchemeUpdated,
@@ -1527,6 +1529,7 @@ class OntologyService:
         target_id: str,
         property_definition_id: str,
         source_run_id: str | None = None,
+        attributes: dict[str, Any] | None = None,
     ) -> Relationship:
         """
         Create a new typed relationship between two entities (Classes or Individuals).
@@ -1543,12 +1546,15 @@ class OntologyService:
             property_definition_id: ID of the property definition (relationship type)
             source_run_id: Optional ID of the pipeline run that produced this
                 relationship, for provenance tracking
+            attributes: Values carried on the edge; only names the property
+                definition allows (PropertyDefinition.edge_attribute_names)
 
         Returns:
             The created Relationship
 
         Raises:
-            ValueError: If source_id == target_id
+            ValueError: If source_id == target_id, or an attribute is not allowed
+                or not a JSON scalar
             DuplicateEntityError: If the relationship triple already exists
             EntityNotFoundError: If source, target, or property definition does not exist
         """
@@ -1559,6 +1565,8 @@ class OntologyService:
         prop_def = self._repository.get_property_definition(property_definition_id)
         if prop_def is None:
             raise EntityNotFoundError("PropertyDefinition", property_definition_id)
+        attributes = dict(attributes or {})
+        _check_edge_attributes(prop_def, attributes)
 
         # Validate source entity exists (try Class first, then Individual)
         source_class = self._repository.get_class(source_id)
@@ -1603,6 +1611,7 @@ class OntologyService:
             target_id=target_id,
             property_definition_id=property_definition_id,
             source_run_id=source_run_id,
+            attributes=attributes,
         )
         relationship = self._repository.save_relationship(relationship)
 
@@ -1612,6 +1621,7 @@ class OntologyService:
                 source_id=source_id,
                 target_id=target_id,
                 property_definition_id=property_definition_id,
+                attributes=dict(attributes),
             )
         )
         if failures:
@@ -1639,6 +1649,56 @@ class OntologyService:
                     handler_names,
                 )
 
+        return relationship
+
+    def update_relationship(self, relationship_id: str, attributes: dict[str, Any]) -> Relationship:
+        """
+        Replace a relationship's attributes; its ends and type can't change.
+
+        Writes and emits RelationshipUpdated (with the old and new attributes,
+        so the change can be reverted) only when the attributes differ.
+
+        Args:
+            relationship_id: The relationship
+            attributes: The complete new attributes ({} clears them)
+
+        Returns:
+            The relationship as it now stands
+
+        Raises:
+            EntityNotFoundError: If the relationship or its property definition does not exist
+            ValueError: If an attribute is not allowed or not a JSON scalar
+        """
+        relationship = self._repository.get_relationship(relationship_id)
+        if relationship is None:
+            raise EntityNotFoundError("Relationship", relationship_id)
+        prop_def = self._repository.get_property_definition(relationship.property_definition_id)
+        if prop_def is None:
+            raise EntityNotFoundError("PropertyDefinition", relationship.property_definition_id)
+        attributes = dict(attributes)
+        _check_edge_attributes(prop_def, attributes)
+        old = dict(relationship.attributes)
+        if old == attributes:
+            return relationship
+
+        relationship.attributes = attributes
+        relationship = self._repository.save_relationship(relationship)
+        failures = self._event_publisher.publish(
+            RelationshipUpdated(
+                relationship_id=relationship_id,
+                changed_fields=("attributes",),
+                old_values={"attributes": old},
+                new_values={"attributes": dict(attributes)},
+            )
+        )
+        if failures:
+            handler_names = ", ".join(name for name, _ in failures)
+            _logger.warning(
+                "Event handlers failed for RelationshipUpdated (relationship_id=%s):"
+                " %s. Relationship is updated but audit trail may have gaps.",
+                relationship_id,
+                handler_names,
+            )
         return relationship
 
     def get_relationship(self, relationship_id: str) -> Relationship:
@@ -3427,3 +3487,21 @@ class OntologyService:
             Total count of attribute definitions
         """
         return self._repository.count_attribute_definitions(class_id=class_id)
+
+
+def _check_edge_attributes(prop_def: PropertyDefinition, attributes: dict[str, Any]) -> None:
+    """
+    Refuse attribute names the property does not allow, and non-scalar values.
+
+    Raises:
+        ValueError: Naming the unknown attributes and the allowed ones
+    """
+    validate_relationship_attributes(attributes)
+    allowed = prop_def.edge_attribute_names()
+    unknown = sorted(set(attributes) - allowed)
+    if unknown:
+        listed = ", ".join(sorted(allowed)) if allowed else "none"
+        raise ValueError(
+            f"Relationship type {prop_def.identifier!r} does not allow attributes {unknown}"
+            f" (allowed: {listed})"
+        )

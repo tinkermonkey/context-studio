@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Sequence
 from uuid import uuid4
 
 from domain.interchange.services import get_current_batch_run_id, set_batch_run_context
+from domain.ontology.entities import validate_relationship_attributes
 from domain.ontology.exceptions import OntologyError
 from domain.ontology.snapshots import decode_field, entity_snapshot
 from domain.versioning.approval_policy import auto_apply_ids
@@ -206,8 +207,9 @@ _FIELDS: dict[OperationKind, _KindFields] = {
         clearable=frozenset({"description"}),
     ),
     K.RELATIONSHIP: _KindFields(
-        create=frozenset({"source_id", "target_id", "property_definition_id"}),
+        create=frozenset({"source_id", "target_id", "property_definition_id", "attributes"}),
         required=frozenset({"source_id", "target_id", "property_definition_id"}),
+        update=frozenset({"attributes"}),
     ),
 }
 
@@ -267,6 +269,12 @@ def _has_field_type(name: str, value: Any) -> bool:
         return isinstance(value, int) and not isinstance(value, bool)
     if name == "external_references":
         return isinstance(value, list) and all(isinstance(item, dict) for item in value)
+    if name == "attributes":
+        try:
+            validate_relationship_attributes(value)
+        except ValueError:
+            return False
+        return True
     return True
 
 
@@ -1002,6 +1010,8 @@ class ProposalService:
             return svc.update_attribute_definition(target, **{**v, **cleared}).id
         if kind is K.INDIVIDUAL:
             return self._update_individual(target, v)
+        if kind is K.RELATIONSHIP:
+            return svc.update_relationship(target, v["attributes"]).id
         return self._update_property(target, v)
 
     def _update_property(self, target: str, v: dict[str, Any]) -> str:

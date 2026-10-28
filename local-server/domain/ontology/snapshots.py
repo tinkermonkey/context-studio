@@ -71,6 +71,8 @@ def _encode(value: Any) -> Any:
         return asdict(value)
     if isinstance(value, list):
         return [_encode(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _encode(item) for key, item in value.items()}
     return value
 
 

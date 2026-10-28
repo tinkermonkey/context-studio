@@ -371,6 +371,10 @@ class RelationshipCreateRequest(BaseModel):
         ...,
         description="Relationship type identifier (e.g., 'related_to', 'parent_of')",
     )
+    attributes: Optional[dict[str, str | int | float | bool | None]] = Field(
+        None,
+        description="Values carried on the edge; only names the relationship type allows",
+    )
 
 
 class RelationshipResponse(BaseModel):
@@ -385,6 +389,13 @@ class RelationshipResponse(BaseModel):
         ..., description="Property definition ID (relationship type)"
     )
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
+    attributes: dict[str, str | int | float | bool | None] = Field(
+        default_factory=dict,
+        description=(
+            "Values carried on the edge (e.g. a kit's quantity, unit, optional), keyed by"
+            " the names the relationship type allows"
+        ),
+    )
 
 
 # ==================== PropertyDefinition Schemas ====================

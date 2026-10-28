@@ -117,6 +117,7 @@ from domain.ontology.events import (
     PropertyDefinitionUpdated,
     RelationshipCreated,
     RelationshipDeleted,
+    RelationshipUpdated,
     SchemeCreated,
     SchemeDeleted,
     SchemeUpdated,
@@ -654,6 +655,12 @@ async def lifespan(app: FastAPI):
         logger.info(
             "Event subscription: RelationshipCreated ->"
             " ChangeEventRecorder.on_relationship_created"
+        )
+
+        event_publisher.subscribe(RelationshipUpdated, change_recorder.on_relationship_updated)
+        logger.info(
+            "Event subscription: RelationshipUpdated ->"
+            " ChangeEventRecorder.on_relationship_updated"
         )
 
         event_publisher.subscribe(RelationshipDeleted, change_recorder.on_relationship_deleted)

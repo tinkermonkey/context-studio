@@ -26,6 +26,7 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.web.ontology_routes import router
 from domain.ontology.services import OntologyService
+from domain.ontology.value_objects import ExternalReference
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 
 
@@ -591,6 +592,55 @@ class TestRelationshipCRUD:
 
         response = client.delete(f"/api/relationships/{relationship_id}")
         assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    def test_relationship_attributes_are_created_and_returned(self, client, ontology_service):
+        """#1365: attributes the type allows are stored and read back; others are refused."""
+        taxonomy = ontology_service.create_taxonomy(title="House")
+        scheme = ontology_service.create_scheme(taxonomy_id=taxonomy.id, title="Kinds")
+        activity = ontology_service.create_class(scheme.id, "Activity")
+        resource = ontology_service.create_class(scheme.id, "Resource")
+        ontology_service.create_property_definition(
+            "requires",
+            "requires",
+            external_references=[
+                ExternalReference(
+                    source="house",
+                    identifier="requires",
+                    metadata={"edge_properties": ["quantity", "unit"]},
+                )
+            ],
+        )
+        payload = {
+            "source_id": activity.id,
+            "target_id": resource.id,
+            "relationship_type": "requires",
+        }
+
+        created = client.post(
+            "/api/relationships", json={**payload, "attributes": {"quantity": 2, "unit": "each"}}
+        )
+        assert created.status_code == status.HTTP_201_CREATED, created.text
+        listed = client.get("/api/relationships", params={"source_id": activity.id}).json()
+        assert [r["attributes"] for r in listed["items"]] == [{"quantity": 2, "unit": "each"}]
+        got = client.get(f"/api/relationships/{created.json()['id']}").json()
+        assert got["attributes"] == {"quantity": 2, "unit": "each"}
+
+        refused = client.post(
+            "/api/relationships",
+            json={**payload, "target_id": activity.id, "attributes": {"brand": "Acme"}},
+        )
+        assert refused.status_code in (400, 422)
+
+    def test_relationship_without_attributes_returns_an_empty_object(self, client):
+        tax = client.post("/api/taxonomies", json={"title": "T"}).json()["id"]
+        scheme = client.post(f"/api/taxonomies/{tax}/schemes", json={"title": "S"}).json()["id"]
+        a = client.post(f"/api/schemes/{scheme}/classes", json={"title": "A"}).json()["id"]
+        b = client.post(f"/api/schemes/{scheme}/classes", json={"title": "B"}).json()["id"]
+        response = client.post(
+            "/api/relationships",
+            json={"source_id": a, "target_id": b, "relationship_type": "related_to"},
+        )
+        assert response.json()["attributes"] == {}
 
 
 class TestPropertyDefinitionCRUD:
@@ -1782,9 +1832,7 @@ class TestClassListQueryParams:
         }
         return scheme_id, created
 
-    def test_q_matches_title_case_insensitively_and_total_counts_all_matches(
-        self, client, classes
-    ):
+    def test_q_matches_title_case_insensitively_and_total_counts_all_matches(self, client, classes):
         response = client.get("/api/classes", params={"q": "WIDGET", "limit": 2})
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
@@ -1832,9 +1880,9 @@ class TestClassListQueryParams:
 
     def test_sort_by_title_both_directions(self, client, classes):
         asc = client.get("/api/classes", params={"sort_by": "title"}).json()["items"]
-        desc = client.get(
-            "/api/classes", params={"sort_by": "title", "sort_order": "desc"}
-        ).json()["items"]
+        desc = client.get("/api/classes", params={"sort_by": "title", "sort_order": "desc"}).json()[
+            "items"
+        ]
         titles = ["Alpha Widget", "Beta Widget", "Delta Widget", "Gamma 100%"]
         assert [c["title"] for c in asc] == titles
         assert [c["title"] for c in desc] == list(reversed(titles))

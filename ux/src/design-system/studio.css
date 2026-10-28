@@ -1838,6 +1838,18 @@ body.dark-canvas .hierarchy-row--has-individuals .hierarchy-row__meta {
   font-weight: 500;
 }
 
+/* Values carried on a relationship's edge (quantity, unit, optional), read-only. */
+.relationship-attributes {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.relationship-attributes__value {
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
 /* ------------ Chat panel (docked right column) ------------ */
 /* Open: the canvas stops scrolling and padding itself; the page pane and the
    chat column each fill the canvas height (page scrolls, chat thread scrolls).

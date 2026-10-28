@@ -276,9 +276,7 @@ async def delete_taxonomy(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get(
-    "/taxonomies/{taxonomy_id}/scheme-counts", response_model=list[SchemeCountsResponse]
-)
+@router.get("/taxonomies/{taxonomy_id}/scheme-counts", response_model=list[SchemeCountsResponse])
 async def get_taxonomy_scheme_counts(
     taxonomy_id: str,
     service: OntologyService = Depends(get_ontology_service),
@@ -828,6 +826,7 @@ async def create_relationship(
             source_id=request.source_id,
             target_id=request.target_id,
             property_definition_id=prop_def.id,
+            attributes=request.attributes,
         )
         return RelationshipResponse.model_validate(relationship)
     except Exception as exc:

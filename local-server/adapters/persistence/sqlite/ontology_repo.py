@@ -1197,9 +1197,13 @@ class SQLiteOntologyRepository:
         with self.session_factory() as session:
             scheme_ids = [
                 row[0]
-                for row in session.query(cls.id)
-                .filter(cls.node_type == NodeType.CONCEPT_SCHEME, cls.taxonomy_id == taxonomy_id)
-                .order_by(cls.title)
+                for row in (
+                    session.query(cls.id)
+                    .filter(
+                        cls.node_type == NodeType.CONCEPT_SCHEME, cls.taxonomy_id == taxonomy_id
+                    )
+                    .order_by(cls.title)
+                )
             ]
             class_counts = dict(
                 session.query(cls.concept_scheme_id, func.count(cls.id))
@@ -1772,12 +1776,14 @@ class SQLiteOntologyRepository:
                 orm_rel = map_relationship_domain_to_orm(rel)
                 session.add(orm_rel)
             else:
-                # Update: only update the timestamp field, everything else is immutable
+                # Update (created_at is immutable). A new dict, so the JSON column
+                # registers the change.
                 orm_rel.source_id = rel.source_id  # type: ignore[assignment]
                 orm_rel.target_id = rel.target_id  # type: ignore[assignment]
                 orm_rel.property_definition_id = (
                     rel.property_definition_id  # type: ignore[assignment]
                 )
+                orm_rel.attributes = dict(rel.attributes)  # type: ignore[assignment]
 
             try:
                 session.commit()
