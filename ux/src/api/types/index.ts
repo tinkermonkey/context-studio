@@ -4150,9 +4150,12 @@ export interface paths {
      * Set Approval Policy
      * @description Replace the taxonomy's approval policy.
      *
-     *     Operations proposed afterwards that match a rule (every key the rule sets)
-     *     and reach min_probability apply as soon as they are proposed, under the
-     *     proposal's run. Breaking operations and deletes never auto-apply.
+     *     Operations proposed afterwards apply as soon as they are proposed, under the
+     *     proposal's run, when they reach min_probability and matching rules cover
+     *     every class their entity will have (a rule matches when every key it sets
+     *     does; one without a class covers any). Never auto-applied: breaking
+     *     operations, deletes, taxonomy creates, property-definition changes, and
+     *     anything that touches or points at an entity outside this taxonomy.
      */
     put: operations["set_approval_policy_api_taxonomies__taxonomy_id__approval_policy_put"];
     post?: never;
@@ -4386,7 +4389,7 @@ export interface components {
     ApprovalPolicyRequest: {
       /**
        * Auto Apply
-       * @description An operation matching any rule may auto-apply; breaking operations and deletes never do
+       * @description Operations the matching rules cover may auto-apply; breaking ones, deletes, taxonomy creates and anything outside this taxonomy never do
        */
       auto_apply?: components["schemas"]["AutoApplyRuleSchema"][];
       /**

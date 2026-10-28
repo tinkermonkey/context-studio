@@ -10,9 +10,19 @@ matches an operation when every key it sets matches:
   individual's classes, an attribute's class, or the class itself)
 - scope: editorial, additive or breaking
 
-Hard rules beat the policy: breaking operations (deletes among them) never
-auto-apply, and with no policy nothing does. An operation that points at a
-"$ref" auto-applies only if the create it points at does too.
+An entity typed by several classes needs every one of them covered: by a
+matching rule naming that class, or by a matching rule with no class at all.
+For an update that is the entity's current classes plus any it would gain.
+
+Hard rules beat the policy:
+
+- breaking operations (deletes among them) and taxonomy creates never auto-apply;
+- an operation auto-applies only if its target and every entity it points at
+  are inside the proposal's taxonomy (property definitions are global, so
+  changing one never auto-applies, though a relationship may use one);
+- an operation that points at a "$ref" auto-applies only if the create it
+  points at does too;
+- with no policy, nothing auto-applies.
 
 The policy is set by a person through the REST API; it is never exposed as an
 agent tool.
@@ -21,7 +31,7 @@ agent tool.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, Sequence
 
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.versioning.proposals import (
@@ -61,13 +71,12 @@ class AutoApplyRule:
         if self.op is None and self.kind is None and self.class_key is None and self.scope is None:
             raise ValueError("An auto-apply rule needs at least one of op, kind, class, scope")
 
-    def matches(self, operation: ProposedOperation, class_keys: set[str]) -> bool:
-        """Whether every key this rule sets matches the operation."""
+    def matches(self, operation: ProposedOperation) -> bool:
+        """Whether the op, kind and scope this rule sets match (its class is checked per class)."""
         return (
             (self.op is None or operation.op is self.op)
             and (self.kind is None or operation.kind is self.kind)
             and (self.scope is None or operation.scope is self.scope)
-            and (self.class_key is None or self.class_key in class_keys)
         )
 
     @classmethod
@@ -124,17 +133,29 @@ class ApprovalPolicy:
         if not 0.0 <= self.min_probability <= 1.0:
             raise ValueError("min_probability must be between 0 and 1")
 
-    def allows(self, operation: ProposedOperation, class_keys: set[str]) -> bool:
+    def allows(self, operation: ProposedOperation, classes: Sequence[set[str]]) -> bool:
         """
-        Whether this operation may auto-apply: never a breaking one or a delete;
-        otherwise when it is probable enough and matches a rule.
+        Whether this operation may auto-apply: never a breaking one, a delete or a
+        taxonomy create; otherwise when it is probable enough and matching rules
+        cover it.
+
+        Args:
+            operation: The operation
+            classes: One set of keys (id and identifier) per class the entity
+                will be typed by; an empty set for a class no rule can name
         """
         if operation.scope is ChangeScope.BREAKING or operation.op is OperationType.DELETE:
+            return False
+        if operation.kind is OperationKind.TAXONOMY and operation.op is OperationType.CREATE:
             return False
         probability = operation.probability if operation.probability is not None else 0.0
         if probability < self.min_probability:
             return False
-        return any(rule.matches(operation, class_keys) for rule in self.auto_apply)
+        matching = [rule for rule in self.auto_apply if rule.matches(operation)]
+        if any(rule.class_key is None for rule in matching):
+            return True
+        named = {rule.class_key for rule in matching}
+        return bool(classes) and all(keys & named for keys in classes)
 
     @classmethod
     def from_rules(cls, taxonomy_id: str, rules: dict[str, Any]) -> ApprovalPolicy:
@@ -172,7 +193,8 @@ class ApprovalPolicy:
 def auto_apply_ids(
     policy: Optional[ApprovalPolicy],
     operations: Iterable[ProposedOperation],
-    class_keys: Callable[[ProposedOperation], set[str]],
+    classes: Callable[[ProposedOperation], Sequence[set[str]]],
+    inside_taxonomy: Callable[[ProposedOperation], bool],
 ) -> list[str]:
     """
     The operations a policy lets apply as soon as they are proposed, in seq order.
@@ -183,16 +205,21 @@ def auto_apply_ids(
     Args:
         policy: The taxonomy's policy, or None (then nothing auto-applies)
         operations: The proposal's operations
-        class_keys: The class ids and identifiers an operation's entity is typed by
+        classes: Per class the operation's entity will be typed by, its keys
+            (see ApprovalPolicy.allows)
+        inside_taxonomy: Whether the operation's target and every existing
+            entity it points at belong to the policy's taxonomy alone
     """
     if policy is None:
         return []
     chosen: list[str] = []
     applied_refs: set[str] = set()
     for operation in sorted(operations, key=lambda o: o.seq):
-        if not policy.allows(operation, class_keys(operation)):
+        if not policy.allows(operation, classes(operation)):
             continue
         if not _refs(operation.fields) <= applied_refs:
+            continue
+        if not inside_taxonomy(operation):
             continue
         chosen.append(operation.id)
         if operation.ref:

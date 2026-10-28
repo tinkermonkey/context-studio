@@ -366,9 +366,12 @@ async def set_approval_policy(
     """
     Replace the taxonomy's approval policy.
 
-    Operations proposed afterwards that match a rule (every key the rule sets)
-    and reach min_probability apply as soon as they are proposed, under the
-    proposal's run. Breaking operations and deletes never auto-apply.
+    Operations proposed afterwards apply as soon as they are proposed, under the
+    proposal's run, when they reach min_probability and matching rules cover
+    every class their entity will have (a rule matches when every key it sets
+    does; one without a class covers any). Never auto-applied: breaking
+    operations, deletes, taxonomy creates, property-definition changes, and
+    anything that touches or points at an entity outside this taxonomy.
     """
     try:
         policy = await run_sync_in_executor(service.set, taxonomy_id, request.to_rules())

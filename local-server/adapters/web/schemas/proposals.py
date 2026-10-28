@@ -242,8 +242,8 @@ class ApprovalPolicyRequest(BaseModel):
 
     auto_apply: list[AutoApplyRuleSchema] = Field(
         default_factory=list,
-        description="An operation matching any rule may auto-apply; breaking operations "
-        "and deletes never do",
+        description="Operations the matching rules cover may auto-apply; breaking ones, "
+        "deletes, taxonomy creates and anything outside this taxonomy never do",
     )
     min_probability: float = Field(
         0.0, ge=0.0, le=1.0, description="An operation also needs at least this probability"

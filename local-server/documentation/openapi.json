@@ -7765,7 +7765,7 @@
           "proposals"
         ],
         "summary": "Set Approval Policy",
-        "description": "Replace the taxonomy's approval policy.\n\nOperations proposed afterwards that match a rule (every key the rule sets)\nand reach min_probability apply as soon as they are proposed, under the\nproposal's run. Breaking operations and deletes never auto-apply.",
+        "description": "Replace the taxonomy's approval policy.\n\nOperations proposed afterwards apply as soon as they are proposed, under the\nproposal's run, when they reach min_probability and matching rules cover\nevery class their entity will have (a rule matches when every key it sets\ndoes; one without a class covers any). Never auto-applied: breaking\noperations, deletes, taxonomy creates, property-definition changes, and\nanything that touches or points at an entity outside this taxonomy.",
         "operationId": "set_approval_policy_api_taxonomies__taxonomy_id__approval_policy_put",
         "parameters": [
           {
@@ -8098,7 +8098,7 @@
             },
             "type": "array",
             "title": "Auto Apply",
-            "description": "An operation matching any rule may auto-apply; breaking operations and deletes never do"
+            "description": "Operations the matching rules cover may auto-apply; breaking ones, deletes, taxonomy creates and anything outside this taxonomy never do"
           },
           "min_probability": {
             "type": "number",

@@ -377,10 +377,120 @@ class ProposalService:
             errors.append(OperationError(None, "invalid", str(exc)))
         if errors:
             raise ProposalValidationError(errors)
-        stored = self._proposals.create(proposal)
-        policy = self._policies.get(taxonomy_id) if self._policies is not None else None
-        auto = auto_apply_ids(policy, stored.operations, self._class_keys)
-        return self.apply(stored.id, auto) if auto else stored
+        return self._auto_apply(self._proposals.create(proposal))
+
+    # --------------------------------------------------------------- auto-apply
+
+    def _auto_apply(self, proposal: ChangeProposal) -> ChangeProposal:
+        """
+        Apply what the taxonomy's approval policy allows, under the proposal's run.
+
+        Never raises: the proposal is already stored, so an error (a stored
+        policy that no longer parses, a failing repository) is logged and the
+        proposal returned as it stands, its status settled, for review.
+        """
+        if self._policies is None:
+            return proposal
+        try:
+            policy = self._policies.get(proposal.taxonomy_id)
+            auto = auto_apply_ids(
+                policy,
+                proposal.operations,
+                self._classes,
+                lambda operation: self._inside_taxonomy(operation, proposal.taxonomy_id),
+            )
+            # apply takes the proposal's lock itself; propose never holds it.
+            return self.apply(proposal.id, auto) if auto else proposal
+        except Exception:  # noqa: BLE001 - the stored proposal must reach the caller
+            _logger.exception("Auto-apply of proposal %s failed; left for review", proposal.id)
+        try:
+            with self._lock(proposal.id):
+                current = self._get(proposal.id)
+                current.settle_status()
+                self._proposals.set_status(current.id, current.status)
+                return current
+        except Exception:  # noqa: BLE001
+            _logger.exception("Could not re-read proposal %s after auto-apply", proposal.id)
+            return proposal
+
+    def _classes(self, operation: ProposedOperation) -> list[set[str]]:
+        """
+        Per class the operation's entity will be typed by, its id and identifier:
+        an individual's current classes plus any it is given, an attribute's
+        class, or a class itself. A "$ref" class gets an empty set (no rule
+        names it).
+        """
+        target, fields = operation.target_id, operation.fields
+        class_ids: list[Any] = []
+        if operation.kind is K.INDIVIDUAL:
+            current = self._repo.get_individual(target) if target else None
+            class_ids = list(current.class_ids if current else [])
+            class_ids += [c for c in fields.get("class_ids") or [] if c not in class_ids]
+        elif operation.kind is K.ATTRIBUTE:
+            current = self._repo.get_attribute_definition(target) if target else None
+            class_ids = [current.class_id if current else fields.get("class_id")]
+        elif operation.kind is K.CLASS and target:
+            class_ids = [target]
+        classes: list[set[str]] = []
+        for class_id in class_ids:
+            if not isinstance(class_id, str) or _is_ref(class_id):
+                classes.append(set())
+                continue
+            cls = self._repo.get_class(class_id)
+            identifier = cls.identifier if cls is not None else None
+            classes.append({class_id, identifier} if identifier else {class_id})
+        return classes
+
+    def _inside_taxonomy(self, operation: ProposedOperation, taxonomy_id: str) -> bool:
+        """
+        Whether the operation's target and every existing entity its id fields
+        point at belong to this taxonomy alone. "$ref" values are skipped (their
+        creates are checked themselves). Property definitions are global: an
+        operation on one is never inside, but a relationship may use one.
+        """
+        if operation.kind is K.PROPERTY:
+            return False
+        if operation.kind is K.TAXONOMY:
+            return operation.op is not OperationType.CREATE and operation.target_id == taxonomy_id
+        if operation.target_id is not None and self._taxonomies(
+            (operation.kind,), operation.target_id
+        ) != {taxonomy_id}:
+            return False
+        for name, value in operation.fields.items():
+            kinds = _ID_FIELDS.get(name)
+            if kinds is None or value is None or name == "property_definition_id":
+                continue
+            for item in value if isinstance(value, list) else [value]:
+                if _is_ref(item):
+                    continue
+                if self._taxonomies(kinds, item) != {taxonomy_id}:
+                    return False
+        return True
+
+    def _taxonomies(self, kinds: tuple[OperationKind, ...], entity_id: Any) -> set[str]:
+        """The taxonomies an entity of one of these kinds belongs to (empty if none or missing)."""
+        for kind in kinds:
+            entity = self._load(kind, entity_id)
+            if entity is None:
+                continue
+            if kind is K.TAXONOMY:
+                return {entity.id}
+            if kind in (K.SCHEME, K.CLASS):
+                return {entity.taxonomy_id}
+            if kind is K.ATTRIBUTE:
+                return self._taxonomies((K.CLASS,), entity.class_id)
+            if kind is K.INDIVIDUAL:
+                found: set[str] = set()
+                for class_id in entity.class_ids:
+                    found |= self._taxonomies((K.CLASS,), class_id)
+                return found
+            if kind is K.RELATIONSHIP:
+                ends = (K.CLASS, K.INDIVIDUAL)
+                return self._taxonomies(ends, entity.source_id) | self._taxonomies(
+                    ends, entity.target_id
+                )
+            return set()  # a property definition is global
+        return set()
 
     def _validated(
         self, draft: OperationDraft, refs: dict[str, OperationKind]
@@ -436,32 +546,6 @@ class ProposalService:
             operation.base = {name: snapshot.get(name) for name in operation.fields}
         operation.scope = classify_scope(op, operation.fields, operation.base, claimed)
         return operation
-
-    def _class_keys(self, operation: ProposedOperation) -> set[str]:
-        """
-        Ids and identifiers of the classes an operation's entity is typed by: an
-        individual's classes, an attribute's class, or a class itself. An
-        existing entity counts as it is now; a create, as its fields say.
-        """
-        target, fields = operation.target_id, operation.fields
-        class_ids: list[Any] = []
-        if operation.kind is K.INDIVIDUAL:
-            current = self._repo.get_individual(target) if target else None
-            class_ids = list(current.class_ids if current else fields.get("class_ids") or [])
-        elif operation.kind is K.ATTRIBUTE:
-            current = self._repo.get_attribute_definition(target) if target else None
-            class_ids = [current.class_id if current else fields.get("class_id")]
-        elif operation.kind is K.CLASS and target:
-            class_ids = [target]
-        keys: set[str] = set()
-        for class_id in class_ids:
-            if not isinstance(class_id, str) or _is_ref(class_id):
-                continue
-            keys.add(class_id)
-            cls = self._repo.get_class(class_id)
-            if cls is not None and cls.identifier:
-                keys.add(cls.identifier)
-        return keys
 
     @staticmethod
     def _check_field_names(operation: ProposedOperation) -> None:

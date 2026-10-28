@@ -15,7 +15,8 @@ Scope follows the DR design charter's vocabulary. The system classifies it
 - additive: something new, or more of something (a create, an extra allowed
   value, an extra class on an individual, a new reference)
 - breaking: anything that removes, moves or redefines (a delete, a move, an
-  identifier, domain or range, datatype or requiredness change)
+  identifier, domain or range, datatype or requiredness change, a new required
+  attribute)
 """
 
 from __future__ import annotations
@@ -135,7 +136,8 @@ def _computed_scope(op: OperationType, fields: dict[str, Any], base: dict[str, A
     if op in (OperationType.DELETE, OperationType.MOVE):
         return ChangeScope.BREAKING
     if op is OperationType.CREATE:
-        return ChangeScope.ADDITIVE
+        # A required attribute makes every existing individual of its class invalid.
+        return ChangeScope.BREAKING if fields.get("is_required") is True else ChangeScope.ADDITIVE
     scope = ChangeScope.EDITORIAL
     for name, value in fields.items():
         if name in EDITORIAL_FIELDS:

@@ -37,6 +37,12 @@ class TestClassifyScope:
     def test_create_is_additive(self):
         assert classify_scope(OperationType.CREATE, {"title": "Furniture"}) is ChangeScope.ADDITIVE
 
+    def test_creating_a_required_attribute_is_breaking(self):
+        required = {"identifier": "size", "datatype": "integer", "is_required": True}
+        assert classify_scope(OperationType.CREATE, required) is ChangeScope.BREAKING
+        optional = {**required, "is_required": False}
+        assert classify_scope(OperationType.CREATE, optional) is ChangeScope.ADDITIVE
+
     @pytest.mark.parametrize("op", [OperationType.DELETE, OperationType.MOVE])
     def test_delete_and_move_are_breaking(self, op):
         assert classify_scope(op, {}) is ChangeScope.BREAKING

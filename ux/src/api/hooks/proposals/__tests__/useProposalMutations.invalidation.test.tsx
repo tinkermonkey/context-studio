@@ -6,6 +6,7 @@ import { QUERY_KEYS } from "@/api/config";
 import { proposalsService } from "@/api/services/proposals";
 import {
   useApplyChangeProposal,
+  useCreateChangeProposal,
   useRejectChangeProposal,
   useRevertChangeProposal,
 } from "../useProposalMutations";
@@ -57,6 +58,22 @@ describe("change proposal mutation invalidation", () => {
     const { result } = renderHook(() => useApplyChangeProposal(), { wrapper });
 
     result.current.mutate({ id: "proposal-1", data: { operation_ids: ["op-1"] } });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    for (const queryKey of [...PROPOSAL_QUERIES, ...ONTOLOGY_QUERIES]) {
+      expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(true);
+    }
+    for (const queryKey of UNRELATED_QUERIES) {
+      expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(false);
+    }
+  });
+
+  it("create marks the proposals and every ontology query stale (auto-apply)", async () => {
+    vi.spyOn(proposalsService, "createProposal").mockResolvedValue({} as never);
+    const { wrapper, invalidated } = setup();
+    const { result } = renderHook(() => useCreateChangeProposal(), { wrapper });
+
+    result.current.mutate({ taxonomy_id: "tax-1", title: "Chores", source: "mcp", operations: [] });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     for (const queryKey of [...PROPOSAL_QUERIES, ...ONTOLOGY_QUERIES]) {
