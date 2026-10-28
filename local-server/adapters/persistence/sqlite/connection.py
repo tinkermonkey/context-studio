@@ -32,6 +32,10 @@ from sqlalchemy.pool import StaticPool
 # Type alias for SQLAlchemy Engine (mypy compatibility)
 Engine = Any  # type: ignore[misc]
 
+# How long a write waits for the lock: an atomic revert holds it for its whole run (seconds
+# on large runs), and a write that gives up would leave its change event unrecorded.
+BUSY_TIMEOUT_MS = 30000
+
 
 def _is_memory_url(database_url: str) -> bool:
     """
@@ -84,7 +88,7 @@ def _create_sqlite_engine(database_url: str) -> Engine:
         )
         pragmas = [
             "PRAGMA journal_mode=WAL",
-            "PRAGMA busy_timeout=5000",
+            f"PRAGMA busy_timeout={BUSY_TIMEOUT_MS}",
             "PRAGMA foreign_keys=ON",
         ]
 

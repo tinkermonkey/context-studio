@@ -7,6 +7,9 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 )
 
+import threading
+import time
+
 import pytest
 from sqlalchemy.orm import sessionmaker
 
@@ -64,3 +67,34 @@ def test_a_rollback_inside_the_scope_refuses_to_commit_even_if_caught(parts):
             repo.save_taxonomy(taxonomy(2))
     assert repo.get_taxonomy("t1") is None
     assert repo.get_taxonomy("t2") is None
+
+
+@pytest.mark.slow
+def test_a_writer_waits_through_a_scope_held_longer_than_five_seconds(parts):
+    """Another thread's write waits for the scope's lock (busy_timeout) and then succeeds."""
+    repo, shared, scope = parts
+    other_repo = SQLiteOntologyRepository(session_factory=sessionmaker(bind=shared.kw["bind"]))
+    lock_held = threading.Event()
+    outcome: dict = {}
+
+    def write() -> None:
+        lock_held.wait()
+        started = time.monotonic()
+        try:
+            other_repo.save_taxonomy(taxonomy(2))
+            outcome["ok"] = True
+        except Exception as exc:  # noqa: BLE001 - reported by the assertion below
+            outcome["error"] = exc
+        outcome["waited"] = time.monotonic() - started
+
+    writer = threading.Thread(target=write)
+    writer.start()
+    with scope.atomic():
+        repo.save_taxonomy(taxonomy(1))
+        lock_held.set()
+        time.sleep(6)
+    writer.join(timeout=60)
+
+    assert outcome.get("ok"), outcome
+    assert outcome["waited"] >= 5
+    assert repo.get_taxonomy("t1") is not None and repo.get_taxonomy("t2") is not None

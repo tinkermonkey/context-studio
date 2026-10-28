@@ -14,9 +14,9 @@ caught the error and carried on, so a partial result is never kept.
 
 The scope starts with BEGIN IMMEDIATE, so its reads and writes see one
 consistent database and it holds the write lock from the start (other writers
-wait up to busy_timeout). Use it on file databases: with an in-memory
-StaticPool database every session shares one connection, so a session outside
-the scope that commits would commit the scope's work too.
+wait up to BUSY_TIMEOUT_MS, see connection.py). Use it on file databases: with
+an in-memory StaticPool database every session shares one connection, so a
+session outside the scope that commits would commit the scope's work too.
 """
 
 from __future__ import annotations
