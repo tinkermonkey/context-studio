@@ -534,3 +534,42 @@ def test_a_failing_status_write_rolls_the_revert_back(parts, monkeypatch):
     assert graph_state(repo, change_repo) == before
     assert service.get(proposal.id).status is ProposalStatus.DONE
     assert repo.get_class(room.id).description == "Any room"
+
+
+def test_revert_refused_when_an_identifier_is_freed_only_after_it_is_given_back(parts):
+    """
+    Seq 2 renamed P1 i_ident -> k_ident; outside, the run's new property took
+    i_ident. Undoing seq 2 gives P1 i_ident back before undoing seq 1 deletes
+    that property, so the revert is refused, with nothing changed.
+    """
+    ontology, repo, change_repo, service = parts
+    tax = ontology.create_taxonomy(title="House")
+    p1 = ontology.create_property_definition(identifier="i_ident", title="I")
+    proposal = service.propose(
+        tax.id,
+        "Rename",
+        [
+            OperationDraft(
+                1, T.CREATE, K.PROPERTY, ref="pn", fields={"identifier": "z_ident", "title": "Z"}
+            ),
+            OperationDraft(2, T.UPDATE, K.PROPERTY, p1.id, fields={"identifier": "k_ident"}),
+            OperationDraft(3, T.UPDATE, K.PROPERTY, p1.id, fields={"title": "Renamed"}),
+        ],
+        ProposalSource.USER,
+    )
+    applied = service.apply(proposal.id, [o.id for o in proposal.operations])
+    assert all(o.status is OperationStatus.APPLIED for o in applied.operations)
+    pn = next(o for o in applied.operations if o.seq == 1).result_entity_id
+    time.sleep(0.01)
+    ontology.update_property_definition(pn, identifier="i_ident")
+    before = graph_state(repo, change_repo)
+
+    with pytest.raises(ValueError, match="i_ident"):
+        service.revert(proposal.id)
+
+    assert graph_state(repo, change_repo) == before
+    assert (
+        repo.get_property_definition(p1.id).identifier,
+        repo.get_property_definition(p1.id).title,
+    ) == ("k_ident", "Renamed")
+    assert service.get(proposal.id).status is ProposalStatus.DONE

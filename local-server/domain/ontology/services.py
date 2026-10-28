@@ -72,6 +72,7 @@ from .value_objects import (
     SchemeCounts,
     Status,
     validate_default_value_against_allowed_values,
+    validate_identifier,
 )
 
 _logger = logging.getLogger(__name__)
@@ -93,6 +94,7 @@ def _serialize_external_references(refs: list[ExternalReference]) -> list[dict[s
 def _property_event_values(prop_def: PropertyDefinition) -> dict[str, object]:
     """The updatable fields of a property definition, as an event payload records them."""
     return {
+        "identifier": prop_def.identifier,
         "title": prop_def.title,
         "description": prop_def.description,
         "canonical_predicate": prop_def.canonical_predicate,
@@ -2077,11 +2079,15 @@ class OntologyService:
         update_domain_class_id: bool = False,
         update_range_class_id: bool = False,
         external_references: list[ExternalReference] | None = None,
+        identifier: str | None = None,
     ) -> PropertyDefinition:
         """
-        Update a property definition's title, description, and/or relevance flag.
+        Update a property definition's identifier, wording, predicate, relevance,
+        domain/range or references.
 
-        Note: identifier cannot be changed after creation.
+        Relationships typed by the property keep pointing at it whatever changes,
+        so a rename, reversal or retarget of an in-use relationship type keeps its
+        relationships.
 
         Args:
             property_id: The property definition ID
@@ -2114,6 +2120,8 @@ class OntologyService:
                 callers that do not intend to change it are unaffected
             external_references: New list of external references, replacing the
                 existing list wholesale (optional)
+            identifier: New identifier slug (optional); it must be unused by any
+                other ontology entity
 
         Returns:
             The updated PropertyDefinition
@@ -2122,7 +2130,8 @@ class OntologyService:
             EntityNotFoundError: If the property does not exist, or if
                 domain_class_id/range_class_id does not reference an existing Class
             DuplicateEntityError: If the new title already exists
-            ValueError: If the new title is empty
+            IdentifierConflictError: If another entity already has the new identifier
+            ValueError: If the new title is empty or the new identifier is not a valid slug
         """
         prop_def = self._repository.get_property_definition(property_id)
         if prop_def is None:
@@ -2131,6 +2140,15 @@ class OntologyService:
 
         title_changed = title is not None and title != prop_def.title
         desc_changed = description is not None and description != prop_def.description
+
+        if identifier is not None and identifier != prop_def.identifier:
+            identifier = validate_identifier(identifier)
+            holder = self._repository.get_property_definition_by_identifier(identifier)
+            if (holder is not None and holder.id != property_id) or (
+                self._repository.get_by_identifier(identifier) is not None
+            ):
+                raise IdentifierConflictError(identifier)
+            prop_def.identifier = identifier
 
         # Check if new title is unique
         if title_changed:

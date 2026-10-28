@@ -291,11 +291,74 @@ class RevertService:
                     entity_from_snapshot(entity_type, snapshot, event.entity_id)
                 except ValueError as exc:
                     problems.append(f"{label}: {exc}")
+        problems.extend(self._identifier_problems(pending))
         if problems:
             raise RevertRefusedError(
                 f"Cannot revert batch run {batch_run_id}; nothing was changed. "
                 + "; ".join(problems)
             )
+
+    def _identifier_problems(self, pending: list) -> list[str]:
+        """
+        Identifiers the revert gives back must be free when it gives them back:
+        an entity's old identifier, or a deleted entity's. Walked in
+        the order the inverses run, so a holder only counts as gone once the
+        revert has deleted it or given it another identifier.
+        """
+        holder_of: dict[str, str | None] = {}  # identifier -> holder, as the walk changes it
+        identifier_of: dict[str, str | None] = {}  # entity -> its identifier, likewise
+
+        def holder(identifier: str) -> str | None:
+            if identifier not in holder_of:
+                found = self._ontology_repo.get_property_definition_by_identifier(
+                    identifier
+                ) or self._ontology_repo.get_by_identifier(identifier)
+                holder_of[identifier] = found.id if found is not None else None
+            return holder_of[identifier]
+
+        def current_identifier(entity_id: str, entity_type: str) -> str | None:
+            if entity_id not in identifier_of:
+                getter = {
+                    "property_definition": self._ontology_repo.get_property_definition,
+                    "taxonomy": self._ontology_repo.get_taxonomy,
+                    "concept_scheme": self._ontology_repo.get_concept_scheme,
+                    "class": self._ontology_repo.get_class,
+                }.get(entity_type)
+                entity = getter(entity_id) if getter is not None else None
+                identifier_of[entity_id] = getattr(entity, "identifier", None)
+            return identifier_of[entity_id]
+
+        def release(entity_id: str, entity_type: str) -> None:
+            old = current_identifier(entity_id, entity_type)
+            if old is not None and holder(old) == entity_id:
+                holder_of[old] = None
+            identifier_of[entity_id] = None
+
+        problems = []
+        for event in pending:  # the order the inverses run
+            entity_type = self._normalize_entity_type(event.entity_type)
+            if event.operation == ChangeOperation.CREATE:
+                release(event.entity_id, entity_type)
+                continue
+            if event.operation == ChangeOperation.UPDATE:
+                # Any kind: taxonomy, scheme, class and property identifiers share one namespace.
+                identifier = (event.previous_state or {}).get("identifier")
+            elif event.operation == ChangeOperation.DELETE:
+                identifier = self._deleted_state(event).get("identifier")
+            else:
+                continue
+            if not identifier:
+                continue
+            held_by = holder(identifier)
+            if held_by is not None and held_by != event.entity_id:
+                problems.append(
+                    f"{event.entity_id}: identifier '{identifier}' is held by {held_by} "
+                    "when the revert would give it back"
+                )
+            release(event.entity_id, entity_type)
+            holder_of[identifier] = event.entity_id
+            identifier_of[event.entity_id] = identifier
+        return problems
 
     def _check_no_outside_dependents(self, batch_run_id: str, pending: list) -> None:
         """

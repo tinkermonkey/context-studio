@@ -1816,3 +1816,39 @@ def test_inverse_delete_attribute_definition(ontology_repo, change_repo, revert_
 
     assert result.entities_restored == 1
     assert ontology_repo.get_attribute_definition("attr-1") == attr
+
+
+def test_revert_refused_when_a_class_identifier_it_gives_back_is_taken(
+    ontology_repo, change_repo, revert_svc
+):
+    """Identifiers are one namespace: a class's old identifier is checked like a property's."""
+    ontology_repo.save_class(
+        Class(
+            id="cls-a",
+            concept_scheme_id="scheme-1",
+            taxonomy_id="tx-1",
+            title="A",
+            identifier="new_cls",
+        )
+    )
+    ontology_repo.save_class(
+        Class(
+            id="cls-b",
+            concept_scheme_id="scheme-1",
+            taxonomy_id="tx-1",
+            title="B",
+            identifier="old_cls",
+        )
+    )
+    change_repo.record_change(
+        entity_id="cls-a",
+        entity_type="class",
+        operation=ChangeOperation.UPDATE,
+        new_state={"identifier": "new_cls"},
+        previous_state={"identifier": "old_cls"},
+        batch_run_id="run-1",
+    )
+
+    with pytest.raises(ValueError, match="old_cls"):
+        revert_svc.revert("run-1")
+    assert ontology_repo.get_class("cls-a").identifier == "new_cls"
