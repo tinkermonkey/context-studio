@@ -1,25 +1,31 @@
 """
-Integration tests for the bundle loader (#1338): a small House-shaped bundle
-loaded into a fresh SQLite workspace through the import service the CLI uses.
-Covers what lands, change events, idempotent reloads, updates, carried
-metadata, the identifier guards and the stale report.
+Integration tests for bundle load (#1338) and export (#1362) against a fresh
+SQLite workspace, through the import service the CLI uses. Covers what lands,
+change events, idempotent reloads, updates, carried metadata, the identifier
+guards, the stale report, and load -> export -> load round trips for the real
+House bundle and for a taxonomy authored in Context Studio.
 """
 
 import copy
 import json
 import os
 import sys
+from pathlib import Path
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+)
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from adapters.persistence.sqlite import models
 from adapters.persistence.sqlite.models import Base, ChangeEvent
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from scripts.bundle_loader import BundleError, load_bundle, read_bundle
-from scripts.import_bundle import build_import_service
+from domain.interchange.bundle import BundleError, BundleExporter, load_bundle
+from domain.interchange.services import set_batch_run_context
+from scripts.import_bundle import build_import_service, read_bundle
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 
 BUNDLE = {
@@ -94,6 +100,18 @@ BUNDLE = {
         {"source": "vacuuming", "property": "house_activity_is_a_activity", "target": "cleaning"}
     ],
 }
+
+
+@pytest.fixture(autouse=True)
+def no_batch_run_context():
+    """
+    Clear the batch-run correlation context. A unit test earlier in a full run
+    leaves it set, so change events would name a batch run this database lacks
+    and fail their foreign key.
+    """
+    set_batch_run_context(None)
+    yield
+    set_batch_run_context(None)
 
 
 @pytest.fixture()
@@ -234,7 +252,7 @@ def test_read_bundle_checks_the_header(tmp_path):
     path = tmp_path / "bundle.json"
     path.write_text(json.dumps({"format": "something-else", "version": 0}))
 
-    with pytest.raises(BundleError, match="not a context-studio-bundle v0"):
+    with pytest.raises(BundleError, match="Not a context-studio-bundle v0"):
         read_bundle(path)
 
 
@@ -289,27 +307,212 @@ def test_dropped_relationships_and_attributes_are_reported(service, repo):
     )
 
 
-def test_existing_class_gets_the_source_reference_through_the_service(
-    service, repo, session_factory
-):
-    """A class made by hand is adopted: its reference is added as a recorded change."""
-    taxonomy = service.create_taxonomy(title="House", identifier="house")
+def test_hand_made_class_is_matched_without_writes(service, repo, session_factory):
+    """A class made by hand is matched on its identifier; nothing about it is rewritten."""
+    taxonomy = service.create_taxonomy(
+        title="House",
+        identifier="house",
+        description=BUNDLE["taxonomy"]["description"],
+        vision=BUNDLE["taxonomy"]["vision"],
+    )
     scheme = service.create_scheme(
         taxonomy_id=taxonomy.id, title="Kinds", identifier="house_kinds", description="Node kinds."
     )
-    service.create_class(
+    place = service.create_class(
         concept_scheme_id=scheme.id,
         title="Place",
         description="A room or area where tasks happen.",
         identifier="house_place",
     )
-
-    load_bundle(service, repo, _bundle())
-
-    place = repo.get_by_identifier("house_place")
-    assert [(r.source, r.identifier) for r in place.external_references] == [
-        ("house", "house_place")
-    ]
     with session_factory() as session:
-        recorded = session.query(ChangeEvent).filter(ChangeEvent.entity_id == place.id).all()
-    assert any("external_references" in (e.new_state or {}) for e in recorded)
+        before = session.query(ChangeEvent).filter(ChangeEvent.entity_id == place.id).count()
+
+    summary = load_bundle(service, repo, _bundle())
+
+    assert repo.get_by_identifier("house_place").external_references == []
+    assert summary.kind("class").unchanged == 1
+    with session_factory() as session:
+        after = session.query(ChangeEvent).filter(ChangeEvent.entity_id == place.id).count()
+    assert after == before
+
+
+def test_unrelated_relationship_type_is_refused(service, repo):
+    service.create_property_definition(
+        identifier="house_activity_is_a_activity", title="Someone else's is_a"
+    )
+
+    with pytest.raises(BundleError, match="does not belong to this taxonomy"):
+        load_bundle(service, repo, _bundle())
+
+
+# ---------------------------------------------------------------- round trips
+
+# A snapshot of the House repo's ontology/house.bundle.json (tinkermonkey/house#32).
+HOUSE_BUNDLE = Path(__file__).parent.parent / "fixtures" / "bundles" / "house.bundle.json"
+
+
+def _written(session_factory) -> dict[str, int]:
+    """Row counts of everything a load can write."""
+    with session_factory() as session:
+        return {
+            model.__name__: session.query(model).count()
+            for model in (
+                models.OntologyEntity,
+                models.IndividualClass,
+                models.Relationship,
+                models.PropertyDefinition,
+                models.AttributeDefinition,
+                ChangeEvent,
+            )
+        }
+
+
+def _taxonomy_id(repo, identifier):
+    return repo.get_by_identifier(identifier).id
+
+
+def _normalized(bundle):
+    """A bundle with list order and absent-vs-empty optional class keys made irrelevant."""
+    result = copy.deepcopy(bundle)
+    for kind, key in (
+        ("schemes", "identifier"),
+        ("classes", "identifier"),
+        ("properties", "identifier"),
+        ("individuals", "id"),
+    ):
+        result[kind] = sorted(result[kind], key=lambda entry: entry[key])
+    for cls in result["classes"]:
+        cls.setdefault("parent", None)
+        cls.setdefault("attributes", [])
+    result["relationships"] = sorted(
+        result["relationships"], key=lambda r: (r["source"], r["property"], r["target"])
+    )
+    return result
+
+
+def _assert_round_trip_writes_nothing(service, repo, session_factory, taxonomy_id):
+    exported = BundleExporter(repo).export(taxonomy_id)
+    before = _written(session_factory)
+
+    summary = load_bundle(service, repo, exported)
+
+    assert summary.changed == 0, summary.counts
+    assert summary.stale == []
+    assert _written(session_factory) == before
+    assert BundleExporter(repo).export(taxonomy_id) == exported
+    return exported
+
+
+def test_house_bundle_round_trip_writes_nothing(service, repo, session_factory):
+    house = read_bundle(HOUSE_BUNDLE)
+    load_bundle(service, repo, house)
+
+    exported = _assert_round_trip_writes_nothing(
+        service, repo, session_factory, _taxonomy_id(repo, "house")
+    )
+
+    assert _normalized(exported) == _normalized(house)
+
+
+@pytest.fixture()
+def authored(service):
+    """A taxonomy built in Context Studio: no bundle source references anywhere."""
+    taxonomy = service.create_taxonomy(
+        title="Garden", identifier="garden", description="Beds and plants."
+    )
+    scheme = service.create_scheme(
+        taxonomy_id=taxonomy.id, title="Kinds", identifier="garden_kinds"
+    )
+    bed = service.create_class(concept_scheme_id=scheme.id, title="Bed", identifier="garden_bed")
+    raised = service.create_class(
+        concept_scheme_id=scheme.id,
+        title="Raised bed",
+        identifier="garden_raised_bed",
+        parent_class_id=bed.id,
+    )
+    plant = service.create_class(
+        concept_scheme_id=scheme.id, title="Plant", identifier="garden_plant"
+    )
+    # Left at the default sort_order 0, as the UI creates them.
+    for identifier, title in (("garden_sun", "Sun"), ("garden_soil", "Soil")):
+        service.create_attribute_definition(
+            class_id=bed.id, identifier=identifier, title=title, datatype="string"
+        )
+    grows_in = service.create_property_definition(
+        identifier="garden_grows_in",
+        title="grows in",
+        canonical_predicate="grows_in",
+        domain_class_id=plant.id,
+        range_class_id=bed.id,
+    )
+    north = service.create_individual([raised.id], title="North bed")
+    tomato = service.create_individual([plant.id], title="Tomato", description="Cherry.")
+    service.create_relationship(tomato.id, north.id, grows_in.id)
+    return {"taxonomy": taxonomy, "tomato": tomato, "north": north}
+
+
+def test_authored_taxonomy_round_trip_writes_nothing(service, repo, session_factory, authored):
+    tomato, north = authored["tomato"], authored["north"]
+
+    exported = _assert_round_trip_writes_nothing(
+        service, repo, session_factory, authored["taxonomy"].id
+    )
+
+    assert exported["source"] == "garden"
+    assert {i["id"] for i in exported["individuals"]} == {tomato.id, north.id}
+    assert exported["relationships"] == [
+        {"source": tomato.id, "property": "garden_grows_in", "target": north.id}
+    ]
+    assert repo.get_individual(tomato.id).external_references == []
+
+
+def test_authored_bundle_reproduces_in_another_workspace(repo, authored):
+    exported = BundleExporter(repo).export(authored["taxonomy"].id)
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    other_factory = sessionmaker(bind=engine)
+    other_repo = SQLiteOntologyRepository(other_factory)
+
+    load_bundle(build_import_service(other_factory, FakeEmbeddingService()), other_repo, exported)
+
+    assert BundleExporter(other_repo).export(_taxonomy_id(other_repo, "garden")) == exported
+    engine.dispose()
+
+
+def test_individual_added_in_context_studio_round_trips_without_duplicates(
+    service, repo, session_factory
+):
+    load_bundle(service, repo, _bundle())
+    activity = repo.get_by_identifier("house_activity")
+    mopping = service.create_individual([activity.id], title="Mopping")
+
+    exported = _assert_round_trip_writes_nothing(
+        service, repo, session_factory, _taxonomy_id(repo, "house")
+    )
+
+    assert mopping.id in {i["id"] for i in exported["individuals"]}
+    titles = [i.title for i in repo.list_individuals(class_id=activity.id, limit=None)]
+    assert titles.count("Mopping") == 1
+
+
+def test_data_for_a_context_studio_individual_is_carried_on_reload(service, repo):
+    load_bundle(service, repo, _bundle())
+    activity = repo.get_by_identifier("house_activity")
+    mopping = service.create_individual([activity.id], title="Mopping")
+    bundle = BundleExporter(repo).export(_taxonomy_id(repo, "house"))
+    next(i for i in bundle["individuals"] if i["id"] == mopping.id)["data"] = {"aliases": ["mop"]}
+
+    summary = load_bundle(service, repo, bundle)
+
+    [reference] = repo.get_individual(mopping.id).external_references
+    assert (reference.source, reference.identifier) == ("house", mopping.id)
+    assert dict(reference.metadata) == {"aliases": ["mop"]}
+    assert summary.kind("individual").updated == 1
+
+
+def test_export_refuses_a_class_without_an_identifier(service, repo, authored):
+    scheme = repo.get_by_identifier("garden_kinds")
+    service.create_class(concept_scheme_id=scheme.id, title="Path")
+
+    with pytest.raises(BundleError, match="Class 'Path'"):
+        BundleExporter(repo).export(authored["taxonomy"].id)
