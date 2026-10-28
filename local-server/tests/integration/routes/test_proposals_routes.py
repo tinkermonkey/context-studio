@@ -25,6 +25,7 @@ from adapters.persistence.sqlite.connection import create_local_db_engine
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
+from adapters.persistence.sqlite.transaction import TransactionAbortedError
 from adapters.web.proposals_routes import router
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.services import OntologyService
@@ -401,7 +402,7 @@ class FailingRevertService:
     def __init__(self, error):
         self.error = error
 
-    def revert_with_summary(self, run_id):
+    def revert_with_summary(self, run_id, on_reverted=None):
         raise self.error
 
 
@@ -430,11 +431,18 @@ class TestRevertErrors:
         assert client.get(f"/api/proposals/{proposal['id']}").json()["status"] == "open"
 
     @pytest.mark.parametrize(
-        "error",
-        [ValueError("Could not restore field title"), EntityNotFoundError("Class", "gone")],
+        "error, detail",
+        [
+            (ValueError("Could not restore field title"), "An unexpected error occurred"),
+            (EntityNotFoundError("Class", "gone"), "An unexpected error occurred"),
+            (
+                TransactionAbortedError("scope rolled back"),
+                "The change was rolled back; nothing was changed",
+            ),
+        ],
     )
-    def test_an_error_partway_through_is_a_logged_500(
-        self, session_factory, ontology, graph, error, caplog
+    def test_any_other_revert_error_is_a_logged_500(
+        self, session_factory, ontology, graph, error, detail, caplog
     ):
         client = _client_reverting_with(session_factory, ontology, error)
         proposal = _propose(client, graph, _describe_room(graph, seq=1))
@@ -443,5 +451,6 @@ class TestRevertErrors:
             response = client.post(f"/api/proposals/{proposal['id']}/revert")
 
         assert response.status_code == 500
-        assert response.json()["detail"] == "An unexpected error occurred"
+        assert response.json()["detail"] == detail
         assert str(error) in caplog.text
+        assert client.get(f"/api/proposals/{proposal['id']}").json()["status"] == "open"

@@ -4121,10 +4121,11 @@ export interface paths {
      * Revert Proposal
      * @description Undo everything applied from the proposal and mark it reverted.
      *
-     *     Pending and failed operations are rejected. A revert refused before it
-     *     changes anything is a 409: entities made outside the proposal depend on ones
-     *     it created (detail.blocking names them), or an event can't be undone. An
-     *     error partway through is a 500.
+     *     Pending and failed operations are rejected, in the same transaction. A
+     *     refused revert is a 409 and changes nothing: entities made outside the
+     *     proposal depend on ones it created (detail.blocking names them), or an event
+     *     can't be undone. Any other error (including an aborted transaction) is a
+     *     logged 500; the revert's transaction is rolled back.
      */
     post: operations["revert_proposal_api_proposals__proposal_id__revert_post"];
     delete?: never;

@@ -10,6 +10,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from adapters.persistence.sqlite.transaction import TransactionAbortedError
 from adapters.web.dependencies import get_proposal_service
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.proposals import (
@@ -83,6 +84,12 @@ def _http_error(exc: Exception, unknown_ids_are_invalid: bool = False) -> HTTPEx
         return HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
     if unknown_ids_are_invalid and isinstance(exc, ValueError):
         return HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc))
+    if isinstance(exc, TransactionAbortedError):
+        _logger.error(f"Proposal transaction rolled back: {exc}", exc_info=exc)
+        return HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="The change was rolled back; nothing was changed",
+        )
     _logger.error(f"Unexpected error in proposals endpoint: {exc}", exc_info=exc)
     return HTTPException(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred"
@@ -283,10 +290,11 @@ async def revert_proposal(
     """
     Undo everything applied from the proposal and mark it reverted.
 
-    Pending and failed operations are rejected. A revert refused before it
-    changes anything is a 409: entities made outside the proposal depend on ones
-    it created (detail.blocking names them), or an event can't be undone. An
-    error partway through is a 500.
+    Pending and failed operations are rejected, in the same transaction. A
+    refused revert is a 409 and changes nothing: entities made outside the
+    proposal depend on ones it created (detail.blocking names them), or an event
+    can't be undone. Any other error (including an aborted transaction) is a
+    logged 500; the revert's transaction is rolled back.
     """
 
     def run() -> ChangeProposalRevertResponse:

@@ -7665,7 +7665,7 @@
           "proposals"
         ],
         "summary": "Revert Proposal",
-        "description": "Undo everything applied from the proposal and mark it reverted.\n\nPending and failed operations are rejected. A revert refused before it\nchanges anything is a 409: entities made outside the proposal depend on ones\nit created (detail.blocking names them), or an event can't be undone. An\nerror partway through is a 500.",
+        "description": "Undo everything applied from the proposal and mark it reverted.\n\nPending and failed operations are rejected, in the same transaction. A\nrefused revert is a 409 and changes nothing: entities made outside the\nproposal depend on ones it created (detail.blocking names them), or an event\ncan't be undone. Any other error (including an aborted transaction) is a\nlogged 500; the revert's transaction is rolled back.",
         "operationId": "revert_proposal_api_proposals__proposal_id__revert_post",
         "parameters": [
           {

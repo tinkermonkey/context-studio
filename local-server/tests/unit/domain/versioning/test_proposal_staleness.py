@@ -15,7 +15,7 @@ from tests.fakes.fake_proposal_repository import FakeChangeProposalRepository
 
 
 class StubRevertService:
-    def revert_with_summary(self, run_id: str) -> RevertResult:
+    def revert_with_summary(self, run_id: str, on_reverted=None) -> RevertResult:
         return RevertResult(run_id=run_id, events_reverted=0)
 
 
