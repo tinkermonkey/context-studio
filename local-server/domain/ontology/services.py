@@ -3096,6 +3096,7 @@ class OntologyService:
         default_value: str | None = None,
         sort_order: int = 0,
         external_references: list[ExternalReference] | None = None,
+        source_run_id: str | None = None,
     ) -> AttributeDefinition:
         """
         Create a new attribute definition (TBox data property declaration).
@@ -3116,6 +3117,8 @@ class OntologyService:
             default_value: Optional default value (as string)
             sort_order: Display order within the class's attribute list
             external_references: Optional list of references to external knowledge bases
+            source_run_id: Optional ID of the run that produced this attribute
+                definition, for provenance tracking
 
         Returns:
             The created AttributeDefinition
@@ -3167,6 +3170,7 @@ class OntologyService:
             external_references=external_references or [],
             created_at=now,
             last_modified=now,
+            source_run_id=source_run_id,
         )
         attr_def = self._repository.save_attribute_definition(attr_def)
 

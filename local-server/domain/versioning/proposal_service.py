@@ -17,6 +17,7 @@ an earlier create in the same proposal makes (its `ref` is "name").
 from __future__ import annotations
 
 import logging
+import threading
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Sequence
@@ -64,6 +65,27 @@ _REF_PREFIX = "$"
 _VOLATILE_FIELDS = frozenset({"last_modified", "version"})
 
 K = OperationKind
+
+# Fields that follow another entity rather than being set on this one: a class's
+# taxonomy_id follows its scheme's. Staleness ignores them.
+_DERIVED_FIELDS: dict[OperationKind, frozenset[str]] = {K.CLASS: frozenset({"taxonomy_id"})}
+
+# The JSON type each settable field must have (None is checked separately).
+_TEXT_FIELDS = frozenset(
+    {
+        "title",
+        "description",
+        "color",
+        "identifier",
+        "vision",
+        "canonical_predicate",
+        "datatype",
+        "default_value",
+    }
+)
+_BOOL_FIELDS = frozenset({"is_required", "is_relevant"})
+_INT_FIELDS = frozenset({"sort_order"})
+_TEXT_LIST_FIELDS = frozenset({"allowed_values", "class_ids"})
 
 # Id fields and the kinds of entity they may point at.
 _ID_FIELDS: dict[str, tuple[OperationKind, ...]] = {
@@ -232,6 +254,21 @@ def _is_ref(value: Any) -> bool:
     return isinstance(value, str) and value.startswith(_REF_PREFIX) and len(value) > 1
 
 
+def _has_field_type(name: str, value: Any) -> bool:
+    """Whether a (non-None) field value has the JSON type its field takes."""
+    if name in _TEXT_LIST_FIELDS:
+        return isinstance(value, list) and all(isinstance(item, str) for item in value)
+    if name in _TEXT_FIELDS or name in _ID_FIELDS:
+        return isinstance(value, str)
+    if name in _BOOL_FIELDS:
+        return isinstance(value, bool)
+    if name in _INT_FIELDS:
+        return isinstance(value, int) and not isinstance(value, bool)
+    if name == "external_references":
+        return isinstance(value, list) and all(isinstance(item, dict) for item in value)
+    return True
+
+
 class ProposalService:
     """Propose, apply, reject and revert change proposals."""
 
@@ -253,6 +290,10 @@ class ProposalService:
         self._ontology = ontology_service
         self._repo = ontology_repo
         self._revert = revert_service
+        # One lock per proposal: a desktop app runs one process, so two requests
+        # deciding on the same proposal are serialized here.
+        self._locks: dict[str, threading.Lock] = {}
+        self._locks_guard = threading.Lock()
 
     # ------------------------------------------------------------------ propose
 
@@ -334,10 +375,21 @@ class ProposalService:
         self, draft: OperationDraft, refs: dict[str, OperationKind]
     ) -> ProposedOperation:
         """Build one ProposedOperation from a draft, checked against the graph."""
+        probability = draft.probability
+        if probability is not None and (
+            isinstance(probability, bool) or not isinstance(probability, (int, float))
+        ):
+            raise _Invalid("invalid", f"probability must be a number, not {probability!r}")
+        if draft.target_id is not None and not isinstance(draft.target_id, str):
+            raise _Invalid("invalid", f"target_id must be a string, not {draft.target_id!r}")
         try:
             op = OperationType(draft.op)
             kind = OperationKind(draft.kind)
             claimed = ChangeScope(draft.claimed_scope) if draft.claimed_scope else None
+            if not isinstance(draft.fields or {}, dict):
+                raise ValueError("fields must be an object")
+            if not isinstance(draft.evidence or [], list):
+                raise ValueError("evidence must be a list")
             operation = ProposedOperation(
                 seq=draft.seq,
                 op=op,
@@ -347,9 +399,9 @@ class ProposalService:
                 fields=dict(draft.fields or {}),
                 rationale=draft.rationale,
                 evidence=list(draft.evidence or []),
-                probability=draft.probability,
+                probability=probability,
             )
-        except ValueError as exc:
+        except (TypeError, ValueError) as exc:
             raise _Invalid("invalid", str(exc)) from exc
 
         if op is OperationType.CREATE and operation.ref and operation.ref in refs:
@@ -406,8 +458,17 @@ class ProposalService:
 
     @staticmethod
     def _check_values(operation: ProposedOperation) -> None:
-        """Encoded values (references, datatype, ...) decode to their domain types."""
+        """Each value has its field's type, and encoded values decode to their domain types."""
         for name, value in operation.fields.items():
+            if value is None:
+                continue
+            if not _has_field_type(name, value):
+                raise _Invalid("invalid", f"{name} has the wrong type: {value!r}")
+            if name == "class_ids":
+                if not value:
+                    raise _Invalid("invalid", "class_ids can't be empty")
+                if len(set(value)) != len(value):
+                    raise _Invalid("invalid", "class_ids has duplicates")
             try:
                 decode_field(name, value)
             except (TypeError, KeyError, ValueError, AttributeError) as exc:
@@ -524,25 +585,26 @@ class ProposalService:
                 is already applied or rejected; nothing is applied
             ValueError: If an operation id is not in the proposal; nothing is applied
         """
-        proposal = self._get(proposal_id)
-        if proposal.status is ProposalStatus.REVERTED:
-            raise ChangeProposalStateError(f"Change proposal {proposal_id} is reverted")
-        chosen = self._chosen(proposal, operation_ids, "apply")
-        force = set(force_stale)
-        refs = {o.ref: o for o in proposal.operations if o.ref}
+        with self._lock(proposal_id):
+            proposal = self._get(proposal_id)
+            if proposal.status is ProposalStatus.REVERTED:
+                raise ChangeProposalStateError(f"Change proposal {proposal_id} is reverted")
+            chosen = self._chosen(proposal, operation_ids, "apply")
+            force = set(force_stale)
+            refs = {o.ref: o for o in proposal.operations if o.ref}
 
-        previous_run = get_current_batch_run_id()
-        set_batch_run_context(proposal.id)
-        try:
-            for operation in chosen:
-                self._apply_one(operation, refs, proposal.id, operation.id in force)
-                self._proposals.save_operations(proposal.id, [operation])
-        finally:
-            set_batch_run_context(previous_run)
+            previous_run = get_current_batch_run_id()
+            set_batch_run_context(proposal.id)
+            try:
+                for operation in chosen:
+                    self._apply_one(operation, refs, proposal.id, operation.id in force)
+                    self._proposals.save_operations(proposal.id, [operation])
+            finally:
+                set_batch_run_context(previous_run)
 
-        proposal.settle_status()
-        self._proposals.set_status(proposal.id, proposal.status)
-        return self._get(proposal_id)
+            proposal.settle_status()
+            self._proposals.set_status(proposal.id, proposal.status)
+            return self._get(proposal_id)
 
     def _apply_one(
         self,
@@ -553,7 +615,10 @@ class ProposalService:
     ) -> None:
         operation.reason = None
         try:
-            fields = {name: self._resolved(value, refs) for name, value in operation.fields.items()}
+            fields = {
+                name: self._resolved(value, refs) if name in _ID_FIELDS else value
+                for name, value in operation.fields.items()
+            }
             if operation.op is not OperationType.CREATE:
                 self._check_fresh(operation, forced)
             operation.result_entity_id = self._dispatch(operation, fields, run_id)
@@ -562,6 +627,10 @@ class ProposalService:
             operation.status = OperationStatus.FAILED
             operation.reason = exc.reason
         except (OntologyError, ValueError) as exc:
+            operation.status = OperationStatus.FAILED
+            operation.reason = f"{APPLY_ERROR}: {exc}"
+        except Exception as exc:  # noqa: BLE001 - one operation's failure must not stop the rest
+            _logger.exception("Proposal %s op seq %s raised unexpectedly", run_id, operation.seq)
             operation.status = OperationStatus.FAILED
             operation.reason = f"{APPLY_ERROR}: {exc}"
         if operation.status is OperationStatus.FAILED:
@@ -590,10 +659,11 @@ class ProposalService:
         if forced:
             return
         snapshot = entity_snapshot(current)
+        ignored = _VOLATILE_FIELDS | _DERIVED_FIELDS.get(operation.kind, frozenset())
         changed = sorted(
             name
             for name, value in operation.base.items()
-            if name not in _VOLATILE_FIELDS and snapshot.get(name) != value
+            if name not in ignored and snapshot.get(name) != value
         )
         if changed:
             raise _ApplyFailed(TARGET_CHANGED, f"{', '.join(changed)} changed since proposed")
@@ -611,45 +681,52 @@ class ProposalService:
             ChangeProposalStateError: If an operation is already applied or rejected
             ValueError: If an operation id is not in the proposal
         """
-        proposal = self._get(proposal_id)
-        chosen = self._chosen(proposal, operation_ids, "reject")
-        for operation in chosen:
-            operation.status = OperationStatus.REJECTED
-            operation.reason = note
-        self._proposals.save_operations(proposal.id, chosen)
-        proposal.settle_status()
-        self._proposals.set_status(proposal.id, proposal.status)
-        return self._get(proposal_id)
+        with self._lock(proposal_id):
+            proposal = self._get(proposal_id)
+            chosen = self._chosen(proposal, operation_ids, "reject")
+            for operation in chosen:
+                operation.status = OperationStatus.REJECTED
+                operation.reason = note
+            self._proposals.save_operations(proposal.id, chosen)
+            proposal.settle_status()
+            self._proposals.set_status(proposal.id, proposal.status)
+            return self._get(proposal_id)
 
     def revert(self, proposal_id: str) -> RevertResult:
         """
         Undo everything applied from the proposal and mark it reverted.
 
-        Operations still pending are rejected ("proposal reverted"), since a
-        reverted proposal takes no more decisions. Recorded outcomes of the other
-        operations are kept.
+        Operations still undecided (pending or failed) are rejected ("proposal
+        reverted"), since a reverted proposal takes no more decisions. Applied and
+        rejected operations keep their recorded outcomes.
 
         Raises:
             ChangeProposalNotFoundError: If the proposal does not exist
             RevertConflictError, ValueError: From RevertService when the run can't
                 be undone; nothing is changed and the status is left as it was
         """
-        proposal = self._get(proposal_id)
-        result = self._revert.revert_with_summary(proposal.id)
-        pending = proposal.pending
-        for operation in pending:
-            operation.status = OperationStatus.REJECTED
-            operation.reason = REVERTED_REASON
-        if pending:
-            self._proposals.save_operations(proposal.id, pending)
-        self._proposals.set_status(proposal.id, ProposalStatus.REVERTED)
-        return result
+        with self._lock(proposal_id):
+            proposal = self._get(proposal_id)
+            result = self._revert.revert_with_summary(proposal.id)
+            undecided = proposal.pending
+            for operation in undecided:
+                operation.status = OperationStatus.REJECTED
+                operation.reason = REVERTED_REASON
+            if undecided:
+                self._proposals.save_operations(proposal.id, undecided)
+            self._proposals.set_status(proposal.id, ProposalStatus.REVERTED)
+            return result
 
     # ------------------------------------------------------------------ helpers
 
     def get(self, proposal_id: str) -> ChangeProposal:
         """The proposal, or ChangeProposalNotFoundError."""
         return self._get(proposal_id)
+
+    def _lock(self, proposal_id: str) -> threading.Lock:
+        """The lock that serializes apply, reject and revert of one proposal (in-process)."""
+        with self._locks_guard:
+            return self._locks.setdefault(proposal_id, threading.Lock())
 
     def _get(self, proposal_id: str) -> ChangeProposal:
         proposal = self._proposals.get(proposal_id)
@@ -734,7 +811,7 @@ class ProposalService:
             return svc.create_property_definition(**v, source_run_id=run_id).id
         if kind is K.ATTRIBUTE:
             v["datatype"] = getattr(v["datatype"], "value", v["datatype"])
-            return svc.create_attribute_definition(**v).id
+            return svc.create_attribute_definition(**v, source_run_id=run_id).id
         if kind is K.INDIVIDUAL:
             return svc.create_individual(**v, source_run_id=run_id).id
         return svc.create_relationship(**v, source_run_id=run_id).id

@@ -1,5 +1,8 @@
 """Unit tests for ProposalService (#1354): propose, apply, staleness, reject, revert."""
 
+import threading
+import time
+
 import pytest
 
 from domain.events import DomainEvent
@@ -599,3 +602,230 @@ class TestRejectAndRevert:
         unchanged = service.get(proposal.id)
         assert unchanged.status is ProposalStatus.OPEN
         assert unchanged.operations[0].status is OperationStatus.PENDING
+
+
+# ------------------------------------------------- review fixes (regressions)
+
+
+class TestRefsOnlyInIdFields:
+    def test_dollar_text_in_a_text_field_is_kept_as_written(self, service, graph, ontology):
+        proposal = propose(
+            service,
+            graph,
+            draft(1, T.CREATE, K.CLASS, ref="kit", concept_scheme_id=graph["vocab"], title="Kit"),
+            draft(2, T.CREATE, K.INDIVIDUAL, class_ids=[graph["room"]], title="$kit"),
+            draft(3, T.UPDATE, K.CLASS, graph["room"], description="$5 per night"),
+        )
+        result = by_seq(service.apply(proposal.id, ids(proposal, 1, 2, 3)))
+        assert all(o.status is OperationStatus.APPLIED for o in result.values())
+        assert ontology.get_individual(result[2].result_entity_id).title == "$kit"
+        assert ontology.get_class(graph["room"]).description == "$5 per night"
+
+
+class TestUnexpectedErrors:
+    def test_any_exception_fails_only_its_operation(self, service, graph, ontology, monkeypatch):
+        def broken(*args, **kwargs):
+            raise RuntimeError("disk on fire")
+
+        monkeypatch.setattr(ontology, "update_class", broken)
+        proposal = propose(
+            service,
+            graph,
+            draft(1, T.UPDATE, K.CLASS, graph["room"], description="Any room"),
+            draft(2, T.UPDATE, K.INDIVIDUAL, graph["den"], description="Cosy"),
+        )
+        set_batch_run_context("outer-run")
+        try:
+            result = service.apply(proposal.id, ids(proposal, 1, 2))
+            assert get_current_batch_run_id() == "outer-run"
+        finally:
+            set_batch_run_context(None)
+        ops = by_seq(result)
+        assert (ops[1].status, ops[1].reason) == (OperationStatus.FAILED, "error: disk on fire")
+        assert ops[2].status is OperationStatus.APPLIED
+
+    @pytest.mark.parametrize(
+        "changes",
+        [
+            {"fields": {"title": 123}},
+            {"fields": {"description": ["a"]}},
+            {"fields": {"color": 7}},
+            {"probability": "0.9"},
+            {"probability": True},
+        ],
+    )
+    def test_wrong_value_types_are_refused_at_propose(self, service, graph, changes):
+        values = {
+            "seq": 1,
+            "op": "update",
+            "kind": "class",
+            "target_id": graph["room"],
+            "fields": {"title": "Chamber"},
+        }
+        values.update(changes)
+        with pytest.raises(ProposalValidationError) as caught:
+            service.propose(graph["taxonomy"], "T", [OperationDraft(**values)], ProposalSource.MCP)
+        assert caught.value.errors[0].code == "invalid"
+
+    def test_wrong_attribute_and_id_value_types_are_refused_at_propose(self, service, graph):
+        with pytest.raises(ProposalValidationError) as caught:
+            propose(
+                service,
+                graph,
+                draft(
+                    1,
+                    T.CREATE,
+                    K.ATTRIBUTE,
+                    class_id=graph["room"],
+                    identifier="a",
+                    title="A",
+                    datatype="string",
+                    sort_order="x",
+                ),
+                draft(
+                    2,
+                    T.CREATE,
+                    K.ATTRIBUTE,
+                    class_id=graph["room"],
+                    identifier="b",
+                    title="B",
+                    datatype="string",
+                    allowed_values="abc",
+                ),
+                draft(
+                    3,
+                    T.CREATE,
+                    K.ATTRIBUTE,
+                    class_id=graph["room"],
+                    identifier="c",
+                    title="C",
+                    datatype="string",
+                    is_required="yes",
+                ),
+                draft(4, T.UPDATE, K.PROPERTY, graph["near"], domain_class_id=5),
+            )
+        assert [(e.seq, e.code) for e in caught.value.errors] == [
+            (1, "invalid"),
+            (2, "invalid"),
+            (3, "invalid"),
+            (4, "invalid"),
+        ]
+
+
+class TestClassIds:
+    @pytest.mark.parametrize("duplicate", [False, True])
+    def test_empty_or_duplicate_class_ids_are_refused(self, service, graph, duplicate):
+        class_ids = [graph["room"], graph["room"]] if duplicate else []
+        with pytest.raises(ProposalValidationError) as caught:
+            propose(
+                service,
+                graph,
+                draft(1, T.UPDATE, K.INDIVIDUAL, graph["den"], class_ids=class_ids),
+                draft(2, T.CREATE, K.INDIVIDUAL, class_ids=class_ids, title="Hall"),
+            )
+        assert [(e.seq, e.code) for e in caught.value.errors] == [
+            (1, "invalid"),
+            (2, "invalid") if duplicate else (2, "missing_field"),
+        ]
+
+    def test_replacing_every_class_adds_before_removing(self, service, graph, ontology):
+        proposal = propose(
+            service,
+            graph,
+            draft(1, T.UPDATE, K.INDIVIDUAL, graph["den"], class_ids=[graph["kitchen"]]),
+        )
+        result = service.apply(proposal.id, ids(proposal, 1))
+        assert result.operations[0].status is OperationStatus.APPLIED, result.operations[0].reason
+        assert ontology.get_individual(graph["den"]).class_ids == [graph["kitchen"]]
+
+
+class TestDerivedFieldsAndStatus:
+    def test_a_scheme_move_does_not_make_a_later_delete_of_its_class_stale(
+        self, service, graph, ontology
+    ):
+        garden = ontology.create_taxonomy(title="Garden")
+        proposal = propose(
+            service,
+            graph,
+            draft(1, T.MOVE, K.SCHEME, graph["other"], taxonomy_id=garden.id),
+            draft(2, T.DELETE, K.CLASS, graph["place"]),
+        )
+        result = by_seq(service.apply(proposal.id, ids(proposal, 1, 2)))
+        assert result[2].status is OperationStatus.APPLIED, result[2].reason
+
+    def test_a_failed_operation_keeps_the_proposal_open(self, service, graph, ontology):
+        proposal = propose(
+            service, graph, draft(1, T.UPDATE, K.CLASS, graph["room"], description="Any room")
+        )
+        ontology.update_class(graph["room"], description="Edited meanwhile")
+        failed = service.apply(proposal.id, ids(proposal, 1))
+        assert failed.status is ProposalStatus.OPEN
+
+        rejected = service.reject(proposal.id, ids(proposal, 1), note="Leave it")
+        assert rejected.status is ProposalStatus.DONE
+
+    def test_revert_rejects_failed_operations_too(self, service, graph, ontology):
+        proposal = propose(
+            service,
+            graph,
+            draft(1, T.UPDATE, K.CLASS, graph["room"], description="Any room"),
+            draft(2, T.UPDATE, K.CLASS, graph["kitchen"], description="Cooking"),
+        )
+        ontology.update_class(graph["room"], description="Edited meanwhile")
+        service.apply(proposal.id, ids(proposal, 1, 2))
+        service.revert(proposal.id)
+        ops = by_seq(service.get(proposal.id))
+        assert (ops[1].status, ops[1].reason) == (OperationStatus.REJECTED, "proposal reverted")
+        assert ops[2].status is OperationStatus.APPLIED
+
+    def test_attribute_creates_carry_the_run_id(self, service, graph, ontology):
+        proposal = propose(
+            service,
+            graph,
+            draft(
+                1,
+                T.CREATE,
+                K.ATTRIBUTE,
+                class_id=graph["room"],
+                identifier="area",
+                title="Area",
+                datatype="integer",
+            ),
+        )
+        result = service.apply(proposal.id, ids(proposal, 1))
+        made = ontology.get_attribute_definition(result.operations[0].result_entity_id)
+        assert made.source_run_id == proposal.id
+
+
+class TestConcurrency:
+    def test_two_applies_of_one_operation_apply_it_once(
+        self, service, graph, ontology, monkeypatch
+    ):
+        calls = []
+        real_update = ontology.update_class
+
+        def slow_update(*args, **kwargs):
+            calls.append(args)
+            time.sleep(0.05)
+            return real_update(*args, **kwargs)
+
+        monkeypatch.setattr(ontology, "update_class", slow_update)
+        proposal = propose(
+            service, graph, draft(1, T.UPDATE, K.CLASS, graph["room"], description="Any room")
+        )
+        outcomes = []
+
+        def run():
+            try:
+                service.apply(proposal.id, ids(proposal, 1))
+                outcomes.append("applied")
+            except ChangeProposalStateError:
+                outcomes.append("refused")
+
+        threads = [threading.Thread(target=run) for _ in range(2)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+        assert sorted(outcomes) == ["applied", "refused"]
+        assert len(calls) == 1
