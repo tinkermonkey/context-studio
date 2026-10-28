@@ -10,6 +10,7 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+import logging
 import tempfile
 from pathlib import Path
 
@@ -25,7 +26,9 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from adapters.web.proposals_routes import router
+from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.services import OntologyService
+from domain.versioning.exceptions import RevertRefusedError
 from domain.versioning.proposal_service import ProposalService
 from domain.versioning.revert_service import RevertService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
@@ -390,3 +393,55 @@ class TestRevert:
 
     def test_missing_proposal_is_404(self, client):
         assert client.post("/api/proposals/nope/revert").status_code == 404
+
+
+class FailingRevertService:
+    """A RevertService stand-in that raises the given error."""
+
+    def __init__(self, error):
+        self.error = error
+
+    def revert_with_summary(self, run_id):
+        raise self.error
+
+
+def _client_reverting_with(session_factory, ontology, error):
+    app = FastAPI()
+    app.include_router(router)
+    app.state.proposal_service = ProposalService(
+        SQLiteChangeProposalRepository(session_factory),
+        ontology,
+        ontology._repository,
+        FailingRevertService(error),
+    )
+    return TestClient(app)
+
+
+class TestRevertErrors:
+    def test_a_refused_revert_is_409_nothing_changed(self, session_factory, ontology, graph):
+        message = "Cannot revert batch run x; nothing was changed. event: no state"
+        client = _client_reverting_with(session_factory, ontology, RevertRefusedError(message))
+        proposal = _propose(client, graph, _describe_room(graph, seq=1))
+
+        response = client.post(f"/api/proposals/{proposal['id']}/revert")
+
+        assert response.status_code == 409
+        assert response.json()["detail"] == {"message": message, "blocking": []}
+        assert client.get(f"/api/proposals/{proposal['id']}").json()["status"] == "open"
+
+    @pytest.mark.parametrize(
+        "error",
+        [ValueError("Could not restore field title"), EntityNotFoundError("Class", "gone")],
+    )
+    def test_an_error_partway_through_is_a_logged_500(
+        self, session_factory, ontology, graph, error, caplog
+    ):
+        client = _client_reverting_with(session_factory, ontology, error)
+        proposal = _propose(client, graph, _describe_room(graph, seq=1))
+
+        with caplog.at_level(logging.ERROR):
+            response = client.post(f"/api/proposals/{proposal['id']}/revert")
+
+        assert response.status_code == 500
+        assert response.json()["detail"] == "An unexpected error occurred"
+        assert str(error) in caplog.text

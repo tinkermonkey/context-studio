@@ -29,7 +29,7 @@ from domain.ontology.entities import (
 from domain.ontology.events import GraphInvalidated
 from domain.ontology.snapshots import entity_snapshot
 from domain.ontology.value_objects import DataType, ExternalReference
-from domain.versioning.exceptions import RevertConflictError
+from domain.versioning.exceptions import RevertConflictError, RevertRefusedError
 from domain.versioning.revert_service import RevertService
 from domain.versioning.value_objects import ChangeOperation
 from tests.fakes.fake_change_repository import FakeChangeRepository
@@ -213,7 +213,9 @@ def test_revert_changes_nothing_when_an_event_cannot_be_undone(
         batch_run_id="run-1",
     )
 
-    with pytest.raises(ValueError, match=r"nothing was changed.*unknown fields \['parent_id'\]"):
+    with pytest.raises(
+        RevertRefusedError, match=r"nothing was changed.*unknown fields \['parent_id'\]"
+    ):
         revert_svc.revert("run-1")
 
     assert ontology_repo.get_class("cls-1").description == "A living being"
@@ -1257,7 +1259,7 @@ def test_revert_changes_nothing_when_a_delete_snapshot_is_incomplete(
         batch_run_id="run-1",
     )
 
-    with pytest.raises(ValueError, match="nothing was changed.*snapshot is incomplete"):
+    with pytest.raises(RevertRefusedError, match="nothing was changed.*snapshot is incomplete"):
         revert_svc.revert("run-1")
 
     assert ontology_repo.get_class("cls-1").description == "A living being"

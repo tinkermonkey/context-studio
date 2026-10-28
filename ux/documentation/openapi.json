@@ -7665,7 +7665,7 @@
           "proposals"
         ],
         "summary": "Revert Proposal",
-        "description": "Undo everything applied from the proposal and mark it reverted.\n\nPending operations are rejected. If entities made outside the proposal\ndepend on ones it created, nothing is changed and the 409 names them.",
+        "description": "Undo everything applied from the proposal and mark it reverted.\n\nPending and failed operations are rejected. A revert refused before it\nchanges anything is a 409: entities made outside the proposal depend on ones\nit created (detail.blocking names them), or an event can't be undone. An\nerror partway through is a 500.",
         "operationId": "revert_proposal_api_proposals__proposal_id__revert_post",
         "parameters": [
           {
@@ -7693,7 +7693,7 @@
             "description": "Change proposal not found"
           },
           "409": {
-            "description": "Entities outside the proposal depend on ones it created; detail.blocking lists them and nothing was changed",
+            "description": "Refused, nothing changed: entities outside the proposal depend on ones it created (detail.blocking lists them), or an event can't be undone (blocking is empty)",
             "content": {
               "application/json": {
                 "schema": {

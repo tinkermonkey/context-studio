@@ -702,8 +702,8 @@ class ProposalService:
 
         Raises:
             ChangeProposalNotFoundError: If the proposal does not exist
-            RevertConflictError, ValueError: From RevertService when the run can't
-                be undone; nothing is changed and the status is left as it was
+            RevertConflictError, RevertRefusedError: From RevertService when the
+                run can't be undone; nothing is changed and the status is left as it was
         """
         with self._lock(proposal_id):
             proposal = self._get(proposal_id)

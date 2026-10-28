@@ -21,20 +21,15 @@ from adapters.web.schemas.proposals import (
     ChangeProposalRevertResponse,
     ChangeProposalValidationErrorResponse,
 )
-from domain.ontology.exceptions import EntityInUseError
 from domain.versioning.exceptions import (
     ChangeProposalNotFoundError,
     ChangeProposalStateError,
     ProposalValidationError,
     RevertConflictError,
+    RevertRefusedError,
 )
 from domain.versioning.proposal_service import OperationDraft, ProposalService
-from domain.versioning.proposals import (
-    ChangeProposal,
-    OperationStatus,
-    ProposalSource,
-    ProposalStatus,
-)
+from domain.versioning.proposals import ChangeProposal, ProposalSource, ProposalStatus
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
@@ -46,8 +41,15 @@ _NOT_FOUND = {404: {"description": "Change proposal not found"}}
 _STATE_CONFLICT = {409: {"description": "An operation is already applied or rejected"}}
 
 
-def _http_error(exc: Exception) -> HTTPException:
-    """Map a domain exception to an HTTPException."""
+def _http_error(exc: Exception, unknown_ids_are_invalid: bool = False) -> HTTPException:
+    """
+    Map a domain exception to an HTTPException; anything unexpected is logged as a 500.
+
+    Args:
+        exc: The exception
+        unknown_ids_are_invalid: The call checks its request's operation ids up
+            front and raises ValueError for unknown ones (apply, reject): a 422
+    """
     if isinstance(exc, HTTPException):
         return exc
     if isinstance(exc, ChangeProposalNotFoundError):
@@ -73,9 +75,13 @@ def _http_error(exc: Exception) -> HTTPException:
                 ],
             },
         )
-    if isinstance(exc, (ChangeProposalStateError, EntityInUseError)):
+    if isinstance(exc, RevertRefusedError):
+        return HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail={"message": str(exc), "blocking": []}
+        )
+    if isinstance(exc, ChangeProposalStateError):
         return HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
-    if isinstance(exc, ValueError):
+    if unknown_ids_are_invalid and isinstance(exc, ValueError):
         return HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc))
     _logger.error(f"Unexpected error in proposals endpoint: {exc}", exc_info=exc)
     return HTTPException(
@@ -223,7 +229,7 @@ async def apply_proposal(
     try:
         return await run_sync_in_executor(run)
     except Exception as exc:
-        raise _http_error(exc) from exc
+        raise _http_error(exc, unknown_ids_are_invalid=True) from exc
 
 
 @router.post(
@@ -245,18 +251,14 @@ async def reject_proposal(
     def run() -> ChangeProposalResponse:
         operation_ids = request.operation_ids
         if operation_ids is None:
-            operation_ids = [
-                o.id
-                for o in service.get(proposal_id).operations
-                if o.status in (OperationStatus.PENDING, OperationStatus.FAILED)
-            ]
+            operation_ids = [o.id for o in service.get(proposal_id).pending]
         proposal = service.reject(proposal_id, operation_ids, request.note)
         return _response(service, proposal)
 
     try:
         return await run_sync_in_executor(run)
     except Exception as exc:
-        raise _http_error(exc) from exc
+        raise _http_error(exc, unknown_ids_are_invalid=True) from exc
 
 
 @router.post(
@@ -267,8 +269,9 @@ async def reject_proposal(
         409: {
             "model": ChangeProposalRevertConflictResponse,
             "description": (
-                "Entities outside the proposal depend on ones it created; "
-                "detail.blocking lists them and nothing was changed"
+                "Refused, nothing changed: entities outside the proposal depend on ones "
+                "it created (detail.blocking lists them), or an event can't be undone "
+                "(blocking is empty)"
             ),
         },
     },
@@ -280,8 +283,10 @@ async def revert_proposal(
     """
     Undo everything applied from the proposal and mark it reverted.
 
-    Pending operations are rejected. If entities made outside the proposal
-    depend on ones it created, nothing is changed and the 409 names them.
+    Pending and failed operations are rejected. A revert refused before it
+    changes anything is a 409: entities made outside the proposal depend on ones
+    it created (detail.blocking names them), or an event can't be undone. An
+    error partway through is a 500.
     """
 
     def run() -> ChangeProposalRevertResponse:
@@ -300,8 +305,5 @@ async def revert_proposal(
 
     try:
         return await run_sync_in_executor(run)
-    except ValueError as exc:
-        # RevertService raises ValueError when an event can't be undone; nothing changed.
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     except Exception as exc:
         raise _http_error(exc) from exc

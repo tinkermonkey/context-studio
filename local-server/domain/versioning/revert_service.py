@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Callable, Optional
 from domain.ontology.events import GraphInvalidated
 from domain.ontology.snapshots import entity_field_names, entity_from_snapshot, entity_snapshot
 from domain.ontology.value_objects import DataType, ExternalReference
-from domain.versioning.exceptions import RevertConflictError
+from domain.versioning.exceptions import RevertConflictError, RevertRefusedError
 from domain.versioning.value_objects import ChangeOperation
 
 if TYPE_CHECKING:
@@ -127,8 +127,9 @@ class RevertService:
             RevertResult with event count and detailed breakdown by entity type
 
         Raises:
-            ValueError: If batch_run_id is empty, or an event can't be undone (no
-                previous state, an unknown field, no snapshot); nothing is changed
+            ValueError: If batch_run_id is empty
+            RevertRefusedError: If an event can't be undone (no previous state, an
+                unknown field, no snapshot); nothing is changed
             RevertConflictError: If entities outside the run depend on entities it
                 created; nothing is changed
         """
@@ -263,7 +264,7 @@ class RevertService:
         bad event from stopping the revert partway through the run.
 
         Raises:
-            ValueError: listing each event that can't be undone
+            RevertRefusedError: listing each event that can't be undone
         """
         problems = []
         for event in pending:
@@ -291,7 +292,7 @@ class RevertService:
                 except ValueError as exc:
                     problems.append(f"{label}: {exc}")
         if problems:
-            raise ValueError(
+            raise RevertRefusedError(
                 f"Cannot revert batch run {batch_run_id}; nothing was changed. "
                 + "; ".join(problems)
             )

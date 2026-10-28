@@ -4121,8 +4121,10 @@ export interface paths {
      * Revert Proposal
      * @description Undo everything applied from the proposal and mark it reverted.
      *
-     *     Pending operations are rejected. If entities made outside the proposal
-     *     depend on ones it created, nothing is changed and the 409 names them.
+     *     Pending and failed operations are rejected. A revert refused before it
+     *     changes anything is a 409: entities made outside the proposal depend on ones
+     *     it created (detail.blocking names them), or an event can't be undone. An
+     *     error partway through is a 500.
      */
     post: operations["revert_proposal_api_proposals__proposal_id__revert_post"];
     delete?: never;
@@ -14378,7 +14380,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description Entities outside the proposal depend on ones it created; detail.blocking lists them and nothing was changed */
+      /** @description Refused, nothing changed: entities outside the proposal depend on ones it created (detail.blocking lists them), or an event can't be undone (blocking is empty) */
       409: {
         headers: {
           [name: string]: unknown;

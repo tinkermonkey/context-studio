@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, type QueryKey } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QUERY_KEYS } from "@/api/config";
 import { proposalsService } from "@/api/services/proposals";
@@ -10,69 +10,89 @@ import {
   useRevertChangeProposal,
 } from "../useProposalMutations";
 
-function createWrapper() {
+// Keys the app's own queries use, as their hooks build them.
+const PROPOSAL_QUERIES: QueryKey[] = [
+  QUERY_KEYS.changeProposals({ taxonomy_id: "tax-1", status: "open" }),
+  QUERY_KEYS.changeProposal("proposal-1"),
+];
+const ONTOLOGY_QUERIES: QueryKey[] = [
+  QUERY_KEYS.taxonomies,
+  QUERY_KEYS.taxonomy("tax-1"),
+  QUERY_KEYS.schemes("tax-1"),
+  QUERY_KEYS.classes({ concept_scheme_id: "scheme-1" }),
+  QUERY_KEYS.class("class-1"),
+  QUERY_KEYS.schemeCounts("tax-1"),
+  QUERY_KEYS.individuals({ class_id: "class-1" }),
+  QUERY_KEYS.individual("ind-1", "relationships"),
+  QUERY_KEYS.relationships({ source_id: "ind-1" }),
+  QUERY_KEYS.properties,
+  QUERY_KEYS.graphView,
+  QUERY_KEYS.changes({ limit: 10 }),
+];
+const UNRELATED_QUERIES: QueryKey[] = [QUERY_KEYS.pipelineRuns(), QUERY_KEYS.health];
+
+function setup() {
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-  const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+  for (const queryKey of [...PROPOSAL_QUERIES, ...ONTOLOGY_QUERIES, ...UNRELATED_QUERIES]) {
+    queryClient.setQueryData(queryKey, { cached: true });
+  }
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
-  return { wrapper, invalidateSpy };
+  const invalidated = (queryKey: QueryKey) =>
+    queryClient.getQueryState(queryKey)?.isInvalidated ?? false;
+  return { wrapper, invalidated };
 }
-
-const ONTOLOGY_KEYS = [
-  QUERY_KEYS.changeProposalsRoot,
-  QUERY_KEYS.taxonomies,
-  QUERY_KEYS.schemesRoot,
-  QUERY_KEYS.classesRoot,
-  QUERY_KEYS.individualsRoot,
-  QUERY_KEYS.relationshipsRoot,
-  QUERY_KEYS.properties,
-  QUERY_KEYS.graph,
-  QUERY_KEYS.changesRoot,
-];
 
 describe("change proposal mutation invalidation", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it("useApplyChangeProposal refreshes the proposals and the ontology", async () => {
+  it("apply marks the proposals and every ontology query stale", async () => {
     vi.spyOn(proposalsService, "applyProposal").mockResolvedValue({} as never);
-    const { wrapper, invalidateSpy } = createWrapper();
+    const { wrapper, invalidated } = setup();
     const { result } = renderHook(() => useApplyChangeProposal(), { wrapper });
 
     result.current.mutate({ id: "proposal-1", data: { operation_ids: ["op-1"] } });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    for (const queryKey of ONTOLOGY_KEYS) {
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey });
+    for (const queryKey of [...PROPOSAL_QUERIES, ...ONTOLOGY_QUERIES]) {
+      expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(true);
+    }
+    for (const queryKey of UNRELATED_QUERIES) {
+      expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(false);
     }
   });
 
-  it("useRevertChangeProposal refreshes the proposals and the ontology", async () => {
+  it("revert marks the proposals and every ontology query stale", async () => {
     vi.spyOn(proposalsService, "revertProposal").mockResolvedValue({} as never);
-    const { wrapper, invalidateSpy } = createWrapper();
+    const { wrapper, invalidated } = setup();
     const { result } = renderHook(() => useRevertChangeProposal(), { wrapper });
 
     result.current.mutate("proposal-1");
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    for (const queryKey of ONTOLOGY_KEYS) {
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey });
+    for (const queryKey of [...PROPOSAL_QUERIES, ...ONTOLOGY_QUERIES]) {
+      expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(true);
     }
   });
 
-  it("useRejectChangeProposal refreshes only the proposals", async () => {
+  it("reject marks only the proposals stale", async () => {
     vi.spyOn(proposalsService, "rejectProposal").mockResolvedValue({} as never);
-    const { wrapper, invalidateSpy } = createWrapper();
+    const { wrapper, invalidated } = setup();
     const { result } = renderHook(() => useRejectChangeProposal(), { wrapper });
 
     result.current.mutate({ id: "proposal-1", data: {} });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(invalidateSpy).toHaveBeenCalledTimes(1);
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: QUERY_KEYS.changeProposalsRoot });
+    for (const queryKey of PROPOSAL_QUERIES) {
+      expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(true);
+    }
+    for (const queryKey of [...ONTOLOGY_QUERIES, ...UNRELATED_QUERIES]) {
+      expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(false);
+    }
   });
 });
