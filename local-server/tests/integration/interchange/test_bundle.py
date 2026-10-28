@@ -560,6 +560,83 @@ def test_individual_added_in_context_studio_round_trips_without_duplicates(
     assert titles.count("Mopping") == 1
 
 
+def test_mixed_loaded_and_authored_entities_round_trip_writes_nothing(
+    service, repo, session_factory
+):
+    """House as loaded, plus a class, attribute, type, individuals and links made here."""
+    load_bundle(service, repo, read_bundle(HOUSE_BUNDLE))
+    place = repo.get_by_identifier("house_place")
+    activity = repo.get_by_identifier("house_activity")
+    shed = service.create_class(
+        concept_scheme_id=place.concept_scheme_id,
+        title="Shed",
+        identifier="house_place_shed",
+        parent_class_id=place.id,
+    )
+    service.create_attribute_definition(
+        class_id=place.id, identifier="house_floor_area", title="Floor area", datatype="integer"
+    )
+    stored_in = service.create_property_definition(
+        identifier="house_activity_stored_in_shed",
+        title="activity gear stored in shed",
+        domain_class_id=activity.id,
+        range_class_id=shed.id,
+    )
+    garden_shed = service.create_individual([shed.id], title="Garden shed")
+    edging = service.create_individual([activity.id], title="Edging the lawn")
+    vacuuming = next(
+        i for i in repo.list_individuals(class_id=activity.id, limit=None) if i.title == "Vacuuming"
+    )
+    service.create_relationship(edging.id, garden_shed.id, stored_in.id)
+    service.create_relationship(vacuuming.id, garden_shed.id, stored_in.id)
+    is_a = repo.get_property_definition_by_identifier("house_activity_is_a_activity")
+    cleaning = next(
+        i for i in repo.list_individuals(class_id=activity.id, limit=None) if i.title == "Cleaning"
+    )
+    service.create_relationship(edging.id, cleaning.id, is_a.id)
+
+    exported = _assert_round_trip_writes_nothing(
+        service, repo, session_factory, _taxonomy_id(repo, "house")
+    )
+
+    assert {"house_place_shed"} <= {c["identifier"] for c in exported["classes"]}
+    assert {
+        (edging.id, "house_activity_stored_in_shed", garden_shed.id),
+        (edging.id, "house_activity_is_a_activity", "starter_cleaning"),
+        ("starter_vacuuming", "house_activity_stored_in_shed", garden_shed.id),
+    } <= {(r["source"], r["property"], r["target"]) for r in exported["relationships"]}
+    assert repo.get_property_definition(stored_in.id).external_references == []
+
+
+def test_uuid_id_does_not_match_an_individual_in_another_taxonomy(service, repo):
+    load_bundle(service, repo, _bundle())
+    other = service.create_taxonomy(title="Other", identifier="other")
+    scheme = service.create_scheme(taxonomy_id=other.id, title="Kinds", identifier="other_kinds")
+    thing = service.create_class(concept_scheme_id=scheme.id, title="Thing", identifier="o_thing")
+    outsider = service.create_individual([thing.id], title="Outsider")
+    bundle = _bundle()
+    bundle["individuals"].append(
+        {"id": outsider.id, "classes": ["house_activity"], "title": "Insider", "data": {}}
+    )
+
+    summary = load_bundle(service, repo, bundle)
+
+    assert summary.kind("individual").created == 1
+    after = repo.get_individual(outsider.id)
+    assert (after.title, after.class_ids, after.external_references) == (
+        "Outsider",
+        [thing.id],
+        [],
+    )
+    activity = repo.get_by_identifier("house_activity")
+    [insider] = [
+        i for i in repo.list_individuals(class_id=activity.id, limit=None) if i.title == "Insider"
+    ]
+    assert [(r.source, r.identifier) for r in insider.external_references] == [
+        ("house", outsider.id)
+    ]
+
+
 def test_data_for_a_context_studio_individual_is_carried_on_reload(service, repo):
     load_bundle(service, repo, _bundle())
     activity = repo.get_by_identifier("house_activity")
