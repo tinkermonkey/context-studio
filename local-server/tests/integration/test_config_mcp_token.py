@@ -4,8 +4,37 @@ ConfigurationManager.ensure_mcp_auth_token against a real config.json.
 """
 
 import json
+import shutil
+from pathlib import Path
 
 from config import ConfigurationManager
+
+E2E_CONFIG = Path(__file__).resolve().parents[2] / "config.e2e.json"
+
+
+def test_a_fresh_install_without_config_json_starts_and_saves_a_token(tmp_path):
+    """config.json is no longer shipped: the first start writes defaults, then the token."""
+    config_file = tmp_path / "config.json"
+
+    manager = ConfigurationManager(config_file=str(config_file))
+    token = manager.ensure_mcp_auth_token()
+
+    saved = json.loads(config_file.read_text())
+    assert saved["mcp"]["auth_token"] == token
+    assert "cors_origins" not in saved["server"]
+    assert manager.get_settings().server.cors_origins == ["http://localhost:3100"]
+
+
+def test_the_e2e_config_pins_its_token_so_the_e2e_server_never_writes_it(tmp_path):
+    config_file = tmp_path / "config.e2e.json"
+    shutil.copy(E2E_CONFIG, config_file)
+    before = config_file.read_text()
+
+    token = ConfigurationManager(config_file=str(config_file)).ensure_mcp_auth_token()
+
+    assert token == "e2e-test-token"
+    assert config_file.read_text() == before
+
 
 ORIGINAL = """{
   "server": {

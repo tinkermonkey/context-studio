@@ -49,6 +49,10 @@ The domain layer (`domain/`) has zero infrastructure imports — no FastAPI, no 
 
 The front end is built strictly after the corresponding back-end API is implemented and validated — API contracts and generated types come first, then hooks and services, then the UX workflows that use them.
 
+### Configuration (`local-server/config.json`)
+
+The back end reads `local-server/config.json` (or the file `CONFIG_PATH` names). Each machine has its own copy, and git ignores it because it holds secrets: LLM API keys and the MCP token. On first start without one, the back end writes the defaults. To start from the repository's settings instead, copy `local-server/config.example.json` to `local-server/config.json` before the first start.
+
 ### MCP server (`/mcp`)
 
 The running back end serves an MCP server at `/mcp`, so Claude Code and other MCP clients can read the workspace. It offers the same read-only tools as the in-app chat (`list_taxonomies`, `search_entities`, `get_entity`, and the list, neighbor and path tools), plus each taxonomy's vision statement as a markdown resource. Tool results include links to the entity pages in the app (base URL from `server.ui_base_url` in `config.json`; null turns links off).

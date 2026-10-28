@@ -28,7 +28,7 @@ from config import (
     url_origin,
 )
 
-SHIPPED_CONFIG = Path(__file__).resolve().parents[2] / "config.json"
+EXAMPLE_CONFIG = Path(__file__).resolve().parents[2] / "config.example.json"
 
 
 class TestSyncAdapterTypeEnum:
@@ -311,11 +311,17 @@ class TestCorsOriginsDefault:
         settings = Settings(server={"host": "127.0.0.1", "port": 8000})
         assert settings.server.cors_origins == ["http://localhost:3100"]
 
-    def test_shipped_config_allows_only_the_vite_dev_origin(self) -> None:
-        """The repo's config.json leaves cors_origins to the default: the UI on :3100."""
-        with open(SHIPPED_CONFIG) as f:
-            settings = Settings(**json.load(f))
-        assert settings.server.cors_origins == ["http://localhost:3100"]
+    def test_example_config_allows_only_the_vite_dev_origin(self) -> None:
+        """config.example.json leaves cors_origins to the default: the UI on :3100."""
+        with open(EXAMPLE_CONFIG) as f:
+            example = json.load(f)
+        assert "cors_origins" not in example["server"]
+        assert Settings(**example).server.cors_origins == ["http://localhost:3100"]
+
+    def test_example_config_carries_no_mcp_token(self) -> None:
+        """Each install generates its own token; the committed example must not hold one."""
+        with open(EXAMPLE_CONFIG) as f:
+            assert not Settings(**json.load(f)).mcp.auth_token
 
 
 class TestMcpConfig:
