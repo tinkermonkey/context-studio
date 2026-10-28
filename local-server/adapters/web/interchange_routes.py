@@ -16,7 +16,7 @@ Note: Export returns binary data (Blob); import accepts multipart form data.
 """
 
 import json
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from fastapi import (
     APIRouter,
@@ -50,6 +50,7 @@ from adapters.web.schemas.interchange import (
     SerializationScopeResponse,
 )
 from adapters.web.schemas.ontology import ListResponse
+from domain.interchange.bundle import BundleError, BundleExporter
 from domain.interchange.entities import ImportRunStatus, ResolutionRecord
 from domain.interchange.ports import BatchRunRepository
 from domain.interchange.value_objects import (
@@ -248,6 +249,51 @@ async def export_ontology(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Export operation failed",
         )
+
+
+# ==================== Bundle Endpoints ====================
+
+
+@router.get(
+    "/bundles/{taxonomy_id}",
+    responses={
+        404: {"description": "Taxonomy not found"},
+        409: {"description": "The taxonomy, a scheme or a class has no stored identifier"},
+    },
+)
+async def export_bundle(
+    taxonomy_id: str,
+    source: Optional[str] = Query(
+        None, description="Bundle source; defaults to the taxonomy's identifier"
+    ),
+    ontology_repo: OntologyRepository = Depends(get_ontology_repo),
+) -> dict[str, Any]:
+    """
+    Export one taxonomy as a Context Studio bundle (v0).
+
+    Loading the returned bundle back into this workspace changes nothing.
+    See domain/interchange/bundle.py for the format.
+
+    Raises:
+        HTTPException: 404 if the taxonomy does not exist; 409 if the workspace
+            cannot be expressed as a bundle (an entity has no stored identifier)
+    """
+
+    def export() -> Optional[dict[str, Any]]:
+        if ontology_repo.get_taxonomy(taxonomy_id) is None:
+            return None
+        return BundleExporter(ontology_repo).export(taxonomy_id, source)
+
+    try:
+        bundle = await run_sync_in_executor(export)
+    except BundleError as e:
+        raise HTTPException(status_code=http_status.HTTP_409_CONFLICT, detail=str(e))
+    if bundle is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Taxonomy not found: {taxonomy_id}",
+        )
+    return bundle
 
 
 # ==================== Import Endpoints ====================

@@ -1,9 +1,19 @@
 import { useMemo } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Panel, StatGrid, StatTile, Table, type Column } from "@tinkermonkey/heimdall-ui";
+import {
+  Button,
+  Icon,
+  Panel,
+  StatGrid,
+  StatTile,
+  Table,
+  type Column,
+} from "@tinkermonkey/heimdall-ui";
+import { ApiError } from "@/api/client/interceptors";
 import { useTaxonomy, useUpdateTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useSchemeCounts } from "@/api/hooks/ontology/useContentCounts";
+import { useExportBundle } from "@/api/hooks/interchange";
 import { SMALL_SET_LIMIT } from "@/api/config";
 import { EntityNavigator } from "@/components/entity/EntityNavigator";
 import { EntityLink } from "@/components/entity/EntityLink";
@@ -20,8 +30,10 @@ import {
   formatDate,
   TableEmpty,
 } from "@/components/entity/EntityPageParts";
+import { useToasts } from "@/components/ui/Toast";
 import { usePageBreadcrumbs } from "@/hooks/usePageBreadcrumbs";
 import { entityPath } from "@/lib/entityPaths";
+import { taxonomiesCopy } from "./taxonomies/-copy";
 
 interface SchemeRow {
   id: string;
@@ -74,6 +86,8 @@ export function TaxonomyPage({ id }: { id: string }) {
   const { data: schemesResponse } = useSchemes(id, { limit: SMALL_SET_LIMIT, sort_by: "title" });
   const { data: counts } = useSchemeCounts(id);
   const updateTaxonomy = useUpdateTaxonomy();
+  const exportBundle = useExportBundle();
+  const { toast } = useToasts();
 
   const schemes = useMemo(() => schemesResponse?.items ?? [], [schemesResponse]);
   const countsByScheme = useMemo(
@@ -91,6 +105,15 @@ export function TaxonomyPage({ id }: { id: string }) {
       relationshipTypes: c?.property_definition_count,
     };
   });
+  const onExportBundle = () =>
+    exportBundle.mutate(id, {
+      onError: (err) =>
+        toast(
+          "error",
+          taxonomiesCopy.exportBundle.failedToast,
+          err instanceof ApiError ? err.detail : err.message,
+        ),
+    });
   const sum = (pick: (c: NonNullable<typeof counts>[number]) => number) =>
     counts ? counts.reduce((total, c) => total + pick(c), 0) : undefined;
 
@@ -132,15 +155,27 @@ export function TaxonomyPage({ id }: { id: string }) {
         title={taxonomy.title}
         identifier={taxonomy.identifier}
         actions={
-          <EntityActions
-            entity={{ kind: "taxonomy", id, title: taxonomy.title }}
-            graph={{ layers: schemes.map((s) => s.id) }}
-            create={{
-              label: "New concept scheme",
-              onClick: () =>
-                navigate({ to: "/app/schema/schemes", search: { createForTaxonomy: id } }),
-            }}
-          />
+          <>
+            <Button
+              variant="ghost"
+              onClick={onExportBundle}
+              disabled={exportBundle.isPending}
+              aria-busy={exportBundle.isPending}
+              title={taxonomiesCopy.exportBundle.hint(taxonomy.identifier)}
+              data-testid="taxonomy-export-bundle"
+            >
+              <Icon name="download" size={13} /> {taxonomiesCopy.exportBundle.buttonLabel}
+            </Button>
+            <EntityActions
+              entity={{ kind: "taxonomy", id, title: taxonomy.title }}
+              graph={{ layers: schemes.map((s) => s.id) }}
+              create={{
+                label: "New concept scheme",
+                onClick: () =>
+                  navigate({ to: "/app/schema/schemes", search: { createForTaxonomy: id } }),
+              }}
+            />
+          </>
         }
       />
 

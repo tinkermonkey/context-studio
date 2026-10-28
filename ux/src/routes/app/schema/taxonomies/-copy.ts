@@ -22,4 +22,9 @@ export const taxonomiesCopy = {
     confirmButton: "Publish",
     successToast: (name: string, version: number) => `Taxonomy published · ${name} · v${version}`,
   },
+  exportBundle: {
+    buttonLabel: "Export bundle",
+    hint: (identifier: string) => `Download ${identifier}.bundle.json`,
+    failedToast: "Bundle export failed",
+  },
 };

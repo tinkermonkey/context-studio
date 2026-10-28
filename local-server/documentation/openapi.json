@@ -6798,6 +6798,75 @@
         }
       }
     },
+    "/api/v1/interchange/bundles/{taxonomy_id}": {
+      "get": {
+        "tags": [
+          "interchange"
+        ],
+        "summary": "Export Bundle",
+        "description": "Export one taxonomy as a Context Studio bundle (v0).\n\nLoading the returned bundle back into this workspace changes nothing.\nSee domain/interchange/bundle.py for the format.\n\nRaises:\n    HTTPException: 404 if the taxonomy does not exist; 409 if the workspace\n        cannot be expressed as a bundle (an entity has no stored identifier)",
+        "operationId": "export_bundle_api_v1_interchange_bundles__taxonomy_id__get",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bundle source; defaults to the taxonomy's identifier",
+              "title": "Source"
+            },
+            "description": "Bundle source; defaults to the taxonomy's identifier"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Export Bundle Api V1 Interchange Bundles  Taxonomy Id  Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy not found"
+          },
+          "409": {
+            "description": "The taxonomy, a scheme or a class has no stored identifier"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/interchange/import": {
       "post": {
         "tags": [

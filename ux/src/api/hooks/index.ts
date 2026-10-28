@@ -4,3 +4,4 @@ export * from "./graph";
 export * from "./versioning";
 export * from "./reference";
 export * from "./proposals";
+export * from "./interchange";

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from "vitest";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
@@ -6,6 +6,7 @@ import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import { entityPageHandlers } from "@/test/entityPageHandlers";
 import { ASK_ABOUT_EVENT } from "@/components/entity/EntityPageParts";
+import { ToastViewport, useToasts } from "@/components/ui/Toast";
 import { useBreadcrumbStore } from "@/stores/breadcrumbs";
 import { useNavigatorStore } from "@/stores/navigator";
 import { TaxonomyPage } from "../taxonomies_.$id";
@@ -13,6 +14,24 @@ import { SchemePage } from "../schemes_.$id";
 import { ClassPage } from "../classes_.$id";
 
 const server = setupServer(...entityPageHandlers);
+
+function TaxonomyPageWithToasts({ id }: { id: string }) {
+  const { toasts, dismiss } = useToasts();
+  return (
+    <>
+      <TaxonomyPage id={id} />
+      <ToastViewport toasts={toasts} onDismiss={dismiss} />
+    </>
+  );
+}
+
+function readBlob(blob: Blob): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.readAsText(blob);
+  });
+}
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
@@ -130,6 +149,88 @@ describe("TaxonomyPage", () => {
       title: "Documentation Robotics",
     });
     window.removeEventListener(ASK_ABOUT_EVENT, listener);
+  });
+
+  describe("Export bundle", () => {
+    const bundle = {
+      format: "context-studio-bundle",
+      version: 0,
+      source: "dr_spec",
+      taxonomy: { identifier: "dr_spec", title: "Documentation Robotics" },
+      classes: [],
+    };
+    let downloads: { filename: string; href: string }[];
+    let blobs: Blob[];
+
+    beforeEach(() => {
+      downloads = [];
+      blobs = [];
+      vi.spyOn(URL, "createObjectURL").mockImplementation((blob) => {
+        blobs.push(blob as Blob);
+        return "blob:bundle";
+      });
+      vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+      vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+        this: HTMLAnchorElement,
+      ) {
+        downloads.push({ filename: this.download, href: this.href });
+      });
+    });
+    afterEach(() => vi.restoreAllMocks());
+
+    it("is a labelled header button", async () => {
+      render(<TaxonomyPage id="tax-1" />);
+
+      const button = await screen.findByTestId("taxonomy-export-bundle");
+      expect(button).toBe(screen.getByRole("button", { name: /Export bundle/ }));
+      expect(button).toHaveClass("btn", "btn--ghost");
+      expect(button).toHaveAttribute("title", "Download dr_spec.bundle.json");
+      expect(button).toHaveAttribute("aria-busy", "false");
+      expect(button).toBeEnabled();
+    });
+
+    it("downloads <identifier>.bundle.json with the exported bundle", async () => {
+      let requested: string | undefined;
+      server.use(
+        http.get("*/api/v1/interchange/bundles/:id", ({ params }) => {
+          requested = params.id as string;
+          return HttpResponse.json(bundle);
+        }),
+      );
+      const user = userEvent.setup();
+      render(<TaxonomyPageWithToasts id="tax-1" />);
+
+      await user.click(await screen.findByTestId("taxonomy-export-bundle"));
+
+      await vi.waitFor(() =>
+        expect(downloads).toEqual([{ filename: "dr_spec.bundle.json", href: "blob:bundle" }]),
+      );
+      expect(requested).toBe("tax-1");
+      expect(blobs[0].type).toBe("application/json");
+      expect(await readBlob(blobs[0])).toBe(JSON.stringify(bundle, null, 2) + "\n");
+      expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:bundle");
+      expect(screen.queryByText("Bundle export failed")).not.toBeInTheDocument();
+    });
+
+    it("toasts the server's reason when the export is refused", async () => {
+      server.use(
+        http.get("*/api/v1/interchange/bundles/:id", () =>
+          HttpResponse.json(
+            { detail: "these have no stored identifier: Class 'Path'" },
+            { status: 409 },
+          ),
+        ),
+      );
+      const user = userEvent.setup();
+      render(<TaxonomyPageWithToasts id="tax-1" />);
+
+      await user.click(await screen.findByTestId("taxonomy-export-bundle"));
+
+      expect(await screen.findByText("Bundle export failed")).toBeInTheDocument();
+      expect(screen.getByText("these have no stored identifier: Class 'Path'")).toBeInTheDocument();
+      expect(downloads).toEqual([]);
+      expect(screen.getByTestId("taxonomy-export-bundle")).toBeEnabled();
+    });
   });
 });
 

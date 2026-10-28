@@ -99,6 +99,7 @@ from domain.extraction.events import ExtractionCompleted
 from domain.extraction.ports import ReferenceSource
 from domain.extraction.services import ExtractionService
 from domain.graph.services import GraphAnalysisService
+from domain.interchange.bundle import BundleExporter
 from domain.interchange.services import ImportRunService
 from domain.ontology.events import (
     AttributeDefinitionCreated,
@@ -819,7 +820,13 @@ async def lifespan(app: FastAPI):
             # MCP server for Claude Code and other MCP clients, loopback hosts only
             if is_loopback_host(settings.server.host):
                 await start_mcp_server(
-                    mcp_stack, mcp_endpoint, app.state, config_manager, read_tools, ontology_service
+                    mcp_stack,
+                    mcp_endpoint,
+                    app.state,
+                    config_manager,
+                    read_tools,
+                    ontology_service,
+                    BundleExporter(ontology_repo),
                 )
                 logger.info("MCP server available at /mcp (bearer token required)")
             else:
