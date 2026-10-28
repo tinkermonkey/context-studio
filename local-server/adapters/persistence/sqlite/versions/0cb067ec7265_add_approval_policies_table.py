@@ -1,7 +1,7 @@
 """add approval_policies table
 
 Revision ID: 0cb067ec7265
-Revises: 8de28edb4953
+Revises: a0e7f093e345
 Create Date: 2026-10-28 09:12:05.595691
 
 Adds ``approval_policies`` (#1355): one row per taxonomy, deleted with it.
@@ -15,7 +15,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = "0cb067ec7265"
-down_revision = "8de28edb4953"
+down_revision = "a0e7f093e345"
 branch_labels = None
 depends_on = None
 

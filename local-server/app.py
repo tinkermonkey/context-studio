@@ -555,7 +555,7 @@ async def lifespan(app: FastAPI):
             "RevertService created and wired with repositories, vector indexes and event publisher"
         )
 
-        approval_policy_repo = SQLiteApprovalPolicyRepository(local_session_factory)
+        approval_policy_repo = SQLiteApprovalPolicyRepository(shared_session_factory)
         proposal_service = ProposalService(
             proposals=SQLiteChangeProposalRepository(shared_session_factory),
             ontology_service=ontology_service,

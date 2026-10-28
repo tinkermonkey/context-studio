@@ -16,7 +16,7 @@ ALEMBIC_INI = os.path.join(
     os.path.dirname(__file__), "../../adapters/persistence/sqlite/alembic.ini"
 )
 REVISION = "0cb067ec7265"
-PREVIOUS_REVISION = "8de28edb4953"
+PREVIOUS_REVISION = "a0e7f093e345"
 
 
 def _config(db_path: str) -> Config:
