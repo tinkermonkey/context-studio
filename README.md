@@ -72,7 +72,7 @@ The server only starts when `server.host` is a loopback address. It also refuses
 
 `server.cors_origins` defaults to the UI origin (`server.ui_base_url`, `http://localhost:3100`), not `*`. If you open the UI at another origin, such as `http://127.0.0.1:3100`, add that origin to `server.cors_origins` in `config.json`.
 
-**Residual risk:** the REST API (`/api/...`) is still unauthenticated. Anything that can reach the back end's port can read and change the workspace, including other processes on the same machine. CORS limits what other web pages can do in a browser; it is not authentication. Keep `server.host` on a loopback address.
+**Residual risk:** the REST API (`/api/...`) is still unauthenticated. Anything that can reach the back end's port can read and change the workspace, including other processes on the same machine. CORS limits what other web pages can do in a browser; it is not authentication. Keep `server.host` on a loopback address. The Vite dev server (`npm run dev`) listens on every network interface and proxies `/api` to the back end on `127.0.0.1`. So while it runs, other machines on your network can reach the REST API through port 3100, and the back end sees them as local; that includes `GET /api/v1/admin/mcp` and the MCP token.
 
 ## Status
 
