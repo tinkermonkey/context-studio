@@ -406,8 +406,12 @@ class ConfigurationManager:
             config_dir = os.path.dirname(self.config_file)
             if config_dir:
                 os.makedirs(config_dir, exist_ok=True)
+            settings_dump = self.settings.model_dump()
+            if "cors_origins" not in self.settings.server.model_fields_set:
+                # Defaulted: leave it out so it keeps following server.ui_base_url
+                settings_dump["server"].pop("cors_origins", None)
             with open(self.config_file, "w") as f:
-                json.dump(without_env_derived_keys(self.settings.model_dump()), f, indent=2)
+                json.dump(without_env_derived_keys(settings_dump), f, indent=2)
             _config_logger.info(f"Successfully saved configuration to {self.config_file}")
             return True
         except PermissionError as e:
@@ -465,6 +469,8 @@ class ConfigurationManager:
             with open(self.config_file, "r") as f:
                 text = f.read()
         config_data = json.loads(text) if text.strip() else {}
+        if not isinstance(config_data, dict):
+            raise ValueError("the file does not hold a JSON object")
         mcp_section = config_data.get("mcp")
         if not isinstance(mcp_section, dict):
             mcp_section = config_data["mcp"] = {}
@@ -473,7 +479,7 @@ class ConfigurationManager:
         if config_dir:
             os.makedirs(config_dir, exist_ok=True)
         with open(self.config_file, "w") as f:
-            json.dump(config_data, f, indent=2)
+            json.dump(config_data, f, indent=2, ensure_ascii=False)
             if not text or text.endswith("\n"):
                 f.write("\n")
 

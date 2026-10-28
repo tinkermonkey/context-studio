@@ -81,3 +81,21 @@ def test_an_unreadable_config_is_not_overwritten(tmp_path):
     assert token
     assert manager.get_settings().mcp.auth_token == token
     assert config_file.read_text() == "{ not json"
+
+
+def test_non_ascii_text_is_kept_as_written(tmp_path):
+    config_file = tmp_path / "config.json"
+    config_file.write_text('{"chat": {"system_prompt": "caf\u00e9"}}', encoding="utf-8")
+
+    ConfigurationManager(config_file=str(config_file)).ensure_mcp_auth_token()
+
+    assert '"caf\u00e9"' in config_file.read_text(encoding="utf-8")
+
+
+def test_a_config_that_is_not_an_object_is_not_overwritten(tmp_path):
+    config_file = tmp_path / "config.json"
+    config_file.write_text("[]")
+    manager = ConfigurationManager(config_file=str(config_file))
+
+    assert manager.ensure_mcp_auth_token()
+    assert config_file.read_text() == "[]"
