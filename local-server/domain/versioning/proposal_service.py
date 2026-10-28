@@ -398,6 +398,7 @@ class ProposalService:
                 proposal.operations,
                 self._classes,
                 lambda operation: self._inside_taxonomy(operation, proposal.taxonomy_id),
+                id_fields=frozenset(_ID_FIELDS),
             )
             # apply takes the proposal's lock itself; propose never holds it.
             return self.apply(proposal.id, auto) if auto else proposal
@@ -423,12 +424,12 @@ class ProposalService:
         target, fields = operation.target_id, operation.fields
         class_ids: list[Any] = []
         if operation.kind is K.INDIVIDUAL:
-            current = self._repo.get_individual(target) if target else None
-            class_ids = list(current.class_ids if current else [])
+            individual = self._repo.get_individual(target) if target else None
+            class_ids = list(individual.class_ids if individual else [])
             class_ids += [c for c in fields.get("class_ids") or [] if c not in class_ids]
         elif operation.kind is K.ATTRIBUTE:
-            current = self._repo.get_attribute_definition(target) if target else None
-            class_ids = [current.class_id if current else fields.get("class_id")]
+            attribute = self._repo.get_attribute_definition(target) if target else None
+            class_ids = [attribute.class_id if attribute else fields.get("class_id")]
         elif operation.kind is K.CLASS and target:
             class_ids = [target]
         classes: list[set[str]] = []

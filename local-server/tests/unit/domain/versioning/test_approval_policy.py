@@ -14,7 +14,7 @@ from domain.versioning.approval_policy import (
     AutoApplyRule,
     auto_apply_ids,
 )
-from domain.versioning.proposal_service import OperationDraft, ProposalService
+from domain.versioning.proposal_service import _ID_FIELDS, OperationDraft, ProposalService
 from domain.versioning.proposals import (
     ChangeScope,
     OperationKind,
@@ -91,9 +91,32 @@ class TestParsing:
         with pytest.raises(ValueError, match=message):
             ApprovalPolicy.from_rules("tax", rules)
 
+    @pytest.mark.parametrize(
+        "rule, reason",
+        [
+            ({"op": "delete"}, "a delete is breaking"),
+            ({"op": "move", "kind": "class"}, "a move is breaking"),
+            ({"scope": "breaking"}, "breaking operations never auto-apply"),
+            ({"kind": "property", "scope": "editorial"}, "property definitions are global"),
+            ({"op": "create", "kind": "taxonomy"}, "taxonomy creates never auto-apply"),
+        ],
+    )
+    def test_rules_that_can_never_match_are_refused_by_name(self, rule, reason):
+        with pytest.raises(ValueError) as refused:
+            ApprovalPolicy.from_rules("tax", {"auto_apply": [{"scope": "editorial"}, rule]})
+        assert f"Auto-apply rule {rule} can never match: {reason}" in str(refused.value)
+
+    def test_rules_the_hard_rules_still_allow_are_accepted(self):
+        rules = [{"kind": "taxonomy", "scope": "editorial"}, {"op": "update", "kind": "class"}]
+        policy = ApprovalPolicy.from_rules("tax", {"auto_apply": rules})
+        assert len(policy.auto_apply) == 2
+
 
 ACTIVITY = {"c-act", "house_activity"}
 PLACE = {"c-place", "place"}
+
+
+ID_FIELDS = frozenset(_ID_FIELDS)
 
 
 def everywhere(operation):
@@ -182,15 +205,20 @@ class TestMatching:
 
     def test_no_policy_or_no_rules_applies_nothing(self):
         edit = op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c", title="x")
-        assert auto_apply_ids(None, [edit], lambda o: [], everywhere) == []
-        assert auto_apply_ids(ApprovalPolicy("tax"), [edit], lambda o: [], everywhere) == []
+        assert auto_apply_ids(None, [edit], lambda o: [], everywhere, id_fields=ID_FIELDS) == []
+        policy = ApprovalPolicy("tax")
+        assert auto_apply_ids(policy, [edit], lambda o: [], everywhere, id_fields=ID_FIELDS) == []
 
     def test_only_operations_inside_the_taxonomy_qualify(self):
         policy = ApprovalPolicy("tax", (AutoApplyRule(scope=S.EDITORIAL),))
         inside = op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c-in", title="x")
         outside = op(2, T.UPDATE, K.CLASS, S.EDITORIAL, "c-out", title="y")
         chosen = auto_apply_ids(
-            policy, [inside, outside], lambda o: [], lambda o: o.target_id == "c-in"
+            policy,
+            [inside, outside],
+            lambda o: [],
+            lambda o: o.target_id == "c-in",
+            id_fields=ID_FIELDS,
         )
         assert chosen == [inside.id]
 
@@ -201,9 +229,22 @@ class TestMatching:
         plain = op(3, T.CREATE, K.INDIVIDUAL, S.ADDITIVE, ref="b", class_ids=["c1"])
         relationship = op(4, T.CREATE, K.RELATIONSHIP, S.ADDITIVE, source_id="$b")
         chosen = auto_apply_ids(
-            policy, [relationship, plain, on_new_class, kept_class], lambda o: [], everywhere
+            policy,
+            [relationship, plain, on_new_class, kept_class],
+            lambda o: [],
+            everywhere,
+            id_fields=ID_FIELDS,
         )
         assert chosen == [plain.id]
+
+    def test_text_that_starts_with_a_dollar_is_not_a_ref(self):
+        policy = ApprovalPolicy("tax", (AutoApplyRule(scope=S.EDITORIAL),))
+        priced = op(1, T.UPDATE, K.INDIVIDUAL, S.EDITORIAL, "i1", title="$5 attic")
+        noted = op(2, T.UPDATE, K.INDIVIDUAL, S.EDITORIAL, "i2", description="$x marks it")
+        chosen = auto_apply_ids(
+            policy, [priced, noted], lambda o: [], everywhere, id_fields=ID_FIELDS
+        )
+        assert chosen == [priced.id, noted.id]
 
 
 # ---------------------------------------------------------------- the services
@@ -451,6 +492,16 @@ class TestAutoApplyStaysInsideTheTaxonomy:
         ]
         proposal = service.propose(house["taxonomy"], "Links", drafts, ProposalSource.MCP)
         assert statuses(proposal) == {1: PENDING, 2: PENDING, 3: APPLIED}
+
+
+def test_an_editorial_title_starting_with_a_dollar_auto_applies(service, policies, house, ontology):
+    policies.save(ApprovalPolicy(house["taxonomy"], (AutoApplyRule(scope=S.EDITORIAL),)))
+    drafts = [
+        OperationDraft(1, T.UPDATE, K.INDIVIDUAL, house["attic"], fields={"title": "$5 attic"})
+    ]
+    proposal = service.propose(house["taxonomy"], "Price", drafts, ProposalSource.MCP)
+    assert statuses(proposal) == {1: APPLIED}
+    assert ontology.get_individual(house["attic"]).title == "$5 attic"
 
 
 class TestEveryClassIsCovered:

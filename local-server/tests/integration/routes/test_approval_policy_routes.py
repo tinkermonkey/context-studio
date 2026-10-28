@@ -138,6 +138,25 @@ class TestPolicyRoutes:
         assert client.put(_url(house["taxonomy"]), json=body).status_code == 422
         assert client.get(_url(house["taxonomy"])).json()["auto_apply"] == HOUSE_RULES["auto_apply"]
 
+    @pytest.mark.parametrize(
+        "rule",
+        [
+            {"op": "delete"},
+            {"op": "move"},
+            {"scope": "breaking"},
+            {"kind": "property"},
+            {"op": "create", "kind": "taxonomy"},
+        ],
+    )
+    def test_a_rule_that_can_never_match_is_422_naming_it(self, client, house, rule):
+        client.put(_url(house["taxonomy"]), json=HOUSE_RULES)
+        response = client.put(
+            _url(house["taxonomy"]), json={"auto_apply": [{"scope": "editorial"}, rule]}
+        )
+        assert response.status_code == 422
+        assert f"Auto-apply rule {rule} can never match" in response.json()["detail"]
+        assert client.get(_url(house["taxonomy"])).json()["auto_apply"] == HOUSE_RULES["auto_apply"]
+
     def test_deleting_the_taxonomy_deletes_its_policy(
         self, client, house, ontology, session_factory
     ):

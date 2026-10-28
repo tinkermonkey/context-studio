@@ -85,7 +85,8 @@ class AutoApplyRule:
         Parse a rule like {"op": "create", "kind": "individual", "class": "house_activity"}.
 
         Raises:
-            ValueError: For an unknown key or value, or an empty rule
+            ValueError: For an unknown key or value, an empty rule, or a rule the
+                hard rules mean can never match
         """
         if not isinstance(data, dict):
             raise ValueError("An auto-apply rule must be an object")
@@ -95,12 +96,28 @@ class AutoApplyRule:
         class_key = data.get("class")
         if class_key is not None and (not isinstance(class_key, str) or not class_key):
             raise ValueError("A rule's class must be a class id or identifier")
-        return cls(
+        rule = cls(
             op=OperationType(data["op"]) if data.get("op") is not None else None,
             kind=OperationKind(data["kind"]) if data.get("kind") is not None else None,
             class_key=class_key,
             scope=ChangeScope(data["scope"]) if data.get("scope") is not None else None,
         )
+        never = rule._never_matches()
+        if never:
+            raise ValueError(f"Auto-apply rule {data} can never match: {never}")
+        return rule
+
+    def _never_matches(self) -> Optional[str]:
+        """Why the hard rules mean this rule can never match, if they do."""
+        if self.op in (OperationType.DELETE, OperationType.MOVE):
+            return f"a {self.op.value} is breaking and never auto-applies"
+        if self.scope is ChangeScope.BREAKING:
+            return "breaking operations never auto-apply"
+        if self.kind is OperationKind.PROPERTY:
+            return "property definitions are global and never auto-apply"
+        if self.kind is OperationKind.TAXONOMY and self.op is OperationType.CREATE:
+            return "taxonomy creates never auto-apply"
+        return None
 
     def to_dict(self) -> dict[str, str]:
         """The rule's JSON form, with only the keys it sets."""
@@ -195,6 +212,8 @@ def auto_apply_ids(
     operations: Iterable[ProposedOperation],
     classes: Callable[[ProposedOperation], Sequence[set[str]]],
     inside_taxonomy: Callable[[ProposedOperation], bool],
+    *,
+    id_fields: frozenset[str],
 ) -> list[str]:
     """
     The operations a policy lets apply as soon as they are proposed, in seq order.
@@ -209,6 +228,8 @@ def auto_apply_ids(
             (see ApprovalPolicy.allows)
         inside_taxonomy: Whether the operation's target and every existing
             entity it points at belong to the policy's taxonomy alone
+        id_fields: The fields whose values name entities; only these can hold a
+            "$ref" (a title like "$5 attic" is text)
     """
     if policy is None:
         return []
@@ -217,7 +238,7 @@ def auto_apply_ids(
     for operation in sorted(operations, key=lambda o: o.seq):
         if not policy.allows(operation, classes(operation)):
             continue
-        if not _refs(operation.fields) <= applied_refs:
+        if not _refs(operation.fields, id_fields) <= applied_refs:
             continue
         if not inside_taxonomy(operation):
             continue
@@ -227,10 +248,12 @@ def auto_apply_ids(
     return chosen
 
 
-def _refs(fields: dict[str, Any]) -> set[str]:
-    """The refs ("$name" values) an operation's fields point at, without the "$"."""
+def _refs(fields: dict[str, Any], id_fields: frozenset[str]) -> set[str]:
+    """The refs ("$name" values) an operation's id fields point at, without the "$"."""
     found: set[str] = set()
-    for value in fields.values():
+    for name, value in fields.items():
+        if name not in id_fields:
+            continue
         for item in value if isinstance(value, list) else [value]:
             if isinstance(item, str) and item.startswith(_REF_PREFIX) and len(item) > 1:
                 found.add(item[1:])
