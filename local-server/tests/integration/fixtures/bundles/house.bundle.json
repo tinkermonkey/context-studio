@@ -1,0 +1,1318 @@
+{
+  "format": "context-studio-bundle",
+  "version": 0,
+  "source": "house",
+  "taxonomy": {
+    "identifier": "house",
+    "title": "House",
+    "description": "House is a household knowledge graph that Claude reads and maintains, so that \"I've got an hour for chores\" becomes an ordered plan and a list of what to grab. The graph is memory and vocabulary; Claude does the interpretation. A node is a thing people name in conversation, of exactly one kind from a closed set: places (where things are and work happens), activities (kinds of work), resources (kinds of things used), items (things owned, somewhere, in some quantity), tasks, projects and tags. Concepts are kept apart from instances: a resource is never the thing on the pegboard. Every node has a short definition that says what it is plus one detail that tells it apart from its neighbours. An edge has exactly one meaning, only the kind-to-kind combinations in the schema are valid, hierarchies are acyclic, and inference along them is written down rather than assumed.",
+    "vision": "# House Ontology Charter\n\n**Status:** Draft for review, 2026-10-26. Informative, not normative: [docs/ONTOLOGY.md](../docs/ONTOLOGY.md) stays the specification. This charter states what the ontology is for, what a node and an edge are meant to model, and how a proposed change should be judged. Tooling that reasons about House's vocabulary, such as Context Studio and Claude in conversation, is given this text as its foundation.\n\n## In one paragraph\n\nHouse is a household knowledge graph that Claude reads and maintains, so that \"I've got an hour for chores\" becomes an ordered plan and a list of what to grab. The graph is memory and vocabulary; Claude does the interpretation. A node is a thing people name in conversation, of exactly one kind from a closed set: places (where things are and work happens), activities (kinds of work), resources (kinds of things used), items (things owned, somewhere, in some quantity), tasks, projects and tags. Concepts are kept apart from instances: a resource is never the thing on the pegboard. Every node has a short definition that says what it is plus one detail that tells it apart from its neighbours. An edge has exactly one meaning, only the kind-to-kind combinations in the schema are valid, hierarchies are acyclic, and inference along them is written down rather than assumed.\n\n## What the ontology is for\n\n- Filing tasks by where they happen (place) and what kind of work they are (activity), so \"what's left in the garage?\" and \"what cleaning is due?\" have answers.\n- Knowing what work needs (kits of resources), what the house has and where (stock), and what is low or missing (the shopping list).\n- Answering from the house's own documents: a TV's manual belongs to its model, a warranty to the unit.\n- Each group (the household, a person) keeps its own vocabulary, seeded from a shared starter set of activities and then edited in place.\n\nThe split of responsibility is deliberate: the graph holds names, definitions, structure and the rules for what structure implies; Claude interprets what people say against it.\n\n## What a node models\n\n- A node has exactly one kind from the closed set, and optionally one subkind (a room or a storage spot among places; a tool, supply, material, appliance or furniture among resources). Adding a kind is a design change; ad hoc dimensions use tags until they earn a kind.\n- **Concepts are not instances.** A resource (\"Claw hammer\") is a kind of thing; an item (\"1 claw hammer on the garage pegboard\") is a thing owned, somewhere, in some quantity. A specific make and model is a resource, a leaf under the generic kind; a unit with its own name, serial or warranty is an item. Merging the two is the most common way these models go wrong.\n- **Definitions decide membership.** One or two sentences: say what or where it is, then one distinguishing detail (for a place, what it has, holds or is used for). A definition that only restates the name and the parent is too thin to tell neighbours apart.\n- **Names are distinctive within the group** (\"Den Bathroom\", not a second \"Bathroom\"); the other names people use are aliases.\n- **A place's parent means inside.** A room off or next to another is its sibling under the same floor, linked with `adjacent_to`, never nested in it.\n- Granularity: an activity is a kind of work someone would file several tasks under; one-off phrasing belongs on the task, not in the vocabulary.\n\n## What an edge models\n\n- Every edge type has one meaning and runs from → to as the schema states: `is_a` runs specific → general, `part_of` runs part → whole, `requires` runs work → what it needs, `instance_of` runs instance → concept, `located_in` runs thing → place.\n- Only the `(from kind, edge type, to kind)` combinations in the schema are valid; anything else is rejected.\n- Hierarchies are acyclic: `is_a` is a DAG (an activity may specialise two parents), `part_of` is a tree.\n- `adjacent_to` is symmetric, never transitive, and never carries tasks or stock across.\n- `requires` may carry a quantity, a unit and an optional flag. Kits are inherited down `is_a`: the nearest declaration wins, and a specific resource replaces its general one.\n- Inference is explicit and written down (containment rolls up, kits inherit, stock satisfies down `is_a`); nothing else is assumed.\n\n## How to judge a proposed change\n\n- **A defect** contradicts ONTOLOGY.md, loses information people rely on, merges a concept with an instance, or declares one thing twice (two nodes for one place, two edge types with one meaning).\n- **Working as designed** covers the deliberate conventions: next-door rooms are siblings, activities are created freely and tidied later, each group owns its own copy of the vocabulary, warnings advise and never block.\n- **A judgment call** is a choice with reasonable alternatives: whether a specific job deserves its own activity, where a resource sits in the `is_a` tree, which of two near-synonyms is the name and which the alias.\n- **Scope of change:** a new kind, subkind, edge type, unit or inference rule is a design change (a plan, a recorded decision, a migration); new vocabulary, aliases and sharper definitions are normal edits; merges, retirements and re-parenting are maintenance. A fix should be the smallest scope that resolves the problem.\n"
+  },
+  "schemes": [
+    {
+      "identifier": "house_vocabulary",
+      "title": "Vocabulary",
+      "description": "The kinds people name and curate in conversation, kept per group with definitions and aliases and audited by check_vocabulary: places, activities, resources and tags."
+    },
+    {
+      "identifier": "house_records",
+      "title": "Records",
+      "description": "What is filed against the vocabulary: tasks, the projects that hold them, and items (stock lines and units) of resources in places."
+    }
+  ],
+  "classes": [
+    {
+      "identifier": "house_place",
+      "scheme": "house_vocabulary",
+      "title": "Place",
+      "description": "Where things are and where work happens: a property, building, floor, room, area or storage spot. A place's parent is the place it is inside.",
+      "attributes": [
+        {
+          "identifier": "house_status",
+          "title": "Status",
+          "datatype": "string",
+          "description": "Active, or retired (merged away, sold, broken): kept with its history, hidden from lists.",
+          "allowed_values": [
+            "active",
+            "retired"
+          ]
+        },
+        {
+          "identifier": "house_documents",
+          "title": "Documents",
+          "datatype": "array",
+          "description": "Links to library documents, each with a role (manual, warranty, receipt, contract, other) and a label. A resource's documents are inherited by the resources below it and by its items."
+        },
+        {
+          "identifier": "house_aliases",
+          "title": "Aliases",
+          "datatype": "array",
+          "description": "Other names people use (\"family room\" for Den); unique per kind within a parent, like names."
+        }
+      ]
+    },
+    {
+      "identifier": "house_activity",
+      "scheme": "house_vocabulary",
+      "title": "Activity",
+      "description": "A kind of work, the type a task is filed under, such as Cleaning or Hang a picture. Activities specialise with is_a, broad categories above specific jobs.",
+      "attributes": [
+        {
+          "identifier": "house_status",
+          "title": "Status",
+          "datatype": "string",
+          "description": "Active, or retired (merged away, sold, broken): kept with its history, hidden from lists.",
+          "allowed_values": [
+            "active",
+            "retired"
+          ]
+        },
+        {
+          "identifier": "house_aliases",
+          "title": "Aliases",
+          "datatype": "array",
+          "description": "Other names people use (\"family room\" for Den); unique per kind within a parent, like names."
+        },
+        {
+          "identifier": "house_estimate_minutes",
+          "title": "Estimate (minutes)",
+          "datatype": "integer",
+          "description": "Typical duration of a task of this activity."
+        }
+      ]
+    },
+    {
+      "identifier": "house_resource",
+      "scheme": "house_vocabulary",
+      "title": "Resource",
+      "description": "A kind of thing work uses or the house owns: a tool, supply, material, appliance or piece of furniture, down to a specific make and model. A concept, never a particular thing.",
+      "attributes": [
+        {
+          "identifier": "house_status",
+          "title": "Status",
+          "datatype": "string",
+          "description": "Active, or retired (merged away, sold, broken): kept with its history, hidden from lists.",
+          "allowed_values": [
+            "active",
+            "retired"
+          ]
+        },
+        {
+          "identifier": "house_documents",
+          "title": "Documents",
+          "datatype": "array",
+          "description": "Links to library documents, each with a role (manual, warranty, receipt, contract, other) and a label. A resource's documents are inherited by the resources below it and by its items."
+        },
+        {
+          "identifier": "house_aliases",
+          "title": "Aliases",
+          "datatype": "array",
+          "description": "Other names people use (\"family room\" for Den); unique per kind within a parent, like names."
+        },
+        {
+          "identifier": "house_unit",
+          "title": "Base unit",
+          "datatype": "string",
+          "description": "The unit requirements and stock are counted in; defaults to each.",
+          "allowed_values": [
+            "each",
+            "pair",
+            "dozen",
+            "in",
+            "ft",
+            "yd",
+            "mm",
+            "cm",
+            "m",
+            "fl_oz",
+            "cup",
+            "pt",
+            "qt",
+            "gal",
+            "ml",
+            "l",
+            "oz",
+            "lb",
+            "g",
+            "kg"
+          ]
+        },
+        {
+          "identifier": "house_packs",
+          "title": "Packs",
+          "datatype": "array",
+          "description": "Named pack sizes, each { name, quantity, unit }, e.g. box = 50 each."
+        },
+        {
+          "identifier": "house_reorder_at",
+          "title": "Reorder at",
+          "datatype": "object",
+          "description": "Low-stock threshold { quantity, unit }, stored in the base unit; needs counted stock."
+        },
+        {
+          "identifier": "house_usual_buy",
+          "title": "Usual buy",
+          "datatype": "object",
+          "description": "What the house usually buys on a shopping trip { quantity, unit }; empty quantity means some. A habit, never a schedule."
+        },
+        {
+          "identifier": "house_usual_every_days",
+          "title": "Usually every (days)",
+          "datatype": "integer",
+          "description": "The usual buy's rough cadence (about weekly = 7); only shown, never scheduled."
+        },
+        {
+          "identifier": "house_manufacturer",
+          "title": "Manufacturer",
+          "datatype": "string",
+          "description": "The maker of a specific make and model (a leaf resource)."
+        },
+        {
+          "identifier": "house_model",
+          "title": "Model",
+          "datatype": "string",
+          "description": "The exact model number; matched ignoring case, spaces and dashes."
+        }
+      ]
+    },
+    {
+      "identifier": "house_item",
+      "scheme": "house_records",
+      "title": "Item",
+      "description": "Something owned, somewhere, in some quantity: a stock line (how many, and where) or a unit with its own name, serial or warranty. Always an instance of exactly one resource.",
+      "attributes": [
+        {
+          "identifier": "house_status",
+          "title": "Status",
+          "datatype": "string",
+          "description": "Active, or retired (merged away, sold, broken): kept with its history, hidden from lists.",
+          "allowed_values": [
+            "active",
+            "retired"
+          ]
+        },
+        {
+          "identifier": "house_documents",
+          "title": "Documents",
+          "datatype": "array",
+          "description": "Links to library documents, each with a role (manual, warranty, receipt, contract, other) and a label. A resource's documents are inherited by the resources below it and by its items."
+        },
+        {
+          "identifier": "house_aliases",
+          "title": "Aliases",
+          "datatype": "array",
+          "description": "Other names people use (\"family room\" for Den); unique per kind within a parent, like names."
+        },
+        {
+          "identifier": "house_item_kind",
+          "title": "Item kind",
+          "datatype": "string",
+          "description": "A stock line (how many of a resource, kept in one place) or a unit (one named thing).",
+          "allowed_values": [
+            "line",
+            "unit"
+          ]
+        },
+        {
+          "identifier": "house_quantity",
+          "title": "Quantity",
+          "datatype": "string",
+          "description": "A decimal number; empty means some, not counted; 0 means usually kept here, out now. Always 1 for a unit."
+        },
+        {
+          "identifier": "house_unit",
+          "title": "Unit",
+          "datatype": "string",
+          "description": "A unit in the resource's dimension, or one of its pack names."
+        },
+        {
+          "identifier": "house_note",
+          "title": "Note",
+          "datatype": "string",
+          "description": "Free text about this line or unit."
+        },
+        {
+          "identifier": "house_serial",
+          "title": "Serial",
+          "datatype": "string",
+          "description": "Units only: the serial number."
+        },
+        {
+          "identifier": "house_purchased_on",
+          "title": "Purchased on",
+          "datatype": "string",
+          "description": "Units only: a date, YYYY-MM-DD."
+        },
+        {
+          "identifier": "house_installed_on",
+          "title": "Installed on",
+          "datatype": "string",
+          "description": "Units only: a date, YYYY-MM-DD."
+        },
+        {
+          "identifier": "house_warranty_until",
+          "title": "Warranty until",
+          "datatype": "string",
+          "description": "Units only: a date, YYYY-MM-DD."
+        }
+      ]
+    },
+    {
+      "identifier": "house_task",
+      "scheme": "house_records",
+      "title": "Task",
+      "description": "A piece of work to do, filed in a project, optionally of an activity and in one or more places.",
+      "attributes": [
+        {
+          "identifier": "house_status",
+          "title": "Status",
+          "datatype": "string",
+          "description": "Open or done.",
+          "allowed_values": [
+            "open",
+            "done"
+          ]
+        },
+        {
+          "identifier": "house_notes",
+          "title": "Notes",
+          "datatype": "string",
+          "description": "Free text about the task."
+        },
+        {
+          "identifier": "house_estimate_minutes",
+          "title": "Estimate (minutes)",
+          "datatype": "integer",
+          "description": "Overrides the activity's estimate."
+        },
+        {
+          "identifier": "house_schedule",
+          "title": "Schedule",
+          "datatype": "object",
+          "description": "Recurrence { rule (an RFC 5545 RRULE), anchor (calendar or completion) }; empty means one-time."
+        },
+        {
+          "identifier": "house_due",
+          "title": "Due",
+          "datatype": "string",
+          "description": "A calendar date, YYYY-MM-DD, in the household's time zone."
+        }
+      ]
+    },
+    {
+      "identifier": "house_project",
+      "scheme": "house_records",
+      "title": "Project",
+      "description": "A container of tasks, such as House Tasks or a kitchen remodel; projects nest with part_of.",
+      "attributes": [
+        {
+          "identifier": "house_documents",
+          "title": "Documents",
+          "datatype": "array",
+          "description": "Links to library documents, each with a role (manual, warranty, receipt, contract, other) and a label. A resource's documents are inherited by the resources below it and by its items."
+        },
+        {
+          "identifier": "house_aliases",
+          "title": "Aliases",
+          "datatype": "array",
+          "description": "Other names people use (\"family room\" for Den); unique per kind within a parent, like names."
+        },
+        {
+          "identifier": "house_status",
+          "title": "Status",
+          "datatype": "string",
+          "description": "Active or done.",
+          "allowed_values": [
+            "active",
+            "done"
+          ]
+        }
+      ]
+    },
+    {
+      "identifier": "house_tag",
+      "scheme": "house_vocabulary",
+      "title": "Tag",
+      "description": "A free-form label for a dimension that has not yet earned its own kind, attachable to any node.",
+      "attributes": [
+        {
+          "identifier": "house_status",
+          "title": "Status",
+          "datatype": "string",
+          "description": "Active, or retired (merged away, sold, broken): kept with its history, hidden from lists.",
+          "allowed_values": [
+            "active",
+            "retired"
+          ]
+        },
+        {
+          "identifier": "house_aliases",
+          "title": "Aliases",
+          "datatype": "array",
+          "description": "Other names people use (\"family room\" for Den); unique per kind within a parent, like names."
+        }
+      ]
+    },
+    {
+      "identifier": "house_place_property",
+      "scheme": "house_vocabulary",
+      "parent": "house_place",
+      "title": "Property",
+      "description": "A whole property, the top of a household's place tree."
+    },
+    {
+      "identifier": "house_place_building",
+      "scheme": "house_vocabulary",
+      "parent": "house_place",
+      "title": "Building",
+      "description": "A building on a property: the house, a garage, a shed."
+    },
+    {
+      "identifier": "house_place_floor",
+      "scheme": "house_vocabulary",
+      "parent": "house_place",
+      "title": "Floor",
+      "description": "A floor or level of a building, holding its rooms."
+    },
+    {
+      "identifier": "house_place_room",
+      "scheme": "house_vocabulary",
+      "parent": "house_place",
+      "title": "Room",
+      "description": "A room on a floor. A room off or next to another is its sibling, not inside it."
+    },
+    {
+      "identifier": "house_place_area",
+      "scheme": "house_vocabulary",
+      "parent": "house_place",
+      "title": "Area",
+      "description": "A named area that is not a room, such as the back yard or under the stairs."
+    },
+    {
+      "identifier": "house_place_storage",
+      "scheme": "house_vocabulary",
+      "parent": "house_place",
+      "title": "Storage",
+      "description": "A storage spot inside a room: a shelf, bin, drawer or pegboard, where stock is kept."
+    },
+    {
+      "identifier": "house_resource_tool",
+      "scheme": "house_vocabulary",
+      "parent": "house_resource",
+      "title": "Tool",
+      "description": "A durable resource reused across jobs: a hammer, a level."
+    },
+    {
+      "identifier": "house_resource_supply",
+      "scheme": "house_vocabulary",
+      "parent": "house_resource",
+      "title": "Supply",
+      "description": "A resource used up by the work: picture hooks, cleaning spray, vacuum bags."
+    },
+    {
+      "identifier": "house_resource_material",
+      "scheme": "house_vocabulary",
+      "parent": "house_resource",
+      "title": "Material",
+      "description": "A resource that becomes part of the work: spackle, paint."
+    },
+    {
+      "identifier": "house_resource_appliance",
+      "scheme": "house_vocabulary",
+      "parent": "house_resource",
+      "title": "Appliance",
+      "description": "Equipment the house owns and maintains: a TV, the dishwasher, the furnace."
+    },
+    {
+      "identifier": "house_resource_furniture",
+      "scheme": "house_vocabulary",
+      "parent": "house_resource",
+      "title": "Furniture",
+      "description": "Something owned and placed, never used up: a credenza, a bookcase."
+    }
+  ],
+  "properties": [
+    {
+      "identifier": "house_activity_is_a_activity",
+      "title": "activity is_a activity",
+      "description": "Specialisation, specific to general: Vacuuming is a kind of Cleaning. A DAG; one node may have two parents.",
+      "predicate": "is_a",
+      "domain": "house_activity",
+      "range": "house_activity",
+      "constraints": {
+        "max": null,
+        "min": 0,
+        "hierarchy": true,
+        "symmetric": false
+      }
+    },
+    {
+      "identifier": "house_resource_is_a_resource",
+      "title": "resource is_a resource",
+      "description": "Specialisation, specific to general: Vacuuming is a kind of Cleaning. A DAG; one node may have two parents.",
+      "predicate": "is_a",
+      "domain": "house_resource",
+      "range": "house_resource",
+      "constraints": {
+        "max": null,
+        "min": 0,
+        "hierarchy": true,
+        "symmetric": false
+      }
+    },
+    {
+      "identifier": "house_tag_is_a_tag",
+      "title": "tag is_a tag",
+      "description": "Specialisation, specific to general: Vacuuming is a kind of Cleaning. A DAG; one node may have two parents.",
+      "predicate": "is_a",
+      "domain": "house_tag",
+      "range": "house_tag",
+      "constraints": {
+        "max": null,
+        "min": 0,
+        "hierarchy": true,
+        "symmetric": false
+      }
+    },
+    {
+      "identifier": "house_place_part_of_place",
+      "title": "place part_of place",
+      "description": "Containment, part to whole: Closet is in Primary Bedroom; a sub-project is part of a project. A tree.",
+      "predicate": "part_of",
+      "domain": "house_place",
+      "range": "house_place",
+      "constraints": {
+        "max": 1,
+        "min": 0,
+        "hierarchy": true,
+        "symmetric": false
+      }
+    },
+    {
+      "identifier": "house_place_adjacent_to_place",
+      "title": "place adjacent_to place",
+      "description": "Next to, off or opens onto: Den Bathroom is off the Den. Symmetric, never transitive, never implies containment.",
+      "predicate": "adjacent_to",
+      "domain": "house_place",
+      "range": "house_place",
+      "constraints": {
+        "max": null,
+        "min": 0,
+        "hierarchy": false,
+        "symmetric": true
+      }
+    },
+    {
+      "identifier": "house_project_part_of_project",
+      "title": "project part_of project",
+      "description": "Containment, part to whole: Closet is in Primary Bedroom; a sub-project is part of a project. A tree.",
+      "predicate": "part_of",
+      "domain": "house_project",
+      "range": "house_project",
+      "constraints": {
+        "max": 1,
+        "min": 0,
+        "hierarchy": true,
+        "symmetric": false
+      }
+    },
+    {
+      "identifier": "house_task_in_project_project",
+      "title": "task in_project project",
+      "description": "The project a task is filed in; every task has exactly one.",
+      "predicate": "in_project",
+      "domain": "house_task",
+      "range": "house_project",
+      "constraints": {
+        "max": 1,
+        "min": 1,
+        "hierarchy": false,
+        "symmetric": false
+      }
+    },
+    {
+      "identifier": "house_task_instance_of_activity",
+      "title": "task instance_of activity",
+      "description": "What an instance is: a task's kind of work, or an item's resource (its model when known).",
+      "predicate": "instance_of",
+      "domain": "house_task",
+      "range": "house_activity",
+      "constraints": {
+        "max": 1,
+        "min": 0,
+        "hierarchy": false,
+        "symmetric": false
+      }
+    },
+    {
+      "identifier": "house_item_instance_of_resource",
+      "title": "item instance_of resource",
+      "description": "What an instance is: a task's kind of work, or an item's resource (its model when known).",
+      "predicate": "instance_of",
+      "domain": "house_item",
+      "range": "house_resource",
+      "constraints": {
+        "max": 1,
+        "min": 1,
+        "hierarchy": false,
+        "symmetric": false
+      }
+    },
+    {
+      "identifier": "house_task_located_in_place",
+      "title": "task located_in place",
+      "description": "Where a task happens or where an item is kept.",
+      "predicate": "located_in",
+      "domain": "house_task",
+      "range": "house_place",
+      "constraints": {
+        "max": null,
+        "min": 0,
+        "hierarchy": false,
+        "symmetric": false
+      }
+    },
+    {
+      "identifier": "house_item_located_in_place",
+      "title": "item located_in place",
+      "description": "Where a task happens or where an item is kept.",
+      "predicate": "located_in",
+      "domain": "house_item",
+      "range": "house_place",
+      "constraints": {
+        "max": 1,
+        "min": 1,
+        "hierarchy": false,
+        "symmetric": false
+      }
+    },
+    {
+      "identifier": "house_activity_requires_resource",
+      "title": "activity requires resource",
+      "description": "What work needs: a resource, with an optional quantity, unit and optional flag. Kits inherit down is_a; the nearest declaration wins.",
+      "predicate": "requires",
+      "domain": "house_activity",
+      "range": "house_resource",
+      "constraints": {
+        "max": null,
+        "min": 0,
+        "hierarchy": false,
+        "symmetric": false,
+        "edge_properties": [
+          "quantity",
+          "unit",
+          "optional"
+        ]
+      }
+    },
+    {
+      "identifier": "house_task_requires_resource",
+      "title": "task requires resource",
+      "description": "What work needs: a resource, with an optional quantity, unit and optional flag. Kits inherit down is_a; the nearest declaration wins.",
+      "predicate": "requires",
+      "domain": "house_task",
+      "range": "house_resource",
+      "constraints": {
+        "max": null,
+        "min": 0,
+        "hierarchy": false,
+        "symmetric": false,
+        "edge_properties": [
+          "quantity",
+          "unit",
+          "optional"
+        ]
+      }
+    },
+    {
+      "identifier": "house_task_depends_on_task",
+      "title": "task depends_on task",
+      "description": "Must be done first: patch the hole before painting the wall. A DAG.",
+      "predicate": "depends_on",
+      "domain": "house_task",
+      "range": "house_task",
+      "constraints": {
+        "max": null,
+        "min": 0,
+        "hierarchy": true,
+        "symmetric": false
+      }
+    },
+    {
+      "identifier": "house_place_tagged_tag",
+      "title": "place tagged tag",
+      "description": "An ad hoc label from any node to a tag.",
+      "predicate": "tagged",
+      "domain": "house_place",
+      "range": "house_tag",
+      "constraints": {
+        "max": null,
+        "min": 0,
+        "hierarchy": false,
+        "symmetric": false
+      }
+    },
+    {
+      "identifier": "house_activity_tagged_tag",
+      "title": "activity tagged tag",
+      "description": "An ad hoc label from any node to a tag.",
+      "predicate": "tagged",
+      "domain": "house_activity",
+      "range": "house_tag",
+      "constraints": {
+        "max": null,
+        "min": 0,
+        "hierarchy": false,
+        "symmetric": false
+      }
+    },
+    {
+      "identifier": "house_resource_tagged_tag",
+      "title": "resource tagged tag",
+      "description": "An ad hoc label from any node to a tag.",
+      "predicate": "tagged",
+      "domain": "house_resource",
+      "range": "house_tag",
+      "constraints": {
+        "max": null,
+        "min": 0,
+        "hierarchy": false,
+        "symmetric": false
+      }
+    },
+    {
+      "identifier": "house_item_tagged_tag",
+      "title": "item tagged tag",
+      "description": "An ad hoc label from any node to a tag.",
+      "predicate": "tagged",
+      "domain": "house_item",
+      "range": "house_tag",
+      "constraints": {
+        "max": null,
+        "min": 0,
+        "hierarchy": false,
+        "symmetric": false
+      }
+    },
+    {
+      "identifier": "house_task_tagged_tag",
+      "title": "task tagged tag",
+      "description": "An ad hoc label from any node to a tag.",
+      "predicate": "tagged",
+      "domain": "house_task",
+      "range": "house_tag",
+      "constraints": {
+        "max": null,
+        "min": 0,
+        "hierarchy": false,
+        "symmetric": false
+      }
+    },
+    {
+      "identifier": "house_project_tagged_tag",
+      "title": "project tagged tag",
+      "description": "An ad hoc label from any node to a tag.",
+      "predicate": "tagged",
+      "domain": "house_project",
+      "range": "house_tag",
+      "constraints": {
+        "max": null,
+        "min": 0,
+        "hierarchy": false,
+        "symmetric": false
+      }
+    },
+    {
+      "identifier": "house_tag_tagged_tag",
+      "title": "tag tagged tag",
+      "description": "An ad hoc label from any node to a tag.",
+      "predicate": "tagged",
+      "domain": "house_tag",
+      "range": "house_tag",
+      "constraints": {
+        "max": null,
+        "min": 0,
+        "hierarchy": false,
+        "symmetric": false
+      }
+    }
+  ],
+  "individuals": [
+    {
+      "id": "starter_cleaning",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Cleaning",
+      "description": "Making a space or object clean: removing dirt, dust, grime or mess.",
+      "data": {
+        "house_aliases": [
+          "clean",
+          "cleanup"
+        ]
+      }
+    },
+    {
+      "id": "starter_vacuuming",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Vacuuming",
+      "description": "Cleaning floors, rugs, stairs or upholstery with a vacuum cleaner.",
+      "data": {
+        "house_aliases": [
+          "vacuum",
+          "hoover",
+          "hoovering"
+        ],
+        "house_estimate_minutes": 30
+      }
+    },
+    {
+      "id": "starter_dusting",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Dusting",
+      "description": "Wiping dust off surfaces such as shelves, furniture, baseboards and fixtures.",
+      "data": {
+        "house_aliases": [
+          "dust"
+        ],
+        "house_estimate_minutes": 20
+      }
+    },
+    {
+      "id": "starter_mopping",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Mopping",
+      "description": "Washing hard floors with a mop and cleaning solution.",
+      "data": {
+        "house_aliases": [
+          "mop",
+          "wash the floor"
+        ],
+        "house_estimate_minutes": 30
+      }
+    },
+    {
+      "id": "starter_bathroom_cleaning",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Bathroom cleaning",
+      "description": "Cleaning a bathroom: toilet, sink, tub or shower, mirrors and floor.",
+      "data": {
+        "house_aliases": [
+          "clean the bathroom",
+          "scrub the bathroom"
+        ],
+        "house_estimate_minutes": 45
+      }
+    },
+    {
+      "id": "starter_kitchen_cleaning",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Kitchen cleaning",
+      "description": "Cleaning kitchen counters, appliances, sink and cabinet fronts.",
+      "data": {
+        "house_aliases": [
+          "clean the kitchen"
+        ],
+        "house_estimate_minutes": 45
+      }
+    },
+    {
+      "id": "starter_window_cleaning",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Window cleaning",
+      "description": "Washing window glass, frames and sills, inside or out.",
+      "data": {
+        "house_aliases": [
+          "wash windows",
+          "clean windows"
+        ],
+        "house_estimate_minutes": 30
+      }
+    },
+    {
+      "id": "starter_laundry",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Laundry",
+      "description": "Washing, drying, folding and putting away clothes and linens.",
+      "data": {
+        "house_aliases": [
+          "washing clothes",
+          "do the laundry"
+        ],
+        "house_estimate_minutes": 60
+      }
+    },
+    {
+      "id": "starter_organizing",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Organizing",
+      "description": "Arranging belongings so they are easy to find and put away.",
+      "data": {
+        "house_aliases": [
+          "organize",
+          "organise",
+          "tidying",
+          "tidy up"
+        ]
+      }
+    },
+    {
+      "id": "starter_organize_storage",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Organize storage",
+      "description": "Sorting and arranging a closet, cupboard, shelf, bin or garage so things have a place.",
+      "data": {
+        "house_aliases": [
+          "organize a closet",
+          "sort out storage"
+        ],
+        "house_estimate_minutes": 90
+      }
+    },
+    {
+      "id": "starter_decluttering",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Decluttering",
+      "description": "Going through belongings to donate, sell or throw away what is no longer needed.",
+      "data": {
+        "house_aliases": [
+          "declutter",
+          "clear out"
+        ],
+        "house_estimate_minutes": 60
+      }
+    },
+    {
+      "id": "starter_wall_work",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Wall work",
+      "description": "Jobs on interior walls and ceilings: hanging things, patching and painting.",
+      "data": {
+        "house_aliases": [
+          "walls"
+        ]
+      }
+    },
+    {
+      "id": "starter_hang_a_picture",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Hang a picture",
+      "description": "Hanging a picture, frame, mirror or artwork on a wall with suitable hardware.",
+      "data": {
+        "house_aliases": [
+          "hang a frame",
+          "hang art",
+          "picture hanging"
+        ],
+        "house_estimate_minutes": 20
+      }
+    },
+    {
+      "id": "starter_hang_a_shelf",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Hang a shelf",
+      "description": "Mounting a shelf or rack on a wall, anchored into studs or with wall anchors.",
+      "data": {
+        "house_aliases": [
+          "mount a shelf",
+          "put up a shelf"
+        ],
+        "house_estimate_minutes": 45
+      }
+    },
+    {
+      "id": "starter_patch_a_hole_in_the_wall",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Patch a hole in the wall",
+      "description": "Filling and smoothing holes or dents in drywall or plaster, ready for paint.",
+      "data": {
+        "house_aliases": [
+          "patch drywall",
+          "fill a hole",
+          "spackle"
+        ],
+        "house_estimate_minutes": 30
+      }
+    },
+    {
+      "id": "starter_painting",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Painting",
+      "description": "Painting walls, ceilings, trim or doors, including prep and cleanup.",
+      "data": {
+        "house_aliases": [
+          "paint"
+        ],
+        "house_estimate_minutes": 240
+      }
+    },
+    {
+      "id": "starter_repairs",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Repairs",
+      "description": "Fixing something in the house that is broken, leaking or not working properly.",
+      "data": {
+        "house_aliases": [
+          "repair",
+          "fix"
+        ]
+      }
+    },
+    {
+      "id": "starter_plumbing_repair",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Plumbing repair",
+      "description": "Fixing leaks, drips, clogs or running toilets in sinks, tubs, toilets and pipes.",
+      "data": {
+        "house_aliases": [
+          "fix a leak",
+          "unclog a drain",
+          "plumbing"
+        ],
+        "house_estimate_minutes": 60
+      }
+    },
+    {
+      "id": "starter_electrical_repair",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Electrical repair",
+      "description": "Small electrical fixes such as replacing a switch, outlet or light fixture.",
+      "data": {
+        "house_aliases": [
+          "electrical",
+          "replace a light fixture"
+        ],
+        "house_estimate_minutes": 60
+      }
+    },
+    {
+      "id": "starter_furniture_repair",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Furniture repair",
+      "description": "Fixing wobbly, broken or damaged furniture: tightening, gluing, replacing parts.",
+      "data": {
+        "house_aliases": [
+          "fix furniture"
+        ],
+        "house_estimate_minutes": 45
+      }
+    },
+    {
+      "id": "starter_maintenance",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Maintenance",
+      "description": "Routine upkeep that keeps the house and its systems working, done before things break.",
+      "data": {
+        "house_aliases": [
+          "upkeep",
+          "home maintenance"
+        ]
+      }
+    },
+    {
+      "id": "starter_replace_a_light_bulb",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Replace a light bulb",
+      "description": "Swapping a burnt-out bulb in a lamp or fixture for a working one.",
+      "data": {
+        "house_aliases": [
+          "change a light bulb",
+          "change a bulb"
+        ],
+        "house_estimate_minutes": 5
+      }
+    },
+    {
+      "id": "starter_replace_filters",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Replace filters",
+      "description": "Changing filters in the furnace or air conditioning, range hood, water filter or vacuum.",
+      "data": {
+        "house_aliases": [
+          "change the filter",
+          "furnace filter",
+          "hvac filter"
+        ],
+        "house_estimate_minutes": 15
+      }
+    },
+    {
+      "id": "starter_gutter_cleaning",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Gutter cleaning",
+      "description": "Clearing leaves and debris out of gutters and downspouts so water drains away.",
+      "data": {
+        "house_aliases": [
+          "clean the gutters"
+        ],
+        "house_estimate_minutes": 90
+      }
+    },
+    {
+      "id": "starter_yard_work",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Yard work",
+      "description": "Outdoor work on the lawn, garden beds, trees and paths.",
+      "data": {
+        "house_aliases": [
+          "yardwork",
+          "gardening",
+          "garden work"
+        ]
+      }
+    },
+    {
+      "id": "starter_mowing",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Mowing",
+      "description": "Cutting the lawn with a mower, and trimming the edges.",
+      "data": {
+        "house_aliases": [
+          "mow the lawn",
+          "cut the grass"
+        ],
+        "house_estimate_minutes": 45
+      }
+    },
+    {
+      "id": "starter_weeding",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Weeding",
+      "description": "Pulling or removing weeds from garden beds, lawn and paths.",
+      "data": {
+        "house_aliases": [
+          "pull weeds"
+        ],
+        "house_estimate_minutes": 30
+      }
+    },
+    {
+      "id": "starter_raking_leaves",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Raking leaves",
+      "description": "Raking or blowing fallen leaves and bagging or composting them.",
+      "data": {
+        "house_aliases": [
+          "rake",
+          "leaf cleanup"
+        ],
+        "house_estimate_minutes": 60
+      }
+    },
+    {
+      "id": "starter_watering_plants",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Watering plants",
+      "description": "Watering indoor plants, garden beds or the lawn.",
+      "data": {
+        "house_aliases": [
+          "water the plants"
+        ],
+        "house_estimate_minutes": 15
+      }
+    },
+    {
+      "id": "starter_furniture_assembly",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Furniture assembly",
+      "description": "Putting together flat-pack or delivered furniture from its parts.",
+      "data": {
+        "house_aliases": [
+          "assemble furniture",
+          "build furniture"
+        ],
+        "house_estimate_minutes": 90
+      }
+    },
+    {
+      "id": "starter_shopping",
+      "classes": [
+        "house_activity"
+      ],
+      "title": "Shopping",
+      "description": "Buying supplies, parts or household goods needed for the house or a job.",
+      "data": {
+        "house_aliases": [
+          "buy",
+          "pick up supplies",
+          "errand"
+        ]
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "source": "starter_vacuuming",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_cleaning"
+    },
+    {
+      "source": "starter_dusting",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_cleaning"
+    },
+    {
+      "source": "starter_mopping",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_cleaning"
+    },
+    {
+      "source": "starter_bathroom_cleaning",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_cleaning"
+    },
+    {
+      "source": "starter_kitchen_cleaning",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_cleaning"
+    },
+    {
+      "source": "starter_window_cleaning",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_cleaning"
+    },
+    {
+      "source": "starter_organize_storage",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_organizing"
+    },
+    {
+      "source": "starter_decluttering",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_organizing"
+    },
+    {
+      "source": "starter_hang_a_picture",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_wall_work"
+    },
+    {
+      "source": "starter_hang_a_shelf",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_wall_work"
+    },
+    {
+      "source": "starter_patch_a_hole_in_the_wall",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_wall_work"
+    },
+    {
+      "source": "starter_painting",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_wall_work"
+    },
+    {
+      "source": "starter_plumbing_repair",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_repairs"
+    },
+    {
+      "source": "starter_electrical_repair",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_repairs"
+    },
+    {
+      "source": "starter_furniture_repair",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_repairs"
+    },
+    {
+      "source": "starter_replace_a_light_bulb",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_maintenance"
+    },
+    {
+      "source": "starter_replace_filters",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_maintenance"
+    },
+    {
+      "source": "starter_gutter_cleaning",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_maintenance"
+    },
+    {
+      "source": "starter_gutter_cleaning",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_cleaning"
+    },
+    {
+      "source": "starter_mowing",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_yard_work"
+    },
+    {
+      "source": "starter_weeding",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_yard_work"
+    },
+    {
+      "source": "starter_raking_leaves",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_yard_work"
+    },
+    {
+      "source": "starter_watering_plants",
+      "property": "house_activity_is_a_activity",
+      "target": "starter_yard_work"
+    }
+  ]
+}

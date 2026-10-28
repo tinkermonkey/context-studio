@@ -1,7 +1,7 @@
 """
 Load a Context Studio bundle (v0) into the workspace ontology.
 
-A bundle describes another project's ontology (see scripts/bundle_loader.py
+A bundle describes another project's ontology (see domain/interchange/bundle.py
 for the format). Loading is idempotent: run it again after the project's
 bundle changes and only the differences are written. Every change is recorded
 as a change event. Entities the bundle no longer contains are reported, never
@@ -12,6 +12,7 @@ Usage (from local-server/, venv active):
 """
 
 import argparse
+import json
 import os
 import sys
 from pathlib import Path
@@ -32,6 +33,12 @@ from adapters.persistence.sqlite.individual_vector_index import (
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from config import get_config_manager
+from domain.interchange.bundle import (
+    BundleError,
+    BundleImportSummary,
+    check_bundle_header,
+    load_bundle,
+)
 from domain.ontology.events import (
     AttributeDefinitionCreated,
     AttributeDefinitionUpdated,
@@ -51,12 +58,16 @@ from domain.ontology.events import (
 from domain.ontology.exceptions import OntologyError
 from domain.ontology.ports import EmbeddingService, OntologyRepository
 from domain.ontology.services import OntologyService
-from scripts.bundle_loader import (
-    BundleError,
-    BundleImportSummary,
-    load_bundle,
-    read_bundle,
-)
+
+
+def read_bundle(path: Path) -> dict:
+    """Read a bundle file and check its header."""
+    try:
+        bundle = json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        raise BundleError(f"Malformed JSON in {path}: {exc}") from exc
+    check_bundle_header(bundle)
+    return bundle
 
 
 def build_import_service(

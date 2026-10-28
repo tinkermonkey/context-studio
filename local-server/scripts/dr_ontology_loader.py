@@ -32,11 +32,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Iterable, Iterator
 
+from domain.interchange.bundle import stale_entities
 from domain.ontology.entities import Taxonomy
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import ExternalReference
-from scripts.bundle_loader import stale_entities
 
 DR_SOURCE = "documentation_robotics"
 DR_TAXONOMY_IDENTIFIER = "dr_spec"

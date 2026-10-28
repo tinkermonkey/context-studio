@@ -267,9 +267,10 @@ class TestImportRunServiceContextVariables:
         test_id = "test-run-12345"
 
         service.set_context_import_run_id(test_id)
-        result = service.get_context_import_run_id()
-
-        assert result == test_id
+        try:
+            assert service.get_context_import_run_id() == test_id
+        finally:
+            set_import_run_context(None)
 
     def test_set_context_import_run_id_clears_with_none(self):
         """set_context_import_run_id clears context when passed None."""
@@ -290,11 +291,14 @@ class TestImportRunServiceContextVariables:
         id1 = "run-1"
         id2 = "run-2"
 
-        service.set_context_import_run_id(id1)
-        assert service.get_context_import_run_id() == id1
+        try:
+            service.set_context_import_run_id(id1)
+            assert service.get_context_import_run_id() == id1
 
-        service.set_context_import_run_id(id2)
-        assert service.get_context_import_run_id() == id2
+            service.set_context_import_run_id(id2)
+            assert service.get_context_import_run_id() == id2
+        finally:
+            set_import_run_context(None)
 
     def test_global_context_functions_integration(self):
         """Test integration between service methods and global context functions."""
@@ -333,11 +337,14 @@ class TestImportRunServiceLifecycle:
 
         # Set context for correlation
         service.set_context_import_run_id(run.id)
-        assert service.get_context_import_run_id() == run.id
+        try:
+            assert service.get_context_import_run_id() == run.id
 
-        # Commit
-        run = service.commit_run(run)
-        assert run.status == ImportRunStatus.COMMITTED
+            # Commit
+            run = service.commit_run(run)
+            assert run.status == ImportRunStatus.COMMITTED
+        finally:
+            set_import_run_context(None)
 
     def test_failed_import_lifecycle(self):
         """Test lifecycle: start → fail."""
