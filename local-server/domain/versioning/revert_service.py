@@ -146,24 +146,27 @@ class RevertService:
         # relationship is removed before the property it uses, and chained
         # updates unwind back to the oldest previous state.
         touched: dict[str, str] = {}
-        for event in pending:
-            try:
-                if self._apply_inverse(event, batch_run_id):
-                    reverted_count += 1
-                    self._update_summary(event, summary)
-                    touched[event.entity_id] = self._normalize_entity_type(event.entity_type)
-            except Exception as exc:
-                _logger.error(
-                    f"Failed to revert event {event.id} for entity {event.entity_id}. "
-                    f"Partially reverted {reverted_count} events before failure.",
-                    exc_info=exc,
-                )
-                raise
-
-        for entity_id, entity_type in touched.items():
-            self._sync_indexes(entity_id, entity_type)
-        if reverted_count:
-            self._invalidate_graphs(pending)
+        try:
+            for event in pending:
+                try:
+                    if self._apply_inverse(event, batch_run_id):
+                        reverted_count += 1
+                        self._update_summary(event, summary)
+                        touched[event.entity_id] = self._normalize_entity_type(event.entity_type)
+                except Exception as exc:
+                    _logger.error(
+                        f"Failed to revert event {event.id} for entity {event.entity_id}. "
+                        f"Partially reverted {reverted_count} events before failure.",
+                        exc_info=exc,
+                    )
+                    raise
+        finally:
+            # Each inverse is committed as it is applied, so even after a failure
+            # partway through, the indexes and graph caches must follow what changed.
+            for entity_id, entity_type in touched.items():
+                self._sync_indexes(entity_id, entity_type)
+            if reverted_count:
+                self._invalidate_graphs(pending)
 
         _logger.info(f"Reverted {reverted_count} events for batch run {batch_run_id}")
         return RevertResult(

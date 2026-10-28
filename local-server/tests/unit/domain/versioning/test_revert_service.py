@@ -852,6 +852,37 @@ def test_revert_taxonomy_create_invalidates_the_deleted_taxonomy(ontology_repo, 
     assert _invalidated_taxonomies(publisher) == ["tx-1", "tx-new"]
 
 
+def test_revert_that_fails_partway_still_invalidates_graph(ontology_repo, change_repo):
+    """Inverses applied before a failure are committed, so the graph is still invalidated."""
+    revert_svc, publisher = _publishing_revert_svc(change_repo, ontology_repo)
+    for cls_id in ("cls-first", "cls-second"):
+        ontology_repo.save_class(
+            Class(id=cls_id, concept_scheme_id="scheme-1", taxonomy_id="tx-1", title=cls_id)
+        )
+        change_repo.record_change(
+            entity_id=cls_id,
+            entity_type="class",
+            operation=ChangeOperation.CREATE,
+            new_state={"title": cls_id},
+            batch_run_id="run-fail",
+        )
+    delete_class = ontology_repo.delete_class
+
+    def failing_delete(class_id):
+        if class_id == "cls-first":
+            raise RuntimeError("database is locked")
+        return delete_class(class_id)
+
+    ontology_repo.delete_class = failing_delete
+
+    with pytest.raises(RuntimeError):
+        revert_svc.revert("run-fail")
+
+    # Newest first: cls-second was deleted before cls-first failed.
+    assert ontology_repo.get_class("cls-second") is None
+    assert _invalidated_taxonomies(publisher) == ["tx-1"]
+
+
 def test_revert_that_changes_nothing_leaves_the_graph_alone(ontology_repo, change_repo):
     """A revert whose entities are already gone does not invalidate the graph."""
     revert_svc, publisher = _publishing_revert_svc(change_repo, ontology_repo)
