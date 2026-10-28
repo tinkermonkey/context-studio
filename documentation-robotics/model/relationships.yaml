@@ -1,6 +1,6 @@
 # Intra-layer relationships
 # Format: source_id -> predicate -> target_id
-# Last updated: 2026-05-11T12:10:16.851Z
+# Last updated: 2026-10-28T12:50:11.161Z
 
 - source: motivation.assessment.security-posture-assessment
   target: motivation.outcome.curated-domain-ontology
@@ -42,9 +42,9 @@
   predicate: associated-with
   layer: motivation
   category: structural
-- source: motivation.assessment.security-posture-assessment
-  target: motivation.constraint.sqlite-only-persistence
-  predicate: associated-with
+- source: motivation.constraint.sqlite-only-persistence
+  target: motivation.assessment.security-posture-assessment
+  predicate: influence
   layer: motivation
   category: structural
 - source: security.securitymodel.context-studio-security-model
@@ -54,17 +54,17 @@
   category: structural
 - source: security.securitymodel.context-studio-security-model
   target: security.threat.sql-injection
-  predicate: manages
+  predicate: aggregates
   layer: security
   category: structural
 - source: security.securitymodel.context-studio-security-model
   target: security.threat.information-disclosure-via-error-messages
-  predicate: manages
+  predicate: aggregates
   layer: security
   category: structural
 - source: security.securitymodel.context-studio-security-model
   target: security.authenticationconfig.local-api-key-authentication
-  predicate: aggregates
+  predicate: composes
   layer: security
   category: structural
 - source: security.securitymodel.context-studio-security-model
@@ -182,7 +182,7 @@
   category: structural
 - source: data-store.storedlogic.sqlite-vec-cosine-similarity
   target: application.applicationfunction.embedding-generation
-  predicate: implements
+  predicate: realizes
   layer: data-store
   targetLayer: application
   category: structural
@@ -412,9 +412,9 @@
   predicate: influence
   layer: security
   category: structural
-- source: motivation.assessment.security-posture-assessment
-  target: motivation.constraint.python-3x-runtime
-  predicate: associated-with
+- source: motivation.constraint.python-3x-runtime
+  target: motivation.assessment.security-posture-assessment
+  predicate: influence
   layer: motivation
   category: structural
 - source: motivation.value.knowledge-reusability
@@ -452,7 +452,7 @@
   category: structural
 - source: api.ratelimit.external-reference-api-rate-limit
   target: security.countermeasure.parameterized-queries-via-orm
-  predicate: implements
+  predicate: realizes
   layer: api
   targetLayer: security
   category: structural
@@ -530,9 +530,9 @@
   predicate: governs
   layer: business
   category: structural
-- source: api.info.context-studio-api
-  target: api.openapidocument.context-studio-open-api-spec
-  predicate: associated-with
+- source: api.openapidocument.context-studio-open-api-spec
+  target: api.info.context-studio-api
+  predicate: composes
   layer: api
   category: structural
 - source: ux.uxapplication.context-studio-spa
@@ -736,7 +736,7 @@
   category: structural
 - source: application.applicationfunction.embedding-generation
   target: application.applicationservice.extraction-service
-  predicate: delivers-value
+  predicate: realizes
   layer: application
   category: structural
   properties:
@@ -745,7 +745,7 @@
     basis: naming convention
 - source: application.applicationfunction.sparql-query-function
   target: application.applicationservice.graph-analysis-service
-  predicate: delivers-value
+  predicate: realizes
   layer: application
   category: structural
   properties:
@@ -754,7 +754,7 @@
     basis: shared source file
 - source: application.applicationfunction.network-metrics-function
   target: application.applicationservice.graph-analysis-service
-  predicate: delivers-value
+  predicate: realizes
   layer: application
   category: structural
   properties:
@@ -763,7 +763,7 @@
     basis: shared source file
 - source: application.applicationfunction.llm-provider-routing
   target: application.applicationservice.pipeline-service
-  predicate: delivers-value
+  predicate: realizes
   layer: application
   category: structural
   properties:
@@ -772,7 +772,7 @@
     basis: naming convention
 - source: application.applicationcomponent.sentence-transformer-embedding-adapter
   target: application.applicationfunction.embedding-generation
-  predicate: composes
+  predicate: assigned-to
   layer: application
   category: structural
   properties:
@@ -781,7 +781,7 @@
     basis: shared source file
 - source: application.applicationcomponent.llm-provider-router
   target: application.applicationfunction.llm-provider-routing
-  predicate: composes
+  predicate: assigned-to
   layer: application
   category: structural
   properties:
@@ -790,7 +790,7 @@
     basis: shared source file
 - source: application.applicationcomponent.network-x-graph-engine-adapter
   target: application.applicationfunction.network-metrics-function
-  predicate: composes
+  predicate: assigned-to
   layer: application
   category: structural
   properties:
@@ -799,7 +799,7 @@
     basis: shared source file
 - source: application.applicationcomponent.network-x-graph-engine-adapter
   target: application.applicationfunction.sparql-query-function
-  predicate: composes
+  predicate: assigned-to
   layer: application
   category: structural
   properties:
@@ -3937,7 +3937,7 @@
   category: structural
 - source: application.applicationinterface.rest-api-interface
   target: application.applicationservice.ontology-service
-  predicate: depends-on
+  predicate: assigned-to
   layer: application
   category: structural
 - source: application.applicationprocess.background-task-executor
@@ -3945,9 +3945,9 @@
   predicate: depends-on
   layer: application
   category: structural
-- source: application.applicationprocess.alembic-migration-runner
-  target: application.applicationcollaboration.hexagonal-port-adapter-wiring
-  predicate: depends-on
+- source: application.applicationcollaboration.hexagonal-port-adapter-wiring
+  target: application.applicationprocess.alembic-migration-runner
+  predicate: assigned-to
   layer: application
   category: structural
 - source: application.applicationinteraction.domain-event-publication
@@ -3965,9 +3965,9 @@
   predicate: depends-on
   layer: application
   category: structural
-- source: application.applicationprocess.reference-data-import-process
-  target: application.applicationcollaboration.hexagonal-port-adapter-wiring
-  predicate: depends-on
+- source: application.applicationcollaboration.hexagonal-port-adapter-wiring
+  target: application.applicationprocess.reference-data-import-process
+  predicate: assigned-to
   layer: application
   category: structural
 - source: application.applicationcollaboration.hexagonal-port-adapter-wiring
@@ -4029,27 +4029,27 @@
   category: structural
 - source: testing.testcoveragemodel.context-studio-backend-test-coverage-model
   target: testing.testcoveragetarget.domain-unit-tests
-  predicate: aggregates
+  predicate: composes
   layer: testing
   category: structural
 - source: testing.testcoveragemodel.context-studio-backend-test-coverage-model
   target: testing.testcoveragetarget.route-integration-tests
-  predicate: aggregates
+  predicate: composes
   layer: testing
   category: structural
 - source: testing.testcoveragemodel.context-studio-backend-test-coverage-model
   target: testing.testcoveragetarget.e2e-test-suite
-  predicate: aggregates
+  predicate: composes
   layer: testing
   category: structural
 - source: testing.testcoveragemodel.context-studio-backend-test-coverage-model
   target: testing.testcoveragetarget.ontology-crud
-  predicate: aggregates
+  predicate: composes
   layer: testing
   category: structural
 - source: testing.testcoveragemodel.context-studio-backend-test-coverage-model
   target: testing.testcoveragetarget.graph-analysis
-  predicate: aggregates
+  predicate: composes
   layer: testing
   category: structural
 - source: testing.coveragerequirement.domain-unit-test-coverage

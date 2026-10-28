@@ -1,5 +1,5 @@
 """
-Import Context Studio's own Documentation Robotics model against the pinned spec.
+Import Context Studio's own Documentation Robotics model against the spec it targets.
 
 `scripts/import_dr_model.py` loads `documentation-robotics/model/` (this repo's
 DR model: one YAML file per element type per layer, plus relationships.yaml) as
@@ -7,11 +7,12 @@ individuals and relationships under the `dr_spec` taxonomy that
 `scripts/import_dr_ontology.py` builds from the DR spec. The importer's other
 tests use a small synthetic spec and model; this one runs the real model
 through the production wiring (`build_import_service`, file-backed SQLite with
-foreign keys enforced) against the pinned spec snapshot the model was written
-for, so a model or spec change that breaks the import fails here, on CI.
+foreign keys enforced) against the spec snapshot the model was written for
+(`MODEL_DR_SPEC_VERSION`, newer than the cassette pin), so a model or spec
+change that breaks the import fails here, on CI.
 
 It lives under tests/integration/pipelines/ because that is the directory CI
-runs, alongside the pinned-spec helper.
+runs, alongside the spec-snapshot helper.
 """
 
 from collections import Counter
@@ -28,8 +29,8 @@ from scripts.dr_ontology_loader import DR_SOURCE, import_dr_ontology
 from scripts.import_dr_model import DEFAULT_VIEWER_DIR, build_import_service
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.integration.pipelines._harness.dr_spec import (
-    PINNED_DR_SPEC_VERSION,
-    pinned_dr_spec_dir,
+    MODEL_DR_SPEC_VERSION,
+    dr_spec_dir,
 )
 
 MODEL_DIR = DEFAULT_VIEWER_DIR / "documentation-robotics" / "model"
@@ -58,7 +59,7 @@ def _totals(summary: ModelImportSummary) -> Counter:
 
 @pytest.fixture(scope="module")
 def imported(tmp_path_factory):
-    """Import the pinned DR spec, then the DR model twice, into one file DB."""
+    """Import the model's DR spec, then the DR model twice, into one file DB."""
     db_path = tmp_path_factory.mktemp("dr_model") / "local.db"
     engine = create_local_db_engine(f"sqlite:///{db_path}")
     Base.metadata.create_all(engine)
@@ -66,7 +67,7 @@ def imported(tmp_path_factory):
 
     service = build_import_service(session_factory, FakeEmbeddingService())
     repo = SQLiteOntologyRepository(session_factory)
-    import_dr_ontology(service, repo, pinned_dr_spec_dir())
+    import_dr_ontology(service, repo, dr_spec_dir(MODEL_DR_SPEC_VERSION))
 
     first = import_dr_model(service, repo, DEFAULT_VIEWER_DIR)
     events_after_first = SQLiteChangeRepository(session_factory).get_changes(limit=None).total
@@ -88,9 +89,9 @@ def imported(tmp_path_factory):
     engine.dispose()
 
 
-class TestDrModelImportAgainstPinnedSpec:
-    def test_model_was_written_for_the_pinned_spec(self, imported):
-        assert imported["first"].model_spec_version == PINNED_DR_SPEC_VERSION
+class TestDrModelImportAgainstModelSpec:
+    def test_model_was_written_for_the_snapshot_spec(self, imported):
+        assert imported["first"].model_spec_version == MODEL_DR_SPEC_VERSION
 
     def test_imports_every_element_and_relationship_with_nothing_skipped(self, imported):
         first = imported["first"]
