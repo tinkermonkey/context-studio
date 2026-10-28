@@ -301,7 +301,7 @@ class RevertService:
     def _identifier_problems(self, pending: list) -> list[str]:
         """
         Identifiers the revert gives back must be free when it gives them back:
-        a property definition's old identifier, or a deleted entity's. Walked in
+        an entity's old identifier, or a deleted entity's. Walked in
         the order the inverses run, so a holder only counts as gone once the
         revert has deleted it or given it another identifier.
         """
@@ -341,8 +341,7 @@ class RevertService:
                 release(event.entity_id, entity_type)
                 continue
             if event.operation == ChangeOperation.UPDATE:
-                if entity_type != "property_definition":
-                    continue
+                # Any kind: taxonomy, scheme, class and property identifiers share one namespace.
                 identifier = (event.previous_state or {}).get("identifier")
             elif event.operation == ChangeOperation.DELETE:
                 identifier = self._deleted_state(event).get("identifier")
