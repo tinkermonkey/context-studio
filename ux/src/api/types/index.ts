@@ -4016,6 +4016,121 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/proposals": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Proposals
+     * @description List proposals, newest first, each operation with its stale flag.
+     */
+    get: operations["list_proposals_api_proposals_get"];
+    put?: never;
+    /**
+     * Create Proposal
+     * @description Propose changes to a taxonomy; every operation starts pending.
+     *
+     *     The proposal is validated as a whole against the current graph. If any
+     *     operation is invalid nothing is stored and the 422 lists each problem with
+     *     its operation's seq and a stable code.
+     */
+    post: operations["create_proposal_api_proposals_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/proposals/{proposal_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Proposal
+     * @description A proposal; each pending or failed operation says whether it is stale.
+     */
+    get: operations["get_proposal_api_proposals__proposal_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/proposals/{proposal_id}/apply": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Apply Proposal
+     * @description Apply the chosen operations in seq order under the proposal's run.
+     *
+     *     Each operation records its own outcome; one that fails (e.g. "target_changed")
+     *     does not undo the others. Pass a stale operation in force_stale to apply it
+     *     anyway.
+     */
+    post: operations["apply_proposal_api_proposals__proposal_id__apply_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/proposals/{proposal_id}/reject": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reject Proposal
+     * @description Reject operations, or without operation_ids every pending or failed one.
+     */
+    post: operations["reject_proposal_api_proposals__proposal_id__reject_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/proposals/{proposal_id}/revert": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Revert Proposal
+     * @description Undo everything applied from the proposal and mark it reverted.
+     *
+     *     Pending operations are rejected. If entities made outside the proposal
+     *     depend on ones it created, nothing is changed and the 409 names them.
+     */
+    post: operations["revert_proposal_api_proposals__proposal_id__revert_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4624,6 +4739,186 @@ export interface components {
      * @enum {string}
      */
     ChangeOperation: "create" | "update" | "delete";
+    /**
+     * ChangeProposalApplyRequest
+     * @description Operations to apply, in seq order, under the proposal's run.
+     */
+    ChangeProposalApplyRequest: {
+      /**
+       * Operation Ids
+       * @description Operations to apply
+       */
+      operation_ids: string[];
+      /**
+       * Force Stale
+       * @description Operations to apply even though their target changed since proposed
+       */
+      force_stale?: string[];
+    };
+    /**
+     * ChangeProposalCreateRequest
+     * @description A new change proposal, validated as a whole; nothing is stored if any operation fails.
+     */
+    ChangeProposalCreateRequest: {
+      /**
+       * Taxonomy Id
+       * @description The taxonomy the changes are about
+       */
+      taxonomy_id: string;
+      /**
+       * Title
+       * @description A short summary
+       */
+      title: string;
+      /**
+       * Rationale
+       * @description Why these changes, as a whole
+       */
+      rationale?: string | null;
+      /**
+       * @description Who or what proposed them
+       * @default user
+       */
+      source: components["schemas"]["ProposalSource"];
+      /**
+       * Source Detail
+       * @description More about the source (MCP client, conversation id, bundle file)
+       */
+      source_detail?: string | null;
+      /**
+       * Operations
+       * @description The operations
+       */
+      operations: components["schemas"]["ProposedOperationRequest"][];
+    };
+    /**
+     * ChangeProposalRejectRequest
+     * @description Operations to reject; without operation_ids, every pending or failed one.
+     */
+    ChangeProposalRejectRequest: {
+      /**
+       * Operation Ids
+       * @description Operations to reject
+       */
+      operation_ids?: string[] | null;
+      /**
+       * Note
+       * @description Why; stored as each operation's reason
+       */
+      note?: string | null;
+    };
+    /**
+     * ChangeProposalResponse
+     * @description A change proposal with its operations in seq order.
+     */
+    ChangeProposalResponse: {
+      /**
+       * Id
+       * @description Also the batch run id its applied changes are tagged with
+       */
+      id: string;
+      /** Taxonomy Id */
+      taxonomy_id: string;
+      /** Title */
+      title: string;
+      /** Rationale */
+      rationale?: string | null;
+      source: components["schemas"]["ProposalSource"];
+      /** Source Detail */
+      source_detail?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      status: components["schemas"]["ProposalStatus"];
+      /** Operations */
+      operations: components["schemas"]["ProposedOperationResponse"][];
+    };
+    /**
+     * ChangeProposalRevertConflictDetail
+     * @description Why a proposal can't be reverted; nothing was changed.
+     */
+    ChangeProposalRevertConflictDetail: {
+      /** Message */
+      message: string;
+      /** Blocking */
+      blocking?: components["schemas"]["RevertBlocker"][];
+    };
+    /**
+     * ChangeProposalRevertConflictResponse
+     * @description 409 body of POST /api/proposals/{id}/revert.
+     */
+    ChangeProposalRevertConflictResponse: {
+      detail: components["schemas"]["ChangeProposalRevertConflictDetail"];
+    };
+    /**
+     * ChangeProposalRevertResponse
+     * @description What reverting a proposal undid, and the proposal afterwards.
+     */
+    ChangeProposalRevertResponse: {
+      /** Events Reverted */
+      events_reverted: number;
+      /**
+       * Classes Deleted
+       * @default 0
+       */
+      classes_deleted: number;
+      /**
+       * Individuals Deleted
+       * @default 0
+       */
+      individuals_deleted: number;
+      /**
+       * Relationships Deleted
+       * @default 0
+       */
+      relationships_deleted: number;
+      /**
+       * Properties Deleted
+       * @default 0
+       */
+      properties_deleted: number;
+      /**
+       * Taxonomies Deleted
+       * @default 0
+       */
+      taxonomies_deleted: number;
+      /**
+       * Concept Schemes Deleted
+       * @default 0
+       */
+      concept_schemes_deleted: number;
+      /**
+       * Entities Restored
+       * @default 0
+       */
+      entities_restored: number;
+      proposal: components["schemas"]["ChangeProposalResponse"];
+    };
+    /**
+     * ChangeProposalValidationDetail
+     * @description Every problem found with a proposal; nothing was stored.
+     */
+    ChangeProposalValidationDetail: {
+      /** Message */
+      message: string;
+      /** Errors */
+      errors: components["schemas"]["OperationErrorResponse"][];
+    };
+    /**
+     * ChangeProposalValidationErrorResponse
+     * @description 422 body of POST /api/proposals.
+     */
+    ChangeProposalValidationErrorResponse: {
+      detail: components["schemas"]["ChangeProposalValidationDetail"];
+    };
+    /**
+     * ChangeScope
+     * @description How much a change can break, in increasing order.
+     * @enum {string}
+     */
+    ChangeScope: "editorial" | "additive" | "breaking";
     /**
      * ChangeState
      * @description Valid states for a changeset.
@@ -6510,6 +6805,29 @@ export interface components {
        */
       offset: number;
     };
+    /** ListResponse[ChangeProposalResponse] */
+    ListResponse_ChangeProposalResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["ChangeProposalResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
     /** ListResponse[ClassResponse] */
     ListResponse_ClassResponse_: {
       /**
@@ -6937,6 +7255,52 @@ export interface components {
        */
       datatype?: string | null;
     };
+    /**
+     * OperationErrorResponse
+     * @description Why one proposed operation is invalid.
+     */
+    OperationErrorResponse: {
+      /**
+       * Seq
+       * @description The operation, or null for the whole proposal
+       */
+      seq?: number | null;
+      /**
+       * Code
+       * @description Stable code, e.g. target_not_found, unknown_ref, missing_field
+       */
+      code: string;
+      /**
+       * Message
+       * @description What is wrong and how to fix it
+       */
+      message: string;
+    };
+    /**
+     * OperationKind
+     * @description The kind of ontology entity an operation targets.
+     * @enum {string}
+     */
+    OperationKind:
+      | "taxonomy"
+      | "scheme"
+      | "class"
+      | "property"
+      | "attribute"
+      | "individual"
+      | "relationship";
+    /**
+     * OperationStatus
+     * @description Where an operation stands.
+     * @enum {string}
+     */
+    OperationStatus: "pending" | "applied" | "rejected" | "failed";
+    /**
+     * OperationType
+     * @description What an operation does to its target.
+     * @enum {string}
+     */
+    OperationType: "create" | "update" | "move" | "delete";
     /**
      * PageContextSchema
      * @description The page the user is viewing when sending a message.
@@ -7521,11 +7885,127 @@ export interface components {
       reviewer_notes?: string | null;
     };
     /**
+     * ProposalSource
+     * @description Who or what made the proposal.
+     * @enum {string}
+     */
+    ProposalSource: "chat" | "mcp" | "pipeline" | "bundle" | "user";
+    /**
      * ProposalState
      * @description Valid states for a proposal.
      * @enum {string}
      */
     ProposalState: "open" | "approved" | "rejected" | "merged";
+    /**
+     * ProposalStatus
+     * @description A proposal is open while any operation awaits a decision.
+     * @enum {string}
+     */
+    ProposalStatus: "open" | "done" | "reverted";
+    /**
+     * ProposedOperationRequest
+     * @description One operation as proposed.
+     */
+    ProposedOperationRequest: {
+      /**
+       * Seq
+       * @description Position in the proposal; operations apply in this order
+       */
+      seq: number;
+      /** @description create, update, move or delete */
+      op: components["schemas"]["OperationType"];
+      /** @description The kind of entity targeted */
+      kind: components["schemas"]["OperationKind"];
+      /**
+       * Target Id
+       * @description The existing entity (update, move, delete); omit for a create
+       */
+      target_id?: string | null;
+      /**
+       * Ref
+       * @description A name a create gives its new entity; later operations point at it as "$<ref>"
+       */
+      ref?: string | null;
+      /**
+       * Fields
+       * @description For a create, every field; for an update, only the changed ones; for a move, the new parent, scheme or taxonomy
+       */
+      fields?: {
+        [key: string]: unknown;
+      };
+      /**
+       * Rationale
+       * @description Why this change
+       */
+      rationale?: string | null;
+      /**
+       * Evidence
+       * @description Supporting {"quote", "url", "entity_id"} items
+       */
+      evidence?: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Probability
+       * @description The proposer's confidence, 0 to 1
+       */
+      probability?: number | null;
+      /** @description A claimed scope; it can only make the computed scope stricter */
+      scope?: components["schemas"]["ChangeScope"] | null;
+    };
+    /**
+     * ProposedOperationResponse
+     * @description One proposed operation and its outcome.
+     */
+    ProposedOperationResponse: {
+      /** Id */
+      id: string;
+      /** Seq */
+      seq: number;
+      op: components["schemas"]["OperationType"];
+      kind: components["schemas"]["OperationKind"];
+      /** Target Id */
+      target_id?: string | null;
+      /** Ref */
+      ref?: string | null;
+      /** Fields */
+      fields?: {
+        [key: string]: unknown;
+      };
+      /**
+       * Base
+       * @description The touched fields' values when proposed (a delete: the whole entity)
+       */
+      base?: {
+        [key: string]: unknown;
+      };
+      /** Rationale */
+      rationale?: string | null;
+      /** Evidence */
+      evidence?: {
+        [key: string]: unknown;
+      }[];
+      /** Probability */
+      probability?: number | null;
+      scope: components["schemas"]["ChangeScope"];
+      status: components["schemas"]["OperationStatus"];
+      /**
+       * Result Entity Id
+       * @description The entity made or changed
+       */
+      result_entity_id?: string | null;
+      /**
+       * Reason
+       * @description Why it failed ("<code>: <detail>") or was rejected
+       */
+      reason?: string | null;
+      /**
+       * Stale
+       * @description Pending or failed, and its target is gone or a field it touches changed since proposed; applying it needs force_stale
+       * @default false
+       */
+      stale: boolean;
+    };
     /**
      * PublishDiffStats
      * @description Response containing diff statistics for publishing.
@@ -8057,6 +8537,24 @@ export interface components {
       status: string;
       /** @description Run counts after operation */
       run_counts: components["schemas"]["RunCountsResponse"];
+    };
+    /**
+     * RevertBlocker
+     * @description An entity outside the proposal that depends on one the proposal created.
+     */
+    RevertBlocker: {
+      /**
+       * Kind
+       * @description What depends (e.g. relationship, individual)
+       */
+      kind: string;
+      /** Dependent Id */
+      dependent_id: string;
+      /**
+       * Referenced Id
+       * @description The entity the proposal created
+       */
+      referenced_id: string;
     };
     /**
      * RevertRunResponse
@@ -13636,6 +14134,258 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_proposals_api_proposals_get: {
+    parameters: {
+      query?: {
+        /** @description Only proposals about this taxonomy */
+        taxonomy_id?: string | null;
+        /** @description open, done or reverted */
+        status?: components["schemas"]["ProposalStatus"] | null;
+        /** @description Who or what proposed them */
+        source?: components["schemas"]["ProposalSource"] | null;
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Number of results to skip */
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse_ChangeProposalResponse_"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_proposal_api_proposals_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ChangeProposalCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangeProposalResponse"];
+        };
+      };
+      /** @description The proposal is invalid; detail.errors lists every problem by operation seq, and nothing was stored */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangeProposalValidationErrorResponse"];
+        };
+      };
+    };
+  };
+  get_proposal_api_proposals__proposal_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        proposal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangeProposalResponse"];
+        };
+      };
+      /** @description Change proposal not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  apply_proposal_api_proposals__proposal_id__apply_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        proposal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ChangeProposalApplyRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangeProposalResponse"];
+        };
+      };
+      /** @description Change proposal not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The proposal is reverted, or an operation is already decided */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description An operation id is not in the proposal */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  reject_proposal_api_proposals__proposal_id__reject_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        proposal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ChangeProposalRejectRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangeProposalResponse"];
+        };
+      };
+      /** @description Change proposal not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description An operation is already applied or rejected */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description An operation id is not in the proposal */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  revert_proposal_api_proposals__proposal_id__revert_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        proposal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangeProposalRevertResponse"];
+        };
+      };
+      /** @description Change proposal not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Entities outside the proposal depend on ones it created; detail.blocking lists them and nothing was changed */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangeProposalRevertConflictResponse"];
+        };
       };
       /** @description Validation Error */
       422: {

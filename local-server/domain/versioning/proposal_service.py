@@ -739,6 +739,42 @@ class ProposalService:
         with self._locks_guard:
             return self._locks.setdefault(proposal_id, threading.Lock())
 
+    def list_proposals(
+        self,
+        taxonomy_id: str | None = None,
+        status: ProposalStatus | None = None,
+        source: ProposalSource | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[ChangeProposal]:
+        """Proposals, newest first, optionally filtered."""
+        return self._proposals.list_proposals(taxonomy_id, status, source, limit, offset)
+
+    def count_proposals(
+        self,
+        taxonomy_id: str | None = None,
+        status: ProposalStatus | None = None,
+        source: ProposalSource | None = None,
+    ) -> int:
+        """How many proposals match the filters."""
+        return self._proposals.count_proposals(taxonomy_id, status, source)
+
+    def stale_operation_ids(self, proposal: ChangeProposal) -> set[str]:
+        """
+        Ids of the pending or failed operations that applying now would fail as
+        stale: the target is gone, or a field it touches changed since proposed.
+        Creates are never stale.
+        """
+        stale: set[str] = set()
+        for operation in proposal.pending:
+            if operation.op is OperationType.CREATE:
+                continue
+            try:
+                self._check_fresh(operation, forced=False)
+            except _ApplyFailed:
+                stale.add(operation.id)
+        return stale
+
     def _get(self, proposal_id: str) -> ChangeProposal:
         proposal = self._proposals.get(proposal_id)
         if proposal is None:

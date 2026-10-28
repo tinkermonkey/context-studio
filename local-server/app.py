@@ -86,6 +86,7 @@ from adapters.web.interchange_routes import router as interchange_router
 from adapters.web.ontology_routes import router as ontology_router
 from adapters.web.pipelines_routes import config_router as pipeline_config_router
 from adapters.web.pipelines_routes import router as pipelines_router
+from adapters.web.proposals_routes import router as proposals_router
 from adapters.web.reference_routes import router as reference_router
 from adapters.web.versioning_routes import router as versioning_router
 from config import SyncAdapterType, get_config_manager, get_settings
@@ -872,6 +873,7 @@ app.include_router(versioning_router)
 app.include_router(admin_router)
 app.include_router(interchange_router)
 app.include_router(chat_router)
+app.include_router(proposals_router)
 # A route rather than a mount, so POST /mcp is served without a redirect to /mcp/
 app.add_route("/mcp", mcp_endpoint, include_in_schema=False)
 
