@@ -64,6 +64,8 @@ class FakeChangeProposalRepository:
             target.status = operation.status
             target.result_entity_id = operation.result_entity_id
             target.reason = operation.reason
+            target.scope = operation.scope
+            target.applied_fields = copy.deepcopy(operation.applied_fields)
 
     def set_status(self, proposal_id: str, status: ProposalStatus) -> None:
         if proposal_id not in self._proposals:

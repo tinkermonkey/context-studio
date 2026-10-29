@@ -123,9 +123,10 @@ def classify_scope(
     Args:
         op: What the operation does
         fields: The fields it sets (for an update, only the changed ones)
-        base: The current values of those fields; a list field counts as
-            additive only when its current value is given and every item of it
-            is kept (a field missing from base is unknown, so breaking)
+        base: The current values of those fields; a field set to its current
+            value changes nothing, and a list field counts as additive only
+            when its current value is given and every item of it is kept (a
+            field missing from base is unknown, so breaking)
         claimed: A scope the proposer asserted, if any
 
     Returns:
@@ -145,8 +146,8 @@ def _computed_scope(op: OperationType, fields: dict[str, Any], base: dict[str, A
         return ChangeScope.BREAKING if fields.get("is_required") is True else ChangeScope.ADDITIVE
     scope = ChangeScope.EDITORIAL
     for name, value in fields.items():
-        if name in EDITORIAL_FIELDS:
-            continue
+        if name in EDITORIAL_FIELDS or (name in base and _same_value(base[name], value)):
+            continue  # wording only, or a field set to the value it already has
         if name in ADDITIVE_LIST_FIELDS and name in base and _only_adds(base[name], value):
             scope = ChangeScope.ADDITIVE
             continue
@@ -155,6 +156,15 @@ def _computed_scope(op: OperationType, fields: dict[str, Any], base: dict[str, A
             continue
         return ChangeScope.BREAKING
     return scope
+
+
+def _same_value(a: Any, b: Any) -> bool:
+    """Whether two JSON values are equal and of the same types throughout (True is not 1)."""
+    if isinstance(a, dict) and isinstance(b, dict):
+        return a.keys() == b.keys() and all(_same_value(a[k], b[k]) for k in a)
+    if isinstance(a, list) and isinstance(b, list):
+        return len(a) == len(b) and all(_same_value(x, y) for x, y in zip(a, b))
+    return same_attribute_value(a, b)
 
 
 def _only_adds(current: Any, proposed: Any) -> bool:
@@ -241,6 +251,10 @@ class ProposedOperation:
         status: Pending, applied, rejected or failed
         result_entity_id: The entity created or changed, once applied
         reason: Why it failed or was rejected
+        applied_fields: Set when a reviewer edited the operation before applying
+            it: the fields actually applied, always as an update (an edited
+            delete applies as an update). None when applied as proposed or not
+            applied. `fields` keeps what was proposed.
         id: Unique id
     """
 
@@ -258,6 +272,7 @@ class ProposedOperation:
     status: OperationStatus = OperationStatus.PENDING
     result_entity_id: str | None = None
     reason: str | None = None
+    applied_fields: dict[str, Any] | None = None
     id: str = field(default_factory=lambda: str(uuid4()))
 
     def __post_init__(self) -> None:

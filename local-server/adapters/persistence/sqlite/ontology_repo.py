@@ -307,6 +307,9 @@ class SQLiteOntologyRepository:
                     description=taxonomy.description,
                     vision=taxonomy.vision,
                     color=taxonomy.color,
+                    external_references=serialize_external_references(
+                        taxonomy.external_references
+                    ),
                     created_at=taxonomy.created_at or datetime.now(timezone.utc),
                     last_modified=datetime.now(timezone.utc),
                     version=1,
@@ -318,6 +321,8 @@ class SQLiteOntologyRepository:
                 orm_entity.description = taxonomy.description  # type: ignore[assignment]
                 orm_entity.vision = taxonomy.vision  # type: ignore[assignment]
                 orm_entity.color = taxonomy.color  # type: ignore[assignment]
+                refs = serialize_external_references(taxonomy.external_references)
+                orm_entity.external_references = refs  # type: ignore[assignment]
                 orm_entity.status = taxonomy.status.value  # type: ignore[assignment]
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]
@@ -1458,7 +1463,9 @@ class SQLiteOntologyRepository:
         if not prop.identifier or not prop.identifier.strip():
             raise ValueError("PropertyDefinition identifier cannot be empty")
 
-        with self.session_factory() as session:
+        # No autoflush: flush only at the commit below, where an IntegrityError is
+        # mapped (an autoflush on the update path's lookup would raise it raw).
+        with self.session_factory() as session, session.no_autoflush:
             # Check identifier uniqueness (same session)
             existing = (
                 session.query(OntologyEntity)

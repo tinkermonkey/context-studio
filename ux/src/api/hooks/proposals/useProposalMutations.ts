@@ -33,6 +33,11 @@ export function useCreateChangeProposal() {
   });
 }
 
+/**
+ * Apply operations. `data.edits` maps an operation id to the fields a reviewer corrected it to
+ * (property updates and deletes only; an edited delete applies as an update). Each applied
+ * operation's `applied_fields` reports what was applied.
+ */
 export function useApplyChangeProposal() {
   const queryClient = useQueryClient();
   return useMutation({

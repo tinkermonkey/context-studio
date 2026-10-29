@@ -7630,7 +7630,7 @@
           "proposals"
         ],
         "summary": "Apply Proposal",
-        "description": "Apply the chosen operations in seq order under the proposal's run.\n\nEach operation records its own outcome; one that fails (e.g. \"target_changed\")\ndoes not undo the others. Pass a stale operation in force_stale to apply it\nanyway.",
+        "description": "Apply the chosen operations in seq order under the proposal's run.\n\nEach operation records its own outcome; one that fails (e.g. \"target_changed\")\ndoes not undo the others. Pass a stale operation in force_stale to apply it\nanyway (edited ones too).\n\nedits corrects property-definition updates and deletes before they apply:\neach replaces the operation's proposed fields, applied as an update. A field\nproblem, or a breach of the taxonomy's rules (for dr_spec: both classes are\nDR spec classes, the predicate is in its predicate catalog, and no other\nrelationship type or operation has the triple), fails only that operation\nwith \"invalid_edit: ...\"; it stays open, to apply again with a corrected\nedit or reject. For dr_spec the identifier and DR external reference follow\nfrom the triple. What was applied is returned as the operation's\napplied_fields.",
         "operationId": "apply_proposal_api_proposals__proposal_id__apply_post",
         "parameters": [
           {
@@ -7671,7 +7671,7 @@
             "description": "The proposal is reverted, or an operation is already decided"
           },
           "422": {
-            "description": "An operation id is not in the proposal"
+            "description": "An operation id is not in the proposal, or an edit is misplaced (not in operation_ids, not a property update/delete, empty, or uses a $ref); nothing was applied"
           }
         }
       }
@@ -9131,6 +9131,15 @@
             "type": "array",
             "title": "Force Stale",
             "description": "Operations to apply even though their target changed since proposed"
+          },
+          "edits": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Edits",
+            "description": "Operation id -> the complete Context Studio fields to apply as a property-definition update instead of the proposed ones; only for property update/delete ops in operation_ids (an edited delete applies as an update). For a dr_spec proposal the identifier and DR external reference follow from the triple (canonical_predicate, domain_class_id, range_class_id)"
           }
         },
         "type": "object",
@@ -14530,6 +14539,19 @@
             ],
             "title": "Reason",
             "description": "Why it failed (\"<code>: <detail>\") or was rejected"
+          },
+          "applied_fields": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied Fields",
+            "description": "Set when a reviewer edited the operation: the fields actually applied, always as an update (an edited delete applies as an update). Null = applied as proposed, or not applied"
           },
           "stale": {
             "type": "boolean",

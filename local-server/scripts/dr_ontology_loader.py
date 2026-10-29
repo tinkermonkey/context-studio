@@ -9,7 +9,9 @@ PropertyDefinition per relationship schema.
 
 The spec's design charter (`spec/DESIGN_CHARTER.md`) becomes the taxonomy's
 vision, and its "In one paragraph" section the taxonomy's summary
-(description). Each layer file's description (`spec/layers/*.layer.json`)
+(description). Its predicate catalog (`spec/dist/base.json`) is kept on the
+taxonomy's DR external reference, for reviewers' edits to check predicates
+against (see `adapters.interchange.dr_relationships.dr_predicate_catalog`). Each layer file's description (`spec/layers/*.layer.json`)
 becomes its scheme's scope note. Entities from an earlier import that the spec
 no longer defines are reported as stale, never deleted.
 
@@ -25,29 +27,33 @@ duplicating them.
 
 from __future__ import annotations
 
-import hashlib
 import json
-from collections import Counter, defaultdict
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Iterable, Iterator
+from types import MappingProxyType
+from typing import Any, Callable, Iterator
 from uuid import uuid4
 
+from adapters.interchange.dr_relationships import (  # noqa: F401 - re-exported for the scripts
+    DR_SOURCE,
+    DR_SPEC_REFERENCE,
+    DR_TAXONOMY_IDENTIFIER,
+    RelationshipSchemaRecord,
+    assign_relationship_identifiers,
+    compress_relationship_identifiers,
+    dr_property_definitions,
+)
 from domain.interchange.bundle import stale_entities
 from domain.ontology.entities import PropertyDefinition, Taxonomy
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import ExternalReference
 
-DR_SOURCE = "documentation_robotics"
-DR_TAXONOMY_IDENTIFIER = "dr_spec"
 DR_TAXONOMY_TITLE = "Documentation Robotics"
 
 CHARTER_FILE = "DESIGN_CHARTER.md"
 _SUMMARY_HEADING = "## In one paragraph"
-
-_IDENTIFIER_MAX_LENGTH = 64
-_TRUNCATED_LENGTH = 59
 
 
 @dataclass(frozen=True)
@@ -58,24 +64,6 @@ class NodeSchemaRecord:
     layer_id: str
     title: str
     description: str | None
-
-
-@dataclass(frozen=True)
-class RelationshipSchemaRecord:
-    """One `schemas/relationships/**/*.relationship.schema.json` file."""
-
-    source_spec_node_id: str
-    source_layer: str
-    destination_spec_node_id: str
-    destination_layer: str
-    predicate: str
-    title: str
-    description: str | None
-
-    @property
-    def full_identifier(self) -> str:
-        """Long-form, always-fully-qualified id: {source}.{predicate}.{destination}."""
-        return f"{self.source_spec_node_id}.{self.predicate}.{self.destination_spec_node_id}"
 
 
 @dataclass
@@ -111,6 +99,31 @@ def read_manifest(spec_dir: Path) -> tuple[str, list[dict[str, Any]]]:
         return manifest["specVersion"], manifest["layers"]
     except KeyError as exc:
         raise ValueError(f"Manifest {manifest_path} is missing required key {exc}") from exc
+
+
+def read_predicate_catalog(spec_dir: Path) -> dict[str, dict[str, Any]] | None:
+    """
+    The spec's predicate catalog from spec/dist/base.json, by predicate id: each
+    predicate's inverse, category and description. None when the spec has no
+    dist/base.json (older specs).
+    """
+    path = spec_dir / "dist" / "base.json"
+    if not path.is_file():
+        return None
+    predicates = _load_json(path).get("predicates")
+    if not isinstance(predicates, dict) or not predicates:
+        raise ValueError(f"{path} has no predicates object")
+    try:
+        return {
+            predicate_id: {
+                "inverse": entry.get("inverse"),
+                "category": entry.get("category"),
+                "description": entry.get("description"),
+            }
+            for predicate_id, entry in sorted(predicates.items())
+        }
+    except AttributeError as exc:
+        raise ValueError(f"{path}: a predicate entry is not an object") from exc
 
 
 def read_charter(spec_dir: Path) -> tuple[str | None, str | None]:
@@ -203,128 +216,6 @@ def slugify_spec_node_id(spec_node_id: str) -> str:
     return spec_node_id.replace(".", "_").replace("-", "_")
 
 
-def _stripped_relationship_identifier(record: RelationshipSchemaRecord) -> str:
-    """
-    Layer-qualified type names already encode their layer for compound names
-    (e.g. 'applicationcollaboration'), so the leading '{layer}.' segment of
-    each side is redundant and can be dropped.
-    """
-    source_type = record.source_spec_node_id.split(".", 1)[1]
-    destination_type = record.destination_spec_node_id.split(".", 1)[1]
-    predicate = record.predicate.replace("-", "_")
-    return f"{source_type}_{predicate}_{destination_type}"
-
-
-def _hashed_relationship_identifier(record: RelationshipSchemaRecord) -> str:
-    """Deterministic fallback: 59-char truncation + 4-hex-char SHA-256 suffix."""
-    stripped = _stripped_relationship_identifier(record)
-    digest = hashlib.sha256(record.full_identifier.encode("utf-8")).hexdigest()[:4]
-    return f"{stripped[:_TRUNCATED_LENGTH]}_{digest}"
-
-
-def dr_property_definitions(repo: OntologyRepository) -> dict[str, PropertyDefinition]:
-    """The workspace's property definitions by their DR relationship id (external reference)."""
-    return {
-        ref.identifier: prop
-        for prop in repo.list_property_definitions(limit=None)
-        for ref in prop.external_references
-        if ref.source == DR_SOURCE
-    }
-
-
-def assign_relationship_identifiers(
-    records: Iterable[RelationshipSchemaRecord],
-    repo: OntologyRepository,
-    owners: dict[str, str | None],
-) -> dict[str, str]:
-    """
-    The identifier each relationship schema of a spec gets, as the loader assigns it.
-
-    Like `compress_relationship_identifiers`, plus: a form held by an entity
-    outside this spec's own property definitions (a non-DR or stale property
-    definition, a taxonomy, scheme or class) falls back to the hashed form.
-    The reflection-plan importer calls this on the spec a plan would produce,
-    so the identifiers it proposes are the ones a re-import computes.
-
-    Args:
-        records: Every relationship schema of the spec
-        repo: The workspace
-        owners: Each record's full id -> the property definition that holds it
-            (None for a schema with none yet)
-    """
-    own = {prop_id for prop_id in owners.values() if prop_id}
-
-    def taken(identifier: str) -> bool:
-        holder = repo.get_property_definition_by_identifier(identifier)
-        if holder is not None:
-            return holder.id not in own
-        return repo.get_by_identifier(identifier) is not None
-
-    return compress_relationship_identifiers(records, taken)
-
-
-def compress_relationship_identifiers(
-    records: Iterable[RelationshipSchemaRecord],
-    is_taken: Callable[[str], bool] = lambda identifier: False,
-) -> dict[str, str]:
-    """
-    Map each relationship record's full long-form id to a compressed identifier
-    that is <=64 chars and globally unique across all records.
-
-    Three independent reasons a compressed id needs the hash-suffix fallback:
-    - the layer-stripped form alone exceeds 64 chars,
-    - two distinct relationships (different source/destination layers) strip
-      down to the identical short form (e.g. 'ux.view' and 'data-store.view'
-      both stripping to 'view'), or
-    - `is_taken` says something outside these records already holds the form.
-
-    Raises:
-        ValueError: If compression cannot produce a fully unique, <=64-char
-            identifier set (should not happen for the current DR spec; this
-            is the "verify zero collisions" guard from the design).
-    """
-    records = list(records)
-    compressed: dict[str, str] = {}
-    for record in records:
-        stripped = _stripped_relationship_identifier(record)
-        compressed[record.full_identifier] = (
-            stripped
-            if len(stripped) <= _IDENTIFIER_MAX_LENGTH
-            else _hashed_relationship_identifier(record)
-        )
-
-    # Resolve identifiers that collided even though each individually fit in 64 chars.
-    by_compressed: dict[str, list[str]] = defaultdict(list)
-    for full_id, compressed_id in compressed.items():
-        by_compressed[compressed_id].append(full_id)
-
-    by_full_id = {record.full_identifier: record for record in records}
-    for compressed_id, full_ids in by_compressed.items():
-        if len(full_ids) > 1:
-            for full_id in full_ids:
-                compressed[full_id] = _hashed_relationship_identifier(by_full_id[full_id])
-
-    for full_id, compressed_id in compressed.items():
-        if is_taken(compressed_id):
-            compressed[full_id] = _hashed_relationship_identifier(by_full_id[full_id])
-            if is_taken(compressed[full_id]):
-                raise ValueError(
-                    f"Relationship '{full_id}': identifiers '{compressed_id}' and "
-                    f"'{compressed[full_id]}' are both held by other entities"
-                )
-
-    final_ids = list(compressed.values())
-    if len(final_ids) != len(set(final_ids)):
-        raise ValueError("Relationship identifier compression produced duplicate identifiers")
-    too_long = [identifier for identifier in final_ids if len(identifier) > _IDENTIFIER_MAX_LENGTH]
-    if too_long:
-        raise ValueError(
-            f"Relationship identifiers exceed {_IDENTIFIER_MAX_LENGTH} chars: {too_long}"
-        )
-
-    return compressed
-
-
 def _upsert_taxonomy(
     service: OntologyService,
     repo: OntologyRepository,
@@ -357,7 +248,37 @@ def _upsert_taxonomy(
             vision=vision,
         )
         summary.taxonomies_updated += 1
+    catalog = read_predicate_catalog(spec_dir)
+    if catalog is not None:
+        taxonomy = _store_predicate_catalog(repo, taxonomy, spec_version, catalog)
     return taxonomy  # type: ignore[return-value]
+
+
+def _store_predicate_catalog(
+    repo: OntologyRepository,
+    taxonomy: Taxonomy,
+    spec_version: str,
+    catalog: dict[str, dict[str, Any]],
+) -> Taxonomy:
+    """
+    Keep the predicate catalog on the taxonomy's DR reference (see
+    `dr_predicate_catalog`), replacing the one an earlier import stored. A spec
+    without a catalog leaves the stored one as it is.
+    """
+    reference = ExternalReference(
+        source=DR_SOURCE,
+        identifier=DR_SPEC_REFERENCE,
+        metadata=MappingProxyType({"spec_version": spec_version, "predicates": catalog}),
+    )
+    others = [
+        ref
+        for ref in taxonomy.external_references
+        if not (ref.source == DR_SOURCE and ref.identifier == DR_SPEC_REFERENCE)
+    ]
+    if [*others, reference] == taxonomy.external_references:
+        return taxonomy
+    taxonomy.external_references = [*others, reference]
+    return repo.save_taxonomy(taxonomy)
 
 
 def _upsert_concept_schemes(

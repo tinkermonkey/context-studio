@@ -2,9 +2,11 @@
 """
 Write the decisions on a DR reflection-plan proposal for DR's
 `proposal-import.ts --decisions`: a JSON array of
-`{seq, op_id, status, reason, result_entity_id}`, one per operation, joined to
-DR's plan by seq. Pending operations are written as "pending", which DR skips.
-A reverted proposal is refused: none of its decisions stand.
+`{seq, op_id, status, fields?, reason, result_entity_id}`, one per operation,
+joined to DR's plan by seq. `fields` appears on an operation a reviewer edited
+before applying it: the applied triple `{predicate, source_spec_node_id,
+destination_spec_node_id}`. Pending operations are written as "pending", which
+DR skips. A reverted proposal is refused: none of its decisions stand.
 
 Usage (from local-server/, venv active):
     python scripts/export_dr_decisions.py PROPOSAL_ID OUT.json

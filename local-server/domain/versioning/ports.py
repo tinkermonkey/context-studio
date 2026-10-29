@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, Protocol, Sequence
+from typing import Any, Mapping, Optional, Protocol, Sequence
 
 from domain.versioning.approval_policy import ApprovalPolicy
 from domain.versioning.entities import ChangeEvent, Changeset, EntityVersion, Proposal
@@ -307,7 +307,7 @@ class ChangeProposalRepository(Protocol):
         ...
 
     def save_operations(self, proposal_id: str, operations: Sequence[ProposedOperation]) -> None:
-        """Persist the status, result and reason of these operations.
+        """Persist the status, result, reason, scope and applied fields of these operations.
 
         Raises ValueError for an unknown proposal or operation.
         """
@@ -327,4 +327,64 @@ class ApprovalPolicyRepository(Protocol):
 
     def save(self, policy: ApprovalPolicy) -> ApprovalPolicy:
         """Create or replace the policy of policy.taxonomy_id."""
+        ...
+
+
+class ProposalApplyRules(Protocol):
+    """
+    Rules that some property definitions are under (e.g. the DR spec's
+    relationship types), whichever proposal changes them: property definitions
+    are global, so the target decides, not the proposal's taxonomy.
+
+    ProposalService checks a reviewer's edit like any proposed update, then
+    asks the rules that govern the operation just before it applies (inside
+    the proposal's lock, after earlier operations of the same apply have run).
+    The rules may refuse the edit or complete it with fields they derive (e.g.
+    an identifier). Unedited creates and updates they govern are checked too,
+    as they apply: what was valid when proposed may not be any more.
+    """
+
+    def governs(self, operation: ProposedOperation, fields: dict[str, Any]) -> bool:
+        """
+        Whether these rules govern the operation: its target, or what its
+        fields point it at.
+
+        Args:
+            operation: A property-definition operation
+            fields: The fields it is about to apply (proposed or edited)
+        """
+        ...
+
+    def prepare(
+        self,
+        proposal: ChangeProposal,
+        operation: ProposedOperation,
+        fields: dict[str, Any],
+        other_edits: Mapping[str, dict[str, Any]],
+    ) -> dict[str, Any]:
+        """
+        The fields to apply as an update of the operation's target.
+
+        Args:
+            proposal: The proposal, with the outcomes of operations applied so far
+            operation: The edited operation (an update or delete of its target)
+            fields: The reviewer's fields, in the JSON encoding of snapshots
+            other_edits: The other edits of the same apply, by operation id
+
+        Raises:
+            ValueError: With the reason, when the edit is refused
+        """
+        ...
+
+    def check(self, operation: ProposedOperation, fields: dict[str, Any]) -> None:
+        """
+        Refuse an unedited create or update the rules forbid as it applies now.
+
+        Args:
+            operation: A property-definition create or update, applied as proposed
+            fields: Its fields, with "$ref" values resolved
+
+        Raises:
+            ValueError: With the reason, when it is refused
+        """
         ...

@@ -1542,6 +1542,8 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
         status: pending, applied, rejected or failed
         result_entity_id: Entity created or changed, once applied
         reason: Why it failed or was rejected
+        applied_fields: JSON of the fields actually applied when a reviewer edited the
+            operation (always as an update); null when applied as proposed or not applied
     """
 
     __tablename__ = "proposal_operations"
@@ -1567,6 +1569,7 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
     status = Column(String(10), nullable=False, default="pending", index=True)
     result_entity_id = Column(String(36), nullable=True)
     reason = Column(Text, nullable=True)
+    applied_fields = Column(JSON, nullable=True)
 
     __table_args__ = (UniqueConstraint("proposal_id", "seq", name="uq_proposal_operation_seq"),)
 

@@ -310,6 +310,90 @@ class TestApply:
         assert "already applied or rejected" in again.json()["detail"]
 
 
+class TestApplyWithEdits:
+    @pytest.fixture()
+    def near(self, ontology, graph):
+        return ontology.create_property_definition(
+            "near", "near", domain_class_id=graph["room"], range_class_id=graph["room"]
+        ).id
+
+    def _rename_near(self, near, seq=1):
+        return {
+            "seq": seq,
+            "op": "update",
+            "kind": "property",
+            "target_id": near,
+            "fields": {"identifier": "close_to", "title": "close to"},
+        }
+
+    def test_an_edit_applies_instead_and_is_returned(self, client, graph, ontology, near):
+        hall = ontology.create_class(graph["vocab"], "Hall").id
+        proposal = _propose(client, graph, self._rename_near(near))
+        [op_id] = _op_ids(proposal, 1)
+        edit = {"title": "next to", "range_class_id": hall}
+
+        response = client.post(
+            f"/api/proposals/{proposal['id']}/apply",
+            json={"operation_ids": [op_id], "edits": {op_id: edit}},
+        )
+
+        assert response.status_code == 200, response.text
+        [op] = response.json()["operations"]
+        assert op["status"] == "applied"
+        assert op["applied_fields"] == edit
+        assert op["fields"] == {"identifier": "close_to", "title": "close to"}
+        prop = ontology.get_property_definition(near)
+        assert (prop.identifier, prop.title, prop.range_class_id) == ("near", "next to", hall)
+        got = client.get(f"/api/proposals/{proposal['id']}").json()["operations"][0]
+        assert got["applied_fields"] == edit
+
+    def test_unedited_operations_return_null_applied_fields(self, client, graph, near):
+        proposal = _propose(client, graph, self._rename_near(near))
+        [op_id] = _op_ids(proposal, 1)
+
+        op = client.post(
+            f"/api/proposals/{proposal['id']}/apply", json={"operation_ids": [op_id]}
+        ).json()["operations"][0]
+
+        assert op["status"] == "applied" and op["applied_fields"] is None
+
+    def test_an_invalid_edit_fails_that_operation_in_a_200(self, client, graph, near):
+        proposal = _propose(client, graph, self._rename_near(near), _describe_room(graph))
+        rename_id, describe_id = _op_ids(proposal, 1, 2)
+
+        response = client.post(
+            f"/api/proposals/{proposal['id']}/apply",
+            json={
+                "operation_ids": [rename_id, describe_id],
+                "edits": {rename_id: {"range_class_id": "nope"}},
+            },
+        )
+
+        assert response.status_code == 200
+        rename, describe = response.json()["operations"]
+        assert rename["status"] == "failed"
+        assert rename["reason"].startswith("invalid_edit: range_class_id nope")
+        assert rename["applied_fields"] is None
+        assert describe["status"] == "applied"
+
+    def test_a_misplaced_edit_is_422_and_nothing_applies(self, client, graph, near):
+        proposal = _propose(client, graph, self._rename_near(near), _describe_room(graph))
+        rename_id, describe_id = _op_ids(proposal, 1, 2)
+        url = f"/api/proposals/{proposal['id']}/apply"
+
+        for edits in (
+            {describe_id: {"description": "Any"}},  # a class update
+            {rename_id: {}},  # empty
+            {"other": {"title": "x"}},  # not being applied
+        ):
+            response = client.post(
+                url, json={"operation_ids": [rename_id, describe_id], "edits": edits}
+            )
+            assert response.status_code == 422, edits
+        operations = client.get(f"/api/proposals/{proposal['id']}").json()["operations"]
+        assert all(o["status"] == "pending" for o in operations)
+
+
 class TestReject:
     def test_rejects_chosen_operations_with_a_note(self, client, graph):
         proposal = _propose(client, graph, _create_kit(seq=1, graph=graph), _describe_room(graph))

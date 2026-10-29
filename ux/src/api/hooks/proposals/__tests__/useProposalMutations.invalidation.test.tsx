@@ -68,6 +68,21 @@ describe("change proposal mutation invalidation", () => {
     }
   });
 
+  it("apply sends a reviewer's edits with the operations", async () => {
+    const apply = vi.spyOn(proposalsService, "applyProposal").mockResolvedValue({} as never);
+    const { wrapper } = setup();
+    const { result } = renderHook(() => useApplyChangeProposal(), { wrapper });
+    const data = {
+      operation_ids: ["op-1"],
+      edits: { "op-1": { canonical_predicate: "uses", range_class_id: "class-2" } },
+    };
+
+    result.current.mutate({ id: "proposal-1", data });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(apply).toHaveBeenCalledWith("proposal-1", data);
+  });
+
   it("create marks the proposals and every ontology query stale (auto-apply)", async () => {
     vi.spyOn(proposalsService, "createProposal").mockResolvedValue({} as never);
     const { wrapper, invalidated } = setup();
