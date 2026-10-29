@@ -4191,8 +4191,9 @@ export interface paths {
      *     proposal's run, when they reach min_probability and matching rules cover
      *     every class their entity will have (a rule matches when every key it sets
      *     does; one without a class covers any). Never auto-applied: breaking
-     *     operations, deletes, taxonomy creates, property-definition changes, and
-     *     anything that touches or points at an entity outside this taxonomy.
+     *     operations, deletes, taxonomy creates, changes to the taxonomy's vision,
+     *     property-definition changes, and anything that touches or points at an
+     *     entity outside this taxonomy.
      */
     put: operations["set_approval_policy_api_taxonomies__taxonomy_id__approval_policy_put"];
     post?: never;
@@ -6038,7 +6039,7 @@ export interface components {
     };
     /**
      * EntityRefSchema
-     * @description An entity a tool returned; answers may link to it as entity:<kind>/<id>.
+     * @description An entity or proposal a tool returned; answers may link to it as entity:<kind>/<id>.
      */
     EntityRefSchema: {
       /** Id */
@@ -6047,7 +6048,7 @@ export interface components {
        * Kind
        * @enum {string}
        */
-      kind: "taxonomy" | "scheme" | "class" | "individual" | "property";
+      kind: "taxonomy" | "scheme" | "class" | "individual" | "property" | "proposal";
       /** Title */
       title: string;
     };
@@ -7532,7 +7533,9 @@ export interface components {
        * Entity Kind
        * @description Kind of the viewed entity
        */
-      entity_kind?: ("taxonomy" | "scheme" | "class" | "individual" | "property") | null;
+      entity_kind?:
+        | ("taxonomy" | "scheme" | "class" | "individual" | "property" | "proposal")
+        | null;
       /**
        * Entity Id
        * @description Id of the viewed entity
@@ -9554,6 +9557,9 @@ export interface components {
     /**
      * ToolEndEvent
      * @description A tool finished; `entities` are the ids answers may link to.
+     *
+     *     Sent after every tool call of the round has run and its results are stored,
+     *     so a round's tool_end events follow all its tool_start events.
      */
     ToolEndEvent: {
       /**

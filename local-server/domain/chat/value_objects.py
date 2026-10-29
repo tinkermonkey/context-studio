@@ -15,6 +15,9 @@ from typing import Any, Mapping, Optional, Union
 # Entity kinds the assistant links to, as `entity:<kind>/<id>`. Each maps to an
 # entity page in the UI (property definitions have no page yet).
 ENTITY_KINDS = ("taxonomy", "scheme", "class", "individual", "property")
+# What the assistant can link to: the entity kinds, and change proposals (their
+# review page).
+LINK_KINDS = (*ENTITY_KINDS, "proposal")
 
 
 class ChatRole(str, Enum):
@@ -36,7 +39,10 @@ class StopReason(str, Enum):
 
 @dataclass(frozen=True)
 class EntityRef:
-    """A workspace entity a tool returned, so answers can link to its page."""
+    """
+    A workspace entity or change proposal a tool returned, so answers can link
+    to its page; `kind` is one of LINK_KINDS.
+    """
 
     id: str
     kind: str
@@ -225,7 +231,12 @@ class ToolStarted:
 
 @dataclass(frozen=True)
 class ToolFinished:
-    """A tool finished; `entities` are the refs answers may link to."""
+    """
+    A tool finished; `entities` are the refs answers may link to.
+
+    Yielded once every tool call of the round has run and the results are
+    stored, so a round's ToolFinished events follow all its ToolStarted ones.
+    """
 
     tool_use_id: str
     name: str

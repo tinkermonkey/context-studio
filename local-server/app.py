@@ -23,6 +23,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from adapters.chat.context import ConfigChatSettings, OntologyWorkspaceContext
+from adapters.chat.proposal_tools import build_proposal_tools
 from adapters.chat.tools import build_chat_tools
 from adapters.clustering.sklearn_clusterer import SklearnClusterer
 
@@ -170,6 +171,7 @@ from domain.versioning.bundle_import import BundleImportService
 from domain.versioning.events import ChangesetMerged, SyncCompleted
 from domain.versioning.ports import SyncTarget
 from domain.versioning.proposal_service import ProposalService
+from domain.versioning.proposals import ProposalSource
 from domain.versioning.services import VersioningService
 from utils.logger import get_logger, register_otlp_handler
 
@@ -808,7 +810,8 @@ async def lifespan(app: FastAPI):
         app.state.clusterer = clusterer
         app.state.schema_vector_index = schema_vector_index
 
-        # Read-only tools over the ontology and graph services, shared by the chat
+        # Read-only tools over the ontology and graph services, and the proposal
+        # tools (propose changes; a person reviews them), shared by the chat
         # assistant and the MCP server so both can do the same things
         read_tools = build_chat_tools(
             ontology_service,
@@ -819,7 +822,7 @@ async def lifespan(app: FastAPI):
         )
         app.state.chat_service = ChatService(
             model=llm_router,
-            tools=read_tools,
+            tools=[*read_tools, *build_proposal_tools(proposal_service, ProposalSource.CHAT)],
             repository=SqliteConversationRepository(operations_session_factory),
             settings=ConfigChatSettings(config_manager),
             workspace=OntologyWorkspaceContext(ontology_service),
@@ -841,6 +844,7 @@ async def lifespan(app: FastAPI):
                     read_tools,
                     ontology_service,
                     BundleExporter(ontology_repo),
+                    write_tools=build_proposal_tools(proposal_service, ProposalSource.MCP),
                 )
                 logger.info("MCP server available at /mcp (bearer token required)")
             else:

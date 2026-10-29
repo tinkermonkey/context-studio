@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from adapters.mcp.links import ENTITY_PAGE_PREFIX, EntityLinks
+from adapters.mcp.links import ENTITY_PAGE_PREFIX, PROPOSAL_PAGE_PREFIX, EntityLinks
 from adapters.mcp.server import is_loopback_host
 from domain.chat.value_objects import EntityRef
 
@@ -22,12 +22,30 @@ def test_page_prefixes_match_the_ui_routes():
     assert ui_prefixes == ENTITY_PAGE_PREFIX
 
 
+def test_proposal_page_prefix_matches_the_ui():
+    """The review page prefix MCP links use is the one the chat UI links to."""
+    source = ENTITY_PATHS_TS.read_text()
+    match = re.search(r'PROPOSAL_PAGE_PREFIX = "([^"]+)"', source)
+    assert match is not None, "PROPOSAL_PAGE_PREFIX not found in entityPaths.ts"
+
+    assert match.group(1) == PROPOSAL_PAGE_PREFIX
+
+
 def test_url_for_a_class_page():
     links = EntityLinks("http://localhost:3100/")
 
     url = links.url(EntityRef(id="abc-1", kind="class", title="Operation"))
 
     assert url == "http://localhost:3100/app/schema/classes/abc-1"
+
+
+def test_url_for_a_proposal_review_page():
+    links = EntityLinks("http://localhost:3100")
+
+    url = links.url(EntityRef(id="prop 1", kind="proposal", title="Clarify classes"))
+
+    assert PROPOSAL_PAGE_PREFIX == "/app/proposals"
+    assert url == "http://localhost:3100/app/proposals/prop%201"
 
 
 def test_kinds_without_a_page_get_no_url():

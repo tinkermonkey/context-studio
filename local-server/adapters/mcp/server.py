@@ -1,12 +1,14 @@
 """
 MCP server for Context Studio.
 
-Serves the same read-only tools as the in-app chat, so an MCP client such as
-Claude Code can do everything the chat can. Each taxonomy's vision statement is
-also offered as a markdown resource, and each taxonomy as a JSON bundle
-resource (too large for a tool result). The server runs over streamable HTTP,
-mounted at /mcp on the running app, and only on a loopback host. Every request
-must carry the configured bearer token.
+Serves the same tools as the in-app chat, so an MCP client such as Claude Code
+can do everything the chat can: the read-only tools, plus the proposal tools
+(propose changes for a person to review, and follow them), which are served only
+while the bearer token is enforced. Each taxonomy's vision statement is also
+offered as a markdown resource, and each taxonomy as a JSON bundle resource
+(too large for a tool result). The server runs over streamable HTTP, mounted at
+/mcp on the running app, and only on a loopback host. Every request must carry
+the configured bearer token.
 """
 
 from __future__ import annotations
@@ -56,9 +58,18 @@ INSTRUCTIONS = (
     " details. A taxonomy's description is its one-paragraph summary; its full"
     " vision statement (what it is for, what its classes and relationships model,"
     " how changes are judged) is in get_entity and in the taxonomy's vision"
-    " resource. Read the vision before proposing changes to a taxonomy. A"
-    " taxonomy's full contents are its bundle resource (JSON). All tools"
-    " are read-only. Results include links to the entity pages in the app."
+    " resource. A taxonomy's full contents are its bundle resource (JSON)."
+    " Results include links to the pages in the app."
+)
+READ_ONLY_INSTRUCTIONS = " All tools are read-only."
+PROPOSE_INSTRUCTIONS = (
+    " You propose; a person reviews. Before proposing changes to a taxonomy, read"
+    " its vision and judge every change against it, and look up each id you use."
+    " propose_changes stores a proposal for review in Context Studio, where a"
+    " person accepts or rejects each operation (the taxonomy's approval policy may"
+    " apply some at once); nothing pending changes the workspace. If any operation"
+    " is invalid nothing is stored: fix what the result lists and propose again."
+    " Follow proposals with get_proposal and list_proposals; share the review link."
 )
 
 
@@ -67,17 +78,22 @@ def build_mcp_server(
     ontology: OntologyService,
     links: EntityLinks,
     bundles: BundleExporter,
+    write_tools: Sequence[ChatTool] = (),
 ) -> Server:
     """
     Build the MCP server over the given tools.
 
     Args:
-        tools: The chat's tools; each is listed with its spec verbatim
+        tools: The chat's read-only tools; each is listed with its spec verbatim
         ontology: Ontology service, for the taxonomy vision resources
-        links: Builds entity page links appended to tool results
+        links: Builds page links appended to tool results
         bundles: Exports the taxonomy bundle resources
+        write_tools: Tools that propose changes, listed after the read-only
+            ones; the instructions say the server is read-only without them
     """
-    server: Server = Server(SERVER_NAME, instructions=INSTRUCTIONS)
+    tools = [*tools, *write_tools]
+    instructions = INSTRUCTIONS + (PROPOSE_INSTRUCTIONS if write_tools else READ_ONLY_INSTRUCTIONS)
+    server: Server = Server(SERVER_NAME, instructions=instructions)
     by_name = {tool.spec.name: tool for tool in tools}
 
     @server.list_tools()
@@ -267,20 +283,30 @@ async def start_mcp_server(
     tools: Sequence[ChatTool],
     ontology: OntologyService,
     bundles: BundleExporter,
+    write_tools: Sequence[ChatTool] = (),
 ) -> McpConnection:
     """
     Start the MCP server for the app lifespan and attach it to /mcp.
 
-    Runs the session manager inside `stack`, makes sure an auth token exists
-    (generating and saving one if config.json has none), arms the endpoint
-    with it, and stores the connection details on `state` (app.state) for
-    the settings endpoint.
+    Makes sure an auth token exists (generating and saving one if config.json
+    has none), builds the server, runs its session manager inside `stack`,
+    arms the endpoint with the token, and stores the connection details on
+    `state` (app.state) for the settings endpoint.
+
+    The write tools are served only when there is a token to enforce; the
+    endpoint refuses every request without one in any case.
     """
     settings = config_manager.get_settings()
-    server = build_mcp_server(tools, ontology, EntityLinks(settings.server.ui_base_url), bundles)
+    auth_token = config_manager.ensure_mcp_auth_token()
+    server = build_mcp_server(
+        tools,
+        ontology,
+        EntityLinks(settings.server.ui_base_url),
+        bundles,
+        write_tools=write_tools if auth_token else (),
+    )
     session_manager = build_session_manager(server, loopback_security())
     await stack.enter_async_context(session_manager.run())
-    auth_token = config_manager.ensure_mcp_auth_token()
     endpoint.auth_token = auth_token
     endpoint.session_manager = session_manager
     connection = McpConnection(

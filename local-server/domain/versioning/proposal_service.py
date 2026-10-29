@@ -70,6 +70,12 @@ RULE_REFUSED = "refused"
 REVERTED_REASON = "proposal reverted"
 
 _REF_PREFIX = "$"
+
+# A proposal's title is a short summary; its rationale may run to a few pages.
+MAX_TITLE_CHARS = 500
+MAX_RATIONALE_CHARS = 8000
+# Operation seq values fit SQLite's integer column with room to spare.
+MAX_SEQ = 1_000_000
 # Snapshot fields that change on every write; a delete's staleness ignores them.
 _VOLATILE_FIELDS = frozenset({"last_modified", "version"})
 
@@ -97,7 +103,7 @@ _INT_FIELDS = frozenset({"sort_order"})
 _TEXT_LIST_FIELDS = frozenset({"allowed_values", "class_ids"})
 
 # Id fields and the kinds of entity they may point at.
-_ID_FIELDS: dict[str, tuple[OperationKind, ...]] = {
+ID_FIELDS: dict[str, tuple[OperationKind, ...]] = {
     "taxonomy_id": (K.TAXONOMY,),
     "concept_scheme_id": (K.SCHEME,),
     "parent_class_id": (K.CLASS,),
@@ -112,7 +118,7 @@ _ID_FIELDS: dict[str, tuple[OperationKind, ...]] = {
 
 
 @dataclass(frozen=True)
-class _KindFields:
+class OperationFields:
     """What an operation on one kind of entity may set."""
 
     create: frozenset[str]
@@ -122,20 +128,20 @@ class _KindFields:
     clearable: frozenset[str] = frozenset()
 
 
-_FIELDS: dict[OperationKind, _KindFields] = {
-    K.TAXONOMY: _KindFields(
+OPERATION_FIELDS: dict[OperationKind, OperationFields] = {
+    K.TAXONOMY: OperationFields(
         create=frozenset({"title", "description", "color", "identifier", "vision"}),
         required=frozenset({"title"}),
         update=frozenset({"title", "description", "color", "vision"}),
         clearable=frozenset({"description", "color", "vision"}),
     ),
-    K.SCHEME: _KindFields(
+    K.SCHEME: OperationFields(
         create=frozenset({"taxonomy_id", "title", "description", "color", "identifier"}),
         required=frozenset({"taxonomy_id", "title"}),
         update=frozenset({"title", "description", "color"}),
         clearable=frozenset({"description", "color"}),
     ),
-    K.CLASS: _KindFields(
+    K.CLASS: OperationFields(
         create=frozenset(
             {
                 "concept_scheme_id",
@@ -151,7 +157,7 @@ _FIELDS: dict[OperationKind, _KindFields] = {
         update=frozenset({"title", "description", "color", "external_references"}),
         clearable=frozenset({"description", "color"}),
     ),
-    K.PROPERTY: _KindFields(
+    K.PROPERTY: OperationFields(
         create=frozenset(
             {
                 "identifier",
@@ -186,7 +192,7 @@ _FIELDS: dict[OperationKind, _KindFields] = {
             }
         ),
     ),
-    K.ATTRIBUTE: _KindFields(
+    K.ATTRIBUTE: OperationFields(
         create=frozenset(
             {
                 "class_id",
@@ -215,13 +221,13 @@ _FIELDS: dict[OperationKind, _KindFields] = {
         ),
         clearable=frozenset({"description", "allowed_values", "default_value"}),
     ),
-    K.INDIVIDUAL: _KindFields(
+    K.INDIVIDUAL: OperationFields(
         create=frozenset({"class_ids", "title", "description", "external_references"}),
         required=frozenset({"class_ids", "title"}),
         update=frozenset({"title", "description", "external_references", "class_ids"}),
         clearable=frozenset({"description"}),
     ),
-    K.RELATIONSHIP: _KindFields(
+    K.RELATIONSHIP: OperationFields(
         create=frozenset({"source_id", "target_id", "property_definition_id", "attributes"}),
         required=frozenset({"source_id", "target_id", "property_definition_id"}),
         update=frozenset({"attributes"}),
@@ -254,7 +260,7 @@ def _has_field_type(name: str, value: Any) -> bool:
     """Whether a (non-None) field value has the JSON type its field takes."""
     if name in _TEXT_LIST_FIELDS:
         return isinstance(value, list) and all(isinstance(item, str) for item in value)
-    if name in _TEXT_FIELDS or name in _ID_FIELDS:
+    if name in _TEXT_FIELDS or name in ID_FIELDS:
         return isinstance(value, str)
     if name in _BOOL_FIELDS:
         return isinstance(value, bool)
@@ -349,6 +355,16 @@ class ProposalService:
             errors.append(
                 OperationError(None, "invalid", "A proposal needs at least one operation")
             )
+        for name, value, limit in (
+            ("title", title, MAX_TITLE_CHARS),
+            ("rationale", rationale, MAX_RATIONALE_CHARS),
+        ):
+            if isinstance(value, str) and len(value) > limit:
+                errors.append(
+                    OperationError(
+                        None, "too_long", f"{name} is {len(value)} characters; at most {limit}"
+                    )
+                )
 
         built: list[ProposedOperation] = []
         refs: dict[str, OperationKind] = {}
@@ -357,6 +373,9 @@ class ProposalService:
         seen_seqs: set[int] = set()
         for draft in sorted(operations, key=lambda d: d.seq):
             try:
+                seq = draft.seq
+                if isinstance(seq, bool) or not isinstance(seq, int) or not 0 <= seq <= MAX_SEQ:
+                    raise _Invalid("invalid", f"seq must be an integer from 0 to {MAX_SEQ}")
                 if draft.seq in seen_seqs:
                     raise _Invalid("invalid", "seq values must be unique")
                 seen_seqs.add(draft.seq)
@@ -411,7 +430,7 @@ class ProposalService:
                 proposal.operations,
                 self._classes,
                 lambda operation: self._inside_taxonomy(operation, proposal.taxonomy_id),
-                id_fields=frozenset(_ID_FIELDS),
+                id_fields=frozenset(ID_FIELDS),
             )
             # apply takes the proposal's lock itself; propose never holds it.
             return self.apply(proposal.id, auto) if auto else proposal
@@ -471,7 +490,7 @@ class ProposalService:
         ) != {taxonomy_id}:
             return False
         for name, value in operation.fields.items():
-            kinds = _ID_FIELDS.get(name)
+            kinds = ID_FIELDS.get(name)
             if kinds is None or value is None or name == "property_definition_id":
                 continue
             for item in value if isinstance(value, list) else [value]:
@@ -525,6 +544,14 @@ class ProposalService:
                 raise ValueError("fields must be an object")
             if not isinstance(draft.evidence or [], list):
                 raise ValueError("evidence must be a list")
+            for item in draft.evidence or []:
+                if not isinstance(item, dict) or not all(
+                    isinstance(k, str) and isinstance(v, str) for k, v in item.items()
+                ):
+                    raise ValueError(
+                        'each evidence item must be an object of text values ("quote",'
+                        f' "url", "entity_id"), not {item!r}'
+                    )
             operation = ProposedOperation(
                 seq=draft.seq,
                 op=op,
@@ -563,7 +590,7 @@ class ProposalService:
 
     @staticmethod
     def _check_field_names(operation: ProposedOperation) -> None:
-        spec = _FIELDS[operation.kind]
+        spec = OPERATION_FIELDS[operation.kind]
         names = set(operation.fields)
         if operation.op is OperationType.CREATE:
             allowed, label = spec.create, "create"
@@ -614,7 +641,7 @@ class ProposalService:
     ) -> None:
         """Each id field names an existing entity of an allowed kind, or an earlier ref."""
         for name, value in operation.fields.items():
-            kinds = _ID_FIELDS.get(name)
+            kinds = ID_FIELDS.get(name)
             if kinds is None or value is None:
                 continue
             values = value if isinstance(value, list) else [value]
@@ -790,7 +817,7 @@ class ProposalService:
             if not isinstance(fields, dict) or not fields:
                 raise ValueError(f"{label}: an edit needs at least one field")
             refs = sorted(
-                name for name, value in fields.items() if name in _ID_FIELDS and _is_ref(value)
+                name for name, value in fields.items() if name in ID_FIELDS and _is_ref(value)
             )
             if refs:
                 raise ValueError(f"{label}: an edit can't point at a $ref ({refs})")
@@ -862,7 +889,7 @@ class ProposalService:
     ) -> None:
         def run() -> str:
             fields = {
-                name: self._resolved(value, refs) if name in _ID_FIELDS else value
+                name: self._resolved(value, refs) if name in ID_FIELDS else value
                 for name, value in operation.fields.items()
             }
             if operation.op is not OperationType.CREATE:

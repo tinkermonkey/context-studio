@@ -1,5 +1,6 @@
 """
-ChatService: the read-only assistant's agent loop.
+ChatService: the assistant's agent loop. The assistant reads the workspace and
+proposes changes to it; a person reviews every proposal.
 
 One user turn runs model -> tools -> model until the model answers without
 calling tools or the turn uses up `max_tool_rounds`. Every message is stored as
@@ -53,18 +54,28 @@ _TITLE_LENGTH = 60
 SYSTEM_PROMPT = """\
 You are the Context Studio assistant. You answer questions about the user's \
 knowledge graph workspace: taxonomies, concept schemes and classes (the schema), \
-individuals (the data), and the typed relationships between them.
+individuals (the data), and the typed relationships between them. You also \
+propose changes to it.
 
 Use the tools to look up workspace contents, even when you feel confident; do \
-not answer from general knowledge about what the workspace holds. You are \
-read-only: you cannot create, change or delete anything. If the user asks for a \
-change, say you can't make edits and describe what they could change themselves.
+not answer from general knowledge about what the workspace holds.
 
-Links: every time you mention a workspace entity, write it as a Markdown link \
-[Title](entity:<kind>/<id>), with the kind and id exactly as a tool returned \
-them. The kinds are taxonomy, scheme, class, individual and property. Only link \
-entities whose id came from a tool result, or from a note about the page the user \
-is viewing, in this conversation; never guess or construct an id. To mention an \
+You propose; a person reviews. You cannot create, change or delete anything \
+directly. When the user asks for a change, look up everything it touches, read \
+the taxonomy's vision (get_entity on the taxonomy) and judge the change against \
+it, then send it as one proposal with propose_changes. The user reviews the \
+proposal in Context Studio and accepts or rejects each operation; the \
+taxonomy's approval policy may apply some at once. If the result says nothing \
+was stored, fix the invalid operations and propose again with all of them. Then \
+say what you proposed, which operations are pending and which were applied, and \
+link the proposal. Never say a pending change has been made.
+
+Links: every time you mention a workspace entity or a proposal, write it as a \
+Markdown link [Title](entity:<kind>/<id>), with the kind and id exactly as a \
+tool returned them. The kinds are taxonomy, scheme, class, individual, property \
+and proposal (a change proposal; the link opens its review page). Only link ids \
+that came from a tool result, or from a note about the page the user is \
+viewing, in this conversation; never guess or construct an id. To mention an \
 entity you have not looked up, look it up first. For example: the \
 [Operation](entity:class/6f1c2a9e-...) class.
 
@@ -78,6 +89,15 @@ LIMIT_NOTE = (
 
 _NOT_RUN_LIMIT = "Not run: the tool-call limit for this message was reached."
 _NOT_RUN_CUT_OFF = "Not run: the response was cut off before the tool call finished."
+_NOT_RUN_INTERRUPTED = "Not run: the turn was interrupted before this tool call ran."
+_INTERRUPTED_RUNNING = (
+    "Interrupted while running: it may have completed. Check before running it again"
+    " (for propose_changes, look for the proposal with list_proposals)."
+)
+_UNANSWERED = (
+    "Interrupted: the turn ended before this tool call's result was stored; it may have"
+    " run. Check before running it again (for propose_changes, use list_proposals)."
+)
 
 
 def _now() -> datetime:
@@ -85,7 +105,7 @@ def _now() -> datetime:
 
 
 class ChatService:
-    """Runs conversations with the read-only, tool-calling assistant."""
+    """Runs conversations with the tool-calling assistant."""
 
     def __init__(
         self,
@@ -101,7 +121,8 @@ class ChatService:
 
         Args:
             model: Streaming tool-calling chat model
-            tools: Read-only tools offered to the model on every request
+            tools: Tools offered to the model on every request (read the
+                workspace, propose changes)
             repository: Conversation storage
             settings: Chat configuration, read on every turn
             workspace: Describes the workspace and the viewed page to the model
@@ -196,6 +217,7 @@ class ChatService:
         """
         conversation = await self.get_conversation(conversation_id)
         history = await self._repository.list_messages(conversation_id)
+        await self._answer_dangling_tool_calls(conversation, history)
         model = self._settings.model()
         max_rounds = self._settings.max_tool_rounds()
 
@@ -293,25 +315,48 @@ class ChatService:
                 )
                 return
 
-            results: list[ContentBlock] = []
-            for tool_use in tool_uses:
-                yield ToolStarted(tool_use.id, tool_use.name, tool_use.input)
-                outcome = await self._run_tool(tool_use)
-                yield ToolFinished(
-                    tool_use.id, tool_use.name, outcome.summary, outcome.entities, outcome.is_error
-                )
-                results.append(
-                    ToolResultBlock(
-                        tool_use_id=tool_use.id,
-                        content=outcome.content,
-                        is_error=outcome.is_error,
-                        summary=outcome.summary,
-                        entities=outcome.entities,
+            # The results are stored before any ToolFinished is yielded, and the
+            # finally block answers whatever is left if the turn stops (a failed
+            # event, a closed stream, a client disconnect cancelling it) while
+            # tools run: tools that finished keep their results, the one that
+            # was running is marked as possibly done (its write may still
+            # commit in the thread pool), and the rest as not run. If even that
+            # write is lost, the next send() repairs the history.
+            results: list[ToolResultBlock] = []
+            running: Optional[ToolUseBlock] = None
+            stored = False
+            try:
+                for tool_use in tool_uses:
+                    yield ToolStarted(tool_use.id, tool_use.name, tool_use.input)
+                    running = tool_use
+                    outcome = await self._run_tool(tool_use)
+                    running = None
+                    results.append(
+                        ToolResultBlock(
+                            tool_use_id=tool_use.id,
+                            content=outcome.content,
+                            is_error=outcome.is_error,
+                            summary=outcome.summary,
+                            entities=outcome.entities,
+                        )
                     )
+                note = (ContextBlock(LIMIT_NOTE),) if round_index == max_rounds - 1 else ()
+                await self._append(conversation, history, ChatRole.USER, (*results, *note))
+                stored = True
+            finally:
+                if not stored:
+                    await self._store_interrupted_round(
+                        conversation, history, tool_uses, results, running
+                    )
+            names = {t.id: t.name for t in tool_uses}
+            for result in results:
+                yield ToolFinished(
+                    result.tool_use_id,
+                    names[result.tool_use_id],
+                    result.summary,
+                    result.entities,
+                    result.is_error,
                 )
-            if round_index == max_rounds - 1:
-                results.append(ContextBlock(LIMIT_NOTE))
-            await self._append(conversation, history, ChatRole.USER, tuple(results))
 
     # ------------------------------------------------------------------
     # Helpers
@@ -352,6 +397,63 @@ class ChatService:
         await self._repository.add_message(message)
         history.append(message)
 
+    async def _store_interrupted_round(
+        self,
+        conversation: Conversation,
+        history: list[ChatMessage],
+        tool_uses: list[ToolUseBlock],
+        results: list[ToolResultBlock],
+        running: Optional[ToolUseBlock],
+    ) -> None:
+        """
+        Answer every tool call of a round the turn stopped in: finished ones
+        with their results, the running one as possibly done, the rest as not
+        run. Called from a finally block, so a failed write is logged rather
+        than raised over the exception that stopped the turn; a write that is
+        cancelled itself is repaired by the next send().
+        """
+        answered = {r.tool_use_id for r in results}
+        if running is not None:
+            answered.add(running.id)
+        blocks = (
+            *results,
+            *_unrun([running] if running else [], _INTERRUPTED_RUNNING, "Interrupted"),
+            *_unrun([t for t in tool_uses if t.id not in answered], _NOT_RUN_INTERRUPTED),
+        )
+        try:
+            await self._append(conversation, history, ChatRole.USER, blocks)
+        except Exception:  # noqa: BLE001 - e.g. the try path's write did commit (same seq)
+            logger.warning(
+                "Could not store the interrupted tool round of conversation %s",
+                conversation.id,
+                exc_info=True,
+            )
+
+    async def _answer_dangling_tool_calls(
+        self, conversation: Conversation, history: list[ChatMessage]
+    ) -> None:
+        """
+        Answer tool calls a previous turn left unanswered (its process was
+        killed, or its interrupted-round write was lost), so the history sent
+        to the model stays valid.
+        """
+        if not history or history[-1].role is not ChatRole.ASSISTANT:
+            return
+        dangling = [b for b in history[-1].blocks if isinstance(b, ToolUseBlock)]
+        if not dangling:
+            return
+        logger.warning(
+            "Conversation %s ended on %d unanswered tool calls; answering them as interrupted",
+            conversation.id,
+            len(dangling),
+        )
+        await self._append(
+            conversation,
+            history,
+            ChatRole.USER,
+            _unrun(dangling, _UNANSWERED, "Interrupted"),
+        )
+
     async def _touch(self, conversation: Conversation) -> None:
         conversation.updated_at = _now()
         await self._repository.save_conversation(conversation)
@@ -377,13 +479,15 @@ class ChatService:
             )
 
 
-def _unrun(tool_uses: list[ToolUseBlock], reason: str) -> tuple[ContentBlock, ...]:
+def _unrun(
+    tool_uses: list[ToolUseBlock], reason: str, summary: str = "Not run"
+) -> tuple[ToolResultBlock, ...]:
     return tuple(
         ToolResultBlock(
             tool_use_id=t.id,
             content=json.dumps({"error": reason}),
             is_error=True,
-            summary="Not run",
+            summary=summary,
         )
         for t in tool_uses
     )

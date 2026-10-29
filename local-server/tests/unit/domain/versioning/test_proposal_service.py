@@ -15,7 +15,13 @@ from domain.versioning.exceptions import (
     ChangeProposalStateError,
     ProposalValidationError,
 )
-from domain.versioning.proposal_service import OperationDraft, ProposalService
+from domain.versioning.proposal_service import (
+    MAX_RATIONALE_CHARS,
+    MAX_SEQ,
+    MAX_TITLE_CHARS,
+    OperationDraft,
+    ProposalService,
+)
 from domain.versioning.proposals import (
     ChangeScope,
     OperationKind,
@@ -321,6 +327,44 @@ class TestPropose:
                 ),
             )
         assert caught.value.errors[0].code == "invalid"
+
+    @pytest.mark.parametrize("seq", [-1, MAX_SEQ + 1, 10**30, True])
+    def test_seq_out_of_range_is_invalid(self, service, graph, seq):
+        with pytest.raises(ProposalValidationError) as caught:
+            propose(
+                service,
+                graph,
+                draft(seq, T.UPDATE, K.CLASS, graph["room"], title="Chamber"),
+                draft(2, T.UPDATE, K.CLASS, graph["kitchen"], title="Galley"),
+            )
+        (error,) = caught.value.errors
+        assert (error.seq, error.code) == (seq, "invalid")
+        assert str(MAX_SEQ) in error.message
+
+    def test_title_and_rationale_have_length_limits(self, service, graph):
+        update = draft(1, T.UPDATE, K.CLASS, graph["room"], title="Chamber")
+        with pytest.raises(ProposalValidationError) as caught:
+            service.propose(
+                graph["taxonomy"],
+                "t" * (MAX_TITLE_CHARS + 1),
+                [update],
+                ProposalSource.CHAT,
+                rationale="r" * (MAX_RATIONALE_CHARS + 1),
+            )
+        assert [(e.seq, e.code) for e in caught.value.errors] == [
+            (None, "too_long"),
+            (None, "too_long"),
+        ]
+        assert "title" in caught.value.errors[0].message
+
+        stored = service.propose(
+            graph["taxonomy"],
+            "t" * MAX_TITLE_CHARS,
+            [update],
+            ProposalSource.CHAT,
+            rationale="r" * MAX_RATIONALE_CHARS,
+        )
+        assert len(stored.title) == MAX_TITLE_CHARS
 
     def test_unknown_taxonomy_and_empty_proposal(self, service):
         with pytest.raises(ProposalValidationError) as caught:
@@ -656,6 +700,10 @@ class TestUnexpectedErrors:
             {"fields": {"color": 7}},
             {"probability": "0.9"},
             {"probability": True},
+            {"evidence": ["a quote"]},
+            {"evidence": [3]},
+            {"evidence": [{"quote": "q", "page": 4}]},
+            {"evidence": [{"quote": ["q"]}]},
         ],
     )
     def test_wrong_value_types_are_refused_at_propose(self, service, graph, changes):

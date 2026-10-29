@@ -17,6 +17,8 @@ For an update that is the entity's current classes plus any it would gain.
 Hard rules beat the policy:
 
 - breaking operations (deletes among them) and taxonomy creates never auto-apply;
+- a change to a taxonomy's vision never auto-applies: it is the charter
+  proposals are judged against;
 - an operation auto-applies only if its target and every entity it points at
   are inside the proposal's taxonomy (property definitions are global, so
   changing one never auto-applies, though a relationship may use one);
@@ -152,9 +154,9 @@ class ApprovalPolicy:
 
     def allows(self, operation: ProposedOperation, classes: Sequence[set[str]]) -> bool:
         """
-        Whether this operation may auto-apply: never a breaking one, a delete or a
-        taxonomy create; otherwise when it is probable enough and matching rules
-        cover it.
+        Whether this operation may auto-apply: never a breaking one, a delete, a
+        taxonomy create or a change to a taxonomy's vision; otherwise when it is
+        probable enough and matching rules cover it.
 
         Args:
             operation: The operation
@@ -164,6 +166,10 @@ class ApprovalPolicy:
         if operation.scope is ChangeScope.BREAKING or operation.op is OperationType.DELETE:
             return False
         if operation.kind is OperationKind.TAXONOMY and operation.op is OperationType.CREATE:
+            return False
+        if operation.kind is OperationKind.TAXONOMY and "vision" in operation.fields:
+            # The vision is the charter proposals are judged against: a person
+            # always decides on a change to it, however editorial.
             return False
         probability = operation.probability if operation.probability is not None else 0.0
         if probability < self.min_probability:

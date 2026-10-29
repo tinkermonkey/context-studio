@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import type { StoredChatMessage } from "@/api/services/chat";
+import { linkPath } from "@/lib/entityPaths";
 import {
+  addEntities,
   applyStreamEvent,
   displayMessagesFromStored,
   knownEntitiesFromStored,
@@ -96,6 +98,15 @@ describe("knownEntitiesFromStored / resolveEntityLink", () => {
       id: "ind-1",
     });
     expect(resolveEntityLink("entity:class/cls-1", known)).toEqual({ kind: "class", id: "cls-1" });
+  });
+
+  it("resolves a proposal returned by a tool to its review page", () => {
+    const withProposal = new Map(known);
+    addEntities(withProposal, [{ id: "prop-1", kind: "proposal", title: "Define Operation" }]);
+    const target = resolveEntityLink("entity:proposal/prop-1", withProposal);
+    expect(target).toEqual({ kind: "proposal", id: "prop-1" });
+    expect(target && linkPath(target.kind, target.id)).toBe("/app/proposals/prop-1");
+    expect(resolveEntityLink("entity:proposal/invented", withProposal)).toBeNull();
   });
 
   it.each([

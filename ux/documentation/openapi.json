@@ -7834,7 +7834,7 @@
           "proposals"
         ],
         "summary": "Set Approval Policy",
-        "description": "Replace the taxonomy's approval policy.\n\nOperations proposed afterwards apply as soon as they are proposed, under the\nproposal's run, when they reach min_probability and matching rules cover\nevery class their entity will have (a rule matches when every key it sets\ndoes; one without a class covers any). Never auto-applied: breaking\noperations, deletes, taxonomy creates, property-definition changes, and\nanything that touches or points at an entity outside this taxonomy.",
+        "description": "Replace the taxonomy's approval policy.\n\nOperations proposed afterwards apply as soon as they are proposed, under the\nproposal's run, when they reach min_probability and matching rules cover\nevery class their entity will have (a rule matches when every key it sets\ndoes; one without a class covers any). Never auto-applied: breaking\noperations, deletes, taxonomy creates, changes to the taxonomy's vision,\nproperty-definition changes, and anything that touches or points at an\nentity outside this taxonomy.",
         "operationId": "set_approval_policy_api_taxonomies__taxonomy_id__approval_policy_put",
         "parameters": [
           {
@@ -10940,7 +10940,8 @@
               "scheme",
               "class",
               "individual",
-              "property"
+              "property",
+              "proposal"
             ],
             "title": "Kind"
           },
@@ -10956,7 +10957,7 @@
           "title"
         ],
         "title": "EntityRefSchema",
-        "description": "An entity a tool returned; answers may link to it as entity:<kind>/<id>."
+        "description": "An entity or proposal a tool returned; answers may link to it as entity:<kind>/<id>."
       },
       "EntityVersionResponse": {
         "properties": {
@@ -13345,7 +13346,8 @@
                   "scheme",
                   "class",
                   "individual",
-                  "property"
+                  "property",
+                  "proposal"
                 ]
               },
               {
@@ -16758,7 +16760,7 @@
           "entities"
         ],
         "title": "ToolEndEvent",
-        "description": "A tool finished; `entities` are the ids answers may link to."
+        "description": "A tool finished; `entities` are the ids answers may link to.\n\nSent after every tool call of the round has run and its results are stored,\nso a round's tool_end events follow all its tool_start events."
       },
       "ToolResultBlockSchema": {
         "properties": {

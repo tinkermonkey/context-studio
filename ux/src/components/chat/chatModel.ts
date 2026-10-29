@@ -1,4 +1,4 @@
-import type { EntityKind } from "@/lib/entityPaths";
+import type { LinkKind } from "@/lib/entityPaths";
 import type {
   ChatStreamEvent,
   EntityRef,
@@ -30,7 +30,7 @@ export interface DisplayMessage {
 /** Entity ids the assistant may link to, mapped to their kind. */
 export type KnownEntities = Map<string, string>;
 
-const PAGE_KINDS: readonly EntityKind[] = ["taxonomy", "scheme", "class", "individual"];
+const PAGE_KINDS: readonly LinkKind[] = ["taxonomy", "scheme", "class", "individual", "proposal"];
 
 /**
  * Turn stored messages into display messages: each user question, then one
@@ -155,7 +155,8 @@ export function applyStreamEvent(message: DisplayMessage, event: ChatStreamEvent
 }
 
 /**
- * Resolve an answer link `entity:<kind>/<id>` to an entity page. Returns null —
+ * Resolve an answer link `entity:<kind>/<id>` to an entity page or a proposal's
+ * review page. Returns null —
  * render plain text — when the id didn't come from this conversation's tool
  * results or page context (so a made-up id never becomes a link), when the kind
  * doesn't match, or when the kind has no page (property).
@@ -163,7 +164,7 @@ export function applyStreamEvent(message: DisplayMessage, event: ChatStreamEvent
 export function resolveEntityLink(
   href: string | undefined,
   known: KnownEntities,
-): { kind: EntityKind; id: string } | null {
+): { kind: LinkKind; id: string } | null {
   const match = /^entity:([a-z]+)\/(.+)$/.exec(href ?? "");
   if (!match) return null;
   const [, kind, rawId] = match;
@@ -173,7 +174,7 @@ export function resolveEntityLink(
   } catch {
     return null;
   }
-  if (!PAGE_KINDS.includes(kind as EntityKind)) return null;
+  if (!PAGE_KINDS.includes(kind as LinkKind)) return null;
   if (known.get(id) !== kind) return null;
-  return { kind: kind as EntityKind, id };
+  return { kind: kind as LinkKind, id };
 }

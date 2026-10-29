@@ -2,15 +2,19 @@
 Unit tests for ChatService (the agent loop), using in-memory fakes for every port.
 """
 
+import asyncio
 import copy
 import json
 import logging
+from contextlib import aclosing
 
 import pytest
 
+from domain.chat.entities import ChatMessage
 from domain.chat.exceptions import ChatModelError, ConversationNotFoundError
 from domain.chat.services import LIMIT_NOTE, NEW_CONVERSATION_TITLE, SYSTEM_PROMPT, ChatService
 from domain.chat.value_objects import (
+    LINK_KINDS,
     ChatFailed,
     ChatRole,
     ContextBlock,
@@ -221,7 +225,7 @@ class TestSimpleAnswer:
         title = repository.conversations[conversation.id].title
         assert len(title) == 60 and title.endswith("…")
 
-    async def test_system_prompt_requires_entity_links(self):
+    async def test_system_prompt_requires_links_and_proposing(self):
         model = ScriptedModel(answer("a"))
         service, _ = make_service(model)
         conversation = await service.create_conversation()
@@ -230,8 +234,11 @@ class TestSimpleAnswer:
 
         assert model.requests[0]["system"] == SYSTEM_PROMPT
         assert "[Title](entity:<kind>/<id>)" in SYSTEM_PROMPT
-        assert "read-only" in SYSTEM_PROMPT
-        for kind in ("taxonomy", "scheme", "class", "individual", "property"):
+        assert "read-only" not in SYSTEM_PROMPT
+        assert "You propose; a person reviews." in SYSTEM_PROMPT
+        assert "propose_changes" in SYSTEM_PROMPT
+        assert "Never say a pending change has been made." in SYSTEM_PROMPT
+        for kind in LINK_KINDS:
             assert kind in SYSTEM_PROMPT
 
     async def test_reasoning_blocks_are_stored_for_replay(self):
@@ -315,6 +322,167 @@ class TestToolRounds:
         assert result.summary == "Found 1"
         # The second request carries the tool result
         assert model.requests[1]["messages"][-1].blocks == (result,)
+
+    async def test_results_are_stored_before_tool_finished_is_yielded(self):
+        model = ScriptedModel(tool_call(use("a"), use("b")), answer("done"))
+        service, repository = make_service(model)
+        conversation = await service.create_conversation()
+
+        turn = service.send(conversation.id, "q")
+        seen = []
+        async with aclosing(turn):
+            async for event in turn:
+                seen.append(event)
+                if isinstance(event, ToolFinished):
+                    break  # the consumer fails on the first tool_end
+
+        assert [type(e) for e in seen] == [ToolStarted, ToolStarted, ToolFinished]
+        stored = repository.messages[conversation.id]
+        assert [m.role for m in stored] == [ChatRole.USER, ChatRole.ASSISTANT, ChatRole.USER]
+        assert [(r.tool_use_id, r.is_error) for r in stored[2].blocks] == [
+            ("a", False),
+            ("b", False),
+        ]
+
+    async def test_consumer_stopping_mid_round_leaves_no_unanswered_tool_call(self):
+        model = ScriptedModel(tool_call(use("a"), use("b")), answer("done"))
+        tool = FakeTool()
+        service, repository = make_service(model, tools=[tool])
+        conversation = await service.create_conversation()
+
+        turn = service.send(conversation.id, "q")
+        async with aclosing(turn):
+            async for event in turn:
+                if isinstance(event, ToolStarted) and event.tool_use_id == "b":
+                    break  # the stream closes after "a" ran, before "b" runs
+
+        assert tool.calls == [{"query": "Operation"}]
+        stored = repository.messages[conversation.id]
+        assert [m.role for m in stored] == [ChatRole.USER, ChatRole.ASSISTANT, ChatRole.USER]
+        ran, unrun = stored[2].blocks
+        assert (ran.tool_use_id, ran.is_error, ran.entities) == ("a", False, (OPERATION,))
+        assert (unrun.tool_use_id, unrun.is_error, unrun.summary) == ("b", True, "Not run")
+
+        # The next message continues from a valid history and runs nothing again
+        follow_up = ScriptedModel(answer("ok"))
+        service._model = follow_up
+        await run(service, conversation.id, "and?")
+        assert follow_up.requests[0]["messages"][2].blocks == (ran, unrun)
+        assert tool.calls == [{"query": "Operation"}]
+
+    async def test_cancelled_mid_tool_marks_the_running_tool_as_possibly_done(self):
+        """A client disconnect cancels the turn while a tool's write may still commit."""
+        started = asyncio.Event()
+
+        class BlockingTool(FakeTool):
+            async def execute(self, args):
+                self.calls.append(dict(args))
+                started.set()
+                await asyncio.Event().wait()  # cancelled here
+
+        model = ScriptedModel(tool_call(use("a"), use("b")), answer("done"))
+        tool = BlockingTool()
+        service, repository = make_service(model, tools=[tool])
+        conversation = await service.create_conversation()
+
+        async def consume():
+            async with aclosing(service.send(conversation.id, "q")) as turn:
+                async for _ in turn:
+                    pass
+
+        task = asyncio.create_task(consume())
+        await started.wait()
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+        stored = repository.messages[conversation.id]
+        assert [m.role for m in stored] == [ChatRole.USER, ChatRole.ASSISTANT, ChatRole.USER]
+        running, unrun = stored[2].blocks
+        assert (running.tool_use_id, running.is_error, running.summary) == (
+            "a",
+            True,
+            "Interrupted",
+        )
+        assert "may have completed" in json.loads(running.content)["error"]
+        assert (unrun.tool_use_id, unrun.summary) == ("b", "Not run")
+        assert "Not run" in json.loads(unrun.content)["error"]
+
+    async def test_a_stored_dangling_tool_call_is_answered_before_the_next_message(self):
+        """If even the interrupted-round write was lost, the next send repairs it."""
+        model = ScriptedModel(answer("ok"))
+        service, repository = make_service(model)
+        conversation = await service.create_conversation()
+        dangling = ChatMessage(
+            id="m1",
+            conversation_id=conversation.id,
+            seq=1,
+            role=ChatRole.ASSISTANT,
+            blocks=(use("a"), use("b")),
+        )
+        repository.messages[conversation.id] = [
+            ChatMessage(
+                id="m0",
+                conversation_id=conversation.id,
+                seq=0,
+                role=ChatRole.USER,
+                blocks=(TextBlock("q"),),
+            ),
+            dangling,
+        ]
+
+        events = await run(service, conversation.id, "and?")
+
+        assert events[-1] == TurnCompleted(StopReason.END_TURN, 10, 5)
+        stored = repository.messages[conversation.id]
+        assert [(m.seq, m.role) for m in stored] == [
+            (0, ChatRole.USER),
+            (1, ChatRole.ASSISTANT),
+            (2, ChatRole.USER),
+            (3, ChatRole.USER),
+            (4, ChatRole.ASSISTANT),
+        ]
+        repair = stored[2].blocks
+        assert [(r.tool_use_id, r.is_error, r.summary) for r in repair] == [
+            ("a", True, "Interrupted"),
+            ("b", True, "Interrupted"),
+        ]
+        assert "may have run" in json.loads(repair[0].content)["error"]
+        assert stored[3].blocks[-1] == TextBlock("and?")
+        # The model sees every tool call answered
+        assert model.requests[0]["messages"][2].blocks == repair
+
+    async def test_a_cancelled_write_that_committed_is_not_replaced_by_a_duplicate_error(
+        self, caplog
+    ):
+        """The results write commits, then its await is cancelled: finally's retry clashes."""
+
+        class CommitThenCancel(InMemoryRepository):
+            async def add_message(self, message):
+                seqs = {m.seq for m in self.messages.get(message.conversation_id, [])}
+                if message.seq in seqs:
+                    raise ValueError(f"duplicate seq {message.seq}")
+                await super().add_message(message)
+                if any(isinstance(b, ToolResultBlock) for b in message.blocks):
+                    raise asyncio.CancelledError
+
+        model = ScriptedModel(tool_call(use("a")), answer("done"))
+        service = ChatService(
+            model=model,
+            tools=[FakeTool()],
+            repository=(repository := CommitThenCancel()),
+            settings=FakeSettings(),
+            workspace=FakeWorkspace(),
+        )
+        conversation = await service.create_conversation()
+
+        with caplog.at_level(logging.WARNING), pytest.raises(asyncio.CancelledError):
+            await run(service, conversation.id)
+
+        stored = repository.messages[conversation.id]
+        assert [m.seq for m in stored] == [0, 1, 2]
+        assert stored[2].blocks[0].is_error is False  # the real result, written once
+        assert "Could not store the interrupted tool round" in caplog.text
 
     async def test_parallel_tool_calls_answered_in_one_message(self):
         model = ScriptedModel(tool_call(use("a"), use("b")), answer("done"))

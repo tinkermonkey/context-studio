@@ -14,7 +14,7 @@ from domain.versioning.approval_policy import (
     AutoApplyRule,
     auto_apply_ids,
 )
-from domain.versioning.proposal_service import _ID_FIELDS, OperationDraft, ProposalService
+from domain.versioning.proposal_service import ID_FIELDS, OperationDraft, ProposalService
 from domain.versioning.proposals import (
     ChangeScope,
     OperationKind,
@@ -116,7 +116,7 @@ ACTIVITY = {"c-act", "house_activity"}
 PLACE = {"c-place", "place"}
 
 
-ID_FIELDS = frozenset(_ID_FIELDS)
+ID_NAMES = frozenset(ID_FIELDS)
 
 
 def everywhere(operation):
@@ -134,6 +134,17 @@ class TestMatching:
         update = op(2, T.UPDATE, K.INDIVIDUAL, S.EDITORIAL, target="i1", title="x")
         assert not policy.allows(update, [ACTIVITY])
         assert ApprovalPolicy("tax", (AutoApplyRule(scope=S.EDITORIAL),)).allows(update, [])
+
+    def test_a_taxonomy_vision_update_is_never_allowed(self):
+        policy = ApprovalPolicy(
+            "tax", (AutoApplyRule(scope=S.EDITORIAL), AutoApplyRule(kind=K.TAXONOMY))
+        )
+        vision = op(1, T.UPDATE, K.TAXONOMY, S.EDITORIAL, target="tax", vision="New charter")
+        both = op(2, T.UPDATE, K.TAXONOMY, S.EDITORIAL, target="tax", title="H", vision=None)
+        title = op(3, T.UPDATE, K.TAXONOMY, S.EDITORIAL, target="tax", title="Home")
+        assert not policy.allows(vision, [])
+        assert not policy.allows(both, [])
+        assert policy.allows(title, [])
 
     def test_every_class_must_be_covered(self):
         activity_only = ApprovalPolicy(
@@ -205,9 +216,9 @@ class TestMatching:
 
     def test_no_policy_or_no_rules_applies_nothing(self):
         edit = op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c", title="x")
-        assert auto_apply_ids(None, [edit], lambda o: [], everywhere, id_fields=ID_FIELDS) == []
+        assert auto_apply_ids(None, [edit], lambda o: [], everywhere, id_fields=ID_NAMES) == []
         policy = ApprovalPolicy("tax")
-        assert auto_apply_ids(policy, [edit], lambda o: [], everywhere, id_fields=ID_FIELDS) == []
+        assert auto_apply_ids(policy, [edit], lambda o: [], everywhere, id_fields=ID_NAMES) == []
 
     def test_only_operations_inside_the_taxonomy_qualify(self):
         policy = ApprovalPolicy("tax", (AutoApplyRule(scope=S.EDITORIAL),))
@@ -218,7 +229,7 @@ class TestMatching:
             [inside, outside],
             lambda o: [],
             lambda o: o.target_id == "c-in",
-            id_fields=ID_FIELDS,
+            id_fields=ID_NAMES,
         )
         assert chosen == [inside.id]
 
@@ -233,7 +244,7 @@ class TestMatching:
             [relationship, plain, on_new_class, kept_class],
             lambda o: [],
             everywhere,
-            id_fields=ID_FIELDS,
+            id_fields=ID_NAMES,
         )
         assert chosen == [plain.id]
 
@@ -242,7 +253,7 @@ class TestMatching:
         priced = op(1, T.UPDATE, K.INDIVIDUAL, S.EDITORIAL, "i1", title="$5 attic")
         noted = op(2, T.UPDATE, K.INDIVIDUAL, S.EDITORIAL, "i2", description="$x marks it")
         chosen = auto_apply_ids(
-            policy, [priced, noted], lambda o: [], everywhere, id_fields=ID_FIELDS
+            policy, [priced, noted], lambda o: [], everywhere, id_fields=ID_NAMES
         )
         assert chosen == [priced.id, noted.id]
 
@@ -346,6 +357,34 @@ class TestAutoApplyOnPropose:
         assert dust.title == "Dust"
         assert ontology.get_individual(house["attic"]).description == "Dusty"
         assert tags.tags == [("IndividualCreated", proposal.id)]
+
+    def test_a_vision_change_never_auto_applies(self, service, policies, house, ontology):
+        """The vision is the charter proposals are judged against; a person decides."""
+        policies.save(
+            ApprovalPolicy(
+                house["taxonomy"],
+                (AutoApplyRule(scope=S.EDITORIAL), AutoApplyRule(kind=K.TAXONOMY)),
+            )
+        )
+        before = ontology.get_taxonomy(house["taxonomy"])
+        drafts = [
+            OperationDraft(
+                1, T.UPDATE, K.TAXONOMY, house["taxonomy"], fields={"vision": "Anything"}
+            ),
+            OperationDraft(
+                2, T.UPDATE, K.TAXONOMY, house["taxonomy"], fields={"description": "Our home"}
+            ),
+        ]
+
+        proposal = service.propose(house["taxonomy"], "Recharter", drafts, ProposalSource.MCP)
+
+        vision, description = proposal.operations
+        assert vision.scope is S.EDITORIAL
+        assert vision.status is OperationStatus.PENDING
+        assert description.status is OperationStatus.APPLIED
+        after = ontology.get_taxonomy(house["taxonomy"])
+        assert after.vision == before.vision
+        assert after.description == "Our home"
 
     def test_deletes_never_auto_apply(self, service, policies, house, ontology):
         policies.save(

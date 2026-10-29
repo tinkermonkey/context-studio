@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 
 from domain.chat.entities import ChatMessage, Conversation
 from domain.chat.value_objects import (
+    LINK_KINDS,
     ChatEvent,
     ChatFailed,
     ChatStatus,
@@ -32,11 +33,12 @@ from domain.chat.value_objects import (
     TurnCompleted,
 )
 
-EntityKind = Literal["taxonomy", "scheme", "class", "individual", "property"]
+# The kinds answers link to, entities and proposals (domain LINK_KINDS).
+EntityKind = Literal[LINK_KINDS]  # type: ignore[valid-type]
 
 
 class EntityRefSchema(BaseModel):
-    """An entity a tool returned; answers may link to it as entity:<kind>/<id>."""
+    """An entity or proposal a tool returned; answers may link to it as entity:<kind>/<id>."""
 
     id: str
     kind: EntityKind
@@ -212,7 +214,12 @@ class ToolStartEvent(BaseModel):
 
 
 class ToolEndEvent(BaseModel):
-    """A tool finished; `entities` are the ids answers may link to."""
+    """
+    A tool finished; `entities` are the ids answers may link to.
+
+    Sent after every tool call of the round has run and its results are stored,
+    so a round's tool_end events follow all its tool_start events.
+    """
 
     type: Literal["tool_end"] = "tool_end"
     tool_use_id: str

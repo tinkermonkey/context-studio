@@ -1,1 +1,1 @@
-"""Adapters for the chat context: read-only tools, settings and workspace context."""
+"""Adapters for the chat context: read and proposal tools, settings and workspace context."""
