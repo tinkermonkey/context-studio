@@ -33,6 +33,7 @@ from adapters.interchange.dr_relationships import (
     DR_TAXONOMY_IDENTIFIER,
     DrRelationshipRules,
     dr_predicate_catalog,
+    dr_relationship_id,
 )
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.connection import create_local_db_engine
@@ -748,6 +749,51 @@ def test_an_edit_pointing_a_non_dr_type_into_the_dr_spec_is_refused(parts):
     assert result.status is OperationStatus.FAILED
     assert result.reason == "invalid_edit: near has no DR relationship id"
     assert repo.get_property_definition(near.id).domain_class_id is None
+
+
+def test_an_unedited_rename_onto_a_triple_another_proposal_applied_fails(parts):
+    _, repo, proposals = parts
+    taken = "api.operation.uses.api.response"
+    later = import_reflection_plan(
+        plan_with(rename(1, "api.components.composes.api.response", taken)), proposals, repo
+    )
+    first = import_reflection_plan(plan_for(14), proposals, repo)
+    edit = {first.operations[0].id: edit_triple(repo, predicate="uses")}
+    assert proposals.apply(first.id, list(edit), edits=edit).operations[0].reason is None
+
+    result = proposals.apply(later.id, [later.operations[0].id]).operations[0]
+
+    assert result.status is OperationStatus.FAILED
+    assert result.reason == f"refused: {taken} already exists"
+    holders = [
+        p
+        for p in repo.list_property_definitions(limit=None)
+        if dr_relationship_id(p.external_references) == taken
+    ]
+    assert [p.id for p in holders] == [first.operations[0].target_id]
+
+
+def test_an_unedited_update_whose_triple_disagrees_with_its_dr_id_fails(parts):
+    ontology, repo, proposals = parts
+    delivers = prop_by_dr_id(repo, DELIVERS)
+    proposal = house_proposal(
+        ontology,
+        proposals,
+        OperationDraft(
+            seq=1,
+            op="update",
+            kind="property",
+            target_id=delivers.id,
+            fields={"canonical_predicate": "uses"},  # the DR id would still say delivers
+        ),
+    )
+
+    result = proposals.apply(proposal.id, [proposal.operations[0].id]).operations[0]
+
+    assert result.status is OperationStatus.FAILED
+    assert result.reason == (
+        f"refused: its predicate, domain and range don't match its DR relationship id {DELIVERS}"
+    )
 
 
 def test_an_edit_onto_a_class_outside_the_dr_spec_fails(parts):

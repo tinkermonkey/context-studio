@@ -287,7 +287,10 @@ class DrRelationshipRules:
     DR spec: its fields bring a DR relationship id, or the target's or the
     new domain or range is a dr_spec class. That holds whichever proposal
     the operation is in. An edit of a governed target without a DR
-    relationship id is refused.
+    relationship id is refused. An unedited create or update that leaves a DR
+    relationship id is refused when another relationship type already holds
+    it (e.g. one another proposal's edit applied since), or when its
+    predicate, domain or range disagree with it.
 
     A reviewer edits a DR relationship type's triple in Context Studio fields:
     canonical_predicate (DR's predicate), domain_class_id and range_class_id
@@ -309,9 +312,7 @@ class DrRelationshipRules:
 
     def governs(self, operation: ProposedOperation, fields: dict[str, Any]) -> bool:
         target = (
-            self._repo.get_property_definition(operation.target_id)
-            if operation.target_id
-            else None
+            self._repo.get_property_definition(operation.target_id) if operation.target_id else None
         )
         if target is not None and dr_relationship_id(target.external_references):
             return True
@@ -328,6 +329,29 @@ class DrRelationshipRules:
             if cls is not None and cls.taxonomy_id == taxonomy.id:
                 return True
         return False
+
+    def check(self, operation: ProposedOperation, fields: dict[str, Any]) -> None:
+        target = (
+            self._repo.get_property_definition(operation.target_id) if operation.target_id else None
+        )
+        current = dr_relationship_id(target.external_references) if target else None
+        after = current
+        if "external_references" in fields:
+            after = dr_relationship_id(fields["external_references"] or [])
+        triple_fields = {"canonical_predicate", "domain_class_id", "range_class_id"} & set(fields)
+        if after is None or (after == current and not triple_fields):
+            return  # no DR relationship id afterwards, or its triple stays as it is
+        triple = Triple.parse(after)
+        classes = dr_spec_classes(self._repo)
+        spec_nodes = {class_id: node for node, class_id in classes.items()}
+        base = Triple.parse(current) if current else triple
+        if self._edited(fields, base, spec_nodes) != triple:
+            raise ValueError(
+                f"its predicate, domain and range don't match its DR relationship id {after}"
+            )
+        holder = dr_property_definitions(self._repo).get(after)
+        if holder is not None and (target is None or holder.id != target.id):
+            raise ValueError(f"{after} already exists")
 
     def prepare(
         self,

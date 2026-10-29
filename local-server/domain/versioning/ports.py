@@ -340,7 +340,8 @@ class ProposalApplyRules(Protocol):
     asks the rules that govern the operation just before it applies (inside
     the proposal's lock, after earlier operations of the same apply have run).
     The rules may refuse the edit or complete it with fields they derive (e.g.
-    an identifier).
+    an identifier). Unedited creates and updates they govern are checked too,
+    as they apply: what was valid when proposed may not be any more.
     """
 
     def governs(self, operation: ProposedOperation, fields: dict[str, Any]) -> bool:
@@ -372,5 +373,18 @@ class ProposalApplyRules(Protocol):
 
         Raises:
             ValueError: With the reason, when the edit is refused
+        """
+        ...
+
+    def check(self, operation: ProposedOperation, fields: dict[str, Any]) -> None:
+        """
+        Refuse an unedited create or update the rules forbid as it applies now.
+
+        Args:
+            operation: A property-definition create or update, applied as proposed
+            fields: Its fields, with "$ref" values resolved
+
+        Raises:
+            ValueError: With the reason, when it is refused
         """
         ...

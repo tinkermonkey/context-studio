@@ -41,6 +41,11 @@ class RecordingRules:
     def governs(self, operation, fields):
         return self.governed is None or operation.target_id in self.governed
 
+    def check(self, operation, fields):
+        self.calls.append(("check", operation.seq, dict(fields)))
+        if self.refuse:
+            raise ValueError(self.refuse)
+
     def prepare(self, proposal, operation, fields, other_edits):
         self.calls.append((proposal.id, operation.seq, dict(fields), dict(other_edits)))
         if self.refuse:
@@ -322,7 +327,8 @@ def test_the_taxonomys_rules_complete_the_edit(ontology, repo, graph):
 
 
 def test_a_refusal_by_the_rules_fails_only_that_operation(ontology, repo, graph):
-    service = make_service(ontology, repo, RecordingRules(refuse="that triple already exists"))
+    rules = RecordingRules(refuse="that triple already exists", governed={graph["near"]})
+    service = make_service(ontology, repo, rules)
     proposal = propose(
         service,
         graph,
@@ -369,6 +375,30 @@ def test_rules_are_asked_only_for_targets_they_govern(ontology, repo, graph):
     assert result[1].status is OperationStatus.APPLIED
     assert result[2].reason == "invalid_edit: no"
     assert [call[1] for call in rules.calls] == [2]
+
+
+def test_unedited_property_changes_are_checked_by_the_rules_that_govern_them(ontology, repo, graph):
+    rules = RecordingRules(refuse="X already exists", governed={graph["far"], None})
+    service = make_service(ontology, repo, rules)
+    proposal = propose(
+        service,
+        graph,
+        draft(1, T.UPDATE, K.PROPERTY, graph["near"], title="close"),
+        draft(2, T.UPDATE, K.PROPERTY, graph["far"], title="distant"),
+        draft(3, T.CREATE, K.PROPERTY, None, identifier="by", title="by"),
+        draft(4, T.UPDATE, K.CLASS, graph["room"], title="Chamber"),
+    )
+    ops = by_seq(proposal)
+
+    result = by_seq(service.apply(proposal.id, [o.id for o in ops.values()]))
+
+    assert result[1].status is OperationStatus.APPLIED  # not governed
+    assert result[2].status is OperationStatus.FAILED
+    assert result[2].reason == "refused: X already exists"
+    assert result[3].reason == "refused: X already exists"  # a create, governed (no target)
+    assert result[4].status is OperationStatus.APPLIED  # not a property
+    assert [(c[0], c[1]) for c in rules.calls] == [("check", 2), ("check", 3)]
+    assert ontology.get_property_definition(graph["far"]).title == "far"
 
 
 # -------------------------------------------------------------------- scope

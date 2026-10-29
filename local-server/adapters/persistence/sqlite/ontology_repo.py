@@ -1463,7 +1463,9 @@ class SQLiteOntologyRepository:
         if not prop.identifier or not prop.identifier.strip():
             raise ValueError("PropertyDefinition identifier cannot be empty")
 
-        with self.session_factory() as session:
+        # No autoflush: flush only at the commit below, where an IntegrityError is
+        # mapped (an autoflush on the update path's lookup would raise it raw).
+        with self.session_factory() as session, session.no_autoflush:
             # Check identifier uniqueness (same session)
             existing = (
                 session.query(OntologyEntity)

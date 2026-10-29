@@ -64,6 +64,7 @@ TARGET_MISSING = "target_missing"
 UNRESOLVED_REF = "unresolved_ref"
 APPLY_ERROR = "error"
 INVALID_EDIT = "invalid_edit"
+RULE_REFUSED = "refused"
 
 REVERTED_REASON = "proposal reverted"
 
@@ -708,8 +709,10 @@ class ProposalService:
         Pending and failed operations can be applied (a failed one again, e.g.
         with force_stale after a target_changed). Each records its own outcome:
         applied with the entity it made or changed, or failed with a reason
-        (target_changed, target_missing, unresolved_ref, invalid_edit, error).
-        Operations already applied stay applied when a later one fails.
+        (target_changed, target_missing, unresolved_ref, invalid_edit, refused,
+        error). Operations already applied stay applied when a later one fails.
+        Property-definition creates and updates are also checked by the rules
+        that govern them, if any (refused).
 
         A reviewer can correct a property-definition update or delete before
         applying it: its edit is the complete set of fields to apply, as an
@@ -869,6 +872,16 @@ class ProposalService:
             }
             if operation.op is not OperationType.CREATE:
                 self._check_fresh(operation, forced)
+            if operation.kind is K.PROPERTY and operation.op in (
+                OperationType.CREATE,
+                OperationType.UPDATE,
+            ):
+                rules = self._rules_for(operation, fields)
+                if rules is not None:
+                    try:
+                        rules.check(operation, fields)
+                    except ValueError as exc:
+                        raise _ApplyFailed(RULE_REFUSED, str(exc)) from exc
             return self._dispatch(operation, fields, run_id, operation.op)
 
         self._record_outcome(operation, run_id, run)

@@ -604,6 +604,19 @@ class TestPropertyDefinitionCRUD:
                 )
             )
 
+    def test_renaming_onto_another_kinds_identifier_is_a_conflict(self, repo, sample_class):
+        """A class's identifier, taken on an update, is a conflict, not a raw IntegrityError."""
+        from domain.ontology.exceptions import IdentifierConflictError
+
+        prop = repo.save_property_definition(
+            PropertyDefinition(id="prop-1", identifier="near", title="Near")
+        )
+        prop.identifier = sample_class.identifier
+
+        with pytest.raises(IdentifierConflictError):
+            repo.save_property_definition(prop)
+        assert repo.get_property_definition("prop-1").identifier == "near"
+
     def test_list_property_definitions(self, repo):
         """Test listing all property definitions."""
         repo.save_property_definition(PropertyDefinition(id="p1", identifier="id1", title="P1"))
