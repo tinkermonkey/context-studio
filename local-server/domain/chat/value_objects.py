@@ -231,7 +231,12 @@ class ToolStarted:
 
 @dataclass(frozen=True)
 class ToolFinished:
-    """A tool finished; `entities` are the refs answers may link to."""
+    """
+    A tool finished; `entities` are the refs answers may link to.
+
+    Yielded once every tool call of the round has run and the results are
+    stored, so a round's ToolFinished events follow all its ToolStarted ones.
+    """
 
     tool_use_id: str
     name: str

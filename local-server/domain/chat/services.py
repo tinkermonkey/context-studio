@@ -90,6 +90,14 @@ LIMIT_NOTE = (
 _NOT_RUN_LIMIT = "Not run: the tool-call limit for this message was reached."
 _NOT_RUN_CUT_OFF = "Not run: the response was cut off before the tool call finished."
 _NOT_RUN_INTERRUPTED = "Not run: the turn was interrupted before this tool call ran."
+_INTERRUPTED_RUNNING = (
+    "Interrupted while running: it may have completed. Check before running it again"
+    " (for propose_changes, look for the proposal with list_proposals)."
+)
+_UNANSWERED = (
+    "Interrupted: the turn ended before this tool call's result was stored; it may have"
+    " run. Check before running it again (for propose_changes, use list_proposals)."
+)
 
 
 def _now() -> datetime:
@@ -209,6 +217,7 @@ class ChatService:
         """
         conversation = await self.get_conversation(conversation_id)
         history = await self._repository.list_messages(conversation_id)
+        await self._answer_dangling_tool_calls(conversation, history)
         model = self._settings.model()
         max_rounds = self._settings.max_tool_rounds()
 
@@ -307,16 +316,21 @@ class ChatService:
                 return
 
             # The results are stored before any ToolFinished is yielded, and the
-            # finally block answers whatever is left if the consumer stops (a
-            # failed event, a closed stream) while tools run: the stored history
-            # never ends on an unanswered tool call, and a tool that already ran
-            # (a stored proposal) is never run again by a retry.
+            # finally block answers whatever is left if the turn stops (a failed
+            # event, a closed stream, a client disconnect cancelling it) while
+            # tools run: tools that finished keep their results, the one that
+            # was running is marked as possibly done (its write may still
+            # commit in the thread pool), and the rest as not run. If even that
+            # write is lost, the next send() repairs the history.
             results: list[ToolResultBlock] = []
+            running: Optional[ToolUseBlock] = None
             stored = False
             try:
                 for tool_use in tool_uses:
                     yield ToolStarted(tool_use.id, tool_use.name, tool_use.input)
+                    running = tool_use
                     outcome = await self._run_tool(tool_use)
+                    running = None
                     results.append(
                         ToolResultBlock(
                             tool_use_id=tool_use.id,
@@ -331,13 +345,8 @@ class ChatService:
                 stored = True
             finally:
                 if not stored:
-                    ran = {r.tool_use_id for r in results}
-                    missing = [t for t in tool_uses if t.id not in ran]
-                    await self._append(
-                        conversation,
-                        history,
-                        ChatRole.USER,
-                        (*results, *_unrun(missing, _NOT_RUN_INTERRUPTED)),
+                    await self._store_interrupted_round(
+                        conversation, history, tool_uses, results, running
                     )
             names = {t.id: t.name for t in tool_uses}
             for result in results:
@@ -388,6 +397,63 @@ class ChatService:
         await self._repository.add_message(message)
         history.append(message)
 
+    async def _store_interrupted_round(
+        self,
+        conversation: Conversation,
+        history: list[ChatMessage],
+        tool_uses: list[ToolUseBlock],
+        results: list[ToolResultBlock],
+        running: Optional[ToolUseBlock],
+    ) -> None:
+        """
+        Answer every tool call of a round the turn stopped in: finished ones
+        with their results, the running one as possibly done, the rest as not
+        run. Called from a finally block, so a failed write is logged rather
+        than raised over the exception that stopped the turn; a write that is
+        cancelled itself is repaired by the next send().
+        """
+        answered = {r.tool_use_id for r in results}
+        if running is not None:
+            answered.add(running.id)
+        blocks = (
+            *results,
+            *_unrun([running] if running else [], _INTERRUPTED_RUNNING, "Interrupted"),
+            *_unrun([t for t in tool_uses if t.id not in answered], _NOT_RUN_INTERRUPTED),
+        )
+        try:
+            await self._append(conversation, history, ChatRole.USER, blocks)
+        except Exception:  # noqa: BLE001 - e.g. the try path's write did commit (same seq)
+            logger.warning(
+                "Could not store the interrupted tool round of conversation %s",
+                conversation.id,
+                exc_info=True,
+            )
+
+    async def _answer_dangling_tool_calls(
+        self, conversation: Conversation, history: list[ChatMessage]
+    ) -> None:
+        """
+        Answer tool calls a previous turn left unanswered (its process was
+        killed, or its interrupted-round write was lost), so the history sent
+        to the model stays valid.
+        """
+        if not history or history[-1].role is not ChatRole.ASSISTANT:
+            return
+        dangling = [b for b in history[-1].blocks if isinstance(b, ToolUseBlock)]
+        if not dangling:
+            return
+        logger.warning(
+            "Conversation %s ended on %d unanswered tool calls; answering them as interrupted",
+            conversation.id,
+            len(dangling),
+        )
+        await self._append(
+            conversation,
+            history,
+            ChatRole.USER,
+            _unrun(dangling, _UNANSWERED, "Interrupted"),
+        )
+
     async def _touch(self, conversation: Conversation) -> None:
         conversation.updated_at = _now()
         await self._repository.save_conversation(conversation)
@@ -413,13 +479,15 @@ class ChatService:
             )
 
 
-def _unrun(tool_uses: list[ToolUseBlock], reason: str) -> tuple[ContentBlock, ...]:
+def _unrun(
+    tool_uses: list[ToolUseBlock], reason: str, summary: str = "Not run"
+) -> tuple[ToolResultBlock, ...]:
     return tuple(
         ToolResultBlock(
             tool_use_id=t.id,
             content=json.dumps({"error": reason}),
             is_error=True,
-            summary="Not run",
+            summary=summary,
         )
         for t in tool_uses
     )

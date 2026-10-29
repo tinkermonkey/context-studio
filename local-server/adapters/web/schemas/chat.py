@@ -214,7 +214,12 @@ class ToolStartEvent(BaseModel):
 
 
 class ToolEndEvent(BaseModel):
-    """A tool finished; `entities` are the ids answers may link to."""
+    """
+    A tool finished; `entities` are the ids answers may link to.
+
+    Sent after every tool call of the round has run and its results are stored,
+    so a round's tool_end events follow all its tool_start events.
+    """
 
     type: Literal["tool_end"] = "tool_end"
     tool_use_id: str
