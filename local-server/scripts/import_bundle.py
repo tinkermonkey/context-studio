@@ -115,9 +115,7 @@ def print_result(result: BundleImportResult) -> None:
     else:
         label = "Dry run (not stored)" if result.dry_run else f"Proposal {proposal.id}"
         print(f"{label}: {proposal.title}")
-        outcomes = Counter(
-            f"{o.status.value} ({o.scope.value})" for o in proposal.operations
-        )
+        outcomes = Counter(f"{o.status.value} ({o.scope.value})" for o in proposal.operations)
         for key, count in sorted(outcomes.items()):
             print(f"  {count:5d}  {key}")
 
@@ -153,7 +151,7 @@ def main() -> int:
     print(f"Importing bundle {args.bundle} into {settings.database.local_db_path} ...")
     try:
         result = importer.import_bundle(
-            bundle, apply=args.apply, dry_run=args.dry_run, source_detail=args.bundle.name
+            bundle, apply=args.apply, dry_run=args.dry_run, file_name=args.bundle.name
         )
     except ProposalValidationError as exc:
         print(f"Not proposed; {len(exc.errors)} operations are invalid:", file=sys.stderr)

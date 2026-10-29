@@ -14747,8 +14747,8 @@ export interface operations {
         apply?: boolean;
         /** @description Plan and validate only; store nothing */
         dry_run?: boolean;
-        /** @description Where the bundle came from (a file name) */
-        source_detail?: string | null;
+        /** @description The file the bundle came from, for the rationale */
+        file_name?: string | null;
       };
       header?: never;
       path?: never;
@@ -14770,6 +14770,13 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["BundleImportResponse"];
         };
+      };
+      /** @description The workspace changed while importing; import again */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description The bundle is malformed, conflicts with the workspace, or its plan does not validate; nothing is stored */
       422: {

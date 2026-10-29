@@ -12,8 +12,11 @@ A bundle whose taxonomy does not exist yet has it created first, directly (a
 proposal is about an existing taxonomy); reverting the proposal leaves that
 empty taxonomy in place.
 
-A new import supersedes the open bundle proposals on the same taxonomy: their
-undecided operations are rejected, since the new plan repeats whatever still applies.
+A new import supersedes the taxonomy's open proposals from earlier imports of
+the same bundle source (their source_detail is "bundle:<source>"): their
+undecided operations are rejected, since the new plan repeats whatever still
+applies. An import whose plan is empty supersedes them too, as applying them
+would undo what the bundle now says.
 """
 
 from __future__ import annotations
@@ -23,7 +26,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from domain.interchange.bundle import BundlePlan, plan_bundle
-from domain.versioning.exceptions import ProposalValidationError
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
@@ -37,6 +39,7 @@ if TYPE_CHECKING:
     from domain.versioning.proposal_service import ProposalService
 
 SUPERSEDED_REASON = "superseded by bundle proposal {}"
+_PAGE = 200
 
 
 @dataclass
@@ -79,7 +82,7 @@ class BundleImportService:
         bundle: dict[str, Any],
         apply: bool = False,
         dry_run: bool = False,
-        source_detail: str | None = None,
+        file_name: str | None = None,
     ) -> BundleImportResult:
         """
         Plan a bundle and propose the plan.
@@ -88,7 +91,7 @@ class BundleImportService:
             bundle: The bundle dict
             apply: Also apply every non-breaking operation the policy did not
             dry_run: Plan and validate only; store and change nothing
-            source_detail: Where the bundle came from (a file name), kept on the proposal
+            file_name: The file the bundle came from, named in the proposal's rationale
 
         Returns:
             The plan and the proposal (None when there is nothing to propose)
@@ -102,7 +105,7 @@ class BundleImportService:
             if dry_run:
                 proposal = None
                 if plan.taxonomy_id is not None and plan.operations:
-                    proposal = self._propose(plan, source_detail, dry_run=True)
+                    proposal = self._propose(plan, file_name, dry_run=True)
                 return BundleImportResult(plan, proposal, True, plan.taxonomy_id is None)
 
             created_taxonomy_id = None
@@ -114,53 +117,75 @@ class BundleImportService:
                     identifier=spec["identifier"],
                     vision=spec.get("vision"),
                 ).id
-                plan = plan_bundle(self._repo, bundle)
-            taxonomy_created = created_taxonomy_id is not None
-            if not plan.operations:
-                return BundleImportResult(plan, None, False, taxonomy_created)
             try:
-                proposal = self._propose(plan, source_detail)
-            except ProposalValidationError:
+                if created_taxonomy_id is not None:
+                    plan = plan_bundle(self._repo, bundle)
+                proposal = self._propose(plan, file_name) if plan.operations else None
+            except Exception:
+                # Whatever went wrong, a first import leaves no empty taxonomy behind.
                 if created_taxonomy_id is not None:
                     self._ontology.delete_taxonomy(created_taxonomy_id)
                 raise
-            self._supersede(proposal)
-            if apply:
+            # Even an empty plan supersedes: older proposals would undo the bundle.
+            self._supersede(plan, proposal)
+            if proposal is not None and apply:
                 chosen = [o.id for o in proposal.pending if o.scope is not ChangeScope.BREAKING]
                 if chosen:
                     proposal = self._proposals.apply(proposal.id, chosen)
-            return BundleImportResult(plan, proposal, False, taxonomy_created)
+            return BundleImportResult(plan, proposal, False, created_taxonomy_id is not None)
 
     def _propose(
-        self, plan: BundlePlan, source_detail: str | None, dry_run: bool = False
+        self, plan: BundlePlan, file_name: str | None, dry_run: bool = False
     ) -> ChangeProposal:
         counts = ", ".join(
             f"{kind}: {c.created} created, {c.updated} updated, {c.deleted} deleted"
             for kind, c in plan.counts.items()
             if c.created or c.updated or c.deleted
         )
+        origin = f" from {file_name}" if file_name else ""
         return self._proposals.propose(
             plan.taxonomy_id,  # type: ignore[arg-type]
             f"Import bundle {plan.source}: {plan.taxonomy['title']}",
             plan.operations,
             ProposalSource.BUNDLE,
-            rationale=f"Make the workspace match the {plan.source!r} bundle ({counts}).",
-            source_detail=source_detail,
+            rationale=f"Make the workspace match the {plan.source!r} bundle{origin} ({counts}).",
+            source_detail=bundle_source_detail(plan.source),
             dry_run=dry_run,
         )
 
-    def _supersede(self, proposal: ChangeProposal) -> None:
-        """Reject what is undecided in the taxonomy's other open bundle proposals."""
-        older = self._proposals.list_proposals(
-            taxonomy_id=proposal.taxonomy_id,
-            status=ProposalStatus.OPEN,
-            source=ProposalSource.BUNDLE,
-            limit=500,
+    def _supersede(self, plan: BundlePlan, proposal: ChangeProposal | None) -> None:
+        """
+        Reject what is undecided in the taxonomy's open proposals from earlier
+        imports of the same bundle source (other bundle-source proposals are left).
+        """
+        detail = bundle_source_detail(plan.source)
+        offset = 0
+        older: list[ChangeProposal] = []
+        while True:
+            page = self._proposals.list_proposals(
+                taxonomy_id=plan.taxonomy_id,
+                status=ProposalStatus.OPEN,
+                source=ProposalSource.BUNDLE,
+                limit=_PAGE,
+                offset=offset,
+            )
+            older += page
+            if len(page) < _PAGE:
+                break
+            offset += _PAGE
+        reason = (
+            SUPERSEDED_REASON.format(proposal.id)
+            if proposal is not None
+            else f"superseded: the {plan.source!r} bundle now matches the workspace"
         )
         for other in older:
-            if other.id != proposal.id and other.pending:
-                self._proposals.reject(
-                    other.id,
-                    [o.id for o in other.pending],
-                    note=SUPERSEDED_REASON.format(proposal.id),
-                )
+            if other.source_detail != detail or not other.pending:
+                continue
+            if proposal is not None and other.id == proposal.id:
+                continue
+            self._proposals.reject(other.id, [o.id for o in other.pending], note=reason)
+
+
+def bundle_source_detail(source: str) -> str:
+    """The source_detail an import of a bundle from this source records on its proposal."""
+    return f"bundle:{source}"

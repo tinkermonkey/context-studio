@@ -18,6 +18,7 @@ import copy
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from sqlalchemy.exc import IntegrityError
 
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.models import ChangeEvent
@@ -77,7 +78,7 @@ def _kit(repo):
 def test_house_with_kits_imports_as_one_proposal_and_round_trips(importer, repo, session_factory):
     house = house_with_kits()
 
-    result = importer.import_bundle(house, apply=True, source_detail="house.bundle.json")
+    result = importer.import_bundle(house, apply=True, file_name="house.bundle.json")
 
     proposal = result.proposal
     assert result.taxonomy_created
@@ -184,14 +185,15 @@ def test_route_dry_run_then_apply_then_nothing_to_do(client, repo):
 
     applied = client.post(
         "/api/v1/interchange/bundles",
-        params={"apply": True, "source_detail": "house.bundle.json"},
+        params={"apply": True, "file_name": "house.bundle.json"},
         json=house,
     )
     assert applied.status_code == 200, applied.text
     body = applied.json()
     assert body["proposal"]["status"] == "done"
     assert body["proposal"]["source"] == "bundle"
-    assert body["proposal"]["source_detail"] == "house.bundle.json"
+    assert body["proposal"]["source_detail"] == "bundle:house"
+    assert "from house.bundle.json" in body["proposal"]["rationale"]
     assert body["counts"]["relationship"]["created"] == len(house["relationships"])
 
     again = client.post("/api/v1/interchange/bundles", params={"apply": True}, json=house)
@@ -217,3 +219,17 @@ def test_changes_are_recorded_against_the_proposal(importer, session_factory):
     )
     kinds = {e.entity_type for e in changes.events}
     assert {"concept_scheme", "class", "property_definition", "individual", "relationship"} <= kinds
+
+
+def test_route_maps_a_concurrent_write_to_409(client, importer, monkeypatch):
+    """F7: another import creating the same taxonomy meanwhile is a conflict, not a 500."""
+
+    def collide(*args, **kwargs):
+        raise IntegrityError("INSERT INTO ontology_entities", {}, Exception("UNIQUE constraint"))
+
+    monkeypatch.setattr(importer, "import_bundle", collide)
+
+    response = client.post("/api/v1/interchange/bundles", json=house_with_kits())
+
+    assert response.status_code == 409
+    assert "import again" in response.json()["detail"]

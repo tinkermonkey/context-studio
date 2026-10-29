@@ -481,6 +481,23 @@ def test_moving_a_class_with_subclasses_to_another_scheme_is_refused(importer, s
     assert repo.get_by_identifier("house_spaces") is None
 
 
+def test_a_link_from_vacuuming_to_a_user_individual_survives_a_replan(importer, service, repo):
+    """Only links between the source's individuals are the bundle's to drop (F2)."""
+    load_bundle(importer, _bundle())
+    activity = repo.get_by_identifier("house_activity")
+    vacuuming = next(
+        i for i in repo.list_individuals(class_id=activity.id, limit=None) if i.title == "Vacuuming"
+    )
+    sweeping = service.create_individual(activity.id, "Sweeping")
+    is_a = repo.get_property_definition_by_identifier("house_activity_is_a_activity")
+    link = service.create_relationship(vacuuming.id, sweeping.id, is_a.id)
+
+    summary = load_bundle(importer, _bundle())
+
+    assert summary.operations == [] and summary.deletes == []
+    assert repo.get_relationship(link.id) is not None
+
+
 def test_dropped_relationships_and_attributes_are_reported(importer, service, repo):
     load_bundle(importer, _bundle())
     smaller = _bundle(relationships=[])

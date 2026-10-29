@@ -608,8 +608,11 @@ class _Planner:
         predicates = {prop_id: identifier for identifier, prop_id in property_ids.items()}
         for individual_id in titles:
             for rel in self._repo.list_relationships(source_id=individual_id, limit=None):
+                # Both ends the source's: a link to an individual made in Context
+                # Studio is not the bundle's to drop.
                 if (
-                    rel.property_definition_id in predicates
+                    rel.target_id in titles
+                    and rel.property_definition_id in predicates
                     and (rel.source_id, rel.property_definition_id, rel.target_id)
                     not in self._bundle_triples
                 ):
@@ -618,7 +621,7 @@ class _Planner:
                         rel,
                         f"Relationship {titles[rel.source_id]!r}"
                         f" {predicates[rel.property_definition_id]}"
-                        f" {titles.get(rel.target_id, rel.target_id)!r}",
+                        f" {titles[rel.target_id]!r}",
                         "relationship",
                     )
         stale_properties = [

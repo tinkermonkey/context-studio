@@ -7918,7 +7918,7 @@
             "description": "Plan and validate only; store nothing"
           },
           {
-            "name": "source_detail",
+            "name": "file_name",
             "in": "query",
             "required": false,
             "schema": {
@@ -7931,10 +7931,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Where the bundle came from (a file name)",
-              "title": "Source Detail"
+              "description": "The file the bundle came from, for the rationale",
+              "title": "File Name"
             },
-            "description": "Where the bundle came from (a file name)"
+            "description": "The file the bundle came from, for the rationale"
           }
         ],
         "requestBody": {
@@ -7960,6 +7960,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "The workspace changed while importing; import again"
           },
           "422": {
             "description": "The bundle is malformed, conflicts with the workspace, or its plan does not validate; nothing is stored"

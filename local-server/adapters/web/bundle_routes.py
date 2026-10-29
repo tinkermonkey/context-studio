@@ -11,13 +11,18 @@ anything. A bundle that matches the workspace proposes nothing.
 from typing import Any
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from sqlalchemy.exc import IntegrityError
 
 from adapters.web.dependencies import get_bundle_import_service, get_proposal_service
 from adapters.web.proposals_routes import _http_error
 from adapters.web.schemas.bundles import BundleImportResponse, BundleKindCounts
 from adapters.web.schemas.proposals import ChangeProposalResponse
 from domain.interchange.bundle import BundleError
-from domain.ontology.exceptions import OntologyError
+from domain.ontology.exceptions import (
+    DuplicateEntityError,
+    IdentifierConflictError,
+    OntologyError,
+)
 from domain.versioning.bundle_import import BundleImportResult, BundleImportService
 from domain.versioning.proposal_service import ProposalService
 from utils.async_executor import run_sync_in_executor
@@ -52,20 +57,21 @@ def _response(service: ProposalService, result: BundleImportResult) -> BundleImp
     "/bundles",
     response_model=BundleImportResponse,
     responses={
+        409: {"description": "The workspace changed while importing; import again"},
         422: {
             "description": (
                 "The bundle is malformed, conflicts with the workspace, or its plan"
                 " does not validate; nothing is stored"
             )
-        }
+        },
     },
 )
 async def import_bundle(
     bundle: dict[str, Any] = Body(..., description="A context-studio-bundle v0 document"),
     apply: bool = Query(False, description="Also apply every non-breaking operation"),
     dry_run: bool = Query(False, description="Plan and validate only; store nothing"),
-    source_detail: str | None = Query(
-        None, max_length=255, description="Where the bundle came from (a file name)"
+    file_name: str | None = Query(
+        None, max_length=255, description="The file the bundle came from, for the rationale"
     ),
     importer: BundleImportService = Depends(get_bundle_import_service),
     proposals: ProposalService = Depends(get_proposal_service),
@@ -77,9 +83,15 @@ async def import_bundle(
             bundle,
             apply=apply,
             dry_run=dry_run,
-            source_detail=source_detail,
+            file_name=file_name,
         )
         return await run_sync_in_executor(_response, proposals, result)
+    except (IntegrityError, IdentifierConflictError, DuplicateEntityError) as exc:
+        # Another import (or edit) wrote the same entity meanwhile: retry the import.
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"The workspace changed while importing; import again. ({exc})",
+        ) from exc
     except (BundleError, OntologyError, ValueError) as exc:
         # The bundle is malformed or conflicts with the workspace (a taxonomy title, say).
         raise HTTPException(

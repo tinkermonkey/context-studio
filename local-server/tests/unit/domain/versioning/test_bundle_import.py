@@ -13,7 +13,7 @@ from domain.ontology.services import OntologyService
 from domain.versioning.approval_policy import ApprovalPolicy
 from domain.versioning.bundle_import import BundleImportService
 from domain.versioning.exceptions import ProposalValidationError
-from domain.versioning.proposal_service import ProposalService
+from domain.versioning.proposal_service import OperationDraft, ProposalService
 from domain.versioning.proposals import (
     ChangeScope,
     OperationKind,
@@ -202,6 +202,27 @@ class TestPlan:
         update = next(o for o in plan.operations if o.kind is K.INDIVIDUAL and o.op is T.UPDATE)
         assert update.fields["class_ids"] == [repo.get_by_identifier("house_place").id]
 
+    def test_a_link_to_an_individual_made_here_is_not_planned_as_a_delete(
+        self, importer, ontology, repo
+    ):
+        """F2: only relationships between the source's own individuals are the bundle's to drop."""
+        loaded(importer)
+        resource = repo.get_by_identifier("house_resource").id
+        hang = next(
+            i
+            for i in repo.list_individuals(
+                class_id=repo.get_by_identifier("house_activity").id, limit=None
+            )
+            if i.title == "Hang a picture"
+        )
+        drill = ontology.create_individual(resource, "Cordless drill")
+        requires = repo.get_property_definition_by_identifier("house_requires").id
+        ontology.create_relationship(hang.id, drill.id, requires)
+
+        plan = plan_bundle(repo, bundle())
+
+        assert plan.operations == [] and plan.deletes == []
+
     def test_unknown_edge_attributes_are_refused(self, repo):
         bad = bundle()
         bad["relationships"][1]["attributes"] = {"brand": "Acme"}
@@ -214,13 +235,14 @@ class TestPlan:
 
 class TestImport:
     def test_first_import_creates_the_taxonomy_and_proposes_the_rest(self, importer, repo):
-        result = importer.import_bundle(bundle(), source_detail="house.bundle.json")
+        result = importer.import_bundle(bundle(), file_name="house.bundle.json")
 
         assert result.taxonomy_created and not result.dry_run
         proposal = result.proposal
         assert proposal.taxonomy_id == repo.get_by_identifier("house").id
         assert proposal.source is ProposalSource.BUNDLE
-        assert proposal.source_detail == "house.bundle.json"
+        assert proposal.source_detail == "bundle:house"
+        assert "from house.bundle.json" in proposal.rationale
         assert {o.status for o in proposal.operations} == {OperationStatus.PENDING}
         assert repo.get_by_identifier("house_kinds") is None  # nothing applied without a policy
 
@@ -257,6 +279,34 @@ class TestImport:
         assert result.proposal.status is ProposalStatus.OPEN
         assert repo.get_individual(delete.target_id) is not None
 
+    def test_a_new_edge_property_and_its_attributes_apply_together(self, importer, repo):
+        """F5: a property gaining edge_properties is additive, so apply=true applies it and
+        the attributes that need it."""
+        plain = bundle()
+        plain["properties"][0]["constraints"] = {"max": None}
+        plain["relationships"] = [
+            {key: value for key, value in rel.items() if key != "attributes"}
+            for rel in plain["relationships"]
+        ]
+        importer.import_bundle(plain, apply=True)
+        kits = bundle()
+        kits["properties"][0]["constraints"] = {
+            "max": None,
+            "edge_properties": ["quantity", "unit"],
+        }
+
+        result = importer.import_bundle(kits, apply=True)
+
+        ops = {(o.op, o.kind): o for o in result.proposal.operations}
+        assert ops[(T.UPDATE, K.PROPERTY)].scope is ChangeScope.ADDITIVE
+        assert ops[(T.UPDATE, K.RELATIONSHIP)].scope is ChangeScope.ADDITIVE
+        assert {o.status for o in result.proposal.operations} == {OperationStatus.APPLIED}
+        hooks = repo.list_relationships(
+            property_id=repo.get_property_definition_by_identifier("house_requires").id,
+            limit=None,
+        )
+        assert {"quantity": 2, "unit": "each"} in [r.attributes for r in hooks]
+
     def test_dry_run_stores_nothing(self, importer, proposals, repo):
         first = importer.import_bundle(bundle(), dry_run=True)
         assert first.dry_run and first.taxonomy_created and first.proposal is None
@@ -292,16 +342,66 @@ class TestImport:
         assert old.operations[0].reason == f"superseded by bundle proposal {second.id}"
         assert proposals.get(second.id).status is ProposalStatus.OPEN
 
-    def test_an_invalid_plan_on_a_new_taxonomy_removes_the_taxonomy(
-        self, importer, proposals, repo, monkeypatch
+    @pytest.mark.parametrize(
+        "error", [ProposalValidationError([]), RuntimeError("disk full")], ids=["invalid", "other"]
+    )
+    def test_a_failed_first_import_removes_the_taxonomy(
+        self, importer, proposals, repo, monkeypatch, error
     ):
         def refuse(*args, **kwargs):
-            raise ProposalValidationError([])
+            raise error
 
         monkeypatch.setattr(proposals, "propose", refuse)
-        with pytest.raises(ProposalValidationError):
+        with pytest.raises(type(error)):
             importer.import_bundle(bundle())
         assert repo.get_by_identifier("house") is None
+
+    def test_an_empty_plan_supersedes_older_proposals_of_the_bundle(
+        self, importer, proposals, repo
+    ):
+        """F1: once the bundle matches again, an older pending delete must not stay applicable."""
+        loaded(importer)
+        smaller = bundle()
+        smaller["individuals"] = smaller["individuals"][:2]
+        smaller["relationships"] = smaller["relationships"][:1]
+        older = importer.import_bundle(smaller).proposal
+        assert any(o.op is T.DELETE for o in older.pending)
+        # The full bundle again: the workspace still has the individual, so it matches.
+        result = importer.import_bundle(bundle())
+
+        assert result.proposal is None
+        old = proposals.get(older.id)
+        assert {o.status for o in old.operations} == {OperationStatus.REJECTED}
+        assert old.operations[0].reason.startswith("superseded")
+
+    def test_only_imports_of_the_same_bundle_source_are_superseded(self, importer, proposals, repo):
+        """F4: a hand-made source=bundle proposal, or another source's import, is left open."""
+        loaded(importer)
+        taxonomy_id = repo.get_by_identifier("house").id
+        activity = repo.get_by_identifier("house_activity").id
+
+        def hand_made(detail):
+            return proposals.propose(
+                taxonomy_id,
+                "By hand",
+                [
+                    OperationDraft(
+                        1, T.CREATE, K.INDIVIDUAL, fields={"class_ids": [activity], "title": "X"}
+                    )
+                ],
+                ProposalSource.BUNDLE,
+                source_detail=detail,
+            )
+
+        by_hand = hand_made(None)
+        other_source = hand_made("bundle:garden")
+        changed = bundle()
+        changed["individuals"][0]["title"] = "Hang a frame"
+
+        importer.import_bundle(changed)
+
+        for proposal in (by_hand, other_source):
+            assert proposals.get(proposal.id).status is ProposalStatus.OPEN
 
     def test_the_policy_auto_applies_what_it_allows(self, ontology, repo, importer, proposals):
         loaded(importer)
