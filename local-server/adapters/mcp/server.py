@@ -3,7 +3,8 @@ MCP server for Context Studio.
 
 Serves the same read-only tools as the in-app chat, so an MCP client such as
 Claude Code can do everything the chat can. Each taxonomy's vision statement is
-also offered as a markdown resource. The server runs over streamable HTTP,
+also offered as a markdown resource, and each taxonomy as a JSON bundle
+resource (too large for a tool result). The server runs over streamable HTTP,
 mounted at /mcp on the running app, and only on a loopback host. Every request
 must carry the configured bearer token.
 """
@@ -12,6 +13,7 @@ from __future__ import annotations
 
 import hmac
 import ipaddress
+import json
 import logging
 import re
 from contextlib import AsyncExitStack
@@ -31,6 +33,7 @@ from starlette.types import Receive, Scope, Send
 from adapters.mcp.links import EntityLinks
 from config import ConfigurationManager
 from domain.chat.ports import ChatTool
+from domain.interchange.bundle import BundleError, BundleExporter
 from domain.ontology.entities import Taxonomy
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.services import OntologyService
@@ -40,7 +43,10 @@ _logger = logging.getLogger(__name__)
 
 SERVER_NAME = "context-studio"
 VISION_URI = "contextstudio://taxonomies/{id}/vision"
-_VISION_URI_PATTERN = re.compile(r"^contextstudio://taxonomies/(?P<id>[^/]+)/vision$")
+BUNDLE_URI = "contextstudio://taxonomies/{id}/bundle"
+_TAXONOMY_URI_PATTERN = re.compile(
+    r"^contextstudio://taxonomies/(?P<id>[^/]+)/(?P<kind>vision|bundle)$"
+)
 
 INSTRUCTIONS = (
     "Context Studio holds ontologies: taxonomies, their concept schemes, classes,"
@@ -50,7 +56,8 @@ INSTRUCTIONS = (
     " details. A taxonomy's description is its one-paragraph summary; its full"
     " vision statement (what it is for, what its classes and relationships model,"
     " how changes are judged) is in get_entity and in the taxonomy's vision"
-    " resource. Read the vision before proposing changes to a taxonomy. All tools"
+    " resource. Read the vision before proposing changes to a taxonomy. A"
+    " taxonomy's full contents are its bundle resource (JSON). All tools"
     " are read-only. Results include links to the entity pages in the app."
 )
 
@@ -59,6 +66,7 @@ def build_mcp_server(
     tools: Sequence[ChatTool],
     ontology: OntologyService,
     links: EntityLinks,
+    bundles: BundleExporter,
 ) -> Server:
     """
     Build the MCP server over the given tools.
@@ -67,6 +75,7 @@ def build_mcp_server(
         tools: The chat's tools; each is listed with its spec verbatim
         ontology: Ontology service, for the taxonomy vision resources
         links: Builds entity page links appended to tool results
+        bundles: Exports the taxonomy bundle resources
     """
     server: Server = Server(SERVER_NAME, instructions=INSTRUCTIONS)
     by_name = {tool.spec.name: tool for tool in tools}
@@ -101,15 +110,24 @@ def build_mcp_server(
         taxonomies = await run_sync_in_executor(
             lambda: ontology.list_taxonomies(limit=None, sort_by="title")
         )
-        return [_vision_resource(t) for t in taxonomies if t.vision]
+        return [_vision_resource(t) for t in taxonomies if t.vision] + [
+            _bundle_resource(t) for t in taxonomies
+        ]
 
     @server.read_resource()
     async def read_resource(uri: AnyUrl) -> Iterable[ReadResourceContents]:
-        taxonomy_id = _taxonomy_id_from_uri(str(uri))
+        taxonomy_id, kind = _parse_taxonomy_uri(str(uri))
         try:
             taxonomy = await run_sync_in_executor(ontology.get_taxonomy, taxonomy_id)
         except EntityNotFoundError:
             raise ValueError(f"No taxonomy with id {taxonomy_id!r}") from None
+        if kind == "bundle":
+            try:
+                bundle = await run_sync_in_executor(bundles.export, taxonomy_id)
+            except BundleError as exc:
+                raise ValueError(str(exc)) from None
+            text = json.dumps(bundle, indent=2, ensure_ascii=False) + "\n"
+            return [ReadResourceContents(content=text, mime_type="application/json")]
         if not taxonomy.vision:
             raise ValueError(f"Taxonomy {taxonomy.title!r} has no vision statement")
         return [ReadResourceContents(content=taxonomy.vision, mime_type="text/markdown")]
@@ -132,11 +150,21 @@ def _vision_resource(taxonomy: Taxonomy) -> types.Resource:
     )
 
 
-def _taxonomy_id_from_uri(uri: str) -> str:
-    match = _VISION_URI_PATTERN.match(uri)
+def _bundle_resource(taxonomy: Taxonomy) -> types.Resource:
+    return types.Resource(
+        uri=AnyUrl(BUNDLE_URI.format(id=taxonomy.id)),
+        name=f"{taxonomy.title} bundle",
+        description=f"The {taxonomy.title} taxonomy as a Context Studio bundle",
+        mimeType="application/json",
+    )
+
+
+def _parse_taxonomy_uri(uri: str) -> tuple[str, str]:
+    """Split a taxonomy resource URI into the taxonomy id and the resource kind."""
+    match = _TAXONOMY_URI_PATTERN.match(uri)
     if match is None:
         raise ValueError(f"Unknown resource: {uri}")
-    return match.group("id")
+    return match.group("id"), match.group("kind")
 
 
 def is_loopback_host(host: str) -> bool:
@@ -238,6 +266,7 @@ async def start_mcp_server(
     config_manager: ConfigurationManager,
     tools: Sequence[ChatTool],
     ontology: OntologyService,
+    bundles: BundleExporter,
 ) -> McpConnection:
     """
     Start the MCP server for the app lifespan and attach it to /mcp.
@@ -248,7 +277,7 @@ async def start_mcp_server(
     the settings endpoint.
     """
     settings = config_manager.get_settings()
-    server = build_mcp_server(tools, ontology, EntityLinks(settings.server.ui_base_url))
+    server = build_mcp_server(tools, ontology, EntityLinks(settings.server.ui_base_url), bundles)
     session_manager = build_session_manager(server, loopback_security())
     await stack.enter_async_context(session_manager.run())
     auth_token = config_manager.ensure_mcp_auth_token()

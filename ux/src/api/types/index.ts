@@ -3792,6 +3792,33 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/interchange/bundles/{taxonomy_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Bundle
+     * @description Export one taxonomy as a Context Studio bundle (v0).
+     *
+     *     Loading the returned bundle back into this workspace changes nothing.
+     *     See domain/interchange/bundle.py for the format.
+     *
+     *     Raises:
+     *         HTTPException: 404 if the taxonomy does not exist; 409 if the workspace
+     *             cannot be expressed as a bundle (an entity has no stored identifier)
+     */
+    get: operations["export_bundle_api_v1_interchange_bundles__taxonomy_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/interchange/import": {
     parameters: {
       query?: never;
@@ -13895,6 +13922,56 @@ export interface operations {
     responses: {
       /** @description Successful Response */
       200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_bundle_api_v1_interchange_bundles__taxonomy_id__get: {
+    parameters: {
+      query?: {
+        /** @description Bundle source; defaults to the taxonomy's identifier */
+        source?: string | null;
+      };
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Taxonomy not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The taxonomy, a scheme or a class has no stored identifier */
+      409: {
         headers: {
           [name: string]: unknown;
         };

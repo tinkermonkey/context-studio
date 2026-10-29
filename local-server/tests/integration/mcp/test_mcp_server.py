@@ -1,7 +1,7 @@
 """
 Integration tests for the MCP server (#1337): JSON-RPC over streamable HTTP to the
-/mcp endpoint, serving the chat's real read-only tools over a DR-shaped
-workspace in SQLite.
+/mcp endpoint, serving the chat's real read-only tools and the taxonomy vision
+and bundle (#1363) resources over a DR-shaped workspace in SQLite.
 """
 
 import json
@@ -22,7 +22,15 @@ from adapters.mcp.server import (
     start_mcp_server,
 )
 from config import ConfigurationManager
-from tests.integration.chat.conftest import DR_VISION, OPERATION_ID, TAXONOMY_ID
+from domain.interchange.bundle import BundleExporter
+from tests.integration.chat.conftest import (
+    ADMIN_HEALTH_ID,
+    API_SCHEME_ID,
+    DR_VISION,
+    HEALTH_MONITORING_ID,
+    OPERATION_ID,
+    TAXONOMY_ID,
+)
 
 TOKEN = "test-mcp-token"
 HEADERS = {
@@ -42,7 +50,9 @@ async def mcp_client(workspace):
     entered and exited in the same task, and async fixtures tear down in another.
     """
     tools = build_chat_tools(workspace.ontology, workspace.graph)
-    server = build_mcp_server(tools, workspace.ontology, EntityLinks(UI))
+    server = build_mcp_server(
+        tools, workspace.ontology, EntityLinks(UI), BundleExporter(workspace.repository)
+    )
     manager = build_session_manager(server, loopback_security())
     endpoint = McpEndpoint()
     app = Starlette(routes=[Route("/mcp", endpoint)])
@@ -153,13 +163,72 @@ async def test_taxonomy_vision_is_a_markdown_resource(dr_workspace):
     async with mcp_client(dr_workspace) as client:
         listed = await result_of(client, "resources/list")
         uri = f"contextstudio://taxonomies/{TAXONOMY_ID}/vision"
-        assert [r["uri"] for r in listed["resources"]] == [uri]
-        assert listed["resources"][0]["mimeType"] == "text/markdown"
+        by_uri = {r["uri"]: r for r in listed["resources"]}
+        assert by_uri[uri]["mimeType"] == "text/markdown"
 
         read = await result_of(client, "resources/read", {"uri": uri})
 
         assert read["contents"][0]["text"] == DR_VISION
         assert read["contents"][0]["mimeType"] == "text/markdown"
+
+
+async def test_taxonomy_bundle_is_a_json_resource(dr_workspace):
+    async with mcp_client(dr_workspace) as client:
+        listed = await result_of(client, "resources/list")
+        uri = f"contextstudio://taxonomies/{TAXONOMY_ID}/bundle"
+        assert [r["uri"] for r in listed["resources"]] == [
+            f"contextstudio://taxonomies/{TAXONOMY_ID}/vision",
+            uri,
+        ]
+        assert listed["resources"][1]["mimeType"] == "application/json"
+        assert listed["resources"][1]["name"] == "Documentation Robotics bundle"
+
+        read = await result_of(client, "resources/read", {"uri": uri})
+
+        assert read["contents"][0]["mimeType"] == "application/json"
+        bundle = json.loads(read["contents"][0]["text"])
+        assert bundle == BundleExporter(dr_workspace.repository).export(TAXONOMY_ID)
+        assert bundle["taxonomy"]["identifier"] == "dr_spec"
+        assert bundle["relationships"] == [
+            {
+                "source": ADMIN_HEALTH_ID,
+                "property": "operation_realizes_service",
+                "target": HEALTH_MONITORING_ID,
+            }
+        ]
+
+
+async def test_taxonomy_without_a_vision_still_lists_its_bundle(dr_workspace):
+    dr_workspace.ontology.update_taxonomy(TAXONOMY_ID, vision="")
+    async with mcp_client(dr_workspace) as client:
+        listed = await result_of(client, "resources/list")
+
+        assert [r["uri"] for r in listed["resources"]] == [
+            f"contextstudio://taxonomies/{TAXONOMY_ID}/bundle"
+        ]
+
+
+async def test_bundle_that_cannot_be_exported_is_an_error_with_the_reason(dr_workspace):
+    dr_workspace.ontology.create_class(concept_scheme_id=API_SCHEME_ID, title="Unkeyed")
+    async with mcp_client(dr_workspace) as client:
+        response = await rpc(
+            client,
+            "resources/read",
+            {"uri": f"contextstudio://taxonomies/{TAXONOMY_ID}/bundle"},
+        )
+
+        error = response.json()["error"]
+        assert "no stored identifier" in error["message"]
+        assert "Class 'Unkeyed'" in error["message"]
+
+
+async def test_bundle_of_an_unknown_taxonomy_is_an_error(dr_workspace):
+    async with mcp_client(dr_workspace) as client:
+        response = await rpc(
+            client, "resources/read", {"uri": "contextstudio://taxonomies/missing/bundle"}
+        )
+
+        assert "missing" in response.json()["error"]["message"]
 
 
 async def test_unknown_resource_is_an_error(dr_workspace):
@@ -219,14 +288,15 @@ async def test_request_with_a_non_bearer_scheme_is_refused(dr_workspace):
 
 async def test_resource_reads_need_the_token_too(dr_workspace):
     async with mcp_client(dr_workspace) as client:
-        response = await rpc(
-            client,
-            "resources/read",
-            {"uri": f"contextstudio://taxonomies/{TAXONOMY_ID}/vision"},
-            headers={"authorization": ""},
-        )
+        for kind in ("vision", "bundle"):
+            response = await rpc(
+                client,
+                "resources/read",
+                {"uri": f"contextstudio://taxonomies/{TAXONOMY_ID}/{kind}"},
+                headers={"authorization": ""},
+            )
 
-        assert response.status_code == 401
+            assert response.status_code == 401
 
 
 async def test_request_with_the_token_is_served(dr_workspace):
@@ -248,7 +318,13 @@ async def test_startup_generates_the_token_and_wires_endpoint_and_state(dr_works
 
     async with AsyncExitStack() as stack:
         connection = await start_mcp_server(
-            stack, endpoint, state, config_manager, tools, dr_workspace.ontology
+            stack,
+            endpoint,
+            state,
+            config_manager,
+            tools,
+            dr_workspace.ontology,
+            BundleExporter(dr_workspace.repository),
         )
 
         token = json.loads(config_file.read_text())["mcp"]["auth_token"]

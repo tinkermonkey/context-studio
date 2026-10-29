@@ -2824,6 +2824,9 @@ selectors:
   - selector: taxonomy-vision-save
     component: src/routes/app/schema/taxonomies_.$id.tsx
     description: Saves the edited taxonomy vision statement (markdown)
+  - selector: taxonomy-export-bundle
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: Exports the taxonomy and downloads it as <identifier>.bundle.json
   - selector: taxonomy-vision-cancel
     component: src/routes/app/schema/taxonomies_.$id.tsx
     description: Discards edits to the taxonomy vision statement (markdown)
