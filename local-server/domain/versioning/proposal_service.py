@@ -792,7 +792,9 @@ class ProposalService:
                 )
             if not isinstance(fields, dict) or not fields:
                 raise ValueError(f"{label}: an edit needs at least one field")
-            refs = sorted(name for name, value in fields.items() if _is_ref(value))
+            refs = sorted(
+                name for name, value in fields.items() if name in _ID_FIELDS and _is_ref(value)
+            )
             if refs:
                 raise ValueError(f"{label}: an edit can't point at a $ref ({refs})")
 

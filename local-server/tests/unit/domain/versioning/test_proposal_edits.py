@@ -279,6 +279,16 @@ def test_a_misplaced_edit_is_refused_and_nothing_applies(service, graph, ontolog
     assert ontology.get_property_definition(graph["near"]).title == "near"
 
 
+def test_text_starting_with_a_dollar_is_not_a_ref(service, graph, ontology):
+    proposal = propose(service, graph, draft(1, T.UPDATE, K.PROPERTY, graph["near"], title="x"))
+    op = proposal.operations[0]
+
+    result = service.apply(proposal.id, [op.id], edits={op.id: {"title": "$5 attic"}})
+
+    assert result.operations[0].status is OperationStatus.APPLIED, result.operations[0].reason
+    assert ontology.get_property_definition(graph["near"]).title == "$5 attic"
+
+
 # -------------------------------------------------------------------- rules
 
 
