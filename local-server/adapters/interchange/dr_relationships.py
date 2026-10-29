@@ -85,6 +85,7 @@ def assign_relationship_identifiers(
     records: Iterable[RelationshipSchemaRecord],
     repo: OntologyRepository,
     owners: dict[str, str | None],
+    only: Iterable[str] | None = None,
 ) -> dict[str, str]:
     """
     The identifier each relationship schema of a spec gets, as the loader assigns it.
@@ -100,16 +101,41 @@ def assign_relationship_identifiers(
         repo: The workspace
         owners: Each record's full id -> the property definition that holds it
             (None for a schema with none yet)
+        only: The full ids whose identifiers are wanted, if not all: only
+            their forms are looked up in the workspace (one or two queries
+            each, instead of one per record), and only they are returned
     """
+    records = list(records)
     own = {prop_id for prop_id in owners.values() if prop_id}
+    wanted = set(only) if only is not None else None
+    # Whether another record's form is taken can't change a wanted one's: forms
+    # that collide are hashed regardless, and hashed forms are unique.
+    forms = (
+        None
+        if wanted is None
+        else {
+            form
+            for record in records
+            if record.full_identifier in wanted
+            for form in (
+                _stripped_relationship_identifier(record),
+                _hashed_relationship_identifier(record),
+            )
+        }
+    )
 
     def taken(identifier: str) -> bool:
+        if forms is not None and identifier not in forms:
+            return False
         holder = repo.get_property_definition_by_identifier(identifier)
         if holder is not None:
             return holder.id not in own
         return repo.get_by_identifier(identifier) is not None
 
-    return compress_relationship_identifiers(records, taken)
+    identifiers = compress_relationship_identifiers(records, taken)
+    if wanted is None:
+        return identifiers
+    return {full_id: identifiers[full_id] for full_id in wanted}
 
 
 def compress_relationship_identifiers(
@@ -467,4 +493,4 @@ class DrRelationshipRules:
         owners.pop(current.id, None)
         owners[new.id] = target.id
         records = [Triple.parse(relationship_id).record() for relationship_id in owners]
-        return assign_relationship_identifiers(records, self._repo, owners)[new.id]
+        return assign_relationship_identifiers(records, self._repo, owners, only=[new.id])[new.id]
