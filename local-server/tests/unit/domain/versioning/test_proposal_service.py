@@ -656,6 +656,10 @@ class TestUnexpectedErrors:
             {"fields": {"color": 7}},
             {"probability": "0.9"},
             {"probability": True},
+            {"evidence": ["a quote"]},
+            {"evidence": [3]},
+            {"evidence": [{"quote": "q", "page": 4}]},
+            {"evidence": [{"quote": ["q"]}]},
         ],
     )
     def test_wrong_value_types_are_refused_at_propose(self, service, graph, changes):

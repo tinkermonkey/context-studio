@@ -525,6 +525,14 @@ class ProposalService:
                 raise ValueError("fields must be an object")
             if not isinstance(draft.evidence or [], list):
                 raise ValueError("evidence must be a list")
+            for item in draft.evidence or []:
+                if not isinstance(item, dict) or not all(
+                    isinstance(k, str) and isinstance(v, str) for k, v in item.items()
+                ):
+                    raise ValueError(
+                        'each evidence item must be an object of text values ("quote",'
+                        f' "url", "entity_id"), not {item!r}'
+                    )
             operation = ProposedOperation(
                 seq=draft.seq,
                 op=op,

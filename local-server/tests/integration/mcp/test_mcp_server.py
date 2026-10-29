@@ -553,6 +553,47 @@ async def test_invalid_proposal_through_mcp_lists_what_to_fix(dr_workspace, prop
     assert proposals.service.count_proposals() == 0
 
 
+def evidence_arguments(evidence):
+    return {
+        "taxonomy_id": TAXONOMY_ID,
+        "title": "Bad evidence",
+        "operations": [
+            {**update_operation(1, OPERATION_ID, description="A"), "evidence": evidence},
+            {
+                **update_operation(2, SERVICE_CLASS_ID, description="B"),
+                "evidence": [{"quote": "fine", "url": "https://example.com"}],
+            },
+        ],
+    }
+
+
+def assert_evidence_refused(payload, proposals):
+    assert payload["stored"] is False
+    (invalid,) = payload["operations"]
+    assert (invalid["seq"], invalid["code"]) == (1, "invalid")
+    assert "evidence" in invalid["message"]
+    assert payload["valid_seqs"] == [2]
+    assert proposals.service.count_proposals() == 0
+
+
+async def test_evidence_that_is_not_objects_of_text_is_invalid(dr_workspace, proposals):
+    """
+    Stored evidence must stay readable by GET /api/proposals (objects of text).
+    The MCP SDK checks the input schema (items are objects), so through MCP a
+    non-text value is what reaches the service; the chat has no schema check.
+    """
+    write_tools = build_proposal_tools(proposals.service, ProposalSource.MCP)
+    arguments = evidence_arguments([{"quote": "q", "page": 4}])
+    async with mcp_client(dr_workspace, write_tools) as client:
+        result = await result_of(client, "tools/call", call_params("propose_changes", arguments))
+    assert_evidence_refused(tool_payload(result)[0], proposals)
+
+    chat_tool = build_proposal_tools(proposals.service, ProposalSource.CHAT)[0]
+    outcome = await chat_tool.execute(evidence_arguments(["text", 3]))
+    assert outcome.is_error is False
+    assert_evidence_refused(json.loads(outcome.content), proposals)
+
+
 async def test_get_and_list_proposals_through_mcp(dr_workspace, proposals):
     write_tools = build_proposal_tools(proposals.service, ProposalSource.MCP)
     arguments = {
