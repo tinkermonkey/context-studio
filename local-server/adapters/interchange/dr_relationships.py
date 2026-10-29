@@ -26,6 +26,9 @@ from domain.versioning.proposals import ChangeProposal, OperationStatus, Propose
 
 DR_SOURCE = "documentation_robotics"
 DR_TAXONOMY_IDENTIFIER = "dr_spec"
+# The dr_spec taxonomy's DR reference; its metadata holds the spec's predicate
+# catalog ({"spec_version", "predicates": {id: {inverse, category, description}}}).
+DR_SPEC_REFERENCE = "spec"
 
 _IDENTIFIER_MAX_LENGTH = 64
 _TRUNCATED_LENGTH = 59
@@ -244,6 +247,21 @@ def dr_spec_classes(repo: OntologyRepository) -> dict[str, str]:
     }
 
 
+def dr_predicate_catalog(repo: OntologyRepository) -> dict[str, dict[str, Any]] | None:
+    """
+    The DR predicate catalog the last spec import stored on the dr_spec
+    taxonomy, by predicate id; None if no import stored one (an older import,
+    or a spec without dist/base.json).
+    """
+    taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    for ref in getattr(taxonomy, "external_references", None) or []:
+        if ref.source == DR_SOURCE and ref.identifier == DR_SPEC_REFERENCE and ref.metadata:
+            predicates = ref.metadata.get("predicates")
+            if isinstance(predicates, dict) and predicates:
+                return dict(predicates)
+    return None
+
+
 def swapped_dr_reference(
     target: PropertyDefinition, current: Triple, new: Triple
 ) -> list[dict[str, Any]]:
@@ -269,7 +287,8 @@ class DrEditRules:
     (the classes of DR's source and destination spec nodes), plus title or
     description. Fields the edit leaves out keep the target's current values.
     The edit is refused, with the reason, unless both classes are imported DR
-    spec classes, the predicate is one the imported spec uses, no other
+    spec classes, the predicate is in the spec's predicate catalog (stored on
+    the dr_spec taxonomy at import; see `dr_predicate_catalog`), no other
     relationship type has the triple, and no other operation of the proposal
     (pending, failed, or edited in the same apply) produces it. The applied
     fields always carry the whole triple: the predicate and both classes, the
@@ -292,14 +311,19 @@ class DrEditRules:
         if target is None:
             raise ValueError(f"No property definition {operation.target_id}")
         current = self._triple_of(target)
+        catalog = dr_predicate_catalog(self._repo)
+        if catalog is None:
+            raise ValueError(
+                "the DR spec was imported without its predicate catalog; re-import the "
+                "DR spec to load it"
+            )
         classes = dr_spec_classes(self._repo)
         spec_nodes = {class_id: node for node, class_id in classes.items()}
         properties = dr_property_definitions(self._repo)
         new = self._edited(fields, current, spec_nodes)
 
-        predicates = {p.canonical_predicate for p in properties.values() if p.canonical_predicate}
-        if new.predicate not in predicates:
-            raise ValueError(f"predicate '{new.predicate}' is not one the DR spec uses")
+        if new.predicate not in catalog:
+            raise ValueError(f"predicate '{new.predicate}' is not in the DR predicate catalog")
         holder = properties.get(new.id)
         if holder is not None and holder.id != target.id:
             raise ValueError(f"{new.id} already exists")

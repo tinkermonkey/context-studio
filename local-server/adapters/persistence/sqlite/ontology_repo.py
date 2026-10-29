@@ -307,6 +307,9 @@ class SQLiteOntologyRepository:
                     description=taxonomy.description,
                     vision=taxonomy.vision,
                     color=taxonomy.color,
+                    external_references=serialize_external_references(
+                        taxonomy.external_references
+                    ),
                     created_at=taxonomy.created_at or datetime.now(timezone.utc),
                     last_modified=datetime.now(timezone.utc),
                     version=1,
@@ -318,6 +321,8 @@ class SQLiteOntologyRepository:
                 orm_entity.description = taxonomy.description  # type: ignore[assignment]
                 orm_entity.vision = taxonomy.vision  # type: ignore[assignment]
                 orm_entity.color = taxonomy.color  # type: ignore[assignment]
+                refs = serialize_external_references(taxonomy.external_references)
+                orm_entity.external_references = refs  # type: ignore[assignment]
                 orm_entity.status = taxonomy.status.value  # type: ignore[assignment]
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]

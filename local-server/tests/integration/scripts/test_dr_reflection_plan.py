@@ -29,7 +29,11 @@ import pytest
 from sqlalchemy.orm import sessionmaker
 
 from adapters.events.in_process import InProcessEventPublisher
-from adapters.interchange.dr_relationships import DR_TAXONOMY_IDENTIFIER, DrEditRules
+from adapters.interchange.dr_relationships import (
+    DR_TAXONOMY_IDENTIFIER,
+    DrEditRules,
+    dr_predicate_catalog,
+)
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.connection import create_local_db_engine
 from adapters.persistence.sqlite.models import Base
@@ -59,6 +63,20 @@ DELIVERS = "api.operation.delivers.api.response"
 IN_USE = 3
 
 
+def spec_with_catalog(spec):
+    """
+    Copy the pinned spec to `spec` with its predicate catalog as dist/base.json.
+
+    The 0.8.4 snapshot predates dist/base.json; its catalog is the same set of
+    entries, in schemas/base/predicates.json, so the dist file is built from it.
+    """
+    shutil.copytree(pinned_dr_spec_dir(), spec)
+    catalog = json.loads((spec / "schemas" / "base" / "predicates.json").read_text())
+    base = {"specVersion": "0.8.4", "predicates": catalog["predicates"]}
+    (spec / "dist" / "base.json").write_text(json.dumps(base))
+    return spec
+
+
 @pytest.fixture(scope="module")
 def spec_db():
     """A database with the pinned DR spec imported, built once and copied per test."""
@@ -68,7 +86,7 @@ def spec_db():
         Base.metadata.create_all(engine)
         repo = SQLiteOntologyRepository(session_factory=sessionmaker(bind=engine))
         service = OntologyService(repo, FakeEmbeddingService(), InProcessEventPublisher())
-        import_dr_ontology(service, repo, pinned_dr_spec_dir())
+        import_dr_ontology(service, repo, spec_with_catalog(Path(tmpdir) / "spec"))
         engine.dispose()
         yield path
 
@@ -186,8 +204,7 @@ def apply_all(proposals, proposal):
 
 def spec_after(tmp_path, renames):
     """A copy of the pinned spec in which DR has applied these {old id: new id} renames."""
-    spec = tmp_path / "spec"
-    shutil.copytree(pinned_dr_spec_dir(), spec)
+    spec = spec_with_catalog(tmp_path / "spec")
     pending = dict(renames)
     for path in (spec / "schemas" / "relationships").glob("*/*.relationship.schema.json"):
         data = json.loads(path.read_text())
@@ -596,7 +613,7 @@ def test_an_edit_keeping_the_triple_carries_it_whole(parts):
     [
         (
             {"source": "api.response", "predicate": "frobnicates"},
-            "invalid_edit: predicate 'frobnicates' is not one the DR spec uses",
+            "invalid_edit: predicate 'frobnicates' is not in the DR predicate catalog",
         ),
         (
             {"source": "api.components", "predicate": "aggregates"},
@@ -620,6 +637,67 @@ def test_an_edit_the_dr_spec_refuses_fails_only_that_operation(parts, edit, reas
     assert by_seq[14].applied_fields is None
     assert snap(repo.get_property_definition(ops[14].target_id)) == before
     assert by_seq[13].status is OperationStatus.APPLIED
+
+
+def test_the_import_stores_the_predicate_catalog_on_the_taxonomy(parts):
+    _, repo, _ = parts
+    catalog = dr_predicate_catalog(repo)
+
+    assert len(catalog) == 70
+    assert catalog["owns"] == {
+        "inverse": "owned-by",
+        "category": "business",
+        "description": "Element has responsibility or authority over another element",
+    }
+    used = {p.canonical_predicate for p in repo.list_property_definitions(limit=None)}
+    assert "owns" not in used  # in the catalog, used by no relationship type
+
+
+def test_a_reimport_keeps_one_catalog(parts, tmp_path):
+    ontology, repo, _ = parts
+    import_dr_ontology(ontology, repo, spec_with_catalog(tmp_path / "spec"))
+
+    refs = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER).external_references
+    assert [(r.source, r.identifier) for r in refs] == [(DR_SOURCE, "spec")]
+    assert refs[0].metadata["spec_version"] == "0.8.4"
+    assert len(dr_predicate_catalog(repo)) == 70
+
+
+def test_an_edit_to_a_catalog_predicate_no_type_uses_applies(parts):
+    _, repo, proposals = parts
+    new_id = "api.operation.owns.api.response"
+    proposal = import_reflection_plan(plan_for(14), proposals, repo)
+    op = proposal.operations[0]
+
+    applied = proposals.apply(
+        proposal.id, [op.id], edits={op.id: edit_triple(repo, predicate="owns")}
+    ).operations[0]
+
+    assert applied.status is OperationStatus.APPLIED, applied.reason
+    assert prop_by_dr_id(repo, new_id).canonical_predicate == "owns"
+    [decision] = decisions_for(proposals.get(proposal.id))
+    assert decision["fields"]["predicate"] == "owns"
+
+
+def test_an_edit_without_a_stored_catalog_is_refused_clearly(parts):
+    """An import from before the catalog was stored (or of a spec without one)."""
+    _, repo, proposals = parts
+    taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    taxonomy.external_references = []
+    repo.save_taxonomy(taxonomy)
+    proposal = import_reflection_plan(plan_for(14), proposals, repo)
+    op = proposal.operations[0]
+
+    result = proposals.apply(
+        proposal.id, [op.id], edits={op.id: edit_triple(repo, predicate="uses")}
+    ).operations[0]
+
+    assert result.status is OperationStatus.FAILED
+    assert result.reason == (
+        "invalid_edit: the DR spec was imported without its predicate catalog; re-import "
+        "the DR spec to load it"
+    )
+    assert prop_by_dr_id(repo, "api.operation.delivers.api.response") is not None
 
 
 def test_an_edit_onto_a_class_outside_the_dr_spec_fails(parts):
@@ -744,7 +822,7 @@ def test_a_failed_edit_exports_as_failed_without_fields(parts):
     [decision] = decisions_for(proposals.get(proposal.id))
 
     assert decision["status"] == "failed" and "fields" not in decision
-    assert decision["reason"] == "invalid_edit: predicate 'nope' is not one the DR spec uses"
+    assert decision["reason"] == "invalid_edit: predicate 'nope' is not in the DR predicate catalog"
 
 
 # ------------------------------------------------- DR applies, CS re-imports

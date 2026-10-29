@@ -21,6 +21,7 @@ from scripts.dr_ontology_loader import (
     iter_node_schemas,
     iter_relationship_schemas,
     read_manifest,
+    read_predicate_catalog,
     slugify_spec_node_id,
 )
 
@@ -344,3 +345,42 @@ class TestCompressRelationshipIdentifiers:
         compressed = compress_relationship_identifiers([record])
 
         assert "-" not in compressed[record.full_identifier]
+
+
+# ------------------------------------------------------------ predicate catalog
+
+
+def _write_base(spec_dir, data):
+    (spec_dir / "dist").mkdir(parents=True, exist_ok=True)
+    (spec_dir / "dist" / "base.json").write_text(json.dumps(data))
+
+
+def test_read_predicate_catalog_keeps_inverse_category_and_description(tmp_path):
+    entry = {
+        "predicate": "owns",
+        "inverse": "owned-by",
+        "category": "business",
+        "description": "Element has authority over another",
+        "archimate_alignment": "Assignment",
+        "semantics": {"directionality": "bidirectional"},
+    }
+    _write_base(tmp_path, {"specVersion": "1", "schemas": {}, "predicates": {"owns": entry}})
+
+    assert read_predicate_catalog(tmp_path) == {
+        "owns": {
+            "inverse": "owned-by",
+            "category": "business",
+            "description": "Element has authority over another",
+        }
+    }
+
+
+def test_read_predicate_catalog_is_none_without_dist_base_json(tmp_path):
+    assert read_predicate_catalog(tmp_path) is None
+
+
+@pytest.mark.parametrize("predicates", [None, {}, {"owns": "not an object"}])
+def test_read_predicate_catalog_refuses_a_malformed_catalog(tmp_path, predicates):
+    _write_base(tmp_path, {"predicates": predicates})
+    with pytest.raises(ValueError, match="base.json"):
+        read_predicate_catalog(tmp_path)

@@ -241,7 +241,7 @@ async def apply_proposal(
     edits corrects property-definition updates and deletes before they apply:
     each replaces the operation's proposed fields, applied as an update. A field
     problem, or a breach of the taxonomy's rules (for dr_spec: both classes are
-    DR spec classes, the predicate is one the spec uses, and no other
+    DR spec classes, the predicate is in its predicate catalog, and no other
     relationship type or operation has the triple), fails only that operation
     with "invalid_edit: ..."; it stays open, to apply again with a corrected
     edit or reject. For dr_spec the identifier and DR external reference follow

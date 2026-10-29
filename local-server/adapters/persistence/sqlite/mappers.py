@@ -259,6 +259,9 @@ def map_orm_to_domain(
             last_modified=entity_last_modified,
             version=entity_version,
             status=Status(cast(str, orm_entity.status)),
+            external_references=deserialize_external_references(
+                cast(list[dict[str, Any]], orm_entity.external_references) or []
+            ),
         )
 
     elif orm_entity.node_type == NodeType.CONCEPT_SCHEME:

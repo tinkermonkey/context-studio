@@ -45,6 +45,8 @@ class Taxonomy:
         last_modified: Timestamp of last modification
         version: Version number for optimistic concurrency control
         status: Publication status (draft or published)
+        external_references: References to the source the taxonomy was imported
+            from (e.g. the DR spec, whose predicate catalog rides in the metadata)
     """
 
     id: str
@@ -57,6 +59,7 @@ class Taxonomy:
     last_modified: datetime | None = None
     version: int = 1
     status: Status = Status.DRAFT
+    external_references: list[ExternalReference] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if self.identifier is not None:

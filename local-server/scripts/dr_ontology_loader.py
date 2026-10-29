@@ -9,7 +9,9 @@ PropertyDefinition per relationship schema.
 
 The spec's design charter (`spec/DESIGN_CHARTER.md`) becomes the taxonomy's
 vision, and its "In one paragraph" section the taxonomy's summary
-(description). Each layer file's description (`spec/layers/*.layer.json`)
+(description). Its predicate catalog (`spec/dist/base.json`) is kept on the
+taxonomy's DR external reference, for reviewers' edits to check predicates
+against (see `adapters.interchange.dr_relationships.dr_predicate_catalog`). Each layer file's description (`spec/layers/*.layer.json`)
 becomes its scheme's scope note. Entities from an earlier import that the spec
 no longer defines are reported as stale, never deleted.
 
@@ -29,11 +31,13 @@ import json
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, Callable, Iterator
 from uuid import uuid4
 
 from adapters.interchange.dr_relationships import (  # noqa: F401 - re-exported for the scripts
     DR_SOURCE,
+    DR_SPEC_REFERENCE,
     DR_TAXONOMY_IDENTIFIER,
     RelationshipSchemaRecord,
     assign_relationship_identifiers,
@@ -95,6 +99,31 @@ def read_manifest(spec_dir: Path) -> tuple[str, list[dict[str, Any]]]:
         return manifest["specVersion"], manifest["layers"]
     except KeyError as exc:
         raise ValueError(f"Manifest {manifest_path} is missing required key {exc}") from exc
+
+
+def read_predicate_catalog(spec_dir: Path) -> dict[str, dict[str, Any]] | None:
+    """
+    The spec's predicate catalog from spec/dist/base.json, by predicate id: each
+    predicate's inverse, category and description. None when the spec has no
+    dist/base.json (older specs).
+    """
+    path = spec_dir / "dist" / "base.json"
+    if not path.is_file():
+        return None
+    predicates = _load_json(path).get("predicates")
+    if not isinstance(predicates, dict) or not predicates:
+        raise ValueError(f"{path} has no predicates object")
+    try:
+        return {
+            predicate_id: {
+                "inverse": entry.get("inverse"),
+                "category": entry.get("category"),
+                "description": entry.get("description"),
+            }
+            for predicate_id, entry in sorted(predicates.items())
+        }
+    except AttributeError as exc:
+        raise ValueError(f"{path}: a predicate entry is not an object") from exc
 
 
 def read_charter(spec_dir: Path) -> tuple[str | None, str | None]:
@@ -219,7 +248,37 @@ def _upsert_taxonomy(
             vision=vision,
         )
         summary.taxonomies_updated += 1
+    catalog = read_predicate_catalog(spec_dir)
+    if catalog is not None:
+        taxonomy = _store_predicate_catalog(repo, taxonomy, spec_version, catalog)
     return taxonomy  # type: ignore[return-value]
+
+
+def _store_predicate_catalog(
+    repo: OntologyRepository,
+    taxonomy: Taxonomy,
+    spec_version: str,
+    catalog: dict[str, dict[str, Any]],
+) -> Taxonomy:
+    """
+    Keep the predicate catalog on the taxonomy's DR reference (see
+    `dr_predicate_catalog`), replacing the one an earlier import stored. A spec
+    without a catalog leaves the stored one as it is.
+    """
+    reference = ExternalReference(
+        source=DR_SOURCE,
+        identifier=DR_SPEC_REFERENCE,
+        metadata=MappingProxyType({"spec_version": spec_version, "predicates": catalog}),
+    )
+    others = [
+        ref
+        for ref in taxonomy.external_references
+        if not (ref.source == DR_SOURCE and ref.identifier == DR_SPEC_REFERENCE)
+    ]
+    if [*others, reference] == taxonomy.external_references:
+        return taxonomy
+    taxonomy.external_references = [*others, reference]
+    return repo.save_taxonomy(taxonomy)
 
 
 def _upsert_concept_schemes(
