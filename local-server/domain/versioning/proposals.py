@@ -158,10 +158,30 @@ def _computed_scope(op: OperationType, fields: dict[str, Any], base: dict[str, A
 
 
 def _only_adds(current: Any, proposed: Any) -> bool:
-    """Whether a list field keeps every current item (a None current value is empty)."""
+    """
+    Whether a list field keeps every current item (a None current value is empty).
+    An item is kept when some proposed item equals it, or extends it with new keys
+    (a reference gaining metadata keys, say).
+    """
     if not isinstance(proposed, list):
         return False
-    return all(item in proposed for item in current or [])
+    return all(any(_extends(item, new) for new in proposed) for item in current or [])
+
+
+def _extends(current: Any, proposed: Any) -> bool:
+    """
+    Whether proposed keeps current: the same typed value, or, for dicts, every
+    current key kept and itself extended. A None value may become a dict (a
+    reference without metadata gaining some); changing or removing a key, or any
+    other value, does not extend.
+    """
+    if isinstance(current, dict) and isinstance(proposed, dict):
+        return all(
+            key in proposed and _extends(value, proposed[key]) for key, value in current.items()
+        )
+    if current is None and isinstance(proposed, dict):
+        return True
+    return same_attribute_value(current, proposed)
 
 
 def _only_adds_keys(current: Any, proposed: Any) -> bool:
@@ -172,6 +192,28 @@ def _only_adds_keys(current: Any, proposed: Any) -> bool:
         key in proposed and same_attribute_value(proposed[key], value)
         for key, value in (current or {}).items()
     )
+
+
+@dataclass
+class OperationDraft:
+    """
+    One operation as a proposer submits it, before validation.
+
+    Attributes mirror ProposedOperation; `claimed_scope` is the scope the
+    proposer asserts, which can only make the computed scope stricter. `base`
+    and `status` are not submitted: the service captures and tracks them.
+    """
+
+    seq: int
+    op: OperationType | str
+    kind: OperationKind | str
+    target_id: str | None = None
+    ref: str | None = None
+    fields: dict[str, Any] = field(default_factory=dict)
+    rationale: str | None = None
+    evidence: list[dict[str, Any]] = field(default_factory=list)
+    probability: float | None = None
+    claimed_scope: ChangeScope | str | None = None
 
 
 @dataclass

@@ -1,9 +1,14 @@
 """
-Integration tests for bundle load (#1338) and export (#1362) against a fresh
-SQLite workspace, through the import service the CLI uses. Covers what lands,
+Integration tests for bundle import (#1338, #1364) and export (#1362) against a
+fresh SQLite workspace, through the importer the CLI uses. Covers what lands,
 change events, idempotent reloads, updates, carried metadata, the identifier
-guards, the stale report, and load -> export -> load round trips for the real
-House bundle and for a taxonomy authored in Context Studio.
+guards, planned deletes, relationship attributes (#1365), and load -> export ->
+load round trips for the real House bundle and for a taxonomy authored in
+Context Studio.
+
+Most tests check what an import plans and writes, so `load_bundle` applies every
+planned operation but deletes (breaking moves and edits included);
+test_bundle_import.py covers what a proposal applies and leaves for review.
 """
 
 import copy
@@ -18,15 +23,17 @@ sys.path.append(
 )
 
 import pytest
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from adapters.persistence.sqlite import models
+from adapters.persistence.sqlite.connection import create_local_db_engine
 from adapters.persistence.sqlite.models import Base, ChangeEvent
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from domain.interchange.bundle import BundleError, BundleExporter, load_bundle
+from domain.interchange.bundle import BundleError, BundleExporter
 from domain.ontology.value_objects import ExternalReference
-from scripts.import_bundle import build_import_service, read_bundle
+from domain.versioning.exceptions import ProposalValidationError
+from domain.versioning.proposals import OperationType
+from scripts.import_bundle import build_bundle_importer, read_bundle
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 
 BUNDLE = {
@@ -103,12 +110,17 @@ BUNDLE = {
 }
 
 
-@pytest.fixture()
-def session_factory():
-    engine = create_engine("sqlite:///:memory:")
+def _workspace(path: Path) -> sessionmaker:
+    engine = create_local_db_engine(f"sqlite:///{path}")
     Base.metadata.create_all(engine)
-    yield sessionmaker(bind=engine)
-    engine.dispose()
+    return sessionmaker(bind=engine)
+
+
+@pytest.fixture()
+def session_factory(tmp_path):
+    factory = _workspace(tmp_path / "local.db")
+    yield factory
+    factory.kw["bind"].dispose()
 
 
 @pytest.fixture()
@@ -117,8 +129,27 @@ def repo(session_factory):
 
 
 @pytest.fixture()
-def service(session_factory):
-    return build_import_service(session_factory, FakeEmbeddingService())
+def importer(session_factory):
+    return build_bundle_importer(session_factory, FakeEmbeddingService())
+
+
+@pytest.fixture()
+def service(importer):
+    return importer._ontology
+
+
+def load_bundle(importer, bundle):
+    """
+    Import a bundle, then apply every operation but deletes (the policy-free
+    import applies none on its own); returns the plan.
+    """
+    result = importer.import_bundle(bundle)
+    if result.proposal is not None:
+        chosen = [o.id for o in result.proposal.pending if o.op is not OperationType.DELETE]
+        applied = importer._proposals.apply(result.proposal.id, chosen)
+        failed = [(o.seq, o.reason) for o in applied.operations if o.status.value == "failed"]
+        assert not failed, failed
+    return result.plan
 
 
 def _bundle(**changes):
@@ -127,8 +158,10 @@ def _bundle(**changes):
     return bundle
 
 
-def test_bundle_lands_as_taxonomy_schemes_classes_properties_and_individuals(service, repo):
-    summary = load_bundle(service, repo, _bundle())
+def test_bundle_lands_as_taxonomy_schemes_classes_properties_and_individuals(
+    importer, service, repo
+):
+    summary = load_bundle(importer, _bundle())
 
     taxonomy = repo.get_by_identifier("house")
     assert taxonomy.description == "Household tasks filed by place and activity."
@@ -153,11 +186,11 @@ def test_bundle_lands_as_taxonomy_schemes_classes_properties_and_individuals(ser
     assert summary.kind("class").created == 3
     assert summary.kind("attribute").created == 1
     assert summary.kind("relationship").created == 1
-    assert summary.stale == []
+    assert summary.deletes == []
 
 
-def test_load_records_change_events(service, repo, session_factory):
-    load_bundle(service, repo, _bundle())
+def test_load_records_change_events(importer, service, repo, session_factory):
+    load_bundle(importer, _bundle())
 
     with session_factory() as session:
         types = {e.entity_type for e in session.query(ChangeEvent).all()}
@@ -165,26 +198,26 @@ def test_load_records_change_events(service, repo, session_factory):
     assert "relationship" in types
 
 
-def test_reloading_the_same_bundle_changes_nothing(service, repo, session_factory):
-    load_bundle(service, repo, _bundle())
+def test_reloading_the_same_bundle_changes_nothing(importer, service, repo, session_factory):
+    load_bundle(importer, _bundle())
     with session_factory() as session:
         events_before = session.query(ChangeEvent).count()
 
-    summary = load_bundle(service, repo, _bundle())
+    summary = load_bundle(importer, _bundle())
 
     assert summary.changed == 0
     with session_factory() as session:
         assert session.query(ChangeEvent).count() == events_before
 
 
-def test_reload_applies_changes(service, repo):
-    load_bundle(service, repo, _bundle())
+def test_reload_applies_changes(importer, service, repo):
+    load_bundle(importer, _bundle())
     changed = _bundle()
     changed["taxonomy"]["vision"] = "# House\n\nRevised."
     changed["classes"][0]["parent"] = None
     changed["individuals"][1]["data"] = {"aliases": ["hoover", "vacuum"]}
 
-    summary = load_bundle(service, repo, changed)
+    summary = load_bundle(importer, changed)
 
     assert repo.get_by_identifier("house").vision == "# House\n\nRevised."
     assert repo.get_by_identifier("house_room").parent_class_id is None
@@ -198,14 +231,14 @@ def test_reload_applies_changes(service, repo):
     assert summary.kind("individual").updated == 1
 
 
-def test_entities_dropped_from_the_bundle_are_reported_not_deleted(service, repo):
-    load_bundle(service, repo, _bundle())
+def test_entities_dropped_from_the_bundle_are_reported_not_deleted(importer, service, repo):
+    load_bundle(importer, _bundle())
     smaller = _bundle(relationships=[])
     smaller["individuals"] = smaller["individuals"][:1]
 
-    summary = load_bundle(service, repo, smaller)
+    summary = load_bundle(importer, smaller)
 
-    assert summary.stale == [
+    assert summary.deletes == [
         "Individual 'Vacuuming' (vacuuming)",
         "Relationship 'Vacuuming' house_activity_is_a_activity 'Cleaning'",
     ]
@@ -213,37 +246,37 @@ def test_entities_dropped_from_the_bundle_are_reported_not_deleted(service, repo
     assert len(repo.list_individuals(class_id=activity.id, limit=None)) == 2
 
 
-def test_identifier_owned_by_another_taxonomy_is_refused(service, repo):
+def test_identifier_owned_by_another_taxonomy_is_refused(importer, service, repo):
     other = service.create_taxonomy(title="Other", identifier="other")
     service.create_scheme(taxonomy_id=other.id, title="Kinds", identifier="house_kinds")
 
     with pytest.raises(BundleError, match="house_kinds"):
-        load_bundle(service, repo, _bundle())
+        load_bundle(importer, _bundle())
 
 
-def test_relationship_with_unknown_keys_is_rejected(service, repo):
+def test_relationship_with_unknown_keys_is_rejected(importer, service, repo):
     bundle = _bundle()
     bundle["relationships"][0]["quantity"] = 2
 
     with pytest.raises(BundleError, match=r"unknown keys \['quantity'\]; edge values go in"):
-        load_bundle(service, repo, bundle)
+        load_bundle(importer, bundle)
 
 
-def test_relationship_attributes_the_property_does_not_list_are_refused(service, repo):
+def test_relationship_attributes_the_property_does_not_list_are_refused(importer, service, repo):
     bundle = _bundle()
     bundle["relationships"][0]["attributes"] = {"quantity": 2}
 
     with pytest.raises(BundleError, match=r"carries attributes \['quantity'\].*allowed: none"):
-        load_bundle(service, repo, bundle)
+        load_bundle(importer, bundle)
     assert repo.get_by_identifier("house") is None  # refused before anything was written
 
 
-def test_relationship_attributes_must_be_scalars(service, repo):
+def test_relationship_attributes_must_be_scalars(importer, service, repo):
     bundle = _kit_bundle()
     bundle["relationships"][-1]["attributes"] = {"quantity": {"value": 2}}
 
     with pytest.raises(BundleError, match="string, number, boolean or null"):
-        load_bundle(service, repo, bundle)
+        load_bundle(importer, bundle)
 
 
 def _kit_bundle():
@@ -318,8 +351,8 @@ def _kit(repo):
     }
 
 
-def test_relationship_attributes_load_reload_and_update(service, repo, session_factory):
-    summary = load_bundle(service, repo, _kit_bundle())
+def test_relationship_attributes_load_reload_and_update(importer, service, repo, session_factory):
+    summary = load_bundle(importer, _kit_bundle())
     assert summary.kind("relationship").created == 3
     assert _kit(repo) == {
         "Picture hooks": {"quantity": 2, "unit": "each"},
@@ -327,13 +360,13 @@ def test_relationship_attributes_load_reload_and_update(service, repo, session_f
     }
 
     before = _written(session_factory)
-    assert load_bundle(service, repo, _kit_bundle()).changed == 0
+    assert load_bundle(importer, _kit_bundle()).changed == 0
     assert _written(session_factory) == before
 
     changed = _kit_bundle()
     changed["relationships"][1]["attributes"] = {"quantity": 3, "unit": "each"}
     del changed["relationships"][2]["attributes"]
-    summary = load_bundle(service, repo, changed)
+    summary = load_bundle(importer, changed)
 
     assert summary.kind("relationship").updated == 2
     assert _kit(repo) == {"Picture hooks": {"quantity": 3, "unit": "each"}, "Level": {}}
@@ -346,22 +379,24 @@ def test_relationship_attributes_load_reload_and_update(service, repo, session_f
     assert sorted(e.previous_state["attributes"].get("quantity", 0) for e in updates) == [0, 2]
 
 
-def test_a_relationship_attribute_changing_type_is_updated(service, repo):
+def test_a_relationship_attribute_changing_type_is_updated(importer, service, repo):
     first = _kit_bundle()
     first["relationships"][2]["attributes"] = {"optional": 1}
-    load_bundle(service, repo, first)
+    load_bundle(importer, first)
 
-    summary = load_bundle(service, repo, _kit_bundle())  # optional: true
+    summary = load_bundle(importer, _kit_bundle())  # optional: true
 
     assert summary.kind("relationship").updated == 1
     assert _kit(repo)["Level"]["optional"] is True
 
 
-def test_relationship_attributes_are_exported_and_round_trip(service, repo, session_factory):
-    load_bundle(service, repo, _kit_bundle())
+def test_relationship_attributes_are_exported_and_round_trip(
+    importer, service, repo, session_factory
+):
+    load_bundle(importer, _kit_bundle())
 
     exported = _assert_round_trip_writes_nothing(
-        service, repo, session_factory, _taxonomy_id(repo, "house")
+        importer, repo, session_factory, _taxonomy_id(repo, "house")
     )
 
     kit = [r for r in exported["relationships"] if r["source"] == "hang"]
@@ -382,12 +417,12 @@ def test_relationship_attributes_are_exported_and_round_trip(service, repo, sess
     assert "attributes" not in next(r for r in exported["relationships"] if r["source"] != "hang")
 
 
-def test_class_hierarchy_cycle_is_rejected(service, repo):
+def test_class_hierarchy_cycle_is_rejected(importer, service, repo):
     bundle = _bundle()
     bundle["classes"][1]["parent"] = "house_room"
 
     with pytest.raises(BundleError, match="cycle"):
-        load_bundle(service, repo, bundle)
+        load_bundle(importer, bundle)
 
 
 def test_read_bundle_checks_the_header(tmp_path):
@@ -398,15 +433,15 @@ def test_read_bundle_checks_the_header(tmp_path):
         read_bundle(path)
 
 
-def test_dropping_an_attributes_enum_and_description_applies_once(service, repo):
+def test_dropping_an_attributes_enum_and_description_applies_once(importer, service, repo):
     bundle = _bundle()
     bundle["classes"][2]["attributes"][0].update(
         {"description": "Typical minutes.", "allowed_values": ["5", "10"]}
     )
-    load_bundle(service, repo, bundle)
+    load_bundle(importer, bundle)
 
-    first = load_bundle(service, repo, _bundle())
-    second = load_bundle(service, repo, _bundle())
+    first = load_bundle(importer, _bundle())
+    second = load_bundle(importer, _bundle())
 
     activity = repo.get_by_identifier("house_activity")
     [attribute] = service.list_attribute_definitions(class_id=activity.id, limit=None)
@@ -416,40 +451,68 @@ def test_dropping_an_attributes_enum_and_description_applies_once(service, repo)
     assert second.changed == 0
 
 
-def test_class_moves_to_another_scheme_and_parent(service, repo):
-    load_bundle(service, repo, _bundle())
+def test_class_moves_to_another_scheme_and_parent(importer, service, repo):
+    load_bundle(importer, _bundle())
+    moved = _bundle()
+    moved["schemes"].append({"identifier": "house_spaces", "title": "Spaces"})
+    moved["classes"][0]["scheme"] = "house_spaces"  # Room, leaving Place
+    moved["classes"][0]["parent"] = None
+
+    summary = load_bundle(importer, moved)
+
+    spaces = repo.get_by_identifier("house_spaces")
+    room = repo.get_by_identifier("house_room")
+    assert room.concept_scheme_id == spaces.id
+    assert room.parent_class_id is None
+    assert summary.kind("class").updated == 1
+    assert load_bundle(importer, moved).changed == 0
+
+
+def test_moving_a_class_with_subclasses_to_another_scheme_is_refused(importer, service, repo):
+    """A proposal can't move a class with subclasses to another scheme; nothing is stored."""
+    load_bundle(importer, _bundle())
     moved = _bundle()
     moved["schemes"].append({"identifier": "house_spaces", "title": "Spaces"})
     moved["classes"][1]["scheme"] = "house_spaces"  # Place
     moved["classes"][0]["scheme"] = "house_spaces"  # Room, still under Place
 
-    summary = load_bundle(service, repo, moved)
-
-    spaces = repo.get_by_identifier("house_spaces")
-    place = repo.get_by_identifier("house_place")
-    room = repo.get_by_identifier("house_room")
-    assert place.concept_scheme_id == spaces.id
-    assert room.concept_scheme_id == spaces.id
-    assert room.parent_class_id == place.id
-    assert summary.kind("class").updated == 2
-    assert load_bundle(service, repo, moved).changed == 0
+    with pytest.raises(ProposalValidationError, match="subclasses can't move"):
+        load_bundle(importer, moved)
+    assert repo.get_by_identifier("house_spaces") is None
 
 
-def test_dropped_relationships_and_attributes_are_reported(service, repo):
-    load_bundle(service, repo, _bundle())
+def test_a_link_from_vacuuming_to_a_user_individual_survives_a_replan(importer, service, repo):
+    """Only links between the source's individuals are the bundle's to drop (F2)."""
+    load_bundle(importer, _bundle())
+    activity = repo.get_by_identifier("house_activity")
+    vacuuming = next(
+        i for i in repo.list_individuals(class_id=activity.id, limit=None) if i.title == "Vacuuming"
+    )
+    sweeping = service.create_individual(activity.id, "Sweeping")
+    is_a = repo.get_property_definition_by_identifier("house_activity_is_a_activity")
+    link = service.create_relationship(vacuuming.id, sweeping.id, is_a.id)
+
+    summary = load_bundle(importer, _bundle())
+
+    assert summary.operations == [] and summary.deletes == []
+    assert repo.get_relationship(link.id) is not None
+
+
+def test_dropped_relationships_and_attributes_are_reported(importer, service, repo):
+    load_bundle(importer, _bundle())
     smaller = _bundle(relationships=[])
     smaller["classes"][2]["attributes"] = []
 
-    summary = load_bundle(service, repo, smaller)
+    summary = load_bundle(importer, smaller)
 
-    assert "Relationship 'Vacuuming' house_activity_is_a_activity 'Cleaning'" in summary.stale
+    assert "Relationship 'Vacuuming' house_activity_is_a_activity 'Cleaning'" in summary.deletes
     assert (
         "AttributeDefinition 'Estimate (minutes)' (house_estimate_minutes) on 'Activity'"
-        in summary.stale
+        in summary.deletes
     )
 
 
-def test_hand_made_class_is_matched_without_writes(service, repo, session_factory):
+def test_hand_made_class_is_matched_without_writes(importer, service, repo, session_factory):
     """A class made by hand is matched on its identifier; nothing about it is rewritten."""
     taxonomy = service.create_taxonomy(
         title="House",
@@ -469,7 +532,7 @@ def test_hand_made_class_is_matched_without_writes(service, repo, session_factor
     with session_factory() as session:
         before = session.query(ChangeEvent).filter(ChangeEvent.entity_id == place.id).count()
 
-    summary = load_bundle(service, repo, _bundle())
+    summary = load_bundle(importer, _bundle())
 
     assert repo.get_by_identifier("house_place").external_references == []
     assert summary.kind("class").unchanged == 1
@@ -478,18 +541,20 @@ def test_hand_made_class_is_matched_without_writes(service, repo, session_factor
     assert after == before
 
 
-def test_unrelated_relationship_type_is_refused(service, repo):
+def test_unrelated_relationship_type_is_refused(importer, service, repo):
     service.create_property_definition(
         identifier="house_activity_is_a_activity", title="Someone else's is_a"
     )
 
     with pytest.raises(BundleError, match="does not lie within this taxonomy"):
-        load_bundle(service, repo, _bundle())
+        load_bundle(importer, _bundle())
 
 
-def test_relationship_type_reaching_another_taxonomy_is_refused_not_retargeted(service, repo):
+def test_relationship_type_reaching_another_taxonomy_is_refused_not_retargeted(
+    importer, service, repo
+):
     """A type with one end here and one elsewhere is not this bundle's to rewrite."""
-    load_bundle(service, repo, _bundle())
+    load_bundle(importer, _bundle())
     other = service.create_taxonomy(title="Other", identifier="other")
     scheme = service.create_scheme(taxonomy_id=other.id, title="Kinds", identifier="other_kinds")
     site = service.create_class(concept_scheme_id=scheme.id, title="Site", identifier="other_site")
@@ -511,7 +576,7 @@ def test_relationship_type_reaching_another_taxonomy_is_refused_not_retargeted(s
     )
 
     with pytest.raises(BundleError, match="house_done_at"):
-        load_bundle(service, repo, bundle)
+        load_bundle(importer, bundle)
     prop = repo.get_property_definition_by_identifier("house_done_at")
     assert (prop.title, prop.range_class_id) == ("done at (a Site)", site.id)
 
@@ -561,25 +626,25 @@ def _normalized(bundle):
     return result
 
 
-def _assert_round_trip_writes_nothing(service, repo, session_factory, taxonomy_id):
+def _assert_round_trip_writes_nothing(importer, repo, session_factory, taxonomy_id):
     exported = BundleExporter(repo).export(taxonomy_id)
     before = _written(session_factory)
 
-    summary = load_bundle(service, repo, exported)
+    summary = load_bundle(importer, exported)
 
     assert summary.changed == 0, summary.counts
-    assert summary.stale == []
+    assert summary.deletes == []
     assert _written(session_factory) == before
     assert BundleExporter(repo).export(taxonomy_id) == exported
     return exported
 
 
-def test_house_bundle_round_trip_writes_nothing(service, repo, session_factory):
+def test_house_bundle_round_trip_writes_nothing(importer, service, repo, session_factory):
     house = read_bundle(HOUSE_BUNDLE)
-    load_bundle(service, repo, house)
+    load_bundle(importer, house)
 
     exported = _assert_round_trip_writes_nothing(
-        service, repo, session_factory, _taxonomy_id(repo, "house")
+        importer, repo, session_factory, _taxonomy_id(repo, "house")
     )
 
     assert _normalized(exported) == _normalized(house)
@@ -638,20 +703,22 @@ def house_with_kits():
     return house
 
 
-def test_house_bundle_with_kits_round_trip_writes_nothing(service, repo, session_factory):
+def test_house_bundle_with_kits_round_trip_writes_nothing(importer, service, repo, session_factory):
     house = house_with_kits()
-    load_bundle(service, repo, house)
+    load_bundle(importer, house)
 
     exported = _assert_round_trip_writes_nothing(
-        service, repo, session_factory, _taxonomy_id(repo, "house")
+        importer, repo, session_factory, _taxonomy_id(repo, "house")
     )
 
     assert _normalized(exported) == _normalized(house)
 
 
-def test_reference_identifier_that_differs_from_the_key_is_kept(service, repo, session_factory):
+def test_reference_identifier_that_differs_from_the_key_is_kept(
+    importer, service, repo, session_factory
+):
     """The DR importer keys references by spec id, not by the entity identifier."""
-    load_bundle(service, repo, _bundle())
+    load_bundle(importer, _bundle())
     prop = repo.get_property_definition_by_identifier("house_activity_is_a_activity")
     spec_reference = ExternalReference(
         source="house",
@@ -662,11 +729,11 @@ def test_reference_identifier_that_differs_from_the_key_is_kept(service, repo, s
     service.update_property_definition(prop.id, external_references=[spec_reference])
 
     exported = _assert_round_trip_writes_nothing(
-        service, repo, session_factory, _taxonomy_id(repo, "house")
+        importer, repo, session_factory, _taxonomy_id(repo, "house")
     )
     [spec] = exported["properties"]
     spec["constraints"] = {"hierarchy": True}
-    load_bundle(service, repo, exported)
+    load_bundle(importer, exported)
 
     [reference] = repo.get_property_definition_by_identifier(
         "house_activity_is_a_activity"
@@ -712,11 +779,13 @@ def authored(service):
     return {"taxonomy": taxonomy, "tomato": tomato, "north": north}
 
 
-def test_authored_taxonomy_round_trip_writes_nothing(service, repo, session_factory, authored):
+def test_authored_taxonomy_round_trip_writes_nothing(
+    importer, service, repo, session_factory, authored
+):
     tomato, north = authored["tomato"], authored["north"]
 
     exported = _assert_round_trip_writes_nothing(
-        service, repo, session_factory, authored["taxonomy"].id
+        importer, repo, session_factory, authored["taxonomy"].id
     )
 
     assert exported["source"] == "garden"
@@ -727,7 +796,7 @@ def test_authored_taxonomy_round_trip_writes_nothing(service, repo, session_fact
     assert repo.get_individual(tomato.id).external_references == []
 
 
-def test_retitling_tied_attributes_settles_in_one_load(service, repo, authored):
+def test_retitling_tied_attributes_settles_in_one_load(importer, service, repo, authored):
     """Sun and Soil both sit at sort_order 0; renaming Sun would flip the tie-break."""
     taxonomy_id = authored["taxonomy"].id
     bundle = BundleExporter(repo).export(taxonomy_id)
@@ -735,8 +804,8 @@ def test_retitling_tied_attributes_settles_in_one_load(service, repo, authored):
     assert [a["identifier"] for a in bed["attributes"]] == ["garden_soil", "garden_sun"]
     bed["attributes"][1]["title"] = "Aspect"
 
-    first = load_bundle(service, repo, bundle)
-    second = load_bundle(service, repo, bundle)
+    first = load_bundle(importer, bundle)
+    second = load_bundle(importer, bundle)
 
     assert first.kind("attribute").updated >= 1
     assert second.changed == 0
@@ -748,28 +817,26 @@ def test_retitling_tied_attributes_settles_in_one_load(service, repo, authored):
     assert [a["identifier"] for a in bed["attributes"]] == ["garden_soil", "garden_sun"]
 
 
-def test_authored_bundle_reproduces_in_another_workspace(repo, authored):
+def test_authored_bundle_reproduces_in_another_workspace(repo, authored, tmp_path):
     exported = BundleExporter(repo).export(authored["taxonomy"].id)
-    engine = create_engine("sqlite:///:memory:")
-    Base.metadata.create_all(engine)
-    other_factory = sessionmaker(bind=engine)
+    other_factory = _workspace(tmp_path / "other.db")
     other_repo = SQLiteOntologyRepository(other_factory)
 
-    load_bundle(build_import_service(other_factory, FakeEmbeddingService()), other_repo, exported)
+    load_bundle(build_bundle_importer(other_factory, FakeEmbeddingService()), exported)
 
     assert BundleExporter(other_repo).export(_taxonomy_id(other_repo, "garden")) == exported
-    engine.dispose()
+    other_factory.kw["bind"].dispose()
 
 
 def test_individual_added_in_context_studio_round_trips_without_duplicates(
-    service, repo, session_factory
+    importer, service, repo, session_factory
 ):
-    load_bundle(service, repo, _bundle())
+    load_bundle(importer, _bundle())
     activity = repo.get_by_identifier("house_activity")
     mopping = service.create_individual([activity.id], title="Mopping")
 
     exported = _assert_round_trip_writes_nothing(
-        service, repo, session_factory, _taxonomy_id(repo, "house")
+        importer, repo, session_factory, _taxonomy_id(repo, "house")
     )
 
     assert mopping.id in {i["id"] for i in exported["individuals"]}
@@ -778,10 +845,10 @@ def test_individual_added_in_context_studio_round_trips_without_duplicates(
 
 
 def test_mixed_loaded_and_authored_entities_round_trip_writes_nothing(
-    service, repo, session_factory
+    importer, service, repo, session_factory
 ):
     """House as loaded, plus a class, attribute, type, individuals and links made here."""
-    load_bundle(service, repo, read_bundle(HOUSE_BUNDLE))
+    load_bundle(importer, read_bundle(HOUSE_BUNDLE))
     place = repo.get_by_identifier("house_place")
     activity = repo.get_by_identifier("house_activity")
     shed = service.create_class(
@@ -813,7 +880,7 @@ def test_mixed_loaded_and_authored_entities_round_trip_writes_nothing(
     service.create_relationship(edging.id, cleaning.id, is_a.id)
 
     exported = _assert_round_trip_writes_nothing(
-        service, repo, session_factory, _taxonomy_id(repo, "house")
+        importer, repo, session_factory, _taxonomy_id(repo, "house")
     )
 
     assert {"house_place_shed"} <= {c["identifier"] for c in exported["classes"]}
@@ -825,8 +892,8 @@ def test_mixed_loaded_and_authored_entities_round_trip_writes_nothing(
     assert repo.get_property_definition(stored_in.id).external_references == []
 
 
-def test_uuid_id_does_not_match_an_individual_in_another_taxonomy(service, repo):
-    load_bundle(service, repo, _bundle())
+def test_uuid_id_does_not_match_an_individual_in_another_taxonomy(importer, service, repo):
+    load_bundle(importer, _bundle())
     other = service.create_taxonomy(title="Other", identifier="other")
     scheme = service.create_scheme(taxonomy_id=other.id, title="Kinds", identifier="other_kinds")
     thing = service.create_class(concept_scheme_id=scheme.id, title="Thing", identifier="o_thing")
@@ -836,7 +903,7 @@ def test_uuid_id_does_not_match_an_individual_in_another_taxonomy(service, repo)
         {"id": outsider.id, "classes": ["house_activity"], "title": "Insider", "data": {}}
     )
 
-    summary = load_bundle(service, repo, bundle)
+    summary = load_bundle(importer, bundle)
 
     assert summary.kind("individual").created == 1
     after = repo.get_individual(outsider.id)
@@ -854,14 +921,14 @@ def test_uuid_id_does_not_match_an_individual_in_another_taxonomy(service, repo)
     ]
 
 
-def test_data_for_a_context_studio_individual_is_carried_on_reload(service, repo):
-    load_bundle(service, repo, _bundle())
+def test_data_for_a_context_studio_individual_is_carried_on_reload(importer, service, repo):
+    load_bundle(importer, _bundle())
     activity = repo.get_by_identifier("house_activity")
     mopping = service.create_individual([activity.id], title="Mopping")
     bundle = BundleExporter(repo).export(_taxonomy_id(repo, "house"))
     next(i for i in bundle["individuals"] if i["id"] == mopping.id)["data"] = {"aliases": ["mop"]}
 
-    summary = load_bundle(service, repo, bundle)
+    summary = load_bundle(importer, bundle)
 
     [reference] = repo.get_individual(mopping.id).external_references
     assert (reference.source, reference.identifier) == ("house", mopping.id)

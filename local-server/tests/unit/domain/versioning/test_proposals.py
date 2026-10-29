@@ -51,6 +51,55 @@ class TestClassifyScope:
         )
         assert scope is ChangeScope.BREAKING
 
+    @staticmethod
+    def _references(metadata):
+        return [{"source": "house", "identifier": "requires", "uri": None, "metadata": metadata}]
+
+    @pytest.mark.parametrize(
+        "current, proposed",
+        [
+            ({"max": None}, {"max": None, "edge_properties": ["quantity"]}),
+            (None, {"edge_properties": ["quantity"]}),
+            ({"data": {"a": 1}}, {"data": {"a": 1, "b": 2}}),
+        ],
+        ids=["new key", "metadata where there was none", "nested new key"],
+    )
+    def test_reference_metadata_gaining_keys_is_additive(self, current, proposed):
+        scope = classify_scope(
+            OperationType.UPDATE,
+            {"external_references": self._references(proposed)},
+            base={"external_references": self._references(current)},
+        )
+        assert scope is ChangeScope.ADDITIVE
+
+    @pytest.mark.parametrize(
+        "current, proposed",
+        [
+            ({"aliases": ["a"]}, {"house_aliases": ["a"]}),
+            ({"aliases": ["a"]}, {"aliases": ["a", "b"]}),
+            ({"max": 1}, {"max": True}),
+            ({"max": 1}, None),
+        ],
+        ids=["renamed key", "changed value", "changed type", "metadata dropped"],
+    )
+    def test_reference_metadata_changing_or_losing_keys_is_breaking(self, current, proposed):
+        scope = classify_scope(
+            OperationType.UPDATE,
+            {"external_references": self._references(proposed)},
+            base={"external_references": self._references(current)},
+        )
+        assert scope is ChangeScope.BREAKING
+
+    def test_a_reference_with_another_identifier_is_not_an_extension(self):
+        current = self._references({"a": 1})
+        proposed = [{**current[0], "identifier": "other", "metadata": {"a": 1, "b": 2}}]
+        scope = classify_scope(
+            OperationType.UPDATE,
+            {"external_references": proposed},
+            base={"external_references": current},
+        )
+        assert scope is ChangeScope.BREAKING
+
     @pytest.mark.parametrize("current", [1, 1.0], ids=["int", "float"])
     def test_a_value_changing_type_is_breaking(self, current):
         scope = classify_scope(

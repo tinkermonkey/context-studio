@@ -22,8 +22,8 @@ from sqlalchemy.pool import StaticPool
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.web.interchange_routes import router
-from domain.interchange.bundle import BundleExporter, load_bundle
-from scripts.import_bundle import build_import_service, read_bundle
+from domain.interchange.bundle import BundleExporter
+from scripts.import_bundle import build_bundle_importer, read_bundle
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 
 HOUSE_BUNDLE = Path(__file__).parent.parent / "fixtures" / "bundles" / "house.bundle.json"
@@ -47,13 +47,18 @@ def repo(session_factory):
 
 
 @pytest.fixture()
-def service(session_factory):
-    return build_import_service(session_factory, FakeEmbeddingService())
+def importer(session_factory):
+    return build_bundle_importer(session_factory, FakeEmbeddingService())
 
 
 @pytest.fixture()
-def house_id(service, repo):
-    load_bundle(service, repo, read_bundle(HOUSE_BUNDLE))
+def service(importer):
+    return importer._ontology
+
+
+@pytest.fixture()
+def house_id(importer, repo):
+    importer.import_bundle(read_bundle(HOUSE_BUNDLE), apply=True)
     return repo.get_by_identifier("house").id
 
 
@@ -81,13 +86,13 @@ def test_returns_the_taxonomy_as_a_bundle(client, repo, house_id):
     assert bundle["taxonomy"]["identifier"] == "house"
 
 
-def test_exported_bundle_reloads_without_changes(client, service, repo, house_id):
+def test_exported_bundle_reloads_without_changes(client, importer, house_id):
     bundle = client.get(_url(house_id)).json()
 
-    summary = load_bundle(service, repo, bundle)
+    result = importer.import_bundle(bundle, dry_run=True)
 
-    assert summary.changed == 0, summary.counts
-    assert summary.stale == []
+    assert result.plan.operations == [], result.plan.counts
+    assert result.plan.deletes == []
 
 
 def test_source_is_passed_to_the_exporter(client, repo, house_id):

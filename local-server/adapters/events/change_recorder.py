@@ -39,7 +39,7 @@ from domain.ontology.events import (
     TaxonomyDeleted,
     TaxonomyUpdated,
 )
-from domain.ports import ChangeRecordPort
+from domain.ports import ChangeRecordPort, EventPublisher
 from domain.versioning.value_objects import ChangeOperation
 from utils.logger import get_logger
 
@@ -68,6 +68,34 @@ class ChangeEventRecorder:
             change_repo: Port implementation for persisting changes
         """
         self.change_repo = change_repo
+
+    def subscribe_ontology_events(self, publisher: EventPublisher) -> None:
+        """Subscribe this recorder to every ontology event it records (for scripts)."""
+        for event, handler in (
+            (TaxonomyCreated, self.on_taxonomy_created),
+            (TaxonomyUpdated, self.on_taxonomy_updated),
+            (TaxonomyDeleted, self.on_taxonomy_deleted),
+            (SchemeCreated, self.on_scheme_created),
+            (SchemeUpdated, self.on_scheme_updated),
+            (SchemeDeleted, self.on_scheme_deleted),
+            (ClassCreated, self.on_class_created),
+            (ClassUpdated, self.on_class_updated),
+            (ClassMoved, self.on_class_moved),
+            (ClassDeleted, self.on_class_deleted),
+            (PropertyDefinitionCreated, self.on_property_definition_created),
+            (PropertyDefinitionUpdated, self.on_property_definition_updated),
+            (PropertyDefinitionDeleted, self.on_property_definition_deleted),
+            (AttributeDefinitionCreated, self.on_attribute_definition_created),
+            (AttributeDefinitionUpdated, self.on_attribute_definition_updated),
+            (AttributeDefinitionDeleted, self.on_attribute_definition_deleted),
+            (IndividualCreated, self.on_individual_created),
+            (IndividualUpdated, self.on_individual_updated),
+            (IndividualDeleted, self.on_individual_deleted),
+            (RelationshipCreated, self.on_relationship_created),
+            (RelationshipUpdated, self.on_relationship_updated),
+            (RelationshipDeleted, self.on_relationship_deleted),
+        ):
+            publisher.subscribe(event, handler)
 
     def on_extraction_completed(self, event: ExtractionCompleted) -> None:
         """

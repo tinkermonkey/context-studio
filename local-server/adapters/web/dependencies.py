@@ -46,6 +46,7 @@ from domain.interchange.ports import BatchRunRepository
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
 from domain.versioning.approval_policy import ApprovalPolicyService
+from domain.versioning.bundle_import import BundleImportService
 from domain.versioning.proposal_service import ProposalService
 from domain.versioning.services import VersioningService
 from utils.async_executor import run_sync_in_executor
@@ -227,6 +228,19 @@ async def get_proposal_service(request: Request) -> ProposalService:
     service = getattr(request.app.state, "proposal_service", None)
     if service is None:
         raise RuntimeError("ProposalService not initialized in app.state")
+    return service
+
+
+async def get_bundle_import_service(request: Request) -> BundleImportService:
+    """
+    Extract the BundleImportService from app state.
+
+    Raises:
+        RuntimeError: If service is not initialized in app.state
+    """
+    service = getattr(request.app.state, "bundle_import_service", None)
+    if service is None:
+        raise RuntimeError("BundleImportService not initialized in app.state")
     return service
 
 

@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Sequence
 from uuid import uuid4
@@ -37,6 +37,7 @@ from domain.versioning.exceptions import (
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
+    OperationDraft,
     OperationKind,
     OperationStatus,
     OperationType,
@@ -130,7 +131,15 @@ _FIELDS: dict[OperationKind, _KindFields] = {
     ),
     K.CLASS: _KindFields(
         create=frozenset(
-            {"concept_scheme_id", "title", "description", "color", "parent_class_id", "identifier"}
+            {
+                "concept_scheme_id",
+                "title",
+                "description",
+                "color",
+                "parent_class_id",
+                "identifier",
+                "external_references",
+            }
         ),
         required=frozenset({"concept_scheme_id", "title"}),
         update=frozenset({"title", "description", "color", "external_references"}),
@@ -212,28 +221,6 @@ _FIELDS: dict[OperationKind, _KindFields] = {
         update=frozenset({"attributes"}),
     ),
 }
-
-
-@dataclass
-class OperationDraft:
-    """
-    One operation as a proposer submits it, before validation.
-
-    Attributes mirror ProposedOperation; `claimed_scope` is the scope the
-    proposer asserts, which can only make the computed scope stricter. `base`
-    and `status` are not submitted: the service captures and tracks them.
-    """
-
-    seq: int
-    op: OperationType | str
-    kind: OperationKind | str
-    target_id: str | None = None
-    ref: str | None = None
-    fields: dict[str, Any] = field(default_factory=dict)
-    rationale: str | None = None
-    evidence: list[dict[str, Any]] = field(default_factory=list)
-    probability: float | None = None
-    claimed_scope: ChangeScope | str | None = None
 
 
 class _Invalid(Exception):
@@ -318,6 +305,7 @@ class ProposalService:
         source: ProposalSource,
         rationale: str | None = None,
         source_detail: str | None = None,
+        dry_run: bool = False,
     ) -> ChangeProposal:
         """
         Validate and store a proposal; every operation starts pending.
@@ -333,8 +321,13 @@ class ProposalService:
         Operations the taxonomy's approval policy allows are then applied at
         once, under the proposal's run (see `domain.versioning.approval_policy`).
 
+        Args:
+            dry_run: Validate only: return the proposal, scopes and bases filled
+                in, without storing or applying anything
+
         Returns:
-            The stored proposal, with any auto-applied outcomes
+            The stored proposal, with any auto-applied outcomes (with dry_run,
+            the unstored proposal)
 
         Raises:
             ProposalValidationError: With every problem found; nothing is stored
@@ -385,6 +378,8 @@ class ProposalService:
             errors.append(OperationError(None, "invalid", str(exc)))
         if errors:
             raise ProposalValidationError(errors)
+        if dry_run:
+            return proposal
         return self._auto_apply(self._proposals.create(proposal))
 
     # --------------------------------------------------------------- auto-apply
