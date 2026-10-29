@@ -4192,6 +4192,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/interchange/bundles": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Import Bundle
+     * @description Plan a bundle and propose it; see the module docstring.
+     */
+    post: operations["import_bundle_api_v1_interchange_bundles_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4782,6 +4802,77 @@ export interface components {
        * @description JSON-encoded conflict resolutions to apply on commit
        */
       resolutions?: string | null;
+    };
+    /**
+     * BundleImportResponse
+     * @description The plan for a bundle and the proposal made from it.
+     */
+    BundleImportResponse: {
+      /**
+       * Source
+       * @description The bundle's source
+       */
+      source: string;
+      /**
+       * Taxonomy Id
+       * @description The bundle's taxonomy; None on a dry run that would create it
+       */
+      taxonomy_id?: string | null;
+      /**
+       * Taxonomy Created
+       * @description The import created the taxonomy (on a dry run: would create it)
+       */
+      taxonomy_created: boolean;
+      /**
+       * Dry Run
+       * @description Nothing was stored or changed
+       */
+      dry_run: boolean;
+      /**
+       * Operation Count
+       * @description How many operations the plan has
+       */
+      operation_count: number;
+      /**
+       * Counts
+       * @description Per kind of entity
+       */
+      counts: {
+        [key: string]: components["schemas"]["BundleKindCounts"];
+      };
+      /**
+       * Deletes
+       * @description The entities the plan deletes, described
+       */
+      deletes?: string[];
+      /** @description The proposal (not stored on a dry run); None when the workspace already matches the bundle, or on a dry run that would create the taxonomy */
+      proposal?: components["schemas"]["ChangeProposalResponse"] | null;
+    };
+    /**
+     * BundleKindCounts
+     * @description What the import plans for one kind of entity.
+     */
+    BundleKindCounts: {
+      /**
+       * Created
+       * @description Entities the plan creates
+       */
+      created: number;
+      /**
+       * Updated
+       * @description Entities the plan updates or moves
+       */
+      updated: number;
+      /**
+       * Deleted
+       * @description Entities the plan deletes (these wait for review)
+       */
+      deleted: number;
+      /**
+       * Unchanged
+       * @description Entities that already match the bundle
+       */
+      unchanged: number;
     };
     /**
      * CancelBatchResponse
@@ -14646,6 +14737,46 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+    };
+  };
+  import_bundle_api_v1_interchange_bundles_post: {
+    parameters: {
+      query?: {
+        /** @description Also apply every non-breaking operation */
+        apply?: boolean;
+        /** @description Plan and validate only; store nothing */
+        dry_run?: boolean;
+        /** @description Where the bundle came from (a file name) */
+        source_detail?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          [key: string]: unknown;
+        };
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BundleImportResponse"];
+        };
+      };
+      /** @description The bundle is malformed, conflicts with the workspace, or its plan does not validate; nothing is stored */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };

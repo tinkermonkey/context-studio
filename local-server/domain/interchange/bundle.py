@@ -1,9 +1,9 @@
 """
-Context Studio bundle (v0): load a bundle into the ontology, export one from it.
+Context Studio bundle (v0): plan a bundle import as proposal operations; export one.
 
 A bundle is one JSON document describing one taxonomy: its summary and vision,
 concept schemes, classes and their attributes, relationship types (properties),
-individuals and relationships. Loading and exporting both work on a dict;
+individuals and relationships. Planning and exporting both work on a dict;
 reading and writing files is left to the scripts.
 
     {
@@ -19,29 +19,31 @@ reading and writing files is left to the scripts.
       "relationships": [{"source", "property", "target", "attributes": {}}]
     }
 
-Loading. Every write goes through OntologyService, so changes are evented, and
-each write is one service call made after comparing, so reloading an unchanged
-bundle writes nothing. The taxonomy, schemes, classes and properties are
-matched on `identifier`. Individuals are matched on the source's
-ExternalReference identifier, then on their UUID: an individual created in
-Context Studio exports its UUID as its `id`. Relationships are matched on their
-(source, property, target) triple; their `attributes` (JSON scalars, e.g. a
-kit's quantity, unit and optional) may use only the names the property lists in
-`constraints.edge_properties`.
+Planning. `plan_bundle` only reads: it compares the bundle with the workspace
+and returns the operations that would make the workspace match, as drafts for
+a change proposal (`domain.versioning.bundle_import` proposes and applies them).
+A bundle that matches the workspace plans no operations. The taxonomy, schemes,
+classes and properties are matched on `identifier`. Individuals are matched on
+the source's ExternalReference identifier, then on their UUID: an individual
+created in Context Studio exports its UUID as its `id`. Relationships are
+matched on their (source, property, target) triple; their `attributes` (JSON
+scalars, e.g. a kit's quantity, unit and optional) may use only the names the
+property lists in `constraints.edge_properties`. A create names its new entity
+with a ref ("class:house_room"), so later operations point at it as "$class:...".
 
-References. A class, property or individual the loader creates carries an
+References. A class, property or individual the plan creates carries an
 ExternalReference(source, identifier or id). A matched property or individual
 that already has the source's reference keeps it, identifier included, and only
 its metadata is set; one without gets a reference only if the bundle carries
 `constraints` or `data` for it. A relationship type that is not the source's is
-matched only if every end it has lies in this taxonomy. What
-v0 cannot model is carried in that reference's metadata, out of the
-definitions that drive vector matching: a property's `constraints` and an
-individual's `data`.
+matched only if every end it has lies in this taxonomy. What v0 cannot model is
+carried in that reference's metadata, out of the definitions that drive vector
+matching: a property's `constraints` and an individual's `data`.
 
-The loader never deletes. Classes, relationship types and individuals that
-carry this source's reference, attributes on its classes, and relationships
-between its individuals that are no longer in the bundle are reported as stale.
+Deletes. Classes, relationship types and individuals that carry this source's
+reference, attributes on the bundle's classes, and relationships between the
+source's individuals (or of a relationship type being deleted) that are no
+longer in the bundle are planned as deletes, which are breaking.
 
 Exporting is the inverse, scoped to one taxonomy: links that leave it (a
 property whose domain or range is another taxonomy's class, a relationship to
@@ -53,7 +55,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Iterable, TypeVar
+from typing import Any, Iterable, TypeVar
 
 from domain.ontology.entities import (
     AttributeDefinition,
@@ -67,14 +69,14 @@ from domain.ontology.entities import (
 )
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.value_objects import ExternalReference
-
-if TYPE_CHECKING:
-    from domain.ontology.services import OntologyService
+from domain.versioning.proposals import OperationDraft, OperationKind, OperationType
 
 BUNDLE_FORMAT = "context-studio-bundle"
 BUNDLE_VERSION = 0
 _RELATIONSHIP_KEYS = {"source", "property", "target", "attributes"}
 _Keyed = TypeVar("_Keyed", ConceptScheme, Class)
+
+K, T = OperationKind, OperationType
 
 
 class BundleError(ValueError):
@@ -83,31 +85,50 @@ class BundleError(ValueError):
 
 @dataclass
 class KindCounts:
-    """Created, updated and unchanged counts for one kind of entity."""
+    """Planned creates, updates and deletes, and unchanged entities, for one kind."""
 
     created: int = 0
     updated: int = 0
     unchanged: int = 0
+    deleted: int = 0
 
     def record(self, outcome: str) -> None:
         setattr(self, outcome, getattr(self, outcome) + 1)
 
 
 @dataclass
-class BundleImportSummary:
-    """What a bundle load did, per kind, plus stale entities it left in place."""
+class BundlePlan:
+    """
+    The operations that make the workspace match a bundle.
+
+    Attributes:
+        source: The bundle's source
+        taxonomy: The bundle's taxonomy entry (identifier, title, description, vision)
+        taxonomy_id: The matching taxonomy, or None when the import would create it
+            (its schemes then point at the placeholder NEW_TAXONOMY)
+        operations: Drafts in apply order: creates, then updates and moves, then deletes
+        counts: Per kind of entity, what the plan does
+        deletes: A description of each entity the plan deletes
+    """
 
     source: str
+    taxonomy: dict[str, Any]
+    taxonomy_id: str | None = None
+    operations: list[OperationDraft] = field(default_factory=list)
     counts: dict[str, KindCounts] = field(default_factory=dict)
-    stale: list[str] = field(default_factory=list)
+    deletes: list[str] = field(default_factory=list)
 
     def kind(self, name: str) -> KindCounts:
         return self.counts.setdefault(name, KindCounts())
 
     @property
     def changed(self) -> int:
-        """How many entities were created or updated."""
-        return sum(c.created + c.updated for c in self.counts.values())
+        """How many entities the plan creates, updates or deletes."""
+        return sum(c.created + c.updated + c.deleted for c in self.counts.values())
+
+
+# The taxonomy id a plan uses when the taxonomy does not exist yet.
+NEW_TAXONOMY = "<new taxonomy>"
 
 
 def check_bundle_header(bundle: dict[str, Any]) -> None:
@@ -126,62 +147,104 @@ def check_bundle_header(bundle: dict[str, Any]) -> None:
         raise BundleError("A bundle needs a 'source' and a 'taxonomy.identifier'")
 
 
-def load_bundle(
-    service: OntologyService, repo: OntologyRepository, bundle: dict[str, Any]
-) -> BundleImportSummary:
+def plan_bundle(repo: OntologyRepository, bundle: dict[str, Any]) -> BundlePlan:
     """
-    Idempotently load a bundle into the workspace.
-
-    `service` should be wired with no vector indexes during a bulk load; the
-    caller reindexes once afterwards.
+    Plan the operations that make the workspace match a bundle; writes nothing.
 
     Raises:
         BundleError: If the bundle is malformed, an identifier already belongs
             to another taxonomy, or a reference inside the bundle does not resolve
     """
     check_bundle_header(bundle)
-    return _Loader(service, repo, bundle).run()
+    return _Planner(repo, bundle).run()
 
 
-class _Loader:
-    def __init__(
-        self, service: OntologyService, repo: OntologyRepository, bundle: dict[str, Any]
-    ) -> None:
-        self._service = service
+def _ref(kind: str, key: str) -> str:
+    return f"{kind}:{key}"
+
+
+def _text(value: Any) -> str:
+    return value or ""
+
+
+class _Planner:
+    def __init__(self, repo: OntologyRepository, bundle: dict[str, Any]) -> None:
         self._repo = repo
         self._bundle = bundle
         self._source = bundle["source"]
-        self.summary = BundleImportSummary(source=self._source)
-        self._stale: list[str] = []
+        self.plan = BundlePlan(source=self._source, taxonomy=bundle["taxonomy"])
+        self._creates: list[OperationDraft] = []
+        self._updates: list[OperationDraft] = []
+        self._deletes: list[OperationDraft] = []
+        self._deleted_ids: set[str] = set()
         self._bundle_triples: set[tuple[str, str, str]] = set()
 
     # ------------------------------------------------------------------ run
 
-    def run(self) -> BundleImportSummary:
-        # Checked before anything is written: a bad edge refuses the whole bundle.
+    def run(self) -> BundlePlan:
+        # Checked before anything else: a bad edge refuses the whole bundle.
         edge_properties = _edge_properties(self._bundle)
         for spec in self._bundle.get("relationships", []):
             _relationship_attributes(spec, edge_properties)
-        taxonomy = self._upsert_taxonomy(self._bundle["taxonomy"])
-        scheme_ids = self._upsert_schemes(taxonomy.id, self._bundle.get("schemes", []))
-        class_ids = self._upsert_classes(taxonomy.id, scheme_ids, self._bundle.get("classes", []))
-        taxonomy_class_ids = {cls.id for cls in self._taxonomy_classes(taxonomy.id)}
-        property_ids = self._upsert_properties(
+        taxonomy = self._plan_taxonomy(self._bundle["taxonomy"])
+        taxonomy_id = taxonomy.id if taxonomy else None
+        self.plan.taxonomy_id = taxonomy_id
+        taxonomy_classes = self._taxonomy_classes(taxonomy_id)
+        scheme_ids = self._plan_schemes(taxonomy_id, self._bundle.get("schemes", []))
+        class_ids = self._plan_classes(taxonomy_id, scheme_ids, self._bundle.get("classes", []))
+        taxonomy_class_ids = {cls.id for cls in taxonomy_classes}
+        property_ids = self._plan_properties(
             class_ids, taxonomy_class_ids, self._bundle.get("properties", [])
         )
-        individual_ids = self._upsert_individuals(
-            taxonomy.id, class_ids, taxonomy_class_ids, self._bundle.get("individuals", [])
+        individual_ids = self._plan_individuals(
+            taxonomy_id, class_ids, taxonomy_class_ids, self._bundle.get("individuals", [])
         )
-        self._upsert_relationships(
+        self._plan_relationships(
             individual_ids, property_ids, self._bundle.get("relationships", [])
         )
-        self._report_stale(taxonomy.id, class_ids, property_ids, individual_ids)
-        return self.summary
+        self._plan_deletes(taxonomy_id, taxonomy_classes, class_ids, property_ids, individual_ids)
+        for seq, draft in enumerate([*self._creates, *self._updates, *self._deletes], start=1):
+            draft.seq = seq
+            self.plan.operations.append(draft)
+        self.plan.deletes.sort()
+        return self.plan
+
+    def _create(self, kind: OperationKind, ref: str, fields: dict[str, Any]) -> str:
+        """Plan a create; returns the "$ref" later operations point at it with."""
+        self._creates.append(
+            OperationDraft(
+                seq=0,
+                op=T.CREATE,
+                kind=kind,
+                ref=ref,
+                fields={name: value for name, value in fields.items() if value is not None},
+            )
+        )
+        return f"${ref}"
+
+    def _update(
+        self,
+        kind: OperationKind,
+        target_id: str,
+        fields: dict[str, Any],
+        op: OperationType = T.UPDATE,
+    ) -> None:
+        self._updates.append(
+            OperationDraft(seq=0, op=op, kind=kind, target_id=target_id, fields=fields)
+        )
+
+    def _delete(self, kind: OperationKind, entity: Any, description: str, counted: str) -> None:
+        if entity.id in self._deleted_ids:
+            return
+        self._deleted_ids.add(entity.id)
+        self._deletes.append(OperationDraft(seq=0, op=T.DELETE, kind=kind, target_id=entity.id))
+        self.plan.deletes.append(description)
+        self.plan.kind(counted).record("deleted")
 
     # ------------------------------------------------------------- taxonomy
 
-    def _upsert_taxonomy(self, spec: dict[str, Any]) -> Taxonomy:
-        counts = self.summary.kind("taxonomy")
+    def _plan_taxonomy(self, spec: dict[str, Any]) -> Taxonomy | None:
+        counts = self.plan.kind("taxonomy")
         existing = self._repo.get_by_identifier(spec["identifier"])
         if existing is not None and not isinstance(existing, Taxonomy):
             raise BundleError(
@@ -190,63 +253,58 @@ class _Loader:
             )
         if existing is None:
             counts.record("created")
-            return self._service.create_taxonomy(
-                title=spec["title"],
-                description=spec.get("description"),
-                identifier=spec["identifier"],
-                vision=spec.get("vision"),
-            )
-        wanted = {
-            "title": spec["title"],
-            "description": spec.get("description") or "",
-            "vision": spec.get("vision") or "",
-        }
-        current = {
-            "title": existing.title,
-            "description": existing.description or "",
-            "vision": existing.vision or "",
-        }
-        if wanted == current:
-            counts.record("unchanged")
-            return existing
-        counts.record("updated")
-        return self._service.update_taxonomy(existing.id, **wanted)
+            return None
+        changed = _changed(
+            {
+                "title": (existing.title, spec["title"]),
+                "description": (_text(existing.description), _text(spec.get("description"))),
+                "vision": (_text(existing.vision), _text(spec.get("vision"))),
+            }
+        )
+        if changed:
+            self._update(K.TAXONOMY, existing.id, changed)
+        counts.record("updated" if changed else "unchanged")
+        return existing
 
     # -------------------------------------------------------------- schemes
 
-    def _upsert_schemes(self, taxonomy_id: str, specs: list[dict[str, Any]]) -> dict[str, str]:
-        counts = self.summary.kind("scheme")
+    def _plan_schemes(self, taxonomy_id: str | None, specs: list[dict[str, Any]]) -> dict[str, str]:
+        counts = self.plan.kind("scheme")
         ids: dict[str, str] = {}
         for spec in specs:
-            existing = self._in_taxonomy(ConceptScheme, taxonomy_id, spec["identifier"])
+            identifier = spec["identifier"]
+            existing = self._in_taxonomy(ConceptScheme, taxonomy_id, identifier)
             if existing is None:
-                scheme = self._service.create_scheme(
-                    taxonomy_id=taxonomy_id,
-                    title=spec["title"],
-                    description=spec.get("description"),
-                    identifier=spec["identifier"],
+                ids[identifier] = self._create(
+                    K.SCHEME,
+                    _ref("scheme", identifier),
+                    {
+                        "taxonomy_id": taxonomy_id or NEW_TAXONOMY,
+                        "title": spec["title"],
+                        "description": spec.get("description"),
+                        "identifier": identifier,
+                    },
                 )
                 counts.record("created")
-            elif (existing.title, existing.description or "") == (
-                spec["title"],
-                spec.get("description") or "",
-            ):
-                scheme = existing
-                counts.record("unchanged")
-            else:
-                scheme = self._service.update_concept_scheme(
-                    existing.id, title=spec["title"], description=spec.get("description") or ""
-                )
-                counts.record("updated")
-            ids[spec["identifier"]] = scheme.id
+                continue
+            changed = _changed(
+                {
+                    "title": (existing.title, spec["title"]),
+                    "description": (_text(existing.description), _text(spec.get("description"))),
+                }
+            )
+            if changed:
+                self._update(K.SCHEME, existing.id, changed)
+            counts.record("updated" if changed else "unchanged")
+            ids[identifier] = existing.id
         return ids
 
     # -------------------------------------------------------------- classes
 
-    def _upsert_classes(
-        self, taxonomy_id: str, scheme_ids: dict[str, str], specs: list[dict[str, Any]]
+    def _plan_classes(
+        self, taxonomy_id: str | None, scheme_ids: dict[str, str], specs: list[dict[str, Any]]
     ) -> dict[str, str]:
-        counts = self.summary.kind("class")
+        counts = self.plan.kind("class")
         ids: dict[str, str] = {}
         for spec in _parents_first(specs):
             identifier = spec["identifier"]
@@ -262,104 +320,114 @@ class _Loader:
                     )
             existing = self._in_taxonomy(Class, taxonomy_id, identifier)
             if existing is None:
-                cls = self._service.create_class(
-                    concept_scheme_id=scheme_id,
-                    title=spec["title"],
-                    description=spec.get("description"),
-                    parent_class_id=parent_id,
-                    identifier=identifier,
-                )
-                cls = self._service.update_class(
-                    cls.id,
-                    external_references=[
-                        ExternalReference(source=self._source, identifier=identifier)
-                    ],
+                ids[identifier] = self._create(
+                    K.CLASS,
+                    _ref("class", identifier),
+                    {
+                        "concept_scheme_id": scheme_id,
+                        "title": spec["title"],
+                        "description": spec.get("description"),
+                        "parent_class_id": parent_id,
+                        "identifier": identifier,
+                        "external_references": [
+                            ExternalReference(source=self._source, identifier=identifier).to_dict()
+                        ],
+                    },
                 )
                 counts.record("created")
-            else:
-                cls, outcome = self._update_class(existing, spec, scheme_id, parent_id)
-                counts.record(outcome)
-            ids[identifier] = cls.id
-            self._upsert_attributes(cls, spec.get("attributes", []))
+                self._plan_attributes(identifier, ids[identifier], {}, spec.get("attributes", []))
+                continue
+            counts.record(self._plan_class_update(existing, spec, scheme_id, parent_id))
+            ids[identifier] = existing.id
+            current = {
+                a.identifier: a
+                for a in self._repo.list_attribute_definitions(class_id=existing.id, limit=None)
+            }
+            self._plan_attributes(
+                identifier, existing.id, current, spec.get("attributes", []), existing
+            )
         return ids
 
-    def _update_class(
+    def _plan_class_update(
         self, existing: Class, spec: dict[str, Any], scheme_id: str, parent_id: str | None
-    ) -> tuple[Class, str]:
-        cls, outcome = existing, "unchanged"
-        if (existing.title, existing.description or "") != (
-            spec["title"],
-            spec.get("description") or "",
-        ):
-            cls = self._service.update_class(
-                existing.id, title=spec["title"], description=spec.get("description") or ""
-            )
-            outcome = "updated"
-        # Scheme first: the new parent (loaded earlier, parents first) is already there.
+    ) -> str:
+        changed = _changed(
+            {
+                "title": (existing.title, spec["title"]),
+                "description": (_text(existing.description), _text(spec.get("description"))),
+            }
+        )
+        if changed:
+            self._update(K.CLASS, existing.id, changed)
+        move: dict[str, Any] = {}
+        # A class moving to another scheme names its parent there (or None).
         if existing.concept_scheme_id != scheme_id:
-            cls = self._service.move_class_to_scheme(existing.id, scheme_id)
-            outcome = "updated"
-        if existing.parent_class_id != parent_id:
-            cls = self._service.move_class(existing.id, parent_id)
-            outcome = "updated"
-        return cls, outcome
+            move = {"concept_scheme_id": scheme_id, "parent_class_id": parent_id}
+        elif existing.parent_class_id != parent_id:
+            move = {"parent_class_id": parent_id}
+        if move:
+            self._update(K.CLASS, existing.id, move, op=T.MOVE)
+        return "updated" if changed or move else "unchanged"
 
-    def _upsert_attributes(self, cls: Class, specs: list[dict[str, Any]]) -> None:
-        counts = self.summary.kind("attribute")
-        current = {
-            a.identifier: a
-            for a in self._service.list_attribute_definitions(class_id=cls.id, limit=None)
-        }
-        wanted_identifiers = [spec["identifier"] for spec in specs]
+    def _plan_attributes(
+        self,
+        class_key: str,
+        class_id: str,
+        current: dict[str, AttributeDefinition],
+        specs: list[dict[str, Any]],
+        cls: Class | None = None,
+    ) -> None:
+        counts = self.plan.kind("attribute")
+        wanted_identifiers = {spec["identifier"] for spec in specs}
         for identifier, attribute in current.items():
-            if identifier not in wanted_identifiers:
-                self._stale.append(
-                    f"AttributeDefinition {attribute.title!r} ({identifier}) on {cls.title!r}"
+            if identifier not in wanted_identifiers and cls is not None:
+                self._delete(
+                    K.ATTRIBUTE,
+                    attribute,
+                    f"AttributeDefinition {attribute.title!r} ({identifier}) on {cls.title!r}",
+                    "attribute",
                 )
         sort_orders = _sort_orders(current, specs)
         for spec in specs:
             existing = current.get(spec["identifier"])
-            # "" and [] (not None) so that dropping a description or an enum clears it:
-            # the service reads None as "leave unchanged".
             wanted = {
                 "title": spec["title"],
-                "description": spec.get("description") or "",
+                "description": spec.get("description") or None,
                 "datatype": spec["datatype"],
                 "is_required": bool(spec.get("required", False)),
-                "allowed_values": spec.get("allowed_values") or [],
+                "allowed_values": spec.get("allowed_values") or None,
                 "sort_order": sort_orders[spec["identifier"]],
             }
             if existing is None:
-                self._service.create_attribute_definition(
-                    class_id=cls.id,
-                    identifier=spec["identifier"],
-                    **{**wanted, "description": spec.get("description")},
+                self._create(
+                    K.ATTRIBUTE,
+                    _ref("attribute", f"{class_key}/{spec['identifier']}"),
+                    {"class_id": class_id, "identifier": spec["identifier"], **wanted},
                 )
                 counts.record("created")
                 continue
             have = {
                 "title": existing.title,
-                "description": existing.description or "",
+                "description": existing.description or None,
                 "datatype": str(getattr(existing.datatype, "value", existing.datatype)),
                 "is_required": existing.is_required,
-                "allowed_values": existing.allowed_values or [],
+                "allowed_values": existing.allowed_values or None,
                 "sort_order": existing.sort_order,
             }
-            if have == wanted:
-                counts.record("unchanged")
-            else:
-                self._service.update_attribute_definition(existing.id, **wanted)
-                counts.record("updated")
+            changed = {name: value for name, value in wanted.items() if have[name] != value}
+            if changed:
+                self._update(K.ATTRIBUTE, existing.id, changed)
+            counts.record("updated" if changed else "unchanged")
 
     # ----------------------------------------------------------- properties
 
-    def _upsert_properties(
+    def _plan_properties(
         self,
         class_ids: dict[str, str],
         taxonomy_class_ids: set[str],
         specs: list[dict[str, Any]],
     ) -> dict[str, str]:
-        counts = self.summary.kind("property")
+        counts = self.plan.kind("property")
         ids: dict[str, str] = {}
         for spec in specs:
             identifier = spec["identifier"]
@@ -375,73 +443,51 @@ class _Loader:
                     " bundle's identifiers"
                 )
             if existing is None:
-                prop = self._service.create_property_definition(
-                    identifier=identifier,
-                    title=spec["title"],
-                    description=spec.get("description"),
-                    canonical_predicate=spec.get("predicate"),
-                    domain_class_id=domain_id,
-                    range_class_id=range_id,
-                    external_references=[self._reference(identifier, spec.get("constraints"))],
+                ids[identifier] = self._create(
+                    K.PROPERTY,
+                    _ref("property", identifier),
+                    {
+                        "identifier": identifier,
+                        "title": spec["title"],
+                        "description": spec.get("description"),
+                        "canonical_predicate": spec.get("predicate"),
+                        "domain_class_id": domain_id,
+                        "range_class_id": range_id,
+                        "external_references": [
+                            self._reference(identifier, spec.get("constraints")).to_dict()
+                        ],
+                    },
                 )
                 counts.record("created")
-            else:
-                prop = self._update_property(existing, spec, domain_id, range_id)
-            ids[identifier] = prop.id
+                continue
+            references = self._references(existing, identifier, spec.get("constraints"))
+            changed = _changed(
+                {
+                    "title": (existing.title, spec["title"]),
+                    "description": (_text(existing.description), _text(spec.get("description"))),
+                    "canonical_predicate": (existing.canonical_predicate, spec.get("predicate")),
+                    "domain_class_id": (existing.domain_class_id, domain_id),
+                    "range_class_id": (existing.range_class_id, range_id),
+                }
+            )
+            if existing.external_references != references:
+                changed["external_references"] = [r.to_dict() for r in references]
+            if changed:
+                self._update(K.PROPERTY, existing.id, changed)
+            counts.record("updated" if changed else "unchanged")
+            ids[identifier] = existing.id
         return ids
-
-    def _update_property(
-        self,
-        existing: PropertyDefinition,
-        spec: dict[str, Any],
-        domain_id: str | None,
-        range_id: str | None,
-    ) -> PropertyDefinition:
-        counts = self.summary.kind("property")
-        references = self._references(existing, spec["identifier"], spec.get("constraints"))
-        have = (
-            existing.title,
-            existing.description or "",
-            existing.canonical_predicate,
-            existing.domain_class_id,
-            existing.range_class_id,
-            existing.external_references,
-        )
-        wanted = (
-            spec["title"],
-            spec.get("description") or "",
-            spec.get("predicate"),
-            domain_id,
-            range_id,
-            references,
-        )
-        if have == wanted:
-            counts.record("unchanged")
-            return existing
-        counts.record("updated")
-        return self._service.update_property_definition(
-            existing.id,
-            title=spec["title"],
-            description=spec.get("description") or "",
-            canonical_predicate=spec.get("predicate"),
-            update_canonical_predicate=True,
-            domain_class_id=domain_id,
-            range_class_id=range_id,
-            update_domain_class_id=True,
-            update_range_class_id=True,
-            external_references=references,
-        )
 
     # ---------------------------------------------------------- individuals
 
-    def _upsert_individuals(
+    def _plan_individuals(
         self,
-        taxonomy_id: str,
+        taxonomy_id: str | None,
         class_ids: dict[str, str],
         taxonomy_class_ids: set[str],
         specs: list[dict[str, Any]],
     ) -> dict[str, str]:
-        counts = self.summary.kind("individual")
+        counts = self.plan.kind("individual")
         existing_by_reference = self._owned_individuals(taxonomy_id)
         ids: dict[str, str] = {}
         for spec in specs:
@@ -454,18 +500,40 @@ class _Loader:
                 bundle_id, taxonomy_class_ids
             )
             if existing is None:
-                individual = self._service.create_individual(
-                    wanted_classes,
-                    title=spec["title"],
-                    description=spec.get("description"),
-                    external_references=[self._reference(bundle_id, spec.get("data"))],
+                ids[bundle_id] = self._create(
+                    K.INDIVIDUAL,
+                    _ref("individual", bundle_id),
+                    {
+                        "class_ids": wanted_classes,
+                        "title": spec["title"],
+                        "description": spec.get("description"),
+                        "external_references": [
+                            self._reference(bundle_id, spec.get("data")).to_dict()
+                        ],
+                    },
                 )
                 counts.record("created")
-            else:
-                individual = self._update_individual(
-                    existing, spec, wanted_classes, taxonomy_class_ids
-                )
-            ids[bundle_id] = individual.id
+                continue
+            changed = _changed(
+                {
+                    "title": (existing.title, spec["title"]),
+                    "description": (_text(existing.description), _text(spec.get("description"))),
+                }
+            )
+            references = self._references(existing, bundle_id, spec.get("data"))
+            if existing.external_references != references:
+                changed["external_references"] = [r.to_dict() for r in references]
+            # Only this taxonomy's classes: a bundle cannot speak for the others.
+            kept = [
+                c for c in existing.class_ids if c not in taxonomy_class_ids or c in wanted_classes
+            ]
+            classes = kept + [c for c in wanted_classes if c not in kept]
+            if classes != list(existing.class_ids):
+                changed["class_ids"] = classes
+            if changed:
+                self._update(K.INDIVIDUAL, existing.id, changed)
+            counts.record("updated" if changed else "unchanged")
+            ids[bundle_id] = existing.id
         return ids
 
     def _individual_by_uuid(
@@ -477,49 +545,15 @@ class _Loader:
             return None
         return individual
 
-    def _update_individual(
-        self,
-        existing: Individual,
-        spec: dict[str, Any],
-        wanted_classes: list[str],
-        taxonomy_class_ids: set[str],
-    ) -> Individual:
-        counts = self.summary.kind("individual")
-        references = self._references(existing, spec["id"], spec.get("data"))
-        changed = False
-        if (existing.title, existing.description or "", existing.external_references) != (
-            spec["title"],
-            spec.get("description") or "",
-            references,
-        ):
-            existing = self._service.update_individual(
-                existing.id,
-                title=spec["title"],
-                description=spec.get("description") or "",
-                external_references=references,
-            )
-            changed = True
-        for class_id in wanted_classes:
-            if class_id not in existing.class_ids:
-                existing = self._service.add_class_to_individual(existing.id, class_id)
-                changed = True
-        # Only this taxonomy's classes: a bundle cannot speak for the others.
-        for class_id in list(existing.class_ids):
-            if class_id in taxonomy_class_ids and class_id not in wanted_classes:
-                existing = self._service.remove_class_from_individual(existing.id, class_id)
-                changed = True
-        counts.record("updated" if changed else "unchanged")
-        return existing
-
     # -------------------------------------------------------- relationships
 
-    def _upsert_relationships(
+    def _plan_relationships(
         self,
         individual_ids: dict[str, str],
         property_ids: dict[str, str],
         specs: list[dict[str, Any]],
     ) -> None:
-        counts = self.summary.kind("relationship")
+        counts = self.plan.kind("relationship")
         edge_properties = _edge_properties(self._bundle)
         for spec in specs:
             attributes = _relationship_attributes(spec, edge_properties)
@@ -530,54 +564,88 @@ class _Loader:
             except KeyError as exc:
                 raise BundleError(f"Relationship {spec} names unknown {exc}") from None
             self._bundle_triples.add((source_id, property_id, target_id))
-            existing = self._repo.list_relationships(
-                source_id=source_id, target_id=target_id, property_id=property_id, limit=None
-            )
+            existing = []
+            if not any(_is_ref(i) for i in (source_id, target_id, property_id)):
+                existing = self._repo.list_relationships(
+                    source_id=source_id, target_id=target_id, property_id=property_id, limit=None
+                )
             if not existing:
-                self._service.create_relationship(
-                    source_id, target_id, property_id, attributes=attributes
+                self._create(
+                    K.RELATIONSHIP,
+                    _ref("relationship", f"{spec['source']}/{spec['property']}/{spec['target']}"),
+                    {
+                        "source_id": source_id,
+                        "target_id": target_id,
+                        "property_definition_id": property_id,
+                        "attributes": attributes or None,
+                    },
                 )
                 counts.record("created")
             elif same_attributes(existing[0].attributes, attributes):
                 counts.record("unchanged")
             else:
-                self._service.update_relationship(existing[0].id, attributes)
+                self._update(K.RELATIONSHIP, existing[0].id, {"attributes": attributes})
                 counts.record("updated")
 
-    # ---------------------------------------------------------------- stale
+    # -------------------------------------------------------------- deletes
 
-    def _report_stale(
+    def _plan_deletes(
         self,
-        taxonomy_id: str,
+        taxonomy_id: str | None,
+        taxonomy_classes: list[Class],
         class_ids: dict[str, str],
         property_ids: dict[str, str],
         individual_ids: dict[str, str],
     ) -> None:
+        """
+        Relationships first, then individuals, properties and classes (children
+        first), so nothing is deleted while something planned to go still uses it.
+        Attribute deletes were planned with their classes.
+        """
         loaded = {*class_ids.values(), *property_ids.values(), *individual_ids.values()}
         owned_individuals = self._owned_individuals(taxonomy_id)
-        candidates: Iterable[Any] = (
-            *self._taxonomy_classes(taxonomy_id),
-            *self._repo.list_property_definitions(limit=None),
-            *owned_individuals.values(),
-        )
         titles = {i.id: i.title for i in owned_individuals.values()}
         predicates = {prop_id: identifier for identifier, prop_id in property_ids.items()}
-        dropped_relationships = [
-            f"Relationship {titles[rel.source_id]!r} {predicates[rel.property_definition_id]}"
-            f" {titles.get(rel.target_id, rel.target_id)!r}"
-            for individual_id in titles
-            for rel in self._repo.list_relationships(source_id=individual_id, limit=None)
-            if rel.property_definition_id in predicates
-            and (rel.source_id, rel.property_definition_id, rel.target_id)
-            not in self._bundle_triples
+        for individual_id in titles:
+            for rel in self._repo.list_relationships(source_id=individual_id, limit=None):
+                if (
+                    rel.property_definition_id in predicates
+                    and (rel.source_id, rel.property_definition_id, rel.target_id)
+                    not in self._bundle_triples
+                ):
+                    self._delete(
+                        K.RELATIONSHIP,
+                        rel,
+                        f"Relationship {titles[rel.source_id]!r}"
+                        f" {predicates[rel.property_definition_id]}"
+                        f" {titles.get(rel.target_id, rel.target_id)!r}",
+                        "relationship",
+                    )
+        stale_properties = [
+            prop
+            for prop in self._repo.list_property_definitions(limit=None)
+            if self._owns(prop) and prop.id not in loaded
         ]
-        self.summary.stale = sorted(
-            [
-                *stale_entities(candidates, self._source, loaded),
-                *self._stale,
-                *dropped_relationships,
-            ]
-        )
+        # A relationship type can't be deleted while relationships use it.
+        for prop in stale_properties:
+            for rel in self._repo.list_relationships(property_id=prop.id, limit=None):
+                self._delete(
+                    K.RELATIONSHIP,
+                    rel,
+                    f"Relationship {rel.source_id} {prop.identifier} {rel.target_id}",
+                    "relationship",
+                )
+        for individual in owned_individuals.values():
+            if individual.id not in loaded:
+                self._delete(
+                    K.INDIVIDUAL, individual, _describe(individual, self._source), "individual"
+                )
+        for prop in stale_properties:
+            self._delete(K.PROPERTY, prop, _describe(prop, self._source), "property")
+        depth = _depths(taxonomy_classes)
+        for cls in sorted(taxonomy_classes, key=lambda c: -depth[c.id]):
+            if self._owns(cls) and cls.id not in loaded:
+                self._delete(K.CLASS, cls, _describe(cls, self._source), "class")
 
     # -------------------------------------------------------------- helpers
 
@@ -595,7 +663,7 @@ class _Loader:
         self, entity: Any, identifier: str, metadata: dict[str, Any] | None
     ) -> list[ExternalReference]:
         """
-        The entity's references after a load.
+        The entity's references after the import.
 
         If the entity already has this source's reference, only that reference's
         metadata is set: its identifier may differ from the bundle key (the DR importer
@@ -610,10 +678,10 @@ class _Loader:
                 return references
         return [*references, wanted] if metadata else references
 
-    def _taxonomy_classes(self, taxonomy_id: str) -> list[Class]:
-        return _taxonomy_classes(self._repo, taxonomy_id)
+    def _taxonomy_classes(self, taxonomy_id: str | None) -> list[Class]:
+        return _taxonomy_classes(self._repo, taxonomy_id) if taxonomy_id else []
 
-    def _owned_individuals(self, taxonomy_id: str) -> dict[str, Individual]:
+    def _owned_individuals(self, taxonomy_id: str | None) -> dict[str, Individual]:
         found: dict[str, Individual] = {}
         for cls in self._taxonomy_classes(taxonomy_id):
             for individual in self._repo.list_individuals(class_id=cls.id, limit=None):
@@ -622,7 +690,9 @@ class _Loader:
                         found[ref.identifier] = individual
         return found
 
-    def _in_taxonomy(self, kind: type[_Keyed], taxonomy_id: str, identifier: str) -> _Keyed | None:
+    def _in_taxonomy(
+        self, kind: type[_Keyed], taxonomy_id: str | None, identifier: str
+    ) -> _Keyed | None:
         """The scheme or class with this identifier, refusing one owned elsewhere."""
         entity = self._repo.get_by_identifier(identifier)
         if entity is None:
@@ -637,7 +707,7 @@ class _Loader:
 
     @staticmethod
     def _class_ref(class_ids: dict[str, str], name: str | None, where: str) -> str | None:
-        return None if name is None else _Loader._class_id(class_ids, name, where)
+        return None if name is None else _Planner._class_id(class_ids, name, where)
 
     @staticmethod
     def _class_id(class_ids: dict[str, str], name: str, where: str) -> str:
@@ -646,11 +716,42 @@ class _Loader:
         return class_ids[name]
 
 
+def _changed(pairs: dict[str, tuple[Any, Any]]) -> dict[str, Any]:
+    """The fields whose (have, want) differ, with the wanted value ("" becomes None: clear it)."""
+    return {
+        name: want if want != "" else None for name, (have, want) in pairs.items() if have != want
+    }
+
+
+def _is_ref(value: str) -> bool:
+    return value.startswith("$")
+
+
+def _describe(entity: Any, source: str) -> str:
+    reference = _source_reference(entity, source)
+    key = reference.identifier if reference else entity.id
+    return f"{type(entity).__name__} {entity.title!r} ({key})"
+
+
+def _depths(classes: list[Class]) -> dict[str, int]:
+    """Each class's depth in its hierarchy (a root is 0)."""
+    parents = {cls.id: cls.parent_class_id for cls in classes}
+    depths: dict[str, int] = {}
+    for class_id in parents:
+        depth, current, seen = 0, parents.get(class_id), {class_id}
+        while current is not None and current in parents and current not in seen:
+            seen.add(current)
+            depth += 1
+            current = parents[current]
+        depths[class_id] = depth
+    return depths
+
+
 class BundleExporter:
     """
-    Export one taxonomy as a v0 bundle, the inverse of `load_bundle`.
+    Export one taxonomy as a v0 bundle, the inverse of `plan_bundle`.
 
-    Loading the exported bundle back into the same workspace writes nothing.
+    Planning the exported bundle against the same workspace plans nothing.
     Entries are sorted by key so that a bundle kept in a repository diffs cleanly.
     """
 

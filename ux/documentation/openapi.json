@@ -7883,6 +7883,89 @@
           }
         }
       }
+    },
+    "/api/v1/interchange/bundles": {
+      "post": {
+        "tags": [
+          "interchange"
+        ],
+        "summary": "Import Bundle",
+        "description": "Plan a bundle and propose it; see the module docstring.",
+        "operationId": "import_bundle_api_v1_interchange_bundles_post",
+        "parameters": [
+          {
+            "name": "apply",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Also apply every non-breaking operation",
+              "default": false,
+              "title": "Apply"
+            },
+            "description": "Also apply every non-breaking operation"
+          },
+          {
+            "name": "dry_run",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Plan and validate only; store nothing",
+              "default": false,
+              "title": "Dry Run"
+            },
+            "description": "Plan and validate only; store nothing"
+          },
+          {
+            "name": "source_detail",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 255
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Where the bundle came from (a file name)",
+              "title": "Source Detail"
+            },
+            "description": "Where the bundle came from (a file name)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "A context-studio-bundle v0 document",
+                "title": "Bundle"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BundleImportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The bundle is malformed, conflicts with the workspace, or its plan does not validate; nothing is stored"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -8829,6 +8912,112 @@
           "file"
         ],
         "title": "Body_import_ontology_api_v1_interchange_import_post"
+      },
+      "BundleImportResponse": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "The bundle's source"
+          },
+          "taxonomy_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taxonomy Id",
+            "description": "The bundle's taxonomy; None on a dry run that would create it"
+          },
+          "taxonomy_created": {
+            "type": "boolean",
+            "title": "Taxonomy Created",
+            "description": "The import created the taxonomy (on a dry run: would create it)"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "title": "Dry Run",
+            "description": "Nothing was stored or changed"
+          },
+          "operation_count": {
+            "type": "integer",
+            "title": "Operation Count",
+            "description": "How many operations the plan has"
+          },
+          "counts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/BundleKindCounts"
+            },
+            "type": "object",
+            "title": "Counts",
+            "description": "Per kind of entity"
+          },
+          "deletes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Deletes",
+            "description": "The entities the plan deletes, described"
+          },
+          "proposal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChangeProposalResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The proposal (not stored on a dry run); None when the workspace already matches the bundle, or on a dry run that would create the taxonomy"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "taxonomy_created",
+          "dry_run",
+          "operation_count",
+          "counts"
+        ],
+        "title": "BundleImportResponse",
+        "description": "The plan for a bundle and the proposal made from it."
+      },
+      "BundleKindCounts": {
+        "properties": {
+          "created": {
+            "type": "integer",
+            "title": "Created",
+            "description": "Entities the plan creates"
+          },
+          "updated": {
+            "type": "integer",
+            "title": "Updated",
+            "description": "Entities the plan updates or moves"
+          },
+          "deleted": {
+            "type": "integer",
+            "title": "Deleted",
+            "description": "Entities the plan deletes (these wait for review)"
+          },
+          "unchanged": {
+            "type": "integer",
+            "title": "Unchanged",
+            "description": "Entities that already match the bundle"
+          }
+        },
+        "type": "object",
+        "required": [
+          "created",
+          "updated",
+          "deleted",
+          "unchanged"
+        ],
+        "title": "BundleKindCounts",
+        "description": "What the import plans for one kind of entity."
       },
       "CancelBatchResponse": {
         "properties": {

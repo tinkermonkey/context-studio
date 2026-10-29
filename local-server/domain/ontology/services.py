@@ -931,6 +931,7 @@ class OntologyService:
         parent_class_id: str | None = None,
         identifier: str | None = None,
         source_run_id: str | None = None,
+        external_references: list[ExternalReference] | None = None,
     ) -> Class:
         """
         Create a new class within a concept scheme.
@@ -952,6 +953,8 @@ class OntologyService:
                 auto-generated from title if not provided
             source_run_id: Optional ID of the pipeline run that produced this
                 class, for provenance tracking
+            external_references: Optional references to external sources (e.g. the
+                bundle the class was loaded from)
 
         Returns:
             The created Class with generated embedding
@@ -1010,6 +1013,7 @@ class OntologyService:
             created_at=now,
             last_modified=now,
             source_run_id=source_run_id,
+            external_references=list(external_references or []),
         )
         cls = self._repository.save_class(cls)
         self._sync_vector_index(cls.id, cls.title, cls.description)

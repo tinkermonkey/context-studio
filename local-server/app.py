@@ -78,6 +78,7 @@ from adapters.sync.s3_sync import S3SyncAdapter
 from adapters.telemetry import setup_telemetry
 from adapters.telemetry.log_bridge import OTLPLogHandler
 from adapters.web.admin_routes import router as admin_router
+from adapters.web.bundle_routes import router as bundle_router
 from adapters.web.chat_routes import router as chat_router
 from adapters.web.extraction_routes import router as extraction_router
 from adapters.web.graph_routes import router as graph_router
@@ -164,6 +165,7 @@ from domain.pipelines.schema_node_grounding.apply_service import (
 )
 from domain.pipelines.schema_node_grounding.scoring import GroundingScorer
 from domain.versioning.approval_policy import ApprovalPolicyService
+from domain.versioning.bundle_import import BundleImportService
 from domain.versioning.events import ChangesetMerged, SyncCompleted
 from domain.versioning.ports import SyncTarget
 from domain.versioning.proposal_service import ProposalService
@@ -747,6 +749,9 @@ async def lifespan(app: FastAPI):
         app.state.versioning_service = versioning_service
         app.state.revert_service = revert_service
         app.state.proposal_service = proposal_service
+        app.state.bundle_import_service = BundleImportService(
+            proposal_service, ontology_service, cast(OntologyRepository, ontology_repo)
+        )
         app.state.approval_policy_service = approval_policy_service
         app.state.admin_service = admin_service
         app.state.load_demo_dataset = load_demo_dataset
@@ -896,6 +901,7 @@ app.include_router(admin_router)
 app.include_router(interchange_router)
 app.include_router(chat_router)
 app.include_router(proposals_router)
+app.include_router(bundle_router)
 # A route rather than a mount, so POST /mcp is served without a redirect to /mcp/
 app.add_route("/mcp", mcp_endpoint, include_in_schema=False)
 

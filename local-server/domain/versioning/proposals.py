@@ -175,6 +175,28 @@ def _only_adds_keys(current: Any, proposed: Any) -> bool:
 
 
 @dataclass
+class OperationDraft:
+    """
+    One operation as a proposer submits it, before validation.
+
+    Attributes mirror ProposedOperation; `claimed_scope` is the scope the
+    proposer asserts, which can only make the computed scope stricter. `base`
+    and `status` are not submitted: the service captures and tracks them.
+    """
+
+    seq: int
+    op: OperationType | str
+    kind: OperationKind | str
+    target_id: str | None = None
+    ref: str | None = None
+    fields: dict[str, Any] = field(default_factory=dict)
+    rationale: str | None = None
+    evidence: list[dict[str, Any]] = field(default_factory=list)
+    probability: float | None = None
+    claimed_scope: ChangeScope | str | None = None
+
+
+@dataclass
 class ProposedOperation:
     """
     One change to one ontology entity, as proposed.
