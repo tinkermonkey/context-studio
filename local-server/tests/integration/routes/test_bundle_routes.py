@@ -98,6 +98,21 @@ def test_source_is_passed_to_the_exporter(client, repo, house_id):
     assert response.json()["source"] == "elsewhere"
 
 
+@pytest.mark.parametrize("blank", ["", "   ", "\t"])
+def test_blank_source_falls_back_to_the_taxonomy_identifier(client, repo, house_id, blank):
+    response = client.get(_url(house_id), params={"source": blank})
+
+    assert response.status_code == 200
+    assert response.json()["source"] == "house"
+    assert response.json() == BundleExporter(repo).export(house_id)
+
+
+def test_source_is_stripped(client, house_id):
+    response = client.get(_url(house_id), params={"source": "  elsewhere "})
+
+    assert response.json()["source"] == "elsewhere"
+
+
 def test_unknown_taxonomy_is_404(client):
     response = client.get(_url("00000000-0000-4000-8000-000000000000"))
 

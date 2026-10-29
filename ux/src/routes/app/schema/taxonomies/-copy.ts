@@ -25,6 +25,5 @@ export const taxonomiesCopy = {
   exportBundle: {
     buttonLabel: "Export bundle",
     hint: (identifier: string) => `Download ${identifier}.bundle.json`,
-    failedToast: "Bundle export failed",
   },
 };

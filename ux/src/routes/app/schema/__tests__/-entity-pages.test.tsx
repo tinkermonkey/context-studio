@@ -15,11 +15,12 @@ import { ClassPage } from "../classes_.$id";
 
 const server = setupServer(...entityPageHandlers);
 
-function TaxonomyPageWithToasts({ id }: { id: string }) {
+/** The page plus the toast viewport, which outlives the page when `showPage` turns false. */
+function TaxonomyPageWithToasts({ id, showPage = true }: { id: string; showPage?: boolean }) {
   const { toasts, dismiss } = useToasts();
   return (
     <>
-      <TaxonomyPage id={id} />
+      {showPage && <TaxonomyPage id={id} />}
       <ToastViewport toasts={toasts} onDismiss={dismiss} />
     </>
   );
@@ -208,7 +209,8 @@ describe("TaxonomyPage", () => {
       expect(requested).toBe("tax-1");
       expect(blobs[0].type).toBe("application/json");
       expect(await readBlob(blobs[0])).toBe(JSON.stringify(bundle, null, 2) + "\n");
-      expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:bundle");
+      // Revoked on a later tick, after the browser has taken the download.
+      await vi.waitFor(() => expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:bundle"));
       expect(screen.queryByText("Bundle export failed")).not.toBeInTheDocument();
     });
 
@@ -227,9 +229,57 @@ describe("TaxonomyPage", () => {
       await user.click(await screen.findByTestId("taxonomy-export-bundle"));
 
       expect(await screen.findByText("Bundle export failed")).toBeInTheDocument();
+      expect(screen.getAllByText("Bundle export failed")).toHaveLength(1);
       expect(screen.getByText("these have no stored identifier: Class 'Path'")).toBeInTheDocument();
       expect(downloads).toEqual([]);
       expect(screen.getByTestId("taxonomy-export-bundle")).toBeEnabled();
+    });
+
+    it("is busy and disabled while the export is pending", async () => {
+      let release!: () => void;
+      const held = new Promise<void>((resolve) => (release = resolve));
+      server.use(
+        http.get("*/api/v1/interchange/bundles/:id", async () => {
+          await held;
+          return HttpResponse.json(bundle);
+        }),
+      );
+      const user = userEvent.setup();
+      render(<TaxonomyPageWithToasts id="tax-1" />);
+      const button = await screen.findByTestId("taxonomy-export-bundle");
+
+      await user.click(button);
+
+      await vi.waitFor(() => expect(button).toHaveAttribute("aria-busy", "true"));
+      expect(button).toBeDisabled();
+      expect(downloads).toEqual([]);
+      release();
+      await vi.waitFor(() => expect(button).toHaveAttribute("aria-busy", "false"));
+      expect(button).toBeEnabled();
+      expect(downloads).toHaveLength(1);
+    });
+
+    it("still toasts a failure that lands after the page has unmounted", async () => {
+      let release!: () => void;
+      const held = new Promise<void>((resolve) => (release = resolve));
+      server.use(
+        http.get("*/api/v1/interchange/bundles/:id", async () => {
+          await held;
+          return HttpResponse.json({ detail: "no stored identifier" }, { status: 409 });
+        }),
+      );
+      const user = userEvent.setup();
+      const { rerender } = render(<TaxonomyPageWithToasts id="tax-1" />);
+      const button = await screen.findByTestId("taxonomy-export-bundle");
+      await user.click(button);
+      await vi.waitFor(() => expect(button).toHaveAttribute("aria-busy", "true"));
+
+      rerender(<TaxonomyPageWithToasts id="tax-1" showPage={false} />);
+      expect(screen.queryByTestId("taxonomy-page")).not.toBeInTheDocument();
+      release();
+
+      expect(await screen.findByText("Bundle export failed")).toBeInTheDocument();
+      expect(screen.getByText("no stored identifier")).toBeInTheDocument();
     });
   });
 });

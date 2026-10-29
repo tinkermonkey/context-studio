@@ -4,6 +4,7 @@ import { MutationCache, QueryClient, QueryClientProvider } from "@tanstack/react
 import { renderHook, waitFor } from "@testing-library/react";
 import { interchangeService } from "@/api/services/interchange";
 import { handleMutationError, setGlobalErrorHandler } from "@/api/utils/queryClient";
+import { ToastProvider, useToasts } from "@/components/ui/Toast";
 import { useExportBundle } from "../useExportBundle";
 
 function setup() {
@@ -12,24 +13,30 @@ function setup() {
     defaultOptions: { mutations: { retry: false } },
   });
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <ToastProvider>{children}</ToastProvider>
+    </QueryClientProvider>
   );
-  return renderHook(() => useExportBundle(), { wrapper });
+  return renderHook(() => ({ exportBundle: useExportBundle(), toasts: useToasts().toasts }), {
+    wrapper,
+  });
 }
 
 describe("useExportBundle", () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it("leaves the error toast to the caller, not the global safety net", async () => {
+  it("shows one titled error toast of its own instead of the global one", async () => {
     const globalToast = vi.fn();
     setGlobalErrorHandler(globalToast);
     vi.spyOn(interchangeService, "exportBundle").mockRejectedValue(new Error("refused"));
     const { result } = setup();
 
-    result.current.mutate("tax-1");
+    result.current.exportBundle.mutate("tax-1");
 
-    await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(result.current.error?.message).toBe("refused");
+    await waitFor(() => expect(result.current.exportBundle.isError).toBe(true));
+    expect(result.current.toasts).toMatchObject([
+      { type: "error", title: "Bundle export failed", sub: "refused" },
+    ]);
     expect(globalToast).not.toHaveBeenCalled();
   });
 });

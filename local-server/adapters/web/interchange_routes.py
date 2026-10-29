@@ -278,11 +278,13 @@ async def export_bundle(
         HTTPException: 404 if the taxonomy does not exist; 409 if the workspace
             cannot be expressed as a bundle (an entity has no stored identifier)
     """
+    # A blank ?source= means no source: fall back to the taxonomy identifier.
+    bundle_source = (source or "").strip() or None
 
     def export() -> Optional[dict[str, Any]]:
         if ontology_repo.get_taxonomy(taxonomy_id) is None:
             return None
-        return BundleExporter(ontology_repo).export(taxonomy_id, source)
+        return BundleExporter(ontology_repo).export(taxonomy_id, bundle_source)
 
     try:
         bundle = await run_sync_in_executor(export)

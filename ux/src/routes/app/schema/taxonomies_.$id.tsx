@@ -9,7 +9,6 @@ import {
   Table,
   type Column,
 } from "@tinkermonkey/heimdall-ui";
-import { ApiError } from "@/api/client/interceptors";
 import { useTaxonomy, useUpdateTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
 import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { useSchemeCounts } from "@/api/hooks/ontology/useContentCounts";
@@ -30,7 +29,6 @@ import {
   formatDate,
   TableEmpty,
 } from "@/components/entity/EntityPageParts";
-import { useToasts } from "@/components/ui/Toast";
 import { usePageBreadcrumbs } from "@/hooks/usePageBreadcrumbs";
 import { entityPath } from "@/lib/entityPaths";
 import { taxonomiesCopy } from "./taxonomies/-copy";
@@ -87,7 +85,6 @@ export function TaxonomyPage({ id }: { id: string }) {
   const { data: counts } = useSchemeCounts(id);
   const updateTaxonomy = useUpdateTaxonomy();
   const exportBundle = useExportBundle();
-  const { toast } = useToasts();
 
   const schemes = useMemo(() => schemesResponse?.items ?? [], [schemesResponse]);
   const countsByScheme = useMemo(
@@ -105,15 +102,6 @@ export function TaxonomyPage({ id }: { id: string }) {
       relationshipTypes: c?.property_definition_count,
     };
   });
-  const onExportBundle = () =>
-    exportBundle.mutate(id, {
-      onError: (err) =>
-        toast(
-          "error",
-          taxonomiesCopy.exportBundle.failedToast,
-          err instanceof ApiError ? err.detail : err.message,
-        ),
-    });
   const sum = (pick: (c: NonNullable<typeof counts>[number]) => number) =>
     counts ? counts.reduce((total, c) => total + pick(c), 0) : undefined;
 
@@ -158,7 +146,7 @@ export function TaxonomyPage({ id }: { id: string }) {
           <>
             <Button
               variant="ghost"
-              onClick={onExportBundle}
+              onClick={() => exportBundle.mutate(id)}
               disabled={exportBundle.isPending}
               aria-busy={exportBundle.isPending}
               title={taxonomiesCopy.exportBundle.hint(taxonomy.identifier)}
