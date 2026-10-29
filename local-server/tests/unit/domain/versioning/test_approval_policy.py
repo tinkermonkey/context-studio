@@ -135,6 +135,17 @@ class TestMatching:
         assert not policy.allows(update, [ACTIVITY])
         assert ApprovalPolicy("tax", (AutoApplyRule(scope=S.EDITORIAL),)).allows(update, [])
 
+    def test_a_taxonomy_vision_update_is_never_allowed(self):
+        policy = ApprovalPolicy(
+            "tax", (AutoApplyRule(scope=S.EDITORIAL), AutoApplyRule(kind=K.TAXONOMY))
+        )
+        vision = op(1, T.UPDATE, K.TAXONOMY, S.EDITORIAL, target="tax", vision="New charter")
+        both = op(2, T.UPDATE, K.TAXONOMY, S.EDITORIAL, target="tax", title="H", vision=None)
+        title = op(3, T.UPDATE, K.TAXONOMY, S.EDITORIAL, target="tax", title="Home")
+        assert not policy.allows(vision, [])
+        assert not policy.allows(both, [])
+        assert policy.allows(title, [])
+
     def test_every_class_must_be_covered(self):
         activity_only = ApprovalPolicy(
             "tax", (AutoApplyRule(op=T.CREATE, kind=K.INDIVIDUAL, class_key="house_activity"),)
@@ -346,6 +357,34 @@ class TestAutoApplyOnPropose:
         assert dust.title == "Dust"
         assert ontology.get_individual(house["attic"]).description == "Dusty"
         assert tags.tags == [("IndividualCreated", proposal.id)]
+
+    def test_a_vision_change_never_auto_applies(self, service, policies, house, ontology):
+        """The vision is the charter proposals are judged against; a person decides."""
+        policies.save(
+            ApprovalPolicy(
+                house["taxonomy"],
+                (AutoApplyRule(scope=S.EDITORIAL), AutoApplyRule(kind=K.TAXONOMY)),
+            )
+        )
+        before = ontology.get_taxonomy(house["taxonomy"])
+        drafts = [
+            OperationDraft(
+                1, T.UPDATE, K.TAXONOMY, house["taxonomy"], fields={"vision": "Anything"}
+            ),
+            OperationDraft(
+                2, T.UPDATE, K.TAXONOMY, house["taxonomy"], fields={"description": "Our home"}
+            ),
+        ]
+
+        proposal = service.propose(house["taxonomy"], "Recharter", drafts, ProposalSource.MCP)
+
+        vision, description = proposal.operations
+        assert vision.scope is S.EDITORIAL
+        assert vision.status is OperationStatus.PENDING
+        assert description.status is OperationStatus.APPLIED
+        after = ontology.get_taxonomy(house["taxonomy"])
+        assert after.vision == before.vision
+        assert after.description == "Our home"
 
     def test_deletes_never_auto_apply(self, service, policies, house, ontology):
         policies.save(

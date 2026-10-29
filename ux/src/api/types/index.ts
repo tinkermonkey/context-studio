@@ -4191,8 +4191,9 @@ export interface paths {
      *     proposal's run, when they reach min_probability and matching rules cover
      *     every class their entity will have (a rule matches when every key it sets
      *     does; one without a class covers any). Never auto-applied: breaking
-     *     operations, deletes, taxonomy creates, property-definition changes, and
-     *     anything that touches or points at an entity outside this taxonomy.
+     *     operations, deletes, taxonomy creates, changes to the taxonomy's vision,
+     *     property-definition changes, and anything that touches or points at an
+     *     entity outside this taxonomy.
      */
     put: operations["set_approval_policy_api_taxonomies__taxonomy_id__approval_policy_put"];
     post?: never;
