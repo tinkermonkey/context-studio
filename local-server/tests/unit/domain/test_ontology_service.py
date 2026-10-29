@@ -4236,6 +4236,26 @@ class TestRelationshipAttributes:
 
         assert service._event_publisher.get_events_of_type(RelationshipUpdated) == []
 
+    def test_a_value_of_another_type_is_a_change(self, kit):
+        """True == 1 and 1 == 1.0 in Python, but optional: 1 -> true is a real edit."""
+        service, hang, hooks, requires = kit
+        rel = service.create_relationship(hang, hooks, requires, attributes={"optional": 1})
+
+        service.update_relationship(rel.id, {"optional": True})
+        service.update_relationship(rel.id, {"optional": True})
+
+        [event] = service._event_publisher.get_events_of_type(RelationshipUpdated)
+        assert event.old_values == {"attributes": {"optional": 1}}
+        assert service.get_relationship(rel.id).attributes["optional"] is True
+
+    def test_check_refuses_attributes_of_a_type_that_does_not_exist(self, kit):
+        service, _, _, _ = kit
+        service.check_relationship_attributes("requires", {"quantity": 1})
+        with pytest.raises(ValueError, match="does not exist yet"):
+            service.check_relationship_attributes("needs", {"quantity": 1})
+        with pytest.raises(ValueError, match="does not allow"):
+            service.check_relationship_attributes("requires", {"brand": "x"})
+
     def test_update_refuses_unknown_names_and_missing_relationships(self, kit):
         service, hang, hooks, requires = kit
         rel = service.create_relationship(hang, hooks, requires)

@@ -363,6 +363,16 @@ class Relationship:
 _ATTRIBUTE_VALUE_TYPES = (str, int, float, bool, type(None))
 
 
+def same_attribute_value(a: Any, b: Any) -> bool:
+    """Whether two attribute values are equal and of the same type (True is not 1, 1 is not 1.0)."""
+    return type(a) is type(b) and a == b
+
+
+def same_attributes(a: dict[str, Any], b: dict[str, Any]) -> bool:
+    """Whether two attribute maps have the same names, each with the same typed value."""
+    return a.keys() == b.keys() and all(same_attribute_value(a[k], b[k]) for k in a)
+
+
 def validate_relationship_attributes(attributes: Any) -> None:
     """
     Check that relationship attributes map names to JSON scalars.

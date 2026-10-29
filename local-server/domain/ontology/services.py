@@ -24,6 +24,7 @@ from .entities import (
     PropertyDefinition,
     Relationship,
     Taxonomy,
+    same_attributes,
     validate_relationship_attributes,
 )
 from .events import (
@@ -1678,7 +1679,7 @@ class OntologyService:
         attributes = dict(attributes)
         _check_edge_attributes(prop_def, attributes)
         old = dict(relationship.attributes)
-        if old == attributes:
+        if same_attributes(old, attributes):
             return relationship
 
         relationship.attributes = attributes
@@ -1700,6 +1701,25 @@ class OntologyService:
                 handler_names,
             )
         return relationship
+
+    def check_relationship_attributes(
+        self, property_identifier: str, attributes: dict[str, Any]
+    ) -> None:
+        """
+        Refuse attributes the named relationship type does not allow, before anything
+        is created (a type that does not exist yet allows none).
+
+        Raises:
+            ValueError: If the type does not exist, or an attribute is not allowed
+                or not a JSON scalar
+        """
+        prop_def = self._repository.get_property_definition_by_identifier(property_identifier)
+        if prop_def is None:
+            raise ValueError(
+                f"Relationship type {property_identifier!r} does not exist yet, so it allows"
+                " no attributes"
+            )
+        _check_edge_attributes(prop_def, attributes)
 
     def get_relationship(self, relationship_id: str) -> Relationship:
         """

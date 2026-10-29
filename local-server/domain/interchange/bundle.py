@@ -62,6 +62,7 @@ from domain.ontology.entities import (
     Individual,
     PropertyDefinition,
     Taxonomy,
+    same_attributes,
     validate_relationship_attributes,
 )
 from domain.ontology.ports import OntologyRepository
@@ -537,7 +538,7 @@ class _Loader:
                     source_id, target_id, property_id, attributes=attributes
                 )
                 counts.record("created")
-            elif existing[0].attributes == attributes:
+            elif same_attributes(existing[0].attributes, attributes):
                 counts.record("unchanged")
             else:
                 self._service.update_relationship(existing[0].id, attributes)

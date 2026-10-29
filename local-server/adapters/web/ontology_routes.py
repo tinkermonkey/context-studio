@@ -816,6 +816,9 @@ async def create_relationship(
         HTTPException: 400 if invalid (self-loop), 404 if entities not found, 409 if duplicate
     """
     try:
+        if request.attributes:
+            # Refused before the type is created: a new type allows no attributes.
+            service.check_relationship_attributes(request.relationship_type, request.attributes)
         # Get or create the property definition based on relationship_type
         prop_def = service.get_or_create_property_definition_by_identifier(
             identifier=request.relationship_type,

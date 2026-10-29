@@ -51,6 +51,15 @@ class TestClassifyScope:
         )
         assert scope is ChangeScope.BREAKING
 
+    @pytest.mark.parametrize("current", [1, 1.0], ids=["int", "float"])
+    def test_a_value_changing_type_is_breaking(self, current):
+        scope = classify_scope(
+            OperationType.UPDATE,
+            {"attributes": {"optional": True, "unit": "each"}},
+            base={"attributes": {"optional": current}},
+        )
+        assert scope is ChangeScope.BREAKING
+
     def test_relationship_attributes_without_a_base_are_breaking(self):
         assert classify_scope(OperationType.UPDATE, {"attributes": {"quantity": 2}}) is (
             ChangeScope.BREAKING

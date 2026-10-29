@@ -346,6 +346,17 @@ def test_relationship_attributes_load_reload_and_update(service, repo, session_f
     assert sorted(e.previous_state["attributes"].get("quantity", 0) for e in updates) == [0, 2]
 
 
+def test_a_relationship_attribute_changing_type_is_updated(service, repo):
+    first = _kit_bundle()
+    first["relationships"][2]["attributes"] = {"optional": 1}
+    load_bundle(service, repo, first)
+
+    summary = load_bundle(service, repo, _kit_bundle())  # optional: true
+
+    assert summary.kind("relationship").updated == 1
+    assert _kit(repo)["Level"]["optional"] is True
+
+
 def test_relationship_attributes_are_exported_and_round_trip(service, repo, session_factory):
     load_bundle(service, repo, _kit_bundle())
 

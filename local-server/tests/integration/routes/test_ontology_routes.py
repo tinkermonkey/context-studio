@@ -631,6 +631,29 @@ class TestRelationshipCRUD:
         )
         assert refused.status_code in (400, 422)
 
+    def test_attributes_on_a_new_type_are_refused_without_creating_the_type(
+        self, client, ontology_service
+    ):
+        """The route would auto-create the type; with attributes it refuses first."""
+        taxonomy = ontology_service.create_taxonomy(title="House")
+        scheme = ontology_service.create_scheme(taxonomy_id=taxonomy.id, title="Kinds")
+        a = ontology_service.create_class(scheme.id, "A")
+        b = ontology_service.create_class(scheme.id, "B")
+
+        refused = client.post(
+            "/api/relationships",
+            json={
+                "source_id": a.id,
+                "target_id": b.id,
+                "relationship_type": "needs",
+                "attributes": {"quantity": 1},
+            },
+        )
+
+        assert refused.status_code == 400
+        assert "does not exist yet" in refused.json()["detail"]
+        assert ontology_service._repository.get_property_definition_by_identifier("needs") is None
+
     def test_relationship_without_attributes_returns_an_empty_object(self, client):
         tax = client.post("/api/taxonomies", json={"title": "T"}).json()["id"]
         scheme = client.post(f"/api/taxonomies/{tax}/schemes", json={"title": "S"}).json()["id"]

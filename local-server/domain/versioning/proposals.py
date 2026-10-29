@@ -28,6 +28,8 @@ from enum import Enum
 from typing import Any
 from uuid import uuid4
 
+from domain.ontology.entities import same_attribute_value
+
 
 class ProposalSource(str, Enum):
     """Who or what made the proposal."""
@@ -166,7 +168,10 @@ def _only_adds_keys(current: Any, proposed: Any) -> bool:
     """Whether a map field keeps every current key and its value (None current is empty)."""
     if not isinstance(proposed, dict):
         return False
-    return all(key in proposed and proposed[key] == value for key, value in (current or {}).items())
+    return all(
+        key in proposed and same_attribute_value(proposed[key], value)
+        for key, value in (current or {}).items()
+    )
 
 
 @dataclass
