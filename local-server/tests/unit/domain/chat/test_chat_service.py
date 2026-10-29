@@ -5,6 +5,7 @@ Unit tests for ChatService (the agent loop), using in-memory fakes for every por
 import copy
 import json
 import logging
+from contextlib import aclosing
 
 import pytest
 
@@ -319,6 +320,53 @@ class TestToolRounds:
         assert result.summary == "Found 1"
         # The second request carries the tool result
         assert model.requests[1]["messages"][-1].blocks == (result,)
+
+    async def test_results_are_stored_before_tool_finished_is_yielded(self):
+        model = ScriptedModel(tool_call(use("a"), use("b")), answer("done"))
+        service, repository = make_service(model)
+        conversation = await service.create_conversation()
+
+        turn = service.send(conversation.id, "q")
+        seen = []
+        async with aclosing(turn):
+            async for event in turn:
+                seen.append(event)
+                if isinstance(event, ToolFinished):
+                    break  # the consumer fails on the first tool_end
+
+        assert [type(e) for e in seen] == [ToolStarted, ToolStarted, ToolFinished]
+        stored = repository.messages[conversation.id]
+        assert [m.role for m in stored] == [ChatRole.USER, ChatRole.ASSISTANT, ChatRole.USER]
+        assert [(r.tool_use_id, r.is_error) for r in stored[2].blocks] == [
+            ("a", False),
+            ("b", False),
+        ]
+
+    async def test_consumer_stopping_mid_round_leaves_no_unanswered_tool_call(self):
+        model = ScriptedModel(tool_call(use("a"), use("b")), answer("done"))
+        tool = FakeTool()
+        service, repository = make_service(model, tools=[tool])
+        conversation = await service.create_conversation()
+
+        turn = service.send(conversation.id, "q")
+        async with aclosing(turn):
+            async for event in turn:
+                if isinstance(event, ToolStarted) and event.tool_use_id == "b":
+                    break  # the stream closes after "a" ran, before "b" runs
+
+        assert tool.calls == [{"query": "Operation"}]
+        stored = repository.messages[conversation.id]
+        assert [m.role for m in stored] == [ChatRole.USER, ChatRole.ASSISTANT, ChatRole.USER]
+        ran, unrun = stored[2].blocks
+        assert (ran.tool_use_id, ran.is_error, ran.entities) == ("a", False, (OPERATION,))
+        assert (unrun.tool_use_id, unrun.is_error, unrun.summary) == ("b", True, "Not run")
+
+        # The next message continues from a valid history and runs nothing again
+        follow_up = ScriptedModel(answer("ok"))
+        service._model = follow_up
+        await run(service, conversation.id, "and?")
+        assert follow_up.requests[0]["messages"][2].blocks == (ran, unrun)
+        assert tool.calls == [{"query": "Operation"}]
 
     async def test_parallel_tool_calls_answered_in_one_message(self):
         model = ScriptedModel(tool_call(use("a"), use("b")), answer("done"))

@@ -6038,7 +6038,7 @@ export interface components {
     };
     /**
      * EntityRefSchema
-     * @description An entity a tool returned; answers may link to it as entity:<kind>/<id>.
+     * @description An entity or proposal a tool returned; answers may link to it as entity:<kind>/<id>.
      */
     EntityRefSchema: {
       /** Id */
@@ -6047,7 +6047,7 @@ export interface components {
        * Kind
        * @enum {string}
        */
-      kind: "taxonomy" | "scheme" | "class" | "individual" | "property";
+      kind: "taxonomy" | "scheme" | "class" | "individual" | "property" | "proposal";
       /** Title */
       title: string;
     };
@@ -7532,7 +7532,9 @@ export interface components {
        * Entity Kind
        * @description Kind of the viewed entity
        */
-      entity_kind?: ("taxonomy" | "scheme" | "class" | "individual" | "property") | null;
+      entity_kind?:
+        | ("taxonomy" | "scheme" | "class" | "individual" | "property" | "proposal")
+        | null;
       /**
        * Entity Id
        * @description Id of the viewed entity

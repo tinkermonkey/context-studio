@@ -22,6 +22,15 @@ def test_page_prefixes_match_the_ui_routes():
     assert ui_prefixes == ENTITY_PAGE_PREFIX
 
 
+def test_proposal_page_prefix_matches_the_ui():
+    """The review page prefix MCP links use is the one the chat UI links to."""
+    source = ENTITY_PATHS_TS.read_text()
+    match = re.search(r'PROPOSAL_PAGE_PREFIX = "([^"]+)"', source)
+    assert match is not None, "PROPOSAL_PAGE_PREFIX not found in entityPaths.ts"
+
+    assert match.group(1) == PROPOSAL_PAGE_PREFIX
+
+
 def test_url_for_a_class_page():
     links = EntityLinks("http://localhost:3100/")
 

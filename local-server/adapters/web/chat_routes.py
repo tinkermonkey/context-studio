@@ -15,6 +15,7 @@ text_delta / tool_start / tool_end, then exactly one message_end or error.
 """
 
 from collections.abc import AsyncIterable
+from contextlib import aclosing
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.sse import EventSourceResponse, ServerSentEvent
@@ -124,8 +125,11 @@ async def send_message(
     yield _sse(MessageStartEvent(conversation_id=conversation.id))
     page_context = request.page_context.to_domain() if request.page_context else None
     try:
-        async for event in service.send(conversation.id, request.text, page_context):
-            yield _sse(stream_event_from_domain(event))
+        # aclosing: if this stream stops early the turn is closed at once, so it
+        # stores the results of tools that already ran.
+        async with aclosing(service.send(conversation.id, request.text, page_context)) as events:
+            async for event in events:
+                yield _sse(stream_event_from_domain(event))
     except ConversationNotFoundError:
         yield _sse(ErrorEvent(message="This conversation was deleted."))
     except Exception:  # noqa: BLE001 - the stream must always end with an event

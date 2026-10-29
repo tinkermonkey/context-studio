@@ -1,17 +1,23 @@
 """
-Integration test (#1357): the chat assistant proposes; a person reviews.
+Integration tests (#1357): the chat assistant proposes; a person reviews.
 
 The chat is wired as in app.py (the read-only tools, then the proposal tools
 with the chat source) over real SQLite. A scripted model proposes a change and
-answers linking the proposal, which must resolve to the ref the tool returned.
+answers linking the proposal, which must resolve to the ref the tool returned,
+both in the service and through the chat HTTP route.
 """
 
 import json
 import re
 
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
 from adapters.chat.context import OntologyWorkspaceContext
 from adapters.chat.proposal_tools import build_proposal_tools
 from adapters.chat.tools import build_chat_tools
+from adapters.web.chat_routes import router
 from domain.chat.services import SYSTEM_PROMPT, ChatService
 from domain.chat.value_objects import (
     ModelTurnEnded,
@@ -24,6 +30,7 @@ from domain.chat.value_objects import (
 )
 from domain.versioning.proposals import OperationStatus, ProposalSource
 from tests.integration.chat.conftest import OPERATION_ID, TAXONOMY_ID
+from tests.integration.chat.test_chat_routes import stream_events
 
 LINK = re.compile(r"\[([^\]]+)\]\(entity:([a-z]+)/([^)\s]+)\)")
 
@@ -94,9 +101,9 @@ class FixedSettings:
         return 4
 
 
-async def test_chat_offers_read_and_proposal_tools_and_links_the_proposal(dr_workspace, proposals):
-    model = ProposingModel()
-    service = ChatService(
+def chat_service(dr_workspace, proposals, model):
+    """The chat service as app.py wires it."""
+    return ChatService(
         model=model,
         tools=[
             *build_chat_tools(dr_workspace.ontology, dr_workspace.graph),
@@ -106,6 +113,11 @@ async def test_chat_offers_read_and_proposal_tools_and_links_the_proposal(dr_wor
         settings=FixedSettings(),
         workspace=OntologyWorkspaceContext(dr_workspace.ontology),
     )
+
+
+async def test_chat_offers_read_and_proposal_tools_and_links_the_proposal(dr_workspace, proposals):
+    model = ProposingModel()
+    service = chat_service(dr_workspace, proposals, model)
     conversation = await service.create_conversation()
 
     events = [e async for e in service.send(conversation.id, "Define the Operation class")]
@@ -128,3 +140,43 @@ async def test_chat_offers_read_and_proposal_tools_and_links_the_proposal(dr_wor
     assert [o.status for o in stored.operations] == [OperationStatus.PENDING]
     description = dr_workspace.ontology.get_class(OPERATION_ID).description
     assert description == "An API operation (endpoint + method)"
+
+
+@pytest.fixture
+def client(dr_workspace, proposals):
+    app = FastAPI()
+    app.include_router(router)
+    app.state.chat_service = chat_service(dr_workspace, proposals, ProposingModel())
+    with TestClient(app) as test_client:
+        yield test_client
+
+
+def test_proposing_through_the_chat_route_streams_and_stores_the_proposal(client, proposals):
+    conversation = client.post("/api/chat/conversations").json()
+
+    events = stream_events(client, conversation["id"], "Define the Operation class")
+
+    types = [e["type"] for e in events]
+    assert "error" not in types
+    assert types[0] == "message_start" and types[-1] == "message_end"
+    (tool_end,) = [e for e in events if e["type"] == "tool_end"]
+    assert tool_end["name"] == "propose_changes" and tool_end["is_error"] is False
+    (ref,) = tool_end["entities"]
+    assert (ref["kind"], ref["title"]) == ("proposal", "Define Operation")
+    answer = "".join(e["text"] for e in events if e["type"] == "text_delta")
+    assert LINK.findall(answer) == [("Define Operation", "proposal", ref["id"])]
+    assert proposals.service.get(ref["id"]).source is ProposalSource.CHAT
+
+    # The stored conversation serialises the proposal ref, and ends on the answer
+    detail = client.get(f"/api/chat/conversations/{conversation['id']}")
+    assert detail.status_code == 200
+    messages = detail.json()["messages"]
+    stored_refs = [
+        e
+        for m in messages
+        for b in m["blocks"]
+        if b["type"] == "tool_result"
+        for e in b["entities"]
+    ]
+    assert stored_refs == [ref]
+    assert [m["role"] for m in messages] == ["user", "assistant", "user", "assistant"]

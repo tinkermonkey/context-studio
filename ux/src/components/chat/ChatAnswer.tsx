@@ -1,7 +1,7 @@
 import { type MouseEvent, type ReactNode } from "react";
 import Markdown, { defaultUrlTransform, type Components } from "react-markdown";
 import { useNavigate } from "@tanstack/react-router";
-import { entityPath } from "@/lib/entityPaths";
+import { linkPath } from "@/lib/entityPaths";
 import { resolveEntityLink, type KnownEntities } from "./chatModel";
 
 interface ChatAnswerProps {
@@ -16,8 +16,8 @@ function urlTransform(url: string): string {
 
 /**
  * Markdown answer text. `[Title](entity:<kind>/<id>)` links become entity-page
- * links only when the id came from this conversation's tool results or page
- * context; others (unknown ids, property links, which have no page) render as
+ * (or proposal review page) links only when the id came from this
+ * conversation's tool results or page context; others (unknown ids, property links, which have no page) render as
  * plain text. Clicking navigates the page; the panel stays open.
  */
 export function ChatAnswer({ text, known }: ChatAnswerProps) {
@@ -30,7 +30,7 @@ export function ChatAnswer({ text, known }: ChatAnswerProps) {
         if (!target) {
           return <span data-testid="chat-entity-text">{children as ReactNode}</span>;
         }
-        const path = entityPath(target.kind, target.id);
+        const path = linkPath(target.kind, target.id);
         const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
           if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
           event.preventDefault();

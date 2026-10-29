@@ -89,6 +89,7 @@ LIMIT_NOTE = (
 
 _NOT_RUN_LIMIT = "Not run: the tool-call limit for this message was reached."
 _NOT_RUN_CUT_OFF = "Not run: the response was cut off before the tool call finished."
+_NOT_RUN_INTERRUPTED = "Not run: the turn was interrupted before this tool call ran."
 
 
 def _now() -> datetime:
@@ -305,25 +306,48 @@ class ChatService:
                 )
                 return
 
-            results: list[ContentBlock] = []
-            for tool_use in tool_uses:
-                yield ToolStarted(tool_use.id, tool_use.name, tool_use.input)
-                outcome = await self._run_tool(tool_use)
-                yield ToolFinished(
-                    tool_use.id, tool_use.name, outcome.summary, outcome.entities, outcome.is_error
-                )
-                results.append(
-                    ToolResultBlock(
-                        tool_use_id=tool_use.id,
-                        content=outcome.content,
-                        is_error=outcome.is_error,
-                        summary=outcome.summary,
-                        entities=outcome.entities,
+            # The results are stored before any ToolFinished is yielded, and the
+            # finally block answers whatever is left if the consumer stops (a
+            # failed event, a closed stream) while tools run: the stored history
+            # never ends on an unanswered tool call, and a tool that already ran
+            # (a stored proposal) is never run again by a retry.
+            results: list[ToolResultBlock] = []
+            stored = False
+            try:
+                for tool_use in tool_uses:
+                    yield ToolStarted(tool_use.id, tool_use.name, tool_use.input)
+                    outcome = await self._run_tool(tool_use)
+                    results.append(
+                        ToolResultBlock(
+                            tool_use_id=tool_use.id,
+                            content=outcome.content,
+                            is_error=outcome.is_error,
+                            summary=outcome.summary,
+                            entities=outcome.entities,
+                        )
                     )
+                note = (ContextBlock(LIMIT_NOTE),) if round_index == max_rounds - 1 else ()
+                await self._append(conversation, history, ChatRole.USER, (*results, *note))
+                stored = True
+            finally:
+                if not stored:
+                    ran = {r.tool_use_id for r in results}
+                    missing = [t for t in tool_uses if t.id not in ran]
+                    await self._append(
+                        conversation,
+                        history,
+                        ChatRole.USER,
+                        (*results, *_unrun(missing, _NOT_RUN_INTERRUPTED)),
+                    )
+            names = {t.id: t.name for t in tool_uses}
+            for result in results:
+                yield ToolFinished(
+                    result.tool_use_id,
+                    names[result.tool_use_id],
+                    result.summary,
+                    result.entities,
+                    result.is_error,
                 )
-            if round_index == max_rounds - 1:
-                results.append(ContextBlock(LIMIT_NOTE))
-            await self._append(conversation, history, ChatRole.USER, tuple(results))
 
     # ------------------------------------------------------------------
     # Helpers

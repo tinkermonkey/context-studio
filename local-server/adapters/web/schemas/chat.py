@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 
 from domain.chat.entities import ChatMessage, Conversation
 from domain.chat.value_objects import (
+    LINK_KINDS,
     ChatEvent,
     ChatFailed,
     ChatStatus,
@@ -32,11 +33,12 @@ from domain.chat.value_objects import (
     TurnCompleted,
 )
 
-EntityKind = Literal["taxonomy", "scheme", "class", "individual", "property"]
+# The kinds answers link to, entities and proposals (domain LINK_KINDS).
+EntityKind = Literal[LINK_KINDS]  # type: ignore[valid-type]
 
 
 class EntityRefSchema(BaseModel):
-    """An entity a tool returned; answers may link to it as entity:<kind>/<id>."""
+    """An entity or proposal a tool returned; answers may link to it as entity:<kind>/<id>."""
 
     id: str
     kind: EntityKind

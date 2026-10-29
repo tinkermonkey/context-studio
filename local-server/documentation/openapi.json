@@ -10940,7 +10940,8 @@
               "scheme",
               "class",
               "individual",
-              "property"
+              "property",
+              "proposal"
             ],
             "title": "Kind"
           },
@@ -10956,7 +10957,7 @@
           "title"
         ],
         "title": "EntityRefSchema",
-        "description": "An entity a tool returned; answers may link to it as entity:<kind>/<id>."
+        "description": "An entity or proposal a tool returned; answers may link to it as entity:<kind>/<id>."
       },
       "EntityVersionResponse": {
         "properties": {
@@ -13345,7 +13346,8 @@
                   "scheme",
                   "class",
                   "individual",
-                  "property"
+                  "property",
+                  "proposal"
                 ]
               },
               {
