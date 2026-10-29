@@ -34,7 +34,7 @@ from adapters.events.change_recorder import ChangeEventRecorder
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.graph.networkx_engine import NetworkXGraphEngine
 from adapters.graph.rdflib_engine import RDFLibQueryEngine
-from adapters.interchange.dr_relationships import DR_TAXONOMY_IDENTIFIER, DrEditRules
+from adapters.interchange.dr_relationships import DrRelationshipRules
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.mcp.server import McpEndpoint, is_loopback_host, start_mcp_server
 from adapters.metrics.system_collector import SystemMetricsCollector
@@ -565,9 +565,7 @@ async def lifespan(app: FastAPI):
             ontology_repo=cast(OntologyRepository, ontology_repo),
             revert_service=revert_service,
             approval_policies=approval_policy_repo,
-            edit_rules={
-                DR_TAXONOMY_IDENTIFIER: DrEditRules(cast(OntologyRepository, ontology_repo))
-            },
+            apply_rules=[DrRelationshipRules(cast(OntologyRepository, ontology_repo))],
         )
         approval_policy_service = ApprovalPolicyService(
             approval_policy_repo, cast(OntologyRepository, ontology_repo)

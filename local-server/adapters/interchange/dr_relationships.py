@@ -1,6 +1,6 @@
 """
 Documentation Robotics (DR) relationship types in the workspace, and the rules
-for a reviewer's edit of one in a change proposal.
+a change proposal's operations on them are under.
 
 The DR spec is held as the `dr_spec` taxonomy (see
 `scripts/dr_ontology_loader.py`): one class per spec node, and one property
@@ -8,8 +8,8 @@ definition per relationship schema, each keyed back to DR by an external
 reference (source "documentation_robotics"; a class's identifier is its spec
 node id, a property definition's the relationship id
 "{source}.{predicate}.{destination}"). The loader, the reflection-plan importer
-(`scripts/dr_reflection_plan.py`) and `DrEditRules`, which ProposalService
-applies to edits on dr_spec proposals, share what is here.
+(`scripts/dr_reflection_plan.py`) and `DrRelationshipRules`, which ProposalService
+applies to changes of DR relationship types, share what is here.
 """
 
 from __future__ import annotations
@@ -278,9 +278,16 @@ def swapped_dr_reference(
     ]
 
 
-class DrEditRules:
+class DrRelationshipRules:
     """
-    ProposalEditRules for the dr_spec taxonomy.
+    ProposalApplyRules for the DR spec's relationship types.
+
+    They govern a property-definition operation whose target is a DR
+    relationship type (it has a DR relationship id) or that would touch the
+    DR spec: its fields bring a DR relationship id, or the target's or the
+    new domain or range is a dr_spec class. That holds whichever proposal
+    the operation is in. An edit of a governed target without a DR
+    relationship id is refused.
 
     A reviewer edits a DR relationship type's triple in Context Studio fields:
     canonical_predicate (DR's predicate), domain_class_id and range_class_id
@@ -299,6 +306,28 @@ class DrEditRules:
 
     def __init__(self, repo: OntologyRepository) -> None:
         self._repo = repo
+
+    def governs(self, operation: ProposedOperation, fields: dict[str, Any]) -> bool:
+        target = (
+            self._repo.get_property_definition(operation.target_id)
+            if operation.target_id
+            else None
+        )
+        if target is not None and dr_relationship_id(target.external_references):
+            return True
+        if dr_relationship_id(fields.get("external_references") or []):
+            return True
+        taxonomy = self._repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+        if taxonomy is None:
+            return False
+        class_ids = [fields.get("domain_class_id"), fields.get("range_class_id")]
+        if target is not None:
+            class_ids += [target.domain_class_id, target.range_class_id]
+        for class_id in class_ids:
+            cls = self._repo.get_class(class_id) if isinstance(class_id, str) else None
+            if cls is not None and cls.taxonomy_id == taxonomy.id:
+                return True
+        return False
 
     def prepare(
         self,

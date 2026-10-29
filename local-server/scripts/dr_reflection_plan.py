@@ -20,7 +20,7 @@ operation keeps DR's seq, the join key for the decisions coming back.
 `decisions_for` writes the decisions file DR's `proposal-import.ts
 --decisions` reads: one `{seq, op_id, status, reason, result_entity_id}` per
 operation, plus `fields` (the applied triple in DR's vocabulary) on one a
-reviewer edited before applying it (see `DrEditRules`).
+reviewer edited before applying it (see `DrRelationshipRules`).
 """
 
 from __future__ import annotations

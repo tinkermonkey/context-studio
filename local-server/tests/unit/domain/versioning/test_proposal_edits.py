@@ -30,12 +30,16 @@ class StubRevertService:
 
 
 class RecordingRules:
-    """ProposalEditRules that records its calls, then refuses or completes."""
+    """ProposalApplyRules that records its calls, then refuses or completes."""
 
-    def __init__(self, refuse=None, add=None):
+    def __init__(self, refuse=None, add=None, governed=None):
         self.calls = []
         self.refuse = refuse
         self.add = add or {}
+        self.governed = governed  # target ids it governs; None: every one
+
+    def governs(self, operation, fields):
+        return self.governed is None or operation.target_id in self.governed
 
     def prepare(self, proposal, operation, fields, other_edits):
         self.calls.append((proposal.id, operation.seq, dict(fields), dict(other_edits)))
@@ -80,7 +84,7 @@ def make_service(ontology, repo, rules=None):
         ontology,
         repo,
         StubRevertService(),
-        edit_rules={"house": rules} if rules else None,
+        apply_rules=[rules] if rules else (),
     )
 
 
@@ -348,21 +352,23 @@ def test_what_the_rules_add_is_checked_too(ontology, repo, graph):
     assert result.reason.startswith("invalid_edit: range_class_id gone is not an existing")
 
 
-def test_rules_of_another_taxonomy_are_not_asked(ontology, repo, graph):
-    rules = RecordingRules(refuse="no")
-    service = ProposalService(
-        FakeChangeProposalRepository(),
-        ontology,
-        repo,
-        StubRevertService(),
-        edit_rules={"dr_spec": rules},
+def test_rules_are_asked_only_for_targets_they_govern(ontology, repo, graph):
+    rules = RecordingRules(refuse="no", governed={graph["far"]})
+    service = make_service(ontology, repo, rules)
+    proposal = propose(
+        service,
+        graph,
+        draft(1, T.UPDATE, K.PROPERTY, graph["near"], title="x"),
+        draft(2, T.UPDATE, K.PROPERTY, graph["far"], title="y"),
     )
-    proposal = propose(service, graph, draft(1, T.UPDATE, K.PROPERTY, graph["near"], title="x"))
-    op = proposal.operations[0]
+    ops = by_seq(proposal)
+    edits = {ops[1].id: {"title": "close"}, ops[2].id: {"title": "remote"}}
 
-    result = service.apply(proposal.id, [op.id], edits={op.id: {"title": "y"}}).operations[0]
+    result = by_seq(service.apply(proposal.id, [ops[1].id, ops[2].id], edits=edits))
 
-    assert result.status is OperationStatus.APPLIED and rules.calls == []
+    assert result[1].status is OperationStatus.APPLIED
+    assert result[2].reason == "invalid_edit: no"
+    assert [call[1] for call in rules.calls] == [2]
 
 
 # -------------------------------------------------------------------- scope

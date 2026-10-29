@@ -52,7 +52,7 @@ if TYPE_CHECKING:
     from domain.versioning.ports import (
         ApprovalPolicyRepository,
         ChangeProposalRepository,
-        ProposalEditRules,
+        ProposalApplyRules,
     )
     from domain.versioning.revert_service import RevertResult, RevertService
 
@@ -293,7 +293,7 @@ class ProposalService:
         ontology_repo: OntologyRepository,
         revert_service: RevertService,
         approval_policies: ApprovalPolicyRepository | None = None,
-        edit_rules: Mapping[str, ProposalEditRules] | None = None,
+        apply_rules: Sequence[ProposalApplyRules] = (),
     ) -> None:
         """
         Args:
@@ -303,15 +303,15 @@ class ProposalService:
             revert_service: Undoes everything applied under a proposal's run id
             approval_policies: Taxonomies' approval policies; without them
                 nothing auto-applies
-            edit_rules: Rules for reviewers' edits, by taxonomy identifier;
-                edits on other taxonomies get only the generic checks
+            apply_rules: Rules some property definitions are under (each
+                says which it governs); the rest get only the generic checks
         """
         self._proposals = proposals
         self._ontology = ontology_service
         self._repo = ontology_repo
         self._revert = revert_service
         self._policies = approval_policies
-        self._edit_rules = dict(edit_rules or {})
+        self._apply_rules = tuple(apply_rules)
         # One lock per proposal: a desktop app runs one process, so two requests
         # deciding on the same proposal are serialized here.
         self._locks: dict[str, threading.Lock] = {}
@@ -715,7 +715,7 @@ class ProposalService:
         applying it: its edit is the complete set of fields to apply, as an
         update, instead of the proposed ones (an edited delete keeps its seq and
         applies as an update). The edit is checked like a proposed update, then
-        by the taxonomy's edit rules, if any; a problem fails only that
+        by the rules that govern its target, if any; a problem fails only that
         operation (invalid_edit). Staleness still compares the proposed base,
         so fields only the edit touches are not checked for it. An applied edit
         is recorded as the operation's applied_fields, and its scope is
@@ -749,7 +749,6 @@ class ProposalService:
             self._check_edits_placed(chosen, edits)
             force = set(force_stale)
             refs = {o.ref: o for o in proposal.operations if o.ref}
-            rules = self._rules_for(proposal) if edits else None
 
             previous_run = get_current_batch_run_id()
             set_batch_run_context(proposal.id)
@@ -759,7 +758,7 @@ class ProposalService:
                     if operation.id in edits:
                         others = {i: e for i, e in edits.items() if i != operation.id}
                         edit = edits[operation.id]
-                        self._apply_edited(proposal, operation, edit, others, rules, forced)
+                        self._apply_edited(proposal, operation, edit, others, forced)
                     else:
                         self._apply_one(operation, refs, proposal.id, forced)
                     self._proposals.save_operations(proposal.id, [operation])
@@ -798,11 +797,11 @@ class ProposalService:
             if refs:
                 raise ValueError(f"{label}: an edit can't point at a $ref ({refs})")
 
-    def _rules_for(self, proposal: ChangeProposal) -> ProposalEditRules | None:
-        """The edit rules of the proposal's taxonomy, if it has any."""
-        taxonomy = self._repo.get_taxonomy(proposal.taxonomy_id)
-        identifier = taxonomy.identifier if taxonomy is not None else None
-        return self._edit_rules.get(identifier) if identifier else None
+    def _rules_for(
+        self, operation: ProposedOperation, fields: dict[str, Any]
+    ) -> ProposalApplyRules | None:
+        """The rules that govern a property operation, if any."""
+        return next((r for r in self._apply_rules if r.governs(operation, fields)), None)
 
     def _apply_edited(
         self,
@@ -810,7 +809,6 @@ class ProposalService:
         operation: ProposedOperation,
         edit: dict[str, Any],
         other_edits: dict[str, dict[str, Any]],
-        rules: ProposalEditRules | None,
         forced: bool,
     ) -> None:
         """Apply a reviewer's edit of a property update or delete, as an update."""
@@ -818,6 +816,7 @@ class ProposalService:
         def run() -> str:
             self._check_fresh(operation, forced)
             fields = self._checked_edit(operation, edit)
+            rules = self._rules_for(operation, fields)
             if rules is not None:
                 try:
                     fields = rules.prepare(proposal, operation, fields, other_edits)

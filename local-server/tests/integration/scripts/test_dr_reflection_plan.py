@@ -31,7 +31,7 @@ from sqlalchemy.orm import sessionmaker
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.interchange.dr_relationships import (
     DR_TAXONOMY_IDENTIFIER,
-    DrEditRules,
+    DrRelationshipRules,
     dr_predicate_catalog,
 )
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
@@ -40,7 +40,7 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from domain.ontology.services import OntologyService
-from domain.versioning.proposal_service import ProposalService
+from domain.versioning.proposal_service import OperationDraft, ProposalService
 from domain.versioning.proposals import (
     ChangeScope,
     OperationKind,
@@ -107,7 +107,7 @@ def parts(spec_db, tmp_path):
         ontology,
         repo,
         RevertService(change_repo=change_repo, ontology_repo=repo),
-        edit_rules={DR_TAXONOMY_IDENTIFIER: DrEditRules(repo)},  # as app.py wires it
+        apply_rules=[DrRelationshipRules(repo)],  # as app.py wires it
     )
     yield ontology, repo, proposals
     engine.dispose()
@@ -698,6 +698,56 @@ def test_an_edit_without_a_stored_catalog_is_refused_clearly(parts):
         "the DR spec to load it"
     )
     assert prop_by_dr_id(repo, "api.operation.delivers.api.response") is not None
+
+
+def house_proposal(ontology, proposals, *drafts):
+    """A proposal on another taxonomy: property definitions are global."""
+    house = ontology.create_taxonomy(title="House", identifier="house")
+    return proposals.propose(house.id, "From the house", list(drafts), ProposalSource.USER)
+
+
+def test_dr_rules_govern_a_dr_type_whatever_the_proposals_taxonomy(parts):
+    ontology, repo, proposals = parts
+    delivers = prop_by_dr_id(repo, DELIVERS)
+    proposal = house_proposal(
+        ontology,
+        proposals,
+        OperationDraft(
+            seq=1, op="update", kind="property", target_id=delivers.id, fields={"title": "delivers"}
+        ),
+    )
+    op = proposal.operations[0]
+
+    result = proposals.apply(
+        proposal.id, [op.id], edits={op.id: {"canonical_predicate": "frobnicates"}}
+    ).operations[0]
+
+    assert result.status is OperationStatus.FAILED
+    assert (
+        result.reason == "invalid_edit: predicate 'frobnicates' is not in the DR predicate catalog"
+    )
+    assert repo.get_property_definition(delivers.id).canonical_predicate == "delivers"
+
+
+def test_an_edit_pointing_a_non_dr_type_into_the_dr_spec_is_refused(parts):
+    ontology, repo, proposals = parts
+    near = ontology.create_property_definition("near", "near")
+    proposal = house_proposal(
+        ontology,
+        proposals,
+        OperationDraft(
+            seq=1, op="update", kind="property", target_id=near.id, fields={"title": "near by"}
+        ),
+    )
+    op = proposal.operations[0]
+
+    result = proposals.apply(
+        proposal.id, [op.id], edits={op.id: edit_triple(repo, source="api.operation")}
+    ).operations[0]
+
+    assert result.status is OperationStatus.FAILED
+    assert result.reason == "invalid_edit: near has no DR relationship id"
+    assert repo.get_property_definition(near.id).domain_class_id is None
 
 
 def test_an_edit_onto_a_class_outside_the_dr_spec_fails(parts):

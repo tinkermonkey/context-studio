@@ -330,16 +330,29 @@ class ApprovalPolicyRepository(Protocol):
         ...
 
 
-class ProposalEditRules(Protocol):
+class ProposalApplyRules(Protocol):
     """
-    One taxonomy's rules for a reviewer's edit of a proposed operation.
+    Rules that some property definitions are under (e.g. the DR spec's
+    relationship types), whichever proposal changes them: property definitions
+    are global, so the target decides, not the proposal's taxonomy.
 
-    ProposalService checks an edit's fields like any proposed update, then,
-    for a proposal on a taxonomy with rules, asks them just before the edited
-    operation applies (inside the proposal's lock, after earlier operations of
-    the same apply have run). The rules may refuse the edit or complete it with
-    fields the taxonomy derives (e.g. an identifier).
+    ProposalService checks a reviewer's edit like any proposed update, then
+    asks the rules that govern the operation just before it applies (inside
+    the proposal's lock, after earlier operations of the same apply have run).
+    The rules may refuse the edit or complete it with fields they derive (e.g.
+    an identifier).
     """
+
+    def governs(self, operation: ProposedOperation, fields: dict[str, Any]) -> bool:
+        """
+        Whether these rules govern the operation: its target, or what its
+        fields point it at.
+
+        Args:
+            operation: A property-definition operation
+            fields: The fields it is about to apply (proposed or edited)
+        """
+        ...
 
     def prepare(
         self,
