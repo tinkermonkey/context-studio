@@ -445,6 +445,7 @@ def map_relationship_orm_to_domain(orm_rel: RelationshipORM) -> Relationship:
         property_definition_id=cast(str, orm_rel.property_definition_id),
         created_at=cast(datetime, orm_rel.created_at),
         source_run_id=cast(str | None, orm_rel.source_run_id),
+        attributes=dict(orm_rel.attributes or {}),
     )
 
 
@@ -465,6 +466,7 @@ def map_relationship_domain_to_orm(rel: Relationship) -> RelationshipORM:
         property_definition_id=rel.property_definition_id,
         created_at=rel.created_at,
         source_run_id=rel.source_run_id,
+        attributes=dict(rel.attributes),
     )
 
 

@@ -129,6 +129,7 @@ class RelationshipCreated(DomainEvent):
         source_id: ID of the source entity
         target_id: ID of the target entity
         property_definition_id: ID of the property definition for this relationship type
+        attributes: The values carried on the edge (JSON scalars)
     """
 
     _aggregate_id_field: ClassVar[str] = "relationship_id"
@@ -136,6 +137,26 @@ class RelationshipCreated(DomainEvent):
     source_id: str = ""
     target_id: str = ""
     property_definition_id: str = ""
+    attributes: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class RelationshipUpdated(DomainEvent):
+    """
+    Event emitted when a relationship's attributes change (its ends and type never do).
+
+    Attributes:
+        relationship_id: ID of the updated relationship
+        changed_fields: Tuple of field names that changed ("attributes")
+        old_values: Previous values of those fields, so the update can be reverted
+        new_values: New values of those fields
+    """
+
+    _aggregate_id_field: ClassVar[str] = "relationship_id"
+    relationship_id: str = ""
+    changed_fields: tuple[str, ...] = field(default_factory=tuple)
+    old_values: dict[str, Any] = field(default_factory=dict)
+    new_values: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

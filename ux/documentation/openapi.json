@@ -15005,6 +15005,37 @@
             "type": "string",
             "title": "Relationship Type",
             "description": "Relationship type identifier (e.g., 'related_to', 'parent_of')"
+          },
+          "attributes": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attributes",
+            "description": "Values carried on the edge; only names the relationship type allows"
           }
         },
         "type": "object",
@@ -15050,6 +15081,30 @@
             ],
             "title": "Created At",
             "description": "Creation timestamp"
+          },
+          "attributes": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Attributes",
+            "description": "Values carried on the edge (e.g. a kit's quantity, unit, optional), keyed by the names the relationship type allows"
           }
         },
         "type": "object",

@@ -19,6 +19,10 @@ import { ApiError } from "@/api/client/interceptors";
 import { relationshipsCopy } from "@/routes/app/schema/relationships/-copy";
 import type { components } from "@/api/types";
 import { PREDICATE_CHOICES_LIMIT } from "@/api/config";
+import {
+  attributeEntries,
+  formatAttributeValue,
+} from "@/components/ontology/RelationshipAttributes";
 
 type RelationshipResponse = components["schemas"]["RelationshipResponse"];
 
@@ -59,6 +63,7 @@ export function RelationshipDrawer({
   );
 
   const currentProperty = currentPropertyResponse?.items?.[0];
+  const attributes = attributeEntries(relationship?.attributes);
   const predicateChoices = predicateChoicesResponse?.items ?? [];
   const predicates =
     predicateChoices.length > 0
@@ -116,6 +121,8 @@ export function RelationshipDrawer({
         source_id: editValue.source.id,
         target_id: editValue.target.id,
         relationship_type: editValue.predicate,
+        // Carried over: a replacement keeps the edge's values (refused if the new type disallows them).
+        attributes: relationship.attributes,
       });
     } catch (error) {
       const message = error instanceof ApiError ? error.detail : "Failed to update relationship";
@@ -180,6 +187,17 @@ export function RelationshipDrawer({
                 <span className="drawer-triple-node">{targetName}</span>
               </div>
             </InspectorPanel.Section>
+            {attributes.length > 0 && (
+              <InspectorPanel.Section title="Attributes">
+                <KVGrid
+                  data-testid="relationship-attributes-grid"
+                  rows={attributes.map(([name, value]) => ({
+                    key: name,
+                    value: formatAttributeValue(value),
+                  }))}
+                />
+              </InspectorPanel.Section>
+            )}
             <InspectorPanel.Section title="Provenance">
               <KVGrid
                 rows={[

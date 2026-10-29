@@ -10,6 +10,7 @@ import { usePropertiesByIds } from "@/api/hooks/ontology/useProperties";
 import { SMALL_SET_LIMIT } from "@/api/config";
 import { EntityNavigator } from "@/components/entity/EntityNavigator";
 import { EntityLink } from "@/components/entity/EntityLink";
+import { RelationshipAttributes } from "@/components/ontology/RelationshipAttributes";
 import {
   EntityActions,
   EntityBody,
@@ -205,6 +206,10 @@ export function IndividualPage({ id }: { id: string }) {
           {self}
         </>
       )}
+      <RelationshipAttributes
+        attributes={rel.attributes}
+        data-testid={`individual-relationship-attributes-${rel.id}`}
+      />
     </div>
   );
   const relationshipTotal = (outgoingResponse?.total ?? 0) + (incomingResponse?.total ?? 0);

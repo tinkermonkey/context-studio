@@ -18,6 +18,7 @@ from typing import Any, Literal, Optional, Sequence, cast
 from sqlalchemy import func, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, aliased, sessionmaker
+from sqlalchemy.orm.attributes import flag_modified
 
 from adapters.persistence.sqlite.mappers import (
     deserialize_data_properties,
@@ -1197,9 +1198,13 @@ class SQLiteOntologyRepository:
         with self.session_factory() as session:
             scheme_ids = [
                 row[0]
-                for row in session.query(cls.id)
-                .filter(cls.node_type == NodeType.CONCEPT_SCHEME, cls.taxonomy_id == taxonomy_id)
-                .order_by(cls.title)
+                for row in (
+                    session.query(cls.id)
+                    .filter(
+                        cls.node_type == NodeType.CONCEPT_SCHEME, cls.taxonomy_id == taxonomy_id
+                    )
+                    .order_by(cls.title)
+                )
             ]
             class_counts = dict(
                 session.query(cls.concept_scheme_id, func.count(cls.id))
@@ -1772,12 +1777,15 @@ class SQLiteOntologyRepository:
                 orm_rel = map_relationship_domain_to_orm(rel)
                 session.add(orm_rel)
             else:
-                # Update: only update the timestamp field, everything else is immutable
+                # Update (created_at is immutable). Flagged, because the JSON column
+                # compares with ==, which takes True for 1.
                 orm_rel.source_id = rel.source_id  # type: ignore[assignment]
                 orm_rel.target_id = rel.target_id  # type: ignore[assignment]
                 orm_rel.property_definition_id = (
                     rel.property_definition_id  # type: ignore[assignment]
                 )
+                orm_rel.attributes = dict(rel.attributes)  # type: ignore[assignment]
+                flag_modified(orm_rel, "attributes")
 
             try:
                 session.commit()

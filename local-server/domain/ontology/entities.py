@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from typing import Any
 
 from .value_objects import (
     DataPropertyValue,
@@ -335,9 +336,13 @@ class Relationship:
         target_id: ID of the target entity
         property_definition_id: ID of the property definition that defines this relationship type
         created_at: Timestamp of creation (auto-generated on instantiation)
+        attributes: Values carried on the edge itself (a kit's quantity, unit,
+            optional), keyed by name; JSON scalars only. The property definition
+            says which names are allowed (PropertyDefinition.edge_attribute_names).
 
     Raises:
-        ValueError: If source_id equals target_id (checked in __post_init__)
+        ValueError: If source_id equals target_id, or an attribute is not a
+            JSON scalar (checked in __post_init__)
     """
 
     id: str
@@ -346,11 +351,46 @@ class Relationship:
     property_definition_id: str
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     source_run_id: str | None = None
+    attributes: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """Validate relationship invariants."""
         if self.source_id == self.target_id:
             raise ValueError("A relationship cannot have the same source and target")
+        validate_relationship_attributes(self.attributes)
+
+
+_ATTRIBUTE_VALUE_TYPES = (str, int, float, bool, type(None))
+
+
+def same_attribute_value(a: Any, b: Any) -> bool:
+    """Whether two attribute values are equal and of the same type (True is not 1, 1 is not 1.0)."""
+    return type(a) is type(b) and a == b
+
+
+def same_attributes(a: dict[str, Any], b: dict[str, Any]) -> bool:
+    """Whether two attribute maps have the same names, each with the same typed value."""
+    return a.keys() == b.keys() and all(same_attribute_value(a[k], b[k]) for k in a)
+
+
+def validate_relationship_attributes(attributes: Any) -> None:
+    """
+    Check that relationship attributes map names to JSON scalars.
+
+    Raises:
+        ValueError: If attributes is not a dict, a name is not a non-empty
+            string, or a value is not a string, number, boolean or null
+    """
+    if not isinstance(attributes, dict):
+        raise ValueError(f"Relationship attributes must be an object, not {attributes!r}")
+    for name, value in attributes.items():
+        if not isinstance(name, str) or not name:
+            raise ValueError(f"Relationship attribute names must be non-empty strings: {name!r}")
+        if not isinstance(value, _ATTRIBUTE_VALUE_TYPES):
+            raise ValueError(
+                f"Relationship attribute {name!r} must be a string, number, boolean or null,"
+                f" not {value!r}"
+            )
 
 
 @dataclass
@@ -401,6 +441,21 @@ class PropertyDefinition:
     version: int = 1
     status: Status = Status.DRAFT
     source_run_id: str | None = None
+
+    def edge_attribute_names(self) -> frozenset[str]:
+        """
+        The attribute names its relationships may carry.
+
+        By the bundle convention (v0), a source lists them as `edge_properties` in
+        the metadata of its reference on the property (a bundle property's
+        `constraints`). The union over every reference; empty when none lists any.
+        """
+        names: set[str] = set()
+        for reference in self.external_references:
+            listed = reference.metadata.get("edge_properties") if reference.metadata else None
+            listed = listed or []
+            names.update(name for name in listed if isinstance(name, str))
+        return frozenset(names)
 
     def rename(self, new_title: str) -> None:
         """

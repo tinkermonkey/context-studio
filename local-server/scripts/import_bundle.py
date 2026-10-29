@@ -50,6 +50,7 @@ from domain.ontology.events import (
     PropertyDefinitionCreated,
     PropertyDefinitionUpdated,
     RelationshipCreated,
+    RelationshipUpdated,
     SchemeCreated,
     SchemeUpdated,
     TaxonomyCreated,
@@ -89,6 +90,7 @@ def build_import_service(
         (IndividualCreated, recorder.on_individual_created),
         (IndividualUpdated, recorder.on_individual_updated),
         (RelationshipCreated, recorder.on_relationship_created),
+        (RelationshipUpdated, recorder.on_relationship_updated),
         (AttributeDefinitionCreated, recorder.on_attribute_definition_created),
         (AttributeDefinitionUpdated, recorder.on_attribute_definition_updated),
     ):

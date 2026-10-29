@@ -2443,6 +2443,9 @@ selectors:
   - selector: relationship-triple
     component: src/components/ontology/RelationshipDrawer.tsx
     description: Triple display row showing source, predicate, and target in the relationship inspector
+  - selector: relationship-attributes-grid
+    component: src/components/ontology/RelationshipDrawer.tsx
+    description: Read-only key/value grid of the relationship's attributes (quantity, unit, ...); absent when it has none
   - selector: scheme-classes-empty
     component: src/components/ontology/SchemeDrawer.tsx
     description: Empty state message in the scheme inspector Classes section when no classes exist
@@ -2881,6 +2884,9 @@ selectors:
   - selector: individual-relationship-*
     component: src/routes/app/data/individuals_.$id.tsx
     description: One relationship sentence (suffix is relationship id)
+  - selector: individual-relationship-attributes-*
+    component: src/routes/app/data/individuals_.$id.tsx
+    description: Read-only list of a relationship's attributes on its sentence (suffix is relationship id); absent when it has none
   - selector: individual-data-properties-panel
     component: src/routes/app/data/individuals_.$id.tsx
     description: Data property values of the individual

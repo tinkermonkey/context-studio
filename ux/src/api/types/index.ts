@@ -8552,6 +8552,13 @@ export interface components {
        * @description Relationship type identifier (e.g., 'related_to', 'parent_of')
        */
       relationship_type: string;
+      /**
+       * Attributes
+       * @description Values carried on the edge; only names the relationship type allows
+       */
+      attributes?: {
+        [key: string]: string | number | boolean | null;
+      } | null;
     };
     /**
      * RelationshipResponse
@@ -8583,6 +8590,13 @@ export interface components {
        * @description Creation timestamp
        */
       created_at?: string | null;
+      /**
+       * Attributes
+       * @description Values carried on the edge (e.g. a kit's quantity, unit, optional), keyed by the names the relationship type allows
+       */
+      attributes?: {
+        [key: string]: string | number | boolean | null;
+      };
     };
     /**
      * ResolutionRecordResponse

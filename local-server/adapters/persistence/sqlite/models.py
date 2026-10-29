@@ -35,6 +35,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.orm import declarative_base
 
@@ -370,6 +371,13 @@ class Relationship(Base):  # type: ignore[valid-type,misc]
         nullable=True,
         index=True,
         doc="ID of the pipeline run that created this relationship",
+    )
+    attributes = Column(
+        JSON,
+        nullable=False,
+        default=dict,
+        server_default=text("'{}'"),
+        doc="Values carried on the edge (quantity, unit, ...), keyed by name",
     )
 
     __table_args__ = (

@@ -13,10 +13,11 @@ Scope follows the DR design charter's vocabulary. The system classifies it
 - editorial: wording or presentation only (title, description, vision, color,
   sort order)
 - additive: something new, or more of something (a create, an extra allowed
-  value, an extra class on an individual, a new reference)
+  value, an extra class on an individual, a new reference, an extra attribute
+  on a relationship)
 - breaking: anything that removes, moves or redefines (a delete, a move, an
   identifier, domain or range, datatype or requiredness change, a new required
-  attribute)
+  attribute, a relationship attribute removed or changed)
 """
 
 from __future__ import annotations
@@ -26,6 +27,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 from uuid import uuid4
+
+from domain.ontology.entities import same_attribute_value
 
 
 class ProposalSource(str, Enum):
@@ -97,6 +100,8 @@ EDITORIAL_FIELDS = frozenset({"title", "description", "vision", "color", "sort_o
 ADDITIVE_LIST_FIELDS = frozenset(
     {"allowed_values", "class_ids", "external_references", "lexical_senses"}
 )
+# Map fields where keeping every current key and value only adds.
+ADDITIVE_MAP_FIELDS = frozenset({"attributes"})
 
 # What a move can change, per kind: a scheme moves to another taxonomy, and a
 # class to another parent, another scheme, or both. Nothing else can move.
@@ -145,6 +150,9 @@ def _computed_scope(op: OperationType, fields: dict[str, Any], base: dict[str, A
         if name in ADDITIVE_LIST_FIELDS and name in base and _only_adds(base[name], value):
             scope = ChangeScope.ADDITIVE
             continue
+        if name in ADDITIVE_MAP_FIELDS and name in base and _only_adds_keys(base[name], value):
+            scope = ChangeScope.ADDITIVE
+            continue
         return ChangeScope.BREAKING
     return scope
 
@@ -154,6 +162,16 @@ def _only_adds(current: Any, proposed: Any) -> bool:
     if not isinstance(proposed, list):
         return False
     return all(item in proposed for item in current or [])
+
+
+def _only_adds_keys(current: Any, proposed: Any) -> bool:
+    """Whether a map field keeps every current key and its value (None current is empty)."""
+    if not isinstance(proposed, dict):
+        return False
+    return all(
+        key in proposed and same_attribute_value(proposed[key], value)
+        for key, value in (current or {}).items()
+    )
 
 
 @dataclass
@@ -209,8 +227,11 @@ class ProposedOperation:
         if self.op is OperationType.UPDATE:
             if not self.fields:
                 raise ValueError("An update needs at least one field")
-            if self.kind is OperationKind.RELATIONSHIP:
-                raise ValueError("A relationship can't be updated; delete it and create another")
+            if self.kind is OperationKind.RELATIONSHIP and set(self.fields) != {"attributes"}:
+                raise ValueError(
+                    "A relationship update sets only attributes; to change its ends or"
+                    " type, delete it and create another"
+                )
             moving = sorted(MOVE_FIELDS.get(self.kind, frozenset()) & set(self.fields))
             if moving:
                 raise ValueError(f"Use a move to change {', '.join(moving)}")

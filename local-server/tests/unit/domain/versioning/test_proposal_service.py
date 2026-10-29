@@ -9,6 +9,7 @@ from domain.events import DomainEvent
 from domain.interchange.services import get_current_batch_run_id, set_batch_run_context
 from domain.ontology.events import AttributeDefinitionCreated, ClassCreated, ClassUpdated
 from domain.ontology.services import OntologyService
+from domain.ontology.value_objects import ExternalReference
 from domain.versioning.exceptions import (
     ChangeProposalNotFoundError,
     ChangeProposalStateError,
@@ -842,3 +843,97 @@ class TestConcurrency:
             with pytest.raises(ChangeProposalNotFoundError):
                 action()
         assert service._locks == {}
+
+
+class TestRelationshipAttributes:
+    """#1365: relationships are created with attributes, and only those can be updated."""
+
+    @pytest.fixture()
+    def kit(self, ontology, graph):
+        requires = ontology.create_property_definition(
+            "requires",
+            "requires",
+            external_references=[
+                ExternalReference(
+                    source="house",
+                    identifier="requires",
+                    metadata={"edge_properties": ["quantity", "unit", "optional"]},
+                )
+            ],
+        )
+        hall = ontology.create_individual(graph["room"], "Hall")
+        rel = ontology.create_relationship(
+            graph["den"], hall.id, requires.id, attributes={"quantity": 2}
+        )
+        return {**graph, "requires": requires.id, "hall": hall.id, "rel": rel.id}
+
+    def test_create_with_attributes_applies(self, service, ontology, kit):
+        proposal = propose(
+            service,
+            kit,
+            draft(
+                1,
+                T.CREATE,
+                K.RELATIONSHIP,
+                source_id=kit["hall"],
+                target_id=kit["den"],
+                property_definition_id=kit["requires"],
+                attributes={"quantity": 1, "optional": True},
+            ),
+        )
+        [op] = service.apply(proposal.id, ids(proposal, 1)).operations
+        assert op.status is OperationStatus.APPLIED, op.reason
+        assert ontology.get_relationship(op.result_entity_id).attributes == {
+            "quantity": 1,
+            "optional": True,
+        }
+
+    def test_attributes_update_captures_base_scope_and_applies(self, service, ontology, kit):
+        proposal = propose(
+            service,
+            kit,
+            draft(
+                1, T.UPDATE, K.RELATIONSHIP, kit["rel"], attributes={"quantity": 2, "unit": "each"}
+            ),
+        )
+        [op] = proposal.operations
+        assert op.base == {"attributes": {"quantity": 2}}
+        assert op.scope is ChangeScope.ADDITIVE
+
+        [op] = service.apply(proposal.id, [op.id]).operations
+        assert op.status is OperationStatus.APPLIED, op.reason
+        assert ontology.get_relationship(kit["rel"]).attributes == {"quantity": 2, "unit": "each"}
+
+    def test_attributes_changed_since_proposed_is_stale(self, service, ontology, kit):
+        proposal = propose(
+            service, kit, draft(1, T.UPDATE, K.RELATIONSHIP, kit["rel"], attributes={"quantity": 3})
+        )
+        assert proposal.operations[0].scope is ChangeScope.BREAKING
+        ontology.update_relationship(kit["rel"], {"quantity": 5})
+
+        [op] = service.apply(proposal.id, ids(proposal, 1)).operations
+        assert op.status is OperationStatus.FAILED
+        assert op.reason.startswith("target_changed: attributes")
+
+    def test_endpoints_and_bad_attributes_are_refused(self, service, kit):
+        with pytest.raises(ProposalValidationError) as caught:
+            propose(
+                service,
+                kit,
+                draft(1, T.UPDATE, K.RELATIONSHIP, kit["rel"], target_id=kit["room"]),
+                draft(2, T.UPDATE, K.RELATIONSHIP, kit["rel"], attributes={"quantity": [2]}),
+                draft(3, T.UPDATE, K.RELATIONSHIP, kit["rel"], attributes=None),
+            )
+        assert [(e.seq, e.code) for e in caught.value.errors] == [
+            (1, "invalid"),
+            (2, "invalid"),
+            (3, "invalid"),
+        ]
+
+    def test_an_attribute_the_property_does_not_allow_fails_at_apply(self, service, kit):
+        proposal = propose(
+            service, kit, draft(1, T.UPDATE, K.RELATIONSHIP, kit["rel"], attributes={"brand": "x"})
+        )
+        [op] = service.apply(proposal.id, ids(proposal, 1)).operations
+        assert op.status is OperationStatus.FAILED
+        assert "does not allow attributes ['brand']" in op.reason

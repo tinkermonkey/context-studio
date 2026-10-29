@@ -31,6 +31,7 @@ from domain.ontology.events import (
     PropertyDefinitionUpdated,
     RelationshipCreated,
     RelationshipDeleted,
+    RelationshipUpdated,
     SchemeCreated,
     SchemeDeleted,
     SchemeUpdated,
@@ -211,6 +212,7 @@ class ChangeEventRecorder:
                 "source_id": event.source_id,
                 "target_id": event.target_id,
                 "property_definition_id": event.property_definition_id,
+                "attributes": event.attributes,
             },
             change_reason="Relationship created",
         )
@@ -290,6 +292,17 @@ class ChangeEventRecorder:
             new_state=event.new_values,
             previous_state=event.old_values,
             change_reason=f"Property definition updated: {', '.join(event.changed_fields)}",
+        )
+
+    def on_relationship_updated(self, event: RelationshipUpdated) -> None:
+        """Handle RelationshipUpdated events (attributes only)."""
+        self._record(
+            entity_id=event.relationship_id,
+            entity_type="relationship",
+            operation=ChangeOperation.UPDATE,
+            new_state=event.new_values,
+            previous_state=event.old_values,
+            change_reason=f"Relationship updated: {', '.join(event.changed_fields)}",
         )
 
     # --- DELETE Pattern Handlers ---

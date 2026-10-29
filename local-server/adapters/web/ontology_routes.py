@@ -276,9 +276,7 @@ async def delete_taxonomy(
         raise HTTPException(status_code=status_code, detail=message)
 
 
-@router.get(
-    "/taxonomies/{taxonomy_id}/scheme-counts", response_model=list[SchemeCountsResponse]
-)
+@router.get("/taxonomies/{taxonomy_id}/scheme-counts", response_model=list[SchemeCountsResponse])
 async def get_taxonomy_scheme_counts(
     taxonomy_id: str,
     service: OntologyService = Depends(get_ontology_service),
@@ -818,6 +816,9 @@ async def create_relationship(
         HTTPException: 400 if invalid (self-loop), 404 if entities not found, 409 if duplicate
     """
     try:
+        if request.attributes:
+            # Refused before the type is created: a new type allows no attributes.
+            service.check_relationship_attributes(request.relationship_type, request.attributes)
         # Get or create the property definition based on relationship_type
         prop_def = service.get_or_create_property_definition_by_identifier(
             identifier=request.relationship_type,
@@ -828,6 +829,7 @@ async def create_relationship(
             source_id=request.source_id,
             target_id=request.target_id,
             property_definition_id=prop_def.id,
+            attributes=request.attributes,
         )
         return RelationshipResponse.model_validate(relationship)
     except Exception as exc:
