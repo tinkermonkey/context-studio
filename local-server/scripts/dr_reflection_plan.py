@@ -19,7 +19,8 @@ operation keeps DR's seq, the join key for the decisions coming back.
 
 `decisions_for` writes the decisions file DR's `proposal-import.ts
 --decisions` reads: one `{seq, op_id, status, reason, result_entity_id}` per
-operation.
+operation, plus `fields` (the applied triple in DR's vocabulary) on one a
+reviewer edited before applying it (see `DrEditRules`).
 """
 
 from __future__ import annotations
@@ -29,6 +30,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from adapters.interchange.dr_relationships import (
+    DR_SOURCE,
+    DR_TAXONOMY_IDENTIFIER,
+    Triple,
+    assign_relationship_identifiers,
+    dr_property_definitions,
+    dr_relationship_id,
+    dr_spec_classes,
+    swapped_dr_reference,
+)
 from domain.ontology.entities import PropertyDefinition
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.value_objects import ExternalReference
@@ -36,16 +47,10 @@ from domain.versioning.proposal_service import OperationDraft, ProposalService
 from domain.versioning.proposals import (
     ChangeProposal,
     OperationKind,
+    OperationStatus,
     OperationType,
     ProposalSource,
     ProposalStatus,
-)
-from scripts.dr_ontology_loader import (
-    DR_SOURCE,
-    DR_TAXONOMY_IDENTIFIER,
-    RelationshipSchemaRecord,
-    assign_relationship_identifiers,
-    dr_property_definitions,
 )
 
 PLAN_FORMAT = "dr-reflection-plan/1"
@@ -67,40 +72,6 @@ class PlanError(ValueError):
     def __init__(self, problems: list[str]):
         self.problems = problems
         super().__init__("; ".join(problems))
-
-
-@dataclass(frozen=True)
-class Triple:
-    """A DR relationship id split into its parts."""
-
-    source: str
-    predicate: str
-    destination: str
-
-    @classmethod
-    def parse(cls, relationship_id: str) -> "Triple":
-        """'api.operation.delivers.api.response' -> (api.operation, delivers, api.response)."""
-        parts = relationship_id.split(".")
-        if len(parts) != 5 or not all(parts):
-            raise ValueError(
-                f"'{relationship_id}' is not a {{source}}.{{predicate}}.{{destination}} id"
-            )
-        return cls(f"{parts[0]}.{parts[1]}", parts[2], f"{parts[3]}.{parts[4]}")
-
-    @property
-    def id(self) -> str:
-        return f"{self.source}.{self.predicate}.{self.destination}"
-
-    def record(self) -> RelationshipSchemaRecord:
-        return RelationshipSchemaRecord(
-            source_spec_node_id=self.source,
-            source_layer=self.source.split(".")[0],
-            destination_spec_node_id=self.destination,
-            destination_layer=self.destination.split(".")[0],
-            predicate=self.predicate,
-            title=f"{self.source} {self.predicate} {self.destination}",
-            description=None,
-        )
 
 
 def read_plan(path: Path) -> dict[str, Any]:
@@ -129,13 +100,7 @@ class _Workspace:
         if taxonomy is None:
             raise PlanError([f"No '{DR_TAXONOMY_IDENTIFIER}' taxonomy; import the DR spec first"])
         self.taxonomy_id = taxonomy.id
-        self.classes = {
-            ref.identifier: cls.id
-            for scheme in repo.list_concept_schemes(taxonomy_id=taxonomy.id, limit=None)
-            for cls in repo.list_classes(concept_scheme_id=scheme.id, limit=None)
-            for ref in cls.external_references
-            if ref.source == DR_SOURCE
-        }
+        self.classes = dr_spec_classes(repo)
 
     def class_id(self, spec_node_id: str) -> str:
         found = self.classes.get(spec_node_id)
@@ -327,16 +292,7 @@ def _update_fields(
     if new.destination != current.destination:
         mapped["range_class_id"] = workspace.class_id(new.destination)
     mapped["identifier"] = identifiers[new.id]
-    mapped["external_references"] = [
-        (
-            ExternalReference(
-                source=ref.source, identifier=new.id, uri=ref.uri, metadata=ref.metadata
-            )
-            if ref.source == DR_SOURCE and ref.identifier == current.id
-            else ref
-        ).to_dict()
-        for ref in target.external_references
-    ]
+    mapped["external_references"] = swapped_dr_reference(target, current, new)
     return mapped
 
 
@@ -367,22 +323,37 @@ def decisions_for(proposal: ChangeProposal) -> list[dict[str, Any]]:
     """
     The decisions file for DR's `proposal-import.ts --decisions`, joined by seq.
 
-    Pending operations are included with status "pending", which DR skips.
+    Pending operations are included with status "pending", which DR skips. An
+    operation a reviewer edited before applying it also carries `fields`: the
+    whole applied triple in DR's vocabulary (`predicate`,
+    `source_spec_node_id`, `destination_spec_node_id`); without it, an applied
+    operation was applied as proposed. An edited delete is applied with fields.
 
     Raises:
-        ValueError: If the proposal was reverted, so none of it stands
+        ValueError: If the proposal was reverted, so none of it stands, or an
+            edited operation's applied fields carry no DR relationship id
     """
     if proposal.status is ProposalStatus.REVERTED:
         raise ValueError(
             f"Change proposal {proposal.id} was reverted; its decisions no longer hold"
         )
-    return [
-        {
+    decisions = []
+    for operation in proposal.operations:
+        decision: dict[str, Any] = {
             "seq": operation.seq,
             "op_id": operation.id,
             "status": operation.status.value,
-            "reason": operation.reason,
-            "result_entity_id": operation.result_entity_id,
         }
-        for operation in proposal.operations
-    ]
+        if operation.status is OperationStatus.APPLIED and operation.applied_fields is not None:
+            decision["fields"] = _applied_triple(operation.seq, operation.applied_fields).fields()
+        decision["reason"] = operation.reason
+        decision["result_entity_id"] = operation.result_entity_id
+        decisions.append(decision)
+    return decisions
+
+
+def _applied_triple(seq: int, applied_fields: dict[str, Any]) -> Triple:
+    relationship_id = dr_relationship_id(applied_fields.get("external_references") or [])
+    if relationship_id is None:
+        raise ValueError(f"seq {seq} was edited, but its applied fields have no DR relationship id")
+    return Triple.parse(relationship_id)

@@ -111,6 +111,8 @@ class SQLiteChangeProposalRepository:
                 row.status = operation.status.value  # type: ignore[assignment]
                 row.result_entity_id = operation.result_entity_id  # type: ignore[assignment]
                 row.reason = operation.reason  # type: ignore[assignment]
+                row.scope = operation.scope.value  # type: ignore[assignment]
+                row.applied_fields = operation.applied_fields  # type: ignore[assignment]
             session.commit()
 
     def set_status(self, proposal_id: str, status: ProposalStatus) -> None:
@@ -170,6 +172,7 @@ def _operation_to_orm(proposal_id: str, operation: ProposedOperation) -> Proposa
         status=operation.status.value,
         result_entity_id=operation.result_entity_id,
         reason=operation.reason,
+        applied_fields=operation.applied_fields,
     )
 
 
@@ -190,6 +193,7 @@ def _operation_to_domain(row: ProposalOperation) -> ProposedOperation:
         status=OperationStatus(row.status),
         result_entity_id=row.result_entity_id,  # type: ignore[arg-type]
         reason=row.reason,  # type: ignore[arg-type]
+        applied_fields=dict(row.applied_fields) if row.applied_fields is not None else None,
     )
 
 

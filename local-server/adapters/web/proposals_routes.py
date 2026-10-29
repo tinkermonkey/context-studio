@@ -217,7 +217,13 @@ async def create_proposal(
     responses={
         **_NOT_FOUND,
         409: {"description": "The proposal is reverted, or an operation is already decided"},
-        422: {"description": "An operation id is not in the proposal"},
+        422: {
+            "description": (
+                "An operation id is not in the proposal, or an edit is misplaced "
+                "(not in operation_ids, not a property update/delete, empty, or uses a $ref); "
+                "nothing was applied"
+            )
+        },
     },
 )
 async def apply_proposal(
@@ -230,11 +236,23 @@ async def apply_proposal(
 
     Each operation records its own outcome; one that fails (e.g. "target_changed")
     does not undo the others. Pass a stale operation in force_stale to apply it
-    anyway.
+    anyway (edited ones too).
+
+    edits corrects property-definition updates and deletes before they apply:
+    each replaces the operation's proposed fields, applied as an update. A field
+    problem, or a breach of the taxonomy's rules (for dr_spec: both classes are
+    DR spec classes, the predicate is one the spec uses, and no other
+    relationship type or operation has the triple), fails only that operation
+    with "invalid_edit: ..."; it stays open, to apply again with a corrected
+    edit or reject. For dr_spec the identifier and DR external reference follow
+    from the triple. What was applied is returned as the operation's
+    applied_fields.
     """
 
     def run() -> ChangeProposalResponse:
-        proposal = service.apply(proposal_id, request.operation_ids, request.force_stale)
+        proposal = service.apply(
+            proposal_id, request.operation_ids, request.force_stale, request.edits
+        )
         return _response(service, proposal)
 
     try:

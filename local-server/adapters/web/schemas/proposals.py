@@ -77,6 +77,14 @@ class ChangeProposalApplyRequest(BaseModel):
         default_factory=list,
         description="Operations to apply even though their target changed since proposed",
     )
+    edits: dict[str, dict[str, Any]] = Field(
+        default_factory=dict,
+        description="Operation id -> the complete Context Studio fields to apply as a "
+        "property-definition update instead of the proposed ones; only for property "
+        "update/delete ops in operation_ids (an edited delete applies as an update). For a "
+        "dr_spec proposal the identifier and DR external reference follow from the triple "
+        "(canonical_predicate, domain_class_id, range_class_id)",
+    )
 
 
 class ChangeProposalRejectRequest(BaseModel):
@@ -113,6 +121,12 @@ class ProposedOperationResponse(BaseModel):
     result_entity_id: Optional[str] = Field(None, description="The entity made or changed")
     reason: Optional[str] = Field(
         None, description='Why it failed ("<code>: <detail>") or was rejected'
+    )
+    applied_fields: Optional[dict[str, Any]] = Field(
+        None,
+        description="Set when a reviewer edited the operation: the fields actually applied, "
+        "always as an update (an edited delete applies as an update). Null = applied as "
+        "proposed, or not applied",
     )
     stale: bool = Field(
         False,

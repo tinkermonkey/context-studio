@@ -4106,7 +4106,17 @@ export interface paths {
      *
      *     Each operation records its own outcome; one that fails (e.g. "target_changed")
      *     does not undo the others. Pass a stale operation in force_stale to apply it
-     *     anyway.
+     *     anyway (edited ones too).
+     *
+     *     edits corrects property-definition updates and deletes before they apply:
+     *     each replaces the operation's proposed fields, applied as an update. A field
+     *     problem, or a breach of the taxonomy's rules (for dr_spec: both classes are
+     *     DR spec classes, the predicate is one the spec uses, and no other
+     *     relationship type or operation has the triple), fails only that operation
+     *     with "invalid_edit: ..."; it stays open, to apply again with a corrected
+     *     edit or reject. For dr_spec the identifier and DR external reference follow
+     *     from the triple. What was applied is returned as the operation's
+     *     applied_fields.
      */
     post: operations["apply_proposal_api_proposals__proposal_id__apply_post"];
     delete?: never;
@@ -4861,6 +4871,15 @@ export interface components {
        * @description Operations to apply even though their target changed since proposed
        */
       force_stale?: string[];
+      /**
+       * Edits
+       * @description Operation id -> the complete Context Studio fields to apply as a property-definition update instead of the proposed ones; only for property update/delete ops in operation_ids (an edited delete applies as an update). For a dr_spec proposal the identifier and DR external reference follow from the triple (canonical_predicate, domain_class_id, range_class_id)
+       */
+      edits?: {
+        [key: string]: {
+          [key: string]: unknown;
+        };
+      };
     };
     /**
      * ChangeProposalCreateRequest
@@ -8106,6 +8125,13 @@ export interface components {
        * @description Why it failed ("<code>: <detail>") or was rejected
        */
       reason?: string | null;
+      /**
+       * Applied Fields
+       * @description Set when a reviewer edited the operation: the fields actually applied, always as an update (an edited delete applies as an update). Null = applied as proposed, or not applied
+       */
+      applied_fields?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Stale
        * @description Pending or failed, and its target is gone or a field it touches changed since proposed; applying it needs force_stale
@@ -14466,7 +14492,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description An operation id is not in the proposal */
+      /** @description An operation id is not in the proposal, or an edit is misplaced (not in operation_ids, not a property update/delete, empty, or uses a $ref); nothing was applied */
       422: {
         headers: {
           [name: string]: unknown;

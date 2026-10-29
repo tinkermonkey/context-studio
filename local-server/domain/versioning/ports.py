@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, Protocol, Sequence
+from typing import Any, Mapping, Optional, Protocol, Sequence
 
 from domain.versioning.approval_policy import ApprovalPolicy
 from domain.versioning.entities import ChangeEvent, Changeset, EntityVersion, Proposal
@@ -307,7 +307,7 @@ class ChangeProposalRepository(Protocol):
         ...
 
     def save_operations(self, proposal_id: str, operations: Sequence[ProposedOperation]) -> None:
-        """Persist the status, result and reason of these operations.
+        """Persist the status, result, reason, scope and applied fields of these operations.
 
         Raises ValueError for an unknown proposal or operation.
         """
@@ -327,4 +327,37 @@ class ApprovalPolicyRepository(Protocol):
 
     def save(self, policy: ApprovalPolicy) -> ApprovalPolicy:
         """Create or replace the policy of policy.taxonomy_id."""
+        ...
+
+
+class ProposalEditRules(Protocol):
+    """
+    One taxonomy's rules for a reviewer's edit of a proposed operation.
+
+    ProposalService checks an edit's fields like any proposed update, then,
+    for a proposal on a taxonomy with rules, asks them just before the edited
+    operation applies (inside the proposal's lock, after earlier operations of
+    the same apply have run). The rules may refuse the edit or complete it with
+    fields the taxonomy derives (e.g. an identifier).
+    """
+
+    def prepare(
+        self,
+        proposal: ChangeProposal,
+        operation: ProposedOperation,
+        fields: dict[str, Any],
+        other_edits: Mapping[str, dict[str, Any]],
+    ) -> dict[str, Any]:
+        """
+        The fields to apply as an update of the operation's target.
+
+        Args:
+            proposal: The proposal, with the outcomes of operations applied so far
+            operation: The edited operation (an update or delete of its target)
+            fields: The reviewer's fields, in the JSON encoding of snapshots
+            other_edits: The other edits of the same apply, by operation id
+
+        Raises:
+            ValueError: With the reason, when the edit is refused
+        """
         ...

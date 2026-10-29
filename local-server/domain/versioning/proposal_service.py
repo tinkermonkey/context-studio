@@ -20,7 +20,7 @@ import logging
 import threading
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Sequence
 from uuid import uuid4
 
 from domain.interchange.services import get_current_batch_run_id, set_batch_run_context
@@ -49,7 +49,11 @@ from domain.versioning.proposals import (
 if TYPE_CHECKING:
     from domain.ontology.ports import OntologyRepository
     from domain.ontology.services import OntologyService
-    from domain.versioning.ports import ApprovalPolicyRepository, ChangeProposalRepository
+    from domain.versioning.ports import (
+        ApprovalPolicyRepository,
+        ChangeProposalRepository,
+        ProposalEditRules,
+    )
     from domain.versioning.revert_service import RevertResult, RevertService
 
 _logger = logging.getLogger(__name__)
@@ -59,6 +63,7 @@ TARGET_CHANGED = "target_changed"
 TARGET_MISSING = "target_missing"
 UNRESOLVED_REF = "unresolved_ref"
 APPLY_ERROR = "error"
+INVALID_EDIT = "invalid_edit"
 
 REVERTED_REASON = "proposal reverted"
 
@@ -288,6 +293,7 @@ class ProposalService:
         ontology_repo: OntologyRepository,
         revert_service: RevertService,
         approval_policies: ApprovalPolicyRepository | None = None,
+        edit_rules: Mapping[str, ProposalEditRules] | None = None,
     ) -> None:
         """
         Args:
@@ -297,12 +303,15 @@ class ProposalService:
             revert_service: Undoes everything applied under a proposal's run id
             approval_policies: Taxonomies' approval policies; without them
                 nothing auto-applies
+            edit_rules: Rules for reviewers' edits, by taxonomy identifier;
+                edits on other taxonomies get only the generic checks
         """
         self._proposals = proposals
         self._ontology = ontology_service
         self._repo = ontology_repo
         self._revert = revert_service
         self._policies = approval_policies
+        self._edit_rules = dict(edit_rules or {})
         # One lock per proposal: a desktop app runs one process, so two requests
         # deciding on the same proposal are serialized here.
         self._locks: dict[str, threading.Lock] = {}
@@ -691,6 +700,7 @@ class ProposalService:
         proposal_id: str,
         operation_ids: Iterable[str],
         force_stale: Iterable[str] = (),
+        edits: Mapping[str, dict[str, Any]] | None = None,
     ) -> ChangeProposal:
         """
         Apply the chosen operations, in seq order, under the proposal's run id.
@@ -698,13 +708,25 @@ class ProposalService:
         Pending and failed operations can be applied (a failed one again, e.g.
         with force_stale after a target_changed). Each records its own outcome:
         applied with the entity it made or changed, or failed with a reason
-        (target_changed, target_missing, unresolved_ref, error). Operations
-        already applied stay applied when a later one fails.
+        (target_changed, target_missing, unresolved_ref, invalid_edit, error).
+        Operations already applied stay applied when a later one fails.
+
+        A reviewer can correct a property-definition update or delete before
+        applying it: its edit is the complete set of fields to apply, as an
+        update, instead of the proposed ones (an edited delete keeps its seq and
+        applies as an update). The edit is checked like a proposed update, then
+        by the taxonomy's edit rules, if any; a problem fails only that
+        operation (invalid_edit). Staleness still compares the proposed base,
+        so fields only the edit touches are not checked for it. An applied edit
+        is recorded as the operation's applied_fields, and its scope is
+        recomputed from them; a failed one records nothing, so applying the
+        operation again without an edit applies it as proposed.
 
         Args:
             proposal_id: The proposal
             operation_ids: The operations to apply
             force_stale: Operations to apply even if their target changed since proposed
+            edits: Operation id -> the fields to apply instead of the proposed ones
 
         Returns:
             The proposal with updated outcomes
@@ -713,21 +735,33 @@ class ProposalService:
             ChangeProposalNotFoundError: If the proposal does not exist
             ChangeProposalStateError: If the proposal is reverted, or an operation
                 is already applied or rejected; nothing is applied
-            ValueError: If an operation id is not in the proposal; nothing is applied
+            ValueError: If an operation id is not in the proposal, or an edit is
+                misplaced (its operation isn't being applied or isn't a property
+                update or delete, it is empty, or it points at a "$ref");
+                nothing is applied
         """
         with self._lock(proposal_id):
             proposal = self._get(proposal_id)
             if proposal.status is ProposalStatus.REVERTED:
                 raise ChangeProposalStateError(f"Change proposal {proposal_id} is reverted")
             chosen = self._chosen(proposal, operation_ids, "apply")
+            edits = dict(edits or {})
+            self._check_edits_placed(chosen, edits)
             force = set(force_stale)
             refs = {o.ref: o for o in proposal.operations if o.ref}
+            rules = self._rules_for(proposal) if edits else None
 
             previous_run = get_current_batch_run_id()
             set_batch_run_context(proposal.id)
             try:
                 for operation in chosen:
-                    self._apply_one(operation, refs, proposal.id, operation.id in force)
+                    forced = operation.id in force
+                    if operation.id in edits:
+                        others = {i: e for i, e in edits.items() if i != operation.id}
+                        edit = edits[operation.id]
+                        self._apply_edited(proposal, operation, edit, others, rules, forced)
+                    else:
+                        self._apply_one(operation, refs, proposal.id, forced)
                     self._proposals.save_operations(proposal.id, [operation])
             finally:
                 set_batch_run_context(previous_run)
@@ -736,6 +770,90 @@ class ProposalService:
             self._proposals.set_status(proposal.id, proposal.status)
             return self._get(proposal_id)
 
+    @staticmethod
+    def _check_edits_placed(
+        chosen: list[ProposedOperation], edits: dict[str, dict[str, Any]]
+    ) -> None:
+        """Each edit is a non-empty object for a property update or delete being applied."""
+        by_id = {o.id: o for o in chosen}
+        misplaced = sorted(i for i in edits if i not in by_id)
+        if misplaced:
+            raise ValueError(f"Edits for operations not being applied: {misplaced}")
+        for operation_id, fields in edits.items():
+            operation = by_id[operation_id]
+            label = f"seq {operation.seq}"
+            if operation.kind is not K.PROPERTY or operation.op not in (
+                OperationType.UPDATE,
+                OperationType.DELETE,
+            ):
+                raise ValueError(
+                    f"{label} is a {operation.kind.value} {operation.op.value}; only a "
+                    "property update or delete can be edited"
+                )
+            if not isinstance(fields, dict) or not fields:
+                raise ValueError(f"{label}: an edit needs at least one field")
+            refs = sorted(name for name, value in fields.items() if _is_ref(value))
+            if refs:
+                raise ValueError(f"{label}: an edit can't point at a $ref ({refs})")
+
+    def _rules_for(self, proposal: ChangeProposal) -> ProposalEditRules | None:
+        """The edit rules of the proposal's taxonomy, if it has any."""
+        taxonomy = self._repo.get_taxonomy(proposal.taxonomy_id)
+        identifier = taxonomy.identifier if taxonomy is not None else None
+        return self._edit_rules.get(identifier) if identifier else None
+
+    def _apply_edited(
+        self,
+        proposal: ChangeProposal,
+        operation: ProposedOperation,
+        edit: dict[str, Any],
+        other_edits: dict[str, dict[str, Any]],
+        rules: ProposalEditRules | None,
+        forced: bool,
+    ) -> None:
+        """Apply a reviewer's edit of a property update or delete, as an update."""
+
+        def run() -> str:
+            self._check_fresh(operation, forced)
+            fields = self._checked_edit(operation, edit)
+            if rules is not None:
+                try:
+                    fields = rules.prepare(proposal, operation, fields, other_edits)
+                except ValueError as exc:
+                    raise _ApplyFailed(INVALID_EDIT, str(exc)) from exc
+                fields = self._checked_edit(operation, fields)
+            target_id: str = operation.target_id  # type: ignore[assignment]
+            before = entity_snapshot(self._load(K.PROPERTY, target_id))
+            result = self._dispatch(operation, fields, proposal.id, OperationType.UPDATE)
+            base = {
+                name: operation.base[name] if name in operation.base else before.get(name)
+                for name in fields
+            }
+            operation.applied_fields = fields
+            operation.scope = classify_scope(OperationType.UPDATE, fields, base)
+            return result
+
+        self._record_outcome(operation, proposal.id, run)
+
+    def _checked_edit(self, operation: ProposedOperation, fields: dict[str, Any]) -> dict[str, Any]:
+        """The edit's fields, checked as a proposed property update of the target."""
+        try:
+            as_update = ProposedOperation(
+                seq=operation.seq,
+                op=OperationType.UPDATE,
+                kind=K.PROPERTY,
+                target_id=operation.target_id,
+                fields=dict(fields),
+            )
+            self._check_field_names(as_update)
+            self._check_values(as_update)
+            self._check_id_fields(as_update, {})
+        except _Invalid as exc:
+            raise _ApplyFailed(INVALID_EDIT, exc.message) from exc
+        except (TypeError, ValueError) as exc:
+            raise _ApplyFailed(INVALID_EDIT, str(exc)) from exc
+        return as_update.fields
+
     def _apply_one(
         self,
         operation: ProposedOperation,
@@ -743,15 +861,29 @@ class ProposalService:
         run_id: str,
         forced: bool,
     ) -> None:
-        operation.reason = None
-        try:
+        def run() -> str:
             fields = {
                 name: self._resolved(value, refs) if name in _ID_FIELDS else value
                 for name, value in operation.fields.items()
             }
             if operation.op is not OperationType.CREATE:
                 self._check_fresh(operation, forced)
-            operation.result_entity_id = self._dispatch(operation, fields, run_id)
+            return self._dispatch(operation, fields, run_id, operation.op)
+
+        self._record_outcome(operation, run_id, run)
+
+    def _record_outcome(
+        self, operation: ProposedOperation, run_id: str, run: Callable[[], str]
+    ) -> None:
+        """
+        Run one operation's apply and record it: applied with the entity it made
+        or changed, or failed with a reason (and no applied fields or new scope).
+        """
+        operation.reason = None
+        operation.applied_fields = None
+        scope = operation.scope
+        try:
+            operation.result_entity_id = run()
             operation.status = OperationStatus.APPLIED
         except _ApplyFailed as exc:
             operation.status = OperationStatus.FAILED
@@ -764,6 +896,8 @@ class ProposalService:
             operation.status = OperationStatus.FAILED
             operation.reason = f"{APPLY_ERROR}: {exc}"
         if operation.status is OperationStatus.FAILED:
+            operation.applied_fields = None
+            operation.scope = scope
             _logger.info(
                 "Proposal %s op seq %s failed: %s", run_id, operation.seq, operation.reason
             )
@@ -947,9 +1081,20 @@ class ProposalService:
 
     # ----------------------------------------------------------------- dispatch
 
-    def _dispatch(self, operation: ProposedOperation, fields: dict[str, Any], run_id: str) -> str:
-        """Make the change through OntologyService; returns the entity id made or changed."""
-        kind, op, target = operation.kind, operation.op, operation.target_id
+    def _dispatch(
+        self,
+        operation: ProposedOperation,
+        fields: dict[str, Any],
+        run_id: str,
+        op: OperationType,
+    ) -> str:
+        """
+        Make the change through OntologyService; returns the entity id made or changed.
+
+        `op` is what to do: the operation's own op, or an update when a
+        reviewer's edit turned a delete into one.
+        """
+        kind, target = operation.kind, operation.target_id
         svc = self._ontology
         values = {name: decode_field(name, value) for name, value in fields.items()}
 

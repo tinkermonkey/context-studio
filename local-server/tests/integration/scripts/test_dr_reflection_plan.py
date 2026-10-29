@@ -3,7 +3,9 @@ Integration tests (#1366): a DR reflection plan (`dr-reflection-plan/1`) becomes
 a change proposal on dr_spec; applying it renames, reverses, retargets and
 deletes relationship types (in-use ones keep their relationships); reverting
 it restores them exactly; the decisions export in DR's shape; and the DR spec
-re-imports cleanly after DR applies the same change.
+re-imports cleanly after DR applies the same change. A reviewer's edit of an
+operation (#1383) applies the corrected triple, refused by the DR rules when the
+classes, predicate or triple don't hold, and the export reports what was applied.
 
 Built on the pinned DR spec snapshot (0.8.4) on real SQLite with foreign keys
 enforced and change events recorded. The plan fixture is DR's api-layer plan,
@@ -27,6 +29,7 @@ import pytest
 from sqlalchemy.orm import sessionmaker
 
 from adapters.events.in_process import InProcessEventPublisher
+from adapters.interchange.dr_relationships import DR_TAXONOMY_IDENTIFIER, DrEditRules
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.connection import create_local_db_engine
 from adapters.persistence.sqlite.models import Base
@@ -86,6 +89,7 @@ def parts(spec_db, tmp_path):
         ontology,
         repo,
         RevertService(change_repo=change_repo, ontology_repo=repo),
+        edit_rules={DR_TAXONOMY_IDENTIFIER: DrEditRules(repo)},  # as app.py wires it
     )
     yield ontology, repo, proposals
     engine.dispose()
@@ -492,6 +496,255 @@ def test_decisions_export_in_drs_shape(parts):
     proposals.revert(proposal.id)
     with pytest.raises(ValueError, match="reverted"):
         decisions_for(proposals.get(proposal.id))
+
+
+# ----------------------------------------------------------- accept with edit (#1383)
+
+MEDIATYPE_AGGREGATES = "api.mediatype.aggregates.api.encoding"  # seq 1, a delete
+
+
+def edit_triple(repo, source=None, predicate=None, destination=None, **fields):
+    """An edit in Context Studio fields, the way the review UI builds it from DR's triple."""
+    if source is not None:
+        fields["domain_class_id"] = class_by_dr_id(repo, source).id
+    if destination is not None:
+        fields["range_class_id"] = class_by_dr_id(repo, destination).id
+    if predicate is not None:
+        fields["canonical_predicate"] = predicate
+    return fields
+
+
+def test_an_edited_rename_applies_the_reviewers_triple(parts):
+    _, repo, proposals = parts
+    new_id = "api.operation.uses.api.response"
+    assert prop_by_dr_id(repo, new_id) is None
+    proposal = import_reflection_plan(plan_for(14), proposals, repo)  # delivers -> aggregates
+    op = proposal.operations[0]
+    delivers = repo.get_property_definition(op.target_id)
+
+    applied = proposals.apply(
+        proposal.id, [op.id], edits={op.id: edit_triple(repo, predicate="uses")}
+    ).operations[0]
+
+    assert applied.status is OperationStatus.APPLIED, applied.reason
+    prop = repo.get_property_definition(delivers.id)
+    assert prop_by_dr_id(repo, new_id).id == delivers.id
+    assert prop.canonical_predicate == "uses" and prop.identifier == "operation_uses_response"
+    assert prop.title == "api.operation uses api.response"  # the default title follows
+    assert prop.domain_class_id == delivers.domain_class_id
+    assert prop.range_class_id == delivers.range_class_id
+    stored = proposals.get(proposal.id).operations[0]
+    assert stored.applied_fields == {
+        "canonical_predicate": "uses",
+        "domain_class_id": delivers.domain_class_id,
+        "range_class_id": delivers.range_class_id,
+        "identifier": "operation_uses_response",
+        "title": "api.operation uses api.response",
+        "external_references": [
+            {"source": DR_SOURCE, "identifier": new_id, "uri": None, "metadata": None}
+        ],
+    }
+    assert stored.fields["canonical_predicate"] == "aggregates"  # the proposal is kept
+    assert stored.scope is ChangeScope.BREAKING
+
+
+def test_a_delete_replaced_by_a_triple_applies_as_an_update(parts):
+    _, repo, proposals = parts
+    new_id = "api.mediatype.aggregates.api.header"
+    assert prop_by_dr_id(repo, new_id) is None
+    proposal = import_reflection_plan(plan_for(1), proposals, repo)
+    op = proposal.operations[0]
+    target = prop_by_dr_id(repo, MEDIATYPE_AGGREGATES)
+
+    edit = edit_triple(repo, destination="api.header", title="Media type headers")
+    applied = proposals.apply(proposal.id, [op.id], edits={op.id: edit}).operations[0]
+
+    assert applied.status is OperationStatus.APPLIED, applied.reason
+    assert (applied.seq, applied.op) == (1, OperationType.DELETE)
+    assert applied.result_entity_id == target.id
+    prop = repo.get_property_definition(target.id)
+    assert prop is not None and prop_by_dr_id(repo, MEDIATYPE_AGGREGATES) is None
+    assert prop_by_dr_id(repo, new_id).id == target.id
+    assert prop.title == "Media type headers"
+    assert prop.range_class_id == class_by_dr_id(repo, "api.header").id
+    assert prop.identifier == "mediatype_aggregates_header"
+
+
+def test_an_edit_keeping_the_triple_carries_it_whole(parts):
+    _, repo, proposals = parts
+    proposal = import_reflection_plan(plan_for(1), proposals, repo)
+    op = proposal.operations[0]
+    target = prop_by_dr_id(repo, MEDIATYPE_AGGREGATES)
+
+    applied = proposals.apply(
+        proposal.id, [op.id], edits={op.id: {"description": "Kept, reworded"}}
+    ).operations[0]
+
+    assert applied.status is OperationStatus.APPLIED, applied.reason
+    assert applied.applied_fields["identifier"] == target.identifier
+    assert applied.scope is ChangeScope.EDITORIAL
+    [decision] = decisions_for(proposals.get(proposal.id))
+    assert decision["fields"] == {
+        "predicate": "aggregates",
+        "source_spec_node_id": "api.mediatype",
+        "destination_spec_node_id": "api.encoding",
+    }
+
+
+@pytest.mark.parametrize(
+    "edit, reason",
+    [
+        (
+            {"source": "api.response", "predicate": "frobnicates"},
+            "invalid_edit: predicate 'frobnicates' is not one the DR spec uses",
+        ),
+        (
+            {"source": "api.components", "predicate": "aggregates"},
+            "invalid_edit: api.components.aggregates.api.response already exists",
+        ),
+    ],
+)
+def test_an_edit_the_dr_spec_refuses_fails_only_that_operation(parts, edit, reason):
+    _, repo, proposals = parts
+    proposal = import_reflection_plan(plan_for(13, 14), proposals, repo)
+    ops = {o.seq: o for o in proposal.operations}
+    before = snap(repo.get_property_definition(ops[14].target_id))
+
+    result = proposals.apply(
+        proposal.id, [ops[13].id, ops[14].id], edits={ops[14].id: edit_triple(repo, **edit)}
+    )
+
+    by_seq = {o.seq: o for o in result.operations}
+    assert by_seq[14].status is OperationStatus.FAILED
+    assert by_seq[14].reason == reason
+    assert by_seq[14].applied_fields is None
+    assert snap(repo.get_property_definition(ops[14].target_id)) == before
+    assert by_seq[13].status is OperationStatus.APPLIED
+
+
+def test_an_edit_onto_a_class_outside_the_dr_spec_fails(parts):
+    ontology, repo, proposals = parts
+    house = ontology.create_taxonomy(title="House")
+    rooms = ontology.create_scheme(taxonomy_id=house.id, title="Rooms")
+    kitchen = ontology.create_class(rooms.id, "Kitchen")
+    proposal = import_reflection_plan(plan_for(14), proposals, repo)
+    op = proposal.operations[0]
+
+    result = proposals.apply(
+        proposal.id, [op.id], edits={op.id: {"domain_class_id": kitchen.id}}
+    ).operations[0]
+
+    assert result.status is OperationStatus.FAILED
+    assert result.reason == (
+        f"invalid_edit: domain_class_id '{kitchen.id}' is not an imported DR spec class"
+    )
+
+
+def test_an_edit_onto_a_triple_another_operation_proposes_fails(parts):
+    _, repo, proposals = parts
+    proposal = import_reflection_plan(plan_for(1, 14), proposals, repo)  # 14 -> aggregates
+    ops = {o.seq: o for o in proposal.operations}
+    edit = edit_triple(repo, source="api.operation", destination="api.response")
+
+    result = proposals.apply(proposal.id, [ops[1].id], edits={ops[1].id: edit})
+
+    failed = next(o for o in result.operations if o.seq == 1)
+    assert failed.status is OperationStatus.FAILED
+    assert failed.reason == (
+        "invalid_edit: seq 14 also produces api.operation.aggregates.api.response"
+    )
+    assert prop_by_dr_id(repo, MEDIATYPE_AGGREGATES) is not None
+
+
+def test_two_edits_producing_one_triple_both_fail(parts):
+    _, repo, proposals = parts
+    new_id = "api.tag.governs.api.ratelimit"
+    assert prop_by_dr_id(repo, new_id) is None
+    proposal = import_reflection_plan(plan_for(1, 2), proposals, repo)
+    ops = {o.seq: o for o in proposal.operations}
+    edit = edit_triple(repo, source="api.tag", predicate="governs", destination="api.ratelimit")
+
+    result = proposals.apply(
+        proposal.id, [ops[1].id, ops[2].id], edits={ops[1].id: edit, ops[2].id: edit}
+    )
+
+    by_seq = {o.seq: o for o in result.operations}
+    assert by_seq[1].reason == f"invalid_edit: seq 2 also produces {new_id}"
+    assert by_seq[2].reason == f"invalid_edit: seq 1 also produces {new_id}"
+    assert prop_by_dr_id(repo, new_id) is None
+
+
+def test_revert_of_an_edited_apply_restores_exactly(parts):
+    ontology, repo, proposals = parts
+    delivers, rel_ids = put_delivers_in_use(ontology, repo)
+    proposal = import_reflection_plan(plan_for(1, 14), proposals, repo)
+    ops = {o.seq: o for o in proposal.operations}
+    targets = [ops[1].target_id, ops[14].target_id]
+    before = {t: snap(repo.get_property_definition(t)) for t in targets}
+    rels_before = {r: snap(repo.get_relationship(r)) for r in rel_ids}
+    edits = {
+        ops[1].id: edit_triple(repo, destination="api.header"),
+        ops[14].id: edit_triple(repo, predicate="uses"),
+    }
+
+    applied = proposals.apply(proposal.id, [ops[1].id, ops[14].id], edits=edits)
+    assert all(o.status is OperationStatus.APPLIED for o in applied.operations), [
+        o.reason for o in applied.operations
+    ]
+    assert repo.get_property_definition(delivers.id).canonical_predicate == "uses"
+
+    proposals.revert(proposal.id)
+
+    assert {t: snap(repo.get_property_definition(t)) for t in targets} == before
+    assert {r: snap(repo.get_relationship(r)) for r in rel_ids} == rels_before
+    assert proposals.get(proposal.id).status is ProposalStatus.REVERTED
+
+
+def test_decisions_export_reports_what_was_applied(parts):
+    _, repo, proposals = parts
+    proposal = import_reflection_plan(plan_for(1, 2, 13, 14), proposals, repo)
+    ops = {o.seq: o for o in proposal.operations}
+    edits = {
+        ops[1].id: edit_triple(repo, destination="api.header"),
+        ops[14].id: edit_triple(repo, predicate="uses"),
+    }
+    proposals.apply(proposal.id, [ops[1].id, ops[2].id, ops[14].id], edits=edits)
+    proposals.reject(proposal.id, [ops[13].id], note="Keep references")
+
+    decisions = {d["seq"]: d for d in decisions_for(proposals.get(proposal.id))}
+
+    assert decisions[1] == {
+        "seq": 1,
+        "op_id": ops[1].id,
+        "status": "applied",
+        "fields": {
+            "predicate": "aggregates",
+            "source_spec_node_id": "api.mediatype",
+            "destination_spec_node_id": "api.header",
+        },
+        "reason": None,
+        "result_entity_id": ops[1].target_id,
+    }
+    assert decisions[14]["fields"] == {
+        "predicate": "uses",
+        "source_spec_node_id": "api.operation",
+        "destination_spec_node_id": "api.response",
+    }
+    assert "fields" not in decisions[2] and decisions[2]["status"] == "applied"
+    assert "fields" not in decisions[13] and decisions[13]["status"] == "rejected"
+    json.dumps(list(decisions.values()))
+
+
+def test_a_failed_edit_exports_as_failed_without_fields(parts):
+    _, repo, proposals = parts
+    proposal = import_reflection_plan(plan_for(14), proposals, repo)
+    op = proposal.operations[0]
+    proposals.apply(proposal.id, [op.id], edits={op.id: edit_triple(repo, predicate="nope")})
+
+    [decision] = decisions_for(proposals.get(proposal.id))
+
+    assert decision["status"] == "failed" and "fields" not in decision
+    assert decision["reason"] == "invalid_edit: predicate 'nope' is not one the DR spec uses"
 
 
 # ------------------------------------------------- DR applies, CS re-imports
