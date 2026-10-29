@@ -411,6 +411,17 @@ def test_a_field_set_to_its_current_value_changes_nothing():
     assert classify_scope(T.UPDATE, {"identifier": "far"}, base) is ChangeScope.BREAKING
 
 
+def test_a_value_of_another_type_is_not_the_current_value():
+    base = {"attributes": {"optional": 1}, "is_required": False}
+    assert classify_scope(T.UPDATE, {"attributes": {"optional": True}}, base) is (
+        ChangeScope.BREAKING
+    )
+    assert classify_scope(T.UPDATE, {"is_required": 0}, base) is ChangeScope.BREAKING
+    assert classify_scope(T.UPDATE, {"attributes": {"optional": 1}}, base) is (
+        ChangeScope.EDITORIAL
+    )
+
+
 def test_a_proposed_update_to_the_current_value_is_editorial(service, graph):
     proposal = propose(
         service,

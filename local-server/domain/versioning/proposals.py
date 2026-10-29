@@ -146,7 +146,7 @@ def _computed_scope(op: OperationType, fields: dict[str, Any], base: dict[str, A
         return ChangeScope.BREAKING if fields.get("is_required") is True else ChangeScope.ADDITIVE
     scope = ChangeScope.EDITORIAL
     for name, value in fields.items():
-        if name in EDITORIAL_FIELDS or (name in base and base[name] == value):
+        if name in EDITORIAL_FIELDS or (name in base and _same_value(base[name], value)):
             continue  # wording only, or a field set to the value it already has
         if name in ADDITIVE_LIST_FIELDS and name in base and _only_adds(base[name], value):
             scope = ChangeScope.ADDITIVE
@@ -156,6 +156,15 @@ def _computed_scope(op: OperationType, fields: dict[str, Any], base: dict[str, A
             continue
         return ChangeScope.BREAKING
     return scope
+
+
+def _same_value(a: Any, b: Any) -> bool:
+    """Whether two JSON values are equal and of the same types throughout (True is not 1)."""
+    if isinstance(a, dict) and isinstance(b, dict):
+        return a.keys() == b.keys() and all(_same_value(a[k], b[k]) for k in a)
+    if isinstance(a, list) and isinstance(b, list):
+        return len(a) == len(b) and all(_same_value(x, y) for x, y in zip(a, b))
+    return same_attribute_value(a, b)
 
 
 def _only_adds(current: Any, proposed: Any) -> bool:

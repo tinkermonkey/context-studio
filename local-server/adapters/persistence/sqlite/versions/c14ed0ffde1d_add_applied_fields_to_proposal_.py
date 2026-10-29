@@ -1,7 +1,7 @@
 """add applied_fields to proposal_operations
 
 Revision ID: c14ed0ffde1d
-Revises: 0cb067ec7265
+Revises: 86bcab10d611
 Create Date: 2026-10-28 19:36:21.684393
 
 Adds ``proposal_operations.applied_fields`` (#1383): what was actually applied
@@ -15,7 +15,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = "c14ed0ffde1d"
-down_revision = "0cb067ec7265"
+down_revision = "86bcab10d611"
 branch_labels = None
 depends_on = None
 
