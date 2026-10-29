@@ -74,6 +74,8 @@ _REF_PREFIX = "$"
 # A proposal's title is a short summary; its rationale may run to a few pages.
 MAX_TITLE_CHARS = 500
 MAX_RATIONALE_CHARS = 8000
+# Operation seq values fit SQLite's integer column with room to spare.
+MAX_SEQ = 1_000_000
 # Snapshot fields that change on every write; a delete's staleness ignores them.
 _VOLATILE_FIELDS = frozenset({"last_modified", "version"})
 
@@ -371,6 +373,9 @@ class ProposalService:
         seen_seqs: set[int] = set()
         for draft in sorted(operations, key=lambda d: d.seq):
             try:
+                seq = draft.seq
+                if isinstance(seq, bool) or not isinstance(seq, int) or not 0 <= seq <= MAX_SEQ:
+                    raise _Invalid("invalid", f"seq must be an integer from 0 to {MAX_SEQ}")
                 if draft.seq in seen_seqs:
                     raise _Invalid("invalid", "seq values must be unique")
                 seen_seqs.add(draft.seq)

@@ -17,6 +17,7 @@ from domain.versioning.exceptions import (
 )
 from domain.versioning.proposal_service import (
     MAX_RATIONALE_CHARS,
+    MAX_SEQ,
     MAX_TITLE_CHARS,
     OperationDraft,
     ProposalService,
@@ -326,6 +327,19 @@ class TestPropose:
                 ),
             )
         assert caught.value.errors[0].code == "invalid"
+
+    @pytest.mark.parametrize("seq", [-1, MAX_SEQ + 1, 10**30, True])
+    def test_seq_out_of_range_is_invalid(self, service, graph, seq):
+        with pytest.raises(ProposalValidationError) as caught:
+            propose(
+                service,
+                graph,
+                draft(seq, T.UPDATE, K.CLASS, graph["room"], title="Chamber"),
+                draft(2, T.UPDATE, K.CLASS, graph["kitchen"], title="Galley"),
+            )
+        (error,) = caught.value.errors
+        assert (error.seq, error.code) == (seq, "invalid")
+        assert str(MAX_SEQ) in error.message
 
     def test_title_and_rationale_have_length_limits(self, service, graph):
         update = draft(1, T.UPDATE, K.CLASS, graph["room"], title="Chamber")

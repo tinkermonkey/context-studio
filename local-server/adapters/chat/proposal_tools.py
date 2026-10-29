@@ -36,6 +36,7 @@ from domain.versioning.exceptions import (
 )
 from domain.versioning.proposal_service import (
     ID_FIELDS,
+    MAX_SEQ,
     OPERATION_FIELDS,
     ProposalService,
 )
@@ -161,6 +162,8 @@ OPERATION_SCHEMA: dict[str, Any] = {
     "properties": {
         "seq": {
             "type": "integer",
+            "minimum": 0,
+            "maximum": MAX_SEQ,
             "description": "Unique position in the proposal; operations apply in seq order",
         },
         "op": {"type": "string", "enum": [t.value for t in OperationType]},

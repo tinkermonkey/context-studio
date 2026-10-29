@@ -594,6 +594,24 @@ async def test_evidence_that_is_not_objects_of_text_is_invalid(dr_workspace, pro
     assert_evidence_refused(json.loads(outcome.content), proposals)
 
 
+async def test_a_huge_seq_is_an_invalid_operation_not_a_server_error(dr_workspace, proposals):
+    chat_tool = build_proposal_tools(proposals.service, ProposalSource.CHAT)[0]
+
+    outcome = await chat_tool.execute(
+        {
+            "taxonomy_id": TAXONOMY_ID,
+            "title": "Huge seq",
+            "operations": [update_operation(10**30, OPERATION_ID, description="A")],
+        }
+    )
+
+    assert outcome.is_error is False
+    payload = json.loads(outcome.content)
+    assert payload["stored"] is False
+    assert [(o["seq"], o["code"]) for o in payload["operations"]] == [(10**30, "invalid")]
+    assert proposals.service.count_proposals() == 0
+
+
 async def test_get_and_list_proposals_through_mcp(dr_workspace, proposals):
     write_tools = build_proposal_tools(proposals.service, ProposalSource.MCP)
     arguments = {
