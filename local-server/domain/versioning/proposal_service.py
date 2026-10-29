@@ -70,6 +70,10 @@ RULE_REFUSED = "refused"
 REVERTED_REASON = "proposal reverted"
 
 _REF_PREFIX = "$"
+
+# A proposal's title is a short summary; its rationale may run to a few pages.
+MAX_TITLE_CHARS = 500
+MAX_RATIONALE_CHARS = 8000
 # Snapshot fields that change on every write; a delete's staleness ignores them.
 _VOLATILE_FIELDS = frozenset({"last_modified", "version"})
 
@@ -349,6 +353,16 @@ class ProposalService:
             errors.append(
                 OperationError(None, "invalid", "A proposal needs at least one operation")
             )
+        for name, value, limit in (
+            ("title", title, MAX_TITLE_CHARS),
+            ("rationale", rationale, MAX_RATIONALE_CHARS),
+        ):
+            if isinstance(value, str) and len(value) > limit:
+                errors.append(
+                    OperationError(
+                        None, "too_long", f"{name} is {len(value)} characters; at most {limit}"
+                    )
+                )
 
         built: list[ProposedOperation] = []
         refs: dict[str, OperationKind] = {}

@@ -57,6 +57,8 @@ PROPOSAL_KIND = "proposal"
 MAX_OPERATIONS = 200
 # Large enough for a full 200-operation propose result.
 MAX_PROPOSAL_CHARS = 16000
+# A result too large even with one entry has its texts cut to this length.
+CLIPPED_TEXT_CHARS = 300
 DEFAULT_LIMIT = 20
 MAX_LIMIT = 50
 
@@ -78,23 +80,50 @@ def _capped(
     payload: dict[str, Any], list_key: str, note: Callable[[int], str]
 ) -> tuple[str, list[Any]]:
     """
-    Serialize a result, dropping whole entries of its list until it fits
-    MAX_PROPOSAL_CHARS; returns the content and the entries kept.
+    Serialize a result within MAX_PROPOSAL_CHARS; returns the content and the
+    entries of its list that were kept.
+
+    Whole entries are dropped from the end of the list first, never the last
+    one, so paging with offset always advances. If that is not enough, every
+    text longer than CLIPPED_TEXT_CHARS is cut and the result says so.
 
     Args:
         payload: The result
         list_key: The list to cut
         note: What to do about the cut entries, given how many were kept
     """
-    content = dumps(payload)
-    items = list(payload[list_key])
-    total = len(items)
-    while items and len(content) > MAX_PROPOSAL_CHARS:
-        items = items[: max(len(items) * 3 // 4, len(items) - 1)]
-        truncated = f"showing {len(items)} of {total}; {note(len(items))}"
-        payload = {**payload, list_key: items, "truncated": truncated}
-        content = dumps(payload)
-    return content, items
+    total = len(payload[list_key])
+
+    def fit(current: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+        items = list(current[list_key])
+        content = dumps(current)
+        while len(items) > 1 and len(content) > MAX_PROPOSAL_CHARS:
+            items = items[: max(len(items) * 3 // 4, 1)]
+            truncated = f"showing {len(items)} of {total}; {note(len(items))}"
+            current = {**current, list_key: items, "truncated": truncated}
+            content = dumps(current)
+        return content, current
+
+    content, fitted = fit(payload)
+    if len(content) > MAX_PROPOSAL_CHARS:
+        clipped = _clipped(payload)
+        clipped["clipped"] = (
+            f"texts longer than {CLIPPED_TEXT_CHARS} characters are cut; the review page"
+            " shows them whole"
+        )
+        content, fitted = fit(clipped)
+    return content, list(fitted[list_key])
+
+
+def _clipped(value: Any) -> Any:
+    """The value with every text longer than CLIPPED_TEXT_CHARS cut, marked with an ellipsis."""
+    if isinstance(value, str) and len(value) > CLIPPED_TEXT_CHARS:
+        return value[:CLIPPED_TEXT_CHARS] + "…"
+    if isinstance(value, dict):
+        return {k: _clipped(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_clipped(v) for v in value]
+    return value
 
 
 def _field_guide() -> str:

@@ -15,7 +15,12 @@ from domain.versioning.exceptions import (
     ChangeProposalStateError,
     ProposalValidationError,
 )
-from domain.versioning.proposal_service import OperationDraft, ProposalService
+from domain.versioning.proposal_service import (
+    MAX_RATIONALE_CHARS,
+    MAX_TITLE_CHARS,
+    OperationDraft,
+    ProposalService,
+)
 from domain.versioning.proposals import (
     ChangeScope,
     OperationKind,
@@ -321,6 +326,31 @@ class TestPropose:
                 ),
             )
         assert caught.value.errors[0].code == "invalid"
+
+    def test_title_and_rationale_have_length_limits(self, service, graph):
+        update = draft(1, T.UPDATE, K.CLASS, graph["room"], title="Chamber")
+        with pytest.raises(ProposalValidationError) as caught:
+            service.propose(
+                graph["taxonomy"],
+                "t" * (MAX_TITLE_CHARS + 1),
+                [update],
+                ProposalSource.CHAT,
+                rationale="r" * (MAX_RATIONALE_CHARS + 1),
+            )
+        assert [(e.seq, e.code) for e in caught.value.errors] == [
+            (None, "too_long"),
+            (None, "too_long"),
+        ]
+        assert "title" in caught.value.errors[0].message
+
+        stored = service.propose(
+            graph["taxonomy"],
+            "t" * MAX_TITLE_CHARS,
+            [update],
+            ProposalSource.CHAT,
+            rationale="r" * MAX_RATIONALE_CHARS,
+        )
+        assert len(stored.title) == MAX_TITLE_CHARS
 
     def test_unknown_taxonomy_and_empty_proposal(self, service):
         with pytest.raises(ProposalValidationError) as caught:

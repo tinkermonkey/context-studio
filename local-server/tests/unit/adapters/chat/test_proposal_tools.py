@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 import pytest
 
 from adapters.chat.proposal_tools import (
+    CLIPPED_TEXT_CHARS,
     MAX_OPERATIONS,
     MAX_PROPOSAL_CHARS,
     OPERATION_SCHEMA,
@@ -585,3 +586,56 @@ class TestListProposals:
 
         assert outcome.is_error is True
         assert "open, done, reverted" in result["error"]
+
+
+# ============================================================================
+# The size cap is hard, and paging always advances
+# ============================================================================
+
+
+class TestHardCap:
+    async def test_huge_titles_are_clipped_and_paging_advances(self):
+        listed = [make_proposal([make_operation(1)], proposal_id=f"p-{i}") for i in range(3)]
+        for proposal in listed:
+            proposal.title = "t" * 40000
+        service = FakeProposalService(listed=listed, total=3)
+
+        outcome, result = await call(service, "list_proposals", offset=5)
+
+        assert len(outcome.content) <= MAX_PROPOSAL_CHARS
+        assert "clipped" in result
+        assert len(result["items"]) >= 1
+        assert result["items"][0]["title"] == "t" * CLIPPED_TEXT_CHARS + "…"
+        if "truncated" in result:
+            kept = len(result["items"])
+            assert result["truncated"].endswith(f"pass offset {5 + kept} for the rest")
+        assert [e.id for e in outcome.entities] == [i["id"] for i in result["items"]]
+
+    async def test_paging_never_stalls_on_one_large_entry(self):
+        listed = [make_proposal([make_operation(1)], proposal_id=f"p-{i}") for i in range(30)]
+        for proposal in listed:
+            proposal.title = "t" * 499
+        service = FakeProposalService(listed=listed, total=30)
+
+        outcome, result = await call(service, "list_proposals", limit=30)
+
+        assert len(outcome.content) <= MAX_PROPOSAL_CHARS
+        kept = len(result["items"])
+        assert 1 <= kept < 30
+        assert result["truncated"].endswith(f"pass offset {kept} for the rest")
+
+    async def test_a_huge_single_operation_still_fits(self):
+        operation = make_operation(
+            1, OperationStatus.REJECTED, reason="r" * 40000, fields={"description": "d" * 40000}
+        )
+        service = FakeProposalService(proposal=make_proposal([operation]))
+
+        get_outcome, detail = await call(service, "get_proposal", id="prop-1")
+        propose_outcome, proposed = await call(
+            service, "propose_changes", taxonomy_id=TAXONOMY, title="t", operations=[update_op(1)]
+        )
+
+        for outcome in (get_outcome, propose_outcome):
+            assert len(outcome.content) <= MAX_PROPOSAL_CHARS
+        assert len(detail["operations"]) == 1 and "clipped" in detail
+        assert len(proposed["operations"]) == 1 and "clipped" in proposed
