@@ -17,6 +17,7 @@ from sqlalchemy.orm import sessionmaker
 
 from adapters.graph.networkx_engine import NetworkXGraphEngine
 from adapters.graph.rdflib_engine import RDFLibQueryEngine
+from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.chat_repo import SqliteConversationRepository
 from adapters.persistence.sqlite.connection import (
     create_local_db_engine,
@@ -26,6 +27,7 @@ from adapters.persistence.sqlite.connection import (
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.operations.models import OperationsBase
+from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from domain.graph.services import GraphAnalysisService
 from domain.ontology.entities import (
     Class,
@@ -36,6 +38,9 @@ from domain.ontology.entities import (
     Taxonomy,
 )
 from domain.ontology.services import OntologyService
+from domain.versioning.proposal_service import ProposalService
+from domain.versioning.revert_service import RevertService
+from tests.fakes.fake_approval_policy_repository import FakeApprovalPolicyRepository
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
 
@@ -155,3 +160,25 @@ def dr_workspace():
         )
         local_engine.dispose()
         ops_engine.dispose()
+
+
+@dataclass
+class Proposals:
+    service: ProposalService
+    policies: FakeApprovalPolicyRepository
+
+
+@pytest.fixture
+def proposals(dr_workspace):
+    """A ProposalService over the DR workspace; set a policy in `policies` to auto-apply."""
+    policies = FakeApprovalPolicyRepository()
+    service = ProposalService(
+        SQLiteChangeProposalRepository(dr_workspace.session_factory),
+        dr_workspace.ontology,
+        dr_workspace.repository,
+        RevertService(
+            SQLiteChangeRepository(dr_workspace.session_factory), dr_workspace.repository
+        ),
+        approval_policies=policies,
+    )
+    return Proposals(service=service, policies=policies)

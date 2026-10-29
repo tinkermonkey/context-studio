@@ -146,16 +146,15 @@ def _parent_id(entity: Entity) -> Optional[str]:
 # ============================================================================
 
 
-class _Tool:
-    """Base for tools: runs the synchronous lookup in the thread pool."""
+class ToolBase:
+    """
+    Base for every chat and MCP tool: runs the synchronous `run` in the thread
+    pool and reports invalid arguments as an error outcome.
+    """
 
     name: str = ""
     description: str = ""
     input_schema: Mapping[str, Any] = {}
-
-    def __init__(self, ontology: OntologyService, resolver: EntityResolver) -> None:
-        self._ontology = ontology
-        self._resolver = resolver
 
     @property
     def spec(self) -> ToolSpec:
@@ -170,27 +169,39 @@ class _Tool:
         try:
             return self.run(args)
         except ToolArgumentError as e:
-            return _error(f"Invalid arguments: {e}", f"{self.name}: invalid arguments")
-        except (EntityNotFoundError, NodeNotFoundError):
-            entity_id = next((v for k, v in args.items() if k.endswith("id")), "")
-            return _error(f"No entity found with id {entity_id!r}.", "Entity not found")
+            return error_outcome(f"Invalid arguments: {e}", f"{self.name}: invalid arguments")
 
     def run(self, args: dict[str, Any]) -> ToolOutcome:
         raise NotImplementedError
 
 
-def _error(message: str, summary: str) -> ToolOutcome:
+class _Tool(ToolBase):
+    """Base for the read tools over the ontology: a missing entity is an error outcome."""
+
+    def __init__(self, ontology: OntologyService, resolver: EntityResolver) -> None:
+        self._ontology = ontology
+        self._resolver = resolver
+
+    def _run_safely(self, args: dict[str, Any]) -> ToolOutcome:
+        try:
+            return super()._run_safely(args)
+        except (EntityNotFoundError, NodeNotFoundError):
+            entity_id = next((v for k, v in args.items() if k.endswith("id")), "")
+            return error_outcome(f"No entity found with id {entity_id!r}.", "Entity not found")
+
+
+def error_outcome(message: str, summary: str) -> ToolOutcome:
     return ToolOutcome(content=json.dumps({"error": message}), summary=summary, is_error=True)
 
 
-def _required_str(args: Mapping[str, Any], name: str) -> str:
+def required_str(args: Mapping[str, Any], name: str) -> str:
     value = args.get(name)
     if not isinstance(value, str) or not value.strip():
         raise ToolArgumentError(f"'{name}' must be a non-empty string")
     return value.strip()
 
 
-def _optional_str(args: Mapping[str, Any], name: str) -> Optional[str]:
+def optional_str(args: Mapping[str, Any], name: str) -> Optional[str]:
     value = args.get(name)
     if value is None or value == "":
         return None
@@ -199,7 +210,7 @@ def _optional_str(args: Mapping[str, Any], name: str) -> Optional[str]:
     return value.strip() or None
 
 
-def _int_arg(args: Mapping[str, Any], name: str, default: int, low: int, high: int) -> int:
+def int_arg(args: Mapping[str, Any], name: str, default: int, low: int, high: int) -> int:
     value = args.get(name, default)
     if value is None:
         return default
@@ -226,7 +237,7 @@ def _outcome(
     entities: Sequence[EntityRef],
 ) -> ToolOutcome:
     """Serialize a result, cutting its item list until it fits MAX_RESULT_CHARS."""
-    content = _dumps(payload)
+    content = dumps(payload)
     if list_key is not None and len(content) > MAX_RESULT_CHARS:
         items = list(payload[list_key])
         while items and len(content) > MAX_RESULT_CHARS:
@@ -236,7 +247,7 @@ def _outcome(
                 list_key: items,
                 "truncated": f"showing {len(items)} items; ask for fewer or page with offset",
             }
-            content = _dumps(payload)
+            content = dumps(payload)
     shown = set(_ids_in(payload))
     return ToolOutcome(
         content=content,
@@ -245,7 +256,7 @@ def _outcome(
     )
 
 
-def _dumps(payload: Any) -> str:
+def dumps(payload: Any) -> str:
     return json.dumps(payload, separators=(",", ":"), ensure_ascii=False, default=str)
 
 
@@ -346,8 +357,8 @@ class SearchEntitiesTool(_Tool):
         self._individual_index = individual_index
 
     def run(self, args: dict[str, Any]) -> ToolOutcome:
-        query = _required_str(args, "query")
-        limit = _int_arg(args, "limit", DEFAULT_LIMIT, 1, MAX_LIMIT)
+        query = required_str(args, "query")
+        limit = int_arg(args, "limit", DEFAULT_LIMIT, 1, MAX_LIMIT)
         kinds = args.get("kinds") or list(ENTITY_KINDS)
         if not isinstance(kinds, list) or any(k not in ENTITY_KINDS for k in kinds):
             raise ToolArgumentError(f"'kinds' must be a list of {', '.join(ENTITY_KINDS)}")
@@ -440,7 +451,7 @@ class GetEntityTool(_Tool):
     }
 
     def run(self, args: dict[str, Any]) -> ToolOutcome:
-        entity = self._resolver.get(_required_str(args, "id"))
+        entity = self._resolver.get(required_str(args, "id"))
         ref = ref_of(entity)
         result: dict[str, Any] = {
             **_ref_dict(ref),
@@ -522,9 +533,9 @@ class ListChildrenTool(_Tool):
     }
 
     def run(self, args: dict[str, Any]) -> ToolOutcome:
-        entity = self._resolver.get(_required_str(args, "id"))
-        limit = _int_arg(args, "limit", DEFAULT_LIMIT, 1, MAX_LIMIT)
-        offset = _int_arg(args, "offset", 0, 0, 1_000_000)
+        entity = self._resolver.get(required_str(args, "id"))
+        limit = int_arg(args, "limit", DEFAULT_LIMIT, 1, MAX_LIMIT)
+        offset = int_arg(args, "offset", 0, 0, 1_000_000)
 
         children: list[Entity]
         if isinstance(entity, Taxonomy):
@@ -594,10 +605,10 @@ class ListRelationshipsTool(_Tool):
     }
 
     def run(self, args: dict[str, Any]) -> ToolOutcome:
-        entity = self._resolver.get(_required_str(args, "entity_id"))
+        entity = self._resolver.get(required_str(args, "entity_id"))
         direction = _choice(args, "direction", ("out", "in", "both"), "both")
-        property_id = _optional_str(args, "property_id")
-        limit = _int_arg(args, "limit", DEFAULT_LIMIT, 1, MAX_LIMIT)
+        property_id = optional_str(args, "property_id")
+        limit = int_arg(args, "limit", DEFAULT_LIMIT, 1, MAX_LIMIT)
 
         relationships = []
         total = 0
@@ -662,8 +673,8 @@ class ListRelationshipTypesTool(_Tool):
     }
 
     def run(self, args: dict[str, Any]) -> ToolOutcome:
-        query = _optional_str(args, "query")
-        limit = _int_arg(args, "limit", DEFAULT_LIMIT, 1, MAX_LIMIT)
+        query = optional_str(args, "query")
+        limit = int_arg(args, "limit", DEFAULT_LIMIT, 1, MAX_LIMIT)
         properties = self._ontology.list_property_definitions(
             query=query, limit=limit, sort_by="title"
         )
@@ -720,10 +731,10 @@ class GetNeighborsTool(_Tool):
         self._graph = graph
 
     def run(self, args: dict[str, Any]) -> ToolOutcome:
-        entity = self._resolver.get(_required_str(args, "id"))
+        entity = self._resolver.get(required_str(args, "id"))
         direction = _choice(args, "direction", ("out", "in", "both"), "both")
-        depth = _int_arg(args, "depth", 1, 1, 2)
-        limit = _int_arg(args, "limit", DEFAULT_LIMIT, 1, MAX_LIMIT)
+        depth = int_arg(args, "depth", 1, 1, 2)
+        limit = int_arg(args, "limit", DEFAULT_LIMIT, 1, MAX_LIMIT)
         neighbor_ids = self._graph.get_neighbors(str(entity.id), direction=direction, depth=depth)
         found = self._resolver.get_many(sorted(neighbor_ids))
         neighbors = sorted(found.values(), key=lambda e: (kind_of(e), e.title))[:limit]
@@ -765,8 +776,8 @@ class FindPathTool(_Tool):
         self._graph = graph
 
     def run(self, args: dict[str, Any]) -> ToolOutcome:
-        source = self._resolver.get(_required_str(args, "source_id"))
-        target = self._resolver.get(_required_str(args, "target_id"))
+        source = self._resolver.get(required_str(args, "source_id"))
+        target = self._resolver.get(required_str(args, "target_id"))
         ends = [ref_of(source), ref_of(target)]
         path = self._graph.find_shortest_path(str(source.id), str(target.id))
         if path is None:
@@ -796,12 +807,12 @@ def build_chat_tools(
     embedding: Optional[EmbeddingService] = None,
     schema_index: Optional[SchemaVectorIndex] = None,
     individual_index: Optional[IndividualVectorIndex] = None,
-) -> list[_Tool]:
+) -> list[ToolBase]:
     """
     The read-only tools, in the order offered to the model.
 
     The same list serves the in-app chat and the MCP server, so both can do the
-    same things.
+    same things; the proposal tools (`adapters.chat.proposal_tools`) follow them.
     """
     resolver = EntityResolver(ontology)
     return [

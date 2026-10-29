@@ -1,8 +1,9 @@
 """
-Links from MCP tool results to the UI's entity pages.
+Links from MCP tool results to the UI's entity pages and proposal review pages.
 
-The page prefixes mirror `ux/src/lib/entityPaths.ts`; a test pins them, so a
-renamed route fails the build rather than handing out dead links.
+The entity page prefixes mirror `ux/src/lib/entityPaths.ts`; a test pins them,
+so a renamed route fails the build rather than handing out dead links. A change
+proposal's review page is PROPOSAL_PAGE_PREFIX/<id>; the UI must serve it there.
 """
 
 from __future__ import annotations
@@ -19,9 +20,15 @@ ENTITY_PAGE_PREFIX: dict[str, str] = {
     "individual": "/app/data/individuals",
 }
 
+# The review page of one change proposal: <ui_base_url>/app/proposals/<id>.
+PROPOSAL_PAGE_PREFIX = "/app/proposals"
+
+# Every link kind with a page: the entity kinds and "proposal".
+PAGE_PREFIX: dict[str, str] = {**ENTITY_PAGE_PREFIX, "proposal": PROPOSAL_PAGE_PREFIX}
+
 
 class EntityLinks:
-    """Builds UI page links for the entities a tool result mentions."""
+    """Builds UI page links for the entities and proposals a tool result mentions."""
 
     def __init__(self, ui_base_url: Optional[str]) -> None:
         """
@@ -32,8 +39,8 @@ class EntityLinks:
         self._base = (ui_base_url or "").rstrip("/")
 
     def url(self, ref: EntityRef) -> Optional[str]:
-        """The page URL for an entity, or None if it has no page or links are off."""
-        prefix = ENTITY_PAGE_PREFIX.get(ref.kind)
+        """The page URL for a ref, or None if its kind has no page or links are off."""
+        prefix = PAGE_PREFIX.get(ref.kind)
         if not self._base or prefix is None:
             return None
         return f"{self._base}{prefix}/{quote(ref.id, safe='')}"

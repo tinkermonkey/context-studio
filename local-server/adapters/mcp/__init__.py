@@ -1,1 +1,1 @@
-"""MCP adapter: serves the chat's read-only tools and taxonomy visions to MCP clients."""
+"""MCP adapter: serves the chat's tools and taxonomy visions to MCP clients."""

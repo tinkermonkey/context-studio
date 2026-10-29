@@ -11,6 +11,7 @@ import pytest
 from domain.chat.exceptions import ChatModelError, ConversationNotFoundError
 from domain.chat.services import LIMIT_NOTE, NEW_CONVERSATION_TITLE, SYSTEM_PROMPT, ChatService
 from domain.chat.value_objects import (
+    LINK_KINDS,
     ChatFailed,
     ChatRole,
     ContextBlock,
@@ -221,7 +222,7 @@ class TestSimpleAnswer:
         title = repository.conversations[conversation.id].title
         assert len(title) == 60 and title.endswith("…")
 
-    async def test_system_prompt_requires_entity_links(self):
+    async def test_system_prompt_requires_links_and_proposing(self):
         model = ScriptedModel(answer("a"))
         service, _ = make_service(model)
         conversation = await service.create_conversation()
@@ -230,8 +231,11 @@ class TestSimpleAnswer:
 
         assert model.requests[0]["system"] == SYSTEM_PROMPT
         assert "[Title](entity:<kind>/<id>)" in SYSTEM_PROMPT
-        assert "read-only" in SYSTEM_PROMPT
-        for kind in ("taxonomy", "scheme", "class", "individual", "property"):
+        assert "read-only" not in SYSTEM_PROMPT
+        assert "You propose; a person reviews." in SYSTEM_PROMPT
+        assert "propose_changes" in SYSTEM_PROMPT
+        assert "Never say a pending change has been made." in SYSTEM_PROMPT
+        for kind in LINK_KINDS:
             assert kind in SYSTEM_PROMPT
 
     async def test_reasoning_blocks_are_stored_for_replay(self):

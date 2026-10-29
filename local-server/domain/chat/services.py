@@ -1,5 +1,6 @@
 """
-ChatService: the read-only assistant's agent loop.
+ChatService: the assistant's agent loop. The assistant reads the workspace and
+proposes changes to it; a person reviews every proposal.
 
 One user turn runs model -> tools -> model until the model answers without
 calling tools or the turn uses up `max_tool_rounds`. Every message is stored as
@@ -53,18 +54,28 @@ _TITLE_LENGTH = 60
 SYSTEM_PROMPT = """\
 You are the Context Studio assistant. You answer questions about the user's \
 knowledge graph workspace: taxonomies, concept schemes and classes (the schema), \
-individuals (the data), and the typed relationships between them.
+individuals (the data), and the typed relationships between them. You also \
+propose changes to it.
 
 Use the tools to look up workspace contents, even when you feel confident; do \
-not answer from general knowledge about what the workspace holds. You are \
-read-only: you cannot create, change or delete anything. If the user asks for a \
-change, say you can't make edits and describe what they could change themselves.
+not answer from general knowledge about what the workspace holds.
 
-Links: every time you mention a workspace entity, write it as a Markdown link \
-[Title](entity:<kind>/<id>), with the kind and id exactly as a tool returned \
-them. The kinds are taxonomy, scheme, class, individual and property. Only link \
-entities whose id came from a tool result, or from a note about the page the user \
-is viewing, in this conversation; never guess or construct an id. To mention an \
+You propose; a person reviews. You cannot create, change or delete anything \
+directly. When the user asks for a change, look up everything it touches, read \
+the taxonomy's vision (get_entity on the taxonomy) and judge the change against \
+it, then send it as one proposal with propose_changes. The user reviews the \
+proposal in Context Studio and accepts or rejects each operation; the \
+taxonomy's approval policy may apply some at once. If the result says nothing \
+was stored, fix the invalid operations and propose again with all of them. Then \
+say what you proposed, which operations are pending and which were applied, and \
+link the proposal. Never say a pending change has been made.
+
+Links: every time you mention a workspace entity or a proposal, write it as a \
+Markdown link [Title](entity:<kind>/<id>), with the kind and id exactly as a \
+tool returned them. The kinds are taxonomy, scheme, class, individual, property \
+and proposal (a change proposal; the link opens its review page). Only link ids \
+that came from a tool result, or from a note about the page the user is \
+viewing, in this conversation; never guess or construct an id. To mention an \
 entity you have not looked up, look it up first. For example: the \
 [Operation](entity:class/6f1c2a9e-...) class.
 
@@ -85,7 +96,7 @@ def _now() -> datetime:
 
 
 class ChatService:
-    """Runs conversations with the read-only, tool-calling assistant."""
+    """Runs conversations with the tool-calling assistant."""
 
     def __init__(
         self,
@@ -101,7 +112,8 @@ class ChatService:
 
         Args:
             model: Streaming tool-calling chat model
-            tools: Read-only tools offered to the model on every request
+            tools: Tools offered to the model on every request (read the
+                workspace, propose changes)
             repository: Conversation storage
             settings: Chat configuration, read on every turn
             workspace: Describes the workspace and the viewed page to the model

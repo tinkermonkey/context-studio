@@ -42,7 +42,10 @@ class ChatModel(Protocol):
 
 
 class ChatTool(Protocol):
-    """Port for a read-only tool the assistant can call."""
+    """
+    Port for a tool the assistant can call: it reads the workspace, or proposes
+    changes that a person reviews (or the taxonomy's approval policy applies).
+    """
 
     @property
     def spec(self) -> ToolSpec:
