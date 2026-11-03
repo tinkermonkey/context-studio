@@ -17,6 +17,7 @@ import { SMALL_SET_LIMIT } from "@/api/config";
 import { EntityNavigator } from "@/components/entity/EntityNavigator";
 import { EntityLink } from "@/components/entity/EntityLink";
 import { IntentPanel } from "@/components/entity/IntentPanel";
+import { PendingProposalOperations } from "@/components/entity/PendingProposalOperations";
 import {
   EntityActions,
   EntityBody,
@@ -201,6 +202,7 @@ export function TaxonomyPage({ id }: { id: string }) {
           />
         }
       >
+        <PendingProposalOperations kind="taxonomy" entityId={id} />
         <IntentPanel
           title="Summary"
           note="One paragraph on what this taxonomy is for. Chat and Claude Code see it in every conversation."

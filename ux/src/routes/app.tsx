@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   createFileRoute,
   Outlet,
@@ -20,6 +20,9 @@ import { ChatPanel } from "@/components/chat/ChatPanel";
 import { useChatEntryPoints } from "@/components/chat/useChatEntryPoints";
 import { useHealth, useConfig } from "@/api/hooks/admin";
 import { useEntityCounts } from "@/api/hooks/ontology/useEntityCounts";
+import { useQueryClient } from "@tanstack/react-query";
+import { useChangeProposals } from "@/api/hooks/proposals";
+import { QUERY_KEYS } from "@/api/config";
 import {
   DATA_AREA_CRUMB,
   NAV_ACTIONS,
@@ -102,6 +105,24 @@ function AppShell() {
   const schemeCount = counts.schemes ?? 0;
   const propertyCount = counts.properties ?? 0;
   const relationshipCount = counts.relationships ?? 0;
+  // The badge counts open proposals, not pending operations; polling picks up
+  // proposals made over MCP or by an import.
+  const { data: openProposals } = useChangeProposals(
+    { status: "open", limit: 1 },
+    { refetchInterval: 30_000 },
+  );
+  // When the count changes, refresh the queue and entity-page lists that share
+  // the (otherwise long-lived) proposal queries.
+  const queryClient = useQueryClient();
+  const openTotal = openProposals?.total;
+  const seenOpenTotal = useRef(openTotal);
+  useEffect(() => {
+    if (openTotal === undefined) return;
+    if (seenOpenTotal.current !== undefined && seenOpenTotal.current !== openTotal) {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.changeProposalsRoot });
+    }
+    seenOpenTotal.current = openTotal;
+  }, [openTotal, queryClient]);
 
   const workspaceName = (() => {
     const displayName = config?.sections?.workspace?.display_name;
@@ -266,6 +287,12 @@ function AppShell() {
             title: "",
             items: [
               { id: "dashboard", label: "Dashboard", icon: "dashboard" },
+              {
+                id: "proposals",
+                label: "Proposals",
+                icon: "gitBranch",
+                count: openTotal || undefined,
+              },
               {
                 id: "schema",
                 label: "Schema",

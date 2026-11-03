@@ -87,6 +87,8 @@ function byIds<T extends { id: string }>(items: T[], url: URL): T[] {
 }
 
 export const entityPageHandlers = [
+  // No open proposals; tests of the pending-changes callout use proposalHandlers.
+  http.get("*/api/proposals", () => list([])),
   http.get("*/api/taxonomies/:id/scheme-counts", () =>
     HttpResponse.json([
       {

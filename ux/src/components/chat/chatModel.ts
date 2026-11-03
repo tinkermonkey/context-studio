@@ -16,6 +16,8 @@ export type DisplayBlock =
       input: Record<string, unknown>;
       status: "running" | "success" | "error";
       summary: string;
+      /** Entities the tool's result mentions (e.g. the proposal propose_changes stored). */
+      entities: EntityRef[];
     };
 
 /** A user question, or the assistant's whole turn (tool calls and answer text). */
@@ -67,12 +69,14 @@ export function displayMessagesFromStored(stored: StoredChatMessage[]): DisplayM
           input: block.input,
           status: "running",
           summary: "",
+          entities: [],
         });
       } else if (block.type === "tool_result") {
         const tool = findTool(turn, block.tool_use_id);
         if (tool) {
           tool.status = block.is_error ? "error" : "success";
           tool.summary = block.summary;
+          tool.entities = block.entities ?? [];
         }
       }
     }
@@ -135,6 +139,7 @@ export function applyStreamEvent(message: DisplayMessage, event: ChatStreamEvent
             input: event.input,
             status: "running",
             summary: "",
+            entities: [],
           },
         ],
       };
@@ -143,7 +148,12 @@ export function applyStreamEvent(message: DisplayMessage, event: ChatStreamEvent
         ...message,
         blocks: message.blocks.map((block) =>
           block.type === "tool" && block.toolUseId === event.tool_use_id
-            ? { ...block, status: event.is_error ? "error" : "success", summary: event.summary }
+            ? {
+                ...block,
+                status: event.is_error ? "error" : "success",
+                summary: event.summary,
+                entities: event.entities ?? [],
+              }
             : block,
         ),
       };

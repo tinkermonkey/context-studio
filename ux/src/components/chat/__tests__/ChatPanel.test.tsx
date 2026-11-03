@@ -191,6 +191,137 @@ describe("ChatPanel", () => {
     expect(useChatPanelStore.getState().open).toBe(true);
   });
 
+  it("shows a proposal card under a propose_changes result, linking to its review page", async () => {
+    const conversation = {
+      ...STORED_CONVERSATION,
+      messages: [
+        STORED_CONVERSATION.messages[0],
+        {
+          id: "m1",
+          seq: 1,
+          role: "assistant",
+          blocks: [{ type: "tool_use", id: "tu-p", name: "propose_changes", input: {} }],
+          created_at: T,
+        },
+        {
+          id: "m2",
+          seq: 2,
+          role: "user",
+          blocks: [
+            {
+              type: "tool_result",
+              tool_use_id: "tu-p",
+              summary: "Proposed Starter kits: 2 applied, 1 pending",
+              is_error: false,
+              entities: [{ id: "proposal-1", kind: "proposal", title: "Starter kits" }],
+            },
+          ],
+          created_at: T,
+        },
+      ],
+    };
+    const op = (id: string, status: string) => ({
+      id,
+      seq: 1,
+      op: "create",
+      kind: "relationship",
+      fields: {},
+      base: {},
+      evidence: [],
+      scope: "additive",
+      status,
+      stale: false,
+    });
+    server.use(
+      http.get("*/api/chat/conversations", () => HttpResponse.json([conversation])),
+      http.get("*/api/chat/conversations/conv-1", () => HttpResponse.json(conversation)),
+      http.get("*/api/proposals/proposal-1", () =>
+        HttpResponse.json({
+          id: "proposal-1",
+          taxonomy_id: "tax-h",
+          title: "Starter kits",
+          source: "chat",
+          created_at: T,
+          status: "open",
+          operations: [op("a", "applied"), op("b", "applied"), op("c", "pending")],
+        }),
+      ),
+      http.get("*/api/taxonomies/tax-h", () =>
+        HttpResponse.json({ id: "tax-h", identifier: "house", title: "House" }),
+      ),
+    );
+    const user = userEvent.setup();
+
+    render(<ChatPanel />);
+
+    const card = await screen.findByTestId("chat-proposal-card");
+    expect(card).toHaveClass("proposal-card");
+    expect(await within(card).findByText("Starter kits")).toHaveAttribute(
+      "href",
+      "/app/proposals/proposal-1",
+    );
+    expect(within(card).getByText("open")).toBeInTheDocument();
+    expect(await within(card).findByText("house")).toBeInTheDocument();
+    expect(screen.getByTestId("chat-proposal-counts")).toHaveTextContent(
+      "3 operations · 2 applied · 1 pending",
+    );
+    const review = screen.getByTestId("chat-proposal-review");
+    expect(review).toHaveTextContent("Review 1");
+    // Chat only links to the proposal; decisions are made on its page.
+    expect(within(card).queryByRole("button")).not.toBeInTheDocument();
+
+    await user.click(review);
+    expect(navigate).toHaveBeenCalledWith({
+      to: "/app/proposals/$proposalId",
+      params: { proposalId: "proposal-1" },
+      search: {},
+    });
+  });
+
+  it.each([
+    ["an errored propose_changes call", "propose_changes", true],
+    ["another tool's result that mentions a proposal", "get_proposal", false],
+  ])("shows no proposal card for %s", async (_label, name, isError) => {
+    const conversation = {
+      ...STORED_CONVERSATION,
+      messages: [
+        STORED_CONVERSATION.messages[0],
+        {
+          id: "m1",
+          seq: 1,
+          role: "assistant",
+          blocks: [{ type: "tool_use", id: "tu-x", name, input: {} }],
+          created_at: T,
+        },
+        {
+          id: "m2",
+          seq: 2,
+          role: "user",
+          blocks: [
+            {
+              type: "tool_result",
+              tool_use_id: "tu-x",
+              summary: isError ? "Proposal not stored" : "Starter kits (open)",
+              is_error: isError,
+              entities: [{ id: "proposal-1", kind: "proposal", title: "Starter kits" }],
+            },
+          ],
+          created_at: T,
+        },
+      ],
+    };
+    server.use(
+      http.get("*/api/chat/conversations", () => HttpResponse.json([conversation])),
+      http.get("*/api/chat/conversations/conv-1", () => HttpResponse.json(conversation)),
+    );
+
+    render(<ChatPanel />);
+
+    const tool = await screen.findByTestId("chat-tool-block");
+    expect(tool).toHaveAttribute("data-status", isError ? "error" : "success");
+    expect(screen.queryByTestId("chat-proposal-card")).not.toBeInTheDocument();
+  });
+
   it("streams a turn with tool activity, sending the page context", async () => {
     let sent: unknown;
     server.use(

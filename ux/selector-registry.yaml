@@ -2914,3 +2914,105 @@ selectors:
   - selector: mcp-connection-note
     component: src/components/settings/McpConnectionPanel.tsx
     description: Info callout about the MCP token and where it is stored
+
+  # Review queue: proposals list (/app/proposals)
+  - selector: proposals-page
+    component: src/components/proposals/ProposalsListPage.tsx
+    description: "Root of the proposals list page"
+  - selector: proposals-filters
+    component: src/components/proposals/ProposalsListPage.tsx
+    description: "Filter row: status and taxonomy segmented controls plus the count"
+  - selector: proposals-status-filter
+    component: src/components/proposals/ProposalsListPage.tsx
+    description: "Status segmented control (open / done / reverted / all; default open)"
+  - selector: proposals-taxonomy-filter
+    component: src/components/proposals/ProposalsListPage.tsx
+    description: "Taxonomy segmented control (all taxonomies, or one with proposals)"
+  - selector: proposals-count
+    component: src/components/proposals/ProposalsListPage.tsx
+    description: "\"N of M proposals\" count beside the filters"
+  - selector: proposals-table
+    component: src/components/proposals/ProposalsListPage.tsx
+    description: "Wrapper of the proposals table; each row opens the proposal"
+  - selector: proposals-empty
+    component: src/components/proposals/ProposalsListPage.tsx
+    description: "Empty-state text when no proposal matches the filters"
+  - selector: proposal-link-*
+    component: src/components/proposals/ProposalsListPage.tsx
+    description: "Proposal title link in a list row, by proposal id"
+  - selector: proposal-pending-*
+    component: src/components/proposals/ProposalsListPage.tsx
+    description: "Pending \"N of M\" label and decided ProgressBar in a list row, by proposal id"
+
+  # Review queue: proposal detail (/app/proposals/$proposalId)
+  - selector: proposal-page
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Root of a proposal's read-only detail page"
+  - selector: proposal-summary
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Summary row: status chip, tally and op mix"
+  - selector: proposal-status
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Proposal status chip (open / done / reverted)"
+  - selector: proposal-tally
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "\"N pending · N applied · N rejected · N failed\" tally"
+  - selector: proposal-op-mix
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Op mix and scope mix, e.g. \"7 update · 15 delete · all breaking\""
+  - selector: proposal-operations-table
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Wrapper of the operations table; a row click selects the operation into the inspector"
+  - selector: operation-status-*
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Status chip plus stale chip cell of an operation row, by operation id"
+  - selector: operation-stale-*
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Rose \"stale\" chip on an operation whose target changed since proposed, by operation id"
+  - selector: operation-diff-*
+    component: src/components/proposals/OperationDiff.tsx
+    description: "An operation's change cell (triple diff or field change), by operation id; data-op holds the op"
+  - selector: operation-inspector
+    component: src/components/proposals/OperationInspector.tsx
+    description: "Inspector for the selected operation (Change, Rationale, Evidence)"
+  - selector: operation-stale-callout
+    component: src/components/proposals/OperationInspector.tsx
+    description: "Warn callout in the inspector when the operation is stale"
+  - selector: operation-reason
+    component: src/components/proposals/OperationInspector.tsx
+    description: "Why the operation failed or was rejected"
+  - selector: operation-change-table
+    component: src/components/proposals/OperationInspector.tsx
+    description: "Field / before / after Change table"
+  - selector: operation-change-row-*
+    component: src/components/proposals/OperationInspector.tsx
+    description: "One Change table row, by field name (e.g. canonical_predicate)"
+  - selector: operation-rationale
+    component: src/components/proposals/OperationInspector.tsx
+    description: "The operation's rationale text"
+  - selector: operation-evidence
+    component: src/components/proposals/OperationInspector.tsx
+    description: "Evidence quotes with claim id, entity id or url captions"
+
+  # Review queue: entry points (chat card, entity pages)
+  - selector: chat-proposal-card
+    component: src/components/proposals/ProposalCard.tsx
+    description: "Proposal card under a successful propose_changes tool block in chat"
+  - selector: chat-proposal-link
+    component: src/components/proposals/ProposalCard.tsx
+    description: "Proposal title link in the chat card"
+  - selector: chat-proposal-counts
+    component: src/components/proposals/ProposalCard.tsx
+    description: "\"N operations · M applied · K pending\" in the chat card"
+  - selector: chat-proposal-review
+    component: src/components/proposals/ProposalCard.tsx
+    description: "\"Review N pending\" link to the proposal page in the chat card"
+  - selector: pending-operations
+    component: src/components/entity/PendingProposalOperations.tsx
+    description: "Pending operations in open proposals that touch a class, property or taxonomy"
+  - selector: pending-operations-callout
+    component: src/components/entity/PendingProposalOperations.tsx
+    description: "Info callout summarising the pending operations on an entity page"
+  - selector: pending-operation-link-*
+    component: src/components/entity/PendingProposalOperations.tsx
+    description: "Link to a pending operation on its proposal page (?op=), by operation id"

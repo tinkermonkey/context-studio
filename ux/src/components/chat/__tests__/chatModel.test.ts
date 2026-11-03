@@ -77,6 +77,7 @@ describe("displayMessagesFromStored", () => {
             input: { query: "Operation" },
             status: "success",
             summary: "Found 1",
+            entities: [{ id: "ind-1", kind: "individual", title: "Admin Health" }],
           },
           { type: "text", text: "[Admin Health](entity:individual/ind-1)." },
         ],
@@ -154,6 +155,7 @@ describe("applyStreamEvent", () => {
         input: { id: "x" },
         status: "success",
         summary: "Operation (class)",
+        entities: [],
       },
       { type: "text", text: "Done" },
     ]);

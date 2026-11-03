@@ -1,0 +1,326 @@
+@layer app {
+  /* ============= Review queue: proposals list ============= */
+  .proposals-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .proposals-filters__controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .proposals-count,
+  .proposal-age {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .proposal-age {
+    display: block;
+    text-align: right;
+  }
+
+  .proposal-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .proposal-cell__title {
+    font-weight: 600;
+    font-size: 13.5px;
+  }
+
+  .proposal-cell__detail {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-3));
+    overflow-wrap: anywhere;
+  }
+
+  .proposal-pending {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  /* Heimdall's ProgressBar track is a shell token (dark navy on the light
+     canvas, where an empty bar reads as full); use a canvas tone. */
+  .proposal-pending .progress-bar {
+    background-color: rgb(var(--canvas-border));
+  }
+
+  .proposals-footnote {
+    margin: 0;
+    font-size: 12.5px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  /* ============= Proposal detail ============= */
+  .proposal-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .proposal-summary__tally {
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .proposal-summary__mix {
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .op-seq,
+  .op-probability {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .op-probability {
+    display: block;
+    text-align: right;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .op-plan-kind {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-2));
+    white-space: nowrap;
+  }
+
+  .op-status {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  /* An operation's change, in a table cell. */
+  .op-diff {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-1));
+    overflow-wrap: anywhere;
+  }
+
+  .op-diff__before,
+  .op-diff__predicate,
+  .op-diff__to,
+  .op-diff__kind,
+  .op-diff__note {
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .op-diff__note {
+    font-family: var(--font-sans);
+  }
+
+  .op-diff__removed {
+    text-decoration: line-through;
+    text-decoration-color: rgb(var(--status-rose) / 0.7);
+    text-decoration-thickness: 1.5px;
+  }
+
+  .op-diff__changed,
+  .op-diff__predicate.op-diff__changed {
+    color: var(--accent-amber);
+    font-weight: 600;
+  }
+
+  /* ============= Operation inspector ============= */
+  .op-inspector__stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .op-inspector__status {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .op-inspector__reason {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .op-inspector__rationale {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .op-inspector__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* Change: one stacked row per field: name, then before above after. */
+  .op-change-list {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+  }
+
+  .op-change {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 7px 0;
+    border-top: 1px dashed rgb(var(--canvas-border));
+  }
+
+  .op-change:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .op-change__field {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .op-change dd {
+    margin: 0;
+  }
+
+  /* Prose wraps between words; ids break after dots and underscores (<wbr>). */
+  .op-change__value {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: rgb(var(--canvas-fg-1));
+    overflow-wrap: break-word;
+  }
+
+  .op-change__value--id {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+
+  .op-change__unchanged {
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .op-change__before--changed {
+    color: rgb(var(--canvas-fg-3));
+    text-decoration: line-through;
+  }
+
+  .op-change__after--changed {
+    color: var(--accent-amber);
+    font-weight: 600;
+  }
+
+  .op-change__removed {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-rose);
+  }
+
+  .op-evidence {
+    margin: 0;
+    padding: 8px 10px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 6px;
+    background: rgb(var(--canvas-bg-2));
+  }
+
+  .op-evidence__quote {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .op-evidence__caption {
+    margin-top: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgb(var(--canvas-fg-3));
+    overflow-wrap: anywhere;
+  }
+
+  /* ============= Entry points: chat card, entity pages ============= */
+  .proposal-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 14px;
+    border: 1px solid rgb(var(--canvas-border-strong));
+    border-radius: 8px;
+    background: rgb(var(--canvas-bg-2));
+  }
+
+  .proposal-card__head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .proposal-card__eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .proposal-card__counts {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .pending-ops {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pending-ops__change {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .pending-ops__where {
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .pending-ops__failed {
+    color: var(--accent-rose);
+    font-weight: 600;
+  }
+}

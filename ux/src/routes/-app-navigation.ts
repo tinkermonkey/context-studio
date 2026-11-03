@@ -6,6 +6,7 @@
 
 export const ROUTE_LABELS: Record<string, string[]> = {
   "/app": ["Dashboard"],
+  "/app/proposals": ["Proposals"],
   "/app/schema/taxonomies": ["Schema", "Taxonomies"],
   "/app/schema/schemes": ["Schema", "Concept Schemes"],
   "/app/schema/classes": ["Schema", "Classes"],
@@ -25,6 +26,7 @@ export const ROUTE_LABELS: Record<string, string[]> = {
 };
 
 export const ROUTE_TO_SIDEBAR_ID: Array<{ prefix: string; id: string }> = [
+  { prefix: "/app/proposals", id: "proposals" },
   { prefix: "/app/schema/taxonomies", id: "schema-taxonomies" },
   { prefix: "/app/schema/schemes", id: "schema-schemes" },
   { prefix: "/app/schema/classes", id: "schema-classes" },
@@ -44,6 +46,12 @@ export const ROUTE_TO_SIDEBAR_ID: Array<{ prefix: string; id: string }> = [
 
 export const NAV_ACTIONS = [
   { id: "nav-dashboard", label: "Dashboard", description: "Go to dashboard", to: "/app" },
+  {
+    id: "nav-proposals",
+    label: "Proposals",
+    description: "Review proposed changes",
+    to: "/app/proposals",
+  },
   {
     id: "nav-taxonomies",
     label: "Taxonomies",
@@ -120,6 +128,7 @@ export const NAV_ACTIONS = [
 
 export const SIDEBAR_PATH_MAP: Record<string, string> = {
   dashboard: "/app",
+  proposals: "/app/proposals",
   schema: "/app/schema/taxonomies",
   "schema-taxonomies": "/app/schema/taxonomies",
   "schema-schemes": "/app/schema/schemes",
@@ -186,6 +195,7 @@ const DYNAMIC_ROUTE_LABELS: Array<{
     pattern: /^\/app\/pipelines\/batches\/([^/]+)$/,
     labels: (m) => ["Pipelines", "Runs", `Batch ${decodeSegment(m[1])}`],
   },
+  { pattern: /^\/app\/proposals\/[^/]+$/, labels: () => ["Proposals", "Proposal"] },
   // Entity pages replace these with their place in the hierarchy once loaded.
   { pattern: /^\/app\/schema\/taxonomies\/[^/]+$/, labels: () => ["Schema", "Taxonomy"] },
   { pattern: /^\/app\/schema\/schemes\/[^/]+$/, labels: () => ["Schema", "Concept scheme"] },
