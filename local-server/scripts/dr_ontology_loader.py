@@ -47,11 +47,12 @@ from adapters.interchange.dr_relationships import (  # noqa: F401 - re-exported 
 )
 from domain.interchange.bundle import stale_entities
 from domain.ontology.entities import Class, PropertyDefinition, Taxonomy
+from domain.ontology.exceptions import OntologyError
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import ExternalReference
 from domain.versioning.ports import ChangeProposalRepository
-from domain.versioning.proposals import ProposalStatus
+from domain.versioning.proposals import OperationStatus, ProposalStatus
 
 DR_TAXONOMY_TITLE = "Documentation Robotics"
 
@@ -545,10 +546,23 @@ def import_dr_ontology(
     return summary
 
 
-def _describe(entity: Class | PropertyDefinition) -> str:
+def describe_stale(entity: Class | PropertyDefinition) -> str:
+    """'PropertyDefinition 'Title' (<DR id>)', as `ImportSummary.stale` lists it."""
     kind = type(entity).__name__
     ref = next(r.identifier for r in entity.external_references if r.source == DR_SOURCE)
     return f"{kind} {entity.title!r} ({ref})"
+
+
+def _strings_in(value: Any) -> Iterator[str]:
+    """Every string in a field value, however deeply nested in dicts and lists."""
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, dict):
+        for item in value.values():
+            yield from _strings_in(item)
+    elif isinstance(value, list):
+        for item in value:
+            yield from _strings_in(item)
 
 
 def find_prune_blockers(
@@ -559,37 +573,69 @@ def find_prune_blockers(
     """
     What still uses the stale entities, as (stale entity, user) descriptions.
 
-    A use is any row that references a stale entity through a foreign key
-    (`find_references`: relationships typed by or attached to it, classes and
-    individuals pointing at it, property definitions with it as domain/range,
-    attribute definitions on it) other than another stale entity, and any
-    pending or failed operation of an open change proposal that targets a
-    stale entity or names it in its fields. Empty means all of them can go.
+    A use is:
+      - any row that references a stale entity through a foreign key
+        (`find_references`: relationships typed by or attached to it, classes
+        and individuals pointing at it, property definitions with it as
+        domain/range, attribute definitions on it) other than another stale
+        entity;
+      - a pending or failed operation of an open change proposal that targets
+        a stale entity or names its id anywhere in its fields;
+      - an applied operation of a proposal that wasn't reverted which created
+        or changed a stale entity: a reflection plan applied here before DR's
+        spec has the same change makes its new triples look stale, and deleting
+        them would break the proposal's revert and decisions export.
+
+    Empty means all of them can go.
     """
     by_id = {entity.id: entity for entity in stale}
     blockers = [
-        (_describe(by_id[ref.referenced_id]), f"{ref.dependent_kind} {ref.dependent_id}")
+        (describe_stale(by_id[ref.referenced_id]), f"{ref.dependent_kind} {ref.dependent_id}")
         for ref in repo.find_references(sorted(by_id))
         if ref.dependent_id not in by_id
     ]
-    open_count = proposals.count_proposals(status=ProposalStatus.OPEN)
-    for proposal in proposals.list_proposals(status=ProposalStatus.OPEN, limit=open_count):
-        for operation in proposal.pending:
-            values = [operation.target_id, *operation.fields.values()]
-            for entity_id, entity in by_id.items():
-                if any(v == entity_id or (isinstance(v, list) and entity_id in v) for v in values):
-                    blockers.append(
-                        (
-                            _describe(entity),
-                            f"proposal {proposal.id} ({proposal.title!r}) operation "
-                            f"{operation.seq} ({operation.op.value} {operation.kind.value}, "
-                            f"{operation.status.value})",
-                        )
-                    )
+    for proposal in proposals.list_proposals(limit=proposals.count_proposals()):
+        if proposal.status is ProposalStatus.REVERTED:
+            continue  # its applied operations are undone
+        for operation in proposal.operations:
+            where = (
+                f"proposal {proposal.id} ({proposal.title!r}) operation {operation.id} "
+                f"(seq {operation.seq}, {operation.op.value} {operation.kind.value}, "
+                f"{operation.status.value})"
+            )
+            if operation.status is OperationStatus.APPLIED:
+                changed = {operation.result_entity_id, operation.target_id}
+                where += ", which created/changed it; DR's spec may not have this triple yet"
+            elif proposal.status is ProposalStatus.OPEN and not operation.decided:
+                changed = {operation.target_id, *_strings_in(operation.fields)}
+            else:
+                continue
+            blockers.extend(
+                (describe_stale(entity), where)
+                for entity_id, entity in by_id.items()
+                if entity_id in changed
+            )
     return sorted(blockers)
 
 
-def prune_stale(service: OntologyService, stale: list[Class | PropertyDefinition]) -> Counter[str]:
+class PruneFailed(Exception):
+    """A delete was refused partway through a prune; the earlier deletes stand."""
+
+    def __init__(
+        self,
+        deleted: list[Class | PropertyDefinition],
+        failed: Class | PropertyDefinition,
+        error: Exception,
+    ):
+        self.deleted = deleted
+        self.failed = failed
+        self.error = error
+        super().__init__(f"Deleting {describe_stale(failed)} failed: {error}")
+
+
+def prune_stale(
+    service: OntologyService, stale: list[Class | PropertyDefinition]
+) -> list[Class | PropertyDefinition]:
     """
     Delete the stale entities through the service, so each delete is recorded
     like any other. Property definitions go first (they may have a stale class
@@ -597,20 +643,29 @@ def prune_stale(service: OntologyService, stale: list[Class | PropertyDefinition
     Callers check `find_prune_blockers` first.
 
     Returns:
-        How many of each kind were deleted ("PropertyDefinition", "Class")
-    """
-    pruned: Counter[str] = Counter()
-    for prop in (e for e in stale if isinstance(e, PropertyDefinition)):
-        service.delete_property_definition(prop.id)
-        pruned["PropertyDefinition"] += 1
+        The deleted entities, in the order deleted
 
+    Raises:
+        PruneFailed: If a delete is refused; the ones before it stay deleted
+    """
     classes = {e.id: e for e in stale if isinstance(e, Class)}
 
     def depth(cls: Class) -> int:
         parent = classes.get(cls.parent_class_id or "")
         return 0 if parent is None else 1 + depth(parent)
 
-    for cls in sorted(classes.values(), key=depth, reverse=True):
-        service.delete_class(cls.id)
-        pruned["Class"] += 1
-    return pruned
+    order: list[Class | PropertyDefinition] = [
+        *(e for e in stale if isinstance(e, PropertyDefinition)),
+        *sorted(classes.values(), key=depth, reverse=True),
+    ]
+    deleted: list[Class | PropertyDefinition] = []
+    for entity in order:
+        try:
+            if isinstance(entity, PropertyDefinition):
+                service.delete_property_definition(entity.id)
+            else:
+                service.delete_class(entity.id)
+        except OntologyError as exc:
+            raise PruneFailed(deleted, entity, exc) from exc
+        deleted.append(entity)
+    return deleted

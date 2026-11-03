@@ -14,6 +14,7 @@ import json
 import os
 import sys
 from datetime import datetime, timezone
+from types import SimpleNamespace
 from uuid import uuid4
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -25,23 +26,32 @@ from sqlalchemy.orm import sessionmaker
 from adapters.events.change_recorder import ChangeEventRecorder
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
+from adapters.persistence.sqlite.connection import create_local_db_engine
 from adapters.persistence.sqlite.models import Base, OntologyEntity
 from adapters.persistence.sqlite.models import ChangeEvent as ChangeEventORM
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from domain.ontology.services import OntologyService
+from domain.ontology.value_objects import ExternalReference
+from domain.versioning.proposal_service import OperationDraft, ProposalService
 from domain.versioning.proposals import (
     ChangeProposal,
     OperationKind,
     OperationType,
     ProposalSource,
+    ProposalStatus,
     ProposedOperation,
 )
+from domain.versioning.revert_service import RevertService
+from scripts import import_dr_ontology as import_script
 from scripts.dr_ontology_loader import (
+    DR_SOURCE,
     DR_TAXONOMY_IDENTIFIER,
+    PruneFailed,
     find_prune_blockers,
     import_dr_ontology,
+    prune_stale,
 )
 from scripts.import_dr_ontology import report_and_prune
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
@@ -464,6 +474,11 @@ def _drop_spec_files(spec_dir, pattern):
         path.unlink()
 
 
+def _delete_event_count(session_factory):
+    with session_factory() as session:
+        return session.query(ChangeEventORM).filter(ChangeEventORM.operation == "delete").count()
+
+
 def _realizes(repo):
     return next(p for p in repo.list_property_definitions(limit=None) if "realizes" in p.identifier)
 
@@ -514,7 +529,7 @@ class TestPruneStale:
         assert import_dr_ontology(ontology_service, repo, spec_dir).stale == []
 
     def test_prune_refuses_and_deletes_nothing_when_a_relationship_uses_a_stale_property(
-        self, ontology_service, recorded_service, repo, proposals, spec_dir, capsys
+        self, ontology_service, recorded_service, repo, proposals, spec_dir, session_factory, capsys
     ):
         import_dr_ontology(ontology_service, repo, spec_dir)
         goal = repo.get_by_identifier("motivation_goal")
@@ -533,6 +548,41 @@ class TestPruneStale:
         assert repo.get_property_definition(realizes.id) is not None
         assert repo.get_relationship(relationship.id) is not None
         assert f"relationship {relationship.id}" in capsys.readouterr().err
+        assert _delete_event_count(session_factory) == 0
+
+    @pytest.mark.parametrize("use", ["subclass", "individual", "property_range"])
+    def test_prune_refuses_when_something_outside_the_stale_set_uses_a_stale_class(
+        self, ontology_service, recorded_service, repo, proposals, spec_dir, session_factory, use
+    ):
+        import_dr_ontology(ontology_service, repo, spec_dir)
+        service_class = repo.get_by_identifier("business_businessservice")
+        if use == "subclass":
+            user = ontology_service.create_class(
+                service_class.concept_scheme_id,
+                "Internal Service",
+                parent_class_id=service_class.id,
+            )
+        elif use == "individual":
+            user = ontology_service.create_individual(service_class.id, "Billing")
+        else:
+            user = ontology_service.create_property_definition(
+                identifier="hosts", title="Hosts", range_class_id=service_class.id
+            )
+        _drop_spec_files(spec_dir, "*realizes*.json")
+        _drop_spec_files(spec_dir, "businessservice.node.schema.json")
+        summary = import_dr_ontology(ontology_service, repo, spec_dir)
+        assert len(summary.stale_entities) == 2  # the class and the stale property ranging over it
+
+        blockers = find_prune_blockers(repo, proposals, summary.stale_entities)
+        assert [user_desc.split()[-1] for _, user_desc in blockers] == [user.id]
+        assert blockers[0][0].startswith("Class 'Business Service'")
+        assert not report_and_prune(summary, recorded_service, repo, proposals, prune=True)
+
+        assert all(
+            repo.get_class(e.id) or repo.get_property_definition(e.id)
+            for e in summary.stale_entities
+        )
+        assert _delete_event_count(session_factory) == 0
 
     def test_prune_refuses_when_an_open_proposal_operation_names_a_stale_entity(
         self, ontology_service, recorded_service, repo, proposals, spec_dir
@@ -566,6 +616,109 @@ class TestPruneStale:
         assert not report_and_prune(summary, recorded_service, repo, proposals, prune=True)
         assert repo.get_property_definition(realizes.id) is not None
 
+    def test_prune_refuses_when_an_open_proposal_names_a_stale_id_nested_in_its_fields(
+        self, ontology_service, repo, proposals, spec_dir
+    ):
+        import_dr_ontology(ontology_service, repo, spec_dir)
+        realizes = _realizes(repo)
+        other = next(p for p in repo.list_property_definitions(limit=None) if p.id != realizes.id)
+        proposals.create(
+            ChangeProposal(
+                id=str(uuid4()),
+                taxonomy_id=repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER).id,
+                title="Point at realizes",
+                source=ProposalSource.USER,
+                created_at=datetime.now(timezone.utc),
+                operations=[
+                    ProposedOperation(
+                        seq=1,
+                        op=OperationType.UPDATE,
+                        kind=OperationKind.PROPERTY,
+                        target_id=other.id,
+                        fields={"external_references": [{"metadata": {"see": [realizes.id]}}]},
+                    )
+                ],
+            )
+        )
+        _drop_spec_files(spec_dir, "*realizes*.json")
+        summary = import_dr_ontology(ontology_service, repo, spec_dir)
+
+        blockers = find_prune_blockers(repo, proposals, summary.stale_entities)
+        assert len(blockers) == 1
+        assert "Point at realizes" in blockers[0][1]
+
+    def test_prune_refuses_for_a_type_an_applied_proposal_created_that_the_spec_lacks(
+        self, ontology_service, recorded_service, repo, proposals, spec_dir, session_factory
+    ):
+        import_dr_ontology(ontology_service, repo, spec_dir)
+        goal = repo.get_by_identifier("motivation_goal")
+        stakeholder = repo.get_by_identifier("motivation_stakeholder")
+        change_repo = SQLiteChangeRepository(session_factory)
+        publisher = InProcessEventPublisher()
+        ChangeEventRecorder(change_repo).subscribe_ontology_events(publisher)
+        proposal_service = ProposalService(
+            proposals,
+            OntologyService(repo, FakeEmbeddingService(), publisher, schema_index=None),
+            repo,
+            RevertService(change_repo=change_repo, ontology_repo=repo),
+        )
+        # As a reflection plan's create does: a new triple carrying its DR reference.
+        new_triple = "motivation.goal.serves.motivation.stakeholder"
+        proposal = proposal_service.propose(
+            repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER).id,
+            "Reflection plan",
+            [
+                OperationDraft(
+                    seq=1,
+                    op=OperationType.CREATE,
+                    kind=OperationKind.PROPERTY,
+                    fields={
+                        "identifier": "goal_serves_stakeholder",
+                        "title": "Goal serves Stakeholder",
+                        "canonical_predicate": "serves",
+                        "domain_class_id": goal.id,
+                        "range_class_id": stakeholder.id,
+                        "external_references": [
+                            ExternalReference(source=DR_SOURCE, identifier=new_triple).to_dict()
+                        ],
+                    },
+                )
+            ],
+            ProposalSource.USER,
+        )
+        proposal = proposal_service.apply(proposal.id, [proposal.operations[0].id])
+        assert proposal.status is ProposalStatus.DONE
+        created_id = proposal.operations[0].result_entity_id
+
+        summary = import_dr_ontology(ontology_service, repo, spec_dir)  # spec lacks the triple
+        assert [e.id for e in summary.stale_entities] == [created_id]
+
+        blockers = find_prune_blockers(repo, proposals, summary.stale_entities)
+        assert len(blockers) == 1
+        assert f"proposal {proposal.id}" in blockers[0][1]
+        assert "created/changed" in blockers[0][1]
+        assert not report_and_prune(summary, recorded_service, repo, proposals, prune=True)
+        assert repo.get_property_definition(created_id) is not None
+        assert _delete_event_count(session_factory) == 0
+
+    def test_a_refused_delete_stops_the_prune_and_reports_what_was_deleted(
+        self, ontology_service, recorded_service, repo, spec_dir
+    ):
+        import_dr_ontology(ontology_service, repo, spec_dir)
+        service_class = repo.get_by_identifier("business_businessservice")
+        ontology_service.create_individual(service_class.id, "Billing")
+        _drop_spec_files(spec_dir, "*realizes*.json")
+        _drop_spec_files(spec_dir, "businessservice.node.schema.json")
+        summary = import_dr_ontology(ontology_service, repo, spec_dir)
+
+        # Skipping find_prune_blockers: the class's individual makes its delete fail.
+        with pytest.raises(PruneFailed) as caught:
+            prune_stale(recorded_service, summary.stale_entities)
+
+        assert [type(e).__name__ for e in caught.value.deleted] == ["PropertyDefinition"]
+        assert caught.value.failed.id == service_class.id
+        assert repo.get_class(service_class.id) is not None
+
     def test_without_prune_nothing_is_deleted(
         self, ontology_service, recorded_service, repo, proposals, spec_dir, capsys
     ):
@@ -577,3 +730,42 @@ class TestPruneStale:
 
         assert repo.get_property_definition(summary.stale_entities[0].id) is not None
         assert "not deleted" in capsys.readouterr().out
+
+
+class TestImportScriptExitCode:
+    def test_main_exits_1_when_the_prune_is_refused(self, spec_dir, tmp_path, monkeypatch):
+        db_path = tmp_path / "local.db"
+        engine = create_local_db_engine(f"sqlite:///{db_path}")
+        Base.metadata.create_all(engine)
+        repo = SQLiteOntologyRepository(sessionmaker(bind=engine))
+        service = OntologyService(repo, FakeEmbeddingService(), _NoOpEventPublisher())
+        import_dr_ontology(service, repo, spec_dir)
+        goal = repo.get_by_identifier("motivation_goal")
+        service_class = repo.get_by_identifier("business_businessservice")
+        source = service.create_individual(goal.id, "Grow revenue")
+        target = service.create_individual(service_class.id, "Billing")
+        service.create_relationship(source.id, target.id, _realizes(repo).id)
+        engine.dispose()
+        _drop_spec_files(spec_dir, "*realizes*.json")
+
+        database = SimpleNamespace(
+            local_db_path=str(db_path), operations_db_path=str(tmp_path / "operations.db")
+        )
+        settings = SimpleNamespace(database=database)
+        monkeypatch.setattr(
+            import_script,
+            "get_config_manager",
+            lambda: SimpleNamespace(get_settings=lambda: settings),
+        )
+        monkeypatch.setattr(
+            import_script, "SentenceTransformerEmbedding", lambda **_: FakeEmbeddingService()
+        )
+        monkeypatch.setattr(import_script, "record_baseline_reset_if_new", lambda *_: False)
+        monkeypatch.setattr(
+            sys, "argv", ["import_dr_ontology.py", "--spec-dir", str(spec_dir), "--prune"]
+        )
+
+        assert import_script.main() == 1
+
+        monkeypatch.setattr(sys, "argv", ["import_dr_ontology.py", "--spec-dir", str(spec_dir)])
+        assert import_script.main() == 0

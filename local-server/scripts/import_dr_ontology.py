@@ -51,12 +51,15 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from config import get_config_manager
+from domain.ontology.entities import PropertyDefinition
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
 from domain.versioning.ports import ChangeProposalRepository
 from experiments.ledger import append_baseline_reset, latest_baseline_reset
 from scripts.dr_ontology_loader import (
     ImportSummary,
+    PruneFailed,
+    describe_stale,
     find_prune_blockers,
     import_dr_ontology,
     prune_stale,
@@ -154,7 +157,8 @@ def report_and_prune(
     """
     List the stale entities; with `prune`, delete them all, or none if any is in use.
 
-    Returns False when pruning was refused because something uses a stale entity.
+    Returns False when pruning was refused because something uses a stale entity,
+    or a delete was refused partway (the deleted and not-deleted ones are listed).
     """
     if not summary.stale:
         print("Stale: none")
@@ -179,13 +183,27 @@ def report_and_prune(
             print(f"  - {stale} <- used by {user}", file=sys.stderr)
         return False
 
-    pruned = prune_stale(service, summary.stale_entities)
+    try:
+        deleted = prune_stale(service, summary.stale_entities)
+    except PruneFailed as exc:
+        deleted_ids = {entity.id for entity in exc.deleted}
+        print(f"Prune stopped: {exc}", file=sys.stderr)
+        print(f"Deleted ({len(exc.deleted)}):", file=sys.stderr)
+        for entity in exc.deleted:
+            print(f"  - {describe_stale(entity)}", file=sys.stderr)
+        not_deleted = [e for e in summary.stale_entities if e.id not in deleted_ids]
+        print(f"Not deleted ({len(not_deleted)}):", file=sys.stderr)
+        for entity in not_deleted:
+            print(f"  - {describe_stale(entity)}", file=sys.stderr)
+        return False
+
+    properties = sum(isinstance(entity, PropertyDefinition) for entity in deleted)
     print(
-        f"Pruned {len(summary.stale)} stale entities: "
-        f"{pruned['PropertyDefinition']} property definition(s), {pruned['Class']} class(es)"
+        f"Pruned {len(deleted)} stale entities: {properties} property definition(s), "
+        f"{len(deleted) - properties} class(es)"
     )
-    for entry in summary.stale:
-        print(f"  - {entry}")
+    for entity in deleted:
+        print(f"  - {describe_stale(entity)}")
     return True
 
 
