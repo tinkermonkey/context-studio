@@ -4,6 +4,7 @@ import type { ProposedOperation } from "@/api/services/proposals";
 import {
   CLASS_ID_FIELDS,
   OPERATION_STATUS_VARIANT,
+  asApplied,
   SCOPE_VARIANT,
   changeRows,
   formatProbability,
@@ -57,7 +58,8 @@ function evidenceCaption(item: EvidenceItem): string[] {
   );
 }
 
-export function operationTitle(operation: ProposedOperation, context: OperationContext): string {
+export function operationTitle(proposed: ProposedOperation, context: OperationContext): string {
+  const operation = asApplied(proposed);
   if (operation.kind === "property") {
     const { before, after } = propertyTriples(
       operation,
@@ -76,7 +78,7 @@ export function operationTitle(operation: ProposedOperation, context: OperationC
 interface OperationInspectorProps {
   operation: ProposedOperation;
   context: OperationContext;
-  /** The Decision section (accept / reject / edit) goes first; the review queue's read-only view has none. */
+  /** The Decision section (accept / reject / edit) goes first; decided operations have none. */
   decision?: ReactNode;
 }
 
@@ -108,7 +110,8 @@ export function OperationInspector({ operation, context, decision }: OperationIn
 
         <InspectorPanel.Section title="Change">
           <div className="op-inspector__stack">
-            {operation.stale && (
+            {/* The Decision section, when there is one, explains a stale operation itself. */}
+            {operation.stale && !decision && (
               <FormCallout variant="warn" icon="alert" data-testid="operation-stale-callout">
                 The target changed after this was proposed, so the before values may no longer match
                 the workspace.

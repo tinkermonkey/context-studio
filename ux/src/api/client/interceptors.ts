@@ -4,12 +4,15 @@ import { trace, SpanStatusCode } from "@opentelemetry/api";
 export class ApiError extends Error {
   status: number;
   detail: string;
+  /** The response's `detail` when it is an object (e.g. a 409's `{message, blocking}`). */
+  body?: unknown;
 
-  constructor(message: string, status: number, detail: string) {
+  constructor(message: string, status: number, detail: string, body?: unknown) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.detail = detail;
+    this.body = body;
   }
 }
 
@@ -66,11 +69,17 @@ export function applyInterceptors(instance: AxiosInstance): void {
 
       const status = error.response?.status ?? 0;
       const data = error.response?.data as Record<string, unknown> | undefined;
+      const structured =
+        data?.detail && typeof data.detail === "object" && !Array.isArray(data.detail)
+          ? (data.detail as Record<string, unknown>)
+          : undefined;
       const detail =
         typeof data?.detail === "string"
           ? data.detail
-          : (error.message ?? "An unexpected error occurred");
-      return Promise.reject(new ApiError(detail, status, detail));
+          : typeof structured?.message === "string"
+            ? structured.message
+            : (error.message ?? "An unexpected error occurred");
+      return Promise.reject(new ApiError(detail, status, detail, structured));
     },
   );
 }

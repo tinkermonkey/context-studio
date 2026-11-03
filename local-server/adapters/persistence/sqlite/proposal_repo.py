@@ -113,6 +113,7 @@ class SQLiteChangeProposalRepository:
                 row.reason = operation.reason  # type: ignore[assignment]
                 row.scope = operation.scope.value  # type: ignore[assignment]
                 row.applied_fields = operation.applied_fields  # type: ignore[assignment]
+                row.base = dict(operation.base)  # type: ignore[assignment]
             session.commit()
 
     def set_status(self, proposal_id: str, status: ProposalStatus) -> None:

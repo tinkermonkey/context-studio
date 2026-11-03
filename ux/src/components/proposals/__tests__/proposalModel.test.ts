@@ -11,6 +11,7 @@ import {
   renameOperation,
 } from "@/test/proposalFixtures";
 import {
+  asApplied,
   changeRows,
   decidedPercent,
   formatAge,
@@ -264,5 +265,17 @@ describe("changeRows", () => {
     expect(formatValue(3)).toBe("3");
     expect(formatValue([{ source: "dr", identifier: "a.b" }])).toBe("a.b");
     expect(formatValue({ a: 1 })).toBe('{"a":1}');
+  });
+});
+
+describe("asApplied", () => {
+  it("reads an edited operation as the update it applied, others as proposed", () => {
+    const remove = createProposedOperation({ op: "delete", kind: "property", fields: {} });
+    expect(asApplied(remove)).toBe(remove);
+    const edited = { ...remove, applied_fields: { canonical_predicate: "serves" } };
+    expect(asApplied(edited)).toMatchObject({
+      op: "update",
+      fields: { canonical_predicate: "serves" },
+    });
   });
 });

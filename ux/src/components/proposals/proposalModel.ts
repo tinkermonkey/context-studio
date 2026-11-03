@@ -222,6 +222,16 @@ export function propertyTriples(
   return { before, after: tripleOf({ ...beforeValues, ...fields }, undefined) };
 }
 
+/**
+ * The operation as it applied: one a reviewer edited applied its
+ * `applied_fields` as an update (an edited delete too); others as proposed.
+ */
+export function asApplied(operation: ProposedOperation): ProposedOperation {
+  return operation.applied_fields
+    ? { ...operation, op: "update", fields: operation.applied_fields }
+    : operation;
+}
+
 // ==================== "$ref" (an earlier create in the same proposal) ====================
 
 /** What a "$ref" names: the create's title, and the entity it made once applied. */

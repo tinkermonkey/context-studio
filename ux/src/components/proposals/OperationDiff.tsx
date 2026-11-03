@@ -1,6 +1,7 @@
 import type { ProposedOperation } from "@/api/services/proposals";
 import {
   CLASS_ID_FIELDS,
+  asApplied,
   changeRows,
   formatValue,
   operationSubject,
@@ -84,8 +85,10 @@ interface OperationDiffProps {
  * changed parts highlighted; a delete strikes the triple through; a create
  * shows the new one. Other kinds show the entity and the fields that change.
  */
-export function OperationDiff({ operation, context }: OperationDiffProps) {
-  const testId = `operation-diff-${operation.id}`;
+export function OperationDiff({ operation: proposed, context }: OperationDiffProps) {
+  const testId = `operation-diff-${proposed.id}`;
+  // An edited operation shows the triple it applied.
+  const operation = asApplied(proposed);
 
   if (operation.kind === "property") {
     const { before, after } = propertyTriples(

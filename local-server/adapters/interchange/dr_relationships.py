@@ -233,6 +233,11 @@ class Triple:
             description=None,
         )
 
+    @property
+    def default_description(self) -> str:
+        """The description DR's relationship schemas give a triple unless curated."""
+        return f"Defines relationship: {self.source} {self.predicate} {self.destination}"
+
     def fields(self) -> dict[str, str]:
         """The triple in DR's vocabulary, as DR's decisions file carries it."""
         return {
@@ -329,8 +334,8 @@ class DrRelationshipRules:
     (pending, failed, or edited in the same apply) produces it. The applied
     fields always carry the whole triple: the predicate and both classes, the
     identifier a re-import of the edited spec computes, and the DR external
-    reference (whatever the edit gave for those two). A title still the
-    default for the old triple follows the new one.
+    reference (whatever the edit gave for those two). A title or description
+    still the default for the old triple follows the new one.
     """
 
     def __init__(self, repo: OntologyRepository) -> None:
@@ -420,6 +425,8 @@ class DrRelationshipRules:
             completed["identifier"] = self._identifier(new, current, target, properties)
             if "title" not in fields and target.title == current.record().title:
                 completed["title"] = new.record().title
+            if "description" not in fields and target.description == current.default_description:
+                completed["description"] = new.default_description
         completed["external_references"] = swapped_dr_reference(target, current, new)
         return completed
 

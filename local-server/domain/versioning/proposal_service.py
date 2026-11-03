@@ -856,6 +856,8 @@ class ProposalService:
                 for name in fields
             }
             operation.applied_fields = fields
+            # Keep what the applied fields replaced, so the change reads before -> after.
+            operation.base = {**operation.base, **base}
             operation.scope = classify_scope(OperationType.UPDATE, fields, base)
             return result
 

@@ -155,6 +155,17 @@ class ClassCountsResponse(BaseModel):
     )
 
 
+class ExternalReferenceResponse(BaseModel):
+    """Response containing external reference data."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    source: str = Field(..., description="Source of the reference")
+    identifier: str = Field(..., description="External identifier")
+    uri: Optional[str] = Field(None, description="External URI")
+    metadata: Optional[dict[str, Any]] = Field(None, description="Source-specific metadata")
+
+
 class TaxonomyResponse(BaseModel):
     """Response containing taxonomy data."""
 
@@ -166,6 +177,11 @@ class TaxonomyResponse(BaseModel):
     description: Optional[str] = Field(None, description="One-paragraph summary")
     vision: Optional[str] = Field(None, description="Full vision statement (markdown)")
     color: Optional[str] = Field(None, description="Optional hex color '#rrggbb'")
+    external_references: list[ExternalReferenceResponse] = Field(
+        default_factory=list,
+        description="References to the source it was imported from (dr_spec: the DR spec, "
+        "whose metadata holds the predicate catalog)",
+    )
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
     last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
     version: int = Field(default=1, description="Version number for optimistic concurrency control")
@@ -298,17 +314,6 @@ class ClassMoveRequest(BaseModel):
     """Request to move a class to a different concept scheme."""
 
     target_scheme_id: str = Field(..., description="ID of the target concept scheme")
-
-
-class ExternalReferenceResponse(BaseModel):
-    """Response containing external reference data."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    source: str = Field(..., description="Source of the reference")
-    identifier: str = Field(..., description="External identifier")
-    uri: Optional[str] = Field(None, description="External URI")
-    metadata: Optional[dict[str, Any]] = Field(None, description="Source-specific metadata")
 
 
 class LexicalSenseResponse(BaseModel):

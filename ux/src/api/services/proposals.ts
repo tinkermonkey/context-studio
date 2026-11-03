@@ -7,6 +7,11 @@ export type ChangeProposalCreateRequest = components["schemas"]["ChangeProposalC
 export type ChangeProposalApplyRequest = components["schemas"]["ChangeProposalApplyRequest"];
 export type ChangeProposalRejectRequest = components["schemas"]["ChangeProposalRejectRequest"];
 export type ChangeProposalRevertResponse = components["schemas"]["ChangeProposalRevertResponse"];
+export type ChangeProposalRevertConflict =
+  components["schemas"]["ChangeProposalRevertConflictDetail"];
+export type RevertBlocker = components["schemas"]["RevertBlocker"];
+/** One operation's decision in DR's decisions file (`proposal-import.ts --decisions`). */
+export type DrDecision = components["schemas"]["DrDecisionResponse"];
 export type ApprovalPolicy = components["schemas"]["ApprovalPolicyResponse"];
 export type ApprovalPolicyRequest = components["schemas"]["ApprovalPolicyRequest"];
 type ChangeProposalList = components["schemas"]["ListResponse_ChangeProposalResponse_"];
@@ -45,6 +50,11 @@ class ProposalsService extends BaseService {
 
   async revertProposal(id: string): Promise<ChangeProposalRevertResponse> {
     return this.post<ChangeProposalRevertResponse>(`/api/proposals/${id}/revert`);
+  }
+
+  /** DR's decisions file for a reflection-plan proposal; 409 once it is reverted. */
+  async getDecisions(id: string): Promise<DrDecision[]> {
+    return this.get<DrDecision[]>(`/api/proposals/${id}/decisions`);
   }
 
   async getApprovalPolicy(taxonomyId: string): Promise<ApprovalPolicy> {

@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider, type QueryKey } from "@tanstack/react
 import { renderHook, waitFor } from "@testing-library/react";
 import { QUERY_KEYS } from "@/api/config";
 import { proposalsService } from "@/api/services/proposals";
+import { createChangeProposal } from "@/api/services/__tests__/fixtures/proposals.fixtures";
 import {
   useApplyChangeProposal,
   useCreateChangeProposal,
@@ -44,8 +45,11 @@ function setup() {
   );
   const invalidated = (queryKey: QueryKey) =>
     queryClient.getQueryState(queryKey)?.isInvalidated ?? false;
-  return { wrapper, invalidated };
+  return { wrapper, invalidated, queryClient };
 }
+
+/** What apply, reject and revert answer with: the proposal afterwards. */
+const after = createChangeProposal({ id: "proposal-1", status: "done" });
 
 describe("change proposal mutation invalidation", () => {
   afterEach(() => {
@@ -53,13 +57,15 @@ describe("change proposal mutation invalidation", () => {
   });
 
   it("apply marks the proposals and every ontology query stale", async () => {
-    vi.spyOn(proposalsService, "applyProposal").mockResolvedValue({} as never);
-    const { wrapper, invalidated } = setup();
+    vi.spyOn(proposalsService, "applyProposal").mockResolvedValue(after);
+    const { wrapper, invalidated, queryClient } = setup();
     const { result } = renderHook(() => useApplyChangeProposal(), { wrapper });
 
     result.current.mutate({ id: "proposal-1", data: { operation_ids: ["op-1"] } });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    // The response shows at once, before the refetch.
+    expect(queryClient.getQueryData(QUERY_KEYS.changeProposal("proposal-1"))).toEqual(after);
     for (const queryKey of [...PROPOSAL_QUERIES, ...ONTOLOGY_QUERIES]) {
       expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(true);
     }
@@ -69,7 +75,7 @@ describe("change proposal mutation invalidation", () => {
   });
 
   it("apply sends a reviewer's edits with the operations", async () => {
-    const apply = vi.spyOn(proposalsService, "applyProposal").mockResolvedValue({} as never);
+    const apply = vi.spyOn(proposalsService, "applyProposal").mockResolvedValue(after);
     const { wrapper } = setup();
     const { result } = renderHook(() => useApplyChangeProposal(), { wrapper });
     const data = {
@@ -100,7 +106,17 @@ describe("change proposal mutation invalidation", () => {
   });
 
   it("revert marks the proposals and every ontology query stale", async () => {
-    vi.spyOn(proposalsService, "revertProposal").mockResolvedValue({} as never);
+    vi.spyOn(proposalsService, "revertProposal").mockResolvedValue({
+      events_reverted: 1,
+      classes_deleted: 0,
+      individuals_deleted: 0,
+      relationships_deleted: 0,
+      properties_deleted: 0,
+      taxonomies_deleted: 0,
+      concept_schemes_deleted: 0,
+      entities_restored: 1,
+      proposal: { ...after, status: "reverted" },
+    });
     const { wrapper, invalidated } = setup();
     const { result } = renderHook(() => useRevertChangeProposal(), { wrapper });
 
@@ -113,13 +129,14 @@ describe("change proposal mutation invalidation", () => {
   });
 
   it("reject marks only the proposals stale", async () => {
-    vi.spyOn(proposalsService, "rejectProposal").mockResolvedValue({} as never);
-    const { wrapper, invalidated } = setup();
+    vi.spyOn(proposalsService, "rejectProposal").mockResolvedValue(after);
+    const { wrapper, invalidated, queryClient } = setup();
     const { result } = renderHook(() => useRejectChangeProposal(), { wrapper });
 
     result.current.mutate({ id: "proposal-1", data: {} });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(queryClient.getQueryData(QUERY_KEYS.changeProposal("proposal-1"))).toEqual(after);
     for (const queryKey of PROPOSAL_QUERIES) {
       expect(invalidated(queryKey), JSON.stringify(queryKey)).toBe(true);
     }

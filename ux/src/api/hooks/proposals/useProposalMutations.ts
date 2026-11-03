@@ -43,7 +43,11 @@ export function useApplyChangeProposal() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: ChangeProposalApplyRequest }) =>
       proposalsService.applyProposal(id, data),
-    onSuccess: () => invalidateOntology(queryClient),
+    onSuccess: (proposal) => {
+      // The response is the proposal afterwards: show it now, before the refetch lands.
+      queryClient.setQueryData(QUERY_KEYS.changeProposal(proposal.id), proposal);
+      invalidateOntology(queryClient);
+    },
   });
 }
 
@@ -52,7 +56,8 @@ export function useRejectChangeProposal() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: ChangeProposalRejectRequest }) =>
       proposalsService.rejectProposal(id, data),
-    onSuccess: () => {
+    onSuccess: (proposal) => {
+      queryClient.setQueryData(QUERY_KEYS.changeProposal(proposal.id), proposal);
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.changeProposalsRoot });
     },
   });
@@ -62,6 +67,18 @@ export function useRevertChangeProposal() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => proposalsService.revertProposal(id),
-    onSuccess: () => invalidateOntology(queryClient),
+    // The page explains a refused (409) revert itself.
+    meta: { skipGlobalErrorToast: true },
+    onSuccess: (result) => {
+      queryClient.setQueryData(QUERY_KEYS.changeProposal(result.proposal.id), result.proposal);
+      invalidateOntology(queryClient);
+    },
+  });
+}
+
+/** Fetch a DR reflection-plan proposal's decisions file, to download it. */
+export function useExportProposalDecisions() {
+  return useMutation({
+    mutationFn: (id: string) => proposalsService.getDecisions(id),
   });
 }
