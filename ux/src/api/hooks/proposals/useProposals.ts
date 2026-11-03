@@ -2,10 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
 import { proposalsService, type ChangeProposalListParams } from "@/api/services/proposals";
 
-export function useChangeProposals(params?: ChangeProposalListParams) {
+/** `refetchInterval` (ms) polls, for counts that should notice proposals made over MCP. */
+export function useChangeProposals(
+  params?: ChangeProposalListParams,
+  options?: { refetchInterval?: number },
+) {
   return useQuery({
     queryKey: QUERY_KEYS.changeProposals(params),
     queryFn: () => proposalsService.listProposals(params),
+    refetchInterval: options?.refetchInterval,
   });
 }
 

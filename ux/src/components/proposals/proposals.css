@@ -1,0 +1,297 @@
+@layer app {
+  /* ============= Review queue: proposals list ============= */
+  .proposals-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .proposals-filters__controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .proposals-count,
+  .proposal-age {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .proposal-age {
+    display: block;
+    text-align: right;
+  }
+
+  .proposal-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .proposal-cell__title {
+    font-weight: 600;
+    font-size: 13.5px;
+  }
+
+  .proposal-cell__detail {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-3));
+    overflow-wrap: anywhere;
+  }
+
+  .proposal-pending {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .proposals-footnote {
+    margin: 0;
+    font-size: 12.5px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  /* ============= Proposal detail ============= */
+  .proposal-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .proposal-summary__tally {
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .proposal-summary__mix {
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .op-seq,
+  .op-probability {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .op-probability {
+    display: block;
+    text-align: right;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .op-plan-kind {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-2));
+    white-space: nowrap;
+  }
+
+  .op-status {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  /* An operation's change, in a table cell. */
+  .op-diff {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-1));
+    overflow-wrap: anywhere;
+  }
+
+  .op-diff__before,
+  .op-diff__predicate,
+  .op-diff__to,
+  .op-diff__kind,
+  .op-diff__note {
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .op-diff__note {
+    font-family: var(--font-sans);
+  }
+
+  .op-diff__removed {
+    text-decoration: line-through;
+    text-decoration-color: rgb(var(--status-rose) / 0.7);
+    text-decoration-thickness: 1.5px;
+  }
+
+  .op-diff__changed,
+  .op-diff__predicate.op-diff__changed {
+    color: var(--accent-amber);
+    font-weight: 600;
+  }
+
+  /* ============= Operation inspector ============= */
+  .op-inspector__stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .op-inspector__status {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .op-inspector__reason {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .op-inspector__rationale {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .op-inspector__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .op-change-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .op-change-table th {
+    text-align: left;
+    padding: 4px 6px 6px 0;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .op-change-table td {
+    padding: 6px 6px 6px 0;
+    font-family: var(--font-mono);
+    vertical-align: top;
+    overflow-wrap: anywhere;
+    border-top: 1px dashed rgb(var(--canvas-border));
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .op-change-table td.op-change-table__field,
+  .op-change-table td.op-change-table__muted {
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .op-change-table td.op-change-table__field {
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+
+  .op-change-table__before--changed {
+    text-decoration: line-through;
+  }
+
+  .op-change-table td.op-change-table__after--changed {
+    color: var(--accent-amber);
+    font-weight: 600;
+  }
+
+  .op-change-table td.op-change-table__removed {
+    white-space: nowrap;
+    color: var(--accent-rose);
+    font-weight: 600;
+  }
+
+  .op-evidence {
+    margin: 0;
+    padding: 8px 10px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 6px;
+    background: rgb(var(--canvas-bg-2));
+  }
+
+  .op-evidence__quote {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .op-evidence__caption {
+    margin-top: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgb(var(--canvas-fg-3));
+    overflow-wrap: anywhere;
+  }
+
+  /* ============= Entry points: chat card, entity pages ============= */
+  .proposal-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 14px;
+    border: 1px solid rgb(var(--canvas-border-strong));
+    border-radius: 8px;
+    background: rgb(var(--canvas-bg-2));
+  }
+
+  .proposal-card__head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .proposal-card__eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .proposal-card__counts {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .pending-ops {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pending-ops__change {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .pending-ops__where {
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-3));
+  }
+}

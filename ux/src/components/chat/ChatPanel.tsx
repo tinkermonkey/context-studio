@@ -14,10 +14,11 @@ import {
 } from "@tinkermonkey/heimdall-ui";
 import { useChatSession, useChatStatus } from "@/api/hooks/chat";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ProposalCard } from "@/components/proposals/ProposalCard";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { useChatPanelStore } from "@/stores/chatPanel";
 import { ChatAnswer } from "./ChatAnswer";
-import type { DisplayMessage, KnownEntities } from "./chatModel";
+import type { DisplayBlock, DisplayMessage, KnownEntities } from "./chatModel";
 import { useChatPageContext } from "./useChatPageContext";
 
 const BASE_SUGGESTIONS = [
@@ -56,21 +57,33 @@ interface AssistantBodyProps {
   pending: boolean;
 }
 
-/** An assistant turn: its tool calls as a stack of ToolBlocks, then the answer. */
+/** The card for the proposal a successful propose_changes call stored; nothing for other tools. */
+function StoredProposalCard({ block }: { block: Extract<DisplayBlock, { type: "tool" }> }) {
+  if (block.name !== "propose_changes" || block.status !== "success") return null;
+  const proposal = block.entities.find((entity) => entity.kind === "proposal");
+  return proposal ? <ProposalCard proposalId={proposal.id} /> : null;
+}
+
+/**
+ * An assistant turn: its tool calls as a stack of ToolBlocks (a stored
+ * proposal's card under its propose_changes block), then the answer.
+ */
 function AssistantBody({ message, known, pending }: AssistantBodyProps) {
   return (
     <div className="chat-turn">
       {message.blocks.map((block, index) =>
         block.type === "tool" ? (
-          <ToolBlock
-            key={block.toolUseId}
-            name={block.name}
-            status={block.status}
-            output={toolOutput(block.input, block.summary)}
-            defaultCollapsed
-            data-testid="chat-tool-block"
-            data-status={block.status}
-          />
+          <Fragment key={block.toolUseId}>
+            <ToolBlock
+              name={block.name}
+              status={block.status}
+              output={toolOutput(block.input, block.summary)}
+              defaultCollapsed
+              data-testid="chat-tool-block"
+              data-status={block.status}
+            />
+            <StoredProposalCard block={block} />
+          </Fragment>
         ) : (
           <ChatAnswer key={`text-${index}`} text={block.text} known={known} />
         ),

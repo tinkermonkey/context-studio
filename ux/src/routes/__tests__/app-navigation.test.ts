@@ -118,3 +118,20 @@ describe("app navigation — pipelines", () => {
     expect(getActiveItemId("/app")).toBe("dashboard");
   });
 });
+
+describe("app navigation — proposals", () => {
+  it("maps the Proposals sidebar item and palette action to the review queue", () => {
+    expect(SIDEBAR_PATH_MAP["proposals"]).toBe("/app/proposals");
+    const action = NAV_ACTIONS.find((a) => a.id === "nav-proposals");
+    expect(action).toMatchObject({ label: "Proposals", to: "/app/proposals" });
+  });
+
+  it.each(["/app/proposals", "/app/proposals/abc-123"])("highlights Proposals for %s", (path) => {
+    expect(getActiveItemId(path)).toBe("proposals");
+  });
+
+  it("labels the list and a proposal's page", () => {
+    expect(getBreadcrumbLabels("/app/proposals")).toEqual(["Proposals"]);
+    expect(getBreadcrumbLabels("/app/proposals/abc-123")).toEqual(["Proposals", "Proposal"]);
+  });
+});

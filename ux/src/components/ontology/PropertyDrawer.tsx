@@ -7,6 +7,7 @@ import {
   SegmentedControl,
 } from "@tinkermonkey/heimdall-ui";
 import { InlineInspector } from "@/components/ui/InlineInspector";
+import { PendingProposalOperations } from "@/components/entity/PendingProposalOperations";
 import { EditableField } from "@/components/ui/EditableField";
 import { SuggestField } from "@/components/ontology/suggesters/SuggestField";
 import {
@@ -168,6 +169,8 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
                 ]}
               />
             </InspectorPanel.Section>
+
+            <PendingProposalOperations kind="property" entityId={property.id} inInspector />
 
             <InspectorPanel.Section title="Used By Relationships">
               {propertyRelationships.length === 0 ? (

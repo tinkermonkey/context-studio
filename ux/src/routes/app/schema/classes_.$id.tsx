@@ -26,6 +26,7 @@ import { SMALL_SET_LIMIT } from "@/api/config";
 import { useToasts } from "@/components/ui/Toast";
 import { EntityNavigator } from "@/components/entity/EntityNavigator";
 import { EntityLink } from "@/components/entity/EntityLink";
+import { PendingProposalOperations } from "@/components/entity/PendingProposalOperations";
 import {
   EntityActions,
   EntityBody,
@@ -403,6 +404,7 @@ export function ClassPage({ id }: { id: string }) {
           </IdentityCard>
         }
       >
+        <PendingProposalOperations kind="class" entityId={id} />
         <Panel
           title={`Individuals · ${formatCount(individualsResponse?.total)}`}
           noPadding

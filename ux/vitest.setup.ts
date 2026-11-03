@@ -639,6 +639,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         onSelectRows,
         onRowClick,
         onSort,
+        emptyState,
         className = "",
         ...props
       }: any,
@@ -719,6 +720,20 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         React.createElement(
           "tbody",
           { className: "table__body" },
+          data.length === 0 &&
+            emptyState &&
+            React.createElement(
+              "tr",
+              { className: "table__row" },
+              React.createElement(
+                "td",
+                {
+                  className: "table__cell table__cell--empty",
+                  colSpan: columns.length + (selectable ? 1 : 0),
+                },
+                emptyState,
+              ),
+            ),
           data.map((row: any, index: number) => {
             const rowKeyValue = getRowKey(row, index);
             return React.createElement(
@@ -1009,6 +1024,16 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       children,
     ),
   ),
+  ProgressBar: ({ percent, color = "emerald", height: _h, label, className = "", ...props }: any) =>
+    React.createElement("div", {
+      className: ["progress-bar", `progress-bar--${color}`, className].filter(Boolean).join(" "),
+      role: "progressbar",
+      "aria-valuenow": percent,
+      "aria-valuemin": 0,
+      "aria-valuemax": 100,
+      "aria-label": label,
+      ...props,
+    }),
   FormCallout: ({ variant = "info", icon: _icon, children, className = "", ...props }: any) =>
     React.createElement(
       "div",

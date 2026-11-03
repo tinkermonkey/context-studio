@@ -20,6 +20,7 @@ import { ChatPanel } from "@/components/chat/ChatPanel";
 import { useChatEntryPoints } from "@/components/chat/useChatEntryPoints";
 import { useHealth, useConfig } from "@/api/hooks/admin";
 import { useEntityCounts } from "@/api/hooks/ontology/useEntityCounts";
+import { useChangeProposals } from "@/api/hooks/proposals";
 import {
   DATA_AREA_CRUMB,
   NAV_ACTIONS,
@@ -102,6 +103,12 @@ function AppShell() {
   const schemeCount = counts.schemes ?? 0;
   const propertyCount = counts.properties ?? 0;
   const relationshipCount = counts.relationships ?? 0;
+  // The badge counts open proposals, not pending operations; polling picks up
+  // proposals made over MCP or by an import.
+  const { data: openProposals } = useChangeProposals(
+    { status: "open", limit: 1 },
+    { refetchInterval: 30_000 },
+  );
 
   const workspaceName = (() => {
     const displayName = config?.sections?.workspace?.display_name;
@@ -266,6 +273,12 @@ function AppShell() {
             title: "",
             items: [
               { id: "dashboard", label: "Dashboard", icon: "dashboard" },
+              {
+                id: "proposals",
+                label: "Proposals",
+                icon: "gitBranch",
+                count: openProposals?.total || undefined,
+              },
               {
                 id: "schema",
                 label: "Schema",

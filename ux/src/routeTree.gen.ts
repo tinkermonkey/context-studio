@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppVersioningRouteImport } from './routes/app/versioning'
 import { Route as AppSettingsRouteImport } from './routes/app/settings'
+import { Route as AppProposalsRouteImport } from './routes/app/proposals'
 import { Route as AppContactSheetRouteImport } from './routes/app/contact-sheet'
 import { Route as AppPipelinesIndexRouteImport } from './routes/app/pipelines/index'
 import { Route as AppGraphIndexRouteImport } from './routes/app/graph/index'
@@ -25,6 +26,7 @@ import { Route as AppSchemaPropertiesRouteImport } from './routes/app/schema/pro
 import { Route as AppSchemaClassesRouteImport } from './routes/app/schema/classes'
 import { Route as AppReferenceWorkflowsRouteImport } from './routes/app/reference/workflows'
 import { Route as AppReferenceSourcesRouteImport } from './routes/app/reference/sources'
+import { Route as AppProposalsProposalIdRouteImport } from './routes/app/proposals_.$proposalId'
 import { Route as AppPipelinesRunsRouteImport } from './routes/app/pipelines/runs'
 import { Route as AppPipelinesReviewRouteImport } from './routes/app/pipelines/review'
 import { Route as AppDataIndividualsRouteImport } from './routes/app/data/individuals'
@@ -66,6 +68,11 @@ const AppVersioningRoute = AppVersioningRouteImport.update({
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProposalsRoute = AppProposalsRouteImport.update({
+  id: '/proposals',
+  path: '/proposals',
   getParentRoute: () => AppRoute,
 } as any)
 const AppContactSheetRoute = AppContactSheetRouteImport.update({
@@ -116,6 +123,11 @@ const AppReferenceWorkflowsRoute = AppReferenceWorkflowsRouteImport.update({
 const AppReferenceSourcesRoute = AppReferenceSourcesRouteImport.update({
   id: '/reference/sources',
   path: '/reference/sources',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProposalsProposalIdRoute = AppProposalsProposalIdRouteImport.update({
+  id: '/proposals_/$proposalId',
+  path: '/proposals/$proposalId',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPipelinesRunsRoute = AppPipelinesRunsRouteImport.update({
@@ -187,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/welcome': typeof WelcomeRoute
   '/app/contact-sheet': typeof AppContactSheetRoute
+  '/app/proposals': typeof AppProposalsRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/versioning': typeof AppVersioningRoute
   '/app/': typeof AppIndexRoute
@@ -194,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/app/data/individuals': typeof AppDataIndividualsRoute
   '/app/pipelines/review': typeof AppPipelinesReviewRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
+  '/app/proposals/$proposalId': typeof AppProposalsProposalIdRoute
   '/app/reference/sources': typeof AppReferenceSourcesRoute
   '/app/reference/workflows': typeof AppReferenceWorkflowsRoute
   '/app/schema/classes': typeof AppSchemaClassesRoute
@@ -216,6 +230,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/welcome': typeof WelcomeRoute
   '/app/contact-sheet': typeof AppContactSheetRoute
+  '/app/proposals': typeof AppProposalsRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/versioning': typeof AppVersioningRoute
   '/app': typeof AppIndexRoute
@@ -223,6 +238,7 @@ export interface FileRoutesByTo {
   '/app/data/individuals': typeof AppDataIndividualsRoute
   '/app/pipelines/review': typeof AppPipelinesReviewRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
+  '/app/proposals/$proposalId': typeof AppProposalsProposalIdRoute
   '/app/reference/sources': typeof AppReferenceSourcesRoute
   '/app/reference/workflows': typeof AppReferenceWorkflowsRoute
   '/app/schema/classes': typeof AppSchemaClassesRoute
@@ -246,6 +262,7 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/welcome': typeof WelcomeRoute
   '/app/contact-sheet': typeof AppContactSheetRoute
+  '/app/proposals': typeof AppProposalsRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/versioning': typeof AppVersioningRoute
   '/app/': typeof AppIndexRoute
@@ -253,6 +270,7 @@ export interface FileRoutesById {
   '/app/data/individuals': typeof AppDataIndividualsRoute
   '/app/pipelines/review': typeof AppPipelinesReviewRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
+  '/app/proposals_/$proposalId': typeof AppProposalsProposalIdRoute
   '/app/reference/sources': typeof AppReferenceSourcesRoute
   '/app/reference/workflows': typeof AppReferenceWorkflowsRoute
   '/app/schema/classes': typeof AppSchemaClassesRoute
@@ -278,6 +296,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/welcome'
     | '/app/contact-sheet'
+    | '/app/proposals'
     | '/app/settings'
     | '/app/versioning'
     | '/app/'
@@ -285,6 +304,7 @@ export interface FileRouteTypes {
     | '/app/data/individuals'
     | '/app/pipelines/review'
     | '/app/pipelines/runs'
+    | '/app/proposals/$proposalId'
     | '/app/reference/sources'
     | '/app/reference/workflows'
     | '/app/schema/classes'
@@ -307,6 +327,7 @@ export interface FileRouteTypes {
     | '/'
     | '/welcome'
     | '/app/contact-sheet'
+    | '/app/proposals'
     | '/app/settings'
     | '/app/versioning'
     | '/app'
@@ -314,6 +335,7 @@ export interface FileRouteTypes {
     | '/app/data/individuals'
     | '/app/pipelines/review'
     | '/app/pipelines/runs'
+    | '/app/proposals/$proposalId'
     | '/app/reference/sources'
     | '/app/reference/workflows'
     | '/app/schema/classes'
@@ -336,6 +358,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/welcome'
     | '/app/contact-sheet'
+    | '/app/proposals'
     | '/app/settings'
     | '/app/versioning'
     | '/app/'
@@ -343,6 +366,7 @@ export interface FileRouteTypes {
     | '/app/data/individuals'
     | '/app/pipelines/review'
     | '/app/pipelines/runs'
+    | '/app/proposals_/$proposalId'
     | '/app/reference/sources'
     | '/app/reference/workflows'
     | '/app/schema/classes'
@@ -410,6 +434,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/app/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/proposals': {
+      id: '/app/proposals'
+      path: '/proposals'
+      fullPath: '/app/proposals'
+      preLoaderRoute: typeof AppProposalsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/contact-sheet': {
@@ -480,6 +511,13 @@ declare module '@tanstack/react-router' {
       path: '/reference/sources'
       fullPath: '/app/reference/sources'
       preLoaderRoute: typeof AppReferenceSourcesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/proposals_/$proposalId': {
+      id: '/app/proposals_/$proposalId'
+      path: '/proposals/$proposalId'
+      fullPath: '/app/proposals/$proposalId'
+      preLoaderRoute: typeof AppProposalsProposalIdRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/pipelines/runs': {
@@ -582,6 +620,7 @@ const AppSchemaSchemesRouteWithChildren =
 
 interface AppRouteChildren {
   AppContactSheetRoute: typeof AppContactSheetRoute
+  AppProposalsRoute: typeof AppProposalsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppVersioningRoute: typeof AppVersioningRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -589,6 +628,7 @@ interface AppRouteChildren {
   AppDataIndividualsRoute: typeof AppDataIndividualsRoute
   AppPipelinesReviewRoute: typeof AppPipelinesReviewRoute
   AppPipelinesRunsRoute: typeof AppPipelinesRunsRoute
+  AppProposalsProposalIdRoute: typeof AppProposalsProposalIdRoute
   AppReferenceSourcesRoute: typeof AppReferenceSourcesRoute
   AppReferenceWorkflowsRoute: typeof AppReferenceWorkflowsRoute
   AppSchemaClassesRoute: typeof AppSchemaClassesRoute
@@ -609,6 +649,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppContactSheetRoute: AppContactSheetRoute,
+  AppProposalsRoute: AppProposalsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppVersioningRoute: AppVersioningRoute,
   AppIndexRoute: AppIndexRoute,
@@ -616,6 +657,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDataIndividualsRoute: AppDataIndividualsRoute,
   AppPipelinesReviewRoute: AppPipelinesReviewRoute,
   AppPipelinesRunsRoute: AppPipelinesRunsRoute,
+  AppProposalsProposalIdRoute: AppProposalsProposalIdRoute,
   AppReferenceSourcesRoute: AppReferenceSourcesRoute,
   AppReferenceWorkflowsRoute: AppReferenceWorkflowsRoute,
   AppSchemaClassesRoute: AppSchemaClassesRoute,
