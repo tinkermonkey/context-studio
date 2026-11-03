@@ -89,15 +89,33 @@ export function ApplyResults({ proposal, operationIds, context, actions }: Apply
           <span className="apply-result__text">{row.result}</span>
           {row.operation.status === "failed" && (
             <span className="op-decision__actions">
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={actions.busy}
-                onClick={() => actions.accept([row.id])}
-                data-testid={`apply-retry-${row.id}`}
-              >
-                {row.operation.stale ? "Apply anyway" : "Retry"}
-              </Button>
+              {/* A failed edit retries with the edit; the server kept no record of it. */}
+              {(!actions.editFailed(row.operation) || actions.lastEditOf(row.id)) && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={actions.busy}
+                  onClick={() => actions.retry(row.id)}
+                  data-testid={`apply-retry-${row.id}`}
+                >
+                  {actions.lastEditOf(row.id)
+                    ? "Retry edit"
+                    : row.operation.stale
+                      ? "Apply anyway"
+                      : "Retry"}
+                </Button>
+              )}
+              {actions.editFailed(row.operation) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={actions.busy}
+                  onClick={() => actions.retry(row.id, { asProposed: true })}
+                  data-testid={`apply-as-proposed-${row.id}`}
+                >
+                  Apply as proposed
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -116,6 +134,7 @@ export function ApplyResults({ proposal, operationIds, context, actions }: Apply
 
   return (
     <Panel
+      className="apply-results"
       title="Apply results"
       subtitle={`${applied} of ${rows.length} applied`}
       headerAction={

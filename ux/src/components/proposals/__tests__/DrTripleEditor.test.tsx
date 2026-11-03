@@ -225,6 +225,63 @@ describe("editing an update", () => {
   });
 });
 
+describe("what blocks an edit", () => {
+  it("refuses an update edited back to the target's own triple", async () => {
+    renderEditor();
+    const predicate = await screen.findByTestId("operation-edit-predicate");
+    await waitFor(() => expect(predicate).toHaveValue("performs"));
+
+    await retype(predicate, "assigned-to");
+    expect(await screen.findByTestId("operation-edit-triple-error")).toHaveTextContent(
+      "business.businessrole.assigned-to.business.businessprocess is the current triple. To keep it, reject the update.",
+    );
+    expect(screen.getByTestId("operation-edit-apply")).toBeDisabled();
+  });
+
+  it("waits for the already-exists lookup before Apply edited", async () => {
+    let answer: () => void = () => {};
+    const answered = new Promise<void>((resolve) => (answer = resolve));
+    server.use(
+      http.get("*/api/properties", async () => {
+        await answered;
+        return list([]);
+      }),
+    );
+    renderEditor();
+    const source = await screen.findByTestId("operation-edit-source");
+    await waitFor(() => expect(source).toHaveValue("business.businessrole"));
+
+    expect(screen.getByTestId("operation-edit-apply")).toBeDisabled();
+    answer();
+    await waitFor(() => expect(screen.getByTestId("operation-edit-apply")).toBeEnabled());
+  });
+
+  it("can't edit without the predicate catalog, but can still delete as proposed", async () => {
+    const user = userEvent.setup();
+    render(
+      <DrTripleEditor
+        operation={remove}
+        proposal={proposal}
+        taxonomy={{ ...taxonomy, external_references: [] }}
+        current={current}
+        onApply={vi.fn().mockResolvedValue({})}
+        onCancel={vi.fn()}
+      />,
+    );
+    await screen.findByTestId("operation-edit-source");
+
+    expect(await screen.findByTestId("operation-edit-no-catalog")).toHaveTextContent(
+      "The DR spec was imported without its predicate catalog; re-import it to edit triples.",
+    );
+    expect(screen.queryByTestId("operation-edit-valid")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Apply replacement" })).toBeDisabled();
+
+    await user.click(screen.getByRole("radio", { name: "Delete as proposed" }));
+    expect(screen.queryByTestId("operation-edit-no-catalog")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Accept delete" })).toBeEnabled();
+  });
+});
+
 describe("replacing a delete", () => {
   it("sends a replacement as an edit, which applies as an update", async () => {
     const user = userEvent.setup();

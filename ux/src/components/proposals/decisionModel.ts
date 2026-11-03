@@ -134,7 +134,7 @@ export interface DrSpec {
   /** Spec node id (e.g. "business.businessrole") -> class id. */
   classIdByNode: Map<string, string>;
   nodeByClassId: Map<string, string>;
-  /** The predicate catalog; undefined when the import stored none (the server checks then). */
+  /** The predicate catalog; undefined when the import stored none (no edit can apply then). */
   predicates?: Set<string>;
 }
 
@@ -248,16 +248,27 @@ export interface ExistingProperty {
   range_class_id?: string | null;
 }
 
+export const NO_CATALOG =
+  "The DR spec was imported without its predicate catalog; re-import it to edit triples.";
+
 export interface TripleErrors {
   source?: string;
   predicate?: string;
   destination?: string;
   /** About the triple as a whole: it already exists, or another operation makes it. */
   triple?: string;
+  /** No predicate catalog: the server refuses every edit until the DR spec is re-imported. */
+  catalog?: string;
 }
 
 export function hasTripleErrors(errors: TripleErrors): boolean {
-  return !!(errors.source || errors.predicate || errors.destination || errors.triple);
+  return !!(
+    errors.source ||
+    errors.predicate ||
+    errors.destination ||
+    errors.triple ||
+    errors.catalog
+  );
 }
 
 /**
@@ -280,9 +291,12 @@ export function checkDrTriple(
     operation: ProposedOperation;
     others: ProposedOperation[];
     current?: DrTriple;
+    /** An update's proposed triple: editing back to it applies as proposed. */
+    proposed?: DrTriple;
   },
 ): TripleErrors {
   const errors: TripleErrors = {};
+  if (!spec.predicates) errors.catalog = NO_CATALOG;
   const end = (node: string) =>
     !node ? "Required" : spec.classIdByNode.has(node) ? undefined : `No class ${node} in dr_spec`;
   errors.source = end(triple.source);
@@ -297,8 +311,8 @@ export function checkDrTriple(
 
   const id = drTripleId(triple);
   const { operation } = context;
-  if (operation.op === "delete" && sameDrTriple(triple, context.current)) {
-    errors.triple = `${id} is the current triple. To keep it, reject the delete.`;
+  if (sameDrTriple(triple, context.current) && !sameDrTriple(triple, context.proposed)) {
+    errors.triple = `${id} is the current triple. To keep it, reject the ${operation.op}.`;
     return errors;
   }
   const domain = spec.classIdByNode.get(triple.source);

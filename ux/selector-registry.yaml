@@ -3094,6 +3094,9 @@ selectors:
   - selector: operation-edit-triple-error
     component: src/components/proposals/DrTripleEditor.tsx
     description: "Error callout: the triple already exists, another operation makes it, or a replacement keeps the current one"
+  - selector: operation-edit-no-catalog
+    component: src/components/proposals/DrTripleEditor.tsx
+    description: "Error callout when dr_spec has no predicate catalog: no edit can apply until it is re-imported"
   - selector: operation-edit-server-error
     component: src/components/proposals/DrTripleEditor.tsx
     description: "The server's refusal of the last edited apply, until the next change"
@@ -3138,7 +3141,10 @@ selectors:
     description: "What an operation made or changed, or \"<code>: <detail>\" on a failure, by operation id"
   - selector: apply-retry-*
     component: src/components/proposals/ApplyResults.tsx
-    description: "Applies a failed operation again (Apply anyway when stale), by operation id"
+    description: "Applies a failed operation again: with its last edit (Retry edit), else Retry / Apply anyway, by operation id"
+  - selector: apply-as-proposed-*
+    component: src/components/proposals/ApplyResults.tsx
+    description: "Applies an operation whose edit failed as proposed, without the edit, by operation id"
   - selector: apply-reject-*
     component: src/components/proposals/ApplyResults.tsx
     description: "Rejects a failed operation, by operation id"

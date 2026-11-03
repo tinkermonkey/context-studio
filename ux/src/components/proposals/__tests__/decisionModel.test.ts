@@ -255,6 +255,27 @@ describe("checkDrTriple", () => {
     );
   });
 
+  it("refuses an update edited back to the current triple, but not to the proposed one", () => {
+    const now = triple("business.businessrole", "assigned-to", "business.businessprocess");
+    const proposed = triple("business.businessrole", "performs", "business.businessprocess");
+    expect(check(now, { current: now, proposed }).triple).toBe(
+      "business.businessrole.assigned-to.business.businessprocess is the current triple. To keep it, reject the update.",
+    );
+    // An update that leaves the triple alone proposes the current triple itself.
+    expect(check(now, { current: now, proposed: now }).triple).toBeUndefined();
+  });
+
+  it("refuses every edit without a predicate catalog", () => {
+    const noCatalog = { ...spec, predicates: undefined };
+    const errors = checkDrTriple(
+      triple("business.businessevent", "triggers", "business.businessprocess"),
+      noCatalog,
+      { operation: update, others: [update] },
+    );
+    expect(errors.catalog).toMatch(/imported without its predicate catalog/);
+    expect(hasTripleErrors(errors)).toBe(true);
+  });
+
   it("refuses a delete's replacement that is the current triple", () => {
     const remove = op({ ...update, op: "delete", fields: {} });
     const now = triple("business.businessrole", "assigned-to", "business.businessprocess");

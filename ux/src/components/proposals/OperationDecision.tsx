@@ -39,11 +39,19 @@ export function OperationDecision({
   const editable = !!taxonomy && isDrEditable(operation, taxonomy.identifier);
   const failed = operation.status === "failed";
   const noteId = `operation-reject-note-${operation.id}`;
-  const acceptLabel = operation.stale ? "Apply anyway" : failed ? "Apply again" : "Accept";
+  // After a failed edit the generic button applies the proposal, not the edit.
+  const editFailed = actions.editFailed(operation);
+  const acceptLabel = editFailed
+    ? "Apply as proposed"
+    : operation.stale
+      ? "Apply anyway"
+      : failed
+        ? "Apply again"
+        : "Accept";
 
   return (
     <InspectorPanel.Section title="Decision">
-      <div className="op-inspector__stack" data-testid="operation-decision">
+      <div className="op-inspector__stack op-decision" data-testid="operation-decision">
         {operation.stale && (
           <FormCallout variant="warn" icon="alert" data-testid="operation-stale-callout">
             {staleCause?.gone
@@ -53,7 +61,9 @@ export function OperationDecision({
         )}
         {failed && !operation.stale && (
           <FormCallout variant="error" icon="alert" data-testid="operation-failed-callout">
-            The last apply failed (the reason is under Change). Apply it again, or reject it.
+            {editFailed
+              ? "The edit wasn't applied (the reason is under Change). Edit it again, apply the proposal as it stands, or reject it."
+              : "The last apply failed (the reason is under Change). Apply it again, or reject it."}
           </FormCallout>
         )}
 
@@ -63,8 +73,9 @@ export function OperationDecision({
             proposal={proposal}
             taxonomy={taxonomy}
             current={current}
+            lastEdit={actions.lastEditOf(operation.id)}
             busy={actions.busy}
-            onApply={(edits) => actions.accept([operation.id], edits)}
+            onApply={(edits) => actions.accept([operation.id], { edits })}
             onCancel={() => setEditing(false)}
           />
         ) : (

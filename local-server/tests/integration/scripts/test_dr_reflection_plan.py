@@ -26,6 +26,8 @@ from collections import Counter
 from pathlib import Path
 
 import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
 
 from adapters.events.in_process import InProcessEventPublisher
@@ -40,6 +42,7 @@ from adapters.persistence.sqlite.connection import create_local_db_engine
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
+from adapters.web.proposals_routes import router as proposals_router
 from domain.ontology.services import OntologyService
 from domain.versioning.proposal_service import OperationDraft, ProposalService
 from domain.versioning.proposals import (
@@ -558,12 +561,19 @@ def test_an_edited_rename_applies_the_reviewers_triple(parts):
         "range_class_id": delivers.range_class_id,
         "identifier": "operation_uses_response",
         "title": "api.operation uses api.response",
+        # The spec's default description follows the triple too.
+        "description": "Defines relationship: api.operation uses api.response",
         "external_references": [
             {"source": DR_SOURCE, "identifier": new_id, "uri": None, "metadata": None}
         ],
     }
     assert stored.fields["canonical_predicate"] == "aggregates"  # the proposal is kept
     assert stored.scope is ChangeScope.BREAKING
+    # The base keeps what the applied fields replaced, so the change reads before -> after.
+    assert stored.base["canonical_predicate"] == delivers.canonical_predicate
+    assert stored.base["identifier"] == delivers.identifier
+    assert stored.base["domain_class_id"] == delivers.domain_class_id
+    assert stored.base["range_class_id"] == delivers.range_class_id
 
 
 def test_a_delete_replaced_by_a_triple_applies_as_an_update(parts):
@@ -586,6 +596,56 @@ def test_a_delete_replaced_by_a_triple_applies_as_an_update(parts):
     assert prop.title == "Media type headers"
     assert prop.range_class_id == class_by_dr_id(repo, "api.header").id
     assert prop.identifier == "mediatype_aggregates_header"
+
+
+def default_description(relationship_id):
+    source, predicate, destination = (
+        ".".join(relationship_id.split(".")[:2]),
+        relationship_id.split(".")[2],
+        ".".join(relationship_id.split(".")[3:]),
+    )
+    return f"Defines relationship: {source} {predicate} {destination}"
+
+
+@pytest.mark.parametrize("seq", [14, 1], ids=["update", "delete"])
+def test_a_default_description_follows_an_edited_triple(parts, seq):
+    ontology, repo, proposals = parts
+    proposal = import_reflection_plan(plan_for(seq), proposals, repo)
+    op = proposal.operations[0]
+    target = repo.get_property_definition(op.target_id)
+    old_id = dr_relationship_id(target.external_references)
+    ontology.update_property_definition(target.id, description=default_description(old_id))
+    edit = edit_triple(repo, predicate="uses")
+
+    # Its base predates the description change, so it is stale: force it.
+    applied = proposals.apply(
+        proposal.id, [op.id], force_stale=[op.id], edits={op.id: edit}
+    ).operations[0]
+
+    assert applied.status is OperationStatus.APPLIED, applied.reason
+    new_id = dr_relationship_id(repo.get_property_definition(target.id).external_references)
+    assert new_id.split(".")[2] == "uses"
+    prop = repo.get_property_definition(target.id)
+    assert prop.description == default_description(new_id)
+    assert applied.applied_fields["description"] == default_description(new_id)
+
+
+def test_a_curated_description_stays_when_the_triple_is_edited(parts):
+    ontology, repo, proposals = parts
+    proposal = import_reflection_plan(plan_for(14), proposals, repo)
+    op = proposal.operations[0]
+    ontology.update_property_definition(op.target_id, description="What an operation returns.")
+
+    applied = proposals.apply(
+        proposal.id,
+        [op.id],
+        force_stale=[op.id],
+        edits={op.id: edit_triple(repo, predicate="uses")},
+    ).operations[0]
+
+    assert applied.status is OperationStatus.APPLIED, applied.reason
+    assert "description" not in applied.applied_fields
+    assert repo.get_property_definition(op.target_id).description == "What an operation returns."
 
 
 def test_an_edit_keeping_the_triple_carries_it_whole(parts):
@@ -907,6 +967,40 @@ def test_decisions_export_reports_what_was_applied(parts):
     assert "fields" not in decisions[2] and decisions[2]["status"] == "applied"
     assert "fields" not in decisions[13] and decisions[13]["status"] == "rejected"
     json.dumps(list(decisions.values()))
+
+
+def test_a_dr_edit_applied_over_http_exports_its_fields(parts):
+    _, repo, proposals = parts
+    app = FastAPI()
+    app.include_router(proposals_router)
+    app.state.proposal_service = proposals
+    client = TestClient(app)
+    proposal = import_reflection_plan(plan_for(14), proposals, repo)  # delivers -> aggregates
+    op = proposal.operations[0]
+
+    response = client.post(
+        f"/api/proposals/{proposal.id}/apply",
+        json={"operation_ids": [op.id], "edits": {op.id: edit_triple(repo, predicate="uses")}},
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["operations"][0]["status"] == "applied"
+    decisions = client.get(f"/api/proposals/{proposal.id}/decisions")
+    assert decisions.status_code == 200
+    assert decisions.json() == [
+        {
+            "seq": 14,
+            "op_id": op.id,
+            "status": "applied",
+            "fields": {
+                "predicate": "uses",
+                "source_spec_node_id": "api.operation",
+                "destination_spec_node_id": "api.response",
+            },
+            "reason": None,
+            "result_entity_id": op.target_id,
+        }
+    ]
 
 
 def test_a_failed_edit_exports_as_failed_without_fields(parts):

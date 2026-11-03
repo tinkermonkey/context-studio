@@ -15,10 +15,11 @@ import {
   drTriplesOf,
   hasTripleErrors,
   sameDrTriple,
+  type DrSpec,
   type DrTriple,
 } from "./decisionModel";
 import type { TripleSource } from "./proposalModel";
-import type { Edits } from "./useProposalActions";
+import type { ApplyOutcome, Edits } from "./useProposalActions";
 import "./proposals.css";
 
 type Taxonomy = components["schemas"]["TaxonomyResponse"];
@@ -29,6 +30,16 @@ const PARTS: { part: Part; label: string; hint: string }[] = [
   { part: "predicate", label: "Predicate", hint: "from the catalog" },
   { part: "destination", label: "Destination", hint: "a dr_spec class" },
 ];
+
+/** The triple an edit (Context Studio fields) names, by spec node; undefined if it can't. */
+function editedTriple(edit: Record<string, unknown>, spec: DrSpec): DrTriple | undefined {
+  const source = spec.nodeByClassId.get(String(edit.domain_class_id));
+  const destination = spec.nodeByClassId.get(String(edit.range_class_id));
+  const predicate = edit.canonical_predicate;
+  return source && destination && typeof predicate === "string"
+    ? { source, predicate, destination }
+    : undefined;
+}
 
 /** Server reasons an edited apply records on the operation (it stays open). */
 const EDIT_FAILURE = /^(invalid_edit|refused): /;
@@ -53,8 +64,10 @@ interface DrTripleEditorProps {
   taxonomy: Taxonomy;
   /** The target property definition as it stands now, once loaded. */
   current?: TripleSource;
+  /** The edit this operation's last apply sent (it failed): the editor starts from it. */
+  lastEdit?: Record<string, unknown>;
   /** Apply the operation with these edits (undefined: as proposed). */
-  onApply: (edits?: Edits) => Promise<{ error?: unknown }>;
+  onApply: (edits?: Edits) => Promise<ApplyOutcome>;
   onCancel: () => void;
   busy?: boolean;
 }
@@ -71,6 +84,7 @@ export function DrTripleEditor({
   proposal,
   taxonomy,
   current,
+  lastEdit,
   onApply,
   onCancel,
   busy,
@@ -85,7 +99,8 @@ export function DrTripleEditor({
     () => (spec ? drTriplesOf(operation, spec, current) : {}),
     [spec, operation, current],
   );
-  const start = isDelete ? triples.current : triples.proposed;
+  const retried = spec && lastEdit ? editedTriple(lastEdit, spec) : undefined;
+  const start = retried ?? (isDelete ? triples.current : triples.proposed);
 
   const [mode, setMode] = useState<"replace" | "delete">("replace");
   const [draft, setDraft] = useState<DrTriple | undefined>();
@@ -100,6 +115,8 @@ export function DrTripleEditor({
     { domain_class_id: sourceClassId, limit: 500 },
     { enabled: !!sourceClassId },
   );
+  // Until the lookup answers, "already exists" can't be checked.
+  const checkingExisting = !!sourceClassId && !fromSource;
 
   const errors =
     spec && replacing
@@ -108,11 +125,12 @@ export function DrTripleEditor({
           operation,
           others: proposal.operations,
           current: triples.current,
+          proposed: triples.proposed,
         })
       : {};
   // An update edited back to the proposed triple applies as proposed (no edit).
   const edited = replacing && !(isDelete ? false : sameDrTriple(values, triples.proposed));
-  const blocked = !spec || (replacing && hasTripleErrors(errors)) || busy;
+  const blocked = !spec || (replacing && (hasTripleErrors(errors) || checkingExisting)) || busy;
 
   // The server's refusal of the last apply, until the reviewer changes something.
   const reason = operation.reason ?? "";
@@ -129,7 +147,9 @@ export function DrTripleEditor({
     if (blocked || !spec) return;
     setServerError(undefined);
     const edits = edited ? { [operation.id]: drEditFields(values, spec) } : undefined;
-    const { error } = await onApply(edits);
+    const { error, cancelled } = await onApply(edits);
+    // A cancelled Apply anyway sent nothing: an older reason stays hidden.
+    if (cancelled) return;
     if (error) setServerError(error instanceof ApiError ? error.detail : String(error));
     else setShowReason(true);
   };
@@ -191,6 +211,12 @@ export function DrTripleEditor({
           aria-label="Delete or replace"
           data-testid="operation-edit-mode"
         />
+      )}
+
+      {replacing && errors.catalog && (
+        <FormCallout variant="error" icon="alert" data-testid="operation-edit-no-catalog">
+          {errors.catalog}
+        </FormCallout>
       )}
 
       {classesFailed && (

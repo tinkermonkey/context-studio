@@ -70,6 +70,36 @@ afterEach(() => {
 });
 afterAll(() => server.close());
 
+/** dr_spec classes with DR references, and a taxonomy holding the predicate catalog. */
+function useDrSpec() {
+  const dr = (identifier: string) => [{ source: "documentation_robotics", identifier }];
+  server.use(
+    http.get("*/api/classes", () =>
+      HttpResponse.json({
+        items: [
+          { ...component, external_references: dr("application.component") },
+          { ...serviceClass, external_references: dr("application.service") },
+        ],
+        total: 2,
+        limit: 500,
+        offset: 0,
+      }),
+    ),
+    http.get("*/api/taxonomies/:id", () =>
+      HttpResponse.json({
+        ...taxonomy,
+        external_references: [
+          {
+            source: "documentation_robotics",
+            identifier: "spec",
+            metadata: { predicates: { realizes: {}, serves: {}, uses: {} } },
+          },
+        ],
+      }),
+    ),
+  );
+}
+
 function renderPage(selectedOperationId?: string) {
   return render(
     <ProposalDetailPage
@@ -117,20 +147,7 @@ describe("deciding one operation in the inspector", () => {
 
   it("edits a DR triple, then accepts it: the edit is sent and the result is marked edited", async () => {
     const user = userEvent.setup();
-    const dr = (identifier: string) => [{ source: "documentation_robotics", identifier }];
-    server.use(
-      http.get("*/api/classes", () =>
-        HttpResponse.json({
-          items: [
-            { ...component, external_references: dr("application.component") },
-            { ...serviceClass, external_references: dr("application.service") },
-          ],
-          total: 2,
-          limit: 500,
-          offset: 0,
-        }),
-      ),
-    );
+    useDrSpec();
     renderPage("op-rename");
 
     await user.click(await screen.findByRole("button", { name: "Edit, then accept" }));
@@ -171,6 +188,105 @@ describe("deciding one operation in the inspector", () => {
     renderPage("op-class");
     await screen.findByTestId("operation-decision");
     expect(screen.queryByTestId("operation-edit")).not.toBeInTheDocument();
+  });
+});
+
+describe("a failed edit", () => {
+  const replacement = {
+    canonical_predicate: "uses",
+    domain_class_id: "class-1",
+    range_class_id: "class-2",
+  };
+
+  async function replaceDelete(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(await screen.findByRole("button", { name: "Replace instead" }));
+    const predicate = await screen.findByTestId("operation-edit-predicate");
+    await waitFor(() => expect(predicate).toHaveValue("realizes"));
+    await user.clear(predicate);
+    await user.type(predicate, "uses");
+    await waitFor(() => expect(screen.getByTestId("operation-edit-apply")).toBeEnabled());
+    await user.click(screen.getByRole("button", { name: "Apply replacement" }));
+  }
+
+  it("retries with the edit, never quietly as the proposed delete", async () => {
+    const user = userEvent.setup();
+    useDrSpec();
+    proposal.operations[1].stale = false;
+    failures = { "op-delete": "invalid_edit: seq 9 also produces it" };
+    renderPage("op-delete");
+
+    await replaceDelete(user);
+    await waitFor(() => expect(applied).toHaveLength(1));
+    expect(applied[0]).toEqual({
+      operation_ids: ["op-delete"],
+      force_stale: [],
+      edits: { "op-delete": replacement },
+    });
+    // Its failure is the edit's: the generic button says it applies the proposal.
+    expect(await screen.findByTestId("apply-retry-op-delete")).toHaveTextContent("Retry edit");
+    expect(screen.getByTestId("apply-as-proposed-op-delete")).toHaveTextContent(
+      "Apply as proposed",
+    );
+
+    failures = {};
+    await user.click(screen.getByTestId("apply-retry-op-delete"));
+    await waitFor(() => expect(applied).toHaveLength(2));
+    expect(applied[1]).not.toEqual({ operation_ids: ["op-delete"], force_stale: [], edits: {} });
+    expect(applied[1]).toEqual({
+      operation_ids: ["op-delete"],
+      force_stale: [],
+      edits: { "op-delete": replacement },
+    });
+  });
+
+  it("after a reload offers Apply as proposed, not a plain retry", async () => {
+    Object.assign(proposal.operations[1], {
+      status: "failed",
+      stale: false,
+      reason: "invalid_edit: predicate 'x' is not in the DR predicate catalog",
+    });
+    renderPage("op-delete");
+    expect(await screen.findByTestId("operation-accept")).toHaveTextContent("Apply as proposed");
+  });
+
+  it("keeps the edit through Apply anyway; a cancel shows no old reason, a 422 reaches the editor", async () => {
+    const user = userEvent.setup();
+    useDrSpec();
+    Object.assign(proposal.operations[1], {
+      status: "failed",
+      reason: "invalid_edit: an older refusal",
+    });
+    renderPage("op-delete");
+
+    await replaceDelete(user);
+    await user.click(
+      within(await screen.findByRole("dialog")).getByRole("button", { name: "Cancel" }),
+    );
+    expect(applied).toHaveLength(0);
+    expect(screen.queryByTestId("operation-edit-server-error")).not.toBeInTheDocument();
+
+    server.use(
+      http.post("*/api/proposals/:id/apply", async ({ request }) => {
+        applied.push((await request.json()) as Record<string, unknown>);
+        return HttpResponse.json(
+          { detail: "Edits for operations not being applied" },
+          { status: 422 },
+        );
+      }),
+    );
+    await user.click(screen.getByRole("button", { name: "Apply replacement" }));
+    await user.click(
+      within(await screen.findByRole("dialog")).getByRole("button", { name: "Apply anyway" }),
+    );
+    await waitFor(() => expect(applied).toHaveLength(1));
+    expect(applied[0]).toEqual({
+      operation_ids: ["op-delete"],
+      force_stale: ["op-delete"],
+      edits: { "op-delete": replacement },
+    });
+    expect(await screen.findByTestId("operation-edit-server-error")).toHaveTextContent(
+      "Not applied: Edits for operations not being applied",
+    );
   });
 });
 
@@ -342,7 +458,11 @@ describe("accept all and the results", () => {
     await user.click(screen.getByTestId("apply-retry-op-class"));
     await waitFor(() => expect(applied).toHaveLength(2));
     expect(applied[1]).toEqual({ operation_ids: ["op-class"], force_stale: [], edits: {} });
-    expect(await screen.findByTestId("apply-results-ok")).toHaveTextContent("Applied 1 of 1.");
+    // The retry joins the batch's outcomes instead of replacing them.
+    expect(await screen.findByTestId("apply-results-ok")).toHaveTextContent("Applied 2 of 2.");
+    expect(screen.getByTestId("apply-result-op-rename")).toHaveTextContent(
+      "component_serves_service",
+    );
   });
 
   it("confirms Reject all awaiting before rejecting every pending and failed operation", async () => {

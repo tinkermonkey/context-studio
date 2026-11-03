@@ -91,6 +91,7 @@ export function RevertConflict({ proposal, conflict, onDismiss }: RevertConflict
           Close
         </Button>
       }
+      className="revert-conflict"
       data-testid="revert-conflict"
     >
       <div className="stack-lg">

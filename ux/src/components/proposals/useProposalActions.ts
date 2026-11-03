@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   useApplyChangeProposal,
   useExportProposalDecisions,
@@ -6,18 +6,37 @@ import {
   useRevertChangeProposal,
 } from "@/api/hooks/proposals";
 import { ApiError } from "@/api/client/interceptors";
-import type { ChangeProposal, ChangeProposalRevertConflict } from "@/api/services/proposals";
+import type {
+  ChangeProposal,
+  ChangeProposalRevertConflict,
+  ProposedOperation,
+} from "@/api/services/proposals";
 import { useToasts } from "@/components/ui/Toast";
 import { downloadJson } from "@/lib/download";
 import { revertConflictOf, splitStale } from "./decisionModel";
 
 export type Edits = Record<string, Record<string, unknown>>;
 
-/** An apply that includes stale operations, waiting for the reviewer to confirm Apply anyway. */
-export interface ForceRequest {
-  operationIds: string[];
-  edits?: Edits;
+/** How an apply ended: the server's error, or the reviewer cancelled the Apply anyway. */
+export interface ApplyOutcome {
+  error?: unknown;
+  cancelled?: boolean;
 }
+
+interface ApplyOptions {
+  edits?: Edits;
+  /** Add these outcomes to the results view instead of replacing it (a retry from it). */
+  merge?: boolean;
+}
+
+/** An apply that includes stale operations, waiting for the reviewer to confirm Apply anyway. */
+export interface ForceRequest extends ApplyOptions {
+  operationIds: string[];
+  settle: (outcome: ApplyOutcome) => void;
+}
+
+/** Reasons an edited apply leaves on the operation: the edit, not the proposal, failed. */
+const EDIT_FAILURE = /^(invalid_edit|refused): /;
 
 function message(error: unknown): string {
   if (error instanceof ApiError) return error.detail;
@@ -39,20 +58,34 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
   const exportDecisions = useExportProposalDecisions();
   const [lastApplied, setLastApplied] = useState<string[] | null>(null);
   const [forceRequest, setForceRequest] = useState<ForceRequest | null>(null);
+  // The waiting request, claimed once: by Apply anyway or by Cancel, whichever comes first.
+  const pendingForce = useRef<ForceRequest | null>(null);
   const [revertConflict, setRevertConflict] = useState<ChangeProposalRevertConflict | null>(null);
+  // The edit each operation's last apply sent: the server keeps none for a failed one.
+  const [lastEdits, setLastEdits] = useState<Edits>({});
   const id = proposal?.id ?? "";
 
   const send = async (
     operationIds: string[],
     forceStale: string[],
-    edits: Edits = {},
-  ): Promise<{ error?: unknown }> => {
+    { edits = {}, merge = false }: ApplyOptions = {},
+  ): Promise<ApplyOutcome> => {
+    setLastEdits((previous) => {
+      const next = { ...previous };
+      for (const opId of operationIds) {
+        if (edits[opId]) next[opId] = edits[opId];
+        else delete next[opId];
+      }
+      return next;
+    });
     try {
       await apply.mutateAsync({
         id,
         data: { operation_ids: operationIds, force_stale: forceStale, edits },
       });
-      setLastApplied(operationIds);
+      setLastApplied((previous) =>
+        merge && previous ? [...new Set([...previous, ...operationIds])] : operationIds,
+      );
       setRevertConflict(null);
       return {};
     } catch (error) {
@@ -62,17 +95,38 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
 
   /**
    * Apply operations as they are (or with `edits`). Stale ones among them
-   * wait for the Apply anyway confirmation instead; the rest apply now.
+   * wait for the Apply anyway confirmation instead; the rest apply then.
+   * Settles once the apply does, or when the confirmation is cancelled.
    */
-  const accept = async (operationIds: string[], edits?: Edits): Promise<{ error?: unknown }> => {
+  const accept = async (
+    operationIds: string[],
+    options: ApplyOptions = {},
+  ): Promise<ApplyOutcome> => {
     if (!proposal) return {};
     const { fresh, stale } = splitStale(proposal.operations, operationIds);
     if (stale.length > 0) {
-      setForceRequest({ operationIds: [...fresh, ...stale], edits });
-      return {};
+      return new Promise((settle) => {
+        const request = { ...options, operationIds: [...fresh, ...stale], settle };
+        pendingForce.current = request;
+        setForceRequest(request);
+      });
     }
     if (fresh.length === 0) return {};
-    return send(fresh, [], edits);
+    return send(fresh, [], options);
+  };
+
+  /** The edit this operation's last apply sent, if any. */
+  const lastEditOf = (opId: string) => lastEdits[opId];
+
+  /** True when the operation's last apply was an edit, or its failure is the edit's. */
+  const editFailed = (operation: ProposedOperation) =>
+    operation.status === "failed" &&
+    (!!lastEdits[operation.id] || EDIT_FAILURE.test(operation.reason ?? ""));
+
+  /** Apply a failed operation again from the results: with its last edit, if it had one. */
+  const retry = (opId: string, { asProposed = false } = {}) => {
+    const edit = asProposed ? undefined : lastEdits[opId];
+    return accept([opId], { edits: edit ? { [opId]: edit } : undefined, merge: true });
   };
 
   /** Accept the operations that need no confirmation; stale ones are left for Apply anyway. */
@@ -82,12 +136,20 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
     if (fresh.length > 0) await send(fresh, []);
   };
 
-  const confirmForce = async (): Promise<{ error?: unknown }> => {
-    const request = forceRequest;
+  const confirmForce = async () => {
+    const request = pendingForce.current;
+    pendingForce.current = null;
     setForceRequest(null);
-    if (!request || !proposal) return {};
+    if (!request || !proposal) return;
     const { stale } = splitStale(proposal.operations, request.operationIds);
-    return send(request.operationIds, stale, request.edits);
+    request.settle(await send(request.operationIds, stale, request));
+  };
+
+  const cancelForce = () => {
+    const request = pendingForce.current;
+    pendingForce.current = null;
+    request?.settle({ cancelled: true });
+    setForceRequest(null);
   };
 
   const rejectOperations = async (operationIds: string[], note?: string) => {
@@ -143,7 +205,10 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
     downloadDecisions,
     forceRequest,
     confirmForce,
-    cancelForce: () => setForceRequest(null),
+    cancelForce,
+    retry,
+    lastEditOf,
+    editFailed,
     /** Operation ids the last apply sent; null until one ran (or after a revert). */
     lastApplied,
     closeResults: () => setLastApplied(null),

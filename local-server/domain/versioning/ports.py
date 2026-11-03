@@ -307,7 +307,7 @@ class ChangeProposalRepository(Protocol):
         ...
 
     def save_operations(self, proposal_id: str, operations: Sequence[ProposedOperation]) -> None:
-        """Persist the status, result, reason, scope and applied fields of these operations.
+        """Persist the status, result, reason, scope, base and applied fields of these operations.
 
         Raises ValueError for an unknown proposal or operation.
         """

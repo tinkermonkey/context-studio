@@ -6,12 +6,15 @@ interface ProposalSearch {
   op?: string;
 }
 
-function ProposalRoute() {
+/**
+ * One proposal's page. Keyed by proposal: checked operations, the threshold,
+ * results and a revert conflict reset when moving to another one.
+ */
+export function ProposalPage({ proposalId, op }: { proposalId: string; op?: string }) {
   const navigate = useNavigate();
-  const { proposalId } = Route.useParams();
-  const { op } = Route.useSearch();
   return (
     <ProposalDetailPage
+      key={proposalId}
       id={proposalId}
       selectedOperationId={op}
       onSelectOperation={(operationId) =>
@@ -24,6 +27,12 @@ function ProposalRoute() {
       }
     />
   );
+}
+
+function ProposalRoute() {
+  const { proposalId } = Route.useParams();
+  const { op } = Route.useSearch();
+  return <ProposalPage proposalId={proposalId} op={op} />;
 }
 
 export const Route = createFileRoute("/app/proposals_/$proposalId")({
