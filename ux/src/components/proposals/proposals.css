@@ -323,4 +323,235 @@
     color: var(--accent-rose);
     font-weight: 600;
   }
+
+  /* ============= Decisions (#1361) ============= */
+  .proposal-summary__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-left: auto;
+    font-family: var(--font-sans);
+  }
+
+  /* Muted: a probability below the threshold. */
+  .op-probability--below {
+    color: rgb(var(--canvas-fg-4));
+    font-weight: 400;
+  }
+
+  /* Threshold bar and the selection bar. */
+  .proposal-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    align-items: center;
+    padding: 10px 14px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 8px;
+    background: rgb(var(--canvas-bg-2));
+  }
+
+  .proposal-bar--selection {
+    border-color: rgb(var(--status-amber) / 0.35);
+    background: rgb(var(--status-amber) / 0.07);
+  }
+
+  .proposal-bar__label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .proposal-bar__slider {
+    width: 220px;
+    accent-color: var(--accent-amber);
+  }
+
+  .proposal-bar__value {
+    width: 36px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .proposal-bar__count {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .proposal-bar__text {
+    font-size: 12.5px;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .proposal-bar__note {
+    margin-left: auto;
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .proposal-bar__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  .op-decision__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  /* Accept with edit, in the inspector. */
+  .op-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .op-edit__triples {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 6px 10px;
+    align-items: baseline;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .op-edit__triples dt,
+  .op-edit__label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .op-edit__triples dd {
+    margin: 0;
+  }
+
+  .op-edit__triples .op-edit__yours {
+    color: var(--accent-amber);
+    font-weight: 600;
+  }
+
+  .op-edit__muted {
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .op-edit__superseded {
+    color: rgb(var(--canvas-fg-2));
+    text-decoration: line-through;
+  }
+
+  .op-edit__removed {
+    color: var(--accent-rose);
+    font-weight: 600;
+  }
+
+  /* Triple ids have no spaces; let them wrap inside the editor's callouts. */
+  .op-edit .form-callout__body {
+    overflow-wrap: anywhere;
+  }
+
+  .op-edit__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .op-edit__label {
+    margin-bottom: 6px;
+  }
+
+  .op-edit__preview {
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 6px;
+    background: rgb(var(--canvas-bg-2));
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  /* Apply results. */
+  .apply-result {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .apply-result__text {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-2));
+    overflow-wrap: anywhere;
+  }
+
+  /* Stale confirmation. */
+  .proposal-force-list {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+  }
+
+  /* Blocked revert. */
+  .revert-conflict__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+
+  .revert-conflict__table th {
+    padding: 0 8px 6px 0;
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .revert-conflict__table td {
+    padding: 6px 8px 6px 0;
+    vertical-align: top;
+    border-top: 1px dashed rgb(var(--canvas-border));
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .revert-conflict__kind,
+  .revert-conflict__created {
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .revert-conflict__id {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+
+  .revert-conflict__advice {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: rgb(var(--canvas-fg-2));
+  }
 }

@@ -24,6 +24,8 @@ export interface OperationContext {
   endTitle: (end: TripleEnd, operation: ProposedOperation) => string | undefined;
   /** The current property definition an update or delete targets, once loaded. */
   currentProperty: (id: string | null | undefined) => TripleSource | undefined;
+  /** True when a property operation's target is known to be gone (the lookup found none). */
+  targetGone: (operation: ProposedOperation) => boolean;
 }
 
 type PropertyList = ReturnType<typeof usePropertiesByIds>;
@@ -79,6 +81,11 @@ export function useOperationContext(
       endTitle: (end, operation) =>
         end ? classById.get(resolveRef(end, refs?.get(operation.id)))?.title : undefined,
       currentProperty: (id) => (id ? propertyById.get(id) : undefined),
+      targetGone: (operation) =>
+        operation.kind === "property" &&
+        !!operation.target_id &&
+        propertiesLoaded &&
+        !propertyById.has(operation.target_id),
     };
   }, [classes, propertyItems, refs, propertiesLoaded, propertiesFailed]);
 }

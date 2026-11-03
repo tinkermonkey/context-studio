@@ -204,12 +204,31 @@ describe("ProposalDetailPage", () => {
     expect(scrollIntoView.mock.contexts[0]).toHaveAttribute("data-row-key", "op-class");
   });
 
-  it("is read-only: no accept, reject or edit controls", async () => {
-    renderPage("op-rename");
-    await screen.findByTestId("operation-inspector");
+  it("has no decision controls for an operation already decided", async () => {
+    renderPage("op-create");
+    const inspector = await screen.findByTestId("operation-inspector");
+    expect(within(inspector).queryByTestId("operation-decision")).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /accept|reject|edit|apply/i }),
+      within(inspector).queryByRole("button", { name: /accept|reject|edit|apply/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("is read-only once reverted: no decisions, selection, threshold or revert", async () => {
+    server.use(
+      http.get("*/api/proposals/:id", () =>
+        HttpResponse.json({ ...openProposal, status: "reverted" }),
+      ),
+    );
+    renderPage("op-rename");
+    const inspector = await screen.findByTestId("operation-inspector");
+    expect(within(inspector).queryByTestId("operation-decision")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-actions")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-threshold-bar")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("operation-check-op-rename")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /accept|reject|revert|apply/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/This proposal was reverted/)).toBeInTheDocument();
   });
 
   it("shows not found for an unknown proposal", async () => {

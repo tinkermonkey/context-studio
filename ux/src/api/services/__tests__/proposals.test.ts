@@ -5,6 +5,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
+import { ApiError } from "@/api/client/interceptors";
 import { proposalsService, type ChangeProposalCreateRequest } from "../proposals";
 import { createChangeProposal, createProposedOperation } from "./fixtures/proposals.fixtures";
 
@@ -154,6 +155,33 @@ describe("ProposalsService", () => {
     expect(reject.status).toBe("open");
     expect(bodies.reject).toEqual({ note: "no" });
     expect(revert.proposal.status).toBe("reverted");
+  });
+
+  it("keeps a refused revert's blockers on the ApiError", async () => {
+    const blocking = [{ kind: "individual", dependent_id: "ind-1", referenced_id: "class-9" }];
+    server.use(
+      http.post("*/api/proposals/proposal-1/revert", () =>
+        HttpResponse.json({ detail: { message: "Can't be reverted", blocking } }, { status: 409 }),
+      ),
+    );
+
+    const error = await proposalsService.revertProposal("proposal-1").catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({
+      status: 409,
+      detail: "Can't be reverted",
+      body: { message: "Can't be reverted", blocking },
+    });
+  });
+
+  it("gets a proposal's DR decisions", async () => {
+    const decisions = [
+      { seq: 1, op_id: "op-1", status: "applied", reason: null, result_entity_id: "p-1" },
+    ];
+    server.use(
+      http.get("*/api/proposals/proposal-1/decisions", () => HttpResponse.json(decisions)),
+    );
+    expect(await proposalsService.getDecisions("proposal-1")).toEqual(decisions);
   });
 
   it("reads and replaces a taxonomy's approval policy", async () => {

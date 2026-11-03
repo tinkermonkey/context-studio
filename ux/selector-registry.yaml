@@ -2947,7 +2947,7 @@ selectors:
   # Review queue: proposal detail (/app/proposals/$proposalId)
   - selector: proposal-page
     component: src/components/proposals/ProposalDetailPage.tsx
-    description: "Root of a proposal's read-only detail page"
+    description: "Root of a proposal's detail page"
   - selector: proposal-summary
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Summary row: status chip, tally and op mix"
@@ -2976,8 +2976,8 @@ selectors:
     component: src/components/proposals/OperationInspector.tsx
     description: "Inspector for the selected operation (Change, Rationale, Evidence)"
   - selector: operation-stale-callout
-    component: src/components/proposals/OperationInspector.tsx
-    description: "Warn callout in the inspector when the operation is stale"
+    component: src/components/proposals/OperationDecision.tsx
+    description: "Warn callout when the operation is stale: in the Decision section (what changed, Apply anyway), or under Change when it takes no decision"
   - selector: operation-reason
     component: src/components/proposals/OperationInspector.tsx
     description: "Why the operation failed or was rejected"
@@ -2993,6 +2993,167 @@ selectors:
   - selector: operation-evidence
     component: src/components/proposals/OperationInspector.tsx
     description: "Evidence quotes with claim id, entity id or url captions"
+
+  # Review queue: decisions (#1361)
+  - selector: proposal-actions
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Header actions: Export decisions, Revert proposal, Reject all awaiting, Accept all awaiting (absent once reverted)"
+  - selector: proposal-export-decisions
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Downloads DR's decisions JSON (dr_spec proposals only)"
+  - selector: proposal-revert
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Revert proposal button; opens a ConfirmDialog saying what it undoes"
+  - selector: proposal-revert-message
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "What a revert undoes, in the revert ConfirmDialog"
+  - selector: proposal-reject-all
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Reject all awaiting (pending and failed) operations, after a ConfirmDialog"
+  - selector: proposal-accept-all
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Accept all awaiting operations that aren't stale"
+  - selector: proposal-force-message
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Apply anyway ConfirmDialog body: each stale operation and what changed, or that its target is gone"
+  - selector: operation-check-*
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Selection checkbox of an operation row, by operation id (disabled once decided)"
+  - selector: operation-probability-*
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Probability cell, by operation id; op-probability--below when under the threshold"
+  - selector: proposal-threshold-bar
+    component: src/components/proposals/DecisionBars.tsx
+    description: "Probability threshold bar (hidden when no operation has a probability)"
+  - selector: proposal-threshold-slider
+    component: src/components/proposals/DecisionBars.tsx
+    description: "Probability threshold range input (0 to 1, step 0.05, default 0.60)"
+  - selector: proposal-threshold-value
+    component: src/components/proposals/DecisionBars.tsx
+    description: "The threshold as two decimals"
+  - selector: proposal-threshold-count
+    component: src/components/proposals/DecisionBars.tsx
+    description: "\"N of M awaiting at or above\""
+  - selector: proposal-threshold-select
+    component: src/components/proposals/DecisionBars.tsx
+    description: "\"Select N\": checks the awaiting, non-stale operations at or above the threshold"
+  - selector: proposal-selection-bar
+    component: src/components/proposals/DecisionBars.tsx
+    description: "Bulk bar shown while operations are checked"
+  - selector: proposal-selection-count
+    component: src/components/proposals/DecisionBars.tsx
+    description: "\"N selected\""
+  - selector: proposal-selection-clear
+    component: src/components/proposals/DecisionBars.tsx
+    description: "Unchecks every operation"
+  - selector: proposal-selection-reject
+    component: src/components/proposals/DecisionBars.tsx
+    description: "Rejects the checked operations"
+  - selector: proposal-selection-accept
+    component: src/components/proposals/DecisionBars.tsx
+    description: "Accepts the checked operations that aren't stale"
+  - selector: operation-decision
+    component: src/components/proposals/OperationDecision.tsx
+    description: "Inspector Decision section of an operation awaiting a decision"
+  - selector: operation-failed-callout
+    component: src/components/proposals/OperationDecision.tsx
+    description: "Error callout when the last apply of the operation failed"
+  - selector: operation-accept
+    component: src/components/proposals/OperationDecision.tsx
+    description: "Accept (Apply anyway when stale, Apply again when failed)"
+  - selector: operation-edit
+    component: src/components/proposals/OperationDecision.tsx
+    description: "\"Edit, then accept\" (update) or \"Replace instead\" (delete) for a DR relationship type"
+  - selector: operation-reject
+    component: src/components/proposals/OperationDecision.tsx
+    description: "Rejects the operation with the optional reason"
+  - selector: operation-reject-note
+    component: src/components/proposals/OperationDecision.tsx
+    description: "Optional reject reason, stored as the operation's reason"
+  - selector: operation-edit-panel
+    component: src/components/proposals/DrTripleEditor.tsx
+    description: "Accept-with-edit editor for a DR relationship type's triple"
+  - selector: operation-edit-triples
+    component: src/components/proposals/DrTripleEditor.tsx
+    description: "Current / Proposed / Your edit triples"
+  - selector: operation-edit-yours
+    component: src/components/proposals/DrTripleEditor.tsx
+    description: "The edited triple, with parts that differ highlighted"
+  - selector: operation-edit-mode
+    component: src/components/proposals/DrTripleEditor.tsx
+    description: "Delete as proposed / Replace with another triple (deletes only)"
+  - selector: operation-edit-source
+    component: src/components/proposals/DrTripleEditor.tsx
+    description: "Source spec node id input (dr_spec classes as suggestions)"
+  - selector: operation-edit-predicate
+    component: src/components/proposals/DrTripleEditor.tsx
+    description: "Predicate input (the predicate catalog as suggestions)"
+  - selector: operation-edit-destination
+    component: src/components/proposals/DrTripleEditor.tsx
+    description: "Destination spec node id input"
+  - selector: operation-edit-triple-error
+    component: src/components/proposals/DrTripleEditor.tsx
+    description: "Error callout: the triple already exists, another operation makes it, or a replacement keeps the current one"
+  - selector: operation-edit-server-error
+    component: src/components/proposals/DrTripleEditor.tsx
+    description: "The server's refusal of the last edited apply, until the next change"
+  - selector: operation-edit-valid
+    component: src/components/proposals/DrTripleEditor.tsx
+    description: "Info callout when the edited triple passes the checks"
+  - selector: operation-edit-apply
+    component: src/components/proposals/DrTripleEditor.tsx
+    description: "Apply edited / Apply replacement / Accept delete"
+  - selector: operation-edit-reset
+    component: src/components/proposals/DrTripleEditor.tsx
+    description: "Back to proposed: drops the edit"
+  - selector: operation-edit-cancel
+    component: src/components/proposals/DrTripleEditor.tsx
+    description: "Closes the editor"
+  - selector: operation-edit-preview
+    component: src/components/proposals/DrTripleEditor.tsx
+    description: "The decision line DR receives, as JSON (fields only on an edit)"
+  - selector: proposal-apply-results
+    component: src/components/proposals/ApplyResults.tsx
+    description: "Results panel of the last apply"
+  - selector: apply-results-close
+    component: src/components/proposals/ApplyResults.tsx
+    description: "Closes the results panel"
+  - selector: apply-results-warning
+    component: src/components/proposals/ApplyResults.tsx
+    description: "Warn callout when some operations failed"
+  - selector: apply-results-ok
+    component: src/components/proposals/ApplyResults.tsx
+    description: "Info callout when every sent operation applied"
+  - selector: apply-results-tally
+    component: src/components/proposals/ApplyResults.tsx
+    description: "StatGrid: applied / failed / pending / rejected in the proposal"
+  - selector: apply-results-table
+    component: src/components/proposals/ApplyResults.tsx
+    description: "Per-operation outcome table"
+  - selector: apply-outcome-*
+    component: src/components/proposals/ApplyResults.tsx
+    description: "Outcome chip (plus violet edited chip), by operation id"
+  - selector: apply-result-*
+    component: src/components/proposals/ApplyResults.tsx
+    description: "What an operation made or changed, or \"<code>: <detail>\" on a failure, by operation id"
+  - selector: apply-retry-*
+    component: src/components/proposals/ApplyResults.tsx
+    description: "Applies a failed operation again (Apply anyway when stale), by operation id"
+  - selector: apply-reject-*
+    component: src/components/proposals/ApplyResults.tsx
+    description: "Rejects a failed operation, by operation id"
+  - selector: revert-conflict
+    component: src/components/proposals/RevertConflict.tsx
+    description: "Why a revert was refused (409); nothing was changed"
+  - selector: revert-conflict-message
+    component: src/components/proposals/RevertConflict.tsx
+    description: "Error callout: Can't revert ... Nothing was changed."
+  - selector: revert-conflict-blockers
+    component: src/components/proposals/RevertConflict.tsx
+    description: "Blocking entities: kind, dependent id (linked to its page), the created entity it references"
+  - selector: revert-conflict-dismiss
+    component: src/components/proposals/RevertConflict.tsx
+    description: "Closes the conflict panel"
 
   # Review queue: entry points (chat card, entity pages)
   - selector: chat-proposal-card
