@@ -13,6 +13,8 @@ schema_index=None embedding-suppression contract.
 import json
 import os
 import sys
+from datetime import datetime, timezone
+from uuid import uuid4
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -20,11 +22,28 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from adapters.events.change_recorder import ChangeEventRecorder
+from adapters.events.in_process import InProcessEventPublisher
+from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.models import Base, OntologyEntity
+from adapters.persistence.sqlite.models import ChangeEvent as ChangeEventORM
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from domain.ontology.services import OntologyService
-from scripts.dr_ontology_loader import import_dr_ontology
+from domain.versioning.proposals import (
+    ChangeProposal,
+    OperationKind,
+    OperationType,
+    ProposalSource,
+    ProposedOperation,
+)
+from scripts.dr_ontology_loader import (
+    DR_TAXONOMY_IDENTIFIER,
+    find_prune_blockers,
+    import_dr_ontology,
+)
+from scripts.import_dr_ontology import report_and_prune
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 
 
@@ -438,3 +457,123 @@ class TestDesignCharterAndLayerIntent:
         assert len(summary.stale) == 1
         assert summary.stale[0].startswith("PropertyDefinition")
         assert "motivation.goal.realizes.business.businessservice" in summary.stale[0]
+
+
+def _drop_spec_files(spec_dir, pattern):
+    for path in (spec_dir / "schemas").rglob(pattern):
+        path.unlink()
+
+
+def _realizes(repo):
+    return next(p for p in repo.list_property_definitions(limit=None) if "realizes" in p.identifier)
+
+
+@pytest.fixture
+def recorded_service(repo, session_factory):
+    """An OntologyService whose deletes are recorded as change events, as the script wires it."""
+    publisher = InProcessEventPublisher()
+    ChangeEventRecorder(SQLiteChangeRepository(session_factory)).subscribe_ontology_events(
+        publisher
+    )
+    return OntologyService(
+        repository=repo,
+        embedding_service=FakeEmbeddingService(),
+        event_publisher=publisher,
+        schema_index=None,
+    )
+
+
+@pytest.fixture
+def proposals(session_factory):
+    return SQLiteChangeProposalRepository(session_factory)
+
+
+class TestPruneStale:
+    def test_prune_deletes_unused_stale_entities_and_records_the_deletes(
+        self, ontology_service, recorded_service, repo, proposals, spec_dir, session_factory
+    ):
+        import_dr_ontology(ontology_service, repo, spec_dir)
+        _drop_spec_files(spec_dir, "*realizes*.json")
+        _drop_spec_files(spec_dir, "businessservice.node.schema.json")
+        summary = import_dr_ontology(ontology_service, repo, spec_dir)
+        stale_ids = {entity.id for entity in summary.stale_entities}
+        assert len(stale_ids) == 2  # the realizes property and its range class
+
+        assert report_and_prune(summary, recorded_service, repo, proposals, prune=True)
+
+        assert repo.get_by_identifier("business_businessservice") is None
+        assert not [p for p in repo.list_property_definitions(limit=None) if p.id in stale_ids]
+        with session_factory() as session:
+            deleted = {
+                row.entity_id
+                for row in session.query(ChangeEventORM).filter(
+                    ChangeEventORM.entity_id.in_(stale_ids), ChangeEventORM.operation == "delete"
+                )
+            }
+        assert deleted == stale_ids
+        assert import_dr_ontology(ontology_service, repo, spec_dir).stale == []
+
+    def test_prune_refuses_and_deletes_nothing_when_a_relationship_uses_a_stale_property(
+        self, ontology_service, recorded_service, repo, proposals, spec_dir, capsys
+    ):
+        import_dr_ontology(ontology_service, repo, spec_dir)
+        goal = repo.get_by_identifier("motivation_goal")
+        service_class = repo.get_by_identifier("business_businessservice")
+        realizes = _realizes(repo)
+        source = ontology_service.create_individual(goal.id, "Grow revenue")
+        target = ontology_service.create_individual(service_class.id, "Billing")
+        relationship = ontology_service.create_relationship(source.id, target.id, realizes.id)
+        _drop_spec_files(spec_dir, "*realizes*.json")
+        summary = import_dr_ontology(ontology_service, repo, spec_dir)
+
+        blockers = find_prune_blockers(repo, proposals, summary.stale_entities)
+        assert blockers == [(summary.stale[0], f"relationship {relationship.id}")]
+        assert not report_and_prune(summary, recorded_service, repo, proposals, prune=True)
+
+        assert repo.get_property_definition(realizes.id) is not None
+        assert repo.get_relationship(relationship.id) is not None
+        assert f"relationship {relationship.id}" in capsys.readouterr().err
+
+    def test_prune_refuses_when_an_open_proposal_operation_names_a_stale_entity(
+        self, ontology_service, recorded_service, repo, proposals, spec_dir
+    ):
+        import_dr_ontology(ontology_service, repo, spec_dir)
+        realizes = _realizes(repo)
+        proposal = proposals.create(
+            ChangeProposal(
+                id=str(uuid4()),
+                taxonomy_id=repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER).id,
+                title="Retitle realizes",
+                source=ProposalSource.USER,
+                created_at=datetime.now(timezone.utc),
+                operations=[
+                    ProposedOperation(
+                        seq=1,
+                        op=OperationType.UPDATE,
+                        kind=OperationKind.PROPERTY,
+                        target_id=realizes.id,
+                        fields={"title": "Delivers"},
+                    )
+                ],
+            )
+        )
+        _drop_spec_files(spec_dir, "*realizes*.json")
+        summary = import_dr_ontology(ontology_service, repo, spec_dir)
+
+        blockers = find_prune_blockers(repo, proposals, summary.stale_entities)
+        assert len(blockers) == 1
+        assert f"proposal {proposal.id}" in blockers[0][1]
+        assert not report_and_prune(summary, recorded_service, repo, proposals, prune=True)
+        assert repo.get_property_definition(realizes.id) is not None
+
+    def test_without_prune_nothing_is_deleted(
+        self, ontology_service, recorded_service, repo, proposals, spec_dir, capsys
+    ):
+        import_dr_ontology(ontology_service, repo, spec_dir)
+        _drop_spec_files(spec_dir, "*realizes*.json")
+        summary = import_dr_ontology(ontology_service, repo, spec_dir)
+
+        assert report_and_prune(summary, recorded_service, repo, proposals, prune=False)
+
+        assert repo.get_property_definition(summary.stale_entities[0].id) is not None
+        assert "not deleted" in capsys.readouterr().out
