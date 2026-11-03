@@ -1,11 +1,19 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { QUERY_KEYS } from "@/api/config";
 import { createTestQueryClient, render } from "@/test/test-utils";
 import { entityPageHandlers } from "@/test/entityPageHandlers";
-import { proposalHandlers } from "@/test/proposalFixtures";
+import { createProposedOperation } from "@/api/services/__tests__/fixtures/proposals.fixtures";
+import {
+  classOperation,
+  deleteOperation,
+  openProposal,
+  proposalHandlers,
+  renameOperation,
+} from "@/test/proposalFixtures";
 import { ClassPage } from "@/routes/app/schema/classes_.$id";
 import { PendingProposalOperations } from "../PendingProposalOperations";
 
@@ -71,6 +79,98 @@ describe("PendingProposalOperations", () => {
     ).toBeInTheDocument();
     // The applied create is not pending.
     expect(screen.queryByTestId("pending-operation-link-op-create")).not.toBeInTheDocument();
+  });
+
+  it("includes failed operations, which still await a decision, with a failed marker", async () => {
+    const capability = createProposedOperation({
+      id: "op-cap",
+      seq: 5,
+      op: "create",
+      kind: "class",
+      target_id: null,
+      ref: "cap",
+      fields: { title: "Capability" },
+      status: "applied",
+      result_entity_id: "class-9",
+    });
+    const usesCapability = createProposedOperation({
+      id: "op-uses",
+      seq: 6,
+      op: "create",
+      kind: "property",
+      target_id: null,
+      fields: { canonical_predicate: "uses", domain_class_id: "$cap", range_class_id: "class-2" },
+      base: {},
+      status: "pending",
+    });
+    server.use(
+      http.get("*/api/proposals", () =>
+        HttpResponse.json({
+          items: [
+            {
+              ...openProposal,
+              operations: [
+                renameOperation,
+                { ...deleteOperation, status: "failed", reason: "target_not_found: gone" },
+                classOperation,
+                capability,
+                usesCapability,
+              ],
+            },
+          ],
+          total: 1,
+          limit: 500,
+          offset: 0,
+        }),
+      ),
+    );
+    render(<PendingProposalOperations kind="class" entityId="class-1" />);
+
+    expect(await screen.findByTestId("pending-operation-failed-op-delete")).toHaveClass(
+      "pending-ops__failed",
+    );
+    // The rename matches once its current property (domain class-1) loads.
+    await screen.findByTestId("pending-operation-link-op-rename");
+    expect(linkIds()).toEqual(["op-rename", "op-delete", "op-class"]);
+  });
+
+  it("matches a $ref end to the class its applied create made", async () => {
+    const capability = createProposedOperation({
+      id: "op-cap",
+      seq: 5,
+      op: "create",
+      kind: "class",
+      target_id: null,
+      ref: "cap",
+      fields: { title: "Capability" },
+      status: "applied",
+      result_entity_id: "class-2",
+    });
+    const usesCapability = createProposedOperation({
+      id: "op-uses",
+      seq: 6,
+      op: "create",
+      kind: "property",
+      target_id: null,
+      fields: { canonical_predicate: "uses", domain_class_id: "$cap", range_class_id: "class-1" },
+      base: {},
+      status: "pending",
+    });
+    server.use(
+      http.get("*/api/proposals", () =>
+        HttpResponse.json({
+          items: [{ ...openProposal, operations: [capability, usesCapability] }],
+          total: 1,
+          limit: 500,
+          offset: 0,
+        }),
+      ),
+    );
+    render(<PendingProposalOperations kind="class" entityId="class-2" />);
+
+    const link = await screen.findByTestId("pending-operation-link-op-uses");
+    // The $ref end shows the class the create made.
+    expect(await within(link).findByText("application_service")).toBeInTheDocument();
   });
 
   it("renders nothing when no pending operation touches the entity", async () => {

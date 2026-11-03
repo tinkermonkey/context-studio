@@ -140,9 +140,11 @@ describe("ProposalDetailPage", () => {
     ).toBeInTheDocument();
 
     const predicate = await screen.findByTestId("operation-change-row-canonical_predicate");
-    expect(within(predicate).getByText("predicate")).toHaveClass("op-change-table__field");
-    expect(within(predicate).getByText("realizes")).toHaveClass("op-change-table__before--changed");
-    expect(within(predicate).getByText("serves")).toHaveClass("op-change-table__after--changed");
+    // Stacked: the field name, then before (struck) above after (highlighted).
+    expect(within(predicate).getByText("predicate")).toHaveClass("op-change__field");
+    expect(within(predicate).getByText("realizes")).toHaveClass("op-change__before--changed");
+    expect(within(predicate).getByText("serves")).toHaveClass("op-change__after--changed");
+    expect(within(predicate).getByText("serves")).toHaveClass("op-change__value--id");
 
     expect(screen.getByTestId("operation-rationale")).toHaveTextContent("Rename the predicate.");
     expect(within(inspector).getByText("rename-predicate")).toHaveClass("chip--id-tag");
@@ -166,10 +168,40 @@ describe("ProposalDetailPage", () => {
     expect(await within(source).findByText("application_component")).toBeInTheDocument();
     // "removed" is said once, on the first row.
     const predicate = screen.getByTestId("operation-change-row-canonical_predicate");
-    expect(within(predicate).getByText("removed")).toHaveClass("op-change-table__removed");
+    expect(within(predicate).getByText("removed")).toHaveClass("op-change__removed");
     expect(within(source).queryByText("removed")).not.toBeInTheDocument();
     // Bookkeeping fields of the deleted entity are not listed.
     expect(screen.queryByTestId("operation-change-row-version")).not.toBeInTheDocument();
+  });
+
+  it("marks an update's ends unknown when its property is gone, not 'any'", async () => {
+    server.use(
+      http.get("*/api/properties", () =>
+        HttpResponse.json({ items: [], total: 0, limit: 1, offset: 0 }),
+      ),
+    );
+    renderPage();
+    const rename = await screen.findByTestId("operation-diff-op-rename");
+    expect(await within(rename).findAllByText("deleted")).toHaveLength(4);
+    expect(within(rename).queryByText("any")).not.toBeInTheDocument();
+  });
+
+  it("marks unknown ends '?' when the property lookup fails", async () => {
+    server.use(
+      http.get("*/api/properties", () => HttpResponse.json({ detail: "boom" }, { status: 500 })),
+    );
+    renderPage();
+    const rename = await screen.findByTestId("operation-diff-op-rename");
+    expect(await within(rename).findAllByText("?")).toHaveLength(4);
+  });
+
+  it("scrolls a deep-linked operation's row into view", async () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    renderPage("op-class");
+    await screen.findByTestId("operation-inspector");
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(scrollIntoView.mock.contexts[0]).toHaveAttribute("data-row-key", "op-class");
   });
 
   it("is read-only: no accept, reject or edit controls", async () => {

@@ -266,7 +266,7 @@ describe("ChatPanel", () => {
       "3 operations · 2 applied · 1 pending",
     );
     const review = screen.getByTestId("chat-proposal-review");
-    expect(review).toHaveTextContent("Review 1 pending");
+    expect(review).toHaveTextContent("Review 1");
     // Chat only links to the proposal; decisions are made on its page.
     expect(within(card).queryByRole("button")).not.toBeInTheDocument();
 
@@ -276,6 +276,50 @@ describe("ChatPanel", () => {
       params: { proposalId: "proposal-1" },
       search: {},
     });
+  });
+
+  it.each([
+    ["an errored propose_changes call", "propose_changes", true],
+    ["another tool's result that mentions a proposal", "get_proposal", false],
+  ])("shows no proposal card for %s", async (_label, name, isError) => {
+    const conversation = {
+      ...STORED_CONVERSATION,
+      messages: [
+        STORED_CONVERSATION.messages[0],
+        {
+          id: "m1",
+          seq: 1,
+          role: "assistant",
+          blocks: [{ type: "tool_use", id: "tu-x", name, input: {} }],
+          created_at: T,
+        },
+        {
+          id: "m2",
+          seq: 2,
+          role: "user",
+          blocks: [
+            {
+              type: "tool_result",
+              tool_use_id: "tu-x",
+              summary: isError ? "Proposal not stored" : "Starter kits (open)",
+              is_error: isError,
+              entities: [{ id: "proposal-1", kind: "proposal", title: "Starter kits" }],
+            },
+          ],
+          created_at: T,
+        },
+      ],
+    };
+    server.use(
+      http.get("*/api/chat/conversations", () => HttpResponse.json([conversation])),
+      http.get("*/api/chat/conversations/conv-1", () => HttpResponse.json(conversation)),
+    );
+
+    render(<ChatPanel />);
+
+    const tool = await screen.findByTestId("chat-tool-block");
+    expect(tool).toHaveAttribute("data-status", isError ? "error" : "success");
+    expect(screen.queryByTestId("chat-proposal-card")).not.toBeInTheDocument();
   });
 
   it("streams a turn with tool activity, sending the page context", async () => {

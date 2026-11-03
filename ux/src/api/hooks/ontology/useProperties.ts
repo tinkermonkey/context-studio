@@ -3,6 +3,7 @@ import { QUERY_KEYS } from "@/api/config";
 import { ontologyService, type PropertyListParams } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 import { listQueryOptions, type ListQueryOptions } from "./listQueryOptions";
+import { listByIdChunks, uniqueIds } from "./idChunks";
 
 type PropertyDefinitionCreateRequest = components["schemas"]["PropertyDefinitionCreateRequest"];
 type PropertyDefinitionUpdateRequest = components["schemas"]["PropertyDefinitionUpdateRequest"];
@@ -22,14 +23,21 @@ export function useProperties(
   });
 }
 
-/** Fetch exactly the property definitions with these ids; skipped when there are none. */
+/**
+ * Fetch exactly the property definitions with these ids, in chunks of 100;
+ * skipped when there are none.
+ */
 export function usePropertiesByIds(ids: Array<string | null | undefined>) {
-  const unique = [...new Set(ids.filter((id): id is string => !!id))].sort();
-  return useProperties(
-    undefined,
-    { ids: unique, limit: Math.max(unique.length, 1) },
-    { enabled: unique.length > 0, keepPrevious: true },
-  );
+  const unique = uniqueIds(ids);
+  const params = { ids: unique, limit: Math.max(unique.length, 1) };
+  return useQuery({
+    queryKey: [...QUERY_KEYS.properties, null, params],
+    queryFn: () =>
+      listByIdChunks(unique, (chunk) =>
+        ontologyService.listProperties(undefined, { ids: chunk, limit: chunk.length }),
+      ),
+    ...listQueryOptions({ enabled: unique.length > 0, keepPrevious: true }),
+  });
 }
 
 export function useProperty(id: string) {

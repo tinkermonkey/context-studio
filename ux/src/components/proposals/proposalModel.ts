@@ -15,6 +15,8 @@ export interface OperationTally {
   applied: number;
   rejected: number;
   failed: number;
+  /** Still waiting for a decision: pending or failed (a failed one can be applied or rejected). */
+  awaiting: number;
 }
 
 export function tallyOperations(operations: ProposedOperation[]): OperationTally {
@@ -24,9 +26,16 @@ export function tallyOperations(operations: ProposedOperation[]): OperationTally
     applied: 0,
     rejected: 0,
     failed: 0,
+    awaiting: 0,
   };
   for (const operation of operations) tally[operation.status] += 1;
+  tally.awaiting = tally.pending + tally.failed;
   return tally;
+}
+
+/** True while an operation waits for a decision: pending, or failed and retryable. */
+export function isAwaiting(operation: ProposedOperation): boolean {
+  return operation.status === "pending" || operation.status === "failed";
 }
 
 /** "22 pending · 0 applied · 0 rejected · 0 failed" */
@@ -34,16 +43,21 @@ export function tallyLabel(tally: OperationTally): string {
   return `${tally.pending} pending · ${tally.applied} applied · ${tally.rejected} rejected · ${tally.failed} failed`;
 }
 
-/** "5 of 14 · 9 applied": pending of total, plus how many are already applied. */
+/**
+ * "5 of 14 · 9 applied": operations awaiting a decision (pending or failed) of
+ * the total, plus how many are applied and, if any, how many failed.
+ */
 export function pendingLabel(tally: OperationTally): string {
-  const base = `${tally.pending} of ${tally.total}`;
-  return tally.applied > 0 ? `${base} · ${tally.applied} applied` : base;
+  const parts = [`${tally.awaiting} of ${tally.total}`];
+  if (tally.applied > 0) parts.push(`${tally.applied} applied`);
+  if (tally.failed > 0) parts.push(`${tally.failed} failed`);
+  return parts.join(" · ");
 }
 
-/** Share of operations already decided (applied, rejected or failed), 0 to 100. */
+/** Share of operations decided (applied or rejected), 0 to 100. */
 export function decidedPercent(tally: OperationTally): number {
   if (tally.total === 0) return 100;
-  return Math.round(((tally.total - tally.pending) / tally.total) * 100);
+  return Math.round(((tally.total - tally.awaiting) / tally.total) * 100);
 }
 
 const SCOPE_ORDER: ChangeScope[] = ["editorial", "additive", "breaking"];
@@ -103,6 +117,14 @@ export const SOURCE_VARIANT: Record<ChangeProposal["source"], ChipVariant> = {
   user: "neutral",
 };
 
+/** "just now", "5h ago": formatAge as a phrase. */
+export function formatAgo(createdAt: string, now: Date = new Date()): string {
+  const age = formatAge(createdAt, now);
+  if (age === "now") return "just now";
+  if (age === "—") return "at an unknown time";
+  return `${age} ago`;
+}
+
 /** Compact age: "now", "12m", "5h", "6d". */
 export function formatAge(createdAt: string, now: Date = new Date()): string {
   const created = new Date(createdAt);
@@ -130,11 +152,18 @@ export function formatProbability(probability: number | null | undefined): strin
 
 // ==================== Triples (property operations) ====================
 
-/** A relationship type as predicate plus domain and range class ids. */
+/**
+ * One end of a triple: a class id (or "$ref" to a create in the same
+ * proposal), null for unconstrained ("any"), or undefined when unknown (an
+ * update's untouched end whose current property isn't loaded or is gone).
+ */
+export type TripleEnd = string | null | undefined;
+
+/** A relationship type as predicate plus domain and range ends. */
 export interface Triple {
   predicate?: string;
-  domain?: string;
-  range?: string;
+  domain: TripleEnd;
+  range: TripleEnd;
 }
 
 /** The property definition fields a triple reads; any object with them will do. */
@@ -149,11 +178,17 @@ function text(value: unknown): string | undefined {
   return typeof value === "string" && value ? value : undefined;
 }
 
-function tripleOf(values: Record<string, unknown>): Triple {
+function endOf(values: Record<string, unknown>, key: string, missing: null | undefined): TripleEnd {
+  if (!(key in values)) return missing;
+  return text(values[key]) ?? null;
+}
+
+/** `missingEnd` is what an absent end means: null (unconstrained) or undefined (unknown). */
+function tripleOf(values: Record<string, unknown>, missingEnd: null | undefined): Triple {
   return {
     predicate: text(values.canonical_predicate) ?? text(values.title),
-    domain: text(values.domain_class_id),
-    range: text(values.range_class_id),
+    domain: endOf(values, "domain_class_id", missingEnd),
+    range: endOf(values, "range_class_id", missingEnd),
   };
 }
 
@@ -163,33 +198,75 @@ function tripleOf(values: Record<string, unknown>): Triple {
  * `base` holds only the touched fields' values when proposed (a delete: the
  * whole entity), so the untouched parts of an update come from the current
  * property definition; `base` wins over it because the current one may already
- * carry the applied change. A create has no before; a delete has no after.
+ * carry the applied change. Without the current property those parts are
+ * unknown (undefined). A create's missing end is unconstrained (null). A
+ * create has no before; a delete has no after.
  */
 export function propertyTriples(
   operation: ProposedOperation,
   current?: TripleSource,
 ): { before?: Triple; after?: Triple } {
   const fields = operation.fields ?? {};
-  if (operation.op === "create") return { after: tripleOf(fields) };
+  if (operation.op === "create") return { after: tripleOf(fields, null) };
   const currentValues: Record<string, unknown> = current
     ? {
-        canonical_predicate: current.canonical_predicate || current.title,
-        domain_class_id: current.domain_class_id,
-        range_class_id: current.range_class_id,
+        canonical_predicate: current.canonical_predicate,
+        title: current.title,
+        domain_class_id: current.domain_class_id ?? null,
+        range_class_id: current.range_class_id ?? null,
       }
     : {};
   const beforeValues = { ...currentValues, ...(operation.base ?? {}) };
-  const before = tripleOf(beforeValues);
+  const before = tripleOf(beforeValues, undefined);
   if (operation.op === "delete") return { before };
-  return { before, after: tripleOf({ ...beforeValues, ...fields }) };
+  return { before, after: tripleOf({ ...beforeValues, ...fields }, undefined) };
+}
+
+// ==================== "$ref" (an earlier create in the same proposal) ====================
+
+/** What a "$ref" names: the create's title, and the entity it made once applied. */
+export interface RefTarget {
+  title: string;
+  resultId?: string;
+}
+
+/** "$ref" -> its create, for one proposal. */
+export type RefMap = Map<string, RefTarget>;
+
+export function proposalRefs(proposal: ChangeProposal): RefMap {
+  const refs: RefMap = new Map();
+  for (const op of proposal.operations) {
+    if (op.op !== "create" || !op.ref) continue;
+    refs.set(`$${op.ref}`, {
+      title: text(op.fields?.title) ?? text(op.fields?.identifier) ?? `$${op.ref}`,
+      resultId: op.status === "applied" ? (op.result_entity_id ?? undefined) : undefined,
+    });
+  }
+  return refs;
+}
+
+/** Each operation's proposal's refs, by operation id. */
+export function refsByOperation(proposals: ChangeProposal[]): Map<string, RefMap> {
+  const byOperation = new Map<string, RefMap>();
+  for (const proposal of proposals) {
+    const refs = proposalRefs(proposal);
+    for (const op of proposal.operations) byOperation.set(op.id, refs);
+  }
+  return byOperation;
+}
+
+/** A class id, or the entity an applied "$ref" create made; unapplied refs stay as given. */
+export function resolveRef(id: string, refs?: RefMap): string {
+  return id.startsWith("$") ? (refs?.get(id)?.resultId ?? id) : id;
 }
 
 /** Class ids an operation's triple or target refers to (for one lookup query). */
-export function referencedClassIds(operation: ProposedOperation): string[] {
+export function referencedClassIds(operation: ProposedOperation, refs?: RefMap): string[] {
   const ids: string[] = [];
   for (const values of [operation.fields ?? {}, operation.base ?? {}]) {
     for (const key of ["domain_class_id", "range_class_id", "parent_class_id"]) {
-      const id = text(values[key]);
+      const value = text(values[key]);
+      const id = value && resolveRef(value, refs);
       if (id && !id.startsWith("$")) ids.push(id);
     }
   }
@@ -200,25 +277,30 @@ export function referencedClassIds(operation: ProposedOperation): string[] {
 /** Ids of the existing property definitions that property operations touch. */
 export function referencedPropertyIds(operations: ProposedOperation[]): string[] {
   return operations
-    .filter((o) => o.kind === "property" && o.target_id)
+    .filter((o) => o.kind === "property" && o.op !== "create" && o.target_id)
     .map((o) => o.target_id as string);
 }
 
 /**
  * True when the operation touches a class: as its target, or as a property
  * operation's domain or range, before or after. An update's base carries only
- * the fields it touches, so pass the current property for the untouched ends.
+ * the fields it touches, so pass the current property for the untouched ends;
+ * pass the proposal's refs so an applied "$ref" end matches the class it made.
  */
 export function operationTouchesClass(
   operation: ProposedOperation,
   classId: string,
   currentProperty?: TripleSource,
+  refs?: RefMap,
 ): boolean {
   if (operation.target_id === classId) return true;
   if (operation.kind !== "property") return false;
   const current = (currentProperty ?? {}) as Record<string, unknown>;
   for (const values of [operation.fields ?? {}, operation.base ?? {}, current]) {
-    if (values.domain_class_id === classId || values.range_class_id === classId) return true;
+    for (const key of ["domain_class_id", "range_class_id"]) {
+      const value = text(values[key]);
+      if (value && resolveRef(value, refs) === classId) return true;
+    }
   }
   return false;
 }

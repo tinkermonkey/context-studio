@@ -4,7 +4,12 @@ import { ontologyService } from "@/api/services/ontology";
 import { useDebounce } from "@/hooks/useDebounce";
 import { ENTITY_SEARCH_DEBOUNCE_MS } from "./useEntitySearch";
 
-export type EntityType = "Class" | "Taxonomy" | "ConceptScheme" | "Individual" | "PropertyDefinition";
+export type EntityType =
+  | "Class"
+  | "Taxonomy"
+  | "ConceptScheme"
+  | "Individual"
+  | "PropertyDefinition";
 
 export interface EntityListResponse {
   items: Array<{ id: string; title?: string }>;
@@ -41,7 +46,10 @@ interface PickerListParams {
   sort_by?: "title";
 }
 
-async function listEntities(type: EntityType, params: PickerListParams): Promise<EntityListResponse> {
+async function listEntities(
+  type: EntityType,
+  params: PickerListParams,
+): Promise<EntityListResponse> {
   switch (type) {
     case "Class":
       return (await ontologyService.listClasses(params)) as EntityListResponse;

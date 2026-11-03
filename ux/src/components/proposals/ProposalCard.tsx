@@ -60,7 +60,8 @@ export function ProposalCard({ proposalId }: ProposalCardProps) {
           className="btn btn--primary btn--sm"
           data-testid="chat-proposal-review"
         >
-          {tally.pending > 0 ? `Review ${tally.pending} pending` : "Open proposal"}
+          {/* Failed operations still await a decision (apply again or reject). */}
+          {tally.awaiting > 0 ? `Review ${tally.awaiting}` : "Open proposal"}
         </ProposalLink>
       </div>
     </div>

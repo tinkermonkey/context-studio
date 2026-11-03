@@ -4,7 +4,13 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
-import { proposalHandlers } from "@/test/proposalFixtures";
+import {
+  createOperation,
+  deleteOperation,
+  openProposal,
+  proposalHandlers,
+  renameOperation,
+} from "@/test/proposalFixtures";
 import { createTaxonomy } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { ProposalsListPage } from "../ProposalsListPage";
 
@@ -62,6 +68,33 @@ describe("ProposalsListPage", () => {
 
     expect(screen.getByTestId("proposals-count")).toHaveTextContent("1 of 1 proposals");
     expect(screen.getByTestId("proposals-table")).toHaveClass("schema-table-wrap");
+  });
+
+  it("counts failed operations as still awaiting a decision", async () => {
+    server.use(
+      http.get("*/api/proposals", () =>
+        HttpResponse.json({
+          items: [
+            {
+              ...openProposal,
+              operations: [
+                renameOperation,
+                { ...deleteOperation, status: "failed", reason: "target_not_found: gone" },
+                createOperation,
+              ],
+            },
+          ],
+          total: 1,
+          limit: 500,
+          offset: 0,
+        }),
+      ),
+    );
+    render(<ProposalsListPage status="open" onFiltersChange={vi.fn()} />);
+
+    const pending = await screen.findByTestId("proposal-pending-proposal-1");
+    expect(pending).toHaveTextContent("2 of 3 · 1 applied · 1 failed");
+    expect(within(pending).getByRole("progressbar")).toHaveAttribute("aria-valuenow", "33");
   });
 
   it("opens a proposal when its row is clicked", async () => {

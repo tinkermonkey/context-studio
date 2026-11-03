@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
 import { chatService, type PageContext } from "@/api/services/chat";
 import {
@@ -44,6 +44,7 @@ function errorMessage(error: unknown): string {
  * created on the first message, so "New chat" never leaves empty ones behind.
  */
 export function useChatSession(): ChatSession {
+  const queryClient = useQueryClient();
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [known, setKnown] = useState<KnownEntities>(() => new Map());
@@ -130,6 +131,10 @@ export function useChatSession(): ChatSession {
               addEntities(next, event.entities);
               return next;
             });
+            // A stored proposal: the queue, badge and entity pages should show it now.
+            if (event.name === "propose_changes" && !event.is_error) {
+              queryClient.invalidateQueries({ queryKey: QUERY_KEYS.changeProposalsRoot });
+            }
           }
           updateAssistant((m) => applyStreamEvent(m, event));
         }
@@ -144,7 +149,7 @@ export function useChatSession(): ChatSession {
         }
       }
     },
-    [conversationId],
+    [conversationId, queryClient],
   );
 
   return { conversationId, messages, known, loading, streaming, loadError, send, newChat };

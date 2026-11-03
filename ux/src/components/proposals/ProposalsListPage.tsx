@@ -106,7 +106,7 @@ const columns: Column<ProposalRow>[] = [
           percent={decidedPercent(row.tally)}
           color="emerald"
           height={4}
-          label={`${row.tally.total - row.tally.pending} of ${row.tally.total} decided`}
+          label={`${row.tally.total - row.tally.awaiting} of ${row.tally.total} decided`}
         />
       </div>
     ),

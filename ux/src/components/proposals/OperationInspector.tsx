@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { Chip, FormCallout, InspectorPanel } from "@tinkermonkey/heimdall-ui";
 import type { ProposedOperation } from "@/api/services/proposals";
 import {
@@ -22,6 +22,28 @@ const PROPERTY_FIELD_LABELS: Record<string, string> = {
   range_class_id: "destination",
 };
 
+/** Fields whose values are ids or references: monospace, breaking after dots and underscores. */
+const ID_FIELDS = new Set([
+  "canonical_predicate",
+  "domain_class_id",
+  "range_class_id",
+  "parent_class_id",
+  "identifier",
+  "external_references",
+  "concept_scheme_id",
+  "taxonomy_id",
+]);
+
+/** An id with line-break opportunities after its dots and underscores. */
+function breakable(text: string): ReactNode {
+  return text.split(/(?<=[._])/).map((part, i) => (
+    <Fragment key={i}>
+      {i > 0 && <wbr />}
+      {part}
+    </Fragment>
+  ));
+}
+
 interface EvidenceItem {
   quote?: unknown;
   claim_id?: unknown;
@@ -43,7 +65,7 @@ export function operationTitle(operation: ProposedOperation, context: OperationC
     );
     const triple = after ?? before;
     const text = triple
-      ? `${context.classLabel(triple.domain)} ${triple.predicate ?? "—"} ${context.classLabel(triple.range)}`
+      ? `${context.endLabel(triple.domain, operation)} ${triple.predicate ?? "—"} ${context.endLabel(triple.range, operation)}`
       : operation.kind;
     return operation.op === "delete" ? `Remove ${text}` : text;
   }
@@ -65,8 +87,15 @@ export function OperationInspector({ operation, context, decision }: OperationIn
   const evidence = (operation.evidence ?? []) as EvidenceItem[];
   const label = (field: string) =>
     operation.kind === "property" ? (PROPERTY_FIELD_LABELS[field] ?? field) : field;
-  const value = (field: string, v: unknown) =>
-    CLASS_ID_FIELDS.has(field) && typeof v === "string" ? context.classLabel(v) : formatValue(v);
+  const value = (field: string, v: unknown): ReactNode => {
+    const text =
+      CLASS_ID_FIELDS.has(field) && typeof v === "string"
+        ? context.endLabel(v, operation)
+        : formatValue(v);
+    return ID_FIELDS.has(field) ? breakable(text) : text;
+  };
+  const valueClass = (field: string) =>
+    ID_FIELDS.has(field) ? "op-change__value op-change__value--id" : "op-change__value";
 
   return (
     <div data-testid="operation-inspector">
@@ -94,46 +123,40 @@ export function OperationInspector({ operation, context, decision }: OperationIn
               )}
             </div>
             {rows.length > 0 ? (
-              <table className="op-change-table" data-testid="operation-change-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Field</th>
-                    <th scope="col">Before</th>
-                    <th scope="col">After</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row, index) => (
-                    <tr key={row.field} data-testid={`operation-change-row-${row.field}`}>
-                      <td className="op-change-table__field">{label(row.field)}</td>
-                      <td
-                        className={
-                          row.changed && row.before !== undefined
-                            ? "op-change-table__before--changed"
-                            : "op-change-table__muted"
-                        }
+              <dl className="op-change-list" data-testid="operation-change-table">
+                {rows.map((row, index) => (
+                  <div
+                    key={row.field}
+                    className="op-change"
+                    data-testid={`operation-change-row-${row.field}`}
+                  >
+                    <dt className="op-change__field">{label(row.field)}</dt>
+                    {operation.op !== "create" && (
+                      <dd
+                        className={`${valueClass(row.field)} ${
+                          row.changed ? "op-change__before--changed" : "op-change__unchanged"
+                        }`}
                       >
-                        {operation.op === "create" ? "" : value(row.field, row.before)}
-                      </td>
-                      <td
-                        className={
-                          operation.op === "delete"
-                            ? "op-change-table__removed"
-                            : row.changed
-                              ? "op-change-table__after--changed"
-                              : "op-change-table__muted"
-                        }
-                      >
-                        {operation.op === "delete"
-                          ? index === 0
-                            ? "removed"
-                            : ""
-                          : value(row.field, row.after)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        {value(row.field, row.before)}
+                      </dd>
+                    )}
+                    {operation.op === "delete"
+                      ? index === 0 && <dd className="op-change__removed">removed</dd>
+                      : row.changed && (
+                          <dd
+                            className={[
+                              valueClass(row.field),
+                              operation.op === "create" ? "" : "op-change__after--changed",
+                            ]
+                              .filter(Boolean)
+                              .join(" ")}
+                          >
+                            {value(row.field, row.after)}
+                          </dd>
+                        )}
+                  </div>
+                ))}
+              </dl>
             ) : (
               <p className="entity-note">No field changes recorded.</p>
             )}

@@ -7,7 +7,11 @@ import { OperationDiff } from "@/components/proposals/OperationDiff";
 import { ProposalLink } from "@/components/proposals/ProposalLink";
 import {
   formatProbability,
+  isAwaiting,
   operationTouchesClass,
+  refsByOperation,
+  referencedPropertyIds,
+  type RefMap,
   type TripleSource,
 } from "@/components/proposals/proposalModel";
 import { useOperationContext } from "@/components/proposals/useOperationContext";
@@ -37,10 +41,11 @@ function touches(
   id: string,
   { proposal, operation: op }: PendingRow,
   currentProperty?: TripleSource,
+  refs?: RefMap,
 ) {
   switch (kind) {
     case "class":
-      return operationTouchesClass(op, id, currentProperty);
+      return operationTouchesClass(op, id, currentProperty, refs);
     case "property":
       return op.target_id === id;
     case "taxonomy":
@@ -62,9 +67,9 @@ interface PendingProposalOperationsProps {
 }
 
 /**
- * The pending operations in open proposals that would change this entity,
- * each linking to the operation on its proposal page. Renders nothing when
- * there are none.
+ * The operations awaiting a decision (pending, or failed and retryable) in
+ * open proposals that would change this entity, each linking to the
+ * operation on its proposal page. Renders nothing when there are none.
  */
 export function PendingProposalOperations({
   kind,
@@ -72,34 +77,37 @@ export function PendingProposalOperations({
   inInspector,
 }: PendingProposalOperationsProps) {
   const { data } = useChangeProposals(OPEN_PROPOSALS);
-  const pending = useMemo<PendingRow[]>(
+  const awaiting = useMemo<PendingRow[]>(
     () =>
       (data?.items ?? []).flatMap((proposal) =>
         proposal.operations
-          .filter((op) => op.status === "pending")
+          .filter(isAwaiting)
           .map((operation) => ({ id: operation.id, operation, proposal })),
       ),
     [data],
   );
-  // On a class page, a property update's base lacks the ends it doesn't change.
+  const refs = useMemo(() => refsByOperation(data?.items ?? []), [data]);
+  // One query for the target properties: a property update's base lacks the
+  // ends it doesn't change (class matching), and the rows render from them.
   const targetIds = useMemo(
-    () =>
-      kind === "class"
-        ? pending
-            .filter((row) => row.operation.kind === "property" && row.operation.op !== "create")
-            .map((row) => row.operation.target_id)
-        : [],
-    [kind, pending],
+    () => referencedPropertyIds(awaiting.map((row) => row.operation)),
+    [awaiting],
   );
-  const { data: targets } = usePropertiesByIds(targetIds);
+  const targets = usePropertiesByIds(targetIds);
   const rows = useMemo(() => {
-    const byId = new Map((targets?.items ?? []).map((p) => [p.id, p]));
-    return pending.filter((row) =>
-      touches(kind, entityId, row, byId.get(row.operation.target_id ?? "")),
+    const byId = new Map((targets.data?.items ?? []).map((p) => [p.id, p]));
+    return awaiting.filter((row) =>
+      touches(
+        kind,
+        entityId,
+        row,
+        byId.get(row.operation.target_id ?? ""),
+        refs.get(row.operation.id),
+      ),
     );
-  }, [pending, targets, kind, entityId]);
+  }, [awaiting, targets.data, refs, kind, entityId]);
   const operations = useMemo(() => rows.map((row) => row.operation), [rows]);
-  const context = useOperationContext(operations);
+  const context = useOperationContext(operations, refs, targets);
 
   if (rows.length === 0) return null;
 
@@ -120,6 +128,15 @@ export function PendingProposalOperations({
           <span className="pending-ops__where">
             {row.proposal.title} · seq {row.operation.seq} · {row.operation.op}
             {row.operation.stale ? " · stale" : ""}
+            {row.operation.status === "failed" && (
+              <span
+                className="pending-ops__failed"
+                data-testid={`pending-operation-failed-${row.id}`}
+              >
+                {" "}
+                · failed
+              </span>
+            )}
           </span>
         </div>
       ),

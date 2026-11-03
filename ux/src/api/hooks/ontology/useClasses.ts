@@ -3,6 +3,7 @@ import { QUERY_KEYS } from "@/api/config";
 import { ontologyService, type ClassListParams } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 import { listQueryOptions, type ListQueryOptions } from "./listQueryOptions";
+import { listByIdChunks, uniqueIds } from "./idChunks";
 
 type ClassCreateRequest = components["schemas"]["ClassCreateRequest"];
 type ClassUpdateRequest = components["schemas"]["ClassUpdateRequest"];
@@ -18,14 +19,19 @@ export function useClasses(params?: ClassListParams, options?: ListQueryOptions)
 
 /**
  * Fetch exactly the classes with these ids (e.g. to resolve titles for the
- * rows on one table page). Skips the request when there are no ids.
+ * rows on one table page), in chunks of 100. Skips the request when there are
+ * no ids.
  */
 export function useClassesByIds(ids: Array<string | null | undefined>) {
-  const unique = [...new Set(ids.filter((id): id is string => !!id))].sort();
-  return useClasses(
-    { ids: unique, limit: Math.max(unique.length, 1) },
-    { enabled: unique.length > 0, keepPrevious: true },
-  );
+  const unique = uniqueIds(ids);
+  return useQuery({
+    queryKey: QUERY_KEYS.classes({ ids: unique, limit: Math.max(unique.length, 1) }),
+    queryFn: () =>
+      listByIdChunks(unique, (chunk) =>
+        ontologyService.listClasses({ ids: chunk, limit: chunk.length }),
+      ),
+    ...listQueryOptions({ enabled: unique.length > 0, keepPrevious: true }),
+  });
 }
 
 /**

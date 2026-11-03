@@ -54,6 +54,12 @@
     font-size: 12px;
   }
 
+  /* Heimdall's ProgressBar track is a shell token (dark navy on the light
+     canvas, where an empty bar reads as full); use a canvas tone. */
+  .proposal-pending .progress-bar {
+    background-color: rgb(var(--canvas-border));
+  }
+
   .proposals-footnote {
     margin: 0;
     font-size: 12.5px;
@@ -161,6 +167,7 @@
 
   .op-inspector__rationale {
     margin: 0;
+    overflow-wrap: anywhere;
     font-size: 12.5px;
     line-height: 1.55;
     color: rgb(var(--canvas-fg-2));
@@ -172,55 +179,71 @@
     gap: 6px;
   }
 
-  .op-change-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
+  /* Change: one stacked row per field: name, then before above after. */
+  .op-change-list {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
   }
 
-  .op-change-table th {
-    text-align: left;
-    padding: 4px 6px 6px 0;
+  .op-change {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 7px 0;
+    border-top: 1px dashed rgb(var(--canvas-border));
+  }
+
+  .op-change:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .op-change__field {
     font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: rgb(var(--canvas-fg-3));
   }
 
-  .op-change-table td {
-    padding: 6px 6px 6px 0;
-    font-family: var(--font-mono);
-    vertical-align: top;
-    overflow-wrap: anywhere;
-    border-top: 1px dashed rgb(var(--canvas-border));
-    color: rgb(var(--canvas-fg-1));
+  .op-change dd {
+    margin: 0;
   }
 
-  .op-change-table td.op-change-table__field,
-  .op-change-table td.op-change-table__muted {
+  /* Prose wraps between words; ids break after dots and underscores (<wbr>). */
+  .op-change__value {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: rgb(var(--canvas-fg-1));
+    overflow-wrap: break-word;
+  }
+
+  .op-change__value--id {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+
+  .op-change__unchanged {
     color: rgb(var(--canvas-fg-3));
   }
 
-  .op-change-table td.op-change-table__field {
-    white-space: nowrap;
-    overflow-wrap: normal;
-  }
-
-  .op-change-table__before--changed {
+  .op-change__before--changed {
+    color: rgb(var(--canvas-fg-3));
     text-decoration: line-through;
   }
 
-  .op-change-table td.op-change-table__after--changed {
+  .op-change__after--changed {
     color: var(--accent-amber);
     font-weight: 600;
   }
 
-  .op-change-table td.op-change-table__removed {
-    white-space: nowrap;
-    color: var(--accent-rose);
+  .op-change__removed {
+    font-family: var(--font-mono);
+    font-size: 12px;
     font-weight: 600;
+    color: var(--accent-rose);
   }
 
   .op-evidence {
@@ -233,6 +256,7 @@
 
   .op-evidence__quote {
     margin: 0;
+    overflow-wrap: anywhere;
     font-size: 12.5px;
     line-height: 1.5;
     color: rgb(var(--canvas-fg-1));
@@ -293,5 +317,10 @@
   .pending-ops__where {
     font-size: 11.5px;
     color: rgb(var(--canvas-fg-3));
+  }
+
+  .pending-ops__failed {
+    color: var(--accent-rose);
+    font-weight: 600;
   }
 }

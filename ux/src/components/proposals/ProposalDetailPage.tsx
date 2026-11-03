@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Chip, PageHeader, Table, type Column } from "@tinkermonkey/heimdall-ui";
 import { useChangeProposal } from "@/api/hooks/proposals";
 import { useTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
@@ -15,10 +15,11 @@ import {
   OPERATION_STATUS_VARIANT,
   OP_VARIANT,
   PROPOSAL_STATUS_VARIANT,
-  formatAge,
+  formatAgo,
   formatProbability,
   opMixLabel,
   planKind,
+  refsByOperation,
   tallyLabel,
   tallyOperations,
 } from "./proposalModel";
@@ -115,9 +116,21 @@ export function ProposalDetailPage({
   const { data: proposal, error, refetch } = useChangeProposal(id);
   const { data: taxonomy } = useTaxonomy(proposal?.taxonomy_id ?? "");
   const operations = useMemo(() => proposal?.operations ?? [], [proposal]);
-  const context = useOperationContext(operations);
+  const refs = useMemo(() => (proposal ? refsByOperation([proposal]) : undefined), [proposal]);
+  const context = useOperationContext(operations, refs);
   const showPlanKind = operations.some((o) => planKind(o) !== undefined);
   const columns = useMemo(() => operationColumns(context, showPlanKind), [context, showPlanKind]);
+
+  // A deep link (?op=) scrolls its row into view once the operations load.
+  const tableRef = useRef<HTMLDivElement>(null);
+  const deepLinkedOperation = useRef(selectedOperationId);
+  useEffect(() => {
+    const target = deepLinkedOperation.current;
+    if (!target || operations.length === 0) return;
+    deepLinkedOperation.current = undefined;
+    const row = tableRef.current?.querySelector(`tr[data-row-key="${CSS.escape(target)}"]`);
+    row?.scrollIntoView?.({ block: "center" });
+  }, [operations]);
 
   usePageBreadcrumbs(
     linkPath("proposal", id),
@@ -146,10 +159,7 @@ export function ProposalDetailPage({
   const tally = tallyOperations(operations);
   const taxonomyLabel = taxonomy?.identifier ?? proposal.taxonomy_id;
   const proposedBy = proposal.source_detail ? ` by ${proposal.source_detail}` : "";
-  const subtitle = [
-    proposal.rationale,
-    `Proposed ${formatAge(proposal.created_at)} ago${proposedBy}.`,
-  ]
+  const subtitle = [proposal.rationale, `Proposed ${formatAgo(proposal.created_at)}${proposedBy}.`]
     .filter(Boolean)
     .join(" ");
 
@@ -182,7 +192,7 @@ export function ProposalDetailPage({
           <OperationInspector key={operation.id} operation={operation} context={context} />
         )}
       >
-        <div className="schema-table-wrap" data-testid="proposal-operations-table">
+        <div ref={tableRef} className="schema-table-wrap" data-testid="proposal-operations-table">
           <Table<ProposedOperation>
             rowKey="id"
             columns={columns}
