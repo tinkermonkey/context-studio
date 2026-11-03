@@ -480,6 +480,97 @@ class TestRevert:
         assert client.post("/api/proposals/nope/revert").status_code == 404
 
 
+class TestDecisions:
+    """GET /api/proposals/{id}/decisions: DR's decisions file (scripts/export_dr_decisions.py)."""
+
+    def test_one_decision_per_operation_in_seq_order(self, client, graph):
+        proposal = _propose(
+            client,
+            graph,
+            _create_kit(seq=1, graph=graph),
+            _describe_room(graph, seq=2),
+            {
+                **_create_kit(seq=3, ref="box", graph=graph),
+                "fields": {"concept_scheme_id": graph["vocab"], "title": "Box"},
+            },
+        )
+        create_id, describe_id, other_id = _op_ids(proposal, 1, 2, 3)
+        applied = client.post(
+            f"/api/proposals/{proposal['id']}/apply", json={"operation_ids": [create_id]}
+        ).json()
+        client.post(
+            f"/api/proposals/{proposal['id']}/reject",
+            json={"operation_ids": [describe_id], "note": "not now"},
+        )
+
+        response = client.get(f"/api/proposals/{proposal['id']}/decisions")
+
+        assert response.status_code == 200
+        # Exactly the script's shape: no "fields" key on an operation applied as proposed.
+        assert response.json() == [
+            {
+                "seq": 1,
+                "op_id": create_id,
+                "status": "applied",
+                "reason": None,
+                "result_entity_id": applied["operations"][0]["result_entity_id"],
+            },
+            {
+                "seq": 2,
+                "op_id": describe_id,
+                "status": "rejected",
+                "reason": "not now",
+                "result_entity_id": None,
+            },
+            {
+                "seq": 3,
+                "op_id": other_id,
+                "status": "pending",
+                "reason": None,
+                "result_entity_id": None,
+            },
+        ]
+
+    def test_reverted_proposal_is_409(self, client, graph):
+        proposal = _propose(client, graph, _create_kit(seq=1, graph=graph))
+        client.post(
+            f"/api/proposals/{proposal['id']}/apply", json={"operation_ids": _op_ids(proposal, 1)}
+        )
+        assert client.post(f"/api/proposals/{proposal['id']}/revert").status_code == 200
+
+        response = client.get(f"/api/proposals/{proposal['id']}/decisions")
+        assert response.status_code == 409
+        assert "reverted" in response.json()["detail"]
+
+    def test_an_edit_without_a_dr_relationship_id_is_409(self, client, graph, ontology):
+        near = ontology.create_property_definition(
+            "near", "near", domain_class_id=graph["room"], range_class_id=graph["room"]
+        ).id
+        proposal = _propose(
+            client,
+            graph,
+            {
+                "seq": 1,
+                "op": "update",
+                "kind": "property",
+                "target_id": near,
+                "fields": {"title": "close to"},
+            },
+        )
+        [op_id] = _op_ids(proposal, 1)
+        client.post(
+            f"/api/proposals/{proposal['id']}/apply",
+            json={"operation_ids": [op_id], "edits": {op_id: {"title": "next to"}}},
+        )
+
+        response = client.get(f"/api/proposals/{proposal['id']}/decisions")
+        assert response.status_code == 409
+        assert "no DR relationship id" in response.json()["detail"]
+
+    def test_missing_proposal_is_404(self, client):
+        assert client.get("/api/proposals/nope/decisions").status_code == 404
+
+
 class FailingRevertService:
     """A RevertService stand-in that raises the given error."""
 

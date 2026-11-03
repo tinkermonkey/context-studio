@@ -7624,6 +7624,59 @@
         }
       }
     },
+    "/api/proposals/{proposal_id}/decisions": {
+      "get": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Get Proposal Decisions",
+        "description": "The decisions on a DR reflection-plan proposal, for DR's\n`proposal-import.ts --decisions`: the same JSON as\n`scripts/export_dr_decisions.py` writes, joined to DR's plan by seq.",
+        "operationId": "get_proposal_decisions_api_proposals__proposal_id__decisions_get",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The decisions, one per operation in seq order",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DrDecisionResponse"
+                  },
+                  "title": "Response 200 Get Proposal Decisions Api Proposals  Proposal Id  Decisions Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Change proposal not found"
+          },
+          "409": {
+            "description": "The proposal was reverted, so none of its decisions stand, or an edited operation's applied fields carry no DR relationship id"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/proposals/{proposal_id}/apply": {
       "post": {
         "tags": [
@@ -10838,6 +10891,86 @@
         ],
         "title": "DemoDatasetLoadResponse",
         "description": "Counts of entities persisted by a demo dataset load."
+      },
+      "DrDecisionResponse": {
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "title": "Seq"
+          },
+          "op_id": {
+            "type": "string",
+            "title": "Op Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OperationStatus"
+          },
+          "fields": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DrTripleFields"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only on an edited operation; absent (not null) otherwise"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "result_entity_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Entity Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seq",
+          "op_id",
+          "status"
+        ],
+        "title": "DrDecisionResponse",
+        "description": "One operation's decision, as DR's `proposal-import.ts --decisions` reads it.\n\n`fields` is present only on an operation a reviewer edited before applying\nit: the triple that was applied."
+      },
+      "DrTripleFields": {
+        "properties": {
+          "predicate": {
+            "type": "string",
+            "title": "Predicate"
+          },
+          "source_spec_node_id": {
+            "type": "string",
+            "title": "Source Spec Node Id"
+          },
+          "destination_spec_node_id": {
+            "type": "string",
+            "title": "Destination Spec Node Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "predicate",
+          "source_spec_node_id",
+          "destination_spec_node_id"
+        ],
+        "title": "DrTripleFields",
+        "description": "A DR relationship's triple in DR's vocabulary."
       },
       "EnqueueBatchRunsRequest": {
         "properties": {
@@ -16572,6 +16705,14 @@
             ],
             "title": "Color",
             "description": "Optional hex color '#rrggbb'"
+          },
+          "external_references": {
+            "items": {
+              "$ref": "#/components/schemas/ExternalReferenceResponse"
+            },
+            "type": "array",
+            "title": "External References",
+            "description": "References to the source it was imported from (dr_spec: the DR spec, whose metadata holds the predicate catalog)"
           },
           "created_at": {
             "anyOf": [

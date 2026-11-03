@@ -230,6 +230,32 @@ class ChangeProposalRevertResponse(BaseModel):
     proposal: ChangeProposalResponse
 
 
+class DrTripleFields(BaseModel):
+    """A DR relationship's triple in DR's vocabulary."""
+
+    predicate: str
+    source_spec_node_id: str
+    destination_spec_node_id: str
+
+
+class DrDecisionResponse(BaseModel):
+    """
+    One operation's decision, as DR's `proposal-import.ts --decisions` reads it.
+
+    `fields` is present only on an operation a reviewer edited before applying
+    it: the triple that was applied.
+    """
+
+    seq: int
+    op_id: str
+    status: OperationStatus
+    fields: Optional[DrTripleFields] = Field(
+        None, description="Only on an edited operation; absent (not null) otherwise"
+    )
+    reason: Optional[str] = None
+    result_entity_id: Optional[str] = None
+
+
 # ==================== Approval policy ====================
 
 

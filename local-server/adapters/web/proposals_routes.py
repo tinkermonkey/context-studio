@@ -1,5 +1,6 @@
 """
-FastAPI routes for change proposals: list, get, propose, apply, reject, revert.
+FastAPI routes for change proposals: list, get, propose, apply, reject, revert,
+and the decisions export for DR reflection plans.
 
 A proposal is a run: everything applied from it is tagged with its id, so
 reverting it undoes them. Each route is a thin adapter over ProposalService;
@@ -9,7 +10,9 @@ service calls touch SQLite, so they run in the thread pool.
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import JSONResponse
 
+from adapters.interchange.dr_decisions import decisions_for
 from adapters.persistence.sqlite.transaction import TransactionAbortedError
 from adapters.web.dependencies import get_approval_policy_service, get_proposal_service
 from adapters.web.schemas.ontology import ListResponse
@@ -23,6 +26,7 @@ from adapters.web.schemas.proposals import (
     ChangeProposalRevertConflictResponse,
     ChangeProposalRevertResponse,
     ChangeProposalValidationErrorResponse,
+    DrDecisionResponse,
 )
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.versioning.approval_policy import ApprovalPolicyService
@@ -145,6 +149,45 @@ async def get_proposal(
         return await run_sync_in_executor(lambda: _response(service, service.get(proposal_id)))
     except Exception as exc:
         raise _http_error(exc) from exc
+
+
+@router.get(
+    "/proposals/{proposal_id}/decisions",
+    response_model=None,
+    responses={
+        200: {
+            "model": list[DrDecisionResponse],
+            "description": "The decisions, one per operation in seq order",
+        },
+        **_NOT_FOUND,
+        409: {
+            "description": (
+                "The proposal was reverted, so none of its decisions stand, or an edited "
+                "operation's applied fields carry no DR relationship id"
+            )
+        },
+    },
+)
+async def get_proposal_decisions(
+    proposal_id: str,
+    service: ProposalService = Depends(get_proposal_service),
+) -> JSONResponse:
+    """
+    The decisions on a DR reflection-plan proposal, for DR's
+    `proposal-import.ts --decisions`: the same JSON as
+    `scripts/export_dr_decisions.py` writes, joined to DR's plan by seq.
+    """
+
+    def run() -> list[dict]:
+        return decisions_for(service.get(proposal_id))
+
+    try:
+        decisions = await run_sync_in_executor(run)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    except Exception as exc:
+        raise _http_error(exc) from exc
+    return JSONResponse(content=decisions)
 
 
 # ==================== Propose ====================

@@ -4091,6 +4091,28 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/proposals/{proposal_id}/decisions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Proposal Decisions
+     * @description The decisions on a DR reflection-plan proposal, for DR's
+     *     `proposal-import.ts --decisions`: the same JSON as
+     *     `scripts/export_dr_decisions.py` writes, joined to DR's plan by seq.
+     */
+    get: operations["get_proposal_decisions_api_proposals__proposal_id__decisions_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/proposals/{proposal_id}/apply": {
     parameters: {
       query?: never;
@@ -5981,6 +6003,38 @@ export interface components {
        * @description Number of external references attached
        */
       external_references: number;
+    };
+    /**
+     * DrDecisionResponse
+     * @description One operation's decision, as DR's `proposal-import.ts --decisions` reads it.
+     *
+     *     `fields` is present only on an operation a reviewer edited before applying
+     *     it: the triple that was applied.
+     */
+    DrDecisionResponse: {
+      /** Seq */
+      seq: number;
+      /** Op Id */
+      op_id: string;
+      status: components["schemas"]["OperationStatus"];
+      /** @description Only on an edited operation; absent (not null) otherwise */
+      fields?: components["schemas"]["DrTripleFields"] | null;
+      /** Reason */
+      reason?: string | null;
+      /** Result Entity Id */
+      result_entity_id?: string | null;
+    };
+    /**
+     * DrTripleFields
+     * @description A DR relationship's triple in DR's vocabulary.
+     */
+    DrTripleFields: {
+      /** Predicate */
+      predicate: string;
+      /** Source Spec Node Id */
+      source_spec_node_id: string;
+      /** Destination Spec Node Id */
+      destination_spec_node_id: string;
     };
     /**
      * EnqueueBatchRunsRequest
@@ -9484,6 +9538,11 @@ export interface components {
        * @description Optional hex color '#rrggbb'
        */
       color?: string | null;
+      /**
+       * External References
+       * @description References to the source it was imported from (dr_spec: the DR spec, whose metadata holds the predicate catalog)
+       */
+      external_references?: components["schemas"]["ExternalReferenceResponse"][];
       /**
        * Created At
        * @description Creation timestamp
@@ -14535,6 +14594,51 @@ export interface operations {
       };
       /** @description Change proposal not found */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_proposal_decisions_api_proposals__proposal_id__decisions_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        proposal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The decisions, one per operation in seq order */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DrDecisionResponse"][];
+        };
+      };
+      /** @description Change proposal not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The proposal was reverted, so none of its decisions stand, or an edited operation's applied fields carry no DR relationship id */
+      409: {
         headers: {
           [name: string]: unknown;
         };

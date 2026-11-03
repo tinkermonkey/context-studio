@@ -12,6 +12,7 @@ These tests exercise the complete stack: routes → domain service → adapters 
 """
 
 import tempfile
+from types import MappingProxyType
 from pathlib import Path
 from uuid import uuid4
 
@@ -206,6 +207,35 @@ class TestTaxonomyCRUD:
         """POST /api/taxonomies with empty title returns 422 (validation error)."""
         response = client.post("/api/taxonomies", json={"title": ""})
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def test_taxonomy_external_references_are_returned_with_metadata(self, client, repository):
+        """GET returns the taxonomy's external references, e.g. dr_spec's predicate catalog."""
+        taxonomy_id = client.post("/api/taxonomies", json={"title": "DR spec"}).json()["id"]
+        assert client.get(f"/api/taxonomies/{taxonomy_id}").json()["external_references"] == []
+        taxonomy = repository.get_taxonomy(taxonomy_id)
+        catalog = {"serves": {"inverse": "served-by", "category": "dependency"}}
+        taxonomy.external_references = [
+            ExternalReference(
+                source="documentation_robotics",
+                identifier="spec",
+                metadata=MappingProxyType({"spec_version": "0.10.0", "predicates": catalog}),
+            )
+        ]
+        repository.save_taxonomy(taxonomy)
+
+        expected = [
+            {
+                "source": "documentation_robotics",
+                "identifier": "spec",
+                "uri": None,
+                "metadata": {"spec_version": "0.10.0", "predicates": catalog},
+            }
+        ]
+        assert (
+            client.get(f"/api/taxonomies/{taxonomy_id}").json()["external_references"] == expected
+        )
+        listed = client.get("/api/taxonomies").json()["items"]
+        assert [t["external_references"] for t in listed if t["id"] == taxonomy_id] == [expected]
 
 
 class TestConceptSchemeCRUD:
@@ -931,7 +961,9 @@ class TestAutoCreatePropertyDefinition:
         # Create 4 classes
         class_ids = []
         for i in range(4):
-            resp = client.post(f"/api/schemes/{scheme_id}/classes", json={"title": f"Class {i+1}"})
+            resp = client.post(
+                f"/api/schemes/{scheme_id}/classes", json={"title": f"Class {i + 1}"}
+            )
             class_ids.append(resp.json()["id"])
 
         # Create first relationship
