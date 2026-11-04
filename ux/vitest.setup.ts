@@ -1128,7 +1128,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       ),
   ),
   SegmentedControl: React.forwardRef(
-    ({ value, onChange, options = [], className = "", ...props }: any, ref: any) =>
+    ({ value, onChange, options = [], className = "", disabled, ...props }: any, ref: any) =>
       React.createElement(
         "div",
         {
@@ -1153,6 +1153,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
                 .join(" "),
               "data-testid": `status-filter-${option.value}`,
               "data-active": value === option.value,
+              disabled: !!(disabled || option.disabled),
               onClick: () => onChange?.(option.value),
             },
             option.label,

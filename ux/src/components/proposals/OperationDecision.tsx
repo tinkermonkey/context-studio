@@ -3,7 +3,8 @@ import { Button, Field, FormCallout, InspectorPanel, TextArea } from "@tinkermon
 import type { ChangeProposal, ProposedOperation } from "@/api/services/proposals";
 import type { components } from "@/api/types";
 import { DrTripleEditor } from "./DrTripleEditor";
-import { isDrEditable, staleCauseText, type StaleCause } from "./decisionModel";
+import { InUseResolver } from "./InUseResolver";
+import { blockersOf, isDrEditable, staleCauseText, type StaleCause } from "./decisionModel";
 import type { TripleSource } from "./proposalModel";
 import type { ProposalActions } from "./useProposalActions";
 import "./proposals.css";
@@ -24,7 +25,9 @@ interface OperationDecisionProps {
  * The inspector's Decision section for an operation awaiting a decision:
  * Accept (Apply anyway when stale, Apply again when failed), "Edit, then
  * accept" or "Replace instead" for a DR relationship type, and Reject with an
- * optional reason.
+ * optional reason. A relationship-type delete that relationships still use
+ * resolves them instead of Accept (move them or delete them too), and its
+ * Reject keeps the type.
  */
 export function OperationDecision({
   operation,
@@ -38,6 +41,7 @@ export function OperationDecision({
   const [editing, setEditing] = useState(false);
   const editable = !!taxonomy && isDrEditable(operation, taxonomy.identifier);
   const failed = operation.status === "failed";
+  const blockers = blockersOf(operation);
   const noteId = `operation-reject-note-${operation.id}`;
   // After a failed edit the generic button applies the proposal, not the edit.
   const editFailed = actions.editFailed(operation);
@@ -59,7 +63,7 @@ export function OperationDecision({
               : `${staleCause ? staleCauseText(staleCause) : "Its target changed after it was proposed."} Applying it needs Apply anyway, which keeps the proposed values.`}
           </FormCallout>
         )}
-        {failed && !operation.stale && (
+        {failed && !operation.stale && !blockers && (
           <FormCallout variant="error" icon="alert" data-testid="operation-failed-callout">
             {editFailed
               ? "The edit wasn't applied (the reason is under Change). Edit it again, apply the proposal as it stands, or reject it."
@@ -80,16 +84,31 @@ export function OperationDecision({
           />
         ) : (
           <>
+            {blockers && (
+              <InUseResolver
+                operation={operation}
+                blockers={blockers}
+                busy={actions.busy}
+                lastResolution={actions.lastResolutionOf(operation.id)}
+                onApply={(resolution) =>
+                  actions.accept([operation.id], {
+                    resolutions: { [operation.id]: resolution },
+                  })
+                }
+              />
+            )}
             <div className="op-decision__actions" role="group" aria-label="Decision">
-              <Button
-                variant="primary"
-                size="sm"
-                disabled={actions.busy}
-                onClick={() => actions.accept([operation.id])}
-                data-testid="operation-accept"
-              >
-                {acceptLabel}
-              </Button>
+              {!blockers && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={actions.busy}
+                  onClick={() => actions.accept([operation.id])}
+                  data-testid="operation-accept"
+                >
+                  {acceptLabel}
+                </Button>
+              )}
               {editable && (
                 <Button
                   variant="secondary"
@@ -108,7 +127,7 @@ export function OperationDecision({
                 onClick={() => actions.rejectOperations([operation.id], note)}
                 data-testid="operation-reject"
               >
-                Reject
+                {blockers ? "Keep the type (reject)" : "Reject"}
               </Button>
             </div>
             <Field label="Reason" hint="optional, stored with a reject" htmlFor={noteId}>
@@ -116,7 +135,7 @@ export function OperationDecision({
                 id={noteId}
                 rows={2}
                 value={note}
-                placeholder="Why reject it?"
+                placeholder={blockers ? "Why keep the type?" : "Why reject it?"}
                 onChange={(e) => setNote(e.target.value)}
                 data-testid="operation-reject-note"
               />

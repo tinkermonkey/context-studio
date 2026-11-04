@@ -34,8 +34,9 @@ interface ApplyResultsProps {
 
 /**
  * The outcome of the last apply: a warning when some failed (applies aren't
- * atomic), the proposal's tally, and each sent operation's outcome. A failed
- * one can be applied again or rejected from here.
+ * atomic), the proposal's tally, and each sent operation's outcome, with the
+ * relationships a resolved delete moved or deleted. A failed one can be
+ * applied again or rejected from here.
  */
 export function ApplyResults({ proposal, operationIds, context, actions }: ApplyResultsProps) {
   const rows: Row[] = outcomeRows(proposal, operationIds).map((r) => ({
@@ -48,6 +49,10 @@ export function ApplyResults({ proposal, operationIds, context, actions }: Apply
   const failed = rows.filter((r) => r.operation.status === "failed");
   const applied = rows.filter((r) => r.operation.status === "applied").length;
   const tally = tallyOperations(proposal.operations);
+  const resolved = rows.some((r) => r.resolved);
+  const revertNote = resolved
+    ? "Revert undoes everything this proposal applied, and puts the relationships it moved or deleted back on their type."
+    : "Revert undoes everything this proposal applied.";
 
   const columns: Column<Row>[] = [
     {
@@ -77,6 +82,11 @@ export function ApplyResults({ proposal, operationIds, context, actions }: Apply
             {row.operation.status}
           </Chip>
           {row.edited && <Chip variant="violet">edited</Chip>}
+          {row.resolved && (
+            <Chip variant="amber">
+              {row.operation.resolution?.strategy === "move" ? "moved" : "deleted too"}
+            </Chip>
+          )}
         </div>
       ),
     },
@@ -87,6 +97,23 @@ export function ApplyResults({ proposal, operationIds, context, actions }: Apply
       render: (_, row) => (
         <div className="apply-result" data-testid={`apply-result-${row.id}`}>
           <span className="apply-result__text">{row.result}</span>
+          {row.resolved && (row.operation.resolution?.edges?.length ?? 0) > 0 && (
+            <ul
+              className="apply-result__edges"
+              aria-label={
+                row.operation.resolution?.strategy === "move"
+                  ? "Relationships moved"
+                  : "Relationships deleted"
+              }
+              data-testid={`apply-resolution-${row.id}`}
+            >
+              {row.operation.resolution?.edges?.map((edge) => (
+                <li key={edge.relationship_id}>
+                  {edge.source_title} → {edge.target_title}
+                </li>
+              ))}
+            </ul>
+          )}
           {row.operation.status === "failed" && (
             <span className="op-decision__actions">
               {/* A failed edit retries with the edit; the server kept no record of it. */}
@@ -100,9 +127,11 @@ export function ApplyResults({ proposal, operationIds, context, actions }: Apply
                 >
                   {actions.lastEditOf(row.id)
                     ? "Retry edit"
-                    : row.operation.stale
-                      ? "Apply anyway"
-                      : "Retry"}
+                    : actions.lastResolutionOf(row.id)
+                      ? "Retry resolution"
+                      : row.operation.stale
+                        ? "Apply anyway"
+                        : "Retry"}
                 </Button>
               )}
               {actions.editFailed(row.operation) && (
@@ -152,11 +181,11 @@ export function ApplyResults({ proposal, operationIds, context, actions }: Apply
       <div className="stack-lg">
         {failed.length > 0 ? (
           <FormCallout variant="warn" icon="alert" data-testid="apply-results-warning">
-            {`Applied ${applied} of ${rows.length}. ${seqList(failed)} failed and stay${failed.length === 1 ? "s" : ""} failed: retry, or reject. Applies aren't atomic; each outcome is recorded, and Revert undoes everything this proposal applied.`}
+            {`Applied ${applied} of ${rows.length}. ${seqList(failed)} failed and stay${failed.length === 1 ? "s" : ""} failed: retry, or reject. Applies aren't atomic; each outcome is recorded. ${revertNote}`}
           </FormCallout>
         ) : (
           <FormCallout variant="info" icon="check" data-testid="apply-results-ok">
-            {`Applied ${applied} of ${rows.length}. Revert undoes everything this proposal applied.`}
+            {`Applied ${applied} of ${rows.length}. ${revertNote}`}
           </FormCallout>
         )}
         <StatGrid columns={4} data-testid="apply-results-tally">

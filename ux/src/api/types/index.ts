@@ -4139,6 +4139,16 @@ export interface paths {
      *     edit or reject. For dr_spec the identifier and DR external reference follow
      *     from the triple. What was applied is returned as the operation's
      *     applied_fields.
+     *
+     *     resolutions lets a relationship-type delete apply although relationships
+     *     still use the type (its blockers list them): "move" gives each the
+     *     replacement type instead (all must fit its domain and range, inheritance-
+     *     aware, and allow their attributes, or nothing moves), "delete" deletes them
+     *     too. The relationships and the type change in one transaction tagged with
+     *     the proposal's run, so Revert restores them together; a failure fails only
+     *     that operation ("unresolvable: ..." for a misfit) and changes nothing.
+     *     Without a resolution such a delete fails as in use. What was moved or
+     *     deleted is returned as the operation's resolution.
      */
     post: operations["apply_proposal_api_proposals__proposal_id__apply_post"];
     delete?: never;
@@ -4812,6 +4822,20 @@ export interface components {
       /** @description Breakdown of runs by status */
       run_counts: components["schemas"]["RunCountsResponse"];
     };
+    /**
+     * BlockingEdgeResponse
+     * @description A relationship that uses the relationship type being deleted.
+     */
+    BlockingEdgeResponse: {
+      /** Relationship Id */
+      relationship_id: string;
+      source: components["schemas"]["EdgeEndResponse"];
+      target: components["schemas"]["EdgeEndResponse"];
+      /** Attributes */
+      attributes?: {
+        [key: string]: unknown;
+      };
+    };
     /** Body_import_ontology_api_v1_interchange_import_post */
     Body_import_ontology_api_v1_interchange_import_post: {
       /**
@@ -4993,6 +5017,13 @@ export interface components {
         [key: string]: {
           [key: string]: unknown;
         };
+      };
+      /**
+       * Resolutions
+       * @description Operation id -> how to resolve the relationships still using the relationship type a property delete in operation_ids removes (see the operation's blockers). Moved or deleted in one transaction with the type; a misfit or any failing step fails only that operation, changing nothing. Not with an edit of the same operation
+       */
+      resolutions?: {
+        [key: string]: components["schemas"]["InUseResolutionRequest"];
       };
     };
     /**
@@ -5918,6 +5949,24 @@ export interface components {
       };
     };
     /**
+     * DeleteBlockersResponse
+     * @description What blocks a relationship-type delete: the relationships that still use the type.
+     */
+    DeleteBlockersResponse: {
+      /** Edges */
+      edges: components["schemas"]["BlockingEdgeResponse"][];
+      /**
+       * Replacements
+       * @description Types whose domain and range accept both ends of every edge (inheritance-aware) and that allow their attributes; empty when none does
+       */
+      replacements?: components["schemas"]["ReplacementTypeResponse"][];
+      /**
+       * Move Unavailable Reason
+       * @description Why no type fits, when replacements is empty
+       */
+      move_unavailable_reason?: string | null;
+    };
+    /**
      * DemoDatasetDescriptorResponse
      * @description Metadata describing a demo dataset users can load into a fresh workspace.
      */
@@ -6009,7 +6058,9 @@ export interface components {
      * @description One operation's decision, as DR's `proposal-import.ts --decisions` reads it.
      *
      *     `fields` is present only on an operation a reviewer edited before applying
-     *     it: the triple that was applied.
+     *     it: the triple that was applied. `resolution` is present only on a
+     *     relationship-type delete applied with the relationships using it moved or
+     *     deleted.
      */
     DrDecisionResponse: {
       /** Seq */
@@ -6019,6 +6070,8 @@ export interface components {
       status: components["schemas"]["OperationStatus"];
       /** @description Only on an edited operation; absent (not null) otherwise */
       fields?: components["schemas"]["DrTripleFields"] | null;
+      /** @description Only on a delete applied with a resolution: the strategy, the replacement type and the relationships moved or deleted; absent (not null) otherwise */
+      resolution?: components["schemas"]["InUseResolutionResponse"] | null;
       /** Reason */
       reason?: string | null;
       /** Result Entity Id */
@@ -6035,6 +6088,23 @@ export interface components {
       source_spec_node_id: string;
       /** Destination Spec Node Id */
       destination_spec_node_id: string;
+    };
+    /**
+     * EdgeEndResponse
+     * @description One end of a relationship, with the classes it is typed by.
+     */
+    EdgeEndResponse: {
+      /** Id */
+      id: string;
+      /** Title */
+      title: string;
+      /**
+       * Class Ids
+       * @description An individual's classes, or a class end itself
+       */
+      class_ids?: string[];
+      /** Class Titles */
+      class_titles?: string[];
     };
     /**
      * EnqueueBatchRunsRequest
@@ -6850,6 +6920,35 @@ export interface components {
        * @enum {string}
        */
       status: "pending" | "committed" | "failed" | "rolled_back";
+    };
+    /**
+     * InUseResolutionRequest
+     * @description How to resolve the relationships still using a relationship type a delete removes.
+     */
+    InUseResolutionRequest: {
+      /** @description move: give each relationship the replacement type instead; delete: delete them too. Either way the type is deleted afterwards */
+      strategy: components["schemas"]["ResolutionStrategy"];
+      /**
+       * Replacement Property Id
+       * @description The type they move to (a move only); every relationship must fit its domain and range (inheritance-aware) and allow its attributes
+       */
+      replacement_property_id?: string | null;
+    };
+    /**
+     * InUseResolutionResponse
+     * @description How a relationship-type delete resolved the relationships that still used it.
+     */
+    InUseResolutionResponse: {
+      strategy: components["schemas"]["ResolutionStrategy"];
+      /** Replacement Property Id */
+      replacement_property_id?: string | null;
+      /** Replacement Identifier */
+      replacement_identifier?: string | null;
+      /**
+       * Edges
+       * @description The relationships moved or deleted
+       */
+      edges?: components["schemas"]["ResolvedEdgeResponse"][];
     };
     /**
      * IndividualClassListRequest
@@ -8280,12 +8379,16 @@ export interface components {
       applied_fields?: {
         [key: string]: unknown;
       } | null;
+      /** @description Set when a relationship-type delete was applied with a resolution: what happened to the relationships that used it. Null otherwise */
+      resolution?: components["schemas"]["InUseResolutionResponse"] | null;
       /**
        * Stale
        * @description Pending or failed, and its target is gone or a field it touches changed since proposed; applying it needs force_stale
        * @default false
        */
       stale: boolean;
+      /** @description A pending or failed relationship-type delete whose type relationships still use: applying it as proposed fails; it needs a resolution. Null otherwise */
+      blockers?: components["schemas"]["DeleteBlockersResponse"] | null;
     };
     /**
      * PublishDiffStats
@@ -8773,6 +8876,18 @@ export interface components {
       };
     };
     /**
+     * ReplacementTypeResponse
+     * @description A relationship type every blocking relationship fits.
+     */
+    ReplacementTypeResponse: {
+      /** Property Id */
+      property_id: string;
+      /** Identifier */
+      identifier: string;
+      /** Title */
+      title: string;
+    };
+    /**
      * ResolutionRecordResponse
      * @description Record of a resolution applied during import.
      */
@@ -8796,6 +8911,12 @@ export interface components {
       resolution_chosen: "skip" | "overwrite" | "merge" | "rename" | "abort";
     };
     /**
+     * ResolutionStrategy
+     * @description What happens to the relationships still using a relationship type being deleted.
+     * @enum {string}
+     */
+    ResolutionStrategy: "move" | "delete";
+    /**
      * ResolveConflictsRequest
      * @description Request to resolve conflicts in a proposal
      */
@@ -8809,6 +8930,27 @@ export interface components {
           [key: string]: unknown;
         };
       };
+    };
+    /**
+     * ResolvedEdgeResponse
+     * @description A relationship a resolved delete moved or deleted.
+     */
+    ResolvedEdgeResponse: {
+      /** Relationship Id */
+      relationship_id: string;
+      /** Source Id */
+      source_id: string;
+      /** Target Id */
+      target_id: string;
+      /** Source Title */
+      source_title: string;
+      /** Target Title */
+      target_title: string;
+      /**
+       * Moved To Id
+       * @description The relationship of the replacement type made in its place (a move)
+       */
+      moved_to_id?: string | null;
     };
     /**
      * ResumeBatchResponse
@@ -14693,7 +14835,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description An operation id is not in the proposal, or an edit is misplaced (not in operation_ids, not a property update/delete, empty, or uses a $ref); nothing was applied */
+      /** @description An operation id is not in the proposal, or an edit is misplaced (not in operation_ids, not a property update/delete, empty, or uses a $ref), or a resolution is (not in operation_ids, not a property delete, also edited, or a move without replacement_property_id); nothing was applied */
       422: {
         headers: {
           [name: string]: unknown;

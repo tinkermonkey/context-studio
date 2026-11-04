@@ -7683,7 +7683,7 @@
           "proposals"
         ],
         "summary": "Apply Proposal",
-        "description": "Apply the chosen operations in seq order under the proposal's run.\n\nEach operation records its own outcome; one that fails (e.g. \"target_changed\")\ndoes not undo the others. Pass a stale operation in force_stale to apply it\nanyway (edited ones too).\n\nedits corrects property-definition updates and deletes before they apply:\neach replaces the operation's proposed fields, applied as an update. A field\nproblem, or a breach of the taxonomy's rules (for dr_spec: both classes are\nDR spec classes, the predicate is in its predicate catalog, and no other\nrelationship type or operation has the triple), fails only that operation\nwith \"invalid_edit: ...\"; it stays open, to apply again with a corrected\nedit or reject. For dr_spec the identifier and DR external reference follow\nfrom the triple. What was applied is returned as the operation's\napplied_fields.",
+        "description": "Apply the chosen operations in seq order under the proposal's run.\n\nEach operation records its own outcome; one that fails (e.g. \"target_changed\")\ndoes not undo the others. Pass a stale operation in force_stale to apply it\nanyway (edited ones too).\n\nedits corrects property-definition updates and deletes before they apply:\neach replaces the operation's proposed fields, applied as an update. A field\nproblem, or a breach of the taxonomy's rules (for dr_spec: both classes are\nDR spec classes, the predicate is in its predicate catalog, and no other\nrelationship type or operation has the triple), fails only that operation\nwith \"invalid_edit: ...\"; it stays open, to apply again with a corrected\nedit or reject. For dr_spec the identifier and DR external reference follow\nfrom the triple. What was applied is returned as the operation's\napplied_fields.\n\nresolutions lets a relationship-type delete apply although relationships\nstill use the type (its blockers list them): \"move\" gives each the\nreplacement type instead (all must fit its domain and range, inheritance-\naware, and allow their attributes, or nothing moves), \"delete\" deletes them\ntoo. The relationships and the type change in one transaction tagged with\nthe proposal's run, so Revert restores them together; a failure fails only\nthat operation (\"unresolvable: ...\" for a misfit) and changes nothing.\nWithout a resolution such a delete fails as in use. What was moved or\ndeleted is returned as the operation's resolution.",
         "operationId": "apply_proposal_api_proposals__proposal_id__apply_post",
         "parameters": [
           {
@@ -7724,7 +7724,7 @@
             "description": "The proposal is reverted, or an operation is already decided"
           },
           "422": {
-            "description": "An operation id is not in the proposal, or an edit is misplaced (not in operation_ids, not a property update/delete, empty, or uses a $ref); nothing was applied"
+            "description": "An operation id is not in the proposal, or an edit is misplaced (not in operation_ids, not a property update/delete, empty, or uses a $ref), or a resolution is (not in operation_ids, not a property delete, also edited, or a move without replacement_property_id); nothing was applied"
           }
         }
       }
@@ -8930,6 +8930,33 @@
         "title": "BatchResponse",
         "description": "Response containing batch information."
       },
+      "BlockingEdgeResponse": {
+        "properties": {
+          "relationship_id": {
+            "type": "string",
+            "title": "Relationship Id"
+          },
+          "source": {
+            "$ref": "#/components/schemas/EdgeEndResponse"
+          },
+          "target": {
+            "$ref": "#/components/schemas/EdgeEndResponse"
+          },
+          "attributes": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Attributes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "relationship_id",
+          "source",
+          "target"
+        ],
+        "title": "BlockingEdgeResponse",
+        "description": "A relationship that uses the relationship type being deleted."
+      },
       "Body_import_ontology_api_v1_interchange_import_post": {
         "properties": {
           "format": {
@@ -9193,6 +9220,14 @@
             "type": "object",
             "title": "Edits",
             "description": "Operation id -> the complete Context Studio fields to apply as a property-definition update instead of the proposed ones; only for property update/delete ops in operation_ids (an edited delete applies as an update). For a dr_spec proposal the identifier and DR external reference follow from the triple (canonical_predicate, domain_class_id, range_class_id)"
+          },
+          "resolutions": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/InUseResolutionRequest"
+            },
+            "type": "object",
+            "title": "Resolutions",
+            "description": "Operation id -> how to resolve the relationships still using the relationship type a property delete in operation_ids removes (see the operation's blockers). Moved or deleted in one transaction with the type; a misfit or any failing step fails only that operation, changing nothing. Not with an edit of the same operation"
           }
         },
         "type": "object",
@@ -10784,6 +10819,43 @@
         "title": "DegreeDistributionResponse",
         "description": "Response containing degree distribution for all nodes."
       },
+      "DeleteBlockersResponse": {
+        "properties": {
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/BlockingEdgeResponse"
+            },
+            "type": "array",
+            "title": "Edges"
+          },
+          "replacements": {
+            "items": {
+              "$ref": "#/components/schemas/ReplacementTypeResponse"
+            },
+            "type": "array",
+            "title": "Replacements",
+            "description": "Types whose domain and range accept both ends of every edge (inheritance-aware) and that allow their attributes; empty when none does"
+          },
+          "move_unavailable_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Move Unavailable Reason",
+            "description": "Why no type fits, when replacements is empty"
+          }
+        },
+        "type": "object",
+        "required": [
+          "edges"
+        ],
+        "title": "DeleteBlockersResponse",
+        "description": "What blocks a relationship-type delete: the relationships that still use the type."
+      },
       "DemoDatasetDescriptorResponse": {
         "properties": {
           "name": {
@@ -10916,6 +10988,17 @@
             ],
             "description": "Only on an edited operation; absent (not null) otherwise"
           },
+          "resolution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InUseResolutionResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only on a delete applied with a resolution: the strategy, the replacement type and the relationships moved or deleted; absent (not null) otherwise"
+          },
           "reason": {
             "anyOf": [
               {
@@ -10946,7 +11029,7 @@
           "status"
         ],
         "title": "DrDecisionResponse",
-        "description": "One operation's decision, as DR's `proposal-import.ts --decisions` reads it.\n\n`fields` is present only on an operation a reviewer edited before applying\nit: the triple that was applied."
+        "description": "One operation's decision, as DR's `proposal-import.ts --decisions` reads it.\n\n`fields` is present only on an operation a reviewer edited before applying\nit: the triple that was applied. `resolution` is present only on a\nrelationship-type delete applied with the relationships using it moved or\ndeleted."
       },
       "DrTripleFields": {
         "properties": {
@@ -10971,6 +11054,40 @@
         ],
         "title": "DrTripleFields",
         "description": "A DR relationship's triple in DR's vocabulary."
+      },
+      "EdgeEndResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "class_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Class Ids",
+            "description": "An individual's classes, or a class end itself"
+          },
+          "class_titles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Class Titles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "EdgeEndResponse",
+        "description": "One end of a relationship, with the classes it is typed by."
       },
       "EnqueueBatchRunsRequest": {
         "properties": {
@@ -12317,6 +12434,75 @@
         ],
         "title": "ImportRunResponse",
         "description": "Response containing import run data."
+      },
+      "InUseResolutionRequest": {
+        "properties": {
+          "strategy": {
+            "$ref": "#/components/schemas/ResolutionStrategy",
+            "description": "move: give each relationship the replacement type instead; delete: delete them too. Either way the type is deleted afterwards"
+          },
+          "replacement_property_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replacement Property Id",
+            "description": "The type they move to (a move only); every relationship must fit its domain and range (inheritance-aware) and allow its attributes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "strategy"
+        ],
+        "title": "InUseResolutionRequest",
+        "description": "How to resolve the relationships still using a relationship type a delete removes."
+      },
+      "InUseResolutionResponse": {
+        "properties": {
+          "strategy": {
+            "$ref": "#/components/schemas/ResolutionStrategy"
+          },
+          "replacement_property_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replacement Property Id"
+          },
+          "replacement_identifier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replacement Identifier"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/ResolvedEdgeResponse"
+            },
+            "type": "array",
+            "title": "Edges",
+            "description": "The relationships moved or deleted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "strategy"
+        ],
+        "title": "InUseResolutionResponse",
+        "description": "How a relationship-type delete resolved the relationships that still used it."
       },
       "IndividualClassListRequest": {
         "properties": {
@@ -14688,11 +14874,33 @@
             "title": "Applied Fields",
             "description": "Set when a reviewer edited the operation: the fields actually applied, always as an update (an edited delete applies as an update). Null = applied as proposed, or not applied"
           },
+          "resolution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InUseResolutionResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set when a relationship-type delete was applied with a resolution: what happened to the relationships that used it. Null otherwise"
+          },
           "stale": {
             "type": "boolean",
             "title": "Stale",
             "description": "Pending or failed, and its target is gone or a field it touches changed since proposed; applying it needs force_stale",
             "default": false
+          },
+          "blockers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeleteBlockersResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A pending or failed relationship-type delete whose type relationships still use: applying it as proposed fails; it needs a resolution. Null otherwise"
           }
         },
         "type": "object",
@@ -15466,6 +15674,30 @@
         "title": "RelationshipResponse",
         "description": "Response containing relationship data."
       },
+      "ReplacementTypeResponse": {
+        "properties": {
+          "property_id": {
+            "type": "string",
+            "title": "Property Id"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "property_id",
+          "identifier",
+          "title"
+        ],
+        "title": "ReplacementTypeResponse",
+        "description": "A relationship type every blocking relationship fits."
+      },
       "ResolutionRecordResponse": {
         "properties": {
           "match_kind": {
@@ -15505,6 +15737,15 @@
         "title": "ResolutionRecordResponse",
         "description": "Record of a resolution applied during import."
       },
+      "ResolutionStrategy": {
+        "type": "string",
+        "enum": [
+          "move",
+          "delete"
+        ],
+        "title": "ResolutionStrategy",
+        "description": "What happens to the relationships still using a relationship type being deleted."
+      },
       "ResolveConflictsRequest": {
         "properties": {
           "resolutions": {
@@ -15523,6 +15764,52 @@
         ],
         "title": "ResolveConflictsRequest",
         "description": "Request to resolve conflicts in a proposal"
+      },
+      "ResolvedEdgeResponse": {
+        "properties": {
+          "relationship_id": {
+            "type": "string",
+            "title": "Relationship Id"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "target_id": {
+            "type": "string",
+            "title": "Target Id"
+          },
+          "source_title": {
+            "type": "string",
+            "title": "Source Title"
+          },
+          "target_title": {
+            "type": "string",
+            "title": "Target Title"
+          },
+          "moved_to_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Moved To Id",
+            "description": "The relationship of the replacement type made in its place (a move)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "relationship_id",
+          "source_id",
+          "target_id",
+          "source_title",
+          "target_title"
+        ],
+        "title": "ResolvedEdgeResponse",
+        "description": "A relationship a resolved delete moved or deleted."
       },
       "ResumeBatchResponse": {
         "properties": {

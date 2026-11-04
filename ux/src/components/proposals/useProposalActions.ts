@@ -13,7 +13,13 @@ import type {
 } from "@/api/services/proposals";
 import { useToasts } from "@/components/ui/Toast";
 import { downloadJson } from "@/lib/download";
-import { revertConflictOf, splitStale } from "./decisionModel";
+import {
+  plural,
+  revertConflictOf,
+  splitBlocked,
+  splitStale,
+  type Resolutions,
+} from "./decisionModel";
 
 export type Edits = Record<string, Record<string, unknown>>;
 
@@ -25,6 +31,8 @@ export interface ApplyOutcome {
 
 interface ApplyOptions {
   edits?: Edits;
+  /** How blocked relationship-type deletes resolve the relationships still using the type. */
+  resolutions?: Resolutions;
   /** Add these outcomes to the results view instead of replacing it (a retry from it). */
   merge?: boolean;
 }
@@ -63,25 +71,34 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
   const [revertConflict, setRevertConflict] = useState<ChangeProposalRevertConflict | null>(null);
   // The edit each operation's last apply sent: the server keeps none for a failed one.
   const [lastEdits, setLastEdits] = useState<Edits>({});
+  // Likewise the resolution each blocked delete's last apply sent.
+  const [lastResolutions, setLastResolutions] = useState<Resolutions>({});
   const id = proposal?.id ?? "";
 
   const send = async (
     operationIds: string[],
     forceStale: string[],
-    { edits = {}, merge = false }: ApplyOptions = {},
+    { edits = {}, resolutions = {}, merge = false }: ApplyOptions = {},
   ): Promise<ApplyOutcome> => {
-    setLastEdits((previous) => {
+    const remember = <T>(previous: Record<string, T>, sent: Record<string, T>) => {
       const next = { ...previous };
       for (const opId of operationIds) {
-        if (edits[opId]) next[opId] = edits[opId];
+        if (sent[opId]) next[opId] = sent[opId];
         else delete next[opId];
       }
       return next;
-    });
+    };
+    setLastEdits((previous) => remember(previous, edits));
+    setLastResolutions((previous) => remember(previous, resolutions));
     try {
       await apply.mutateAsync({
         id,
-        data: { operation_ids: operationIds, force_stale: forceStale, edits },
+        data: {
+          operation_ids: operationIds,
+          force_stale: forceStale,
+          edits,
+          ...(Object.keys(resolutions).length > 0 ? { resolutions } : {}),
+        },
       });
       setLastApplied((previous) =>
         merge && previous ? [...new Set([...previous, ...operationIds])] : operationIds,
@@ -123,16 +140,36 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
     operation.status === "failed" &&
     (!!lastEdits[operation.id] || EDIT_FAILURE.test(operation.reason ?? ""));
 
-  /** Apply a failed operation again from the results: with its last edit, if it had one. */
+  /** The resolution this blocked delete's last apply sent, if any. */
+  const lastResolutionOf = (opId: string) => lastResolutions[opId];
+
+  /** Apply a failed operation again from the results: with its last edit or resolution. */
   const retry = (opId: string, { asProposed = false } = {}) => {
     const edit = asProposed ? undefined : lastEdits[opId];
-    return accept([opId], { edits: edit ? { [opId]: edit } : undefined, merge: true });
+    const resolution = asProposed ? undefined : lastResolutions[opId];
+    return accept([opId], {
+      edits: edit ? { [opId]: edit } : undefined,
+      resolutions: resolution ? { [opId]: resolution } : undefined,
+      merge: true,
+    });
   };
 
-  /** Accept the operations that need no confirmation; stale ones are left for Apply anyway. */
+  /**
+   * Accept the operations that need no confirmation or choice: stale ones are
+   * left for Apply anyway, and blocked deletes (relationships still use the
+   * type) for a resolution in the inspector, which a toast says.
+   */
   const acceptFresh = async (operationIds: string[]) => {
     if (!proposal) return;
-    const { fresh } = splitStale(proposal.operations, operationIds);
+    const { unblocked, blocked } = splitBlocked(proposal.operations, operationIds);
+    const { fresh } = splitStale(proposal.operations, unblocked);
+    if (blocked.length > 0) {
+      toast(
+        "info",
+        `${plural(blocked.length, "blocked delete")} skipped`,
+        "Relationships still use those types. Resolve each in the inspector: move them, delete them too, or keep the type.",
+      );
+    }
     if (fresh.length > 0) await send(fresh, []);
   };
 
@@ -208,6 +245,7 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
     cancelForce,
     retry,
     lastEditOf,
+    lastResolutionOf,
     editFailed,
     /** Operation ids the last apply sent; null until one ran (or after a revert). */
     lastApplied,

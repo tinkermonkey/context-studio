@@ -4,7 +4,7 @@ import "./proposals.css";
 interface ThresholdBarProps {
   threshold: number;
   onThresholdChange: (threshold: number) => void;
-  /** Awaiting, non-stale operations at or above the threshold. */
+  /** Awaiting operations at or above the threshold, neither stale nor blocked. */
   matching: number;
   awaiting: number;
   onSelect: () => void;
@@ -55,7 +55,7 @@ export function ThresholdBar({
         Select {matching}
       </Button>
       <span className="proposal-bar__note">
-        Stale operations are never selected by the threshold.
+        Stale operations and blocked deletes are never selected by the threshold.
       </span>
     </div>
   );
@@ -65,6 +65,11 @@ interface SelectionBarProps {
   selected: number;
   /** Selected operations that are stale: Accept selected leaves them for Apply anyway. */
   stale: number;
+  /**
+   * Selected deletes of relationship types still in use: Accept selected skips
+   * them; each needs a resolution in the inspector.
+   */
+  blocked?: number;
   busy?: boolean;
   onClear: () => void;
   onReject: () => void;
@@ -75,20 +80,27 @@ interface SelectionBarProps {
 export function SelectionBar({
   selected,
   stale,
+  blocked = 0,
   busy,
   onClear,
   onReject,
   onAccept,
 }: SelectionBarProps) {
-  const acceptable = selected - stale;
+  const acceptable = selected - stale - blocked;
+  const notes = [
+    stale > 0 &&
+      `${stale} stale: Accept selected leaves ${stale === 1 ? "it" : "them"} for Apply anyway in the inspector.`,
+    blocked > 0 &&
+      `${blocked} blocked (in use): Accept selected skips ${blocked === 1 ? "it" : "them"}; resolve ${blocked === 1 ? "it" : "each"} in the inspector.`,
+  ].filter(Boolean);
   return (
     <div className="proposal-bar proposal-bar--selection" data-testid="proposal-selection-bar">
       <span className="proposal-bar__count" data-testid="proposal-selection-count">
         {selected} selected
       </span>
-      <span className="proposal-bar__text">
-        {stale > 0
-          ? `${stale} stale: Accept selected leaves ${stale === 1 ? "it" : "them"} for Apply anyway in the inspector.`
+      <span className="proposal-bar__text" data-testid="proposal-selection-note">
+        {notes.length > 0
+          ? notes.join(" ")
           : "Applied in seq order under this proposal's run; revert undoes them together."}
       </span>
       <span className="proposal-bar__actions">

@@ -3161,6 +3161,41 @@ selectors:
     component: src/components/proposals/RevertConflict.tsx
     description: "Closes the conflict panel"
 
+  # Review queue: relationship-type deletes still in use (#1393)
+  - selector: operation-blocked-*
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Amber \"Blocked: in use by N\" chip on an awaiting relationship-type delete whose type relationships still use, by operation id"
+  - selector: proposal-selection-note
+    component: src/components/proposals/DecisionBars.tsx
+    description: "Selection bar text: stale and blocked operations Accept selected leaves out, else how it applies"
+  - selector: operation-in-use
+    component: src/components/proposals/InUseResolver.tsx
+    description: "Decision panel part for a blocked delete: the relationships using the type and how to resolve them"
+  - selector: operation-in-use-callout
+    component: src/components/proposals/InUseResolver.tsx
+    description: "Warn callout: N relationships still use the type, so deleting it as proposed fails"
+  - selector: operation-blocker-edges
+    component: src/components/proposals/InUseResolver.tsx
+    description: "List of the relationships using the type (source and target, with their classes)"
+  - selector: operation-blocker-edge-*
+    component: src/components/proposals/InUseResolver.tsx
+    description: "One relationship using the type, by relationship id; \"fits <type>\" while moving"
+  - selector: operation-resolution-strategy
+    component: src/components/proposals/InUseResolver.tsx
+    description: "Move them / Delete them too segmented control (Move disabled when no type fits)"
+  - selector: operation-move-unavailable
+    component: src/components/proposals/InUseResolver.tsx
+    description: "Why Move isn't available: no other relationship type fits every relationship"
+  - selector: operation-resolution-replacement
+    component: src/components/proposals/InUseResolver.tsx
+    description: "Move to: the relationship types every relationship fits"
+  - selector: operation-resolution-apply
+    component: src/components/proposals/InUseResolver.tsx
+    description: "Applies the delete with the resolution; names its scope (\"Apply: delete 2 relationships and the type\")"
+  - selector: apply-resolution-*
+    component: src/components/proposals/ApplyResults.tsx
+    description: "The relationships an applied resolution moved or deleted, by operation id"
+
   # Review queue: entry points (chat card, entity pages)
   - selector: chat-proposal-card
     component: src/components/proposals/ProposalCard.tsx
