@@ -66,6 +66,7 @@ class FakeChangeProposalRepository:
             target.reason = operation.reason
             target.scope = operation.scope
             target.applied_fields = copy.deepcopy(operation.applied_fields)
+            target.resolution = copy.deepcopy(operation.resolution)
             target.base = copy.deepcopy(operation.base)
 
     def set_status(self, proposal_id: str, status: ProposalStatus) -> None:

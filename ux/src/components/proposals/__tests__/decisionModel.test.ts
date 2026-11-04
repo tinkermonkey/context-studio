@@ -6,6 +6,7 @@ import {
 } from "@/api/services/__tests__/fixtures/proposals.fixtures";
 import {
   atOrAboveThreshold,
+  blockersOf,
   checkDrTriple,
   decisionPreview,
   drEditFields,
@@ -17,8 +18,11 @@ import {
   isBelowThreshold,
   isDrEditable,
   outcomeRows,
+  resolutionLabel,
+  resolutionResult,
   revertConflictOf,
   revertSummary,
+  splitBlocked,
   splitStale,
   staleCause,
   staleCauseText,
@@ -366,8 +370,19 @@ describe("revert", () => {
       updated: 2,
       deleted: 1,
       edited: 1,
+      relationships: 0,
       open: 1,
     });
+  });
+
+  it("counts the relationships resolved deletes moved or deleted, for the revert to restore", () => {
+    const proposal = createChangeProposal({
+      operations: [
+        op({ id: "a", op: "delete", kind: "property", status: "applied", resolution: deleted }),
+        op({ id: "b", op: "delete", status: "applied" }),
+      ],
+    });
+    expect(revertSummary(proposal)).toMatchObject({ deleted: 2, relationships: 2 });
   });
 
   it("reads the blockers from a 409 and ignores other errors", () => {
@@ -380,5 +395,84 @@ describe("revert", () => {
     });
     expect(revertConflictOf(new ApiError("boom", 500, "boom"))).toBeUndefined();
     expect(revertConflictOf(new Error("x"))).toBeUndefined();
+  });
+});
+
+const edge = (id: string, source: string, target: string) => ({
+  relationship_id: id,
+  source: { id: `${id}-s`, title: source, class_ids: ["c1"], class_titles: ["BusinessEvent"] },
+  target: { id: `${id}-t`, title: target, class_ids: ["c2"], class_titles: ["BusinessFunction"] },
+  attributes: {},
+});
+
+const blockers = {
+  edges: [
+    edge("r1", "Entity Changed Event", "Entity Enrichment"),
+    edge("r2", "Sync Completed Event", "Conflict Resolution"),
+  ],
+  replacements: [],
+  move_unavailable_reason: "none accepts BusinessFunction targets",
+};
+
+const deleted = {
+  strategy: "delete" as const,
+  replacement_property_id: null,
+  replacement_identifier: null,
+  edges: [
+    {
+      relationship_id: "r1",
+      source_id: "s1",
+      target_id: "t1",
+      source_title: "Entity Changed Event",
+      target_title: "Entity Enrichment",
+    },
+    {
+      relationship_id: "r2",
+      source_id: "s2",
+      target_id: "t2",
+      source_title: "Sync Completed Event",
+      target_title: "Conflict Resolution",
+    },
+  ],
+};
+
+describe("blocked relationship-type deletes", () => {
+  const blocked = op({ id: "blocked", op: "delete", kind: "property", probability: 0.9, blockers });
+  const plain = op({ id: "plain", probability: 0.9 });
+
+  it("an awaiting delete with blockers is blocked; a decided one is not", () => {
+    expect(blockersOf(blocked)).toBe(blockers);
+    expect(blockersOf({ ...blocked, status: "rejected" })).toBeUndefined();
+    expect(blockersOf(plain)).toBeUndefined();
+  });
+
+  it("bulk accept and the threshold skip blocked deletes", () => {
+    expect(splitBlocked([blocked, plain], ["blocked", "plain"])).toEqual({
+      unblocked: ["plain"],
+      blocked: ["blocked"],
+    });
+    expect(atOrAboveThreshold([blocked, plain], 0.6).map((o) => o.id)).toEqual(["plain"]);
+  });
+
+  it("the resolve button names its scope", () => {
+    expect(resolutionLabel(blockers, "delete")).toBe("Apply: delete 2 relationships and the type");
+    expect(resolutionLabel(blockers, "move", "relates_to")).toBe(
+      "Apply: move 2 relationships to relates_to and delete the type",
+    );
+  });
+
+  it("an applied resolution reads as what it did", () => {
+    const applied = op({ id: "a", op: "delete", status: "applied", resolution: deleted });
+    expect(resolutionResult(applied)).toBe("deleted 2 relationships and the type");
+    const moved = {
+      ...applied,
+      resolution: { ...deleted, strategy: "move" as const, replacement_identifier: "relates_to" },
+    };
+    expect(resolutionResult(moved)).toBe("moved 2 relationships to relates_to, removed the type");
+    expect(outcomeRows(createChangeProposal({ operations: [applied] }), ["a"])[0]).toMatchObject({
+      resolved: true,
+      result: "deleted 2 relationships and the type",
+    });
+    expect(resolutionResult(op({ id: "b", status: "applied" }))).toBeUndefined();
   });
 });

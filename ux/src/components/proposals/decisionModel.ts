@@ -1,6 +1,7 @@
 /**
  * Deciding a change proposal, worked out in the browser: the probability
- * threshold, stale causes, a DR triple edit (checked as it is typed, and the
+ * threshold, stale causes, relationship-type deletes blocked by relationships
+ * still using the type, a DR triple edit (checked as it is typed, and the
  * `edits` entry and decision line it makes), apply outcomes and what a revert
  * undoes. Read-only views live in proposalModel.
  */
@@ -11,7 +12,13 @@ import type {
   DrDecision,
   ProposedOperation,
 } from "@/api/services/proposals";
+import type { components } from "@/api/types";
 import { isAwaiting, propertyTriples, type TripleSource } from "./proposalModel";
+
+export type DeleteBlockers = components["schemas"]["DeleteBlockersResponse"];
+export type BlockingEdge = components["schemas"]["BlockingEdgeResponse"];
+export type Resolution = components["schemas"]["InUseResolutionRequest"];
+export type Resolutions = Record<string, Resolution>;
 
 // ==================== Who can decide ====================
 
@@ -50,8 +57,9 @@ export function isBelowThreshold(operation: ProposedOperation, threshold: number
 }
 
 /**
- * The operations "Select N" picks: awaiting, not stale, with a probability at
- * or above the threshold. Stale ones are never picked; they need Apply anyway.
+ * The operations "Select N" picks: awaiting, not stale, not blocked, with a
+ * probability at or above the threshold. Stale ones are never picked (they need
+ * Apply anyway), nor blocked deletes (they need a resolution in the inspector).
  */
 export function atOrAboveThreshold(
   operations: ProposedOperation[],
@@ -61,6 +69,7 @@ export function atOrAboveThreshold(
     (o) =>
       isAwaiting(o) &&
       !o.stale &&
+      !isBlocked(o) &&
       typeof o.probability === "number" &&
       !isBelowThreshold(o, threshold),
   );
@@ -114,6 +123,67 @@ export function staleCauseText(cause: StaleCause): string {
   if (cause.gone) return "Its target is gone, so applying it fails even with Apply anyway.";
   if (cause.fields.length > 0) return `${cause.fields.join(", ")} changed since it was proposed.`;
   return "Its target changed after it was proposed.";
+}
+
+// ==================== Blocked relationship-type deletes ====================
+
+/** An awaiting relationship-type delete's blockers: the relationships still using the type. */
+export function blockersOf(operation: ProposedOperation): DeleteBlockers | undefined {
+  const blockers = operation.blockers;
+  return isAwaiting(operation) && blockers && blockers.edges.length > 0 ? blockers : undefined;
+}
+
+export function isBlocked(operation: ProposedOperation): boolean {
+  return !!blockersOf(operation);
+}
+
+/**
+ * Awaiting operations among `ids`, split into those a bulk accept sends and
+ * the blocked deletes it skips: those need a resolution, chosen in the inspector.
+ */
+export function splitBlocked(
+  operations: ProposedOperation[],
+  ids: Iterable<string>,
+): { unblocked: string[]; blocked: string[] } {
+  const wanted = new Set(ids);
+  const chosen = operations.filter((o) => wanted.has(o.id) && isAwaiting(o));
+  return {
+    unblocked: chosen.filter((o) => !isBlocked(o)).map((o) => o.id),
+    blocked: chosen.filter(isBlocked).map((o) => o.id),
+  };
+}
+
+export function plural(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
+
+/** "Entity Changed Event (BusinessEvent)" */
+export function edgeEndLabel(end: BlockingEdge["source"]): string {
+  const classes = end.class_titles ?? [];
+  return classes.length > 0 ? `${end.title} (${classes.join(", ")})` : end.title;
+}
+
+/** The resolve button names its scope: what it moves or deletes, then the type. */
+export function resolutionLabel(
+  blockers: DeleteBlockers,
+  strategy: Resolution["strategy"],
+  replacementIdentifier?: string,
+): string {
+  const edges = plural(blockers.edges.length, "relationship");
+  return strategy === "move"
+    ? `Apply: move ${edges} to ${replacementIdentifier ?? "another type"} and delete the type`
+    : `Apply: delete ${edges} and the type`;
+}
+
+/** What an applied resolution did, or undefined for an operation without one. */
+export function resolutionResult(operation: ProposedOperation): string | undefined {
+  const resolution = operation.resolution;
+  if (operation.status !== "applied" || !resolution) return undefined;
+  const edges = plural(resolution.edges?.length ?? 0, "relationship");
+  const replacement = resolution.replacement_identifier ?? resolution.replacement_property_id;
+  return resolution.strategy === "move"
+    ? `moved ${edges} to ${replacement}, removed the type`
+    : `deleted ${edges} and the type`;
 }
 
 // ==================== DR triple edits (accept with edit) ====================
@@ -374,6 +444,8 @@ export interface OutcomeRow {
   operation: ProposedOperation;
   /** A reviewer's edit was applied (applied_fields set). */
   edited: boolean;
+  /** A blocked delete was applied with its relationships moved or deleted (resolution set). */
+  resolved: boolean;
   /** "<code>: <detail>" on a failure, else what it made or changed. */
   result: string;
 }
@@ -387,8 +459,11 @@ export function outcomeRows(proposal: ChangeProposal, operationIds: string[]): O
       const edited = operation.status === "applied" && !!operation.applied_fields;
       const appliedIdentifier =
         operation.applied_fields?.identifier ?? operation.fields?.identifier;
+      const resolved = resolutionResult(operation);
       let result: string;
-      if (operation.status === "failed" || operation.status === "rejected") {
+      if (resolved) {
+        result = resolved;
+      } else if (operation.status === "failed" || operation.status === "rejected") {
         result = operation.reason ?? operation.status;
       } else if (operation.status === "applied") {
         result =
@@ -400,7 +475,7 @@ export function outcomeRows(proposal: ChangeProposal, operationIds: string[]): O
       } else {
         result = "not applied";
       }
-      return { operation, edited, result };
+      return { operation, edited, resolved: !!resolved, result };
     });
 }
 
@@ -412,6 +487,8 @@ export interface RevertSummary {
   updated: number;
   deleted: number;
   edited: number;
+  /** Relationships applied deletes moved or deleted with their type: restored on it. */
+  relationships: number;
   /** Pending or failed: rejected by the revert. */
   open: number;
 }
@@ -428,6 +505,7 @@ export function revertSummary(proposal: ChangeProposal): RevertSummary {
     updated: count((o) => o.op === "update" || o.op === "move" || (o.op === "delete" && edited(o))),
     deleted: count((o) => o.op === "delete" && !edited(o)),
     edited: count(edited),
+    relationships: applied.reduce((sum, o) => sum + (o.resolution?.edges?.length ?? 0), 0),
     open: proposal.operations.filter(isAwaiting).length,
   };
 }

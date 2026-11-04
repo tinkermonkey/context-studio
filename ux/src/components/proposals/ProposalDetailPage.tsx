@@ -27,7 +27,9 @@ import {
   DEFAULT_THRESHOLD,
   DR_TAXONOMY_IDENTIFIER,
   atOrAboveThreshold,
+  blockersOf,
   hasProbabilities,
+  isBlocked,
   isBelowThreshold,
   revertSummary,
   staleCause,
@@ -156,6 +158,11 @@ function operationColumns(context: OperationContext, options: ColumnOptions): Op
               stale
             </Chip>
           )}
+          {blockersOf(row) && (
+            <Chip variant="amber" data-testid={`operation-blocked-${row.id}`}>
+              Blocked: in use by {blockersOf(row)?.edges.length}
+            </Chip>
+          )}
           {row.applied_fields && <Chip variant="violet">edited</Chip>}
         </div>
       ),
@@ -169,6 +176,8 @@ function revertMessage(summary: RevertSummary): string {
     summary.updated > 0 &&
       `${summary.updated} updated changed back${summary.edited > 0 ? ` (${summary.edited} edited)` : ""}`,
     summary.deleted > 0 && `${summary.deleted} deleted restored`,
+    summary.relationships > 0 &&
+      `the ${summary.relationships} relationship${summary.relationships === 1 ? "" : "s"} moved or deleted with a type restored on it`,
   ].filter(Boolean);
   const open =
     summary.open > 0
@@ -288,9 +297,14 @@ export function ProposalDetailPage({
       context.targetGone(operation),
     );
   const checkedList = [...checked];
-  const checkedStale = operations.filter((o) => checked.has(o.id) && o.stale).length;
+  // A blocked delete counts as blocked even when stale too: Accept selected skips it either way.
+  const checkedStale = operations.filter(
+    (o) => checked.has(o.id) && o.stale && !isBlocked(o),
+  ).length;
+  const checkedBlocked = operations.filter((o) => checked.has(o.id) && isBlocked(o)).length;
   const awaitingIds = awaitingOps.map((o) => o.id);
-  const freshAwaiting = awaitingOps.filter((o) => !o.stale).length;
+  const blockedAwaiting = awaitingOps.filter(isBlocked).length;
+  const freshAwaiting = awaitingOps.filter((o) => !o.stale && !isBlocked(o)).length;
   const force = actions.forceRequest;
   const forceStale = force
     ? operations.filter((o) => force.operationIds.includes(o.id) && o.stale)
@@ -357,7 +371,14 @@ export function ProposalDetailPage({
                   disabled={actions.busy || freshAwaiting === 0}
                   title={
                     awaitingOps.length > freshAwaiting
-                      ? "Stale operations are left for Apply anyway"
+                      ? [
+                          awaitingOps.some((o) => o.stale && !isBlocked(o)) &&
+                            "Stale operations are left for Apply anyway",
+                          blockedAwaiting > 0 &&
+                            "Blocked deletes are left for a resolution in the inspector",
+                        ]
+                          .filter(Boolean)
+                          .join(". ")
                       : undefined
                   }
                   onClick={() => actions.acceptFresh(awaitingIds)}
@@ -402,6 +423,7 @@ export function ProposalDetailPage({
         <SelectionBar
           selected={checked.size}
           stale={checkedStale}
+          blocked={checkedBlocked}
           busy={actions.busy}
           onClear={() => setChecked([])}
           onReject={async () => {

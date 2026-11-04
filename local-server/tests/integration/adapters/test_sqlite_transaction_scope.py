@@ -69,6 +69,18 @@ def test_a_rollback_inside_the_scope_refuses_to_commit_even_if_caught(parts):
     assert repo.get_taxonomy("t2") is None
 
 
+def test_an_aborted_scope_names_the_error_the_rollback_handled(parts):
+    """The refusal carries the cause a repository caught and rolled back on."""
+    _, shared, scope = parts
+    with pytest.raises(TransactionAbortedError, match=r"rolled back \(ValueError: dup\)"):
+        with scope.atomic():
+            with shared() as session:
+                try:
+                    raise ValueError("dup")
+                except ValueError:
+                    session.rollback()
+
+
 @pytest.mark.slow
 def test_a_writer_waits_through_a_scope_held_longer_than_five_seconds(parts):
     """Another thread's write waits for the scope's lock (busy_timeout) and then succeeds."""

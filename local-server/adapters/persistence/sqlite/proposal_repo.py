@@ -18,6 +18,7 @@ from adapters.persistence.sqlite.models import BatchRun, ChangeProposalRun, Prop
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
+    InUseResolution,
     OperationKind,
     OperationStatus,
     OperationType,
@@ -113,6 +114,7 @@ class SQLiteChangeProposalRepository:
                 row.reason = operation.reason  # type: ignore[assignment]
                 row.scope = operation.scope.value  # type: ignore[assignment]
                 row.applied_fields = operation.applied_fields  # type: ignore[assignment]
+                row.resolution = _resolution_json(operation)  # type: ignore[assignment]
                 row.base = dict(operation.base)  # type: ignore[assignment]
             session.commit()
 
@@ -174,7 +176,12 @@ def _operation_to_orm(proposal_id: str, operation: ProposedOperation) -> Proposa
         result_entity_id=operation.result_entity_id,
         reason=operation.reason,
         applied_fields=operation.applied_fields,
+        resolution=_resolution_json(operation),
     )
+
+
+def _resolution_json(operation: ProposedOperation) -> Optional[dict]:
+    return operation.resolution.to_json() if operation.resolution is not None else None
 
 
 def _operation_to_domain(row: ProposalOperation) -> ProposedOperation:
@@ -195,6 +202,11 @@ def _operation_to_domain(row: ProposalOperation) -> ProposedOperation:
         result_entity_id=row.result_entity_id,  # type: ignore[arg-type]
         reason=row.reason,  # type: ignore[arg-type]
         applied_fields=dict(row.applied_fields) if row.applied_fields is not None else None,
+        resolution=(
+            InUseResolution.from_json(dict(row.resolution))  # type: ignore[arg-type]
+            if row.resolution is not None
+            else None
+        ),
     )
 
 

@@ -2,7 +2,7 @@
 The decisions on a DR reflection-plan proposal, as DR's
 `proposal-import.ts --decisions` reads them.
 
-One `{seq, op_id, status, fields?, reason, result_entity_id}` per operation,
+One `{seq, op_id, status, fields?, resolution?, reason, result_entity_id}` per operation,
 joined to DR's plan by seq. Shared by `scripts/export_dr_decisions.py` and
 `GET /api/proposals/{id}/decisions`.
 """
@@ -24,6 +24,9 @@ def decisions_for(proposal: ChangeProposal) -> list[dict[str, Any]]:
     whole applied triple in DR's vocabulary (`predicate`,
     `source_spec_node_id`, `destination_spec_node_id`); without it, an applied
     operation was applied as proposed. An edited delete is applied with fields.
+    A relationship-type delete applied with the relationships using it moved
+    to another type or deleted too carries `resolution`: the strategy, the
+    replacement type and those relationships.
 
     Raises:
         ValueError: If the proposal was reverted, so none of it stands, or an
@@ -42,6 +45,8 @@ def decisions_for(proposal: ChangeProposal) -> list[dict[str, Any]]:
         }
         if operation.status is OperationStatus.APPLIED and operation.applied_fields is not None:
             decision["fields"] = _applied_triple(operation.seq, operation.applied_fields).fields()
+        if operation.status is OperationStatus.APPLIED and operation.resolution is not None:
+            decision["resolution"] = operation.resolution.to_json()
         decision["reason"] = operation.reason
         decision["result_entity_id"] = operation.result_entity_id
         decisions.append(decision)

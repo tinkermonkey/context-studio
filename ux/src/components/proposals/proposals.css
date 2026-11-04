@@ -527,6 +527,64 @@
     overflow-wrap: anywhere;
   }
 
+  /* Blocked relationship-type delete: the relationships using it, and how to resolve them. */
+  .op-resolver {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .op-resolver__edges {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+
+  .op-resolver__edge {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    align-items: baseline;
+    padding: 6px 0;
+    border-top: 1px dashed rgb(var(--canvas-border));
+    color: rgb(var(--canvas-fg-1));
+    overflow-wrap: anywhere;
+  }
+
+  .op-resolver__edge:first-child {
+    border-top: none;
+  }
+
+  .op-resolver__arrow,
+  .op-resolver__note {
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .op-resolver__note {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+  }
+
+  .op-resolver__fit {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: rgb(var(--status-emerald));
+  }
+
+  /* What an applied resolution moved or deleted, under its result. */
+  .apply-result__edges {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: rgb(var(--canvas-fg-2));
+    overflow-wrap: anywhere;
+  }
+
   /* Stale confirmation. */
   .proposal-force-list {
     margin: 0;

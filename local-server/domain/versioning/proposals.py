@@ -70,6 +70,13 @@ class OperationKind(str, Enum):
     RELATIONSHIP = "relationship"
 
 
+class ResolutionStrategy(str, Enum):
+    """What happens to the relationships still using a relationship type being deleted."""
+
+    MOVE = "move"
+    DELETE = "delete"
+
+
 class ChangeScope(str, Enum):
     """How much a change can break, in increasing order."""
 
@@ -204,6 +211,75 @@ def _only_adds_keys(current: Any, proposed: Any) -> bool:
     )
 
 
+@dataclass(frozen=True)
+class ResolvedEdge:
+    """
+    One relationship a resolved delete moved or deleted.
+
+    Attributes:
+        relationship_id: The relationship that used the deleted type
+        source_id, target_id: Its ends
+        source_title, target_title: The ends' titles when it was resolved
+        moved_to_id: The relationship of the replacement type made in its place
+            (a move only)
+    """
+
+    relationship_id: str
+    source_id: str
+    target_id: str
+    source_title: str
+    target_title: str
+    moved_to_id: str | None = None
+
+
+@dataclass
+class InUseResolution:
+    """
+    A reviewer's choice for deleting a relationship type that relationships still use.
+
+    Attributes:
+        strategy: Move the relationships to another type, or delete them too;
+            either way the type is deleted afterwards
+        replacement_property_id: The type they move to (a move only)
+        replacement_identifier: That type's identifier, recorded when applied
+        edges: The relationships moved or deleted, recorded when applied
+        relationship_ids: The relationships the reviewer saw using the type
+            (a request only, not stored); the apply fails if the relationships
+            using it at apply time differ. None skips the check.
+    """
+
+    strategy: ResolutionStrategy
+    replacement_property_id: str | None = None
+    replacement_identifier: str | None = None
+    edges: list[ResolvedEdge] = field(default_factory=list)
+    relationship_ids: list[str] | None = None
+
+    def __post_init__(self) -> None:
+        self.strategy = ResolutionStrategy(self.strategy)
+        if self.strategy is ResolutionStrategy.MOVE and not self.replacement_property_id:
+            raise ValueError("A move needs replacement_property_id")
+        if self.strategy is ResolutionStrategy.DELETE and self.replacement_property_id:
+            raise ValueError("A delete takes no replacement_property_id")
+
+    def to_json(self) -> dict[str, Any]:
+        """The JSON stored with the operation."""
+        return {
+            "strategy": self.strategy.value,
+            "replacement_property_id": self.replacement_property_id,
+            "replacement_identifier": self.replacement_identifier,
+            "edges": [vars(edge).copy() for edge in self.edges],
+        }
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> "InUseResolution":
+        return cls(
+            strategy=ResolutionStrategy(data["strategy"]),
+            replacement_property_id=data.get("replacement_property_id"),
+            replacement_identifier=data.get("replacement_identifier"),
+            edges=[ResolvedEdge(**edge) for edge in data.get("edges") or []],
+        )
+
+
 @dataclass
 class OperationDraft:
     """
@@ -273,6 +349,7 @@ class ProposedOperation:
     result_entity_id: str | None = None
     reason: str | None = None
     applied_fields: dict[str, Any] | None = None
+    resolution: InUseResolution | None = None
     id: str = field(default_factory=lambda: str(uuid4()))
 
     def __post_init__(self) -> None:

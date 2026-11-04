@@ -46,7 +46,11 @@ def _response(service: ProposalService, result: BundleImportResult) -> BundleImp
         },
         deletes=plan.deletes,
         proposal=(
-            ChangeProposalResponse.from_domain(proposal, service.stale_operation_ids(proposal))
+            ChangeProposalResponse.from_domain(
+                proposal,
+                service.stale_operation_ids(proposal),
+                service.in_use_blockers(proposal),
+            )
             if proposal is not None
             else None
         ),
