@@ -6,7 +6,9 @@ operation is invalid) and decided per operation afterwards. Applying runs the
 chosen operations in seq order through OntologyService with the proposal's id
 as the batch run id, so every change event they produce is tagged with it and
 reverting the run undoes the proposal. Applies are not atomic: each operation
-records its own outcome, and revert is the recovery path.
+records its own outcome, and revert is the recovery path. One operation that
+takes several steps (a relationship-type delete resolved by moving or deleting
+the relationships using it) runs them in one transaction.
 
 Values in an operation's `fields` and `base` use the JSON encoding of entity
 snapshots (`domain.ontology.snapshots`): enums as their value, external
@@ -18,6 +20,7 @@ from __future__ import annotations
 
 import logging
 import threading
+from contextlib import nullcontext
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Sequence
@@ -34,9 +37,11 @@ from domain.versioning.exceptions import (
     OperationError,
     ProposalValidationError,
 )
+from domain.versioning.in_use import DeleteBlockers, InUseInspector
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
+    InUseResolution,
     OperationDraft,
     OperationKind,
     OperationStatus,
@@ -44,12 +49,15 @@ from domain.versioning.proposals import (
     ProposalSource,
     ProposalStatus,
     ProposedOperation,
+    ResolutionStrategy,
+    ResolvedEdge,
     classify_scope,
 )
 
 if TYPE_CHECKING:
     from domain.ontology.ports import OntologyRepository
     from domain.ontology.services import OntologyService
+    from domain.ports import TransactionScope
     from domain.versioning.ports import (
         ApprovalPolicyRepository,
         ChangeProposalRepository,
@@ -66,6 +74,7 @@ UNRESOLVED_REF = "unresolved_ref"
 APPLY_ERROR = "error"
 INVALID_EDIT = "invalid_edit"
 RULE_REFUSED = "refused"
+UNRESOLVABLE = "unresolvable"
 
 REVERTED_REASON = "proposal reverted"
 
@@ -288,6 +297,7 @@ class ProposalService:
         revert_service: RevertService,
         approval_policies: ApprovalPolicyRepository | None = None,
         apply_rules: Sequence[ProposalApplyRules] = (),
+        transaction_scope: TransactionScope | None = None,
     ) -> None:
         """
         Args:
@@ -299,6 +309,9 @@ class ProposalService:
                 nothing auto-applies
             apply_rules: Rules some property definitions are under (each
                 says which it governs); the rest get only the generic checks
+            transaction_scope: Makes an operation of several steps (a resolved
+                relationship-type delete) atomic; without one, a step failing
+                keeps the steps before it
         """
         self._proposals = proposals
         self._ontology = ontology_service
@@ -306,6 +319,7 @@ class ProposalService:
         self._revert = revert_service
         self._policies = approval_policies
         self._apply_rules = tuple(apply_rules)
+        self._transaction_scope = transaction_scope
         # One lock per proposal: a desktop app runs one process, so two requests
         # deciding on the same proposal are serialized here.
         self._locks: dict[str, threading.Lock] = {}
@@ -724,6 +738,7 @@ class ProposalService:
         operation_ids: Iterable[str],
         force_stale: Iterable[str] = (),
         edits: Mapping[str, dict[str, Any]] | None = None,
+        resolutions: Mapping[str, InUseResolution] | None = None,
     ) -> ChangeProposal:
         """
         Apply the chosen operations, in seq order, under the proposal's run id.
@@ -747,11 +762,24 @@ class ProposalService:
         recomputed from them; a failed one records nothing, so applying the
         operation again without an edit applies it as proposed.
 
+        A relationship-type (property) delete that relationships still use fails
+        as proposed (in use). A resolution lets it apply: move those
+        relationships to another type (each must fit its domain and range,
+        inheritance-aware, allow its attributes and not duplicate one, or
+        nothing moves), or delete them too; then the type is deleted. The steps
+        run through OntologyService in one transaction under the proposal's run,
+        so a failing step keeps none of them (unresolvable, or the step's error)
+        and Revert restores the type and its relationships together. An applied
+        resolution is recorded with the relationships it moved or deleted; a
+        failed one records nothing, like an edit.
+
         Args:
             proposal_id: The proposal
             operation_ids: The operations to apply
             force_stale: Operations to apply even if their target changed since proposed
             edits: Operation id -> the fields to apply instead of the proposed ones
+            resolutions: Operation id -> how to resolve the relationships still
+                using the relationship type a delete removes
 
         Returns:
             The proposal with updated outcomes
@@ -762,8 +790,9 @@ class ProposalService:
                 is already applied or rejected; nothing is applied
             ValueError: If an operation id is not in the proposal, or an edit is
                 misplaced (its operation isn't being applied or isn't a property
-                update or delete, it is empty, or it points at a "$ref");
-                nothing is applied
+                update or delete, it is empty, or it points at a "$ref"), or a
+                resolution is (its operation isn't being applied, isn't a
+                property delete, or is also edited); nothing is applied
         """
         with self._lock(proposal_id):
             proposal = self._get(proposal_id)
@@ -772,6 +801,8 @@ class ProposalService:
             chosen = self._chosen(proposal, operation_ids, "apply")
             edits = dict(edits or {})
             self._check_edits_placed(chosen, edits)
+            resolutions = dict(resolutions or {})
+            self._check_resolutions_placed(chosen, edits, resolutions)
             force = set(force_stale)
             refs = {o.ref: o for o in proposal.operations if o.ref}
 
@@ -784,6 +815,9 @@ class ProposalService:
                         others = {i: e for i, e in edits.items() if i != operation.id}
                         edit = edits[operation.id]
                         self._apply_edited(proposal, operation, edit, others, forced)
+                    elif operation.id in resolutions:
+                        resolution = resolutions[operation.id]
+                        self._apply_resolved(operation, resolution, proposal.id, forced)
                     else:
                         self._apply_one(operation, refs, proposal.id, forced)
                     self._proposals.save_operations(proposal.id, [operation])
@@ -821,6 +855,27 @@ class ProposalService:
             )
             if refs:
                 raise ValueError(f"{label}: an edit can't point at a $ref ({refs})")
+
+    @staticmethod
+    def _check_resolutions_placed(
+        chosen: list[ProposedOperation],
+        edits: dict[str, dict[str, Any]],
+        resolutions: dict[str, InUseResolution],
+    ) -> None:
+        """Each resolution is for a property delete being applied, and not also edited."""
+        by_id = {o.id: o for o in chosen}
+        misplaced = sorted(i for i in resolutions if i not in by_id)
+        if misplaced:
+            raise ValueError(f"Resolutions for operations not being applied: {misplaced}")
+        for operation_id in resolutions:
+            operation = by_id[operation_id]
+            if operation.kind is not K.PROPERTY or operation.op is not OperationType.DELETE:
+                raise ValueError(
+                    f"seq {operation.seq} is a {operation.kind.value} {operation.op.value}; "
+                    "only a property delete takes a resolution"
+                )
+            if operation_id in edits:
+                raise ValueError(f"seq {operation.seq} has both an edit and a resolution")
 
     def _rules_for(
         self, operation: ProposedOperation, fields: dict[str, Any]
@@ -862,6 +917,76 @@ class ProposalService:
             return result
 
         self._record_outcome(operation, proposal.id, run)
+
+    def _apply_resolved(
+        self,
+        operation: ProposedOperation,
+        resolution: InUseResolution,
+        run_id: str,
+        forced: bool,
+    ) -> None:
+        """
+        Apply a relationship-type delete with a resolution of the relationships
+        using it: move or delete each, then delete the type, in one transaction.
+        """
+
+        def run() -> str:
+            self._check_fresh(operation, forced)
+            target_id: str = operation.target_id  # type: ignore[assignment]
+            with self._atomic():
+                inspector = InUseInspector(self._repo)
+                edges = inspector.edges(target_id)
+                replacement = None
+                if resolution.strategy is ResolutionStrategy.MOVE:
+                    replacement_id: str = resolution.replacement_property_id  # type: ignore
+                    replacement = self._repo.get_property_definition(replacement_id)
+                    if replacement is None or replacement.id == target_id:
+                        raise _ApplyFailed(
+                            UNRESOLVABLE, f"no other relationship type {replacement_id}"
+                        )
+                    misfits = inspector.misfits(replacement, edges)
+                    if misfits:
+                        raise _ApplyFailed(
+                            UNRESOLVABLE,
+                            f"{len(misfits)} of {len(edges)} relationship(s) don't fit "
+                            f"{replacement.identifier}: {'; '.join(misfits)}",
+                        )
+                resolved: list[ResolvedEdge] = []
+                for edge in edges:
+                    self._ontology.delete_relationship(edge.relationship_id)
+                    moved_to = None
+                    if replacement is not None:
+                        moved_to = self._ontology.create_relationship(
+                            edge.source.id,
+                            edge.target.id,
+                            replacement.id,
+                            source_run_id=run_id,
+                            attributes=edge.attributes,
+                        ).id
+                    resolved.append(
+                        ResolvedEdge(
+                            relationship_id=edge.relationship_id,
+                            source_id=edge.source.id,
+                            target_id=edge.target.id,
+                            source_title=edge.source.title,
+                            target_title=edge.target.title,
+                            moved_to_id=moved_to,
+                        )
+                    )
+                self._ontology.delete_property_definition(target_id)
+            operation.resolution = InUseResolution(
+                strategy=resolution.strategy,
+                replacement_property_id=replacement.id if replacement else None,
+                replacement_identifier=replacement.identifier if replacement else None,
+                edges=resolved,
+            )
+            return target_id
+
+        self._record_outcome(operation, run_id, run)
+
+    def _atomic(self) -> Any:
+        """One transaction for the steps of one operation, when a scope is wired."""
+        return self._transaction_scope.atomic() if self._transaction_scope else nullcontext()
 
     def _checked_edit(self, operation: ProposedOperation, fields: dict[str, Any]) -> dict[str, Any]:
         """The edit's fields, checked as a proposed property update of the target."""
@@ -919,6 +1044,7 @@ class ProposalService:
         """
         operation.reason = None
         operation.applied_fields = None
+        operation.resolution = None
         scope = operation.scope
         try:
             operation.result_entity_id = run()
@@ -935,6 +1061,7 @@ class ProposalService:
             operation.reason = f"{APPLY_ERROR}: {exc}"
         if operation.status is OperationStatus.FAILED:
             operation.applied_fields = None
+            operation.resolution = None
             operation.scope = scope
             _logger.info(
                 "Proposal %s op seq %s failed: %s", run_id, operation.seq, operation.reason
@@ -1076,6 +1203,31 @@ class ProposalService:
             except _ApplyFailed:
                 stale.add(operation.id)
         return stale
+
+    def in_use_blockers(self, proposal: ChangeProposal) -> dict[str, DeleteBlockers]:
+        """
+        For each pending or failed relationship-type (property) delete whose type
+        relationships still use: those relationships, with each end's classes,
+        and the other types every one of them fits (never a type another
+        awaiting operation of the proposal deletes). Applying such a delete as
+        proposed fails; it needs a resolution (see `apply`).
+        """
+        deletes = [
+            o
+            for o in proposal.pending
+            if o.kind is K.PROPERTY and o.op is OperationType.DELETE and o.target_id
+        ]
+        if not deletes:
+            return {}
+        deleted = {o.id: str(o.target_id) for o in deletes}
+        inspector = InUseInspector(self._repo)
+        found: dict[str, DeleteBlockers] = {}
+        for operation_id, target_id in deleted.items():
+            others = set(deleted.values()) - {target_id}
+            blockers = inspector.blockers(target_id, excluded=others)
+            if blockers is not None:
+                found[operation_id] = blockers
+        return found
 
     def _get(self, proposal_id: str) -> ChangeProposal:
         proposal = self._proposals.get(proposal_id)
