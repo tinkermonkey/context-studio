@@ -1544,6 +1544,9 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
         reason: Why it failed or was rejected
         applied_fields: JSON of the fields actually applied when a reviewer edited the
             operation (always as an update); null when applied as proposed or not applied
+        resolution: JSON {strategy, replacement_property_id, replacement_identifier,
+            edges} when a relationship-type delete was applied with the relationships
+            using it moved or deleted; null otherwise
     """
 
     __tablename__ = "proposal_operations"
@@ -1570,6 +1573,7 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
     result_entity_id = Column(String(36), nullable=True)
     reason = Column(Text, nullable=True)
     applied_fields = Column(JSON, nullable=True)
+    resolution = Column(JSON, nullable=True)
 
     __table_args__ = (UniqueConstraint("proposal_id", "seq", name="uq_proposal_operation_seq"),)
 

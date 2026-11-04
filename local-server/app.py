@@ -570,6 +570,7 @@ async def lifespan(app: FastAPI):
             revert_service=revert_service,
             approval_policies=approval_policy_repo,
             apply_rules=[DrRelationshipRules(cast(OntologyRepository, ontology_repo))],
+            transaction_scope=SqliteTransactionScope(shared_session_factory),
         )
         approval_policy_service = ApprovalPolicyService(
             approval_policy_repo, cast(OntologyRepository, ontology_repo)

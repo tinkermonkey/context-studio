@@ -38,7 +38,12 @@ from domain.versioning.exceptions import (
     RevertRefusedError,
 )
 from domain.versioning.proposal_service import OperationDraft, ProposalService
-from domain.versioning.proposals import ChangeProposal, ProposalSource, ProposalStatus
+from domain.versioning.proposals import (
+    ChangeProposal,
+    InUseResolution,
+    ProposalSource,
+    ProposalStatus,
+)
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
@@ -105,7 +110,9 @@ def _http_error(exc: Exception, unknown_ids_are_invalid: bool = False) -> HTTPEx
 
 
 def _response(service: ProposalService, proposal: ChangeProposal) -> ChangeProposalResponse:
-    return ChangeProposalResponse.from_domain(proposal, service.stale_operation_ids(proposal))
+    return ChangeProposalResponse.from_domain(
+        proposal, service.stale_operation_ids(proposal), service.in_use_blockers(proposal)
+    )
 
 
 # ==================== Read ====================
@@ -263,8 +270,9 @@ async def create_proposal(
         422: {
             "description": (
                 "An operation id is not in the proposal, or an edit is misplaced "
-                "(not in operation_ids, not a property update/delete, empty, or uses a $ref); "
-                "nothing was applied"
+                "(not in operation_ids, not a property update/delete, empty, or uses a $ref), "
+                "or a resolution is (not in operation_ids, not a property delete, also "
+                "edited, or a move without replacement_property_id); nothing was applied"
             )
         },
     },
@@ -290,11 +298,27 @@ async def apply_proposal(
     edit or reject. For dr_spec the identifier and DR external reference follow
     from the triple. What was applied is returned as the operation's
     applied_fields.
+
+    resolutions lets a relationship-type delete apply although relationships
+    still use the type (its blockers list them): "move" gives each the
+    replacement type instead (all must fit its domain and range, inheritance-
+    aware, and allow their attributes, or nothing moves), "delete" deletes them
+    too. The relationships and the type change in one transaction tagged with
+    the proposal's run, so Revert restores them together; a failure fails only
+    that operation ("unresolvable: ..." for a misfit) and changes nothing.
+    Without a resolution such a delete fails as in use. What was moved or
+    deleted is returned as the operation's resolution.
     """
 
     def run() -> ChangeProposalResponse:
+        resolutions = {
+            op_id: InUseResolution(
+                strategy=r.strategy, replacement_property_id=r.replacement_property_id
+            )
+            for op_id, r in request.resolutions.items()
+        }
         proposal = service.apply(
-            proposal_id, request.operation_ids, request.force_stale, request.edits
+            proposal_id, request.operation_ids, request.force_stale, request.edits, resolutions
         )
         return _response(service, proposal)
 

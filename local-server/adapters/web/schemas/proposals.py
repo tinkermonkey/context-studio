@@ -11,6 +11,7 @@ from typing import Any, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from domain.versioning.approval_policy import ApprovalPolicy
+from domain.versioning.in_use import DeleteBlockers
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
@@ -20,6 +21,7 @@ from domain.versioning.proposals import (
     ProposalSource,
     ProposalStatus,
     ProposedOperation,
+    ResolutionStrategy,
 )
 
 # ==================== Requests ====================
@@ -69,6 +71,21 @@ class ChangeProposalCreateRequest(BaseModel):
     operations: list[ProposedOperationRequest] = Field(..., description="The operations")
 
 
+class InUseResolutionRequest(BaseModel):
+    """How to resolve the relationships still using a relationship type a delete removes."""
+
+    strategy: ResolutionStrategy = Field(
+        ...,
+        description="move: give each relationship the replacement type instead; delete: "
+        "delete them too. Either way the type is deleted afterwards",
+    )
+    replacement_property_id: Optional[str] = Field(
+        None,
+        description="The type they move to (a move only); every relationship must fit its "
+        "domain and range (inheritance-aware) and allow its attributes",
+    )
+
+
 class ChangeProposalApplyRequest(BaseModel):
     """Operations to apply, in seq order, under the proposal's run."""
 
@@ -85,6 +102,14 @@ class ChangeProposalApplyRequest(BaseModel):
         "dr_spec proposal the identifier and DR external reference follow from the triple "
         "(canonical_predicate, domain_class_id, range_class_id)",
     )
+    resolutions: dict[str, InUseResolutionRequest] = Field(
+        default_factory=dict,
+        description="Operation id -> how to resolve the relationships still using the "
+        "relationship type a property delete in operation_ids removes (see the operation's "
+        "blockers). Moved or deleted in one transaction with the type; a misfit or any "
+        "failing step fails only that operation, changing nothing. Not with an edit of the "
+        "same operation",
+    )
 
 
 class ChangeProposalRejectRequest(BaseModel):
@@ -95,6 +120,84 @@ class ChangeProposalRejectRequest(BaseModel):
 
 
 # ==================== Responses ====================
+
+
+class EdgeEndResponse(BaseModel):
+    """One end of a relationship, with the classes it is typed by."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    title: str
+    class_ids: list[str] = Field(
+        default_factory=list, description="An individual's classes, or a class end itself"
+    )
+    class_titles: list[str] = Field(default_factory=list)
+
+
+class BlockingEdgeResponse(BaseModel):
+    """A relationship that uses the relationship type being deleted."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    relationship_id: str
+    source: EdgeEndResponse
+    target: EdgeEndResponse
+    attributes: dict[str, Any] = Field(default_factory=dict)
+
+
+class ReplacementTypeResponse(BaseModel):
+    """A relationship type every blocking relationship fits."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    property_id: str
+    identifier: str
+    title: str
+
+
+class DeleteBlockersResponse(BaseModel):
+    """What blocks a relationship-type delete: the relationships that still use the type."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    edges: list[BlockingEdgeResponse]
+    replacements: list[ReplacementTypeResponse] = Field(
+        default_factory=list,
+        description="Types whose domain and range accept both ends of every edge "
+        "(inheritance-aware) and that allow their attributes; empty when none does",
+    )
+    move_unavailable_reason: Optional[str] = Field(
+        None, description="Why no type fits, when replacements is empty"
+    )
+
+
+class ResolvedEdgeResponse(BaseModel):
+    """A relationship a resolved delete moved or deleted."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    relationship_id: str
+    source_id: str
+    target_id: str
+    source_title: str
+    target_title: str
+    moved_to_id: Optional[str] = Field(
+        None, description="The relationship of the replacement type made in its place (a move)"
+    )
+
+
+class InUseResolutionResponse(BaseModel):
+    """How a relationship-type delete resolved the relationships that still used it."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    strategy: ResolutionStrategy
+    replacement_property_id: Optional[str] = None
+    replacement_identifier: Optional[str] = None
+    edges: list[ResolvedEdgeResponse] = Field(
+        default_factory=list, description="The relationships moved or deleted"
+    )
 
 
 class ProposedOperationResponse(BaseModel):
@@ -128,10 +231,20 @@ class ProposedOperationResponse(BaseModel):
         "always as an update (an edited delete applies as an update). Null = applied as "
         "proposed, or not applied",
     )
+    resolution: Optional[InUseResolutionResponse] = Field(
+        None,
+        description="Set when a relationship-type delete was applied with a resolution: "
+        "what happened to the relationships that used it. Null otherwise",
+    )
     stale: bool = Field(
         False,
         description="Pending or failed, and its target is gone or a field it touches "
         "changed since proposed; applying it needs force_stale",
+    )
+    blockers: Optional[DeleteBlockersResponse] = Field(
+        None,
+        description="A pending or failed relationship-type delete whose type relationships "
+        "still use: applying it as proposed fails; it needs a resolution. Null otherwise",
     )
 
 
@@ -151,8 +264,14 @@ class ChangeProposalResponse(BaseModel):
     operations: list[ProposedOperationResponse]
 
     @classmethod
-    def from_domain(cls, proposal: ChangeProposal, stale_ids: set[str]) -> "ChangeProposalResponse":
-        """Build the response, flagging the operations in stale_ids."""
+    def from_domain(
+        cls,
+        proposal: ChangeProposal,
+        stale_ids: set[str],
+        blockers: Optional[dict[str, DeleteBlockers]] = None,
+    ) -> "ChangeProposalResponse":
+        """Build the response, flagging the operations in stale_ids, with their blockers."""
+        blockers = blockers or {}
         return cls(
             id=proposal.id,
             taxonomy_id=proposal.taxonomy_id,
@@ -162,13 +281,19 @@ class ChangeProposalResponse(BaseModel):
             source_detail=proposal.source_detail,
             created_at=proposal.created_at,
             status=proposal.status,
-            operations=[_operation(o, o.id in stale_ids) for o in proposal.operations],
+            operations=[
+                _operation(o, o.id in stale_ids, blockers.get(o.id)) for o in proposal.operations
+            ],
         )
 
 
-def _operation(operation: ProposedOperation, stale: bool) -> ProposedOperationResponse:
+def _operation(
+    operation: ProposedOperation, stale: bool, blockers: Optional[DeleteBlockers]
+) -> ProposedOperationResponse:
     response = ProposedOperationResponse.model_validate(operation)
     response.stale = stale
+    if blockers is not None:
+        response.blockers = DeleteBlockersResponse.model_validate(blockers)
     return response
 
 
@@ -243,7 +368,9 @@ class DrDecisionResponse(BaseModel):
     One operation's decision, as DR's `proposal-import.ts --decisions` reads it.
 
     `fields` is present only on an operation a reviewer edited before applying
-    it: the triple that was applied.
+    it: the triple that was applied. `resolution` is present only on a
+    relationship-type delete applied with the relationships using it moved or
+    deleted.
     """
 
     seq: int
@@ -251,6 +378,11 @@ class DrDecisionResponse(BaseModel):
     status: OperationStatus
     fields: Optional[DrTripleFields] = Field(
         None, description="Only on an edited operation; absent (not null) otherwise"
+    )
+    resolution: Optional[InUseResolutionResponse] = Field(
+        None,
+        description="Only on a delete applied with a resolution: the strategy, the "
+        "replacement type and the relationships moved or deleted; absent (not null) otherwise",
     )
     reason: Optional[str] = None
     result_entity_id: Optional[str] = None
