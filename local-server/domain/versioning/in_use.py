@@ -8,6 +8,12 @@ its classes (an individual's classes, or a class end itself) is that class or
 a subclass of it. A type without a domain (or range) accepts any source (or
 target). It must also allow the relationship's attributes, and not already
 have a relationship between the same two ends.
+
+Only types that share a taxonomy with the deleted type (the taxonomies of
+their domain and range classes) are offered as replacements, so a generic
+untyped type from elsewhere isn't offered just because it accepts anything. A
+deleted type with neither domain nor range has no taxonomy, and any type may
+replace it.
 """
 
 from __future__ import annotations
@@ -74,6 +80,7 @@ class InUseInspector:
         self._ends: dict[str, EdgeEnd] = {}
         self._class_titles: dict[str, str] = {}
         self._types: list[PropertyDefinition] | None = None
+        self._class_taxonomies: dict[str, str | None] = {}
 
     def edges(self, property_id: str) -> list[BlockingEdge]:
         """The relationships that use the type, oldest first."""
@@ -103,7 +110,13 @@ class InUseInspector:
         skip = {property_id, *excluded}
         if self._types is None:
             self._types = list(self._repo.list_property_definitions(limit=None))
-        candidates = [p for p in self._types if p.id not in skip]
+        deleted = self._repo.get_property_definition(property_id)
+        home = self._taxonomies_of(deleted) if deleted is not None else set()
+        candidates = [
+            p
+            for p in self._types
+            if p.id not in skip and (not home or self._taxonomies_of(p) & home)
+        ]
         fitting = [p for p in candidates if not self.misfits(p, edges)]
         replacements = tuple(
             ReplacementType(property_id=p.id, identifier=p.identifier, title=p.title)
@@ -164,6 +177,20 @@ class InUseInspector:
         return f"{_names(both)} fit both ends, but not every relationship: " + "; ".join(
             self.misfits(first, edges)
         )
+
+    def _taxonomies_of(self, prop: PropertyDefinition) -> set[str]:
+        """The taxonomies of a type's domain and range classes (empty when untyped)."""
+        found: set[str] = set()
+        for class_id in (prop.domain_class_id, prop.range_class_id):
+            if class_id is None:
+                continue
+            if class_id not in self._class_taxonomies:
+                cls = self._repo.get_class(class_id)
+                self._class_taxonomies[class_id] = cls.taxonomy_id if cls is not None else None
+            taxonomy_id = self._class_taxonomies[class_id]
+            if taxonomy_id is not None:
+                found.add(taxonomy_id)
+        return found
 
     def _accepts(self, class_id: str | None, end: EdgeEnd) -> bool:
         if class_id is None:

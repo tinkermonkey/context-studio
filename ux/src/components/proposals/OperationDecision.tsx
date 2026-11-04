@@ -29,6 +29,19 @@ interface OperationDecisionProps {
  * resolves them instead of Accept (move them or delete them too), and its
  * Reject keeps the type.
  */
+/** The plain in-use failure of a delete applied without a resolution. */
+const IN_USE_FAILURE = /is in use by \d+ relationship/;
+
+/**
+ * Why a blocked delete's last resolution failed, if it did. The plain in-use
+ * failure (applied without a resolution) only repeats the Blocked callout.
+ */
+function resolutionFailure(operation: ProposedOperation, resolutionSent: boolean) {
+  if (operation.status !== "failed" || !operation.reason) return undefined;
+  if (!resolutionSent && IN_USE_FAILURE.test(operation.reason)) return undefined;
+  return operation.reason;
+}
+
 export function OperationDecision({
   operation,
   proposal,
@@ -90,7 +103,10 @@ export function OperationDecision({
                 blockers={blockers}
                 busy={actions.busy}
                 lastResolution={actions.lastResolutionOf(operation.id)}
-                failureReason={failed ? operation.reason : undefined}
+                failureReason={resolutionFailure(
+                  operation,
+                  !!actions.lastResolutionOf(operation.id),
+                )}
                 onApply={(resolution) =>
                   actions.accept([operation.id], {
                     resolutions: { [operation.id]: resolution },

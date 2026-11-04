@@ -217,15 +217,52 @@ class TestBlockers:
         self, service, graph, ontology
     ):
         serves = add_fitting_type(ontology, graph)
-        # A domain or range left open accepts anything.
-        open_type = ontology.create_property_definition(
-            "relates_to", "relates to", external_references=edge_attributes("weight")
+        # A range left open accepts any target.
+        open_range = ontology.create_property_definition(
+            "businessevent_relates_to",
+            "relates to",
+            domain_class_id=graph["event"],
+            external_references=edge_attributes("weight"),
         ).id
         proposal = propose_delete(service, graph)
         blockers = service.in_use_blockers(proposal)[the_op(proposal).id]
 
-        assert [r.property_id for r in blockers.replacements] == [serves, open_type]
+        assert [r.property_id for r in blockers.replacements] == [open_range, serves]
         assert blockers.move_unavailable_reason is None
+
+    def test_never_offers_an_untyped_type_from_outside_the_taxonomy(self, service, graph, ontology):
+        """A generic type with no domain or range fits anything, but isn't the DR catalog's."""
+        ontology.create_property_definition(
+            "causes", "causes", external_references=edge_attributes("weight")
+        )
+        other = ontology.create_taxonomy(title="Other", identifier="other")
+        scheme = ontology.create_scheme(taxonomy_id=other.id, title="Things")
+        thing = ontology.create_class(scheme.id, "Thing")
+        ontology.create_property_definition(
+            "thing_involves",
+            "involves",
+            domain_class_id=thing.id,
+            external_references=edge_attributes("weight"),
+        )
+        proposal = propose_delete(service, graph)
+        blockers = service.in_use_blockers(proposal)[the_op(proposal).id]
+
+        assert blockers.replacements == ()
+        assert "none accepts BusinessFunction targets" in blockers.move_unavailable_reason
+
+    def test_an_untyped_type_being_deleted_may_move_to_any_type(self, service, graph, ontology):
+        untyped = ontology.create_property_definition("related", "related").id
+        generic = ontology.create_property_definition("causes", "causes").id
+        ontology.create_relationship(graph["changed"], graph["conflicts"], untyped)
+        proposal = service.propose(
+            graph["taxonomy"],
+            "Untyped",
+            [OperationDraft(seq=1, op=T.DELETE, kind=K.PROPERTY, target_id=untyped)],
+            ProposalSource.USER,
+        )
+        blockers = service.in_use_blockers(proposal)[the_op(proposal).id]
+
+        assert generic in [r.property_id for r in blockers.replacements]
 
     def test_a_type_that_doesnt_allow_an_edges_attributes_doesnt_fit(
         self, service, graph, ontology

@@ -256,6 +256,18 @@ describe("a blocked relationship-type delete", () => {
 });
 
 describe("a failed resolution", () => {
+  it("a plain in-use failure shows only the Blocked callout, not a repeat of it", async () => {
+    Object.assign(blocked(), {
+      status: "failed",
+      reason: "error: PropertyDefinition 'prop-1' is in use by 2 relationship(s)",
+    });
+    renderPage("op-delete");
+
+    expect(await screen.findByTestId("operation-in-use-callout")).toBeInTheDocument();
+    expect(screen.queryByTestId("operation-resolution-failed")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("operation-failed-callout")).not.toBeInTheDocument();
+  });
+
   it("shows why it failed, and falls back to Delete when its type no longer fits", async () => {
     blocked().blockers!.replacements = [
       { property_id: "prop-relates", identifier: "relates_to", title: "relates to" },

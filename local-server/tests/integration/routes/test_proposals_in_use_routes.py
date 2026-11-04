@@ -167,6 +167,18 @@ class TestBlockers:
         assert "none accepts BusinessFunction targets" in blockers["move_unavailable_reason"]
         assert op["resolution"] is None
 
+    def test_untyped_generic_types_are_not_offered_for_a_dr_type(self, client, graph, ontology):
+        """The real DR case: generic types outside dr_spec fit anything but aren't offered."""
+        for identifier in ("causes", "complements", "uses", "variant_of"):
+            ontology.create_property_definition(identifier, identifier)
+        _, op = _propose_delete(client, graph)
+
+        assert op["blockers"]["replacements"] == []
+        assert op["blockers"]["move_unavailable_reason"] == (
+            "1 type accepts BusinessEvent sources (businessevent_triggers_businessprocess), "
+            "but none accepts BusinessFunction targets"
+        )
+
     def test_a_fitting_type_is_offered(self, client, graph, ontology):
         serves = _serves(ontology, graph)
         _, op = _propose_delete(client, graph)
