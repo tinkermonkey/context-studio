@@ -90,6 +90,7 @@ export function OperationDecision({
                 blockers={blockers}
                 busy={actions.busy}
                 lastResolution={actions.lastResolutionOf(operation.id)}
+                failureReason={failed ? operation.reason : undefined}
                 onApply={(resolution) =>
                   actions.accept([operation.id], {
                     resolutions: { [operation.id]: resolution },

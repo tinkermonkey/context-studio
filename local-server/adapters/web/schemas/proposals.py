@@ -84,6 +84,12 @@ class InUseResolutionRequest(BaseModel):
         description="The type they move to (a move only); every relationship must fit its "
         "domain and range (inheritance-aware) and allow its attributes",
     )
+    relationship_ids: list[str] = Field(
+        ...,
+        description="The relationships the reviewer saw using the type (its blockers' "
+        "edges); if those using it at apply time differ, the operation fails "
+        "(unresolvable) and nothing changes",
+    )
 
 
 class ChangeProposalApplyRequest(BaseModel):

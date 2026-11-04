@@ -9,6 +9,7 @@ from types import MappingProxyType
 
 import pytest
 
+from domain.ontology.events import GraphInvalidated
 from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import ExternalReference
 from domain.versioning.in_use import InUseInspector
@@ -152,9 +153,19 @@ def scope(repo):
 
 
 @pytest.fixture()
-def service(ontology, repo, scope):
+def publisher():
+    return FakeEventPublisher()
+
+
+@pytest.fixture()
+def service(ontology, repo, scope, publisher):
     return ProposalService(
-        FakeChangeProposalRepository(), ontology, repo, StubRevertService(), transaction_scope=scope
+        FakeChangeProposalRepository(),
+        ontology,
+        repo,
+        StubRevertService(),
+        transaction_scope=scope,
+        event_publisher=publisher,
     )
 
 
@@ -445,3 +456,114 @@ class TestInspector:
     def test_ancestors_follow_parents_without_looping(self, repo, graph):
         inspector = InUseInspector(repo)
         assert inspector._ancestors_of(graph["sync_event"]) == {graph["sync_event"], graph["event"]}
+
+
+class TestReviewFindings:
+    def test_relationships_the_proposal_deletes_dont_block(self, service, graph, repo):
+        """A bundle import plans the relationship deletes before their type's delete."""
+        rel_deletes = [
+            OperationDraft(seq=1, op=T.DELETE, kind=K.RELATIONSHIP, target_id=graph["first"]),
+            OperationDraft(seq=2, op=T.DELETE, kind=K.RELATIONSHIP, target_id=graph["second"]),
+        ]
+        drafts = [
+            rel_deletes[0],
+            rel_deletes[1],
+            OperationDraft(
+                seq=9, op=T.DELETE, kind=K.PROPERTY, target_id=graph["triggers_function"]
+            ),
+        ]
+        proposal = service.propose(graph["taxonomy"], "Bundle", drafts, ProposalSource.BUNDLE)
+        assert service.in_use_blockers(proposal) == {}
+
+        applied = service.apply(proposal.id, [o.id for o in proposal.operations])
+        assert all(o.status is OperationStatus.APPLIED for o in applied.operations)
+        assert repo.get_property_definition(graph["triggers_function"]) is None
+
+    def test_only_the_relationships_left_block(self, service, graph):
+        drafts = [
+            OperationDraft(seq=1, op=T.DELETE, kind=K.RELATIONSHIP, target_id=graph["first"]),
+            OperationDraft(
+                seq=2, op=T.DELETE, kind=K.PROPERTY, target_id=graph["triggers_function"]
+            ),
+        ]
+        proposal = service.propose(graph["taxonomy"], "Bundle", drafts, ProposalSource.BUNDLE)
+        blockers = service.in_use_blockers(proposal)[the_op(proposal, 2).id]
+        assert [e.relationship_id for e in blockers.edges] == [graph["second"]]
+
+    def test_fails_when_the_relationships_changed_since_reviewed(self, service, graph, repo):
+        proposal = propose_delete(service, graph)
+        op_id = the_op(proposal).id
+        seen = InUseResolution(strategy=DELETE, relationship_ids=[graph["first"]])
+        applied = service.apply(proposal.id, [op_id], resolutions={op_id: seen})
+
+        op = the_op(applied)
+        assert op.status is OperationStatus.FAILED
+        assert op.reason == (
+            "unresolvable: the relationships using the type changed since reviewed: "
+            "2 now, 1 reviewed; review them again"
+        )
+        assert len(edges_of(repo, graph["triggers_function"])) == 2
+
+    def test_applies_when_the_reviewed_relationships_still_stand(self, service, graph):
+        proposal = propose_delete(service, graph)
+        op_id = the_op(proposal).id
+        seen = InUseResolution(strategy=DELETE, relationship_ids=[graph["second"], graph["first"]])
+        applied = service.apply(proposal.id, [op_id], resolutions={op_id: seen})
+        assert the_op(applied).status is OperationStatus.APPLIED
+
+    def test_invalidates_the_graph_after_the_transaction(self, service, graph, publisher):
+        proposal = propose_delete(service, graph)
+        op_id = the_op(proposal).id
+        service.apply(proposal.id, [op_id], resolutions={op_id: InUseResolution(strategy=DELETE)})
+
+        last = publisher.get_events_of_type(GraphInvalidated)[-1]
+        assert (last.taxonomy_id, last.reason) == (graph["taxonomy"], "proposal_resolution")
+
+    def test_refuses_a_move_to_a_type_the_proposal_deletes(self, service, graph, ontology):
+        serves = add_fitting_type(ontology, graph)
+        proposal = propose_delete(
+            service, graph, OperationDraft(seq=2, op=T.DELETE, kind=K.PROPERTY, target_id=serves)
+        )
+        op_id = the_op(proposal).id
+        move = InUseResolution(strategy=MOVE, replacement_property_id=serves)
+        with pytest.raises(ValueError, match="which seq 2 deletes"):
+            service.apply(proposal.id, [op_id], resolutions={op_id: move})
+
+    def test_a_resolution_for_an_unused_type_records_none(self, service, graph, ontology):
+        unused = add_fitting_type(ontology, graph)
+        proposal = service.propose(
+            graph["taxonomy"],
+            "Unused",
+            [OperationDraft(seq=1, op=T.DELETE, kind=K.PROPERTY, target_id=unused)],
+            ProposalSource.USER,
+        )
+        op_id = the_op(proposal).id
+        applied = service.apply(
+            proposal.id, [op_id], resolutions={op_id: InUseResolution(strategy=DELETE)}
+        )
+        assert the_op(applied).status is OperationStatus.APPLIED
+        assert the_op(applied).resolution is None
+
+    def test_lists_relationship_types_once_per_preflight(self, service, graph, ontology, repo):
+        serves = add_fitting_type(ontology, graph)
+        drafts = [
+            OperationDraft(
+                seq=1, op=T.DELETE, kind=K.PROPERTY, target_id=graph["triggers_function"]
+            ),
+            OperationDraft(
+                seq=2, op=T.DELETE, kind=K.PROPERTY, target_id=graph["triggers_process"]
+            ),
+        ]
+        ontology.create_relationship(graph["changed"], graph["enrichment"], serves)
+        # triggers_process needs a user too, to be blocked.
+        process_individual = ontology.create_individual(graph["process"], "Billing")
+        ontology.create_relationship(
+            graph["changed"], process_individual.id, graph["triggers_process"]
+        )
+        proposal = service.propose(graph["taxonomy"], "Two", drafts, ProposalSource.USER)
+        calls = []
+        original = repo.list_property_definitions
+        repo.list_property_definitions = lambda *a, **k: calls.append(1) or original(*a, **k)
+
+        assert len(service.in_use_blockers(proposal)) == 2
+        assert len(calls) == 1

@@ -28,6 +28,7 @@ from uuid import uuid4
 
 from domain.interchange.services import get_current_batch_run_id, set_batch_run_context
 from domain.ontology.entities import validate_relationship_attributes
+from domain.ontology.events import GraphInvalidated
 from domain.ontology.exceptions import OntologyError
 from domain.ontology.snapshots import decode_field, entity_snapshot
 from domain.versioning.approval_policy import auto_apply_ids
@@ -57,7 +58,7 @@ from domain.versioning.proposals import (
 if TYPE_CHECKING:
     from domain.ontology.ports import OntologyRepository
     from domain.ontology.services import OntologyService
-    from domain.ports import TransactionScope
+    from domain.ports import EventPublisher, TransactionScope
     from domain.versioning.ports import (
         ApprovalPolicyRepository,
         ChangeProposalRepository,
@@ -298,6 +299,7 @@ class ProposalService:
         approval_policies: ApprovalPolicyRepository | None = None,
         apply_rules: Sequence[ProposalApplyRules] = (),
         transaction_scope: TransactionScope | None = None,
+        event_publisher: EventPublisher | None = None,
     ) -> None:
         """
         Args:
@@ -312,6 +314,10 @@ class ProposalService:
             transaction_scope: Makes an operation of several steps (a resolved
                 relationship-type delete) atomic; without one, a step failing
                 keeps the steps before it
+            event_publisher: Invalidates the graphs a multi-step operation
+                touched once its transaction commits (the steps' own
+                invalidations run before the commit, so a rebuild could cache
+                the old graph)
         """
         self._proposals = proposals
         self._ontology = ontology_service
@@ -320,6 +326,7 @@ class ProposalService:
         self._policies = approval_policies
         self._apply_rules = tuple(apply_rules)
         self._transaction_scope = transaction_scope
+        self._event_publisher = event_publisher
         # One lock per proposal: a desktop app runs one process, so two requests
         # deciding on the same proposal are serialized here.
         self._locks: dict[str, threading.Lock] = {}
@@ -802,7 +809,7 @@ class ProposalService:
             edits = dict(edits or {})
             self._check_edits_placed(chosen, edits)
             resolutions = dict(resolutions or {})
-            self._check_resolutions_placed(chosen, edits, resolutions)
+            self._check_resolutions_placed(proposal, chosen, edits, resolutions)
             force = set(force_stale)
             refs = {o.ref: o for o in proposal.operations if o.ref}
 
@@ -858,11 +865,20 @@ class ProposalService:
 
     @staticmethod
     def _check_resolutions_placed(
+        proposal: ChangeProposal,
         chosen: list[ProposedOperation],
         edits: dict[str, dict[str, Any]],
         resolutions: dict[str, InUseResolution],
     ) -> None:
-        """Each resolution is for a property delete being applied, and not also edited."""
+        """
+        Each resolution is for a property delete being applied, not also edited,
+        and doesn't move relationships to a type the proposal also deletes.
+        """
+        deleted = {
+            o.target_id: o.seq
+            for o in proposal.pending
+            if o.kind is K.PROPERTY and o.op is OperationType.DELETE
+        }
         by_id = {o.id: o for o in chosen}
         misplaced = sorted(i for i in resolutions if i not in by_id)
         if misplaced:
@@ -876,6 +892,12 @@ class ProposalService:
                 )
             if operation_id in edits:
                 raise ValueError(f"seq {operation.seq} has both an edit and a resolution")
+            replacement = resolutions[operation_id].replacement_property_id
+            if replacement is not None and replacement in deleted:
+                raise ValueError(
+                    f"seq {operation.seq} moves its relationships to {replacement}, which "
+                    f"seq {deleted[replacement]} deletes"
+                )
 
     def _rules_for(
         self, operation: ProposedOperation, fields: dict[str, Any]
@@ -936,6 +958,14 @@ class ProposalService:
             with self._atomic():
                 inspector = InUseInspector(self._repo)
                 edges = inspector.edges(target_id)
+                expected = resolution.relationship_ids
+                if expected is not None and {e.relationship_id for e in edges} != set(expected):
+                    raise _ApplyFailed(
+                        UNRESOLVABLE,
+                        f"the relationships using the type changed since reviewed: "
+                        f"{len(edges)} now, {len(set(expected))} reviewed; review them again",
+                    )
+                taxonomies = self._taxonomies_of(edges)
                 replacement = None
                 if resolution.strategy is ResolutionStrategy.MOVE:
                     replacement_id: str = resolution.replacement_property_id  # type: ignore
@@ -974,15 +1004,39 @@ class ProposalService:
                         )
                     )
                 self._ontology.delete_property_definition(target_id)
-            operation.resolution = InUseResolution(
-                strategy=resolution.strategy,
-                replacement_property_id=replacement.id if replacement else None,
-                replacement_identifier=replacement.identifier if replacement else None,
-                edges=resolved,
-            )
+            # Committed: invalidate again, so no graph rebuilt mid-transaction stays cached.
+            for taxonomy_id in sorted(taxonomies):
+                self._invalidate_graph(taxonomy_id)
+            # Nothing used the type after all: it applied as proposed.
+            if resolved:
+                operation.resolution = InUseResolution(
+                    strategy=resolution.strategy,
+                    replacement_property_id=replacement.id if replacement else None,
+                    replacement_identifier=replacement.identifier if replacement else None,
+                    edges=resolved,
+                )
             return target_id
 
         self._record_outcome(operation, run_id, run)
+
+    def _taxonomies_of(self, edges: list[Any]) -> set[str]:
+        """The taxonomies of the classes typing the edges' ends."""
+        class_ids = {c for e in edges for end in (e.source, e.target) for c in end.class_ids}
+        found: set[str] = set()
+        for class_id in class_ids:
+            cls = self._repo.get_class(class_id)
+            if cls is not None:
+                found.add(cls.taxonomy_id)
+        return found
+
+    def _invalidate_graph(self, taxonomy_id: str) -> None:
+        if self._event_publisher is None:
+            return
+        failures = self._event_publisher.publish(
+            GraphInvalidated(taxonomy_id=taxonomy_id, reason="proposal_resolution")
+        )
+        for name, exc in failures:
+            _logger.warning("GraphInvalidated handler %s failed: %s", name, exc)
 
     def _atomic(self) -> Any:
         """One transaction for the steps of one operation, when a scope is wired."""
@@ -1209,8 +1263,11 @@ class ProposalService:
         For each pending or failed relationship-type (property) delete whose type
         relationships still use: those relationships, with each end's classes,
         and the other types every one of them fits (never a type another
-        awaiting operation of the proposal deletes). Applying such a delete as
-        proposed fails; it needs a resolution (see `apply`).
+        awaiting operation of the proposal deletes). Relationships an awaiting
+        relationship delete of the proposal removes don't count (a bundle
+        import deletes them before their type), so a delete they all cover has
+        none. Applying a blocked delete as proposed fails; it needs a
+        resolution (see `apply`).
         """
         deletes = [
             o
@@ -1220,11 +1277,16 @@ class ProposalService:
         if not deletes:
             return {}
         deleted = {o.id: str(o.target_id) for o in deletes}
+        covered = {
+            str(o.target_id)
+            for o in proposal.pending
+            if o.kind is K.RELATIONSHIP and o.op is OperationType.DELETE
+        }
         inspector = InUseInspector(self._repo)
         found: dict[str, DeleteBlockers] = {}
         for operation_id, target_id in deleted.items():
             others = set(deleted.values()) - {target_id}
-            blockers = inspector.blockers(target_id, excluded=others)
+            blockers = inspector.blockers(target_id, excluded=others, covered=covered)
             if blockers is not None:
                 found[operation_id] = blockers
         return found

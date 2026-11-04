@@ -6933,6 +6933,11 @@ export interface components {
        * @description The type they move to (a move only); every relationship must fit its domain and range (inheritance-aware) and allow its attributes
        */
       replacement_property_id?: string | null;
+      /**
+       * Relationship Ids
+       * @description The relationships the reviewer saw using the type (its blockers' edges); if those using it at apply time differ, the operation fails (unresolvable) and nothing changes
+       */
+      relationship_ids: string[];
     };
     /**
      * InUseResolutionResponse
@@ -14835,7 +14840,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description An operation id is not in the proposal, or an edit is misplaced (not in operation_ids, not a property update/delete, empty, or uses a $ref), or a resolution is (not in operation_ids, not a property delete, also edited, or a move without replacement_property_id); nothing was applied */
+      /** @description An operation id is not in the proposal, or an edit is misplaced (not in operation_ids, not a property update/delete, empty, or uses a $ref), or a resolution is (not in operation_ids, not a property delete, also edited, a move without replacement_property_id, or a move to a type the proposal deletes); nothing was applied */
       422: {
         headers: {
           [name: string]: unknown;

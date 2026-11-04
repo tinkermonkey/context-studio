@@ -21,6 +21,7 @@ session outside the scope that commits would commit the scope's work too.
 
 from __future__ import annotations
 
+import sys
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
@@ -37,6 +38,8 @@ class TransactionAbortedError(RuntimeError):
 class _Scope:
     session: Session
     rolled_back: bool = False
+    # The error a repository was handling when it rolled back, if any.
+    cause: BaseException | None = None
 
 
 class _JoinedSession:
@@ -62,6 +65,8 @@ class _JoinedSession:
 
     def rollback(self) -> None:
         self._scope.rolled_back = True
+        if self._scope.cause is None:
+            self._scope.cause = sys.exc_info()[1]
         self._scope.session.rollback()
 
     def __getattr__(self, name: str) -> Any:
@@ -101,9 +106,12 @@ class SharedSessionFactory:
             scope.session.connection().exec_driver_sql("BEGIN IMMEDIATE")
             yield
             if scope.rolled_back:
+                cause = scope.cause
+                because = f" ({type(cause).__name__}: {cause})" if cause is not None else ""
                 raise TransactionAbortedError(
-                    "A write inside the transaction was rolled back; nothing was committed"
-                )
+                    f"A write inside the transaction was rolled back{because}; nothing was"
+                    " committed"
+                ) from cause
             scope.session.commit()
         except BaseException:
             scope.session.rollback()

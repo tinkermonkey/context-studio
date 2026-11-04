@@ -272,7 +272,8 @@ async def create_proposal(
                 "An operation id is not in the proposal, or an edit is misplaced "
                 "(not in operation_ids, not a property update/delete, empty, or uses a $ref), "
                 "or a resolution is (not in operation_ids, not a property delete, also "
-                "edited, or a move without replacement_property_id); nothing was applied"
+                "edited, a move without replacement_property_id, or a move to a type the "
+                "proposal deletes); nothing was applied"
             )
         },
     },
@@ -313,7 +314,9 @@ async def apply_proposal(
     def run() -> ChangeProposalResponse:
         resolutions = {
             op_id: InUseResolution(
-                strategy=r.strategy, replacement_property_id=r.replacement_property_id
+                strategy=r.strategy,
+                replacement_property_id=r.replacement_property_id,
+                relationship_ids=list(r.relationship_ids),
             )
             for op_id, r in request.resolutions.items()
         }

@@ -243,12 +243,16 @@ class InUseResolution:
         replacement_property_id: The type they move to (a move only)
         replacement_identifier: That type's identifier, recorded when applied
         edges: The relationships moved or deleted, recorded when applied
+        relationship_ids: The relationships the reviewer saw using the type
+            (a request only, not stored); the apply fails if the relationships
+            using it at apply time differ. None skips the check.
     """
 
     strategy: ResolutionStrategy
     replacement_property_id: str | None = None
     replacement_identifier: str | None = None
     edges: list[ResolvedEdge] = field(default_factory=list)
+    relationship_ids: list[str] | None = None
 
     def __post_init__(self) -> None:
         self.strategy = ResolutionStrategy(self.strategy)

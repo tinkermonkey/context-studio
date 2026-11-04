@@ -126,9 +126,11 @@ def _propose_delete(client, graph):
 
 
 def _apply(client, proposal, op, resolution=None):
+    """Apply one op; a resolution names the relationships its blockers listed, as the UI does."""
     body = {"operation_ids": [op["id"]]}
     if resolution is not None:
-        body["resolutions"] = {op["id"]: resolution}
+        seen = [e["relationship_id"] for e in (op.get("blockers") or {}).get("edges", [])]
+        body["resolutions"] = {op["id"]: {"relationship_ids": seen, **resolution}}
     return client.post(f"/api/proposals/{proposal['id']}/apply", json=body)
 
 
@@ -295,3 +297,58 @@ class TestDecisions:
         assert decision["status"] == "rejected"
         assert decision["reason"] == "Still used by two events"
         assert "resolution" not in decision
+
+
+class TestReviewFindings:
+    def test_a_bundle_shaped_proposal_deleting_the_relationships_first_isnt_blocked(
+        self, client, graph, ontology
+    ):
+        response = client.post(
+            "/api/proposals",
+            json={
+                "taxonomy_id": graph["taxonomy"],
+                "title": "Bundle",
+                "source": "bundle",
+                "operations": [
+                    {"seq": 1, "op": "delete", "kind": "relationship", "target_id": graph["first"]},
+                    {
+                        "seq": 2,
+                        "op": "delete",
+                        "kind": "relationship",
+                        "target_id": graph["second"],
+                    },
+                    {"seq": 3, "op": "delete", "kind": "property", "target_id": graph["blocked"]},
+                ],
+            },
+        )
+        proposal = response.json()
+        assert [o["blockers"] for o in proposal["operations"]] == [None, None, None]
+
+        applied = client.post(
+            f"/api/proposals/{proposal['id']}/apply",
+            json={"operation_ids": [o["id"] for o in proposal["operations"]]},
+        ).json()
+        assert [o["status"] for o in applied["operations"]] == ["applied"] * 3
+        assert ontology._repository.get_property_definition(graph["blocked"]) is None
+
+    def test_resolution_ids_are_required(self, client, graph):
+        proposal, op = _propose_delete(client, graph)
+
+        response = client.post(
+            f"/api/proposals/{proposal['id']}/apply",
+            json={"operation_ids": [op["id"]], "resolutions": {op["id"]: {"strategy": "delete"}}},
+        )
+
+        assert response.status_code == 422
+
+    def test_a_relationship_added_since_review_fails_the_resolution(self, client, graph, ontology):
+        proposal, op = _propose_delete(client, graph)
+        extra = ontology.create_individual(graph["function"], "Late Function")
+        changed = next(e["source"]["id"] for e in op["blockers"]["edges"])
+        ontology.create_relationship(changed, extra.id, graph["blocked"])
+
+        applied = _apply(client, proposal, op, {"strategy": "delete"}).json()["operations"][0]
+
+        assert applied["status"] == "failed"
+        assert "changed since reviewed: 3 now, 2 reviewed" in applied["reason"]
+        assert len(_ends(ontology, graph["blocked"])) == 3

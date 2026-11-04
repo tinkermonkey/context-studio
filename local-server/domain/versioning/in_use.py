@@ -73,28 +73,37 @@ class InUseInspector:
         self._ancestors: dict[str, frozenset[str]] = {}
         self._ends: dict[str, EdgeEnd] = {}
         self._class_titles: dict[str, str] = {}
+        self._types: list[PropertyDefinition] | None = None
 
     def edges(self, property_id: str) -> list[BlockingEdge]:
         """The relationships that use the type, oldest first."""
         relationships = self._repo.list_relationships(property_id=property_id, limit=None)
         return [self._edge(r) for r in relationships]
 
-    def blockers(self, property_id: str, excluded: Iterable[str] = ()) -> DeleteBlockers | None:
+    def blockers(
+        self,
+        property_id: str,
+        excluded: Iterable[str] = (),
+        covered: Iterable[str] = (),
+    ) -> DeleteBlockers | None:
         """
-        What blocks deleting the type, or None when nothing uses it.
+        What blocks deleting the type, or None when nothing (left) uses it.
 
         Args:
             property_id: The type being deleted
             excluded: Other types not to offer as replacements (ones the same
                 proposal deletes, say)
+            covered: Relationships something else already deletes (the same
+                proposal's relationship deletes, say); they don't block
         """
-        edges = self.edges(property_id)
+        gone = set(covered)
+        edges = [e for e in self.edges(property_id) if e.relationship_id not in gone]
         if not edges:
             return None
         skip = {property_id, *excluded}
-        candidates = [
-            p for p in self._repo.list_property_definitions(limit=None) if p.id not in skip
-        ]
+        if self._types is None:
+            self._types = list(self._repo.list_property_definitions(limit=None))
+        candidates = [p for p in self._types if p.id not in skip]
         fitting = [p for p in candidates if not self.misfits(p, edges)]
         replacements = tuple(
             ReplacementType(property_id=p.id, identifier=p.identifier, title=p.title)

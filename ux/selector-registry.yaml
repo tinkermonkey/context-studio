@@ -3174,6 +3174,9 @@ selectors:
   - selector: operation-in-use-callout
     component: src/components/proposals/InUseResolver.tsx
     description: "Warn callout: N relationships still use the type, so deleting it as proposed fails"
+  - selector: operation-resolution-failed
+    component: src/components/proposals/InUseResolver.tsx
+    description: "Error callout with the reason the blocked delete's last apply failed"
   - selector: operation-blocker-edges
     component: src/components/proposals/InUseResolver.tsx
     description: "List of the relationships using the type (source and target, with their classes)"

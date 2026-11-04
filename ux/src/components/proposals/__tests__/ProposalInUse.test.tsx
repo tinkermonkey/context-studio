@@ -19,12 +19,17 @@ const server = setupServer(...proposalHandlers, ...entityPageHandlers);
 
 type Body = {
   operation_ids: string[];
-  resolutions?: Record<string, { strategy: "move" | "delete"; replacement_property_id?: string }>;
+  resolutions?: Record<
+    string,
+    { strategy: "move" | "delete"; replacement_property_id?: string; relationship_ids: string[] }
+  >;
 };
 
 let proposal: ChangeProposal;
 let applied: Body[];
 let rejected: Record<string, unknown>[];
+/** When set, the next resolved apply fails with this reason and leaves these blockers. */
+let resolutionFails: { reason: string; blockers: typeof blockers } | null;
 
 const end = (id: string, title: string, classTitle: string) => ({
   id,
@@ -64,6 +69,7 @@ beforeEach(() => {
   Object.assign(blocked(), { stale: false, probability: 0.9, blockers: structuredClone(blockers) });
   applied = [];
   rejected = [];
+  resolutionFails = null;
   server.use(
     http.get("*/api/proposals/:id", () => HttpResponse.json(proposal)),
     http.post("*/api/proposals/:id/apply", async ({ request }) => {
@@ -72,6 +78,15 @@ beforeEach(() => {
       for (const op of proposal.operations) {
         if (!body.operation_ids.includes(op.id)) continue;
         const resolution = body.resolutions?.[op.id];
+        if (resolution && resolutionFails) {
+          Object.assign(op, {
+            status: "failed",
+            reason: resolutionFails.reason,
+            blockers: resolutionFails.blockers,
+          });
+          resolutionFails = null;
+          continue;
+        }
         if (op.blockers && !resolution) {
           Object.assign(op, {
             status: "failed",
@@ -173,7 +188,7 @@ describe("a blocked relationship-type delete", () => {
       operation_ids: ["op-delete"],
       force_stale: [],
       edits: {},
-      resolutions: { "op-delete": { strategy: "delete" } },
+      resolutions: { "op-delete": { strategy: "delete", relationship_ids: ["rel-1", "rel-2"] } },
     });
     const results = await screen.findByTestId("proposal-apply-results");
     expect(within(results).getByTestId("apply-result-op-delete")).toHaveTextContent(
@@ -205,7 +220,11 @@ describe("a blocked relationship-type delete", () => {
 
     await waitFor(() => expect(applied).toHaveLength(1));
     expect(applied[0].resolutions).toEqual({
-      "op-delete": { strategy: "move", replacement_property_id: "prop-relates" },
+      "op-delete": {
+        strategy: "move",
+        replacement_property_id: "prop-relates",
+        relationship_ids: ["rel-1", "rel-2"],
+      },
     });
     expect(await screen.findByTestId("apply-result-op-delete")).toHaveTextContent(
       "moved 2 relationships to relates_to, removed the type",
@@ -236,7 +255,54 @@ describe("a blocked relationship-type delete", () => {
   });
 });
 
+describe("a failed resolution", () => {
+  it("shows why it failed, and falls back to Delete when its type no longer fits", async () => {
+    blocked().blockers!.replacements = [
+      { property_id: "prop-relates", identifier: "relates_to", title: "relates to" },
+    ];
+    blocked().blockers!.move_unavailable_reason = null;
+    resolutionFails = {
+      reason: "unresolvable: 2 of 2 relationship(s) don't fit relates_to",
+      blockers: structuredClone(blockers),
+    };
+    const user = userEvent.setup();
+    renderPage("op-delete");
+
+    expect(screen.queryByTestId("operation-resolution-failed")).not.toBeInTheDocument();
+    await user.click(await screen.findByTestId("operation-resolution-apply"));
+
+    const failure = await screen.findByTestId("operation-resolution-failed");
+    expect(failure).toHaveTextContent(
+      "The last apply failed: unresolvable: 2 of 2 relationship(s) don't fit relates_to",
+    );
+    // relates_to is no longer offered: Move falls back to Delete them too.
+    const resolver = screen.getByTestId("operation-in-use");
+    await waitFor(() =>
+      expect(within(resolver).getByRole("radio", { name: "Move them" })).toBeDisabled(),
+    );
+    expect(within(resolver).getByRole("radio", { name: "Delete them too" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    expect(within(resolver).getByTestId("operation-resolution-apply")).toHaveTextContent(
+      "Apply: delete 2 relationships and the type",
+    );
+  });
+});
+
 describe("bulk decisions skip blocked deletes", () => {
+  it("a delete whose relationships the proposal deletes too is not blocked", async () => {
+    blocked().blockers = null;
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByTestId("proposal-accept-all"));
+
+    await waitFor(() => expect(applied).toHaveLength(1));
+    expect(applied[0].operation_ids).toEqual(["op-rename", "op-delete", "op-class"]);
+    expect(screen.queryByTestId("operation-blocked-op-delete")).not.toBeInTheDocument();
+  });
+
   it("Accept all awaiting leaves the blocked delete and says so", async () => {
     const user = userEvent.setup();
     renderPage();

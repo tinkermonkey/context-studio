@@ -18,6 +18,8 @@ interface InUseResolverProps {
   busy?: boolean;
   /** The resolution this delete's last apply sent, if it failed with one. */
   lastResolution?: Resolution;
+  /** Why the last apply failed, when it did. */
+  failureReason?: string | null;
   onApply: (resolution: Resolution) => void;
 }
 
@@ -31,26 +33,36 @@ export function InUseResolver({
   blockers,
   busy,
   lastResolution,
+  failureReason,
   onApply,
 }: InUseResolverProps) {
   const replacements = blockers.replacements ?? [];
   const canMove = replacements.length > 0;
-  const [strategy, setStrategy] = useState<Strategy>(
-    lastResolution?.strategy ?? (canMove ? "move" : "delete"),
+  // The reviewer's choices; what applies is derived from the current blockers,
+  // falling back when a choice no longer holds (its type isn't offered, or no
+  // type fits any more).
+  const [chosenStrategy, setStrategy] = useState<Strategy | undefined>(lastResolution?.strategy);
+  const [chosenReplacement, setReplacementId] = useState<string | undefined>(
+    lastResolution?.replacement_property_id ?? undefined,
   );
-  const [replacementId, setReplacementId] = useState(
-    lastResolution?.replacement_property_id ?? replacements[0]?.property_id ?? "",
-  );
-  const replacement = replacements.find((r) => r.property_id === replacementId);
-  const moving = strategy === "move" && canMove;
+  const replacement =
+    replacements.find((r) => r.property_id === chosenReplacement) ?? replacements[0];
+  const strategy: Strategy = canMove ? (chosenStrategy ?? "move") : "delete";
+  const moving = strategy === "move";
   const count = blockers.edges.length;
   const pickerId = `operation-resolution-replacement-${operation.id}`;
 
+  // The relationships the reviewer sees: the server refuses if they changed meanwhile.
+  const relationshipIds = blockers.edges.map((edge) => edge.relationship_id);
   const apply = () =>
     onApply(
-      moving
-        ? { strategy: "move", replacement_property_id: replacementId }
-        : { strategy: "delete" },
+      moving && replacement
+        ? {
+            strategy: "move",
+            replacement_property_id: replacement.property_id,
+            relationship_ids: relationshipIds,
+          }
+        : { strategy: "delete", relationship_ids: relationshipIds },
     );
 
   return (
@@ -58,6 +70,11 @@ export function InUseResolver({
       <FormCallout variant="warn" icon="alert" data-testid="operation-in-use-callout">
         {`Blocked: ${plural(count, "relationship")} still ${count === 1 ? "uses" : "use"} this type, so deleting it as proposed fails. Move them to another type or delete them too, and the type is deleted after them; or keep the type by rejecting.`}
       </FormCallout>
+      {failureReason && (
+        <FormCallout variant="error" icon="alert" data-testid="operation-resolution-failed">
+          {`The last apply failed: ${failureReason}`}
+        </FormCallout>
+      )}
 
       <ul
         className="op-resolver__edges"
@@ -107,7 +124,7 @@ export function InUseResolver({
         >
           <Select
             id={pickerId}
-            value={replacementId}
+            value={replacement?.property_id ?? ""}
             onChange={setReplacementId}
             ariaLabel="Move to"
             data-testid="operation-resolution-replacement"
