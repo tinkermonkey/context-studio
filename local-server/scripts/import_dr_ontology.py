@@ -24,8 +24,13 @@ recorded since the import, so pre-import experiment results never judge
 post-import ones. A spec-version upgrade is therefore always a deliberate,
 baseline-resetting re-import — never an in-place, silent update.
 
+Entities from an earlier import that the spec no longer defines are listed as
+stale. With --prune they are deleted (each delete recorded as a change event),
+but only if nothing uses any of them; otherwise nothing is deleted, each use
+is listed and the script exits non-zero.
+
 Usage (from local-server/, venv active):
-    python scripts/import_dr_ontology.py [--spec-dir PATH]
+    python scripts/import_dr_ontology.py [--spec-dir PATH] [--prune]
 """
 
 import argparse
@@ -38,15 +43,27 @@ from typing import cast
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
+from adapters.events.change_recorder import ChangeEventRecorder
 from adapters.events.in_process import InProcessEventPublisher
+from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.connection import DatabaseManager
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from config import get_config_manager
+from domain.ontology.entities import PropertyDefinition
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
+from domain.versioning.ports import ChangeProposalRepository
 from experiments.ledger import append_baseline_reset, latest_baseline_reset
-from scripts.dr_ontology_loader import ImportSummary, import_dr_ontology
+from scripts.dr_ontology_loader import (
+    ImportSummary,
+    PruneFailed,
+    describe_stale,
+    find_prune_blockers,
+    import_dr_ontology,
+    prune_stale,
+)
 
 DR_ONTOLOGY_CONTEXT = "dr_spec"
 
@@ -119,7 +136,75 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_SPEC_DIR,
         help=f"Path to the documentation_robotics spec checkout (default: {DEFAULT_SPEC_DIR})",
     )
+    parser.add_argument(
+        "--prune",
+        action="store_true",
+        help=(
+            "Delete stale entities (from an earlier import, not in this spec) when nothing "
+            "uses them (without it, they are only listed)"
+        ),
+    )
     return parser.parse_args()
+
+
+def report_and_prune(
+    summary: ImportSummary,
+    service: OntologyService,
+    repo: OntologyRepository,
+    proposals: ChangeProposalRepository,
+    prune: bool,
+) -> bool:
+    """
+    List the stale entities; with `prune`, delete them all, or none if any is in use.
+
+    Returns False when pruning was refused because something uses a stale entity,
+    or a delete was refused partway (the deleted and not-deleted ones are listed).
+    """
+    if not summary.stale:
+        print("Stale: none")
+        return True
+    if not prune:
+        print(
+            "Stale (from an earlier import, not in this spec; not deleted, re-run with "
+            f"--prune to delete): {len(summary.stale)}"
+        )
+        for entry in summary.stale:
+            print(f"  - {entry}")
+        return True
+
+    blockers = find_prune_blockers(repo, proposals, summary.stale_entities)
+    if blockers:
+        print(
+            f"Prune refused, nothing deleted: {len(blockers)} use(s) of the "
+            f"{len(summary.stale)} stale entities:",
+            file=sys.stderr,
+        )
+        for stale, user in blockers:
+            print(f"  - {stale} <- used by {user}", file=sys.stderr)
+        return False
+
+    try:
+        deleted = prune_stale(service, summary.stale_entities)
+    except PruneFailed as exc:
+        deleted_ids = {entity.id for entity in exc.deleted}
+        print(f"Prune stopped: {exc}", file=sys.stderr)
+        print(f"Deleted ({len(exc.deleted)}):", file=sys.stderr)
+        for entity in exc.deleted:
+            print(f"  - {describe_stale(entity)}", file=sys.stderr)
+        not_deleted = [e for e in summary.stale_entities if e.id not in deleted_ids]
+        print(f"Not deleted ({len(not_deleted)}):", file=sys.stderr)
+        for entity in not_deleted:
+            print(f"  - {describe_stale(entity)}", file=sys.stderr)
+        return False
+
+    properties = sum(isinstance(entity, PropertyDefinition) for entity in deleted)
+    print(
+        f"Pruned {len(deleted)} stale entities: {properties} property definition(s), "
+        f"{len(deleted) - properties} class(es)"
+    )
+    for entity in deleted:
+        print(f"  - {describe_stale(entity)}")
+    return True
 
 
 def main() -> int:
@@ -142,10 +227,11 @@ def main() -> int:
 
     # schema_index=None suppresses per-entity vector sync during creation;
     # reindex_all() below runs the embedding batch exactly once, at the end.
+    event_publisher = InProcessEventPublisher()
     ontology_service = OntologyService(
         repository=cast(OntologyRepository, ontology_repo),
         embedding_service=embedding_service,
-        event_publisher=InProcessEventPublisher(),
+        event_publisher=event_publisher,
         schema_index=None,
     )
 
@@ -176,14 +262,18 @@ def main() -> int:
         print("Design charter: taxonomy vision and summary set from DESIGN_CHARTER.md")
     else:
         print("Design charter: none in this spec; existing vision and summary left as they were")
-    if summary.stale:
-        print(
-            f"Stale (from an earlier import, not in this spec; not deleted): {len(summary.stale)}"
+    if args.prune:
+        # Prune deletes are recorded as change events, like any other delete.
+        ChangeEventRecorder(SQLiteChangeRepository(session_factory)).subscribe_ontology_events(
+            event_publisher
         )
-        for entry in summary.stale:
-            print(f"  - {entry}")
-    else:
-        print("Stale: none")
+    prune_ok = report_and_prune(
+        summary,
+        ontology_service,
+        cast(OntologyRepository, ontology_repo),
+        SQLiteChangeProposalRepository(session_factory),
+        args.prune,
+    )
 
     print("Reindexing schema vector index ...")
     vector_index = SqliteSchemaVectorIndex(session_factory, embedding_service)
@@ -201,7 +291,7 @@ def main() -> int:
             "recorded — skipped."
         )
 
-    return 0
+    return 0 if prune_ok else 1
 
 
 if __name__ == "__main__":
