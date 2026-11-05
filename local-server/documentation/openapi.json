@@ -7375,6 +7375,28 @@
           }
         }
       }
+    },
+    "/api/decision-models": {
+      "get": {
+        "tags": [
+          "decision-models"
+        ],
+        "summary": "List Decision Models",
+        "description": "List the configured decision-model instances: name, adapter, model, configured.",
+        "operationId": "list_decision_models_api_decision_models_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionModelListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -10004,6 +10026,98 @@
         "type": "object",
         "title": "DatasetUpdateRequest",
         "description": "Request to update a dataset."
+      },
+      "DecisionModelListResponse": {
+        "properties": {
+          "default": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default",
+            "description": "Default instance name"
+          },
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionModelResponse"
+            },
+            "type": "array",
+            "title": "Models"
+          }
+        },
+        "type": "object",
+        "required": [
+          "models"
+        ],
+        "title": "DecisionModelListResponse",
+        "description": "Every configured decision-model instance and the default's name."
+      },
+      "DecisionModelResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Instance name from config.json"
+          },
+          "adapter": {
+            "type": "string",
+            "title": "Adapter",
+            "description": "Adapter serving the instance, e.g. 'workers_ai' or 'llm'"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "description": "Model id the adapter calls"
+          },
+          "configured": {
+            "type": "boolean",
+            "title": "Configured",
+            "description": "Whether the instance has what it needs to make a call"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "Whether callers get this instance when naming none"
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fallback",
+            "description": "Instance used when this one is unconfigured or fails"
+          },
+          "price_per_mtok_in": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Per Mtok In",
+            "description": "USD per million input tokens, when configured"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "adapter",
+          "model",
+          "configured",
+          "is_default"
+        ],
+        "title": "DecisionModelResponse",
+        "description": "A configured decision-model instance. Credentials are never included."
       },
       "DegreeDistributionResponse": {
         "properties": {

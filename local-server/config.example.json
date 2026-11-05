@@ -32,5 +32,29 @@
     "export_logs": true,
     "export_traces": true,
     "sample_rate": 1.0
+  },
+  "decision_models": {
+    "default": "clef",
+    "models": {
+      "clef": {
+        "adapter": "workers_ai",
+        "model": "@cf/cloudflare/clef",
+        "account_id": "",
+        "api_token": "",
+        "price_per_mtok_in": 0.24,
+        "fallback": "llm-sonnet"
+      },
+      "clef-flash": {
+        "adapter": "workers_ai",
+        "model": "@cf/cloudflare/clef-flash",
+        "account_id": "",
+        "api_token": "",
+        "price_per_mtok_in": 0.09
+      },
+      "llm-sonnet": {
+        "adapter": "llm",
+        "model": "claude-sonnet-5-5"
+      }
+    }
   }
 }

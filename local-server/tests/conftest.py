@@ -54,3 +54,20 @@ def _enforce_sqlite_foreign_keys(dbapi_connection, connection_record):  # type: 
             cursor.execute("PRAGMA foreign_keys=ON")
         finally:
             cursor.close()
+
+
+def pytest_addoption(parser):
+    """Options for opt-in live tests."""
+    parser.addoption(
+        "--decision-model-config",
+        default=None,
+        help=(
+            "Path to a config.json whose decision_models section the live decision-model"
+            " test calls (with -m external_network). Credentials are read from that file only."
+        ),
+    )
+    parser.addoption(
+        "--decision-model-instance",
+        default="clef-flash",
+        help="Decision-model instance the live test calls (default: clef-flash)",
+    )

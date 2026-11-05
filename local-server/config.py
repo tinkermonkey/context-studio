@@ -260,6 +260,43 @@ class ChatConfig(BaseModel):
     )
 
 
+class DecisionModelInstanceConfig(BaseModel):
+    """One named decision-model instance: which adapter serves it and how."""
+
+    adapter: str = Field(description="Adapter that serves the instance: 'workers_ai' or 'llm'")
+    model: str = Field(min_length=1, description="Model id the adapter calls")
+    account_id: str = Field(default="", description="Account id (workers_ai)")
+    api_token: str = Field(default="", description="API token (workers_ai)")
+    request_model: Optional[str] = Field(
+        default=None,
+        description=(
+            "Model name sent in the workers_ai request body; defaults to the last"
+            " path segment of 'model'"
+        ),
+    )
+    fallback: Optional[str] = Field(
+        default=None,
+        description="Instance to use when this one is unconfigured or its call fails",
+    )
+    price_per_mtok_in: Optional[float] = Field(
+        default=None, ge=0.0, description="USD per million input tokens, for cost_usd"
+    )
+    price_per_mtok_out: Optional[float] = Field(
+        default=None, ge=0.0, description="USD per million output tokens, for cost_usd"
+    )
+    concurrency: int = Field(
+        default=4, ge=1, le=64, description="Maximum calls in flight at once (workers_ai)"
+    )
+    timeout_seconds: float = Field(default=60.0, gt=0, description="Request timeout")
+
+
+class DecisionModelsConfig(BaseModel):
+    """Named decision-model instances; callers ask by name or take the default."""
+
+    default: Optional[str] = Field(default=None, description="Instance used when none is named")
+    models: dict[str, DecisionModelInstanceConfig] = Field(default_factory=dict)
+
+
 class S3Config(BaseModel):
     """S3 synchronization configuration section"""
 
@@ -336,6 +373,7 @@ class Settings(BaseModel):
     reference: ReferenceConfig = Field(default_factory=ReferenceConfig)
     recognition: RecognitionConfig = Field(default_factory=RecognitionConfig)
     chat: ChatConfig = Field(default_factory=ChatConfig)
+    decision_models: DecisionModelsConfig = Field(default_factory=DecisionModelsConfig)
     mcp: McpConfig = Field(default_factory=McpConfig)
     sync: Optional[SyncConfig] = Field(default=None, description="Synchronization configuration")
     telemetry: TelemetryConfig = Field(default_factory=TelemetryConfig)
