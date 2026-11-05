@@ -38,6 +38,29 @@ describe("SchemaPageLayout", () => {
       expect(screen.getByTestId("schema-inspector-container")).toBeInTheDocument();
     });
 
+    it("lays out the list and a sticky inspector side by side when an entity is selected", () => {
+      render(
+        <SchemaPageLayout
+          data={mockData}
+          selectedId="1"
+          renderInspectorContent={(entity) => <div>Details for {entity.name}</div>}
+        >
+          <div>Content</div>
+        </SchemaPageLayout>,
+      );
+      expect(screen.getByTestId("schema-page-layout")).toHaveClass("split-2");
+      expect(screen.getByTestId("schema-inspector-container")).toHaveClass("split-2__inspector");
+    });
+
+    it("does not use the split layout when no entity is selected", () => {
+      render(
+        <SchemaPageLayout data={mockData}>
+          <div>Content</div>
+        </SchemaPageLayout>,
+      );
+      expect(screen.getByTestId("schema-page-layout")).not.toHaveClass("split-2");
+    });
+
     it("does not render drawer container when no entity selected", () => {
       render(
         <SchemaPageLayout
