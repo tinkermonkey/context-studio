@@ -86,9 +86,11 @@
   font-size: 12px;
   line-height: 1.5;
 }
+/* Colours only: the info callout keeps Heimdall's 3px left accent. */
 .form-callout--info {
   background: rgba(34, 211, 238, 0.04);
-  border: 1px solid rgba(34, 211, 238, 0.16);
+  border-color: rgba(34, 211, 238, 0.16);
+  border-left-color: rgba(34, 211, 238, 0.4);
   color: rgb(var(--canvas-fg-2));
 }
 .form-callout svg {

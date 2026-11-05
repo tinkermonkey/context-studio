@@ -67,6 +67,16 @@ body.dark-canvas {
   --level-individual: 52 211 153;
 }
 
+/* Heimdall's -fg status tokens stay at their light-canvas values, which fail
+   contrast as callout icons on the dark warn/error tints; use the full-strength
+   status colour there instead. */
+body.dark-canvas .form-callout--warn .form-callout__icon {
+  color: rgb(var(--status-warn));
+}
+body.dark-canvas .form-callout--error .form-callout__icon {
+  color: rgb(var(--status-error));
+}
+
 /* Heimdall gives the canvas min-width: 1100px. With the 256px sidebar that is
    wider than any viewport under ~1360px, so the canvas overflowed the window
    and its right edge (the split-2 inspector) was cut off. Pages adapt to a
