@@ -474,3 +474,58 @@ def test_a_reversal_drops_the_evidence_as_dr_does(parts):
     assert change["previous_relationship_id"] == DELIVERS
     assert change["relationship_id"] == NEW
     assert change["set"] == {"evidence": []}
+
+
+def other_dr_types(repo, count):
+    """Relationship types of the pinned spec's api layer other than delivers (sorted by DR id)."""
+    found = sorted(
+        (ref.identifier, prop)
+        for prop in repo.list_property_definitions(limit=None)
+        for ref in prop.external_references
+        if ref.source == DR_SOURCE
+        and ref.identifier.startswith("api.")
+        and ref.identifier != DELIVERS
+    )
+    return [prop for _, prop in found[:count]]
+
+
+def delete_naming(seq, target, replacement):
+    return OperationDraft(
+        seq=seq, op="delete", kind="property", target_id=target.id, replacement=replacement.id
+    )
+
+
+def test_a_replacement_the_proposal_also_deletes_is_followed_to_the_end(parts):
+    _, repo, proposals = parts
+    a = prop_by_dr_id(repo, DELIVERS)
+    b, c = other_dr_types(repo, 2)
+    c_id = next(r.identifier for r in c.external_references if r.source == DR_SOURCE)
+    proposal = propose(repo, proposals, delete_naming(1, a, b), delete_naming(2, b, c))
+    proposal = apply_all(proposals, proposal)
+    assert all(o.status is OperationStatus.APPLIED for o in proposal.operations), [
+        o.reason for o in proposal.operations
+    ]
+
+    changes = spec_changes_for(proposal, repo)["changes"]
+
+    # A ends at C (through B, which this proposal deletes too), not at nothing.
+    assert [ch["replacement_relationship_id"] for ch in changes] == [c_id, c_id]
+    assert all("note" not in ch for ch in changes)
+
+
+def test_a_replacement_chain_that_cycles_names_none_and_says_so(parts):
+    _, repo, proposals = parts
+    a = prop_by_dr_id(repo, DELIVERS)
+    (b,) = other_dr_types(repo, 1)
+    proposal = propose(repo, proposals, delete_naming(1, a, b), delete_naming(2, b, a))
+    proposal = apply_all(proposals, proposal)
+    assert all(o.status is OperationStatus.APPLIED for o in proposal.operations), [
+        o.reason for o in proposal.operations
+    ]
+
+    changes = spec_changes_for(proposal, repo)["changes"]
+
+    assert [ch["op"] for ch in changes] == ["delete", "delete"]
+    for change in changes:
+        assert "replacement_relationship_id" not in change
+        assert "comes back round" in change["note"]

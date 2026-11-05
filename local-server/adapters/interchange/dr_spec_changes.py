@@ -16,6 +16,8 @@ MCP or in the app, exports as one `cs-dr-spec-changes/1` document:
         "set": {"description"?, "cardinality"?, "strength"?, "evidence"?},
         "replacement_relationship_id" # delete only: the type the delete names as its
                                       # replacement, else the one its relationships moved to
+                                      # (followed through the proposal's other deletes)
+        "note"                        # delete only, when that chain is a cycle
      }],
      "skipped": [{"seq", "op_id", "why"}]}
 
@@ -78,9 +80,19 @@ def spec_changes_for(proposal: ChangeProposal, repo: OntologyRepository) -> dict
     skipped: list[dict[str, Any]] = []
     # "$<ref>" -> the entity the proposal's create of that ref made.
     refs = {o.ref: o.result_entity_id for o in proposal.operations if o.ref}
+    # The relationship types this proposal deleted, by id -> the delete.
+    deletes = {
+        o.target_id: o
+        for o in proposal.operations
+        if o.kind is OperationKind.PROPERTY
+        and o.op is OperationType.DELETE
+        and o.status is OperationStatus.APPLIED
+        and o.applied_fields is None
+        and o.target_id
+    }
     for operation in proposal.operations:
         why = _not_exported(operation)
-        change = None if why else _change(operation, repo, refs)
+        change = None if why else _change(operation, repo, refs, deletes)
         if change is None:
             skipped.append(
                 {
@@ -109,7 +121,10 @@ def _not_exported(operation: ProposedOperation) -> str | None:
 
 
 def _change(
-    operation: ProposedOperation, repo: OntologyRepository, refs: dict[str, str | None]
+    operation: ProposedOperation,
+    repo: OntologyRepository,
+    refs: dict[str, str | None],
+    deletes: dict[str, ProposedOperation],
 ) -> dict[str, Any] | None:
     label = f"seq {operation.seq}"
     if operation.op is OperationType.CREATE:
@@ -118,7 +133,7 @@ def _change(
         # An edited delete was applied as an update.
         return _update(operation, repo, label, refs)
     if operation.op is OperationType.DELETE:
-        return _delete(operation, repo, label, refs)
+        return _delete(operation, repo, label, refs, deletes)
     return None
 
 
@@ -221,6 +236,7 @@ def _delete(
     repo: OntologyRepository,
     label: str,
     refs: dict[str, str | None],
+    deletes: dict[str, ProposedOperation],
 ) -> dict | None:
     """
     A deleted type, with the type replacing it: the one the delete names
@@ -230,6 +246,11 @@ def _delete(
     same way); DR keeps it for the model migration only when it links the same
     pair of types or the reverse. A named replacement whose create was not
     applied, or that is gone, falls back to the resolution's, if any.
+
+    A replacement this proposal also deleted is followed through that delete's
+    own replacement, as the review showed it (ProposalService's replacement
+    chain), to a type that still stands: A replaced by B, B by C exports C for
+    A. A chain that comes back round leaves no replacement, with a note.
     """
     base = operation.base
     relationship_id = dr_relationship_id(base.get("external_references") or [])
@@ -237,19 +258,12 @@ def _delete(
         return None
     triple = Triple.parse(relationship_id)
     entry = _entry(operation, "delete", triple, base.get("identifier"), {})
-    named = operation.proposed_replacement_id
-    if named and named.startswith("$"):
-        named = refs.get(named[1:])
-    resolution = operation.resolution
-    moved_to = resolution.replacement_property_id if resolution else None
-    replacement_property_id = next(
-        (
-            candidate
-            for candidate in (named, moved_to)
-            if candidate and repo.get_property_definition(candidate) is not None
-        ),
-        None,
-    )
+    replacement_property_id, cycle = _final_replacement(operation, repo, refs, deletes)
+    if cycle:
+        entry["note"] = (
+            "its replacement chain comes back round to a type this proposal deletes, so no "
+            "type survives to replace it"
+        )
     if replacement_property_id:
         replacement = repo.get_property_definition(replacement_property_id)
         replacement_id = (
@@ -261,6 +275,42 @@ def _delete(
             )
         entry["replacement_relationship_id"] = replacement_id
     return entry
+
+
+def _final_replacement(
+    operation: ProposedOperation,
+    repo: OntologyRepository,
+    refs: dict[str, str | None],
+    deletes: dict[str, ProposedOperation],
+) -> tuple[str | None, bool]:
+    """
+    The type that ends up replacing a delete's target, and whether its chain is a
+    cycle: each delete's named replacement, else its resolution's, followed
+    through the proposal's other deletes to one that still exists.
+    """
+    seen = {operation.target_id}
+    current = operation
+    while True:
+        named = current.proposed_replacement_id
+        if named and named.startswith("$"):
+            named = refs.get(named[1:])
+        moved_to = current.resolution.replacement_property_id if current.resolution else None
+        candidate = next(
+            (
+                c
+                for c in (named, moved_to)
+                if c and (c in deletes or repo.get_property_definition(c) is not None)
+            ),
+            None,
+        )
+        if candidate is None:
+            return None, False
+        if candidate not in deletes:
+            return candidate, False
+        if candidate in seen:
+            return None, True
+        seen.add(candidate)
+        current = deletes[candidate]
 
 
 def _entry(
