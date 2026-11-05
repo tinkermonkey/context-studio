@@ -159,6 +159,52 @@ describe("ProposalDetailPage", () => {
     expect(within(evidence).getByText("https://example.com/spec")).toBeInTheDocument();
   });
 
+  it("shows a DR type's cardinality, strength and spec evidence on a create", async () => {
+    server.use(
+      http.get("*/api/proposals/proposal-1", () =>
+        HttpResponse.json({
+          ...openProposal,
+          operations: openProposal.operations.map((o) =>
+            o.id === "op-create"
+              ? {
+                  ...o,
+                  fields: {
+                    ...o.fields,
+                    external_references: [
+                      {
+                        source: "documentation_robotics",
+                        identifier:
+                          "business.businessservice.uses.application.applicationcomponent",
+                        metadata: {
+                          cardinality: "many-to-many",
+                          strength: "medium",
+                          evidence: ["A service config names the component.", "A second line."],
+                        },
+                      },
+                    ],
+                  },
+                }
+              : o,
+          ),
+        }),
+      ),
+    );
+    renderPage("op-create");
+
+    const strength = await screen.findByTestId("operation-change-row-strength");
+    expect(within(strength).getByText("strength")).toHaveClass("op-change__field");
+    expect(within(strength).getByText("medium")).toHaveClass("op-change__value");
+    const cardinality = screen.getByTestId("operation-change-row-cardinality");
+    expect(within(cardinality).getByText("many-to-many")).toBeInTheDocument();
+    const evidence = screen.getByTestId("operation-change-row-evidence");
+    expect(within(evidence).getByText("spec evidence")).toHaveClass("op-change__field");
+    const lines = within(evidence).getAllByRole("listitem");
+    expect(lines.map((li) => li.textContent)).toEqual([
+      "A service config names the component.",
+      "A second line.",
+    ]);
+  });
+
   it("resolves a delete's class ids and warns when the operation is stale", async () => {
     renderPage("op-delete");
 

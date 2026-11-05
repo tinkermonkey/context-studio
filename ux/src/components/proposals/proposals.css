@@ -226,6 +226,13 @@
     overflow-wrap: anywhere;
   }
 
+  /* A list value (a DR type's spec evidence): one line per item. */
+  .op-change__lines {
+    margin: 0;
+    padding-left: 16px;
+    list-style: disc;
+  }
+
   .op-change__unchanged {
     color: rgb(var(--canvas-fg-3));
   }

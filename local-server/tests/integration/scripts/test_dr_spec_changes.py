@@ -1,0 +1,299 @@
+"""
+Integration tests (#1397): any decided proposal on DR relationship types exports
+its applied creates, updates and deletes, with the values applied and the DR
+attributes (cardinality, strength, evidence) kept on the DR reference, for DR to
+write into its spec (`cs-dr-spec-changes/1`).
+
+Built on the pinned DR spec snapshot (0.8.4), as test_dr_reflection_plan.py is.
+"""
+
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+import pytest
+
+from adapters.interchange.dr_spec_changes import spec_changes_for
+from domain.versioning.proposal_service import OperationDraft
+from domain.versioning.proposals import (
+    InUseResolution,
+    OperationStatus,
+    ProposalSource,
+    ResolutionStrategy,
+)
+from scripts.dr_ontology_loader import DR_SOURCE, DR_TAXONOMY_IDENTIFIER
+from tests.integration.scripts import test_dr_reflection_plan as plan_tests
+from tests.integration.scripts.test_dr_reflection_plan import (
+    DELIVERS,
+    SPEC_ATTRIBUTES,
+    class_by_dr_id,
+    prop_by_dr_id,
+    put_delivers_in_use,
+)
+
+# The pinned-spec database fixtures, shared with the reflection-plan tests.
+spec_db = plan_tests.spec_db
+parts = plan_tests.parts
+
+NEW = "api.response.references.api.operation"
+RENAMED = "api.operation.uses.api.response"
+EVIDENCE = ["The operation's spec lists the response under its responses."]
+
+
+def dr_ref(relationship_id, **metadata):
+    return {"source": DR_SOURCE, "identifier": relationship_id, "metadata": metadata or None}
+
+
+def propose(repo, proposals, *drafts):
+    taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    return proposals.propose(taxonomy.id, "Spec changes", list(drafts), ProposalSource.MCP)
+
+
+def apply_all(proposals, proposal, **kwargs):
+    return proposals.apply(proposal.id, [o.id for o in proposal.operations], **kwargs)
+
+
+def create_new(repo):
+    return OperationDraft(
+        seq=1,
+        op="create",
+        kind="property",
+        fields={
+            "identifier": "response_references_operation",
+            "title": "api.response references api.operation",
+            "canonical_predicate": "references",
+            "description": "The response names the operation it answers.",
+            "domain_class_id": class_by_dr_id(repo, "api.response").id,
+            "range_class_id": class_by_dr_id(repo, "api.operation").id,
+            "external_references": [
+                dr_ref(NEW, cardinality="many-to-many", strength="medium", evidence=EVIDENCE)
+            ],
+        },
+    )
+
+
+def test_a_create_exports_every_value_it_applied(parts):
+    _, repo, proposals = parts
+    assert prop_by_dr_id(repo, NEW) is None
+    proposal = apply_all(proposals, propose(repo, proposals, create_new(repo)))
+    assert proposal.operations[0].status is OperationStatus.APPLIED, proposal.operations[0].reason
+
+    document = spec_changes_for(proposal, repo)
+
+    assert document["format"] == "cs-dr-spec-changes/1"
+    assert document["proposal_id"] == proposal.id
+    assert document["skipped"] == []
+    assert document["changes"] == [
+        {
+            "seq": 1,
+            "op_id": proposal.operations[0].id,
+            "op": "create",
+            "relationship_id": NEW,
+            "identifier": "response_references_operation",
+            "predicate": "references",
+            "source_spec_node_id": "api.response",
+            "destination_spec_node_id": "api.operation",
+            "set": {
+                "description": "The response names the operation it answers.",
+                "cardinality": "many-to-many",
+                "strength": "medium",
+                "evidence": EVIDENCE,
+            },
+        }
+    ]
+
+
+def test_an_update_exports_only_what_it_changed(parts):
+    _, repo, proposals = parts
+    delivers = prop_by_dr_id(repo, DELIVERS)
+    proposal = propose(
+        repo,
+        proposals,
+        OperationDraft(
+            seq=1,
+            op="update",
+            kind="property",
+            target_id=delivers.id,
+            fields={
+                "description": "The operation returns the response.",
+                # Resent whole: only the evidence is new.
+                "external_references": [dr_ref(DELIVERS, **SPEC_ATTRIBUTES, evidence=EVIDENCE)],
+            },
+        ),
+    )
+    proposal = apply_all(proposals, proposal)
+
+    (change,) = spec_changes_for(proposal, repo)["changes"]
+
+    assert change["op"] == "update"
+    assert change["relationship_id"] == DELIVERS
+    assert "previous_relationship_id" not in change
+    assert change["identifier"] == delivers.identifier
+    assert change["set"] == {
+        "description": "The operation returns the response.",
+        "evidence": EVIDENCE,
+    }
+
+
+def test_an_update_that_drops_the_evidence_exports_it_empty(parts):
+    _, repo, proposals = parts
+    delivers = prop_by_dr_id(repo, DELIVERS)
+    with_evidence = [dr_ref(DELIVERS, **SPEC_ATTRIBUTES, evidence=EVIDENCE)]
+    first = propose(
+        repo,
+        proposals,
+        OperationDraft(
+            seq=1,
+            op="update",
+            kind="property",
+            target_id=delivers.id,
+            fields={"external_references": with_evidence},
+        ),
+    )
+    apply_all(proposals, first)
+    second = propose(
+        repo,
+        proposals,
+        OperationDraft(
+            seq=1,
+            op="update",
+            kind="property",
+            target_id=delivers.id,
+            fields={"external_references": [dr_ref(DELIVERS, cardinality="one-to-many")]},
+        ),
+    )
+
+    (change,) = spec_changes_for(apply_all(proposals, second), repo)["changes"]
+
+    assert change["set"] == {"cardinality": "one-to-many", "strength": None, "evidence": []}
+
+
+def test_an_edited_rename_exports_the_new_triple_and_keeps_the_attributes(parts):
+    _, repo, proposals = parts
+    delivers = prop_by_dr_id(repo, DELIVERS)
+    proposal = propose(
+        repo,
+        proposals,
+        OperationDraft(
+            seq=1, op="update", kind="property", target_id=delivers.id, fields={"title": "x"}
+        ),
+    )
+    op = proposal.operations[0]
+    edit = {
+        "canonical_predicate": "uses",
+        "external_references": [dr_ref(DELIVERS, cardinality="one-to-many", strength="high")],
+    }
+
+    proposal = proposals.apply(proposal.id, [op.id], edits={op.id: edit})
+    assert proposal.operations[0].status is OperationStatus.APPLIED, proposal.operations[0].reason
+
+    (change,) = spec_changes_for(proposal, repo)["changes"]
+    assert change["relationship_id"] == RENAMED
+    assert change["previous_relationship_id"] == DELIVERS
+    assert change["predicate"] == "uses"
+    assert change["identifier"] == "operation_uses_response"
+    # The edit's attributes were applied; the generated default description is not exported.
+    assert change["set"] == {"cardinality": "one-to-many", "strength": "high"}
+    ref = next(r for r in prop_by_dr_id(repo, RENAMED).external_references)
+    assert dict(ref.metadata) == {"cardinality": "one-to-many", "strength": "high"}
+
+
+def test_a_resolved_delete_names_the_replacement(parts):
+    ontology, repo, proposals = parts
+    delivers, _ = put_delivers_in_use(ontology, repo)
+    uses = OperationDraft(
+        seq=1,
+        op="create",
+        kind="property",
+        fields={
+            "identifier": "operation_uses_response",
+            "title": "api.operation uses api.response",
+            "canonical_predicate": "uses",
+            "domain_class_id": delivers.domain_class_id,
+            "range_class_id": delivers.range_class_id,
+            "external_references": [dr_ref(RENAMED)],
+        },
+    )
+    apply_all(proposals, propose(repo, proposals, uses))
+    replacement = prop_by_dr_id(repo, RENAMED)
+    proposal = propose(
+        repo,
+        proposals,
+        OperationDraft(seq=1, op="delete", kind="property", target_id=delivers.id),
+    )
+    op = proposal.operations[0]
+
+    proposal = proposals.apply(
+        proposal.id,
+        [op.id],
+        resolutions={
+            op.id: InUseResolution(
+                strategy=ResolutionStrategy.MOVE, replacement_property_id=replacement.id
+            )
+        },
+    )
+    assert proposal.operations[0].status is OperationStatus.APPLIED, proposal.operations[0].reason
+
+    (change,) = spec_changes_for(proposal, repo)["changes"]
+    assert change == {
+        "seq": 1,
+        "op_id": op.id,
+        "op": "delete",
+        "relationship_id": DELIVERS,
+        "identifier": delivers.identifier,
+        "predicate": "delivers",
+        "source_spec_node_id": "api.operation",
+        "destination_spec_node_id": "api.response",
+        "set": {},
+        "replacement_relationship_id": RENAMED,
+    }
+
+
+def test_undecided_and_non_property_operations_are_skipped(parts):
+    _, repo, proposals = parts
+    delivers = prop_by_dr_id(repo, DELIVERS)
+    operation_class = class_by_dr_id(repo, "api.operation")
+    proposal = propose(
+        repo,
+        proposals,
+        OperationDraft(
+            seq=1, op="update", kind="property", target_id=delivers.id, fields={"title": "x"}
+        ),
+        OperationDraft(
+            seq=2,
+            op="update",
+            kind="class",
+            target_id=operation_class.id,
+            fields={"title": "Operation"},
+        ),
+    )
+    proposals.reject(proposal.id, [proposal.operations[0].id], "no")
+    proposal = proposals.apply(proposal.id, [proposal.operations[1].id])
+
+    document = spec_changes_for(proposal, repo)
+
+    assert document["changes"] == []
+    assert [(s["seq"], s["why"]) for s in document["skipped"]] == [
+        (1, "rejected"),
+        (2, "a class operation, not a relationship type"),
+    ]
+
+
+def test_a_reverted_proposal_is_refused(parts):
+    _, repo, proposals = parts
+    proposal = apply_all(proposals, propose(repo, proposals, create_new(repo)))
+    proposals.revert(proposal.id)
+
+    with pytest.raises(ValueError, match="reverted"):
+        spec_changes_for(proposals._get(proposal.id), repo)
+
+
+def test_a_dr_id_disagreeing_with_the_classes_is_refused(parts):
+    _, repo, proposals = parts
+    proposal = apply_all(proposals, propose(repo, proposals, create_new(repo)))
+    # A create recorded with a DR id its classes don't give (as no rule would let through now).
+    proposal.operations[0].fields["external_references"] = [dr_ref(RENAMED)]
+
+    with pytest.raises(ValueError, match="DR relationship id is api.operation.uses"):
+        spec_changes_for(proposal, repo)

@@ -24,6 +24,8 @@ const PROPERTY_FIELD_LABELS: Record<string, string> = {
   canonical_predicate: "predicate",
   domain_class_id: "source",
   range_class_id: "destination",
+  // A DR relationship type's x-dr-evidence lines, not the proposal's evidence.
+  evidence: "spec evidence",
 };
 
 /** Fields whose values are ids or references: monospace, breaking after dots and underscores. */
@@ -144,6 +146,15 @@ export function OperationInspector({ operation, context, decision }: OperationIn
   const label = (field: string) =>
     operation.kind === "property" ? (PROPERTY_FIELD_LABELS[field] ?? field) : field;
   const value = (field: string, v: unknown): ReactNode => {
+    if (field === "evidence" && Array.isArray(v) && v.length > 0) {
+      return (
+        <ul className="op-change__lines">
+          {v.map((line, i) => (
+            <li key={i}>{formatValue(line)}</li>
+          ))}
+        </ul>
+      );
+    }
     const text =
       CLASS_ID_FIELDS.has(field) && typeof v === "string"
         ? context.endLabel(v, operation)

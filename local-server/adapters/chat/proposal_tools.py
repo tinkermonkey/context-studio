@@ -244,7 +244,12 @@ class ProposeChangesTool(_ProposalTool):
         "Fields per kind (* required on create):\n"
         f"{_field_guide()}\n"
         "A relationship update sets only its attributes; to change its ends, delete it"
-        " and create another. Id fields"
+        " and create another. A DR relationship type (a property with a"
+        " documentation_robotics external reference) keeps its spec cardinality,"
+        " strength and evidence lines in that reference's metadata:"
+        ' {"cardinality", "strength", "evidence": [...]}. Give them on a create; to'
+        " change them, update external_references, which replaces the whole list, so"
+        " send every reference and every metadata key. Id fields"
         f' ({", ".join(sorted(ID_FIELDS))}) take an existing id or "$<ref>" of an'
         " earlier create in the same proposal."
     )

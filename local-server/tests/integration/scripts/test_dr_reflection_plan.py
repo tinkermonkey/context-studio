@@ -65,6 +65,8 @@ PLAN_FILE = (
 )
 DELIVERS = "api.operation.delivers.api.response"
 IN_USE = 3
+# The attributes the pinned spec gives every relationship type (it has no x-dr-evidence).
+SPEC_ATTRIBUTES = {"cardinality": "many-to-many", "strength": "medium"}
 
 
 def spec_with_catalog(spec):
@@ -269,7 +271,7 @@ def test_fixture_operations_map_onto_property_definitions(parts):
                 "source": DR_SOURCE,
                 "identifier": "api.operation.aggregates.api.response",
                 "uri": None,
-                "metadata": None,
+                "metadata": SPEC_ATTRIBUTES,  # a renamed type keeps its attributes
             }
         ],
     }
@@ -564,7 +566,7 @@ def test_an_edited_rename_applies_the_reviewers_triple(parts):
         # The spec's default description follows the triple too.
         "description": "Defines relationship: api.operation uses api.response",
         "external_references": [
-            {"source": DR_SOURCE, "identifier": new_id, "uri": None, "metadata": None}
+            {"source": DR_SOURCE, "identifier": new_id, "uri": None, "metadata": SPEC_ATTRIBUTES}
         ],
     }
     assert stored.fields["canonical_predicate"] == "aggregates"  # the proposal is kept

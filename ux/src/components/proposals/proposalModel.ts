@@ -470,6 +470,9 @@ const FIELD_ORDER = [
   "identifier",
   "title",
   "description",
+  "cardinality",
+  "strength",
+  "evidence",
 ];
 
 function fieldRank(field: string): number {
@@ -491,15 +494,56 @@ export function changeRows(operation: ProposedOperation): ChangeRow[] {
       : operation.op === "create"
         ? Object.keys(fields)
         : [...new Set([...Object.keys(fields), ...Object.keys(base)])];
-  return names
+  const value = (field: string, side: "before" | "after") =>
+    side === "before"
+      ? operation.op === "create"
+        ? undefined
+        : base[field]
+      : operation.op === "delete"
+        ? undefined
+        : fields[field];
+  const rows = names
     .filter((field) => !HIDDEN_FIELDS.has(field))
-    .sort((a, b) => fieldRank(a) - fieldRank(b) || a.localeCompare(b))
     .map((field) => {
-      const before = operation.op === "create" ? undefined : base[field];
-      const after = operation.op === "delete" ? undefined : fields[field];
+      const before = value(field, "before");
+      const after = value(field, "after");
       return { field, before, after, changed: !sameValue(before, after) };
-    })
+    });
+  const references = rows.find((row) => row.field === "external_references");
+  if (operation.kind === "property" && references) {
+    // References read by identifier; a DR type's attributes get rows of their own.
+    references.changed = formatValue(references.before) !== formatValue(references.after);
+    const before = drAttributes(references.before);
+    const after = drAttributes(references.after);
+    for (const field of DR_ATTRIBUTES) {
+      if (!(field in before) && !(field in after)) continue;
+      rows.push({
+        field,
+        before: before[field],
+        after: after[field],
+        changed: !sameValue(before[field], after[field]),
+      });
+    }
+  }
+  return rows
+    .sort((a, b) => fieldRank(a.field) - fieldRank(b.field) || a.field.localeCompare(b.field))
     .filter((row) => !isEmpty(row.before) || !isEmpty(row.after));
+}
+
+/** A DR relationship type's spec attributes, kept on its DR reference's metadata. */
+export const DR_ATTRIBUTES = ["cardinality", "strength", "evidence"] as const;
+
+/** The DR attributes on the DR ("documentation_robotics") reference among references. */
+function drAttributes(references: unknown): Record<string, unknown> {
+  if (!Array.isArray(references)) return {};
+  const ref = references.find(
+    (r) =>
+      r && typeof r === "object" && (r as { source?: unknown }).source === "documentation_robotics",
+  ) as { metadata?: Record<string, unknown> | null } | undefined;
+  const metadata = ref?.metadata ?? {};
+  return Object.fromEntries(
+    DR_ATTRIBUTES.filter((k) => k in metadata).map((k) => [k, metadata[k]]),
+  );
 }
 
 function isEmpty(value: unknown): boolean {

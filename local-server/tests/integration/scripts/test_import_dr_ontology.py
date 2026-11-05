@@ -397,6 +397,96 @@ class TestImportDrOntologyExternalReferencePreservation:
         assert sources == {"documentation_robotics", "manual"}
 
 
+REALIZES_SCHEMA = (
+    "schemas/relationships/motivation/goal.realizes.businessservice.relationship.schema.json"
+)
+
+
+def _realizes_reference(repo):
+    prop = repo.get_property_definition_by_identifier("goal_realizes_businessservice")
+    return next(ref for ref in prop.external_references if ref.source == DR_SOURCE)
+
+
+def _set_spec_attributes(spec_dir, cardinality=None, strength=None, evidence=None):
+    """Give the realizes schema attributes, as DR's relationship schemas carry them."""
+    path = spec_dir / REALIZES_SCHEMA
+    data = json.loads(path.read_text())
+    if cardinality:
+        data["properties"]["cardinality"] = {"const": cardinality}
+    if strength:
+        data["properties"]["strength"] = {"const": strength}
+    if evidence is None:
+        data.pop("x-dr-evidence", None)
+    else:
+        data["x-dr-evidence"] = evidence
+    path.write_text(json.dumps(data))
+
+
+class TestRelationshipAttributes:
+    """Cardinality, strength and x-dr-evidence ride on the DR reference's metadata (#1397)."""
+
+    def test_import_stores_the_attributes_on_the_dr_reference(
+        self, ontology_service, repo, spec_dir
+    ):
+        _set_spec_attributes(spec_dir, "many-to-many", "high", ["A goal names the service."])
+
+        import_dr_ontology(ontology_service, repo, spec_dir)
+
+        assert dict(_realizes_reference(repo).metadata) == {
+            "cardinality": "many-to-many",
+            "strength": "high",
+            "evidence": ["A goal names the service."],
+        }
+
+    def test_a_schema_without_attributes_gets_no_metadata(self, ontology_service, repo, spec_dir):
+        import_dr_ontology(ontology_service, repo, spec_dir)
+
+        assert _realizes_reference(repo).metadata is None
+
+    def test_reimporting_an_unchanged_spec_saves_no_property_definition(
+        self, ontology_service, repo, spec_dir, monkeypatch
+    ):
+        _set_spec_attributes(spec_dir, "many-to-many", "medium", ["Evidence."])
+        import_dr_ontology(ontology_service, repo, spec_dir)
+        saves = []
+        save = repo.save_property_definition
+        monkeypatch.setattr(
+            repo, "save_property_definition", lambda prop: saves.append(prop) or save(prop)
+        )
+
+        import_dr_ontology(ontology_service, repo, spec_dir)
+
+        assert saves == []
+
+    def test_a_changed_spec_updates_the_attributes_and_keeps_other_references(
+        self, ontology_service, repo, spec_dir
+    ):
+        _set_spec_attributes(spec_dir, "many-to-many", "medium", ["Old evidence."])
+        import_dr_ontology(ontology_service, repo, spec_dir)
+        prop = repo.get_property_definition_by_identifier("goal_realizes_businessservice")
+        prop.external_references.append(ExternalReference(source="manual", identifier="m-1"))
+        repo.save_property_definition(prop)
+
+        _set_spec_attributes(spec_dir, "one-to-many", "high")
+        import_dr_ontology(ontology_service, repo, spec_dir)
+
+        prop = repo.get_property_definition_by_identifier("goal_realizes_businessservice")
+        assert [(r.source, r.identifier) for r in prop.external_references] == [
+            (DR_SOURCE, "motivation.goal.realizes.business.businessservice"),
+            ("manual", "m-1"),
+        ]
+        assert dict(_realizes_reference(repo).metadata) == {
+            "cardinality": "one-to-many",
+            "strength": "high",
+        }
+
+    def test_malformed_evidence_raises(self, ontology_service, repo, spec_dir):
+        _set_spec_attributes(spec_dir, evidence="not a list")
+
+        with pytest.raises(ValueError, match="x-dr-evidence"):
+            import_dr_ontology(ontology_service, repo, spec_dir)
+
+
 CHARTER = """# Documentation Robotics Design Charter
 
 **Status:** Adopted.
