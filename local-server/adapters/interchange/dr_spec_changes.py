@@ -14,7 +14,8 @@ MCP or in the app, exports as one `cs-dr-spec-changes/1` document:
         "identifier",                 # Context Studio's identifier for the type
         "predicate", "source_spec_node_id", "destination_spec_node_id",
         "set": {"description"?, "cardinality"?, "strength"?, "evidence"?},
-        "replacement_relationship_id" # delete only, when its relationships moved to another type
+        "replacement_relationship_id" # delete only: the type the delete names as its
+                                      # replacement, else the one its relationships moved to
      }],
      "skipped": [{"seq", "op_id", "why"}]}
 
@@ -117,7 +118,7 @@ def _change(
         # An edited delete was applied as an update.
         return _update(operation, repo, label, refs)
     if operation.op is OperationType.DELETE:
-        return _delete(operation, repo, label)
+        return _delete(operation, repo, label, refs)
     return None
 
 
@@ -215,23 +216,48 @@ def _update(
     return entry
 
 
-def _delete(operation: ProposedOperation, repo: OntologyRepository, label: str) -> dict | None:
+def _delete(
+    operation: ProposedOperation,
+    repo: OntologyRepository,
+    label: str,
+    refs: dict[str, str | None],
+) -> dict | None:
+    """
+    A deleted type, with the type replacing it: the one the delete names
+    (`proposed_replacement_id`, a "$ref" resolved to its applied create), else
+    the one its relationships moved to (the resolution). The replacement is the
+    type as the proposal left it (domain.versioning.in_use compares pairs the
+    same way); DR keeps it for the model migration only when it links the same
+    pair of types or the reverse. A named replacement whose create was not
+    applied, or that is gone, falls back to the resolution's, if any.
+    """
     base = operation.base
     relationship_id = dr_relationship_id(base.get("external_references") or [])
     if relationship_id is None:
         return None
     triple = Triple.parse(relationship_id)
     entry = _entry(operation, "delete", triple, base.get("identifier"), {})
+    named = operation.proposed_replacement_id
+    if named and named.startswith("$"):
+        named = refs.get(named[1:])
     resolution = operation.resolution
-    if resolution is not None and resolution.replacement_property_id:
-        replacement = repo.get_property_definition(resolution.replacement_property_id)
+    moved_to = resolution.replacement_property_id if resolution else None
+    replacement_property_id = next(
+        (
+            candidate
+            for candidate in (named, moved_to)
+            if candidate and repo.get_property_definition(candidate) is not None
+        ),
+        None,
+    )
+    if replacement_property_id:
+        replacement = repo.get_property_definition(replacement_property_id)
         replacement_id = (
             dr_relationship_id(replacement.external_references) if replacement else None
         )
         if replacement_id is None:
             raise ValueError(
-                f"{label}: its relationships moved to {resolution.replacement_property_id}, "
-                "which is not a DR relationship type"
+                f"{label}: its replacement {replacement_property_id} is not a DR relationship type"
             )
         entry["replacement_relationship_id"] = replacement_id
     return entry

@@ -250,6 +250,69 @@ def test_a_resolved_delete_names_the_replacement(parts):
     }
 
 
+def uses_create(delivers, seq=1):
+    """A create of api.operation uses api.response, the pair delivers links."""
+    return OperationDraft(
+        seq=seq,
+        op="create",
+        kind="property",
+        ref="uses",
+        fields={
+            "identifier": "operation_uses_response",
+            "title": "api.operation uses api.response",
+            "canonical_predicate": "uses",
+            "domain_class_id": delivers.domain_class_id,
+            "range_class_id": delivers.range_class_id,
+            "external_references": [dr_ref(RENAMED)],
+        },
+    )
+
+
+def test_a_delete_exports_the_replacement_it_names_by_ref(parts):
+    _, repo, proposals = parts
+    delivers = prop_by_dr_id(repo, DELIVERS)
+    proposal = propose(
+        repo,
+        proposals,
+        uses_create(delivers),
+        OperationDraft(
+            seq=2, op="delete", kind="property", target_id=delivers.id, replacement="$uses"
+        ),
+    )
+    proposal = apply_all(proposals, proposal)
+    assert all(o.status is OperationStatus.APPLIED for o in proposal.operations), [
+        o.reason for o in proposal.operations
+    ]
+
+    changes = spec_changes_for(proposal, repo)["changes"]
+
+    assert [c["op"] for c in changes] == ["create", "delete"]
+    assert changes[1]["relationship_id"] == DELIVERS
+    assert changes[1]["replacement_relationship_id"] == RENAMED
+
+
+def test_a_named_replacement_whose_create_was_rejected_names_none(parts):
+    _, repo, proposals = parts
+    delivers = prop_by_dr_id(repo, DELIVERS)
+    proposal = propose(
+        repo,
+        proposals,
+        uses_create(delivers),
+        OperationDraft(
+            seq=2, op="delete", kind="property", target_id=delivers.id, replacement="$uses"
+        ),
+    )
+    create, delete = proposal.operations
+    proposals.reject(proposal.id, [create.id], "no")
+    proposal = proposals.apply(proposal.id, [delete.id])
+    assert proposal.operations[1].status is OperationStatus.APPLIED, proposal.operations[1].reason
+
+    (change,) = spec_changes_for(proposal, repo)["changes"]
+
+    assert change["op"] == "delete"
+    assert "replacement_relationship_id" not in change
+
+
 def test_undecided_and_non_property_operations_are_skipped(parts):
     _, repo, proposals = parts
     delivers = prop_by_dr_id(repo, DELIVERS)
