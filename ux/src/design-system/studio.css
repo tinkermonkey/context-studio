@@ -453,6 +453,19 @@ select.input {
   overflow: auto;
   max-height: var(--split-pane-max-height);
 }
+/* When the table frame is the list column's own child, the column stretches
+   to the row's height (the inspector's, when that is taller) and the frame
+   fills it, so a short table still leaves room below its rows for a row
+   menu to open. */
+.split-2 > :first-child:has(> .schema-table-wrap) {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.split-2 > :first-child > .schema-table-wrap {
+  flex: 1 1 auto;
+}
 
 /* Classes table cells: the identifier stays on one line and the title keeps a
    readable minimum; the description narrows first and clamps to two lines;
