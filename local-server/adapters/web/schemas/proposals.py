@@ -1,8 +1,7 @@
 """
 Pydantic schemas for the change proposal API.
 
-Names carry a ChangeProposal prefix because ProposalResponse and
-RejectProposalRequest already name the changeset proposals in versioning.py.
+Names carry the ChangeProposal prefix, the domain's name for a proposal.
 """
 
 from datetime import datetime

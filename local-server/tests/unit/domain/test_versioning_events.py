@@ -2,7 +2,6 @@
 Unit tests for domain events in the Version Control & Collaboration bounded context.
 
 Tests verify:
-- ChangesetMerged event validation (merged_at timestamp required)
 - SyncCompleted event validation (direction must be 'push'/'pull', completed_at required)
 - Events are frozen (immutable)
 - Auto-population of aggregate_id
@@ -13,83 +12,8 @@ from datetime import datetime, timezone
 
 import pytest
 
-from domain.versioning.events import ChangesetMerged, SyncCompleted
+from domain.versioning.events import SyncCompleted
 from domain.versioning.value_objects import SyncDirection
-
-
-class TestChangesetMerged:
-    """Tests for ChangesetMerged event."""
-
-    def test_changeset_merged_instantiation(self):
-        """ChangesetMerged can be instantiated with all required fields."""
-        now = datetime.now(timezone.utc)
-        event = ChangesetMerged(
-            changeset_id="changeset-123",
-            proposal_id="proposal-456",
-            merged_at=now,
-            events_applied=5,
-        )
-        assert event.event_id is not None
-        assert event.occurred_at is not None
-        assert event.changeset_id == "changeset-123"
-        assert event.proposal_id == "proposal-456"
-        assert event.merged_at == now
-        assert event.events_applied == 5
-
-    def test_changeset_merged_auto_populates_aggregate_id(self):
-        """ChangesetMerged auto-populates aggregate_id from changeset_id."""
-        now = datetime.now(timezone.utc)
-        event = ChangesetMerged(
-            changeset_id="changeset-789",
-            proposal_id="proposal-999",
-            merged_at=now,
-            events_applied=3,
-        )
-        assert event.aggregate_id == "changeset-789"
-
-    def test_changeset_merged_is_frozen(self):
-        """ChangesetMerged instances are frozen."""
-        now = datetime.now(timezone.utc)
-        event = ChangesetMerged(
-            changeset_id="changeset-123",
-            proposal_id="proposal-456",
-            merged_at=now,
-            events_applied=5,
-        )
-        with pytest.raises(FrozenInstanceError):
-            event.events_applied = 10
-
-    def test_changeset_merged_rejects_none_merged_at(self):
-        """ChangesetMerged raises ValueError if merged_at is None."""
-        with pytest.raises(ValueError, match="ChangesetMerged event requires merged_at timestamp"):
-            ChangesetMerged(
-                changeset_id="changeset-123",
-                proposal_id="proposal-456",
-                merged_at=None,  # type: ignore
-                events_applied=5,
-            )
-
-    def test_changeset_merged_accepts_zero_events_applied(self):
-        """ChangesetMerged can have zero events_applied (edge case)."""
-        now = datetime.now(timezone.utc)
-        event = ChangesetMerged(
-            changeset_id="changeset-123",
-            proposal_id="proposal-456",
-            merged_at=now,
-            events_applied=0,
-        )
-        assert event.events_applied == 0
-
-    def test_changeset_merged_rejects_empty_proposal_id(self):
-        """ChangesetMerged raises ValueError if proposal_id is empty (parent validation)."""
-        now = datetime.now(timezone.utc)
-        with pytest.raises(ValueError, match="Event field 'proposal_id' cannot be empty"):
-            ChangesetMerged(
-                changeset_id="changeset-123",
-                proposal_id="",
-                merged_at=now,
-                events_applied=5,
-            )
 
 
 class TestSyncCompleted:
@@ -218,11 +142,8 @@ class TestEventImportability:
     """Tests that all versioning events can be imported from the module."""
 
     def test_versioning_events_importable(self):
-        """ChangesetMerged and SyncCompleted are importable from domain.versioning.events."""
-        events = [
-            ChangesetMerged,
-            SyncCompleted,
-        ]
+        """SyncCompleted is importable from domain.versioning.events."""
+        events = [SyncCompleted]
         for event_class in events:
             assert event_class is not None
             assert hasattr(event_class, "__dataclass_fields__")

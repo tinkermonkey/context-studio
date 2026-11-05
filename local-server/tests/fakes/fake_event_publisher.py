@@ -68,7 +68,7 @@ class FakeEventPublisher:
         Get all events of a specific type.
 
         Args:
-            event_type: The event type to filter by (e.g., ChangesetMerged)
+            event_type: The event type to filter by (e.g., SyncCompleted)
 
         Returns:
             List of events of the specified type with proper type preservation.

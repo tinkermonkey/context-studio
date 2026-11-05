@@ -62,12 +62,8 @@ export const QUERY_KEYS = {
   extraction: ["extraction"] as const,
   // Versioning
   changes: (params?: object) => ["changes", params] as const,
-  changesets: ["changesets"] as const,
-  proposals: (proposalId?: string) =>
-    proposalId ? (["proposals", proposalId] as const) : (["proposals"] as const),
-  proposalConflicts: (proposalId: string) => ["proposals", proposalId, "conflicts"] as const,
   syncStatus: ["sync-status"] as const,
-  // Change proposals (/api/proposals); "proposals" above is the changeset surface.
+  // Change proposals (/api/proposals)
   changesRoot: ["changes"] as const,
   changeProposalsRoot: ["change-proposals"] as const,
   changeProposals: (params?: object) => ["change-proposals", "list", params] as const,

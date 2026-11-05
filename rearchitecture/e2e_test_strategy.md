@@ -586,7 +586,7 @@ test_change_event_completeness
     update 2 classes → filter by event_type "update" → verify 2 →
     delete 1 relationship → filter by event_type "delete" → verify 1
 
-test_changeset_workflow
+test_changeset_workflow  (retired in #1369: changesets were replaced by ChangeProposal)
     Create entities across multiple API calls →
     group into a changeset →
     verify changeset contains all expected operations →

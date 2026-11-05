@@ -11,25 +11,6 @@ if TYPE_CHECKING:
     from domain.versioning.entities import ChangeEvent
 
 
-class ChangeState(str, Enum):
-    """Valid states for a changeset."""
-
-    WORKING = "working"
-    STAGED = "staged"
-    PROPOSED = "proposed"
-    APPROVED = "approved"
-    MERGED = "merged"
-
-
-class ProposalState(str, Enum):
-    """Valid states for a proposal."""
-
-    OPEN = "open"
-    APPROVED = "approved"
-    REJECTED = "rejected"
-    MERGED = "merged"
-
-
 class ChangeOperation(str, Enum):
     """Types of operations on entities."""
 
@@ -38,26 +19,11 @@ class ChangeOperation(str, Enum):
     DELETE = "delete"
 
 
-class EntityVersionState(str, Enum):
-    """Valid states for an entity version."""
-
-    ACTIVE = "active"
-    ARCHIVED = "archived"
-
-
 class SyncDirection(str, Enum):
     """Direction of a synchronization operation."""
 
     PUSH = "push"
     PULL = "pull"
-
-
-class MergeStrategy(str, Enum):
-    """Strategy for resolving conflicts during merge."""
-
-    LAST_WRITE_WINS = "last_write_wins"
-    BASE_VALUE_WINS = "base_value_wins"
-    MANUAL = "manual"
 
 
 @dataclass(frozen=True)

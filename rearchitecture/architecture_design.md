@@ -198,21 +198,22 @@ The system decomposes into six bounded contexts. Each context owns its domain en
 
 ### 4.5 Version Control & Collaboration
 
-**Responsibility:** Change tracking, versioning, changesets, proposals, conflict resolution, and sync.
+**Responsibility:** Change tracking, change proposals (review and apply), revert, and sync.
+
+> **Retired (#1369):** the versioning `Changeset` / `Proposal` / conflict resolution (and the `EntityVersion` snapshots its merge wrote) were removed in favour of `ChangeProposal` (`domain/versioning/proposals.py`, `proposal_service.py`, `/api/proposals`). The context now covers change events, change proposals, revert and sync.
 
 **Domain Entities:**
 - `ChangeEvent` — an atomic change record
-- `EntityVersion`, `ChangeState`
-- `Changeset`, `Proposal`
-- `ConflictReport`, `MergeResult`
+- `ChangeProposal`, `ProposedOperation`
 
 **Driving Ports:**
-- `TrackChanges`, `ManageVersions`
-- `CreateChangeset`, `SubmitProposal`, `ResolveConflicts`
+- `TrackChanges`
+- `ProposeChanges`, `ApplyProposal`, `RevertRun`
 - `SyncWorkspace`
 
 **Driven Ports:**
-- `ChangeRepository` — persistence for change events and versions
+- `ChangeRepository` — persistence for change events
+- `ChangeProposalRepository` — persistence for change proposals and their operations
 - `SyncTarget` — abstraction over S3/DuckDB sync
 - `OntologyRepository` — read current state for diff computation
 
@@ -274,8 +275,9 @@ local-server/
 │   │
 │   ├── versioning/                 # Bounded context: Version Control & Collaboration
 │   │   ├── __init__.py
-│   │   ├── entities.py             # ChangeEvent, EntityVersion, Changeset, Proposal
-│   │   ├── services.py             # VersioningService, ConflictResolver
+│   │   ├── entities.py             # ChangeEvent
+│   │   ├── proposals.py            # ChangeProposal, ProposedOperation
+│   │   ├── services.py             # VersioningService (history, sync)
 │   │   └── ports.py                # ChangeRepository, SyncTarget
 │   │
 │   └── admin/                      # Bounded context: System Administration
@@ -482,11 +484,10 @@ class SemanticQueryEngine(Protocol):
 # domain/versioning/ports.py
 
 class ChangeRepository(Protocol):
-    """Port for persisting change events and versions."""
+    """Port for persisting change events."""
 
     def record_change(self, event: "ChangeEvent") -> "ChangeEvent": ...
     def get_changes(self, entity_id: str) -> Sequence["ChangeEvent"]: ...
-    def get_version(self, entity_id: str, version: int) -> Optional["EntityVersion"]: ...
 
 
 class SyncTarget(Protocol):

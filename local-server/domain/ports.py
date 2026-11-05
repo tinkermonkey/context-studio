@@ -35,7 +35,6 @@ class ChangeRecordPort(Protocol):
         previous_state: dict | None = None,
         user_id: str | None = None,
         change_reason: str | None = None,
-        changeset_id: str | None = None,
         batch_run_id: str | None = None,
     ) -> str:
         """
@@ -49,7 +48,6 @@ class ChangeRecordPort(Protocol):
             previous_state: JSON snapshot before change (optional)
             user_id: Optional user ID
             change_reason: Optional explanation
-            changeset_id: Optional changeset reference
             batch_run_id: Optional ID of the batch run (import or extraction) that triggered this
             change
 

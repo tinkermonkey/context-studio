@@ -1,6 +1,6 @@
 """Performance tests for version control and collaboration operations at various scales.
 
-Tests measure changeset creation, proposal workflow, and change event recording
+Tests measure change event recording and change history query
 performance at multiple scales.
 """
 
@@ -31,34 +31,6 @@ def _setup_versioning_context() -> tuple[VersioningService, FakeChangeRepository
 
 @pytest.mark.performance
 @pytest.mark.parametrize(
-    "num_changesets,max_time",
-    [
-        (10, 0.02),
-        (50, 0.1),
-        (100, 0.2),
-    ],
-)
-def test_bulk_create_changesets(num_changesets: int, max_time: float) -> None:
-    """Measure throughput of creating changesets."""
-    service, _ = _setup_versioning_context()
-
-    start = time.perf_counter()
-    for i in range(num_changesets):
-        service.create_changeset(
-            name=f"Changeset_{i:03d}",
-            description=f"Description for changeset {i}",
-        )
-    elapsed = time.perf_counter() - start
-
-    print(
-        f"\nBulk create changesets ({num_changesets} changesets): {elapsed:.4f}s"
-        f" ({num_changesets / elapsed:.1f} changesets/sec)"
-    )
-    assert elapsed < max_time
-
-
-@pytest.mark.performance
-@pytest.mark.parametrize(
     "num_changes,max_time",
     [
         (10, 0.02),
@@ -85,42 +57,6 @@ def test_bulk_record_changes(num_changes: int, max_time: float) -> None:
     print(
         f"\nBulk record changes ({num_changes} changes): {elapsed:.4f}s"
         f" ({num_changes / elapsed:.1f} changes/sec)"
-    )
-    assert elapsed < max_time
-
-
-@pytest.mark.performance
-@pytest.mark.parametrize(
-    "num_changesets,max_time",
-    [
-        (5, 0.01),
-        (10, 0.05),
-        (20, 0.1),
-    ],
-)
-def test_proposal_workflow(num_changesets: int, max_time: float) -> None:
-    """Measure throughput of proposal creation and approval workflow."""
-    service, _ = _setup_versioning_context()
-
-    # Create changesets
-    changeset_ids = []
-    for i in range(num_changesets):
-        changeset = service.create_changeset(
-            name=f"Changeset_{i:03d}",
-            description=f"Description for changeset {i}",
-        )
-        changeset_ids.append(changeset.id)
-
-    start = time.perf_counter()
-    for changeset_id in changeset_ids:
-        service.stage_changeset(changeset_id)
-        proposal = service.submit_proposal(changeset_id)
-        service.approve_proposal(proposal.id)
-    elapsed = time.perf_counter() - start
-
-    print(
-        f"\nProposal workflow ({num_changesets} proposals): {elapsed:.4f}s"
-        f" ({num_changesets / elapsed:.1f} proposals/sec)"
     )
     assert elapsed < max_time
 

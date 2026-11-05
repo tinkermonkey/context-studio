@@ -1,1 +1,1 @@
-"""Versioning domain — change events, changesets, proposals, and conflict resolution."""
+"""Versioning domain — change events, change proposals, revert, and sync."""

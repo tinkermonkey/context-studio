@@ -1191,61 +1191,17 @@ selectors:
   - selector: versioning-page
     component: routes/app/versioning.tsx
     description: Main versioning page container
-  - selector: pending-changes-list
-    component: components/versioning/PendingChangesList.tsx
-    description: Container for the pending changes list
-  - selector: pending-change-*
-    component: components/versioning/PendingChangesList.tsx
-    description: Individual pending change row (pattern matches pending-change-{changeId})
-  - selector: changeset-panel
-    component: components/versioning/ChangesetPanel.tsx
-    description: Main container for the changeset management panel
-  - selector: changeset-list
-    component: components/versioning/ChangesetListSection.tsx
-    description: Container for the changesets list
-  - selector: changeset-name-input
-    component: components/versioning/CreateChangesetModal.tsx
-    description: Name input field in create changeset modal
-  - selector: changeset-description-input
-    component: components/versioning/CreateChangesetModal.tsx
-    description: Description textarea in create changeset modal
-  - selector: changeset-cancel-button
-    component: components/versioning/CreateChangesetModal.tsx
-    description: Cancel button in create changeset modal
-  - selector: changeset-submit-button
-    component: components/versioning/CreateChangesetModal.tsx
-    description: Submit button in create changeset modal
+  - selector: change-history-list
+    component: components/versioning/ChangeHistoryList.tsx
+    description: Read-only list of recorded change events
+  - selector: change-history-row-*
+    component: components/versioning/ChangeHistoryList.tsx
+    description: Individual change event row (pattern matches change-history-row-{changeId})
 
   # Sync Status Panel
   - selector: sync-status-panel
     component: components/versioning/SyncStatus.tsx
     description: Main container for the sync status panel
-
-  # Conflict Resolver
-  - selector: conflict-resolver
-    component: components/versioning/ConflictResolver.tsx
-    description: Root container for the conflict resolver panel
-  - selector: conflict-list
-    component: components/versioning/ConflictResolver.tsx
-    description: Container for all conflict groups
-  - selector: conflict-group-{entityId}
-    component: components/versioning/ConflictResolver.tsx
-    description: Collapsible group of conflicts for a single entity
-  - selector: conflict-row-{entityId}-{fieldName}
-    component: components/versioning/ConflictResolver.tsx
-    description: Individual conflict row for a field within an entity
-  - selector: conflict-keep-ours-{entityId}-{fieldName}
-    component: components/versioning/ConflictResolver.tsx
-    description: Button to keep the "ours" (base) value for a conflict
-  - selector: conflict-keep-theirs-{entityId}-{fieldName}
-    component: components/versioning/ConflictResolver.tsx
-    description: Button to keep the "theirs" (incoming) value for a conflict
-  - selector: conflict-edit-{entityId}-{fieldName}
-    component: components/versioning/ConflictResolver.tsx
-    description: Button to edit a custom resolution value for a conflict
-  - selector: conflict-apply-resolutions-button
-    component: components/versioning/ConflictResolver.tsx
-    description: Primary button to apply all conflict resolutions
 
   # Settings Page
   - selector: settings-page

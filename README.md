@@ -36,7 +36,7 @@ Context Studio is designed to be packaged as a desktop app (via Tauri) and run e
   2. **Graph Analysis** — in-memory graph construction, traversal, SPARQL, network metrics
   3. **Knowledge Extraction** — the RAG pipeline, NLP processing, external knowledge enrichment
   4. **LLM Pipeline Management** — pipeline configuration and execution tracking
-  5. **Version Control & Collaboration** — change events, changesets, proposals, conflict resolution, sync
+  5. **Version Control & Collaboration** — change events, change proposals (review and apply), revert, sync
   6. **System Administration** — health, background tasks, configuration
 
 The domain layer (`domain/`) has zero infrastructure imports — no FastAPI, no SQLAlchemy, no I/O — so business logic can be tested in isolation and infrastructure can be swapped without touching it. Persistence is split across three SQLite databases: `local.db` (the ontology workspace), `operations.db` (pipeline execution/background tasks), and cached/imported reference data pulled from sources like ConceptNet, DBpedia, and schema.org.

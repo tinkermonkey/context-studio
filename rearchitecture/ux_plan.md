@@ -190,7 +190,7 @@ Goal: All service classes and React Query hooks wired and returning real data fr
    - `GraphService` — methods for all 14 graph endpoints
    - `ExtractionService` — extract, NLP analysis, reference enrichment
    - `PipelineService` — pipeline config CRUD + execution
-   - `VersioningService` — changes, changesets, sync
+   - `VersioningService` — changes, sync
    - `ReferenceService` — search, relations, status
    - `AdminService` — health, metrics, configuration, background tasks
 
@@ -199,7 +199,7 @@ Goal: All service classes and React Query hooks wired and returning real data fr
    - `src/api/hooks/graph/` — `useBuildGraph`, `useGraphMetrics`, `useShortestPath`, `useSparqlQuery`, etc.
    - `src/api/hooks/extraction/` — `useExtract`, `useNlpAnalysis`, `useEnrichFromReferences`
    - `src/api/hooks/pipeline/` — `usePipelines`, `usePipeline`, `useCreatePipeline`, `useExecutePipeline`, `usePipelineExecutions`
-   - `src/api/hooks/versioning/` — `useChanges`, `useChangesets`, `useCreateChangeset`, `useSyncStatus`, `usePushSync`, `usePullSync`
+   - `src/api/hooks/versioning/` — `useChanges`, `useSyncStatus`, `usePushSync`, `usePullSync`
    - `src/api/hooks/reference/` — `useReferenceSearch`, `useReferenceStatus`
    - `src/api/hooks/admin/` — `useHealthStatus`, `useSystemMetrics`, `useConfiguration`, `useUpdateConfiguration`, `useBackgroundTasks`
    - `src/api/hooks/index.ts` — barrel export
@@ -378,9 +378,9 @@ Goal: Complete remaining functional pages.
    - `workflows.tsx` — grounding workflow list; same table + drawer pattern
 
 2. **Versioning** (`versioning.tsx`)
-   - `ChangesetPanel.tsx` — list of changes, stage into a changeset, apply changeset
+   - `ChangeHistoryList.tsx` — read-only list of change events
    - `SyncStatus.tsx` — push/pull status from `useSyncStatus`, `usePushSync`, `usePullSync`
-   - `ConflictResolver.tsx` — CRDT conflict diff and resolution UI
+   - (The changeset and conflict tabs were retired in #1369; review and apply changes in the proposals queue at `/app/proposals`.)
 
 3. **Settings** (`settings.tsx`)
    - 2-column `.config-tile` grid with prominent icons
@@ -390,7 +390,7 @@ Goal: Complete remaining functional pages.
 ### Verification
 
 - Reference search returns results
-- Changeset create → apply cycle works
+- Change history lists recorded change events
 - Config changes persist across restart
 
 ---
