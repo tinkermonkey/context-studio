@@ -3595,7 +3595,7 @@
           "pipelines"
         ],
         "summary": "Run Pipeline",
-        "description": "Invoke a pipeline by type.\n\nThe request body structure depends on the pipeline type. Supported types:\n- individual_extraction: requires text and ontology_id\n- schema_extraction: requires documents, optional scope\n- schema_node_grounding: requires nodes and sources\n- schema_node_definition_refinement: requires node_id and\n  current_definition, optional groundings and extraction_usages\n- schema_node_connection_refinement: requires scope_id and\n  current_connections, optional groundings and extraction_usages\n\nCreates a pipeline run, executes it with the registered implementation,\nand returns the run with execution results.\n\nArgs:\n    pipeline_type: The pipeline type (e.g., individual_extraction)\n    request_body: Type-specific request payload\n    request: FastAPI request (for service access)\n\nReturns:\n    PipelineRunResponse with the executed PipelineRun\n\nRaises:\n    HTTPException: 400 for invalid input, 404 for missing config/impl, 500 for execution errors",
+        "description": "Invoke a pipeline by type.\n\nThe request body structure depends on the pipeline type. Supported types:\n- individual_extraction: requires text and ontology_id\n- schema_extraction: requires documents, optional scope\n- schema_node_grounding: requires nodes and sources\n- schema_node_definition_refinement: requires node_id and\n  current_definition, optional groundings and extraction_usages\n- schema_node_connection_refinement: requires scope_id and\n  current_connections, optional groundings and extraction_usages\n\nCreates a pipeline run, executes it with the registered implementation,\nand returns the run with execution results. With `async: true` the run is\nstored pending and returned at once (202); a background worker executes it.\n\nArgs:\n    pipeline_type: The pipeline type (e.g., individual_extraction)\n    request_body: Type-specific request payload\n    request: FastAPI request (for service access)\n\nReturns:\n    PipelineRunResponse with the executed PipelineRun\n\nRaises:\n    HTTPException: 400 for invalid input, 404 for missing config/impl, 500 for execution errors",
         "operationId": "run_pipeline_api_pipelines__pipeline_type__run_post",
         "parameters": [
           {
@@ -3629,6 +3629,16 @@
               }
             }
           },
+          "202": {
+            "description": "With async: the pending run, executing in the background",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineRunResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -3650,6 +3660,49 @@
         "summary": "Get Pipeline Run",
         "description": "Fetch a PipelineRun by ID.\n\nArgs:\n    run_id: The pipeline run ID\n    request: FastAPI request (for service access)\n\nReturns:\n    PipelineRunResponse with the run details\n\nRaises:\n    HTTPException: 404 if run not found",
         "operationId": "get_pipeline_run_api_pipelines_runs__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pipelines/runs/{run_id}/cancel": {
+      "post": {
+        "tags": [
+          "pipelines"
+        ],
+        "summary": "Cancel Pipeline Run",
+        "description": "Cancel a pipeline run.\n\nA pending run is cancelled at once. A run executing in the background is\ncancelled at its next await point; poll the run until its status is\n`cancelled`.\n\nRaises:\n    HTTPException: 404 if the run is not found, 409 if it is neither pending\n        nor executing in the background, 503 if background runs are off",
+        "operationId": "cancel_pipeline_run_api_pipelines_runs__run_id__cancel_post",
         "parameters": [
           {
             "name": "run_id",
@@ -10312,7 +10365,7 @@
             "type": "array",
             "minItems": 1,
             "title": "Runs",
-            "description": "Run specs to enqueue"
+            "description": "Run specs to enqueue: pipeline_type, implementation_id, configuration_ref, specific_data, and input_data (a run given an input_data is executed by the background workers; one without stays pending)"
           },
           "idempotency_key": {
             "anyOf": [
@@ -13213,6 +13266,18 @@
             "title": "Configuration Ref",
             "description": "Configuration reference (defaults to 'default')",
             "default": "default"
+          },
+          "async": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Async",
+            "description": "Return the pending run at once (202) and execute it in the background; poll GET /api/pipelines/runs/{id} for status and progress"
           }
         },
         "additionalProperties": true,
@@ -13342,6 +13407,42 @@
             ],
             "title": "Source Text",
             "description": "Input text the run extracted from; provenance span offsets index into it. Returned by run detail and run execution; omitted (null) in run lists."
+          },
+          "items_done": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Items Done",
+            "description": "Work items finished so far (null until the run reports progress)"
+          },
+          "items_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Items Total",
+            "description": "Work items the run will process (null until known)"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposal Id",
+            "description": "The change proposal the run produced, if it produced one"
           }
         },
         "type": "object",

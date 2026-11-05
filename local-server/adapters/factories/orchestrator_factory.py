@@ -21,7 +21,7 @@ from domain.pipelines.orchestration.noop import (
     NoOpPipelineOrchestrator,
     NoOpPipelineState,
 )
-from domain.pipelines.ports import LLMProvider
+from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.schema_extraction.open_orchestrator import (
     OpenSchemaExtractionOrchestrator,
@@ -207,6 +207,60 @@ _PIPELINE_TYPE_TO_STATE: dict[PipelineType, Type[PipelineState]] = {
     PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT: DefinitionRefinementState,
     PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT: ConnectionRefinementState,
 }
+
+
+def _grounding_config(config: dict[str, Any]) -> dict[str, Any]:
+    """The grounding-specific part of a configuration: top_n and weights."""
+    return {
+        "top_n": config.get("top_n", 10),
+        "weights": config.get(
+            "weights",
+            {
+                "source_score": 0.3,
+                "label_match": 0.3,
+                "semantic_similarity": 0.4,
+            },
+        ),
+    }
+
+
+def build_orchestrator_services(
+    app_state: Any,
+    config: dict[str, Any],
+    run_id: str,
+    status_writer: PipelineRunStatusWriter,
+) -> dict[str, Any]:
+    """
+    The services dict create_orchestrator draws on, from the app's wired adapters.
+
+    Args:
+        app_state: The FastAPI app.state holding the wired adapters (missing ones are None)
+        config: The run's pinned configuration
+        run_id: The run being executed
+        status_writer: Where the orchestrator writes the run's status and progress
+
+    Returns:
+        Services dict for create_orchestrator
+    """
+    return {
+        "extraction_service": getattr(app_state, "extraction_service", None),
+        "ontology_repo": getattr(app_state, "ontology_repo", None),
+        "extraction_repo": getattr(app_state, "extraction_repo", None),
+        "grounding_adapter": getattr(app_state, "grounding_adapter", None),
+        "scorer": getattr(app_state, "grounding_scorer", None),
+        "grounding_config": _grounding_config(config),
+        "refinement_config": config,
+        # Ports + config for the open extraction implementations (open_v1)
+        "nlp_processor": getattr(app_state, "nlp_processor", None),
+        "embedding_service": getattr(app_state, "embedding_service", None),
+        "clusterer": getattr(app_state, "clusterer", None),
+        "schema_index": getattr(app_state, "schema_vector_index", None),
+        "reference_source": getattr(app_state, "conceptnet_source", None),
+        "open_schema_config": config,
+        "open_individual_config": config,
+        "run_id": run_id,
+        "status_writer": status_writer,
+    }
 
 
 def create_orchestrator(

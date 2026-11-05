@@ -1,0 +1,334 @@
+"""
+Integration tests for background pipeline runs (#1409): the in-process
+executor claims pending runs, records progress, status and errors on them,
+marks runs a restart left RUNNING as interrupted, and cancels pending and
+executing runs. Real SQLite file database, the no-op pipeline, a fake LLM.
+"""
+
+import tempfile
+import time
+from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from adapters.persistence.sqlite.batch_repo import BatchRepository
+from adapters.persistence.sqlite.connection import (
+    create_local_db_engine,
+    create_session_factory,
+)
+from adapters.persistence.sqlite.models import Base
+from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
+from adapters.pipelines.run_executor import BackgroundRunExecutor, UnknownPipelineError
+from adapters.web.pipelines_routes import router
+from domain.pipelines.entities import BatchStatus, PipelineRunStatus, PipelineType
+from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator
+from domain.pipelines.registry import (
+    PipelineConfigurationRegistry,
+    PipelineImplementationRegistry,
+)
+from tests.fakes.fake_llm_provider import FakeLLMProvider
+
+
+@pytest.fixture
+def session_factory():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        engine = create_local_db_engine(f"sqlite:///{Path(tmpdir) / 'local.db'}")
+        Base.metadata.create_all(engine)
+        yield create_session_factory(engine)
+        engine.dispose()
+
+
+def make_executor(session_factory, llm=None, workers=1) -> BackgroundRunExecutor:
+    """An executor over the no-op pipeline (default implementation and configuration)."""
+    implementations = PipelineImplementationRegistry()
+    implementations.register_impl(PipelineType.NO_OP, "default", NoOpPipelineOrchestrator)
+    configurations = PipelineConfigurationRegistry()
+    configurations.register(PipelineType.NO_OP, "default", "default", {"model": "test-model"})
+    return BackgroundRunExecutor(
+        runs=PipelineRepository(session_factory),
+        batches=BatchRepository(session_factory),
+        implementations=implementations,
+        configurations=configurations,
+        llm_provider=llm or FakeLLMProvider(),
+        app_state=SimpleNamespace(),
+        workers=workers,
+        poll_seconds=0.05,
+    )
+
+
+@pytest.fixture
+def executor(session_factory):
+    executor = make_executor(session_factory)
+    yield executor
+    executor.stop()
+
+
+def wait_for(predicate, timeout=10.0):
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        value = predicate()
+        if value:
+            return value
+        time.sleep(0.02)
+    raise AssertionError("condition not met in time")
+
+
+def submit_noop(executor, items=0, item_seconds=0.0):
+    return executor.submit(
+        PipelineType.NO_OP,
+        "default",
+        "default",
+        {"items": items, "item_seconds": item_seconds},
+    )
+
+
+def status_of(session_factory, run_id):
+    return PipelineRepository(session_factory).get(run_id).status
+
+
+class TestExecution:
+    def test_submitted_run_is_pending_until_a_worker_claims_it(self, executor, session_factory):
+        run = submit_noop(executor)
+
+        assert run.status == PipelineRunStatus.PENDING
+        assert status_of(session_factory, run.id) == PipelineRunStatus.PENDING
+
+    def test_worker_executes_a_long_run_and_records_progress(self, executor, session_factory):
+        repo = PipelineRepository(session_factory)
+        run = submit_noop(executor, items=5, item_seconds=0.05)
+        executor.start()
+
+        seen_midway = wait_for(lambda: (r := repo.get(run.id)).items_done and r)
+        assert seen_midway.items_total == 5
+        done = wait_for(
+            lambda: (r := repo.get(run.id)).status == PipelineRunStatus.COMPLETED and r
+        )
+        assert (done.items_done, done.items_total) == (5, 5)
+        assert done.started_at is not None
+        assert done.output_summary["status"] == "completed"
+        batch = BatchRepository(session_factory).get(run.batch_run_id)
+        assert batch.status == BatchStatus.COMPLETED
+        assert batch.completed_at is not None
+
+    def test_failed_run_records_its_error(self, session_factory):
+        executor = make_executor(session_factory, llm=FakeLLMProvider(should_fail=True))
+        run = submit_noop(executor)
+        executor.start()
+        try:
+            repo = PipelineRepository(session_factory)
+            failed = wait_for(
+                lambda: (r := repo.get(run.id)).status == PipelineRunStatus.FAILED and r
+            )
+            assert failed.failure_reason == "LLM provider error"
+            batch = BatchRepository(session_factory).get(run.batch_run_id)
+            assert batch.status == BatchStatus.FAILED
+        finally:
+            executor.stop()
+
+    def test_runs_without_an_input_are_left_pending(self, executor, session_factory):
+        repo = PipelineRepository(session_factory)
+        batch = BatchRepository(session_factory).create()
+        bare = repo.create(
+            batch_run_id=batch.id,
+            pipeline_type=PipelineType.NO_OP,
+            implementation_id="default",
+            configuration_ref="default",
+            configuration_slug="default",
+            configuration_version=1,
+        )
+        queued = submit_noop(executor)
+        executor.start()
+
+        wait_for(lambda: status_of(session_factory, queued.id) == PipelineRunStatus.COMPLETED)
+        assert status_of(session_factory, bare.id) == PipelineRunStatus.PENDING
+
+    def test_unknown_configuration_is_refused(self, executor):
+        with pytest.raises(UnknownPipelineError):
+            executor.submit(PipelineType.NO_OP, "default", "missing", {})
+        with pytest.raises(UnknownPipelineError):
+            executor.submit(PipelineType.SCHEMA_EXTRACTION, "default", "default", {})
+
+    def test_two_workers_never_run_the_same_run_twice(self, session_factory):
+        executor = make_executor(session_factory, workers=2)
+        runs = [submit_noop(executor, items=2, item_seconds=0.01) for _ in range(6)]
+        llm = executor._llm_provider
+        executor.start()
+        try:
+            for run in runs:
+                wait_for(
+                    lambda run=run: status_of(session_factory, run.id)
+                    == PipelineRunStatus.COMPLETED
+                )
+            assert llm.call_count == len(runs)
+        finally:
+            executor.stop()
+
+
+class TestRestartRecovery:
+    def test_runs_left_running_become_interrupted_at_startup(self, session_factory):
+        first = make_executor(session_factory)
+        run = submit_noop(first)
+        # A previous process claimed the run and died before finishing it
+        assert PipelineRepository(session_factory).claim_next_pending()[0].id == run.id
+
+        restarted = make_executor(session_factory)
+        restarted.start()
+        try:
+            assert status_of(session_factory, run.id) == PipelineRunStatus.INTERRUPTED
+            batch = BatchRepository(session_factory).get(run.batch_run_id)
+            assert batch.status == BatchStatus.FAILED
+        finally:
+            restarted.stop()
+
+    def test_stopping_marks_an_executing_run_interrupted(self, session_factory):
+        executor = make_executor(session_factory)
+        run = submit_noop(executor, items=500, item_seconds=0.02)
+        executor.start()
+        repo = PipelineRepository(session_factory)
+        wait_for(lambda: repo.get(run.id).items_done)
+
+        executor.stop()
+
+        assert status_of(session_factory, run.id) == PipelineRunStatus.INTERRUPTED
+
+    def test_resumed_interrupted_run_executes_again(self, session_factory):
+        executor = make_executor(session_factory)
+        run = submit_noop(executor, items=500, item_seconds=0.02)
+        executor.start()
+        repo = PipelineRepository(session_factory)
+        wait_for(lambda: repo.get(run.id).items_done)
+        executor.stop()
+
+        app = FastAPI()
+        app.include_router(router)
+        app.state.pipeline_run_repo = repo
+        app.state.batch_repo = BatchRepository(session_factory)
+        restarted = make_executor(session_factory)
+        app.state.run_executor = restarted
+        restarted.start()
+        try:
+            client = TestClient(app)
+            response = client.post(f"/api/pipelines/batches/{run.batch_run_id}/resume")
+            assert response.json()["resumed_count"] == 1
+            restarted.wake()
+            # A worker claims the re-queued run and executes it from the start
+            wait_for(lambda: status_of(session_factory, run.id) == PipelineRunStatus.RUNNING)
+        finally:
+            restarted.stop()
+
+
+class TestCancel:
+    def test_cancel_pending_run(self, executor, session_factory):
+        run = submit_noop(executor)
+
+        assert executor.cancel(run.id) is True
+
+        assert status_of(session_factory, run.id) == PipelineRunStatus.CANCELLED
+        batch = BatchRepository(session_factory).get(run.batch_run_id)
+        assert batch.status == BatchStatus.CANCELLED
+
+    def test_cancel_executing_run(self, executor, session_factory):
+        run = submit_noop(executor, items=500, item_seconds=0.02)
+        executor.start()
+        repo = PipelineRepository(session_factory)
+        wait_for(lambda: repo.get(run.id).items_done)
+
+        assert executor.cancel(run.id) is True
+
+        wait_for(lambda: status_of(session_factory, run.id) == PipelineRunStatus.CANCELLED)
+        assert repo.get(run.id).items_done < 500
+
+    def test_finished_or_unknown_run_cannot_be_cancelled(self, executor, session_factory):
+        run = submit_noop(executor)
+        executor.start()
+        wait_for(lambda: status_of(session_factory, run.id) == PipelineRunStatus.COMPLETED)
+
+        assert executor.cancel(run.id) is False
+        assert executor.cancel("no-such-run") is False
+
+
+class TestRoutes:
+    @pytest.fixture
+    def client(self, executor, session_factory):
+        app = FastAPI()
+        app.include_router(router)
+        app.state.pipeline_run_repo = PipelineRepository(session_factory)
+        app.state.batch_repo = BatchRepository(session_factory)
+        app.state.implementation_registry = executor._implementations
+        app.state.config_registry = executor._configurations
+        app.state.llm_router = FakeLLMProvider()
+        app.state.run_executor = executor
+        executor.start()
+        return TestClient(app)
+
+    def test_async_run_returns_pending_run_at_once(self, client):
+        response = client.post(
+            "/api/pipelines/no_op/run",
+            json={"async": True, "items": 3, "item_seconds": 0.02},
+        )
+
+        assert response.status_code == 202
+        body = response.json()
+        assert body["status"] == "pending"
+        assert body["items_done"] is None
+        assert body["proposal_id"] is None
+
+        done = wait_for(
+            lambda: (r := client.get(f"/api/pipelines/runs/{body['id']}").json())["status"]
+            == "completed"
+            and r
+        )
+        assert (done["items_done"], done["items_total"]) == (3, 3)
+        assert "async" not in done["output_summary"]["input_echo"]
+        assert "run_async" not in done["output_summary"]["input_echo"]
+
+    def test_async_run_with_unknown_configuration_returns_404(self, client):
+        response = client.post(
+            "/api/pipelines/no_op/run", json={"async": True, "configuration_ref": "nope"}
+        )
+
+        assert response.status_code == 404
+
+    def test_cancel_route(self, client):
+        started = client.post(
+            "/api/pipelines/no_op/run",
+            json={"async": True, "items": 500, "item_seconds": 0.02},
+        ).json()
+        wait_for(lambda: client.get(f"/api/pipelines/runs/{started['id']}").json()["items_done"])
+
+        response = client.post(f"/api/pipelines/runs/{started['id']}/cancel")
+
+        assert response.status_code == 200
+        wait_for(
+            lambda: client.get(f"/api/pipelines/runs/{started['id']}").json()["status"]
+            == "cancelled"
+        )
+        assert client.post(f"/api/pipelines/runs/{started['id']}/cancel").status_code == 409
+        assert client.post("/api/pipelines/runs/no-such-run/cancel").status_code == 404
+
+    def test_enqueued_batch_runs_with_input_are_executed(self, client):
+        batch = client.post("/api/pipelines/batches").json()
+        enqueued = client.post(
+            f"/api/pipelines/batches/{batch['id']}/runs",
+            json={"runs": [{"pipeline_type": "no_op", "input_data": {"items": 1}}]},
+        ).json()
+
+        run_id = enqueued["run_ids"][0]
+        wait_for(lambda: client.get(f"/api/pipelines/runs/{run_id}").json()["status"] == "completed")
+        assert client.get(f"/api/pipelines/batches/{batch['id']}").json()["status"] == "completed"
+
+    def test_run_links_the_proposal_it_produced(self, client, session_factory):
+        run = client.post("/api/pipelines/no_op/run", json={"async": True}).json()
+        PipelineRepository(session_factory).set_proposal_id(run["id"], "proposal-1")
+
+        assert client.get(f"/api/pipelines/runs/{run['id']}").json()["proposal_id"] == "proposal-1"
+
+    def test_async_without_executor_returns_503(self, session_factory):
+        app = FastAPI()
+        app.include_router(router)
+        response = TestClient(app).post("/api/pipelines/no_op/run", json={"async": True})
+
+        assert response.status_code == 503

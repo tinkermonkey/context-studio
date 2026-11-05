@@ -289,7 +289,7 @@ class BatchRepository:
         Batch status priority (when all runs are terminal):
         1. COMPLETED: At least one run is COMPLETED
         2. CANCELLED: No runs COMPLETED, but at least one CANCELLED
-        3. FAILED: All runs are FAILED
+        3. FAILED: All runs are FAILED or INTERRUPTED
 
         Batch status transitions:
         - PENDING: No child runs started yet, or all runs still PENDING
@@ -322,6 +322,7 @@ class BatchRepository:
                 PipelineRunStatus.COMPLETED.value,
                 PipelineRunStatus.FAILED.value,
                 PipelineRunStatus.CANCELLED.value,
+                PipelineRunStatus.INTERRUPTED.value,
             )
             all_terminal = all(s in terminal_statuses for s in statuses)
 
@@ -374,7 +375,10 @@ class BatchRepository:
                     counts["running"] += 1
                 elif run.status == PipelineRunStatus.COMPLETED.value:
                     counts["completed"] += 1
-                elif run.status == PipelineRunStatus.FAILED.value:
+                elif run.status in (
+                    PipelineRunStatus.FAILED.value,
+                    PipelineRunStatus.INTERRUPTED.value,
+                ):
                     counts["failed"] += 1
                 elif run.status == PipelineRunStatus.CANCELLED.value:
                     counts["cancelled"] += 1

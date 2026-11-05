@@ -147,7 +147,7 @@ class PipelineConfigurationResponse(BaseModel):
 class PipelineRunRequest(BaseModel):
     """Base request to invoke a pipeline (polymorphic)."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     implementation_id: str = Field(
         default="default",
@@ -155,6 +155,14 @@ class PipelineRunRequest(BaseModel):
     )
     configuration_ref: str = Field(
         default="default", description="Configuration reference (defaults to 'default')"
+    )
+    run_async: Optional[bool] = Field(
+        default=None,
+        alias="async",
+        description=(
+            "Return the pending run at once (202) and execute it in the background; "
+            "poll GET /api/pipelines/runs/{id} for status and progress"
+        ),
     )
 
 
@@ -250,6 +258,15 @@ class PipelineRunResponse(BaseModel):
             "Input text the run extracted from; provenance span offsets index into it. "
             "Returned by run detail and run execution; omitted (null) in run lists."
         ),
+    )
+    items_done: Optional[int] = Field(
+        None, description="Work items finished so far (null until the run reports progress)"
+    )
+    items_total: Optional[int] = Field(
+        None, description="Work items the run will process (null until known)"
+    )
+    proposal_id: Optional[str] = Field(
+        None, description="The change proposal the run produced, if it produced one"
     )
 
 
@@ -673,7 +690,15 @@ class EnqueueBatchRunsRequest(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    runs: list[dict[str, Any]] = Field(..., min_length=1, description="Run specs to enqueue")
+    runs: list[dict[str, Any]] = Field(
+        ...,
+        min_length=1,
+        description=(
+            "Run specs to enqueue: pipeline_type, implementation_id, configuration_ref, "
+            "specific_data, and input_data (a run given an input_data is executed by "
+            "the background workers; one without stays pending)"
+        ),
+    )
     idempotency_key: Optional[str] = Field(None, description="Optional idempotency key for replay")
 
 

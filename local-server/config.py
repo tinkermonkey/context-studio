@@ -260,6 +260,17 @@ class ChatConfig(BaseModel):
     )
 
 
+class PipelinesConfig(BaseModel):
+    """Pipeline execution configuration section"""
+
+    background_workers: int = Field(
+        default=1,
+        ge=1,
+        le=8,
+        description="Pipeline runs the background executor runs at once",
+    )
+
+
 class S3Config(BaseModel):
     """S3 synchronization configuration section"""
 
@@ -336,6 +347,7 @@ class Settings(BaseModel):
     reference: ReferenceConfig = Field(default_factory=ReferenceConfig)
     recognition: RecognitionConfig = Field(default_factory=RecognitionConfig)
     chat: ChatConfig = Field(default_factory=ChatConfig)
+    pipelines: PipelinesConfig = Field(default_factory=PipelinesConfig)
     mcp: McpConfig = Field(default_factory=McpConfig)
     sync: Optional[SyncConfig] = Field(default=None, description="Synchronization configuration")
     telemetry: TelemetryConfig = Field(default_factory=TelemetryConfig)
