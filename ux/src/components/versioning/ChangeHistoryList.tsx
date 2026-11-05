@@ -14,21 +14,15 @@ function getOperationChip(operation: string) {
   return <Chip variant={variant}>{operation}</Chip>;
 }
 
-const ROW_COLUMNS = "1fr 100px 140px";
-
 export function ChangeHistoryList() {
   const { data, isLoading, error, refetch } = useChanges();
   const changes = data?.events ?? [];
 
   if (isLoading) {
     return (
-      <div className="stack-lg" style={{ flex: 1, overflow: "auto" }}>
+      <div className="stack-lg" data-testid="change-history-loading" aria-busy="true">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div
-            key={i}
-            className="skeleton"
-            style={{ height: "48px", borderRadius: "var(--radius-md, 6px)" }}
-          />
+          <div key={i} className="skeleton change-history-skeleton" />
         ))}
       </div>
     );
@@ -40,55 +34,23 @@ export function ChangeHistoryList() {
 
   if (changes.length === 0) {
     return (
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "var(--canvas-fg-3)",
-          textAlign: "center",
-          padding: "20px",
-        }}
-      >
-        <p style={{ margin: 0, fontSize: "13px" }}>{COPY.noChanges}</p>
+      <div className="change-history-empty" data-testid="change-history-empty" role="status">
+        {COPY.noChanges}
       </div>
     );
   }
 
   return (
     <div
-      style={{
-        flex: 1,
-        overflow: "auto",
-        border: "1px solid var(--canvas-border)",
-        borderRadius: "var(--radius-lg, 8px)",
-      }}
+      className="change-history-list"
       data-testid="change-history-list"
       role="list"
       aria-label={COPY.changesHeading}
     >
-      <div
-        aria-hidden="true"
-        style={{
-          display: "grid",
-          gridTemplateColumns: ROW_COLUMNS,
-          gap: "8px",
-          padding: "12px",
-          borderBottom: "1px solid var(--canvas-border)",
-          backgroundColor: "var(--canvas-bg-2)",
-          fontSize: "11px",
-          fontWeight: 600,
-          textTransform: "uppercase",
-          color: "var(--canvas-fg-3)",
-          letterSpacing: "0.05em",
-          position: "sticky",
-          top: 0,
-        }}
-      >
-        <div>Entity</div>
-        <div>Type</div>
-        <div>Time</div>
+      <div className="change-history-row change-history-header" aria-hidden="true">
+        <div>{COPY.entityHeader}</div>
+        <div>{COPY.typeHeader}</div>
+        <div className="change-history-align-end">{COPY.timeHeader}</div>
       </div>
 
       {changes.map((change) => {
@@ -98,28 +60,12 @@ export function ChangeHistoryList() {
           <div
             key={change.id}
             role="listitem"
-            style={{
-              display: "grid",
-              gridTemplateColumns: ROW_COLUMNS,
-              gap: "8px",
-              padding: "12px",
-              borderBottom: "1px solid var(--canvas-border)",
-              alignItems: "center",
-            }}
+            className="change-history-row"
             data-testid={`change-history-row-${change.id}`}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
+            <div className="change-history-entity">
               {getOperationChip(change.operation)}
-              <span
-                style={{
-                  fontSize: "13px",
-                  color: "rgb(var(--canvas-fg-1))",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-                title={label}
-              >
+              <span className="change-history-label" title={label}>
                 {label}
               </span>
             </div>
@@ -128,7 +74,7 @@ export function ChangeHistoryList() {
               <Chip variant="neutral">{change.entity_type}</Chip>
             </div>
 
-            <div style={{ fontSize: "12px", color: "var(--canvas-fg-3)", textAlign: "right" }}>
+            <div className="change-history-time change-history-align-end">
               {formatRelativeTime(change.timestamp)}
             </div>
           </div>

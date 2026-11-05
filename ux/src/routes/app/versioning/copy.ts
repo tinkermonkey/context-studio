@@ -11,6 +11,9 @@ export const COPY = {
   changesHeading: "Change history",
   noChanges: "No changes recorded yet",
   couldNotLoadChanges: "Could not load change history",
+  entityHeader: "Entity",
+  typeHeader: "Type",
+  timeHeader: "Time",
 
   // Sync Status Panel
   syncTargetLabel: "Sync target:",

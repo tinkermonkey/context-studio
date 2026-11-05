@@ -48,10 +48,6 @@ class ChangeRepository(Protocol):
         """Get change events with optional filters, returning paginated results with total count."""
         ...
 
-    def get_changes_by_ids(self, event_ids: list[str]) -> list[ChangeEvent]:
-        """Retrieve change events by their IDs."""
-        ...
-
     def mark_processed(self, event_ids: list[str]) -> None:
         """
         Mark events as processed.

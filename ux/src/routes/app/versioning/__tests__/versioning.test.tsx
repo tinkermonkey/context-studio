@@ -66,9 +66,40 @@ describe("Versioning Page", () => {
       render(<VersioningPage />);
 
       await waitFor(() => {
-        expect(screen.getByText(/no changes recorded yet/i)).toBeInTheDocument();
+        expect(screen.getByTestId("change-history-empty")).toBeInTheDocument();
+      });
+      expect(screen.getByText(/no changes recorded yet/i)).toBeInTheDocument();
+      expect(screen.getByTestId("change-history-empty")).toHaveAttribute("role", "status");
+      expect(screen.queryByTestId("change-history-list")).not.toBeInTheDocument();
+    });
+
+    it("shows the loading skeleton while change history loads", async () => {
+      server.use(
+        http.get("*/api/v1/versioning/changes", () => new Promise<never>(() => undefined)),
+      );
+
+      render(<VersioningPage />);
+
+      expect(await screen.findByTestId("change-history-loading")).toHaveAttribute(
+        "aria-busy",
+        "true",
+      );
+    });
+
+    it("shows an error banner when change history fails to load", async () => {
+      server.use(
+        http.get("*/api/v1/versioning/changes", () =>
+          HttpResponse.json({ detail: "boom" }, { status: 500 }),
+        ),
+      );
+
+      render(<VersioningPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Could not load change history")).toBeInTheDocument();
       });
       expect(screen.queryByTestId("change-history-list")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("change-history-empty")).not.toBeInTheDocument();
     });
 
     it("loads and displays change events as a read-only list", async () => {

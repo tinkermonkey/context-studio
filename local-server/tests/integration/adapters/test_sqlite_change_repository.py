@@ -231,51 +231,6 @@ class TestSQLiteChangeRepository:
 
     # New error handling tests
 
-    def test_get_changes_by_ids_happy_path(self, change_repo):
-        """Test that get_changes_by_ids retrieves events by their IDs."""
-        # Create multiple change events
-        id1 = change_repo.record_change(
-            entity_id="entity-1",
-            entity_type="test_entity",
-            operation=ChangeOperation.CREATE,
-            new_state={"key": "value1"},
-        )
-        id3 = change_repo.record_change(
-            entity_id="entity-3",
-            entity_type="test_entity",
-            operation=ChangeOperation.DELETE,
-            new_state={},
-        )
-
-        # Retrieve by IDs
-        retrieved = change_repo.get_changes_by_ids([id1, id3])
-
-        assert len(retrieved) == 2
-        assert any(e.id == id1 for e in retrieved)
-        assert any(e.id == id3 for e in retrieved)
-        assert any(e.entity_id == "entity-1" for e in retrieved)
-        assert any(e.entity_id == "entity-3" for e in retrieved)
-
-    def test_get_changes_by_ids_with_empty_list(self, change_repo):
-        """Test that get_changes_by_ids returns empty list for empty input."""
-        retrieved = change_repo.get_changes_by_ids([])
-        assert retrieved == []
-
-    def test_get_changes_by_ids_with_nonexistent_ids(self, change_repo):
-        """Test that get_changes_by_ids returns only matching IDs."""
-        change_id = change_repo.record_change(
-            entity_id="entity-1",
-            entity_type="test_entity",
-            operation=ChangeOperation.CREATE,
-            new_state={"key": "value"},
-        )
-
-        # Query with mix of existing and nonexistent IDs
-        retrieved = change_repo.get_changes_by_ids([change_id, "nonexistent-id"])
-
-        assert len(retrieved) == 1
-        assert retrieved[0].id == change_id
-
     def test_mark_processed_raises_domain_exception_before_db_exception(self, change_repo):
         """Test that mark_processed raises VersionNotFoundError without catching it."""
         # This test verifies the defensive re-raise is in place

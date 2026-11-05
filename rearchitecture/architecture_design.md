@@ -277,8 +277,16 @@ local-server/
 │   │   ├── __init__.py
 │   │   ├── entities.py             # ChangeEvent
 │   │   ├── proposals.py            # ChangeProposal, ProposedOperation
+│   │   ├── proposal_service.py     # ProposalService (validate, apply, reject)
+│   │   ├── revert_service.py       # RevertService (undo a batch run)
+│   │   ├── approval_policy.py      # ApprovalPolicy, ApprovalPolicyService
+│   │   ├── bundle_import.py        # BundleImportService
+│   │   ├── in_use.py               # InUseInspector, DeleteBlockers
+│   │   ├── events.py               # SyncCompleted
+│   │   ├── exceptions.py           # Versioning domain errors
+│   │   ├── value_objects.py        # ChangeOperation, SyncStatus, SyncResult
 │   │   ├── services.py             # VersioningService (history, sync)
-│   │   └── ports.py                # ChangeRepository, SyncTarget
+│   │   └── ports.py                # ChangeRepository, ChangeProposalRepository, SyncTarget
 │   │
 │   └── admin/                      # Bounded context: System Administration
 │       ├── __init__.py

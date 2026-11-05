@@ -146,30 +146,6 @@ class SQLiteChangeRepository:
             events = [self._to_domain_change_event(e) for e in orm_events]
             return ChangeHistoryResult(events=tuple(events), total=total_count)
 
-    def get_changes_by_ids(self, event_ids: list[str]) -> list[DomainChangeEvent]:
-        """
-        Retrieve change events by their IDs.
-
-        Args:
-            event_ids: List of change event IDs to retrieve
-
-        Returns:
-            List of matching ChangeEvent domain entities
-
-        Raises:
-            RuntimeError: If database operation fails
-        """
-        if not event_ids:
-            return []
-
-        try:
-            with self.session_factory() as session:
-                query = select(ChangeEvent).where(ChangeEvent.id.in_(event_ids))
-                orm_events = session.execute(query).scalars().all()
-                return [self._to_domain_change_event(e) for e in orm_events]
-        except SQLAlchemyError as e:
-            raise RuntimeError(f"Failed to retrieve change events: {str(e)}") from e
-
     def mark_processed(self, event_ids: list[str]) -> None:
         """
         Mark change events as processed (synchronized to remote).

@@ -1197,6 +1197,12 @@ selectors:
   - selector: change-history-row-*
     component: components/versioning/ChangeHistoryList.tsx
     description: Individual change event row (pattern matches change-history-row-{changeId})
+  - selector: change-history-loading
+    component: components/versioning/ChangeHistoryList.tsx
+    description: Skeleton shown while the change history loads
+  - selector: change-history-empty
+    component: components/versioning/ChangeHistoryList.tsx
+    description: Empty state shown when no change events are recorded
 
   # Sync Status Panel
   - selector: sync-status-panel
