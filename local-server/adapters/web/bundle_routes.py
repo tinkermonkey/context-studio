@@ -16,7 +16,7 @@ from sqlalchemy.exc import IntegrityError
 from adapters.web.dependencies import get_bundle_import_service, get_proposal_service
 from adapters.web.proposals_routes import _http_error
 from adapters.web.schemas.bundles import BundleImportResponse, BundleKindCounts
-from adapters.web.schemas.proposals import ChangeProposalResponse
+from adapters.web.schemas.proposals import proposal_response
 from domain.interchange.bundle import BundleError
 from domain.ontology.exceptions import (
     DuplicateEntityError,
@@ -46,12 +46,7 @@ def _response(service: ProposalService, result: BundleImportResult) -> BundleImp
         },
         deletes=plan.deletes,
         proposal=(
-            ChangeProposalResponse.from_domain(
-                proposal,
-                service.stale_operation_ids(proposal),
-                service.in_use_blockers(proposal),
-                service.replacement_checks(proposal),
-            )
+            proposal_response(service, proposal, dry_run=result.dry_run)
             if proposal is not None
             else None
         ),

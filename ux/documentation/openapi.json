@@ -6897,6 +6897,20 @@
         "summary": "Create Proposal",
         "description": "Propose changes to a taxonomy; every operation starts pending.\n\nThe proposal is validated as a whole against the current graph. If any\noperation is invalid nothing is stored and the 422 lists each problem with\nits operation's seq and a stable code. Source \"bundle\" is refused (code\ninvalid_source): bundle proposals come from the bundle import route, and\nare exempt from the approval policy's min_probability.",
         "operationId": "create_proposal_api_proposals_post",
+        "parameters": [
+          {
+            "name": "dry_run",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Validate only (200): return the computed scopes, auto-apply verdict, stale flags, blockers and replacement checks; store and apply nothing",
+              "default": false,
+              "title": "Dry Run"
+            },
+            "description": "Validate only (200): return the computed scopes, auto-apply verdict, stale flags, blockers and replacement checks; store and apply nothing"
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -6910,6 +6924,16 @@
         "responses": {
           "201": {
             "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeProposalResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "A dry run: the proposal as it would be stored, nothing stored",
             "content": {
               "application/json": {
                 "schema": {
@@ -8757,6 +8781,12 @@
           },
           "status": {
             "$ref": "#/components/schemas/ProposalStatus"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "title": "Dry Run",
+            "description": "Validated only: nothing was stored or applied, and the ids are not kept",
+            "default": false
           },
           "operations": {
             "items": {
@@ -13997,6 +14027,18 @@
               }
             ],
             "description": "Set when proposed_replacement_id is: how its pair compares"
+          },
+          "auto_apply": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Apply",
+            "description": "A dry run only: whether the taxonomy's approval policy would apply it as soon as proposed. Null otherwise"
           }
         },
         "type": "object",

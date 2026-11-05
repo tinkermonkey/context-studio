@@ -4680,6 +4680,12 @@ export interface components {
        */
       created_at: string;
       status: components["schemas"]["ProposalStatus"];
+      /**
+       * Dry Run
+       * @description Validated only: nothing was stored or applied, and the ids are not kept
+       * @default false
+       */
+      dry_run: boolean;
       /** Operations */
       operations: components["schemas"]["ProposedOperationResponse"][];
     };
@@ -7756,6 +7762,11 @@ export interface components {
       proposed_replacement_id?: string | null;
       /** @description Set when proposed_replacement_id is: how its pair compares */
       replacement_check?: components["schemas"]["ReplacementCheckResponse"] | null;
+      /**
+       * Auto Apply
+       * @description A dry run only: whether the taxonomy's approval policy would apply it as soon as proposed. Null otherwise
+       */
+      auto_apply?: boolean | null;
     };
     /**
      * PublishDiffStats
@@ -13620,7 +13631,10 @@ export interface operations {
   };
   create_proposal_api_proposals_post: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description Validate only (200): return the computed scopes, auto-apply verdict, stale flags, blockers and replacement checks; store and apply nothing */
+        dry_run?: boolean;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -13631,6 +13645,15 @@ export interface operations {
       };
     };
     responses: {
+      /** @description A dry run: the proposal as it would be stored, nothing stored */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangeProposalResponse"];
+        };
+      };
       /** @description Successful Response */
       201: {
         headers: {

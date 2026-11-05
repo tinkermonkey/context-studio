@@ -453,15 +453,7 @@ class ProposalService:
         if self._policies is None:
             return proposal
         try:
-            policy = self._policies.get(proposal.taxonomy_id)
-            auto = auto_apply_ids(
-                policy,
-                proposal.operations,
-                self._classes,
-                lambda operation: self._inside_taxonomy(operation, proposal.taxonomy_id),
-                id_fields=frozenset(ID_FIELDS),
-                source=proposal.source,
-            )
+            auto = self._policy_auto_apply_ids(proposal)
             # apply takes the proposal's lock itself; propose never holds it.
             return self.apply(proposal.id, auto) if auto else proposal
         except Exception:  # noqa: BLE001 - the stored proposal must reach the caller
@@ -475,6 +467,31 @@ class ProposalService:
         except Exception:  # noqa: BLE001
             _logger.exception("Could not re-read proposal %s after auto-apply", proposal.id)
             return proposal
+
+    def auto_apply_operation_ids(self, proposal: ChangeProposal) -> list[str]:
+        """
+        The operations the taxonomy's approval policy applies as soon as they
+        are proposed, in seq order: a dry run's auto-apply verdict. None
+        without a policy, or when the stored policy can't be read (propose
+        then leaves everything for review too).
+        """
+        if self._policies is None:
+            return []
+        try:
+            return self._policy_auto_apply_ids(proposal)
+        except Exception:  # noqa: BLE001 - as in _auto_apply: nothing applies
+            _logger.exception("Approval policy of %s could not be read", proposal.taxonomy_id)
+            return []
+
+    def _policy_auto_apply_ids(self, proposal: ChangeProposal) -> list[str]:
+        return auto_apply_ids(
+            self._policies.get(proposal.taxonomy_id) if self._policies else None,
+            proposal.operations,
+            self._classes,
+            lambda operation: self._inside_taxonomy(operation, proposal.taxonomy_id),
+            id_fields=frozenset(ID_FIELDS),
+            source=proposal.source,
+        )
 
     def _classes(self, operation: ProposedOperation) -> list[set[str]]:
         """
