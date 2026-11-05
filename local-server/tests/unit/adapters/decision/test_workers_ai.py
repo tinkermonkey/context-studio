@@ -10,6 +10,8 @@ import os
 import sys
 import threading
 import time
+from datetime import datetime, timedelta, timezone
+from email.utils import format_datetime
 from pathlib import Path
 
 sys.path.append(
@@ -19,8 +21,14 @@ sys.path.append(
 import httpx
 import pytest
 
+from adapters.decision.common import ConcurrencyLimit
 from adapters.decision.parsing import choice_of, score_of, yes_no_of
-from adapters.decision.workers_ai import WorkersAIDecisionModel, WorkersAIOptions, wire_question
+from adapters.decision.workers_ai import (
+    WorkersAIDecisionModel,
+    WorkersAIOptions,
+    _retry_after,
+    wire_question,
+)
 from domain.decision.exceptions import (
     DecisionModelError,
     DecisionModelNotConfiguredError,
@@ -342,6 +350,37 @@ def test_auth_failure_is_a_request_error_and_not_retried():
     with pytest.raises(DecisionModelRequestError, match="HTTP 401"):
         make_model(handler).decide("x", HOUSE_QUESTIONS)
     assert len(calls) == 1
+
+
+def test_retry_after_reads_seconds_and_http_dates():
+    def with_header(value):
+        return httpx.Response(429, headers={"Retry-After": value})
+
+    assert _retry_after(with_header("3")) == 3.0
+    later = format_datetime(datetime.now(timezone.utc) + timedelta(seconds=30), usegmt=True)
+    assert 25 <= _retry_after(with_header(later)) <= 30
+    past = format_datetime(datetime.now(timezone.utc) - timedelta(seconds=30), usegmt=True)
+    assert _retry_after(with_header(past)) == 0.0
+    assert _retry_after(with_header("whenever")) is None
+    assert _retry_after(httpx.Response(429)) is None
+    assert _retry_after(with_header("3600")) == 60.0
+
+
+def test_concurrency_limit_drops_semaphores_of_closed_loops():
+    limit = ConcurrencyLimit(1)
+
+    async def contend():
+        # Two waiters on one slot, so the semaphore records its loop
+        async def hold():
+            async with limit.async_slot():
+                await asyncio.sleep(0)
+
+        await asyncio.gather(hold(), hold())
+
+    asyncio.run(contend())
+    asyncio.run(contend())
+    # The first loop's semaphore was dropped when the second loop asked for a slot
+    assert len(limit._loops) == 1
 
 
 def test_429_waits_at_least_retry_after():

@@ -3,6 +3,7 @@ Decision-model registry built from config: lookup by name or default, swapping
 the default in config, fallbacks, and listing without credentials.
 """
 
+import logging
 import os
 import sys
 
@@ -11,6 +12,7 @@ sys.path.append(
 )
 
 import pytest
+from pydantic import ValidationError
 
 from adapters.decision.llm import LLMDecisionModel
 from adapters.decision.registry import build_decision_models
@@ -224,3 +226,60 @@ def test_fallback_loops_and_missing_fallbacks_are_ignored():
     assert len(built["a"].calls) == 1
     assert len(built["b"].calls) == 1
     assert registry.get("c") is built["c"]
+
+
+# ---- secrets stay out of logs and errors ----
+
+TOKEN = "tok-DO-NOT-LEAK-9f8e7d"
+
+
+def test_invalid_options_never_put_the_token_in_logs_or_errors(caplog):
+    # base_url has the wrong type, so options fail validation with the token beside it
+    config = DecisionModelsConfig(
+        models={
+            "cf": {
+                "adapter": "workers_ai",
+                "model": "m",
+                "options": {"account_id": TOKEN, "api_token": TOKEN, "base_url": {"x": TOKEN}},
+            }
+        }
+    )
+    with caplog.at_level(logging.DEBUG):
+        registry = build_decision_models(config)
+        with pytest.raises(DecisionModelNotConfiguredError) as raised:
+            registry.get("cf").decide("x", QUESTIONS)
+
+    assert "base_url" in str(raised.value)
+    assert TOKEN not in str(raised.value)
+    assert TOKEN not in caplog.text
+    assert "invalid options" in caplog.text
+
+
+def test_invalid_instance_config_never_echoes_the_token():
+    # 'model' is missing: the error's input would be the whole instance, options included
+    bad = {"models": {"cf": {"adapter": "workers_ai", "options": {"api_token": TOKEN}}}}
+    with pytest.raises(ValidationError) as raised:
+        DecisionModelsConfig(**bad)
+    assert TOKEN not in str(raised.value)
+    with pytest.raises(ValidationError) as raised:
+        Settings(decision_models=bad)
+    assert TOKEN not in str(raised.value)
+
+
+def test_unknown_keys_are_named_without_their_values(caplog):
+    # The old flat shape, plus a typo inside options
+    config = DecisionModelsConfig(
+        models={
+            "cf": {
+                "adapter": "workers_ai",
+                "model": "m",
+                "api_token": TOKEN,
+                "options": {"account_id": "a", "api_tokn": TOKEN},
+            }
+        }
+    )
+    with caplog.at_level(logging.WARNING):
+        build_decision_models(config)
+    assert "unknown keys api_token" in caplog.text
+    assert "unknown options api_tokn" in caplog.text
+    assert TOKEN not in caplog.text

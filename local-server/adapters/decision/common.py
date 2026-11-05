@@ -101,6 +101,10 @@ class ConcurrencyLimit:
     async def async_slot(self) -> AsyncIterator[None]:
         loop = asyncio.get_running_loop()
         with self._lock:
+            # A semaphore that saw contention holds a reference back to its loop,
+            # so weak keys alone never drop it: purge loops that have closed
+            for closed in [known for known in self._loops if known.is_closed()]:
+                del self._loops[closed]
             semaphore = self._loops.get(loop)
             if semaphore is None:
                 semaphore = self._loops[loop] = asyncio.Semaphore(self._limit)

@@ -15,6 +15,8 @@ from __future__ import annotations
 
 from typing import Callable, Mapping, Optional
 
+from pydantic import ValidationError
+
 from adapters.decision.llm import LLMDecisionModel
 from adapters.decision.workers_ai import WorkersAIDecisionModel, WorkersAIOptions
 from config import DecisionModelInstanceConfig, DecisionModelsConfig
@@ -144,11 +146,32 @@ class DecisionModelRegistry:
         ]
 
 
+def describe_error(error: Exception) -> str:
+    """
+    An error description without input values, which can be credentials:
+    location and message for a pydantic ValidationError, else the type name.
+    """
+    if isinstance(error, ValidationError):
+        return "; ".join(
+            f"{'.'.join(str(part) for part in item['loc'])}: {item['msg']}"
+            for item in error.errors(include_input=False)
+        )
+    return type(error).__name__
+
+
+def warn_unknown_options(name: str, options: Mapping[str, object], known: set[str]) -> None:
+    """Name (never show the values of) option keys the adapter does not read."""
+    unknown = sorted(set(options) - known)
+    if unknown:
+        logger.warning("Decision model %s: unknown options %s", name, ", ".join(unknown))
+
+
 AdapterBuilder = Callable[[str, DecisionModelInstanceConfig], DecisionModel]
 
 
 def _adapter_builders(llm: Optional[LLMProvider]) -> dict[str, AdapterBuilder]:
     def workers_ai(name: str, cfg: DecisionModelInstanceConfig) -> DecisionModel:
+        warn_unknown_options(name, cfg.options, set(WorkersAIOptions.model_fields))
         return WorkersAIDecisionModel(
             name,
             model=cfg.model,
@@ -160,6 +183,7 @@ def _adapter_builders(llm: Optional[LLMProvider]) -> dict[str, AdapterBuilder]:
         )
 
     def llm_adapter(name: str, cfg: DecisionModelInstanceConfig) -> DecisionModel:
+        warn_unknown_options(name, cfg.options, set())
         return LLMDecisionModel(
             name,
             llm=llm,
@@ -192,12 +216,18 @@ def build_decision_models(
             logger.warning("Decision model %s: unknown adapter %r", name, cfg.adapter)
             base[name] = UnavailableDecisionModel(name, f"unknown adapter '{cfg.adapter}'")
         else:
+            if cfg.model_extra:
+                logger.warning(
+                    "Decision model %s: unknown keys %s (adapter settings go under options)",
+                    name,
+                    ", ".join(sorted(cfg.model_extra)),
+                )
             try:
                 base[name] = builder(name, cfg)
             except (ValueError, TypeError) as e:
-                # Invalid adapter options (pydantic's ValidationError is a ValueError)
-                logger.warning("Decision model %s: invalid options (%s)", name, e)
-                base[name] = UnavailableDecisionModel(name, f"invalid options: {e}")
+                reason = f"invalid options: {describe_error(e)}"
+                logger.warning("Decision model %s: %s", name, reason)
+                base[name] = UnavailableDecisionModel(name, reason)
 
     def with_fallbacks(name: str, seen: tuple[str, ...]) -> DecisionModel:
         fallback = config.models[name].fallback

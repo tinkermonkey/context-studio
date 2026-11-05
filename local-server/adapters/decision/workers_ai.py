@@ -22,10 +22,12 @@ from __future__ import annotations
 
 import asyncio
 import time
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from typing import Any, Awaitable, Callable, Mapping, Optional
 
 import httpx
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from adapters.decision.common import ConcurrencyLimit, cost_share, finish_answers, request_cost
 from adapters.decision.parsing import as_number, choice_of, score_of, yes_no_of
@@ -56,6 +58,9 @@ _MAX_RETRY_AFTER_SECONDS = 60.0
 
 class WorkersAIOptions(BaseModel):
     """The `options` object of a workers_ai instance in config.json."""
+
+    # Errors must never echo input values: api_token is one of them
+    model_config = ConfigDict(hide_input_in_errors=True)
 
     account_id: str = Field(default="", description="Cloudflare account id")
     api_token: str = Field(default="", description="API token with Workers AI access")
@@ -150,11 +155,20 @@ def _is_retryable_status(status_code: int) -> bool:
 
 
 def _retry_after(response: httpx.Response) -> Optional[float]:
-    """Seconds from a numeric Retry-After header, capped; None when absent or a date."""
-    try:
-        seconds = float(response.headers.get("Retry-After", ""))
-    except ValueError:
+    """Seconds to wait from a Retry-After header (seconds or an HTTP date), capped."""
+    value = response.headers.get("Retry-After", "").strip()
+    if not value:
         return None
+    try:
+        seconds = float(value)
+    except ValueError:
+        try:
+            when = parsedate_to_datetime(value)
+        except (TypeError, ValueError):
+            return None
+        if when.tzinfo is None:
+            when = when.replace(tzinfo=timezone.utc)
+        seconds = (when - datetime.now(timezone.utc)).total_seconds()
     return min(max(seconds, 0.0), _MAX_RETRY_AFTER_SECONDS)
 
 
