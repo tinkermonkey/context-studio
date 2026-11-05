@@ -364,3 +364,60 @@ class TestReviewFindings:
         assert applied["status"] == "failed"
         assert "changed since reviewed: 3 now, 2 reviewed" in applied["reason"]
         assert len(_ends(ontology, graph["blocked"])) == 3
+
+
+class TestNamedReplacement:
+    """#1398: a delete names its replacement; REST stores it and flags its pair."""
+
+    def _propose(self, client, graph, replacement):
+        return client.post(
+            "/api/proposals",
+            json={
+                "taxonomy_id": graph["taxonomy"],
+                "title": "Business layer",
+                "operations": [
+                    {
+                        "seq": 1,
+                        "op": "delete",
+                        "kind": "property",
+                        "target_id": graph["blocked"],
+                        "replacement": replacement,
+                    }
+                ],
+            },
+        )
+
+    def test_a_different_pair_is_flagged_and_a_fitting_one_is_offered_first(
+        self, client, graph, ontology
+    ):
+        response = self._propose(client, graph, "businessevent_triggers_businessprocess")
+        assert response.status_code == 201, response.text
+        op = response.json()["operations"][0]
+        check = op["replacement_check"]
+        assert check["pair"] == "different"
+        assert op["proposed_replacement_id"] == check["property_id"]
+        assert (check["range"]["title"], check["deleted_range"]["title"]) == (
+            "BusinessProcess",
+            "BusinessFunction",
+        )
+        # Read back from storage, it says the same.
+        stored = client.get(f"/api/proposals/{response.json()['id']}").json()["operations"][0]
+        assert stored["replacement_check"] == check
+
+        serves = _serves(ontology, graph)
+        ontology.create_property_definition(
+            "businessevent_assigned_to_businessfunction",
+            "assigned to",
+            domain_class_id=graph["event"],
+            range_class_id=graph["function"],
+        )
+        same = self._propose(client, graph, serves).json()["operations"][0]
+        assert same["replacement_check"]["pair"] == "same"
+        assert same["blockers"]["replacements"][0]["property_id"] == serves
+
+    def test_an_unknown_replacement_is_422_by_seq(self, client, graph):
+        response = self._propose(client, graph, "no_such_type")
+
+        assert response.status_code == 422
+        (error,) = response.json()["detail"]["errors"]
+        assert (error["seq"], error["code"]) == (1, "replacement_not_found")

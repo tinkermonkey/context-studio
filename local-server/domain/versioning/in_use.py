@@ -14,11 +14,20 @@ their domain and range classes) are offered as replacements, so a generic
 untyped type from elsewhere isn't offered just because it accepts anything. A
 deleted type with neither domain nor range has no taxonomy, and any type may
 replace it.
+
+A property delete may also name its replacement (`proposed_replacement_id`).
+Its pair of classes is compared with the deleted type's: the same domain and
+range, the two reversed, or a different pair. Only a same or reversed pair can
+take over the deleted type's relationships as they are (DR's `dr upgrade`
+rewrites only those; see `samePairOf` in DR's apply-walk.ts), so a different
+pair is flagged for review. The comparison is exact (a subclass is a different
+class): whether the relationships still fit is the in-use check's job.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import TYPE_CHECKING, Any, Iterable
 
 if TYPE_CHECKING:
@@ -69,6 +78,65 @@ class DeleteBlockers:
     edges: tuple[BlockingEdge, ...]
     replacements: tuple[ReplacementType, ...]
     move_unavailable_reason: str | None = None
+
+
+class PairMatch(str, Enum):
+    """How a replacement's domain and range compare with the deleted type's."""
+
+    SAME = "same"
+    REVERSED = "reversed"
+    DIFFERENT = "different"
+    # The replacement no longer exists, or its create was rejected
+    MISSING = "missing"
+
+
+def compare_pair(
+    deleted: tuple[str | None, str | None], replacement: tuple[str | None, str | None]
+) -> PairMatch:
+    """
+    Compare two (domain class id, range class id) pairs exactly; None (untyped)
+    is a value like any other. A pair whose two ends are the same class is the
+    same pair, never reversed.
+    """
+    if replacement == deleted:
+        return PairMatch.SAME
+    if replacement == (deleted[1], deleted[0]):
+        return PairMatch.REVERSED
+    return PairMatch.DIFFERENT
+
+
+@dataclass(frozen=True)
+class ClassEnd:
+    """A domain or range class, by id and title (None: untyped)."""
+
+    id: str | None
+    title: str | None
+
+
+@dataclass(frozen=True)
+class ReplacementCheck:
+    """
+    A property delete's named replacement, compared with the deleted type.
+
+    Attributes:
+        replacement_id: The replacement as proposed: an id or "$<ref>"
+        property_id: The replacement type, once it exists (None for a "$ref"
+            whose create isn't applied yet, or a replacement since deleted)
+        identifier, title: The replacement's (from its create while unapplied)
+        pair: Same, reversed or different pair; missing if it is gone
+        deleted_domain, deleted_range: The deleted type's classes when proposed
+        domain, range: The replacement's classes (None when missing)
+    """
+
+    replacement_id: str
+    property_id: str | None
+    identifier: str | None
+    title: str | None
+    pair: PairMatch
+    deleted_domain: ClassEnd
+    deleted_range: ClassEnd
+    domain: ClassEnd | None = None
+    range: ClassEnd | None = None
 
 
 class InUseInspector:

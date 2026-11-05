@@ -177,6 +177,7 @@ def _operation_to_orm(proposal_id: str, operation: ProposedOperation) -> Proposa
         reason=operation.reason,
         applied_fields=operation.applied_fields,
         resolution=_resolution_json(operation),
+        proposed_replacement_id=operation.proposed_replacement_id,
     )
 
 
@@ -207,6 +208,7 @@ def _operation_to_domain(row: ProposalOperation) -> ProposedOperation:
             if row.resolution is not None
             else None
         ),
+        proposed_replacement_id=row.proposed_replacement_id,  # type: ignore[arg-type]
     )
 
 

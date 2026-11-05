@@ -111,7 +111,10 @@ def _http_error(exc: Exception, unknown_ids_are_invalid: bool = False) -> HTTPEx
 
 def _response(service: ProposalService, proposal: ChangeProposal) -> ChangeProposalResponse:
     return ChangeProposalResponse.from_domain(
-        proposal, service.stale_operation_ids(proposal), service.in_use_blockers(proposal)
+        proposal,
+        service.stale_operation_ids(proposal),
+        service.in_use_blockers(proposal),
+        service.replacement_checks(proposal),
     )
 
 
@@ -237,6 +240,7 @@ async def create_proposal(
             evidence=o.evidence,
             probability=o.probability,
             claimed_scope=o.scope,
+            replacement=o.replacement,
         )
         for o in request.operations
     ]

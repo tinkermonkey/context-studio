@@ -423,3 +423,31 @@ class TestImport:
         ops = {o.op: o for o in result.proposal.operations}
         assert ops[T.CREATE].status is OperationStatus.APPLIED
         assert ops[T.UPDATE].status is OperationStatus.PENDING
+
+    def test_bundle_imports_are_not_held_to_min_probability(self, repo, importer, proposals):
+        """#1399: editorial bundle ops auto-apply past a floor an MCP op without p doesn't."""
+        loaded(importer)
+        rules = {"auto_apply": [{"scope": "editorial"}], "min_probability": 0.8}
+
+        class Policies:
+            def get(self, taxonomy_id):
+                return ApprovalPolicy.from_rules(taxonomy_id, rules)
+
+        proposals._policies = Policies()
+        retitled = bundle()
+        retitled["individuals"][0]["title"] = "Hang a frame"
+
+        imported = importer.import_bundle(retitled).proposal
+
+        (edit,) = imported.operations
+        assert (edit.scope, edit.probability) == (ChangeScope.EDITORIAL, None)
+        assert edit.status is OperationStatus.APPLIED
+        hammer = next(i for i in repo.list_individuals(limit=None) if i.title == "Hammer")
+        by_agent = proposals.propose(
+            imported.taxonomy_id,
+            "Retitle",
+            [OperationDraft(1, T.UPDATE, K.INDIVIDUAL, hammer.id, fields={"title": "Mallet"})],
+            ProposalSource.MCP,
+        )
+        assert by_agent.operations[0].scope is ChangeScope.EDITORIAL
+        assert by_agent.operations[0].status is OperationStatus.PENDING

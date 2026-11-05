@@ -3183,3 +3183,15 @@ selectors:
   - selector: pending-operation-link-*
     component: src/components/entity/PendingProposalOperations.tsx
     description: "Link to a pending operation on its proposal page (?op=), by operation id"
+  - selector: operation-proposed-replacement-unfit
+    component: src/components/proposals/InUseResolver.tsx
+    description: "Note that the delete's proposed replacement type doesn't fit every relationship using the deleted type, so the resolver doesn't offer it"
+  - selector: operation-replacement
+    component: src/components/proposals/OperationInspector.tsx
+    description: "Inspector Replacement section of a relationship-type delete that names its replacement; data-pair is same, reversed, different or missing"
+  - selector: operation-replacement-callout
+    component: src/components/proposals/OperationInspector.tsx
+    description: "Callout comparing the replacement's pair of classes with the deleted type's (warn for a different pair or a missing replacement)"
+  - selector: operation-replacement-*
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Row chip (role=note) on a delete whose named replacement links a reversed or different pair, or is gone, by operation id; data-pair holds the verdict"

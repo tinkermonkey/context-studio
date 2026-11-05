@@ -11,6 +11,8 @@ import {
   formatValue,
   planKind,
   propertyTriples,
+  replacementEndLabel,
+  replacementFlag,
 } from "./proposalModel";
 import { subjectOf } from "./OperationDiff";
 import type { OperationContext } from "./useOperationContext";
@@ -75,6 +77,41 @@ export function operationTitle(proposed: ProposedOperation, context: OperationCo
   return operation.op === "delete" ? `Remove ${subject}` : subject;
 }
 
+/** The type a delete names as its replacement, and how its pair compares with the deleted type's. */
+function ReplacementSection({
+  operation,
+  context,
+}: {
+  operation: ProposedOperation;
+  context: OperationContext;
+}) {
+  const check = operation.replacement_check!;
+  const flag = replacementFlag(check, (end) =>
+    replacementEndLabel(end, (id) => context.endLabel(id, operation)),
+  );
+  return (
+    <InspectorPanel.Section title="Replacement">
+      <div
+        className="op-inspector__stack op-replacement"
+        data-testid="operation-replacement"
+        data-pair={flag.pair}
+      >
+        <FormCallout
+          variant={flag.warn ? "warn" : "info"}
+          icon={flag.warn ? "alert" : "info"}
+          data-testid="operation-replacement-callout"
+        >
+          {flag.text}
+        </FormCallout>
+        <div className="op-inspector__chips">
+          <Chip form="id-tag">{check.identifier ?? check.replacement_id}</Chip>
+          <Chip variant={flag.variant}>{flag.chip}</Chip>
+        </div>
+      </div>
+    </InspectorPanel.Section>
+  );
+}
+
 interface OperationInspectorProps {
   operation: ProposedOperation;
   context: OperationContext;
@@ -107,6 +144,11 @@ export function OperationInspector({ operation, context, decision }: OperationIn
         id={operation.id}
       >
         {decision}
+
+        {/* Before the change: a replacement linking a different pair is what to judge first. */}
+        {operation.replacement_check && (
+          <ReplacementSection operation={operation} context={context} />
+        )}
 
         <InspectorPanel.Section title="Change">
           <div className="op-inspector__stack">

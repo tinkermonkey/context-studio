@@ -10,7 +10,7 @@ from typing import Any, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from domain.versioning.approval_policy import ApprovalPolicy
-from domain.versioning.in_use import DeleteBlockers
+from domain.versioning.in_use import DeleteBlockers, PairMatch, ReplacementCheck
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
@@ -54,6 +54,12 @@ class ProposedOperationRequest(BaseModel):
     )
     scope: Optional[ChangeScope] = Field(
         None, description="A claimed scope; it can only make the computed scope stricter"
+    )
+    replacement: Optional[str] = Field(
+        None,
+        description="A property (relationship type) delete only: the type that replaces it, "
+        'by id, identifier or "$<ref>" of an earlier property create. Its domain and range '
+        "are compared with the deleted type's (see replacement_check)",
     )
 
 
@@ -205,6 +211,40 @@ class InUseResolutionResponse(BaseModel):
     )
 
 
+class ClassEndResponse(BaseModel):
+    """A domain or range class (both null: untyped)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: Optional[str] = None
+    title: Optional[str] = None
+
+
+class ReplacementCheckResponse(BaseModel):
+    """A relationship-type delete's named replacement, compared with the deleted type."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    replacement_id: str = Field(..., description='The replacement as proposed: an id or "$<ref>"')
+    property_id: Optional[str] = Field(
+        None,
+        description="The replacement type once it exists; null for a $ref whose create isn't "
+        "applied yet, or a replacement since deleted",
+    )
+    identifier: Optional[str] = None
+    title: Optional[str] = None
+    pair: PairMatch = Field(
+        ...,
+        description="same: the same domain and range; reversed: the two swapped; different: "
+        "a different pair of classes (flagged: it can't take over the deleted type's "
+        "relationships as they are); missing: the replacement is gone or its create rejected",
+    )
+    deleted_domain: ClassEndResponse
+    deleted_range: ClassEndResponse
+    domain: Optional[ClassEndResponse] = Field(None, description="Null when missing")
+    range: Optional[ClassEndResponse] = Field(None, description="Null when missing")
+
+
 class ProposedOperationResponse(BaseModel):
     """One proposed operation and its outcome."""
 
@@ -249,7 +289,16 @@ class ProposedOperationResponse(BaseModel):
     blockers: Optional[DeleteBlockersResponse] = Field(
         None,
         description="A pending or failed relationship-type delete whose type relationships "
-        "still use: applying it as proposed fails; it needs a resolution. Null otherwise",
+        "still use: applying it as proposed fails; it needs a resolution. Null otherwise. "
+        "The proposed replacement, when it fits, is listed first",
+    )
+    proposed_replacement_id: Optional[str] = Field(
+        None,
+        description="A relationship-type delete only: the type the proposer names as its "
+        'replacement (a property definition id, or "$<ref>" of a create in this proposal)',
+    )
+    replacement_check: Optional[ReplacementCheckResponse] = Field(
+        None, description="Set when proposed_replacement_id is: how its pair compares"
     )
 
 
@@ -274,9 +323,11 @@ class ChangeProposalResponse(BaseModel):
         proposal: ChangeProposal,
         stale_ids: set[str],
         blockers: Optional[dict[str, DeleteBlockers]] = None,
+        replacement_checks: Optional[dict[str, ReplacementCheck]] = None,
     ) -> "ChangeProposalResponse":
         """Build the response, flagging the operations in stale_ids, with their blockers."""
         blockers = blockers or {}
+        checks = replacement_checks or {}
         return cls(
             id=proposal.id,
             taxonomy_id=proposal.taxonomy_id,
@@ -287,18 +338,24 @@ class ChangeProposalResponse(BaseModel):
             created_at=proposal.created_at,
             status=proposal.status,
             operations=[
-                _operation(o, o.id in stale_ids, blockers.get(o.id)) for o in proposal.operations
+                _operation(o, o.id in stale_ids, blockers.get(o.id), checks.get(o.id))
+                for o in proposal.operations
             ],
         )
 
 
 def _operation(
-    operation: ProposedOperation, stale: bool, blockers: Optional[DeleteBlockers]
+    operation: ProposedOperation,
+    stale: bool,
+    blockers: Optional[DeleteBlockers],
+    check: Optional[ReplacementCheck],
 ) -> ProposedOperationResponse:
     response = ProposedOperationResponse.model_validate(operation)
     response.stale = stale
     if blockers is not None:
         response.blockers = DeleteBlockersResponse.model_validate(blockers)
+    if check is not None:
+        response.replacement_check = ReplacementCheckResponse.model_validate(check)
     return response
 
 

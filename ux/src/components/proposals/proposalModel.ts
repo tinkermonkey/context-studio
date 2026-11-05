@@ -281,7 +281,89 @@ export function referencedClassIds(operation: ProposedOperation, refs?: RefMap):
     }
   }
   if (operation.kind === "class" && operation.target_id) ids.push(operation.target_id);
+  const check = operation.replacement_check;
+  for (const end of [check?.deleted_domain, check?.deleted_range, check?.domain, check?.range]) {
+    const id = end?.id && resolveRef(end.id, refs);
+    if (id && !id.startsWith("$")) ids.push(id);
+  }
   return ids;
+}
+
+export type ReplacementCheck = NonNullable<ProposedOperation["replacement_check"]>;
+export type ReplacementEnd = ReplacementCheck["deleted_domain"];
+
+/**
+ * A replacement check's class end by the label the rest of the review uses
+ * (`endLabel`), falling back to the title the server sent while the classes load.
+ */
+export function replacementEndLabel(
+  end: ReplacementEnd,
+  endLabel: (classId: string | null) => string,
+): string {
+  const id = end.id ?? null;
+  const label = endLabel(id);
+  return id !== null && label === id && end.title ? end.title : label;
+}
+
+export interface ReplacementFlag {
+  pair: ReplacementCheck["pair"];
+  /** A short label for the operation row. */
+  chip: string;
+  variant: ChipVariant;
+  /** The full sentence, for the inspector and the chip's accessible name. */
+  text: string;
+  /** Whether a reviewer should look twice: a different pair, or a replacement that is gone. */
+  warn: boolean;
+}
+
+/**
+ * How a relationship-type delete's named replacement compares with the deleted
+ * type: "Replacement links a different pair: A → C instead of A → B". `label`
+ * names a class end (an id of null: untyped).
+ */
+export function replacementFlag(
+  check: ReplacementCheck,
+  label: (end: ReplacementEnd) => string,
+): ReplacementFlag {
+  const name = check.identifier ?? check.replacement_id;
+  const pairOf = (domain: ReplacementEnd, range: ReplacementEnd) =>
+    `${label(domain)} → ${label(range)}`;
+  const deleted = pairOf(check.deleted_domain, check.deleted_range);
+  const replacing = check.domain && check.range ? pairOf(check.domain, check.range) : deleted;
+  switch (check.pair) {
+    case "different":
+      return {
+        pair: check.pair,
+        chip: "different pair",
+        variant: "rose",
+        text: `Replacement links a different pair: ${replacing} instead of ${deleted}. ${name} can't take over this type's relationships as they are.`,
+        warn: true,
+      };
+    case "reversed":
+      return {
+        pair: check.pair,
+        chip: "reversed pair",
+        variant: "amber",
+        text: `Replacement ${name} links the same pair reversed: ${replacing} instead of ${deleted}.`,
+        warn: false,
+      };
+    case "missing":
+      return {
+        pair: check.pair,
+        chip: "replacement gone",
+        variant: "rose",
+        text: `The named replacement ${name} no longer exists, or its create was rejected.`,
+        warn: true,
+      };
+    default:
+      return {
+        pair: check.pair,
+        chip: "same pair",
+        variant: "emerald",
+        text: `Replacement ${name} links the same pair: ${deleted}.`,
+        warn: false,
+      };
+  }
 }
 
 /** Ids of the existing property definitions that property operations touch. */

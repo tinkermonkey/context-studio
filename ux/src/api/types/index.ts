@@ -4850,6 +4850,16 @@ export interface components {
       parent_class_id?: string | null;
     };
     /**
+     * ClassEndResponse
+     * @description A domain or range class (both null: untyped).
+     */
+    ClassEndResponse: {
+      /** Id */
+      id?: string | null;
+      /** Title */
+      title?: string | null;
+    };
+    /**
      * ClassMoveRequest
      * @description Request to move a class to a different concept scheme.
      */
@@ -7055,6 +7065,12 @@ export interface components {
       entity_id?: string | null;
     };
     /**
+     * PairMatch
+     * @description How a replacement's domain and range compare with the deleted type's.
+     * @enum {string}
+     */
+    PairMatch: "same" | "reversed" | "different" | "missing";
+    /**
      * PathResultResponse
      * @description Response containing a single path between two nodes.
      */
@@ -7644,6 +7660,11 @@ export interface components {
       probability?: number | null;
       /** @description A claimed scope; it can only make the computed scope stricter */
       scope?: components["schemas"]["ChangeScope"] | null;
+      /**
+       * Replacement
+       * @description A property (relationship type) delete only: the type that replaces it, by id, identifier or "$<ref>" of an earlier property create. Its domain and range are compared with the deleted type's (see replacement_check)
+       */
+      replacement?: string | null;
     };
     /**
      * ProposedOperationResponse
@@ -7706,8 +7727,15 @@ export interface components {
        * @default false
        */
       stale: boolean;
-      /** @description A pending or failed relationship-type delete whose type relationships still use: applying it as proposed fails; it needs a resolution. Null otherwise */
+      /** @description A pending or failed relationship-type delete whose type relationships still use: applying it as proposed fails; it needs a resolution. Null otherwise. The proposed replacement, when it fits, is listed first */
       blockers?: components["schemas"]["DeleteBlockersResponse"] | null;
+      /**
+       * Proposed Replacement Id
+       * @description A relationship-type delete only: the type the proposer names as its replacement (a property definition id, or "$<ref>" of a create in this proposal)
+       */
+      proposed_replacement_id?: string | null;
+      /** @description Set when proposed_replacement_id is: how its pair compares */
+      replacement_check?: components["schemas"]["ReplacementCheckResponse"] | null;
     };
     /**
      * PublishDiffStats
@@ -8182,6 +8210,34 @@ export interface components {
       attributes?: {
         [key: string]: string | number | boolean | null;
       };
+    };
+    /**
+     * ReplacementCheckResponse
+     * @description A relationship-type delete's named replacement, compared with the deleted type.
+     */
+    ReplacementCheckResponse: {
+      /**
+       * Replacement Id
+       * @description The replacement as proposed: an id or "$<ref>"
+       */
+      replacement_id: string;
+      /**
+       * Property Id
+       * @description The replacement type once it exists; null for a $ref whose create isn't applied yet, or a replacement since deleted
+       */
+      property_id?: string | null;
+      /** Identifier */
+      identifier?: string | null;
+      /** Title */
+      title?: string | null;
+      /** @description same: the same domain and range; reversed: the two swapped; different: a different pair of classes (flagged: it can't take over the deleted type's relationships as they are); missing: the replacement is gone or its create rejected */
+      pair: components["schemas"]["PairMatch"];
+      deleted_domain: components["schemas"]["ClassEndResponse"];
+      deleted_range: components["schemas"]["ClassEndResponse"];
+      /** @description Null when missing */
+      domain?: components["schemas"]["ClassEndResponse"] | null;
+      /** @description Null when missing */
+      range?: components["schemas"]["ClassEndResponse"] | null;
     };
     /**
      * ReplacementTypeResponse

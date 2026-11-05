@@ -14,6 +14,17 @@ An entity typed by several classes needs every one of them covered: by a
 matching rule naming that class, or by a matching rule with no class at all.
 For an update that is the entity's current classes plus any it would gain.
 
+An operation also needs at least the policy's min_probability; one without a
+probability counts as 0. Operations of a bundle import (source "bundle") are
+exempt: a bundle is the project's own released source of truth, not a
+judgement, so it carries no probability and isn't held to a confidence floor.
+Every other rule, and every hard rule, still applies to them. The exemption
+follows the proposal's recorded source rather than a probability faked onto
+its operations, so the review queue never shows a confidence nobody stated.
+Chat and MCP proposals can't claim to be bundles (their tools fix the source);
+over REST the source is the caller's word, and REST is the person's own
+surface.
+
 Hard rules beat the policy:
 
 - breaking operations (deletes among them) and taxonomy creates never auto-apply;
@@ -40,6 +51,7 @@ from domain.versioning.proposals import (
     ChangeScope,
     OperationKind,
     OperationType,
+    ProposalSource,
     ProposedOperation,
 )
 
@@ -141,7 +153,8 @@ class ApprovalPolicy:
         taxonomy_id: The taxonomy it governs
         auto_apply: Rules; an operation matching any of them may auto-apply
         min_probability: An operation also needs at least this probability
-            (one without a probability passes only a minimum of 0)
+            (one without a probability passes only a minimum of 0); a bundle
+            import's operations are exempt
     """
 
     taxonomy_id: str
@@ -152,16 +165,22 @@ class ApprovalPolicy:
         if not 0.0 <= self.min_probability <= 1.0:
             raise ValueError("min_probability must be between 0 and 1")
 
-    def allows(self, operation: ProposedOperation, classes: Sequence[set[str]]) -> bool:
+    def allows(
+        self,
+        operation: ProposedOperation,
+        classes: Sequence[set[str]],
+        source: ProposalSource,
+    ) -> bool:
         """
         Whether this operation may auto-apply: never a breaking one, a delete, a
         taxonomy create or a change to a taxonomy's vision; otherwise when it is
-        probable enough and matching rules cover it.
+        probable enough (a bundle import's always is) and matching rules cover it.
 
         Args:
             operation: The operation
             classes: One set of keys (id and identifier) per class the entity
                 will be typed by; an empty set for a class no rule can name
+            source: Who or what made the operation's proposal
         """
         if operation.scope is ChangeScope.BREAKING or operation.op is OperationType.DELETE:
             return False
@@ -171,9 +190,10 @@ class ApprovalPolicy:
             # The vision is the charter proposals are judged against: a person
             # always decides on a change to it, however editorial.
             return False
-        probability = operation.probability if operation.probability is not None else 0.0
-        if probability < self.min_probability:
-            return False
+        if source is not ProposalSource.BUNDLE:
+            probability = operation.probability if operation.probability is not None else 0.0
+            if probability < self.min_probability:
+                return False
         matching = [rule for rule in self.auto_apply if rule.matches(operation)]
         if any(rule.class_key is None for rule in matching):
             return True
@@ -220,6 +240,7 @@ def auto_apply_ids(
     inside_taxonomy: Callable[[ProposedOperation], bool],
     *,
     id_fields: frozenset[str],
+    source: ProposalSource,
 ) -> list[str]:
     """
     The operations a policy lets apply as soon as they are proposed, in seq order.
@@ -236,13 +257,14 @@ def auto_apply_ids(
             entity it points at belong to the policy's taxonomy alone
         id_fields: The fields whose values name entities; only these can hold a
             "$ref" (a title like "$5 attic" is text)
+        source: Who or what made the proposal (see ApprovalPolicy.allows)
     """
     if policy is None:
         return []
     chosen: list[str] = []
     applied_refs: set[str] = set()
     for operation in sorted(operations, key=lambda o: o.seq):
-        if not policy.allows(operation, classes(operation)):
+        if not policy.allows(operation, classes(operation), source):
             continue
         if not _refs(operation.fields, id_fields) <= applied_refs:
             continue

@@ -32,6 +32,7 @@ from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_proposal_repository import FakeChangeProposalRepository
 
 T, K, S = OperationType, OperationKind, ChangeScope
+MCP = ProposalSource.MCP
 
 HOUSE_RULES = {
     "auto_apply": [
@@ -129,11 +130,11 @@ class TestMatching:
             "tax", (AutoApplyRule(op=T.CREATE, kind=K.INDIVIDUAL, class_key="house_activity"),)
         )
         create = op(1, T.CREATE, K.INDIVIDUAL, S.ADDITIVE, class_ids=["c-act"])
-        assert policy.allows(create, [ACTIVITY])
-        assert not policy.allows(create, [PLACE])
+        assert policy.allows(create, [ACTIVITY], MCP)
+        assert not policy.allows(create, [PLACE], MCP)
         update = op(2, T.UPDATE, K.INDIVIDUAL, S.EDITORIAL, target="i1", title="x")
-        assert not policy.allows(update, [ACTIVITY])
-        assert ApprovalPolicy("tax", (AutoApplyRule(scope=S.EDITORIAL),)).allows(update, [])
+        assert not policy.allows(update, [ACTIVITY], MCP)
+        assert ApprovalPolicy("tax", (AutoApplyRule(scope=S.EDITORIAL),)).allows(update, [], MCP)
 
     def test_a_taxonomy_vision_update_is_never_allowed(self):
         policy = ApprovalPolicy(
@@ -142,18 +143,18 @@ class TestMatching:
         vision = op(1, T.UPDATE, K.TAXONOMY, S.EDITORIAL, target="tax", vision="New charter")
         both = op(2, T.UPDATE, K.TAXONOMY, S.EDITORIAL, target="tax", title="H", vision=None)
         title = op(3, T.UPDATE, K.TAXONOMY, S.EDITORIAL, target="tax", title="Home")
-        assert not policy.allows(vision, [])
-        assert not policy.allows(both, [])
-        assert policy.allows(title, [])
+        assert not policy.allows(vision, [], MCP)
+        assert not policy.allows(both, [], MCP)
+        assert policy.allows(title, [], MCP)
 
     def test_every_class_must_be_covered(self):
         activity_only = ApprovalPolicy(
             "tax", (AutoApplyRule(op=T.CREATE, kind=K.INDIVIDUAL, class_key="house_activity"),)
         )
         create = op(1, T.CREATE, K.INDIVIDUAL, S.ADDITIVE, class_ids=["c-act", "c-place"])
-        assert not activity_only.allows(create, [ACTIVITY, PLACE])
-        assert not activity_only.allows(create, [ACTIVITY, set()])  # a "$ref" class
-        assert not activity_only.allows(create, [])
+        assert not activity_only.allows(create, [ACTIVITY, PLACE], MCP)
+        assert not activity_only.allows(create, [ACTIVITY, set()], MCP)  # a "$ref" class
+        assert not activity_only.allows(create, [], MCP)
 
         both = ApprovalPolicy(
             "tax",
@@ -162,7 +163,7 @@ class TestMatching:
                 AutoApplyRule(kind=K.INDIVIDUAL, class_key="c-place"),
             ),
         )
-        assert both.allows(create, [ACTIVITY, PLACE])
+        assert both.allows(create, [ACTIVITY, PLACE], MCP)
 
     def test_a_rule_without_a_class_covers_every_class(self):
         policy = ApprovalPolicy(
@@ -173,7 +174,7 @@ class TestMatching:
             ),
         )
         create = op(1, T.CREATE, K.INDIVIDUAL, S.ADDITIVE, class_ids=["c-act", "c-place"])
-        assert policy.allows(create, [ACTIVITY, PLACE, set()])
+        assert policy.allows(create, [ACTIVITY, PLACE, set()], MCP)
 
     def test_a_class_rule_covers_only_operations_its_other_keys_match(self):
         policy = ApprovalPolicy(
@@ -184,7 +185,7 @@ class TestMatching:
             ),
         )
         create = op(1, T.CREATE, K.INDIVIDUAL, S.ADDITIVE, class_ids=["c-act", "c-place"])
-        assert not policy.allows(create, [ACTIVITY, PLACE])
+        assert not policy.allows(create, [ACTIVITY, PLACE], MCP)
 
     def test_hard_rules_beat_any_rule(self):
         policy = ApprovalPolicy(
@@ -200,25 +201,46 @@ class TestMatching:
         move = op(2, T.MOVE, K.CLASS, S.BREAKING, target="c1", parent_class_id=None)
         breaking_update = op(3, T.UPDATE, K.CLASS, S.BREAKING, target="c1", identifier="x")
         new_taxonomy = op(4, T.CREATE, K.TAXONOMY, S.ADDITIVE, title="Other")
-        assert not any(policy.allows(o, []) for o in (delete, move, breaking_update, new_taxonomy))
+        assert not any(
+            policy.allows(o, [], MCP) for o in (delete, move, breaking_update, new_taxonomy)
+        )
 
     def test_min_probability(self):
         policy = ApprovalPolicy("tax", (AutoApplyRule(scope=S.EDITORIAL),), min_probability=0.8)
         assert policy.allows(
-            op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c", probability=0.8, title="x"), []
+            op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c", probability=0.8, title="x"), [], MCP
         )
         assert not policy.allows(
-            op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c", probability=0.5, title="x"), []
+            op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c", probability=0.5, title="x"), [], MCP
         )
-        assert not policy.allows(op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c", title="x"), [])
+        assert not policy.allows(op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c", title="x"), [], MCP)
         lenient = ApprovalPolicy("tax", (AutoApplyRule(scope=S.EDITORIAL),))
-        assert lenient.allows(op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c", title="x"), [])
+        assert lenient.allows(op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c", title="x"), [], MCP)
+
+    def test_a_bundle_import_is_exempt_from_min_probability_alone(self):
+        policy = ApprovalPolicy("tax", (AutoApplyRule(scope=S.EDITORIAL),), min_probability=0.8)
+        edit = op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c", title="x")
+        assert policy.allows(edit, [], ProposalSource.BUNDLE)
+        assert not policy.allows(edit, [], ProposalSource.MCP)
+        assert not policy.allows(edit, [], ProposalSource.CHAT)
+        # Every other rule still applies to it.
+        additive = op(2, T.CREATE, K.CLASS, S.ADDITIVE, ref="c2", title="New")
+        delete = op(3, T.DELETE, K.CLASS, S.BREAKING, "c")
+        vision = op(4, T.UPDATE, K.TAXONOMY, S.EDITORIAL, "tax", vision="v")
+        for other in (additive, delete, vision):
+            assert not policy.allows(other, [], ProposalSource.BUNDLE)
 
     def test_no_policy_or_no_rules_applies_nothing(self):
         edit = op(1, T.UPDATE, K.CLASS, S.EDITORIAL, "c", title="x")
-        assert auto_apply_ids(None, [edit], lambda o: [], everywhere, id_fields=ID_NAMES) == []
+        assert (
+            auto_apply_ids(None, [edit], lambda o: [], everywhere, id_fields=ID_NAMES, source=MCP)
+            == []
+        )
         policy = ApprovalPolicy("tax")
-        assert auto_apply_ids(policy, [edit], lambda o: [], everywhere, id_fields=ID_NAMES) == []
+        assert (
+            auto_apply_ids(policy, [edit], lambda o: [], everywhere, id_fields=ID_NAMES, source=MCP)
+            == []
+        )
 
     def test_only_operations_inside_the_taxonomy_qualify(self):
         policy = ApprovalPolicy("tax", (AutoApplyRule(scope=S.EDITORIAL),))
@@ -230,6 +252,7 @@ class TestMatching:
             lambda o: [],
             lambda o: o.target_id == "c-in",
             id_fields=ID_NAMES,
+            source=MCP,
         )
         assert chosen == [inside.id]
 
@@ -245,6 +268,7 @@ class TestMatching:
             lambda o: [],
             everywhere,
             id_fields=ID_NAMES,
+            source=MCP,
         )
         assert chosen == [plain.id]
 
@@ -253,7 +277,7 @@ class TestMatching:
         priced = op(1, T.UPDATE, K.INDIVIDUAL, S.EDITORIAL, "i1", title="$5 attic")
         noted = op(2, T.UPDATE, K.INDIVIDUAL, S.EDITORIAL, "i2", description="$x marks it")
         chosen = auto_apply_ids(
-            policy, [priced, noted], lambda o: [], everywhere, id_fields=ID_NAMES
+            policy, [priced, noted], lambda o: [], everywhere, id_fields=ID_NAMES, source=MCP
         )
         assert chosen == [priced.id, noted.id]
 

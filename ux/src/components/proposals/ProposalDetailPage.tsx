@@ -47,6 +47,8 @@ import {
   opMixLabel,
   planKind,
   refsByOperation,
+  replacementEndLabel,
+  replacementFlag,
   tallyLabel,
   tallyOperations,
 } from "./proposalModel";
@@ -164,10 +166,37 @@ function operationColumns(context: OperationContext, options: ColumnOptions): Op
             </Chip>
           )}
           {row.applied_fields && <Chip variant="violet">edited</Chip>}
+          <ReplacementChip operation={row} context={context} />
         </div>
       ),
     },
   ];
+}
+
+/** A delete whose named replacement links a different or reversed pair, or is gone. */
+function ReplacementChip({
+  operation,
+  context,
+}: {
+  operation: ProposedOperation;
+  context: OperationContext;
+}) {
+  const check = operation.replacement_check;
+  if (!check || check.pair === "same") return null;
+  const flag = replacementFlag(check, (end) =>
+    replacementEndLabel(end, (id) => context.endLabel(id, operation)),
+  );
+  return (
+    <span
+      role="note"
+      aria-label={flag.text}
+      title={flag.text}
+      data-testid={`operation-replacement-${operation.id}`}
+      data-pair={flag.pair}
+    >
+      <Chip variant={flag.variant}>{flag.chip}</Chip>
+    </span>
+  );
 }
 
 function revertMessage(summary: RevertSummary): string {

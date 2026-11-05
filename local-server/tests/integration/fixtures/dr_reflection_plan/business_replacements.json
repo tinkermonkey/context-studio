@@ -1,0 +1,54 @@
+{
+  "format": "dr-reflection-plan/1",
+  "taxonomy_id": "dr_spec",
+  "title": "DR reflection plan: business layer (replacement pairs)",
+  "rationale": "Mirrors the business-layer plan reviewed in Gate B (proposal 0b6d60f8): its seq 4 deletes a type whose named replacement is the reverse pair, and its seq 17 (row 17) deletes businessrole performs businessfunction naming a replacement that links a different pair.",
+  "source": "pipeline",
+  "source_detail": "documentation_robotics cli/scripts/spec-enrich/proposal-export.ts, plan-clef.json",
+  "created_at": "2026-11-05T00:00:00.000Z",
+  "layer": "business",
+  "operations": [
+    {
+      "seq": 4,
+      "op": "delete",
+      "kind": "property",
+      "target_id": "business.businessrole.assigned-to.business.businessinterface",
+      "ref": null,
+      "fields": {},
+      "replacement": "business.businessinterface.serves.business.businessrole",
+      "base": {},
+      "rationale": "Remove business.businessrole.assigned-to.business.businessinterface: business.businessinterface.serves.business.businessrole already exists and expresses it. Plan kind reverse, p 0.68; claims rel:business.businessrole#3.",
+      "evidence": [
+        {
+          "quote": "BusinessRole assigned-to BusinessInterface has the wrong direction compared with ArchiMate.",
+          "claim_id": "rel:business.businessrole#3"
+        }
+      ],
+      "probability": 0.68,
+      "scope": null,
+      "status": "pending",
+      "dr": {}
+    },
+    {
+      "seq": 17,
+      "op": "delete",
+      "kind": "property",
+      "target_id": "business.businessrole.performs.business.businessfunction",
+      "ref": null,
+      "fields": {},
+      "replacement": "business.businessrole.assigned-to.business.businessprocess",
+      "base": {},
+      "rationale": "Remove business.businessrole.performs.business.businessfunction: business.businessrole.assigned-to.business.businessprocess already exists and expresses it. Plan kind compound, p 0.41; claims rel:business.businessrole#1.",
+      "evidence": [
+        {
+          "quote": "BusinessRole assigned-to BusinessFunction and BusinessRole performs BusinessFunction express the same meaning.",
+          "claim_id": "rel:business.businessrole#1"
+        }
+      ],
+      "probability": 0.407,
+      "scope": null,
+      "status": "pending",
+      "dr": {}
+    }
+  ]
+}
