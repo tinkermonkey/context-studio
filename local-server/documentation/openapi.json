@@ -9748,25 +9748,8 @@
             "description": "Property identifier"
           },
           "value": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "integer"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
             "title": "Value",
-            "description": "Value of the property"
+            "description": "Value of the property: text, number, boolean, null, or a JSON array or object for an array or object attribute"
           },
           "datatype": {
             "anyOf": [

@@ -5256,9 +5256,9 @@ export interface components {
       property_identifier: string;
       /**
        * Value
-       * @description Value of the property
+       * @description Value of the property: text, number, boolean, null, or a JSON array or object for an array or object attribute
        */
-      value: string | number | boolean | null;
+      value: unknown;
       /**
        * Datatype
        * @description Type of the value

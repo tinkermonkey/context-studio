@@ -332,7 +332,11 @@ class DataPropertyValueResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     property_identifier: str = Field(..., description="Property identifier")
-    value: str | int | float | bool | None = Field(..., description="Value of the property")
+    value: Any = Field(
+        ...,
+        description="Value of the property: text, number, boolean, null, or a JSON array or "
+        "object for an array or object attribute",
+    )
     datatype: Optional[str] = Field(None, description="Type of the value")
 
 

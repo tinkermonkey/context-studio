@@ -14,6 +14,15 @@ Values in an operation's `fields` and `base` use the JSON encoding of entity
 snapshots (`domain.ontology.snapshots`): enums as their value, external
 references as dicts. A field value "$name" in an id field points at the entity
 an earlier create in the same proposal makes (its `ref` is "name").
+
+An individual's attribute values are `data_properties`: attribute identifier
+-> value. On a create they are its values; on an update, the values to set,
+null removing one, others kept. Each must be an attribute of the individual's
+classes (theirs or inherited from a parent class) and fit its datatype and
+allowed values. A value for an attribute of a class the proposal itself
+creates ("$ref") is checked when applied. Setting a value that wasn't there is
+additive; changing or removing one is editorial, or breaking for a required
+attribute.
 """
 
 from __future__ import annotations
@@ -31,6 +40,7 @@ from domain.ontology.entities import validate_relationship_attributes
 from domain.ontology.events import GraphInvalidated
 from domain.ontology.exceptions import OntologyError
 from domain.ontology.snapshots import decode_field, entity_snapshot
+from domain.ontology.value_objects import DataPropertyValue, DataType
 from domain.versioning.approval_policy import auto_apply_ids
 from domain.versioning.exceptions import (
     ChangeProposalNotFoundError,
@@ -66,6 +76,7 @@ from domain.versioning.proposals import (
 )
 
 if TYPE_CHECKING:
+    from domain.ontology.entities import AttributeDefinition
     from domain.ontology.ports import OntologyRepository
     from domain.ontology.services import OntologyService
     from domain.ports import EventPublisher, TransactionScope
@@ -121,6 +132,17 @@ _TEXT_FIELDS = frozenset(
 _BOOL_FIELDS = frozenset({"is_required", "is_relevant"})
 _INT_FIELDS = frozenset({"sort_order"})
 _TEXT_LIST_FIELDS = frozenset({"allowed_values", "class_ids"})
+# An individual's attribute values: identifier -> value (see the module docstring).
+DATA_FIELD = "data_properties"
+_JSON_VALUE_TYPES = (str, int, float, bool, list, dict, type(None))
+# The JSON type a value of each attribute datatype must have.
+_DATATYPE_TYPES: dict[DataType, tuple[type, ...]] = {
+    DataType.STRING: (str,),
+    DataType.INTEGER: (int,),
+    DataType.BOOLEAN: (bool,),
+    DataType.ARRAY: (list,),
+    DataType.OBJECT: (dict,),
+}
 
 # Id fields and the kinds of entity they may point at.
 ID_FIELDS: dict[str, tuple[OperationKind, ...]] = {
@@ -242,9 +264,9 @@ OPERATION_FIELDS: dict[OperationKind, OperationFields] = {
         clearable=frozenset({"description", "allowed_values", "default_value"}),
     ),
     K.INDIVIDUAL: OperationFields(
-        create=frozenset({"class_ids", "title", "description", "external_references"}),
+        create=frozenset({"class_ids", "title", "description", "external_references", DATA_FIELD}),
         required=frozenset({"class_ids", "title"}),
-        update=frozenset({"title", "description", "external_references", "class_ids"}),
+        update=frozenset({"title", "description", "external_references", "class_ids", DATA_FIELD}),
         clearable=frozenset({"description"}),
     ),
     K.RELATIONSHIP: OperationFields(
@@ -276,6 +298,28 @@ def _is_ref(value: Any) -> bool:
     return isinstance(value, str) and value.startswith(_REF_PREFIX) and len(value) > 1
 
 
+def _data_values(snapshot_values: Any) -> dict[str, Any]:
+    """An individual's snapshot data_properties as identifier -> value."""
+    return {item["property_identifier"]: item["value"] for item in snapshot_values or []}
+
+
+def _value_problem(attribute: AttributeDefinition, value: Any) -> str | None:
+    """Why a (non-None) value doesn't fit an attribute's datatype or allowed values."""
+    datatype = DataType(attribute.datatype)
+    wrong_type = not isinstance(value, _DATATYPE_TYPES[datatype]) or (
+        datatype is DataType.INTEGER and isinstance(value, bool)
+    )
+    if wrong_type:
+        return f"is {datatype.value}, so {value!r} doesn't fit"
+    allowed = attribute.allowed_values
+    if allowed and isinstance(value, (str, list)):
+        items = value if isinstance(value, list) else [value]
+        unknown = [item for item in items if item not in allowed]
+        if unknown:
+            return f"allows only {allowed}, not {unknown}"
+    return None
+
+
 def _has_field_type(name: str, value: Any) -> bool:
     """Whether a (non-None) field value has the JSON type its field takes."""
     if name in _TEXT_LIST_FIELDS:
@@ -288,6 +332,11 @@ def _has_field_type(name: str, value: Any) -> bool:
         return isinstance(value, int) and not isinstance(value, bool)
     if name == "external_references":
         return isinstance(value, list) and all(isinstance(item, dict) for item in value)
+    if name == DATA_FIELD:
+        return isinstance(value, dict) and all(
+            isinstance(key, str) and key and isinstance(item, _JSON_VALUE_TYPES)
+            for key, item in value.items()
+        )
     if name == "attributes":
         try:
             validate_relationship_attributes(value)
@@ -671,8 +720,145 @@ class ProposalService:
         elif op is not OperationType.CREATE:
             snapshot = entity_snapshot(target)
             operation.base = {name: snapshot.get(name) for name in operation.fields}
-        operation.scope = classify_scope(op, operation.fields, operation.base, claimed)
+            if DATA_FIELD in operation.fields:
+                # Only the values the update touches: absent ones as None.
+                current = _data_values(snapshot.get(DATA_FIELD))
+                operation.base[DATA_FIELD] = {
+                    key: current.get(key) for key in operation.fields[DATA_FIELD]
+                }
+        others = {name: value for name, value in operation.fields.items() if name != DATA_FIELD}
+        operation.scope = classify_scope(op, others, operation.base, claimed)
+        if kind is K.INDIVIDUAL and DATA_FIELD in operation.fields:
+            attributes = self._check_data_proposed(operation, target)
+            data_scope = self._data_scope(operation, attributes)
+            if data_scope.rank > operation.scope.rank:
+                operation.scope = data_scope
         return operation
+
+    def _check_data_proposed(
+        self, operation: ProposedOperation, target: Any
+    ) -> dict[str, AttributeDefinition]:
+        """
+        An individual operation's data_properties fit the attributes of the
+        classes it will have; returns those attributes. A create's values can't
+        be null. Attributes of a "$ref" class aren't known yet: values the
+        existing classes don't define are checked when applied.
+        """
+        values = operation.fields[DATA_FIELD]
+        if operation.op is OperationType.CREATE:
+            nulls = sorted(key for key, value in values.items() if value is None)
+            if nulls:
+                raise _Invalid("invalid", f"data_properties {nulls} can't be null on a create")
+        class_ids = operation.fields.get("class_ids") or (target.class_ids if target else [])
+        attributes = self._attributes_of(class_ids)
+        present = _data_values(entity_snapshot(target).get(DATA_FIELD)) if target else {}
+        try:
+            self._check_data(
+                values, attributes, present, deferred=any(_is_ref(c) for c in class_ids)
+            )
+        except ValueError as exc:
+            raise _Invalid("invalid", str(exc)) from exc
+        return attributes
+
+    @staticmethod
+    def _data_scope(
+        operation: ProposedOperation, attributes: dict[str, AttributeDefinition]
+    ) -> ChangeScope:
+        """
+        Setting a value that wasn't there is additive; changing or removing one
+        is editorial, or breaking for a required attribute.
+        """
+        if operation.op is OperationType.CREATE:
+            return ChangeScope.ADDITIVE
+        scope = ChangeScope.EDITORIAL
+        base = operation.base.get(DATA_FIELD) or {}
+        for key, value in operation.fields[DATA_FIELD].items():
+            current = base.get(key)
+            if current is None and value is not None:
+                found = ChangeScope.ADDITIVE
+            elif value == current and type(value) is type(current):
+                continue
+            else:
+                attribute = attributes.get(key)
+                required = attribute is not None and attribute.is_required
+                found = ChangeScope.BREAKING if required else ChangeScope.EDITORIAL
+            if found.rank > scope.rank:
+                scope = found
+        return scope
+
+    def _attributes_of(self, class_ids: Iterable[Any]) -> dict[str, AttributeDefinition]:
+        """
+        The attributes an individual of these classes has: each class's own,
+        then its parent's and so on up; the first class (in order) to define
+        an identifier wins. "$ref" classes are skipped.
+        """
+        found: dict[str, AttributeDefinition] = {}
+        for class_id in class_ids:
+            current, seen = class_id, set()
+            while isinstance(current, str) and not _is_ref(current) and current not in seen:
+                seen.add(current)
+                for attribute in self._repo.list_attribute_definitions(
+                    class_id=current, limit=None
+                ):
+                    found.setdefault(attribute.identifier, attribute)
+                cls = self._repo.get_class(current)
+                current = cls.parent_class_id if cls is not None else None
+        return found
+
+    @staticmethod
+    def _check_data(
+        values: Mapping[str, Any],
+        attributes: dict[str, AttributeDefinition],
+        present: Mapping[str, Any],
+        deferred: bool = False,
+    ) -> None:
+        """
+        Each value is for one of the attributes and fits it; None removes a
+        value (one the individual has may be removed even if no attribute
+        defines it any more).
+
+        Args:
+            deferred: Skip values no attribute defines (a "$ref" class may)
+
+        Raises:
+            ValueError: Naming the first value that doesn't fit, and why
+        """
+        for key, value in values.items():
+            attribute = attributes.get(key)
+            if attribute is None:
+                if deferred or (value is None and key in present):
+                    continue
+                known = ", ".join(sorted(attributes)) or "none"
+                raise ValueError(
+                    f"data_properties '{key}' is not an attribute of the individual's classes "
+                    f"(theirs and inherited: {known})"
+                )
+            if value is None:
+                continue
+            problem = _value_problem(attribute, value)
+            if problem:
+                raise ValueError(f"data_properties '{key}' {problem}")
+
+    def _data_for(
+        self, class_ids: list[str], values: Mapping[str, Any], current: list[DataPropertyValue]
+    ) -> list[DataPropertyValue]:
+        """
+        An individual's attribute values once these are set (None removes
+        one), checked against its classes' attributes as they are now.
+
+        Raises:
+            ValueError: If a value doesn't fit
+        """
+        attributes = self._attributes_of(class_ids)
+        by_key = {value.property_identifier: value for value in current}
+        self._check_data(values, attributes, by_key)
+        for key, value in values.items():
+            if value is None:
+                by_key.pop(key, None)
+            else:
+                datatype = DataType(attributes[key].datatype).value
+                by_key[key] = DataPropertyValue(key, value, datatype)
+        return list(by_key.values())
 
     def _replacement_id(
         self, name: Any, operation: ProposedOperation, refs: dict[str, OperationKind]
@@ -761,6 +947,8 @@ class ProposalService:
                     raise _Invalid("invalid", "class_ids can't be empty")
                 if len(set(value)) != len(value):
                     raise _Invalid("invalid", "class_ids has duplicates")
+            if name == DATA_FIELD:
+                continue  # an identifier -> value map, checked against the classes
             try:
                 decode_field(name, value)
             except (TypeError, KeyError, ValueError, AttributeError) as exc:
@@ -1258,6 +1446,11 @@ class ProposalService:
             return
         snapshot = entity_snapshot(current)
         ignored = _VOLATILE_FIELDS | _DERIVED_FIELDS.get(operation.kind, frozenset())
+        if DATA_FIELD in operation.fields and operation.op is OperationType.UPDATE:
+            # An update's base holds only the values it touches (see _validated).
+            current = _data_values(snapshot.get(DATA_FIELD))
+            touched = operation.base[DATA_FIELD] or {}
+            snapshot[DATA_FIELD] = {key: current.get(key) for key in touched}
         changed = sorted(
             name
             for name, value in operation.base.items()
@@ -1636,7 +1829,10 @@ class ProposalService:
         """
         kind, target = operation.kind, operation.target_id
         svc = self._ontology
-        values = {name: decode_field(name, value) for name, value in fields.items()}
+        values = {
+            name: value if name == DATA_FIELD else decode_field(name, value)
+            for name, value in fields.items()
+        }
 
         if op is OperationType.DELETE:
             delete = {
@@ -1675,6 +1871,8 @@ class ProposalService:
             v["datatype"] = getattr(v["datatype"], "value", v["datatype"])
             return svc.create_attribute_definition(**v, source_run_id=run_id).id
         if kind is K.INDIVIDUAL:
+            if DATA_FIELD in v:
+                v[DATA_FIELD] = self._data_for(v["class_ids"], v[DATA_FIELD], [])
             return svc.create_individual(**v, source_run_id=run_id).id
         return svc.create_relationship(**v, source_run_id=run_id).id
 
@@ -1717,6 +1915,11 @@ class ProposalService:
         text = {name: v[name] for name in ("title", "external_references") if name in v}
         if "description" in v:
             text["description"] = v["description"] if v["description"] is not None else ""
+        if DATA_FIELD in v:
+            # Checked first, against the classes it will have, so a misfit changes nothing.
+            individual = svc.get_individual(target)
+            classes = list(v.get("class_ids") or individual.class_ids)
+            text[DATA_FIELD] = self._data_for(classes, v[DATA_FIELD], individual.data_properties)
         if text:
             svc.update_individual(target, **text)
         if "class_ids" in v:

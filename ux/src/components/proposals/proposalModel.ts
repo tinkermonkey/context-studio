@@ -480,10 +480,34 @@ function fieldRank(field: string): number {
   return index === -1 ? FIELD_ORDER.length : index;
 }
 
+/** Rows for an individual's attribute values are this plus the attribute identifier. */
+export const DATA_FIELD_PREFIX = "data_properties.";
+
+/** A row's field as shown: an attribute value's row by its attribute identifier. */
+export function fieldLabel(field: string): string {
+  return field.startsWith(DATA_FIELD_PREFIX) ? field.slice(DATA_FIELD_PREFIX.length) : field;
+}
+
+/**
+ * An individual's attribute values by identifier: an operation's
+ * data_properties map, or an entity snapshot's list (a delete's base).
+ */
+export function dataValues(value: unknown): Record<string, unknown> {
+  if (Array.isArray(value)) {
+    return Object.fromEntries(
+      value
+        .filter((item) => item && typeof item === "object" && "property_identifier" in item)
+        .map((item) => [String(item.property_identifier), item.value]),
+    );
+  }
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+}
+
 /**
  * Field / before / after rows for an operation, from `fields` vs `base`.
  * A create has only after values, a delete only before values; an update
- * lists the fields it touches.
+ * lists the fields it touches. An individual's attribute values get a row
+ * each (DATA_FIELD_PREFIX + identifier).
  */
 export function changeRows(operation: ProposedOperation): ChangeRow[] {
   const fields = operation.fields ?? {};
@@ -509,6 +533,20 @@ export function changeRows(operation: ProposedOperation): ChangeRow[] {
       const after = value(field, "after");
       return { field, before, after, changed: !sameValue(before, after) };
     });
+  const data = rows.find((row) => row.field === "data_properties");
+  if (operation.kind === "individual" && data) {
+    rows.splice(rows.indexOf(data), 1);
+    const before = dataValues(data.before);
+    const after = dataValues(data.after);
+    for (const key of new Set([...Object.keys(before), ...Object.keys(after)])) {
+      rows.push({
+        field: `${DATA_FIELD_PREFIX}${key}`,
+        before: before[key],
+        after: after[key],
+        changed: !sameValue(before[key], after[key]),
+      });
+    }
+  }
   const references = rows.find((row) => row.field === "external_references");
   if (operation.kind === "property" && references) {
     // References read by identifier; a DR type's attributes get rows of their own.

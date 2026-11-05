@@ -249,7 +249,10 @@ class ProposeChangesTool(_ProposalTool):
         " strength and evidence lines in that reference's metadata:"
         ' {"cardinality", "strength", "evidence": [...]}. Give them on a create; to'
         " change them, update external_references, which replaces the whole list, so"
-        " send every reference and every metadata key. Id fields"
+        " send every reference and every metadata key. An individual's data_properties"
+        " map attribute identifiers (of its classes, inherited ones included) to values"
+        " of the attribute's datatype; on an update, only those given change and null"
+        " removes one. Id fields"
         f' ({", ".join(sorted(ID_FIELDS))}) take an existing id or "$<ref>" of an'
         " earlier create in the same proposal."
     )
