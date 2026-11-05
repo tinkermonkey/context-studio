@@ -332,6 +332,37 @@ class TestSizeBounds:
         assert block.startswith("Attribute 'area' as declared across scheme rooms (29 classes):")
         assert block.endswith("\n  (+4 more)")
 
+    def test_owner_row_is_kept_when_it_sorts_past_the_cap(self, repo):
+        for i in range(MAX_ATTRIBUTE_PEERS + 5):
+            repo.save_class(
+                Class(
+                    id=f"room{i:02}",
+                    concept_scheme_id="rooms",
+                    taxonomy_id="house",
+                    title=f"Room {i:02}",
+                    identifier=f"room{i:02}",
+                )
+            )
+            _attr(repo, f"ra{i}", f"room{i:02}", "area", "integer")
+        repo.save_class(
+            Class(
+                id="zone",
+                concept_scheme_id="rooms",
+                taxonomy_id="house",
+                title="Zone",
+                identifier="zone",
+            )
+        )
+        _attr(repo, "za", "zone", "area", "string", description="Zone area.")
+
+        pack = EvidencePackBuilder(repo).build_for_attribute("zone", "area", ContextPolicy.NONE)
+
+        [evidence] = pack.attributes
+        assert len(evidence.peers) == MAX_ATTRIBUTE_PEERS
+        assert evidence.peers[-1].class_id == "zone"
+        assert evidence.omitted == 8  # 33 declarers: bedroom, kitchen, 30 rooms and zone
+        assert '  zone.area: type=string required=false desc="Zone area."\n  (+8 more)' in pack.text
+
     def test_intent_text_is_clipped_but_the_charter_is_whole(self, repo):
         kitchen = repo.get_class("kitchen")
         kitchen.description = "x" * 500

@@ -19,8 +19,11 @@ the taxonomy's charter (its vision); `none` gives no intent.
 
 Size: rendered text is whitespace-collapsed; attribute definitions are clipped
 to `DEFINITION_CLIP` characters, the taxonomy summary, scope note and class
-definition to `INTENT_CLIP`, and attribute peers to `MAX_ATTRIBUTE_PEERS` rows.
-The charter on `full` is included whole and is unbounded.
+definition to `INTENT_CLIP`, and attribute peers to `MAX_ATTRIBUTE_PEERS` rows
+(the owner's row always kept). The charter on `full` is included whole and is
+unbounded. Unlike DR, which clips raw text, whitespace is collapsed before
+clipping, so a clipped definition can run a little further than DR's; the
+facts are unchanged.
 
 Predicate meanings come from an optional predicate catalog (DR's is the dr_spec
 taxonomy's `ExternalReference(documentation_robotics, "spec").metadata.predicates`);
@@ -144,7 +147,7 @@ def _predicate(prop: PropertyDefinition) -> str:
 def _clip(text: str | None, limit: int | None = None) -> str | None:
     """`text` on one line (whitespace collapsed), cut to `limit` characters; None if empty."""
     flat = " ".join(text.split()) if text else ""
-    return (flat[:limit] if limit else flat) or None
+    return (flat[:limit].rstrip() if limit else flat) or None
 
 
 def _edge_sort_key(edge: EdgeEvidence) -> tuple[str, ...]:
@@ -291,12 +294,16 @@ class EvidencePackBuilder:
                     inherited_from_label=_label(declarer) if inherited else None,
                 )
             )
+        # The owner's row is always kept; the cap trims the other classes.
+        others = [p for p in peers if p.class_id != owner.id]
+        kept_others = {id(p) for p in others[: MAX_ATTRIBUTE_PEERS - (len(peers) - len(others))]}
+        kept = [p for p in peers if p.class_id == owner.id or id(p) in kept_others]
         return AttributeEvidence(
             attribute_identifier=identifier,
             concept_scheme_id=owner.concept_scheme_id,
             scheme_label=_label(scheme) if scheme else owner.concept_scheme_id,
-            peers=tuple(peers[:MAX_ATTRIBUTE_PEERS]),
-            omitted=max(0, len(peers) - MAX_ATTRIBUTE_PEERS),
+            peers=tuple(kept),
+            omitted=len(peers) - len(kept),
         )
 
     def _pair(

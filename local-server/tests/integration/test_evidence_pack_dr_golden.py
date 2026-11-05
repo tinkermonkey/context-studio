@@ -14,7 +14,10 @@ Context Studio's own and is pinned separately.
 The attribute case does the same for the `type` attribute across the security
 layer (`DR_ATTRIBUTE_EVIDENCE`). The DR importer brings in no attribute
 definitions, so the fixture adds them from the snapshot's node schemas
-(`properties.attributes`), one per node type declaring `type`.
+(`properties.attributes`), one per node type declaring `type`. It pins the
+attribute section's scope (the scheme), row order and clipping; it does not
+test import fidelity, since the fixture builds the attributes from the same
+schemas DR reads.
 
 To regenerate the DR strings, from a documentation_robotics checkout at the
 snapshot's commit (see tests/integration/fixtures/dr_spec/README.md):
@@ -257,7 +260,7 @@ def test_attribute_facts_match_dr_claim_evidence(workspace):
             p.datatype,
             "|".join(p.allowed_values or ()),
             str(p.is_required).lower(),
-            p.definition,
+            p.definition or "",  # DR rows without a desc parse as ""
         )
         for p in evidence.peers
     )
