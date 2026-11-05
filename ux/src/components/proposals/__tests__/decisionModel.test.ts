@@ -18,6 +18,7 @@ import {
   isBelowThreshold,
   isDrEditable,
   outcomeRows,
+  replacementLabel,
   resolutionLabel,
   resolutionResult,
   revertConflictOf,
@@ -418,6 +419,7 @@ const deleted = {
   strategy: "delete" as const,
   replacement_property_id: null,
   replacement_identifier: null,
+  reversed: false,
   edges: [
     {
       relationship_id: "r1",
@@ -474,5 +476,28 @@ describe("blocked relationship-type deletes", () => {
       result: "deleted 2 relationships and the type",
     });
     expect(resolutionResult(op({ id: "b", status: "applied" }))).toBeUndefined();
+  });
+
+  it("a reversed move says the ends swap (#1412)", () => {
+    const type = { property_id: "p", identifier: "triggered_by", title: "t", reversed: false };
+    expect(replacementLabel(type, false)).toBe("triggered_by");
+    expect(replacementLabel(type, true)).toBe("triggered_by (proposed)");
+    expect(replacementLabel({ ...type, reversed: true }, true)).toBe(
+      "triggered_by (proposed, reversed: ends swap)",
+    );
+    const applied = op({
+      id: "r",
+      op: "delete",
+      status: "applied",
+      resolution: {
+        ...deleted,
+        strategy: "move" as const,
+        replacement_identifier: "triggered_by",
+        reversed: true,
+      },
+    });
+    expect(resolutionResult(applied)).toBe(
+      "moved 2 relationships to triggered_by with their ends swapped, removed the type",
+    );
   });
 });

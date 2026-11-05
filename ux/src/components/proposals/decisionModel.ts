@@ -17,6 +17,7 @@ import { isAwaiting, propertyTriples, type TripleSource } from "./proposalModel"
 
 export type DeleteBlockers = components["schemas"]["DeleteBlockersResponse"];
 export type BlockingEdge = components["schemas"]["BlockingEdgeResponse"];
+export type ReplacementType = components["schemas"]["ReplacementTypeResponse"];
 export type Resolution = components["schemas"]["InUseResolutionRequest"];
 export type Resolutions = Record<string, Resolution>;
 
@@ -175,14 +176,25 @@ export function resolutionLabel(
     : `Apply: delete ${edges} and the type`;
 }
 
+/** A move target in the picker: "(proposed)" and "(reversed: ends swap)" as they apply. */
+export function replacementLabel(replacement: ReplacementType, proposed: boolean): string {
+  const notes = [proposed && "proposed", replacement.reversed && "reversed: ends swap"].filter(
+    Boolean,
+  );
+  return notes.length > 0
+    ? `${replacement.identifier} (${notes.join(", ")})`
+    : replacement.identifier;
+}
+
 /** What an applied resolution did, or undefined for an operation without one. */
 export function resolutionResult(operation: ProposedOperation): string | undefined {
   const resolution = operation.resolution;
   if (operation.status !== "applied" || !resolution) return undefined;
   const edges = plural(resolution.edges?.length ?? 0, "relationship");
   const replacement = resolution.replacement_identifier ?? resolution.replacement_property_id;
+  const swapped = resolution.reversed ? " with their ends swapped" : "";
   return resolution.strategy === "move"
-    ? `moved ${edges} to ${replacement}, removed the type`
+    ? `moved ${edges} to ${replacement}${swapped}, removed the type`
     : `deleted ${edges} and the type`;
 }
 

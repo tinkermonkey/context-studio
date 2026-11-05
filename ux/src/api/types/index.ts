@@ -5418,7 +5418,7 @@ export interface components {
       edges: components["schemas"]["BlockingEdgeResponse"][];
       /**
        * Replacements
-       * @description Types whose domain and range accept both ends of every edge (inheritance-aware) and that allow their attributes; empty when none does
+       * @description Types whose domain and range accept both ends of every edge (inheritance-aware; swapped, for a reversed type) and that allow their attributes; empty when none does
        */
       replacements?: components["schemas"]["ReplacementTypeResponse"][];
       /**
@@ -6371,6 +6371,12 @@ export interface components {
       replacement_property_id?: string | null;
       /** Replacement Identifier */
       replacement_identifier?: string | null;
+      /**
+       * Reversed
+       * @description A move to a reversed type: each relationship was re-created with its ends swapped (edges keep the original ends)
+       * @default false
+       */
+      reversed: boolean;
       /**
        * Edges
        * @description The relationships moved or deleted
@@ -8287,6 +8293,12 @@ export interface components {
       identifier: string;
       /** Title */
       title: string;
+      /**
+       * Reversed
+       * @description Its domain and range are the deleted type's reversed: moving re-creates each relationship with its source and target swapped
+       * @default false
+       */
+      reversed: boolean;
     };
     /**
      * ResolutionRecordResponse

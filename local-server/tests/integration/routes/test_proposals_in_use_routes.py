@@ -187,6 +187,7 @@ class TestBlockers:
                 "property_id": serves,
                 "identifier": "businessevent_serves_businessfunction",
                 "title": "serves",
+                "reversed": False,
             }
         ]
         assert op["blockers"]["move_unavailable_reason"] is None
@@ -250,6 +251,45 @@ class TestApply:
         assert reverted.status_code == 200, reverted.text
         assert _ends(ontology, graph["blocked"]) == graph["ends"]
         assert _ends(ontology, serves) == set()
+
+    def test_a_reversed_move_swaps_the_ends_then_revert_restores_the_originals(
+        self, client, graph, ontology
+    ):
+        """#1412: a replacement with the pair reversed takes the relationships the other way."""
+        triggered_by = ontology.create_property_definition(
+            "businessfunction_triggered_by_businessevent",
+            "triggered by",
+            domain_class_id=graph["function"],
+            range_class_id=graph["event"],
+        ).id
+        proposal, op = _propose_delete(client, graph)
+        assert op["blockers"]["replacements"] == [
+            {
+                "property_id": triggered_by,
+                "identifier": "businessfunction_triggered_by_businessevent",
+                "title": "triggered by",
+                "reversed": True,
+            }
+        ]
+
+        response = _apply(
+            client, proposal, op, {"strategy": "move", "replacement_property_id": triggered_by}
+        )
+
+        applied = response.json()["operations"][0]
+        assert applied["status"] == "applied", applied["reason"]
+        assert applied["resolution"]["reversed"] is True
+        swapped = {(target, source) for source, target in graph["ends"]}
+        assert _ends(ontology, triggered_by) == swapped
+        assert ontology._repository.get_property_definition(graph["blocked"]) is None
+
+        reverted = client.post(f"/api/proposals/{proposal['id']}/revert")
+        assert reverted.status_code == 200, reverted.text
+        assert _ends(ontology, graph["blocked"]) == graph["ends"]
+        assert {
+            r.id for r in ontology.list_relationships(property_id=graph["blocked"], limit=None)
+        } == {graph["first"], graph["second"]}
+        assert _ends(ontology, triggered_by) == set()
 
     def test_a_failing_step_rolls_back_in_the_database(self, client, graph, ontology, monkeypatch):
         proposal, op = _propose_delete(client, graph)

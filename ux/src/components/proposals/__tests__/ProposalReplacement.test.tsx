@@ -214,7 +214,7 @@ describe("replacementDeletedFlag", () => {
 
 describe("the in-use resolver", () => {
   const blockers = (
-    replacements: { property_id: string; identifier: string; title: string }[],
+    replacements: { property_id: string; identifier: string; title: string; reversed: boolean }[],
   ) => ({
     edges: [
       {
@@ -236,8 +236,13 @@ describe("the in-use resolver", () => {
   it("marks the proposed replacement, listed first by the server", async () => {
     theDelete().replacement_check = check("same", component, service);
     theDelete().blockers = blockers([
-      { property_id: "prop-twin", identifier: "component_uses_component", title: "uses" },
-      { property_id: "prop-other", identifier: "relates_to", title: "relates to" },
+      {
+        property_id: "prop-twin",
+        identifier: "component_uses_component",
+        title: "uses",
+        reversed: false,
+      },
+      { property_id: "prop-other", identifier: "relates_to", title: "relates to", reversed: false },
     ]);
     renderPage("op-delete");
 
@@ -252,7 +257,7 @@ describe("the in-use resolver", () => {
 
   it("says when the proposed replacement doesn't fit", async () => {
     theDelete().blockers = blockers([
-      { property_id: "prop-other", identifier: "relates_to", title: "relates to" },
+      { property_id: "prop-other", identifier: "relates_to", title: "relates to", reversed: false },
     ]);
     renderPage("op-delete");
 

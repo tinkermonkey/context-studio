@@ -53,7 +53,12 @@ const blockers = {
       attributes: {},
     },
   ],
-  replacements: [] as { property_id: string; identifier: string; title: string }[],
+  replacements: [] as {
+    property_id: string;
+    identifier: string;
+    title: string;
+    reversed: boolean;
+  }[],
   move_unavailable_reason:
     "1 type accepts BusinessEvent sources (businessevent_triggers_businessprocess), but none accepts BusinessFunction targets",
 };
@@ -98,6 +103,7 @@ beforeEach(() => {
         if (resolution && op.blockers) {
           op.resolution = {
             strategy: resolution.strategy,
+            reversed: false,
             replacement_property_id: resolution.replacement_property_id ?? null,
             replacement_identifier: resolution.replacement_property_id ? "relates_to" : null,
             edges: op.blockers.edges.map((e) => ({
@@ -203,7 +209,12 @@ describe("a blocked relationship-type delete", () => {
 
   it("moves them to a type that fits every one, the button naming it", async () => {
     blocked().blockers!.replacements = [
-      { property_id: "prop-relates", identifier: "relates_to", title: "relates to" },
+      {
+        property_id: "prop-relates",
+        identifier: "relates_to",
+        title: "relates to",
+        reversed: false,
+      },
     ];
     blocked().blockers!.move_unavailable_reason = null;
     const user = userEvent.setup();
@@ -233,7 +244,12 @@ describe("a blocked relationship-type delete", () => {
 
   it("the move button names its scope", async () => {
     blocked().blockers!.replacements = [
-      { property_id: "prop-relates", identifier: "relates_to", title: "relates to" },
+      {
+        property_id: "prop-relates",
+        identifier: "relates_to",
+        title: "relates to",
+        reversed: false,
+      },
     ];
     renderPage("op-delete");
 
@@ -270,7 +286,12 @@ describe("a failed resolution", () => {
 
   it("shows why it failed, and falls back to Delete when its type no longer fits", async () => {
     blocked().blockers!.replacements = [
-      { property_id: "prop-relates", identifier: "relates_to", title: "relates to" },
+      {
+        property_id: "prop-relates",
+        identifier: "relates_to",
+        title: "relates to",
+        reversed: false,
+      },
     ];
     blocked().blockers!.move_unavailable_reason = null;
     resolutionFails = {

@@ -46,6 +46,8 @@ from domain.versioning.in_use import (
     PairMatch,
     ReplacementCheck,
     compare_pair,
+    moved_ends,
+    reverses,
 )
 from domain.versioning.proposals import (
     ChangeProposal,
@@ -827,7 +829,8 @@ class ProposalService:
         as proposed (in use). A resolution lets it apply: move those
         relationships to another type (each must fit its domain and range,
         inheritance-aware, allow its attributes and not duplicate one, or
-        nothing moves), or delete them too; then the type is deleted. The steps
+        nothing moves; a type whose domain and range are the deleted type's
+        reversed takes each with its ends swapped), or delete them too; then the type is deleted. The steps
         run through OntologyService in one transaction under the proposal's run,
         so a failing step keeps none of them (unresolvable, or the step's error)
         and Revert restores the type and its relationships together. An applied
@@ -1020,7 +1023,7 @@ class ProposalService:
                         f"{len(edges)} now, {len(set(expected))} reviewed; review them again",
                     )
                 taxonomies = self._taxonomies_of(edges)
-                replacement = None
+                replacement, swap = None, False
                 if resolution.strategy is ResolutionStrategy.MOVE:
                     replacement_id: str = resolution.replacement_property_id  # type: ignore
                     replacement = self._repo.get_property_definition(replacement_id)
@@ -1028,7 +1031,9 @@ class ProposalService:
                         raise _ApplyFailed(
                             UNRESOLVABLE, f"no other relationship type {replacement_id}"
                         )
-                    misfits = inspector.misfits(replacement, edges)
+                    # A reversed replacement takes each relationship with its ends swapped.
+                    swap = reverses(self._repo.get_property_definition(target_id), replacement)
+                    misfits = inspector.misfits(replacement, edges, swap)
                     if misfits:
                         raise _ApplyFailed(
                             UNRESOLVABLE,
@@ -1040,9 +1045,10 @@ class ProposalService:
                     self._ontology.delete_relationship(edge.relationship_id)
                     moved_to = None
                     if replacement is not None:
+                        source, target = moved_ends(edge, swap)
                         moved_to = self._ontology.create_relationship(
-                            edge.source.id,
-                            edge.target.id,
+                            source.id,
+                            target.id,
                             replacement.id,
                             source_run_id=run_id,
                             attributes=edge.attributes,
@@ -1067,6 +1073,7 @@ class ProposalService:
                     strategy=resolution.strategy,
                     replacement_property_id=replacement.id if replacement else None,
                     replacement_identifier=replacement.identifier if replacement else None,
+                    reversed=swap,
                     edges=resolved,
                 )
             return target_id

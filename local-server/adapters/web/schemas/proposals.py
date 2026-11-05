@@ -165,6 +165,11 @@ class ReplacementTypeResponse(BaseModel):
     property_id: str
     identifier: str
     title: str
+    reversed: bool = Field(
+        False,
+        description="Its domain and range are the deleted type's reversed: moving re-creates "
+        "each relationship with its source and target swapped",
+    )
 
 
 class DeleteBlockersResponse(BaseModel):
@@ -176,7 +181,8 @@ class DeleteBlockersResponse(BaseModel):
     replacements: list[ReplacementTypeResponse] = Field(
         default_factory=list,
         description="Types whose domain and range accept both ends of every edge "
-        "(inheritance-aware) and that allow their attributes; empty when none does",
+        "(inheritance-aware; swapped, for a reversed type) and that allow their attributes; "
+        "empty when none does",
     )
     move_unavailable_reason: Optional[str] = Field(
         None, description="Why no type fits, when replacements is empty"
@@ -206,6 +212,11 @@ class InUseResolutionResponse(BaseModel):
     strategy: ResolutionStrategy
     replacement_property_id: Optional[str] = None
     replacement_identifier: Optional[str] = None
+    reversed: bool = Field(
+        False,
+        description="A move to a reversed type: each relationship was re-created with its "
+        "ends swapped (edges keep the original ends)",
+    )
     edges: list[ResolvedEdgeResponse] = Field(
         default_factory=list, description="The relationships moved or deleted"
     )
