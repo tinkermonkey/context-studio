@@ -2318,12 +2318,15 @@ export interface paths {
      * Resume Batch Runs
      * @description Re-queue a batch's cancelled, failed or interrupted runs that carry a stored input.
      *
+     *     Runs without a stored input are skipped (no worker could execute them) and
+     *     are not counted in resumed_count.
+     *
      *     Args:
      *         batch_id: Batch ID
      *         request: FastAPI request (for service access)
      *
      *     Returns:
-     *         Count of resumed runs
+     *         Count of resumed runs (runs without a stored input are skipped)
      *
      *     Raises:
      *         HTTPException: 404 if batch not found
@@ -8399,7 +8402,7 @@ export interface components {
       batch_id: string;
       /**
        * Resumed Count
-       * @description Number of runs resumed
+       * @description Number of runs resumed (runs without a stored input are skipped)
        */
       resumed_count: number;
       /**

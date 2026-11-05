@@ -107,8 +107,11 @@ class TestExecution:
         assert (done.items_done, done.items_total) == (5, 5)
         assert done.started_at is not None
         assert done.output_summary["status"] == "completed"
-        batch = BatchRepository(session_factory).get(run.batch_run_id)
-        assert batch.status == BatchStatus.COMPLETED
+        # The batch status is written just after the run's
+        batches = BatchRepository(session_factory)
+        batch = wait_for(
+            lambda: (b := batches.get(run.batch_run_id)).status == BatchStatus.COMPLETED and b
+        )
         assert batch.completed_at is not None
 
     def test_failed_run_records_its_error(self, session_factory):
@@ -121,8 +124,8 @@ class TestExecution:
                 lambda: (r := repo.get(run.id)).status == PipelineRunStatus.FAILED and r
             )
             assert failed.failure_reason == "LLM provider error"
-            batch = BatchRepository(session_factory).get(run.batch_run_id)
-            assert batch.status == BatchStatus.FAILED
+            batches = BatchRepository(session_factory)
+            wait_for(lambda: batches.get(run.batch_run_id).status == BatchStatus.FAILED)
         finally:
             executor.stop()
 
@@ -322,7 +325,11 @@ class TestRoutes:
         wait_for(
             lambda: client.get(f"/api/pipelines/runs/{run_id}").json()["status"] == "completed"
         )
-        assert client.get(f"/api/pipelines/batches/{batch['id']}").json()["status"] == "completed"
+        wait_for(
+            lambda: (
+                client.get(f"/api/pipelines/batches/{batch['id']}").json()["status"] == "completed"
+            )
+        )
 
     def test_run_links_the_proposal_it_produced(self, client, session_factory):
         run = client.post("/api/pipelines/no_op/run", json={"async": True}).json()

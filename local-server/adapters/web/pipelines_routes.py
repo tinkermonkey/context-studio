@@ -1134,7 +1134,7 @@ async def get_pipeline_run(
         503: {"description": "Background pipeline runs are not available"},
     },
 )
-async def cancel_pipeline_run(run_id: str, request: Request) -> PipelineRunResponse:
+def cancel_pipeline_run(run_id: str, request: Request) -> PipelineRunResponse:
     """
     Cancel a pipeline run.
 
@@ -2244,7 +2244,7 @@ async def enqueue_batch_runs(
     status_code=http_status.HTTP_200_OK,
     response_model=CancelBatchResponse,
 )
-async def cancel_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
+def cancel_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
     """
     Cancel a batch's pending runs, and those executing in the background.
 
@@ -2312,16 +2312,19 @@ async def cancel_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
     status_code=http_status.HTTP_200_OK,
     response_model=ResumeBatchResponse,
 )
-async def resume_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
+def resume_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
     """
     Re-queue a batch's cancelled, failed or interrupted runs that carry a stored input.
+
+    Runs without a stored input are skipped (no worker could execute them) and
+    are not counted in resumed_count.
 
     Args:
         batch_id: Batch ID
         request: FastAPI request (for service access)
 
     Returns:
-        Count of resumed runs
+        Count of resumed runs (runs without a stored input are skipped)
 
     Raises:
         HTTPException: 404 if batch not found

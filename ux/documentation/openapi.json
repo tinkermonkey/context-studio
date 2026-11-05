@@ -4789,7 +4789,7 @@
           "pipelines"
         ],
         "summary": "Resume Batch Runs",
-        "description": "Re-queue a batch's cancelled, failed or interrupted runs that carry a stored input.\n\nArgs:\n    batch_id: Batch ID\n    request: FastAPI request (for service access)\n\nReturns:\n    Count of resumed runs\n\nRaises:\n    HTTPException: 404 if batch not found",
+        "description": "Re-queue a batch's cancelled, failed or interrupted runs that carry a stored input.\n\nRuns without a stored input are skipped (no worker could execute them) and\nare not counted in resumed_count.\n\nArgs:\n    batch_id: Batch ID\n    request: FastAPI request (for service access)\n\nReturns:\n    Count of resumed runs (runs without a stored input are skipped)\n\nRaises:\n    HTTPException: 404 if batch not found",
         "operationId": "resume_batch_runs_api_pipelines_batches__batch_id__resume_post",
         "parameters": [
           {
@@ -15100,7 +15100,7 @@
             "type": "integer",
             "minimum": 0.0,
             "title": "Resumed Count",
-            "description": "Number of runs resumed"
+            "description": "Number of runs resumed (runs without a stored input are skipped)"
           },
           "status": {
             "type": "string",

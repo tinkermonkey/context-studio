@@ -729,6 +729,8 @@ class ResumeBatchResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     batch_id: str = Field(..., description="Batch UUID")
-    resumed_count: int = Field(..., ge=0, description="Number of runs resumed")
+    resumed_count: int = Field(
+        ..., ge=0, description="Number of runs resumed (runs without a stored input are skipped)"
+    )
     status: str = Field(..., description="Batch status after operation")
     run_counts: RunCountsResponse = Field(..., description="Run counts after operation")
