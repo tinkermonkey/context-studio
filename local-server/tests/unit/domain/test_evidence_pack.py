@@ -23,6 +23,8 @@ from domain.ontology.entities import (  # noqa: E402
     Taxonomy,
 )
 from domain.ontology.evidence import (  # noqa: E402
+    INTENT_CLIP,
+    MAX_ATTRIBUTE_PEERS,
     NO_EVIDENCE,
     ContextPolicy,
     EvidencePackBuilder,
@@ -36,11 +38,11 @@ LONG_DEFINITION = (
 )
 
 
-def _prop(repo, prop_id, domain, predicate, range_, description=None):
+def _prop(repo, prop_id, domain, predicate, range_, description=None, identifier=None):
     repo.save_property_definition(
         PropertyDefinition(
             id=prop_id,
-            identifier=f"{domain}_{predicate}_{range_}",
+            identifier=identifier or predicate,
             title=f"{domain} {predicate} {range_}",
             description=description,
             canonical_predicate=predicate,
@@ -105,11 +107,11 @@ def repo():
         )
     _prop(repo, "p1", "kitchen", "adjacent-to", "bedroom", "Shares a wall with")
     _prop(repo, "p2", "kitchen", "opens-to", "bedroom", "Has a door into")
-    _prop(repo, "p3", "bedroom", "adjacent-to", "kitchen", "Shares a wall with")
+    _prop(repo, "p3", "bedroom", "adjacent-to", "kitchen", "Shares a wall with", "beside-kitchen")
     _prop(repo, "p4", "kitchen", "contains", "sink", "Holds")
     _prop(repo, "p5", "kitchen", "connects", "kitchen", "Links two of the same")
-    _prop(repo, "p6", "bedroom", "connects", "bedroom", "Links two of the same")
-    _prop(repo, "p7", "bathroom", "adjacent-to", "bedroom", "Shares a wall with")
+    _prop(repo, "p6", "bedroom", "connects", "bedroom", "Links two of the same", "suite")
+    _prop(repo, "p7", "bathroom", "adjacent-to", "bedroom", "Shares a wall with", "ensuite")
     _attr(repo, "a1", "kitchen", "area", "integer", is_required=True, description=LONG_DEFINITION)
     _attr(repo, "a2", "bedroom", "area", "string", allowed_values=["small", "large"])
     _attr(repo, "a3", "bedroom", "windows", "integer")
@@ -214,8 +216,9 @@ class TestPairEdges:
         ]
         assert pack.text == (
             "Relationship types between kitchen, bedroom (exact list, 4 types):\n"
-            "  bedroom --[adjacent-to]--> kitchen  (adjacent-to: Shares a boundary)\n"
-            "  bedroom --[connects]--> bedroom  (connects: Joins)\n"
+            "  bedroom --[adjacent-to]--> kitchen [beside-kitchen]"
+            "  (adjacent-to: Shares a boundary)\n"
+            "  bedroom --[connects]--> bedroom [suite]  (connects: Joins)\n"
             "  kitchen --[adjacent-to]--> bedroom  (adjacent-to: Shares a boundary)\n"
             "  kitchen --[opens-to]--> bedroom  (opens-to: Has an opening into)"
         )
@@ -304,6 +307,151 @@ class TestPredicateContext:
         )
 
         assert pack.predicates == ()
+
+
+class TestSizeBounds:
+    def test_attribute_peers_are_capped_with_a_count_of_the_rest(self, repo):
+        for i in range(MAX_ATTRIBUTE_PEERS + 2):
+            repo.save_class(
+                Class(
+                    id=f"room{i:02}",
+                    concept_scheme_id="rooms",
+                    taxonomy_id="house",
+                    title=f"Room {i:02}",
+                    identifier=f"room{i:02}",
+                )
+            )
+            _attr(repo, f"ra{i}", f"room{i:02}", "area", "integer")
+
+        pack = EvidencePackBuilder(repo).build_for_attribute("kitchen", "area", ContextPolicy.NONE)
+
+        [evidence] = pack.attributes
+        assert len(evidence.peers) == MAX_ATTRIBUTE_PEERS
+        assert evidence.omitted == 4  # 29 declarers: bedroom, kitchen and 27 rooms
+        block = pack.text.split("\n\n")[0]
+        assert block.startswith("Attribute 'area' as declared across scheme rooms (29 classes):")
+        assert block.endswith("\n  (+4 more)")
+
+    def test_intent_text_is_clipped_but_the_charter_is_whole(self, repo):
+        kitchen = repo.get_class("kitchen")
+        kitchen.description = "x" * 500
+        repo.get_taxonomy("house").vision = "charter " * 200
+
+        pack = EvidencePackBuilder(repo).build("kitchen", policy=ContextPolicy.FULL)
+
+        assert pack.intent.class_definition == "x" * INTENT_CLIP
+        assert pack.intent.charter == ("charter " * 200).strip()
+
+
+class TestRenderedText:
+    def test_whitespace_is_collapsed_and_quotes_are_escaped(self, repo):
+        repo.get_concept_scheme("rooms").description = "Spaces\n\n  people   occupy."
+        _attr(
+            repo,
+            "a9",
+            "bathroom",
+            "area",
+            "integer",
+            description='The "wet"\narea,\tin  feet.',
+        )
+        _prop(repo, "p9", "kitchen", "serves", "bathroom", "Carries\n  water   to")
+
+        pack = EvidencePackBuilder(repo).build(
+            "kitchen",
+            named_class_ids=["bathroom"],
+            attributes=[("kitchen", "area")],
+            policy=ContextPolicy.SUMMARY,
+        )
+
+        assert "  Scheme rooms scope: Spaces people occupy." in pack.text
+        assert (
+            '  bathroom.area: type=integer required=false desc="The \\"wet\\" area, in feet."'
+            in (pack.text)
+        )
+        assert "(serves: Carries water to)" in pack.text
+
+    def test_identical_looking_rows_are_told_apart_by_identifier_in_a_stable_order(self, repo):
+        _prop(repo, "p0", "kitchen", "opens-to", "bedroom", "Has a door into", "pantry-door")
+
+        pack = EvidencePackBuilder(repo, CATALOG).build_for_relationship_type(
+            "p2", ContextPolicy.NONE
+        )
+
+        opens = [e for e in pack.pair.edges if e.predicate == "opens-to"]
+        assert [e.property_id for e in opens] == ["p2", "p0"]  # "opens-to" < "pantry-door"
+        assert "  kitchen --[opens-to]--> bedroom  (opens-to: Has an opening into)" in pack.text
+        assert (
+            "  kitchen --[opens-to]--> bedroom [pantry-door]  (opens-to: Has an opening into)"
+            in pack.text
+        )
+        assert pack.predicates[0].same_pair_predicates == ("adjacent-to", "opens-to", "opens-to")
+
+
+class TestNamedSelfLoops:
+    def test_named_self_loops_can_be_left_out(self, repo):
+        pack = EvidencePackBuilder(repo, include_named_self_loops=False).build(
+            "kitchen", named_class_ids=["bedroom"], policy=ContextPolicy.NONE
+        )
+
+        assert [e.property_id for e in pack.pair.edges] == ["p3", "p1", "p2"]
+
+    def test_subject_alone_still_lists_its_self_loops(self, repo):
+        pack = EvidencePackBuilder(repo, include_named_self_loops=False).build(
+            "kitchen", policy=ContextPolicy.NONE
+        )
+
+        assert [e.property_id for e in pack.pair.edges] == ["p5"]
+
+    def test_self_loop_relationship_type_does_not_repeat_the_reverse_list(self, repo):
+        pack = EvidencePackBuilder(repo, CATALOG).build_for_relationship_type(
+            "p5", ContextPolicy.NONE
+        )
+
+        assert pack.text.endswith(
+            "Relationship type kitchen --[connects]--> kitchen: predicate connects (Joins); "
+            "all predicates kitchen -> kitchen: [connects]; "
+            "reverse direction: same as above (self-loop)"
+        )
+
+
+class TestInheritedAttributes:
+    def test_subclass_reports_the_attribute_it_inherits(self, repo):
+        repo.save_class(
+            Class(
+                id="galley",
+                concept_scheme_id="rooms",
+                taxonomy_id="house",
+                title="Galley",
+                identifier="galley",
+                parent_class_id="kitchen",
+            )
+        )
+
+        pack = EvidencePackBuilder(repo).build_for_attribute("galley", "area", ContextPolicy.NONE)
+
+        galley = next(p for p in pack.attributes[0].peers if p.class_id == "galley")
+        assert (galley.inherited_from_class_id, galley.datatype, galley.is_required) == (
+            "kitchen",
+            "integer",
+            True,
+        )
+        assert "  galley.area: type=integer required=true desc=" in pack.text
+        assert pack.text.split("\n\n")[0].splitlines()[2].endswith(" (inherited from kitchen)")
+
+    def test_own_declaration_wins_over_an_ancestor(self, repo):
+        repo.get_class("bedroom").parent_class_id = "kitchen"
+
+        pack = EvidencePackBuilder(repo).build_for_attribute("kitchen", "area", ContextPolicy.NONE)
+
+        bedroom = next(p for p in pack.attributes[0].peers if p.class_id == "bedroom")
+        assert (bedroom.datatype, bedroom.inherited_from_class_id) == ("string", None)
+
+    def test_a_parent_cycle_does_not_loop(self, repo):
+        repo.get_class("bathroom").parent_class_id = "bathroom"
+
+        pack = EvidencePackBuilder(repo).build_for_attribute("kitchen", "area", ContextPolicy.NONE)
+
+        assert "bathroom" not in {p.class_id for p in pack.attributes[0].peers}
 
 
 def test_unknown_subject_raises(repo):

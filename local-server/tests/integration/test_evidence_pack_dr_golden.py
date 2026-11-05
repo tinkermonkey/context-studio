@@ -10,6 +10,27 @@ lib/intent.ts, DR main) run against the same snapshot. The facts must agree
 (relationship types between the pair with predicate meanings; the named type's
 predicate, same-pair predicates and reverse predicates); the formatting is
 Context Studio's own and is pinned separately.
+
+The attribute case does the same for the `type` attribute across the security
+layer (`DR_ATTRIBUTE_EVIDENCE`). The DR importer brings in no attribute
+definitions, so the fixture adds them from the snapshot's node schemas
+(`properties.attributes`), one per node type declaring `type`.
+
+To regenerate the DR strings, from a documentation_robotics checkout at the
+snapshot's commit (see tests/integration/fixtures/dr_spec/README.md):
+
+    mkdir /tmp/drrun && cd /tmp/drrun && echo '{"type":"module"}' > package.json
+    # schemas.ts: cli/scripts/spec-enrich/lib/schemas.ts, with its repoRoot import
+    #   replaced by `const repoRoot = () => process.env.DR_ROOT as string;`
+    # claim.ts: `import { loadNodeSchemas, loadRelationshipSchemas, loadPredicates,
+    #   type NodeSchema } from "./schemas.ts"; function allNodes() { return loadNodeSchemas(); }`,
+    #   then claimEvidence() copied verbatim from lib/intent.ts, then
+    #   `const [subject, ...ids] = process.argv.slice(2); console.log(claimEvidence(ids, subject));`
+    export DR_ROOT=<documentation_robotics checkout>   # node 24 runs .ts directly
+    node claim.ts motivation.requirement motivation.requirement.realizes.motivation.goal motivation.goal
+    node claim.ts testing.testcasesketch testing.testcasesketch.validates.testing.coveragerequirement testing.coveragerequirement
+    node claim.ts application.applicationservice application.applicationservice.realizes.business.businessservice business.businessservice
+    node claim.ts security.threat security.threat.type
 """
 
 import json
@@ -19,14 +40,17 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from uuid import uuid4
+
 import pytest
 
 from adapters.interchange.dr_relationships import dr_property_definitions
 from adapters.persistence.sqlite.connection import create_local_db_engine, create_session_factory
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from domain.ontology.entities import AttributeDefinition
 from domain.ontology.evidence import ContextPolicy, EvidencePackBuilder
-from scripts.dr_ontology_loader import import_dr_ontology
+from scripts.dr_ontology_loader import import_dr_ontology, slugify_spec_node_id
 from scripts.import_dr_model import build_import_service
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.integration.pipelines._harness.dr_spec import MODEL_DR_SPEC_VERSION, dr_spec_dir
@@ -63,36 +87,58 @@ Relationship application.applicationservice.realizes.business.businessservice: p
 }
 
 CS_TEXT = {
-    "motivation.requirement.realizes.motivation.goal": """\
-Relationship types between motivation_requirement, motivation_goal (exact list, 9 types):
-  motivation_goal --[aggregates]--> motivation_goal  (aggregates: Whole-part relationship where part can exist independently)
-  motivation_goal --[aggregates]--> motivation_requirement  (aggregates: Whole-part relationship where part can exist independently)
-  motivation_goal --[influence]--> motivation_goal  (influence: Element affects or impacts another element)
-  motivation_goal --[influence]--> motivation_requirement  (influence: Element affects or impacts another element)
-  motivation_goal --[realizes]--> motivation_goal  (realizes: Element implements or makes concrete another element)
-  motivation_goal --[specializes]--> motivation_goal  (specializes: Type-subtype relationship (inheritance))
-  motivation_requirement --[aggregates]--> motivation_goal  (aggregates: Whole-part relationship where part can exist independently)
-  motivation_requirement --[associated-with]--> motivation_goal  (associated-with: Generic relationship indicating elements are related or connected)
-  motivation_requirement --[realizes]--> motivation_goal  (realizes: Element implements or makes concrete another element)
-
-Relationship type motivation_requirement --[realizes]--> motivation_goal: predicate realizes (Element implements or makes concrete another element); all predicates motivation_requirement -> motivation_goal: [aggregates, associated-with, realizes]; reverse direction motivation_goal -> motivation_requirement: [aggregates, influence]""",
-    "testing.testcasesketch.validates.testing.coveragerequirement": """\
-Relationship types between testing_testcasesketch, testing_coveragerequirement (exact list, 6 types):
-  testing_coveragerequirement --[flows-to]--> testing_coveragerequirement  (flows-to: Data or control flows from one element to another)
-  testing_coveragerequirement --[flows-to]--> testing_testcasesketch  (flows-to: Data or control flows from one element to another)
-  testing_coveragerequirement --[references]--> testing_coveragerequirement  (references: Pointer reference without functional dependency)
-  testing_testcasesketch --[references]--> testing_coveragerequirement  (references: Pointer reference without functional dependency)
-  testing_testcasesketch --[tests]--> testing_coveragerequirement  (tests: Element validates or verifies another element)
-  testing_testcasesketch --[validates]--> testing_coveragerequirement  (validates: Test element validates that a requirement or target is satisfied)
-
-Relationship type testing_testcasesketch --[validates]--> testing_coveragerequirement: predicate validates (Test element validates that a requirement or target is satisfied); all predicates testing_testcasesketch -> testing_coveragerequirement: [references, tests, validates]; reverse direction testing_coveragerequirement -> testing_testcasesketch: [flows-to]""",
     "application.applicationservice.realizes.business.businessservice": """\
 Relationship types between application_applicationservice, business_businessservice (exact list, 1 types):
-  application_applicationservice --[realizes]--> business_businessservice  (realizes: Element implements or makes concrete another element)
+  application_applicationservice --[realizes]--> business_businessservice [applicationservice_realizes_businessservice]  (realizes: Element implements or makes concrete another element)
 
-Relationship type application_applicationservice --[realizes]--> business_businessservice: predicate realizes (Element implements or makes concrete another element); all predicates application_applicationservice -> business_businessservice: [realizes]; reverse direction business_businessservice -> application_applicationservice: [none]""",
+Relationship type application_applicationservice --[realizes]--> business_businessservice [applicationservice_realizes_businessservice]: predicate realizes (Element implements or makes concrete another element); all predicates application_applicationservice -> business_businessservice: [realizes]; reverse direction business_businessservice -> application_applicationservice: [none]""",
+    "motivation.requirement.realizes.motivation.goal": """\
+Relationship types between motivation_requirement, motivation_goal (exact list, 9 types):
+  motivation_goal --[aggregates]--> motivation_goal [goal_aggregates_goal]  (aggregates: Whole-part relationship where part can exist independently)
+  motivation_goal --[aggregates]--> motivation_requirement [goal_aggregates_requirement]  (aggregates: Whole-part relationship where part can exist independently)
+  motivation_goal --[influence]--> motivation_goal [goal_influence_goal]  (influence: Element affects or impacts another element)
+  motivation_goal --[influence]--> motivation_requirement [goal_influence_requirement]  (influence: Element affects or impacts another element)
+  motivation_goal --[realizes]--> motivation_goal [goal_realizes_goal]  (realizes: Element implements or makes concrete another element)
+  motivation_goal --[specializes]--> motivation_goal [goal_specializes_goal]  (specializes: Type-subtype relationship (inheritance))
+  motivation_requirement --[aggregates]--> motivation_goal [requirement_aggregates_goal]  (aggregates: Whole-part relationship where part can exist independently)
+  motivation_requirement --[associated-with]--> motivation_goal [requirement_associated_with_goal]  (associated-with: Generic relationship indicating elements are related or connected)
+  motivation_requirement --[realizes]--> motivation_goal [requirement_realizes_goal]  (realizes: Element implements or makes concrete another element)
+
+Relationship type motivation_requirement --[realizes]--> motivation_goal [requirement_realizes_goal]: predicate realizes (Element implements or makes concrete another element); all predicates motivation_requirement -> motivation_goal: [aggregates, associated-with, realizes]; reverse direction motivation_goal -> motivation_requirement: [aggregates, influence]""",
+    "testing.testcasesketch.validates.testing.coveragerequirement": """\
+Relationship types between testing_testcasesketch, testing_coveragerequirement (exact list, 6 types):
+  testing_coveragerequirement --[flows-to]--> testing_coveragerequirement [coveragerequirement_flows_to_coveragerequirement]  (flows-to: Data or control flows from one element to another)
+  testing_coveragerequirement --[flows-to]--> testing_testcasesketch [coveragerequirement_flows_to_testcasesketch]  (flows-to: Data or control flows from one element to another)
+  testing_coveragerequirement --[references]--> testing_coveragerequirement [coveragerequirement_references_coveragerequirement]  (references: Pointer reference without functional dependency)
+  testing_testcasesketch --[references]--> testing_coveragerequirement [testcasesketch_references_coveragerequirement]  (references: Pointer reference without functional dependency)
+  testing_testcasesketch --[tests]--> testing_coveragerequirement [testcasesketch_tests_coveragerequirement]  (tests: Element validates or verifies another element)
+  testing_testcasesketch --[validates]--> testing_coveragerequirement [testcasesketch_validates_coveragerequirement]  (validates: Test element validates that a requirement or target is satisfied)
+
+Relationship type testing_testcasesketch --[validates]--> testing_coveragerequirement [testcasesketch_validates_coveragerequirement]: predicate validates (Test element validates that a requirement or target is satisfied); all predicates testing_testcasesketch -> testing_coveragerequirement: [references, tests, validates]; reverse direction testing_coveragerequirement -> testing_testcasesketch: [flows-to]""",
 }
 
+DR_ATTRIBUTE_EVIDENCE = """\
+Attribute 'type' as declared across layer security (6 types):
+  actor.type: type=string enum[human|service|system|external-entity] required=true desc="Category of actor, per NIST AC-2 (Account Management) subject classification."
+  countermeasure.type: type=string enum[technical|operational|management|physical] required=true desc="NIST SP 800-53 control family classification: technical (hardware/software mechanisms), op"
+  evidence.type: type=string enum[log|signature|timestamp|hash|certificate|audit-trail] required=true desc="Category of evidence artifact, per NIST AU-10 (Non-repudiation)."
+  policyaction.type: type=string enum[allow|deny|log|alert|redirect|rate-limit|challenge|quarantine|notify|mask|encrypt] required=true desc="Enforcement action type applied when the parent policy rule fires."
+  secureresource.type: type=string enum[api|database|file|service|ui|stream] required=true desc="Category of protected resource, used to apply appropriate access control and audit policie"
+  validationrule.type: type=string enum[regex|range|length|enum|custom] required=true desc="Validation mechanism type, per NIST SI-10 (Information Input Validation)."
+"""
+
+CS_ATTRIBUTE_TEXT = """\
+Attribute 'type' as declared across scheme security (6 classes):
+  security_actor.type: type=string enum[human|service|system|external-entity] required=true desc="Category of actor, per NIST AC-2 (Account Management) subject classification."
+  security_countermeasure.type: type=string enum[technical|operational|management|physical] required=true desc="NIST SP 800-53 control family classification: technical (hardware/software mechanisms), op"
+  security_evidence.type: type=string enum[log|signature|timestamp|hash|certificate|audit-trail] required=true desc="Category of evidence artifact, per NIST AU-10 (Non-repudiation)."
+  security_policyaction.type: type=string enum[allow|deny|log|alert|redirect|rate-limit|challenge|quarantine|notify|mask|encrypt] required=true desc="Enforcement action type applied when the parent policy rule fires."
+  security_secureresource.type: type=string enum[api|database|file|service|ui|stream] required=true desc="Category of protected resource, used to apply appropriate access control and audit policie"
+  security_validationrule.type: type=string enum[regex|range|length|enum|custom] required=true desc="Validation mechanism type, per NIST SI-10 (Information Input Validation).\""""
+
+_ATTRIBUTE_ROW = re.compile(
+    r'^  (\w+)\.type: type=(\S+)(?: enum\[(.*)\])? required=(true|false)(?: desc="(.*)")?'
+)
 _PAIR_ROW = re.compile(r"^  (\S+)  \(([^:]+): (.*)\)$")
 _PREDICATE_LINE = re.compile(
     r"^Relationship (\S+): predicate (\S+) \((.*)\); all predicates \S+ -> \S+: \[(.*)\]; "
@@ -117,6 +163,36 @@ def _dr_facts(evidence: str) -> dict:
     }
 
 
+def _add_security_type_attributes(repo, spec_dir) -> dict[str, str]:
+    """
+    An attribute definition for `type` on each security node type that declares
+    it, from its node schema; returns every security class id -> DR type name.
+    """
+    type_by_class_id = {}
+    for path in sorted((spec_dir / "schemas" / "nodes" / "security").glob("*.node.schema.json")):
+        props = json.loads(path.read_text())["properties"]
+        spec_node_id = props["spec_node_id"]["const"]
+        cls = repo.get_by_identifier(slugify_spec_node_id(spec_node_id))
+        type_by_class_id[cls.id] = spec_node_id.split(".")[1]
+        attributes = props.get("attributes", {})
+        spec = attributes.get("properties", {}).get("type")
+        if spec is None:
+            continue
+        repo.save_attribute_definition(
+            AttributeDefinition(
+                id=str(uuid4()),
+                class_id=cls.id,
+                identifier="type",
+                title="Type",
+                datatype=spec["type"],
+                description=spec.get("description"),
+                is_required="type" in attributes.get("required", []),
+                allowed_values=[str(v) for v in spec["enum"]] if spec.get("enum") else None,
+            )
+        )
+    return type_by_class_id
+
+
 @pytest.fixture(scope="module")
 def workspace(tmp_path_factory):
     """The pinned DR spec imported into a file SQLite workspace, plus its predicate catalog."""
@@ -129,9 +205,12 @@ def workspace(tmp_path_factory):
     import_dr_ontology(
         build_import_service(session_factory, FakeEmbeddingService()), repo, spec_dir
     )
+    type_by_class_id = _add_security_type_attributes(repo, spec_dir)
     catalog = json.loads((spec_dir / "schemas" / "base" / "predicates.json").read_text())
     by_dr_id = dr_property_definitions(repo)
     return {
+        "repo": repo,
+        "type_by_class_id": type_by_class_id,
         "builder": EvidencePackBuilder(repo, catalog["predicates"]),
         "by_dr_id": by_dr_id,
         "dr_id_by_property": {prop.id: dr_id for dr_id, prop in by_dr_id.items()},
@@ -161,3 +240,34 @@ def test_pack_text_is_pinned(workspace, dr_id):
     pack = workspace["builder"].build_for_relationship_type(prop.id, ContextPolicy.NONE)
 
     assert pack.text == CS_TEXT[dr_id]
+
+
+def _threat_type_pack(workspace):
+    threat = workspace["repo"].get_by_identifier("security_threat")
+    return workspace["builder"].build_for_attribute(threat.id, "type", ContextPolicy.NONE)
+
+
+def test_attribute_facts_match_dr_claim_evidence(workspace):
+    [evidence] = _threat_type_pack(workspace).attributes
+    type_of = workspace["type_by_class_id"]
+
+    peers = sorted(
+        (
+            type_of[p.class_id],
+            p.datatype,
+            "|".join(p.allowed_values or ()),
+            str(p.is_required).lower(),
+            p.definition,
+        )
+        for p in evidence.peers
+    )
+    expected = sorted(
+        _ATTRIBUTE_ROW.match(row).groups(default="")
+        for row in DR_ATTRIBUTE_EVIDENCE.splitlines()[1:]
+    )
+    assert peers == expected
+    assert evidence.omitted == 0
+
+
+def test_attribute_text_is_pinned(workspace):
+    assert _threat_type_pack(workspace).text == CS_ATTRIBUTE_TEXT

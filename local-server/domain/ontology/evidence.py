@@ -6,9 +6,10 @@ Context Studio's ontology, for any taxonomy. The pack is built by deterministic
 lookups (no LLM) from the ids a decision names:
 
 - attribute (class, identifier) -> how every class in that class's scheme
-  declares the attribute
+  declares the attribute, its own or inherited from an ancestor class
 - classes (subject + named)     -> every relationship type between any two of
-  them, both directions (the subject's own self-loops only when it is alone)
+  them, both directions (the subject's own self-loops only when it is alone;
+  the named classes' self-loops unless `include_named_self_loops=False`)
 - relationship type ids         -> the predicate's meaning, every predicate
   joining the same pair and the reverse-direction predicates
 
@@ -16,21 +17,29 @@ Plus the design intent under a context policy: `summary` gives the taxonomy
 summary, the scheme scope note and the subject class's definition; `full` adds
 the taxonomy's charter (its vision); `none` gives no intent.
 
+Size: rendered text is whitespace-collapsed; attribute definitions are clipped
+to `DEFINITION_CLIP` characters, the taxonomy summary, scope note and class
+definition to `INTENT_CLIP`, and attribute peers to `MAX_ATTRIBUTE_PEERS` rows.
+The charter on `full` is included whole and is unbounded.
+
 Predicate meanings come from an optional predicate catalog (DR's is the dr_spec
 taxonomy's `ExternalReference(documentation_robotics, "spec").metadata.predicates`);
 without one, a relationship type's own description is its meaning.
 """
 
+import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from .entities import Class, PropertyDefinition
+from .entities import AttributeDefinition, Class, PropertyDefinition
 from .exceptions import EntityNotFoundError
 from .ports import OntologyRepository
 
 DEFINITION_CLIP = 90
+INTENT_CLIP = 300
+MAX_ATTRIBUTE_PEERS = 25
 NO_EVIDENCE = "(no structured evidence for the named ids)"
 
 
@@ -56,7 +65,7 @@ class IntentEvidence:
 
 @dataclass(frozen=True)
 class AttributePeer:
-    """One class's declaration of an attribute."""
+    """One class's declaration of an attribute (its own, or an ancestor's)."""
 
     class_id: str
     class_label: str
@@ -64,16 +73,19 @@ class AttributePeer:
     allowed_values: tuple[str, ...] | None
     is_required: bool
     definition: str | None
+    inherited_from_class_id: str | None = None
+    inherited_from_label: str | None = None
 
 
 @dataclass(frozen=True)
 class AttributeEvidence:
-    """How every class in a scheme declares one attribute."""
+    """How the classes in a scheme declare one attribute (at most MAX_ATTRIBUTE_PEERS)."""
 
     attribute_identifier: str
     concept_scheme_id: str
     scheme_label: str
     peers: tuple[AttributePeer, ...]
+    omitted: int = 0
 
 
 @dataclass(frozen=True)
@@ -81,6 +93,7 @@ class EdgeEvidence:
     """One relationship type with its predicate's meaning."""
 
     property_id: str
+    identifier: str
     domain_class_id: str
     domain_label: str
     predicate: str
@@ -128,8 +141,14 @@ def _predicate(prop: PropertyDefinition) -> str:
     return prop.canonical_predicate or prop.identifier
 
 
-def _clip(text: str | None) -> str | None:
-    return text[:DEFINITION_CLIP] if text else None
+def _clip(text: str | None, limit: int | None = None) -> str | None:
+    """`text` on one line (whitespace collapsed), cut to `limit` characters; None if empty."""
+    flat = " ".join(text.split()) if text else ""
+    return (flat[:limit] if limit else flat) or None
+
+
+def _edge_sort_key(edge: EdgeEvidence) -> tuple[str, ...]:
+    return (edge.domain_label, edge.predicate, edge.range_label, edge.identifier, edge.property_id)
 
 
 class EvidencePackBuilder:
@@ -139,6 +158,7 @@ class EvidencePackBuilder:
         self,
         repo: OntologyRepository,
         predicate_catalog: Mapping[str, Mapping[str, Any]] | None = None,
+        include_named_self_loops: bool = True,
     ) -> None:
         """
         Args:
@@ -146,9 +166,13 @@ class EvidencePackBuilder:
             predicate_catalog: Optional predicate id -> {"description", ...}. When
                 given, it alone supplies predicate meanings (as in DR); otherwise
                 a relationship type's description is its meaning.
+            include_named_self_loops: Whether the pair section lists the named
+                classes' self-loops. True matches DR's claimEvidence; the
+                subject's own self-loops are listed only when it is alone.
         """
         self._repo = repo
         self._catalog = predicate_catalog
+        self._include_named_self_loops = include_named_self_loops
 
     def build_for_relationship_type(
         self, property_id: str, policy: ContextPolicy = ContextPolicy.SUMMARY
@@ -231,13 +255,14 @@ class EvidencePackBuilder:
             return None
         taxonomy = self._repo.get_taxonomy(subject.taxonomy_id)
         scheme = self._repo.get_concept_scheme(subject.concept_scheme_id)
+        charter = taxonomy.vision if taxonomy and policy is ContextPolicy.FULL else None
         return IntentEvidence(
-            taxonomy_summary=taxonomy.description if taxonomy else None,
-            charter=taxonomy.vision if taxonomy and policy is ContextPolicy.FULL else None,
+            taxonomy_summary=_clip(taxonomy.description, INTENT_CLIP) if taxonomy else None,
+            charter=charter.strip() or None if charter else None,
             scheme_label=_label(scheme) if scheme else subject.concept_scheme_id,
-            scheme_scope_note=scheme.description if scheme else None,
+            scheme_scope_note=_clip(scheme.description, INTENT_CLIP) if scheme else None,
             class_label=_label(subject),
-            class_definition=subject.description,
+            class_definition=_clip(subject.description, INTENT_CLIP),
         )
 
     def _attribute(self, class_id: str, identifier: str) -> AttributeEvidence | None:
@@ -246,45 +271,58 @@ class EvidencePackBuilder:
             return None
         scheme = self._repo.get_concept_scheme(owner.concept_scheme_id)
         siblings = self._repo.list_classes(concept_scheme_id=owner.concept_scheme_id, limit=None)
+        declarations = _Declarations(self._repo, identifier)
         peers = []
-        for cls in sorted(siblings, key=_label):
-            for attr in self._repo.list_attribute_definitions(class_id=cls.id, limit=None):
-                if attr.identifier != identifier:
-                    continue
-                peers.append(
-                    AttributePeer(
-                        class_id=cls.id,
-                        class_label=_label(cls),
-                        datatype=str(getattr(attr.datatype, "value", attr.datatype)),
-                        allowed_values=tuple(attr.allowed_values) if attr.allowed_values else None,
-                        is_required=attr.is_required,
-                        definition=_clip(attr.description),
-                    )
+        for cls in sorted(siblings, key=lambda c: (_label(c), c.id)):
+            found = declarations.of(cls)
+            if found is None:
+                continue
+            attr, declarer = found
+            inherited = declarer.id != cls.id
+            peers.append(
+                AttributePeer(
+                    class_id=cls.id,
+                    class_label=_label(cls),
+                    datatype=str(getattr(attr.datatype, "value", attr.datatype)),
+                    allowed_values=tuple(attr.allowed_values) if attr.allowed_values else None,
+                    is_required=attr.is_required,
+                    definition=_clip(attr.description, DEFINITION_CLIP),
+                    inherited_from_class_id=declarer.id if inherited else None,
+                    inherited_from_label=_label(declarer) if inherited else None,
                 )
+            )
         return AttributeEvidence(
             attribute_identifier=identifier,
             concept_scheme_id=owner.concept_scheme_id,
             scheme_label=_label(scheme) if scheme else owner.concept_scheme_id,
-            peers=tuple(peers),
+            peers=tuple(peers[:MAX_ATTRIBUTE_PEERS]),
+            omitted=max(0, len(peers) - MAX_ATTRIBUTE_PEERS),
         )
 
     def _pair(
         self, subject_id: str, classes: dict[str, Class], outgoing: "_OutgoingIndex"
     ) -> PairEvidence | None:
         alone = len(classes) == 1
+
+        def listed(prop: PropertyDefinition) -> bool:
+            if prop.range_class_id not in classes:
+                return False
+            if alone or prop.domain_class_id != prop.range_class_id:
+                return True
+            return prop.domain_class_id != subject_id and self._include_named_self_loops
+
         edges = [
             self._edge(prop, classes)
             for class_id in classes
             for prop in outgoing.of(class_id)
-            if prop.range_class_id in classes
-            and (alone or not (prop.domain_class_id == subject_id == prop.range_class_id))
+            if listed(prop)
         ]
         if alone and not edges:
             return None
         return PairEvidence(
             class_ids=tuple(classes),
             class_labels=tuple(_label(cls) for cls in classes.values()),
-            edges=tuple(sorted(edges, key=lambda e: (e.domain_label, e.predicate, e.range_label))),
+            edges=tuple(sorted(edges, key=_edge_sort_key)),
         )
 
     def _predicate_context(
@@ -320,12 +358,13 @@ class EvidencePackBuilder:
             meaning = prop.description
         return EdgeEvidence(
             property_id=prop.id,
+            identifier=prop.identifier,
             domain_class_id=prop.domain_class_id or "",
             domain_label=_label(classes[prop.domain_class_id]),
             predicate=predicate,
             range_class_id=prop.range_class_id or "",
             range_label=_label(classes[prop.range_class_id]),
-            meaning=meaning,
+            meaning=_clip(meaning),
         )
 
 
@@ -344,6 +383,38 @@ class _OutgoingIndex:
         return self._by_domain[class_id]
 
 
+class _Declarations:
+    """Where a class gets one attribute: itself, else its nearest ancestor declaring it."""
+
+    def __init__(self, repo: OntologyRepository, identifier: str) -> None:
+        self._repo = repo
+        self._identifier = identifier
+        self._own: dict[str, AttributeDefinition | None] = {}
+
+    def _declared_by(self, class_id: str) -> AttributeDefinition | None:
+        if class_id not in self._own:
+            self._own[class_id] = next(
+                (
+                    attr
+                    for attr in self._repo.list_attribute_definitions(class_id=class_id, limit=None)
+                    if attr.identifier == self._identifier
+                ),
+                None,
+            )
+        return self._own[class_id]
+
+    def of(self, cls: Class) -> tuple[AttributeDefinition, Class] | None:
+        seen: set[str] = set()
+        current: Class | None = cls
+        while current is not None and current.id not in seen:
+            seen.add(current.id)
+            if (attr := self._declared_by(current.id)) is not None:
+                return attr, current
+            parent_id = current.parent_class_id
+            current = self._repo.get_class(parent_id) if parent_id else None
+        return None
+
+
 def _render_intent(intent: IntentEvidence) -> str:
     lines = ["Design intent:"]
     if intent.taxonomy_summary:
@@ -353,7 +424,7 @@ def _render_intent(intent: IntentEvidence) -> str:
     if intent.class_definition:
         lines.append(f"  Class {intent.class_label} definition: {intent.class_definition}")
     if intent.charter:
-        lines.append(f"  Charter:\n{intent.charter.strip()}")
+        lines.append(f"  Charter:\n{intent.charter}")
     return "\n".join(lines) if len(lines) > 1 else ""
 
 
@@ -361,19 +432,30 @@ def _render_attribute(evidence: AttributeEvidence) -> str:
     rows = []
     for peer in evidence.peers:
         enum = f" enum[{'|'.join(peer.allowed_values)}]" if peer.allowed_values else ""
-        definition = f' desc="{peer.definition}"' if peer.definition else " (no description)"
+        definition = (
+            f" desc={json.dumps(peer.definition, ensure_ascii=False)}"
+            if peer.definition
+            else " (no description)"
+        )
+        inherited = (
+            f" (inherited from {peer.inherited_from_label})" if peer.inherited_from_label else ""
+        )
         rows.append(
             f"  {peer.class_label}.{evidence.attribute_identifier}: type={peer.datatype}{enum}"
-            f" required={str(peer.is_required).lower()}{definition}"
+            f" required={str(peer.is_required).lower()}{definition}{inherited}"
         )
+    if evidence.omitted:
+        rows.append(f"  (+{evidence.omitted} more)")
+    count = len(evidence.peers) + evidence.omitted
     return (
         f"Attribute '{evidence.attribute_identifier}' as declared across scheme "
-        f"{evidence.scheme_label} ({len(rows)} classes):\n" + ("\n".join(rows) or "  (none)")
+        f"{evidence.scheme_label} ({count} classes):\n" + ("\n".join(rows) or "  (none)")
     )
 
 
 def _render_edge(edge: EdgeEvidence) -> str:
-    return f"{edge.domain_label} --[{edge.predicate}]--> {edge.range_label}"
+    named = f" [{edge.identifier}]" if edge.identifier != edge.predicate else ""
+    return f"{edge.domain_label} --[{edge.predicate}]--> {edge.range_label}{named}"
 
 
 def _render_pair(pair: PairEvidence) -> str:
@@ -386,12 +468,17 @@ def _render_pair(pair: PairEvidence) -> str:
 
 def _render_predicate(context: PredicateContext) -> str:
     edge = context.edge
+    if edge.domain_class_id == edge.range_class_id:
+        reverse = "reverse direction: same as above (self-loop)"
+    else:
+        reverse = (
+            f"reverse direction {edge.range_label} -> {edge.domain_label}: "
+            f"[{', '.join(context.reverse_predicates) or 'none'}]"
+        )
     return (
         f"Relationship type {_render_edge(edge)}: predicate {edge.predicate} "
         f"({edge.meaning or '?'}); all predicates {edge.domain_label} -> {edge.range_label}: "
-        f"[{', '.join(context.same_pair_predicates)}]; reverse direction "
-        f"{edge.range_label} -> {edge.domain_label}: "
-        f"[{', '.join(context.reverse_predicates) or 'none'}]"
+        f"[{', '.join(context.same_pair_predicates)}]; {reverse}"
     )
 
 
