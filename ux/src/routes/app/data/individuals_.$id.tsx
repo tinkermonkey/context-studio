@@ -37,6 +37,12 @@ interface Endpoint {
   classId?: string;
 }
 
+/** An attribute value as text: an array or object attribute's value as JSON. */
+function dataValueText(value: unknown): string {
+  if (value === null || value === undefined) return "—";
+  return typeof value === "object" ? JSON.stringify(value) : String(value);
+}
+
 const dataPropertyColumns: Column<DataPropertyValueResponse>[] = [
   {
     key: "property_identifier",
@@ -44,7 +50,7 @@ const dataPropertyColumns: Column<DataPropertyValueResponse>[] = [
     width: "220px",
     render: (value) => <span className="mono">{value as string}</span>,
   },
-  { key: "value", label: "Value", render: (value) => String(value ?? "—") },
+  { key: "value", label: "Value", render: (value) => dataValueText(value) },
   {
     key: "datatype",
     label: "Type",

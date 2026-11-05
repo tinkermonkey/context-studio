@@ -702,3 +702,21 @@ class TestMoveByPair:
 
         assert InUseResolution.from_json(op.resolution.to_json()) == op.resolution
         assert InUseResolution.from_json({"strategy": "delete"}).reversed is False
+
+    def test_a_reversed_move_is_stale_once_the_deleted_types_pair_changes(
+        self, service, graph, repo, ontology
+    ):
+        reversed_type = add_reversed_type(ontology, graph)
+        proposal = propose_delete(service, graph)
+        op_id = the_op(proposal).id
+        ontology.update_property_definition(
+            graph["triggers_function"], range_class_id=graph["process"], update_range_class_id=True
+        )
+        resolution = InUseResolution(strategy=MOVE, replacement_property_id=reversed_type)
+
+        op = the_op(service.apply(proposal.id, [op_id], resolutions={op_id: resolution}))
+
+        assert op.status is OperationStatus.FAILED
+        assert op.reason == "target_changed: range_class_id changed since proposed"
+        assert len(edges_of(repo, graph["triggers_function"])) == 2
+        assert edges_of(repo, reversed_type) == []

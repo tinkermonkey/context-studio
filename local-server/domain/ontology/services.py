@@ -2608,6 +2608,7 @@ class OntologyService:
                 title=title,
                 class_ids=class_ids_list,
                 external_references=_serialize_external_references(individual.external_references),
+                data_properties=_serialize_data_properties(individual.data_properties),
             )
         )
         if failures:

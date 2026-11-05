@@ -6,6 +6,7 @@ included, and their datatypes.
 
 import pytest
 
+from domain.ontology.events import IndividualCreated
 from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import DataPropertyValue
 from domain.versioning.exceptions import ProposalValidationError
@@ -63,8 +64,8 @@ def house(ontology):
     ontology.update_individual(
         drill.id,
         data_properties=[
-            DataPropertyValue("brand", "Bosch", "string"),
-            DataPropertyValue("count", 1, "integer"),
+            DataPropertyValue("brand", "Bosch", "xsd:string"),
+            DataPropertyValue("count", 1, "xsd:integer"),
         ],
     )
     return {
@@ -121,10 +122,10 @@ class TestCreate:
 
         assert applied.status is OperationStatus.APPLIED, applied.reason
         assert values(ontology, applied.result_entity_id) == {
-            "brand": ("Makita", "string"),
-            "count": (2, "integer"),
-            "powered": (True, "boolean"),
-            "size": ("M", "string"),
+            "brand": ("Makita", "xsd:string"),
+            "count": (2, "xsd:integer"),
+            "powered": (True, "xsd:boolean"),
+            "size": ("M", "xsd:string"),
         }
 
     def test_an_attribute_the_classes_dont_have_fails_with_a_clear_reason(self, service, house):
@@ -191,8 +192,8 @@ class TestCreate:
         statuses = [o.status for o in proposal.operations]
         assert statuses[:3] == [OperationStatus.APPLIED] * 3
         assert values(ontology, proposal.operations[2].result_entity_id) == {
-            "rungs": (3, "integer"),
-            "brand": ("Werner", "string"),
+            "rungs": (3, "xsd:integer"),
+            "brand": ("Werner", "xsd:string"),
         }
         bad = proposal.operations[3]
         assert bad.status is OperationStatus.FAILED
@@ -229,9 +230,9 @@ class TestUpdate:
 
         assert applied.status is OperationStatus.APPLIED, applied.reason
         assert values(ontology, house["drill"]) == {
-            "brand": ("Bosch", "string"),
-            "count": (1, "integer"),
-            "powered": (True, "boolean"),
+            "brand": ("Bosch", "xsd:string"),
+            "count": (1, "xsd:integer"),
+            "powered": (True, "xsd:boolean"),
         }
 
     def test_changing_or_removing_a_value_is_editorial(self, service, house, ontology):
@@ -243,7 +244,7 @@ class TestUpdate:
         assert op.base == {"data_properties": {"brand": "Bosch"}}
 
         apply_all(service, proposal)
-        assert values(ontology, house["drill"])["brand"] == ("DeWalt", "string")
+        assert values(ontology, house["drill"])["brand"] == ("DeWalt", "xsd:string")
 
     def test_changing_or_removing_a_required_value_is_breaking(self, service, house, ontology):
         for data in ({"count": 3}, {"count": None}):
@@ -260,7 +261,7 @@ class TestUpdate:
         retype = update(1, house["drill"], {"floor": 2}, class_ids=[house["tool"], house["place"]])
         applied = apply_all(service, propose(service, house, retype)).operations[0]
         assert applied.status is OperationStatus.APPLIED, applied.reason
-        assert values(ontology, house["drill"])["floor"] == (2, "integer")
+        assert values(ontology, house["drill"])["floor"] == (2, "xsd:integer")
 
         with pytest.raises(ProposalValidationError) as excinfo:
             propose(
@@ -286,7 +287,7 @@ class TestUpdate:
             house["drill"],
             data_properties=[
                 *ontology.get_individual(house["drill"]).data_properties,
-                DataPropertyValue("colour", "red", "string"),
+                DataPropertyValue("colour", "red", "xsd:string"),
             ],
         )
         proposal = propose(service, house, update(1, house["drill"], {"colour": None}))
@@ -298,13 +299,13 @@ class TestUpdate:
         current = ontology.get_individual(house["drill"]).data_properties
         ontology.update_individual(
             house["drill"],
-            data_properties=[current[0], DataPropertyValue("count", 5, "integer")],
+            data_properties=[current[0], DataPropertyValue("count", 5, "xsd:integer")],
         )
         assert service.stale_operation_ids(proposal) == set()
 
         ontology.update_individual(
             house["drill"],
-            data_properties=[*current, DataPropertyValue("powered", False, "boolean")],
+            data_properties=[*current, DataPropertyValue("powered", False, "xsd:boolean")],
         )
         assert service.stale_operation_ids(proposal) == {proposal.operations[0].id}
         applied = apply_all(service, proposal).operations[0]
@@ -324,3 +325,36 @@ class TestUpdate:
         assert applied.status is OperationStatus.FAILED
         assert applied.reason == "error: data_properties 'powered' is string, so True doesn't fit"
         assert "powered" not in values(ontology, house["drill"])
+
+
+class TestReviewRound:
+    def test_allowed_values_apply_to_numbers_and_booleans_by_their_json_text(
+        self, service, house, ontology
+    ):
+        ontology.create_attribute_definition(
+            house["tool"], "voltage", "Voltage", "integer", allowed_values=["12", "18"]
+        )
+        ontology.create_attribute_definition(
+            house["tool"], "cordless", "Cordless", "boolean", allowed_values=["true"]
+        )
+        proposal = propose(
+            service, house, update(1, house["drill"], {"voltage": 18, "cordless": True})
+        )
+        assert apply_all(service, proposal).operations[0].status is OperationStatus.APPLIED
+
+        for data, expected in (
+            ({"voltage": 24}, "data_properties 'voltage' allows only ['12', '18'], not [24]"),
+            ({"cordless": False}, "data_properties 'cordless' allows only ['true'], not [False]"),
+        ):
+            with pytest.raises(ProposalValidationError) as excinfo:
+                propose(service, house, update(1, house["drill"], data))
+            assert problems(excinfo) == [(1, "invalid", expected)]
+
+    def test_the_created_event_carries_the_values(self, service, house, ontology):
+        proposal = propose(service, house, create(1, [house["tool"]], "Saw", {"brand": "Makita"}))
+        apply_all(service, proposal)
+
+        created = ontology._event_publisher.get_events_of_type(IndividualCreated)[-1]
+        assert created.data_properties == [
+            {"property_identifier": "brand", "value": "Makita", "datatype": "xsd:string"}
+        ]

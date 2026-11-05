@@ -27,6 +27,7 @@ attribute.
 
 from __future__ import annotations
 
+import json
 import logging
 import threading
 from contextlib import nullcontext
@@ -142,6 +143,15 @@ _DATATYPE_TYPES: dict[DataType, tuple[type, ...]] = {
     DataType.BOOLEAN: (bool,),
     DataType.ARRAY: (list,),
     DataType.OBJECT: (dict,),
+}
+# The type hint a stored value carries, as the domain's examples write it
+# (xsd for scalars; rdf:JSON, RDF 1.1's JSON literal, for arrays and objects).
+_DATATYPE_HINTS: dict[DataType, str] = {
+    DataType.STRING: "xsd:string",
+    DataType.INTEGER: "xsd:integer",
+    DataType.BOOLEAN: "xsd:boolean",
+    DataType.ARRAY: "rdf:JSON",
+    DataType.OBJECT: "rdf:JSON",
 }
 
 # Id fields and the kinds of entity they may point at.
@@ -312,9 +322,14 @@ def _value_problem(attribute: AttributeDefinition, value: Any) -> str | None:
     if wrong_type:
         return f"is {datatype.value}, so {value!r} doesn't fit"
     allowed = attribute.allowed_values
-    if allowed and isinstance(value, (str, list)):
+    if allowed and not isinstance(value, dict):
+        # Allowed values are text: a number or boolean matches its JSON text ("3", "true").
         items = value if isinstance(value, list) else [value]
-        unknown = [item for item in items if item not in allowed]
+        unknown = [
+            item
+            for item in items
+            if (item if isinstance(item, str) else json.dumps(item)) not in allowed
+        ]
         if unknown:
             return f"allows only {allowed}, not {unknown}"
     return None
@@ -856,7 +871,7 @@ class ProposalService:
             if value is None:
                 by_key.pop(key, None)
             else:
-                datatype = DataType(attributes[key].datatype).value
+                datatype = _DATATYPE_HINTS[DataType(attributes[key].datatype)]
                 by_key[key] = DataPropertyValue(key, value, datatype)
         return list(by_key.values())
 
