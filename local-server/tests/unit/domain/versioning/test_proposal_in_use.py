@@ -492,7 +492,7 @@ class TestResolution:
 class TestInspector:
     def test_ancestors_follow_parents_without_looping(self, repo, graph):
         inspector = InUseInspector(repo)
-        assert inspector._ancestors_of(graph["sync_event"]) == {graph["sync_event"], graph["event"]}
+        assert inspector.ancestors_of(graph["sync_event"]) == {graph["sync_event"], graph["event"]}
 
 
 class TestReviewFindings:

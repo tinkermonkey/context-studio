@@ -321,9 +321,9 @@ class InUseInspector:
     def _accepts(self, class_id: str | None, end: EdgeEnd) -> bool:
         if class_id is None:
             return True
-        return any(class_id in self._ancestors_of(c) for c in end.class_ids)
+        return any(class_id in self.ancestors_of(c) for c in end.class_ids)
 
-    def _ancestors_of(self, class_id: str) -> frozenset[str]:
+    def ancestors_of(self, class_id: str) -> frozenset[str]:
         """The class and every class above it."""
         if class_id not in self._ancestors:
             seen: list[str] = []

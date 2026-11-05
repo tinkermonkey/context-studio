@@ -447,7 +447,13 @@ async def get_approval_policy(
     taxonomy_id: str,
     service: ApprovalPolicyService = Depends(get_approval_policy_service),
 ) -> ApprovalPolicyResponse:
-    """The taxonomy's approval policy; empty (nothing auto-applies) if none is set."""
+    """
+    The taxonomy's approval policy; empty (nothing auto-applies) if none is set.
+
+    A rule naming a class matches entities typed by it or any subclass of it:
+    individuals, attributes, the class itself, class creates under it (by the
+    proposed parent) and relationships (by the source's and target's classes).
+    """
     try:
         policy = await run_sync_in_executor(service.get, taxonomy_id)
     except Exception as exc:
@@ -472,7 +478,9 @@ async def set_approval_policy(
     Operations proposed afterwards apply as soon as they are proposed, under the
     proposal's run, when they reach min_probability and matching rules cover
     every class their entity will have (a rule matches when every key it sets
-    does; one without a class covers any). Never auto-applied: breaking
+    does; one without a class covers any, and one naming a class covers its
+    subclasses, class creates under it and relationships between entities of
+    it; see ApprovalPolicyResponse). Never auto-applied: breaking
     operations, deletes, taxonomy creates, changes to the taxonomy's vision,
     property-definition changes, and anything that touches or points at an
     entity outside this taxonomy.

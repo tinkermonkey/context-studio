@@ -500,8 +500,11 @@ class AutoApplyRuleSchema(BaseModel):
     class_: Optional[str] = Field(
         None,
         alias="class",
-        description="Only entities typed by this class (id or identifier): an individual's "
-        "classes, an attribute's class, or the class itself",
+        description="Only entities typed by this class (id or identifier) or a subclass of "
+        "it: an individual's classes (for a create, the class_ids it is given), an "
+        "attribute's class, the class itself (for a class create, its proposed parent), or "
+        "the classes of a relationship's source and target. Every class an entity is typed "
+        "by must be covered, by a rule naming it or an ancestor, or by a rule with no class",
     )
     scope: Optional[ChangeScope] = Field(None, description="Only this scope")
 
@@ -526,7 +529,16 @@ class ApprovalPolicyRequest(BaseModel):
 
 
 class ApprovalPolicyResponse(BaseModel):
-    """A taxonomy's approval policy; empty (nothing auto-applies) until one is set."""
+    """
+    A taxonomy's approval policy; empty (nothing auto-applies) until one is set.
+
+    A rule naming a class matches an operation on an entity typed by that class
+    or any subclass of it: an individual (its current classes plus any it is
+    given; for a create, its class_ids), an attribute (its class), a class (the
+    class itself; for a create, its proposed parent, so a top-level class create
+    matches only rules without a class) or a relationship (the classes of its
+    source and of its target). Every class must be covered.
+    """
 
     taxonomy_id: str
     auto_apply: list[AutoApplyRuleSchema]

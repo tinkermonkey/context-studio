@@ -704,3 +704,261 @@ class TestApprovalPolicyService:
         with pytest.raises(ValueError):
             svc.set(house["taxonomy"], {"auto_apply": [{"op": "replace"}]})
         assert policies.policies == {}
+
+
+# ------------------------------------------- class rules follow inheritance (#1414)
+
+
+@pytest.fixture()
+def chores(ontology, house):
+    """Under House activity: Cleaning, and under that Dusting; a Resource class beside them."""
+    cleaning = ontology.create_class(
+        house["scheme"], "Cleaning", identifier="cleaning", parent_class_id=house["activity"]
+    )
+    dusting = ontology.create_class(
+        house["scheme"], "Dusting", identifier="dusting", parent_class_id=cleaning.id
+    )
+    resource = ontology.create_class(house["scheme"], "Resource", identifier="resource")
+    mop = ontology.create_individual(dusting.id, "Mop the floor")
+    cook = ontology.create_individual(house["activity"], "Cook")
+    broom = ontology.create_individual(resource.id, "Broom")
+    requires = ontology.create_property_definition(
+        "requires", "requires", domain_class_id=house["activity"], range_class_id=resource.id
+    )
+    follows = ontology.create_property_definition("follows", "follows")
+    return {
+        "cleaning": cleaning.id,
+        "dusting": dusting.id,
+        "resource": resource.id,
+        "mop": mop.id,
+        "cook": cook.id,
+        "broom": broom.id,
+        "requires": requires.id,
+        "follows": follows.id,
+    }
+
+
+def rules(house, *rule_dicts):
+    return ApprovalPolicy.from_rules(house["taxonomy"], {"auto_apply": list(rule_dicts)})
+
+
+class TestClassRulesFollowInheritance:
+    def test_an_individual_of_a_subclass_is_covered_by_its_ancestors_rule(
+        self, service, policies, house, chores
+    ):
+        policies.save(ApprovalPolicy.from_rules(house["taxonomy"], HOUSE_RULES))
+        drafts = [
+            OperationDraft(
+                1,
+                T.CREATE,
+                K.INDIVIDUAL,
+                fields={"class_ids": [chores["dusting"]], "title": "Dust"},
+            ),
+            OperationDraft(
+                2,
+                T.CREATE,
+                K.INDIVIDUAL,
+                fields={"class_ids": [chores["resource"]], "title": "Bucket"},
+            ),
+        ]
+        proposal = service.propose(house["taxonomy"], "Chores", drafts, ProposalSource.MCP)
+        # Dusting is a Cleaning, which is a House activity; a Resource is not.
+        assert statuses(proposal) == {1: APPLIED, 2: PENDING}
+
+    def test_an_update_of_a_subclass_individual_is_covered_by_identifier_or_id(
+        self, service, policies, house, chores
+    ):
+        drafts = [OperationDraft(1, T.UPDATE, K.INDIVIDUAL, chores["mop"], fields={"title": "Mop"})]
+        for key in ("house_activity", house["activity"]):
+            policies.save(rules(house, {"op": "update", "kind": "individual", "class": key}))
+            proposal = service.propose(house["taxonomy"], "Rename", drafts, ProposalSource.MCP)
+            assert statuses(proposal) == {1: APPLIED}
+
+    def test_a_rule_on_a_subclass_doesnt_cover_its_parent(self, service, policies, house, chores):
+        policies.save(rules(house, {"op": "update", "kind": "individual", "class": "cleaning"}))
+        drafts = [
+            OperationDraft(1, T.UPDATE, K.INDIVIDUAL, chores["cook"], fields={"title": "Bake"}),
+            OperationDraft(2, T.UPDATE, K.INDIVIDUAL, chores["mop"], fields={"title": "Mop"}),
+        ]
+        proposal = service.propose(house["taxonomy"], "Rename", drafts, ProposalSource.MCP)
+        assert statuses(proposal) == {1: PENDING, 2: APPLIED}
+
+    def test_a_class_create_matches_by_its_proposed_parent(
+        self, service, policies, house, chores, ontology
+    ):
+        policies.save(rules(house, {"op": "create", "kind": "class", "class": "house_activity"}))
+        scheme = house["scheme"]
+        drafts = [
+            OperationDraft(
+                1,
+                T.CREATE,
+                K.CLASS,
+                ref="laundry",
+                fields={
+                    "concept_scheme_id": scheme,
+                    "title": "Laundry",
+                    "parent_class_id": house["activity"],
+                },
+            ),
+            OperationDraft(
+                2,
+                T.CREATE,
+                K.CLASS,
+                fields={
+                    "concept_scheme_id": scheme,
+                    "title": "Polishing",
+                    "parent_class_id": chores["dusting"],
+                },
+            ),
+            # Under a class the proposal creates, itself under House activity.
+            OperationDraft(
+                3,
+                T.CREATE,
+                K.CLASS,
+                fields={
+                    "concept_scheme_id": scheme,
+                    "title": "Ironing",
+                    "parent_class_id": "$laundry",
+                },
+            ),
+            OperationDraft(
+                4,
+                T.CREATE,
+                K.CLASS,
+                fields={
+                    "concept_scheme_id": scheme,
+                    "title": "Tool",
+                    "parent_class_id": chores["resource"],
+                },
+            ),
+            # At the top of the scheme: no parent, so no class rule names it.
+            OperationDraft(
+                5, T.CREATE, K.CLASS, fields={"concept_scheme_id": scheme, "title": "Mood"}
+            ),
+        ]
+        proposal = service.propose(house["taxonomy"], "Classes", drafts, ProposalSource.MCP)
+
+        assert statuses(proposal) == {1: APPLIED, 2: APPLIED, 3: APPLIED, 4: PENDING, 5: PENDING}
+        ironing = ontology.get_class(proposal.operations[2].result_entity_id)
+        assert ironing.parent_class_id == proposal.operations[0].result_entity_id
+
+    def test_a_relationship_between_instances_of_a_named_class(
+        self, service, policies, house, chores
+    ):
+        policies.save(
+            rules(house, {"op": "create", "kind": "relationship", "class": "house_activity"})
+        )
+        follows = chores["follows"]
+        drafts = [
+            OperationDraft(
+                1,
+                T.CREATE,
+                K.RELATIONSHIP,
+                fields={
+                    "source_id": chores["mop"],
+                    "target_id": chores["cook"],
+                    "property_definition_id": follows,
+                },
+            ),
+            # The target is a Resource: not covered.
+            OperationDraft(
+                2,
+                T.CREATE,
+                K.RELATIONSHIP,
+                fields={
+                    "source_id": chores["cook"],
+                    "target_id": chores["broom"],
+                    "property_definition_id": chores["requires"],
+                },
+            ),
+            # A class end is its own class.
+            OperationDraft(
+                3,
+                T.CREATE,
+                K.RELATIONSHIP,
+                fields={
+                    "source_id": chores["cleaning"],
+                    "target_id": house["activity"],
+                    "property_definition_id": follows,
+                },
+            ),
+        ]
+        proposal = service.propose(house["taxonomy"], "Links", drafts, ProposalSource.MCP)
+        assert statuses(proposal) == {1: APPLIED, 2: PENDING, 3: APPLIED}
+
+    def test_both_ends_covered_by_two_rules_and_a_new_individual_end(
+        self, service, policies, house, chores
+    ):
+        policies.save(
+            rules(
+                house,
+                {"op": "create", "class": "house_activity"},
+                {"op": "create", "kind": "relationship", "class": "resource"},
+            )
+        )
+        drafts = [
+            OperationDraft(
+                1,
+                T.CREATE,
+                K.INDIVIDUAL,
+                ref="sweep",
+                fields={"class_ids": [chores["cleaning"]], "title": "Sweep"},
+            ),
+            OperationDraft(
+                2,
+                T.CREATE,
+                K.RELATIONSHIP,
+                fields={
+                    "source_id": "$sweep",
+                    "target_id": chores["broom"],
+                    "property_definition_id": chores["requires"],
+                },
+            ),
+        ]
+        proposal = service.propose(house["taxonomy"], "Kit", drafts, ProposalSource.MCP)
+        assert statuses(proposal) == {1: APPLIED, 2: APPLIED}
+
+    def test_the_house_policy_after_the_change(self, service, policies, house, chores):
+        """
+        House's policy (activity creates and editorial changes auto-apply): a kit's
+        resources and `requires` edges still wait, activities of a subclass now apply.
+        """
+        policies.save(ApprovalPolicy.from_rules(house["taxonomy"], HOUSE_RULES))
+        drafts = [
+            OperationDraft(
+                1,
+                T.CREATE,
+                K.INDIVIDUAL,
+                ref="vacuum",
+                fields={"class_ids": [chores["resource"]], "title": "Vacuum"},
+            ),
+            OperationDraft(
+                2,
+                T.CREATE,
+                K.RELATIONSHIP,
+                fields={
+                    "source_id": chores["cook"],
+                    "target_id": chores["broom"],
+                    "property_definition_id": chores["requires"],
+                },
+            ),
+            OperationDraft(
+                3,
+                T.CREATE,
+                K.INDIVIDUAL,
+                fields={"class_ids": [chores["cleaning"]], "title": "Scrub"},
+            ),
+            OperationDraft(4, T.UPDATE, K.INDIVIDUAL, chores["broom"], fields={"title": "Brush"}),
+            OperationDraft(
+                5,
+                T.CREATE,
+                K.CLASS,
+                fields={
+                    "concept_scheme_id": house["scheme"],
+                    "title": "Gardening",
+                    "parent_class_id": house["activity"],
+                },
+            ),
+        ]
+        proposal = service.propose(house["taxonomy"], "Kits", drafts, ProposalSource.MCP)
+        assert statuses(proposal) == {1: PENDING, 2: PENDING, 3: APPLIED, 4: APPLIED, 5: PENDING}

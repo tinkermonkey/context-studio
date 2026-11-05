@@ -456,10 +456,12 @@ class ProposalService:
             return proposal
         try:
             policy = self._policies.get(proposal.taxonomy_id)
+            creates = {o.ref: o for o in proposal.operations if o.ref}
+            inspector = InUseInspector(self._repo)
             auto = auto_apply_ids(
                 policy,
                 proposal.operations,
-                self._classes,
+                lambda operation: self._classes(operation, creates, inspector),
                 lambda operation: self._inside_taxonomy(operation, proposal.taxonomy_id),
                 id_fields=frozenset(ID_FIELDS),
                 source=proposal.source,
@@ -478,12 +480,22 @@ class ProposalService:
             _logger.exception("Could not re-read proposal %s after auto-apply", proposal.id)
             return proposal
 
-    def _classes(self, operation: ProposedOperation) -> list[set[str]]:
+    def _classes(
+        self,
+        operation: ProposedOperation,
+        creates: Mapping[str, ProposedOperation],
+        inspector: InUseInspector,
+    ) -> list[set[str]]:
         """
-        Per class the operation's entity will be typed by, its id and identifier:
-        an individual's current classes plus any it is given, an attribute's
-        class, or a class itself. A "$ref" class gets an empty set (no rule
-        names it).
+        Per class the operation's entity is typed by, the keys a policy rule may
+        name it by: the id and identifier of the class and of every class above
+        it (a rule naming a class covers its subclasses too).
+
+        The classes are an individual's current classes plus any it is given;
+        an attribute's class; a class itself, or for a class create its
+        proposed parent (none at the top of a scheme); and for a relationship,
+        the classes of its source and of its target (a class end is its own
+        class). A "$ref" class is keyed by its create's identifier and parent.
         """
         target, fields = operation.target_id, operation.fields
         class_ids: list[Any] = []
@@ -494,17 +506,58 @@ class ProposalService:
         elif operation.kind is K.ATTRIBUTE:
             attribute = self._repo.get_attribute_definition(target) if target else None
             class_ids = [attribute.class_id if attribute else fields.get("class_id")]
-        elif operation.kind is K.CLASS and target:
-            class_ids = [target]
-        classes: list[set[str]] = []
-        for class_id in class_ids:
-            if not isinstance(class_id, str) or _is_ref(class_id):
-                classes.append(set())
-                continue
-            cls = self._repo.get_class(class_id)
-            identifier = cls.identifier if cls is not None else None
-            classes.append({class_id, identifier} if identifier else {class_id})
-        return classes
+        elif operation.kind is K.CLASS:
+            parent = fields.get("parent_class_id")
+            class_ids = [target] if target else [parent] if parent is not None else []
+        elif operation.kind is K.RELATIONSHIP:
+            relationship = self._repo.get_relationship(target) if target else None
+            if relationship is not None:
+                ends = [relationship.source_id, relationship.target_id]
+            else:
+                ends = [fields.get("source_id"), fields.get("target_id")]
+            for end in ends:
+                class_ids += self._end_class_ids(end, creates)
+        return [self._class_keys(c, creates, inspector) for c in class_ids]
+
+    def _end_class_ids(self, end: Any, creates: Mapping[str, ProposedOperation]) -> list[Any]:
+        """A relationship end's classes: an individual's, or a class end itself (None: unknown)."""
+        if not isinstance(end, str):
+            return [None]
+        if _is_ref(end):
+            create = creates.get(end[1:])
+            if create is not None and create.kind is K.INDIVIDUAL:
+                return list(create.fields.get("class_ids") or []) or [None]
+            return [end] if create is not None and create.kind is K.CLASS else [None]
+        individual = self._repo.get_individual(end)
+        if individual is not None:
+            return list(individual.class_ids) or [None]
+        return [end] if self._repo.get_class(end) is not None else [None]
+
+    def _class_keys(
+        self,
+        class_id: Any,
+        creates: Mapping[str, ProposedOperation],
+        inspector: InUseInspector,
+    ) -> set[str]:
+        """The ids and identifiers of a class and every class above it."""
+        if not isinstance(class_id, str):
+            return set()
+        if _is_ref(class_id):
+            # A class the proposal creates: its identifier, then its parent's keys
+            # (a ref only points at an earlier create, so this ends).
+            create = creates.get(class_id[1:])
+            if create is None or create.kind is not K.CLASS:
+                return set()
+            identifier = create.fields.get("identifier")
+            keys = {identifier} if isinstance(identifier, str) and identifier else set()
+            return keys | self._class_keys(create.fields.get("parent_class_id"), creates, inspector)
+        keys: set[str] = set()
+        for ancestor_id in inspector.ancestors_of(class_id):
+            keys.add(ancestor_id)
+            cls = self._repo.get_class(ancestor_id)
+            if cls is not None and cls.identifier:
+                keys.add(cls.identifier)
+        return keys
 
     def _inside_taxonomy(self, operation: ProposedOperation, taxonomy_id: str) -> bool:
         """
@@ -830,12 +883,13 @@ class ProposalService:
         relationships to another type (each must fit its domain and range,
         inheritance-aware, allow its attributes and not duplicate one, or
         nothing moves; a type whose domain and range are the deleted type's
-        reversed takes each with its ends swapped), or delete them too; then the type is deleted. The steps
-        run through OntologyService in one transaction under the proposal's run,
-        so a failing step keeps none of them (unresolvable, or the step's error)
-        and Revert restores the type and its relationships together. An applied
-        resolution is recorded with the relationships it moved or deleted; a
-        failed one records nothing, like an edit.
+        reversed takes each with its ends swapped), or delete them too; then the
+        type is deleted. The steps run through OntologyService in one
+        transaction under the proposal's run, so a failing step keeps none of
+        them (unresolvable, or the step's error) and Revert restores the type
+        and its relationships together. An applied resolution is recorded with
+        the relationships it moved or deleted; a failed one records nothing,
+        like an edit.
 
         Args:
             proposal_id: The proposal
