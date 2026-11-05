@@ -206,6 +206,38 @@ async def test_dry_runs_store_nothing_and_agree(client, proposal_tools, proposal
         assert session.query(ChangeEvent).count() == 0
 
 
+class AllowEverything(ApprovalPolicy):
+    """A policy past the hard rules: it would auto-apply even a breaking delete."""
+
+    def allows(self, operation, classes, source):
+        return True
+
+
+async def test_an_in_use_delete_never_auto_applies(client, proposal_tools, proposals, monkeypatch):
+    """
+    Dry run and real propose share one path: an in-use delete waits for review.
+    Today's hard rules already keep deletes and global property changes from
+    auto-applying, so the test lifts both to reach the in-use check.
+    """
+    proposals.policies.save(AllowEverything(TAXONOMY_ID))
+    monkeypatch.setattr(proposals.service, "_inside_taxonomy", lambda operation, taxonomy: True)
+    delete = [{"seq": 1, "op": "delete", "kind": "property", "target_id": REALIZES_ID}]
+
+    dry = client.post("/api/proposals", params={"dry_run": "true"}, json=body(operations=delete))
+    result = await call(
+        proposal_tools,
+        "propose_changes",
+        taxonomy_id=TAXONOMY_ID,
+        title="Drop realizes",
+        operations=delete,
+    )
+
+    assert dry.json()["operations"][0]["auto_apply"] is False
+    assert result["operations"][0]["status"] == "pending"
+    assert result["operations"][0]["blockers"]["edges"]
+    assert proposals.service.get(result["id"]).operations[0].reason is None
+
+
 def test_a_stored_proposal_is_not_a_dry_run(client):
     response = client.post("/api/proposals", json=body())
 

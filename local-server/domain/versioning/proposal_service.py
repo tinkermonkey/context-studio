@@ -472,7 +472,8 @@ class ProposalService:
         """
         Ids of the operations the taxonomy's approval policy applies as soon as
         they are proposed, in seq order: the same selection `_auto_apply` makes,
-        so a dry run's verdict and a real propose share one path. Empty without
+        so a dry run's verdict and a real propose share one path. A
+        relationship-type delete still in use is never among them. Empty without
         a policy, or when the stored policy can't be read (propose then leaves
         everything for review too).
         """
@@ -485,7 +486,12 @@ class ProposalService:
             return []
 
     def _policy_auto_apply_ids(self, proposal: ChangeProposal) -> list[str]:
-        return auto_apply_ids(
+        """
+        What the policy allows, less the relationship-type deletes still in use:
+        applying one as proposed would fail, so it waits for a reviewer to
+        resolve its relationships.
+        """
+        allowed = auto_apply_ids(
             self._policies.get(proposal.taxonomy_id) if self._policies else None,
             proposal.operations,
             self._classes,
@@ -493,6 +499,10 @@ class ProposalService:
             id_fields=frozenset(ID_FIELDS),
             source=proposal.source,
         )
+        if not allowed:
+            return allowed
+        blocked = self.in_use_blockers(proposal)
+        return [i for i in allowed if i not in blocked]
 
     def _classes(self, operation: ProposedOperation) -> list[set[str]]:
         """

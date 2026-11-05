@@ -864,25 +864,6 @@ class TestDryRun:
         assert "1 would apply at once" in result["next"]
         assert "1 blocked" in result["next"]
 
-    async def test_a_blocked_operation_is_not_eligible_to_auto_apply(self):
-        delete = blocked_delete()
-        service = FakeProposalService(
-            proposal=make_proposal([delete]),
-            blockers={delete.id: blockers(1)},
-            auto=[delete.id],
-        )
-
-        _, result = await call(
-            service,
-            "propose_changes",
-            taxonomy_id=TAXONOMY,
-            title="t",
-            dry_run=True,
-            operations=[{"seq": 1, "op": "delete", "kind": "property", "target_id": "p-1"}],
-        )
-
-        assert result["operations"][0]["auto_apply"] is False
-
     async def test_dry_run_must_be_a_boolean(self):
         service = FakeProposalService(proposal=make_proposal([make_operation(1)]))
 

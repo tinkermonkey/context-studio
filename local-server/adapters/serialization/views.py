@@ -50,19 +50,15 @@ def proposal_response(
 ) -> ChangeProposalResponse:
     """
     The REST view of a proposal: stale flags, in-use blockers and replacement
-    checks; for a dry run, each operation's auto-apply eligibility too (an
-    operation with in-use blockers is never eligible: applying it would fail).
+    checks; for a dry run, each operation's auto-apply eligibility too (see
+    ProposalService.auto_apply_operation_ids).
     """
-    blockers = service.in_use_blockers(proposal)
-    auto = None
-    if dry_run:
-        auto = set(service.auto_apply_operation_ids(proposal)) - set(blockers)
     return ChangeProposalResponse.from_domain(
         proposal,
         service.stale_operation_ids(proposal),
-        blockers,
+        service.in_use_blockers(proposal),
         service.replacement_checks(proposal),
-        auto,
+        service.auto_apply_operation_ids(proposal) if dry_run else None,
     )
 
 
