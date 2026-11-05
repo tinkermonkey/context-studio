@@ -17,6 +17,7 @@ from __future__ import annotations
 import hashlib
 from collections import defaultdict
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Any, Callable, Iterable, Mapping
 
 from domain.ontology.entities import PropertyDefinition
@@ -323,15 +324,31 @@ def dr_predicate_catalog(repo: OntologyRepository) -> dict[str, dict[str, Any]] 
 def swapped_dr_reference(
     target: PropertyDefinition, current: Triple, new: Triple
 ) -> list[dict[str, Any]]:
-    """The target's external references with its DR id moved to the new triple, as dicts."""
+    """
+    The target's external references with its DR id moved to the new triple, as dicts.
+
+    A reversal (source and destination swapped) drops the evidence lines, as DR
+    does when it derives the reversed schema: they describe the old direction.
+    """
+    reversed_pair = (
+        new.source == current.destination
+        and new.destination == current.source
+        and current.source != current.destination
+    )
+
+    def moved(ref: ExternalReference) -> ExternalReference:
+        metadata = dict(ref.metadata or {})
+        if reversed_pair:
+            metadata.pop("evidence", None)
+        return ExternalReference(
+            source=ref.source,
+            identifier=new.id,
+            uri=ref.uri,
+            metadata=MappingProxyType(metadata) if metadata else None,
+        )
+
     return [
-        (
-            ExternalReference(
-                source=ref.source, identifier=new.id, uri=ref.uri, metadata=ref.metadata
-            )
-            if ref.source == DR_SOURCE and ref.identifier == current.id
-            else ref
-        ).to_dict()
+        (moved(ref) if ref.source == DR_SOURCE and ref.identifier == current.id else ref).to_dict()
         for ref in target.external_references
     ]
 

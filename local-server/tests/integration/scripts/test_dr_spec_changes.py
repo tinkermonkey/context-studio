@@ -297,3 +297,117 @@ def test_a_dr_id_disagreeing_with_the_classes_is_refused(parts):
 
     with pytest.raises(ValueError, match="DR relationship id is api.operation.uses"):
         spec_changes_for(proposal, repo)
+
+
+def test_a_create_naming_a_class_the_proposal_created_resolves_its_ref(parts):
+    _, repo, proposals = parts
+    operation_class = class_by_dr_id(repo, "api.operation")
+    widget = OperationDraft(
+        seq=1,
+        op="create",
+        kind="class",
+        ref="widget",
+        fields={
+            "concept_scheme_id": operation_class.concept_scheme_id,
+            "title": "Widget",
+            "identifier": "api_widget",
+            "external_references": [{"source": DR_SOURCE, "identifier": "api.widget"}],
+        },
+    )
+    uses = OperationDraft(
+        seq=2,
+        op="create",
+        kind="property",
+        fields={
+            "identifier": "widget_uses_operation",
+            "title": "api.widget uses api.operation",
+            "canonical_predicate": "uses",
+            "domain_class_id": "$widget",
+            "range_class_id": operation_class.id,
+            "external_references": [dr_ref("api.widget.uses.api.operation")],
+        },
+    )
+    proposal = apply_all(proposals, propose(repo, proposals, widget, uses))
+    assert all(o.status is OperationStatus.APPLIED for o in proposal.operations), [
+        o.reason for o in proposal.operations
+    ]
+
+    document = spec_changes_for(proposal, repo)
+
+    (change,) = document["changes"]
+    assert change["relationship_id"] == "api.widget.uses.api.operation"
+    assert change["source_spec_node_id"] == "api.widget"
+    assert [s["seq"] for s in document["skipped"]] == [1]
+
+
+def test_a_type_on_dr_spec_classes_without_a_dr_reference_is_refused(parts):
+    _, repo, proposals = parts
+    create = create_new(repo)
+    create.fields["external_references"] = []
+    proposal = apply_all(proposals, propose(repo, proposals, create))
+    assert proposal.operations[0].status is OperationStatus.APPLIED, proposal.operations[0].reason
+
+    with pytest.raises(ValueError, match="seq 1: it created a relationship type on DR spec"):
+        spec_changes_for(proposal, repo)
+
+
+def test_an_update_stripping_the_dr_reference_is_refused(parts):
+    _, repo, proposals = parts
+    delivers = prop_by_dr_id(repo, DELIVERS)
+    proposal = propose(
+        repo,
+        proposals,
+        OperationDraft(
+            seq=1,
+            op="update",
+            kind="property",
+            target_id=delivers.id,
+            fields={"external_references": []},
+        ),
+    )
+    proposal = apply_all(proposals, proposal)
+    assert proposal.operations[0].status is OperationStatus.APPLIED, proposal.operations[0].reason
+
+    with pytest.raises(ValueError, match=f"removed the DR reference of {DELIVERS}"):
+        spec_changes_for(proposal, repo)
+
+
+def test_a_reversal_drops_the_evidence_as_dr_does(parts):
+    _, repo, proposals = parts
+    delivers = prop_by_dr_id(repo, DELIVERS)
+    with_evidence = [dr_ref(DELIVERS, **SPEC_ATTRIBUTES, evidence=EVIDENCE)]
+    first = propose(
+        repo,
+        proposals,
+        OperationDraft(
+            seq=1,
+            op="update",
+            kind="property",
+            target_id=delivers.id,
+            fields={"external_references": with_evidence},
+        ),
+    )
+    apply_all(proposals, first)
+    second = propose(
+        repo,
+        proposals,
+        OperationDraft(
+            seq=1, op="update", kind="property", target_id=delivers.id, fields={"title": "x"}
+        ),
+    )
+    op = second.operations[0]
+    edit = {
+        "canonical_predicate": "references",
+        "domain_class_id": delivers.range_class_id,
+        "range_class_id": delivers.domain_class_id,
+    }
+
+    second = proposals.apply(second.id, [op.id], edits={op.id: edit})
+    assert second.operations[0].status is OperationStatus.APPLIED, second.operations[0].reason
+
+    ref = next(r for r in prop_by_dr_id(repo, NEW).external_references if r.source == DR_SOURCE)
+    assert dict(ref.metadata) == SPEC_ATTRIBUTES
+    (change,) = spec_changes_for(second, repo)["changes"]
+    assert change["previous_relationship_id"] == DELIVERS
+    assert change["relationship_id"] == NEW
+    assert change["set"] == {"evidence": []}

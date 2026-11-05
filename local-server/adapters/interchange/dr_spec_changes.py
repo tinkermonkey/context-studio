@@ -26,8 +26,16 @@ the x-dr-evidence lines; null for cardinality or strength, or an empty
 evidence list, means the operation removed it. Only applied operations
 export; the rest are listed in `skipped` with why.
 
-The triple comes from the domain and range classes' DR references and the
-predicate, and must agree with the type's DR relationship id.
+The triple comes from the domain and range classes' DR references (a "$ref"
+to a class the proposal created resolves to that class) and the predicate,
+and must agree with the type's DR relationship id. A relationship type
+between DR spec classes without a DR reference can't land in DR's spec, so
+the export refuses it rather than skip it.
+
+What an update didn't set is read from the workspace as it is now, so export
+and land proposals in the order they were applied: exported after a later
+change to the same type, an older proposal's triple comes out wrong (DR's
+writer then refuses it, as the file it names is gone).
 """
 
 from __future__ import annotations
@@ -67,9 +75,11 @@ def spec_changes_for(proposal: ChangeProposal, repo: OntologyRepository) -> dict
         )
     changes: list[dict[str, Any]] = []
     skipped: list[dict[str, Any]] = []
+    # "$<ref>" -> the entity the proposal's create of that ref made.
+    refs = {o.ref: o.result_entity_id for o in proposal.operations if o.ref}
     for operation in proposal.operations:
         why = _not_exported(operation)
-        change = None if why else _change(operation, repo)
+        change = None if why else _change(operation, repo, refs)
         if change is None:
             skipped.append(
                 {
@@ -97,30 +107,35 @@ def _not_exported(operation: ProposedOperation) -> str | None:
     return None
 
 
-def _change(operation: ProposedOperation, repo: OntologyRepository) -> dict[str, Any] | None:
+def _change(
+    operation: ProposedOperation, repo: OntologyRepository, refs: dict[str, str | None]
+) -> dict[str, Any] | None:
     label = f"seq {operation.seq}"
     if operation.op is OperationType.CREATE:
-        return _create(operation, repo, label)
+        return _create(operation, repo, label, refs)
     if operation.op is OperationType.UPDATE or operation.applied_fields is not None:
         # An edited delete was applied as an update.
-        return _update(operation, repo, label)
+        return _update(operation, repo, label, refs)
     if operation.op is OperationType.DELETE:
         return _delete(operation, repo, label)
     return None
 
 
-def _create(operation: ProposedOperation, repo: OntologyRepository, label: str) -> dict | None:
+def _create(
+    operation: ProposedOperation,
+    repo: OntologyRepository,
+    label: str,
+    refs: dict[str, str | None],
+) -> dict | None:
     fields = operation.fields
+    domain = _resolve_ref(fields.get("domain_class_id"), refs, label)
+    range_ = _resolve_ref(fields.get("range_class_id"), refs, label)
     relationship_id = dr_relationship_id(fields.get("external_references") or [])
     if relationship_id is None:
+        _refuse_if_dr_spec(repo, label, "created a relationship type", domain, range_)
         return None
     triple = _resolved(
-        repo,
-        label,
-        relationship_id,
-        fields.get("canonical_predicate"),
-        fields.get("domain_class_id"),
-        fields.get("range_class_id"),
+        repo, label, relationship_id, fields.get("canonical_predicate"), domain, range_
     )
     values: dict[str, Any] = {}
     if fields.get("description") is not None:
@@ -129,7 +144,12 @@ def _create(operation: ProposedOperation, repo: OntologyRepository, label: str) 
     return _entry(operation, "create", triple, fields.get("identifier"), values)
 
 
-def _update(operation: ProposedOperation, repo: OntologyRepository, label: str) -> dict | None:
+def _update(
+    operation: ProposedOperation,
+    repo: OntologyRepository,
+    label: str,
+    refs: dict[str, str | None],
+) -> dict | None:
     applied = operation.applied_fields if operation.applied_fields is not None else operation.fields
     base = operation.base
     prop = repo.get_property_definition(operation.result_entity_id or operation.target_id or "")
@@ -142,14 +162,28 @@ def _update(operation: ProposedOperation, repo: OntologyRepository, label: str) 
     )
 
     def value(name: str) -> Any:
-        return applied[name] if name in applied else current[name]
+        found = applied[name] if name in applied else current[name]
+        return _resolve_ref(found, refs, label) if name.endswith("_class_id") else found
 
     relationship_id = dr_relationship_id(value("external_references") or [])
+    previous_id = dr_relationship_id(base.get("external_references") or [])
     if relationship_id is None:
+        if previous_id is not None:
+            raise ValueError(
+                f"{label}: it removed the DR reference of {previous_id}, so DR's spec can't "
+                "follow; give the type its DR reference back, or delete the type instead"
+            )
         if prop is None:
             raise ValueError(f"{label}: its relationship type no longer exists")
+        _refuse_if_dr_spec(
+            repo,
+            label,
+            "left a relationship type",
+            value("domain_class_id"),
+            value("range_class_id"),
+        )
         return None
-    previous = dr_relationship_id(base.get("external_references") or []) or relationship_id
+    previous = previous_id or relationship_id
     triple = _resolved(
         repo,
         label,
@@ -217,6 +251,27 @@ def _entry(
         "destination_spec_node_id": triple.destination,
         "set": values,
     }
+
+
+def _resolve_ref(value: Any, refs: dict[str, str | None], label: str) -> Any:
+    """A "$<ref>" id field as the entity the proposal's create of that ref made."""
+    if not (isinstance(value, str) and value.startswith("$") and len(value) > 1):
+        return value
+    entity_id = refs.get(value[1:])
+    if entity_id is None:
+        raise ValueError(f"{label}: {value} names no create of this proposal that was applied")
+    return entity_id
+
+
+def _refuse_if_dr_spec(repo: OntologyRepository, label: str, what: str, *class_ids: Any) -> None:
+    """A type between DR spec classes without a DR reference is a spec change DR can't take."""
+    for class_id in class_ids:
+        cls = repo.get_class(class_id) if isinstance(class_id, str) else None
+        if cls is not None and dr_relationship_id(cls.external_references) is not None:
+            raise ValueError(
+                f"{label}: it {what} on DR spec classes without a DR reference "
+                f"(source {DR_SOURCE!r}), so it can't land in DR's spec; give it one"
+            )
 
 
 def _attributes(external_references: Any) -> dict[str, Any]:

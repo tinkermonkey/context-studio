@@ -512,7 +512,10 @@ export function changeRows(operation: ProposedOperation): ChangeRow[] {
   const references = rows.find((row) => row.field === "external_references");
   if (operation.kind === "property" && references) {
     // References read by identifier; a DR type's attributes get rows of their own.
-    references.changed = formatValue(references.before) !== formatValue(references.after);
+    references.changed = !sameValue(
+      withoutDrAttributes(references.before),
+      withoutDrAttributes(references.after),
+    );
     const before = drAttributes(references.before);
     const after = drAttributes(references.after);
     for (const field of DR_ATTRIBUTES) {
@@ -532,6 +535,27 @@ export function changeRows(operation: ProposedOperation): ChangeRow[] {
 
 /** A DR relationship type's spec attributes, kept on its DR reference's metadata. */
 export const DR_ATTRIBUTES = ["cardinality", "strength", "evidence"] as const;
+
+/**
+ * References compared by full value (source, identifier, uri, metadata), less
+ * the DR attributes, which have rows of their own; key order doesn't count.
+ */
+function withoutDrAttributes(references: unknown): unknown {
+  if (!Array.isArray(references)) return references;
+  return references.map((r) => {
+    if (!r || typeof r !== "object") return r;
+    const { source, identifier, uri, metadata } = r as Record<string, unknown>;
+    const rest = Object.entries((metadata ?? {}) as Record<string, unknown>)
+      .filter(([key]) => !(DR_ATTRIBUTES as readonly string[]).includes(key))
+      .sort(([a], [b]) => a.localeCompare(b));
+    return {
+      source,
+      identifier,
+      uri: uri ?? null,
+      metadata: rest.length ? Object.fromEntries(rest) : null,
+    };
+  });
+}
 
 /** The DR attributes on the DR ("documentation_robotics") reference among references. */
 function drAttributes(references: unknown): Record<string, unknown> {

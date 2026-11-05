@@ -283,6 +283,18 @@ describe("changeRows", () => {
       // The same reference by identifier: only its metadata changed.
       ["external_references", false],
     ]);
+    // Any other change to a reference (here its uri) marks the references row changed.
+    const moved = {
+      ...update,
+      fields: {
+        external_references: [
+          { ...(update.fields!.external_references as object[])[0], uri: "https://dr/x" },
+        ],
+      },
+    };
+    expect(changeRows(moved).find((row) => row.field === "external_references")?.changed).toBe(
+      true,
+    );
     expect(changeRows(update).find((row) => row.field === "evidence")).toMatchObject({
       before: undefined,
       after: ["A config names it."],
