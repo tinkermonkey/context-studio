@@ -2286,7 +2286,7 @@ export interface paths {
     put?: never;
     /**
      * Cancel Batch Runs
-     * @description Cancel all PENDING runs in a batch.
+     * @description Cancel a batch's pending runs, and those executing in the background.
      *
      *     Args:
      *         batch_id: Batch ID
@@ -2316,7 +2316,7 @@ export interface paths {
     put?: never;
     /**
      * Resume Batch Runs
-     * @description Resume (re-enqueue) cancelled or failed runs in a batch back to PENDING status.
+     * @description Re-queue a batch's cancelled, failed or interrupted runs that carry a stored input.
      *
      *     Args:
      *         batch_id: Batch ID
@@ -11632,6 +11632,13 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description With async: background pipeline runs are not available */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
   get_pipeline_run_api_pipelines_runs__run_id__get: {
@@ -11685,6 +11692,20 @@ export interface operations {
           "application/json": components["schemas"]["PipelineRunResponse"];
         };
       };
+      /** @description Pipeline run not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The run is neither pending nor executing in the background */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
       /** @description Validation Error */
       422: {
         headers: {
@@ -11693,6 +11714,13 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Background pipeline runs are not available */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };

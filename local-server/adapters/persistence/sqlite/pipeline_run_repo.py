@@ -801,6 +801,43 @@ class PipelineRepository:
 
         return self._write("cancel a pending pipeline run", cancel)
 
+    def requeue(self, run_id: str) -> bool:
+        """
+        Set a CANCELLED, FAILED or INTERRUPTED run that carries an input back to
+        PENDING, clearing its progress, failure reason, start time and proposal.
+
+        Returns:
+            True if the run was re-queued; False if it is in another state or has
+            no stored input (no worker could execute it)
+        """
+        requeueable = (
+            PipelineRunStatus.CANCELLED.value,
+            PipelineRunStatus.FAILED.value,
+            PipelineRunStatus.INTERRUPTED.value,
+        )
+
+        def requeue(session: Session) -> bool:
+            orm_obj = (
+                session.query(PipelineRun)
+                .filter(
+                    PipelineRun.id == run_id,
+                    PipelineRun.status.in_(requeueable),
+                    PipelineRun.input_data.isnot(None),
+                )
+                .first()
+            )
+            if not orm_obj:
+                return False
+            orm_obj.status = PipelineRunStatus.PENDING.value  # type: ignore[assignment]
+            orm_obj.failure_reason = None  # type: ignore[assignment]
+            orm_obj.started_at = None  # type: ignore[assignment]
+            orm_obj.items_done = None  # type: ignore[assignment]
+            orm_obj.items_total = None  # type: ignore[assignment]
+            orm_obj.proposal_id = None  # type: ignore[assignment]
+            return True
+
+        return self._write("re-queue a pipeline run", requeue)
+
     def update_progress(self, run_id: str, items_done: int, items_total: int | None) -> bool:
         """
         Record how many work items the run has finished, out of how many.

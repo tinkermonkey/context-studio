@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
+import time
 from typing import Any, Callable
 
 from adapters.factories.orchestrator_factory import (
@@ -34,6 +35,9 @@ from domain.pipelines.registry import (
 from utils.logger import get_logger
 
 _logger = get_logger(__name__)
+
+# The pipeline type whose input `text` is stored once, as the run's source_text
+_TEXT_IN_SOURCE_TEXT = PipelineType.INDIVIDUAL_EXTRACTION
 
 
 class UnknownPipelineError(LookupError):
@@ -96,16 +100,32 @@ class BackgroundRunExecutor:
             self._threads.append(thread)
         _logger.info("Background run executor started with %d worker(s)", self._workers)
 
-    def stop(self, timeout: float = 5.0) -> None:
-        """Stop the workers; a run still executing is marked INTERRUPTED."""
+    def stop(self, timeout: float = 5.0) -> bool:
+        """
+        Stop the workers; a run still executing is marked INTERRUPTED.
+
+        Returns:
+            True if every worker stopped within the timeout
+        """
         self._stopping.set()
         self._wake.set()
         with self._lock:
             for loop, task in self._active.values():
                 loop.call_soon_threadsafe(task.cancel)
+        deadline = time.monotonic() + timeout
         for thread in self._threads:
-            thread.join(timeout)
+            thread.join(max(0.0, deadline - time.monotonic()))
+        alive = [t.name for t in self._threads if t.is_alive()]
         self._threads = []
+        if alive:
+            # Daemon threads end with the process; the next start marks their
+            # runs interrupted
+            _logger.warning(
+                "Pipeline run workers still busy at shutdown (%s); their runs will be"
+                " marked interrupted on the next start",
+                ", ".join(alive),
+            )
+        return not alive
 
     # ==================== Submitting and cancelling ====================
 
@@ -144,6 +164,9 @@ class BackgroundRunExecutor:
         if config_version is None:
             raise UnknownPipelineError(f"Configuration not found: {configuration_ref}")
 
+        if pipeline_type == _TEXT_IN_SOURCE_TEXT:
+            # The text is kept once, as the run's source_text; restored when claimed
+            input_data = {k: v for k, v in input_data.items() if k != "text"}
         batch = self._batches.create()
         run = self._runs.create(
             batch_run_id=batch.id,
@@ -170,23 +193,41 @@ class BackgroundRunExecutor:
         """
         Cancel a run: a PENDING run at once, a RUNNING one at its next await.
 
+        Holds the lock workers claim under, so a run is either still pending
+        (cancelled here) or already registered as executing (its task cancelled).
+
         Returns:
             True if the run was cancelled or its cancellation requested; False if
             it is not pending and not executing in this process
         """
-        run = self._runs.get(run_id)
-        if run is None:
-            return False
-        if self._runs.cancel_if_pending(run_id):
-            self._refresh_batch(run.batch_run_id, finished=True)
-            return True
         with self._lock:
-            active = self._active.get(run_id)
-        if active is None:
-            return False
-        loop, task = active
-        loop.call_soon_threadsafe(task.cancel)
-        return True
+            run = self._runs.get(run_id)
+            if run is None:
+                return False
+            cancelled_pending = self._runs.cancel_if_pending(run_id)
+            active = None if cancelled_pending else self._active.get(run_id)
+            if active is not None:
+                loop, task = active
+                if task.done():
+                    return False
+                loop.call_soon_threadsafe(task.cancel)
+                return True
+        if cancelled_pending:
+            self._refresh_batch(run.batch_run_id, finished=True)
+        return cancelled_pending
+
+    def requeue(self, run_id: str) -> bool:
+        """
+        Put a cancelled, failed or interrupted run back in the queue, progress reset.
+
+        Returns:
+            True if the run was re-queued; False if it is in another state or has
+            no stored input to execute
+        """
+        requeued = self._runs.requeue(run_id)
+        if requeued:
+            self.wake()
+        return requeued
 
     # ==================== Workers ====================
 
@@ -194,26 +235,40 @@ class BackgroundRunExecutor:
         asyncio.run(self._work_loop())
 
     async def _work_loop(self) -> None:
+        loop = asyncio.get_running_loop()
         while not self._stopping.is_set():
-            try:
-                claimed = self._runs.claim_next_pending()
-            except Exception:
-                _logger.exception("Could not claim a pending pipeline run")
-                claimed = None
+            claimed = self._claim(loop)
             if claimed is None:
                 self._wake.wait(self._poll_seconds)
                 self._wake.clear()
                 continue
-            run, input_data = claimed
-            await self._execute(run, input_data)
+            await self._execute(*claimed)
 
-    async def _execute(self, run: PipelineRun, input_data: dict[str, Any]) -> None:
-        self._refresh_batch(run.batch_run_id)
-        task = asyncio.ensure_future(self._run_pipeline(run, input_data))
+    def _claim(self, loop: asyncio.AbstractEventLoop) -> tuple[PipelineRun, asyncio.Task] | None:
+        """Claim the next pending run and register its (not yet started) task."""
         with self._lock:
-            self._active[run.id] = (asyncio.get_running_loop(), task)
+            try:
+                claimed = self._runs.claim_next_pending()
+            except Exception:
+                _logger.exception("Could not claim a pending pipeline run")
+                return None
+            if claimed is None:
+                return None
+            run, input_data = claimed
+            if run.pipeline_type == _TEXT_IN_SOURCE_TEXT and "text" not in input_data:
+                input_data["text"] = run.source_text or ""
+            task = loop.create_task(self._run_pipeline(run, input_data))
+            self._active[run.id] = (loop, task)
+            return run, task
+
+    async def _execute(self, run: PipelineRun, task: asyncio.Task) -> None:
+        self._refresh_batch(run.batch_run_id)
         try:
-            await task
+            try:
+                await task
+            finally:
+                with self._lock:
+                    self._active.pop(run.id, None)
         except asyncio.CancelledError:
             status = (
                 PipelineRunStatus.INTERRUPTED
@@ -230,10 +285,7 @@ class BackgroundRunExecutor:
                     run.id, reason, output_summary={"error": reason}
                 )
             )
-        finally:
-            with self._lock:
-                self._active.pop(run.id, None)
-            self._refresh_batch(run.batch_run_id, finished=True)
+        self._refresh_batch(run.batch_run_id, finished=True)
 
     async def _run_pipeline(self, run: PipelineRun, input_data: dict[str, Any]) -> None:
         impl_class = self._implementations.get(run.pipeline_type, run.implementation_id)
@@ -277,10 +329,13 @@ class BackgroundRunExecutor:
 
         self._record(refresh)
 
-    @staticmethod
-    def _record(write: Callable[[], Any]) -> None:
+    def _record(self, write: Callable[[], Any]) -> None:
         """Run a bookkeeping write, logging (not raising) a storage failure."""
         try:
             write()
-        except Exception:
-            _logger.exception("Could not record pipeline run state")
+        except Exception as exc:
+            if self._stopping.is_set():
+                # Shutting down: the run is recovered as interrupted on restart
+                _logger.warning("Could not record pipeline run state at shutdown: %s", exc)
+            else:
+                _logger.exception("Could not record pipeline run state")

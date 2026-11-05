@@ -103,9 +103,7 @@ class TestExecution:
 
         seen_midway = wait_for(lambda: (r := repo.get(run.id)).items_done and r)
         assert seen_midway.items_total == 5
-        done = wait_for(
-            lambda: (r := repo.get(run.id)).status == PipelineRunStatus.COMPLETED and r
-        )
+        done = wait_for(lambda: (r := repo.get(run.id)).status == PipelineRunStatus.COMPLETED and r)
         assert (done.items_done, done.items_total) == (5, 5)
         assert done.started_at is not None
         assert done.output_summary["status"] == "completed"
@@ -159,8 +157,9 @@ class TestExecution:
         try:
             for run in runs:
                 wait_for(
-                    lambda run=run: status_of(session_factory, run.id)
-                    == PipelineRunStatus.COMPLETED
+                    lambda run=run: (
+                        status_of(session_factory, run.id) == PipelineRunStatus.COMPLETED
+                    )
                 )
             assert llm.call_count == len(runs)
         finally:
@@ -277,9 +276,11 @@ class TestRoutes:
         assert body["proposal_id"] is None
 
         done = wait_for(
-            lambda: (r := client.get(f"/api/pipelines/runs/{body['id']}").json())["status"]
-            == "completed"
-            and r
+            lambda: (
+                (r := client.get(f"/api/pipelines/runs/{body['id']}").json())["status"]
+                == "completed"
+                and r
+            )
         )
         assert (done["items_done"], done["items_total"]) == (3, 3)
         assert "async" not in done["output_summary"]["input_echo"]
@@ -303,8 +304,9 @@ class TestRoutes:
 
         assert response.status_code == 200
         wait_for(
-            lambda: client.get(f"/api/pipelines/runs/{started['id']}").json()["status"]
-            == "cancelled"
+            lambda: (
+                client.get(f"/api/pipelines/runs/{started['id']}").json()["status"] == "cancelled"
+            )
         )
         assert client.post(f"/api/pipelines/runs/{started['id']}/cancel").status_code == 409
         assert client.post("/api/pipelines/runs/no-such-run/cancel").status_code == 404
@@ -317,7 +319,9 @@ class TestRoutes:
         ).json()
 
         run_id = enqueued["run_ids"][0]
-        wait_for(lambda: client.get(f"/api/pipelines/runs/{run_id}").json()["status"] == "completed")
+        wait_for(
+            lambda: client.get(f"/api/pipelines/runs/{run_id}").json()["status"] == "completed"
+        )
         assert client.get(f"/api/pipelines/batches/{batch['id']}").json()["status"] == "completed"
 
     def test_run_links_the_proposal_it_produced(self, client, session_factory):
@@ -332,3 +336,99 @@ class TestRoutes:
         response = TestClient(app).post("/api/pipelines/no_op/run", json={"async": True})
 
         assert response.status_code == 503
+
+
+class TestBatchCancelAndResume:
+    @pytest.fixture
+    def client(self, executor, session_factory):
+        app = FastAPI()
+        app.include_router(router)
+        app.state.pipeline_run_repo = PipelineRepository(session_factory)
+        app.state.batch_repo = BatchRepository(session_factory)
+        app.state.run_executor = executor
+        return TestClient(app)
+
+    def test_batch_cancel_cancels_an_executing_run(self, client, executor, session_factory):
+        run = submit_noop(executor, items=500, item_seconds=0.02)
+        executor.start()
+        repo = PipelineRepository(session_factory)
+        wait_for(lambda: repo.get(run.id).items_done)
+
+        response = client.post(f"/api/pipelines/batches/{run.batch_run_id}/cancel")
+
+        assert response.json()["cancelled_count"] == 1
+        wait_for(lambda: status_of(session_factory, run.id) == PipelineRunStatus.CANCELLED)
+        assert repo.get(run.id).items_done < 500
+
+    def test_resume_requeues_with_fresh_progress_and_skips_runs_without_input(
+        self, client, executor, session_factory
+    ):
+        repo = PipelineRepository(session_factory)
+        run = submit_noop(executor)
+        repo.update_progress(run.id, 3, 7)
+        repo.set_proposal_id(run.id, "proposal-1")
+        repo.update_failure_info(run.id, "boom")
+        bare = repo.create(
+            batch_run_id=run.batch_run_id,
+            pipeline_type=PipelineType.NO_OP,
+            implementation_id="default",
+            configuration_ref="default",
+            configuration_slug="default",
+            configuration_version=1,
+        )
+        repo.update_failure_info(bare.id, "boom")
+
+        response = client.post(f"/api/pipelines/batches/{run.batch_run_id}/resume")
+
+        assert response.json()["resumed_count"] == 1
+        resumed = repo.get(run.id)
+        assert resumed.status == PipelineRunStatus.PENDING
+        assert (resumed.items_done, resumed.items_total, resumed.proposal_id) == (None, None, None)
+        assert resumed.failure_reason is None
+        assert repo.get(bare.id).status == PipelineRunStatus.FAILED
+
+
+class TestStoredInput:
+    def test_extraction_text_is_stored_once_and_restored_for_the_worker(
+        self, session_factory, monkeypatch
+    ):
+        executor = make_executor(session_factory)
+        executor._implementations.register_impl(
+            PipelineType.INDIVIDUAL_EXTRACTION, "default", NoOpPipelineOrchestrator
+        )
+        executor._configurations.register(
+            PipelineType.INDIVIDUAL_EXTRACTION, "default", "default", {"model": "test-model"}
+        )
+        seen = {}
+
+        class RecordingOrchestrator:
+            async def execute(self, state):
+                seen.update(state.input_data)
+                state.current_status = PipelineRunStatus.COMPLETED
+                state.result = {}
+                return state
+
+        monkeypatch.setattr(
+            "adapters.pipelines.run_executor.create_orchestrator",
+            lambda *args, **kwargs: RecordingOrchestrator(),
+        )
+        text = "Alice works at Acme."
+        run = executor.submit(
+            PipelineType.INDIVIDUAL_EXTRACTION,
+            "default",
+            "default",
+            {"text": text, "ontology_id": "tax-1"},
+            specific_data={"source_text": text, "source_text_hash": "x"},
+        )
+        repo = PipelineRepository(session_factory)
+        _, stored = repo.claim_next_pending()
+        assert "text" not in stored
+        repo.update_status(run.id, PipelineRunStatus.PENDING)
+
+        executor.start()
+        try:
+            wait_for(lambda: status_of(session_factory, run.id) == PipelineRunStatus.COMPLETED)
+        finally:
+            executor.stop()
+        assert seen["text"] == text
+        assert seen["ontology_id"] == "tax-1"

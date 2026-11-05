@@ -870,7 +870,8 @@ def _run_executor(request: Request) -> BackgroundRunExecutor:
         202: {
             "model": PipelineRunResponse,
             "description": "With async: the pending run, executing in the background",
-        }
+        },
+        503: {"description": "With async: background pipeline runs are not available"},
     },
 )
 async def run_pipeline(
@@ -1124,7 +1125,15 @@ async def get_pipeline_run(
     return _to_response(run)
 
 
-@router.post("/runs/{run_id}/cancel", response_model=PipelineRunResponse)
+@router.post(
+    "/runs/{run_id}/cancel",
+    response_model=PipelineRunResponse,
+    responses={
+        404: {"description": "Pipeline run not found"},
+        409: {"description": "The run is neither pending nor executing in the background"},
+        503: {"description": "Background pipeline runs are not available"},
+    },
+)
 async def cancel_pipeline_run(run_id: str, request: Request) -> PipelineRunResponse:
     """
     Cancel a pipeline run.
@@ -2237,7 +2246,7 @@ async def enqueue_batch_runs(
 )
 async def cancel_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
     """
-    Cancel all PENDING runs in a batch.
+    Cancel a batch's pending runs, and those executing in the background.
 
     Args:
         batch_id: Batch ID
@@ -2261,12 +2270,15 @@ async def cancel_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
 
     try:
         runs = pipeline_run_repo.list_by_batch_id(batch_id)
-        cancelled_count = 0
-
-        for run in runs:
-            if run.status == PipelineRunStatus.PENDING:
-                pipeline_run_repo.update_status(run.id, PipelineRunStatus.CANCELLED)
-                cancelled_count += 1
+        # Conditional cancels: a run a worker claims meanwhile is cancelled as executing
+        executor = getattr(request.app.state, "run_executor", None)
+        cancel = executor.cancel if executor is not None else pipeline_run_repo.cancel_if_pending
+        cancelled_count = sum(
+            1
+            for run in runs
+            if run.status in (PipelineRunStatus.PENDING, PipelineRunStatus.RUNNING)
+            and cancel(run.id)
+        )
 
         # Recompute batch status based on child runs
         if cancelled_count > 0:
@@ -2302,7 +2314,7 @@ async def cancel_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
 )
 async def resume_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
     """
-    Resume (re-enqueue) cancelled or failed runs in a batch back to PENDING status.
+    Re-queue a batch's cancelled, failed or interrupted runs that carry a stored input.
 
     Args:
         batch_id: Batch ID
@@ -2326,16 +2338,10 @@ async def resume_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
 
     try:
         runs = pipeline_run_repo.list_by_batch_id(batch_id)
-        resumed_count = 0
-
-        for run in runs:
-            if run.status in (
-                PipelineRunStatus.CANCELLED,
-                PipelineRunStatus.FAILED,
-                PipelineRunStatus.INTERRUPTED,
-            ):
-                pipeline_run_repo.update_status(run.id, PipelineRunStatus.PENDING)
-                resumed_count += 1
+        # Only runs with a stored input are re-queued: no worker could execute the rest
+        executor = getattr(request.app.state, "run_executor", None)
+        requeue = executor.requeue if executor is not None else pipeline_run_repo.requeue
+        resumed_count = sum(1 for run in runs if requeue(run.id))
 
         # Recompute batch status based on child runs
         if resumed_count > 0:

@@ -40,10 +40,20 @@ async def get_run(client, run_id):
     return json.loads(text.split(LINKS)[0])
 
 
+async def wait_for_run(client, run_id, condition, timeout=20.0):
+    """Poll get_run until condition(run) holds; fail only after a generous deadline."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        run = await get_run(client, run_id)
+        if condition(run):
+            return run
+        await asyncio.sleep(0.01)
+    raise AssertionError(f"run {run_id} never reached the expected state: {run}")
+
+
 async def test_long_noop_run_started_over_mcp_finishes_in_background(dr_workspace, run_setup):
     _, runs, tools = run_setup
     async with mcp_client(dr_workspace, write_tools=tools) as client:
-        started_at = time.monotonic()
         result, text = await call(
             client,
             "run_refinement",
@@ -51,34 +61,27 @@ async def test_long_noop_run_started_over_mcp_finishes_in_background(dr_workspac
                 "taxonomy_id": TAXONOMY_ID,
                 "pipeline": "no_op",
                 "scope": {"scheme": "api"},
-                "options": {"items": 20, "item_seconds": 0.05},
+                "options": {"items": 200, "item_seconds": 0.01},
             },
         )
-        # The 1-second run is started, not awaited
-        assert time.monotonic() - started_at < 0.8
+        # The call returns the run id before the run has done anything
         assert result["isError"] is False
         started = json.loads(text)
         assert started["status"] == "pending"
+        assert started["items_done"] is None
         run_id = started["run_id"]
 
         # The server keeps answering while the run executes
-        for _ in range(100):
-            midway = await get_run(client, run_id)
-            if midway["items_done"]:
-                break
-            await asyncio.sleep(0.02)
+        midway = await wait_for_run(client, run_id, lambda r: r["items_done"])
         assert midway["status"] == "running"
-        assert 0 < midway["items_done"] < 20
+        assert midway["items_total"] == 200
+        assert midway["items_done"] < midway["items_total"]
         entity, _ = await call(client, "get_entity", {"id": OPERATION_ID})
         assert entity["isError"] is False
 
-        for _ in range(250):
-            finished = await get_run(client, run_id)
-            if finished["status"] == "completed":
-                break
-            await asyncio.sleep(0.02)
+        finished = await wait_for_run(client, run_id, lambda r: r["status"] != "running")
         assert finished["status"] == "completed"
-        assert (finished["items_done"], finished["items_total"]) == (20, 20)
+        assert (finished["items_done"], finished["items_total"]) == (200, 200)
         assert finished["proposal_id"] is None
         echo = runs.get(run_id).output_summary["input_echo"]
         assert echo["taxonomy_id"] == TAXONOMY_ID

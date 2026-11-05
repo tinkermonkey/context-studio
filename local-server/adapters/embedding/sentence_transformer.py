@@ -11,6 +11,7 @@ which is lightweight and suitable for desktop deployment.
 
 from __future__ import annotations
 
+import threading
 from typing import TYPE_CHECKING, Optional
 
 from opentelemetry import trace
@@ -46,6 +47,8 @@ class SentenceTransformerEmbedding:
         """
         self.model_name = model_name
         self._model: Optional[SentenceTransformer] = None
+        # Pipeline workers and the API thread pool may trigger the first load at once
+        self._load_lock = threading.Lock()
 
     def _ensure_model_loaded(self) -> None:
         """
@@ -54,6 +57,14 @@ class SentenceTransformerEmbedding:
         Defers model loading to the first embedding request to reduce
         application startup time.
         """
+        if self._model is not None:
+            return
+        with self._load_lock:
+            if self._model is None:
+                self._load_model()
+
+    def _load_model(self) -> None:
+        """Load the model (called once, under the load lock)."""
         if self._model is None:
             try:
                 # Lazy import to avoid hard dependency on sentence-transformers

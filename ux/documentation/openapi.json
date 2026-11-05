@@ -3639,6 +3639,9 @@
               }
             }
           },
+          "503": {
+            "description": "With async: background pipeline runs are not available"
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -3724,6 +3727,15 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "Pipeline run not found"
+          },
+          "409": {
+            "description": "The run is neither pending nor executing in the background"
+          },
+          "503": {
+            "description": "Background pipeline runs are not available"
           },
           "422": {
             "description": "Validation Error",
@@ -4734,7 +4746,7 @@
           "pipelines"
         ],
         "summary": "Cancel Batch Runs",
-        "description": "Cancel all PENDING runs in a batch.\n\nArgs:\n    batch_id: Batch ID\n    request: FastAPI request (for service access)\n\nReturns:\n    Count of cancelled runs\n\nRaises:\n    HTTPException: 404 if batch not found",
+        "description": "Cancel a batch's pending runs, and those executing in the background.\n\nArgs:\n    batch_id: Batch ID\n    request: FastAPI request (for service access)\n\nReturns:\n    Count of cancelled runs\n\nRaises:\n    HTTPException: 404 if batch not found",
         "operationId": "cancel_batch_runs_api_pipelines_batches__batch_id__cancel_post",
         "parameters": [
           {
@@ -4777,7 +4789,7 @@
           "pipelines"
         ],
         "summary": "Resume Batch Runs",
-        "description": "Resume (re-enqueue) cancelled or failed runs in a batch back to PENDING status.\n\nArgs:\n    batch_id: Batch ID\n    request: FastAPI request (for service access)\n\nReturns:\n    Count of resumed runs\n\nRaises:\n    HTTPException: 404 if batch not found",
+        "description": "Re-queue a batch's cancelled, failed or interrupted runs that carry a stored input.\n\nArgs:\n    batch_id: Batch ID\n    request: FastAPI request (for service access)\n\nReturns:\n    Count of resumed runs\n\nRaises:\n    HTTPException: 404 if batch not found",
         "operationId": "resume_batch_runs_api_pipelines_batches__batch_id__resume_post",
         "parameters": [
           {
