@@ -164,11 +164,27 @@ Each phase ends at a gate: continue if Context Studio wins on hand edits and dec
 
 ### Value log
 
-One row per task done through Context Studio (Gate A: [#1341](https://github.com/tinkermonkey/context-studio/issues/1341)).
+One row per task done through Context Studio (Gate A: [#1341](https://github.com/tinkermonkey/context-studio/issues/1341); Gate B: [#1370](https://github.com/tinkermonkey/context-studio/issues/1370)).
 
 | Date | Project | Task | Hand edits | Drift found | Time to decision | Agent context spent | What was missing |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |  |  |
+| 2026-11-04 | Documentation Robotics | Gate B #1: business-layer reflection walk in the review queue (proposal 0b6d60f8, 22 ops), in place of the spreadsheet. Landed in documentation_robotics#993 | 0 field edits in review; 22/22 accepted unchanged. To land it in #993: a hand-written maintainer pass (`applied-business-principles.json`) that fixed decisions that broke the layer's rules or contradicted each other, and one decision overridden (row 17's replacement). One code change mid-walk ([#1394](https://github.com/tinkermonkey/context-studio/pull/1394)) to resolve an in-use delete | 1: op 8 deleted a relationship type still used by 2 relationships. 0 defects caught at review; 1 missed (row 17's replacement linked a different pair, found while landing #993) | 21 ops in 2m07s; op 8 blocked 1h50m until #1394 shipped; 26h15m calendar. Baseline: the application-layer walk took 3h54m for 18 rows, including building the walk tooling; 0/18 accepted unchanged | n/a (a person walked it) | In-use blockers show only at apply time, and chat and MCP don't show them. Review didn't flag whether a delete's replacement links the same pair of element types; with the maintainer pass, `dr upgrade` migrates 10 of 26 retired types and drops 16. 21 ops in 2m07s suggests partly bulk acceptance. 11 layers not yet imported |
+| 2026-11-05 | Documentation Robotics | Gate B #2: charter-driven change over MCP in the application layer (redefine component assigned-to interface; add collaboration aggregates collaboration), reviewed in the UI, applied to `spec/schemas/**` in documentation_robotics#995 | 0 field edits in review; 2/2 accepted unchanged. To land it: 3 files written by hand (2 schemas and the CHANGELOG) plus 4 regenerated | 1: 9 application-layer relationship types are in Context Studio (proposal 69642a4f, 2026-10-30) but not in the DR spec. 0 defects caught at review | About 4 min to propose; 15h19m elapsed to decision (overnight; active review time isn't recorded); about 11 min from decision to an open, locally validated PR (14:33 to 14:44 UTC) | About 50 tool calls. Charter read once (it is the taxonomy vision); Context Studio's DR importer source read twice to learn the identifier and reference conventions | Context Studio can't hold `x-dr-evidence`, cardinality or strength, so they rode in rationale text and couldn't be edited at review. `export_dr_decisions.py` handles only triple decisions, so the spec edit was by hand. MCP `get_entity` and `get_proposal` omit fields that REST returns. Decisions carry no `decided_at` |
+| 2026-11-05 | House | Gate B #3: starter kits proposed over MCP (21 resources, 24 `requires` edges) under an approval policy, then a bundle round trip | 0 in House files. 0/45 kit ops kept (24 rejected, 21 auto-applied then reverted). In Context Studio: 2 policy updates, 24 rejects and 1 revert | 70 ops: House bundle 7b4858c had not been imported yet. Applied 70/70; the round trip then plans 0 ops in both directions | Kits proposed about 8.5 min after start; 21 auto-applied within 1 s; rejected on scope (time not recorded) and reverted 15h21m after proposal (23:17 to 14:39 UTC, overnight). Drift import applied 15h17m after it was proposed | About 50 tool calls. Read House's ONTOLOGY.md, the stage-2a decisions, VISION.md, House's exporter, and Context Studio's policy and bundle code | Kit contents (hammer, screws) are detail settled between claude.ai and the user, not ontology; the existing `requires` Activity/Task → Resource schema is enough. A `min_probability` above 0 blocks every bundle-import op, even editorial ones. Policy class rules don't cover subclasses. No proposal dry run. `propose_changes` has no field for an individual's data. Attribute-key renames count as breaking |
+
+**Gate B reading (2026-11-05).** Context Studio wins on hand edits at review and on decisions captured:
+
+- Tasks 1 and 2 accepted 24/24 ops unchanged, though 21 of task 1's 22 went through in 2m07s, so this is partly bulk acceptance. Task 3's 24 kit edges were rejected on scope, and its 21 auto-applied resources were reverted.
+- Every decision is saved with its operation's rationale and evidence, plus the reviewer's reason or in-use resolution where there was one. A reverted proposal's decisions are no longer exported.
+- House's round trip closed at zero ops, and revert worked.
+
+Quality held: DR validation passes in CI on documentation_robotics#993, and locally on #995 (`npm run build:spec:validate`), which is not merged yet. House evals were not run.
+
+Landing changes in the project still costs hand work, so three frictions should be fixed before Phase C:
+
+- Applying a DR decision still means hand-editing spec files. The export script handles only triple decisions, and Context Studio has no fields for evidence, cardinality or strength.
+- Review doesn't flag when a delete's replacement links a different pair of element types. The rationale names the replacement, but nothing marks the change of pair. That is how task 1 missed row 17.
+- Approval policies can't auto-apply bundle imports.
 
 ## Decisions to make
 
