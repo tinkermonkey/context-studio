@@ -21,9 +21,8 @@ judgement, so it carries no probability and isn't held to a confidence floor.
 Every other rule, and every hard rule, still applies to them. The exemption
 follows the proposal's recorded source rather than a probability faked onto
 its operations, so the review queue never shows a confidence nobody stated.
-Chat and MCP proposals can't claim to be bundles (their tools fix the source);
-over REST the source is the caller's word, and REST is the person's own
-surface.
+Only the bundle import makes bundle proposals: chat and MCP tools fix their
+source, and the REST create refuses source "bundle".
 
 Hard rules beat the policy:
 

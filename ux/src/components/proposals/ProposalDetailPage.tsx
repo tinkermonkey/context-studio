@@ -48,6 +48,7 @@ import {
   planKind,
   refsByOperation,
   replacementEndLabel,
+  replacementDeletedFlag,
   replacementFlag,
   tallyLabel,
   tallyOperations,
@@ -182,21 +183,35 @@ function ReplacementChip({
   context: OperationContext;
 }) {
   const check = operation.replacement_check;
-  if (!check || check.pair === "same") return null;
+  if (!check) return null;
   const flag = replacementFlag(check, (end) =>
     replacementEndLabel(end, (id) => context.endLabel(id, operation)),
   );
+  const gone = replacementDeletedFlag(check, deletedIdentifier(operation));
+  if (check.pair === "same" && !gone) return null;
+  const text = [check.pair === "same" ? undefined : flag.text, gone?.text]
+    .filter(Boolean)
+    .join(" ");
   return (
     <span
+      className="op-replacement-chips"
       role="note"
-      aria-label={flag.text}
-      title={flag.text}
-      data-testid={`operation-replacement-${operation.id}`}
+      aria-label={text}
+      title={text}
+      data-testid={`operation-replacement-chip-${operation.id}`}
       data-pair={flag.pair}
+      data-replacement-deleted={gone ? (check.cycle ? "cycle" : "chain") : undefined}
     >
-      <Chip variant={flag.variant}>{flag.chip}</Chip>
+      {check.pair !== "same" && <Chip variant={flag.variant}>{flag.chip}</Chip>}
+      {gone && <Chip variant="rose">{gone.chip}</Chip>}
     </span>
   );
+}
+
+/** A delete's own type, by identifier, for naming it in a cycle. */
+function deletedIdentifier(operation: ProposedOperation): string {
+  const identifier = operation.base?.identifier;
+  return typeof identifier === "string" ? identifier : (operation.target_id ?? "this type");
 }
 
 function revertMessage(summary: RevertSummary): string {

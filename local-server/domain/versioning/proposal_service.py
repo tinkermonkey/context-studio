@@ -39,6 +39,7 @@ from domain.versioning.exceptions import (
     ProposalValidationError,
 )
 from domain.versioning.in_use import (
+    ChainLink,
     ClassEnd,
     DeleteBlockers,
     InUseInspector,
@@ -1343,13 +1344,13 @@ class ProposalService:
             blockers = inspector.blockers(target_id, excluded=others, covered=covered)
             if blockers is None:
                 continue
-            named = self._replacement_property(proposal, operation)
+            named = self._replacement_property_id(proposal, operation)
             if named is not None:
                 # The proposer's named replacement goes first, when it fits.
                 blockers = replace(
                     blockers,
                     replacements=tuple(
-                        sorted(blockers.replacements, key=lambda r: r.property_id != named.id)
+                        sorted(blockers.replacements, key=lambda r: r.property_id != named)
                     ),
                 )
             found[operation.id] = blockers
@@ -1360,10 +1361,29 @@ class ProposalService:
         For each property delete that names its replacement: the replacement and
         how its domain and range compare with the deleted type's (as proposed,
         from its base): the same pair, reversed, or a different pair; missing
-        once the replacement is gone, or its create rejected. A "$ref"
-        replacement is read from its create's fields until that is applied.
+        once the replacement is gone, or its create rejected.
+
+        The replacement is judged as it will be once the proposal applies: an
+        awaiting update of it in the same proposal overlays its domain, range,
+        identifier and title; a "$ref" replacement is read from its create's
+        fields until that is applied; one the proposal deletes is read from that
+        delete's base. The comparison is exact, as DR's pairOf: an untyped
+        deleted type (no domain or range) against a typed replacement, or a
+        superclass or subclass of either end, is a different pair.
+
+        A replacement the proposal also deletes (an awaiting or applied delete)
+        is followed through each delete's own replacement to the end of the
+        chain, or round a cycle (see ReplacementCheck.chain).
         """
         creates = {o.ref: o for o in proposal.operations if o.ref}
+        deletes = {
+            o.target_id: o
+            for o in proposal.operations
+            if o.kind is K.PROPERTY
+            and o.op is OperationType.DELETE
+            and o.target_id
+            and o.status is not OperationStatus.REJECTED
+        }
         checks: dict[str, ReplacementCheck] = {}
         for operation in proposal.operations:
             replacement_id = operation.proposed_replacement_id
@@ -1374,46 +1394,118 @@ class ProposalService:
                 "deleted_domain": self._class_end(deleted[0], creates),
                 "deleted_range": self._class_end(deleted[1], creates),
             }
-            found = self._replacement_property(proposal, operation)
-            create = creates.get(replacement_id[1:]) if _is_ref(replacement_id) else None
-            if found is not None:
-                pair = (found.domain_class_id, found.range_class_id)
-                property_id, identifier, title = found.id, found.identifier, found.title
-            elif create is not None and create.status in (
-                OperationStatus.PENDING,
-                OperationStatus.FAILED,
-            ):
-                fields = create.fields
-                pair = (fields.get("domain_class_id"), fields.get("range_class_id"))
-                property_id, identifier, title = None, fields.get("identifier"), fields.get("title")
-            else:
+            values = self._replacement_values(proposal, replacement_id, creates, deletes)
+            chain, cycle = self._replacement_chain(proposal, operation, creates, deletes)
+            if values is None:
                 checks[operation.id] = ReplacementCheck(
                     replacement_id, None, None, None, PairMatch.MISSING, **ends
                 )
                 continue
+            pair = (values.get("domain_class_id"), values.get("range_class_id"))
             checks[operation.id] = ReplacementCheck(
                 replacement_id,
-                property_id,
-                identifier,
-                title,
+                values.get("id"),
+                values.get("identifier"),
+                values.get("title"),
                 compare_pair(deleted, pair),
                 **ends,
                 domain=self._class_end(pair[0], creates),
                 range=self._class_end(pair[1], creates),
+                chain=chain,
+                cycle=cycle,
             )
         return checks
 
-    def _replacement_property(self, proposal: ChangeProposal, operation: ProposedOperation) -> Any:
-        """The property definition a delete names as its replacement, if it exists now."""
+    @staticmethod
+    def _replacement_property_id(
+        proposal: ChangeProposal, operation: ProposedOperation
+    ) -> str | None:
+        """The id of the type a delete names as its replacement ("$ref": once applied)."""
         replacement_id = operation.proposed_replacement_id
-        if not replacement_id:
-            return None
-        if _is_ref(replacement_id):
+        if replacement_id and _is_ref(replacement_id):
             create = next((o for o in proposal.operations if o.ref == replacement_id[1:]), None)
-            if create is None or create.status is not OperationStatus.APPLIED:
+            applied = create is not None and create.status is OperationStatus.APPLIED
+            return create.result_entity_id if applied else None  # type: ignore[union-attr]
+        return replacement_id
+
+    def _replacement_values(
+        self,
+        proposal: ChangeProposal,
+        replacement_id: str,
+        creates: dict[str, ProposedOperation],
+        deletes: dict[Any, ProposedOperation],
+    ) -> dict[str, Any] | None:
+        """
+        A replacement's id, identifier, title, domain and range once the
+        proposal applies; None when it is gone (or its create rejected).
+        """
+        if _is_ref(replacement_id):
+            create = creates.get(replacement_id[1:])
+            if create is None or create.status is OperationStatus.REJECTED:
                 return None
-            replacement_id = create.result_entity_id
-        return self._load(K.PROPERTY, replacement_id)  # type: ignore[arg-type]
+            if create.status is not OperationStatus.APPLIED:
+                return {**create.fields, "id": None}
+            replacement_id = str(create.result_entity_id)
+        found = self._load(K.PROPERTY, replacement_id)
+        if found is not None:
+            values = {
+                "id": found.id,
+                "identifier": found.identifier,
+                "title": found.title,
+                "domain_class_id": found.domain_class_id,
+                "range_class_id": found.range_class_id,
+            }
+        elif replacement_id in deletes:
+            # Deleted by this proposal already: as it was when proposed.
+            values = {**deletes[replacement_id].base, "id": None}
+        else:
+            return None
+        for update in proposal.pending:
+            if update.op is OperationType.UPDATE and update.target_id == replacement_id:
+                values.update(
+                    {
+                        name: update.fields[name]
+                        for name in ("identifier", "title", "domain_class_id", "range_class_id")
+                        if name in update.fields
+                    }
+                )
+        return values
+
+    def _replacement_chain(
+        self,
+        proposal: ChangeProposal,
+        operation: ProposedOperation,
+        creates: dict[str, ProposedOperation],
+        deletes: dict[Any, ProposedOperation],
+    ) -> tuple[tuple[ChainLink, ...], bool]:
+        """
+        When the proposal also deletes the delete's replacement: each
+        replacement in turn, following each delete's own replacement, to one
+        it doesn't delete (or none), and whether the chain comes back round to a
+        type already in it. Empty when the replacement stays.
+        """
+        current = operation.proposed_replacement_id
+        if current not in deletes:
+            return (), False
+        seen = {operation.target_id}
+        links: list[ChainLink] = []
+        while current is not None:
+            deleter = deletes.get(current)
+            values = self._replacement_values(proposal, current, creates, {})
+            if deleter is not None:
+                identifier = deleter.base.get("identifier")
+            else:
+                identifier = values.get("identifier") if values else None
+            links.append(
+                ChainLink(current, identifier, deleter.seq if deleter is not None else None)
+            )
+            if deleter is None:
+                return tuple(links), False
+            seen.add(current)
+            current = deleter.proposed_replacement_id
+            if current in seen:
+                return tuple(links), True
+        return tuple(links), False
 
     def _class_end(self, class_id: Any, creates: dict[str, ProposedOperation]) -> ClassEnd:
         """A domain or range class with its title ("$ref": its create's title)."""

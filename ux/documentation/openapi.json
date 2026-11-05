@@ -6895,7 +6895,7 @@
           "proposals"
         ],
         "summary": "Create Proposal",
-        "description": "Propose changes to a taxonomy; every operation starts pending.\n\nThe proposal is validated as a whole against the current graph. If any\noperation is invalid nothing is stored and the 422 lists each problem with\nits operation's seq and a stable code.",
+        "description": "Propose changes to a taxonomy; every operation starts pending.\n\nThe proposal is validated as a whole against the current graph. If any\noperation is invalid nothing is stored and the 422 lists each problem with\nits operation's seq and a stable code. Source \"bundle\" is refused (code\ninvalid_source): bundle proposals come from the bundle import route, and\nare exempt from the approval policy's min_probability.",
         "operationId": "create_proposal_api_proposals_post",
         "requestBody": {
           "required": true,
@@ -8499,6 +8499,44 @@
         ],
         "title": "CentralityResponse",
         "description": "Response containing centrality scores."
+      },
+      "ChainLinkResponse": {
+        "properties": {
+          "replacement_id": {
+            "type": "string",
+            "title": "Replacement Id",
+            "description": "The type: an id or \"$<ref>\""
+          },
+          "identifier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Identifier"
+          },
+          "deleted_by_seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deleted By Seq",
+            "description": "The delete of this proposal that removes it; null where the chain ends"
+          }
+        },
+        "type": "object",
+        "required": [
+          "replacement_id"
+        ],
+        "title": "ChainLinkResponse",
+        "description": "One replacement in a chain of deletes."
       },
       "ChangeHistoryResponse": {
         "properties": {
@@ -14788,6 +14826,26 @@
               }
             ],
             "description": "Null when missing"
+          },
+          "replacement_deleted": {
+            "type": "boolean",
+            "title": "Replacement Deleted",
+            "description": "The proposal also deletes the replacement (flagged)",
+            "default": false
+          },
+          "chain": {
+            "items": {
+              "$ref": "#/components/schemas/ChainLinkResponse"
+            },
+            "type": "array",
+            "title": "Chain",
+            "description": "Empty unless replacement_deleted: each replacement in turn, following each delete's own replacement, to the type it ends at (the last link, with no deleted_by_seq) or until it comes back round"
+          },
+          "cycle": {
+            "type": "boolean",
+            "title": "Cycle",
+            "description": "The chain comes back round to a type already in it: every type in it is deleted, so nothing replaces this one",
+            "default": false
           }
         },
         "type": "object",

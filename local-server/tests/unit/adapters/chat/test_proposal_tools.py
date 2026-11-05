@@ -21,7 +21,7 @@ from domain.versioning.exceptions import (
     OperationError,
     ProposalValidationError,
 )
-from domain.versioning.in_use import ClassEnd, PairMatch, ReplacementCheck
+from domain.versioning.in_use import ChainLink, ClassEnd, PairMatch, ReplacementCheck
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
@@ -536,6 +536,40 @@ class TestReplacements:
             "deleted_pair": "BusinessRole -> BusinessFunction",
             "replacement_pair": "BusinessRole -> BusinessProcess",
         }
+
+    async def test_get_proposal_flags_a_cycle_of_deletes(self):
+        """DR apm 8 <-> 9: each delete names the type the other deletes."""
+        eight = make_operation(
+            8,
+            op=OperationType.DELETE,
+            kind=OperationKind.PROPERTY,
+            target_id="p-a",
+            fields={},
+            scope=ChangeScope.BREAKING,
+            proposed_replacement_id="p-b",
+        )
+        end = ClassEnd("c-1", "Metric")
+        check = ReplacementCheck(
+            replacement_id="p-b",
+            property_id="p-b",
+            identifier="b",
+            title="b",
+            pair=PairMatch.REVERSED,
+            deleted_domain=end,
+            deleted_range=end,
+            domain=end,
+            range=end,
+            chain=(ChainLink("p-b", "b", 9),),
+            cycle=True,
+        )
+        service = FakeProposalService(proposal=make_proposal([eight]), checks={eight.id: check})
+
+        _, result = await call(service, "get_proposal", id="prop-1")
+
+        flagged = result["operations"][0]["replacement_check"]
+        assert flagged["replacement_deleted"] is True
+        assert flagged["cycle"] is True
+        assert flagged["chain"] == [{"identifier": "b", "deleted_by_seq": 9}]
 
 
 class TestGetProposal:

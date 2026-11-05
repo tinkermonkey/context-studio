@@ -104,7 +104,8 @@
     white-space: nowrap;
   }
 
-  .op-status {
+  .op-status,
+  .op-replacement-chips {
     display: flex;
     gap: 4px;
     flex-wrap: wrap;

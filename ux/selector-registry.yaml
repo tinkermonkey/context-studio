@@ -3192,6 +3192,9 @@ selectors:
   - selector: operation-replacement-callout
     component: src/components/proposals/OperationInspector.tsx
     description: "Callout comparing the replacement's pair of classes with the deleted type's (warn for a different pair or a missing replacement)"
-  - selector: operation-replacement-*
+  - selector: operation-replacement-chip-*
     component: src/components/proposals/ProposalDetailPage.tsx
-    description: "Row chip (role=note) on a delete whose named replacement links a reversed or different pair, or is gone, by operation id; data-pair holds the verdict"
+    description: "Row chips (role=note) on a delete whose named replacement links a reversed or different pair, is gone, or is deleted by the proposal too, by operation id; data-pair holds the pair verdict, data-replacement-deleted is chain or cycle"
+  - selector: operation-replacement-deleted-callout
+    component: src/components/proposals/OperationInspector.tsx
+    description: "Warning that the proposal deletes the named replacement too: the chain of replacements to the type it ends at, or the cycle (data-cycle)"

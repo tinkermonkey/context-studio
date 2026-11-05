@@ -19,9 +19,15 @@ A property delete may also name its replacement (`proposed_replacement_id`).
 Its pair of classes is compared with the deleted type's: the same domain and
 range, the two reversed, or a different pair. Only a same or reversed pair can
 take over the deleted type's relationships as they are (DR's `dr upgrade`
-rewrites only those; see `samePairOf` in DR's apply-walk.ts), so a different
-pair is flagged for review. The comparison is exact (a subclass is a different
-class): whether the relationships still fit is the in-use check's job.
+rewrites only those; see `pairOf` in DR's apply-reflect-plan.ts), so a
+different pair is flagged for review. The comparison is exact, as DR's: a
+subclass or superclass is a different class, and an untyped end (None) differs
+from a typed one, so an untyped deleted type against a typed replacement is a
+different pair. Whether the relationships still fit is the in-use check's job.
+
+A replacement the same proposal also deletes is flagged too, following each
+delete's own replacement to the end of the chain, or round a cycle (two deletes
+naming each other: neither type survives).
 """
 
 from __future__ import annotations
@@ -114,6 +120,18 @@ class ClassEnd:
 
 
 @dataclass(frozen=True)
+class ChainLink:
+    """
+    One replacement in a chain of deletes: the type, and the delete of the
+    same proposal that removes it (None for the type the chain ends at).
+    """
+
+    replacement_id: str
+    identifier: str | None
+    deleted_by_seq: int | None
+
+
+@dataclass(frozen=True)
 class ReplacementCheck:
     """
     A property delete's named replacement, compared with the deleted type.
@@ -126,6 +144,12 @@ class ReplacementCheck:
         pair: Same, reversed or different pair; missing if it is gone
         deleted_domain, deleted_range: The deleted type's classes when proposed
         domain, range: The replacement's classes (None when missing)
+        chain: Empty unless the proposal also deletes the replacement; then
+            each replacement in turn, following each delete's own replacement,
+            to the type it ends at (the last link, not deleted) or until it
+            comes back round
+        cycle: Whether the chain comes back round to a type already in it
+            (this delete's own included): every type in it is deleted
     """
 
     replacement_id: str
@@ -137,6 +161,13 @@ class ReplacementCheck:
     deleted_range: ClassEnd
     domain: ClassEnd | None = None
     range: ClassEnd | None = None
+    chain: tuple[ChainLink, ...] = ()
+    cycle: bool = False
+
+    @property
+    def replacement_deleted(self) -> bool:
+        """Whether the proposal also deletes the replacement."""
+        return bool(self.chain)
 
 
 class InUseInspector:

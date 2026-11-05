@@ -13,7 +13,12 @@ import { entityPageHandlers } from "@/test/entityPageHandlers";
 import { openProposal, proposalHandlers } from "@/test/proposalFixtures";
 import type { ChangeProposal, ProposedOperation } from "@/api/services/proposals";
 import { ProposalDetailPage } from "../ProposalDetailPage";
-import { replacementEndLabel, replacementFlag, type ReplacementCheck } from "../proposalModel";
+import {
+  replacementDeletedFlag,
+  replacementEndLabel,
+  replacementFlag,
+  type ReplacementCheck,
+} from "../proposalModel";
 
 const server = setupServer(...proposalHandlers, ...entityPageHandlers);
 
@@ -33,6 +38,9 @@ function check(pair: ReplacementCheck["pair"], domain = component, range = compo
     deleted_range: service,
     domain: pair === "missing" ? null : domain,
     range: pair === "missing" ? null : range,
+    replacement_deleted: false,
+    chain: [] as ReplacementCheck["chain"],
+    cycle: false,
   };
 }
 
@@ -70,12 +78,12 @@ describe("a delete naming its replacement", () => {
   it("flags a different pair on its row; other rows carry no flag", async () => {
     renderPage();
 
-    const flag = await screen.findByTestId("operation-replacement-op-delete");
+    const flag = await screen.findByTestId("operation-replacement-chip-op-delete");
     expect(flag).toHaveAttribute("role", "note");
     expect(flag).toHaveAttribute("data-pair", "different");
     await waitFor(() => expect(flag).toHaveAccessibleName(expect.stringContaining(DIFFERENT)));
     expect(within(flag).getByText("different pair")).toHaveClass("chip--rose");
-    expect(screen.queryByTestId("operation-replacement-op-rename")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("operation-replacement-chip-op-rename")).not.toBeInTheDocument();
   });
 
   it("explains a different pair in the inspector as a warning", async () => {
@@ -103,14 +111,14 @@ describe("a delete naming its replacement", () => {
       ),
     );
     expect(callout).not.toHaveAttribute("role", "alert");
-    expect(screen.queryByTestId("operation-replacement-op-delete")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("operation-replacement-chip-op-delete")).not.toBeInTheDocument();
   });
 
   it("a reversed pair gets an amber row chip", async () => {
     theDelete().replacement_check = check("reversed", service, component);
     renderPage();
 
-    const flag = await screen.findByTestId("operation-replacement-op-delete");
+    const flag = await screen.findByTestId("operation-replacement-chip-op-delete");
     expect(within(flag).getByText("reversed pair")).toHaveClass("chip--amber");
   });
 
@@ -120,6 +128,87 @@ describe("a delete naming its replacement", () => {
 
     await screen.findByTestId("operation-inspector");
     expect(screen.queryByTestId("operation-replacement")).not.toBeInTheDocument();
+  });
+});
+
+describe("a replacement the proposal deletes too", () => {
+  it("flags a cycle on the row and names both types in the inspector", async () => {
+    Object.assign(theDelete().replacement_check!, {
+      pair: "reversed",
+      domain: service,
+      range: component,
+      replacement_deleted: true,
+      chain: [
+        { replacement_id: "prop-twin", identifier: "component_uses_component", deleted_by_seq: 9 },
+      ],
+      cycle: true,
+    });
+    renderPage("op-delete");
+
+    const flag = await screen.findByTestId("operation-replacement-chip-op-delete");
+    expect(flag).toHaveAttribute("data-replacement-deleted", "cycle");
+    expect(within(flag).getByText("reversed pair")).toHaveClass("chip--amber");
+    expect(within(flag).getByText("replacement cycle")).toHaveClass("chip--rose");
+    const callout = await screen.findByTestId("operation-replacement-deleted-callout");
+    expect(callout).toHaveAttribute("role", "alert");
+    expect(callout).toHaveTextContent(
+      "component_realizes_service and component_uses_component each name the other as replacement; both are deleted (seq 9), so neither replaces the other.",
+    );
+  });
+
+  it("follows a chain to the type it ends at, even when the pair is the same", async () => {
+    Object.assign(theDelete().replacement_check!, {
+      pair: "same",
+      domain: component,
+      range: service,
+      replacement_deleted: true,
+      chain: [
+        { replacement_id: "prop-twin", identifier: "component_uses_component", deleted_by_seq: 17 },
+        {
+          replacement_id: "prop-end",
+          identifier: "component_serves_service",
+          deleted_by_seq: null,
+        },
+      ],
+      cycle: false,
+    });
+    renderPage("op-delete");
+
+    const flag = await screen.findByTestId("operation-replacement-chip-op-delete");
+    expect(flag).toHaveAttribute("data-replacement-deleted", "chain");
+    expect(within(flag).queryByText("same pair")).not.toBeInTheDocument();
+    expect(within(flag).getByText("replacement deleted")).toHaveClass("chip--rose");
+    expect(await screen.findByTestId("operation-replacement-deleted-callout")).toHaveTextContent(
+      "The replacement component_uses_component is deleted too (seq 17). Following each delete's replacement: component_uses_component (deleted by seq 17) → component_serves_service; the chain ends at component_serves_service, which stays.",
+    );
+  });
+
+  it("a replacement that stays has no deleted callout", async () => {
+    renderPage("op-delete");
+
+    await screen.findByTestId("operation-replacement-callout");
+    expect(screen.queryByTestId("operation-replacement-deleted-callout")).not.toBeInTheDocument();
+  });
+});
+
+describe("replacementDeletedFlag", () => {
+  it("names a longer loop and a chain that ends with no replacement", () => {
+    const link = (id: string, seq: number | null) => ({
+      replacement_id: id,
+      identifier: id,
+      deleted_by_seq: seq,
+    });
+    const loop = { ...check("different"), replacement_deleted: true, cycle: true };
+    expect(
+      replacementDeletedFlag({ ...loop, chain: [link("b", 7), link("c", 8)] }, "a")?.text,
+    ).toBe(
+      "The replacements loop: b (deleted by seq 7) → c (deleted by seq 8) → back round; every type in it is deleted, so nothing replaces a.",
+    );
+    const dead = { ...loop, cycle: false, chain: [link("b", 7)] };
+    expect(replacementDeletedFlag(dead, "a")?.text).toContain(
+      "the chain ends with no replacement (seq 7 names none)",
+    );
+    expect(replacementDeletedFlag(check("same"), "a")).toBeUndefined();
   });
 });
 

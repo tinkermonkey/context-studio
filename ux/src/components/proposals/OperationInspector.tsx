@@ -12,6 +12,7 @@ import {
   planKind,
   propertyTriples,
   replacementEndLabel,
+  replacementDeletedFlag,
   replacementFlag,
 } from "./proposalModel";
 import { subjectOf } from "./OperationDiff";
@@ -89,6 +90,11 @@ function ReplacementSection({
   const flag = replacementFlag(check, (end) =>
     replacementEndLabel(end, (id) => context.endLabel(id, operation)),
   );
+  const identifier = operation.base?.identifier;
+  const gone = replacementDeletedFlag(
+    check,
+    typeof identifier === "string" ? identifier : (operation.target_id ?? "this type"),
+  );
   return (
     <InspectorPanel.Section title="Replacement">
       <div
@@ -103,9 +109,20 @@ function ReplacementSection({
         >
           {flag.text}
         </FormCallout>
+        {gone && (
+          <FormCallout
+            variant="warn"
+            icon="alert"
+            data-testid="operation-replacement-deleted-callout"
+            data-cycle={check.cycle ? "true" : "false"}
+          >
+            {gone.text}
+          </FormCallout>
+        )}
         <div className="op-inspector__chips">
           <Chip form="id-tag">{check.identifier ?? check.replacement_id}</Chip>
           <Chip variant={flag.variant}>{flag.chip}</Chip>
+          {gone && <Chip variant="rose">{gone.chip}</Chip>}
         </div>
       </div>
     </InspectorPanel.Section>

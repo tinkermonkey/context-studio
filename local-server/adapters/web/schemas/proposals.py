@@ -220,6 +220,18 @@ class ClassEndResponse(BaseModel):
     title: Optional[str] = None
 
 
+class ChainLinkResponse(BaseModel):
+    """One replacement in a chain of deletes."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    replacement_id: str = Field(..., description='The type: an id or "$<ref>"')
+    identifier: Optional[str] = None
+    deleted_by_seq: Optional[int] = Field(
+        None, description="The delete of this proposal that removes it; null where the chain ends"
+    )
+
+
 class ReplacementCheckResponse(BaseModel):
     """A relationship-type delete's named replacement, compared with the deleted type."""
 
@@ -243,6 +255,20 @@ class ReplacementCheckResponse(BaseModel):
     deleted_range: ClassEndResponse
     domain: Optional[ClassEndResponse] = Field(None, description="Null when missing")
     range: Optional[ClassEndResponse] = Field(None, description="Null when missing")
+    replacement_deleted: bool = Field(
+        False, description="The proposal also deletes the replacement (flagged)"
+    )
+    chain: list[ChainLinkResponse] = Field(
+        default_factory=list,
+        description="Empty unless replacement_deleted: each replacement in turn, following "
+        "each delete's own replacement, to the type it ends at (the last link, with no "
+        "deleted_by_seq) or until it comes back round",
+    )
+    cycle: bool = Field(
+        False,
+        description="The chain comes back round to a type already in it: every type in it "
+        "is deleted, so nothing replaces this one",
+    )
 
 
 class ProposedOperationResponse(BaseModel):

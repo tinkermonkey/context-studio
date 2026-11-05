@@ -3630,7 +3630,9 @@ export interface paths {
      *
      *     The proposal is validated as a whole against the current graph. If any
      *     operation is invalid nothing is stored and the 422 lists each problem with
-     *     its operation's seq and a stable code.
+     *     its operation's seq and a stable code. Source "bundle" is refused (code
+     *     invalid_source): bundle proposals come from the bundle import route, and
+     *     are exempt from the approval policy's min_probability.
      */
     post: operations["create_proposal_api_proposals_post"];
     delete?: never;
@@ -4528,6 +4530,24 @@ export interface components {
       scores: {
         [key: string]: number;
       };
+    };
+    /**
+     * ChainLinkResponse
+     * @description One replacement in a chain of deletes.
+     */
+    ChainLinkResponse: {
+      /**
+       * Replacement Id
+       * @description The type: an id or "$<ref>"
+       */
+      replacement_id: string;
+      /** Identifier */
+      identifier?: string | null;
+      /**
+       * Deleted By Seq
+       * @description The delete of this proposal that removes it; null where the chain ends
+       */
+      deleted_by_seq?: number | null;
     };
     /**
      * ChangeHistoryResponse
@@ -8238,6 +8258,23 @@ export interface components {
       domain?: components["schemas"]["ClassEndResponse"] | null;
       /** @description Null when missing */
       range?: components["schemas"]["ClassEndResponse"] | null;
+      /**
+       * Replacement Deleted
+       * @description The proposal also deletes the replacement (flagged)
+       * @default false
+       */
+      replacement_deleted: boolean;
+      /**
+       * Chain
+       * @description Empty unless replacement_deleted: each replacement in turn, following each delete's own replacement, to the type it ends at (the last link, with no deleted_by_seq) or until it comes back round
+       */
+      chain?: components["schemas"]["ChainLinkResponse"][];
+      /**
+       * Cycle
+       * @description The chain comes back round to a type already in it: every type in it is deleted, so nothing replaces this one
+       * @default false
+       */
+      cycle: boolean;
     };
     /**
      * ReplacementTypeResponse

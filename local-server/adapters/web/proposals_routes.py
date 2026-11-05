@@ -226,8 +226,19 @@ async def create_proposal(
 
     The proposal is validated as a whole against the current graph. If any
     operation is invalid nothing is stored and the 422 lists each problem with
-    its operation's seq and a stable code.
+    its operation's seq and a stable code. Source "bundle" is refused (code
+    invalid_source): bundle proposals come from the bundle import route, and
+    are exempt from the approval policy's min_probability.
     """
+    if request.source is ProposalSource.BUNDLE:
+        message = "bundle proposals come from the bundle import route"
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail={
+                "message": message,
+                "errors": [{"seq": None, "code": "invalid_source", "message": message}],
+            },
+        )
     drafts = [
         OperationDraft(
             seq=o.seq,

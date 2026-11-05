@@ -114,7 +114,6 @@ def _propose_delete(client, graph):
         json={
             "taxonomy_id": graph["taxonomy"],
             "title": "Business layer",
-            "source": "bundle",
             "operations": [
                 {"seq": 8, "op": "delete", "kind": "property", "target_id": graph["blocked"]}
             ],
@@ -320,7 +319,6 @@ class TestReviewFindings:
             json={
                 "taxonomy_id": graph["taxonomy"],
                 "title": "Bundle",
-                "source": "bundle",
                 "operations": [
                     {"seq": 1, "op": "delete", "kind": "relationship", "target_id": graph["first"]},
                     {
@@ -421,3 +419,24 @@ class TestNamedReplacement:
         assert response.status_code == 422
         (error,) = response.json()["detail"]["errors"]
         assert (error["seq"], error["code"]) == (1, "replacement_not_found")
+
+
+def test_rest_refuses_a_bundle_source(client, graph):
+    """#1399: bundle proposals skip min_probability, so only the bundle import makes them."""
+    response = client.post(
+        "/api/proposals",
+        json={
+            "taxonomy_id": graph["taxonomy"],
+            "title": "Not a bundle",
+            "source": "bundle",
+            "operations": [
+                {"seq": 1, "op": "delete", "kind": "property", "target_id": graph["blocked"]}
+            ],
+        },
+    )
+
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+    assert detail["message"] == "bundle proposals come from the bundle import route"
+    assert detail["errors"][0]["code"] == "invalid_source"
+    assert client.get("/api/proposals").json()["total"] == 0

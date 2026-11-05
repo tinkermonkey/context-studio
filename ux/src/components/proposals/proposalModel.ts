@@ -366,6 +366,48 @@ export function replacementFlag(
   }
 }
 
+export interface ReplacementDeletedFlag {
+  /** "replacement deleted" or "replacement cycle", for the row chip. */
+  chip: string;
+  /** The full sentence, naming the chain or the cycle. */
+  text: string;
+}
+
+/**
+ * When the proposal also deletes a delete's named replacement: the chain of
+ * replacements to the type it ends at, or the cycle ("A and B each name the
+ * other; both are deleted"). Undefined when the replacement stays.
+ */
+export function replacementDeletedFlag(
+  check: ReplacementCheck,
+  deletedIdentifier: string,
+): ReplacementDeletedFlag | undefined {
+  const chain = check.chain ?? [];
+  if (!check.replacement_deleted || chain.length === 0) return undefined;
+  const name = (link: (typeof chain)[number]) => link.identifier ?? link.replacement_id;
+  const step = (link: (typeof chain)[number]) =>
+    link.deleted_by_seq != null
+      ? `${name(link)} (deleted by seq ${link.deleted_by_seq})`
+      : name(link);
+  const first = chain[0];
+  if (check.cycle) {
+    const text =
+      chain.length === 1
+        ? `${deletedIdentifier} and ${name(first)} each name the other as replacement; both are deleted (seq ${first.deleted_by_seq}), so neither replaces the other.`
+        : `The replacements loop: ${chain.map(step).join(" → ")} → back round; every type in it is deleted, so nothing replaces ${deletedIdentifier}.`;
+    return { chip: "replacement cycle", text };
+  }
+  const last = chain[chain.length - 1];
+  const ending =
+    last.deleted_by_seq == null
+      ? `the chain ends at ${name(last)}, which stays`
+      : `the chain ends with no replacement (seq ${last.deleted_by_seq} names none)`;
+  return {
+    chip: "replacement deleted",
+    text: `The replacement ${name(first)} is deleted too (seq ${first.deleted_by_seq}). Following each delete's replacement: ${chain.map(step).join(" → ")}; ${ending}.`,
+  };
+}
+
 /** Ids of the existing property definitions that property operations touch. */
 export function referencedPropertyIds(operations: ProposedOperation[]): string[] {
   return operations

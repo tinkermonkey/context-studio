@@ -120,6 +120,101 @@ class TestPropose:
         assert graph["triggers_process"] not in {r.property_id for r in blockers.replacements}
 
 
+class TestAfterTheProposal:
+    """The replacement is judged as the proposal leaves it (review 1 on #1398)."""
+
+    def test_an_update_of_the_replacement_in_the_proposal_overlays_its_pair(
+        self, service, graph, ontology
+    ):
+        """DR navigation seq 20/21: seq 20 retargets the type seq 21 names as replacement."""
+        twin = add_fitting_type(ontology, graph)  # BusinessEvent -> BusinessFunction, as deleted
+        retarget = OperationDraft(
+            20,
+            T.UPDATE,
+            K.PROPERTY,
+            twin,
+            fields={
+                "identifier": "businessfunction_navigates_to_businessprocess",
+                "domain_class_id": graph["function"],
+                "range_class_id": graph["process"],
+            },
+        )
+        proposal = propose(service, graph, retarget, delete(graph, twin, seq=21))
+
+        check = service.replacement_checks(proposal)[the_op(proposal, 21).id]
+        assert check.pair is PairMatch.DIFFERENT  # the same pair until seq 20 applies
+        assert (check.domain.title, check.range.title) == ("BusinessFunction", "BusinessProcess")
+        assert check.identifier == "businessfunction_navigates_to_businessprocess"
+        assert check.property_id == twin
+
+        # A reversal by the update (DR technology seq 8/9) reads as reversed.
+        reverse = OperationDraft(
+            8,
+            T.UPDATE,
+            K.PROPERTY,
+            twin,
+            fields={"domain_class_id": graph["function"], "range_class_id": graph["event"]},
+        )
+        reversed_ = propose(service, graph, reverse, delete(graph, twin, seq=9))
+        assert service.replacement_checks(reversed_)[the_op(reversed_, 9).id].pair is (
+            PairMatch.REVERSED
+        )
+
+        # Rejected, the update no longer counts.
+        rejected = service.reject(proposal.id, [the_op(proposal, 20).id])
+        assert service.replacement_checks(rejected)[the_op(rejected, 21).id].pair is (
+            PairMatch.SAME
+        )
+
+    def test_a_chain_of_deletes_is_followed_to_the_type_it_ends_at(self, service, graph, ontology):
+        """Gate B business seq 6 -> seq 17: the replacement is deleted too, with its own."""
+        serves = add_fitting_type(ontology, graph)
+        proposal = propose(
+            service,
+            graph,
+            delete(graph, graph["triggers_process"], seq=6),
+            delete(graph, serves, seq=17, target="triggers_process"),
+        )
+
+        check = service.replacement_checks(proposal)[the_op(proposal, 6).id]
+        assert check.replacement_deleted and not check.cycle
+        assert [(link.identifier, link.deleted_by_seq) for link in check.chain] == [
+            ("businessevent_triggers_businessprocess", 17),
+            ("businessevent_serves_businessfunction", None),
+        ]
+        assert check.pair is PairMatch.DIFFERENT
+        assert not service.replacement_checks(proposal)[the_op(proposal, 17).id].chain
+
+        # Applied, the deleted replacement is read from its delete's base.
+        applied = service.apply(proposal.id, [the_op(proposal, 17).id])
+        after = service.replacement_checks(applied)[the_op(applied, 6).id]
+        assert (after.pair, after.property_id, after.replacement_deleted) == (
+            PairMatch.DIFFERENT,
+            None,
+            True,
+        )
+        assert after.range.title == "BusinessProcess"
+
+    def test_deletes_naming_each_other_are_a_cycle(self, service, graph):
+        """DR api 15 <-> 19: both types are deleted, so neither replaces the other."""
+        proposal = propose(
+            service,
+            graph,
+            delete(graph, graph["triggers_process"], seq=15),
+            delete(graph, graph["triggers_function"], seq=19, target="triggers_process"),
+        )
+
+        checks = service.replacement_checks(proposal)
+        first, second = checks[the_op(proposal, 15).id], checks[the_op(proposal, 19).id]
+        assert first.cycle and second.cycle
+        assert [link.deleted_by_seq for link in first.chain] == [19]
+        assert [link.deleted_by_seq for link in second.chain] == [15]
+
+        # A rejected delete breaks the cycle: its type stays.
+        kept = service.reject(proposal.id, [the_op(proposal, 19).id])
+        assert not service.replacement_checks(kept)[the_op(kept, 15).id].chain
+
+
 class TestChecks:
     def test_compares_the_replacements_pair_with_the_deleted_types(self, service, graph, ontology):
         reversed_type = ontology.create_property_definition(

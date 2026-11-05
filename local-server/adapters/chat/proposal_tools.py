@@ -435,7 +435,10 @@ class GetProposalTool(_ProposalTool):
         " current values. A property delete that names its replacement has"
         " replacement_check: its pair is same, reversed or different (the replacement"
         " links a different pair of classes than the deleted type, so it can't take over"
-        " its relationships), or missing. A large proposal's operations page with offset."
+        " its relationships), or missing; replacement_deleted means the proposal deletes"
+        " the replacement too (chain follows each delete's replacement; cycle means the"
+        " deletes name each other and none survives). A large proposal's operations page"
+        " with offset."
     )
     input_schema = {
         "type": "object",
@@ -534,6 +537,13 @@ def _replacement_check(check: ReplacementCheck) -> dict[str, Any]:
         "deleted_pair": pair(check.deleted_domain, check.deleted_range),
         "replacement_pair": pair(check.domain, check.range),
     }
+    if check.chain:
+        found["replacement_deleted"] = True
+        found["chain"] = [
+            {"identifier": link.identifier, "deleted_by_seq": link.deleted_by_seq}
+            for link in check.chain
+        ]
+        found["cycle"] = check.cycle
     return {k: v for k, v in found.items() if v is not None}
 
 
