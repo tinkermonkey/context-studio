@@ -73,23 +73,30 @@
   font-size: 12px;
 }
 
+/* Layout applies to every callout. Colours apply to the info variant only, so
+   Heimdall's --warn and --error variants (layer heimdall, below this one) keep
+   their own background, border and icon colour. */
 .form-callout {
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  background: rgba(34, 211, 238, 0.04);
-  border: 1px solid rgba(34, 211, 238, 0.16);
   border-radius: 6px;
   padding: 10px 12px;
   margin-bottom: 14px;
   font-size: 12px;
-  color: rgb(var(--canvas-fg-2));
   line-height: 1.5;
 }
+.form-callout--info {
+  background: rgba(34, 211, 238, 0.04);
+  border: 1px solid rgba(34, 211, 238, 0.16);
+  color: rgb(var(--canvas-fg-2));
+}
 .form-callout svg {
-  color: rgb(var(--accent-primary));
   flex-shrink: 0;
   margin-top: 2px;
+}
+.form-callout--info svg {
+  color: rgb(var(--accent-primary));
 }
 .form-callout em {
   font-style: normal;

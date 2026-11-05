@@ -67,6 +67,14 @@ body.dark-canvas {
   --level-individual: 52 211 153;
 }
 
+/* Heimdall gives the canvas min-width: 1100px. With the 256px sidebar that is
+   wider than any viewport under ~1360px, so the canvas overflowed the window
+   and its right edge (the split-2 inspector) was cut off. Pages adapt to a
+   narrower canvas themselves (minmax(0, 1fr) tracks, container queries). */
+.shell-layout__canvas {
+  min-width: 0;
+}
+
 /* Heimdall .hierarchy-row pins the pill column at 220px, but the pill
    contains the kind tag, label, and meta count and frequently exceeds
    that — the overflow visually collides with the description column.

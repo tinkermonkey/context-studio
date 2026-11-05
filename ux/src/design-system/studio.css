@@ -429,9 +429,66 @@ select.input {
 /* ------------ Two-pane layouts ------------ */
 .split-2 {
   display: grid;
-  grid-template-columns: 1fr var(--inspector-width, 380px);
+  grid-template-columns: minmax(0, 1fr) var(--inspector-width, 380px);
   gap: 16px;
   align-items: start;
+}
+/* The list column may shrink below its content's width (grid items default to
+   min-width: auto), so a wide table never pushes the inspector off-screen. A
+   table wider than the column scrolls sideways inside its own frame. That
+   makes the frame a scroll container, so while the inspector is open the
+   table header sticks within the frame, not to the top of the canvas. */
+.split-2__main {
+  min-width: 0;
+}
+.split-2__main .schema-table-wrap {
+  overflow-x: auto;
+}
+
+/* Classes table cells: the identifier stays on one line and the title keeps a
+   readable minimum; the description narrows first and clamps to two lines;
+   a long scheme name truncates and a long parent name wraps rather than
+   widening their columns. */
+.class-cell__id {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+.class-cell__title {
+  display: block;
+  min-width: 140px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.class-cell__description {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  min-width: 120px;
+  color: rgb(var(--canvas-fg-3));
+  font-size: 12.5px;
+}
+.class-cell__scheme.chip {
+  max-width: 140px;
+}
+.class-cell__scheme-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.class-cell__parent {
+  display: block;
+  min-width: 96px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: rgb(var(--canvas-fg-2));
+  overflow-wrap: anywhere;
+}
+.class-cell__root {
+  color: rgb(var(--canvas-fg-3));
+  font-size: 12px;
 }
 /* The inspector stays in view while the list beside it scrolls: it sticks to
    the top of the shell canvas (the scroll container) and is never taller than

@@ -468,33 +468,9 @@
     font-weight: 600;
   }
 
-  /* crud.css restyles every .form-callout as an info note; keep the warn and
-     error variants here, as the design has them. Triple ids have no spaces,
-     so callout text may break anywhere. */
+  /* Triple ids have no spaces, so callout text may break anywhere. */
   :is(.op-decision, .op-replacement, .apply-results, .revert-conflict) .form-callout__body {
     overflow-wrap: anywhere;
-  }
-
-  :is(.op-decision, .op-replacement, .apply-results, .revert-conflict) .form-callout--error {
-    background: rgb(var(--status-error-bg));
-    border: 1px solid rgb(var(--semantic-rose-border));
-    border-left: 3px solid rgb(var(--status-error));
-    color: rgb(var(--canvas-fg-1));
-  }
-
-  :is(.op-decision, .op-replacement, .apply-results, .revert-conflict) .form-callout--error svg {
-    color: rgb(var(--status-error-fg));
-  }
-
-  :is(.op-decision, .op-replacement, .apply-results, .revert-conflict) .form-callout--warn {
-    background: rgb(var(--status-warn-bg));
-    border: 1px solid rgb(var(--semantic-amber-border));
-    border-left: 3px solid rgb(var(--status-warn));
-    color: rgb(var(--canvas-fg-1));
-  }
-
-  :is(.op-decision, .op-replacement, .apply-results, .revert-conflict) .form-callout--warn svg {
-    color: rgb(var(--status-warn-fg));
   }
 
   .op-edit__fields {
