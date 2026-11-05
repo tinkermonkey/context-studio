@@ -100,7 +100,7 @@ The back-end is organized into six bounded contexts, each owning its domain enti
 2. **Graph Analysis** — in-memory graph construction, traversal, SPARQL, network metrics
 3. **Knowledge Extraction** — RAG pipeline, NLP processing, external knowledge enrichment
 4. **LLM Pipeline Management** — pipeline configurations and execution tracking
-5. **Version Control & Collaboration** — change events, changesets, proposals, conflict resolution, sync
+5. **Version Control & Collaboration** — change events, change proposals (review and apply), revert, sync
 6. **System Administration** — health, background tasks, configuration
 
 ### Database Files

@@ -11,25 +11,7 @@ class VersioningError(Exception):
 
 
 class VersionNotFoundError(VersioningError):
-    """Raised when a requested version does not exist."""
-
-    pass
-
-
-class ChangesetStateError(VersioningError):
-    """Raised when an invalid changeset state transition is attempted."""
-
-    pass
-
-
-class ProposalStateError(VersioningError):
-    """Raised when an invalid proposal state transition is attempted."""
-
-    pass
-
-
-class ConflictResolutionError(VersioningError):
-    """Raised when conflict resolution fails."""
+    """Raised when a requested change event does not exist."""
 
     pass
 
@@ -38,14 +20,6 @@ class SyncError(VersioningError):
     """Raised when synchronization fails."""
 
     pass
-
-
-class UnknownChangeEventError(VersioningError):
-    """Raised when a request names change event ids that do not exist."""
-
-    def __init__(self, missing_ids: list[str]):
-        self.missing_ids = missing_ids
-        super().__init__(f"Unknown change event ids: {', '.join(missing_ids)}")
 
 
 class RevertRefusedError(VersioningError, ValueError):

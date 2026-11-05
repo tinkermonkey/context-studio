@@ -5,16 +5,10 @@ Provides a simple dict-based storage for testing domain logic without
 database dependencies.
 """
 
-from copy import deepcopy
 from datetime import datetime, timezone
 from typing import Optional
 
-from domain.versioning.entities import (
-    ChangeEvent,
-    Changeset,
-    EntityVersion,
-    Proposal,
-)
+from domain.versioning.entities import ChangeEvent
 from domain.versioning.exceptions import VersionNotFoundError
 from domain.versioning.value_objects import ChangeHistoryResult, ChangeOperation
 
@@ -30,11 +24,6 @@ class FakeChangeRepository:
     def __init__(self) -> None:
         """Initialize the fake repository with empty storage."""
         self._change_events: dict[str, ChangeEvent] = {}
-        self._entity_versions: dict[tuple[str, int], EntityVersion] = {}
-        self._changesets: dict[str, Changeset] = {}
-        self._changeset_events: dict[tuple[str, str], bool] = {}
-        self._proposals: dict[str, Proposal] = {}
-        self._conflict_resolutions: dict[str, dict[str, dict[str, object]]] = {}
 
     # ChangeEvent operations
 
@@ -47,7 +36,6 @@ class FakeChangeRepository:
         previous_state: Optional[dict] = None,
         user_id: Optional[str] = None,
         change_reason: Optional[str] = None,
-        changeset_id: Optional[str] = None,
         batch_run_id: Optional[str] = None,
     ) -> str:
         """Record a change event and return its ID."""
@@ -64,7 +52,6 @@ class FakeChangeRepository:
             previous_state=previous_state,
             user_id=user_id,
             change_reason=change_reason,
-            changeset_id=changeset_id,
             batch_run_id=batch_run_id,
             processed=False,
         )
@@ -95,10 +82,6 @@ class FakeChangeRepository:
         position = {event_id: i for i, event_id in enumerate(self._change_events)}
         events.sort(key=lambda e: (e.timestamp, position[e.id]), reverse=True)
         return ChangeHistoryResult(events=tuple(events[:limit]), total=total_count)
-
-    def get_changes_by_ids(self, event_ids: list[str]) -> list[ChangeEvent]:
-        """Retrieve change events by their IDs."""
-        return [self._change_events[eid] for eid in event_ids if eid in self._change_events]
 
     def mark_processed(self, event_ids: list[str]) -> None:
         """
@@ -147,152 +130,3 @@ class FakeChangeRepository:
     def count_unprocessed(self) -> int:
         """Count total unprocessed change events without loading them."""
         return sum(1 for e in self._change_events.values() if not e.processed)
-
-    # EntityVersion operations
-
-    def save_version(self, version: EntityVersion) -> None:
-        """Save an entity version."""
-        key = (version.entity_id, version.version)
-        self._entity_versions[key] = version
-
-    def get_version(self, entity_id: str, version: int) -> Optional[EntityVersion]:
-        """Retrieve a specific version."""
-        return self._entity_versions.get((entity_id, version))
-
-    def get_latest_version(self, entity_id: str) -> Optional[EntityVersion]:
-        """Retrieve the latest version of an entity."""
-        matching = [v for (eid, _), v in self._entity_versions.items() if eid == entity_id]
-        if not matching:
-            return None
-        return max(matching, key=lambda v: v.version)
-
-    def list_versions(self, entity_id: str) -> list[EntityVersion]:
-        """Retrieve all versions of an entity."""
-        versions = [v for (eid, _), v in self._entity_versions.items() if eid == entity_id]
-        versions.sort(key=lambda v: v.version)
-        return versions
-
-    # Changeset operations
-
-    def create_changeset(self, changeset: Changeset) -> Changeset:
-        """
-        Create a new changeset.
-
-        Stores a copy to prevent tests from relying on by-reference mutations.
-        """
-        self._changesets[changeset.id] = deepcopy(changeset)
-        return changeset
-
-    def get_changeset(self, changeset_id: str) -> Optional[Changeset]:
-        """Retrieve a changeset by ID."""
-        stored = self._changesets.get(changeset_id)
-        if stored is not None:
-            return deepcopy(stored)
-        return None
-
-    def list_changesets(self, limit: int = 100) -> list[Changeset]:
-        """List all changesets."""
-        changesets = list(self._changesets.values())
-        changesets.sort(key=lambda c: c.created_at, reverse=True)
-        return [deepcopy(c) for c in changesets[:limit]]
-
-    def update_changeset(self, changeset: Changeset) -> Changeset:
-        """
-        Update an existing changeset.
-
-        Stores a copy to prevent tests from relying on by-reference mutations.
-        """
-        self._changesets[changeset.id] = deepcopy(changeset)
-        return changeset
-
-    # Proposal operations
-
-    def create_proposal(self, proposal: Proposal) -> Proposal:
-        """
-        Create a new proposal.
-
-        Stores a copy to prevent tests from relying on by-reference mutations.
-        """
-        self._proposals[proposal.id] = deepcopy(proposal)
-        return proposal
-
-    def get_proposal(self, proposal_id: str) -> Optional[Proposal]:
-        """Retrieve a proposal by ID."""
-        stored = self._proposals.get(proposal_id)
-        if stored is not None:
-            return deepcopy(stored)
-        return None
-
-    def update_proposal(self, proposal: Proposal) -> Proposal:
-        """
-        Update an existing proposal.
-
-        Stores a copy to prevent tests from relying on by-reference mutations.
-        """
-        self._proposals[proposal.id] = deepcopy(proposal)
-        return proposal
-
-    def update_changeset_and_proposal_on_submit(
-        self, changeset: Changeset, proposal: Proposal
-    ) -> tuple[Changeset, Proposal]:
-        """
-        Atomically update changeset and create proposal on submit.
-
-        Stores copies to prevent tests from relying on by-reference mutations.
-        """
-        self._changesets[changeset.id] = deepcopy(changeset)
-        self._proposals[proposal.id] = deepcopy(proposal)
-        return deepcopy(changeset), deepcopy(proposal)
-
-    def atomic_update_changeset_and_proposal(
-        self, changeset: Changeset, proposal: Proposal
-    ) -> tuple[Changeset, Proposal]:
-        """
-        Atomically update changeset and proposal on approve, reject, or merge.
-
-        Stores copies to prevent tests from relying on by-reference mutations.
-        """
-        self._changesets[changeset.id] = deepcopy(changeset)
-        self._proposals[proposal.id] = deepcopy(proposal)
-        return deepcopy(changeset), deepcopy(proposal)
-
-    def atomic_update_on_merge(
-        self,
-        changeset: Changeset,
-        proposal: Proposal,
-        versions: list[EntityVersion],
-    ) -> tuple[Changeset, Proposal]:
-        """
-        Atomically update changeset, proposal, and save entity versions on merge.
-
-        Stores copies to prevent tests from relying on by-reference mutations.
-        """
-        self._changesets[changeset.id] = deepcopy(changeset)
-        self._proposals[proposal.id] = deepcopy(proposal)
-        for version in versions:
-            self._entity_versions[(version.entity_id, version.version)] = deepcopy(version)
-        return deepcopy(changeset), deepcopy(proposal)
-
-    def save_conflict_resolutions(
-        self, proposal_id: str, resolutions: dict[str, dict[str, object]]
-    ) -> None:
-        """
-        Persist conflict resolutions for a proposal.
-
-        Args:
-            proposal_id: ID of the proposal
-            resolutions: Dict mapping entity_id -> {field_name: resolved_value}
-        """
-        self._conflict_resolutions[proposal_id] = deepcopy(resolutions)
-
-    def get_conflict_resolutions(self, proposal_id: str) -> dict[str, dict[str, object]]:
-        """
-        Retrieve persisted conflict resolutions for a proposal.
-
-        Args:
-            proposal_id: ID of the proposal
-
-        Returns:
-            Dict mapping entity_id -> {field_name: resolved_value}
-        """
-        return deepcopy(self._conflict_resolutions.get(proposal_id, {}))

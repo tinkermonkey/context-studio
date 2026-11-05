@@ -24,16 +24,16 @@ afterAll(() => {
   server.close();
 });
 
+const emptyChanges = () =>
+  http.get("*/api/v1/versioning/changes", () => HttpResponse.json({ events: [], total: 0 }));
+
 describe("Versioning Page", () => {
   // ========================================================================
   // Page Structure
   // ========================================================================
   describe("page structure", () => {
     it("renders versioning page root", async () => {
-      server.use(
-        http.get("*/api/v1/versioning/changesets", () => HttpResponse.json([])),
-        http.get("*/api/v1/versioning/changes", () => HttpResponse.json({ events: [], total: 0 })),
-      );
+      server.use(emptyChanges());
 
       render(<VersioningPage />);
 
@@ -42,40 +42,67 @@ describe("Versioning Page", () => {
       });
     });
 
-    it("displays tabs for changesets, conflicts, and sync", async () => {
-      server.use(
-        http.get("*/api/v1/versioning/changesets", () => HttpResponse.json([])),
-        http.get("*/api/v1/versioning/changes", () => HttpResponse.json({ events: [], total: 0 })),
-      );
+    it("displays tabs for changes and sync only", async () => {
+      server.use(emptyChanges());
 
       render(<VersioningPage />);
 
       await waitFor(() => {
-        expect(screen.getByRole("tab", { name: /changesets/i })).toBeInTheDocument();
-        expect(screen.getByRole("tab", { name: /conflict/i })).toBeInTheDocument();
+        expect(screen.getByRole("tab", { name: /changes/i })).toBeInTheDocument();
         expect(screen.getByRole("tab", { name: /sync/i })).toBeInTheDocument();
       });
+      expect(screen.queryByRole("tab", { name: /changesets/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole("tab", { name: /conflict/i })).not.toBeInTheDocument();
     });
   });
 
   // ========================================================================
-  // Changeset Panel: States
+  // Change History: States
   // ========================================================================
-  describe("changeset panel states", () => {
-    it("displays changeset panel on default tab with page root testid", async () => {
+  describe("change history states", () => {
+    it("shows the empty state when no changes are recorded", async () => {
+      server.use(emptyChanges());
+
+      render(<VersioningPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("change-history-empty")).toBeInTheDocument();
+      });
+      expect(screen.getByText(/no changes recorded yet/i)).toBeInTheDocument();
+      expect(screen.getByTestId("change-history-empty")).toHaveAttribute("role", "status");
+      expect(screen.queryByTestId("change-history-list")).not.toBeInTheDocument();
+    });
+
+    it("shows the loading skeleton while change history loads", async () => {
       server.use(
-        http.get("*/api/v1/versioning/changesets", () => HttpResponse.json([])),
-        http.get("*/api/v1/versioning/changes", () => HttpResponse.json({ events: [], total: 0 })),
+        http.get("*/api/v1/versioning/changes", () => new Promise<never>(() => undefined)),
+      );
+
+      render(<VersioningPage />);
+
+      expect(await screen.findByTestId("change-history-loading")).toHaveAttribute(
+        "aria-busy",
+        "true",
+      );
+    });
+
+    it("shows an error banner when change history fails to load", async () => {
+      server.use(
+        http.get("*/api/v1/versioning/changes", () =>
+          HttpResponse.json({ detail: "boom" }, { status: 500 }),
+        ),
       );
 
       render(<VersioningPage />);
 
       await waitFor(() => {
-        expect(screen.getByTestId("versioning-page")).toBeInTheDocument();
+        expect(screen.getByText("Could not load change history")).toBeInTheDocument();
       });
+      expect(screen.queryByTestId("change-history-list")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("change-history-empty")).not.toBeInTheDocument();
     });
 
-    it("loads and displays pending changes on page render", async () => {
+    it("loads and displays change events as a read-only list", async () => {
       const mockChanges = createChangeHistory({
         events: [
           {
@@ -91,17 +118,18 @@ describe("Versioning Page", () => {
         total: 1,
       });
 
-      server.use(
-        http.get("*/api/v1/versioning/changesets", () => HttpResponse.json([])),
-        http.get("*/api/v1/versioning/changes", () => HttpResponse.json(mockChanges)),
-      );
+      server.use(http.get("*/api/v1/versioning/changes", () => HttpResponse.json(mockChanges)));
 
       render(<VersioningPage />);
 
       await waitFor(() => {
-        expect(screen.getByTestId("changeset-panel")).toBeInTheDocument();
+        expect(screen.getByTestId("change-history-list")).toBeInTheDocument();
         expect(screen.getByText("Test Entity")).toBeInTheDocument();
       });
+      const list = screen.getByTestId("change-history-list");
+      expect(list).toHaveAttribute("role", "list");
+      expect(screen.getByTestId("change-history-row-change-1")).toHaveAttribute("role", "listitem");
+      expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
     });
   });
 
@@ -112,8 +140,7 @@ describe("Versioning Page", () => {
     it("switches to sync tab when clicked", async () => {
       server.use(
         http.get("*/api/v1/versioning/sync/status", () => HttpResponse.json(createSyncStatus())),
-        http.get("*/api/v1/versioning/changesets", () => HttpResponse.json([])),
-        http.get("*/api/v1/versioning/changes", () => HttpResponse.json({ events: [], total: 0 })),
+        emptyChanges(),
       );
 
       render(<VersioningPage />);
@@ -123,27 +150,6 @@ describe("Versioning Page", () => {
 
       await waitFor(() => {
         expect(syncTab).toHaveAttribute("aria-selected", "true");
-      });
-    });
-  });
-
-  // ========================================================================
-  // Conflict Resolver: States
-  // ========================================================================
-  describe("conflict resolver states", () => {
-    it("renders conflict tab and shows empty state when no proposal selected", async () => {
-      server.use(
-        http.get("*/api/v1/versioning/changesets", () => HttpResponse.json([])),
-        http.get("*/api/v1/versioning/changes", () => HttpResponse.json({ events: [], total: 0 })),
-      );
-
-      render(<VersioningPage />);
-
-      const conflictTab = screen.getByRole("tab", { name: /conflict/i });
-      await userEvent.click(conflictTab);
-
-      await waitFor(() => {
-        expect(screen.getByText(/no proposal selected/i)).toBeInTheDocument();
       });
     });
   });

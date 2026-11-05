@@ -133,7 +133,7 @@ Per the design handoff:
 │   │   │   ├── graph.ts             # Graph build, metrics, paths, SPARQL, communities
 │   │   │   ├── extraction.ts        # RAG extraction, NLP analysis, reference enrichment
 │   │   │   ├── pipeline.ts          # Pipeline configs and executions
-│   │   │   ├── versioning.ts        # Change events, changesets, sync
+│   │   │   ├── versioning.ts        # Change events, sync
 │   │   │   ├── reference.ts         # External reference sources (ConceptNet, DBpedia, etc.)
 │   │   │   └── admin.ts             # Health checks, configuration, background tasks
 │   │   ├── hooks/                    # TanStack Query hooks — one directory per bounded context
@@ -196,9 +196,8 @@ Per the design handoff:
 │   │   │   ├── ExecutionHistory.tsx
 │   │   │   └── PipelineForm.tsx
 │   │   ├── versioning/
-│   │   │   ├── ChangesetPanel.tsx
-│   │   │   ├── SyncStatus.tsx
-│   │   │   └── ConflictResolver.tsx
+│   │   │   ├── ChangeHistoryList.tsx
+│   │   │   └── SyncStatus.tsx
 │   │   └── admin/
 │   │       ├── HealthDashboard.tsx
 │   │       ├── ConfigEditor.tsx
@@ -291,7 +290,7 @@ Each service class extends `BaseService` (same pattern as legacy), which provide
 - `GraphService` — graph build, metrics, paths, SPARQL, community detection
 - `ExtractionService` — RAG pipeline, NLP analysis, reference enrichment
 - `PipelineService` — pipeline configurations and execution
-- `VersioningService` — change events, changesets, sync push/pull
+- `VersioningService` — change events, sync push/pull
 - `ReferenceService` — external knowledge source search and relations
 - `AdminService` — health, configuration, background tasks
 

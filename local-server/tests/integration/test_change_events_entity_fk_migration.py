@@ -29,7 +29,7 @@ EXPECTED_INDEXES = {
     "ix_change_events_entity_id",
     "ix_change_events_operation",
     "ix_change_events_timestamp",
-    "ix_change_events_changeset_id",
+    "ix_change_events_changeset_id",  # dropped later by ac7d7a96fb72 (#1369)
     "ix_change_events_batch_run_id",
     "idx_entity_id_timestamp",
     "idx_processed",

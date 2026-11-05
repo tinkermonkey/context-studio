@@ -295,6 +295,7 @@ This context can be developed in parallel with 4.1–4.3. Build in sub-task orde
 - **4.4a Domain entities and persistence**: `domain/versioning/` entities, `ChangeRepository` port, SQLite adapter for change events and entity versions
 - **4.4b Changeset and Proposal workflow**: `VersioningService` domain service implementing changeset management and proposal workflow; depends on 4.4a
 - **4.4c CRDT merge engine**: conflict resolution logic using CRDT merge strategy; depends on 4.4b
+- *4.4b and 4.4c (with entity versions) were later retired in #1369 in favour of `ChangeProposal` (`/api/proposals`).*
 - **4.4d Sync adapters**: `adapters/sync/s3_sync.py` (`S3SyncAdapter`) and `adapters/sync/duckdb_sync.py` (DuckDB-based sync); can only start after 4.4a and 4.4b are complete
 - Run `scripts/update_api_specs.py` after routes are live and commit the updated `documentation/openapi.json`
 

@@ -12,10 +12,6 @@ import type { components } from "@/api/types";
 
 type SyncStatusResponse = components["schemas"]["SyncStatusResponse"];
 
-interface SyncStatusPanelProps {
-  onConflictDetected?: () => void;
-}
-
 function getStatusChip(status: string) {
   const variantMap: Record<string, "emerald" | "amber" | "rose" | "neutral"> = {
     synced: "emerald",
@@ -158,7 +154,7 @@ function SyncStatusCard({
   );
 }
 
-export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
+export function SyncStatusPanel() {
   const { toast } = useToasts();
   const navigate = useNavigate();
   const [lastPullCount, setLastPullCount] = useState<number | undefined>();
@@ -181,12 +177,6 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
       toast("success", COPY.pushSuccessMessage(result.pushed));
     } catch (error) {
       const message = error instanceof Error ? error.message : COPY.failedToPush;
-      const isConflict = message.toLowerCase().includes("conflict");
-
-      if (isConflict) {
-        onConflictDetected?.();
-      }
-
       toast("error", `${message}${COPY.retryErrorSuffix}`);
     }
   };
@@ -198,12 +188,6 @@ export function SyncStatusPanel({ onConflictDetected }: SyncStatusPanelProps) {
       toast("success", COPY.pullSuccessMessage(result.pulled));
     } catch (error) {
       const message = error instanceof Error ? error.message : COPY.failedToPull;
-      const isConflict = message.toLowerCase().includes("conflict");
-
-      if (isConflict) {
-        onConflictDetected?.();
-      }
-
       toast("error", `${message}${COPY.retryErrorSuffix}`);
     }
   };

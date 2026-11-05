@@ -493,6 +493,8 @@ class ChangeEvent:
 
 #### EntityVersion
 
+> **Retired (#1369):** `EntityVersion` was written only by the changeset merge and was removed with it.
+
 ```python
 @dataclass
 class EntityVersion:
@@ -715,6 +717,8 @@ class AppConfiguration:
 ---
 
 ## 10. Versioning Context: Conflict Resolution Entities
+
+> **Retired (#1369):** the `Changeset` / `Proposal` / conflict resolution entities in this section were removed in favour of `ChangeProposal` (`domain/versioning/proposals.py`). Kept here as design history.
 
 #### ConflictReport
 

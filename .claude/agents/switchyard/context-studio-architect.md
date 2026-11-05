@@ -17,7 +17,7 @@ local-server/
 │   ├── graph/        # In-memory graph, traversal, SPARQL, metrics
 │   ├── extraction/   # RAG pipeline, NLP, external knowledge enrichment
 │   ├── pipeline/     # LLM pipeline configs and execution tracking
-│   ├── versioning/   # Change events, changesets, proposals, sync
+│   ├── versioning/   # Change events, change proposals, revert, sync
 │   └── admin/        # Health, background tasks, configuration
 ├── adapters/
 │   ├── persistence/sqlite/  # SQLAlchemy ORM, repositories, Alembic migrations

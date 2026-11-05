@@ -1,6 +1,5 @@
 """Integration tests for SQLiteChangeRepository."""
 
-import uuid
 from datetime import datetime, timezone
 
 import pytest
@@ -8,30 +7,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
-from adapters.persistence.sqlite.models import (
-    Base,
-    ChangeEvent,
-    Changeset,
-    ConflictResolution,
-    EntityVersion,
-    Proposal,
-)
-from domain.versioning.entities import (
-    Changeset as DomainChangeset,
-)
-from domain.versioning.entities import (
-    EntityVersion as DomainEntityVersion,
-)
-from domain.versioning.entities import (
-    Proposal as DomainProposal,
-)
+from adapters.persistence.sqlite.models import Base, ChangeEvent
 from domain.versioning.exceptions import VersionNotFoundError
-from domain.versioning.value_objects import (
-    ChangeOperation,
-    ChangeState,
-    EntityVersionState,
-    ProposalState,
-)
+from domain.versioning.value_objects import ChangeOperation
 from tests.utils.parent_rows import create_batch_run_row
 
 
@@ -57,30 +35,6 @@ def change_repo(session_factory):
 
 class TestSQLiteChangeRepository:
     """Tests for SQLiteChangeRepository."""
-
-    def _create_proposal(self, session_factory):
-        """Helper method to create a Changeset and Proposal for testing."""
-        session = session_factory()
-        try:
-            changeset_id = str(uuid.uuid4())
-            proposal_id = str(uuid.uuid4())
-
-            changeset = Changeset(
-                id=changeset_id,
-                name="Test Changeset",
-                description="Test changeset for conflict resolution",
-                state="working",
-            )
-            session.add(changeset)
-            session.flush()
-
-            proposal = Proposal(id=proposal_id, changeset_id=changeset_id, state="open")
-            session.add(proposal)
-            session.commit()
-
-            return proposal_id
-        finally:
-            session.close()
 
     def test_record_change_creates_record(self, change_repo, session_factory):
         """Test that record_change persists a change event."""
@@ -117,7 +71,6 @@ class TestSQLiteChangeRepository:
             previous_state={"status": "running"},
             user_id="user-789",
             change_reason="Status updated",
-            changeset_id="changeset-999",
         )
 
         session = session_factory()
@@ -125,7 +78,6 @@ class TestSQLiteChangeRepository:
             record = session.query(ChangeEvent).filter_by(id=change_id).first()
             assert record.previous_state == {"status": "running"}
             assert record.user_id == "user-789"
-            assert record.changeset_id == "changeset-999"
         finally:
             session.close()
 
@@ -277,329 +229,13 @@ class TestSQLiteChangeRepository:
         count = change_repo.count_unprocessed()
         assert count == 0
 
-    def test_save_conflict_resolutions_persists_resolutions(self, change_repo, session_factory):
-        """Test that save_conflict_resolutions persists conflict resolution data."""
-        proposal_id = self._create_proposal(session_factory)
-        resolutions = {
-            "entity-1": {
-                "field_a": "resolved_value_a",
-                "field_b": "resolved_value_b",
-            },
-            "entity-2": {
-                "field_c": "resolved_value_c",
-            },
-        }
-
-        change_repo.save_conflict_resolutions(proposal_id, resolutions)
-
-        # Verify the resolutions were persisted
-        session = session_factory()
-        try:
-            records = session.query(ConflictResolution).filter_by(proposal_id=proposal_id).all()
-
-            assert len(records) == 3
-
-            # Verify all fields are correct
-            entity_1_records = [r for r in records if r.entity_id == "entity-1"]
-            assert len(entity_1_records) == 2
-
-            entity_2_records = [r for r in records if r.entity_id == "entity-2"]
-            assert len(entity_2_records) == 1
-
-            assert entity_2_records[0].field_name == "field_c"
-            assert entity_2_records[0].resolved_value == "resolved_value_c"
-        finally:
-            session.close()
-
-    def test_get_conflict_resolutions_retrieves_resolutions(self, change_repo, session_factory):
-        """Test that get_conflict_resolutions retrieves persisted resolutions."""
-        proposal_id = self._create_proposal(session_factory)
-        resolutions = {
-            "entity-1": {
-                "field_a": "value_a",
-                "field_b": "value_b",
-            },
-            "entity-2": {
-                "field_c": "value_c",
-            },
-        }
-
-        change_repo.save_conflict_resolutions(proposal_id, resolutions)
-
-        # Retrieve the resolutions
-        retrieved = change_repo.get_conflict_resolutions(proposal_id)
-
-        assert retrieved == resolutions
-        assert retrieved["entity-1"]["field_a"] == "value_a"
-        assert retrieved["entity-1"]["field_b"] == "value_b"
-        assert retrieved["entity-2"]["field_c"] == "value_c"
-
-    def test_save_conflict_resolutions_overwrites_existing(self, change_repo, session_factory):
-        """Test that save_conflict_resolutions deletes and reinserts (overwrites) existing
-        resolutions."""
-        proposal_id = self._create_proposal(session_factory)
-
-        # Save initial resolutions
-        initial_resolutions = {
-            "entity-1": {"field_a": "initial_value_a"},
-            "entity-2": {"field_b": "initial_value_b"},
-        }
-        change_repo.save_conflict_resolutions(proposal_id, initial_resolutions)
-
-        # Overwrite with new resolutions
-        new_resolutions = {
-            "entity-1": {"field_a": "new_value_a"},
-            "entity-3": {"field_c": "new_value_c"},
-        }
-        change_repo.save_conflict_resolutions(proposal_id, new_resolutions)
-
-        # Retrieve and verify only new resolutions exist
-        retrieved = change_repo.get_conflict_resolutions(proposal_id)
-
-        assert retrieved == new_resolutions
-        assert "entity-2" not in retrieved  # Old entity should be gone
-        assert retrieved["entity-1"]["field_a"] == "new_value_a"
-        assert retrieved["entity-3"]["field_c"] == "new_value_c"
-
-    def test_get_conflict_resolutions_returns_empty_dict_for_nonexistent_proposal(
-        self, change_repo
-    ):
-        """Test that get_conflict_resolutions returns empty dict for nonexistent proposal."""
-        retrieved = change_repo.get_conflict_resolutions("nonexistent-proposal")
-        assert retrieved == {}
-
     # New error handling tests
-
-    def test_get_changes_by_ids_happy_path(self, change_repo):
-        """Test that get_changes_by_ids retrieves events by their IDs."""
-        # Create multiple change events
-        id1 = change_repo.record_change(
-            entity_id="entity-1",
-            entity_type="test_entity",
-            operation=ChangeOperation.CREATE,
-            new_state={"key": "value1"},
-        )
-        id3 = change_repo.record_change(
-            entity_id="entity-3",
-            entity_type="test_entity",
-            operation=ChangeOperation.DELETE,
-            new_state={},
-        )
-
-        # Retrieve by IDs
-        retrieved = change_repo.get_changes_by_ids([id1, id3])
-
-        assert len(retrieved) == 2
-        assert any(e.id == id1 for e in retrieved)
-        assert any(e.id == id3 for e in retrieved)
-        assert any(e.entity_id == "entity-1" for e in retrieved)
-        assert any(e.entity_id == "entity-3" for e in retrieved)
-
-    def test_get_changes_by_ids_with_empty_list(self, change_repo):
-        """Test that get_changes_by_ids returns empty list for empty input."""
-        retrieved = change_repo.get_changes_by_ids([])
-        assert retrieved == []
-
-    def test_get_changes_by_ids_with_nonexistent_ids(self, change_repo):
-        """Test that get_changes_by_ids returns only matching IDs."""
-        change_id = change_repo.record_change(
-            entity_id="entity-1",
-            entity_type="test_entity",
-            operation=ChangeOperation.CREATE,
-            new_state={"key": "value"},
-        )
-
-        # Query with mix of existing and nonexistent IDs
-        retrieved = change_repo.get_changes_by_ids([change_id, "nonexistent-id"])
-
-        assert len(retrieved) == 1
-        assert retrieved[0].id == change_id
-
-    def test_atomic_update_on_merge_happy_path(self, change_repo, session_factory):
-        """Test that atomic_update_on_merge successfully commits all changes."""
-        # Create changeset and proposal
-        session = session_factory()
-        try:
-            changeset_id = str(uuid.uuid4())
-            proposal_id = str(uuid.uuid4())
-
-            changeset = Changeset(
-                id=changeset_id,
-                name="Test Changeset",
-                state="submitted",
-            )
-            session.add(changeset)
-            session.flush()
-
-            proposal = Proposal(
-                id=proposal_id,
-                changeset_id=changeset_id,
-                state="open",
-                submitted_at=datetime.now(timezone.utc),
-            )
-            session.add(proposal)
-            session.commit()
-        finally:
-            session.close()
-
-        # Create domain entities for merge
-        domain_changeset = DomainChangeset(
-            id=changeset_id,
-            name="Test Changeset",
-            _state=ChangeState.MERGED,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
-            event_ids=[],
-        )
-
-        domain_proposal = DomainProposal(
-            id=proposal_id,
-            changeset_id=changeset_id,
-            _state=ProposalState.MERGED,
-            submitted_at=datetime.now(timezone.utc),
-            reviewed_at=datetime.now(timezone.utc),
-        )
-
-        domain_version = DomainEntityVersion(
-            entity_id="entity-1",
-            version=1,
-            state=EntityVersionState.ACTIVE,
-            snapshot={"data": "snapshot"},
-            created_at=datetime.now(timezone.utc),
-        )
-
-        # Execute merge
-        returned_changeset, returned_proposal = change_repo.atomic_update_on_merge(
-            domain_changeset, domain_proposal, [domain_version]
-        )
-
-        # Verify returned objects
-        assert returned_changeset.state == ChangeState.MERGED
-        assert returned_proposal.state == ProposalState.MERGED
-
-        # Verify database state
-        session = session_factory()
-        try:
-            db_changeset = session.query(Changeset).filter_by(id=changeset_id).first()
-            assert db_changeset is not None
-            assert db_changeset.state == "merged"
-
-            db_proposal = session.query(Proposal).filter_by(id=proposal_id).first()
-            assert db_proposal is not None
-            assert db_proposal.state == "merged"
-
-            db_version = (
-                session.query(EntityVersion).filter_by(entity_id="entity-1", version=1).first()
-            )
-            assert db_version is not None
-            assert db_version.snapshot == {"data": "snapshot"}
-        finally:
-            session.close()
 
     def test_mark_processed_raises_domain_exception_before_db_exception(self, change_repo):
         """Test that mark_processed raises VersionNotFoundError without catching it."""
         # This test verifies the defensive re-raise is in place
         with pytest.raises(VersionNotFoundError):
             change_repo.mark_processed(["nonexistent-id"])
-
-    def test_atomic_update_on_merge_raises_domain_exception_before_db_exception(
-        self, change_repo, session_factory
-    ):
-        """Test that atomic_update_on_merge raises VersionNotFoundError without catching it."""
-        domain_changeset = DomainChangeset(
-            id="nonexistent-changeset",
-            name="Test",
-            _state=ChangeState.MERGED,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
-            event_ids=[],
-        )
-
-        domain_proposal = DomainProposal(
-            id="nonexistent-proposal",
-            changeset_id="nonexistent-changeset",
-            _state=ProposalState.MERGED,
-            submitted_at=datetime.now(timezone.utc),
-            reviewed_at=datetime.now(timezone.utc),
-        )
-
-        # Should raise VersionNotFoundError, not RuntimeError
-        with pytest.raises(VersionNotFoundError):
-            change_repo.atomic_update_on_merge(domain_changeset, domain_proposal, [])
-
-    def test_update_changeset_raises_domain_exception_before_db_exception(self, change_repo):
-        """Test that update_changeset raises VersionNotFoundError without catching it."""
-        domain_changeset = DomainChangeset(
-            id="nonexistent-changeset",
-            name="Test",
-            _state=ChangeState.WORKING,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
-            event_ids=[],
-        )
-
-        with pytest.raises(VersionNotFoundError):
-            change_repo.update_changeset(domain_changeset)
-
-    def test_update_proposal_raises_domain_exception_before_db_exception(self, change_repo):
-        """Test that update_proposal raises VersionNotFoundError without catching it."""
-        domain_proposal = DomainProposal(
-            id="nonexistent-proposal",
-            changeset_id="changeset-123",
-            _state=ProposalState.MERGED,
-            submitted_at=datetime.now(timezone.utc),
-            reviewed_at=datetime.now(timezone.utc),
-        )
-
-        with pytest.raises(VersionNotFoundError):
-            change_repo.update_proposal(domain_proposal)
-
-    def test_update_changeset_and_proposal_on_submit_raises_domain_exception_before_db_exception(
-        self, change_repo
-    ):
-        """Test that update_changeset_and_proposal_on_submit raises VersionNotFoundError."""
-        domain_changeset = DomainChangeset(
-            id="nonexistent-changeset",
-            name="Test",
-            _state=ChangeState.PROPOSED,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
-            event_ids=[],
-        )
-
-        domain_proposal = DomainProposal(
-            id=str(uuid.uuid4()),
-            changeset_id="nonexistent-changeset",
-            _state=ProposalState.OPEN,
-            submitted_at=datetime.now(timezone.utc),
-        )
-
-        with pytest.raises(VersionNotFoundError):
-            change_repo.update_changeset_and_proposal_on_submit(domain_changeset, domain_proposal)
-
-    def test_atomic_update_changeset_and_proposal_raises_domain_exception_before_db_exception(
-        self, change_repo
-    ):
-        """Test that atomic_update_changeset_and_proposal raises VersionNotFoundError."""
-        domain_changeset = DomainChangeset(
-            id="nonexistent-changeset",
-            name="Test",
-            _state=ChangeState.APPROVED,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
-            event_ids=[],
-        )
-
-        domain_proposal = DomainProposal(
-            id=str(uuid.uuid4()),
-            changeset_id="nonexistent-changeset",
-            _state=ProposalState.APPROVED,
-            submitted_at=datetime.now(timezone.utc),
-            reviewed_at=datetime.now(timezone.utc),
-        )
-
-        with pytest.raises(VersionNotFoundError):
-            change_repo.atomic_update_changeset_and_proposal(domain_changeset, domain_proposal)
 
     def test_get_changes_breaks_timestamp_ties_newest_inserted_first(
         self, change_repo, session_factory

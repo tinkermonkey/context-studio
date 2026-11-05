@@ -600,11 +600,6 @@ class ChangeRepository(Protocol):
         limit: int = 100,
     ) -> Sequence[ChangeEvent]: ...
     def mark_processed(self, event_ids: Sequence[int]) -> int: ...
-
-    def save_version(self, version: EntityVersion) -> EntityVersion: ...
-    def get_version(self, entity_id: str, version: int) -> Optional[EntityVersion]: ...
-    def get_latest_version(self, entity_id: str) -> Optional[EntityVersion]: ...
-    def list_versions(self, entity_id: str) -> Sequence[EntityVersion]: ...
 ```
 
 **Adapters:**
@@ -785,10 +780,10 @@ This table maps every significant current source file to its destination in the 
 | `services/version_manager.py` | Split: `domain/versioning/services.py` + `adapters/persistence/sqlite/change_repo.py` | |
 | `services/working_tree_manager.py` | `domain/versioning/services.py` | Business logic stays in domain |
 | `services/diff_generator.py` | `domain/versioning/services.py` | |
-| `services/changeset_manager.py` | `domain/versioning/services.py` | |
-| `services/proposal_manager.py` | `domain/versioning/services.py` | |
-| `services/crdt_merge_engine.py` | `domain/versioning/services.py` | |
-| `services/conflict_resolution_engine.py` | `domain/versioning/services.py` | |
+| `services/changeset_manager.py` | — | Ported, then retired in #1369 in favour of `ChangeProposal` |
+| `services/proposal_manager.py` | — | Ported, then retired in #1369 in favour of `ChangeProposal` |
+| `services/crdt_merge_engine.py` | — | Ported, then retired in #1369 in favour of `ChangeProposal` |
+| `services/conflict_resolution_engine.py` | — | Ported, then retired in #1369 in favour of `ChangeProposal` |
 | `services/incremental_sync_engine.py` | `adapters/sync/s3_sync.py` | Infrastructure concern |
 | `services/s3_sync_manager.py` | `adapters/sync/s3_sync.py` | |
 | `services/s3_storage_optimizer.py` | `adapters/sync/s3_optimizer.py` | |

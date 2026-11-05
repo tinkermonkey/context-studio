@@ -168,7 +168,7 @@ from domain.pipelines.schema_node_grounding.apply_service import (
 from domain.pipelines.schema_node_grounding.scoring import GroundingScorer
 from domain.versioning.approval_policy import ApprovalPolicyService
 from domain.versioning.bundle_import import BundleImportService
-from domain.versioning.events import ChangesetMerged, SyncCompleted
+from domain.versioning.events import SyncCompleted
 from domain.versioning.ports import SyncTarget
 from domain.versioning.proposal_service import ProposalService
 from domain.versioning.proposals import ProposalSource
@@ -628,11 +628,6 @@ async def lifespan(app: FastAPI):
         logger.info(
             "Event subscription: ExtractionCompleted ->"
             " ChangeEventRecorder.on_extraction_completed"
-        )
-
-        event_publisher.subscribe(ChangesetMerged, versioning_service.on_changeset_merged)
-        logger.info(
-            "Event subscription: ChangesetMerged ->" " VersioningService.on_changeset_merged"
         )
 
         event_publisher.subscribe(SyncCompleted, versioning_service.on_sync_completed)
