@@ -17,6 +17,7 @@ from __future__ import annotations
 import hashlib
 from collections import defaultdict
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Any, Callable, Iterable, Mapping
 
 from domain.ontology.entities import PropertyDefinition
@@ -29,6 +30,10 @@ DR_TAXONOMY_IDENTIFIER = "dr_spec"
 # The dr_spec taxonomy's DR reference; its metadata holds the spec's predicate
 # catalog ({"spec_version", "predicates": {id: {inverse, category, description}}}).
 DR_SPEC_REFERENCE = "spec"
+# A relationship type's spec attributes, kept on its DR reference's metadata:
+# "cardinality" and "strength" (the schema's properties.<name>.const) and
+# "evidence" (its x-dr-evidence lines; absent when the schema has none).
+DR_ATTRIBUTE_KEYS = ("cardinality", "strength", "evidence")
 
 _IDENTIFIER_MAX_LENGTH = 64
 _TRUNCATED_LENGTH = 59
@@ -45,6 +50,21 @@ class RelationshipSchemaRecord:
     predicate: str
     title: str
     description: str | None
+    cardinality: str | None = None
+    strength: str | None = None
+    evidence: tuple[str, ...] = ()
+
+    @property
+    def attributes(self) -> dict[str, Any]:
+        """The DR attributes as its DR reference's metadata keeps them (see DR_ATTRIBUTE_KEYS)."""
+        attributes: dict[str, Any] = {}
+        if self.cardinality is not None:
+            attributes["cardinality"] = self.cardinality
+        if self.strength is not None:
+            attributes["strength"] = self.strength
+        if self.evidence:
+            attributes["evidence"] = list(self.evidence)
+        return attributes
 
     @property
     def full_identifier(self) -> str:
@@ -259,6 +279,14 @@ def dr_relationship_id(external_references: Iterable[Any]) -> str | None:
     return None
 
 
+def _dr_reference_dict(external_references: Any) -> dict[str, Any] | None:
+    """The DR reference among external reference dicts (an edit's fields), if any."""
+    for ref in external_references or []:
+        if isinstance(ref, dict) and ref.get("source") == DR_SOURCE:
+            return ref
+    return None
+
+
 def dr_spec_classes(repo: OntologyRepository) -> dict[str, str]:
     """
     The dr_spec taxonomy's classes: spec node id -> class id.
@@ -296,15 +324,31 @@ def dr_predicate_catalog(repo: OntologyRepository) -> dict[str, dict[str, Any]] 
 def swapped_dr_reference(
     target: PropertyDefinition, current: Triple, new: Triple
 ) -> list[dict[str, Any]]:
-    """The target's external references with its DR id moved to the new triple, as dicts."""
+    """
+    The target's external references with its DR id moved to the new triple, as dicts.
+
+    A reversal (source and destination swapped) drops the evidence lines, as DR
+    does when it derives the reversed schema: they describe the old direction.
+    """
+    reversed_pair = (
+        new.source == current.destination
+        and new.destination == current.source
+        and current.source != current.destination
+    )
+
+    def moved(ref: ExternalReference) -> ExternalReference:
+        metadata = dict(ref.metadata or {})
+        if reversed_pair:
+            metadata.pop("evidence", None)
+        return ExternalReference(
+            source=ref.source,
+            identifier=new.id,
+            uri=ref.uri,
+            metadata=MappingProxyType(metadata) if metadata else None,
+        )
+
     return [
-        (
-            ExternalReference(
-                source=ref.source, identifier=new.id, uri=ref.uri, metadata=ref.metadata
-            )
-            if ref.source == DR_SOURCE and ref.identifier == current.id
-            else ref
-        ).to_dict()
+        (moved(ref) if ref.source == DR_SOURCE and ref.identifier == current.id else ref).to_dict()
         for ref in target.external_references
     ]
 
@@ -334,7 +378,8 @@ class DrRelationshipRules:
     (pending, failed, or edited in the same apply) produces it. The applied
     fields always carry the whole triple: the predicate and both classes, the
     identifier a re-import of the edited spec computes, and the DR external
-    reference (whatever the edit gave for those two). A title or description
+    reference (whatever the edit gave for those two; an edit's DR reference
+    metadata, its cardinality, strength and evidence, is kept). A title or description
     still the default for the old triple follows the new one.
     """
 
@@ -427,7 +472,14 @@ class DrRelationshipRules:
                 completed["title"] = new.record().title
             if "description" not in fields and target.description == current.default_description:
                 completed["description"] = new.default_description
-        completed["external_references"] = swapped_dr_reference(target, current, new)
+        references = swapped_dr_reference(target, current, new)
+        edited = _dr_reference_dict(fields.get("external_references"))
+        if edited is not None:
+            # The edit's DR attributes (metadata) win over the target's current ones.
+            for ref in references:
+                if ref["source"] == DR_SOURCE and ref["identifier"] == new.id:
+                    ref["metadata"] = edited.get("metadata")
+        completed["external_references"] = references
         return completed
 
     @staticmethod

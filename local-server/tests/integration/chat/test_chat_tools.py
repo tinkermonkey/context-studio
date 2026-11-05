@@ -217,13 +217,16 @@ class TestGetEntity:
         assert result["counts"]["relationships_out"] == 1
         assert ref_ids(outcome) == {ADMIN_HEALTH_ID, OPERATION_ID}
 
-    async def test_property_details(self, tools):
+    async def test_property_details(self, tools, dr_workspace):
         _, result = await call(tools, "get_entity", id=REALIZES_ID)
 
         assert result["kind"] == "property"
         assert result["domain"][0]["id"] == OPERATION_ID
         assert result["range"][0]["id"] == SERVICE_CLASS_ID
         assert result["counts"]["relationships"] == 1
+        # A proposer changing a DR type's attributes resends these whole (#1397).
+        prop = dr_workspace.ontology.get_property_definition(REALIZES_ID)
+        assert result["external_references"] == [r.to_dict() for r in prop.external_references]
 
     async def test_unknown_id_is_error(self, tools):
         outcome, result = await call(tools, "get_entity", id="missing-id")

@@ -5,7 +5,11 @@ Translates the Documentation Robotics (DR) spec's node/relationship JSON
 schemas (`documentation_robotics/spec/schemas/{nodes,relationships}/`) into
 Context Studio's ontology domain model: one Taxonomy for the spec as a whole,
 one ConceptScheme per DR layer, one Class per node schema, and one
-PropertyDefinition per relationship schema.
+PropertyDefinition per relationship schema. A relationship schema's
+cardinality, strength and x-dr-evidence ride on its property definition's DR
+reference as metadata (`{"cardinality", "strength", "evidence"}`; see
+`DR_ATTRIBUTE_KEYS`), so a change proposal can change them and
+`scripts/export_dr_spec_changes.py` can hand them back to DR.
 
 The spec's design charter (`spec/DESIGN_CHARTER.md`) becomes the taxonomy's
 vision, and its "In one paragraph" section the taxonomy's summary
@@ -204,6 +208,9 @@ def iter_relationship_schemas(spec_dir: Path) -> Iterator[RelationshipSchemaReco
         data = _load_json(path)
         try:
             props = data["properties"]
+            evidence = data.get("x-dr-evidence") or []
+            if not isinstance(evidence, list) or not all(isinstance(e, str) for e in evidence):
+                raise ValueError(f"Relationship schema {path}: x-dr-evidence is not a string list")
             yield RelationshipSchemaRecord(
                 source_spec_node_id=props["source_spec_node_id"]["const"],
                 source_layer=props["source_layer"]["const"],
@@ -212,6 +219,9 @@ def iter_relationship_schemas(spec_dir: Path) -> Iterator[RelationshipSchemaReco
                 predicate=props["predicate"]["const"],
                 title=data["title"],
                 description=data.get("description"),
+                cardinality=(props.get("cardinality") or {}).get("const"),
+                strength=(props.get("strength") or {}).get("const"),
+                evidence=tuple(evidence),
             )
         except KeyError as exc:
             raise ValueError(f"Relationship schema {path} is missing required key {exc}") from exc
@@ -322,6 +332,50 @@ def _upsert_concept_schemes(
             summary.concept_schemes_updated += 1
         scheme_id_by_layer[layer_id] = scheme.id  # type: ignore[union-attr]
     return scheme_id_by_layer
+
+
+def _attributes_reference(identifier: str, attributes: dict[str, Any]) -> ExternalReference:
+    """A relationship type's DR reference, its spec attributes as metadata (None if none)."""
+    return ExternalReference(
+        source=DR_SOURCE,
+        identifier=identifier,
+        metadata=MappingProxyType(attributes) if attributes else None,
+    )
+
+
+def _sync_relationship_reference(
+    repo: OntologyRepository, prop: PropertyDefinition, record: RelationshipSchemaRecord
+) -> None:
+    """
+    Give a property definition its DR reference, with the schema's attributes
+    as metadata: added if missing, its metadata replaced if it differs (a
+    re-import of an unchanged spec saves nothing). Other references stay.
+    """
+    identifier = record.full_identifier
+    attributes = record.attributes
+    refs = list(prop.external_references)
+    index = next(
+        (
+            i
+            for i, ref in enumerate(refs)
+            if ref.source == DR_SOURCE and ref.identifier == identifier
+        ),
+        None,
+    )
+    if index is None:
+        refs.append(_attributes_reference(identifier, attributes))
+    elif dict(refs[index].metadata or {}) == attributes:
+        return
+    else:
+        current = refs[index]
+        refs[index] = ExternalReference(
+            source=DR_SOURCE,
+            identifier=identifier,
+            uri=current.uri,
+            metadata=MappingProxyType(attributes) if attributes else None,
+        )
+    prop.external_references = refs
+    repo.save_property_definition(prop)
 
 
 def _sync_external_reference(save_fn: Callable[[Any], Any], entity: Any, identifier: str) -> None:
@@ -470,14 +524,15 @@ def _upsert_property_definitions(
                 domain_class_id=domain_class_id,
                 range_class_id=range_class_id,
                 external_references=[
-                    ExternalReference(source=DR_SOURCE, identifier=record.full_identifier)
+                    _attributes_reference(record.full_identifier, record.attributes)
                 ],
             )
             summary.property_definitions_created += 1
         else:
             # Existing entity: update everything except external_references here, then
-            # append-if-missing below — a wholesale external_references= replace on update
-            # would silently discard any non-DR reference some other source had attached.
+            # sync its DR reference below — a wholesale external_references= replace on
+            # update would silently discard any non-DR reference some other source had
+            # attached.
             prop = service.update_property_definition(
                 existing.id,
                 identifier=identifier,
@@ -491,7 +546,7 @@ def _upsert_property_definitions(
                 update_range_class_id=True,
             )
             summary.property_definitions_updated += 1
-            _sync_external_reference(repo.save_property_definition, prop, record.full_identifier)
+            _sync_relationship_reference(repo, prop, record)  # type: ignore[arg-type]
         property_ids.add(prop.id)
     return property_ids
 

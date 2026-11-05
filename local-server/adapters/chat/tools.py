@@ -440,7 +440,8 @@ class GetEntityTool(_Tool):
     description = (
         "Get one entity by id: title, identifier, description, parents (taxonomy,"
         " scheme, parent class), classes of an individual, data properties, and counts"
-        " of children and relationships. For a taxonomy, description is its"
+        " of children and relationships; for a relationship type (property), its"
+        " external references too. For a taxonomy, description is its"
         " one-paragraph summary and vision is its full vision statement: what it is"
         " for, what its classes and relationships model, and how changes are judged."
     )
@@ -485,6 +486,9 @@ class GetEntityTool(_Tool):
             link("domain", [entity.domain_class_id])
             link("range", [entity.range_class_id])
             counts["relationships"] = self._ontology.count_relationships(property_id=entity.id)
+            # A DR relationship type's spec attributes ride on its DR reference's metadata;
+            # a proposer resends the whole list to change them.
+            result["external_references"] = [r.to_dict() for r in entity.external_references]
         if not isinstance(entity, (Taxonomy, ConceptScheme, PropertyDefinition)):
             counts["relationships_out"] = self._ontology.count_relationships(source_id=entity.id)
             counts["relationships_in"] = self._ontology.count_relationships(target_id=entity.id)

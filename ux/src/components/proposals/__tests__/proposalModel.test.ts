@@ -259,6 +259,48 @@ describe("changeRows", () => {
     expect(changeRows(createOperation).every((row) => row.before === undefined)).toBe(true);
   });
 
+  it("gives a DR type's attributes rows of their own, from its DR reference", () => {
+    const ref = (metadata: Record<string, unknown> | null) => [
+      { source: "documentation_robotics", identifier: "a.b.uses.c.d", uri: null, metadata },
+    ];
+    const update = createProposedOperation({
+      op: "update",
+      kind: "property",
+      fields: {
+        external_references: ref({
+          cardinality: "many-to-many",
+          strength: "high",
+          evidence: ["A config names it."],
+        }),
+      },
+      base: { external_references: ref({ cardinality: "many-to-many", strength: "medium" }) },
+    });
+
+    expect(changeRows(update).map(({ field, changed }) => [field, changed])).toEqual([
+      ["cardinality", false],
+      ["strength", true],
+      ["evidence", true],
+      // The same reference by identifier: only its metadata changed.
+      ["external_references", false],
+    ]);
+    // Any other change to a reference (here its uri) marks the references row changed.
+    const moved = {
+      ...update,
+      fields: {
+        external_references: [
+          { ...(update.fields!.external_references as object[])[0], uri: "https://dr/x" },
+        ],
+      },
+    };
+    expect(changeRows(moved).find((row) => row.field === "external_references")?.changed).toBe(
+      true,
+    );
+    expect(changeRows(update).find((row) => row.field === "evidence")).toMatchObject({
+      before: undefined,
+      after: ["A config names it."],
+    });
+  });
+
   it("formats values for display", () => {
     expect(formatValue(undefined)).toBe("—");
     expect(formatValue("x")).toBe("x");
