@@ -179,7 +179,7 @@ describe("a replacement the proposal deletes too", () => {
     expect(within(flag).queryByText("same pair")).not.toBeInTheDocument();
     expect(within(flag).getByText("replacement deleted")).toHaveClass("chip--rose");
     expect(await screen.findByTestId("operation-replacement-deleted-callout")).toHaveTextContent(
-      "The replacement component_uses_component is deleted too (seq 17). Following each delete's replacement: component_uses_component (deleted by seq 17) → component_serves_service; the chain ends at component_serves_service, which stays.",
+      "The replacement component_uses_component is deleted too (seq 17). Following each delete's replacement: component_uses_component (deleted by seq 17) → component_serves_service; the chain ends at component_serves_service, which this proposal doesn't delete.",
     );
   });
 

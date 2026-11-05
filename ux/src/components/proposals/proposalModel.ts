@@ -400,7 +400,7 @@ export function replacementDeletedFlag(
   const last = chain[chain.length - 1];
   const ending =
     last.deleted_by_seq == null
-      ? `the chain ends at ${name(last)}, which stays`
+      ? `the chain ends at ${name(last)}, which this proposal doesn't delete`
       : `the chain ends with no replacement (seq ${last.deleted_by_seq} names none)`;
   return {
     chip: "replacement deleted",
