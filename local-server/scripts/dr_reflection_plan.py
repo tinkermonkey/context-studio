@@ -15,7 +15,12 @@ proposes them, through ProposalService, as one change proposal on the
 canonical_predicate, source/destination spec node -> domain/range class, and a
 new triple -> a new identifier and DR reference. DR's `base` and `dr`
 bookkeeping are ignored; Context Studio captures its own base. Each
-operation keeps DR's seq, the join key for the decisions coming back.
+operation keeps DR's seq, the join key for the decisions coming back. A
+delete's `replacement` (the DR relationship id of the type that expresses the
+deleted one) becomes the operation's replacement: the property definition with
+that DR id, the one an update in the plan turns into it, or "$<ref>" of the
+plan's create of it; review compares its pair of classes with the deleted
+type's (see `domain.versioning.in_use`).
 
 `decisions_for` (in `adapters/interchange/dr_decisions.py`, re-exported here)
 writes the decisions file DR's `proposal-import.ts --decisions` reads: one
@@ -159,7 +164,43 @@ def drafts_for(plan: dict[str, Any], workspace: _Workspace) -> list[OperationDra
         identifiers = _identifiers_after(planned, workspace)
     except ValueError as exc:
         raise PlanError([str(exc)]) from exc
-    return [_draft(p, workspace, identifiers) for p in planned]
+    replacements, problems = _replacements(planned, workspace)
+    if problems:
+        raise PlanError(problems)
+    return [_draft(p, workspace, identifiers, replacements.get(p.seq)) for p in planned]
+
+
+def _replacements(
+    planned: list[_Planned], workspace: _Workspace
+) -> tuple[dict[int, str], list[str]]:
+    """
+    Per delete that names one, its replacement in Context Studio's terms: the
+    plan's create of that triple ("$<ref>"), the type an update turns into it,
+    or the type that has it now. Also the deletes whose replacement is none of these.
+    """
+    produced = {p.new.id: p for p in planned if p.new is not None}
+    found: dict[int, str] = {}
+    problems: list[str] = []
+    for p in planned:
+        name = p.item.get("replacement")
+        if p.op is not OperationType.DELETE or name is None:
+            continue
+        if not isinstance(name, str):
+            problems.append(f"{p.label}: replacement is not a DR relationship id")
+            continue
+        maker = produced.get(name)
+        if maker is not None and maker.op is OperationType.CREATE:
+            found[p.seq] = f"${maker.item.get('ref')}"
+        elif maker is not None and maker.target is not None:
+            found[p.seq] = maker.target.id
+        elif name in workspace.properties:
+            found[p.seq] = workspace.properties[name].id
+        else:
+            problems.append(
+                f"{p.label}: replacement {name} is no relationship type in the workspace or"
+                " the plan (is the DR spec import older than the plan?)"
+            )
+    return found, problems
 
 
 def _resolve(item: dict[str, Any], workspace: _Workspace) -> _Planned:
@@ -236,7 +277,12 @@ def _identifiers_after(planned: list[_Planned], workspace: _Workspace) -> dict[s
     return assign_relationship_identifiers(records, workspace.repo, owners)
 
 
-def _draft(p: _Planned, workspace: _Workspace, identifiers: dict[str, str]) -> OperationDraft:
+def _draft(
+    p: _Planned,
+    workspace: _Workspace,
+    identifiers: dict[str, str],
+    replacement: str | None = None,
+) -> OperationDraft:
     item = p.item
     common: dict[str, Any] = {
         "seq": p.seq,
@@ -267,7 +313,7 @@ def _draft(p: _Planned, workspace: _Workspace, identifiers: dict[str, str]) -> O
         )
     assert p.target is not None and p.current is not None
     if p.op is OperationType.DELETE:
-        return OperationDraft(**common, target_id=p.target.id)
+        return OperationDraft(**common, target_id=p.target.id, replacement=replacement)
     return OperationDraft(
         **common, target_id=p.target.id, fields=_update_fields(p, fields, workspace, identifiers)
     )

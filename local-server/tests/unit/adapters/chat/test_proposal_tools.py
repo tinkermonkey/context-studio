@@ -21,6 +21,7 @@ from domain.versioning.exceptions import (
     OperationError,
     ProposalValidationError,
 )
+from domain.versioning.in_use import ChainLink, ClassEnd, PairMatch, ReplacementCheck
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
@@ -67,8 +68,11 @@ def make_proposal(operations, status=ProposalStatus.OPEN, proposal_id="prop-1"):
 class FakeProposalService:
     """Records calls; answers with canned proposals or raises a canned error."""
 
-    def __init__(self, proposal=None, error=None, stale=frozenset(), listed=(), total=0):
+    def __init__(
+        self, proposal=None, error=None, stale=frozenset(), listed=(), total=0, checks=None
+    ):
         self.proposal = proposal
+        self.checks = checks or {}
         self.error = error
         self.stale = set(stale)
         self.listed = list(listed)
@@ -89,6 +93,9 @@ class FakeProposalService:
 
     def stale_operation_ids(self, proposal):
         return self.stale
+
+    def replacement_checks(self, proposal):
+        return self.checks
 
     def list_proposals(self, taxonomy_id=None, status=None, source=None, limit=50, offset=0):
         self.calls.append(("list", taxonomy_id, status, source, limit, offset))
@@ -153,6 +160,7 @@ def test_propose_schema_defines_every_operation_field():
         "rationale",
         "evidence",
         "probability",
+        "replacement",
     }
     assert OPERATION_SCHEMA["required"] == ["seq", "op", "kind"]
     assert OPERATION_SCHEMA["properties"]["op"]["enum"] == [t.value for t in OperationType]
@@ -204,7 +212,7 @@ class TestProposeChanges:
             ],
         )
 
-        (_, taxonomy_id, title, drafts, source, rationale) = service.calls[0]
+        _, taxonomy_id, title, drafts, source, rationale = service.calls[0]
         assert (taxonomy_id, title, source, rationale) == (
             TAXONOMY,
             "Clarify classes",
@@ -456,6 +464,112 @@ class TestProposeChanges:
 # ============================================================================
 # get_proposal
 # ============================================================================
+
+
+class TestReplacements:
+    async def test_propose_passes_a_deletes_replacement_and_checks_it_is_text(self):
+        service = FakeProposalService(proposal=make_proposal([make_operation(1)]))
+        delete = {"seq": 1, "op": "delete", "kind": "property", "target_id": "p-1"}
+
+        await call(
+            service,
+            "propose_changes",
+            taxonomy_id=TAXONOMY,
+            title="Drop a twin",
+            operations=[{**delete, "replacement": "businessrole_assigned_to_businessprocess"}],
+        )
+        (draft,) = service.calls[0][3]
+        assert draft.replacement == "businessrole_assigned_to_businessprocess"
+
+        _, result = await call(
+            service,
+            "propose_changes",
+            taxonomy_id=TAXONOMY,
+            title="Drop a twin",
+            operations=[{**delete, "replacement": 7}],
+        )
+        assert result["stored"] is False
+        assert result["operations"] == [
+            {
+                "seq": 1,
+                "status": "invalid",
+                "code": "invalid",
+                "message": "replacement must be text",
+            }
+        ]
+        assert len(service.calls) == 1
+
+    async def test_get_proposal_flags_a_different_pair(self):
+        """Gate B row 17: performs businessfunction -> assigned-to businessprocess."""
+        row_17 = make_operation(
+            17,
+            op=OperationType.DELETE,
+            kind=OperationKind.PROPERTY,
+            target_id="p-perf",
+            fields={},
+            scope=ChangeScope.BREAKING,
+            proposed_replacement_id="p-assigned",
+        )
+        check = ReplacementCheck(
+            replacement_id="p-assigned",
+            property_id="p-assigned",
+            identifier="businessrole_assigned_to_businessprocess",
+            title="assigned-to process",
+            pair=PairMatch.DIFFERENT,
+            deleted_domain=ClassEnd("c-role", "BusinessRole"),
+            deleted_range=ClassEnd("c-fn", "BusinessFunction"),
+            domain=ClassEnd("c-role", "BusinessRole"),
+            range=ClassEnd("c-proc", "BusinessProcess"),
+        )
+        service = FakeProposalService(
+            proposal=make_proposal([make_operation(1), row_17]), checks={row_17.id: check}
+        )
+
+        _, result = await call(service, "get_proposal", id="prop-1")
+
+        plain, flagged = result["operations"]
+        assert "replacement_check" not in plain
+        assert flagged["replacement_check"] == {
+            "replacement_id": "p-assigned",
+            "identifier": "businessrole_assigned_to_businessprocess",
+            "pair": "different",
+            "deleted_pair": "BusinessRole -> BusinessFunction",
+            "replacement_pair": "BusinessRole -> BusinessProcess",
+        }
+
+    async def test_get_proposal_flags_a_cycle_of_deletes(self):
+        """DR apm 8 <-> 9: each delete names the type the other deletes."""
+        eight = make_operation(
+            8,
+            op=OperationType.DELETE,
+            kind=OperationKind.PROPERTY,
+            target_id="p-a",
+            fields={},
+            scope=ChangeScope.BREAKING,
+            proposed_replacement_id="p-b",
+        )
+        end = ClassEnd("c-1", "Metric")
+        check = ReplacementCheck(
+            replacement_id="p-b",
+            property_id="p-b",
+            identifier="b",
+            title="b",
+            pair=PairMatch.REVERSED,
+            deleted_domain=end,
+            deleted_range=end,
+            domain=end,
+            range=end,
+            chain=(ChainLink("p-b", "b", 9),),
+            cycle=True,
+        )
+        service = FakeProposalService(proposal=make_proposal([eight]), checks={eight.id: check})
+
+        _, result = await call(service, "get_proposal", id="prop-1")
+
+        flagged = result["operations"][0]["replacement_check"]
+        assert flagged["replacement_deleted"] is True
+        assert flagged["cycle"] is True
+        assert flagged["chain"] == [{"identifier": "b", "deleted_by_seq": 9}]
 
 
 class TestGetProposal:

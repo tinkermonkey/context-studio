@@ -38,6 +38,10 @@ export function InUseResolver({
 }: InUseResolverProps) {
   const replacements = blockers.replacements ?? [];
   const canMove = replacements.length > 0;
+  // The type the delete names as its replacement: the server lists it first when it fits.
+  const proposed = operation.replacement_check ?? undefined;
+  const proposedId = proposed?.property_id ?? undefined;
+  const proposedFits = replacements.some((r) => r.property_id === proposedId);
   // The reviewer's choices; what applies is derived from the current blockers,
   // falling back when a choice no longer holds (its type isn't offered, or no
   // type fits any more).
@@ -131,11 +135,17 @@ export function InUseResolver({
           >
             {replacements.map((r) => (
               <Select.Item key={r.property_id} value={r.property_id}>
-                {r.identifier}
+                {r.property_id === proposedId ? `${r.identifier} (proposed)` : r.identifier}
               </Select.Item>
             ))}
           </Select>
         </Field>
+      )}
+
+      {proposed && proposedId && !proposedFits && (
+        <p className="op-resolver__note" data-testid="operation-proposed-replacement-unfit">
+          {`The proposed replacement ${proposed.identifier ?? proposed.replacement_id} doesn't fit every relationship, so it isn't offered.`}
+        </p>
       )}
 
       <div className="op-decision__actions" role="group" aria-label="Resolve">

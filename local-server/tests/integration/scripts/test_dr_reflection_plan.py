@@ -1094,3 +1094,69 @@ def test_a_spec_with_an_unknown_node_fails_before_any_identifier_moves(parts, tm
         import_dr_ontology(ontology, repo, spec)
 
     assert {p.id: p.identifier for p in repo.list_property_definitions(limit=None)} == before
+
+
+# ------------------------------------------------- named replacements (#1398)
+
+REPLACEMENTS_FILE = PLAN_FILE.parent / "business_replacements.json"
+PERFORMS_FUNCTION = "business.businessrole.performs.business.businessfunction"
+ASSIGNED_TO_PROCESS = "business.businessrole.assigned-to.business.businessprocess"
+ASSIGNED_TO_FUNCTION = "business.businessrole.assigned-to.business.businessfunction"
+SERVES_ROLE = "business.businessinterface.serves.business.businessrole"
+
+
+def test_named_replacements_are_compared_by_pair_in_the_api(parts):
+    """Gate B: seq 4's replacement is the reverse pair; row 17's links a different pair."""
+    _, repo, proposals = parts
+    app = FastAPI()
+    app.include_router(proposals_router)
+    app.state.proposal_service = proposals
+    client = TestClient(app)
+
+    proposal = import_reflection_plan(read_plan(REPLACEMENTS_FILE), proposals, repo)
+
+    by_seq = {o.seq: o for o in proposal.operations}
+    serves = prop_by_dr_id(repo, SERVES_ROLE)
+    assert by_seq[4].proposed_replacement_id == serves.id
+    assert by_seq[17].proposed_replacement_id == prop_by_dr_id(repo, ASSIGNED_TO_PROCESS).id
+    body = client.get(f"/api/proposals/{proposal.id}").json()
+    by_seq_json = {o["seq"]: o for o in body["operations"]}
+    assert by_seq_json[4]["proposed_replacement_id"] == serves.id
+    checks = {seq: o["replacement_check"] for seq, o in by_seq_json.items()}
+    assert checks[4]["pair"] == "reversed"
+    assert (checks[4]["property_id"], checks[4]["identifier"]) == (serves.id, serves.identifier)
+    row_17 = checks[17]
+    assert row_17["pair"] == "different"
+    assert (row_17["deleted_domain"]["title"], row_17["deleted_range"]["title"]) == (
+        class_by_dr_id(repo, "business.businessrole").title,
+        class_by_dr_id(repo, "business.businessfunction").title,
+    )
+    assert row_17["range"]["title"] == class_by_dr_id(repo, "business.businessprocess").title
+
+    # Applied, the delete still reports its check (the deleted pair comes from its base).
+    applied = proposals.apply(proposal.id, [by_seq[17].id])
+    assert applied.operations[-1].status is OperationStatus.APPLIED, applied.operations[-1].reason
+    assert proposals.replacement_checks(applied)[by_seq[17].id].pair.value == "different"
+
+
+def test_row_17s_override_names_a_same_pair_replacement(parts):
+    """documentation_robotics#993 made row 17's replacement assigned-to businessfunction."""
+    _, repo, proposals = parts
+    plan = read_plan(REPLACEMENTS_FILE)
+    row_17 = next(o for o in plan["operations"] if o["seq"] == 17)
+    plan["operations"] = [{**row_17, "replacement": ASSIGNED_TO_FUNCTION}]
+
+    proposal = import_reflection_plan(plan, proposals, repo)
+
+    (check,) = proposals.replacement_checks(proposal).values()
+    assert check.pair.value == "same"
+    assert check.property_id == prop_by_dr_id(repo, ASSIGNED_TO_FUNCTION).id
+
+
+def test_an_unknown_replacement_is_a_plan_error(parts):
+    _, repo, proposals = parts
+    delete = operation(17, "delete", PERFORMS_FUNCTION)
+    delete["replacement"] = "business.businessrole.nothing.business.nowhere"
+    with pytest.raises(PlanError) as caught:
+        import_reflection_plan(plan_with(delete), proposals, repo)
+    assert "replacement business.businessrole.nothing.business.nowhere" in caught.value.problems[0]

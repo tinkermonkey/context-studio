@@ -50,6 +50,7 @@ def _response(service: ProposalService, result: BundleImportResult) -> BundleImp
                 proposal,
                 service.stale_operation_ids(proposal),
                 service.in_use_blockers(proposal),
+                service.replacement_checks(proposal),
             )
             if proposal is not None
             else None

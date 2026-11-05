@@ -1349,6 +1349,9 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
         resolution: JSON {strategy, replacement_property_id, replacement_identifier,
             edges} when a relationship-type delete was applied with the relationships
             using it moved or deleted; null otherwise
+        proposed_replacement_id: A relationship-type delete only: the type the proposer
+            names as its replacement, a property definition id or "$<ref>" of a create in
+            the same proposal; null otherwise
     """
 
     __tablename__ = "proposal_operations"
@@ -1376,6 +1379,7 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
     reason = Column(Text, nullable=True)
     applied_fields = Column(JSON, nullable=True)
     resolution = Column(JSON, nullable=True)
+    proposed_replacement_id = Column(String(101), nullable=True)
 
     __table_args__ = (UniqueConstraint("proposal_id", "seq", name="uq_proposal_operation_seq"),)
 

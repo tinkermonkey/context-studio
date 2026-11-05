@@ -34,6 +34,7 @@ from domain.versioning.exceptions import (
     OperationError,
     ProposalValidationError,
 )
+from domain.versioning.in_use import ClassEnd, ReplacementCheck
 from domain.versioning.proposal_service import (
     ID_FIELDS,
     MAX_SEQ,
@@ -194,6 +195,15 @@ OPERATION_SCHEMA: dict[str, Any] = {
             "maximum": 1,
             "description": "Your confidence in this change, 0 to 1",
         },
+        "replacement": {
+            "type": "string",
+            "description": (
+                "Property delete only: the relationship type that replaces the deleted one,"
+                ' by id, identifier or "$<ref>" of an earlier property create. Name it'
+                " whenever another type expresses the deleted one; review flags a replacement"
+                " that links a different pair of classes"
+            ),
+        },
     },
     "required": ["seq", "op", "kind"],
 }
@@ -299,7 +309,7 @@ def _drafts(raw: Sequence[Any]) -> tuple[list[OperationDraft], list[OperationErr
             continue
         bad_text = [
             k
-            for k in ("ref", "rationale")
+            for k in ("ref", "rationale", "replacement")
             if item.get(k) is not None and not isinstance(item.get(k), str)
         ]
         if bad_text:
@@ -316,6 +326,7 @@ def _drafts(raw: Sequence[Any]) -> tuple[list[OperationDraft], list[OperationErr
                 rationale=item.get("rationale"),
                 evidence=item.get("evidence") or [],
                 probability=item.get("probability"),
+                replacement=item.get("replacement"),
             )
         )
     return drafts, errors
@@ -421,7 +432,13 @@ class GetProposalTool(_ProposalTool):
         " fields, status (pending, applied, rejected or failed), scope and stale flag."
         " A stale operation's target changed or is gone since it was proposed: a"
         " reviewer may still apply it, or you can propose the change again against the"
-        " current values. A large proposal's operations page with offset."
+        " current values. A property delete that names its replacement has"
+        " replacement_check: its pair is same, reversed or different (the replacement"
+        " links a different pair of classes than the deleted type, so it can't take over"
+        " its relationships), or missing; replacement_deleted means the proposal deletes"
+        " the replacement too (chain follows each delete's replacement; cycle means the"
+        " deletes name each other and none survives). A large proposal's operations page"
+        " with offset."
     )
     input_schema = {
         "type": "object",
@@ -440,11 +457,14 @@ class GetProposalTool(_ProposalTool):
         proposal = self._service.get(required_str(args, "id"))
         offset = int_arg(args, "offset", 0, 0, MAX_OPERATIONS)
         stale = self._service.stale_operation_ids(proposal)
+        checks = self._service.replacement_checks(proposal)
         payload: dict[str, Any] = {
             **_proposal_summary(proposal),
             "rationale": proposal.rationale,
             "offset": offset,
-            "operations": [_operation(o, o.id in stale) for o in proposal.operations[offset:]],
+            "operations": [
+                _operation(o, o.id in stale, checks.get(o.id)) for o in proposal.operations[offset:]
+            ],
         }
         content = dumps(payload)
         if len(content) > MAX_PROPOSAL_CHARS:
@@ -476,7 +496,9 @@ def _proposal_summary(proposal: ChangeProposal) -> dict[str, Any]:
     }
 
 
-def _operation(operation: ProposedOperation, stale: bool) -> dict[str, Any]:
+def _operation(
+    operation: ProposedOperation, stale: bool, check: Optional[ReplacementCheck] = None
+) -> dict[str, Any]:
     item: dict[str, Any] = {
         "id": operation.id,
         "seq": operation.seq,
@@ -495,7 +517,34 @@ def _operation(operation: ProposedOperation, stale: bool) -> dict[str, Any]:
         item["result_entity_id"] = operation.result_entity_id
     if operation.reason:
         item["reason"] = operation.reason
+    if check is not None:
+        item["replacement_check"] = _replacement_check(check)
     return item
+
+
+def _replacement_check(check: ReplacementCheck) -> dict[str, Any]:
+    """A replacement check, compactly: the pair verdict, with both pairs by class title."""
+
+    def pair(domain: Optional[ClassEnd], range_: Optional[ClassEnd]) -> Optional[str]:
+        if domain is None or range_ is None:
+            return None
+        return f"{domain.title or 'any'} -> {range_.title or 'any'}"
+
+    found: dict[str, Any] = {
+        "replacement_id": check.replacement_id,
+        "identifier": check.identifier,
+        "pair": check.pair.value,
+        "deleted_pair": pair(check.deleted_domain, check.deleted_range),
+        "replacement_pair": pair(check.domain, check.range),
+    }
+    if check.chain:
+        found["replacement_deleted"] = True
+        found["chain"] = [
+            {"identifier": link.identifier, "deleted_by_seq": link.deleted_by_seq}
+            for link in check.chain
+        ]
+        found["cycle"] = check.cycle
+    return {k: v for k, v in found.items() if v is not None}
 
 
 class ListProposalsTool(_ProposalTool):

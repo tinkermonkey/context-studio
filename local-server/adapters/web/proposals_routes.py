@@ -111,7 +111,10 @@ def _http_error(exc: Exception, unknown_ids_are_invalid: bool = False) -> HTTPEx
 
 def _response(service: ProposalService, proposal: ChangeProposal) -> ChangeProposalResponse:
     return ChangeProposalResponse.from_domain(
-        proposal, service.stale_operation_ids(proposal), service.in_use_blockers(proposal)
+        proposal,
+        service.stale_operation_ids(proposal),
+        service.in_use_blockers(proposal),
+        service.replacement_checks(proposal),
     )
 
 
@@ -223,8 +226,19 @@ async def create_proposal(
 
     The proposal is validated as a whole against the current graph. If any
     operation is invalid nothing is stored and the 422 lists each problem with
-    its operation's seq and a stable code.
+    its operation's seq and a stable code. Source "bundle" is refused (code
+    invalid_source): bundle proposals come from the bundle import route, and
+    are exempt from the approval policy's min_probability.
     """
+    if request.source is ProposalSource.BUNDLE:
+        message = "bundle proposals come from the bundle import route"
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail={
+                "message": message,
+                "errors": [{"seq": None, "code": "invalid_source", "message": message}],
+            },
+        )
     drafts = [
         OperationDraft(
             seq=o.seq,
@@ -237,6 +251,7 @@ async def create_proposal(
             evidence=o.evidence,
             probability=o.probability,
             claimed_scope=o.scope,
+            replacement=o.replacement,
         )
         for o in request.operations
     ]

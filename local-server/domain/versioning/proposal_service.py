@@ -21,7 +21,7 @@ from __future__ import annotations
 import logging
 import threading
 from contextlib import nullcontext
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Sequence
 from uuid import uuid4
@@ -38,7 +38,15 @@ from domain.versioning.exceptions import (
     OperationError,
     ProposalValidationError,
 )
-from domain.versioning.in_use import DeleteBlockers, InUseInspector
+from domain.versioning.in_use import (
+    ChainLink,
+    ClassEnd,
+    DeleteBlockers,
+    InUseInspector,
+    PairMatch,
+    ReplacementCheck,
+    compare_pair,
+)
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
@@ -452,6 +460,7 @@ class ProposalService:
                 self._classes,
                 lambda operation: self._inside_taxonomy(operation, proposal.taxonomy_id),
                 id_fields=frozenset(ID_FIELDS),
+                source=proposal.source,
             )
             # apply takes the proposal's lock itself; propose never holds it.
             return self.apply(proposal.id, auto) if auto else proposal
@@ -592,6 +601,7 @@ class ProposalService:
         self._check_field_names(operation)
         self._check_values(operation)
         self._check_id_fields(operation, refs)
+        operation.proposed_replacement_id = self._replacement_id(draft.replacement, operation, refs)
 
         target = None
         if op is not OperationType.CREATE:
@@ -608,6 +618,50 @@ class ProposalService:
             operation.base = {name: snapshot.get(name) for name in operation.fields}
         operation.scope = classify_scope(op, operation.fields, operation.base, claimed)
         return operation
+
+    def _replacement_id(
+        self, name: Any, operation: ProposedOperation, refs: dict[str, OperationKind]
+    ) -> str | None:
+        """
+        A property delete's named replacement, resolved: an existing property
+        definition's id (named by id or identifier), or "$<ref>" of an earlier
+        property create.
+        """
+        if name is None:
+            return None
+        if operation.op is not OperationType.DELETE or operation.kind is not K.PROPERTY:
+            raise _Invalid(
+                "invalid", "Only a property (relationship type) delete can name a replacement"
+            )
+        if not isinstance(name, str) or not name:
+            raise _Invalid(
+                "invalid",
+                'replacement must be a relationship type id, identifier or "$<ref>",'
+                f" not {name!r}",
+            )
+        if _is_ref(name):
+            ref_kind = refs.get(name[1:])
+            if ref_kind is None:
+                raise _Invalid(
+                    "unknown_ref", f"replacement {name} names no create earlier in the proposal"
+                )
+            if ref_kind is not K.PROPERTY:
+                raise _Invalid(
+                    "replacement_not_found",
+                    f"replacement {name} is a {ref_kind.value}, not a property",
+                )
+            return name
+        found = self._repo.get_property_definition(
+            name
+        ) or self._repo.get_property_definition_by_identifier(name)
+        if found is None:
+            raise _Invalid(
+                "replacement_not_found",
+                f"replacement {name} is not the id or identifier of a relationship type",
+            )
+        if found.id == operation.target_id:
+            raise _Invalid("invalid", "A relationship type can't replace itself")
+        return found.id
 
     @staticmethod
     def _check_field_names(operation: ProposedOperation) -> None:
@@ -1284,12 +1338,185 @@ class ProposalService:
         }
         inspector = InUseInspector(self._repo)
         found: dict[str, DeleteBlockers] = {}
-        for operation_id, target_id in deleted.items():
+        for operation in deletes:
+            target_id = deleted[operation.id]
             others = set(deleted.values()) - {target_id}
             blockers = inspector.blockers(target_id, excluded=others, covered=covered)
-            if blockers is not None:
-                found[operation_id] = blockers
+            if blockers is None:
+                continue
+            named = self._replacement_property_id(proposal, operation)
+            if named is not None:
+                # The proposer's named replacement goes first, when it fits.
+                blockers = replace(
+                    blockers,
+                    replacements=tuple(
+                        sorted(blockers.replacements, key=lambda r: r.property_id != named)
+                    ),
+                )
+            found[operation.id] = blockers
         return found
+
+    def replacement_checks(self, proposal: ChangeProposal) -> dict[str, ReplacementCheck]:
+        """
+        For each property delete that names its replacement: the replacement and
+        how its domain and range compare with the deleted type's (as proposed,
+        from its base): the same pair, reversed, or a different pair; missing
+        once the replacement is gone, or its create rejected.
+
+        The replacement is judged as it will be once the proposal applies: an
+        awaiting update of it in the same proposal overlays its domain, range,
+        identifier and title; a "$ref" replacement is read from its create's
+        fields until that is applied; one the proposal deletes is read from that
+        delete's base. The comparison is exact, as DR's pairOf: an untyped
+        deleted type (no domain or range) against a typed replacement, or a
+        superclass or subclass of either end, is a different pair.
+
+        A replacement the proposal also deletes (an awaiting or applied delete)
+        is followed through each delete's own replacement to the end of the
+        chain, or round a cycle (see ReplacementCheck.chain).
+        """
+        creates = {o.ref: o for o in proposal.operations if o.ref}
+        deletes = {
+            o.target_id: o
+            for o in proposal.operations
+            if o.kind is K.PROPERTY
+            and o.op is OperationType.DELETE
+            and o.target_id
+            and o.status is not OperationStatus.REJECTED
+        }
+        checks: dict[str, ReplacementCheck] = {}
+        for operation in proposal.operations:
+            replacement_id = operation.proposed_replacement_id
+            if not replacement_id:
+                continue
+            deleted = (operation.base.get("domain_class_id"), operation.base.get("range_class_id"))
+            ends = {
+                "deleted_domain": self._class_end(deleted[0], creates),
+                "deleted_range": self._class_end(deleted[1], creates),
+            }
+            values = self._replacement_values(proposal, replacement_id, creates, deletes)
+            chain, cycle = self._replacement_chain(proposal, operation, creates, deletes)
+            if values is None:
+                checks[operation.id] = ReplacementCheck(
+                    replacement_id, None, None, None, PairMatch.MISSING, **ends
+                )
+                continue
+            pair = (values.get("domain_class_id"), values.get("range_class_id"))
+            checks[operation.id] = ReplacementCheck(
+                replacement_id,
+                values.get("id"),
+                values.get("identifier"),
+                values.get("title"),
+                compare_pair(deleted, pair),
+                **ends,
+                domain=self._class_end(pair[0], creates),
+                range=self._class_end(pair[1], creates),
+                chain=chain,
+                cycle=cycle,
+            )
+        return checks
+
+    @staticmethod
+    def _replacement_property_id(
+        proposal: ChangeProposal, operation: ProposedOperation
+    ) -> str | None:
+        """The id of the type a delete names as its replacement ("$ref": once applied)."""
+        replacement_id = operation.proposed_replacement_id
+        if replacement_id and _is_ref(replacement_id):
+            create = next((o for o in proposal.operations if o.ref == replacement_id[1:]), None)
+            applied = create is not None and create.status is OperationStatus.APPLIED
+            return create.result_entity_id if applied else None  # type: ignore[union-attr]
+        return replacement_id
+
+    def _replacement_values(
+        self,
+        proposal: ChangeProposal,
+        replacement_id: str,
+        creates: dict[str, ProposedOperation],
+        deletes: dict[Any, ProposedOperation],
+    ) -> dict[str, Any] | None:
+        """
+        A replacement's id, identifier, title, domain and range once the
+        proposal applies; None when it is gone (or its create rejected).
+        """
+        if _is_ref(replacement_id):
+            create = creates.get(replacement_id[1:])
+            if create is None or create.status is OperationStatus.REJECTED:
+                return None
+            if create.status is not OperationStatus.APPLIED:
+                return {**create.fields, "id": None}
+            replacement_id = str(create.result_entity_id)
+        found = self._load(K.PROPERTY, replacement_id)
+        if found is not None:
+            values = {
+                "id": found.id,
+                "identifier": found.identifier,
+                "title": found.title,
+                "domain_class_id": found.domain_class_id,
+                "range_class_id": found.range_class_id,
+            }
+        elif replacement_id in deletes:
+            # Deleted by this proposal already: as it was when proposed.
+            values = {**deletes[replacement_id].base, "id": None}
+        else:
+            return None
+        for update in proposal.pending:
+            if update.op is OperationType.UPDATE and update.target_id == replacement_id:
+                values.update(
+                    {
+                        name: update.fields[name]
+                        for name in ("identifier", "title", "domain_class_id", "range_class_id")
+                        if name in update.fields
+                    }
+                )
+        return values
+
+    def _replacement_chain(
+        self,
+        proposal: ChangeProposal,
+        operation: ProposedOperation,
+        creates: dict[str, ProposedOperation],
+        deletes: dict[Any, ProposedOperation],
+    ) -> tuple[tuple[ChainLink, ...], bool]:
+        """
+        When the proposal also deletes the delete's replacement: each
+        replacement in turn, following each delete's own replacement, to one
+        it doesn't delete (or none), and whether the chain comes back round to a
+        type already in it. Empty when the replacement stays.
+        """
+        current = operation.proposed_replacement_id
+        if current not in deletes:
+            return (), False
+        seen = {operation.target_id}
+        links: list[ChainLink] = []
+        while current is not None:
+            deleter = deletes.get(current)
+            values = self._replacement_values(proposal, current, creates, {})
+            if deleter is not None:
+                identifier = deleter.base.get("identifier")
+            else:
+                identifier = values.get("identifier") if values else None
+            links.append(
+                ChainLink(current, identifier, deleter.seq if deleter is not None else None)
+            )
+            if deleter is None:
+                return tuple(links), False
+            seen.add(current)
+            current = deleter.proposed_replacement_id
+            if current in seen:
+                return tuple(links), True
+        return tuple(links), False
+
+    def _class_end(self, class_id: Any, creates: dict[str, ProposedOperation]) -> ClassEnd:
+        """A domain or range class with its title ("$ref": its create's title)."""
+        if not isinstance(class_id, str):
+            return ClassEnd(None, None)
+        if _is_ref(class_id):
+            create = creates.get(class_id[1:])
+            title = create.fields.get("title") if create is not None else None
+            return ClassEnd(class_id, title if isinstance(title, str) else class_id)
+        cls = self._repo.get_class(class_id)
+        return ClassEnd(class_id, cls.title if cls is not None else class_id)
 
     def _get(self, proposal_id: str) -> ChangeProposal:
         proposal = self._proposals.get(proposal_id)
