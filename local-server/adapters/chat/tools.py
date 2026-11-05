@@ -17,27 +17,15 @@ from __future__ import annotations
 import json
 from typing import Any, Callable, Mapping, Optional, Sequence
 
-from pydantic import BaseModel
-
-from adapters.web.schemas.ontology import (
-    AttributeDefinitionResponse,
-    ClassResponse,
-    ConceptSchemeResponse,
-    IndividualResponse,
-    PropertyDefinitionResponse,
-    RelationshipResponse,
-    TaxonomyResponse,
-)
+from adapters.serialization.views import rest_fields
 from domain.chat.value_objects import ENTITY_KINDS, EntityRef, ToolOutcome, ToolSpec
 from domain.graph.exceptions import NodeNotFoundError
 from domain.graph.services import GraphAnalysisService
 from domain.ontology.entities import (
-    AttributeDefinition,
     Class,
     ConceptScheme,
     Individual,
     PropertyDefinition,
-    Relationship,
     Taxonomy,
 )
 from domain.ontology.exceptions import EntityNotFoundError
@@ -452,24 +440,20 @@ class SearchEntitiesTool(_Tool):
         return scores
 
 
-# The REST response each kind is serialized with, so tool and REST fields can't drift.
-_REST_RESPONSES: dict[type, type[BaseModel]] = {
-    Taxonomy: TaxonomyResponse,
-    ConceptScheme: ConceptSchemeResponse,
-    Class: ClassResponse,
-    Individual: IndividualResponse,
-    PropertyDefinition: PropertyDefinitionResponse,
-    Relationship: RelationshipResponse,
-    AttributeDefinition: AttributeDefinitionResponse,
-}
-# Display-only or bulky REST fields the tools leave out.
-_EXCLUDED_REST_FIELDS = {"color", "embedding"}
+# get_entity shows at most this many items of an entity's lists; <key>_total counts them.
+MAX_ENTITY_LIST_ITEMS = 20
+_CAPPED_ENTITY_LISTS = ("external_references", "lexical_senses", "data_properties")
 
 
-def rest_fields(entity: Any) -> dict[str, Any]:
-    """An entity's fields as its REST response returns them, less color and embedding."""
-    response = _REST_RESPONSES[type(entity)].model_validate(entity)
-    return response.model_dump(mode="json", exclude=_EXCLUDED_REST_FIELDS)
+def _entity_fields(entity: Any) -> dict[str, Any]:
+    """The REST fields, each long list cut to MAX_ENTITY_LIST_ITEMS with its total."""
+    fields = rest_fields(entity)
+    for key in _CAPPED_ENTITY_LISTS:
+        items = fields.get(key)
+        if isinstance(items, list) and len(items) > MAX_ENTITY_LIST_ITEMS:
+            fields[key] = items[:MAX_ENTITY_LIST_ITEMS]
+            fields[f"{key}_total"] = len(items)
+    return fields
 
 
 class GetEntityTool(_Tool):
@@ -485,7 +469,8 @@ class GetEntityTool(_Tool):
         " summary and vision is its full vision statement: what it is for, what its"
         " classes and relationships model, and how changes are judged. A relationship"
         " (kind relationship) has its source, target and type; an attribute definition"
-        " (kind attribute) has its class, datatype and constraints."
+        " (kind attribute) has its class, datatype and constraints. Lists longer than"
+        f" {MAX_ENTITY_LIST_ITEMS} are cut, with <name>_total giving the full count."
     )
     input_schema = {
         "type": "object",
@@ -505,7 +490,7 @@ class GetEntityTool(_Tool):
         except EntityNotFoundError:
             return self._schema_item(entity_id)
         ref = ref_of(entity)
-        result: dict[str, Any] = {**_ref_dict(ref), **rest_fields(entity)}
+        result: dict[str, Any] = {**_ref_dict(ref), **_entity_fields(entity)}
         related: list[EntityRef] = [ref]
         counts: dict[str, int] = {}
         link = self._linker(result, related)
@@ -529,7 +514,10 @@ class GetEntityTool(_Tool):
             counts["relationships"] = self._ontology.count_relationships(property_id=entity.id)
             # A DR relationship type's spec attributes ride on its DR reference's metadata;
             # a proposer resends the whole list to change them. (Not in the REST response.)
-            result["external_references"] = [r.to_dict() for r in entity.external_references]
+            references = [r.to_dict() for r in entity.external_references]
+            result["external_references"] = references[:MAX_ENTITY_LIST_ITEMS]
+            if len(references) > MAX_ENTITY_LIST_ITEMS:
+                result["external_references_total"] = len(references)
         if not isinstance(entity, (Taxonomy, ConceptScheme, PropertyDefinition)):
             counts["relationships_out"] = self._ontology.count_relationships(source_id=entity.id)
             counts["relationships_in"] = self._ontology.count_relationships(target_id=entity.id)
@@ -550,11 +538,11 @@ class GetEntityTool(_Tool):
         except EntityNotFoundError:
             attribute = self._ontology.get_attribute_definition(item_id)
             result: dict[str, Any] = {"id": attribute.id, "kind": "attribute"}
-            result.update(rest_fields(attribute))
+            result.update(_entity_fields(attribute))
             self._linker(result, related)("class", [attribute.class_id])
             return _outcome(result, None, f"{attribute.title} (attribute)", related)
         result = {"id": relationship.id, "kind": "relationship"}
-        result.update(rest_fields(relationship))
+        result.update(_entity_fields(relationship))
         link = self._linker(result, related)
         link("source", [relationship.source_id])
         link("type", [relationship.property_definition_id])

@@ -11,7 +11,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from domain.versioning.approval_policy import ApprovalPolicy
 from domain.versioning.in_use import DeleteBlockers, PairMatch, ReplacementCheck
-from domain.versioning.proposal_service import ProposalService
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
@@ -329,8 +328,9 @@ class ProposedOperationResponse(BaseModel):
     )
     auto_apply: Optional[bool] = Field(
         None,
-        description="A dry run only: whether the taxonomy's approval policy would apply it "
-        "as soon as proposed. Null otherwise",
+        description="A dry run only: eligible to auto-apply, i.e. the taxonomy's approval "
+        "policy would apply it as soon as proposed and no in-use blockers stop it (applying "
+        "can still fail). Null otherwise",
     )
 
 
@@ -407,23 +407,6 @@ def _operation(
     if check is not None:
         response.replacement_check = ReplacementCheckResponse.model_validate(check)
     return response
-
-
-def proposal_response(
-    service: ProposalService, proposal: ChangeProposal, dry_run: bool = False
-) -> ChangeProposalResponse:
-    """
-    The REST view of a proposal: stale flags, in-use blockers and replacement
-    checks; for a dry run, the auto-apply verdict too. The chat and MCP
-    proposal tools serialize through this as well.
-    """
-    return ChangeProposalResponse.from_domain(
-        proposal,
-        service.stale_operation_ids(proposal),
-        service.in_use_blockers(proposal),
-        service.replacement_checks(proposal),
-        service.auto_apply_operation_ids(proposal) if dry_run else None,
-    )
 
 
 class OperationErrorResponse(BaseModel):

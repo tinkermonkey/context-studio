@@ -13,10 +13,10 @@ from typing import Any
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
 
+from adapters.serialization.views import proposal_response
 from adapters.web.dependencies import get_bundle_import_service, get_proposal_service
 from adapters.web.proposals_routes import _http_error
 from adapters.web.schemas.bundles import BundleImportResponse, BundleKindCounts
-from adapters.web.schemas.proposals import proposal_response
 from domain.interchange.bundle import BundleError
 from domain.ontology.exceptions import (
     DuplicateEntityError,

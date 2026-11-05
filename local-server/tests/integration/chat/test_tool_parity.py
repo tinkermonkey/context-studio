@@ -17,6 +17,8 @@ from fastapi.testclient import TestClient
 
 from adapters.chat.proposal_tools import build_proposal_tools
 from adapters.chat.tools import build_chat_tools
+from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
+from adapters.persistence.sqlite.models import ChangeEvent
 from adapters.web.proposals_routes import router
 from domain.ontology.value_objects import DataPropertyValue
 from domain.versioning.approval_policy import ApprovalPolicy, AutoApplyRule
@@ -30,6 +32,7 @@ from tests.integration.chat.conftest import (
     SERVICE_CLASS_ID,
     TAXONOMY_ID,
 )
+from tests.utils.change_recording import wire_change_recorder
 
 
 @pytest.fixture
@@ -123,8 +126,14 @@ async def test_get_proposal_matches_rest(client, proposal_tools, proposals):
     rest = compact(client.get(f"/api/proposals/{proposal_id}").json())
     tool = await call(proposal_tools, "get_proposal", id=proposal_id)
 
+    # Only a dry run says dry_run
+    assert rest.pop("dry_run") is False and "dry_run" not in tool
     for key, value in rest.items():
         assert tool[key] == value, key
+    # The tool adds only its own keys, and none inside an operation
+    assert set(tool) - set(rest) <= {"kind", "counts", "offset"}
+    for tool_op, rest_op in zip(tool["operations"], rest["operations"], strict=True):
+        assert set(tool_op) == set(rest_op)
     # What #1413 found missing is all there
     assert tool["source_detail"] == "claude-code"
     applied, create, delete = tool["operations"]
@@ -158,9 +167,13 @@ async def test_propose_changes_shows_the_blockers_rest_shows(client, proposal_to
     assert delete["replacement_check"] == rest["operations"][2]["replacement_check"]
 
 
-async def test_dry_runs_store_nothing_and_agree(client, proposal_tools, proposals):
+async def test_dry_runs_store_nothing_and_agree(client, proposal_tools, proposals, dr_workspace):
     proposals.policies.save(
         ApprovalPolicy(TAXONOMY_ID, auto_apply=(AutoApplyRule(scope=ChangeScope.EDITORIAL),))
+    )
+    wire_change_recorder(
+        dr_workspace.ontology._event_publisher,
+        SQLiteChangeRepository(dr_workspace.session_factory),
     )
 
     response = client.post("/api/proposals", params={"dry_run": "true"}, json=body())
@@ -185,6 +198,12 @@ async def test_dry_runs_store_nothing_and_agree(client, proposal_tools, proposal
     assert tool["operations"][2]["blockers"] == compact(rest["operations"][2]["blockers"])
     assert proposals.service.count_proposals() == 0
     assert client.get("/api/proposals").json()["total"] == 0
+    # The eligible update was not applied, and nothing was recorded
+    operation = dr_workspace.ontology.get_class(OPERATION_ID)
+    assert operation.description == "An API operation (endpoint + method)"
+    dr_workspace.ontology.get_property_definition(REALIZES_ID)
+    with dr_workspace.session_factory() as session:
+        assert session.query(ChangeEvent).count() == 0
 
 
 def test_a_stored_proposal_is_not_a_dry_run(client):

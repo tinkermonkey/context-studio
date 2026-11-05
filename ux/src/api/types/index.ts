@@ -7764,7 +7764,7 @@ export interface components {
       replacement_check?: components["schemas"]["ReplacementCheckResponse"] | null;
       /**
        * Auto Apply
-       * @description A dry run only: whether the taxonomy's approval policy would apply it as soon as proposed. Null otherwise
+       * @description A dry run only: eligible to auto-apply, i.e. the taxonomy's approval policy would apply it as soon as proposed and no in-use blockers stop it (applying can still fail). Null otherwise
        */
       auto_apply?: boolean | null;
     };
@@ -13632,7 +13632,7 @@ export interface operations {
   create_proposal_api_proposals_post: {
     parameters: {
       query?: {
-        /** @description Validate only (200): return the computed scopes, auto-apply verdict, stale flags, blockers and replacement checks; store and apply nothing */
+        /** @description Validate only (200): return the computed scopes, stale flags, blockers, replacement checks and which operations are eligible to auto-apply; store and apply nothing */
         dry_run?: boolean;
       };
       header?: never;

@@ -781,6 +781,47 @@ class TestRestParityFields:
         assert len(found["edges"]) == MAX_BLOCKER_EDGES
         assert found["edges_total"] == 25
 
+    async def test_a_blockers_move_targets_are_capped(self):
+        delete = blocked_delete()
+        many = DeleteBlockers(
+            edges=blockers(1).edges,
+            replacements=tuple(ReplacementType(f"p-{i}", f"t{i}", f"t{i}") for i in range(15)),
+        )
+        service = FakeProposalService(proposal=make_proposal([delete]), blockers={delete.id: many})
+
+        _, result = await call(service, "get_proposal", id="prop-1")
+
+        found = result["operations"][0]["blockers"]
+        assert len(found["replacements"]) == MAX_BLOCKER_EDGES
+        assert found["replacements_total"] == 15
+
+    async def test_get_proposal_shows_dry_run_only_when_true(self):
+        service = FakeProposalService(proposal=make_proposal([make_operation(1)]))
+
+        _, result = await call(service, "get_proposal", id="prop-1")
+
+        assert "dry_run" not in result
+        assert "auto_apply" not in result["operations"][0]
+
+    async def test_a_stored_proposal_that_cannot_be_described_is_still_stored(self):
+        proposal = make_proposal([make_operation(1, OperationStatus.APPLIED)])
+        service = FakeProposalService(proposal=proposal)
+
+        def broken(proposal):
+            raise RuntimeError("database is locked")
+
+        service.in_use_blockers = broken
+
+        outcome, result = await call(
+            service, "propose_changes", taxonomy_id=TAXONOMY, title="t", operations=[update_op(1)]
+        )
+
+        assert outcome.is_error is False
+        assert (result["stored"], result["id"]) == (True, "prop-1")
+        assert result["operations"] == [{"seq": 1, "status": "applied", "scope": "editorial"}]
+        assert "Do not propose it again" in result["details_unavailable"]
+        assert outcome.entities == (EntityRef("prop-1", "proposal", "Clarify classes"),)
+
 
 class TestDryRun:
     async def test_dry_run_stores_nothing_and_previews_each_operation(self):
@@ -822,6 +863,25 @@ class TestDryRun:
         assert "Nothing was stored" in result["next"]
         assert "1 would apply at once" in result["next"]
         assert "1 blocked" in result["next"]
+
+    async def test_a_blocked_operation_is_not_eligible_to_auto_apply(self):
+        delete = blocked_delete()
+        service = FakeProposalService(
+            proposal=make_proposal([delete]),
+            blockers={delete.id: blockers(1)},
+            auto=[delete.id],
+        )
+
+        _, result = await call(
+            service,
+            "propose_changes",
+            taxonomy_id=TAXONOMY,
+            title="t",
+            dry_run=True,
+            operations=[{"seq": 1, "op": "delete", "kind": "property", "target_id": "p-1"}],
+        )
+
+        assert result["operations"][0]["auto_apply"] is False
 
     async def test_dry_run_must_be_a_boolean(self):
         service = FakeProposalService(proposal=make_proposal([make_operation(1)]))
@@ -920,7 +980,7 @@ class TestListProposals:
             "title": "Clarify classes",
             "taxonomy_id": TAXONOMY,
             "source": "mcp",
-            "created_at": CREATED.isoformat(),
+            "created_at": "2026-10-28T12:00:00Z",
             "status": "done",
             "counts": {"pending": 0, "applied": 1, "rejected": 0, "failed": 0},
         }

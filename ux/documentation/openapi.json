@@ -6904,11 +6904,11 @@
             "required": false,
             "schema": {
               "type": "boolean",
-              "description": "Validate only (200): return the computed scopes, auto-apply verdict, stale flags, blockers and replacement checks; store and apply nothing",
+              "description": "Validate only (200): return the computed scopes, stale flags, blockers, replacement checks and which operations are eligible to auto-apply; store and apply nothing",
               "default": false,
               "title": "Dry Run"
             },
-            "description": "Validate only (200): return the computed scopes, auto-apply verdict, stale flags, blockers and replacement checks; store and apply nothing"
+            "description": "Validate only (200): return the computed scopes, stale flags, blockers, replacement checks and which operations are eligible to auto-apply; store and apply nothing"
           }
         ],
         "requestBody": {
@@ -14038,7 +14038,7 @@
               }
             ],
             "title": "Auto Apply",
-            "description": "A dry run only: whether the taxonomy's approval policy would apply it as soon as proposed. Null otherwise"
+            "description": "A dry run only: eligible to auto-apply, i.e. the taxonomy's approval policy would apply it as soon as proposed and no in-use blockers stop it (applying can still fail). Null otherwise"
           }
         },
         "type": "object",

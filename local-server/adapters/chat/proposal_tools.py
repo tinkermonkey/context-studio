@@ -17,7 +17,10 @@ result is longer, whole entries are dropped and the result says so.
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from typing import Any, Callable, Optional, Sequence
+
+from pydantic import TypeAdapter
 
 from adapters.chat.tools import (
     ToolArgumentError,
@@ -28,7 +31,7 @@ from adapters.chat.tools import (
     optional_str,
     required_str,
 )
-from adapters.web.schemas.proposals import proposal_response
+from adapters.serialization.views import proposal_response
 from domain.chat.value_objects import EntityRef, ToolOutcome
 from domain.versioning.exceptions import (
     ChangeProposalNotFoundError,
@@ -62,7 +65,8 @@ MAX_PROPOSAL_CHARS = 16000
 CLIPPED_TEXT_CHARS = 300
 DEFAULT_LIMIT = 20
 MAX_LIMIT = 50
-# An in-use blocker lists at most this many of its relationships; the review page has all.
+# An in-use blocker lists at most this many relationships and move targets; the review
+# page has all.
 MAX_BLOCKER_EDGES = 10
 # Dropped from get_proposal's operations first when a result is too large.
 BULKY_OPERATION_KEYS = ("fields", "base", "applied_fields", "evidence")
@@ -85,15 +89,19 @@ def _view(service: ProposalService, proposal: ChangeProposal, dry_run: bool = Fa
     """
     The proposal as REST returns it (the same serializer, so the two can't
     drift), compacted: nulls and empty lists or objects are left out, and each
-    in-use blocker lists at most MAX_BLOCKER_EDGES relationships (edges_total
-    says how many there are).
+    in-use blocker lists at most MAX_BLOCKER_EDGES relationships and move
+    targets (edges_total and replacements_total say how many there are), and
+    dry_run appears only when true.
     """
     view = _compact(proposal_response(service, proposal, dry_run=dry_run).model_dump(mode="json"))
+    if not view.get("dry_run"):
+        view.pop("dry_run", None)
     for operation in view["operations"]:
-        blockers = operation.get("blockers")
-        if blockers and len(blockers.get("edges", ())) > MAX_BLOCKER_EDGES:
-            blockers["edges_total"] = len(blockers["edges"])
-            blockers["edges"] = blockers["edges"][:MAX_BLOCKER_EDGES]
+        blockers = operation.get("blockers") or {}
+        for key in ("edges", "replacements"):
+            if len(blockers.get(key, ())) > MAX_BLOCKER_EDGES:
+                blockers[f"{key}_total"] = len(blockers[key])
+                blockers[key] = blockers[key][:MAX_BLOCKER_EDGES]
     return view
 
 
@@ -274,7 +282,8 @@ class ProposeChangesTool(_ProposalTool):
         " A delete naming its replacement has replacement_check (see get_proposal)."
         " With dry_run true nothing is stored or applied: you get the same check, each"
         " operation's scope, stale flag, blockers, replacement check and auto_apply"
-        " (whether the approval policy would apply it at once), then propose for real.\n"
+        " (eligible to auto-apply: the approval policy would apply it at once and no"
+        " blockers stop it; applying can still fail), then propose for real.\n"
         "Kind property is a relationship type (property definition); attribute is a"
         " data attribute of a class; relationship links two classes or individuals.\n"
         "Fields per kind (* required on create):\n"
@@ -327,15 +336,26 @@ class ProposeChangesTool(_ProposalTool):
             proposal = self._service.propose(
                 taxonomy_id, title, drafts, self._source, rationale=rationale, dry_run=dry_run
             )
-            view = _view(self._service, proposal, dry_run=dry_run)
         except ProposalValidationError as exc:
             return _not_stored(exc.errors, drafts)
         except Exception:  # noqa: BLE001 - the agent gets an answer, the log the detail
             _logger.exception("propose_changes could not store a proposal")
             return error_outcome(
-                "The proposal could not be stored because of a server error.",
-                "Proposal not stored",
+                f"The proposal could not be {'checked' if dry_run else 'stored'} because of"
+                " a server error.",
+                "Proposal not checked" if dry_run else "Proposal not stored",
             )
+        try:
+            view = _view(self._service, proposal, dry_run=dry_run)
+        except Exception:  # noqa: BLE001 - stored already: never invite a duplicate
+            _logger.exception("propose_changes could not describe proposal %s", proposal.id)
+            if dry_run:
+                return error_outcome(
+                    "The dry run passed validation, but its details could not be read"
+                    " because of a server error.",
+                    "Dry run details unavailable",
+                )
+            return _stored(proposal, None)
         return _dry_run(view) if dry_run else _stored(proposal, view)
 
 
@@ -425,9 +445,20 @@ def _outcomes(view: dict[str, Any], keys: Sequence[str]) -> list[dict[str, Any]]
     return [{k: o[k] for k in (*keys, "replacement_check") if k in o} for o in view["operations"]]
 
 
-def _stored(proposal: ChangeProposal, view: dict[str, Any]) -> ToolOutcome:
-    """A stored proposal: each operation's status, scope and blockers, and what happens next."""
+def _stored(proposal: ChangeProposal, view: Optional[dict[str, Any]]) -> ToolOutcome:
+    """
+    A stored proposal: each operation's status, scope and blockers, and what
+    happens next. Without a view (it could not be read), each operation's
+    status and scope only, and a note that the details are unavailable.
+    """
     counts = _counts(proposal)
+    if view is not None:
+        operations = _outcomes(view, _OUTCOME_KEYS)
+    else:
+        operations = [
+            {"seq": o.seq, "status": o.status.value, "scope": o.scope.value}
+            for o in proposal.operations
+        ]
     payload: dict[str, Any] = {
         "stored": True,
         "id": proposal.id,
@@ -436,9 +467,14 @@ def _stored(proposal: ChangeProposal, view: dict[str, Any]) -> ToolOutcome:
         "taxonomy_id": proposal.taxonomy_id,
         "status": proposal.status.value,
         "counts": counts,
-        "operations": _outcomes(view, _OUTCOME_KEYS),
+        "operations": operations,
         "next": _next_step(counts),
     }
+    if view is None:
+        payload["details_unavailable"] = (
+            "The proposal is stored; its blockers and checks could not be read. Do not"
+            " propose it again: get_proposal shows them."
+        )
     content, _ = _capped(
         payload, "operations", lambda kept: f"get_proposal with offset {kept} shows the rest"
     )
@@ -471,7 +507,7 @@ def _dry_run(view: dict[str, Any]) -> ToolOutcome:
         "next": " ".join(notes),
     }
     content, _ = _capped(
-        payload, "operations", lambda _: "the rest validated; propose to see them all"
+        payload, "operations", lambda _: "the rest validated; split the proposal to see them"
     )
     return ToolOutcome(content=content, summary=f"Dry run “{view['title']}”: {auto} would apply")
 
@@ -561,6 +597,11 @@ class GetProposalTool(_ProposalTool):
         )
 
 
+def _timestamp(value: datetime) -> str:
+    """A timestamp as REST writes it (UTC as Z), so list_proposals and get_proposal agree."""
+    return TypeAdapter(datetime).dump_python(value, mode="json")
+
+
 def _proposal_summary(proposal: ChangeProposal) -> dict[str, Any]:
     return {
         "id": proposal.id,
@@ -568,7 +609,7 @@ def _proposal_summary(proposal: ChangeProposal) -> dict[str, Any]:
         "title": proposal.title,
         "taxonomy_id": proposal.taxonomy_id,
         "source": proposal.source.value,
-        "created_at": proposal.created_at.isoformat(),
+        "created_at": _timestamp(proposal.created_at),
         "status": proposal.status.value,
         "counts": _counts(proposal),
     }

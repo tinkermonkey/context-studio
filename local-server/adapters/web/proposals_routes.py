@@ -14,6 +14,7 @@ from fastapi.responses import JSONResponse
 
 from adapters.interchange.dr_decisions import decisions_for
 from adapters.persistence.sqlite.transaction import TransactionAbortedError
+from adapters.serialization.views import proposal_response
 from adapters.web.dependencies import get_approval_policy_service, get_proposal_service
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.proposals import (
@@ -27,7 +28,6 @@ from adapters.web.schemas.proposals import (
     ChangeProposalRevertResponse,
     ChangeProposalValidationErrorResponse,
     DrDecisionResponse,
-    proposal_response,
 )
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.versioning.approval_policy import ApprovalPolicyService
@@ -219,8 +219,9 @@ async def create_proposal(
     response: Response,
     dry_run: bool = Query(
         False,
-        description="Validate only (200): return the computed scopes, auto-apply verdict, "
-        "stale flags, blockers and replacement checks; store and apply nothing",
+        description="Validate only (200): return the computed scopes, "
+        "stale flags, blockers, replacement checks and which operations are eligible to "
+        "auto-apply; store and apply nothing",
     ),
     service: ProposalService = Depends(get_proposal_service),
 ) -> ChangeProposalResponse:

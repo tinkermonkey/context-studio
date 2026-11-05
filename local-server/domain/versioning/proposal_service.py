@@ -470,10 +470,11 @@ class ProposalService:
 
     def auto_apply_operation_ids(self, proposal: ChangeProposal) -> list[str]:
         """
-        The operations the taxonomy's approval policy applies as soon as they
-        are proposed, in seq order: a dry run's auto-apply verdict. None
-        without a policy, or when the stored policy can't be read (propose
-        then leaves everything for review too).
+        Ids of the operations the taxonomy's approval policy applies as soon as
+        they are proposed, in seq order: the same selection `_auto_apply` makes,
+        so a dry run's verdict and a real propose share one path. Empty without
+        a policy, or when the stored policy can't be read (propose then leaves
+        everything for review too).
         """
         if self._policies is None:
             return []
