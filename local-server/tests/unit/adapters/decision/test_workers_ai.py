@@ -20,8 +20,13 @@ import httpx
 import pytest
 
 from adapters.decision.parsing import choice_of, score_of, yes_no_of
-from adapters.decision.workers_ai import WorkersAIDecisionModel, wire_question
-from domain.decision.exceptions import DecisionModelError, DecisionModelNotConfiguredError
+from adapters.decision.workers_ai import WorkersAIDecisionModel, WorkersAIOptions, wire_question
+from domain.decision.exceptions import (
+    DecisionModelError,
+    DecisionModelNotConfiguredError,
+    DecisionModelRequestError,
+    DecisionModelUnavailableError,
+)
 from domain.decision.value_objects import (
     ChoiceAnswer,
     ChoiceQuestion,
@@ -55,10 +60,13 @@ HOUSE_QUESTIONS = {
 
 
 def make_model(handler, **kwargs) -> WorkersAIDecisionModel:
+    option_values = {"account_id": "acct-123", "api_token": "token-abc"}
+    for key in ("account_id", "api_token", "request_model", "base_url"):
+        if key in kwargs:
+            option_values[key] = kwargs.pop(key)
     defaults = dict(
         model="@cf/vendor/some-model",
-        account_id="acct-123",
-        api_token="token-abc",
+        options=WorkersAIOptions(**option_values),
         price_per_mtok_in=0.09,
         backoff_seconds=0.0,
         transport=httpx.MockTransport(handler),
@@ -110,6 +118,18 @@ def test_score_of_list_distribution_and_expected_value():
     score, distribution = score_of({"distribution": [0.0, 0.5, 0.5]}, 3)
     assert distribution == [0.0, 0.5, 0.5]
     assert score == pytest.approx(1.5)
+
+
+def test_choice_of_empty_choice_falls_back_to_arg_max():
+    assert choice_of({"choice": "", "probabilities": {"a": 0.2, "b": 0.7}})[0] == "b"
+
+
+def test_choice_of_rejects_options_not_offered():
+    assert choice_of({"choice": "none"}, offered={"a", "b"})[0] is None
+
+
+def test_score_of_ignores_list_of_the_wrong_length():
+    assert score_of({"probabilities": [0.5, 0.5]}, 3) == (None, [])
 
 
 def test_score_of_clamps_out_of_range_score_without_distribution():
@@ -218,10 +238,59 @@ def test_unwrapped_result_is_accepted():
     assert answers["is_persistence"].p_yes == pytest.approx(0.7726)
 
 
-def test_missing_answer_raises():
+def test_no_usable_answer_at_all_raises():
     model = make_model(respond_with("dr_element"))
-    with pytest.raises(DecisionModelError, match="no answer for question 'kind'"):
+    with pytest.raises(DecisionModelError, match="no usable answer"):
         model.decide("x", {"kind": HOUSE_QUESTIONS["kind"]})
+
+
+def test_one_missing_answer_keeps_the_others():
+    # The dr_element response answers 'layer' only; 'kind' comes back empty
+    model = make_model(respond_with("dr_element"))
+    questions = {
+        "layer": ChoiceQuestion(instructions="?", criteria={"application": "A"}),
+        "kind": HOUSE_QUESTIONS["kind"],
+    }
+    answers = model.decide("x", questions)
+    assert answers["layer"].choice == "application"
+    assert isinstance(answers["kind"], ChoiceAnswer)
+    assert answers["kind"].choice is None
+    assert answers["kind"].model == "instance-a"
+
+
+def test_choice_not_offered_is_treated_as_unanswered():
+    # 'none' was not offered, so a 'none' choice is not a usable answer
+    payload = {
+        "result": {
+            "answers": {
+                "pick": {"choice": "none", "probabilities": {"a": 0.1, "none": 0.9}},
+                "ok": {"noul": 0.4},
+            }
+        }
+    }
+    model = make_model(lambda _r: httpx.Response(200, json=payload))
+    questions = {
+        "pick": ChoiceQuestion(instructions="?", criteria={"a": "A"}, offer_none=False),
+        "ok": YesNoQuestion(instructions="?"),
+    }
+    answers = model.decide("x", questions)
+    assert answers["pick"].choice is None
+    assert answers["ok"].p_yes == 0.4
+
+
+def test_non_numeric_usage_does_not_break_parsing():
+    payload = {"result": {"answers": {"ok": {"noul": 0.4}}, "usage": {"input_tokens": "lots"}}}
+    model = make_model(lambda _r: httpx.Response(200, json=payload))
+    answers = model.decide("x", {"ok": YesNoQuestion(instructions="?")})
+    assert answers["ok"].cost_usd == 0.0
+
+
+def test_unexpected_httpx_errors_become_decision_model_errors():
+    def handler(_request):
+        raise httpx.DecodingError("garbled")
+
+    with pytest.raises(DecisionModelError, match="DecodingError"):
+        make_model(handler).decide("x", HOUSE_QUESTIONS)
 
 
 # ---- errors and retries ----
@@ -230,7 +299,7 @@ def test_missing_answer_raises():
 def test_recorded_400_error_raises_without_retry():
     sent: list[httpx.Request] = []
     model = make_model(respond_with("bad_question_type", sent))
-    with pytest.raises(DecisionModelError, match="Bad input"):
+    with pytest.raises(DecisionModelRequestError, match="Bad input"):
         model.decide("x", HOUSE_QUESTIONS)
     assert len(sent) == 1
 
@@ -258,9 +327,42 @@ def test_gives_up_after_max_attempts():
         calls.append(request)
         return httpx.Response(500, text="upstream broke")
 
-    with pytest.raises(DecisionModelError, match="HTTP 500"):
+    with pytest.raises(DecisionModelUnavailableError, match="HTTP 500"):
         make_model(handler, max_attempts=3).decide("x", HOUSE_QUESTIONS)
     assert len(calls) == 3
+
+
+def test_auth_failure_is_a_request_error_and_not_retried():
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(401, json={"success": False, "errors": [{"message": "bad token"}]})
+
+    with pytest.raises(DecisionModelRequestError, match="HTTP 401"):
+        make_model(handler).decide("x", HOUSE_QUESTIONS)
+    assert len(calls) == 1
+
+
+def test_429_waits_at_least_retry_after():
+    statuses = iter([429])
+    delays: list[float] = []
+    recorded = RECORDED["house_activity"]["response"]
+
+    def handler(_request):
+        if next(statuses, None):
+            return httpx.Response(429, headers={"Retry-After": "7"}, json={})
+        return httpx.Response(200, json=recorded)
+
+    make_model(handler, backoff_seconds=1.0, sleep=delays.append).decide("x", HOUSE_QUESTIONS)
+    assert delays == [7.0]
+
+
+def test_base_url_comes_from_options():
+    sent: list[httpx.Request] = []
+    model = make_model(respond_with("house_activity", sent), base_url="https://gateway.test/v4/")
+    model.decide("x", HOUSE_QUESTIONS)
+    assert str(sent[0].url).startswith("https://gateway.test/v4/accounts/acct-123/ai/run/")
 
 
 def test_retries_connection_errors():

@@ -46,7 +46,8 @@ def live_model(request):
     return model
 
 
-def test_live_call_answers_every_question_kind(live_model):
+def test_live_call_answers_every_question_kind(live_model, request):
+    requested = request.config.getoption("--decision-model-instance")
     questions = {
         "kind": ChoiceQuestion(
             instructions="What kind of house record does this text describe?",
@@ -79,5 +80,6 @@ def test_live_call_answers_every_question_kind(live_model):
     assert isinstance(maintenance, YesNoAnswer)
     assert maintenance.p_yes is not None and 0 <= maintenance.p_yes <= 1
     for answer in answers.values():
-        assert answer.model == live_model.name
+        # The requested instance answered itself, not a fallback
+        assert answer.model == requested
         assert answer.latency_ms > 0

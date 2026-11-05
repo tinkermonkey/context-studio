@@ -21,9 +21,8 @@ CONFIG = DecisionModelsConfig(
         "primary": {
             "adapter": "workers_ai",
             "model": "@cf/vendor/model-large",
-            "account_id": "acct-secret-id",
-            "api_token": "token-secret",
             "price_per_mtok_in": 0.24,
+            "options": {"account_id": "acct-secret-id", "api_token": "token-secret"},
             "fallback": "llm",
         },
         "unset": {"adapter": "workers_ai", "model": "@cf/vendor/model-small"},
@@ -53,7 +52,6 @@ def test_lists_instances_with_adapter_model_and_configured_flag():
         "configured": True,
         "is_default": True,
         "fallback": "llm",
-        "price_per_mtok_in": 0.24,
     }
     assert models["unset"]["configured"] is False
     assert models["llm"]["adapter"] == "llm"

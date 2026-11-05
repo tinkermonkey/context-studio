@@ -33,6 +33,10 @@ class ChoiceQuestion:
     criteria: Mapping[str, str]
     offer_none: bool = True
 
+    def __post_init__(self) -> None:
+        if not self.options():
+            raise ValueError("A choice question needs at least one option")
+
     def options(self) -> dict[str, str]:
         """The options to offer, including 'none' when it is offered."""
         options = dict(self.criteria)
@@ -47,6 +51,10 @@ class ScoreQuestion:
 
     instructions: str
     levels: Sequence[str]
+
+    def __post_init__(self) -> None:
+        if len(self.levels) < 2:
+            raise ValueError("A score question needs at least two levels")
 
 
 @dataclass(frozen=True)
@@ -119,4 +127,3 @@ class DecisionModelInfo:
     configured: bool
     is_default: bool = False
     fallback: Optional[str] = None
-    price_per_mtok_in: Optional[float] = None

@@ -98,6 +98,18 @@ def test_unconfigured_instance_raises_not_configured():
         FakeDecisionModel(configured=False).decide("x", QUESTIONS)
 
 
-def test_failing_instance_raises_decision_model_error():
+def test_failing_instance_raises_a_decision_model_error():
     with pytest.raises(DecisionModelError):
         FakeDecisionModel(fail=True).decide("x", QUESTIONS)
+
+
+def test_score_question_needs_two_levels():
+    with pytest.raises(ValueError):
+        ScoreQuestion(instructions="?", levels=["only"])
+
+
+def test_choice_question_needs_an_option():
+    with pytest.raises(ValueError):
+        ChoiceQuestion(instructions="?", criteria={}, offer_none=False)
+    # 'none' alone counts as an option
+    assert list(ChoiceQuestion(instructions="?", criteria={}).options()) == [NONE_OPTION]

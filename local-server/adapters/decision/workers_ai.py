@@ -5,25 +5,36 @@ POST {base_url}/accounts/{account_id}/ai/run/{model}
     {"model": <request model>, "state": <text>, "questions": {<name>: <question>}}
 
 Each question is {"type": "choice"|"score"|"noul", "instructions", "criteria"}.
-The model id, the request model name, credentials and price all come from
-config; nothing here names a particular model.
+The model id comes from the instance config; account id, token, request model
+and base URL come from the instance's adapter options (WorkersAIOptions).
+Nothing here names a particular model.
 
-Requests that get HTTP 429 or 5xx, or fail to connect, are retried with
-exponential backoff. At most `concurrency` requests are in flight at once
-per instance (separately for sync and async callers).
+Requests that get HTTP 429 (honoring Retry-After) or 5xx, or fail to connect,
+are retried with exponential backoff; if they still fail the error is
+DecisionModelUnavailableError, which lets a fallback instance answer. Other
+4xx responses raise DecisionModelRequestError and are not retried or passed to
+a fallback. At most `concurrency` requests are in flight at once per instance.
+latency_ms is measured from when the request gets a concurrency slot, so it
+covers the call and its retries, not time spent queued.
 """
 
 from __future__ import annotations
 
 import asyncio
-import threading
 import time
 from typing import Any, Awaitable, Callable, Mapping, Optional
 
 import httpx
+from pydantic import BaseModel, Field
 
-from adapters.decision.parsing import choice_of, score_of, yes_no_of
-from domain.decision.exceptions import DecisionModelError, DecisionModelNotConfiguredError
+from adapters.decision.common import ConcurrencyLimit, cost_share, finish_answers, request_cost
+from adapters.decision.parsing import as_number, choice_of, score_of, yes_no_of
+from domain.decision.exceptions import (
+    DecisionModelError,
+    DecisionModelNotConfiguredError,
+    DecisionModelRequestError,
+    DecisionModelUnavailableError,
+)
 from domain.decision.value_objects import (
     Answer,
     ChoiceAnswer,
@@ -40,6 +51,19 @@ logger = get_logger(__name__)
 
 WORKERS_AI_BASE_URL = "https://api.cloudflare.com/client/v4"
 _MAX_ERROR_TEXT = 500
+_MAX_RETRY_AFTER_SECONDS = 60.0
+
+
+class WorkersAIOptions(BaseModel):
+    """The `options` object of a workers_ai instance in config.json."""
+
+    account_id: str = Field(default="", description="Cloudflare account id")
+    api_token: str = Field(default="", description="API token with Workers AI access")
+    request_model: Optional[str] = Field(
+        default=None,
+        description="Model name sent in the request body; defaults to the last segment of model",
+    )
+    base_url: str = Field(default=WORKERS_AI_BASE_URL, description="API base URL")
 
 
 def wire_question(question: Question) -> dict[str, Any]:
@@ -61,19 +85,24 @@ def wire_question(question: Question) -> dict[str, Any]:
     raise TypeError(f"Unsupported question type: {type(question).__name__}")
 
 
-def request_cost(
-    tokens_in: int,
-    tokens_out: int,
-    price_per_mtok_in: Optional[float],
-    price_per_mtok_out: Optional[float] = None,
-) -> Optional[float]:
-    """USD cost of one request, or None when no input price is configured."""
-    if price_per_mtok_in is None:
+def _parse_one(question: Question, wire: Any, meta: Mapping[str, Any]) -> Optional[Answer]:
+    """One typed answer, or None when the wire answer is missing or unusable."""
+    if not isinstance(wire, Mapping):
         return None
-    cost = tokens_in * price_per_mtok_in / 1e6
-    if price_per_mtok_out is not None:
-        cost += tokens_out * price_per_mtok_out / 1e6
-    return cost
+    if isinstance(question, ChoiceQuestion):
+        choice, probabilities, confidence = choice_of(wire, offered=question.options())
+        if choice is None:
+            return None
+        return ChoiceAnswer(
+            choice=choice, probabilities=probabilities, confidence=confidence, **meta
+        )
+    if isinstance(question, ScoreQuestion):
+        score, distribution = score_of(wire, len(question.levels))
+        return (
+            None if score is None else ScoreAnswer(score=score, probabilities=distribution, **meta)
+        )
+    p_yes = yes_no_of(wire)
+    return None if p_yes is None else YesNoAnswer(p_yes=p_yes, **meta)
 
 
 def parse_answers(
@@ -83,15 +112,17 @@ def parse_answers(
     model_name: str,
     latency_ms: float,
     price_per_mtok_in: Optional[float],
+    price_per_mtok_out: Optional[float] = None,
 ) -> dict[str, Answer]:
     """
     Turn a Workers AI response body into one answer per question.
 
-    The request's cost is split evenly across its answers, so summing cost_usd
-    over answers gives the cost of the calls.
+    A question without a usable answer gets an empty answer (value None) and
+    is logged. The request's cost is split evenly across its answers, so
+    summing cost_usd over answers gives the cost of the calls.
 
     Raises:
-        DecisionModelError: if the body reports failure or lacks an answer
+        DecisionModelError: if the body reports failure or no question was answered
     """
     if not isinstance(payload, Mapping):
         raise DecisionModelError(f"{model_name}: response is not a JSON object")
@@ -105,32 +136,26 @@ def parse_answers(
     usage = result.get("usage") or payload.get("usage") or {}
     if not isinstance(answers, Mapping):
         raise DecisionModelError(f"{model_name}: response answers are not an object")
-    tokens_in = int(usage.get("input_tokens") or 0) if isinstance(usage, Mapping) else 0
-    tokens_out = int(usage.get("output_tokens") or 0) if isinstance(usage, Mapping) else 0
-    cost = request_cost(tokens_in, tokens_out, price_per_mtok_in)
-    share = cost / len(questions) if cost is not None and questions else cost
-
-    parsed: dict[str, Answer] = {}
-    for name, question in questions.items():
-        wire = answers.get(name)
-        if not isinstance(wire, Mapping):
-            raise DecisionModelError(f"{model_name}: no answer for question '{name}'")
-        meta: dict[str, Any] = {"model": model_name, "latency_ms": latency_ms, "cost_usd": share}
-        if isinstance(question, ChoiceQuestion):
-            choice, probabilities, confidence = choice_of(wire)
-            parsed[name] = ChoiceAnswer(
-                choice=choice, probabilities=probabilities, confidence=confidence, **meta
-            )
-        elif isinstance(question, ScoreQuestion):
-            score, distribution = score_of(wire, len(question.levels))
-            parsed[name] = ScoreAnswer(score=score, probabilities=distribution, **meta)
-        else:
-            parsed[name] = YesNoAnswer(p_yes=yes_no_of(wire), **meta)
-    return parsed
+    usage = usage if isinstance(usage, Mapping) else {}
+    tokens_in = int(as_number(usage.get("input_tokens")) or 0)
+    tokens_out = int(as_number(usage.get("output_tokens")) or 0)
+    cost = request_cost(tokens_in, tokens_out, price_per_mtok_in, price_per_mtok_out)
+    meta = {"model": model_name, "latency_ms": latency_ms, "cost_usd": cost_share(cost, questions)}
+    parsed = {name: _parse_one(q, answers.get(name), meta) for name, q in questions.items()}
+    return finish_answers(parsed, questions, meta)
 
 
 def _is_retryable_status(status_code: int) -> bool:
     return status_code == 429 or status_code >= 500
+
+
+def _retry_after(response: httpx.Response) -> Optional[float]:
+    """Seconds from a numeric Retry-After header, capped; None when absent or a date."""
+    try:
+        seconds = float(response.headers.get("Retry-After", ""))
+    except ValueError:
+        return None
+    return min(max(seconds, 0.0), _MAX_RETRY_AFTER_SECONDS)
 
 
 class WorkersAIDecisionModel:
@@ -141,15 +166,13 @@ class WorkersAIDecisionModel:
         name: str,
         *,
         model: str,
-        account_id: str,
-        api_token: str,
-        request_model: Optional[str] = None,
+        options: WorkersAIOptions,
         price_per_mtok_in: Optional[float] = None,
+        price_per_mtok_out: Optional[float] = None,
         concurrency: int = 4,
         timeout_seconds: float = 60.0,
         max_attempts: int = 4,
         backoff_seconds: float = 1.0,
-        base_url: str = WORKERS_AI_BASE_URL,
         transport: Optional[httpx.BaseTransport] = None,
         async_transport: Optional[httpx.AsyncBaseTransport] = None,
         sleep: Callable[[float], None] = time.sleep,
@@ -157,22 +180,19 @@ class WorkersAIDecisionModel:
     ) -> None:
         self._name = name
         self._model = model
-        self._account_id = account_id
-        self._api_token = api_token
+        self._options = options
         # The body names the model by its short name, e.g. the last segment of the id
-        self._request_model = request_model or model.rsplit("/", 1)[-1]
-        self._price_per_mtok_in = price_per_mtok_in
+        self._request_model = options.request_model or model.rsplit("/", 1)[-1]
+        self._price_in = price_per_mtok_in
+        self._price_out = price_per_mtok_out
         self._timeout = timeout_seconds
         self._max_attempts = max(1, max_attempts)
         self._backoff = backoff_seconds
-        self._base_url = base_url.rstrip("/")
         self._transport = transport
         self._async_transport = async_transport
         self._sleep = sleep
         self._async_sleep = async_sleep
-        self._concurrency = concurrency
-        self._sync_slots = threading.BoundedSemaphore(concurrency)
-        self._async_slots: Optional[tuple[asyncio.AbstractEventLoop, asyncio.Semaphore]] = None
+        self._limit = ConcurrencyLimit(concurrency)
 
     @property
     def name(self) -> str:
@@ -180,15 +200,16 @@ class WorkersAIDecisionModel:
 
     @property
     def is_configured(self) -> bool:
-        return bool(self._account_id and self._api_token and self._model)
+        return bool(self._options.account_id and self._options.api_token and self._model)
 
     def _url(self) -> str:
-        return f"{self._base_url}/accounts/{self._account_id}/ai/run/{self._model}"
+        base = self._options.base_url.rstrip("/")
+        return f"{base}/accounts/{self._options.account_id}/ai/run/{self._model}"
 
     def _request(self, state: str, questions: Mapping[str, Question]) -> dict[str, Any]:
         if not self.is_configured:
             raise DecisionModelNotConfiguredError(
-                f"Decision model '{self._name}' needs account_id and api_token"
+                f"Decision model '{self._name}' needs options.account_id and options.api_token"
             )
         if not questions:
             raise ValueError("At least one question is required")
@@ -199,10 +220,16 @@ class WorkersAIDecisionModel:
         }
 
     def _headers(self) -> dict[str, str]:
-        return {"Authorization": f"Bearer {self._api_token}"}
+        return {"Authorization": f"Bearer {self._options.api_token}"}
 
-    def _delay(self, attempt: int) -> float:
-        return self._backoff * (2**attempt)
+    def _delay(self, attempt: int, response: Optional[httpx.Response]) -> float:
+        """Backoff before the next attempt; at least the server's Retry-After on a 429."""
+        delay = self._backoff * (2**attempt)
+        if response is not None and response.status_code == 429:
+            retry_after = _retry_after(response)
+            if retry_after is not None:
+                delay = max(delay, retry_after)
+        return delay
 
     def _final_response(self, response: httpx.Response) -> Any:
         """The JSON body of a non-retryable response, or a DecisionModelError."""
@@ -210,11 +237,14 @@ class WorkersAIDecisionModel:
             payload = response.json()
         except ValueError:
             payload = None
-        if response.is_error and not (
-            isinstance(payload, Mapping) and payload.get("success") is False
-        ):
-            raise DecisionModelError(
-                f"{self._name}: HTTP {response.status_code}: {response.text[:_MAX_ERROR_TEXT]}"
+        if response.is_error:
+            detail = (
+                str(payload.get("errors") or payload)
+                if isinstance(payload, Mapping)
+                else response.text
+            )
+            raise DecisionModelRequestError(
+                f"{self._name}: HTTP {response.status_code}: {detail[:_MAX_ERROR_TEXT]}"
             )
         if payload is None:
             raise DecisionModelError(f"{self._name}: response is not JSON")
@@ -226,10 +256,11 @@ class WorkersAIDecisionModel:
             questions,
             model_name=self._name,
             latency_ms=(time.perf_counter() - started) * 1000,
-            price_per_mtok_in=self._price_per_mtok_in,
+            price_per_mtok_in=self._price_in,
+            price_per_mtok_out=self._price_out,
         )
 
-    def _retry_error(self, attempt: int, detail: str) -> DecisionModelError:
+    def _retry_error(self, attempt: int, detail: str) -> DecisionModelUnavailableError:
         logger.warning(
             "Decision model %s: attempt %d/%d failed (%s)",
             self._name,
@@ -237,65 +268,72 @@ class WorkersAIDecisionModel:
             self._max_attempts,
             detail,
         )
-        return DecisionModelError(f"{self._name}: {detail}")
+        return DecisionModelUnavailableError(f"{self._name}: {detail}")
 
     def decide(self, state: str, questions: Mapping[str, Question]) -> dict[str, Answer]:
         body = self._request(state, questions)
-        started = time.perf_counter()
         last_error: Optional[DecisionModelError] = None
-        with (
-            self._sync_slots,
-            httpx.Client(transport=self._transport, timeout=self._timeout) as client,
-        ):
-            for attempt in range(self._max_attempts):
-                if attempt:
-                    self._sleep(self._delay(attempt - 1))
-                try:
-                    response = client.post(self._url(), headers=self._headers(), json=body)
-                except httpx.TransportError as e:
-                    last_error = self._retry_error(attempt, f"{type(e).__name__}: {e}")
-                    continue
-                if _is_retryable_status(response.status_code):
-                    last_error = self._retry_error(
-                        attempt, f"HTTP {response.status_code}: {response.text[:300]}"
-                    )
-                    continue
-                return self._parse(self._final_response(response), questions, started)
+        last_response: Optional[httpx.Response] = None
+        with self._limit.slot():
+            started = time.perf_counter()
+            try:
+                with httpx.Client(transport=self._transport, timeout=self._timeout) as client:
+                    for attempt in range(self._max_attempts):
+                        if attempt:
+                            self._sleep(self._delay(attempt - 1, last_response))
+                        try:
+                            response = client.post(self._url(), headers=self._headers(), json=body)
+                        except httpx.TransportError as e:
+                            last_error = self._retry_error(attempt, f"{type(e).__name__}: {e}")
+                            last_response = None
+                            continue
+                        if _is_retryable_status(response.status_code):
+                            last_error = self._retry_error(
+                                attempt, f"HTTP {response.status_code}: {response.text[:300]}"
+                            )
+                            last_response = response
+                            continue
+                        return self._parse(self._final_response(response), questions, started)
+            except DecisionModelError:
+                raise
+            except Exception as e:
+                raise DecisionModelError(f"{self._name}: {type(e).__name__}: {e}") from e
         assert last_error is not None
         raise last_error
-
-    def _async_semaphore(self) -> asyncio.Semaphore:
-        """The async concurrency limit for the running event loop."""
-        loop = asyncio.get_running_loop()
-        if self._async_slots is None or self._async_slots[0] is not loop:
-            self._async_slots = (loop, asyncio.Semaphore(self._concurrency))
-        return self._async_slots[1]
 
     async def decide_async(
         self, state: str, questions: Mapping[str, Question]
     ) -> dict[str, Answer]:
         body = self._request(state, questions)
-        started = time.perf_counter()
         last_error: Optional[DecisionModelError] = None
-        async with self._async_semaphore():
-            async with httpx.AsyncClient(
-                transport=self._async_transport, timeout=self._timeout
-            ) as client:
-                for attempt in range(self._max_attempts):
-                    if attempt:
-                        await self._async_sleep(self._delay(attempt - 1))
-                    try:
-                        response = await client.post(
-                            self._url(), headers=self._headers(), json=body
-                        )
-                    except httpx.TransportError as e:
-                        last_error = self._retry_error(attempt, f"{type(e).__name__}: {e}")
-                        continue
-                    if _is_retryable_status(response.status_code):
-                        last_error = self._retry_error(
-                            attempt, f"HTTP {response.status_code}: {response.text[:300]}"
-                        )
-                        continue
-                    return self._parse(self._final_response(response), questions, started)
+        last_response: Optional[httpx.Response] = None
+        async with self._limit.async_slot():
+            started = time.perf_counter()
+            try:
+                async with httpx.AsyncClient(
+                    transport=self._async_transport, timeout=self._timeout
+                ) as client:
+                    for attempt in range(self._max_attempts):
+                        if attempt:
+                            await self._async_sleep(self._delay(attempt - 1, last_response))
+                        try:
+                            response = await client.post(
+                                self._url(), headers=self._headers(), json=body
+                            )
+                        except httpx.TransportError as e:
+                            last_error = self._retry_error(attempt, f"{type(e).__name__}: {e}")
+                            last_response = None
+                            continue
+                        if _is_retryable_status(response.status_code):
+                            last_error = self._retry_error(
+                                attempt, f"HTTP {response.status_code}: {response.text[:300]}"
+                            )
+                            last_response = response
+                            continue
+                        return self._parse(self._final_response(response), questions, started)
+            except DecisionModelError:
+                raise
+            except Exception as e:
+                raise DecisionModelError(f"{self._name}: {type(e).__name__}: {e}") from e
         assert last_error is not None
         raise last_error

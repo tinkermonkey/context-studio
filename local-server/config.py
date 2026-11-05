@@ -7,7 +7,7 @@ import logging
 import os
 import secrets
 from enum import Enum
-from typing import List, Optional
+from typing import Any, List, Optional
 from urllib.parse import urlsplit
 
 from dotenv import load_dotenv
@@ -261,33 +261,32 @@ class ChatConfig(BaseModel):
 
 
 class DecisionModelInstanceConfig(BaseModel):
-    """One named decision-model instance: which adapter serves it and how."""
+    """
+    One named decision-model instance: which adapter serves it and how.
 
-    adapter: str = Field(description="Adapter that serves the instance: 'workers_ai' or 'llm'")
+    The fields here apply to every adapter. Adapter-specific settings (an
+    account id, a token, a base URL) go in `options`, which the adapter
+    validates itself; e.g. workers_ai reads account_id, api_token,
+    request_model and base_url from it.
+    """
+
+    adapter: str = Field(description="Adapter that serves the instance, e.g. 'workers_ai' or 'llm'")
     model: str = Field(min_length=1, description="Model id the adapter calls")
-    account_id: str = Field(default="", description="Account id (workers_ai)")
-    api_token: str = Field(default="", description="API token (workers_ai)")
-    request_model: Optional[str] = Field(
-        default=None,
-        description=(
-            "Model name sent in the workers_ai request body; defaults to the last"
-            " path segment of 'model'"
-        ),
-    )
     fallback: Optional[str] = Field(
         default=None,
-        description="Instance to use when this one is unconfigured or its call fails",
+        description="Instance to use when this one is unconfigured or unavailable",
     )
+    concurrency: int = Field(default=4, ge=1, le=64, description="Maximum calls in flight at once")
+    timeout_seconds: float = Field(default=60.0, gt=0, description="Request timeout")
     price_per_mtok_in: Optional[float] = Field(
         default=None, ge=0.0, description="USD per million input tokens, for cost_usd"
     )
     price_per_mtok_out: Optional[float] = Field(
         default=None, ge=0.0, description="USD per million output tokens, for cost_usd"
     )
-    concurrency: int = Field(
-        default=4, ge=1, le=64, description="Maximum calls in flight at once (workers_ai)"
+    options: dict[str, Any] = Field(
+        default_factory=dict, description="Adapter-specific settings, validated by the adapter"
     )
-    timeout_seconds: float = Field(default=60.0, gt=0, description="Request timeout")
 
 
 class DecisionModelsConfig(BaseModel):

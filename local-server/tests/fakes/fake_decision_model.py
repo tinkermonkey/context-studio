@@ -4,7 +4,10 @@ Fake DecisionModel for tests: answers from scripted probabilities, records calls
 
 from typing import Mapping, Optional
 
-from domain.decision.exceptions import DecisionModelError, DecisionModelNotConfiguredError
+from domain.decision.exceptions import (
+    DecisionModelNotConfiguredError,
+    DecisionModelUnavailableError,
+)
 from domain.decision.value_objects import (
     Answer,
     ChoiceAnswer,
@@ -36,6 +39,7 @@ class FakeDecisionModel:
         p: float = 0.9,
         configured: bool = True,
         fail: bool = False,
+        error: Optional[Exception] = None,
         cost_usd: Optional[float] = 0.0,
     ) -> None:
         self._name = name
@@ -44,7 +48,8 @@ class FakeDecisionModel:
         self._p_yes = dict(p_yes or {})
         self._p = p
         self._configured = configured
-        self._fail = fail
+        # fail=True raises DecisionModelUnavailableError; error= raises that error
+        self._error = error or (DecisionModelUnavailableError(f"{name} failed") if fail else None)
         self._cost = cost_usd
         self.calls: list[tuple[str, dict[str, Question]]] = []
 
@@ -60,8 +65,8 @@ class FakeDecisionModel:
         if not self._configured:
             raise DecisionModelNotConfiguredError(f"{self._name} is not configured")
         self.calls.append((state, dict(questions)))
-        if self._fail:
-            raise DecisionModelError(f"{self._name} failed")
+        if self._error is not None:
+            raise self._error
         meta = {"model": self._name, "latency_ms": 0.0, "cost_usd": self._cost}
         answers: dict[str, Answer] = {}
         for name, question in questions.items():

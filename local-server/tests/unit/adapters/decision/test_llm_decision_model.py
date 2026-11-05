@@ -15,7 +15,11 @@ sys.path.append(
 import pytest
 
 from adapters.decision.llm import LLMDecisionModel
-from domain.decision.exceptions import DecisionModelError, DecisionModelNotConfiguredError
+from domain.decision.exceptions import (
+    DecisionModelError,
+    DecisionModelNotConfiguredError,
+    DecisionModelUnavailableError,
+)
 from domain.decision.value_objects import (
     ChoiceAnswer,
     ChoiceQuestion,
@@ -105,26 +109,49 @@ def test_cost_is_none_without_a_price():
     assert all(a.cost_usd is None for a in model.decide("x", QUESTIONS).values())
 
 
-@pytest.mark.parametrize(
-    "reply",
-    [
-        "not json",
-        "[1, 2]",
-        json.dumps({k: v for k, v in REPLY.items() if k != "kind"}),
-        json.dumps({**REPLY, "kind": {"probabilities": {"other": 1.0}}}),
-        json.dumps({**REPLY, "is_maintenance": {"p_yes": "likely"}}),
-    ],
-)
-def test_unusable_replies_raise(reply):
+@pytest.mark.parametrize("reply", ["not json", "[1, 2]", json.dumps({"other": {}})])
+def test_replies_without_any_usable_answer_raise(reply):
     _llm, model = make(reply)
     with pytest.raises(DecisionModelError):
         model.decide("x", QUESTIONS)
 
 
+@pytest.mark.parametrize(
+    "kind_entry",
+    [None, {"probabilities": {"other": 1.0}}, {"probabilities": "high"}],
+)
+def test_one_unusable_answer_keeps_the_others(kind_entry):
+    reply = (
+        {**REPLY, "kind": kind_entry}
+        if kind_entry is not None
+        else {k: v for k, v in REPLY.items() if k != "kind"}
+    )
+    _llm, model = make(reply)
+    answers = model.decide("x", QUESTIONS)
+    assert answers["kind"].choice is None
+    assert answers["kind"].calibrated is False
+    assert answers["is_maintenance"].p_yes == 0.75
+
+
+def test_reply_with_text_around_the_json_is_accepted():
+    _llm, model = make("Here are my answers:\n" + json.dumps(REPLY) + "\nHope that helps.")
+    assert model.decide("x", QUESTIONS)["kind"].choice == "activity"
+
+
+def test_bare_number_yes_no_is_accepted():
+    _llm, model = make({**REPLY, "is_maintenance": 0.3})
+    assert model.decide("x", QUESTIONS)["is_maintenance"].p_yes == 0.3
+
+
+def test_score_list_of_the_wrong_length_is_unanswered():
+    _llm, model = make({**REPLY, "significance": {"probabilities": [1.0]}})
+    assert model.decide("x", QUESTIONS)["significance"].score is None
+
+
 def test_provider_errors_become_decision_model_errors():
     llm = FakeLLMProvider(should_fail=True)
     model = LLMDecisionModel("llm-instance", llm=llm, model="test-model")
-    with pytest.raises(DecisionModelError, match="LLM provider error"):
+    with pytest.raises(DecisionModelUnavailableError, match="LLM provider error"):
         model.decide("x", QUESTIONS)
 
 

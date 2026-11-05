@@ -5,8 +5,10 @@ Each named instance names an adapter ('workers_ai' or 'llm') and its model.
 Callers ask for an instance by name or take the default, so changing the
 default (or pointing an instance at another model) is a config change only.
 
-An instance may name a fallback instance, used when it is unconfigured or its
-call fails.
+An instance may name a fallback instance, used when it is unconfigured or
+unavailable (transport errors, 429, 5xx). Requests the service rejects (other
+4xx) and unusable responses are raised instead: a fallback would hide a
+revoked token or a bad question and pay for every call.
 """
 
 from __future__ import annotations
@@ -14,11 +16,12 @@ from __future__ import annotations
 from typing import Callable, Mapping, Optional
 
 from adapters.decision.llm import LLMDecisionModel
-from adapters.decision.workers_ai import WorkersAIDecisionModel
+from adapters.decision.workers_ai import WorkersAIDecisionModel, WorkersAIOptions
 from config import DecisionModelInstanceConfig, DecisionModelsConfig
 from domain.decision.exceptions import (
     DecisionModelError,
     DecisionModelNotConfiguredError,
+    DecisionModelUnavailableError,
     UnknownDecisionModelError,
 )
 from domain.decision.ports import DecisionModel
@@ -56,8 +59,8 @@ class UnavailableDecisionModel:
 class FallbackDecisionModel:
     """
     An instance with a fallback: the fallback answers when the primary is
-    unconfigured or raises DecisionModelError. Answers report the instance
-    that actually answered.
+    unconfigured or raises DecisionModelUnavailableError. Other errors are
+    raised. Answers report the instance that actually answered.
     """
 
     def __init__(self, primary: DecisionModel, fallback: DecisionModel) -> None:
@@ -84,7 +87,7 @@ class FallbackDecisionModel:
         if self._primary.is_configured:
             try:
                 return self._primary.decide(state, questions)
-            except DecisionModelError as e:
+            except (DecisionModelNotConfiguredError, DecisionModelUnavailableError) as e:
                 self._log_fallback(e)
         return self._fallback.decide(state, questions)
 
@@ -94,7 +97,7 @@ class FallbackDecisionModel:
         if self._primary.is_configured:
             try:
                 return await self._primary.decide_async(state, questions)
-            except DecisionModelError as e:
+            except (DecisionModelNotConfiguredError, DecisionModelUnavailableError) as e:
                 self._log_fallback(e)
         return await self._fallback.decide_async(state, questions)
 
@@ -136,7 +139,6 @@ class DecisionModelRegistry:
                 configured=self._unwrapped[name].is_configured,
                 is_default=name == self._default,
                 fallback=cfg.fallback,
-                price_per_mtok_in=cfg.price_per_mtok_in,
             )
             for name, cfg in self._config.models.items()
         ]
@@ -150,10 +152,9 @@ def _adapter_builders(llm: Optional[LLMProvider]) -> dict[str, AdapterBuilder]:
         return WorkersAIDecisionModel(
             name,
             model=cfg.model,
-            account_id=cfg.account_id,
-            api_token=cfg.api_token,
-            request_model=cfg.request_model,
+            options=WorkersAIOptions(**cfg.options),
             price_per_mtok_in=cfg.price_per_mtok_in,
+            price_per_mtok_out=cfg.price_per_mtok_out,
             concurrency=cfg.concurrency,
             timeout_seconds=cfg.timeout_seconds,
         )
@@ -165,6 +166,7 @@ def _adapter_builders(llm: Optional[LLMProvider]) -> dict[str, AdapterBuilder]:
             model=cfg.model,
             price_per_mtok_in=cfg.price_per_mtok_in,
             price_per_mtok_out=cfg.price_per_mtok_out,
+            concurrency=cfg.concurrency,
             timeout_seconds=cfg.timeout_seconds,
         )
 
@@ -179,9 +181,8 @@ def build_decision_models(
     """
     Build every configured instance, wrapping those that name a fallback.
 
-    An unknown adapter or a fallback that names a missing instance (or loops
-    back) is logged and leaves the instance without it, rather than stopping
-    the server.
+    An unknown adapter, invalid adapter options, or a fallback that names a
+    missing instance (or loops back) is logged rather than stopping the server.
     """
     builders = builders if builders is not None else _adapter_builders(llm)
     base: dict[str, DecisionModel] = {}
@@ -191,7 +192,12 @@ def build_decision_models(
             logger.warning("Decision model %s: unknown adapter %r", name, cfg.adapter)
             base[name] = UnavailableDecisionModel(name, f"unknown adapter '{cfg.adapter}'")
         else:
-            base[name] = builder(name, cfg)
+            try:
+                base[name] = builder(name, cfg)
+            except (ValueError, TypeError) as e:
+                # Invalid adapter options (pydantic's ValidationError is a ValueError)
+                logger.warning("Decision model %s: invalid options (%s)", name, e)
+                base[name] = UnavailableDecisionModel(name, f"invalid options: {e}")
 
     def with_fallbacks(name: str, seen: tuple[str, ...]) -> DecisionModel:
         fallback = config.models[name].fallback

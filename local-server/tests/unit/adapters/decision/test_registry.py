@@ -16,7 +16,12 @@ from adapters.decision.llm import LLMDecisionModel
 from adapters.decision.registry import build_decision_models
 from adapters.decision.workers_ai import WorkersAIDecisionModel
 from config import DecisionModelsConfig, Settings
-from domain.decision.exceptions import DecisionModelNotConfiguredError, UnknownDecisionModelError
+from domain.decision.exceptions import (
+    DecisionModelError,
+    DecisionModelNotConfiguredError,
+    DecisionModelRequestError,
+    UnknownDecisionModelError,
+)
 from domain.decision.value_objects import ChoiceQuestion
 from tests.fakes.fake_decision_model import FakeDecisionModel
 from tests.fakes.fake_llm_provider import FakeLLMProvider
@@ -34,15 +39,13 @@ def config_with_default(default: str) -> DecisionModelsConfig:
                     "primary": {
                         "adapter": "workers_ai",
                         "model": "@cf/vendor/model-large",
-                        "account_id": "acct-secret-id",
-                        "api_token": "token-secret",
                         "price_per_mtok_in": 0.24,
+                        "options": {"account_id": "acct-secret-id", "api_token": "token-secret"},
                     },
                     "light": {
                         "adapter": "workers_ai",
                         "model": "@cf/vendor/model-small",
-                        "account_id": "acct-secret-id",
-                        "api_token": "token-secret",
+                        "options": {"account_id": "acct-secret-id", "api_token": "token-secret"},
                     },
                     "llm": {"adapter": "llm", "model": "test-model"},
                 },
@@ -145,6 +148,36 @@ def test_fallback_answers_when_primary_errors():
     answers = fallback_registry(primary, backup).get().decide("x", QUESTIONS)
     assert answers["kind"].model == "backup"
     assert len(primary.calls) == 1
+
+
+@pytest.mark.parametrize(
+    "error",
+    [DecisionModelRequestError("HTTP 401: revoked token"), DecisionModelError("unusable reply")],
+)
+def test_request_errors_and_unusable_replies_do_not_fall_back(error):
+    primary = FakeDecisionModel("primary", error=error)
+    backup = FakeDecisionModel("backup")
+    with pytest.raises(type(error)):
+        fallback_registry(primary, backup).get().decide("x", QUESTIONS)
+    assert backup.calls == []
+
+
+def test_invalid_adapter_options_leave_the_instance_unconfigured():
+    config = DecisionModelsConfig(
+        models={"cf": {"adapter": "workers_ai", "model": "m", "options": {"account_id": 42}}}
+    )
+    registry = build_decision_models(config)
+    assert registry.describe()[0].configured is False
+    with pytest.raises(DecisionModelNotConfiguredError):
+        registry.get("cf").decide("x", QUESTIONS)
+
+
+def test_old_flat_credentials_are_not_read():
+    # Credentials belong under options; flat ones are ignored, so the instance is unconfigured
+    config = DecisionModelsConfig(
+        models={"cf": {"adapter": "workers_ai", "model": "m", "account_id": "a", "api_token": "t"}}
+    )
+    assert build_decision_models(config).describe()[0].configured is False
 
 
 def test_primary_answers_when_healthy():

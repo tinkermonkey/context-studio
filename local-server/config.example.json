@@ -39,17 +39,21 @@
       "clef": {
         "adapter": "workers_ai",
         "model": "@cf/cloudflare/clef",
-        "account_id": "",
-        "api_token": "",
         "price_per_mtok_in": 0.24,
-        "fallback": "llm-sonnet"
+        "fallback": "llm-sonnet",
+        "options": {
+          "account_id": "",
+          "api_token": ""
+        }
       },
       "clef-flash": {
         "adapter": "workers_ai",
         "model": "@cf/cloudflare/clef-flash",
-        "account_id": "",
-        "api_token": "",
-        "price_per_mtok_in": 0.09
+        "price_per_mtok_in": 0.09,
+        "options": {
+          "account_id": "",
+          "api_token": ""
+        }
       },
       "llm-sonnet": {
         "adapter": "llm",

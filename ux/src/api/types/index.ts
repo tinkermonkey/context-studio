@@ -5457,11 +5457,6 @@ export interface components {
        * @description Instance used when this one is unconfigured or fails
        */
       fallback?: string | null;
-      /**
-       * Price Per Mtok In
-       * @description USD per million input tokens, when configured
-       */
-      price_per_mtok_in?: number | null;
     };
     /**
      * DegreeDistributionResponse

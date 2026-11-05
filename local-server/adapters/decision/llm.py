@@ -4,17 +4,24 @@ Decision model served by a chat LLM through the LLM provider router.
 The model is asked for a probability distribution per question as JSON. LLM
 probabilities are the model's own estimate, not calibrated, so every answer
 is marked calibrated=False for thresholds to treat differently.
+
+Provider errors raise DecisionModelUnavailableError (a fallback may answer);
+a reply with no usable answer raises DecisionModelError. At most
+`concurrency` calls are in flight at once per instance.
 """
 
 from __future__ import annotations
 
 import json
-import re
 import time
 from typing import Any, Mapping, Optional
 
-from adapters.decision.workers_ai import request_cost
-from domain.decision.exceptions import DecisionModelError, DecisionModelNotConfiguredError
+from adapters.decision.common import ConcurrencyLimit, cost_share, finish_answers, request_cost
+from domain.decision.exceptions import (
+    DecisionModelError,
+    DecisionModelNotConfiguredError,
+    DecisionModelUnavailableError,
+)
 from domain.decision.value_objects import (
     Answer,
     ChoiceAnswer,
@@ -25,6 +32,9 @@ from domain.decision.value_objects import (
     YesNoAnswer,
 )
 from domain.pipelines.ports import LLMProvider, LLMResponse
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 SYSTEM_PROMPT = """You are a decision model. You read a piece of text (the state) and answer \
 structured questions about it with probabilities.
@@ -38,8 +48,6 @@ Reply with only a JSON object, one key per question name:
 - choice: {"probabilities": {"<option>": <p>, ...}}
 - score: {"probabilities": [<p for level 0>, <p for level 1>, ...]}
 - yes_no: {"p_yes": <p>}"""
-
-_FENCE = re.compile(r"^```(?:json)?\s*|\s*```$")
 
 
 def build_user_prompt(state: str, questions: Mapping[str, Question]) -> str:
@@ -63,6 +71,22 @@ def build_user_prompt(state: str, questions: Mapping[str, Question]) -> str:
     return json.dumps({"state": state, "questions": described}, indent=2, ensure_ascii=False)
 
 
+def first_json_object(content: str) -> Optional[dict[str, Any]]:
+    """The first JSON object in the text, ignoring code fences or prose around it."""
+    decoder = json.JSONDecoder()
+    start = content.find("{")
+    while start != -1:
+        try:
+            value, _end = decoder.raw_decode(content, start)
+        except json.JSONDecodeError:
+            start = content.find("{", start + 1)
+            continue
+        if isinstance(value, dict):
+            return value
+        start = content.find("{", start + 1)
+    return None
+
+
 def _probability(value: Any) -> Optional[float]:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
@@ -74,6 +98,37 @@ def _normalized(values: list[float]) -> list[float]:
     return [v / total for v in values] if total > 0 else values
 
 
+def _parse_one(question: Question, entry: Any, meta: Mapping[str, Any]) -> Optional[Answer]:
+    """One typed answer, or None when the reply's entry is missing or unusable."""
+    if isinstance(question, ChoiceQuestion):
+        raw = entry.get("probabilities") if isinstance(entry, Mapping) else None
+        raw = raw if isinstance(raw, Mapping) else {}
+        options = list(question.options())
+        weights = [_probability(raw.get(option)) or 0.0 for option in options]
+        if not any(weights):
+            return None
+        probabilities = dict(zip(options, _normalized(weights)))
+        choice = max(probabilities, key=lambda option: probabilities[option])
+        return ChoiceAnswer(choice=choice, probabilities=probabilities, **meta)
+    if isinstance(question, ScoreQuestion):
+        levels = list(question.levels)
+        raw = entry.get("probabilities") if isinstance(entry, Mapping) else None
+        if isinstance(raw, Mapping):
+            # Keyed by level name or by index
+            raw = [raw.get(level, raw.get(str(i))) for i, level in enumerate(levels)]
+        if not isinstance(raw, list) or len(raw) != len(levels):
+            return None
+        weights = [_probability(p) or 0.0 for p in raw]
+        if not any(weights):
+            return None
+        distribution = _normalized(weights)
+        score = sum(p * i for i, p in enumerate(distribution))
+        return ScoreAnswer(score=score, probabilities=distribution, **meta)
+    # yes_no: {"p_yes": p}, or a bare number
+    p_yes = _probability(entry.get("p_yes") if isinstance(entry, Mapping) else entry)
+    return None if p_yes is None else YesNoAnswer(p_yes=p_yes, **meta)
+
+
 def parse_llm_answers(
     content: str,
     questions: Mapping[str, Question],
@@ -83,59 +138,23 @@ def parse_llm_answers(
     cost_usd: Optional[float],
 ) -> dict[str, Answer]:
     """
-    Turn the model's JSON reply into one answer per question.
+    Turn the model's JSON reply into one answer per question. A question
+    without a usable answer gets an empty answer (value None) and is logged.
 
     Raises:
-        DecisionModelError: if the reply is not JSON or lacks a usable answer
+        DecisionModelError: if the reply holds no JSON object or no usable answer
     """
-    try:
-        data = json.loads(_FENCE.sub("", content.strip()))
-    except json.JSONDecodeError as e:
-        raise DecisionModelError(f"{model_name}: reply is not JSON: {e}") from e
-    if not isinstance(data, Mapping):
-        raise DecisionModelError(f"{model_name}: reply is not a JSON object")
-
-    share = cost_usd / len(questions) if cost_usd is not None and questions else cost_usd
+    data = first_json_object(content)
+    if data is None:
+        raise DecisionModelError(f"{model_name}: reply holds no JSON object")
     meta: dict[str, Any] = {
         "model": model_name,
         "latency_ms": latency_ms,
-        "cost_usd": share,
+        "cost_usd": cost_share(cost_usd, questions),
         "calibrated": False,
     }
-    parsed: dict[str, Answer] = {}
-    for name, question in questions.items():
-        entry = data.get(name)
-        if not isinstance(entry, Mapping):
-            raise DecisionModelError(f"{model_name}: no answer for question '{name}'")
-        if isinstance(question, ChoiceQuestion):
-            raw = entry.get("probabilities")
-            raw = raw if isinstance(raw, Mapping) else {}
-            options = list(question.options())
-            weights = [_probability(raw.get(option)) or 0.0 for option in options]
-            if not any(weights):
-                raise DecisionModelError(f"{model_name}: no probabilities for '{name}'")
-            probabilities = dict(zip(options, _normalized(weights)))
-            choice = max(probabilities, key=lambda option: probabilities[option])
-            parsed[name] = ChoiceAnswer(choice=choice, probabilities=probabilities, **meta)
-        elif isinstance(question, ScoreQuestion):
-            levels = list(question.levels)
-            raw = entry.get("probabilities")
-            if isinstance(raw, Mapping):
-                # Keyed by level name or by index
-                raw = [raw.get(level, raw.get(str(i))) for i, level in enumerate(levels)]
-            weights = [_probability(p) or 0.0 for p in raw] if isinstance(raw, list) else []
-            weights = (weights + [0.0] * len(levels))[: len(levels)]
-            if not any(weights):
-                raise DecisionModelError(f"{model_name}: no probabilities for '{name}'")
-            distribution = _normalized(weights)
-            score = sum(p * i for i, p in enumerate(distribution))
-            parsed[name] = ScoreAnswer(score=score, probabilities=distribution, **meta)
-        else:
-            p_yes = _probability(entry.get("p_yes"))
-            if p_yes is None:
-                raise DecisionModelError(f"{model_name}: no p_yes for '{name}'")
-            parsed[name] = YesNoAnswer(p_yes=p_yes, **meta)
-    return parsed
+    parsed = {name: _parse_one(q, data.get(name), meta) for name, q in questions.items()}
+    return finish_answers(parsed, questions, meta)
 
 
 class LLMDecisionModel:
@@ -149,6 +168,7 @@ class LLMDecisionModel:
         model: str,
         price_per_mtok_in: Optional[float] = None,
         price_per_mtok_out: Optional[float] = None,
+        concurrency: int = 4,
         timeout_seconds: float = 60.0,
         max_tokens: int = 2000,
     ) -> None:
@@ -159,6 +179,7 @@ class LLMDecisionModel:
         self._price_out = price_per_mtok_out
         self._timeout = timeout_seconds
         self._max_tokens = max_tokens
+        self._limit = ConcurrencyLimit(concurrency)
 
     @property
     def name(self) -> str:
@@ -203,20 +224,22 @@ class LLMDecisionModel:
 
     def decide(self, state: str, questions: Mapping[str, Question]) -> dict[str, Answer]:
         llm = self._check(questions)
-        started = time.perf_counter()
-        try:
-            response = llm.complete(**self._kwargs(state, questions))
-        except Exception as e:
-            raise DecisionModelError(f"{self._name}: {type(e).__name__}: {e}") from e
+        with self._limit.slot():
+            started = time.perf_counter()
+            try:
+                response = llm.complete(**self._kwargs(state, questions))
+            except Exception as e:
+                raise DecisionModelUnavailableError(f"{self._name}: {type(e).__name__}: {e}") from e
         return self._parse(response, questions, started)
 
     async def decide_async(
         self, state: str, questions: Mapping[str, Question]
     ) -> dict[str, Answer]:
         llm = self._check(questions)
-        started = time.perf_counter()
-        try:
-            response = await llm.complete_async(**self._kwargs(state, questions))
-        except Exception as e:
-            raise DecisionModelError(f"{self._name}: {type(e).__name__}: {e}") from e
+        async with self._limit.async_slot():
+            started = time.perf_counter()
+            try:
+                response = await llm.complete_async(**self._kwargs(state, questions))
+            except Exception as e:
+                raise DecisionModelUnavailableError(f"{self._name}: {type(e).__name__}: {e}") from e
         return self._parse(response, questions, started)

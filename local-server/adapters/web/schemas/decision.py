@@ -20,9 +20,6 @@ class DecisionModelResponse(BaseModel):
     fallback: Optional[str] = Field(
         default=None, description="Instance used when this one is unconfigured or fails"
     )
-    price_per_mtok_in: Optional[float] = Field(
-        default=None, description="USD per million input tokens, when configured"
-    )
 
     @classmethod
     def from_domain(cls, info: DecisionModelInfo) -> "DecisionModelResponse":
@@ -33,7 +30,6 @@ class DecisionModelResponse(BaseModel):
             configured=info.configured,
             is_default=info.is_default,
             fallback=info.fallback,
-            price_per_mtok_in=info.price_per_mtok_in,
         )
 
 

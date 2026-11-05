@@ -10094,18 +10094,6 @@
             ],
             "title": "Fallback",
             "description": "Instance used when this one is unconfigured or fails"
-          },
-          "price_per_mtok_in": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Price Per Mtok In",
-            "description": "USD per million input tokens, when configured"
           }
         },
         "type": "object",

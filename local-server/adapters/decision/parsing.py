@@ -13,10 +13,10 @@ so both forms are read.
 from __future__ import annotations
 
 import math
-from typing import Any, Mapping, Optional
+from typing import Any, Collection, Mapping, Optional
 
 
-def _number(value: Any) -> Optional[float]:
+def as_number(value: Any) -> Optional[float]:
     """A finite float, or None for anything else (bools, strings, NaN)."""
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
@@ -26,24 +26,34 @@ def _number(value: Any) -> Optional[float]:
 
 def choice_of(
     answer: Mapping[str, Any],
+    offered: Optional[Collection[str]] = None,
 ) -> tuple[Optional[str], dict[str, float], Optional[float]]:
-    """(choice, probabilities by option, confidence) from a choice answer."""
+    """
+    (choice, probabilities by option, confidence) from a choice answer.
+
+    An empty or absent choice falls back to the most probable option. A choice
+    that was not offered (when `offered` is given) comes back as None, so the
+    caller treats the question as unanswered.
+    """
     raw = answer.get("probabilities")
     probabilities: dict[str, float] = {}
     if isinstance(raw, Mapping):
         for option, p in raw.items():
-            number = _number(p)
+            number = as_number(p)
             if number is not None:
                 probabilities[str(option)] = number
 
     choice: Optional[str] = None
     for key in ("choice", "answer", "value"):
-        if isinstance(answer.get(key), str):
-            choice = answer[key]
+        value = answer.get(key)
+        if isinstance(value, str) and value:
+            choice = value
             break
     if choice is None and probabilities:
         choice = max(probabilities, key=lambda option: probabilities[option])
-    return choice, probabilities, _number(answer.get("confidence"))
+    if choice is not None and offered is not None and choice not in offered:
+        choice = None
+    return choice, probabilities, as_number(answer.get("confidence"))
 
 
 def _score_distribution(answer: Mapping[str, Any], levels: int) -> list[float]:
@@ -51,13 +61,13 @@ def _score_distribution(answer: Mapping[str, Any], levels: int) -> list[float]:
     for key in ("probabilities", "distribution"):
         raw = answer.get(key)
         if isinstance(raw, list):
-            numbers = [_number(p) for p in raw]
-            if numbers and all(n is not None for n in numbers):
+            numbers = [as_number(p) for p in raw]
+            if len(numbers) == levels and all(n is not None for n in numbers):
                 return [n for n in numbers if n is not None]
         elif isinstance(raw, Mapping) and raw:
             by_index: dict[int, float] = {}
             for index, p in raw.items():
-                number = _number(p)
+                number = as_number(p)
                 try:
                     position = int(index)
                 except (TypeError, ValueError):
@@ -72,9 +82,9 @@ def _score_distribution(answer: Mapping[str, Any], levels: int) -> list[float]:
 def score_of(answer: Mapping[str, Any], levels: int) -> tuple[Optional[float], list[float]]:
     """(score on the 0..levels-1 scale, probability of each level) from a score answer."""
     distribution = _score_distribution(answer, levels)
-    score = _number(answer.get("score"))
+    score = as_number(answer.get("score"))
     if score is None:
-        score = _number(answer.get("value"))
+        score = as_number(answer.get("value"))
     if score is None and distribution:
         score = sum(p * i for i, p in enumerate(distribution))
     # A score reported on a 1..N scale without a distribution: clamp to the top level
@@ -86,7 +96,7 @@ def score_of(answer: Mapping[str, Any], levels: int) -> tuple[Optional[float], l
 def yes_no_of(answer: Mapping[str, Any]) -> Optional[float]:
     """The probability of 'yes' from a yes/no ('noul') answer."""
     for key in ("noul", "probability", "p_yes", "value", "score"):
-        number = _number(answer.get(key))
+        number = as_number(answer.get(key))
         if number is not None:
             return number
     return None
