@@ -165,7 +165,7 @@ export function OperationInspector({ operation, context, decision }: OperationIn
     ID_FIELDS.has(field) ? "op-change__value op-change__value--id" : "op-change__value";
 
   return (
-    <div data-testid="operation-inspector">
+    <div data-testid="operation-inspector" className="operation-inspector">
       <InspectorPanel
         eyebrow={`OPERATION · seq ${operation.seq} · ${operation.op} · ${operation.kind}`}
         title={operationTitle(operation, context)}

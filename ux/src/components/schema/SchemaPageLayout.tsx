@@ -17,12 +17,11 @@ export function SchemaPageLayout<T extends { id: string }>({
 
   if (selectedEntity && renderInspectorContent) {
     return (
-      <div
-        data-testid="schema-page-layout"
-        style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 14, alignItems: "start" }}
-      >
+      <div data-testid="schema-page-layout" className="split-2">
         <div>{children}</div>
-        <div data-testid="schema-inspector-container">{renderInspectorContent(selectedEntity)}</div>
+        <div data-testid="schema-inspector-container" className="split-2__inspector">
+          {renderInspectorContent(selectedEntity)}
+        </div>
       </div>
     );
   }

@@ -206,6 +206,14 @@ describe("EntitySurface", () => {
       expect(screen.getByTestId("inspector")).toHaveTextContent("Entity 1");
     });
 
+    it("puts the inspector in the sticky column of the split layout", async () => {
+      const user = userEvent.setup();
+      renderSurface();
+      await user.click(screen.getByTestId("click-row-1"));
+      expect(screen.getByTestId("schema-page-layout")).toHaveClass("split-2");
+      expect(screen.getByTestId("schema-inspector-container")).toHaveClass("split-2__inspector");
+    });
+
     it("does not open inspector when only checkbox is clicked", async () => {
       const user = userEvent.setup();
       renderSurface();
