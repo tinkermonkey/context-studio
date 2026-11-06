@@ -117,7 +117,7 @@ _[Diagram: phased plan: 4 phases, 4 value gates. See the live document.]_
 
 Phase A is planned as the milestone [Workbench A · Plug in](https://github.com/tinkermonkey/context-studio/milestone/8), tracked in [#1342](https://github.com/tinkermonkey/context-studio/issues/1342) with eight issues (#1334–#1341). One design refinement came out of planning: the taxonomy's existing `description` becomes the one-paragraph summary, so `vision` is the only new field.
 
-Phase A is merged (#1343, #1346–#1350); House's bundle and charter are under review, and Gate A waits on the DR and House cutover. Phase B is planned as [Workbench B · Propose and ship](https://github.com/tinkermonkey/context-studio/milestone/9), tracked in [#1351](https://github.com/tinkermonkey/context-studio/issues/1351) with 19 issues (#1352–#1370).
+Phases A and B are done, and both milestones are closed (2026-11-05). Phase A merged in #1343 and #1346–#1350. House's bundle and charter landed in tinkermonkey/house#32: `ontology/VISION.md` is informative only, and `docs/ONTOLOGY.md` stays House's specification. Gate B (#1370) replaced Gate A. Phase B, [Workbench B · Propose and ship](https://github.com/tinkermonkey/context-studio/milestone/9), closed with 21 issues, tracked in [#1351](https://github.com/tinkermonkey/context-studio/issues/1351). Phase C is under way in two milestones, [C1 · Clean up and decide](https://github.com/tinkermonkey/context-studio/milestone/10) and [C2 · Refine](https://github.com/tinkermonkey/context-studio/milestone/11), tracked in [#1421](https://github.com/tinkermonkey/context-studio/issues/1421).
 
 Phase B design decisions:
 
@@ -180,7 +180,7 @@ One row per task done through Context Studio (Gate A: [#1341](https://github.com
 
 Quality held: DR validation passes in CI on documentation_robotics#993, and locally on #995 (`npm run build:spec:validate`), which is not merged yet. House evals were not run.
 
-Landing changes in the project still costs hand work, so three frictions should be fixed before Phase C:
+Landing changes in the project still cost hand work, so three frictions were fixed before Phase C (#1397–#1399):
 
 - Applying a DR decision still means hand-editing spec files. The export script handles only triple decisions, and Context Studio has no fields for evidence, cardinality or strength.
 - Review doesn't flag when a delete's replacement links a different pair of element types. The rationale names the replacement, but nothing marks the change of pair. That is how task 1 missed row 17.
