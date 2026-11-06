@@ -119,7 +119,8 @@ class ChangeProposalApplyRequest(BaseModel):
         description="Operation id -> how to resolve the relationships still using the "
         "relationship type a property delete in operation_ids removes (see the operation's "
         "blockers), or a property update that retargets (gives the type another domain and "
-        "range pair) no longer fits. Moved or deleted in one transaction with the type; a "
+        "range pair) needs while relationships use it. Moved or deleted in one transaction "
+        "with the type; a "
         "misfit or any failing step fails only that operation, changing nothing. Not with an "
         "edit of the same delete; an update that renames or reverses the type takes none "
         "(a reverse always swaps the ends of its relationships)",
@@ -328,8 +329,9 @@ class ProposedOperationResponse(BaseModel):
     )
     blockers: Optional[DeleteBlockersResponse] = Field(
         None,
-        description="A pending or failed relationship-type delete whose type relationships "
-        "still use: applying it as proposed fails; it needs a resolution. Null otherwise. "
+        description="A pending or failed relationship-type delete, or update that retargets "
+        "the type, whose type relationships still use: applying it as proposed fails; it "
+        "needs a resolution. Null otherwise. "
         "The proposed replacement, when it fits, is listed first",
     )
     proposed_replacement_id: Optional[str] = Field(

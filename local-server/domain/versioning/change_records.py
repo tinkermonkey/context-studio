@@ -3,68 +3,54 @@ Schema change records: what an applied proposal did to its relationship types,
 in a shape that composes across proposals the way DR's change records do
 (`applied-*.json`, folded by DR's generate-relationship-migration.ts).
 
-One record per applied relationship-type (property) operation that changes
-how relationships of the type read:
+One record per applied relationship-type (property) operation that recorded
+a TypeChange as it applied:
 
     create    a new type; from and to are the type
     rename    the same pair of classes under another key: its relationships keep
     reverse   the pair reversed: its relationships swapped ends (swap)
-    retarget  another pair: its relationships stayed, moved or were deleted as
-              the reviewer resolved them (see ProposalService.apply)
+    retarget  another pair: to is the type as retargeted; its relationships
+              (if any) moved to moved_to (swap when they swapped ends) or were
+              deleted (moved_to None)
     delete    the type removed; to is the type its relationships moved to
               (swap when they swapped ends), or the type the delete names as
               its replacement when that links the same pair or the reverse;
               otherwise None, as its relationships were deleted or there were none
 
-An update that changes neither the pair nor the key (wording, attributes)
-makes no record. Records compose oldest first: a record whose `from` is an
-earlier one's `to` continues it (A to B, then B to C, is A to C), and two swaps
-cancel.
+An update whose key didn't change makes no record, nor does an operation
+applied before TypeChange was recorded. A reverted proposal has none: its
+changes were undone. Records compose oldest first: a record whose `from` is an
+earlier one's `to` continues it (A to B, then B to C, is A to C), and two
+swaps cancel.
 
-A type is named by a key computed from its fields as an entity snapshot
-(`domain.ontology.snapshots`): its identifier by default; the DR export keys
-it by its DR relationship id. Records read only the operation: an applied
-update keeps the type's key fields as they were in its `base`, so a later
-change to the type doesn't change what an earlier record says.
+A type is named by a key computed from its recorded fields (snapshot JSON):
+its identifier by default; the DR export keys it by its DR relationship id.
+Records read only what the operation recorded as it applied, never the
+workspace or what was proposed.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
 from typing import Any, Callable, Mapping
 
 from domain.versioning.gold import ProposalDecision
-from domain.versioning.in_use import PairMatch, compare_pair
 from domain.versioning.proposals import (
     ChangeProposal,
-    OperationKind,
     OperationStatus,
-    OperationType,
-    ProposedOperation,
-    ResolutionStrategy,
-)
-
-# The fields a type's pair and key are read from; an applied update keeps them in its base.
-TYPE_KEY_FIELDS = (
-    "identifier",
-    "canonical_predicate",
-    "domain_class_id",
-    "range_class_id",
-    "external_references",
+    ProposalStatus,
+    SchemaChangeAction,
+    TypeChange,
 )
 
 TypeKey = Callable[[Mapping[str, Any]], "str | None"]
 
-
-class SchemaChangeAction(str, Enum):
-    """What an operation did to a relationship type."""
-
-    CREATE = "create"
-    RENAME = "rename"
-    REVERSE = "reverse"
-    RETARGET = "retarget"
-    DELETE = "delete"
+__all__ = [
+    "SchemaChangeAction",
+    "SchemaChangeRecord",
+    "identifier_key",
+    "schema_change_records",
+]
 
 
 @dataclass(frozen=True)
@@ -75,11 +61,14 @@ class SchemaChangeRecord:
     Attributes:
         action: What happened to the type
         from_: The type's key before (a create: the new type)
-        to: Its key after; None for a delete whose relationships didn't move
-        swap: Relationships of `from_` run the other way as `to`
+        to: Its key after; for a delete, the type its relationships moved to
+            (None if they didn't)
+        swap: Relationships of `from_` run the other way where they went
         p: The proposer's confidence (1 when it gave none)
         proposal_id, operation_id: The applied operation
         applied_at: When it was decided (ISO 8601), None if no decision was recorded
+        moved_to: A retarget only: the type its relationships moved to (None
+            if they were deleted or there were none)
     """
 
     action: SchemaChangeAction
@@ -90,6 +79,7 @@ class SchemaChangeRecord:
     proposal_id: str
     operation_id: str
     applied_at: str | None
+    moved_to: str | None = None
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -101,6 +91,7 @@ class SchemaChangeRecord:
             "proposal_id": self.proposal_id,
             "operation_id": self.operation_id,
             "applied_at": self.applied_at,
+            "moved_to": self.moved_to,
         }
 
 
@@ -114,131 +105,64 @@ def schema_change_records(
     proposal: ChangeProposal,
     decisions: Mapping[str, ProposalDecision] | None = None,
     key: TypeKey = identifier_key,
-    type_of: Callable[[str], Mapping[str, Any] | None] | None = None,
 ) -> list[SchemaChangeRecord]:
     """
     The schema change records of a proposal's applied relationship-type operations, in seq order.
 
     Args:
         decisions: Operation id -> its recorded decision, for applied_at
-        key: A type's key from its fields; an operation whose type has none
-            (before and after) makes no record
-        type_of: A type's current fields by id, to key a delete's
-            replacement; without it, a delete keys the type its relationships
-            moved to by the identifier its resolution recorded
+        key: A type's key from its recorded fields; a change whose type has
+            none makes no record
     """
-    refs = {o.ref: o.result_entity_id for o in proposal.operations if o.ref}
+    if proposal.status is ProposalStatus.REVERTED:
+        return []
     records = []
     for operation in proposal.operations:
-        if operation.kind is not OperationKind.PROPERTY:
+        change = operation.type_change
+        if operation.status is not OperationStatus.APPLIED or change is None:
             continue
-        if operation.status is not OperationStatus.APPLIED:
-            continue
-        found = _record(operation, refs, key, type_of)
+        found = _record(change, key)
         if found is None:
             continue
-        action, from_, to, swap = found
         decision = (decisions or {}).get(operation.id)
         records.append(
             SchemaChangeRecord(
-                action=action,
-                from_=from_,
-                to=to,
-                swap=swap,
                 p=operation.probability if operation.probability is not None else 1.0,
                 proposal_id=proposal.id,
                 operation_id=operation.id,
                 applied_at=decision.decided_at.isoformat() if decision else None,
+                **found,
             )
         )
     return records
 
 
-def _record(
-    operation: ProposedOperation,
-    refs: dict[str, str | None],
-    key: TypeKey,
-    type_of: Callable[[str], Mapping[str, Any] | None] | None,
-) -> tuple[SchemaChangeAction, str, str | None, bool] | None:
-    if operation.op is OperationType.CREATE:
-        created = key(_resolved(operation.fields, refs))
-        return (SchemaChangeAction.CREATE, created, created, False) if created else None
-    if operation.op is OperationType.UPDATE or operation.applied_fields is not None:
-        # An edited delete applied as an update.
-        return _update(operation, refs, key)
-    if operation.op is OperationType.DELETE:
-        return _delete(operation, refs, key, type_of)
-    return None
-
-
-def _update(
-    operation: ProposedOperation, refs: dict[str, str | None], key: TypeKey
-) -> tuple[SchemaChangeAction, str, str | None, bool] | None:
-    applied = operation.applied_fields if operation.applied_fields is not None else operation.fields
-    before = dict(operation.base)
-    after = {**before, **_resolved(applied, refs)}
-    from_, to = key(before), key(after)
-    if from_ is None:
-        from_ = to
-    if to is None:
-        to = from_
-    if from_ is None:
+def _record(change: TypeChange, key: TypeKey) -> dict[str, Any] | None:
+    before = key(change.before) if change.before is not None else None
+    after = key(change.after) if change.after is not None else None
+    replacement = key(change.replacement) if change.replacement is not None else None
+    action = change.action
+    if action is SchemaChangeAction.CREATE:
+        return _fields(action, after, after) if after else None
+    if before is None:
         return None
-    pair = compare_pair(_pair(before), _pair(after))
-    if pair is PairMatch.REVERSED:
-        return SchemaChangeAction.REVERSE, from_, to, True
-    if pair is PairMatch.DIFFERENT:
-        return SchemaChangeAction.RETARGET, from_, to, False
-    if from_ != to:
-        return SchemaChangeAction.RENAME, from_, to, False
-    return None
-
-
-def _delete(
-    operation: ProposedOperation,
-    refs: dict[str, str | None],
-    key: TypeKey,
-    type_of: Callable[[str], Mapping[str, Any] | None] | None,
-) -> tuple[SchemaChangeAction, str, str | None, bool] | None:
-    from_ = key(operation.base)
-    if from_ is None:
+    if action is SchemaChangeAction.DELETE:
+        return _fields(action, before, replacement, change.swap and replacement is not None)
+    if after is None:
         return None
-    resolution = operation.resolution
-    if resolution is not None and resolution.strategy is ResolutionStrategy.MOVE:
-        moved_to = resolution.replacement_property_id
-        if type_of is None:
-            return (
-                SchemaChangeAction.DELETE,
-                from_,
-                resolution.replacement_identifier,
-                resolution.reversed,
-            )
-        replacement = type_of(moved_to) if moved_to else None
-        to = key(replacement) if replacement is not None else None
-        return SchemaChangeAction.DELETE, from_, to, resolution.reversed if to else False
-    if resolution is not None or type_of is None:
-        return SchemaChangeAction.DELETE, from_, None, False
-    named = operation.proposed_replacement_id
-    if named and named.startswith("$"):
-        named = refs.get(named[1:])
-    replacement = type_of(named) if named else None
-    if replacement is None:
-        return SchemaChangeAction.DELETE, from_, None, False
-    pair = compare_pair(_pair(operation.base), _pair(replacement))
-    if pair is PairMatch.DIFFERENT:
-        return SchemaChangeAction.DELETE, from_, None, False
-    return SchemaChangeAction.DELETE, from_, key(replacement), pair is PairMatch.REVERSED
+    if action is SchemaChangeAction.RETARGET:
+        moved = replacement is not None
+        return _fields(action, before, after, change.swap and moved, replacement)
+    if action is SchemaChangeAction.RENAME and before == after:
+        return None
+    return _fields(action, before, after, change.swap)
 
 
-def _pair(fields: Mapping[str, Any]) -> tuple[Any, Any]:
-    return fields.get("domain_class_id"), fields.get("range_class_id")
-
-
-def _resolved(fields: Mapping[str, Any], refs: dict[str, str | None]) -> dict[str, Any]:
-    """Fields with "$ref" class ids as the classes the proposal's creates made."""
-    resolved = dict(fields)
-    for name in ("domain_class_id", "range_class_id"):
-        value = resolved.get(name)
-        if isinstance(value, str) and value.startswith("$"):
-            resolved[name] = refs.get(value[1:])
-    return resolved
+def _fields(
+    action: SchemaChangeAction,
+    from_: str,
+    to: str | None,
+    swap: bool = False,
+    moved_to: str | None = None,
+) -> dict[str, Any]:
+    return {"action": action, "from_": from_, "to": to, "swap": swap, "moved_to": moved_to}

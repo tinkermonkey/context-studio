@@ -287,6 +287,74 @@ class InUseResolution:
         )
 
 
+# A relationship type's fields its pair and keys are read from (as snapshot JSON).
+TYPE_KEY_FIELDS = (
+    "identifier",
+    "canonical_predicate",
+    "domain_class_id",
+    "range_class_id",
+    "external_references",
+)
+
+
+class SchemaChangeAction(str, Enum):
+    """What an applied operation did to a relationship type."""
+
+    CREATE = "create"
+    RENAME = "rename"
+    REVERSE = "reverse"
+    RETARGET = "retarget"
+    DELETE = "delete"
+
+
+@dataclass
+class TypeChange:
+    """
+    What an applied relationship-type operation did to the type and the
+    relationships using it, recorded as it applied (see
+    `domain.versioning.change_records`).
+
+    Attributes:
+        action: Create; rename (the same pair of classes); reverse (the pair
+            swapped: its relationships swapped ends); retarget (another pair);
+            delete
+        before: The type's id and TYPE_KEY_FIELDS just before (None: a create)
+        after: The same just after (None: a delete)
+        swap: Its relationships swapped ends: a reverse, or a move to a
+            reversed replacement
+        replacement: The id and TYPE_KEY_FIELDS of the type its relationships
+            moved to (a retarget's or delete's resolution), or of the type a
+            delete names as its replacement when that links the same pair of
+            classes or the reverse; None otherwise
+    """
+
+    action: SchemaChangeAction
+    before: dict[str, Any] | None = None
+    after: dict[str, Any] | None = None
+    swap: bool = False
+    replacement: dict[str, Any] | None = None
+
+    def to_json(self) -> dict[str, Any]:
+        """The JSON stored with the operation."""
+        return {
+            "action": self.action.value,
+            "before": self.before,
+            "after": self.after,
+            "swap": self.swap,
+            "replacement": self.replacement,
+        }
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> "TypeChange":
+        return cls(
+            action=SchemaChangeAction(data["action"]),
+            before=data.get("before"),
+            after=data.get("after"),
+            swap=bool(data.get("swap")),
+            replacement=data.get("replacement"),
+        )
+
+
 @dataclass
 class OperationDraft:
     """
@@ -348,6 +416,8 @@ class ProposedOperation:
             the proposer says replaces the deleted one, as an id or "$<ref>" of
             an earlier property create (see `domain.versioning.in_use` for how
             its pair of classes is compared with the deleted type's)
+        type_change: Set when an applied property operation created or deleted
+            the type, or changed its pair or keys: what it did (see TypeChange)
         id: Unique id
     """
 
@@ -368,6 +438,7 @@ class ProposedOperation:
     applied_fields: dict[str, Any] | None = None
     resolution: InUseResolution | None = None
     proposed_replacement_id: str | None = None
+    type_change: TypeChange | None = None
     id: str = field(default_factory=lambda: str(uuid4()))
 
     def __post_init__(self) -> None:

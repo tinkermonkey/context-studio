@@ -323,7 +323,7 @@ class ChangeEventRecorder:
         )
 
     def on_relationship_updated(self, event: RelationshipUpdated) -> None:
-        """Handle RelationshipUpdated events (attributes only)."""
+        """Handle RelationshipUpdated events (attributes, or swapped ends)."""
         self._record(
             entity_id=event.relationship_id,
             entity_type="relationship",

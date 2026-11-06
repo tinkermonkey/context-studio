@@ -337,13 +337,14 @@ async def apply_proposal(
     the proposal's run, so Revert restores them together; a failure fails only
     that operation ("unresolvable: ..." for a misfit) and changes nothing.
     Without a resolution such a delete fails as in use. A property update that
-    retargets the type (another domain and range pair) takes one the same way;
-    without one its relationships stay. What was moved or deleted is returned
-    as the operation's resolution.
+    retargets a type relationships use (another domain and range pair) needs
+    one the same way (its blockers list them); a retarget of an unused type
+    needs none. What was moved or deleted is returned as the operation's
+    resolution.
 
     A property update that reverses the type (domain and range swapped) swaps
-    the ends of every relationship using it, and a rename keeps them, in one
-    transaction with the update; Revert undoes both.
+    the ends of every relationship using it in place (each keeps its id), and
+    a rename keeps them, in one transaction with the update; Revert undoes both.
     """
 
     def run() -> ChangeProposalResponse:

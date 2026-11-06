@@ -3750,13 +3750,14 @@ export interface paths {
      *     the proposal's run, so Revert restores them together; a failure fails only
      *     that operation ("unresolvable: ..." for a misfit) and changes nothing.
      *     Without a resolution such a delete fails as in use. A property update that
-     *     retargets the type (another domain and range pair) takes one the same way;
-     *     without one its relationships stay. What was moved or deleted is returned
-     *     as the operation's resolution.
+     *     retargets a type relationships use (another domain and range pair) needs
+     *     one the same way (its blockers list them); a retarget of an unused type
+     *     needs none. What was moved or deleted is returned as the operation's
+     *     resolution.
      *
      *     A property update that reverses the type (domain and range swapped) swaps
-     *     the ends of every relationship using it, and a rename keeps them, in one
-     *     transaction with the update; Revert undoes both.
+     *     the ends of every relationship using it in place (each keeps its id), and
+     *     a rename keeps them, in one transaction with the update; Revert undoes both.
      */
     post: operations["apply_proposal_api_proposals__proposal_id__apply_post"];
     delete?: never;
@@ -4710,7 +4711,7 @@ export interface components {
       };
       /**
        * Resolutions
-       * @description Operation id -> how to resolve the relationships still using the relationship type a property delete in operation_ids removes (see the operation's blockers), or a property update that retargets (gives the type another domain and range pair) no longer fits. Moved or deleted in one transaction with the type; a misfit or any failing step fails only that operation, changing nothing. Not with an edit of the same delete; an update that renames or reverses the type takes none (a reverse always swaps the ends of its relationships)
+       * @description Operation id -> how to resolve the relationships still using the relationship type a property delete in operation_ids removes (see the operation's blockers), or a property update that retargets (gives the type another domain and range pair) needs while relationships use it. Moved or deleted in one transaction with the type; a misfit or any failing step fails only that operation, changing nothing. Not with an edit of the same delete; an update that renames or reverses the type takes none (a reverse always swaps the ends of its relationships)
        */
       resolutions?: {
         [key: string]: components["schemas"]["InUseResolutionRequest"];
@@ -8059,7 +8060,7 @@ export interface components {
        * @default false
        */
       stale: boolean;
-      /** @description A pending or failed relationship-type delete whose type relationships still use: applying it as proposed fails; it needs a resolution. Null otherwise. The proposed replacement, when it fits, is listed first */
+      /** @description A pending or failed relationship-type delete, or update that retargets the type, whose type relationships still use: applying it as proposed fails; it needs a resolution. Null otherwise. The proposed replacement, when it fits, is listed first */
       blockers?: components["schemas"]["DeleteBlockersResponse"] | null;
       /**
        * Proposed Replacement Id

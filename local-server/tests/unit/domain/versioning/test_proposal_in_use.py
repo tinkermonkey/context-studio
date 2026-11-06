@@ -28,6 +28,7 @@ from domain.versioning.proposals import (
     OperationStatus,
     OperationType,
     ProposalSource,
+    ProposalStatus,
     ResolutionStrategy,
 )
 from domain.versioning.revert_service import RevertResult
@@ -745,16 +746,29 @@ def apply(service, proposal, **kwargs):
 
 def ends(repo, property_id):
     return {
-        (r.source_id, r.target_id, tuple(sorted(r.attributes.items())))
+        (r.id, r.source_id, r.target_id, tuple(sorted(r.attributes.items())))
         for r in edges_of(repo, property_id)
     }
+
+
+def swapped(found):
+    return {(i, t, s, a) for i, s, t, a in found}
 
 
 def reverse_fields(graph):
     return {"domain_class_id": graph["function"], "range_class_id": graph["event"]}
 
 
-def test_a_reverse_swaps_the_ends_of_every_relationship_in_one_transaction(
+def unused_type(ontology, graph):
+    return ontology.create_property_definition(
+        "businessevent_follows_businessfunction",
+        "follows",
+        domain_class_id=graph["event"],
+        range_class_id=graph["function"],
+    ).id
+
+
+def test_a_reverse_swaps_every_relationships_ends_in_place_in_one_transaction(
     service, graph, repo, scope
 ):
     before = ends(repo, graph["triggers_function"])
@@ -763,18 +777,36 @@ def test_a_reverse_swaps_the_ends_of_every_relationship_in_one_transaction(
     op = apply(service, proposal)
 
     assert op.status is OperationStatus.APPLIED, op.reason
-    assert ends(repo, graph["triggers_function"]) == {(t, s, a) for s, t, a in before}
+    # Same ids and attributes, ends swapped.
+    assert ends(repo, graph["triggers_function"]) == swapped(before)
     assert scope.entered == 1
-    # The type's key fields as they were stay in the base, for its record.
-    assert op.base["domain_class_id"] == graph["event"]
-    assert op.base["range_class_id"] == graph["function"]
-    assert op.base["identifier"] == "businessevent_triggers_businessfunction"
+    change = op.type_change
+    assert change.action is SchemaChangeAction.REVERSE
+    assert change.swap is True
+    assert change.before["domain_class_id"] == graph["event"]
+    assert change.after["domain_class_id"] == graph["function"]
     (record,) = schema_change_records(service.get(proposal.id), service.decisions_of(proposal.id))
     assert record.action is SchemaChangeAction.REVERSE
     assert record.swap is True
     assert record.from_ == record.to == "businessevent_triggers_businessfunction"
     assert record.applied_at is not None
     assert record.p == 1.0
+
+
+def test_a_reverse_keeps_a_pair_running_both_ways(service, graph, repo, ontology):
+    """a -> b and b -> a of one type swap to b -> a and a -> b, each keeping its id."""
+    first = repo.get_relationship(graph["first"])
+    mirror = ontology.create_relationship(
+        first.target_id, first.source_id, graph["triggers_function"]
+    )
+    before = ends(repo, graph["triggers_function"])
+    proposal = propose_update(service, graph, **reverse_fields(graph))
+
+    op = apply(service, proposal)
+
+    assert op.status is OperationStatus.APPLIED, op.reason
+    assert ends(repo, graph["triggers_function"]) == swapped(before)
+    assert repo.get_relationship(mirror.id).source_id == first.source_id
 
 
 def test_an_edited_update_that_reverses_swaps_them_too(service, graph, repo):
@@ -785,17 +817,30 @@ def test_an_edited_update_that_reverses_swaps_them_too(service, graph, repo):
     op = apply(service, proposal, edits={op_id: reverse_fields(graph)})
 
     assert op.status is OperationStatus.APPLIED, op.reason
-    assert ends(repo, graph["triggers_function"]) == {(t, s, a) for s, t, a in before}
+    assert ends(repo, graph["triggers_function"]) == swapped(before)
+
+
+def test_a_reverse_that_drops_an_attribute_its_relationships_carry_fails(service, graph, repo):
+    before = ends(repo, graph["triggers_function"])
+    proposal = propose_update(service, graph, **reverse_fields(graph), external_references=[])
+
+    op = apply(service, proposal)
+
+    assert op.status is OperationStatus.FAILED
+    assert op.reason.startswith("unresolvable")
+    assert "['weight']" in op.reason
+    assert ends(repo, graph["triggers_function"]) == before
+    assert op.type_change is None
 
 
 def test_a_rename_keeps_the_relationships_as_they_are(service, graph, repo):
-    ids = {r.id for r in edges_of(repo, graph["triggers_function"])}
+    before = ends(repo, graph["triggers_function"])
     proposal = propose_update(service, graph, identifier="businessevent_starts_businessfunction")
 
     op = apply(service, proposal)
 
     assert op.status is OperationStatus.APPLIED, op.reason
-    assert {r.id for r in edges_of(repo, graph["triggers_function"])} == ids
+    assert ends(repo, graph["triggers_function"]) == before
     (record,) = schema_change_records(service.get(proposal.id))
     assert (record.action, record.from_, record.to, record.swap) == (
         SchemaChangeAction.RENAME,
@@ -805,23 +850,74 @@ def test_a_rename_keeps_the_relationships_as_they_are(service, graph, repo):
     )
 
 
-def test_a_wording_update_makes_no_record(service, graph):
+def test_a_wording_update_records_nothing(service, graph):
     proposal = propose_update(service, graph, title="sets off")
-    apply(service, proposal)
+    op = apply(service, proposal)
+    assert op.type_change is None
     assert schema_change_records(service.get(proposal.id)) == []
 
 
-def test_a_retarget_without_a_resolution_keeps_its_relationships(service, graph, repo):
-    ids = {r.id for r in edges_of(repo, graph["triggers_function"])}
+def test_a_forced_rename_records_what_it_replaced_as_applied(service, graph):
+    """
+    Two renames of one type can't share a proposal (conflicting_op), but two
+    proposals can: the second, proposed against the original identifier and
+    forced past the first, records the identifier it actually replaced, so
+    the two records chain.
+    """
+    first = propose_update(service, graph, identifier="starts_function")
+    second = propose_update(service, graph, identifier="launches_function")
+    apply(service, first)
+    apply(service, second, force_stale=[the_op(second).id])
+
+    (renamed,) = schema_change_records(service.get(first.id))
+    (again,) = schema_change_records(service.get(second.id))
+    assert (renamed.from_, renamed.to) == (
+        "businessevent_triggers_businessfunction",
+        "starts_function",
+    )
+    assert (again.from_, again.to) == ("starts_function", "launches_function")
+    assert the_op(service.get(second.id)).base["identifier"] == (
+        "businessevent_triggers_businessfunction"
+    )
+
+
+def test_an_in_use_retarget_is_blocked_until_resolved(service, graph, repo):
+    before = ends(repo, graph["triggers_function"])
     proposal = propose_update(service, graph, range_class_id=graph["process"])
 
+    blockers = service.in_use_blockers(proposal)[the_op(proposal).id]
+    op = apply(service, proposal)
+
+    assert [e.relationship_id for e in blockers.edges] == [graph["first"], graph["second"]]
+    assert op.status is OperationStatus.FAILED
+    assert "a retarget needs a resolution" in op.reason
+    assert ends(repo, graph["triggers_function"]) == before
+    assert (
+        repo.get_property_definition(graph["triggers_function"]).range_class_id == graph["function"]
+    )
+
+
+def test_a_retarget_of_an_unused_type_needs_no_resolution(service, graph, ontology, repo):
+    unused = unused_type(ontology, graph)
+    draft = OperationDraft(
+        seq=1,
+        op=T.UPDATE,
+        kind=K.PROPERTY,
+        target_id=unused,
+        fields={"range_class_id": graph["process"]},
+    )
+    proposal = service.propose(graph["taxonomy"], "Retarget", [draft], ProposalSource.MCP)
+
+    assert service.in_use_blockers(proposal) == {}
     op = apply(service, proposal)
 
     assert op.status is OperationStatus.APPLIED, op.reason
-    assert {r.id for r in edges_of(repo, graph["triggers_function"])} == ids
     (record,) = schema_change_records(service.get(proposal.id))
-    assert record.action is SchemaChangeAction.RETARGET
-    assert record.swap is False
+    assert (record.action, record.moved_to, record.swap) == (
+        SchemaChangeAction.RETARGET,
+        None,
+        False,
+    )
 
 
 def test_a_retarget_can_delete_its_relationships_first(service, graph, repo):
@@ -839,11 +935,13 @@ def test_a_retarget_can_delete_its_relationships_first(service, graph, repo):
     assert (
         repo.get_property_definition(graph["triggers_function"]).range_class_id == graph["process"]
     )
+    (record,) = schema_change_records(service.get(proposal.id))
+    assert (record.action, record.moved_to) == (SchemaChangeAction.RETARGET, None)
 
 
 def test_a_retarget_can_move_its_relationships_to_a_type_they_fit(service, graph, repo, ontology):
     serves = add_fitting_type(ontology, graph)
-    before = ends(repo, graph["triggers_function"])
+    before = {(s, t, a) for _, s, t, a in ends(repo, graph["triggers_function"])}
     proposal = propose_update(service, graph, range_class_id=graph["process"])
     resolution = InUseResolution(strategy=MOVE, replacement_property_id=serves)
 
@@ -851,8 +949,16 @@ def test_a_retarget_can_move_its_relationships_to_a_type_they_fit(service, graph
 
     assert op.status is OperationStatus.APPLIED, op.reason
     assert edges_of(repo, graph["triggers_function"]) == []
-    assert ends(repo, serves) == before
+    assert {(s, t, a) for _, s, t, a in ends(repo, serves)} == before
     assert op.resolution.replacement_identifier == "businessevent_serves_businessfunction"
+    assert op.type_change.replacement["id"] == serves
+    (record,) = schema_change_records(service.get(proposal.id))
+    assert (record.action, record.to, record.moved_to, record.swap) == (
+        SchemaChangeAction.RETARGET,
+        "businessevent_triggers_businessfunction",
+        "businessevent_serves_businessfunction",
+        False,
+    )
 
 
 def test_a_move_that_doesnt_fit_changes_nothing(service, graph, repo):
@@ -913,6 +1019,38 @@ def test_a_delete_record_names_where_its_relationships_moved(service, graph, ont
     assert record.to_json()["from"] == record.from_
 
 
+def test_an_unused_delete_records_its_named_replacement_when_the_pair_matches(
+    service, graph, ontology
+):
+    unused = unused_type(ontology, graph)
+    drafts = [
+        OperationDraft(
+            seq=1,
+            op=T.DELETE,
+            kind=K.PROPERTY,
+            target_id=unused,
+            replacement=graph["triggers_function"],
+        ),
+        OperationDraft(
+            seq=2,
+            op=T.DELETE,
+            kind=K.PROPERTY,
+            target_id=graph["triggers_process"],
+            replacement=graph["triggers_function"],
+        ),
+    ]
+    proposal = service.propose(graph["taxonomy"], "Merge", drafts, ProposalSource.MCP)
+    service.apply(proposal.id, [o.id for o in proposal.operations])
+
+    same, different = schema_change_records(service.get(proposal.id))
+    assert (same.from_, same.to) == (
+        "businessevent_follows_businessfunction",
+        "businessevent_triggers_businessfunction",
+    )
+    # BusinessEvent -> BusinessProcess against -> BusinessFunction: dropped.
+    assert (different.from_, different.to) == ("businessevent_triggers_businessprocess", None)
+
+
 def test_a_create_record_and_unapplied_operations(service, graph):
     drafts = [
         OperationDraft(
@@ -940,3 +1078,11 @@ def test_a_create_record_and_unapplied_operations(service, graph):
         "process_follows_event",
         0.7,
     )
+
+
+def test_a_reverted_proposal_has_no_records(service, graph):
+    proposal = propose_update(service, graph, identifier="businessevent_starts_businessfunction")
+    apply(service, proposal)
+    reverted = service.get(proposal.id)
+    reverted.status = ProposalStatus.REVERTED
+    assert schema_change_records(reverted) == []

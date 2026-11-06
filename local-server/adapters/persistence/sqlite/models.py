@@ -1365,6 +1365,9 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
         proposed_replacement_id: A relationship-type delete only: the type the proposer
             names as its replacement, a property definition id or "$<ref>" of a create in
             the same proposal; null otherwise
+        type_change: JSON {action, before, after, swap, replacement} when an applied
+            relationship-type create, update or delete changed the type (see the
+            domain's TypeChange); null otherwise
     """
 
     __tablename__ = "proposal_operations"
@@ -1393,6 +1396,7 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
     applied_fields = Column(JSON, nullable=True)
     resolution = Column(JSON, nullable=True)
     proposed_replacement_id = Column(String(101), nullable=True)
+    type_change = Column(JSON, nullable=True)
 
     __table_args__ = (UniqueConstraint("proposal_id", "seq", name="uq_proposal_operation_seq"),)
 
