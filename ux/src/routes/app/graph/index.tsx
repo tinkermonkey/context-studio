@@ -6,9 +6,11 @@ import { GraphCanvasComponent } from "@/components/graph/GraphCanvas";
 import { GraphLayerToolbar, type GraphFocus } from "@/components/graph/GraphLayerToolbar";
 import { GraphNodeInspector } from "@/components/graph/GraphNodeInspector";
 import {
+  DEFAULT_LAYOUT,
   defaultLayerIds,
   defaultNodeKind,
   filterGraphView,
+  layoutFits,
   neighborhood,
   type GraphFilter,
   type GraphSearchParams,
@@ -70,7 +72,7 @@ export function GraphPage({ initialFocusId, initialLayerIds }: GraphPageProps = 
   const [classIds, setClassIds] = useState<string[]>([]);
   // null until the user picks a kind; defaults to individuals when the graph has any.
   const [nodeKind, setNodeKind] = useState<GraphFilter["nodeKind"] | null>(null);
-  const [layout, setLayout] = useState<GraphLayoutMode>("layered");
+  const [layout, setLayout] = useState<GraphLayoutMode>(DEFAULT_LAYOUT);
   const [focus, setFocus] = useState<GraphFocus | null>(
     initialFocusId ? { nodeId: initialFocusId, depth: 1 } : null,
   );
@@ -92,6 +94,9 @@ export function GraphPage({ initialFocusId, initialLayerIds }: GraphPageProps = 
       ? neighborhood(view, focus.nodeId, focus.depth, filter.nodeKind)
       : filterGraphView(view, filter);
   }, [view, focus, filter]);
+
+  // A slice too big for the chosen engine falls back to layered, which has no limit.
+  const effectiveLayout = layoutFits(layout, slice.nodes.length) ? layout : "layered";
 
   const focusLabel = focus ? view?.nodes.find((n) => n.id === focus.nodeId)?.label : undefined;
 
@@ -219,7 +224,7 @@ export function GraphPage({ initialFocusId, initialLayerIds }: GraphPageProps = 
             view={view}
             filter={filter}
             onFilterChange={handleFilterChange}
-            layout={layout}
+            layout={effectiveLayout}
             onLayoutChange={setLayout}
             focus={focus}
             focusLabel={focusLabel}
@@ -240,7 +245,7 @@ export function GraphPage({ initialFocusId, initialLayerIds }: GraphPageProps = 
                 nodes={slice.nodes}
                 edges={slice.edges}
                 layers={view.layers}
-                layout={layout}
+                layout={effectiveLayout}
                 selectedNodeId={selectedNodeId}
                 focusNodeId={focus?.nodeId}
                 onNodeSelect={selectNode}

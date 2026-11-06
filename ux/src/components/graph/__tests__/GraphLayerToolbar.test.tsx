@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { render } from "@/test/test-utils";
 import { createGraphView } from "@/api/services/__tests__/fixtures/graph.fixtures";
 import { GraphLayerToolbar } from "../GraphLayerToolbar";
-import { FORCE_LAYOUT_MAX_NODES, type GraphFilter } from "../graphLayers";
+import { LAYOUT_MAX_NODES, type GraphFilter } from "../graphLayers";
 
 // Use the real Heimdall FilterDropdown / SegmentedControl so ARIA roles are the shipped ones
 // (vitest.setup.ts mocks the package globally).
@@ -113,19 +113,26 @@ describe("GraphLayerToolbar", () => {
     expect(props.onFilterChange).toHaveBeenCalledWith({ ...baseFilter, nodeKind: "individual" });
   });
 
-  it("switches layout and disables force layout for large graphs", async () => {
+  it("offers every layout and switches between them", async () => {
     const user = userEvent.setup();
     const props = renderToolbar();
     const layout = screen.getByTestId("graph-layout-toggle");
     expect(layout).toHaveAttribute("role", "radiogroup");
-    await user.click(within(layout).getByRole("radio", { name: "Force" }));
-    expect(props.onLayoutChange).toHaveBeenCalledWith("force");
+    expect(
+      within(layout)
+        .getAllByRole("radio")
+        .map((r) => r.textContent),
+    ).toEqual(["Organic", "Clustered", "Orthogonal", "Layered"]);
+    await user.click(within(layout).getByRole("radio", { name: "Orthogonal" }));
+    expect(props.onLayoutChange).toHaveBeenCalledWith("orthogonal");
   });
 
-  it("disables the force option above the node limit", () => {
-    renderToolbar({ visibleNodeCount: FORCE_LAYOUT_MAX_NODES + 1 });
+  it("disables layouts whose node limit the slice exceeds", () => {
+    renderToolbar({ visibleNodeCount: (LAYOUT_MAX_NODES.orthogonal ?? 0) + 1 });
     const layout = screen.getByTestId("graph-layout-toggle");
-    expect(within(layout).getByRole("radio", { name: "Force" })).toBeDisabled();
+    expect(within(layout).getByRole("radio", { name: "Orthogonal" })).toBeDisabled();
+    expect(within(layout).getByRole("radio", { name: "Organic" })).not.toBeDisabled();
+    expect(within(layout).getByRole("radio", { name: "Layered" })).not.toBeDisabled();
   });
 
   describe("focus mode", () => {

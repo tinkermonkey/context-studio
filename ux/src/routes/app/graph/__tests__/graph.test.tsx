@@ -125,7 +125,7 @@ describe("Graph Page", () => {
       }),
     ).toHaveAttribute("aria-checked", "true");
     expect(canvasNodeLabels().sort()).toEqual(["Checkout", "POST /orders"]);
-    expect(screen.getByTestId("graph-canvas")).toHaveAttribute("data-layout", "layered");
+    expect(screen.getByTestId("graph-canvas")).toHaveAttribute("data-layout", "organic");
   });
 
   it("shows classes by default for a schema-only ontology", () => {

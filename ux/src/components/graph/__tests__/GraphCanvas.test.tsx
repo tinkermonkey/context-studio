@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { screen } from "@testing-library/react";
+import { render as renderRaw, screen } from "@testing-library/react";
 import { render } from "@/test/test-utils";
-import type { GraphNodeData, GraphEdgeData } from "@tinkermonkey/heimdall-ui";
+import type { EdgeGeometry, GraphNodeData, GraphEdgeData } from "@tinkermonkey/heimdall-ui";
 import { createGraphView } from "@/api/services/__tests__/fixtures/graph.fixtures";
 import { GraphCanvasComponent, truncateLabel } from "../GraphCanvas";
 import { LAYER_HEADER_PREFIX } from "../graphLayers";
@@ -11,13 +11,22 @@ interface CapturedProps {
   edges: GraphEdgeData[];
   layout: string;
   selectedNodeId?: string;
-  renderNode: (node: GraphNodeData, selected: boolean) => React.ReactNode;
+  fitView?: boolean;
+  onNodeSelect?: (nodeId: string) => void;
+  renderNode: (
+    node: GraphNodeData,
+    selected: boolean,
+    hierarchy: undefined,
+    props: { nodeId: string; onSelect?: (nodeId: string) => void },
+  ) => React.ReactNode;
+  renderEdge: (edge: GraphEdgeData, geometry: EdgeGeometry) => React.ReactNode;
 }
 
 const { captured } = vi.hoisted(() => ({ captured: { props: null as unknown } }));
 
 // Replace the canvas (it needs layout measurement) with a stub that renders
-// every node through the component's renderNode, keeping the real GraphNode.
+// every node through the component's renderNode (with the props argument the
+// real canvas passes), keeping the real GraphNode.
 vi.mock("@tinkermonkey/heimdall-ui", async () => {
   const actual = await vi.importActual<typeof import("@tinkermonkey/heimdall-ui")>(
     "@tinkermonkey/heimdall-ui",
@@ -29,7 +38,12 @@ vi.mock("@tinkermonkey/heimdall-ui", async () => {
       return (
         <div className="heimdall-graph-canvas-stub">
           {props.nodes.map((node) => (
-            <div key={node.id}>{props.renderNode(node, node.id === props.selectedNodeId)}</div>
+            <div key={node.id}>
+              {props.renderNode(node, node.id === props.selectedNodeId, undefined, {
+                nodeId: node.id,
+                onSelect: props.onNodeSelect,
+              })}
+            </div>
           ))}
         </div>
       );
@@ -86,13 +100,39 @@ describe("GraphCanvasComponent", () => {
     );
   });
 
-  it("uses Heimdall force layout without pinned coordinates or headers in force mode", () => {
-    renderCanvas({ layout: "force" });
-    const props = lastProps();
-    expect(props.layout).toBe("force");
-    expect(props.nodes.some((n) => n.x !== undefined)).toBe(false);
-    expect(props.nodes.some((n) => n.id.startsWith(LAYER_HEADER_PREFIX))).toBe(false);
-    expect(screen.getByTestId("graph-canvas")).toHaveAttribute("data-layout", "force");
+  it.each([
+    ["organic", "organic"],
+    ["clustered", "force-clustered"],
+    ["orthogonal", "orthogonal"],
+  ] as const)(
+    "hands %s mode to Heimdall's %s engine without pinned coordinates or headers",
+    (layout, engine) => {
+      renderCanvas({ layout });
+      const props = lastProps();
+      expect(props.layout).toBe(engine);
+      expect(props.fitView).toBe(true);
+      expect(props.nodes.some((n) => n.x !== undefined)).toBe(false);
+      expect(props.nodes.some((n) => n.id.startsWith(LAYER_HEADER_PREFIX))).toBe(false);
+      expect(screen.getByTestId("graph-canvas")).toHaveAttribute("data-layout", layout);
+    },
+  );
+
+  it("keeps edges and renderNode stable when the selection changes, so the layout does not re-run", () => {
+    const { rerender } = renderCanvas({ layout: "organic", selectedNodeId: "svc" });
+    const first = lastProps();
+    rerender(
+      <GraphCanvasComponent
+        nodes={businessAndApi}
+        edges={edges}
+        layers={view.layers}
+        layout="organic"
+        selectedNodeId="checkout"
+        onNodeSelect={vi.fn()}
+      />,
+    );
+    const second = lastProps();
+    expect(second.edges).toBe(first.edges);
+    expect(second.renderNode).toBe(first.renderNode);
   });
 
   it("colors nodes by layer index and badges classes vs individuals", () => {
@@ -131,15 +171,34 @@ describe("GraphCanvasComponent", () => {
     expect(variants.get("checkout:instance_of:svc")).toBe("default");
   });
 
-  it("labels only edges incident to the selected node, truncating long predicates", () => {
+  it("labels only edges incident to the selected node or hovered, truncating long predicates", () => {
     renderCanvas({ selectedNodeId: "svc" });
-    const labels = new Map(lastProps().edges.map((e) => [e.id, e.label]));
-    expect(labels.get("e-svc-op")).toBe(
-      truncateLabel("business.service realized-by api.operation"),
-    );
-    expect(labels.get("e-svc-op")?.endsWith("…")).toBe(true);
-    expect(labels.get("checkout:instance_of:svc")).toBe("instance of");
-    expect(labels.get("e-checkout-post")).toBeUndefined();
+    const props = lastProps();
+    // Labels stay out of the layout input; renderEdge draws them.
+    expect(props.edges.every((e) => e.label === undefined)).toBe(true);
+    const edgeById = new Map(props.edges.map((e) => [e.id, e]));
+    const labelOf = (id: string, hovered = false) => {
+      const { container, unmount } = renderRaw(
+        <svg>
+          {props.renderEdge(edgeById.get(id)!, {
+            path: "M0 0 L10 10",
+            mid: { x: 5, y: 5 },
+            labelPos: { x: 5, y: 5 },
+            angle: 0,
+            selected: false,
+            hovered,
+          })}
+        </svg>,
+      );
+      const text = container.querySelector("text")?.textContent;
+      unmount();
+      return text;
+    };
+    expect(labelOf("e-svc-op")).toBe(truncateLabel("business.service realized-by api.operation"));
+    expect(labelOf("e-svc-op")?.endsWith("…")).toBe(true);
+    expect(labelOf("checkout:instance_of:svc")).toBe("instance of");
+    expect(labelOf("e-checkout-post")).toBeUndefined();
+    expect(labelOf("e-checkout-post", true)).toBeDefined();
   });
 
   it("renders a legend with the visible layers and the cross-layer edge count", () => {

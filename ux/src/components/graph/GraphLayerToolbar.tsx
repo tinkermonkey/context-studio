@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { Button, FilterDropdown, SegmentedControl } from "@tinkermonkey/heimdall-ui";
 import type { GraphView } from "@/api/hooks/graph";
 import {
-  FORCE_LAYOUT_MAX_NODES,
+  layoutFits,
   MAX_FOCUS_DEPTH,
   MIN_FOCUS_DEPTH,
   type GraphFilter,
@@ -34,6 +34,13 @@ const NODE_KIND_OPTIONS: { value: NodeKindFilter; label: string }[] = [
   { value: "all", label: "All" },
   { value: "class", label: "Classes" },
   { value: "individual", label: "Individuals" },
+];
+
+const LAYOUT_OPTIONS: { value: GraphLayoutMode; label: string }[] = [
+  { value: "organic", label: "Organic" },
+  { value: "clustered", label: "Clustered" },
+  { value: "orthogonal", label: "Orthogonal" },
+  { value: "layered", label: "Layered" },
 ];
 
 const DEPTH_OPTIONS = Array.from({ length: MAX_FOCUS_DEPTH - MIN_FOCUS_DEPTH + 1 }, (_, i) => ({
@@ -110,8 +117,6 @@ export function GraphLayerToolbar({
     });
     onFilterChange({ ...filter, layerIds, classIds });
   };
-
-  const forceDisabled = visibleNodeCount > FORCE_LAYOUT_MAX_NODES;
 
   return (
     <div
@@ -212,10 +217,10 @@ export function GraphLayerToolbar({
       <SegmentedControl
         value={layout}
         onChange={(value) => onLayoutChange(value as GraphLayoutMode)}
-        options={[
-          { value: "layered", label: "Layered" },
-          { value: "force", label: "Force", disabled: forceDisabled && layout !== "force" },
-        ]}
+        options={LAYOUT_OPTIONS.map((option) => ({
+          ...option,
+          disabled: option.value !== layout && !layoutFits(option.value, visibleNodeCount),
+        }))}
         aria-label="Layout"
         data-testid="graph-layout-toggle"
       />

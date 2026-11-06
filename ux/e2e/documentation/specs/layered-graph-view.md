@@ -12,7 +12,8 @@ membership (`instance_of`) and class to parent (`subclass_of`). An individual's 
 
 This plan covers the layer filter (hide/show a layer and its nodes), the inspector (selecting a node
 shows its details; switching selection), focus mode (neighbourhood-only rendering with a depth
-control, re-focus from the inspector, and exit), and the layered/force layout switch.
+control, re-focus from the inspector, and exit), and the layout switch (organic by default;
+clustered, orthogonal and layered).
 
 ### Behaviour verified in the source (drives the assertions)
 
@@ -27,7 +28,8 @@ control, re-focus from the inspector, and exit), and the layered/force layout sw
   layer/class filters for `graph-focus-bar`; the focused node's `GraphNode` gets class
   `graph-node--focus`.
 - **Layer headers** are only rendered in layered layout
-  (`data-testid="graph-layer-header-<conceptSchemeId>"`). In force layout there are no headers.
+  (`data-testid="graph-layer-header-<conceptSchemeId>"`). The other layouts (organic, the default,
+  clustered and orthogonal) have no headers.
 - **Selection cannot be cleared**: the page has no deselect path (no close button, background click
   does not deselect, exiting focus keeps the selection). See Open Questions. "Closing" is covered as
   the initial empty inspector state plus *switching* the selection.
@@ -50,7 +52,7 @@ control, re-focus from the inspector, and exit), and the layered/force layout sw
   `graph-legend-cross-layer-count`, never via SVG paths.
 - Segmented controls (`graph-layout-toggle`, `graph-node-kind-filter`, `graph-focus-depth`) render
   `role="radiogroup"` with `role="radio"` + `aria-checked` buttons labelled
-  Layered/Force, All/Classes/Individuals, "1 hop"/"2 hops"/"3 hops".
+  Organic/Clustered/Orthogonal/Layered, All/Classes/Individuals, "1 hop"/"2 hops"/"3 hops".
 - Layer-filter items render `role="option"` with `aria-selected` inside `graph-layer-filter-panel`
   (opened by clicking `graph-layer-filter`, which has `aria-expanded`). The accessible name starts
   with the scheme title (identifier appended as description), so match `{ name: /^Application/ }`
@@ -115,7 +117,7 @@ Header test ids below are written `graph-layer-header-<app.id>`, meaning the pre
 ### Test Case 1: Layered layout renders one band per concept scheme with the default individual slice
 - **Preconditions**: seed data; on `/app/graph`.
 - **Steps**:
-  1. Wait for `graph-canvas` visible.
+  1. Wait for `graph-canvas` visible; click `graph-layout-toggle` radio "Layered".
   2. Click `graph-node-kind-filter` radio "All".
 - **Expected Result**:
   - After 1: `graph-canvas` has `data-layout="layered"`; `graph-layout-toggle` radio "Layered" has
@@ -140,7 +142,8 @@ Header test ids below are written `graph-layer-header-<app.id>`, meaning the pre
   instance_of and subclass_of edges are emitted; cross-layer edges are detected.
 
 ### Test Case 2: Layer filter hides and restores a layer and the nodes it contains
-- **Preconditions**: seed data; default view (kind = Individuals).
+- **Preconditions**: seed data; default view (kind = Individuals); click `graph-layout-toggle`
+  radio "Layered" so layer headers render.
 - **Steps**:
   1. Click `graph-layer-filter`; assert `graph-layer-filter-panel` visible.
   2. In the panel, assert options `/^Application/` and `/^Business/` have `aria-selected="true"`.
@@ -222,24 +225,25 @@ Header test ids below are written `graph-layer-header-<app.id>`, meaning the pre
   removed (not dimmed); focus crosses layers; inspector navigation re-focuses; exiting focus
   restores the pre-focus filter.
 
-### Test Case 5: Layout switch layered / force
+### Test Case 5: Layout switch across every layout
 - **Preconditions**: seed data; default view.
 - **Steps**:
-  1. Assert `graph-canvas` `data-layout="layered"` and `graph-layer-header-<app.id>` (visible) visible.
-  2. Click `graph-layout-toggle` radio "Force".
+  1. Assert `graph-canvas` `data-layout="organic"`, radio "Organic" `aria-checked="true"`, and
+     `graph-layer-header-<app.id>` count 0.
+  2. Click `graph-layout-toggle` radios "Clustered", "Orthogonal" and "Organic" in turn.
   3. Click `graph-layout-toggle` radio "Layered".
 - **Expected Result**:
-  - After 2: `graph-canvas` `data-layout="force"`; radio "Force" `aria-checked="true"`;
-    `graph-layer-header-<app.id>` and `graph-layer-header-<biz.id>` count 0; CRM, Billing and
-    Order Handling node buttons still visible; `graph-visible-counts` still `3 nodes · 1 edges`;
-    `graph-legend-layer` count still 2.
+  - After each click in 2: `graph-canvas` `data-layout` is `clustered` / `orthogonal` /
+    `organic`; that radio has `aria-checked="true"`; `graph-layer-header-<app.id>` and
+    `graph-layer-header-<biz.id>` count 0; CRM, Billing and Order Handling node buttons still
+    visible; `graph-visible-counts` still `3 nodes · 1 edges`; `graph-legend-layer` count still 2.
   - After 3: `data-layout="layered"`; radio "Layered" `aria-checked="true"`; both layer headers
     visible again; counts unchanged.
 - **Selectors Used**: `graph-canvas`, `graph-layout-toggle`, `graph-layer-header-{conceptSchemeId}`,
   `graph-visible-counts`, `graph-legend-layer` (+ role locators)
 - **Invariants Verified**: layout mode changes positioning only (identical node/edge set); layer
-  bands exist only in layered mode. Force is enabled because 3 nodes is below
-  `FORCE_LAYOUT_MAX_NODES` (250).
+  bands exist only in layered mode. Every layout is enabled because 3 nodes is below each
+  `LAYOUT_MAX_NODES` limit.
 
 ## Coverage Analysis
 
