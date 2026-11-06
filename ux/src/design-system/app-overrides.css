@@ -60,6 +60,11 @@ body.dark-canvas {
      amber / rose tint that keeps canvas-fg-1 text readable. */
   --status-warn-bg: 58 45 18;
   --status-error-bg: 72 24 36;
+  /* Same gap for the neutral semantic tokens (neutral Chip, ActivityTimeline
+     kind labels): their light values render near-white on the dark canvas. */
+  --semantic-neutral-fg: 203 213 225;
+  --semantic-neutral-bg: 51 65 85;
+  --semantic-neutral-border: 71 85 105;
   /* Brighter hierarchy level colors for the dark canvas. */
   --level-taxonomy: 167 139 250;
   --level-scheme: 34 211 238;

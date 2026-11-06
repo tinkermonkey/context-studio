@@ -1,12 +1,15 @@
 import { useCallback, useMemo } from "react";
 import {
   GraphCanvas,
+  GraphEdgeShape,
   GraphNode,
+  type GraphCanvasProps,
   type GraphNodeData,
   type GraphEdgeData,
 } from "@tinkermonkey/heimdall-ui";
 import type { GraphViewEdge, GraphViewLayer, GraphViewNode } from "@/api/hooks/graph";
 import {
+  HEIMDALL_LAYOUT,
   isCrossLayer,
   layerColorKey,
   layerIndexById,
@@ -45,8 +48,13 @@ export function truncateLabel(label: string | null | undefined): string | undefi
 /**
  * Layer-aware graph canvas. Nodes are colored by layer (concept scheme), carry
  * a C/I badge for class vs individual, and cross-layer edges are drawn "hot".
- * In layered mode every node is pinned into its layer's band; in force mode
- * Heimdall's force layout positions them.
+ * In layered mode every node is pinned into its layer's band; the other modes
+ * hand placement to a Heimdall layout engine.
+ *
+ * Heimdall re-runs its layout whenever `edges` or `renderNode` change, so both
+ * stay independent of the selection. Edge labels stay out of the layout input
+ * too (engines would spread nodes apart to fit every label); `renderEdge`
+ * draws them for the edges in focus.
  */
 export const GraphCanvasComponent = ({
   nodes,
@@ -101,23 +109,42 @@ export const GraphCanvasComponent = ({
 
   const heimdallEdges: GraphEdgeData[] = useMemo(
     () =>
-      edges.map((edge) => {
-        const incident =
-          selectedNodeId !== undefined &&
-          (edge.source === selectedNodeId || edge.target === selectedNodeId);
-        return {
-          id: edge.id,
-          sourceId: edge.source,
-          targetId: edge.target,
-          label: incident ? truncateLabel(edge.predicate) : undefined,
-          variant: isCrossLayer(edge, nodeById) ? "hot" : "default",
-        };
-      }),
-    [edges, nodeById, selectedNodeId],
+      edges.map((edge) => ({
+        id: edge.id,
+        sourceId: edge.source,
+        targetId: edge.target,
+        variant: isCrossLayer(edge, nodeById) ? "hot" : "default",
+      })),
+    [edges, nodeById],
   );
 
-  const renderNode = useCallback(
-    (data: GraphNodeData, selected: boolean) => {
+  const labelByEdgeId = useMemo(
+    () => new Map(edges.map((edge) => [edge.id, truncateLabel(edge.predicate)])),
+    [edges],
+  );
+
+  /** Labels show for edges touching the selected node and for the hovered edge. */
+  const renderEdge = useCallback<NonNullable<GraphCanvasProps["renderEdge"]>>(
+    (edge, geometry) => {
+      const showLabel =
+        geometry.hovered ||
+        (selectedNodeId !== undefined &&
+          (edge.sourceId === selectedNodeId || edge.targetId === selectedNodeId));
+      return (
+        <GraphEdgeShape
+          id={edge.id}
+          d={geometry.path}
+          mid={geometry.labelPos}
+          label={showLabel ? labelByEdgeId.get(edge.id) : undefined}
+          variant={edge.variant ?? "default"}
+        />
+      );
+    },
+    [selectedNodeId, labelByEdgeId],
+  );
+
+  const renderNode = useCallback<NonNullable<GraphCanvasProps["renderNode"]>>(
+    (data, selected, _hierarchy, props) => {
       const header = headerById.get(data.id);
       if (header) {
         return (
@@ -147,16 +174,16 @@ export const GraphCanvasComponent = ({
           kind={data.kind}
           domainColor={data.domainColor}
           selected={selected}
-          onSelect={onNodeSelect}
+          onSelect={props?.onSelect}
           className={classNames}
           aria-label={node ? `${node.label} (${node.node_type})` : data.label}
         />
       );
     },
-    [headerById, nodeById, focusNodeId, onNodeSelect],
+    [headerById, nodeById, focusNodeId],
   );
 
-  // Heimdall fits the viewport only on first render; remount when the node set changes.
+  // Heimdall fits the viewport only after its first layout; remount when the node set changes.
   const canvasKey = useMemo(() => `${layout}|${nodes.map((n) => n.id).join(",")}`, [layout, nodes]);
 
   const legendLayers = useMemo(() => {
@@ -250,10 +277,12 @@ export const GraphCanvasComponent = ({
             key={canvasKey}
             nodes={heimdallNodes}
             edges={heimdallEdges}
-            layout={layout === "layered" ? "manual" : "force"}
+            layout={HEIMDALL_LAYOUT[layout]}
             selectedNodeId={selectedNodeId}
             onNodeSelect={onNodeSelect}
             renderNode={renderNode}
+            renderEdge={renderEdge}
+            fitView
             className="graph-canvas__surface"
           />
         </>

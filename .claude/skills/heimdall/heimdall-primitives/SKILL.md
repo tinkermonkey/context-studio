@@ -1,6 +1,6 @@
 ---
 name: heimdall-primitives
-description: Heimdall component guide for Primitives: Icon, Button, Chip, Badge, StatusBadge, VersionPill, SegmentedControl
+description: Heimdall component guide for Primitives: Icon, Avatar, Button, Chip, Badge, StatusBadge, VersionPill, SegmentedControl
 ---
 
 Import all components from `@tinkermonkey/heimdall-ui`. Import the CSS once at your app entry point:
@@ -11,7 +11,7 @@ import '@tinkermonkey/heimdall-ui/css'
 
 ## Icon
 
-Renders a named SVG icon from the Heimdall icon set using `currentColor` for stroke.
+Renders a named outline icon from the Heimdall icon set. Use it for every icon; never paste raw SVG.
 
 ```tsx
 import { Icon } from '@tinkermonkey/heimdall-ui'
@@ -21,11 +21,9 @@ import { Icon } from '@tinkermonkey/heimdall-ui'
 
 | Prop | Type | Default | Description |
 | ---- | ---- | ------- | ----------- |
-| `name` | `IconName` | required | Icon to render (see list below) |
+| `name` | `IconName` | required | Key of the `ICONS` map |
 | `size` | `number` | `24` | Width and height in pixels |
-| `...SVGAttributes` | | | All standard SVG attributes |
-
-Available icon names: `'dashboard' | 'schema' | 'data' | 'pipeline' | 'graph' | 'search' | 'bell' | 'plus' | 'check' | 'x' | 'chevronDown' | 'chevronUp' | 'chevronLeft' | 'chevronRight' | 'menu' | 'settings' | 'alert' | 'trash' | 'edit' | 'download' | 'upload' | 'eye' | 'eyeOff' | 'clock' | 'calendar' | 'filter' | 'link' | 'lock' | 'unlock' | 'user' | 'copy' | 'info' | 'help' | 'spinner' | 'loading' | 'moreVertical' | 'moreHorizontal' | 'reload' | 'arrowRight' | 'arrowLeft' | 'arrowUp' | 'arrowDown' | 'star' | 'heart' | 'palette' | 'component' | 'table' | 'layout' | 'moon' | 'sun' | 'bar-chart' | 'trending-up' | 'trending-down' | 'send' | 'bot' | 'paperclip' | 'pie-chart' | 'slash' | 'file' | 'zap' | 'hardDrive'`
+| `...svgProps` | | | Remaining props spread onto the root `<svg>` |
 
 ### Usage
 
@@ -35,16 +33,98 @@ Available icon names: `'dashboard' | 'schema' | 'data' | 'pipeline' | 'graph' | 
 ```
 
 ```tsx
-// With aria-label for decorative/standalone icons
-<Icon name="alert" size={18} aria-label="Warning" />
-<Icon name="plus" size={14} className="text-amber-500" />
+// Standalone meaningful icon, and a tinted inline icon
+<Icon name="alert" size={18} role="img" aria-label="Warning" />
+<Icon name="gitBranch" size={14} className="text-amber-500" />
 ```
 
 ### Gotchas
 
-- `aria-hidden="true"` is set automatically unless you provide `aria-label`
-- Logs a console warning (does not throw) if the icon name doesn't exist
-- Uses `stroke`, not `fill` — color is inherited via `currentColor` from the parent
+- Valid names are the keys of `ICONS` (see "Icon map" below); the `IconName` type rejects anything else at compile time.
+- Key naming is mixed: most are camelCase (`chevronDown`, `eyeOff`, `hardDrive`), a few are kebab-case (`bar-chart`, `trending-up`, `pie-chart`). Check the exact key.
+- `aria-hidden` is set automatically unless `aria-label` is passed. `aria-label` alone does not add a role; pass `role="img"` for standalone icons that convey meaning.
+- An unknown name (e.g. from untyped data cast to `IconName`) logs a console warning and renders nothing.
+- Stroke-only (`fill="none"`, `stroke="currentColor"`, width 1.75): set color through the parent's or the icon's text color.
+- `spinner` and `loading` are static glyphs. Add a rotation animation yourself if they should spin.
+- Inside a `Button`, the button's CSS forces every child `<svg>` to 14×14 with stroke width 2, so `size` has no visible effect there.
+
+## Icon map
+
+`ICONS` is the name-to-path map behind `Icon`. `IconName` is `keyof typeof ICONS`. Each value is a single SVG path `d` string drawn on a 24×24 viewBox.
+
+```tsx
+import { ICONS, Icon, type IconName } from '@tinkermonkey/heimdall-ui'
+
+const iconNames = Object.keys(ICONS) as IconName[]
+
+export function IconGallery() {
+  return (
+    <div className="flex flex-wrap gap-3">
+      {iconNames.map((name) => (
+        <Icon key={name} name={name} size={16} role="img" aria-label={name} />
+      ))}
+    </div>
+  )
+}
+```
+
+Representative keys: `dashboard`, `schema`, `pipeline`, `graph`, `search`, `plus`, `x`, `chevronDown`, `settings`, `trash`, `filter`, `clock`, `folder`, `gitBranch`, `code`, `zoomIn`, `maximize`, `bar-chart`. Read `Object.keys(ICONS)` for the current set rather than relying on a copied list.
+
+- Type data-driven icon fields as `IconName` so typos fail at compile time.
+- Adding an icon to the library means adding a key and path string to `ICONS` in `src/components/Icon.tsx`; consumers cannot register icons at runtime.
+
+---
+
+## Avatar
+
+People identifier: renders a photo, or initials on a deterministic gradient, with an optional presence dot.
+
+```tsx
+import { Avatar } from '@tinkermonkey/heimdall-ui'
+```
+
+### Props
+
+| Prop | Type | Default | Description |
+| ---- | ---- | ------- | ----------- |
+| `name` | `string` | required | Full name; drives initials, gradient and accessible label |
+| `src` | `string` | — | Image URL; falls back to initials on load error |
+| `size` | `'xs' \| 'sm' \| 'md' \| 'lg'` | `'md'` | 20 / 28 / 36 / 64px |
+| `shape` | `'circle' \| 'rounded'` | `'circle'` | Circle or 6px-radius square |
+| `status` | `StatusColor` | — | Presence dot color, bottom-right |
+| `color` | `StatusColor \| string` | auto | Initials background; auto-derived from `name` |
+| `decorative` | `boolean` | — | Hide from assistive tech when name is shown nearby |
+| `...divProps` | | | Remaining props spread onto the root `<div>` |
+
+`StatusColor` is `'emerald' | 'amber' | 'rose' | 'cyan' | 'violet' | 'neutral'`.
+
+### Usage
+
+```tsx
+// Minimal
+<Avatar name="Ada Lovelace" />
+```
+
+```tsx
+// Photo with fallback, presence, explicit color, and a decorative avatar beside a visible name
+<Avatar name="Grace Hopper" src="/avatars/ghopper.png" size="lg" status="emerald" />
+<Avatar name="svc ingest" shape="rounded" size="sm" color="violet" />
+<Avatar name="Alan Turing" color="linear-gradient(135deg, #0f1729, #243763)" />
+<div className="flex items-center gap-2">
+  <Avatar name="Katherine Johnson" size="sm" decorative />
+  <span>Katherine Johnson</span>
+</div>
+```
+
+### Gotchas
+
+- Initials are the first letter of the first two space-separated words, uppercased. A single word like `svc_ingest` yields one letter; split on spaces if two are wanted.
+- Without `color`, the gradient is picked from the six status colors by hashing `name`, so the same name always gets the same color.
+- `color` accepts a `StatusColor` key (mapped to a gradient) or any CSS `background` value, which is applied as-is.
+- Not decorative: the root gets `role="img"` and `aria-label` of `name`, or `"name (status)"` when `status` is set. Passing `role` or `aria-label` overrides these.
+- After an image fails once, the avatar stays on initials even if `src` changes. Change `key` to retry a new URL.
+- The image renders with `alt=""`; the accessible name comes from the root label.
+- The status dot has a 2px ring in the canvas card color, so it reads correctly only on card or canvas backgrounds.
 
 ---
 
@@ -62,9 +142,10 @@ import { Button } from '@tinkermonkey/heimdall-ui'
 | ---- | ---- | ------- | ----------- |
 | `variant` | `'primary' \| 'accent' \| 'secondary' \| 'ghost' \| 'danger' \| 'link'` | `'primary'` | Visual style |
 | `size` | `'sm' \| 'md'` | `'md'` | Height: md=34px, sm=28px |
-| `icon` | `boolean` | `false` | Constrain to square for icon-only use |
-| `children` | `ReactNode` | required | Button label or content |
-| `...ButtonHTMLAttributes` | | | All standard button attributes |
+| `icon` | `boolean` | — | Square button for icon-only use |
+| `children` | `ReactNode` | required | Label, icon, or both |
+| `type` | `'button' \| 'submit' \| 'reset'` | `'button'` | Native button type |
+| `...buttonProps` | | | Remaining props spread onto the root `<button>` |
 
 ### Usage
 
@@ -74,26 +155,30 @@ import { Button } from '@tinkermonkey/heimdall-ui'
 ```
 
 ```tsx
-// Full variants
-<Button variant="primary">Create</Button>
+// Variants, icons, icon-only, form submit
+<Button variant="primary"><Icon name="plus" size={14} /> Create</Button>
 <Button variant="accent"><Icon name="upload" size={14} /> Run pipeline</Button>
 <Button variant="secondary" size="sm">Cancel</Button>
-<Button variant="ghost" icon><Icon name="plus" size={14} /></Button>
-<Button variant="danger" onClick={handleDelete}>Delete</Button>
-<Button variant="link">Learn more</Button>
-<Button disabled>Unavailable</Button>
+<Button variant="ghost" icon aria-label="Add class"><Icon name="plus" size={14} /></Button>
+<Button variant="danger" onClick={() => deleteClass('cls_organism')}>Delete</Button>
+<Button variant="link">View lineage</Button>
+<Button type="submit" disabled>Unavailable</Button>
 ```
 
 ### Gotchas
 
-- `type` defaults to `'button'`, not `'submit'` — set `type="submit"` explicitly inside forms
-- The `icon` prop makes the button square; you must size the child `<Icon>` yourself
+- `type` defaults to `'button'`, not `'submit'`; set `type="submit"` explicitly inside forms.
+- `icon` sets width equal to height (34px md, 28px sm, zero padding). Add `aria-label` since there is no text.
+- Every child `<svg>` is forced to 14×14 with stroke width 2 by the button CSS, regardless of `Icon`'s `size`.
+- `secondary` and `ghost` currently render identically (transparent, bordered). `primary` is near-black on light canvas and amber on dark canvas; `accent` is amber-700 in both.
+- `link` drops height, padding and border; it is underlined text in `accent-primary-deep`.
+- Disabled buttons use `opacity: 0.5` and `pointer-events: none`, so tooltips or hover handlers on a disabled button never fire. Wrap it if a tooltip is needed.
 
 ---
 
 ## Chip
 
-Inline status and label tag for entity types, environment names, and identifiers.
+Inline tag for statuses, identifiers, versions, environments and inferred values.
 
 ```tsx
 import { Chip } from '@tinkermonkey/heimdall-ui'
@@ -103,37 +188,41 @@ import { Chip } from '@tinkermonkey/heimdall-ui'
 
 | Prop | Type | Default | Description |
 | ---- | ---- | ------- | ----------- |
-| `variant` | `'emerald' \| 'amber' \| 'rose' \| 'cyan' \| 'violet' \| 'neutral'` | `'neutral'` | Semantic color (only applies to `form='default'`) |
-| `form` | `'default' \| 'id-tag' \| 'version' \| 'env'` | `'default'` | Visual style |
+| `variant` | `'emerald' \| 'amber' \| 'rose' \| 'cyan' \| 'violet' \| 'neutral'` | `'neutral'` | Semantic color; only used when `form='default'` |
+| `form` | `'default' \| 'id-tag' \| 'version' \| 'env' \| 'inferred'` | `'default'` | Visual style |
 | `children` | `ReactNode` | required | Label text |
+| `...spanProps` | | | Remaining props spread onto the root `<span>` |
 
 ### Usage
 
 ```tsx
 // Status chip (default form)
-<Chip variant="cyan">running</Chip>
-<Chip variant="emerald">success</Chip>
-<Chip variant="rose">failed</Chip>
+<Chip variant="emerald">running</Chip>
 ```
 
 ```tsx
-// Specialized forms
+// Every form
+<Chip variant="cyan">pulling</Chip>
+<Chip variant="rose">failed</Chip>
 <Chip form="id-tag">cls_4f3a</Chip>
 <Chip form="version">v2.4.0</Chip>
 <Chip form="env">production</Chip>
+<Chip form="inferred">life.organism</Chip>
 ```
 
 ### Gotchas
 
-- `variant` is silently ignored when `form` is anything other than `'default'`
-- `form='default'` and `form='env'` auto-render a colored dot — there is no way to suppress it
-- Semantic color guide: emerald=ok/success, rose=error/failed, cyan=active/updating, amber=warning, violet=secondary/pending, neutral=idle/stopped
+- `variant` is ignored for every `form` other than `'default'`.
+- `form='default'` and `form='env'` always render a leading 6px dot; there is no prop to hide it. The other forms have no dot.
+- `version` is fully rounded (one of the few allowed pills); `env` uses 6px radius; `inferred` has a dashed border and no fill, for values derived rather than asserted.
+- All forms are monospace 11px (`version` is 10.5px) and `white-space: nowrap`; long labels do not wrap.
+- Color mapping: emerald=ok/running, rose=error/failed, cyan=updating/pulling, amber=warning/degraded, violet=secondary/pending, neutral=stopped/idle.
 
 ---
 
 ## Badge
 
-A small colored dot indicator for inline use alongside text or icons.
+A static 8px colored dot for inline use beside text.
 
 ```tsx
 import { Badge } from '@tinkermonkey/heimdall-ui'
@@ -144,8 +233,8 @@ import { Badge } from '@tinkermonkey/heimdall-ui'
 | Prop | Type | Default | Description |
 | ---- | ---- | ------- | ----------- |
 | `color` | `'cyan' \| 'emerald' \| 'amber' \| 'violet' \| 'rose' \| 'neutral'` | `'cyan'` | Dot color |
-| `pulse` | `boolean` | `false` | Animated pulse ring (for live/active states) |
-| `...HTMLAttributes` | | | Standard span attributes |
+| `pulse` | `boolean` | `false` | Pulse the dot itself (scale and fade) |
+| `...spanProps` | | | Remaining props spread onto the root `<span>` |
 
 ### Usage
 
@@ -156,7 +245,7 @@ import { Badge } from '@tinkermonkey/heimdall-ui'
 
 ```tsx
 // Inline with text
-<span className="flex items-center gap-1">
+<span className="inline-flex items-center gap-1.5">
   <Badge color="cyan" />
   syncing
 </span>
@@ -164,13 +253,14 @@ import { Badge } from '@tinkermonkey/heimdall-ui'
 
 ### Gotchas
 
-- `Badge` renders as `<span>`; use `StatusBadge` instead when you need the animated pulse halo
+- `pulse` animates the dot itself, which fades fully out each 1.6s cycle. For a live indicator with a solid dot and a pulsing halo, use `StatusBadge`.
+- Renders an empty `<span>` with no role or label. Pair it with visible text, or add `role="img"` and `aria-label`.
 
 ---
 
 ## StatusBadge
 
-Colored dot with optional pulse animation for live status indicators.
+Solid 8px dot with an optional pulsing halo, for live status indicators.
 
 ```tsx
 import { StatusBadge } from '@tinkermonkey/heimdall-ui'
@@ -180,10 +270,10 @@ import { StatusBadge } from '@tinkermonkey/heimdall-ui'
 
 | Prop | Type | Default | Description |
 | ---- | ---- | ------- | ----------- |
-| `color` | `'cyan' \| 'emerald' \| 'amber' \| 'violet' \| 'rose' \| 'neutral'` | `'cyan'` | Dot color |
-| `pulse` | `boolean` | `false` | Animated pulse halo |
-| `role` | `string` | `'img'` | ARIA role; override with `'presentation'` if purely decorative |
-| `...HTMLAttributes` | | | Standard div attributes |
+| `color` | `'cyan' \| 'emerald' \| 'amber' \| 'violet' \| 'rose' \| 'neutral'` | `'cyan'` | Dot and halo color |
+| `pulse` | `boolean` | `false` | Animate the halo behind the dot |
+| `role` | `AriaRole` | `'img'` | ARIA role; use `'presentation'` when decorative |
+| `...divProps` | | | Remaining props spread onto the root `<div>` |
 
 ### Usage
 
@@ -193,21 +283,23 @@ import { StatusBadge } from '@tinkermonkey/heimdall-ui'
 ```
 
 ```tsx
-// Pulsing live indicator
-<StatusBadge color="cyan" pulse aria-label="syncing" />
-<StatusBadge color="rose" aria-label="error" />
+// Live and static states
+<StatusBadge color="cyan" pulse aria-label="pulling" />
+<StatusBadge color="rose" aria-label="failed" />
+<StatusBadge color="neutral" role="presentation" />
 ```
 
 ### Gotchas
 
-- Renders as `<div>` (block element), unlike `Badge` which is `<span>`
-- Pulse adds an extra halo DOM element — avoid using inside very tight layouts
+- Defaults to `role="img"`, so always pass `aria-label` (or set `role="presentation"`).
+- Renders a `<div>` displayed `inline-flex`; it sits inline with text but is invalid inside a `<p>` or other phrasing-only parent. Use `Badge` there.
+- The halo is a CSS pseudo-element (no extra DOM), scaling 0.6→1.4 and fading over 1.6s; it overflows the 8px box, so leave a few pixels of room.
 
 ---
 
 ## VersionPill
 
-Compact amber monospace tag for displaying version strings.
+Compact monospace tag for version strings, tinted by tone.
 
 ```tsx
 import { VersionPill } from '@tinkermonkey/heimdall-ui'
@@ -217,33 +309,38 @@ import { VersionPill } from '@tinkermonkey/heimdall-ui'
 
 | Prop | Type | Default | Description |
 | ---- | ---- | ------- | ----------- |
-| `children` | `ReactNode` | required | Version string content |
-| `...HTMLAttributes` | | | Standard span attributes |
+| `children` | `ReactNode` | required | Version text |
+| `tone` | `'amber' \| 'emerald' \| 'rose'` | `'amber'` | Tint color |
+| `...spanProps` | | | Remaining props spread onto the root `<span>` |
 
 ### Usage
 
 ```tsx
+// Minimal
 <VersionPill>v1.0.0</VersionPill>
 ```
 
 ```tsx
-// Inside a header row
+// Tones, inside a header row
 <div className="flex items-center gap-2">
-  <h2>My Component</h2>
+  <h2>cls_organism</h2>
   <VersionPill>v2.3.4</VersionPill>
+  <VersionPill tone="emerald">v2.4.0</VersionPill>
+  <VersionPill tone="rose">v2.2.1</VersionPill>
 </div>
 ```
 
 ### Gotchas
 
-- Always amber background — not color-customizable
-- No format validation; any string is accepted
+- Fixed 18px height, 10.5px semibold mono, 3px radius, `white-space: nowrap`; meant for short strings.
+- No format validation; any content is rendered as-is.
+- Only three tones exist. For other semantic colors use `Chip form="version"` or a `Chip` variant.
 
 ---
 
 ## SegmentedControl
 
-Accessible radio-button group rendered as a connected pill row for mutually exclusive filter/view selection.
+Radio group rendered as a connected row of segments, for mutually exclusive view or filter selection.
 
 ```tsx
 import { SegmentedControl } from '@tinkermonkey/heimdall-ui'
@@ -254,9 +351,12 @@ import { SegmentedControl } from '@tinkermonkey/heimdall-ui'
 | Prop | Type | Default | Description |
 | ---- | ---- | ------- | ----------- |
 | `value` | `string \| number` | required | Currently selected value |
-| `onChange` | `(value: string \| number) => void` | required | Called on selection change |
-| `options` | `SegmentedControlOption[]` | required | Array of option definitions |
-| `disabled` | `boolean` | `false` | Disable the entire control |
+| `onChange` | `(value: string \| number) => void` | required | Called with the newly selected value |
+| `options` | `SegmentedControlOption[]` | required | Segments to render |
+| `disabled` | `boolean` | `false` | Disable every segment |
+| `...divProps` | | | Remaining props spread onto the root `<div role="radiogroup">` |
+
+### Data types
 
 ```ts
 interface SegmentedControlOption {
@@ -270,11 +370,12 @@ interface SegmentedControlOption {
 
 ```tsx
 // Minimal
-const [view, setView] = useState('all')
+const [view, setView] = useState<string | number>('all')
 
 <SegmentedControl
   value={view}
   onChange={setView}
+  aria-label="Class filter"
   options={[
     { value: 'all', label: 'All' },
     { value: 'active', label: 'Active' },
@@ -284,13 +385,17 @@ const [view, setView] = useState('all')
 ```
 
 ```tsx
-// With per-option disabling and icons
+// Narrow string state, icon labels, a disabled option
+type Range = 'today' | 'week' | 'month'
+const [range, setRange] = useState<Range>('today')
+
 <SegmentedControl
-  value={view}
-  onChange={setView}
+  value={range}
+  onChange={(v) => setRange(v as Range)}
+  aria-label="Time range"
   options={[
     { value: 'today', label: 'Today' },
-    { value: 'week', label: 'This week' },
+    { value: 'week', label: <><Icon name="calendar" size={12} /> This week</> },
     { value: 'month', label: 'This month', disabled: true },
   ]}
 />
@@ -298,6 +403,9 @@ const [view, setView] = useState('all')
 
 ### Gotchas
 
-- Arrow keys navigate between enabled options; disabled options are skipped entirely
-- If the current `value` matches no option, the first enabled option receives `tabIndex={0}` for keyboard access
-- Don't mix string and number types in `value` across options and the controlled `value` prop
+- `onChange` receives `string | number`. Passing a `useState<string>` setter directly fails to type-check; type the state `string | number` or cast in a wrapper.
+- Selection follows focus: arrow keys (Left/Up, Right/Down) move focus and call `onChange` immediately, wrapping around and skipping disabled options.
+- Clicking the already-active segment still calls `onChange` with the same value.
+- If `value` matches no option, nothing is shown as selected and the first enabled option takes the tab stop.
+- Option values are used as React keys and compared with `===`; keep them unique and of one type (`1` and `'1'` do not match).
+- The root has `role="radiogroup"` but no label; pass `aria-label` or `aria-labelledby`.

@@ -14,7 +14,8 @@ import {
 /**
  * Layered graph view (/app/graph): concept schemes are layers, classes and
  * individuals are nodes. Covers the layer filter, the node inspector, focus
- * mode and the layered/force layout switch.
+ * mode and the layout switch (organic by default; clustered, orthogonal and
+ * layered).
  *
  * Plan: ux/e2e/documentation/specs/layered-graph-view.md
  *
@@ -107,6 +108,7 @@ test.describe("Layered Graph View", () => {
     const layoutToggle = page.getByTestId("graph-layout-toggle");
     const kindFilter = page.getByTestId("graph-node-kind-filter");
 
+    await layoutToggle.getByRole("radio", { name: "Layered" }).click();
     await expect(canvas).toHaveAttribute("data-layout", "layered");
     await expect(layoutToggle.getByRole("radio", { name: "Layered" })).toHaveAttribute(
       "aria-checked",
@@ -154,6 +156,9 @@ test.describe("Layered Graph View", () => {
     const panel = page.getByTestId("graph-layer-filter-panel");
     const appOption = panel.getByRole("option", { name: /^Application/ });
     const bizOption = panel.getByRole("option", { name: /^Business/ });
+
+    // Layer headers (one per visible layer) exist only in the layered layout.
+    await page.getByTestId("graph-layout-toggle").getByRole("radio", { name: "Layered" }).click();
 
     // 1-2: open the panel, both layers selected.
     await trigger.click();
@@ -349,33 +354,41 @@ test.describe("Layered Graph View", () => {
     await expect(inspector).toContainText("Billing Service");
   });
 
-  test("layout switch between layered and force keeps the same nodes and edges", async ({
-    page,
-  }) => {
+  test("layout switch keeps the same nodes and edges across every layout", async ({ page }) => {
     const canvas = page.getByTestId("graph-canvas");
     const layoutToggle = page.getByTestId("graph-layout-toggle");
     const counts = page.getByTestId("graph-visible-counts");
 
-    // 1: default layered layout with layer headers.
-    await expect(canvas).toHaveAttribute("data-layout", "layered");
-    await expect(layerHeader(page, seed.app.id).filter({ visible: true })).toBeVisible();
-
-    // 2: switch to force — no layer headers, same node/edge set.
-    await layoutToggle.getByRole("radio", { name: "Force" }).click();
-    await expect(canvas).toHaveAttribute("data-layout", "force");
-    await expect(layoutToggle.getByRole("radio", { name: "Force" })).toHaveAttribute(
+    // 1: default organic layout — no layer headers.
+    await expect(canvas).toHaveAttribute("data-layout", "organic");
+    await expect(layoutToggle.getByRole("radio", { name: "Organic" })).toHaveAttribute(
       "aria-checked",
       "true",
     );
     await expect(layerHeader(page, seed.app.id)).toHaveCount(0);
-    await expect(layerHeader(page, seed.biz.id)).toHaveCount(0);
-    await expect(canvasNode(page, "CRM System (individual)")).toBeVisible();
-    await expect(canvasNode(page, "Billing Service (individual)")).toBeVisible();
-    await expect(canvasNode(page, "Order Handling (individual)")).toBeVisible();
-    await expect(counts).toHaveText("3 nodes · 1 edges");
-    await expect(page.getByTestId("graph-legend-layer")).toHaveCount(2);
 
-    // 3: back to layered — headers return, counts unchanged.
+    // 2: each engine layout shows the same node/edge set without layer headers.
+    for (const [name, layout] of [
+      ["Clustered", "clustered"],
+      ["Orthogonal", "orthogonal"],
+      ["Organic", "organic"],
+    ]) {
+      await layoutToggle.getByRole("radio", { name }).click();
+      await expect(canvas).toHaveAttribute("data-layout", layout);
+      await expect(layoutToggle.getByRole("radio", { name })).toHaveAttribute(
+        "aria-checked",
+        "true",
+      );
+      await expect(layerHeader(page, seed.app.id)).toHaveCount(0);
+      await expect(layerHeader(page, seed.biz.id)).toHaveCount(0);
+      await expect(canvasNode(page, "CRM System (individual)")).toBeVisible();
+      await expect(canvasNode(page, "Billing Service (individual)")).toBeVisible();
+      await expect(canvasNode(page, "Order Handling (individual)")).toBeVisible();
+      await expect(counts).toHaveText("3 nodes · 1 edges");
+      await expect(page.getByTestId("graph-legend-layer")).toHaveCount(2);
+    }
+
+    // 3: layered — headers appear, counts unchanged.
     await layoutToggle.getByRole("radio", { name: "Layered" }).click();
     await expect(canvas).toHaveAttribute("data-layout", "layered");
     await expect(layoutToggle.getByRole("radio", { name: "Layered" })).toHaveAttribute(

@@ -13,9 +13,6 @@ export const LAYER_PALETTE_SIZE = 12;
 /** Layers shown by default: enough to see cross-layer edges without a hairball. */
 export const DEFAULT_LAYER_COUNT = 3;
 
-/** Force layout is O(n²) per iteration in Heimdall; above this it freezes the page. */
-export const FORCE_LAYOUT_MAX_NODES = 250;
-
 export const MIN_FOCUS_DEPTH = 1;
 export const MAX_FOCUS_DEPTH = 3;
 
@@ -28,7 +25,36 @@ export interface GraphSearchParams {
 }
 
 export type NodeKindFilter = "all" | "class" | "individual";
-export type GraphLayoutMode = "layered" | "force";
+/**
+ * Graph layouts. `layered` is ours (one band per layer, pinned positions); the
+ * rest are Heimdall layout engines.
+ */
+export type GraphLayoutMode = "organic" | "clustered" | "orthogonal" | "layered";
+
+export const DEFAULT_LAYOUT: GraphLayoutMode = "organic";
+
+/** Heimdall `GraphCanvas` layout for each mode; layered positions every node itself. */
+export const HEIMDALL_LAYOUT = {
+  organic: "organic",
+  clustered: "force-clustered",
+  orthogonal: "orthogonal",
+  layered: "manual",
+} as const satisfies Record<GraphLayoutMode, string>;
+
+/**
+ * Heimdall's engines run on the main thread; above these node counts they
+ * freeze the page for too long, so the layout is not offered. Layered has no
+ * limit.
+ */
+export const LAYOUT_MAX_NODES: Partial<Record<GraphLayoutMode, number>> = {
+  organic: 1000,
+  clustered: 500,
+  orthogonal: 80,
+};
+
+export function layoutFits(layout: GraphLayoutMode, nodeCount: number): boolean {
+  return nodeCount <= (LAYOUT_MAX_NODES[layout] ?? Number.POSITIVE_INFINITY);
+}
 
 export interface GraphFilter {
   layerIds: string[];
