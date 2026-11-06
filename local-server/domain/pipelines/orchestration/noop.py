@@ -10,8 +10,9 @@ Exercises:
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, replace
-from typing import cast
+from typing import Any, cast
 
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.orchestration.base import (
@@ -42,6 +43,9 @@ class NoOpPipelineOrchestrator(PipelineOrchestrator):
     1. Initialize — set up state
     2. Process — simulate work (no LLM call)
     3. Finalize — populate result and metrics
+
+    The input may ask for a long run: `items` work items of `item_seconds`
+    each, reporting progress after every item (for testing background runs).
     """
 
     def __init__(
@@ -99,7 +103,14 @@ class NoOpPipelineOrchestrator(PipelineOrchestrator):
             )
             raise
 
-        # Step 3: Process (no-op)
+        # Step 3: Process (no-op), item by item when the input asks for items
+        items = _non_negative(noop_state.input_data.get("items"), int)
+        item_seconds = _non_negative(noop_state.input_data.get("item_seconds"), float)
+        if items:
+            self._report_progress(0, items)
+        for done in range(1, items + 1):
+            await asyncio.sleep(item_seconds)
+            self._report_progress(done, items)
         noop_state = replace(
             noop_state,
             steps_completed=(noop_state.steps_completed or []) + ["process"],
@@ -126,3 +137,10 @@ class NoOpPipelineOrchestrator(PipelineOrchestrator):
         )
 
         return noop_state
+
+
+def _non_negative(value: Any, kind: type) -> Any:
+    """The value as a non-negative int or float, or 0 when it is not a number."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return kind(0)
+    return kind(max(0, value))

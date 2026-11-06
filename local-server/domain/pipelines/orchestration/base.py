@@ -94,6 +94,15 @@ class PipelineOrchestrator(ABC):
         if self._run_id and self._status_writer:
             self._status_writer.update_running_status(self._run_id, datetime.now(timezone.utc))
 
+    def _report_progress(self, items_done: int, items_total: int | None) -> None:
+        """
+        Record progress on the run: items_done of items_total work items.
+
+        Only writes if both run_id and status_writer are available.
+        """
+        if self._run_id and self._status_writer:
+            self._status_writer.update_progress(self._run_id, items_done, items_total)
+
     @abstractmethod
     async def execute(self, state: PipelineState) -> PipelineState:
         """
