@@ -341,6 +341,8 @@ class TestImport:
         assert {o.status for o in old.operations} == {OperationStatus.REJECTED}
         assert old.operations[0].reason == f"superseded by bundle proposal {second.id}"
         assert proposals.get(second.id).status is ProposalStatus.OPEN
+        # Nobody judged the superseded operations: no gold decisions (#1407).
+        assert proposals.decisions_of(first.id) == {}
 
     @pytest.mark.parametrize(
         "error", [ProposalValidationError([]), RuntimeError("disk full")], ids=["invalid", "other"]

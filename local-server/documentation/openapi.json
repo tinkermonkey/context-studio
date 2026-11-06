@@ -7279,6 +7279,369 @@
         }
       }
     },
+    "/api/taxonomies/{taxonomy_id}/gold": {
+      "get": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "List Gold",
+        "description": "The taxonomy's gold: every reviewer or policy decision on its proposals'\noperations, oldest first. Decisions a revert superseded are left out unless\ninclude_superseded.",
+        "operationId": "list_gold_api_taxonomies__taxonomy_id__gold_get",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Maximum number of results",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of results"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of results to skip",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of results to skip"
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/OperationKind"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only operations on this kind",
+              "title": "Kind"
+            },
+            "description": "Only operations on this kind"
+          },
+          {
+            "name": "op",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/OperationType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only this operation: create, update, move or delete",
+              "title": "Op"
+            },
+            "description": "Only this operation: create, update, move or delete"
+          },
+          {
+            "name": "decision",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/DecisionKind"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only applied, rejected or applied_with_edits",
+              "title": "Decision"
+            },
+            "description": "Only applied, rejected or applied_with_edits"
+          },
+          {
+            "name": "decided_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only decisions by user, policy, an agent source or unknown",
+              "title": "Decided By"
+            },
+            "description": "Only decisions by user, policy, an agent source or unknown"
+          },
+          {
+            "name": "decided_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Decided at or after",
+              "title": "Decided From"
+            },
+            "description": "Decided at or after"
+          },
+          {
+            "name": "decided_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Decided before",
+              "title": "Decided To"
+            },
+            "description": "Decided before"
+          },
+          {
+            "name": "include_superseded",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Also decisions a revert superseded",
+              "default": false,
+              "title": "Include Superseded"
+            },
+            "description": "Also decisions a revert superseded"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResponse_GoldDecisionResponse_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/taxonomies/{taxonomy_id}/gold/export": {
+      "get": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Export Gold",
+        "description": "The taxonomy's gold as JSONL: the list route's decisions and filters, all of them.",
+        "operationId": "export_gold_api_taxonomies__taxonomy_id__gold_export_get",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/OperationKind"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only operations on this kind",
+              "title": "Kind"
+            },
+            "description": "Only operations on this kind"
+          },
+          {
+            "name": "op",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/OperationType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only this operation: create, update, move or delete",
+              "title": "Op"
+            },
+            "description": "Only this operation: create, update, move or delete"
+          },
+          {
+            "name": "decision",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/DecisionKind"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only applied, rejected or applied_with_edits",
+              "title": "Decision"
+            },
+            "description": "Only applied, rejected or applied_with_edits"
+          },
+          {
+            "name": "decided_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only decisions by user, policy, an agent source or unknown",
+              "title": "Decided By"
+            },
+            "description": "Only decisions by user, policy, an agent source or unknown"
+          },
+          {
+            "name": "decided_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Decided at or after",
+              "title": "Decided From"
+            },
+            "description": "Decided at or after"
+          },
+          {
+            "name": "decided_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Decided before",
+              "title": "Decided To"
+            },
+            "description": "Decided before"
+          },
+          {
+            "name": "include_superseded",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Also decisions a revert superseded",
+              "default": false,
+              "title": "Include Superseded"
+            },
+            "description": "Also decisions a revert superseded"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Every matching decision, one GoldDecisionResponse JSON object per line",
+            "content": {
+              "application/x-ndjson": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/taxonomies/{taxonomy_id}/approval-policy": {
       "get": {
         "tags": [
@@ -10105,6 +10468,16 @@
         "title": "DatasetUpdateRequest",
         "description": "Request to update a dataset."
       },
+      "DecisionKind": {
+        "type": "string",
+        "enum": [
+          "applied",
+          "rejected",
+          "applied_with_edits"
+        ],
+        "title": "DecisionKind",
+        "description": "What was decided."
+      },
       "DecisionModelListResponse": {
         "properties": {
           "default": {
@@ -10413,6 +10786,30 @@
               }
             ],
             "title": "Result Entity Id"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At",
+            "description": "When the operation was decided (ISO 8601); null if undecided"
+          },
+          "decided_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided By",
+            "description": "Who decided: user, policy, an agent source, or unknown (decided before decisions were recorded); null if undecided"
           }
         },
         "type": "object",
@@ -10907,6 +11304,180 @@
         ],
         "title": "ExtractionResultSchema",
         "description": "Response containing the complete output of an extraction operation."
+      },
+      "GoldDecisionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "operation_id": {
+            "type": "string",
+            "title": "Operation Id"
+          },
+          "proposal_id": {
+            "type": "string",
+            "title": "Proposal Id"
+          },
+          "taxonomy_id": {
+            "type": "string",
+            "title": "Taxonomy Id"
+          },
+          "seq": {
+            "type": "integer",
+            "title": "Seq"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/OperationKind"
+          },
+          "op": {
+            "$ref": "#/components/schemas/OperationType"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/DecisionKind",
+            "description": "applied, rejected or applied_with_edits"
+          },
+          "decided_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Decided At"
+          },
+          "decided_by": {
+            "type": "string",
+            "title": "Decided By",
+            "description": "user, policy, an agent source, or unknown (decided before decisions were recorded)"
+          },
+          "proposed": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Proposed",
+            "description": "The operation as proposed: seq, op, kind, target_id, ref, fields, base, rationale, evidence, probability, scope, proposed_replacement_id"
+          },
+          "applied_fields": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applied Fields",
+            "description": "The fields finally applied (the edit, if edited); null when rejected"
+          },
+          "result_entity_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Entity Id"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Why (a reject note)"
+          },
+          "resolution": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution",
+            "description": "An applied relationship-type delete's in-use resolution"
+          },
+          "chosen_alternative": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chosen Alternative",
+            "description": "The alternative the reviewer chose, when there is one"
+          },
+          "probability": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Probability"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model",
+            "description": "The decision model that produced the probability, if one did"
+          },
+          "superseded_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Superseded At"
+          },
+          "superseded_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Superseded By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "operation_id",
+          "proposal_id",
+          "taxonomy_id",
+          "seq",
+          "kind",
+          "op",
+          "decision",
+          "decided_at",
+          "decided_by",
+          "proposed"
+        ],
+        "title": "GoldDecisionResponse",
+        "description": "One reviewer or policy decision on a proposal operation: gold.\n\nA revert supersedes the proposal's decisions (superseded_at, superseded_by)\nrather than deleting them."
       },
       "GraphMetricsResponse": {
         "properties": {
@@ -12366,6 +12937,41 @@
           "offset"
         ],
         "title": "ListResponse[DataPropertyValueResponse]"
+      },
+      "ListResponse_GoldDecisionResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/GoldDecisionResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total number of items"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Limit applied"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Offset applied"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "ListResponse[GoldDecisionResponse]"
       },
       "ListResponse_ImportRunResponse_": {
         "properties": {

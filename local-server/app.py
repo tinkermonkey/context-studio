@@ -21,6 +21,7 @@ from typing import cast
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.exc import OperationalError
 
 from adapters.chat.context import ConfigChatSettings, OntologyWorkspaceContext
 from adapters.chat.proposal_tools import build_proposal_tools
@@ -570,8 +571,18 @@ async def lifespan(app: FastAPI):
         )
 
         approval_policy_repo = SQLiteApprovalPolicyRepository(shared_session_factory)
+        proposal_repo = SQLiteChangeProposalRepository(shared_session_factory)
+        # Gold backfill (#1407): operations decided before decisions were
+        # recorded get one (decided_by "unknown"). Idempotent: once every decided
+        # operation has a decision, this finds nothing.
+        try:
+            backfilled = proposal_repo.backfill_decisions()
+            if backfilled:
+                logger.info("Gold backfill: recorded %d decisions", backfilled)
+        except OperationalError as exc:  # local.db not migrated to the gold table yet
+            logger.error("Gold backfill skipped (run migrations): %s", exc)
         proposal_service = ProposalService(
-            proposals=SQLiteChangeProposalRepository(shared_session_factory),
+            proposals=proposal_repo,
             ontology_service=ontology_service,
             ontology_repo=cast(OntologyRepository, ontology_repo),
             revert_service=revert_service,

@@ -1,16 +1,18 @@
 """
 FastAPI routes for change proposals: list, get, propose, apply, reject, revert,
-and the decisions export for DR reflection plans.
+the decisions export for DR reflection plans, and each taxonomy's gold (every
+recorded decision).
 
 A proposal is a run: everything applied from it is tagged with its id, so
 reverting it undoes them. Each route is a thin adapter over ProposalService;
 service calls touch SQLite, so they run in the thread pool.
 """
 
+from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 
 from adapters.interchange.dr_decisions import decisions_for
 from adapters.persistence.sqlite.transaction import TransactionAbortedError
@@ -28,6 +30,7 @@ from adapters.web.schemas.proposals import (
     ChangeProposalRevertResponse,
     ChangeProposalValidationErrorResponse,
     DrDecisionResponse,
+    GoldDecisionResponse,
 )
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.versioning.approval_policy import ApprovalPolicyService
@@ -38,9 +41,12 @@ from domain.versioning.exceptions import (
     RevertConflictError,
     RevertRefusedError,
 )
+from domain.versioning.gold import DecisionFilter, DecisionKind
 from domain.versioning.proposal_service import OperationDraft, ProposalService
 from domain.versioning.proposals import (
     InUseResolution,
+    OperationKind,
+    OperationType,
     ProposalSource,
     ProposalStatus,
 )
@@ -182,7 +188,8 @@ async def get_proposal_decisions(
     """
 
     def run() -> list[dict]:
-        return decisions_for(service.get(proposal_id))
+        proposal = service.get(proposal_id)
+        return decisions_for(proposal, service.decisions_of(proposal.id))
 
     try:
         decisions = await run_sync_in_executor(run)
@@ -429,6 +436,104 @@ async def revert_proposal(
         return await run_sync_in_executor(run)
     except Exception as exc:
         raise _http_error(exc) from exc
+
+
+# ==================== Gold ====================
+
+
+def _gold_filter(
+    taxonomy_id: str,
+    kind: Optional[OperationKind] = Query(None, description="Only operations on this kind"),
+    op: Optional[OperationType] = Query(
+        None, description="Only this operation: create, update, move or delete"
+    ),
+    decision: Optional[DecisionKind] = Query(
+        None, description="Only applied, rejected or applied_with_edits"
+    ),
+    decided_by: Optional[str] = Query(
+        None, description="Only decisions by user, policy, an agent source or unknown"
+    ),
+    decided_from: Optional[datetime] = Query(None, description="Decided at or after"),
+    decided_to: Optional[datetime] = Query(None, description="Decided before"),
+    include_superseded: bool = Query(False, description="Also decisions a revert superseded"),
+) -> DecisionFilter:
+    """The gold routes' filters."""
+    return DecisionFilter(
+        taxonomy_id=taxonomy_id,
+        kind=kind,
+        op=op,
+        decision=decision,
+        decided_by=decided_by,
+        decided_from=decided_from,
+        decided_to=decided_to,
+        include_superseded=include_superseded,
+    )
+
+
+@router.get(
+    "/taxonomies/{taxonomy_id}/gold",
+    response_model=ListResponse[GoldDecisionResponse],
+    responses={404: {"description": "Taxonomy not found"}},
+)
+async def list_gold(
+    filters: DecisionFilter = Depends(_gold_filter),
+    limit: int = Query(50, ge=1, le=500, description="Maximum number of results"),
+    offset: int = Query(0, ge=0, description="Number of results to skip"),
+    service: ProposalService = Depends(get_proposal_service),
+) -> ListResponse[GoldDecisionResponse]:
+    """
+    The taxonomy's gold: every reviewer or policy decision on its proposals'
+    operations, oldest first. Decisions a revert superseded are left out unless
+    include_superseded.
+    """
+
+    def run() -> ListResponse[GoldDecisionResponse]:
+        decisions = service.list_decisions(filters, limit, offset)
+        return ListResponse(
+            items=[GoldDecisionResponse.from_domain(d) for d in decisions],
+            total=service.count_decisions(filters),
+            limit=limit,
+            offset=offset,
+        )
+
+    try:
+        return await run_sync_in_executor(run)
+    except Exception as exc:
+        raise _policy_error(exc) from exc
+
+
+@router.get(
+    "/taxonomies/{taxonomy_id}/gold/export",
+    response_class=StreamingResponse,
+    responses={
+        200: {
+            "content": {"application/x-ndjson": {"schema": {"type": "string"}}},
+            "description": "Every matching decision, one GoldDecisionResponse JSON object per line",
+        },
+        404: {"description": "Taxonomy not found"},
+    },
+)
+async def export_gold(
+    filters: DecisionFilter = Depends(_gold_filter),
+    service: ProposalService = Depends(get_proposal_service),
+) -> StreamingResponse:
+    """The taxonomy's gold as JSONL: the list route's decisions and filters, all of them."""
+
+    def run() -> list[str]:
+        return [
+            GoldDecisionResponse.from_domain(d).model_dump_json() + "\n"
+            for d in service.list_decisions(filters)
+        ]
+
+    try:
+        lines = await run_sync_in_executor(run)
+    except Exception as exc:
+        raise _policy_error(exc) from exc
+    return StreamingResponse(
+        iter(lines),
+        media_type="application/x-ndjson",
+        headers={"Content-Disposition": f'attachment; filename="gold-{filters.taxonomy_id}.jsonl"'},
+    )
 
 
 # ==================== Approval policy ====================

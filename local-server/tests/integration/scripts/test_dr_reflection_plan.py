@@ -495,12 +495,15 @@ def test_decisions_export_in_drs_shape(parts):
     proposals.apply(proposal.id, [ops[1].id, ops[14].id, ops[28].id])
     proposals.reject(proposal.id, [ops[13].id], note="Keep references")
 
-    decisions = decisions_for(proposals.get(proposal.id))
+    recorded = proposals.decisions_of(proposal.id)
+    decisions = decisions_for(proposals.get(proposal.id), recorded)
 
     by_seq = {d["seq"]: d for d in decisions}
     assert [d["seq"] for d in decisions] == [1, 9, 13, 14, 28]
     assert all(
-        set(d) == {"seq", "op_id", "status", "reason", "result_entity_id"} for d in decisions
+        set(d)
+        == {"seq", "op_id", "status", "reason", "result_entity_id", "decided_at", "decided_by"}
+        for d in decisions
     )
     assert by_seq[1] == {
         "seq": 1,
@@ -508,7 +511,12 @@ def test_decisions_export_in_drs_shape(parts):
         "status": "applied",
         "reason": None,
         "result_entity_id": ops[1].target_id,
+        "decided_at": recorded[ops[1].id].decided_at.isoformat(),
+        "decided_by": "user",
     }
+    assert by_seq[13]["decided_by"] == "user"
+    # Undecided (pending, failed): no decision recorded.
+    assert by_seq[9]["decided_at"] is None and by_seq[28]["decided_by"] is None
     assert by_seq[13]["status"] == "rejected" and by_seq[13]["reason"] == "Keep references"
     assert by_seq[14]["status"] == "applied"
     assert by_seq[28]["status"] == "failed"
@@ -960,6 +968,8 @@ def test_decisions_export_reports_what_was_applied(parts):
         },
         "reason": None,
         "result_entity_id": ops[1].target_id,
+        "decided_at": None,
+        "decided_by": None,
     }
     assert decisions[14]["fields"] == {
         "predicate": "uses",
@@ -989,6 +999,7 @@ def test_a_dr_edit_applied_over_http_exports_its_fields(parts):
     assert response.json()["operations"][0]["status"] == "applied"
     decisions = client.get(f"/api/proposals/{proposal.id}/decisions")
     assert decisions.status_code == 200
+    decided_at = proposals.decisions_of(proposal.id)[op.id].decided_at.isoformat()
     assert decisions.json() == [
         {
             "seq": 14,
@@ -1001,6 +1012,8 @@ def test_a_dr_edit_applied_over_http_exports_its_fields(parts):
             },
             "reason": None,
             "result_entity_id": op.target_id,
+            "decided_at": decided_at,
+            "decided_by": "user",
         }
     ]
 

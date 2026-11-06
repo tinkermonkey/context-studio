@@ -10,8 +10,10 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+import json
 import logging
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -506,14 +508,19 @@ class TestDecisions:
         response = client.get(f"/api/proposals/{proposal['id']}/decisions")
 
         assert response.status_code == 200
+        decisions = response.json()
+        decided_at = [d.pop("decided_at") for d in decisions]
+        assert [datetime.fromisoformat(d).tzinfo for d in decided_at[:2]] == [timezone.utc] * 2
+        assert decided_at[2] is None
         # Exactly the script's shape: no "fields" key on an operation applied as proposed.
-        assert response.json() == [
+        assert decisions == [
             {
                 "seq": 1,
                 "op_id": create_id,
                 "status": "applied",
                 "reason": None,
                 "result_entity_id": applied["operations"][0]["result_entity_id"],
+                "decided_by": "user",
             },
             {
                 "seq": 2,
@@ -521,6 +528,7 @@ class TestDecisions:
                 "status": "rejected",
                 "reason": "not now",
                 "result_entity_id": None,
+                "decided_by": "user",
             },
             {
                 "seq": 3,
@@ -528,6 +536,7 @@ class TestDecisions:
                 "status": "pending",
                 "reason": None,
                 "result_entity_id": None,
+                "decided_by": None,
             },
         ]
 
@@ -541,6 +550,84 @@ class TestDecisions:
         response = client.get(f"/api/proposals/{proposal['id']}/decisions")
         assert response.status_code == 409
         assert "reverted" in response.json()["detail"]
+
+
+class TestGold:
+    """GET /api/taxonomies/{id}/gold and its JSONL export."""
+
+    def _decide(self, client, graph):
+        proposal = _propose(
+            client, graph, _create_kit(seq=1, graph=graph), _describe_room(graph, seq=2)
+        )
+        create_id, describe_id = _op_ids(proposal, 1, 2)
+        client.post(f"/api/proposals/{proposal['id']}/apply", json={"operation_ids": [create_id]})
+        client.post(
+            f"/api/proposals/{proposal['id']}/reject",
+            json={"operation_ids": [describe_id], "note": "not now"},
+        )
+        return proposal
+
+    def test_lists_each_decision(self, client, graph):
+        proposal = self._decide(client, graph)
+
+        response = client.get(f"/api/taxonomies/{graph['taxonomy']}/gold")
+
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert (body["total"], body["limit"], body["offset"]) == (2, 50, 0)
+        applied, rejected = body["items"]
+        assert (applied["seq"], applied["decision"]) == (1, "applied")
+        assert applied["decided_by"] == "user"
+        assert applied["proposal_id"] == proposal["id"]
+        assert applied["kind"] == "class" and applied["op"] == "create"
+        assert applied["proposed"]["fields"] == applied["applied_fields"]
+        assert (rejected["decision"], rejected["reason"]) == ("rejected", "not now")
+        assert rejected["applied_fields"] is None and rejected["superseded_at"] is None
+
+    def test_filters_and_pages(self, client, graph):
+        self._decide(client, graph)
+        url = f"/api/taxonomies/{graph['taxonomy']}/gold"
+
+        def seqs(**params):
+            return [d["seq"] for d in client.get(url, params=params).json()["items"]]
+
+        assert seqs(op="update") == [2]
+        assert seqs(kind="class", decision="applied") == [1]
+        assert seqs(decided_by="policy") == []
+        assert seqs(decided_to="2000-01-01T00:00:00Z") == []
+        assert seqs(decided_from="2000-01-01T00:00:00Z") == [1, 2]
+        assert seqs(limit=1, offset=1) == [2]
+        assert client.get(url, params={"decision": "maybe"}).status_code == 422
+
+    def test_a_revert_supersedes(self, client, graph):
+        proposal = self._decide(client, graph)
+        assert client.post(f"/api/proposals/{proposal['id']}/revert").status_code == 200
+        url = f"/api/taxonomies/{graph['taxonomy']}/gold"
+
+        assert client.get(url).json()["total"] == 0
+        items = client.get(url, params={"include_superseded": True}).json()["items"]
+        assert [d["superseded_by"] for d in items] == ["user", "user"]
+
+    def test_exports_jsonl(self, client, graph):
+        self._decide(client, graph)
+
+        response = client.get(
+            f"/api/taxonomies/{graph['taxonomy']}/gold/export", params={"decision": "rejected"}
+        )
+
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("application/x-ndjson")
+        assert "attachment" in response.headers["content-disposition"]
+        lines = response.text.splitlines()
+        assert [json.loads(line)["seq"] for line in lines] == [2]
+        listed = client.get(
+            f"/api/taxonomies/{graph['taxonomy']}/gold", params={"decision": "rejected"}
+        ).json()["items"]
+        assert [json.loads(line) for line in lines] == listed
+
+    def test_unknown_taxonomy_is_404(self, client):
+        assert client.get("/api/taxonomies/nope/gold").status_code == 404
+        assert client.get("/api/taxonomies/nope/gold/export").status_code == 404
 
     def test_an_edit_without_a_dr_relationship_id_is_409(self, client, graph, ontology):
         near = ontology.create_property_definition(

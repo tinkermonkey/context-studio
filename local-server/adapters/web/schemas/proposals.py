@@ -10,6 +10,7 @@ from typing import Any, Collection, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from domain.versioning.approval_policy import ApprovalPolicy
+from domain.versioning.gold import DecisionKind, ProposalDecision
 from domain.versioning.in_use import DeleteBlockers, PairMatch, ReplacementCheck
 from domain.versioning.proposals import (
     ChangeProposal,
@@ -509,6 +510,67 @@ class DrDecisionResponse(BaseModel):
     )
     reason: Optional[str] = None
     result_entity_id: Optional[str] = None
+    decided_at: Optional[str] = Field(
+        None, description="When the operation was decided (ISO 8601); null if undecided"
+    )
+    decided_by: Optional[str] = Field(
+        None,
+        description="Who decided: user, policy, an agent source, or unknown (decided "
+        "before decisions were recorded); null if undecided",
+    )
+
+
+# ==================== Gold ====================
+
+
+class GoldDecisionResponse(BaseModel):
+    """
+    One reviewer or policy decision on a proposal operation: gold.
+
+    A revert supersedes the proposal's decisions (superseded_at, superseded_by)
+    rather than deleting them.
+    """
+
+    id: str
+    operation_id: str
+    proposal_id: str
+    taxonomy_id: str
+    seq: int
+    kind: OperationKind
+    op: OperationType
+    decision: DecisionKind = Field(..., description="applied, rejected or applied_with_edits")
+    decided_at: datetime
+    decided_by: str = Field(
+        ...,
+        description="user, policy, an agent source, or unknown (decided before decisions "
+        "were recorded)",
+    )
+    proposed: dict[str, Any] = Field(
+        ...,
+        description="The operation as proposed: seq, op, kind, target_id, ref, fields, base, "
+        "rationale, evidence, probability, scope, proposed_replacement_id",
+    )
+    applied_fields: Optional[dict[str, Any]] = Field(
+        None, description="The fields finally applied (the edit, if edited); null when rejected"
+    )
+    result_entity_id: Optional[str] = None
+    reason: Optional[str] = Field(None, description="Why (a reject note)")
+    resolution: Optional[dict[str, Any]] = Field(
+        None, description="An applied relationship-type delete's in-use resolution"
+    )
+    chosen_alternative: Optional[dict[str, Any]] = Field(
+        None, description="The alternative the reviewer chose, when there is one"
+    )
+    probability: Optional[float] = None
+    model: Optional[str] = Field(
+        None, description="The decision model that produced the probability, if one did"
+    )
+    superseded_at: Optional[datetime] = None
+    superseded_by: Optional[str] = None
+
+    @classmethod
+    def from_domain(cls, decision: ProposalDecision) -> "GoldDecisionResponse":
+        return cls(**vars(decision))
 
 
 # ==================== Approval policy ====================

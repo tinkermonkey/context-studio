@@ -183,7 +183,10 @@ class BundleImportService:
                 continue
             if proposal is not None and other.id == proposal.id:
                 continue
-            self._proposals.reject(other.id, [o.id for o in other.pending], note=reason)
+            # Nobody judged these: no decision is recorded.
+            self._proposals.reject(
+                other.id, [o.id for o in other.pending], note=reason, decided_by=None
+            )
 
 
 def bundle_source_detail(source: str) -> str:

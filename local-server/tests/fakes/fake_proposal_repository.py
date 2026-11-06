@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import copy
+from datetime import datetime
 from typing import Optional, Sequence
 
+from domain.versioning.gold import DecisionFilter, ProposalDecision
 from domain.versioning.proposals import (
     ChangeProposal,
     ProposalSource,
@@ -18,6 +20,7 @@ class FakeChangeProposalRepository:
 
     def __init__(self) -> None:
         self._proposals: dict[str, ChangeProposal] = {}
+        self.decisions: list[ProposalDecision] = []
 
     def create(self, proposal: ChangeProposal) -> ChangeProposal:
         if proposal.id in self._proposals:
@@ -52,7 +55,12 @@ class FakeChangeProposalRepository:
     ) -> int:
         return len(self._matching(taxonomy_id, status, source))
 
-    def save_operations(self, proposal_id: str, operations: Sequence[ProposedOperation]) -> None:
+    def save_operations(
+        self,
+        proposal_id: str,
+        operations: Sequence[ProposedOperation],
+        decisions: Sequence[ProposalDecision] = (),
+    ) -> None:
         if proposal_id not in self._proposals:
             raise ValueError(f"No proposal {proposal_id}")
         stored = {o.id: o for o in self._proposals[proposal_id].operations}
@@ -68,6 +76,28 @@ class FakeChangeProposalRepository:
             target.applied_fields = copy.deepcopy(operation.applied_fields)
             target.resolution = copy.deepcopy(operation.resolution)
             target.base = copy.deepcopy(operation.base)
+        self.decisions += [copy.deepcopy(d) for d in decisions]
+
+    def supersede_decisions(self, proposal_id: str, superseded_at: datetime, by: str) -> int:
+        standing = [
+            d for d in self.decisions if d.proposal_id == proposal_id and d.superseded_at is None
+        ]
+        for decision in standing:
+            decision.superseded_at = superseded_at
+            decision.superseded_by = by
+        return len(standing)
+
+    def list_decisions(
+        self, filters: DecisionFilter, limit: Optional[int] = None, offset: int = 0
+    ) -> list[ProposalDecision]:
+        found = sorted(
+            (d for d in self.decisions if _matches(d, filters)),
+            key=lambda d: (d.decided_at, d.proposal_id, d.seq),
+        )[offset:]
+        return [copy.deepcopy(d) for d in (found if limit is None else found[:limit])]
+
+    def count_decisions(self, filters: DecisionFilter) -> int:
+        return len([d for d in self.decisions if _matches(d, filters)])
 
     def set_status(self, proposal_id: str, status: ProposalStatus) -> None:
         if proposal_id not in self._proposals:
@@ -87,3 +117,17 @@ class FakeChangeProposalRepository:
             and (status is None or p.status == status)
             and (source is None or p.source == source)
         ]
+
+
+def _matches(decision: ProposalDecision, f: DecisionFilter) -> bool:
+    return (
+        (f.taxonomy_id is None or decision.taxonomy_id == f.taxonomy_id)
+        and (f.proposal_id is None or decision.proposal_id == f.proposal_id)
+        and (f.kind is None or decision.kind is f.kind)
+        and (f.op is None or decision.op is f.op)
+        and (f.decision is None or decision.decision is f.decision)
+        and (f.decided_by is None or decision.decided_by == f.decided_by)
+        and (f.decided_from is None or decision.decided_at >= f.decided_from)
+        and (f.decided_to is None or decision.decided_at < f.decided_to)
+        and (f.include_superseded or decision.superseded_at is None)
+    )
