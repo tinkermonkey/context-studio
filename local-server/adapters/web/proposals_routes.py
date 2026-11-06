@@ -300,8 +300,8 @@ async def create_proposal(
             "description": (
                 "An operation id is not in the proposal, or an edit is misplaced "
                 "(not in operation_ids, not a property update/delete, empty, or uses a $ref), "
-                "or a resolution is (not in operation_ids, not a property delete, also "
-                "edited, a move without replacement_property_id, or a move to a type the "
+                "or a resolution is (not in operation_ids, not a property delete or update, "
+                "an edited delete, a move without replacement_property_id, or a move to a type the "
                 "proposal deletes); nothing was applied"
             )
         },
@@ -336,8 +336,15 @@ async def apply_proposal(
     too. The relationships and the type change in one transaction tagged with
     the proposal's run, so Revert restores them together; a failure fails only
     that operation ("unresolvable: ..." for a misfit) and changes nothing.
-    Without a resolution such a delete fails as in use. What was moved or
-    deleted is returned as the operation's resolution.
+    Without a resolution such a delete fails as in use. A property update that
+    retargets a type relationships use (another domain and range pair) needs
+    one the same way (its blockers list them); a retarget of an unused type
+    needs none. What was moved or deleted is returned as the operation's
+    resolution.
+
+    A property update that reverses the type (domain and range swapped) swaps
+    the ends of every relationship using it in place (each keeps its id), and
+    a rename keeps them, in one transaction with the update; Revert undoes both.
     """
 
     def run() -> ChangeProposalResponse:

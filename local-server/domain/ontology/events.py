@@ -143,11 +143,13 @@ class RelationshipCreated(DomainEvent):
 @dataclass(frozen=True)
 class RelationshipUpdated(DomainEvent):
     """
-    Event emitted when a relationship's attributes change (its ends and type never do).
+    Event emitted when a relationship's attributes change, or its ends swap
+    (its type's reversal; see OntologyService.reverse_relationships).
 
     Attributes:
         relationship_id: ID of the updated relationship
-        changed_fields: Tuple of field names that changed ("attributes")
+        changed_fields: Tuple of field names that changed ("attributes", or
+            "source_id" and "target_id")
         old_values: Previous values of those fields, so the update can be reverted
         new_values: New values of those fields
     """

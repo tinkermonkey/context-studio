@@ -20,7 +20,14 @@ MCP or in the app, exports as one `cs-dr-spec-changes/1` document:
         "note",                       # delete only, when that chain is a cycle
         "decided_at", "decided_by"    # the operation's recorded decision (null if none)
      }],
-     "skipped": [{"seq", "op_id", "why"}]}
+     "skipped": [{"seq", "op_id", "why"}],
+     "records": [{                    # the schema change records, as DR's change-record actions
+        "action": "rename" | "delete" | "create",
+        "kind": "cs:rename" | "cs:reverse" | "cs:retarget" | "cs:delete" | "cs:create",
+        "from", "to",                 # DR relationship ids; to is null for a dropped delete
+        "swap", "p", "proposal_id", "operation_id", "applied_at",
+        "note"?                       # why a delete or retarget drops relationships
+     }]}
 
 `set` holds only the spec values the operation applied: for a create, every
 one it gave; for an update, those that differ from what they replaced (a
@@ -35,6 +42,21 @@ to a class the proposal created resolves to that class) and the predicate,
 and must agree with the type's DR relationship id. A relationship type
 between DR spec classes without a DR reference can't land in DR's spec, so
 the export refuses it rather than skip it.
+
+`records` are the proposal's schema change records
+(`domain.versioning.change_records`) keyed by DR relationship id, in the
+action vocabulary of DR's `applied-*.json` change records, which DR's
+generate-relationship-migration.ts composes for `dr upgrade`: a reverse is a
+rename of kind cs:reverse (its relationships swap ends); a retarget, whose
+new triple the generator can't migrate to, is a delete of the old triple
+plus a create of the new: the delete's `to` is the type its resolution moved
+the relationships to (null when it deleted them, or none used it). A delete
+keeps its `to` only when that type links the same pair of spec nodes or the
+reverse. They are read from what each operation recorded as it applied, so
+they hold for a forced apply too. For an unedited proposal they match the
+actions DR's cs-decisions-to-spec.ts derives from `changes`, except that a
+chain of replaced deletes is left for the generator to fold, and a
+retarget's resolution (which `changes` doesn't carry) is kept.
 
 What an update didn't set is read from the workspace as it is now, so export
 and land proposals in the order they were applied: exported after a later
@@ -54,6 +76,11 @@ from adapters.interchange.dr_relationships import (
     dr_relationship_id,
 )
 from domain.ontology.ports import OntologyRepository
+from domain.versioning.change_records import (
+    SchemaChangeAction,
+    SchemaChangeRecord,
+    schema_change_records,
+)
 from domain.versioning.gold import ProposalDecision
 from domain.versioning.proposals import (
     ChangeProposal,
@@ -121,7 +148,77 @@ def spec_changes_for(
         "title": proposal.title,
         "changes": changes,
         "skipped": skipped,
+        "records": dr_change_actions(proposal, repo, decisions),
     }
+
+
+def dr_change_actions(
+    proposal: ChangeProposal,
+    repo: OntologyRepository,
+    decisions: Mapping[str, ProposalDecision] | None = None,
+) -> list[dict[str, Any]]:
+    """The schema change records on DR relationship types, as DR's change-record actions."""
+    records = schema_change_records(
+        proposal,
+        decisions,
+        key=lambda fields: dr_relationship_id(fields.get("external_references") or []),
+    )
+    return [action for record in records for action in _dr_actions(record)]
+
+
+def _dr_actions(record: SchemaChangeRecord) -> list[dict[str, Any]]:
+    """
+    One record as DR actions. A retarget is a delete of the old triple, whose
+    model relationships go where the retarget's resolution moved them (null
+    when it deleted them, or there were none), plus a create of the new one.
+    """
+    shared = {
+        k: v for k, v in record.to_json().items() if k not in ("action", "from", "to", "moved_to")
+    }
+
+    def action(name: str, from_: str, to: str | None, swap: bool, note: str | None = None):
+        found = {
+            "action": name,
+            "kind": f"cs:{record.action.value}",
+            "from": from_,
+            "to": to,
+            **shared,
+            "swap": swap,
+        }
+        if note:
+            found["note"] = note
+        return found
+
+    def delete(to: str | None, swap: bool, why: str) -> dict[str, Any]:
+        if to is not None and _pair_of(record.from_, to) == "different":
+            note = (
+                f"{why} {to}, a different element pair, which a migration cannot apply "
+                "mechanically, so model relationships of this triple are dropped"
+            )
+            return action("delete", record.from_, None, False, note)
+        return action("delete", record.from_, to, swap if to else False)
+
+    if record.action is SchemaChangeAction.CREATE:
+        return [action("create", record.from_, record.to, False)]
+    if record.action in (SchemaChangeAction.RENAME, SchemaChangeAction.REVERSE):
+        return [action("rename", record.from_, record.to, record.swap)]
+    if record.action is SchemaChangeAction.DELETE:
+        return [delete(record.to, record.swap, "replaced by")]
+    retargeted = record.to or record.from_
+    return [
+        delete(record.moved_to, record.swap, "its relationships moved to"),
+        action("create", retargeted, retargeted, False, f"retarget of {record.from_}"),
+    ]
+
+
+def _pair_of(old: str, new: str) -> str:
+    """Same, reversed or different pair of spec nodes, as DR's lib/triples.ts pairOf."""
+    a, b = Triple.parse(old), Triple.parse(new)
+    if (a.source, a.destination) == (b.source, b.destination):
+        return "same"
+    if (a.source, a.destination) == (b.destination, b.source):
+        return "reversed"
+    return "different"
 
 
 def _not_exported(operation: ProposedOperation) -> str | None:

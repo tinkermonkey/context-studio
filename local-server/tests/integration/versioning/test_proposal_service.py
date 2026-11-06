@@ -29,8 +29,14 @@ from adapters.persistence.sqlite.transaction import SharedSessionFactory, Sqlite
 from domain.ontology.services import OntologyService
 from domain.versioning.exceptions import RevertConflictError
 from domain.versioning.proposal_service import OperationDraft, ProposalService
+from domain.versioning.proposals import (
+    InUseResolution,
+    OperationStatus,
+    ProposalSource,
+    ProposalStatus,
+    ResolutionStrategy,
+)
 from domain.versioning.proposals import OperationKind as K
-from domain.versioning.proposals import OperationStatus, ProposalSource, ProposalStatus
 from domain.versioning.proposals import OperationType as T
 from domain.versioning.revert_service import RevertService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
@@ -135,7 +141,12 @@ def test_apply_in_two_goes_then_revert_restores_the_graph(parts):
 
     first = service.apply(proposal.id, [ops[s].id for s in (1, 2, 3)])
     assert [o.status for o in first.operations[:3]] == [OperationStatus.APPLIED] * 3
-    second = service.apply(proposal.id, [ops[s].id for s in (4, 5, 6)])
+    # Den -> Hall uses near, so its retarget (range Room) resolves it: deleted.
+    second = service.apply(
+        proposal.id,
+        [ops[s].id for s in (4, 5, 6)],
+        resolutions={ops[4].id: InUseResolution(strategy=ResolutionStrategy.DELETE)},
+    )
     result = {o.seq: o for o in second.operations}
     assert all(result[s].status is OperationStatus.APPLIED for s in (4, 5, 6)), [
         result[s].reason for s in (4, 5, 6)
@@ -145,7 +156,7 @@ def test_apply_in_two_goes_then_revert_restores_the_graph(parts):
     kit_id = result[2].result_entity_id
     assert repo.get_individual(den.id).class_ids == [room.id, kit_id]
     assert repo.get_individual(hall.id) is None
-    assert repo.get_relationship(link.id) is None  # cascaded with Hall
+    assert repo.get_relationship(link.id) is None  # deleted by the retarget's resolution
     events = change_repo.get_changes(batch_run_id=proposal.id, limit=None).events
     assert {e.batch_run_id for e in events} == {proposal.id}
     assert {e.entity_id for e in events} >= {room.id, kit_id, near.id, hall.id, den.id}

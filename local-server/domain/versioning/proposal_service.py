@@ -70,6 +70,7 @@ from domain.versioning.in_use import (
     reverses,
 )
 from domain.versioning.proposals import (
+    TYPE_KEY_FIELDS,
     ChangeProposal,
     ChangeScope,
     InUseResolution,
@@ -82,6 +83,8 @@ from domain.versioning.proposals import (
     ProposedOperation,
     ResolutionStrategy,
     ResolvedEdge,
+    SchemaChangeAction,
+    TypeChange,
     classify_scope,
 )
 
@@ -1137,13 +1140,26 @@ class ProposalService:
         the relationships it moved or deleted; a failed one records nothing,
         like an edit.
 
+        A relationship-type update (proposed or edited) migrates the
+        relationships using the type in the same transaction: one that
+        reverses its domain and range swaps the ends of each in place (same id,
+        attributes and provenance); a rename keeps them as they are. A
+        retarget (another pair of classes) of a type relationships use needs a
+        resolution, as an in-use delete does: move them to another type or
+        delete them first (only a retarget takes one; see `in_use_blockers`).
+        Each applied property create, update and delete records what it did
+        to the type and its relationships as its type_change, which its schema
+        change record is read from (`domain.versioning.change_records`).
+        Revert undoes the update and the migration together.
+
         Args:
             proposal_id: The proposal
             operation_ids: The operations to apply
             force_stale: Operations to apply even if their target changed since proposed
             edits: Operation id -> the fields to apply instead of the proposed ones
             resolutions: Operation id -> how to resolve the relationships still
-                using the relationship type a delete removes
+                using the relationship type a delete removes, or a retarget
+                no longer fits
             decided_by: Who decided: "user" (a reviewer), "policy" (auto-apply)
                 or an agent source
 
@@ -1158,7 +1174,8 @@ class ProposalService:
                 misplaced (its operation isn't being applied or isn't a property
                 update or delete, it is empty, or it points at a "$ref"), or a
                 resolution is (its operation isn't being applied, isn't a
-                property delete, or is also edited); nothing is applied
+                property delete or update, or is an edited delete); nothing
+                is applied
         """
         with self._lock(proposal_id):
             proposal = self._get(proposal_id)
@@ -1178,15 +1195,15 @@ class ProposalService:
             try:
                 for operation in chosen:
                     forced = operation.id in force
+                    resolution = resolutions.get(operation.id)
                     if operation.id in edits:
                         others = {i: e for i, e in edits.items() if i != operation.id}
                         edit = edits[operation.id]
-                        self._apply_edited(proposal, operation, edit, others, forced)
-                    elif operation.id in resolutions:
-                        resolution = resolutions[operation.id]
-                        self._apply_resolved(operation, resolution, proposal.id, forced)
+                        self._apply_edited(proposal, operation, edit, others, forced, resolution)
+                    elif resolution is not None and operation.op is OperationType.DELETE:
+                        self._apply_resolved(operation, resolution, refs, proposal.id, forced)
                     else:
-                        self._apply_one(operation, refs, proposal.id, forced)
+                        self._apply_one(operation, refs, proposal.id, forced, resolution)
                     decisions = []
                     if operation.status is OperationStatus.APPLIED:
                         decisions.append(
@@ -1242,8 +1259,9 @@ class ProposalService:
         resolutions: dict[str, InUseResolution],
     ) -> None:
         """
-        Each resolution is for a property delete being applied, not also edited,
-        and doesn't move relationships to a type the proposal also deletes.
+        Each resolution is for a property delete (not also edited) or update
+        being applied, and doesn't move relationships to a type the proposal
+        also deletes.
         """
         deleted = {
             o.target_id: o.seq
@@ -1256,12 +1274,15 @@ class ProposalService:
             raise ValueError(f"Resolutions for operations not being applied: {misplaced}")
         for operation_id in resolutions:
             operation = by_id[operation_id]
-            if operation.kind is not K.PROPERTY or operation.op is not OperationType.DELETE:
+            if operation.kind is not K.PROPERTY or operation.op not in (
+                OperationType.DELETE,
+                OperationType.UPDATE,
+            ):
                 raise ValueError(
                     f"seq {operation.seq} is a {operation.kind.value} {operation.op.value}; "
-                    "only a property delete takes a resolution"
+                    "only a property delete or update takes a resolution"
                 )
-            if operation_id in edits:
+            if operation_id in edits and operation.op is OperationType.DELETE:
                 raise ValueError(f"seq {operation.seq} has both an edit and a resolution")
             replacement = resolutions[operation_id].replacement_property_id
             if replacement is not None and replacement in deleted:
@@ -1283,6 +1304,7 @@ class ProposalService:
         edit: dict[str, Any],
         other_edits: dict[str, dict[str, Any]],
         forced: bool,
+        resolution: InUseResolution | None = None,
     ) -> None:
         """Apply a reviewer's edit of a property update or delete, as an update."""
 
@@ -1298,7 +1320,13 @@ class ProposalService:
                 fields = self._checked_edit(operation, fields)
             target_id: str = operation.target_id  # type: ignore[assignment]
             before = entity_snapshot(self._load(K.PROPERTY, target_id))
-            result = self._dispatch(operation, fields, proposal.id, OperationType.UPDATE)
+            result = self._update_type(
+                operation,
+                fields,
+                resolution,
+                proposal.id,
+                lambda: self._dispatch(operation, fields, proposal.id, OperationType.UPDATE),
+            )
             base = {
                 name: operation.base[name] if name in operation.base else before.get(name)
                 for name in fields
@@ -1315,6 +1343,7 @@ class ProposalService:
         self,
         operation: ProposedOperation,
         resolution: InUseResolution,
+        refs: dict[str, ProposedOperation],
         run_id: str,
         forced: bool,
     ) -> None:
@@ -1326,73 +1355,206 @@ class ProposalService:
         def run() -> str:
             self._check_fresh(operation, forced)
             target_id: str = operation.target_id  # type: ignore[assignment]
+            before = self._type_fields(target_id)
             with self._atomic():
                 inspector = InUseInspector(self._repo)
                 edges = inspector.edges(target_id)
-                expected = resolution.relationship_ids
-                if expected is not None and {e.relationship_id for e in edges} != set(expected):
-                    raise _ApplyFailed(
-                        UNRESOLVABLE,
-                        f"the relationships using the type changed since reviewed: "
-                        f"{len(edges)} now, {len(set(expected))} reviewed; review them again",
-                    )
                 taxonomies = self._taxonomies_of(edges)
-                replacement, swap = None, False
-                if resolution.strategy is ResolutionStrategy.MOVE:
-                    replacement_id: str = resolution.replacement_property_id  # type: ignore
-                    replacement = self._repo.get_property_definition(replacement_id)
-                    if replacement is None or replacement.id == target_id:
-                        raise _ApplyFailed(
-                            UNRESOLVABLE, f"no other relationship type {replacement_id}"
-                        )
-                    # A reversed replacement takes each relationship with its ends swapped.
-                    swap = reverses(self._repo.get_property_definition(target_id), replacement)
-                    misfits = inspector.misfits(replacement, edges, swap)
-                    if misfits:
-                        raise _ApplyFailed(
-                            UNRESOLVABLE,
-                            f"{len(misfits)} of {len(edges)} relationship(s) don't fit "
-                            f"{replacement.identifier}: {'; '.join(misfits)}",
-                        )
-                resolved: list[ResolvedEdge] = []
-                for edge in edges:
-                    self._ontology.delete_relationship(edge.relationship_id)
-                    moved_to = None
-                    if replacement is not None:
-                        source, target = moved_ends(edge, swap)
-                        moved_to = self._ontology.create_relationship(
-                            source.id,
-                            target.id,
-                            replacement.id,
-                            source_run_id=run_id,
-                            attributes=edge.attributes,
-                        ).id
-                    resolved.append(
-                        ResolvedEdge(
-                            relationship_id=edge.relationship_id,
-                            source_id=edge.source.id,
-                            target_id=edge.target.id,
-                            source_title=edge.source.title,
-                            target_title=edge.target.title,
-                            moved_to_id=moved_to,
-                        )
-                    )
+                resolved, replacement, swap = self._resolve_edges(
+                    target_id, resolution, inspector, edges, run_id
+                )
                 self._ontology.delete_property_definition(target_id)
             # Committed: invalidate again, so no graph rebuilt mid-transaction stays cached.
             for taxonomy_id in sorted(taxonomies):
                 self._invalidate_graph(taxonomy_id)
             # Nothing used the type after all: it applied as proposed.
-            if resolved:
-                operation.resolution = InUseResolution(
-                    strategy=resolution.strategy,
-                    replacement_property_id=replacement.id if replacement else None,
-                    replacement_identifier=replacement.identifier if replacement else None,
-                    reversed=swap,
-                    edges=resolved,
-                )
+            if not resolved:
+                operation.type_change = self._delete_change(before, operation, refs)
+                return target_id
+            operation.resolution = _recorded(resolution, resolved, replacement, swap)
+            operation.type_change = TypeChange(
+                SchemaChangeAction.DELETE,
+                before=before,
+                swap=swap,
+                replacement=self._type_fields(replacement.id) if replacement else None,
+            )
             return target_id
 
         self._record_outcome(operation, run_id, run)
+
+    def _resolve_edges(
+        self,
+        target_id: str,
+        resolution: InUseResolution,
+        inspector: InUseInspector,
+        edges: list[Any],
+        run_id: str,
+    ) -> tuple[list[ResolvedEdge], Any, bool]:
+        """
+        Move the relationships using a type to the resolution's replacement, or
+        delete them, inside the caller's transaction. Returns what was resolved,
+        the replacement (a move) and whether the moved ones swapped ends.
+        """
+        expected = resolution.relationship_ids
+        if expected is not None and {e.relationship_id for e in edges} != set(expected):
+            raise _ApplyFailed(
+                UNRESOLVABLE,
+                f"the relationships using the type changed since reviewed: "
+                f"{len(edges)} now, {len(set(expected))} reviewed; review them again",
+            )
+        replacement, swap = None, False
+        if resolution.strategy is ResolutionStrategy.MOVE:
+            replacement_id: str = resolution.replacement_property_id  # type: ignore
+            replacement = self._repo.get_property_definition(replacement_id)
+            if replacement is None or replacement.id == target_id:
+                raise _ApplyFailed(UNRESOLVABLE, f"no other relationship type {replacement_id}")
+            # A reversed replacement takes each relationship with its ends swapped.
+            swap = reverses(self._repo.get_property_definition(target_id), replacement)
+            misfits = inspector.misfits(replacement, edges, swap)
+            if misfits:
+                raise _ApplyFailed(
+                    UNRESOLVABLE,
+                    f"{len(misfits)} of {len(edges)} relationship(s) don't fit "
+                    f"{replacement.identifier}: {'; '.join(misfits)}",
+                )
+        resolved: list[ResolvedEdge] = []
+        for edge in edges:
+            self._ontology.delete_relationship(edge.relationship_id)
+            moved_to = None
+            if replacement is not None:
+                source, target = moved_ends(edge, swap)
+                moved_to = self._ontology.create_relationship(
+                    source.id,
+                    target.id,
+                    replacement.id,
+                    source_run_id=run_id,
+                    attributes=edge.attributes,
+                ).id
+            resolved.append(
+                ResolvedEdge(
+                    relationship_id=edge.relationship_id,
+                    source_id=edge.source.id,
+                    target_id=edge.target.id,
+                    source_title=edge.source.title,
+                    target_title=edge.target.title,
+                    moved_to_id=moved_to,
+                )
+            )
+        return resolved, replacement, swap
+
+    def _update_type(
+        self,
+        operation: ProposedOperation,
+        fields: dict[str, Any],
+        resolution: InUseResolution | None,
+        run_id: str,
+        update: Callable[[], str],
+    ) -> str:
+        """
+        Run a relationship-type update with the relationships using the type
+        migrated, in one transaction, and record what it did (TypeChange): a
+        reverse swaps their ends in place (OntologyService.reverse_relationships);
+        a rename keeps them; a retarget of a type in use needs a resolution,
+        which moves or deletes them first.
+        """
+        target_id: str = operation.target_id  # type: ignore[assignment]
+        before = self._type_fields(target_id)
+        old_pair = (before.get("domain_class_id"), before.get("range_class_id"))
+        new_pair = (
+            fields.get("domain_class_id", old_pair[0]),
+            fields.get("range_class_id", old_pair[1]),
+        )
+        pair = compare_pair(old_pair, new_pair)
+        if resolution is not None and pair is not PairMatch.DIFFERENT:
+            raise _ApplyFailed(
+                UNRESOLVABLE,
+                "only a retarget takes a resolution: a rename keeps the relationships "
+                "using the type, and a reverse swaps their ends",
+            )
+        resolved: list[ResolvedEdge] = []
+        replacement, swap = None, False
+        with self._atomic():
+            inspector = InUseInspector(self._repo)
+            edges = inspector.edges(target_id) if pair is not PairMatch.SAME else []
+            if pair is PairMatch.DIFFERENT and edges and resolution is None:
+                raise _ApplyFailed(
+                    APPLY_ERROR,
+                    f"{len(edges)} relationship(s) use the type, so a retarget needs a "
+                    "resolution: move them to another type or delete them",
+                )
+            taxonomies = self._taxonomies_of(edges)
+            if resolution is not None:
+                resolved, replacement, swap = self._resolve_edges(
+                    target_id, resolution, inspector, edges, run_id
+                )
+            result = update()
+            if pair is PairMatch.REVERSED and edges:
+                reversed_type = self._repo.get_property_definition(target_id)
+                allowed = reversed_type.edge_attribute_names() if reversed_type else set()
+                unknown = sorted({name for e in edges for name in e.attributes} - allowed)
+                if unknown:
+                    raise _ApplyFailed(
+                        UNRESOLVABLE,
+                        f"its relationships carry attributes {unknown} the reversed type "
+                        "no longer allows",
+                    )
+                self._ontology.reverse_relationships(target_id)
+                swap = True
+        # Committed: invalidate again, so no graph rebuilt mid-transaction stays cached.
+        for taxonomy_id in sorted(taxonomies):
+            self._invalidate_graph(taxonomy_id)
+        after = self._type_fields(target_id)
+        if resolution is not None and resolved:
+            operation.resolution = _recorded(resolution, resolved, replacement, swap)
+        action = {
+            PairMatch.SAME: SchemaChangeAction.RENAME,
+            PairMatch.REVERSED: SchemaChangeAction.REVERSE,
+        }.get(pair, SchemaChangeAction.RETARGET)
+        if action is not SchemaChangeAction.RENAME or before != after:
+            operation.type_change = TypeChange(
+                action,
+                before=before,
+                after=after,
+                swap=swap or pair is PairMatch.REVERSED,
+                replacement=self._type_fields(replacement.id) if replacement else None,
+            )
+        return result
+
+    def _type_fields(self, property_id: str) -> dict[str, Any]:
+        """A type's id and TYPE_KEY_FIELDS, as snapshot JSON."""
+        snapshot = entity_snapshot(self._load(K.PROPERTY, property_id))
+        return {"id": property_id, **{name: snapshot.get(name) for name in TYPE_KEY_FIELDS}}
+
+    def _delete_change(
+        self,
+        before: dict[str, Any],
+        operation: ProposedOperation,
+        refs: dict[str, ProposedOperation],
+    ) -> TypeChange:
+        """
+        A delete no relationships used: replaced by the type it names, when that
+        links the same pair of classes or the reverse (`compare_pair`).
+        """
+        named = operation.proposed_replacement_id
+        if named and _is_ref(named):
+            create = refs.get(named[1:])
+            applied = create is not None and create.status is OperationStatus.APPLIED
+            named = create.result_entity_id if applied else None  # type: ignore[union-attr]
+        if not named or self._load(K.PROPERTY, named) is None:
+            return TypeChange(SchemaChangeAction.DELETE, before=before)
+        replacement = self._type_fields(named)
+        pair = compare_pair(
+            (before.get("domain_class_id"), before.get("range_class_id")),
+            (replacement.get("domain_class_id"), replacement.get("range_class_id")),
+        )
+        if pair is PairMatch.DIFFERENT:
+            return TypeChange(SchemaChangeAction.DELETE, before=before)
+        return TypeChange(
+            SchemaChangeAction.DELETE,
+            before=before,
+            swap=pair is PairMatch.REVERSED,
+            replacement=replacement,
+        )
 
     def _taxonomies_of(self, edges: list[Any]) -> set[str]:
         """The taxonomies of the classes typing the edges' ends."""
@@ -1442,6 +1604,7 @@ class ProposalService:
         refs: dict[str, ProposedOperation],
         run_id: str,
         forced: bool,
+        resolution: InUseResolution | None = None,
     ) -> None:
         def run() -> str:
             fields = {
@@ -1460,7 +1623,25 @@ class ProposalService:
                         rules.check(operation, fields)
                     except ValueError as exc:
                         raise _ApplyFailed(RULE_REFUSED, str(exc)) from exc
-            return self._dispatch(operation, fields, run_id, operation.op)
+            if operation.kind is K.PROPERTY and operation.op is OperationType.UPDATE:
+                return self._update_type(
+                    operation,
+                    fields,
+                    resolution,
+                    run_id,
+                    lambda: self._dispatch(operation, fields, run_id, operation.op),
+                )
+            if operation.kind is K.PROPERTY and operation.op is OperationType.DELETE:
+                before = self._type_fields(operation.target_id)  # type: ignore[arg-type]
+                result = self._dispatch(operation, fields, run_id, operation.op)
+                operation.type_change = self._delete_change(before, operation, refs)
+                return result
+            result = self._dispatch(operation, fields, run_id, operation.op)
+            if operation.kind is K.PROPERTY and operation.op is OperationType.CREATE:
+                operation.type_change = TypeChange(
+                    SchemaChangeAction.CREATE, after=self._type_fields(result)
+                )
+            return result
 
         self._record_outcome(operation, run_id, run)
 
@@ -1474,6 +1655,7 @@ class ProposalService:
         operation.reason = None
         operation.applied_fields = None
         operation.resolution = None
+        operation.type_change = None
         scope = operation.scope
         try:
             operation.result_entity_id = run()
@@ -1491,6 +1673,7 @@ class ProposalService:
         if operation.status is OperationStatus.FAILED:
             operation.applied_fields = None
             operation.resolution = None
+            operation.type_change = None
             operation.scope = scope
             _logger.info(
                 "Proposal %s op seq %s failed: %s", run_id, operation.seq, operation.reason
@@ -1692,14 +1875,21 @@ class ProposalService:
         relationship delete of the proposal removes don't count (a bundle
         import deletes them before their type), so a delete they all cover has
         none. Applying a blocked delete as proposed fails; it needs a
-        resolution (see `apply`).
+        resolution (see `apply`). The same for each pending or failed property
+        update that retargets its type (another pair of domain and range
+        classes) while relationships use it.
         """
         deletes = [
             o
             for o in proposal.pending
             if o.kind is K.PROPERTY and o.op is OperationType.DELETE and o.target_id
         ]
-        if not deletes:
+        retargets = [
+            o
+            for o in proposal.pending
+            if o.kind is K.PROPERTY and o.op is OperationType.UPDATE and self._retargets(o)
+        ]
+        if not deletes and not retargets:
             return {}
         deleted = {o.id: str(o.target_id) for o in deletes}
         covered = {
@@ -1709,8 +1899,8 @@ class ProposalService:
         }
         inspector = InUseInspector(self._repo)
         found: dict[str, DeleteBlockers] = {}
-        for operation in deletes:
-            target_id = deleted[operation.id]
+        for operation in deletes + retargets:
+            target_id = str(operation.target_id)
             others = set(deleted.values()) - {target_id}
             blockers = inspector.blockers(target_id, excluded=others, covered=covered)
             if blockers is None:
@@ -1726,6 +1916,18 @@ class ProposalService:
                 )
             found[operation.id] = blockers
         return found
+
+    def _retargets(self, operation: ProposedOperation) -> bool:
+        """Whether a property update, as proposed, gives its type another pair of classes."""
+        target = self._load(K.PROPERTY, operation.target_id)  # type: ignore[arg-type]
+        if target is None:
+            return False
+        current = (target.domain_class_id, target.range_class_id)
+        proposed = (
+            operation.fields.get("domain_class_id", current[0]),
+            operation.fields.get("range_class_id", current[1]),
+        )
+        return compare_pair(current, proposed) is PairMatch.DIFFERENT
 
     def replacement_checks(self, proposal: ChangeProposal) -> dict[str, ReplacementCheck]:
         """
@@ -2067,3 +2269,16 @@ class ProposalService:
                 ) from exc
             return target
         return svc.move_class(target, v["parent_class_id"]).id
+
+
+def _recorded(
+    resolution: InUseResolution, resolved: list[ResolvedEdge], replacement: Any, swap: bool
+) -> InUseResolution:
+    """A resolution as applied: the replacement and the relationships moved or deleted."""
+    return InUseResolution(
+        strategy=resolution.strategy,
+        replacement_property_id=replacement.id if replacement else None,
+        replacement_identifier=replacement.identifier if replacement else None,
+        reversed=swap,
+        edges=resolved,
+    )

@@ -75,6 +75,7 @@ class FakeChangeProposalRepository:
             target.scope = operation.scope
             target.applied_fields = copy.deepcopy(operation.applied_fields)
             target.resolution = copy.deepcopy(operation.resolution)
+            target.type_change = copy.deepcopy(operation.type_change)
             target.base = copy.deepcopy(operation.base)
         self.decisions += [copy.deepcopy(d) for d in decisions]
 

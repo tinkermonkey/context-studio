@@ -10,6 +10,7 @@ for event distribution.
 from __future__ import annotations
 
 import logging
+from dataclasses import replace
 from datetime import datetime, timezone
 from typing import Any, Literal
 from uuid import uuid4
@@ -1713,6 +1714,78 @@ class OntologyService:
                 handler_names,
             )
         return relationship
+
+    def reverse_relationships(self, property_definition_id: str) -> list[str]:
+        """
+        Swap the source and target of every relationship of a type, in place.
+
+        Each keeps its id, type, attributes, provenance (source_run_id) and
+        created_at, so reverting the run that made it still removes it. Each swap
+        emits RelationshipUpdated with the old and new ends, which revert
+        inverts. A pair running both ways (a -> b and b -> a) can't swap in
+        place without colliding with itself, so one of the two is deleted, the
+        other swapped, and the first re-made with the same id and values
+        (RelationshipDeleted, then RelationshipCreated): revert removes it,
+        swaps the other back, then restores it. Run it inside a transaction.
+
+        Args:
+            property_definition_id: The type whose relationships swap ends
+
+        Returns:
+            The ids of the relationships swapped
+        """
+        relationships = self._repository.list_relationships(
+            property_id=property_definition_id, limit=None
+        )
+        by_ends = {(r.source_id, r.target_id): r for r in relationships}
+        remade: list[Relationship] = []
+        set_aside: set[str] = set()
+        for relationship in relationships:
+            if relationship.id in set_aside:
+                continue  # its mirror swapped in place; it is re-made below
+            mirror = by_ends.get((relationship.target_id, relationship.source_id))
+            if mirror is not None:
+                self.delete_relationship(mirror.id)
+                set_aside.add(mirror.id)
+                remade.append(mirror)
+            self._swap_ends(relationship)
+        for relationship in remade:
+            swapped = replace(
+                relationship, source_id=relationship.target_id, target_id=relationship.source_id
+            )
+            self._repository.save_relationship(swapped)
+            self._publish_or_warn(
+                RelationshipCreated(
+                    relationship_id=swapped.id,
+                    source_id=swapped.source_id,
+                    target_id=swapped.target_id,
+                    property_definition_id=swapped.property_definition_id,
+                    attributes=dict(swapped.attributes),
+                )
+            )
+        return [r.id for r in relationships]
+
+    def _swap_ends(self, relationship: Relationship) -> None:
+        old = {"source_id": relationship.source_id, "target_id": relationship.target_id}
+        new = {"source_id": relationship.target_id, "target_id": relationship.source_id}
+        self._repository.save_relationship(replace(relationship, **new))
+        self._publish_or_warn(
+            RelationshipUpdated(
+                relationship_id=relationship.id,
+                changed_fields=("source_id", "target_id"),
+                old_values=old,
+                new_values=new,
+            )
+        )
+
+    def _publish_or_warn(self, event: Any) -> None:
+        failures = self._event_publisher.publish(event)
+        if failures:
+            _logger.warning(
+                "Event handlers failed for %s: %s; the audit trail may have gaps.",
+                type(event).__name__,
+                ", ".join(name for name, _ in failures),
+            )
 
     def check_relationship_attributes(
         self, property_identifier: str, attributes: dict[str, Any]

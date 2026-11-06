@@ -41,6 +41,7 @@ from domain.versioning.proposals import (
     ProposalSource,
     ProposalStatus,
     ProposedOperation,
+    TypeChange,
 )
 
 
@@ -136,6 +137,7 @@ class SQLiteChangeProposalRepository:
                 row.scope = operation.scope.value  # type: ignore[assignment]
                 row.applied_fields = operation.applied_fields  # type: ignore[assignment]
                 row.resolution = _resolution_json(operation)  # type: ignore[assignment]
+                row.type_change = _type_change_json(operation)  # type: ignore[assignment]
                 row.base = dict(operation.base)  # type: ignore[assignment]
             session.flush()
             for decision in decisions:
@@ -428,11 +430,16 @@ def _operation_to_orm(proposal_id: str, operation: ProposedOperation) -> Proposa
         applied_fields=operation.applied_fields,
         resolution=_resolution_json(operation),
         proposed_replacement_id=operation.proposed_replacement_id,
+        type_change=_type_change_json(operation),
     )
 
 
 def _resolution_json(operation: ProposedOperation) -> Optional[dict]:
     return operation.resolution.to_json() if operation.resolution is not None else None
+
+
+def _type_change_json(operation: ProposedOperation) -> Optional[dict]:
+    return operation.type_change.to_json() if operation.type_change is not None else None
 
 
 def _operation_to_domain(row: ProposalOperation) -> ProposedOperation:
@@ -459,6 +466,11 @@ def _operation_to_domain(row: ProposalOperation) -> ProposedOperation:
             else None
         ),
         proposed_replacement_id=row.proposed_replacement_id,  # type: ignore[arg-type]
+        type_change=(
+            TypeChange.from_json(dict(row.type_change))  # type: ignore[arg-type]
+            if row.type_change is not None
+            else None
+        ),
     )
 
 
