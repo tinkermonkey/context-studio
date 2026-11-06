@@ -64,7 +64,7 @@ import {
   type Picks,
 } from "./tieredModel";
 import { useOperationContext } from "./useOperationContext";
-import { useProposalActions } from "./useProposalActions";
+import { pendingLabel, useProposalActions } from "./useProposalActions";
 import "./proposals.css";
 
 function scopeMixLabel(operations: ProposedOperation[]): string {
@@ -283,6 +283,7 @@ export function ProposalDetailPage({
         ]
           .filter(Boolean)
           .join(" ")}
+        aria-busy={actions.pending ? true : undefined}
         data-testid="proposal-summary"
       >
         <div className="proposal-summary__row">
@@ -353,6 +354,7 @@ export function ProposalDetailPage({
                         : undefined
                     }
                     onClick={() => actions.acceptFresh(bulkIds)}
+                    aria-busy={actions.pending?.action === "apply" ? true : undefined}
                     data-testid="proposal-accept-all"
                   >
                     Accept {bulkReady.length} ready
@@ -362,6 +364,12 @@ export function ProposalDetailPage({
             </span>
           )}
         </div>
+        {actions.pending && (
+          <div className="proposal-summary__busy" role="status" data-testid="proposal-busy">
+            <Icon name="spinner" size={14} className="spin" />
+            {pendingLabel(actions.pending)}
+          </div>
+        )}
         {deciding && progress.awaiting > 0 && (
           <div
             className="proposal-summary__pills"

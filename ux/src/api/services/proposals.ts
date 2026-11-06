@@ -27,6 +27,8 @@ export interface ChangeProposalListParams {
   offset?: number;
 }
 
+export const APPLY_TIMEOUT_MS = 5 * 60 * 1000;
+
 class ProposalsService extends BaseService {
   async listProposals(params?: ChangeProposalListParams): Promise<ChangeProposalList> {
     return this.get<ChangeProposalList>(
@@ -43,8 +45,11 @@ class ProposalsService extends BaseService {
     return this.post<ChangeProposal>("/api/proposals", data);
   }
 
+  /** A bulk apply can run longer than the default 30 s timeout, so it waits up to APPLY_TIMEOUT_MS. */
   async applyProposal(id: string, data: ChangeProposalApplyRequest): Promise<ChangeProposal> {
-    return this.post<ChangeProposal>(`/api/proposals/${id}/apply`, data);
+    return this.post<ChangeProposal>(`/api/proposals/${id}/apply`, data, undefined, {
+      timeout: APPLY_TIMEOUT_MS,
+    });
   }
 
   async rejectProposal(id: string, data: ChangeProposalRejectRequest): Promise<ChangeProposal> {

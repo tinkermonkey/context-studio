@@ -6,14 +6,26 @@ export class ApiError extends Error {
   detail: string;
   /** The response's `detail` when it is an object (e.g. a 409's `{message, blocking}`). */
   body?: unknown;
+  /** Axios' error code, e.g. "ECONNABORTED" when the request timed out. */
+  code?: string;
 
-  constructor(message: string, status: number, detail: string, body?: unknown) {
+  constructor(message: string, status: number, detail: string, body?: unknown, code?: string) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.detail = detail;
     this.body = body;
+    this.code = code;
   }
+}
+
+/** True when the request stopped waiting for a response; the server may still be working. */
+export function isTimeout(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    error.status === 0 &&
+    (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT")
+  );
 }
 
 export function applyInterceptors(instance: AxiosInstance): void {
@@ -79,7 +91,7 @@ export function applyInterceptors(instance: AxiosInstance): void {
           : typeof structured?.message === "string"
             ? structured.message
             : (error.message ?? "An unexpected error occurred");
-      return Promise.reject(new ApiError(detail, status, detail, structured));
+      return Promise.reject(new ApiError(detail, status, detail, structured, error.code));
     },
   );
 }
