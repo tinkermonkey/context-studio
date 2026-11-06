@@ -52,6 +52,19 @@ describe("SchemaPageLayout", () => {
       expect(screen.getByTestId("schema-inspector-container")).toHaveClass("split-2__inspector");
     });
 
+    it("lets the list column shrink beside the inspector", () => {
+      render(
+        <SchemaPageLayout
+          data={mockData}
+          selectedId="1"
+          renderInspectorContent={(entity) => <div>Details for {entity.name}</div>}
+        >
+          <div>Content</div>
+        </SchemaPageLayout>,
+      );
+      expect(screen.getByText("Content").parentElement).toHaveClass("split-2__main");
+    });
+
     it("does not use the split layout when no entity is selected", () => {
       render(
         <SchemaPageLayout data={mockData}>

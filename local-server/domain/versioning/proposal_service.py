@@ -453,15 +453,7 @@ class ProposalService:
         if self._policies is None:
             return proposal
         try:
-            policy = self._policies.get(proposal.taxonomy_id)
-            auto = auto_apply_ids(
-                policy,
-                proposal.operations,
-                self._classes,
-                lambda operation: self._inside_taxonomy(operation, proposal.taxonomy_id),
-                id_fields=frozenset(ID_FIELDS),
-                source=proposal.source,
-            )
+            auto = self._policy_auto_apply_ids(proposal)
             # apply takes the proposal's lock itself; propose never holds it.
             return self.apply(proposal.id, auto) if auto else proposal
         except Exception:  # noqa: BLE001 - the stored proposal must reach the caller
@@ -475,6 +467,42 @@ class ProposalService:
         except Exception:  # noqa: BLE001
             _logger.exception("Could not re-read proposal %s after auto-apply", proposal.id)
             return proposal
+
+    def auto_apply_operation_ids(self, proposal: ChangeProposal) -> list[str]:
+        """
+        Ids of the operations the taxonomy's approval policy applies as soon as
+        they are proposed, in seq order: the same selection `_auto_apply` makes,
+        so a dry run's verdict and a real propose share one path. A
+        relationship-type delete still in use is never among them. Empty without
+        a policy, or when the stored policy can't be read (propose then leaves
+        everything for review too).
+        """
+        if self._policies is None:
+            return []
+        try:
+            return self._policy_auto_apply_ids(proposal)
+        except Exception:  # noqa: BLE001 - as in _auto_apply: nothing applies
+            _logger.exception("Approval policy of %s could not be read", proposal.taxonomy_id)
+            return []
+
+    def _policy_auto_apply_ids(self, proposal: ChangeProposal) -> list[str]:
+        """
+        What the policy allows, less the relationship-type deletes still in use:
+        applying one as proposed would fail, so it waits for a reviewer to
+        resolve its relationships.
+        """
+        allowed = auto_apply_ids(
+            self._policies.get(proposal.taxonomy_id) if self._policies else None,
+            proposal.operations,
+            self._classes,
+            lambda operation: self._inside_taxonomy(operation, proposal.taxonomy_id),
+            id_fields=frozenset(ID_FIELDS),
+            source=proposal.source,
+        )
+        if not allowed:
+            return allowed
+        blocked = self.in_use_blockers(proposal)
+        return [i for i in allowed if i not in blocked]
 
     def _classes(self, operation: ProposedOperation) -> list[set[str]]:
         """

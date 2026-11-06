@@ -214,6 +214,32 @@ describe("EntitySurface", () => {
       expect(screen.getByTestId("schema-inspector-container")).toHaveClass("split-2__inspector");
     });
 
+    it("lets the table column shrink beside the inspector", async () => {
+      const user = userEvent.setup();
+      renderSurface();
+      expect(screen.getByTestId("selectable-table").parentElement).not.toHaveClass("split-2__main");
+      await user.click(screen.getByTestId("click-row-1"));
+      expect(screen.getByTestId("selectable-table").parentElement).toHaveClass("split-2__main");
+    });
+
+    it("leaves the inspector at the CSS default width unless one is given", async () => {
+      const user = userEvent.setup();
+      renderSurface();
+      await user.click(screen.getByTestId("click-row-1"));
+      expect(
+        screen.getByTestId("schema-page-layout").style.getPropertyValue("--inspector-width"),
+      ).toBe("");
+    });
+
+    it("sets the inspector width when one is given", async () => {
+      const user = userEvent.setup();
+      renderSurface({ inspectorWidth: 440 });
+      await user.click(screen.getByTestId("click-row-1"));
+      expect(
+        screen.getByTestId("schema-page-layout").style.getPropertyValue("--inspector-width"),
+      ).toBe("440px");
+    });
+
     it("does not open inspector when only checkbox is clicked", async () => {
       const user = userEvent.setup();
       renderSurface();

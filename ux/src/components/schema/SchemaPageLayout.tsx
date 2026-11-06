@@ -18,7 +18,7 @@ export function SchemaPageLayout<T extends { id: string }>({
   if (selectedEntity && renderInspectorContent) {
     return (
       <div data-testid="schema-page-layout" className="split-2">
-        <div>{children}</div>
+        <div className="split-2__main">{children}</div>
         <div data-testid="schema-inspector-container" className="split-2__inspector">
           {renderInspectorContent(selectedEntity)}
         </div>

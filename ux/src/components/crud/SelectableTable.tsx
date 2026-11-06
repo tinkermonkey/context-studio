@@ -75,6 +75,26 @@ export function SelectableTable<T extends { id: string }>({
     onSelectRows([...offPageSelected, ...pageSelected]);
   };
 
+  // Heimdall's RowMenu panel is not portaled: it opens inside the table frame,
+  // which scrolls, so a panel hanging below a row near the frame's visible
+  // bottom is clipped. Once the panel opens, measure it and open it upward
+  // instead when it does not fit below and there is more room above.
+  const [rowMenuUpId, setRowMenuUpId] = useState<string | null>(null);
+  const placeRowMenu = (cell: HTMLElement, rowId: string) => {
+    requestAnimationFrame(() => {
+      const panel = cell.querySelector(".dropdown-panel");
+      if (!panel) return;
+      const frame = cell.closest(".schema-table-wrap")?.getBoundingClientRect();
+      const visibleTop = Math.max(frame?.top ?? 0, 0);
+      const visibleBottom = Math.min(frame?.bottom ?? window.innerHeight, window.innerHeight);
+      const trigger = cell.getBoundingClientRect();
+      const roomBelow = visibleBottom - trigger.bottom;
+      const roomAbove = trigger.top - visibleTop;
+      const needed = panel.getBoundingClientRect().height;
+      setRowMenuUpId(roomBelow < needed && roomAbove > roomBelow ? rowId : null);
+    });
+  };
+
   const tableColumns: Column<T>[] = [
     ...columns,
     ...(rowMenuActions && onRowMenuAction
@@ -88,10 +108,17 @@ export function SelectableTable<T extends { id: string }>({
             render: (_value: T[keyof T], row: T) => (
               // Stop propagation so opening the action menu does not also
               // trigger the row click (which opens the inspector).
-              <div className="csb-rowmenu" onClick={(e) => e.stopPropagation()}>
+              <div
+                className="csb-rowmenu"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  placeRowMenu(e.currentTarget, row.id);
+                }}
+              >
                 <RowMenu
                   actions={rowMenuActions}
                   onAction={(actionId) => onRowMenuAction(actionId, row)}
+                  placement={rowMenuUpId === row.id ? "top-end" : "bottom-end"}
                   triggerLabel="Row actions"
                   data-testid={rowMenuTestIdPrefix ? `${rowMenuTestIdPrefix}-${row.id}` : undefined}
                 />

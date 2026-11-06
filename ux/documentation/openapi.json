@@ -6962,6 +6962,20 @@
         "summary": "Create Proposal",
         "description": "Propose changes to a taxonomy; every operation starts pending.\n\nThe proposal is validated as a whole against the current graph. If any\noperation is invalid nothing is stored and the 422 lists each problem with\nits operation's seq and a stable code. Source \"bundle\" is refused (code\ninvalid_source): bundle proposals come from the bundle import route, and\nare exempt from the approval policy's min_probability.",
         "operationId": "create_proposal_api_proposals_post",
+        "parameters": [
+          {
+            "name": "dry_run",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Validate only (200): return the computed scopes, stale flags, blockers, replacement checks and which operations are eligible to auto-apply; store and apply nothing",
+              "default": false,
+              "title": "Dry Run"
+            },
+            "description": "Validate only (200): return the computed scopes, stale flags, blockers, replacement checks and which operations are eligible to auto-apply; store and apply nothing"
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -6975,6 +6989,16 @@
         "responses": {
           "201": {
             "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeProposalResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "A dry run: the proposal as it would be stored, nothing stored",
             "content": {
               "application/json": {
                 "schema": {
@@ -7437,6 +7461,28 @@
           },
           "422": {
             "description": "The bundle is malformed, conflicts with the workspace, or its plan does not validate; nothing is stored"
+          }
+        }
+      }
+    },
+    "/api/decision-models": {
+      "get": {
+        "tags": [
+          "decision-models"
+        ],
+        "summary": "List Decision Models",
+        "description": "List the configured decision-model instances: name, adapter, model, configured.",
+        "operationId": "list_decision_models_api_decision_models_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionModelListResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -8823,6 +8869,12 @@
           "status": {
             "$ref": "#/components/schemas/ProposalStatus"
           },
+          "dry_run": {
+            "type": "boolean",
+            "title": "Dry Run",
+            "description": "Validated only: nothing was stored or applied, and the ids are not kept",
+            "default": false
+          },
           "operations": {
             "items": {
               "$ref": "#/components/schemas/ProposedOperationResponse"
@@ -10069,6 +10121,86 @@
         "type": "object",
         "title": "DatasetUpdateRequest",
         "description": "Request to update a dataset."
+      },
+      "DecisionModelListResponse": {
+        "properties": {
+          "default": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default",
+            "description": "Default instance name"
+          },
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionModelResponse"
+            },
+            "type": "array",
+            "title": "Models"
+          }
+        },
+        "type": "object",
+        "required": [
+          "models"
+        ],
+        "title": "DecisionModelListResponse",
+        "description": "Every configured decision-model instance and the default's name."
+      },
+      "DecisionModelResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Instance name from config.json"
+          },
+          "adapter": {
+            "type": "string",
+            "title": "Adapter",
+            "description": "Adapter serving the instance, e.g. 'workers_ai' or 'llm'"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "description": "Model id the adapter calls"
+          },
+          "configured": {
+            "type": "boolean",
+            "title": "Configured",
+            "description": "Whether the instance has what it needs to make a call"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "Whether callers get this instance when naming none"
+          },
+          "fallback": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fallback",
+            "description": "Instance used when this one is unconfigured or fails"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "adapter",
+          "model",
+          "configured",
+          "is_default"
+        ],
+        "title": "DecisionModelResponse",
+        "description": "A configured decision-model instance. Credentials are never included."
       },
       "DegreeDistributionResponse": {
         "properties": {
@@ -14110,6 +14242,18 @@
               }
             ],
             "description": "Set when proposed_replacement_id is: how its pair compares"
+          },
+          "auto_apply": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Apply",
+            "description": "A dry run only: eligible to auto-apply, i.e. the taxonomy's approval policy would apply it as soon as proposed and no in-use blockers stop it (applying can still fail). Null otherwise"
           }
         },
         "type": "object",

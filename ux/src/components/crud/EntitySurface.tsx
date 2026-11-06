@@ -96,7 +96,7 @@ function EntitySurfaceBase<T extends { id: string }>(
     initialTaxonomyId,
     initialSchemeId,
     onCreateSuccess,
-    inspectorWidth = 420,
+    inspectorWidth = 380,
     testId,
     emptyStateTitle,
     emptyStateDescription,
@@ -320,13 +320,13 @@ function EntitySurfaceBase<T extends { id: string }>(
         data-testid="schema-page-layout"
         className={showRight ? "split-2" : undefined}
         style={
-          showRight && inspectorWidth !== 420
+          showRight && inspectorWidth !== 380
             ? ({ "--inspector-width": `${inspectorWidth}px` } as React.CSSProperties)
             : undefined
         }
       >
         {/* Left: table */}
-        <div>
+        <div className={showRight ? "split-2__main" : undefined}>
           <SelectableTable
             columns={columns}
             data={data}

@@ -39,6 +39,7 @@ from config import url_origin
 from domain.admin.demo_dataset_service import LoadDemoDataset
 from domain.admin.services import AdminService
 from domain.chat.services import ChatService
+from domain.decision.ports import DecisionModels
 from domain.extraction.ports import ReferenceSource
 from domain.extraction.services import ExtractionService
 from domain.graph.services import GraphAnalysisService
@@ -229,6 +230,19 @@ async def get_proposal_service(request: Request) -> ProposalService:
     if service is None:
         raise RuntimeError("ProposalService not initialized in app.state")
     return service
+
+
+async def get_decision_models(request: Request) -> DecisionModels:
+    """
+    Extract the configured decision-model instances from app state.
+
+    Raises:
+        RuntimeError: If they are not initialized in app.state
+    """
+    decision_models = getattr(request.app.state, "decision_models", None)
+    if decision_models is None:
+        raise RuntimeError("Decision models not initialized in app.state")
+    return decision_models
 
 
 async def get_bundle_import_service(request: Request) -> BundleImportService:

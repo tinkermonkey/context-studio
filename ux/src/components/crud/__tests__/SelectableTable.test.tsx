@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { type Column } from "@tinkermonkey/heimdall-ui";
 import { render } from "@/test/test-utils";
@@ -154,6 +154,54 @@ describe("SelectableTable", () => {
       const editButtons = screen.getAllByRole("button", { name: "Edit" });
       await user.click(editButtons[0]);
       expect(onAction).toHaveBeenCalledWith("edit", expect.objectContaining({ id: "1" }));
+    });
+
+    // vitest.setup.ts mocks Heimdall's RowMenu: it passes `placement` through
+    // to its root element and renders no dropdown panel.
+    it("opens the row menu below, aligned to the trigger's right edge", () => {
+      const { container } = render(
+        <SelectableTable
+          columns={columns}
+          data={makeRows(3)}
+          rowMenuActions={[{ id: "edit", label: "Edit" }]}
+          onRowMenuAction={vi.fn()}
+        />,
+      );
+      const menus = container.querySelectorAll(".csb-rowmenu .row-menu");
+      expect(menus.length).toBe(3);
+      menus.forEach((menu) => expect(menu).toHaveAttribute("placement", "bottom-end"));
+    });
+
+    it("opens the row menu upward when it would not fit below the trigger", async () => {
+      const user = userEvent.setup();
+      const rect = (top: number, bottom: number) =>
+        ({ top, bottom, left: 0, right: 0, width: 0, height: bottom - top }) as DOMRect;
+      const spy = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (
+        this: Element,
+      ) {
+        if (this.classList.contains("schema-table-wrap")) return rect(100, 700);
+        if (this.classList.contains("csb-rowmenu")) return rect(640, 680);
+        if (this.classList.contains("dropdown-panel")) return rect(0, 120);
+        return rect(0, 0);
+      });
+      const { container } = render(
+        <SelectableTable
+          columns={columns}
+          data={makeRows(3)}
+          rowMenuActions={[{ id: "edit", label: "Edit" }]}
+          onRowMenuAction={vi.fn()}
+        />,
+      );
+      // Stand in for the open panel the real RowMenu renders inside the cell.
+      const cells = container.querySelectorAll<HTMLElement>(".csb-rowmenu");
+      const panel = document.createElement("div");
+      panel.className = "dropdown-panel";
+      cells[2].appendChild(panel);
+      await user.click(cells[2]);
+      const menus = container.querySelectorAll(".csb-rowmenu .row-menu");
+      await waitFor(() => expect(menus[2]).toHaveAttribute("placement", "top-end"));
+      expect(menus[0]).toHaveAttribute("placement", "bottom-end");
+      spy.mockRestore();
     });
 
     it("does not render row menu when no actions provided", () => {

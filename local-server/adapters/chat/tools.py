@@ -17,10 +17,17 @@ from __future__ import annotations
 import json
 from typing import Any, Callable, Mapping, Optional, Sequence
 
+from adapters.serialization.views import rest_fields
 from domain.chat.value_objects import ENTITY_KINDS, EntityRef, ToolOutcome, ToolSpec
 from domain.graph.exceptions import NodeNotFoundError
 from domain.graph.services import GraphAnalysisService
-from domain.ontology.entities import Class, ConceptScheme, Individual, PropertyDefinition, Taxonomy
+from domain.ontology.entities import (
+    Class,
+    ConceptScheme,
+    Individual,
+    PropertyDefinition,
+    Taxonomy,
+)
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.ports import EmbeddingService, IndividualVectorIndex, SchemaVectorIndex
 from domain.ontology.services import OntologyService
@@ -433,40 +440,60 @@ class SearchEntitiesTool(_Tool):
         return scores
 
 
+# get_entity shows at most this many items of an entity's lists; <key>_total counts them.
+MAX_ENTITY_LIST_ITEMS = 20
+_CAPPED_ENTITY_LISTS = ("external_references", "lexical_senses", "data_properties")
+
+
+def _entity_fields(entity: Any) -> dict[str, Any]:
+    """The REST fields, each long list cut to MAX_ENTITY_LIST_ITEMS with its total."""
+    fields = rest_fields(entity)
+    for key in _CAPPED_ENTITY_LISTS:
+        items = fields.get(key)
+        if isinstance(items, list) and len(items) > MAX_ENTITY_LIST_ITEMS:
+            fields[key] = items[:MAX_ENTITY_LIST_ITEMS]
+            fields[f"{key}_total"] = len(items)
+    return fields
+
+
 class GetEntityTool(_Tool):
     """Details of one entity."""
 
     name = "get_entity"
     description = (
-        "Get one entity by id: title, identifier, description, parents (taxonomy,"
-        " scheme, parent class), classes of an individual, data properties, and counts"
-        " of children and relationships; for a relationship type (property), its"
-        " external references too. For a taxonomy, description is its"
-        " one-paragraph summary and vision is its full vision statement: what it is"
-        " for, what its classes and relationships model, and how changes are judged."
+        "Get one entity by id, with every field the REST API returns (identifier,"
+        " description, external_references, lexical_senses, data_properties with their"
+        " datatype, created_at, last_modified, version, status, ...), its parents"
+        " (taxonomy, scheme, parent class), the classes of an individual, and counts of"
+        " children and relationships. For a taxonomy, description is its one-paragraph"
+        " summary and vision is its full vision statement: what it is for, what its"
+        " classes and relationships model, and how changes are judged. A relationship"
+        " (kind relationship) has its source, target and type; an attribute definition"
+        " (kind attribute) has its class, datatype and constraints. Lists longer than"
+        f" {MAX_ENTITY_LIST_ITEMS} are cut, with <name>_total giving the full count."
     )
     input_schema = {
         "type": "object",
-        "properties": {"id": {"type": "string", "description": "Entity id"}},
+        "properties": {
+            "id": {
+                "type": "string",
+                "description": "Entity, relationship or attribute definition id",
+            }
+        },
         "required": ["id"],
     }
 
     def run(self, args: dict[str, Any]) -> ToolOutcome:
-        entity = self._resolver.get(required_str(args, "id"))
+        entity_id = required_str(args, "id")
+        try:
+            entity = self._resolver.get(entity_id)
+        except EntityNotFoundError:
+            return self._schema_item(entity_id)
         ref = ref_of(entity)
-        result: dict[str, Any] = {
-            **_ref_dict(ref),
-            "identifier": getattr(entity, "identifier", None),
-            "description": entity.description,
-        }
+        result: dict[str, Any] = {**_ref_dict(ref), **_entity_fields(entity)}
         related: list[EntityRef] = [ref]
         counts: dict[str, int] = {}
-
-        def link(field: str, ids: Sequence[Optional[str]]) -> None:
-            found = self._resolver.get_many([i for i in ids if i])
-            refs = [ref_of(found[i]) for i in ids if i and i in found]
-            related.extend(refs)
-            result[field] = [_ref_dict(r) for r in refs]
+        link = self._linker(result, related)
 
         if isinstance(entity, Taxonomy):
             result["vision"] = _capped_vision(entity.vision)
@@ -478,22 +505,63 @@ class GetEntityTool(_Tool):
             link("parents", [entity.parent_class_id, entity.concept_scheme_id, entity.taxonomy_id])
             counts["subclasses"] = self._ontology.count_classes(parent_class_id=entity.id)
             counts["individuals"] = self._ontology.count_individuals(class_id=entity.id)
-            result["properties"] = _data_properties(entity)
+            counts["attributes"] = self._ontology.count_attribute_definitions(class_id=entity.id)
         elif isinstance(entity, Individual):
             link("classes", list(entity.class_ids))
-            result["properties"] = _data_properties(entity)
         elif isinstance(entity, PropertyDefinition):
             link("domain", [entity.domain_class_id])
             link("range", [entity.range_class_id])
             counts["relationships"] = self._ontology.count_relationships(property_id=entity.id)
             # A DR relationship type's spec attributes ride on its DR reference's metadata;
-            # a proposer resends the whole list to change them.
-            result["external_references"] = [r.to_dict() for r in entity.external_references]
+            # a proposer resends the whole list to change them. (Not in the REST response.)
+            references = [r.to_dict() for r in entity.external_references]
+            result["external_references"] = references[:MAX_ENTITY_LIST_ITEMS]
+            if len(references) > MAX_ENTITY_LIST_ITEMS:
+                result["external_references_total"] = len(references)
         if not isinstance(entity, (Taxonomy, ConceptScheme, PropertyDefinition)):
             counts["relationships_out"] = self._ontology.count_relationships(source_id=entity.id)
             counts["relationships_in"] = self._ontology.count_relationships(target_id=entity.id)
         result["counts"] = counts
         return _outcome(result, None, f"{ref.title} ({ref.kind})", related)
+
+    def _schema_item(self, item_id: str) -> ToolOutcome:
+        """
+        A relationship or attribute definition, which have no page of their own:
+        the ends and type, or the class, are linked instead.
+
+        Raises:
+            EntityNotFoundError: If it is neither
+        """
+        related: list[EntityRef] = []
+        try:
+            relationship = self._ontology.get_relationship(item_id)
+        except EntityNotFoundError:
+            attribute = self._ontology.get_attribute_definition(item_id)
+            result: dict[str, Any] = {"id": attribute.id, "kind": "attribute"}
+            result.update(_entity_fields(attribute))
+            self._linker(result, related)("class", [attribute.class_id])
+            return _outcome(result, None, f"{attribute.title} (attribute)", related)
+        result = {"id": relationship.id, "kind": "relationship"}
+        result.update(_entity_fields(relationship))
+        link = self._linker(result, related)
+        link("source", [relationship.source_id])
+        link("type", [relationship.property_definition_id])
+        link("target", [relationship.target_id])
+        titles = [result[k][0]["title"] if result[k] else "?" for k in ("source", "type", "target")]
+        return _outcome(result, None, "{} {} {} (relationship)".format(*titles), related)
+
+    def _linker(
+        self, result: dict[str, Any], related: list[EntityRef]
+    ) -> Callable[[str, Sequence[Optional[str]]], None]:
+        """Sets result[field] to the linkable entities with the given ids, in order."""
+
+        def link(field: str, ids: Sequence[Optional[str]]) -> None:
+            found = self._resolver.get_many([i for i in ids if i])
+            refs = [ref_of(found[i]) for i in ids if i and i in found]
+            related.extend(refs)
+            result[field] = [_ref_dict(r) for r in refs]
+
+        return link
 
 
 def shortened(text: Optional[str], limit: int) -> Optional[str]:
@@ -511,10 +579,6 @@ def _capped_vision(vision: Optional[str]) -> Optional[str]:
         vision[:MAX_VISION_CHARS]
         + f"\n\n[vision truncated at {MAX_VISION_CHARS} of {len(vision)} characters]"
     )
-
-
-def _data_properties(entity: Class | Individual) -> dict[str, Any]:
-    return {p.property_identifier: p.value for p in entity.data_properties}
 
 
 class ListChildrenTool(_Tool):

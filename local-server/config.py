@@ -7,11 +7,18 @@ import logging
 import os
 import secrets
 from enum import Enum
-from typing import List, Optional
+from typing import Any, List, Optional
 from urllib.parse import urlsplit
 
 from dotenv import load_dotenv
-from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
 # Configure a dedicated logger for config module to avoid circular dependencies
 _config_logger = logging.getLogger(__name__)
@@ -271,6 +278,50 @@ class PipelinesConfig(BaseModel):
     )
 
 
+class DecisionModelInstanceConfig(BaseModel):
+    """
+    One named decision-model instance: which adapter serves it and how.
+
+    The fields here apply to every adapter. Adapter-specific settings (an
+    account id, a token, a base URL) go in `options`, which the adapter
+    validates itself; e.g. workers_ai reads account_id, api_token,
+    request_model and base_url from it.
+
+    Unknown keys are kept (so saving config.json never drops them) and named in
+    a warning when the instances are built. Validation errors never echo input
+    values, which can include credentials.
+    """
+
+    model_config = ConfigDict(extra="allow", hide_input_in_errors=True)
+
+    adapter: str = Field(description="Adapter that serves the instance, e.g. 'workers_ai' or 'llm'")
+    model: str = Field(min_length=1, description="Model id the adapter calls")
+    fallback: Optional[str] = Field(
+        default=None,
+        description="Instance to use when this one is unconfigured or unavailable",
+    )
+    concurrency: int = Field(default=4, ge=1, le=64, description="Maximum calls in flight at once")
+    timeout_seconds: float = Field(default=60.0, gt=0, description="Request timeout")
+    price_per_mtok_in: Optional[float] = Field(
+        default=None, ge=0.0, description="USD per million input tokens, for cost_usd"
+    )
+    price_per_mtok_out: Optional[float] = Field(
+        default=None, ge=0.0, description="USD per million output tokens, for cost_usd"
+    )
+    options: dict[str, Any] = Field(
+        default_factory=dict, description="Adapter-specific settings, validated by the adapter"
+    )
+
+
+class DecisionModelsConfig(BaseModel):
+    """Named decision-model instances; callers ask by name or take the default."""
+
+    model_config = ConfigDict(hide_input_in_errors=True)
+
+    default: Optional[str] = Field(default=None, description="Instance used when none is named")
+    models: dict[str, DecisionModelInstanceConfig] = Field(default_factory=dict)
+
+
 class S3Config(BaseModel):
     """S3 synchronization configuration section"""
 
@@ -338,6 +389,9 @@ class SyncConfig(BaseModel):
 class Settings(BaseModel):
     """Centralized configuration settings"""
 
+    # Validation errors are logged; never echo input values, which can be credentials
+    model_config = ConfigDict(hide_input_in_errors=True)
+
     server: ServerConfig = Field(default_factory=ServerConfig)
     database: DatabaseConfig = Field(default_factory=DatabaseConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
@@ -348,6 +402,7 @@ class Settings(BaseModel):
     recognition: RecognitionConfig = Field(default_factory=RecognitionConfig)
     chat: ChatConfig = Field(default_factory=ChatConfig)
     pipelines: PipelinesConfig = Field(default_factory=PipelinesConfig)
+    decision_models: DecisionModelsConfig = Field(default_factory=DecisionModelsConfig)
     mcp: McpConfig = Field(default_factory=McpConfig)
     sync: Optional[SyncConfig] = Field(default=None, description="Synchronization configuration")
     telemetry: TelemetryConfig = Field(default_factory=TelemetryConfig)
@@ -381,7 +436,7 @@ class ConfigurationManager:
             except ValidationError as e:
                 _config_logger.error(
                     "Configuration validation failed: Invalid values in"
-                    f" {self.config_file}. Errors: {e.errors()}. Using default"
+                    f" {self.config_file}. Errors: {e.errors(include_input=False)}. Using default"
                     " configuration."
                 )
                 self.settings = Settings()
