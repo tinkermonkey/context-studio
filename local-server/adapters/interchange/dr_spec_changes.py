@@ -17,7 +17,8 @@ MCP or in the app, exports as one `cs-dr-spec-changes/1` document:
         "replacement_relationship_id" # delete only: the type the delete names as its
                                       # replacement, else the one its relationships moved to
                                       # (followed through the proposal's other deletes)
-        "note"                        # delete only, when that chain is a cycle
+        "note",                       # delete only, when that chain is a cycle
+        "decided_at", "decided_by"    # the operation's recorded decision (null if none)
      }],
      "skipped": [{"seq", "op_id", "why"}]}
 
@@ -43,8 +44,9 @@ writer then refuses it, as the file it names is gone).
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Mapping
 
+from adapters.interchange.dr_decisions import decided_fields
 from adapters.interchange.dr_relationships import (
     DR_ATTRIBUTE_KEYS,
     DR_SOURCE,
@@ -52,6 +54,7 @@ from adapters.interchange.dr_relationships import (
     dr_relationship_id,
 )
 from domain.ontology.ports import OntologyRepository
+from domain.versioning.gold import ProposalDecision
 from domain.versioning.proposals import (
     ChangeProposal,
     OperationKind,
@@ -64,9 +67,17 @@ from domain.versioning.proposals import (
 SPEC_CHANGES_FORMAT = "cs-dr-spec-changes/1"
 
 
-def spec_changes_for(proposal: ChangeProposal, repo: OntologyRepository) -> dict[str, Any]:
+def spec_changes_for(
+    proposal: ChangeProposal,
+    repo: OntologyRepository,
+    decisions: Mapping[str, ProposalDecision] | None = None,
+) -> dict[str, Any]:
     """
     The proposal's applied DR relationship-type changes as a `cs-dr-spec-changes/1` document.
+
+    Args:
+        decisions: Operation id -> its recorded decision, for each change's
+            decided_at and decided_by
 
     Raises:
         ValueError: If the proposal was reverted, or an applied operation's
@@ -102,6 +113,7 @@ def spec_changes_for(proposal: ChangeProposal, repo: OntologyRepository) -> dict
                 }
             )
         else:
+            change.update(decided_fields((decisions or {}).get(operation.id)))
             changes.append(change)
     return {
         "format": SPEC_CHANGES_FORMAT,

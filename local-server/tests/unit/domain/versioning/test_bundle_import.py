@@ -255,6 +255,14 @@ class TestImport:
             "Hang a picture"
         ]
 
+    def test_applying_on_import_is_decided_by_bundle(self, importer, proposals):
+        result = importer.import_bundle(bundle(), apply=True)
+
+        decisions = proposals.decisions_of(result.proposal.id)
+        applied = [o.id for o in result.proposal.operations if o.status is OperationStatus.APPLIED]
+        assert applied and set(decisions) == set(applied)
+        assert {d.decided_by for d in decisions.values()} == {"bundle"}
+
     def test_reimporting_an_unchanged_bundle_proposes_nothing(self, importer, proposals):
         loaded(importer)
 
@@ -341,6 +349,8 @@ class TestImport:
         assert {o.status for o in old.operations} == {OperationStatus.REJECTED}
         assert old.operations[0].reason == f"superseded by bundle proposal {second.id}"
         assert proposals.get(second.id).status is ProposalStatus.OPEN
+        # Nobody judged the superseded operations: no gold decisions (#1407).
+        assert proposals.decisions_of(first.id) == {}
 
     @pytest.mark.parametrize(
         "error", [ProposalValidationError([]), RuntimeError("disk full")], ids=["invalid", "other"]

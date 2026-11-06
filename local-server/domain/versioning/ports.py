@@ -7,6 +7,7 @@ from typing import Any, Mapping, Optional, Protocol, Sequence
 
 from domain.versioning.approval_policy import ApprovalPolicy
 from domain.versioning.entities import ChangeEvent
+from domain.versioning.gold import DecisionFilter, ProposalDecision
 from domain.versioning.proposals import (
     ChangeProposal,
     ProposalSource,
@@ -135,11 +136,35 @@ class ChangeProposalRepository(Protocol):
         """Count proposals matching the filters."""
         ...
 
-    def save_operations(self, proposal_id: str, operations: Sequence[ProposedOperation]) -> None:
+    def save_operations(
+        self,
+        proposal_id: str,
+        operations: Sequence[ProposedOperation],
+        decisions: Sequence[ProposalDecision] = (),
+    ) -> None:
         """Persist the status, result, reason, scope, base and applied fields of these operations.
+
+        The decisions taken on them are recorded with them, in the same commit.
 
         Raises ValueError for an unknown proposal or operation.
         """
+        ...
+
+    def supersede_decisions(self, proposal_id: str, superseded_at: datetime, by: str) -> int:
+        """
+        Mark the proposal's applied decisions (applied, applied_with_edits) not yet
+        superseded as superseded; rejections still stand. Return how many.
+        """
+        ...
+
+    def list_decisions(
+        self, filters: DecisionFilter, limit: Optional[int] = None, offset: int = 0
+    ) -> list[ProposalDecision]:
+        """Decisions matching the filters, oldest first (limit None: all of them)."""
+        ...
+
+    def count_decisions(self, filters: DecisionFilter) -> int:
+        """Count decisions matching the filters."""
         ...
 
     def set_status(self, proposal_id: str, status: ProposalStatus) -> None:

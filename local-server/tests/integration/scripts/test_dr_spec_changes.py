@@ -79,7 +79,8 @@ def test_a_create_exports_every_value_it_applied(parts):
     proposal = apply_all(proposals, propose(repo, proposals, create_new(repo)))
     assert proposal.operations[0].status is OperationStatus.APPLIED, proposal.operations[0].reason
 
-    document = spec_changes_for(proposal, repo)
+    recorded = proposals.decisions_of(proposal.id)
+    document = spec_changes_for(proposal, repo, recorded)
 
     assert document["format"] == "cs-dr-spec-changes/1"
     assert document["proposal_id"] == proposal.id
@@ -100,6 +101,8 @@ def test_a_create_exports_every_value_it_applied(parts):
                 "strength": "medium",
                 "evidence": EVIDENCE,
             },
+            "decided_at": recorded[proposal.operations[0].id].decided_at.isoformat(),
+            "decided_by": "user",
         }
     ]
 
@@ -247,6 +250,8 @@ def test_a_resolved_delete_names_the_replacement(parts):
         "destination_spec_node_id": "api.response",
         "set": {},
         "replacement_relationship_id": RENAMED,
+        "decided_at": None,  # no decisions passed
+        "decided_by": None,
     }
 
 

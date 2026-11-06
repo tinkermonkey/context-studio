@@ -1400,6 +1400,67 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
         return f"<ProposalOperation(proposal={self.proposal_id}, seq={self.seq}, op={self.op})>"
 
 
+class ProposalDecisionRecord(Base):  # type: ignore[valid-type,misc]
+    """
+    Gold: one reviewer or policy decision on a proposal operation.
+
+    Attributes:
+        id: UUID as string, primary key
+        operation_id: FK to proposal_operations.id
+        proposal_id: FK to change_proposals.id
+        taxonomy_id: The proposal's taxonomy
+        seq, kind, op: The operation's seq, entity kind and type (copied for filtering)
+        decision: applied, rejected or applied_with_edits
+        decided_at: When (UTC)
+        decided_by: user, policy, an agent source, or unknown (backfilled)
+        proposed: JSON of the operation as proposed
+        applied_fields: JSON of the fields finally applied; null when rejected
+        result_entity_id: Entity created or changed, when applied
+        reason: Why (a reject note)
+        resolution: JSON of an applied relationship-type delete's in-use resolution
+        chosen_alternative: JSON of the alternative the reviewer chose, if any
+        probability: The operation's probability, if any
+        model: The decision model that produced the probability, if any
+        superseded_at, superseded_by: Set when a revert undid the decision
+    """
+
+    __tablename__ = "proposal_decisions"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    operation_id = Column(
+        String(36),
+        ForeignKey("proposal_operations.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    proposal_id = Column(
+        String(36),
+        ForeignKey("change_proposals.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    taxonomy_id = Column(String(36), nullable=False, index=True)
+    seq = Column(Integer, nullable=False)
+    kind = Column(String(20), nullable=False)
+    op = Column(String(10), nullable=False)
+    decision = Column(String(20), nullable=False, index=True)
+    decided_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    decided_by = Column(String(50), nullable=False, index=True)
+    proposed = Column(JSON, nullable=False, default=dict)
+    applied_fields = Column(JSON, nullable=True)
+    result_entity_id = Column(String(36), nullable=True)
+    reason = Column(Text, nullable=True)
+    resolution = Column(JSON, nullable=True)
+    chosen_alternative = Column(JSON, nullable=True)
+    probability = Column(Float, nullable=True)
+    model = Column(String(100), nullable=True)
+    superseded_at = Column(DateTime(timezone=True), nullable=True)
+    superseded_by = Column(String(50), nullable=True)
+
+    def __repr__(self) -> str:
+        return f"<ProposalDecisionRecord(operation={self.operation_id}, decision={self.decision})>"
+
+
 class ApprovalPolicyRecord(Base):  # type: ignore[valid-type,misc]
     """
     A taxonomy's approval policy: which proposed operations may apply on their own.

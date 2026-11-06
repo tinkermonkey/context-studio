@@ -31,6 +31,7 @@ from adapters.persistence.sqlite.connection import DatabaseManager
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from config import get_config_manager
+from domain.versioning.gold import DecisionFilter, by_operation
 
 
 def main() -> int:
@@ -46,12 +47,16 @@ def main() -> int:
         operations_db_url=f"sqlite:///{settings.database.operations_db_path}",
     )
     session_factory = db_manager.get_local_session_factory()
-    proposal = SQLiteChangeProposalRepository(session_factory).get(args.proposal_id)
+    proposals = SQLiteChangeProposalRepository(session_factory)
+    proposal = proposals.get(args.proposal_id)
     if proposal is None:
         print(f"No change proposal {args.proposal_id}", file=sys.stderr)
         return 1
+    decisions = by_operation(
+        proposals.list_decisions(DecisionFilter(proposal_id=proposal.id, include_superseded=True))
+    )
     try:
-        document = spec_changes_for(proposal, SQLiteOntologyRepository(session_factory))
+        document = spec_changes_for(proposal, SQLiteOntologyRepository(session_factory), decisions)
     except ValueError as exc:
         print(str(exc), file=sys.stderr)
         return 1

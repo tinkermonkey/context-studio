@@ -3805,6 +3805,48 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/taxonomies/{taxonomy_id}/gold": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Gold
+     * @description The taxonomy's gold: every reviewer or policy decision on its proposals'
+     *     operations, oldest first. Applied decisions a revert superseded are left out
+     *     unless include_superseded (a revert leaves rejections standing).
+     */
+    get: operations["list_gold_api_taxonomies__taxonomy_id__gold_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/taxonomies/{taxonomy_id}/gold/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Gold
+     * @description The taxonomy's gold as JSONL: the list route's decisions and filters, all of them.
+     */
+    get: operations["export_gold_api_taxonomies__taxonomy_id__gold_export_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/taxonomies/{taxonomy_id}/approval-policy": {
     parameters: {
       query?: never;
@@ -5461,6 +5503,12 @@ export interface components {
       description?: string | null;
     };
     /**
+     * DecisionKind
+     * @description What was decided.
+     * @enum {string}
+     */
+    DecisionKind: "applied" | "rejected" | "applied_with_edits";
+    /**
      * DecisionModelListResponse
      * @description Every configured decision-model instance and the default's name.
      */
@@ -5657,6 +5705,16 @@ export interface components {
       reason?: string | null;
       /** Result Entity Id */
       result_entity_id?: string | null;
+      /**
+       * Decided At
+       * @description When the operation was decided (ISO 8601); null if undecided
+       */
+      decided_at?: string | null;
+      /**
+       * Decided By
+       * @description Who decided: user, policy, an agent source, or unknown (decided before decisions were recorded); null if undecided
+       */
+      decided_by?: string | null;
     };
     /**
      * DrTripleFields
@@ -5952,6 +6010,85 @@ export interface components {
        * @description ISO 8601 timestamp when extraction completed
        */
       created_at: string;
+    };
+    /**
+     * GoldDecisionResponse
+     * @description One reviewer or policy decision on a proposal operation: gold.
+     *
+     *     A revert supersedes the proposal's applied decisions (superseded_at,
+     *     superseded_by) rather than deleting them; its rejections still stand.
+     */
+    GoldDecisionResponse: {
+      /** Id */
+      id: string;
+      /** Operation Id */
+      operation_id: string;
+      /** Proposal Id */
+      proposal_id: string;
+      /** Taxonomy Id */
+      taxonomy_id: string;
+      /** Seq */
+      seq: number;
+      kind: components["schemas"]["OperationKind"];
+      op: components["schemas"]["OperationType"];
+      /** @description applied, rejected or applied_with_edits */
+      decision: components["schemas"]["DecisionKind"];
+      /**
+       * Decided At
+       * Format: date-time
+       */
+      decided_at: string;
+      /**
+       * Decided By
+       * @description user, policy, an agent source, or unknown (decided before decisions were recorded)
+       */
+      decided_by: string;
+      /**
+       * Proposed
+       * @description The operation as proposed: seq, op, kind, target_id, ref, fields, base, rationale, evidence, probability, scope, proposed_replacement_id
+       */
+      proposed: {
+        [key: string]: unknown;
+      };
+      /**
+       * Applied Fields
+       * @description The fields finally applied (the edit, if edited); null when rejected
+       */
+      applied_fields?: {
+        [key: string]: unknown;
+      } | null;
+      /** Result Entity Id */
+      result_entity_id?: string | null;
+      /**
+       * Reason
+       * @description Why (a reject note)
+       */
+      reason?: string | null;
+      /**
+       * Resolution
+       * @description An applied relationship-type delete's in-use resolution
+       */
+      resolution?: {
+        [key: string]: unknown;
+      } | null;
+      /**
+       * Chosen Alternative
+       * @description The alternative the reviewer chose, when there is one
+       */
+      chosen_alternative?: {
+        [key: string]: unknown;
+      } | null;
+      /** Probability */
+      probability?: number | null;
+      /**
+       * Model
+       * @description The decision model that produced the probability, if one did
+       */
+      model?: string | null;
+      /** Superseded At */
+      superseded_at?: string | null;
+      /** Superseded By */
+      superseded_by?: string | null;
     };
     /**
      * GraphMetricsResponse
@@ -6805,6 +6942,29 @@ export interface components {
        * @description List of items
        */
       items: components["schemas"]["DataPropertyValueResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
+    /** ListResponse[GoldDecisionResponse] */
+    ListResponse_GoldDecisionResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["GoldDecisionResponse"][];
       /**
        * Total
        * @description Total number of items
@@ -14100,6 +14260,116 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["ChangeProposalRevertConflictResponse"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_gold_api_taxonomies__taxonomy_id__gold_get: {
+    parameters: {
+      query?: {
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Number of results to skip */
+        offset?: number;
+        /** @description Only operations on this kind */
+        kind?: components["schemas"]["OperationKind"] | null;
+        /** @description Only this operation: create, update, move or delete */
+        op?: components["schemas"]["OperationType"] | null;
+        /** @description Only applied, rejected or applied_with_edits */
+        decision?: components["schemas"]["DecisionKind"] | null;
+        /** @description Only decisions by user, policy, an agent source or unknown */
+        decided_by?: string | null;
+        /** @description Decided at or after */
+        decided_from?: string | null;
+        /** @description Decided before */
+        decided_to?: string | null;
+        /** @description Also decisions a revert superseded */
+        include_superseded?: boolean;
+      };
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse_GoldDecisionResponse_"];
+        };
+      };
+      /** @description Taxonomy not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_gold_api_taxonomies__taxonomy_id__gold_export_get: {
+    parameters: {
+      query?: {
+        /** @description Only operations on this kind */
+        kind?: components["schemas"]["OperationKind"] | null;
+        /** @description Only this operation: create, update, move or delete */
+        op?: components["schemas"]["OperationType"] | null;
+        /** @description Only applied, rejected or applied_with_edits */
+        decision?: components["schemas"]["DecisionKind"] | null;
+        /** @description Only decisions by user, policy, an agent source or unknown */
+        decided_by?: string | null;
+        /** @description Decided at or after */
+        decided_from?: string | null;
+        /** @description Decided before */
+        decided_to?: string | null;
+        /** @description Also decisions a revert superseded */
+        include_superseded?: boolean;
+      };
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Every matching decision, one GoldDecisionResponse JSON object per line */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/x-ndjson": string;
+        };
+      };
+      /** @description Taxonomy not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {

@@ -9,12 +9,28 @@ operations be tagged with it and reverted with the run.
 
 from __future__ import annotations
 
-from datetime import timezone
+from datetime import datetime, timezone
 from typing import Optional, Sequence
 
+from sqlalchemy import and_, func, not_, or_
 from sqlalchemy.orm import Session, sessionmaker
 
-from adapters.persistence.sqlite.models import BatchRun, ChangeProposalRun, ProposalOperation
+from adapters.persistence.sqlite.models import (
+    BatchRun,
+    ChangeEvent,
+    ChangeProposalRun,
+    ProposalDecisionRecord,
+    ProposalOperation,
+)
+from domain.versioning.bundle_import import MATCHED_PREFIX, SUPERSEDED_PREFIX
+from domain.versioning.gold import (
+    DECIDED_BY_UNKNOWN,
+    DecisionFilter,
+    DecisionKind,
+    ProposalDecision,
+    decision_of,
+)
+from domain.versioning.proposal_service import REVERTED_REASON
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
@@ -93,7 +109,12 @@ class SQLiteChangeProposalRepository:
         with self._session_factory() as session:
             return _filtered(session, taxonomy_id, status, source).count()
 
-    def save_operations(self, proposal_id: str, operations: Sequence[ProposedOperation]) -> None:
+    def save_operations(
+        self,
+        proposal_id: str,
+        operations: Sequence[ProposedOperation],
+        decisions: Sequence[ProposalDecision] = (),
+    ) -> None:
         with self._session_factory() as session:
             if session.get(ChangeProposalRun, proposal_id) is None:
                 raise ValueError(f"No proposal {proposal_id}")
@@ -116,7 +137,118 @@ class SQLiteChangeProposalRepository:
                 row.applied_fields = operation.applied_fields  # type: ignore[assignment]
                 row.resolution = _resolution_json(operation)  # type: ignore[assignment]
                 row.base = dict(operation.base)  # type: ignore[assignment]
+            session.flush()
+            for decision in decisions:
+                session.add(_decision_to_orm(decision))
             session.commit()
+
+    def supersede_decisions(self, proposal_id: str, superseded_at: datetime, by: str) -> int:
+        with self._session_factory() as session:
+            count = (
+                session.query(ProposalDecisionRecord)
+                .filter(
+                    ProposalDecisionRecord.proposal_id == proposal_id,
+                    ProposalDecisionRecord.superseded_at.is_(None),
+                    ProposalDecisionRecord.decision != DecisionKind.REJECTED.value,
+                )
+                .update(
+                    {
+                        ProposalDecisionRecord.superseded_at: superseded_at.astimezone(
+                            timezone.utc
+                        ),
+                        ProposalDecisionRecord.superseded_by: by,
+                    },
+                    synchronize_session=False,
+                )
+            )
+            session.commit()
+            return count
+
+    def list_decisions(
+        self, filters: DecisionFilter, limit: Optional[int] = None, offset: int = 0
+    ) -> list[ProposalDecision]:
+        with self._session_factory() as session:
+            query = _filtered_decisions(session, filters).order_by(
+                ProposalDecisionRecord.decided_at,
+                ProposalDecisionRecord.proposal_id,
+                ProposalDecisionRecord.seq,
+            )
+            if offset:
+                query = query.offset(offset)
+            if limit is not None:
+                query = query.limit(limit)
+            return [_decision_to_domain(row) for row in query]
+
+    def count_decisions(self, filters: DecisionFilter) -> int:
+        with self._session_factory() as session:
+            return _filtered_decisions(session, filters).count()
+
+    def backfill_decisions(self) -> int:
+        """
+        Record a decision for every applied or rejected operation without one:
+        those decided before decisions were recorded. Idempotent.
+
+        decided_by is "unknown"; decided_at is when the operation's change was
+        made (the first change event of the proposal's run for its entity), else
+        when it was proposed. A reverted proposal's applied decisions are
+        superseded at its run's last change event (the revert's), else at
+        decided_at; its rejections still stand. Rejections nobody judged (by a
+        revert, or a bundle import superseding an older plan) are left out, as
+        they are when made now; that filter runs in SQL, so the rows it skips
+        for good are never loaded.
+
+        Returns:
+            How many decisions were recorded
+        """
+        with self._session_factory() as session:
+            decided = session.query(ProposalDecisionRecord.operation_id)
+            rows = (
+                session.query(ProposalOperation)
+                .join(ChangeProposalRun, ChangeProposalRun.id == ProposalOperation.proposal_id)
+                .filter(
+                    ProposalOperation.status.in_(
+                        [OperationStatus.APPLIED.value, OperationStatus.REJECTED.value]
+                    ),
+                    ProposalOperation.id.not_in(decided),
+                    not_(_unjudged_rejection()),
+                )
+                .order_by(ProposalOperation.proposal_id, ProposalOperation.seq)
+                .all()
+            )
+            proposals: dict[str, ChangeProposal] = {}
+            for row in rows:
+                proposal_id: str = row.proposal_id  # type: ignore[assignment]
+                if proposal_id not in proposals:
+                    run = session.get(ChangeProposalRun, proposal_id)
+                    proposals[proposal_id] = _to_domain(run, [])  # type: ignore[arg-type]
+                proposal = proposals[proposal_id]
+                operation = _operation_to_domain(row)
+                decided_at = proposal.created_at
+                if operation.status is OperationStatus.APPLIED and operation.result_entity_id:
+                    first = (
+                        session.query(func.min(ChangeEvent.timestamp))
+                        .filter(
+                            ChangeEvent.batch_run_id == proposal_id,
+                            ChangeEvent.entity_id == operation.result_entity_id,
+                        )
+                        .scalar()
+                    )
+                    decided_at = _utc(first) or decided_at
+                decision = decision_of(proposal, operation, DECIDED_BY_UNKNOWN, decided_at)
+                if (
+                    proposal.status is ProposalStatus.REVERTED
+                    and decision.decision is not DecisionKind.REJECTED
+                ):
+                    last = (
+                        session.query(func.max(ChangeEvent.timestamp))
+                        .filter(ChangeEvent.batch_run_id == proposal_id)
+                        .scalar()
+                    )
+                    decision.superseded_at = max(_utc(last) or decided_at, decided_at)
+                    decision.superseded_by = DECIDED_BY_UNKNOWN
+                session.add(_decision_to_orm(decision))
+            session.commit()
+            return len(rows)
 
     def set_status(self, proposal_id: str, status: ProposalStatus) -> None:
         with self._session_factory() as session:
@@ -125,6 +257,124 @@ class SQLiteChangeProposalRepository:
                 raise ValueError(f"No proposal {proposal_id}")
             run.status = status.value  # type: ignore[assignment]
             session.commit()
+
+
+def _unjudged_rejection():
+    """
+    SQL for a rejection nobody judged: a revert's of what was undecided (a
+    reverted proposal, rejected as "proposal reverted"), or a new bundle
+    import's of an earlier import's (a bundle proposal, rejected as superseded).
+    Needs ProposalOperation joined to ChangeProposalRun.
+    """
+    reason = func.coalesce(ProposalOperation.reason, "")
+    return and_(
+        ProposalOperation.status == OperationStatus.REJECTED.value,
+        or_(
+            and_(
+                ChangeProposalRun.status == ProposalStatus.REVERTED.value,
+                reason == REVERTED_REASON,
+            ),
+            and_(
+                ChangeProposalRun.source == ProposalSource.BUNDLE.value,
+                or_(
+                    reason.startswith(SUPERSEDED_PREFIX, autoescape=True),
+                    reason.startswith(MATCHED_PREFIX, autoescape=True),
+                ),
+            ),
+        ),
+    )
+
+
+def _utc(value: Optional[datetime]) -> Optional[datetime]:
+    """A stored datetime as UTC (SQLite keeps the wall-clock time and drops the zone)."""
+    if value is None:
+        return None
+    return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value
+
+
+def _filtered_decisions(session: Session, filters: DecisionFilter):
+    model = ProposalDecisionRecord
+    query = session.query(model)
+    for column, value in (
+        (model.taxonomy_id, filters.taxonomy_id),
+        (model.proposal_id, filters.proposal_id),
+        (model.kind, filters.kind.value if filters.kind else None),
+        (model.op, filters.op.value if filters.op else None),
+        (model.decision, filters.decision.value if filters.decision else None),
+        (model.decided_by, filters.decided_by),
+    ):
+        if value is not None:
+            query = query.filter(column == value)
+    if filters.decided_from is not None:
+        query = query.filter(model.decided_at >= _stored(filters.decided_from))
+    if filters.decided_to is not None:
+        query = query.filter(model.decided_at < _stored(filters.decided_to))
+    if not filters.include_superseded:
+        query = query.filter(model.superseded_at.is_(None))
+    return query
+
+
+def _stored(value: datetime) -> datetime:
+    """A datetime as stored: UTC (a naive one is taken as UTC already)."""
+    return value.astimezone(timezone.utc) if value.tzinfo is not None else value
+
+
+def _decision_to_orm(decision: ProposalDecision) -> ProposalDecisionRecord:
+    return ProposalDecisionRecord(
+        id=decision.id,
+        operation_id=decision.operation_id,
+        proposal_id=decision.proposal_id,
+        taxonomy_id=decision.taxonomy_id,
+        seq=decision.seq,
+        kind=decision.kind.value,
+        op=decision.op.value,
+        decision=decision.decision.value,
+        decided_at=_stored(decision.decided_at),
+        decided_by=decision.decided_by,
+        proposed=dict(decision.proposed),
+        applied_fields=(
+            dict(decision.applied_fields) if decision.applied_fields is not None else None
+        ),
+        result_entity_id=decision.result_entity_id,
+        reason=decision.reason,
+        resolution=dict(decision.resolution) if decision.resolution is not None else None,
+        chosen_alternative=(
+            dict(decision.chosen_alternative) if decision.chosen_alternative is not None else None
+        ),
+        probability=decision.probability,
+        model=decision.model,
+        superseded_at=_stored(decision.superseded_at) if decision.superseded_at else None,
+        superseded_by=decision.superseded_by,
+    )
+
+
+def _decision_to_domain(row: ProposalDecisionRecord) -> ProposalDecision:
+    return ProposalDecision(
+        id=row.id,  # type: ignore[arg-type]
+        operation_id=row.operation_id,  # type: ignore[arg-type]
+        proposal_id=row.proposal_id,  # type: ignore[arg-type]
+        taxonomy_id=row.taxonomy_id,  # type: ignore[arg-type]
+        seq=row.seq,  # type: ignore[arg-type]
+        kind=OperationKind(row.kind),
+        op=OperationType(row.op),
+        decision=DecisionKind(row.decision),
+        decided_at=_utc(row.decided_at),  # type: ignore[arg-type]
+        decided_by=row.decided_by,  # type: ignore[arg-type]
+        proposed=dict(row.proposed or {}),  # type: ignore[arg-type]
+        applied_fields=dict(row.applied_fields) if row.applied_fields is not None else None,  # type: ignore[arg-type]
+        result_entity_id=row.result_entity_id,  # type: ignore[arg-type]
+        reason=row.reason,  # type: ignore[arg-type]
+        resolution=dict(row.resolution) if row.resolution is not None else None,  # type: ignore[arg-type]
+        chosen_alternative=(
+            dict(row.chosen_alternative)  # type: ignore[arg-type]
+            if row.chosen_alternative is not None
+            else None
+        ),
+        probability=row.probability,  # type: ignore[arg-type]
+        model=row.model,  # type: ignore[arg-type]
+        superseded_at=_utc(row.superseded_at),  # type: ignore[arg-type]
+        superseded_by=row.superseded_by,  # type: ignore[arg-type]
+    )
 
 
 def _filtered(

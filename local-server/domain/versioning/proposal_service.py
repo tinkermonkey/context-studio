@@ -39,7 +39,7 @@ from uuid import uuid4
 from domain.interchange.services import get_current_batch_run_id, set_batch_run_context
 from domain.ontology.entities import validate_relationship_attributes
 from domain.ontology.events import GraphInvalidated
-from domain.ontology.exceptions import OntologyError
+from domain.ontology.exceptions import EntityNotFoundError, OntologyError
 from domain.ontology.snapshots import decode_field, entity_snapshot
 from domain.ontology.value_objects import DataPropertyValue, DataType
 from domain.versioning.approval_policy import auto_apply_ids
@@ -48,6 +48,15 @@ from domain.versioning.exceptions import (
     ChangeProposalStateError,
     OperationError,
     ProposalValidationError,
+)
+from domain.versioning.gold import (
+    DECIDED_BY_POLICY,
+    DECIDED_BY_USER,
+    DecisionFilter,
+    ProposalDecision,
+    by_operation,
+    decision_of,
+    proposed_snapshot,
 )
 from domain.versioning.in_use import (
     ChainLink,
@@ -521,7 +530,9 @@ class ProposalService:
         try:
             auto = self._policy_auto_apply_ids(proposal)
             # apply takes the proposal's lock itself; propose never holds it.
-            return self.apply(proposal.id, auto) if auto else proposal
+            if not auto:
+                return proposal
+            return self.apply(proposal.id, auto, decided_by=DECIDED_BY_POLICY)
         except Exception:  # noqa: BLE001 - the stored proposal must reach the caller
             _logger.exception("Auto-apply of proposal %s failed; left for review", proposal.id)
         try:
@@ -1086,9 +1097,13 @@ class ProposalService:
         force_stale: Iterable[str] = (),
         edits: Mapping[str, dict[str, Any]] | None = None,
         resolutions: Mapping[str, InUseResolution] | None = None,
+        decided_by: str = DECIDED_BY_USER,
     ) -> ChangeProposal:
         """
         Apply the chosen operations, in seq order, under the proposal's run id.
+
+        Each operation that applies records a decision (see `domain.versioning.gold`)
+        by decided_by: applied, or applied_with_edits when edited.
 
         Pending and failed operations can be applied (a failed one again, e.g.
         with force_stale after a target_changed). Each records its own outcome:
@@ -1129,6 +1144,8 @@ class ProposalService:
             edits: Operation id -> the fields to apply instead of the proposed ones
             resolutions: Operation id -> how to resolve the relationships still
                 using the relationship type a delete removes
+            decided_by: Who decided: "user" (a reviewer), "policy" (auto-apply)
+                or an agent source
 
         Returns:
             The proposal with updated outcomes
@@ -1155,6 +1172,7 @@ class ProposalService:
             force = set(force_stale)
             refs = {o.ref: o for o in proposal.operations if o.ref}
 
+            proposed = {o.id: proposed_snapshot(o) for o in chosen}
             previous_run = get_current_batch_run_id()
             set_batch_run_context(proposal.id)
             try:
@@ -1169,7 +1187,18 @@ class ProposalService:
                         self._apply_resolved(operation, resolution, proposal.id, forced)
                     else:
                         self._apply_one(operation, refs, proposal.id, forced)
-                    self._proposals.save_operations(proposal.id, [operation])
+                    decisions = []
+                    if operation.status is OperationStatus.APPLIED:
+                        decisions.append(
+                            decision_of(
+                                proposal,
+                                operation,
+                                decided_by,
+                                datetime.now(timezone.utc),
+                                proposed[operation.id],
+                            )
+                        )
+                    self._proposals.save_operations(proposal.id, [operation], decisions)
             finally:
                 set_batch_run_context(previous_run)
 
@@ -1505,10 +1534,17 @@ class ProposalService:
     # ----------------------------------------------------------- reject / revert
 
     def reject(
-        self, proposal_id: str, operation_ids: Iterable[str], note: str | None = None
+        self,
+        proposal_id: str,
+        operation_ids: Iterable[str],
+        note: str | None = None,
+        decided_by: str | None = DECIDED_BY_USER,
     ) -> ChangeProposal:
         """
         Reject pending or failed operations, with an optional note as the reason.
+
+        Each records a rejected decision by decided_by; None records none, for
+        a closing nobody judged (a bundle import superseding an older plan).
 
         Raises:
             ChangeProposalNotFoundError: If the proposal does not exist
@@ -1521,18 +1557,24 @@ class ProposalService:
             for operation in chosen:
                 operation.status = OperationStatus.REJECTED
                 operation.reason = note
-            self._proposals.save_operations(proposal.id, chosen)
+            decisions = []
+            if decided_by is not None:
+                now = datetime.now(timezone.utc)
+                decisions = [decision_of(proposal, o, decided_by, now) for o in chosen]
+            self._proposals.save_operations(proposal.id, chosen, decisions)
             proposal.settle_status()
             self._proposals.set_status(proposal.id, proposal.status)
             return self._get(proposal_id)
 
-    def revert(self, proposal_id: str) -> RevertResult:
+    def revert(self, proposal_id: str, reverted_by: str = DECIDED_BY_USER) -> RevertResult:
         """
         Undo everything applied from the proposal and mark it reverted.
 
         Operations still undecided (pending or failed) are rejected ("proposal
-        reverted"), since a reverted proposal takes no more decisions. Applied and
-        rejected operations keep their recorded outcomes.
+        reverted"), since a reverted proposal takes no more decisions; nobody
+        judged them, so they record no decision. Applied and rejected operations
+        keep their recorded outcomes; the applied ones' decisions are marked
+        superseded by reverted_by (a rejection still stands).
 
         Raises:
             ChangeProposalNotFoundError: If the proposal does not exist
@@ -1550,11 +1592,43 @@ class ProposalService:
                     operation.reason = REVERTED_REASON
                 if undecided:
                     self._proposals.save_operations(proposal.id, undecided)
+                self._proposals.supersede_decisions(
+                    proposal.id, datetime.now(timezone.utc), reverted_by
+                )
                 self._proposals.set_status(proposal.id, ProposalStatus.REVERTED)
 
             return self._revert.revert_with_summary(proposal.id, on_reverted=close_proposal)
 
     # ------------------------------------------------------------------ helpers
+
+    def list_decisions(
+        self, filters: DecisionFilter, limit: int | None = None, offset: int = 0
+    ) -> list[ProposalDecision]:
+        """
+        Decisions matching the filters, oldest first (limit None: all).
+
+        Raises:
+            EntityNotFoundError: If filters name a taxonomy that does not exist
+        """
+        self._check_taxonomy(filters)
+        return self._proposals.list_decisions(filters, limit, offset)
+
+    def count_decisions(self, filters: DecisionFilter) -> int:
+        """Count decisions matching the filters (EntityNotFoundError as list_decisions)."""
+        self._check_taxonomy(filters)
+        return self._proposals.count_decisions(filters)
+
+    def decisions_of(self, proposal_id: str) -> dict[str, ProposalDecision]:
+        """Operation id -> its latest decision, superseded or not."""
+        return by_operation(
+            self._proposals.list_decisions(
+                DecisionFilter(proposal_id=proposal_id, include_superseded=True)
+            )
+        )
+
+    def _check_taxonomy(self, filters: DecisionFilter) -> None:
+        if filters.taxonomy_id is not None and self._repo.get_taxonomy(filters.taxonomy_id) is None:
+            raise EntityNotFoundError("Taxonomy", filters.taxonomy_id)
 
     def get(self, proposal_id: str) -> ChangeProposal:
         """The proposal, or ChangeProposalNotFoundError."""

@@ -23,6 +23,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from adapters.persistence.sqlite.connection import DatabaseManager
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from config import get_config_manager
+from domain.versioning.gold import DecisionFilter, by_operation
 from scripts.dr_reflection_plan import decisions_for
 
 
@@ -38,14 +39,16 @@ def main() -> int:
         local_db_url=f"sqlite:///{settings.database.local_db_path}",
         operations_db_url=f"sqlite:///{settings.database.operations_db_path}",
     )
-    proposal = SQLiteChangeProposalRepository(db_manager.get_local_session_factory()).get(
-        args.proposal_id
-    )
+    proposals = SQLiteChangeProposalRepository(db_manager.get_local_session_factory())
+    proposal = proposals.get(args.proposal_id)
     if proposal is None:
         print(f"No change proposal {args.proposal_id}", file=sys.stderr)
         return 1
+    recorded = by_operation(
+        proposals.list_decisions(DecisionFilter(proposal_id=proposal.id, include_superseded=True))
+    )
     try:
-        decisions = decisions_for(proposal)
+        decisions = decisions_for(proposal, recorded)
     except ValueError as exc:
         print(str(exc), file=sys.stderr)
         return 1
