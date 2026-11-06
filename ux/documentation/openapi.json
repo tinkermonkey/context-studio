@@ -7125,7 +7125,7 @@
           "proposals"
         ],
         "summary": "Apply Proposal",
-        "description": "Apply the chosen operations in seq order under the proposal's run.\n\nEach operation records its own outcome; one that fails (e.g. \"target_changed\")\ndoes not undo the others. Pass a stale operation in force_stale to apply it\nanyway (edited ones too).\n\nedits corrects property-definition updates and deletes before they apply:\neach replaces the operation's proposed fields, applied as an update. A field\nproblem, or a breach of the taxonomy's rules (for dr_spec: both classes are\nDR spec classes, the predicate is in its predicate catalog, and no other\nrelationship type or operation has the triple), fails only that operation\nwith \"invalid_edit: ...\"; it stays open, to apply again with a corrected\nedit or reject. For dr_spec the identifier and DR external reference follow\nfrom the triple. What was applied is returned as the operation's\napplied_fields.\n\nresolutions lets a relationship-type delete apply although relationships\nstill use the type (its blockers list them): \"move\" gives each the\nreplacement type instead (all must fit its domain and range, inheritance-\naware, and allow their attributes, or nothing moves), \"delete\" deletes them\ntoo. The relationships and the type change in one transaction tagged with\nthe proposal's run, so Revert restores them together; a failure fails only\nthat operation (\"unresolvable: ...\" for a misfit) and changes nothing.\nWithout a resolution such a delete fails as in use. What was moved or\ndeleted is returned as the operation's resolution.",
+        "description": "Apply the chosen operations in seq order under the proposal's run.\n\nEach operation records its own outcome; one that fails (e.g. \"target_changed\")\ndoes not undo the others. Pass a stale operation in force_stale to apply it\nanyway (edited ones too).\n\nedits corrects property-definition updates and deletes before they apply:\neach replaces the operation's proposed fields, applied as an update. A field\nproblem, or a breach of the taxonomy's rules (for dr_spec: both classes are\nDR spec classes, the predicate is in its predicate catalog, and no other\nrelationship type or operation has the triple), fails only that operation\nwith \"invalid_edit: ...\"; it stays open, to apply again with a corrected\nedit or reject. For dr_spec the identifier and DR external reference follow\nfrom the triple. What was applied is returned as the operation's\napplied_fields.\n\nresolutions lets a relationship-type delete apply although relationships\nstill use the type (its blockers list them): \"move\" gives each the\nreplacement type instead (all must fit its domain and range, inheritance-\naware, and allow their attributes, or nothing moves), \"delete\" deletes them\ntoo. The relationships and the type change in one transaction tagged with\nthe proposal's run, so Revert restores them together; a failure fails only\nthat operation (\"unresolvable: ...\" for a misfit) and changes nothing.\nWithout a resolution such a delete fails as in use. A property update that\nretargets the type (another domain and range pair) takes one the same way;\nwithout one its relationships stay. What was moved or deleted is returned\nas the operation's resolution.\n\nA property update that reverses the type (domain and range swapped) swaps\nthe ends of every relationship using it, and a rename keeps them, in one\ntransaction with the update; Revert undoes both.",
         "operationId": "apply_proposal_api_proposals__proposal_id__apply_post",
         "parameters": [
           {
@@ -7166,7 +7166,7 @@
             "description": "The proposal is reverted, or an operation is already decided"
           },
           "422": {
-            "description": "An operation id is not in the proposal, or an edit is misplaced (not in operation_ids, not a property update/delete, empty, or uses a $ref), or a resolution is (not in operation_ids, not a property delete, also edited, a move without replacement_property_id, or a move to a type the proposal deletes); nothing was applied"
+            "description": "An operation id is not in the proposal, or an edit is misplaced (not in operation_ids, not a property update/delete, empty, or uses a $ref), or a resolution is (not in operation_ids, not a property delete or update, an edited delete, a move without replacement_property_id, or a move to a type the proposal deletes); nothing was applied"
           }
         }
       }
@@ -9116,7 +9116,7 @@
             },
             "type": "object",
             "title": "Resolutions",
-            "description": "Operation id -> how to resolve the relationships still using the relationship type a property delete in operation_ids removes (see the operation's blockers). Moved or deleted in one transaction with the type; a misfit or any failing step fails only that operation, changing nothing. Not with an edit of the same operation"
+            "description": "Operation id -> how to resolve the relationships still using the relationship type a property delete in operation_ids removes (see the operation's blockers), or a property update that retargets (gives the type another domain and range pair) no longer fits. Moved or deleted in one transaction with the type; a misfit or any failing step fails only that operation, changing nothing. Not with an edit of the same delete; an update that renames or reverses the type takes none (a reverse always swaps the ends of its relationships)"
           }
         },
         "type": "object",
@@ -10799,7 +10799,7 @@
                 "type": "null"
               }
             ],
-            "description": "Only on a delete applied with a resolution: the strategy, the replacement type and the relationships moved or deleted; absent (not null) otherwise"
+            "description": "Only on a delete or retarget applied with a resolution: the strategy, the replacement type and the relationships moved or deleted; absent (not null) otherwise"
           },
           "reason": {
             "anyOf": [
@@ -11436,7 +11436,7 @@
               }
             ],
             "title": "Resolution",
-            "description": "An applied relationship-type delete's in-use resolution"
+            "description": "An applied relationship-type delete's or retarget's in-use resolution"
           },
           "chosen_alternative": {
             "anyOf": [
@@ -14832,7 +14832,7 @@
                 "type": "null"
               }
             ],
-            "description": "Set when a relationship-type delete was applied with a resolution: what happened to the relationships that used it. Null otherwise"
+            "description": "Set when a relationship-type delete or retarget was applied with a resolution: what happened to the relationships that used it. Null otherwise"
           },
           "stale": {
             "type": "boolean",

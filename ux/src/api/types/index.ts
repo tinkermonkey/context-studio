@@ -3749,8 +3749,14 @@ export interface paths {
      *     too. The relationships and the type change in one transaction tagged with
      *     the proposal's run, so Revert restores them together; a failure fails only
      *     that operation ("unresolvable: ..." for a misfit) and changes nothing.
-     *     Without a resolution such a delete fails as in use. What was moved or
-     *     deleted is returned as the operation's resolution.
+     *     Without a resolution such a delete fails as in use. A property update that
+     *     retargets the type (another domain and range pair) takes one the same way;
+     *     without one its relationships stay. What was moved or deleted is returned
+     *     as the operation's resolution.
+     *
+     *     A property update that reverses the type (domain and range swapped) swaps
+     *     the ends of every relationship using it, and a rename keeps them, in one
+     *     transaction with the update; Revert undoes both.
      */
     post: operations["apply_proposal_api_proposals__proposal_id__apply_post"];
     delete?: never;
@@ -4704,7 +4710,7 @@ export interface components {
       };
       /**
        * Resolutions
-       * @description Operation id -> how to resolve the relationships still using the relationship type a property delete in operation_ids removes (see the operation's blockers). Moved or deleted in one transaction with the type; a misfit or any failing step fails only that operation, changing nothing. Not with an edit of the same operation
+       * @description Operation id -> how to resolve the relationships still using the relationship type a property delete in operation_ids removes (see the operation's blockers), or a property update that retargets (gives the type another domain and range pair) no longer fits. Moved or deleted in one transaction with the type; a misfit or any failing step fails only that operation, changing nothing. Not with an edit of the same delete; an update that renames or reverses the type takes none (a reverse always swaps the ends of its relationships)
        */
       resolutions?: {
         [key: string]: components["schemas"]["InUseResolutionRequest"];
@@ -5699,7 +5705,7 @@ export interface components {
       status: components["schemas"]["OperationStatus"];
       /** @description Only on an edited operation; absent (not null) otherwise */
       fields?: components["schemas"]["DrTripleFields"] | null;
-      /** @description Only on a delete applied with a resolution: the strategy, the replacement type and the relationships moved or deleted; absent (not null) otherwise */
+      /** @description Only on a delete or retarget applied with a resolution: the strategy, the replacement type and the relationships moved or deleted; absent (not null) otherwise */
       resolution?: components["schemas"]["InUseResolutionResponse"] | null;
       /** Reason */
       reason?: string | null;
@@ -6066,7 +6072,7 @@ export interface components {
       reason?: string | null;
       /**
        * Resolution
-       * @description An applied relationship-type delete's in-use resolution
+       * @description An applied relationship-type delete's or retarget's in-use resolution
        */
       resolution?: {
         [key: string]: unknown;
@@ -8045,7 +8051,7 @@ export interface components {
       applied_fields?: {
         [key: string]: unknown;
       } | null;
-      /** @description Set when a relationship-type delete was applied with a resolution: what happened to the relationships that used it. Null otherwise */
+      /** @description Set when a relationship-type delete or retarget was applied with a resolution: what happened to the relationships that used it. Null otherwise */
       resolution?: components["schemas"]["InUseResolutionResponse"] | null;
       /**
        * Stale
@@ -14169,7 +14175,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description An operation id is not in the proposal, or an edit is misplaced (not in operation_ids, not a property update/delete, empty, or uses a $ref), or a resolution is (not in operation_ids, not a property delete, also edited, a move without replacement_property_id, or a move to a type the proposal deletes); nothing was applied */
+      /** @description An operation id is not in the proposal, or an edit is misplaced (not in operation_ids, not a property update/delete, empty, or uses a $ref), or a resolution is (not in operation_ids, not a property delete or update, an edited delete, a move without replacement_property_id, or a move to a type the proposal deletes); nothing was applied */
       422: {
         headers: {
           [name: string]: unknown;

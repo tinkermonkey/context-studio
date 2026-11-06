@@ -118,9 +118,11 @@ class ChangeProposalApplyRequest(BaseModel):
         default_factory=dict,
         description="Operation id -> how to resolve the relationships still using the "
         "relationship type a property delete in operation_ids removes (see the operation's "
-        "blockers). Moved or deleted in one transaction with the type; a misfit or any "
-        "failing step fails only that operation, changing nothing. Not with an edit of the "
-        "same operation",
+        "blockers), or a property update that retargets (gives the type another domain and "
+        "range pair) no longer fits. Moved or deleted in one transaction with the type; a "
+        "misfit or any failing step fails only that operation, changing nothing. Not with an "
+        "edit of the same delete; an update that renames or reverses the type takes none "
+        "(a reverse always swaps the ends of its relationships)",
     )
 
 
@@ -316,8 +318,8 @@ class ProposedOperationResponse(BaseModel):
     )
     resolution: Optional[InUseResolutionResponse] = Field(
         None,
-        description="Set when a relationship-type delete was applied with a resolution: "
-        "what happened to the relationships that used it. Null otherwise",
+        description="Set when a relationship-type delete or retarget was applied with a "
+        "resolution: what happened to the relationships that used it. Null otherwise",
     )
     stale: bool = Field(
         False,
@@ -505,7 +507,7 @@ class DrDecisionResponse(BaseModel):
     )
     resolution: Optional[InUseResolutionResponse] = Field(
         None,
-        description="Only on a delete applied with a resolution: the strategy, the "
+        description="Only on a delete or retarget applied with a resolution: the strategy, the "
         "replacement type and the relationships moved or deleted; absent (not null) otherwise",
     )
     reason: Optional[str] = None
@@ -556,7 +558,7 @@ class GoldDecisionResponse(BaseModel):
     result_entity_id: Optional[str] = None
     reason: Optional[str] = Field(None, description="Why (a reject note)")
     resolution: Optional[dict[str, Any]] = Field(
-        None, description="An applied relationship-type delete's in-use resolution"
+        None, description="An applied relationship-type delete's or retarget's in-use resolution"
     )
     chosen_alternative: Optional[dict[str, Any]] = Field(
         None, description="The alternative the reviewer chose, when there is one"
