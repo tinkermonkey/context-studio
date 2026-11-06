@@ -1903,17 +1903,7 @@ class ProposalService:
         update that retargets its type (another pair of domain and range
         classes) while relationships use it.
         """
-        deletes = [
-            o
-            for o in proposal.pending
-            if o.kind is K.PROPERTY and o.op is OperationType.DELETE and o.target_id
-        ]
-        retargets = [
-            o
-            for o in proposal.pending
-            if o.kind is K.PROPERTY and o.op is OperationType.UPDATE and self._retargets(o)
-        ]
-        return self._blockers_of(proposal, deletes + retargets)
+        return self.in_use(proposal, with_usage=False)[0]
 
     def type_usage(self, proposal: ChangeProposal) -> dict[str, DeleteBlockers]:
         """
@@ -1923,18 +1913,38 @@ class ProposalService:
         `in_use_blockers` lists them. A reviewer's edit that retargets such an
         update instead needs a resolution of them.
         """
-        updates = [
-            o
-            for o in proposal.pending
-            if o.kind is K.PROPERTY
-            and o.op is OperationType.UPDATE
-            and o.target_id
-            and not self._retargets(o)
-        ]
-        return self._blockers_of(proposal, updates)
+        return self.in_use(proposal)[1]
+
+    def in_use(
+        self, proposal: ChangeProposal, with_usage: bool = True
+    ) -> tuple[dict[str, DeleteBlockers], dict[str, DeleteBlockers]]:
+        """
+        `in_use_blockers` and (unless with_usage is False) `type_usage` in one
+        pass: each update's target is loaded once, and one inspector (with its
+        caches of types and classes) serves every operation.
+        """
+        deletes, retargets, keeps = [], [], []
+        for o in proposal.pending:
+            if o.kind is not K.PROPERTY:
+                continue
+            if o.op is OperationType.DELETE and o.target_id:
+                deletes.append(o)
+            elif o.op is OperationType.UPDATE:
+                if self._retargets(o):
+                    retargets.append(o)
+                elif with_usage and o.target_id:
+                    keeps.append(o)
+        inspector = InUseInspector(self._repo)
+        return (
+            self._blockers_of(proposal, deletes + retargets, inspector),
+            self._blockers_of(proposal, keeps, inspector),
+        )
 
     def _blockers_of(
-        self, proposal: ChangeProposal, operations: list[ProposedOperation]
+        self,
+        proposal: ChangeProposal,
+        operations: list[ProposedOperation],
+        inspector: InUseInspector,
     ) -> dict[str, DeleteBlockers]:
         """The relationships using each operation's type, and the types they all fit."""
         if not operations:
@@ -1949,7 +1959,6 @@ class ProposalService:
             for o in proposal.pending
             if o.kind is K.RELATIONSHIP and o.op is OperationType.DELETE
         }
-        inspector = InUseInspector(self._repo)
         found: dict[str, DeleteBlockers] = {}
         for operation in operations:
             target_id = str(operation.target_id)

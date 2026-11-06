@@ -11,6 +11,7 @@ import {
   QUESTION_LABELS,
   bestAlternative,
   conflictClusters,
+  contradicts,
   keptNote,
   kindGroups,
   kindOf,
@@ -323,6 +324,8 @@ function ConflictCard({
   const [individually, setIndividually] = useState(false);
   const awaiting = cluster.operations.filter(isAwaiting);
   const kept = cluster.operations.find((o) => o.status === "applied");
+  // Once one is applied, only what contradicts it directly is rejected as kept against it.
+  const keptAgainst = kept ? awaiting.filter((o) => contradicts(kept, o)) : [];
   const both = cluster.operations.length === 2;
   const open = deciding && awaiting.length > 0;
   const rejectNote =
@@ -371,7 +374,7 @@ function ConflictCard({
         })}
       </div>
       {open &&
-        (kept ? (
+        (kept && keptAgainst.length > 0 ? (
           <div className="conflict-card__actions" role="group" aria-label="Resolve the conflict">
             <span className="tiered-section__note" data-testid={`conflict-kept-${cluster.id}`}>
               Seq {kept.seq} is applied.
@@ -382,7 +385,7 @@ function ConflictCard({
               disabled={actions.busy}
               onClick={() =>
                 actions.rejectOperations(
-                  awaiting.map((o) => o.id),
+                  keptAgainst.map((o) => o.id),
                   keptNote(kept.seq),
                 )
               }
@@ -391,17 +394,20 @@ function ConflictCard({
               Reject the rest ({keptNote(kept.seq)})
             </Button>
           </div>
-        ) : individually ? (
+        ) : kept || individually ? (
           <p className="tiered-section__note" data-testid={`conflict-individual-${cluster.id}`}>
+            {kept ? `Seq ${kept.seq} is applied; nothing left contradicts it. ` : ""}
             Decide each in the inspector.{" "}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIndividually(false)}
-              data-testid={`conflict-back-${cluster.id}`}
-            >
-              Back
-            </Button>
+            {!kept && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIndividually(false)}
+                data-testid={`conflict-back-${cluster.id}`}
+              >
+                Back
+              </Button>
+            )}
           </p>
         ) : (
           <div className="conflict-card__actions" role="group" aria-label="Resolve the conflict">
@@ -419,7 +425,7 @@ function ConflictCard({
                 onClick={() =>
                   actions.keepConflict(
                     o,
-                    awaiting.filter((other) => other.id !== o.id).map((other) => other.id),
+                    awaiting.filter((other) => contradicts(o, other)).map((other) => other.id),
                   )
                 }
                 data-testid={`conflict-keep-${o.id}`}

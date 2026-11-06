@@ -156,6 +156,22 @@ export function conflictClusters(operations: ProposedOperation[]): ConflictClust
     .sort((a, b) => a.operations[0].seq - b.operations[0].seq);
 }
 
+/**
+ * True when two operations contradict each other directly: they change the
+ * same type, or one's replacement triple is the other's current triple. A
+ * cluster can chain A-B-C; keeping A rejects B, not C.
+ */
+export function contradicts(a: ProposedOperation, b: ProposedOperation): boolean {
+  if (a.id === b.id) return false;
+  const keysA = keysOf(a);
+  const keysB = keysOf(b);
+  return (
+    keysA.some((k) => keysB.includes(k)) ||
+    linksOf(a).some((k) => keysB.includes(k)) ||
+    linksOf(b).some((k) => keysA.includes(k))
+  );
+}
+
 /** The reject note of the operations a "Keep seq N" leaves out. */
 export function keptNote(seq: number): string {
   return `conflict: kept seq ${seq}`;
@@ -207,6 +223,9 @@ export function isPickable(
   picks: Picks = {},
 ): boolean {
   if (option.option === NONE) return false;
+  // Without the current triple, whether a pick retargets the type is unknown: only the
+  // plan's answers can be accepted.
+  if (!reflection.current) return option.plan;
   if (question !== "predicate_for") return !!option.class_id;
   if (option.plan) return true;
   const outcome = pickOutcome(reflection, { ...picks, [question]: option.option });
@@ -242,8 +261,11 @@ function resolve(reflection: Reflection, picks: Picks): Resolved | undefined {
   return {
     triple: `${from.option} ${name} ${to.option}`,
     pair,
-    fields:
-      from.class_id && to.class_id
+    // Never an edit whose pair change is unknown (no current triple): it could retarget
+    // a type in use without a resolution.
+    fields: !pair
+      ? undefined
+      : from.class_id && to.class_id
         ? { canonical_predicate: name, domain_class_id: from.class_id, range_class_id: to.class_id }
         : pair === "same"
           ? // No class ids recorded, but the pair stays: the predicate alone renames it.

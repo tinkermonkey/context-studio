@@ -60,23 +60,27 @@ export function OperationDecision({
   const failed = operation.status === "failed";
   const blockers = blockersOf(operation);
   const noteId = `operation-reject-note-${operation.id}`;
-  // After a failed edit the generic button applies the proposal, not the edit, until
-  // the reviewer picks other answers than the edit that failed.
-  const lastEdit = actions.lastEditOf(operation.id);
-  const editFailed =
-    actions.editFailed(operation) &&
-    !(picks?.fields && JSON.stringify(picks.fields) !== JSON.stringify(lastEdit));
-  // Answers other than the plan's apply as an edit, unless a failed edit is applied as proposed.
-  const withPicks = !editFailed && !!picks?.changed && !!picks.fields;
-  const keepsCurrent = !editFailed && !!picks?.keepsCurrent;
+  // While the reviewer's answers differ from the plan's, every action applies them: the
+  // operation never falls back to the plan (or a blocked delete to its delete).
+  const picksChanged = !!picks?.changed;
+  const sameAsLastEdit =
+    !!picks?.fields &&
+    JSON.stringify(picks.fields) === JSON.stringify(actions.lastEditOf(operation.id));
+  // The server refused the edit these very picks make (invalid_edit / refused): pick
+  // other answers, the plan's back, or reject. A failed resolution is not a refused edit.
+  const picksRefused = picksChanged && sameAsLastEdit && actions.editRefused(operation);
+  // Without picks, after a failed edit the generic button applies the proposal.
+  const editFailed = !picksChanged && actions.editFailed(operation);
+  const keepsCurrent = picksChanged && !!picks?.keepsCurrent;
   // Answers that make another triple but can't be written as an edit: never a silent accept.
-  const unappliable = !editFailed && !!picks?.changed && !picks.keepsCurrent && !picks.fields;
+  const unappliable = picksChanged && !picks?.keepsCurrent && !picks?.fields;
+  const withPicks = picksChanged && !keepsCurrent && !unappliable && !picksRefused;
   // The relationships using the type: a delete's or retarget's blockers, a rename's usage.
   const usage = blockers ?? operation.type_usage ?? undefined;
   // Picks that retarget a type in use resolve its relationships with the edit; picks that
   // rename or reverse it need no resolution, so a blocked delete then applies as an edit.
   const picksRetarget = withPicks && picks?.pair === "different" && !!usage?.edges.length;
-  const resolver = withPicks ? (picksRetarget ? usage : undefined) : blockers;
+  const resolver = picksChanged ? (picksRetarget ? usage : undefined) : blockers;
   const pickOptions =
     withPicks && picks?.fields && picks.chosenAlternative
       ? {
@@ -86,7 +90,7 @@ export function OperationDecision({
       : {};
   const acceptLabel = editFailed
     ? "Apply as proposed"
-    : withPicks
+    : picksChanged
       ? "Accept with my picks"
       : operation.stale
         ? "Apply anyway"
@@ -107,7 +111,7 @@ export function OperationDecision({
               : `${staleCause ? staleCauseText(staleCause) : "Its target changed after it was proposed."} Applying it needs Apply anyway, which keeps the proposed values.`}
           </FormCallout>
         )}
-        {failed && !operation.stale && !resolver && (
+        {failed && !operation.stale && !resolver && !picksChanged && (
           <FormCallout variant="error" icon="alert" data-testid="operation-failed-callout">
             {editFailed
               ? "The edit wasn't applied (the reason is under Change). Edit it again, apply the proposal as it stands, or reject it."
@@ -124,6 +128,12 @@ export function OperationDecision({
         {keepsCurrent && picks && (
           <FormCallout variant="warn" icon="alert" data-testid="operation-picks-callout">
             Your picks keep the current triple {picks.triple}. To keep it, reject the operation.
+          </FormCallout>
+        )}
+        {picksRefused && picks && (
+          <FormCallout variant="error" icon="alert" data-testid="operation-picks-callout">
+            The edit your picks make ({picks.triple}) was refused: the reason is under Change. Pick
+            other answers, the plan&apos;s answers back, or reject the operation.
           </FormCallout>
         )}
         {unappliable && picks && (
@@ -170,7 +180,7 @@ export function OperationDecision({
                 <Button
                   variant="primary"
                   size="sm"
-                  disabled={actions.busy || keepsCurrent || unappliable}
+                  disabled={actions.busy || (picksChanged && !withPicks)}
                   onClick={acceptOperation}
                   data-testid="operation-accept"
                 >

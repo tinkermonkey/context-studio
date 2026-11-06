@@ -5,6 +5,7 @@ import {
   bestAlternative,
   conflictClusters,
   conflictedIds,
+  contradicts,
   defaultGroupBy,
   isBulkEligible,
   isPickable,
@@ -179,5 +180,45 @@ describe("pair change", () => {
     expect(
       pickOutcome(retargetReflection, { source_for: "task", predicate_for: "reverse:holds" })?.pair,
     ).toBe("reversed");
+  });
+});
+
+describe("contradicts", () => {
+  it("links direct contradictions only, not a chain", () => {
+    const a = byId("c-rename"); // task needs_tool tool -> task uses tool
+    const b = byId("c-delete"); // task uses tool -> task wields tool
+    const c = structuredClone(b);
+    Object.assign(c, { id: "c-third", seq: 11, target_id: "prop-c-third" });
+    c.reflection = {
+      ...c.reflection!,
+      current: { source: "task", predicate: "wields", target: "tool" },
+      replacement: "task grips tool",
+    };
+    expect(contradicts(a, b)).toBe(true);
+    expect(contradicts(b, c)).toBe(true);
+    expect(contradicts(a, c)).toBe(false);
+    expect(conflictClusters([a, b, c])[0].operations.map((o) => o.id)).toEqual([
+      "c-rename",
+      "c-delete",
+      "c-third",
+    ]);
+  });
+});
+
+describe("no current triple (older proposals)", () => {
+  const noCurrent = () => ({ ...retargetReflection, current: null });
+
+  it("only the plan's answers can be picked", () => {
+    const reflection = noCurrent();
+    for (const q of reflection.questions) {
+      for (const o of q.options) expect(isPickable(reflection, q.question, o)).toBe(o.plan);
+    }
+  });
+
+  it("never makes an edit whose pair change is unknown", () => {
+    const outcome = pickOutcome(noCurrent(), { source_for: "tool" });
+    expect(outcome?.changed).toBe(true);
+    expect(outcome?.pair).toBeUndefined();
+    expect(outcome?.fields).toBeUndefined();
   });
 });

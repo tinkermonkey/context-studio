@@ -12,6 +12,7 @@ from types import MappingProxyType
 
 import pytest
 
+import domain.versioning.proposal_service as proposal_service_module
 from domain.ontology.events import GraphInvalidated
 from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import ExternalReference
@@ -752,10 +753,10 @@ def reverse_fields(graph):
     return {"domain_class_id": graph["function"], "range_class_id": graph["event"]}
 
 
-def unused_type(ontology, graph):
+def unused_type(ontology, graph, identifier="businessevent_follows_businessfunction"):
     return ontology.create_property_definition(
-        "businessevent_follows_businessfunction",
-        "follows",
+        identifier,
+        identifier.replace("_", " "),
         domain_class_id=graph["event"],
         range_class_id=graph["function"],
     ).id
@@ -1110,6 +1111,57 @@ def test_an_edited_delete_that_renames_takes_none(service, graph, repo):
 
     assert op.status is OperationStatus.APPLIED, op.reason
     assert ends(repo, graph["triggers_function"]) == before
+
+
+def test_one_inspector_and_one_type_listing_serve_every_operation(
+    service, graph, ontology, repo, monkeypatch
+):
+    """The detail view's in-use pass doesn't scale with operations x inspectors (#1411)."""
+
+    step = ontology.create_individual(graph["process"], "Enrich Step")
+    ontology.create_relationship(graph["changed"], step.id, graph["triggers_process"])
+    targets = [graph["triggers_process"]]
+    targets += [unused_type(ontology, graph, f"unused_{i}") for i in range(6)]
+    drafts = [
+        OperationDraft(
+            seq=i + 1,
+            op=T.UPDATE,
+            kind=K.PROPERTY,
+            target_id=target,
+            fields={"canonical_predicate": f"p{i}"},
+        )
+        for i, target in enumerate(targets)
+    ]
+    drafts.append(
+        OperationDraft(
+            seq=len(drafts) + 1, op=T.DELETE, kind=K.PROPERTY, target_id=graph["triggers_function"]
+        )
+    )
+    proposal = service.propose(graph["taxonomy"], "Renames", drafts, ProposalSource.MCP)
+    inspectors, listings = [], []
+    original_inspector, original_list = (
+        proposal_service_module.InUseInspector,
+        repo.list_property_definitions,
+    )
+
+    def counting_inspector(*args, **kwargs):
+        inspectors.append(1)
+        return original_inspector(*args, **kwargs)
+
+    def counting_list(*args, **kwargs):
+        listings.append(1)
+        return original_list(*args, **kwargs)
+
+    monkeypatch.setattr(proposal_service_module, "InUseInspector", counting_inspector)
+    monkeypatch.setattr(repo, "list_property_definitions", counting_list)
+
+    blockers, usage = service.in_use(proposal)
+
+    assert len(blockers) == 1 and len(usage) == 1  # the delete; the in-use rename
+    assert len(inspectors) == 1
+    assert len(listings) == 1
+    _, none = service.in_use(proposal, with_usage=False)
+    assert none == {}
 
 
 def test_type_usage_lists_the_relationships_a_rename_keeps(service, graph, ontology):

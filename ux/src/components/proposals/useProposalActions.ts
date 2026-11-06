@@ -152,6 +152,10 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
     operation.status === "failed" &&
     (!!lastEdits[operation.id] || EDIT_FAILURE.test(operation.reason ?? ""));
 
+  /** True when the operation failed because its edit was refused (invalid_edit, refused). */
+  const editRefused = (operation: ProposedOperation) =>
+    operation.status === "failed" && EDIT_FAILURE.test(operation.reason ?? "");
+
   /** The resolution this blocked delete's last apply sent, if any. */
   const lastResolutionOf = (opId: string) => lastResolutions[opId];
 
@@ -274,6 +278,7 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
     lastEditOf,
     lastResolutionOf,
     editFailed,
+    editRefused,
     /** Operation ids the last apply sent; null until one ran (or after a revert). */
     lastApplied,
     closeResults: () => setLastApplied(null),

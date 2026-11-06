@@ -134,7 +134,8 @@ async def list_proposals(
     def run() -> ListResponse[ChangeProposalResponse]:
         proposals = service.list_proposals(taxonomy_id, proposal_status, source, limit, offset)
         return ListResponse(
-            items=[proposal_response(service, p) for p in proposals],
+            # A list needs no type usage: only the review page's picks read it.
+            items=[proposal_response(service, p, with_usage=False) for p in proposals],
             total=service.count_proposals(taxonomy_id, proposal_status, source),
             limit=limit,
             offset=offset,
