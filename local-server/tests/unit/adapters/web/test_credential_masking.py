@@ -244,3 +244,18 @@ class TestMaskCredentialsFunction:
 
         assert result["s3"] == {}
         assert result["duckdb"] is None
+
+    def test_masks_decision_model_option_tokens(self):
+        """A decision-model instance's options.api_token is masked."""
+        section = {
+            "models": {
+                "cf": {
+                    "adapter": "workers_ai",
+                    "options": {"account_id": "acct", "api_token": "tok-secret-WXYZ"},
+                }
+            }
+        }
+
+        result = _mask_credentials(section)
+
+        assert result["models"]["cf"]["options"]["api_token"] == "***WXYZ"

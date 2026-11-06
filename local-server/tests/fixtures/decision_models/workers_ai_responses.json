@@ -1,0 +1,160 @@
+{
+  "_note": "Real Workers AI state-plus-questions responses from the clef-flash instance, recorded 2026-11-05. Request bodies are as sent (no credentials); the account id and token only appear in the URL and header, which are not recorded.",
+  "calls": {
+    "house_activity": {
+      "request": {
+        "model": "clef-flash",
+        "state": "Austin replaced the furnace filter in the basement on Saturday morning.",
+        "questions": {
+          "kind": {
+            "type": "choice",
+            "instructions": "What kind of house record does this text describe? Choose 'none' if no listed kind fits.",
+            "criteria": {
+              "activity": "Something a person did at the house",
+              "asset": "A physical thing the house contains",
+              "issue": "A problem with the house",
+              "none": "None of the listed options apply"
+            }
+          },
+          "significance": {
+            "type": "score",
+            "instructions": "How significant is this event for the upkeep of the house?",
+            "criteria": [
+              "trivial",
+              "minor",
+              "moderate",
+              "major"
+            ]
+          },
+          "is_maintenance": {
+            "type": "noul",
+            "instructions": "This text describes routine maintenance."
+          }
+        }
+      },
+      "status": 200,
+      "response": {
+        "result": {
+          "model": "clef-flash",
+          "answers": {
+            "kind": {
+              "type": "choice",
+              "choice": "activity",
+              "probabilities": {
+                "activity": 0.8677,
+                "asset": 0.0346,
+                "issue": 0.0258,
+                "none": 0.0719
+              },
+              "confidence": 0.68
+            },
+            "significance": {
+              "type": "score",
+              "score": 1.3449,
+              "legend": {
+                "0": "trivial",
+                "1": "minor",
+                "2": "moderate",
+                "3": "major"
+              },
+              "probabilities": {
+                "0": 0.1233,
+                "1": 0.4598,
+                "2": 0.3656,
+                "3": 0.0513
+              },
+              "confidence": 0.1505
+            },
+            "is_maintenance": {
+              "type": "noul",
+              "noul": 0.9293
+            }
+          },
+          "usage": {
+            "input_tokens": 390,
+            "output_tokens": 0
+          }
+        },
+        "success": true,
+        "errors": [],
+        "messages": []
+      }
+    },
+    "dr_element": {
+      "request": {
+        "model": "clef-flash",
+        "state": "class OrderRepository: persists Order aggregates to PostgreSQL and exposes find_by_customer().",
+        "questions": {
+          "layer": {
+            "type": "choice",
+            "instructions": "Which architecture layer would this code symbol be recorded in? Choose 'none' if it is not architecturally meaningful.",
+            "criteria": {
+              "business": "Business processes and actors",
+              "application": "Application components and services",
+              "data_model": "Data structures and schemas",
+              "none": "None of the listed options apply"
+            }
+          },
+          "is_persistence": {
+            "type": "noul",
+            "instructions": "This symbol itself implements data persistence, not merely calling something that does."
+          }
+        }
+      },
+      "status": 200,
+      "response": {
+        "result": {
+          "model": "clef-flash",
+          "answers": {
+            "layer": {
+              "type": "choice",
+              "choice": "application",
+              "probabilities": {
+                "business": 0.0241,
+                "application": 0.6259,
+                "data_model": 0.0974,
+                "none": 0.2526
+              },
+              "confidence": 0.2876
+            },
+            "is_persistence": {
+              "type": "noul",
+              "noul": 0.7726
+            }
+          },
+          "usage": {
+            "input_tokens": 295,
+            "output_tokens": 0
+          }
+        },
+        "success": true,
+        "errors": [],
+        "messages": []
+      }
+    },
+    "bad_question_type": {
+      "request": {
+        "model": "clef-flash",
+        "state": "x",
+        "questions": {
+          "q": {
+            "type": "bogus",
+            "instructions": "?"
+          }
+        }
+      },
+      "status": 400,
+      "response": {
+        "errors": [
+          {
+            "message": "AiError: Bad input: Error: required properties at '/' are 'model,state,questions' (d7fc10f0-b136-484a-9ea2-42667a4a9adf)",
+            "code": 5006
+          }
+        ],
+        "success": false,
+        "result": {},
+        "messages": []
+      }
+    }
+  }
+}
