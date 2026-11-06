@@ -10,6 +10,7 @@ import pytest
 
 from adapters.chat.proposal_tools import (
     CLIPPED_TEXT_CHARS,
+    MAX_BLOCKER_EDGES,
     MAX_OPERATIONS,
     MAX_PROPOSAL_CHARS,
     OPERATION_SCHEMA,
@@ -21,7 +22,16 @@ from domain.versioning.exceptions import (
     OperationError,
     ProposalValidationError,
 )
-from domain.versioning.in_use import ChainLink, ClassEnd, PairMatch, ReplacementCheck
+from domain.versioning.in_use import (
+    BlockingEdge,
+    ChainLink,
+    ClassEnd,
+    DeleteBlockers,
+    EdgeEnd,
+    PairMatch,
+    ReplacementCheck,
+    ReplacementType,
+)
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
@@ -69,18 +79,39 @@ class FakeProposalService:
     """Records calls; answers with canned proposals or raises a canned error."""
 
     def __init__(
-        self, proposal=None, error=None, stale=frozenset(), listed=(), total=0, checks=None
+        self,
+        proposal=None,
+        error=None,
+        stale=frozenset(),
+        listed=(),
+        total=0,
+        checks=None,
+        blockers=None,
+        auto=(),
     ):
         self.proposal = proposal
         self.checks = checks or {}
+        self.blockers = blockers or {}
+        self.auto = list(auto)
+        self.dry_runs = []
         self.error = error
         self.stale = set(stale)
         self.listed = list(listed)
         self.total = total
         self.calls = []
 
-    def propose(self, taxonomy_id, title, operations, source, rationale=None, source_detail=None):
+    def propose(
+        self,
+        taxonomy_id,
+        title,
+        operations,
+        source,
+        rationale=None,
+        source_detail=None,
+        dry_run=False,
+    ):
         self.calls.append(("propose", taxonomy_id, title, list(operations), source, rationale))
+        self.dry_runs.append(dry_run)
         if self.error is not None:
             raise self.error
         return self.proposal
@@ -96,6 +127,12 @@ class FakeProposalService:
 
     def replacement_checks(self, proposal):
         return self.checks
+
+    def in_use_blockers(self, proposal):
+        return self.blockers
+
+    def auto_apply_operation_ids(self, proposal):
+        return self.auto
 
     def list_proposals(self, taxonomy_id=None, status=None, source=None, limit=50, offset=0):
         self.calls.append(("list", taxonomy_id, status, source, limit, offset))
@@ -529,12 +566,19 @@ class TestReplacements:
 
         plain, flagged = result["operations"]
         assert "replacement_check" not in plain
+        assert flagged["proposed_replacement_id"] == "p-assigned"
         assert flagged["replacement_check"] == {
             "replacement_id": "p-assigned",
+            "property_id": "p-assigned",
             "identifier": "businessrole_assigned_to_businessprocess",
+            "title": "assigned-to process",
             "pair": "different",
-            "deleted_pair": "BusinessRole -> BusinessFunction",
-            "replacement_pair": "BusinessRole -> BusinessProcess",
+            "deleted_domain": {"id": "c-role", "title": "BusinessRole"},
+            "deleted_range": {"id": "c-fn", "title": "BusinessFunction"},
+            "domain": {"id": "c-role", "title": "BusinessRole"},
+            "range": {"id": "c-proc", "title": "BusinessProcess"},
+            "replacement_deleted": False,
+            "cycle": False,
         }
 
     async def test_get_proposal_flags_a_cycle_of_deletes(self):
@@ -569,7 +613,9 @@ class TestReplacements:
         flagged = result["operations"][0]["replacement_check"]
         assert flagged["replacement_deleted"] is True
         assert flagged["cycle"] is True
-        assert flagged["chain"] == [{"identifier": "b", "deleted_by_seq": 9}]
+        assert flagged["chain"] == [
+            {"replacement_id": "p-b", "identifier": "b", "deleted_by_seq": 9}
+        ]
 
 
 class TestGetProposal:
@@ -588,7 +634,7 @@ class TestGetProposal:
         assert result["kind"] == "proposal"
         assert result["source"] == "mcp"
         assert result["rationale"] == "Better definitions"
-        assert result["created_at"] == CREATED.isoformat()
+        assert result["created_at"] == "2026-10-28T12:00:00Z"
         assert result["counts"] == {"pending": 1, "applied": 1, "rejected": 1, "failed": 0}
         first, second, third = result["operations"]
         assert first == {
@@ -598,8 +644,8 @@ class TestGetProposal:
             "kind": "class",
             "target_id": "cls-1",
             "fields": {"description": "Description 1"},
-            "status": "pending",
             "scope": "editorial",
+            "status": "pending",
             "stale": True,
         }
         assert (second["status"], second["stale"], second["result_entity_id"]) == (
@@ -647,6 +693,244 @@ class TestGetProposal:
         assert result["offset"] == 0
 
 
+class TestRestParityFields:
+    """#1413: what REST returns of a proposal, get_proposal returns too."""
+
+    async def test_get_proposal_has_every_rest_field(self):
+        decided = make_operation(
+            1,
+            OperationStatus.APPLIED,
+            base={"description": "Old"},
+            rationale="Vaguer than the vision allows",
+            evidence=[{"quote": "An element is a named fact"}],
+            probability=0.8,
+            applied_fields={"description": "Edited"},
+            result_entity_id="cls-1",
+        )
+        proposal = make_proposal([decided])
+        proposal.source_detail = "claude-code"
+        service = FakeProposalService(proposal=proposal)
+
+        _, result = await call(service, "get_proposal", id="prop-1")
+
+        assert result["source_detail"] == "claude-code"
+        (operation,) = result["operations"]
+        assert operation["base"] == {"description": "Old"}
+        assert operation["rationale"] == "Vaguer than the vision allows"
+        assert operation["evidence"] == [{"quote": "An element is a named fact"}]
+        assert operation["probability"] == 0.8
+        assert operation["applied_fields"] == {"description": "Edited"}
+
+    async def test_get_proposal_shows_in_use_blockers(self):
+        delete = blocked_delete()
+        service = FakeProposalService(
+            proposal=make_proposal([delete]), blockers={delete.id: blockers(1)}
+        )
+
+        _, result = await call(service, "get_proposal", id="prop-1")
+
+        assert result["operations"][0]["blockers"] == {
+            "edges": [edge_dict(0)],
+            "move_unavailable_reason": "No type fits every edge",
+        }
+
+    async def test_propose_shows_blockers_and_replacement_check(self):
+        delete = blocked_delete()
+        check = ReplacementCheck(
+            replacement_id="p-2",
+            property_id="p-2",
+            identifier="b",
+            title="b",
+            pair=PairMatch.SAME,
+            deleted_domain=ClassEnd("c-1", "A"),
+            deleted_range=ClassEnd("c-2", "B"),
+            domain=ClassEnd("c-1", "A"),
+            range=ClassEnd("c-2", "B"),
+        )
+        service = FakeProposalService(
+            proposal=make_proposal([delete]),
+            blockers={delete.id: blockers(1, replacements=True)},
+            checks={delete.id: check},
+        )
+
+        _, result = await call(
+            service,
+            "propose_changes",
+            taxonomy_id=TAXONOMY,
+            title="t",
+            operations=[{"seq": 1, "op": "delete", "kind": "property", "target_id": "p-1"}],
+        )
+
+        (operation,) = result["operations"]
+        assert operation["blockers"] == {
+            "edges": [edge_dict(0)],
+            "replacements": [{"property_id": "p-2", "identifier": "b", "title": "b"}],
+        }
+        assert operation["replacement_check"]["pair"] == "same"
+        assert service.dry_runs == [False]
+
+    async def test_a_blockers_edges_are_capped(self):
+        delete = blocked_delete()
+        service = FakeProposalService(
+            proposal=make_proposal([delete]), blockers={delete.id: blockers(25)}
+        )
+
+        _, result = await call(service, "get_proposal", id="prop-1")
+
+        found = result["operations"][0]["blockers"]
+        assert len(found["edges"]) == MAX_BLOCKER_EDGES
+        assert found["edges_total"] == 25
+
+    async def test_a_blockers_move_targets_are_capped(self):
+        delete = blocked_delete()
+        many = DeleteBlockers(
+            edges=blockers(1).edges,
+            replacements=tuple(ReplacementType(f"p-{i}", f"t{i}", f"t{i}") for i in range(15)),
+        )
+        service = FakeProposalService(proposal=make_proposal([delete]), blockers={delete.id: many})
+
+        _, result = await call(service, "get_proposal", id="prop-1")
+
+        found = result["operations"][0]["blockers"]
+        assert len(found["replacements"]) == MAX_BLOCKER_EDGES
+        assert found["replacements_total"] == 15
+
+    async def test_get_proposal_shows_dry_run_only_when_true(self):
+        service = FakeProposalService(proposal=make_proposal([make_operation(1)]))
+
+        _, result = await call(service, "get_proposal", id="prop-1")
+
+        assert "dry_run" not in result
+        assert "auto_apply" not in result["operations"][0]
+
+    async def test_a_stored_proposal_that_cannot_be_described_is_still_stored(self):
+        proposal = make_proposal([make_operation(1, OperationStatus.APPLIED)])
+        service = FakeProposalService(proposal=proposal)
+
+        def broken(proposal):
+            raise RuntimeError("database is locked")
+
+        service.in_use_blockers = broken
+
+        outcome, result = await call(
+            service, "propose_changes", taxonomy_id=TAXONOMY, title="t", operations=[update_op(1)]
+        )
+
+        assert outcome.is_error is False
+        assert (result["stored"], result["id"]) == (True, "prop-1")
+        assert result["operations"] == [{"seq": 1, "status": "applied", "scope": "editorial"}]
+        assert "Do not propose it again" in result["details_unavailable"]
+        assert outcome.entities == (EntityRef("prop-1", "proposal", "Clarify classes"),)
+
+
+class TestDryRun:
+    async def test_dry_run_stores_nothing_and_previews_each_operation(self):
+        auto, held = make_operation(1), blocked_delete(seq=2)
+        service = FakeProposalService(
+            proposal=make_proposal([auto, held]),
+            stale={held.id},
+            blockers={held.id: blockers(1)},
+            auto=[auto.id],
+        )
+
+        outcome, result = await call(
+            service,
+            "propose_changes",
+            taxonomy_id=TAXONOMY,
+            title="Clarify classes",
+            dry_run=True,
+            operations=[
+                update_op(1),
+                {"seq": 2, "op": "delete", "kind": "property", "target_id": "p-1"},
+            ],
+        )
+
+        assert service.dry_runs == [True]
+        assert outcome.is_error is False
+        assert outcome.entities == ()
+        assert (result["stored"], result["dry_run"], result["id"]) == (False, True, None)
+        first, second = result["operations"]
+        assert first == {
+            "seq": 1,
+            "op": "update",
+            "kind": "class",
+            "scope": "editorial",
+            "auto_apply": True,
+            "stale": False,
+        }
+        assert second["auto_apply"] is False and second["stale"] is True
+        assert second["blockers"]["edges"] == [edge_dict(0)]
+        assert "Nothing was stored" in result["next"]
+        assert "1 would apply at once" in result["next"]
+        assert "1 blocked" in result["next"]
+
+    async def test_dry_run_must_be_a_boolean(self):
+        service = FakeProposalService(proposal=make_proposal([make_operation(1)]))
+
+        outcome, result = await call(
+            service,
+            "propose_changes",
+            taxonomy_id=TAXONOMY,
+            title="t",
+            dry_run="yes",
+            operations=[update_op(1)],
+        )
+
+        assert outcome.is_error is True
+        assert "dry_run" in result["error"]
+        assert service.calls == []
+
+    def test_schema_offers_dry_run(self):
+        schema = tools_for(FakeProposalService())["propose_changes"].spec.input_schema
+
+        assert schema["properties"]["dry_run"]["type"] == "boolean"
+
+
+def blocked_delete(seq=1):
+    return make_operation(
+        seq,
+        op=OperationType.DELETE,
+        kind=OperationKind.PROPERTY,
+        target_id="p-1",
+        fields={},
+        scope=ChangeScope.BREAKING,
+    )
+
+
+def blockers(edges, replacements=False):
+    return DeleteBlockers(
+        edges=tuple(
+            BlockingEdge(
+                relationship_id=f"r-{i}",
+                source=EdgeEnd(f"s-{i}", f"Source {i}", ("c-1",), ("A",)),
+                target=EdgeEnd(f"t-{i}", f"Target {i}", ("c-2",), ("B",)),
+                attributes={},
+            )
+            for i in range(edges)
+        ),
+        replacements=(ReplacementType("p-2", "b", "b"),) if replacements else (),
+        move_unavailable_reason=None if replacements else "No type fits every edge",
+    )
+
+
+def edge_dict(i):
+    return {
+        "relationship_id": f"r-{i}",
+        "source": {
+            "id": f"s-{i}",
+            "title": f"Source {i}",
+            "class_ids": ["c-1"],
+            "class_titles": ["A"],
+        },
+        "target": {
+            "id": f"t-{i}",
+            "title": f"Target {i}",
+            "class_ids": ["c-2"],
+            "class_titles": ["B"],
+        },
+    }
+
+
 # ============================================================================
 # list_proposals
 # ============================================================================
@@ -677,7 +961,7 @@ class TestListProposals:
             "title": "Clarify classes",
             "taxonomy_id": TAXONOMY,
             "source": "mcp",
-            "created_at": CREATED.isoformat(),
+            "created_at": "2026-10-28T12:00:00Z",
             "status": "done",
             "counts": {"pending": 0, "applied": 1, "rejected": 0, "failed": 0},
         }
