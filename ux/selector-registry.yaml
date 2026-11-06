@@ -2999,6 +2999,9 @@ selectors:
   - selector: proposal-accept-all
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "\"Accept N ready\": accepts the awaiting operations that aren't stale or blocked"
+  - selector: proposal-busy
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Banner status while an apply or reject runs: spinner and \"Applying N operations…\""
   - selector: proposal-force-message
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Apply anyway ConfirmDialog body: each stale operation and what changed, or that its target is gone"

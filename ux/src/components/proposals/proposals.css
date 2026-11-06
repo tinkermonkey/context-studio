@@ -466,6 +466,16 @@
     font-family: var(--font-sans);
   }
 
+  /* While an apply or reject runs: a spinner and what it sends. */
+  .proposal-summary__busy {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: rgb(var(--canvas-fg-2));
+  }
+
   /* Muted: a probability below the threshold. */
   .op-probability--below {
     color: rgb(var(--canvas-fg-4));

@@ -331,11 +331,15 @@ async def lifespan(app: FastAPI):
 
         # --- Domain Services ---
 
-        schema_vector_index = SqliteSchemaVectorIndex(local_session_factory, embedding_service)
+        # The indexes write embeddings onto ontology_entities rows, so they share
+        # the ontology repository's sessions: inside a transaction scope (a
+        # proposal apply, a revert) the index write joins the scope instead of
+        # waiting on its write lock until busy_timeout, and rolls back with it.
+        schema_vector_index = SqliteSchemaVectorIndex(shared_session_factory, embedding_service)
         logger.info("SchemaVectorIndex created")
 
         individual_vector_index = SqliteIndividualVectorIndex(
-            local_session_factory, embedding_service
+            shared_session_factory, embedding_service
         )
         app.state.individual_vector_index = individual_vector_index
         logger.info("IndividualVectorIndex created")

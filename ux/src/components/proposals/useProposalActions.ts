@@ -5,7 +5,8 @@ import {
   useRejectChangeProposal,
   useRevertChangeProposal,
 } from "@/api/hooks/proposals";
-import { ApiError } from "@/api/client/interceptors";
+import { ApiError, isTimeout } from "@/api/client/interceptors";
+import { APPLY_TIMEOUT_MS } from "@/api/services/proposals";
 import type {
   ChangeProposal,
   ChangeProposalRevertConflict,
@@ -49,8 +50,47 @@ export interface ForceRequest extends ApplyOptions {
   settle: (outcome: ApplyOutcome) => void;
 }
 
+/** The apply or reject request in flight, and how many operations it sends. */
+export interface PendingRequest {
+  action: "apply" | "reject";
+  count: number;
+}
+
+/** "Applying 105 operations…" */
+export function pendingLabel({ action, count }: PendingRequest): string {
+  return `${action === "apply" ? "Applying" : "Rejecting"} ${plural(count, "operation")}…`;
+}
+
 /** Reasons an edited apply leaves on the operation: the edit, not the proposal, failed. */
 const EDIT_FAILURE = /^(invalid_edit|refused): /;
+
+/**
+ * The toast after a bulk accept: how many applied (and failed, if any), then
+ * what it left for the reviewer. Skipped operations were never sent.
+ */
+export function bulkSummary(
+  sent: string[],
+  blocked: number,
+  stale: number,
+  after: ChangeProposal | undefined,
+): ["success" | "info", string, string | undefined] {
+  const sentIds = new Set(sent);
+  const outcomes = (after?.operations ?? []).filter((o) => sentIds.has(o.id));
+  const applied = outcomes.filter((o) => o.status === "applied").length;
+  const failed = outcomes.filter((o) => o.status === "failed").length;
+  const title =
+    sent.length === 0
+      ? "Nothing applied"
+      : failed > 0
+        ? `Applied ${applied}; ${failed} failed (see the results)`
+        : `Applied ${applied}`;
+  const left = [
+    blocked > 0 &&
+      `${blocked} still ${blocked === 1 ? "needs" : "need"} a decision (in use: choose move or drop in the inspector).`,
+    stale > 0 && `${plural(stale, "stale operation")} left for Apply anyway.`,
+  ].filter(Boolean);
+  return [failed > 0 || sent.length === 0 ? "info" : "success", title, left.join(" ") || undefined];
+}
 
 function message(error: unknown): string {
   if (error instanceof ApiError) return error.detail;
@@ -81,12 +121,40 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
   const [lastAlternatives, setLastAlternatives] = useState<ChosenAlternatives>({});
   // Likewise the resolution each blocked delete's last apply sent.
   const [lastResolutions, setLastResolutions] = useState<Resolutions>({});
+  const [pending, setPending] = useState<PendingRequest | null>(null);
+  // Set synchronously, so a second click before the re-render can't send the same ops again.
+  const inFlight = useRef(false);
   const id = proposal?.id ?? "";
+
+  /** Run one apply or reject at a time; a request made while one runs is dropped. */
+  const exclusive = async <T>(
+    request: PendingRequest,
+    run: () => Promise<T>,
+  ): Promise<T | undefined> => {
+    if (inFlight.current) return undefined;
+    inFlight.current = true;
+    setPending(request);
+    try {
+      return await run();
+    } finally {
+      inFlight.current = false;
+      setPending(null);
+    }
+  };
 
   const send = async (
     operationIds: string[],
     forceStale: string[],
-    { edits = {}, chosenAlternatives = {}, resolutions = {}, merge = false }: ApplyOptions = {},
+    options: ApplyOptions = {},
+  ): Promise<ApplyOutcome> =>
+    (await exclusive({ action: "apply", count: operationIds.length }, () =>
+      sendNow(operationIds, forceStale, options),
+    )) ?? { cancelled: true };
+
+  const sendNow = async (
+    operationIds: string[],
+    forceStale: string[],
+    { edits = {}, chosenAlternatives = {}, resolutions = {}, merge = false }: ApplyOptions,
   ): Promise<ApplyOutcome> => {
     const remember = <T>(previous: Record<string, T>, sent: Record<string, T>) => {
       const next = { ...previous };
@@ -118,6 +186,15 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
       setRevertConflict(null);
       return { proposal };
     } catch (error) {
+      if (isTimeout(error)) {
+        toast(
+          "warning",
+          "Apply is taking longer than expected",
+          `The page stopped waiting after ${APPLY_TIMEOUT_MS / 60_000} minutes; the server may still be applying. The operations were refreshed: check where they stand before applying again.`,
+        );
+      } else {
+        toast("error", "Apply failed", message(error));
+      }
       return { error };
     }
   };
@@ -175,20 +252,19 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
   /**
    * Accept the operations that need no confirmation or choice: stale ones are
    * left for Apply anyway, and blocked deletes (relationships still use the
-   * type) for a resolution in the inspector, which a toast says.
+   * type) for a resolution in the inspector. Once the apply returns, a toast
+   * says what applied and what still needs a decision (never sent, so not failed).
    */
   const acceptFresh = async (operationIds: string[]) => {
-    if (!proposal) return;
+    if (!proposal || inFlight.current) return;
     const { unblocked, blocked } = splitBlocked(proposal.operations, operationIds);
-    const { fresh } = splitStale(proposal.operations, unblocked);
-    if (blocked.length > 0) {
-      toast(
-        "info",
-        `${plural(blocked.length, "blocked delete")} skipped`,
-        "Relationships still use those types. Resolve each in the inspector: move them, delete them too, or keep the type.",
-      );
+    const { fresh, stale } = splitStale(proposal.operations, unblocked);
+    let outcome: ApplyOutcome = {};
+    if (fresh.length > 0) {
+      outcome = await send(fresh, []);
+      if (outcome.error || outcome.cancelled) return; // send says why
     }
-    if (fresh.length > 0) await send(fresh, []);
+    toast(...bulkSummary(fresh, blocked.length, stale.length, outcome.proposal));
   };
 
   const confirmForce = async () => {
@@ -209,6 +285,13 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
 
   const rejectOperations = async (operationIds: string[], note?: string) => {
     if (operationIds.length === 0) return false;
+    const rejected = await exclusive({ action: "reject", count: operationIds.length }, () =>
+      rejectNow(operationIds, note),
+    );
+    return rejected ?? false;
+  };
+
+  const rejectNow = async (operationIds: string[], note?: string) => {
     try {
       await reject.mutateAsync({
         id,
@@ -284,7 +367,9 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
     closeResults: () => setLastApplied(null),
     revertConflict,
     dismissRevertConflict: () => setRevertConflict(null),
-    busy: apply.isPending || reject.isPending || revert.isPending,
+    busy: pending !== null || apply.isPending || reject.isPending || revert.isPending,
+    /** The apply or reject in flight, for a busy label; null when none is. */
+    pending,
     exporting: exportDecisions.isPending,
   };
 }

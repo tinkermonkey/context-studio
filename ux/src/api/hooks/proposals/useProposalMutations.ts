@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { isTimeout } from "@/api/client/interceptors";
 import { QUERY_KEYS } from "@/api/config";
 import {
   proposalsService,
@@ -43,10 +44,16 @@ export function useApplyChangeProposal() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: ChangeProposalApplyRequest }) =>
       proposalsService.applyProposal(id, data),
+    // The proposal page says what an apply did, failures and timeouts included.
+    meta: { skipGlobalErrorToast: true },
     onSuccess: (proposal) => {
       // The response is the proposal afterwards: show it now, before the refetch lands.
       queryClient.setQueryData(QUERY_KEYS.changeProposal(proposal.id), proposal);
       invalidateOntology(queryClient);
+    },
+    // A timed-out apply may still be running, or have finished, on the server: show where it got.
+    onError: (error) => {
+      if (isTimeout(error)) invalidateOntology(queryClient);
     },
   });
 }
