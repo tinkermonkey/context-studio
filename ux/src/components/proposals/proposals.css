@@ -67,17 +67,104 @@
   }
 
   /* ============= Proposal detail ============= */
+  /* The decision progress banner: amber while anything needs a decision, emerald once all decided. */
   .proposal-summary {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 10px;
-    align-items: center;
+    padding: 12px 14px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 8px;
+    background: rgb(var(--canvas-bg-2));
     font-family: var(--font-mono);
     font-size: 12px;
   }
 
+  .proposal-summary--open {
+    border-color: rgb(var(--status-amber) / 0.45);
+    background: rgb(var(--status-amber) / 0.07);
+  }
+
+  .proposal-summary--done {
+    border-color: rgb(var(--status-emerald) / 0.45);
+    background: rgb(var(--status-emerald) / 0.07);
+  }
+
+  .proposal-summary__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    align-items: center;
+  }
+
+  .proposal-summary__progress {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
   .proposal-summary__tally {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .proposal-summary__decided {
     color: rgb(var(--canvas-fg-2));
+  }
+
+  .proposal-summary__pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* A breakdown pill: a chip that filters the table to what needs a decision. */
+  .proposal-pill {
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: 999px;
+  }
+
+  .proposal-pill:focus-visible {
+    outline: 2px solid var(--accent-amber);
+    outline-offset: 2px;
+  }
+
+  .proposal-pill:hover .chip {
+    filter: brightness(1.08);
+  }
+
+  /* As in the list: a canvas-toned track, not Heimdall's shell token. */
+  .proposal-summary .progress-bar {
+    background-color: rgb(var(--canvas-border));
+  }
+
+  .proposal-table-filter {
+    display: flex;
+    align-items: center;
+  }
+
+  /* A decided operation's change: still readable, but out of the way. */
+  .op-change-cell--decided {
+    opacity: 0.72;
+  }
+
+  .op-decided__who {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .op-decided__note {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: rgb(var(--canvas-fg-2));
+    overflow-wrap: anywhere;
   }
 
   .proposal-summary__mix {

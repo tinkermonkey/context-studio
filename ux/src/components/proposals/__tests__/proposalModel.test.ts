@@ -27,7 +27,6 @@ import {
   referencedClassIds,
   resolveRef,
   strictestScope,
-  tallyLabel,
   tallyOperations,
 } from "../proposalModel";
 
@@ -44,7 +43,6 @@ describe("tally, pending and scope", () => {
       failed: 0,
       awaiting: 3,
     });
-    expect(tallyLabel(tally)).toBe("3 pending · 1 applied · 0 rejected · 0 failed");
     expect(pendingLabel(tally)).toBe("3 of 4 · 1 applied");
     expect(decidedPercent(tally)).toBe(25);
   });

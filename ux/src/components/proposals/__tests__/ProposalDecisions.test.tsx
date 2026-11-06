@@ -394,8 +394,10 @@ describe("selection and the bulk bar", () => {
     const bar = screen.getByTestId("proposal-selection-bar");
     expect(within(bar).getByTestId("proposal-selection-count")).toHaveTextContent("2 selected");
     expect(bar).toHaveTextContent("1 stale: Accept selected leaves it for Apply anyway");
-    // Decided operations can't be checked.
-    expect(screen.getByTestId("operation-check-op-create")).toBeDisabled();
+    // Decided operations have no checkbox, in any filter.
+    await user.click(screen.getByRole("radio", { name: "All · 4" }));
+    expect(screen.getByTestId("operation-diff-op-create")).toBeInTheDocument();
+    expect(screen.queryByTestId("operation-check-op-create")).not.toBeInTheDocument();
 
     await user.click(within(bar).getByTestId("proposal-selection-accept"));
     await waitFor(() => expect(applied).toHaveLength(1));

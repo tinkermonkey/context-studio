@@ -119,8 +119,30 @@ export const doneProposal = createChangeProposal({
 
 const PROPOSALS = [openProposal, doneProposal];
 
-/** GET /api/proposals (status and taxonomy_id filters) and GET /api/proposals/:id. */
+export const DECIDED_AT = "2026-11-06T12:53:08+00:00";
+
+/**
+ * GET /api/proposals (status and taxonomy_id filters), GET /api/proposals/:id
+ * and GET /api/proposals/:id/decisions (each decided operation decided by the user at DECIDED_AT).
+ */
 export const proposalHandlers = [
+  http.get("*/api/proposals/:id/decisions", ({ params }) => {
+    const proposal = PROPOSALS.find((p) => p.id === params.id);
+    return HttpResponse.json(
+      (proposal?.operations ?? []).map((o) => {
+        const decided = o.status === "applied" || o.status === "rejected";
+        return {
+          seq: o.seq,
+          op_id: o.id,
+          status: o.status,
+          reason: o.reason ?? null,
+          result_entity_id: o.result_entity_id ?? null,
+          decided_at: decided ? DECIDED_AT : null,
+          decided_by: decided ? "user" : null,
+        };
+      }),
+    );
+  }),
   http.get("*/api/proposals/:id", ({ params }) => {
     const proposal = PROPOSALS.find((p) => p.id === params.id);
     return proposal

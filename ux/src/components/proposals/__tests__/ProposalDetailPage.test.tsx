@@ -36,9 +36,11 @@ describe("ProposalDetailPage", () => {
     expect(await screen.findByText("PROPOSAL · dr_spec · pipeline")).toBeInTheDocument();
     expect(screen.getByTestId("proposal-status")).toHaveClass("chip--amber");
     expect(screen.getByTestId("proposal-status")).toHaveTextContent("open");
-    expect(screen.getByTestId("proposal-tally")).toHaveTextContent(
-      "3 pending · 1 applied · 0 rejected · 0 failed",
+    expect(screen.getByTestId("proposal-tally")).toHaveTextContent("3 of 4 need a decision");
+    expect(screen.getByTestId("proposal-decided-counts")).toHaveTextContent(
+      "1 applied · 0 rejected",
     );
+    expect(screen.getByTestId("proposal-summary")).toHaveClass("proposal-summary--open");
     expect(screen.getByTestId("proposal-op-mix")).toHaveTextContent(
       "1 create · 2 update · 1 delete · 2 breaking · 1 additive · 1 editorial",
     );
@@ -52,7 +54,9 @@ describe("ProposalDetailPage", () => {
   });
 
   it("renders each operation's change as a triple diff or field change", async () => {
+    const user = userEvent.setup();
     renderPage();
+    await user.click(await screen.findByRole("radio", { name: "All · 4" }));
 
     // Update: the current triple (its ends from the current property), then the new one.
     const rename = await screen.findByTestId("operation-diff-op-rename");
@@ -79,8 +83,10 @@ describe("ProposalDetailPage", () => {
     expect(within(classChange).getByText("A deployable part")).toHaveClass("op-diff__changed");
   });
 
-  it("shows op, plan kind, probability, status and stale chips", async () => {
+  it("shows op, plan kind, probability, decision state and stale chips", async () => {
+    const user = userEvent.setup();
     renderPage();
+    await user.click(await screen.findByRole("radio", { name: "All · 4" }));
     await screen.findByTestId("operation-diff-op-rename");
 
     const table = screen.getByTestId("proposal-operations-table");
@@ -90,8 +96,12 @@ describe("ProposalDetailPage", () => {
     expect(within(renameRow).getByText("rename-predicate")).toHaveClass("op-plan-kind");
     expect(within(renameRow).getByText("0.82")).toHaveClass("op-probability");
     expect(
-      within(screen.getByTestId("operation-status-op-rename")).getByText("pending"),
+      within(screen.getByTestId("operation-status-op-rename")).getByText("needs decision"),
     ).toHaveClass("chip--amber");
+    expect(screen.getByTestId("operation-status-op-rename")).toHaveAttribute(
+      "data-status",
+      "pending",
+    );
     expect(screen.queryByTestId("operation-stale-op-rename")).not.toBeInTheDocument();
     expect(screen.getByTestId("operation-stale-op-delete")).toHaveClass("chip--rose");
     expect(

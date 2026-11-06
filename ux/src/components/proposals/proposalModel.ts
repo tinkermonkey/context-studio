@@ -38,11 +38,6 @@ export function isAwaiting(operation: ProposedOperation): boolean {
   return operation.status === "pending" || operation.status === "failed";
 }
 
-/** "22 pending · 0 applied · 0 rejected · 0 failed" */
-export function tallyLabel(tally: OperationTally): string {
-  return `${tally.pending} pending · ${tally.applied} applied · ${tally.rejected} rejected · ${tally.failed} failed`;
-}
-
 /**
  * "5 of 14 · 9 applied": operations awaiting a decision (pending or failed) of
  * the total, plus how many are applied and, if any, how many failed.

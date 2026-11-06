@@ -97,14 +97,14 @@ const columns: Column<ProposalRow>[] = [
   },
   {
     key: "tally",
-    label: "Pending",
+    label: "Needs decision",
     width: "160px",
     render: (_, row) => (
       <div className="proposal-pending" data-testid={`proposal-pending-${row.id}`}>
         <span>{pendingLabel(row.tally)}</span>
         <ProgressBar
           percent={decidedPercent(row.tally)}
-          color="emerald"
+          color={row.tally.awaiting > 0 ? "amber" : "emerald"}
           height={4}
           label={`${row.tally.total - row.tally.awaiting} of ${row.tally.total} decided`}
         />
@@ -234,8 +234,8 @@ export function ProposalsListPage({ status, taxonomyId, onFiltersChange }: Propo
       )}
 
       <p className="proposals-footnote">
-        Pending counts operations still waiting for a decision. Scope is the strictest scope in the
-        proposal; breaking changes and deletes never apply by themselves.
+        Needs decision counts operations still waiting for one, failed ones included. Scope is the
+        strictest scope in the proposal; breaking changes and deletes never apply by themselves.
       </p>
     </div>
   );
