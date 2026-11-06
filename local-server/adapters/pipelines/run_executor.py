@@ -311,7 +311,11 @@ class BackgroundRunExecutor:
         output_summary = dict(result_state.result or {})
         if result_state.parse_warnings:
             output_summary["warnings"] = result_state.parse_warnings
-        self._runs.update_summaries(run_id=run.id, output_summary=output_summary, llm_metadata={})
+        self._runs.update_summaries(
+            run_id=run.id,
+            output_summary=output_summary,
+            llm_metadata=dict(result_state.llm_metadata or {}),
+        )
         proposal_id = output_summary.get("proposal_id")
         if isinstance(proposal_id, str) and proposal_id:
             self._runs.set_proposal_id(run.id, proposal_id)

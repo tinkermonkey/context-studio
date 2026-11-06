@@ -1730,6 +1730,9 @@ export interface paths {
      *       current_definition, optional groundings and extraction_usages
      *     - schema_node_connection_refinement: requires scope_id and
      *       current_connections, optional groundings and extraction_usages
+     *     - schema_relationship_reflection: requires taxonomy_id, optional scope (a
+     *       scheme id or identifier, or relationship type ids); proposes its change
+     *       plan as a change proposal (the run's proposal_id)
      *
      *     Creates a pipeline run, executes it with the registered implementation,
      *     and returns the run with execution results. With `async: true` the run is

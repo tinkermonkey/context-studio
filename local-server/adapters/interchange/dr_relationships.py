@@ -321,6 +321,16 @@ def dr_predicate_catalog(repo: OntologyRepository) -> dict[str, dict[str, Any]] 
     return None
 
 
+def dr_predicate_catalog_for(
+    repo: OntologyRepository, taxonomy_id: str
+) -> dict[str, dict[str, Any]] | None:
+    """The DR predicate catalog when the taxonomy is the dr_spec taxonomy; else None."""
+    taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    if taxonomy is None or taxonomy.id != taxonomy_id:
+        return None
+    return dr_predicate_catalog(repo)
+
+
 def swapped_dr_reference(
     target: PropertyDefinition, current: Triple, new: Triple
 ) -> list[dict[str, Any]]:
@@ -460,6 +470,36 @@ class DrRelationshipRules:
             if other.id != operation.id and self._produces(other, other_edits, spec_nodes) == new:
                 raise ValueError(f"seq {other.seq} also produces {new.id}")
 
+        return self._completed(target, fields, current, new, classes, properties)
+
+    def complete_triple_fields(
+        self, target: PropertyDefinition, fields: dict[str, Any]
+    ) -> dict[str, Any]:
+        """
+        A proposed update of a DR relationship type's triple, completed as an
+        edit is when applied: the whole triple, the identifier a re-import
+        computes, the DR reference, and a default title or description that
+        follows the new triple. Fields of a type without a DR relationship id
+        are returned as they are.
+        """
+        if dr_relationship_id(target.external_references) is None:
+            return dict(fields)
+        classes = dr_spec_classes(self._repo)
+        spec_nodes = {class_id: node for node, class_id in classes.items()}
+        current = self._triple_of(target)
+        new = self._edited(fields, current, spec_nodes)
+        properties = dr_property_definitions(self._repo)
+        return self._completed(target, fields, current, new, classes, properties)
+
+    def _completed(
+        self,
+        target: PropertyDefinition,
+        fields: dict[str, Any],
+        current: Triple,
+        new: Triple,
+        classes: dict[str, str],
+        properties: dict[str, PropertyDefinition],
+    ) -> dict[str, Any]:
         completed = dict(fields)
         completed["canonical_predicate"] = new.predicate
         completed["domain_class_id"] = classes[new.source]
