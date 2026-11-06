@@ -891,6 +891,9 @@ async def run_pipeline(
       current_definition, optional groundings and extraction_usages
     - schema_node_connection_refinement: requires scope_id and
       current_connections, optional groundings and extraction_usages
+    - schema_relationship_reflection: requires taxonomy_id, optional scope (a
+      scheme id or identifier, or relationship type ids); proposes its change
+      plan as a change proposal (the run's proposal_id)
 
     Creates a pipeline run, executes it with the registered implementation,
     and returns the run with execution results. With `async: true` the run is
@@ -1033,6 +1036,9 @@ async def run_pipeline(
         status_code, message = _handle_domain_error(exc)
         try:
             repo.update_failure_info(run_id, str(exc), output_summary={"error": message})
+            spent = getattr(exc, "llm_metadata", None)
+            if spent:
+                repo.update_summaries(run_id=run_id, llm_metadata=dict(spent))
             # Update batch timestamps and status when run fails
             batch_repo.update_completed_at(batch_id)
             batch_repo.update_status(batch_id, batch_repo.compute_aggregate_status(batch_id))
@@ -1068,8 +1074,11 @@ async def run_pipeline(
         repo.update_summaries(
             run_id=run_id,
             output_summary=output_summary,
-            llm_metadata={},
+            llm_metadata=dict(result_state.llm_metadata or {}),
         )
+        proposal_id = output_summary.get("proposal_id")
+        if isinstance(proposal_id, str) and proposal_id:
+            repo.set_proposal_id(run_id, proposal_id)
         repo.update_status(run_id, result_state.current_status)
         # Update batch completed_at timestamp since this single-run batch is now complete
         batch_repo.update_completed_at(batch_id)

@@ -51,6 +51,7 @@ class PipelineType(str, Enum):
     SCHEMA_NODE_GROUNDING = "schema_node_grounding"
     SCHEMA_NODE_DEFINITION_REFINEMENT = "schema_node_definition_refinement"
     SCHEMA_NODE_CONNECTION_REFINEMENT = "schema_node_connection_refinement"
+    SCHEMA_RELATIONSHIP_REFLECTION = "schema_relationship_reflection"
 
 
 @dataclass(frozen=True)
@@ -401,3 +402,17 @@ class SchemaConnectionRefinementRun(PipelineRun):
             status=PipelineRunStatus.PENDING,
             created_at=created_at or datetime.now(timezone.utc),
         )
+
+
+@dataclass(frozen=True)
+class SchemaRelationshipReflectionRun(PipelineRun):
+    """
+    Domain entity for schema relationship reflection runs: sorting questions
+    per relationship type, emitted as a change proposal (proposal_id).
+
+    Per-type fields: (none)
+    """
+
+    pipeline_type: PipelineType = field(
+        default=PipelineType.SCHEMA_RELATIONSHIP_REFLECTION, init=False
+    )

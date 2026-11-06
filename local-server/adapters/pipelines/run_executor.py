@@ -285,6 +285,10 @@ class BackgroundRunExecutor:
                     run.id, reason, output_summary={"error": reason}
                 )
             )
+            spent = getattr(exc, "llm_metadata", None)
+            if spent:
+                # The model calls made before the failure still cost money and time
+                self._record(lambda: self._runs.update_summaries(run.id, llm_metadata=dict(spent)))
         self._refresh_batch(run.batch_run_id, finished=True)
 
     async def _run_pipeline(self, run: PipelineRun, input_data: dict[str, Any]) -> None:
@@ -311,7 +315,11 @@ class BackgroundRunExecutor:
         output_summary = dict(result_state.result or {})
         if result_state.parse_warnings:
             output_summary["warnings"] = result_state.parse_warnings
-        self._runs.update_summaries(run_id=run.id, output_summary=output_summary, llm_metadata={})
+        self._runs.update_summaries(
+            run_id=run.id,
+            output_summary=output_summary,
+            llm_metadata=dict(result_state.llm_metadata or {}),
+        )
         proposal_id = output_summary.get("proposal_id")
         if isinstance(proposal_id, str) and proposal_id:
             self._runs.set_proposal_id(run.id, proposal_id)

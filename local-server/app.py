@@ -171,6 +171,9 @@ from domain.pipelines.schema_node_grounding.apply_service import (
     SchemaGroundingApplyService,
 )
 from domain.pipelines.schema_node_grounding.scoring import GroundingScorer
+from domain.pipelines.schema_relationship_reflection import (
+    register_schema_relationship_reflection,
+)
 from domain.versioning.approval_policy import ApprovalPolicyService
 from domain.versioning.bundle_import import BundleImportService
 from domain.versioning.events import SyncCompleted
@@ -448,6 +451,12 @@ async def lifespan(app: FastAPI):
             config_registry=config_registry,
         )
         logger.info("Schema node connection refinement pipeline registered")
+
+        register_schema_relationship_reflection(
+            impl_registry=implementation_registry,
+            config_registry=config_registry,
+        )
+        logger.info("Schema relationship reflection pipeline registered")
 
         # Load user-created pipeline configurations from DB into the in-memory registry
         try:

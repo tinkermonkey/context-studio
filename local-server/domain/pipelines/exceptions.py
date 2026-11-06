@@ -42,6 +42,13 @@ class PipelineExternalServiceError(PipelineError):
 
 
 class PipelineExecutionError(PipelineError):
-    """Raised when internal orchestrator logic fails unexpectedly."""
+    """
+    Raised when internal orchestrator logic fails unexpectedly.
 
-    pass
+    llm_metadata carries what the run's model calls cost before it failed,
+    so the failed run still records it.
+    """
+
+    def __init__(self, message: str = "", llm_metadata: dict | None = None) -> None:
+        super().__init__(message)
+        self.llm_metadata = llm_metadata

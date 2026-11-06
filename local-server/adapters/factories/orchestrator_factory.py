@@ -8,6 +8,11 @@ and pipeline states based on pipeline type and available services.
 from hashlib import sha256
 from typing import Any, Callable, Type
 
+from adapters.interchange.dr_relationships import (
+    DrRelationshipRules,
+    dr_general_predicates_for,
+    dr_predicate_catalog_for,
+)
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.open_orchestrator import (
     OpenIndividualExtractionOrchestrator,
@@ -42,6 +47,10 @@ from domain.pipelines.schema_node_definition_refinement.orchestrator import (
 from domain.pipelines.schema_node_grounding.orchestrator import (
     SchemaGroundingOrchestrator,
     SchemaGroundingState,
+)
+from domain.pipelines.schema_relationship_reflection.orchestrator import (
+    RelationshipReflectionOrchestrator,
+    RelationshipReflectionState,
 )
 from utils.logger import get_logger
 
@@ -185,6 +194,36 @@ def _build_connection_refinement(
     )
 
 
+def _build_relationship_reflection(
+    llm_provider: LLMProvider, services: dict[str, Any]
+) -> PipelineOrchestrator:
+    ontology_repo = services.get("ontology_repo")
+    decision_models = services.get("decision_models")
+    proposal_service = services.get("proposal_service")
+    if not ontology_repo or not decision_models or not proposal_service:
+        raise ValueError(
+            "ontology_repo, decision_models and proposal_service are required for "
+            "RelationshipReflectionOrchestrator"
+        )
+    # DR's predicate catalog, general predicates and relationship identity
+    # apply to the dr_spec taxonomy only; any other taxonomy reflects on its
+    # own predicates.
+    dr_rules = DrRelationshipRules(ontology_repo)
+    return RelationshipReflectionOrchestrator(
+        ontology_repo=ontology_repo,
+        decision_models=decision_models,
+        proposal_service=proposal_service,
+        predicate_catalog=lambda taxonomy_id: dr_predicate_catalog_for(ontology_repo, taxonomy_id),
+        general_predicates=lambda taxonomy_id: dr_general_predicates_for(
+            ontology_repo, taxonomy_id
+        ),
+        complete_fields=dr_rules.complete_triple_fields,
+        config=services.get("refinement_config", {}),
+        run_id=services.get("run_id"),
+        status_writer=services.get("status_writer"),
+    )
+
+
 _ORCHESTRATOR_BUILDERS: dict[
     Type[PipelineOrchestrator],
     Callable[[LLMProvider, dict[str, Any]], PipelineOrchestrator],
@@ -197,6 +236,7 @@ _ORCHESTRATOR_BUILDERS: dict[
     SchemaGroundingOrchestrator: _build_schema_grounding,
     DefinitionRefinementOrchestrator: _build_definition_refinement,
     ConnectionRefinementOrchestrator: _build_connection_refinement,
+    RelationshipReflectionOrchestrator: _build_relationship_reflection,
 }
 
 _PIPELINE_TYPE_TO_STATE: dict[PipelineType, Type[PipelineState]] = {
@@ -206,6 +246,7 @@ _PIPELINE_TYPE_TO_STATE: dict[PipelineType, Type[PipelineState]] = {
     PipelineType.SCHEMA_NODE_GROUNDING: SchemaGroundingState,
     PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT: DefinitionRefinementState,
     PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT: ConnectionRefinementState,
+    PipelineType.SCHEMA_RELATIONSHIP_REFLECTION: RelationshipReflectionState,
 }
 
 
@@ -245,6 +286,8 @@ def build_orchestrator_services(
     return {
         "extraction_service": getattr(app_state, "extraction_service", None),
         "ontology_repo": getattr(app_state, "ontology_repo", None),
+        "decision_models": getattr(app_state, "decision_models", None),
+        "proposal_service": getattr(app_state, "proposal_service", None),
         "extraction_repo": getattr(app_state, "extraction_repo", None),
         "grounding_adapter": getattr(app_state, "grounding_adapter", None),
         "scorer": getattr(app_state, "grounding_scorer", None),
