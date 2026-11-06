@@ -100,8 +100,9 @@ function message(error: unknown): string {
 
 /**
  * Apply, reject, revert and export one proposal. Applies return the server's
- * error instead of throwing (the global mutation toast reports it too), so an
- * editor can show a 422 next to its fields. The last apply's operation ids
+ * error instead of throwing, so an editor can show a 422 next to its fields;
+ * this hook toasts it too ("Apply failed", or a timeout warning), as applies
+ * skip the global mutation toast. One apply or reject runs at a time. The last apply's operation ids
  * drive the results view; a refused (409) revert is kept for the page to explain.
  */
 export function useProposalActions(proposal: ChangeProposal | undefined) {

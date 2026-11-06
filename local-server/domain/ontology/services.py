@@ -168,6 +168,12 @@ class OntologyService:
         write and cause confusing duplicate-on-retry. Mirrors how event-publish
         failures are treated as non-fatal. The entity is saved but unsearchable
         until the next reindex.
+
+        Inside a transaction scope (a proposal apply, a revert) the index writes
+        through the scope's session. An embedding failure is still swallowed
+        here, but a failure writing the vectors (a flush error) leaves that
+        session unusable, so the scope's commit fails and the whole operation
+        rolls back: it fails atomically rather than being swallowed.
         """
         if self._schema_index is None:
             return
@@ -188,9 +194,10 @@ class OntologyService:
         Keep the individual vector index in sync after an individual write (#1142).
 
         Best-effort secondary side-effect with the same contract as
-        `_sync_vector_index`: a failure here must NOT fail the already-persisted
-        create/update. The individual is saved but not recognizable across
-        documents until the next reindex. No delete handling is needed — the
+        `_sync_vector_index` (including the inside-a-transaction exception: a
+        flush failure fails the operation atomically): a failure here must NOT
+        fail the already-persisted create/update. The individual is saved but
+        not recognizable across documents until the next reindex. No delete handling is needed — the
         embedding lives on the entity row, so `delete_individual` drops it with
         the row.
         """
