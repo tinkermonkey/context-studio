@@ -28,6 +28,8 @@ class PipelineRunStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
+    # The server stopped while the run was RUNNING; resume re-queues it
+    INTERRUPTED = "interrupted"
 
 
 class BatchStatus(str, Enum):
@@ -120,6 +122,9 @@ class PipelineRun:
         failure_reason: String description of failure reason if status=FAILED
         source_text: Input text the run extracted from (None for pipeline types
             without a text input); provenance span offsets index into it
+        items_done: Work items finished so far (None until the run reports progress)
+        items_total: Work items the run will process (None until known)
+        proposal_id: The change proposal the run produced, when it produced one
     """
 
     id: str = field(default_factory=lambda: str(uuid4()))
@@ -137,6 +142,9 @@ class PipelineRun:
     started_at: datetime | None = None
     failure_reason: str | None = None
     source_text: str | None = None
+    items_done: int | None = None
+    items_total: int | None = None
+    proposal_id: str | None = None
 
     def __post_init__(self) -> None:
         if not self.batch_run_id:

@@ -24,6 +24,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from adapters.chat.context import ConfigChatSettings, OntologyWorkspaceContext
 from adapters.chat.proposal_tools import build_proposal_tools
+from adapters.chat.run_tools import build_run_tools
 from adapters.chat.tools import build_chat_tools
 from adapters.clustering.sklearn_clusterer import SklearnClusterer
 
@@ -66,6 +67,7 @@ from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from adapters.persistence.sqlite.transaction import SharedSessionFactory, SqliteTransactionScope
+from adapters.pipelines.run_executor import BackgroundRunExecutor
 from adapters.recognition.individual_recognizer import CascadeIndividualRecognizer
 from adapters.reference.cache import CachedReferenceSource
 from adapters.reference.conceptnet import ConceptNetSource
@@ -812,6 +814,19 @@ async def lifespan(app: FastAPI):
         app.state.clusterer = clusterer
         app.state.schema_vector_index = schema_vector_index
 
+        # Background pipeline runs (#1409): workers execute pending runs off the
+        # request; runs left RUNNING by a previous process become INTERRUPTED
+        app.state.run_executor = BackgroundRunExecutor(
+            runs=pipeline_run_repo,
+            batches=batch_repo,
+            implementations=implementation_registry,
+            configurations=config_registry,
+            llm_provider=llm_router,
+            app_state=app.state,
+            workers=settings.pipelines.background_workers,
+        )
+        run_tools = build_run_tools(app.state.run_executor, pipeline_run_repo, ontology_service)
+
         # Read-only tools over the ontology and graph services, and the proposal
         # tools (propose changes; a person reviews them), shared by the chat
         # assistant and the MCP server so both can do the same things
@@ -824,7 +839,11 @@ async def lifespan(app: FastAPI):
         )
         app.state.chat_service = ChatService(
             model=llm_router,
-            tools=[*read_tools, *build_proposal_tools(proposal_service, ProposalSource.CHAT)],
+            tools=[
+                *read_tools,
+                *build_proposal_tools(proposal_service, ProposalSource.CHAT),
+                *run_tools,
+            ],
             repository=SqliteConversationRepository(operations_session_factory),
             settings=ConfigChatSettings(config_manager),
             workspace=OntologyWorkspaceContext(ontology_service),
@@ -846,7 +865,10 @@ async def lifespan(app: FastAPI):
                     read_tools,
                     ontology_service,
                     BundleExporter(ontology_repo),
-                    write_tools=build_proposal_tools(proposal_service, ProposalSource.MCP),
+                    write_tools=[
+                        *build_proposal_tools(proposal_service, ProposalSource.MCP),
+                        *run_tools,
+                    ],
                 )
                 logger.info("MCP server available at /mcp (bearer token required)")
             else:
@@ -855,7 +877,11 @@ async def lifespan(app: FastAPI):
                     settings.server.host,
                 )
 
-            yield
+            app.state.run_executor.start()
+            try:
+                yield
+            finally:
+                app.state.run_executor.stop()
 
             mcp_endpoint.session_manager = None
             mcp_endpoint.auth_token = None

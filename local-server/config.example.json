@@ -23,6 +23,9 @@
   "recognition": {
     "individual_match_threshold": 0.90
   },
+  "pipelines": {
+    "background_workers": 1
+  },
   "telemetry": {
     "enabled": true,
     "service_name": "context-studio-backend",

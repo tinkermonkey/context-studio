@@ -7,13 +7,14 @@ all pipeline types. Uses SQLAlchemy ORM for database access.
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import TYPE_CHECKING, Any, Callable
+from datetime import datetime, timezone
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from adapters.persistence.sqlite.models import (
+    BatchRun,
     ChangeEvent,
     IndividualExtractionRun,
     NoOpPipelineRun,
@@ -55,6 +56,8 @@ if TYPE_CHECKING:
     from domain.pipelines.ports import ChangeEventDictList, PipelineRunList
 
 logger = get_logger(__name__)
+
+_T = TypeVar("_T")
 
 # Map domain type to ORM class
 _PIPELINE_TYPE_TO_ORM = {
@@ -114,6 +117,7 @@ class PipelineRepository:
         configuration_slug: str,
         configuration_version: int,
         specific_data: dict[str, Any] | None = None,
+        input_data: dict[str, Any] | None = None,
     ) -> DomainPipelineRun:
         """
         Create a new pipeline run and persist it.
@@ -133,6 +137,8 @@ class PipelineRepository:
             configuration_slug: Configuration slug part
             configuration_version: Configuration version part
             specific_data: Type-specific fields (e.g., source_text_hash)
+            input_data: The run's full input, for a background worker to execute
+                it (None for runs executed in the request)
 
         Returns:
             Domain entity (specific subclass per pipeline_type)
@@ -160,6 +166,7 @@ class PipelineRepository:
             "input_summary": {},
             "output_summary": {},
             "llm_metadata": {},
+            "input_data": input_data,
         }
 
         # Add type-specific fields
@@ -691,6 +698,181 @@ class PipelineRepository:
             if self._should_close_session():
                 session.close()
 
+    # ==================== Background execution ====================
+
+    def _write(self, action: str, work: Callable[[Session], _T]) -> _T:
+        """Run `work` in one committed transaction, mapping database errors."""
+        session = self._get_session()
+        try:
+            result = work(session)
+            session.commit()
+            return result
+        except SQLAlchemyError as e:
+            session.rollback()
+            logger.error(f"Database error when trying to {action}: {e}")
+            raise PipelineStorageError(f"Failed to {action}") from e
+        finally:
+            if self._should_close_session():
+                session.close()
+
+    def claim_next_pending(self) -> tuple[DomainPipelineRun, dict[str, Any]] | None:
+        """
+        Claim the oldest PENDING run that carries an input, marking it RUNNING.
+
+        The claim is a conditional update (pending -> running), so two workers
+        never claim the same run.
+
+        Returns:
+            The claimed run and its input, or None when no run is waiting
+        """
+
+        def claim(session: Session) -> tuple[DomainPipelineRun, dict[str, Any]] | None:
+            candidates = (
+                session.query(PipelineRun.id)
+                .filter(
+                    PipelineRun.status == PipelineRunStatus.PENDING.value,
+                    PipelineRun.input_data.isnot(None),
+                )
+                .order_by(PipelineRun.created_at)
+                .limit(10)
+                .all()
+            )
+            for (run_id,) in candidates:
+                claimed = (
+                    session.query(BatchRun)
+                    .filter(
+                        BatchRun.id == run_id,
+                        BatchRun.status == PipelineRunStatus.PENDING.value,
+                    )
+                    .update(
+                        {"status": PipelineRunStatus.RUNNING.value},
+                        synchronize_session=False,
+                    )
+                )
+                if claimed:
+                    orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).one()
+                    orm_obj.started_at = datetime.now(timezone.utc)  # type: ignore[assignment]
+                    session.flush()
+                    return self._orm_to_domain(orm_obj), dict(orm_obj.input_data or {})
+            return None
+
+        return self._write("claim a pending pipeline run", claim)
+
+    def mark_running_interrupted(self) -> list[str]:
+        """
+        Mark every RUNNING run INTERRUPTED (at startup: no worker is running them).
+
+        Returns:
+            The batch ids of the runs marked
+        """
+
+        def mark(session: Session) -> list[str]:
+            rows = (
+                session.query(PipelineRun.id, PipelineRun.batch_id)
+                .filter(PipelineRun.status == PipelineRunStatus.RUNNING.value)
+                .all()
+            )
+            if rows:
+                session.query(BatchRun).filter(BatchRun.id.in_([r[0] for r in rows])).update(
+                    {"status": PipelineRunStatus.INTERRUPTED.value}, synchronize_session=False
+                )
+            return sorted({r[1] for r in rows if r[1]})
+
+        return self._write("mark running pipeline runs interrupted", mark)
+
+    def cancel_if_pending(self, run_id: str) -> bool:
+        """
+        Cancel the run if it is still PENDING (a conditional update).
+
+        Returns:
+            True if the run was pending and is now CANCELLED
+        """
+
+        def cancel(session: Session) -> bool:
+            updated = (
+                session.query(BatchRun)
+                .filter(
+                    BatchRun.id == run_id,
+                    BatchRun.status == PipelineRunStatus.PENDING.value,
+                )
+                .update({"status": PipelineRunStatus.CANCELLED.value}, synchronize_session=False)
+            )
+            return bool(updated)
+
+        return self._write("cancel a pending pipeline run", cancel)
+
+    def requeue(self, run_id: str) -> bool:
+        """
+        Set a CANCELLED, FAILED or INTERRUPTED run that carries an input back to
+        PENDING, clearing its progress, failure reason, start time and proposal.
+
+        Returns:
+            True if the run was re-queued; False if it is in another state or has
+            no stored input (no worker could execute it)
+        """
+        requeueable = (
+            PipelineRunStatus.CANCELLED.value,
+            PipelineRunStatus.FAILED.value,
+            PipelineRunStatus.INTERRUPTED.value,
+        )
+
+        def requeue(session: Session) -> bool:
+            orm_obj = (
+                session.query(PipelineRun)
+                .filter(
+                    PipelineRun.id == run_id,
+                    PipelineRun.status.in_(requeueable),
+                    PipelineRun.input_data.isnot(None),
+                )
+                .first()
+            )
+            if not orm_obj:
+                return False
+            orm_obj.status = PipelineRunStatus.PENDING.value  # type: ignore[assignment]
+            orm_obj.failure_reason = None  # type: ignore[assignment]
+            orm_obj.started_at = None  # type: ignore[assignment]
+            orm_obj.items_done = None  # type: ignore[assignment]
+            orm_obj.items_total = None  # type: ignore[assignment]
+            orm_obj.proposal_id = None  # type: ignore[assignment]
+            return True
+
+        return self._write("re-queue a pipeline run", requeue)
+
+    def update_progress(self, run_id: str, items_done: int, items_total: int | None) -> bool:
+        """
+        Record how many work items the run has finished, out of how many.
+
+        Returns:
+            True if updated, False if not found
+        """
+
+        def update(session: Session) -> bool:
+            orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
+            if not orm_obj:
+                return False
+            orm_obj.items_done = items_done  # type: ignore[assignment]
+            orm_obj.items_total = items_total  # type: ignore[assignment]
+            return True
+
+        return self._write("update pipeline run progress", update)
+
+    def set_proposal_id(self, run_id: str, proposal_id: str) -> bool:
+        """
+        Link the run to the change proposal it produced.
+
+        Returns:
+            True if updated, False if not found
+        """
+
+        def update(session: Session) -> bool:
+            orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
+            if not orm_obj:
+                return False
+            orm_obj.proposal_id = proposal_id  # type: ignore[assignment]
+            return True
+
+        return self._write("link a pipeline run to its proposal", update)
+
     def get_change_events_for_run(self, run_id: str) -> "ChangeEventDictList":
         """
         Get all change_events correlated with a pipeline run via batch_run_id.
@@ -760,6 +942,9 @@ class PipelineRepository:
             "started_at": orm_obj.started_at,
             "failure_reason": orm_obj.failure_reason,
             "source_text": orm_obj.source_text,
+            "items_done": orm_obj.items_done,
+            "items_total": orm_obj.items_total,
+            "proposal_id": orm_obj.proposal_id,
         }
 
         # Dispatch based on ORM type

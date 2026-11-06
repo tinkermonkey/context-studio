@@ -26,12 +26,13 @@ Error handling translates domain exceptions to appropriate HTTP responses.
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, Response
 from fastapi import status as http_status
 from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError, OperationalError
 
 from adapters.factories.orchestrator_factory import (
+    build_orchestrator_services,
     build_run_specific_data,
     create_orchestrator,
     create_pipeline_state,
@@ -39,6 +40,7 @@ from adapters.factories.orchestrator_factory import (
 from adapters.persistence.sqlite.pipeline_config_repo import (
     PipelineConfigurationRepository,
 )
+from adapters.pipelines.run_executor import BackgroundRunExecutor, UnknownPipelineError
 from adapters.web.dependencies import get_versioning_service
 from adapters.web.schemas.extraction import (
     RecognitionPreviewHitSchema,
@@ -465,29 +467,6 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
         )
 
 
-def _get_grounding_config(config: dict[str, Any]) -> dict[str, Any]:
-    """
-    Extract grounding-specific configuration.
-
-    Args:
-        config: Configuration dict
-
-    Returns:
-        Grounding config dict with top_n and weights
-    """
-    return {
-        "top_n": config.get("top_n", 10),
-        "weights": config.get(
-            "weights",
-            {
-                "source_score": 0.3,
-                "label_match": 0.3,
-                "semantic_similarity": 0.4,
-            },
-        ),
-    }
-
-
 def _fetch_and_validate_run(
     run_id: str,
     repo: Any,
@@ -568,6 +547,9 @@ def _to_response(run: PipelineRun, include_source_text: bool = True) -> Pipeline
             "started_at": run.started_at,
             "failure_reason": run.failure_reason,
             "source_text": run.source_text if include_source_text else None,
+            "items_done": run.items_done,
+            "items_total": run.items_total,
+            "proposal_id": run.proposal_id,
         }
     )
 
@@ -869,14 +851,33 @@ async def create_configuration(
 # ==================== Pipeline Execution ====================
 
 
+def _run_executor(request: Request) -> BackgroundRunExecutor:
+    """The app's background run executor, or 503 when background runs are off."""
+    executor = getattr(request.app.state, "run_executor", None)
+    if executor is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Background pipeline runs are not available",
+        )
+    return executor
+
+
 @router.post(
     "/{pipeline_type}/run",
     response_model=PipelineRunResponse,
     status_code=http_status.HTTP_201_CREATED,
+    responses={
+        202: {
+            "model": PipelineRunResponse,
+            "description": "With async: the pending run, executing in the background",
+        },
+        503: {"description": "With async: background pipeline runs are not available"},
+    },
 )
 async def run_pipeline(
     pipeline_type: str,
     request: Request,
+    response: Response,
     request_body: PipelineRunRequest = Body(...),
 ) -> PipelineRunResponse:
     """
@@ -892,7 +893,8 @@ async def run_pipeline(
       current_connections, optional groundings and extraction_usages
 
     Creates a pipeline run, executes it with the registered implementation,
-    and returns the run with execution results.
+    and returns the run with execution results. With `async: true` the run is
+    stored pending and returned at once (202); a background worker executes it.
 
     Args:
         pipeline_type: The pipeline type (e.g., individual_extraction)
@@ -912,6 +914,24 @@ async def run_pipeline(
             status_code=http_status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid pipeline type: {pipeline_type}",
         )
+
+    if request_body.run_async:
+        input_data = request_body.model_dump(exclude={"run_async"})
+        try:
+            run = _run_executor(request).submit(
+                ptype,
+                request_body.implementation_id,
+                request_body.configuration_ref,
+                input_data,
+                specific_data=build_run_specific_data(ptype, input_data),
+            )
+        except UnknownPipelineError as e:
+            raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail=str(e)) from e
+        except PipelineStorageError as e:
+            status_code, message = _handle_domain_error(e)
+            raise HTTPException(status_code=status_code, detail=message) from e
+        response.status_code = http_status.HTTP_202_ACCEPTED
+        return _to_response(run)
 
     repo = request.app.state.pipeline_run_repo
     batch_repo = request.app.state.batch_repo
@@ -951,7 +971,7 @@ async def run_pipeline(
         raise HTTPException(status_code=status_code, detail=message) from e
 
     # Extract input data from request body (now includes type-specific fields)
-    input_data = request_body.model_dump()
+    input_data = request_body.model_dump(exclude={"run_async"})
 
     # Persist pipeline run to database only after validation succeeds
     specific_data = build_run_specific_data(ptype, input_data)
@@ -980,25 +1000,7 @@ async def run_pipeline(
         raise HTTPException(status_code=status_code, detail=message) from e
 
     # Prepare services for orchestrator instantiation, including status writer
-    services = {
-        "extraction_service": getattr(request.app.state, "extraction_service", None),
-        "ontology_repo": getattr(request.app.state, "ontology_repo", None),
-        "extraction_repo": getattr(request.app.state, "extraction_repo", None),
-        "grounding_adapter": getattr(request.app.state, "grounding_adapter", None),
-        "scorer": getattr(request.app.state, "grounding_scorer", None),
-        "grounding_config": _get_grounding_config(config_version.config),
-        "refinement_config": config_version.config,
-        # Ports + config for the open extraction implementations (open_v1)
-        "nlp_processor": getattr(request.app.state, "nlp_processor", None),
-        "embedding_service": getattr(request.app.state, "embedding_service", None),
-        "clusterer": getattr(request.app.state, "clusterer", None),
-        "schema_index": getattr(request.app.state, "schema_vector_index", None),
-        "reference_source": getattr(request.app.state, "conceptnet_source", None),
-        "open_schema_config": config_version.config,
-        "open_individual_config": config_version.config,
-        "run_id": run_id,
-        "status_writer": repo,
-    }
+    services = build_orchestrator_services(request.app.state, config_version.config, run_id, repo)
 
     # Instantiate orchestrator with dependencies (validates service dependencies)
     try:
@@ -1121,6 +1123,41 @@ async def get_pipeline_run(
         )
 
     return _to_response(run)
+
+
+@router.post(
+    "/runs/{run_id}/cancel",
+    response_model=PipelineRunResponse,
+    responses={
+        404: {"description": "Pipeline run not found"},
+        409: {"description": "The run is neither pending nor executing in the background"},
+        503: {"description": "Background pipeline runs are not available"},
+    },
+)
+def cancel_pipeline_run(run_id: str, request: Request) -> PipelineRunResponse:
+    """
+    Cancel a pipeline run.
+
+    A pending run is cancelled at once. A run executing in the background is
+    cancelled at its next await point; poll the run until its status is
+    `cancelled`.
+
+    Raises:
+        HTTPException: 404 if the run is not found, 409 if it is neither pending
+            nor executing in the background, 503 if background runs are off
+    """
+    repo = request.app.state.pipeline_run_repo
+    if repo.get(run_id) is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Pipeline run not found: {run_id}",
+        )
+    if not _run_executor(request).cancel(run_id):
+        raise HTTPException(
+            status_code=http_status.HTTP_409_CONFLICT,
+            detail="Only a pending run or one executing in the background can be cancelled",
+        )
+    return _to_response(repo.get(run_id))
 
 
 def _extract_schema_extraction_candidates(run: PipelineRun) -> list[CandidateItem]:
@@ -2175,12 +2212,17 @@ async def enqueue_batch_runs(
                 configuration_slug=config_version.config_ref,
                 configuration_version=config_version.version,
                 specific_data=specific_data or None,
+                input_data=run_data.get("input_data"),
             )
             created_run_ids.append(run.id)
 
         # Update batch started_at timestamp if this is the first run
         if created_run_ids:
             batch_repo.update_started_at(batch_id)
+        # Runs given an input_data are executed by the background workers
+        executor = getattr(request.app.state, "run_executor", None)
+        if executor is not None and any(r.get("input_data") is not None for r in runs_data):
+            executor.wake()
 
         run_counts = batch_repo.get_run_counts(batch_id)
         total_runs = sum(run_counts.values())
@@ -2202,9 +2244,9 @@ async def enqueue_batch_runs(
     status_code=http_status.HTTP_200_OK,
     response_model=CancelBatchResponse,
 )
-async def cancel_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
+def cancel_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
     """
-    Cancel all PENDING runs in a batch.
+    Cancel a batch's pending runs, and those executing in the background.
 
     Args:
         batch_id: Batch ID
@@ -2228,12 +2270,15 @@ async def cancel_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
 
     try:
         runs = pipeline_run_repo.list_by_batch_id(batch_id)
-        cancelled_count = 0
-
-        for run in runs:
-            if run.status == PipelineRunStatus.PENDING:
-                pipeline_run_repo.update_status(run.id, PipelineRunStatus.CANCELLED)
-                cancelled_count += 1
+        # Conditional cancels: a run a worker claims meanwhile is cancelled as executing
+        executor = getattr(request.app.state, "run_executor", None)
+        cancel = executor.cancel if executor is not None else pipeline_run_repo.cancel_if_pending
+        cancelled_count = sum(
+            1
+            for run in runs
+            if run.status in (PipelineRunStatus.PENDING, PipelineRunStatus.RUNNING)
+            and cancel(run.id)
+        )
 
         # Recompute batch status based on child runs
         if cancelled_count > 0:
@@ -2267,16 +2312,19 @@ async def cancel_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
     status_code=http_status.HTTP_200_OK,
     response_model=ResumeBatchResponse,
 )
-async def resume_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
+def resume_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
     """
-    Resume (re-enqueue) cancelled or failed runs in a batch back to PENDING status.
+    Re-queue a batch's cancelled, failed or interrupted runs that carry a stored input.
+
+    Runs without a stored input are skipped (no worker could execute them) and
+    are not counted in resumed_count.
 
     Args:
         batch_id: Batch ID
         request: FastAPI request (for service access)
 
     Returns:
-        Count of resumed runs
+        Count of resumed runs (runs without a stored input are skipped)
 
     Raises:
         HTTPException: 404 if batch not found
@@ -2293,12 +2341,10 @@ async def resume_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
 
     try:
         runs = pipeline_run_repo.list_by_batch_id(batch_id)
-        resumed_count = 0
-
-        for run in runs:
-            if run.status in (PipelineRunStatus.CANCELLED, PipelineRunStatus.FAILED):
-                pipeline_run_repo.update_status(run.id, PipelineRunStatus.PENDING)
-                resumed_count += 1
+        # Only runs with a stored input are re-queued: no worker could execute the rest
+        executor = getattr(request.app.state, "run_executor", None)
+        requeue = executor.requeue if executor is not None else pipeline_run_repo.requeue
+        resumed_count = sum(1 for run in runs if requeue(run.id))
 
         # Recompute batch status based on child runs
         if resumed_count > 0:

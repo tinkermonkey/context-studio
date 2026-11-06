@@ -239,7 +239,7 @@ class TestBatchLifecycle:
     def test_resume_batch_re_enqueues_cancelled_and_failed_runs(
         self, client, pipeline_run_repo, batch_repo
     ):
-        """Resume operation re-enqueues only CANCELLED and FAILED runs."""
+        """Resume re-enqueues only CANCELLED and FAILED runs (runs with a stored input)."""
         # Create a batch and enqueue 5 runs
         create_response = client.post("/api/pipelines/batches")
         batch_id = create_response.json()["id"]
@@ -252,6 +252,7 @@ class TestBatchLifecycle:
                         "pipeline_type": "no_op",
                         "implementation_id": "default",
                         "configuration_ref": "noop-default",
+                        "input_data": {},
                     }
                     for _ in range(5)
                 ]
@@ -372,6 +373,7 @@ class TestBatchLifecycle:
                         "pipeline_type": "no_op",
                         "implementation_id": "default",
                         "configuration_ref": "noop-default",
+                        "input_data": {},
                     }
                 ]
             },

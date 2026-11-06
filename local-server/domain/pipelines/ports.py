@@ -483,3 +483,7 @@ class PipelineRunStatusWriter(Protocol):
     def update_running_status(self, run_id: str, started_at: datetime) -> bool:
         """Update run status to RUNNING with started_at timestamp."""
         ...
+
+    def update_progress(self, run_id: str, items_done: int, items_total: int | None) -> bool:
+        """Record how many work items the run has finished, out of how many."""
+        ...

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+import threading
 import time
 from collections import OrderedDict
 from typing import Literal
@@ -69,6 +70,8 @@ class OpenRouterProvider:
         )
         # Bounded LRU cache: OrderedDict with max size to prevent unbounded growth
         self._response_cache: OrderedDict[str, LLMResponse] = OrderedDict()
+        # Pipeline workers and the API thread pool call this provider concurrently
+        self._cache_lock = threading.Lock()
 
     def complete(
         self,
@@ -110,11 +113,14 @@ class OpenRouterProvider:
         cache_key = self._make_cache_key(
             system_prompt, user_prompt, model, temperature, max_tokens, response_format
         )
-        if cache_key in self._response_cache:
+        with self._cache_lock:
+            cached = self._response_cache.get(cache_key)
+            if cached is not None:
+                # Move to end for LRU ordering
+                self._response_cache.move_to_end(cache_key)
+        if cached is not None:
             logger.debug(f"Cache hit for model {model}")
-            # Move to end for LRU ordering
-            self._response_cache.move_to_end(cache_key)
-            return self._response_cache[cache_key]
+            return cached
 
         # Prepare request
         messages = [
@@ -193,10 +199,11 @@ class OpenRouterProvider:
             )
 
             # Cache result with LRU eviction
-            if len(self._response_cache) >= self.CACHE_MAX_SIZE:
-                # Remove oldest entry (first item in OrderedDict)
-                self._response_cache.popitem(last=False)
-            self._response_cache[cache_key] = llm_response
+            with self._cache_lock:
+                if len(self._response_cache) >= self.CACHE_MAX_SIZE:
+                    # Remove oldest entry (first item in OrderedDict)
+                    self._response_cache.popitem(last=False)
+                self._response_cache[cache_key] = llm_response
             return llm_response
 
         except httpx.HTTPStatusError as e:
@@ -390,5 +397,6 @@ class OpenRouterProvider:
 
     def clear_cache(self) -> None:
         """Clear the response cache."""
-        self._response_cache.clear()
+        with self._cache_lock:
+            self._response_cache.clear()
         logger.info("OpenRouter response cache cleared")

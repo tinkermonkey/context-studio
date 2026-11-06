@@ -1732,7 +1732,8 @@ export interface paths {
      *       current_connections, optional groundings and extraction_usages
      *
      *     Creates a pipeline run, executes it with the registered implementation,
-     *     and returns the run with execution results.
+     *     and returns the run with execution results. With `async: true` the run is
+     *     stored pending and returned at once (202); a background worker executes it.
      *
      *     Args:
      *         pipeline_type: The pipeline type (e.g., individual_extraction)
@@ -1776,6 +1777,34 @@ export interface paths {
     get: operations["get_pipeline_run_api_pipelines_runs__run_id__get"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/pipelines/runs/{run_id}/cancel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel Pipeline Run
+     * @description Cancel a pipeline run.
+     *
+     *     A pending run is cancelled at once. A run executing in the background is
+     *     cancelled at its next await point; poll the run until its status is
+     *     `cancelled`.
+     *
+     *     Raises:
+     *         HTTPException: 404 if the run is not found, 409 if it is neither pending
+     *             nor executing in the background, 503 if background runs are off
+     */
+    post: operations["cancel_pipeline_run_api_pipelines_runs__run_id__cancel_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -2257,7 +2286,7 @@ export interface paths {
     put?: never;
     /**
      * Cancel Batch Runs
-     * @description Cancel all PENDING runs in a batch.
+     * @description Cancel a batch's pending runs, and those executing in the background.
      *
      *     Args:
      *         batch_id: Batch ID
@@ -2287,14 +2316,17 @@ export interface paths {
     put?: never;
     /**
      * Resume Batch Runs
-     * @description Resume (re-enqueue) cancelled or failed runs in a batch back to PENDING status.
+     * @description Re-queue a batch's cancelled, failed or interrupted runs that carry a stored input.
+     *
+     *     Runs without a stored input are skipped (no worker could execute them) and
+     *     are not counted in resumed_count.
      *
      *     Args:
      *         batch_id: Batch ID
      *         request: FastAPI request (for service access)
      *
      *     Returns:
-     *         Count of resumed runs
+     *         Count of resumed runs (runs without a stored input are skipped)
      *
      *     Raises:
      *         HTTPException: 404 if batch not found
@@ -5649,7 +5681,7 @@ export interface components {
     EnqueueBatchRunsRequest: {
       /**
        * Runs
-       * @description Run specs to enqueue
+       * @description Run specs to enqueue: pipeline_type, implementation_id, configuration_ref, specific_data, and input_data (a run given an input_data is executed by the background workers; one without stays pending)
        */
       runs: {
         [key: string]: unknown;
@@ -7408,6 +7440,11 @@ export interface components {
        * @default default
        */
       configuration_ref: string;
+      /**
+       * Async
+       * @description Return the pending run at once (202) and execute it in the background; poll GET /api/pipelines/runs/{id} for status and progress
+       */
+      async?: boolean | null;
     } & {
       [key: string]: unknown;
     };
@@ -7502,6 +7539,21 @@ export interface components {
        * @description Input text the run extracted from; provenance span offsets index into it. Returned by run detail and run execution; omitted (null) in run lists.
        */
       source_text?: string | null;
+      /**
+       * Items Done
+       * @description Work items finished so far (null until the run reports progress)
+       */
+      items_done?: number | null;
+      /**
+       * Items Total
+       * @description Work items the run will process (null until known)
+       */
+      items_total?: number | null;
+      /**
+       * Proposal Id
+       * @description The change proposal the run produced, if it produced one
+       */
+      proposal_id?: string | null;
     };
     /**
      * PipelineTypeResponse
@@ -8430,7 +8482,7 @@ export interface components {
       batch_id: string;
       /**
        * Resumed Count
-       * @description Number of runs resumed
+       * @description Number of runs resumed (runs without a stored input are skipped)
        */
       resumed_count: number;
       /**
@@ -11645,6 +11697,15 @@ export interface operations {
           "application/json": components["schemas"]["PipelineRunResponse"];
         };
       };
+      /** @description With async: the pending run, executing in the background */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineRunResponse"];
+        };
+      };
       /** @description Validation Error */
       422: {
         headers: {
@@ -11653,6 +11714,13 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description With async: background pipeline runs are not available */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -11684,6 +11752,58 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+    };
+  };
+  cancel_pipeline_run_api_pipelines_runs__run_id__cancel_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PipelineRunResponse"];
+        };
+      };
+      /** @description Pipeline run not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The run is neither pending nor executing in the background */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Background pipeline runs are not available */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };

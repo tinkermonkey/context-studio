@@ -1015,6 +1015,11 @@ class PipelineRun(BatchRun):
         output_summary: JSON dict with output counts and metrics
         llm_metadata: JSON dict with model, tokens_used, duration_ms
         source_text: Input text the run extracted from (text-input pipeline types only)
+        input_data: The run's full input, kept so a background worker can execute it
+        items_done: Work items finished so far (progress)
+        items_total: Work items the run will process (progress)
+        proposal_id: The change proposal the run produced (no FK: a proposal is a
+            batch run of its own, and the run's record outlives it)
     """
 
     __tablename__ = "pipeline_runs"
@@ -1084,6 +1089,14 @@ class PipelineRun(BatchRun):
         nullable=True,
         doc="Input text the run extracted from; provenance span offsets index into it",
     )
+    input_data = Column(
+        JSON(none_as_null=True),
+        nullable=True,
+        doc="Full run input, kept so a background worker can execute the run",
+    )
+    items_done = Column(Integer, nullable=True, doc="Work items finished so far")
+    items_total = Column(Integer, nullable=True, doc="Work items the run will process")
+    proposal_id = Column(String(36), nullable=True, doc="The change proposal the run produced")
 
     __mapper_args__: Dict[str, Any] = {
         "polymorphic_abstract": True,
