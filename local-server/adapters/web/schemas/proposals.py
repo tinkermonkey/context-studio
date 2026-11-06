@@ -165,6 +165,11 @@ class ReplacementTypeResponse(BaseModel):
     property_id: str
     identifier: str
     title: str
+    reversed: bool = Field(
+        False,
+        description="Its domain and range are the deleted type's reversed: moving re-creates "
+        "each relationship with its source and target swapped",
+    )
 
 
 class DeleteBlockersResponse(BaseModel):
@@ -176,7 +181,8 @@ class DeleteBlockersResponse(BaseModel):
     replacements: list[ReplacementTypeResponse] = Field(
         default_factory=list,
         description="Types whose domain and range accept both ends of every edge "
-        "(inheritance-aware) and that allow their attributes; empty when none does",
+        "(inheritance-aware; swapped, for a reversed type) and that allow their attributes; "
+        "empty when none does",
     )
     move_unavailable_reason: Optional[str] = Field(
         None, description="Why no type fits, when replacements is empty"
@@ -206,6 +212,11 @@ class InUseResolutionResponse(BaseModel):
     strategy: ResolutionStrategy
     replacement_property_id: Optional[str] = None
     replacement_identifier: Optional[str] = None
+    reversed: bool = Field(
+        False,
+        description="A move to a reversed type: each relationship was re-created with its "
+        "ends swapped (edges keep the original ends)",
+    )
     edges: list[ResolvedEdgeResponse] = Field(
         default_factory=list, description="The relationships moved or deleted"
     )
@@ -513,8 +524,11 @@ class AutoApplyRuleSchema(BaseModel):
     class_: Optional[str] = Field(
         None,
         alias="class",
-        description="Only entities typed by this class (id or identifier): an individual's "
-        "classes, an attribute's class, or the class itself",
+        description="Only entities typed by this class (id or identifier) or a subclass of "
+        "it: an individual's classes (for a create, the class_ids it is given), an "
+        "attribute's class, the class itself (for a class create, its proposed parent), or "
+        "the classes of a relationship's source and target. Every class an entity is typed "
+        "by must be covered, by a rule naming it or an ancestor, or by a rule with no class",
     )
     scope: Optional[ChangeScope] = Field(None, description="Only this scope")
 
@@ -539,7 +553,16 @@ class ApprovalPolicyRequest(BaseModel):
 
 
 class ApprovalPolicyResponse(BaseModel):
-    """A taxonomy's approval policy; empty (nothing auto-applies) until one is set."""
+    """
+    A taxonomy's approval policy; empty (nothing auto-applies) until one is set.
+
+    A rule naming a class matches an operation on an entity typed by that class
+    or any subclass of it: an individual (its current classes plus any it is
+    given; for a create, its class_ids), an attribute (its class), a class (the
+    class itself; for a create, its proposed parent, so a top-level class create
+    matches only rules without a class) or a relationship (the classes of its
+    source and of its target). Every class must be covered.
+    """
 
     taxonomy_id: str
     auto_apply: list[AutoApplyRuleSchema]

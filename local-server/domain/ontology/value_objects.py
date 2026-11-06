@@ -178,12 +178,13 @@ class DataPropertyValue:
 
     Attributes:
         property_identifier: Property identifier
-        value: Attribute value (string, number, boolean, etc.)
+        value: Attribute value (string, number, boolean, None, or a JSON list
+            or dict for an array or object attribute)
         datatype: Optional type hint (e.g., "xsd:string", "xsd:integer")
     """
 
     property_identifier: str
-    value: str | int | float | bool | None
+    value: str | int | float | bool | list[Any] | dict[str, Any] | None
     datatype: str | None = None
 
 

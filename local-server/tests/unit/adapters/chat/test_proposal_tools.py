@@ -764,7 +764,9 @@ class TestRestParityFields:
         (operation,) = result["operations"]
         assert operation["blockers"] == {
             "edges": [edge_dict(0)],
-            "replacements": [{"property_id": "p-2", "identifier": "b", "title": "b"}],
+            "replacements": [
+                {"property_id": "p-2", "identifier": "b", "title": "b", "reversed": False}
+            ],
         }
         assert operation["replacement_check"]["pair"] == "same"
         assert service.dry_runs == [False]

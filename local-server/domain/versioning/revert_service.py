@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Callable, Optional
 
 from domain.ontology.events import GraphInvalidated
 from domain.ontology.snapshots import entity_field_names, entity_from_snapshot, entity_snapshot
-from domain.ontology.value_objects import DataType, ExternalReference
+from domain.ontology.value_objects import DataPropertyValue, DataType, ExternalReference
 from domain.versioning.exceptions import RevertConflictError, RevertRefusedError
 from domain.versioning.value_objects import ChangeOperation
 
@@ -794,6 +794,9 @@ class RevertService:
             if key == "external_references":
                 # Change events carry references as JSON dicts (see ClassUpdated).
                 value = [ExternalReference.from_dict(ref) for ref in value or []]
+            elif key == "data_properties":
+                # And attribute values too (see IndividualUpdated).
+                value = [DataPropertyValue(**item) for item in value or []]
             elif key == "datatype" and value is not None:
                 # An attribute's datatype is stored in the change event as its plain value.
                 value = DataType(value)

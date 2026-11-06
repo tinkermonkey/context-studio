@@ -492,7 +492,7 @@ class TestResolution:
 class TestInspector:
     def test_ancestors_follow_parents_without_looping(self, repo, graph):
         inspector = InUseInspector(repo)
-        assert inspector._ancestors_of(graph["sync_event"]) == {graph["sync_event"], graph["event"]}
+        assert inspector.ancestors_of(graph["sync_event"]) == {graph["sync_event"], graph["event"]}
 
 
 class TestReviewFindings:
@@ -604,3 +604,119 @@ class TestReviewFindings:
 
         assert len(service.in_use_blockers(proposal)) == 2
         assert len(calls) == 1
+
+
+# ------------------------------------------------------ pair of the replacement (#1412)
+
+
+def add_reversed_type(ontology, graph):
+    """BusinessFunction -> BusinessEvent: the deleted type's pair reversed."""
+    return ontology.create_property_definition(
+        "businessfunction_triggered_by_businessevent",
+        "triggered by",
+        domain_class_id=graph["function"],
+        range_class_id=graph["event"],
+        external_references=edge_attributes("weight"),
+    ).id
+
+
+def move_to(service, graph, replacement_id):
+    proposal = propose_delete(service, graph)
+    op_id = the_op(proposal).id
+    resolution = InUseResolution(strategy=MOVE, replacement_property_id=replacement_id)
+    return proposal, the_op(service.apply(proposal.id, [op_id], resolutions={op_id: resolution}))
+
+
+class TestMoveByPair:
+    def test_a_same_pair_replacement_keeps_each_relationships_ends(
+        self, service, graph, repo, ontology
+    ):
+        serves = add_fitting_type(ontology, graph)
+        _, op = move_to(service, graph, serves)
+
+        assert op.status is OperationStatus.APPLIED, op.reason
+        assert op.resolution.reversed is False
+        assert {(r.source_id, r.target_id) for r in edges_of(repo, serves)} == {
+            (graph["changed"], graph["enrichment"]),
+            (graph["synced"], graph["conflicts"]),
+        }
+
+    def test_a_reversed_replacement_takes_each_relationship_with_its_ends_swapped(
+        self, service, graph, repo, ontology, scope
+    ):
+        reversed_type = add_reversed_type(ontology, graph)
+        proposal, op = move_to(service, graph, reversed_type)
+
+        assert op.status is OperationStatus.APPLIED, op.reason
+        assert repo.get_property_definition(graph["triggers_function"]) is None
+        moved = {(r.source_id, r.target_id): r for r in edges_of(repo, reversed_type)}
+        assert set(moved) == {
+            (graph["enrichment"], graph["changed"]),
+            (graph["conflicts"], graph["synced"]),
+        }
+        assert moved[(graph["enrichment"], graph["changed"])].attributes == {"weight": 2}
+        assert moved[(graph["enrichment"], graph["changed"])].source_run_id == proposal.id
+        assert op.resolution.reversed is True
+        # The record keeps each original relationship's ends.
+        first = op.resolution.edges[0]
+        assert (first.source_id, first.target_id) == (graph["changed"], graph["enrichment"])
+        assert first.moved_to_id == moved[(graph["enrichment"], graph["changed"])].id
+        assert scope.entered == 1
+
+    def test_a_different_pair_replacement_misfits_and_changes_nothing(self, service, graph, repo):
+        _, op = move_to(service, graph, graph["triggers_process"])
+
+        assert op.status is OperationStatus.FAILED
+        assert op.reason.startswith("unresolvable: 2 of 2 relationship(s) don't fit")
+        assert len(edges_of(repo, graph["triggers_function"])) == 2
+
+    def test_blockers_offer_a_reversed_type_and_say_so(self, service, graph, ontology):
+        reversed_type = add_reversed_type(ontology, graph)
+        serves = add_fitting_type(ontology, graph)
+        proposal = propose_delete(service, graph)
+        blockers = service.in_use_blockers(proposal)[the_op(proposal).id]
+
+        offered = {r.property_id: r.reversed for r in blockers.replacements}
+        assert offered == {serves: False, reversed_type: True}
+
+    def test_a_reversed_move_checks_duplicates_the_swapped_way_round(
+        self, service, graph, repo, ontology
+    ):
+        reversed_type = add_reversed_type(ontology, graph)
+        ontology.create_relationship(graph["enrichment"], graph["changed"], reversed_type)
+        proposal = propose_delete(service, graph)
+        blockers = service.in_use_blockers(proposal)[the_op(proposal).id]
+        assert blockers.replacements == ()
+
+        _, op = move_to(service, graph, reversed_type)
+        assert op.status is OperationStatus.FAILED
+        assert (
+            "Entity Enrichment → Entity Changed Event: already related by "
+            "businessfunction_triggered_by_businessevent"
+        ) in op.reason
+        assert len(edges_of(repo, graph["triggers_function"])) == 2
+
+    def test_the_reversed_flag_round_trips_through_json(self, service, graph, ontology):
+        reversed_type = add_reversed_type(ontology, graph)
+        _, op = move_to(service, graph, reversed_type)
+
+        assert InUseResolution.from_json(op.resolution.to_json()) == op.resolution
+        assert InUseResolution.from_json({"strategy": "delete"}).reversed is False
+
+    def test_a_reversed_move_is_stale_once_the_deleted_types_pair_changes(
+        self, service, graph, repo, ontology
+    ):
+        reversed_type = add_reversed_type(ontology, graph)
+        proposal = propose_delete(service, graph)
+        op_id = the_op(proposal).id
+        ontology.update_property_definition(
+            graph["triggers_function"], range_class_id=graph["process"], update_range_class_id=True
+        )
+        resolution = InUseResolution(strategy=MOVE, replacement_property_id=reversed_type)
+
+        op = the_op(service.apply(proposal.id, [op_id], resolutions={op_id: resolution}))
+
+        assert op.status is OperationStatus.FAILED
+        assert op.reason == "target_changed: range_class_id changed since proposed"
+        assert len(edges_of(repo, graph["triggers_function"])) == 2
+        assert edges_of(repo, reversed_type) == []

@@ -4,6 +4,7 @@ import type { ProposedOperation } from "@/api/services/proposals";
 import {
   edgeEndLabel,
   plural,
+  replacementLabel,
   resolutionLabel,
   type DeleteBlockers,
   type Resolution,
@@ -97,7 +98,11 @@ export function InUseResolver({
             </span>
             <span>{edgeEndLabel(edge.target)}</span>
             {moving && replacement && (
-              <span className="op-resolver__fit">fits {replacement.identifier}</span>
+              <span className="op-resolver__fit">
+                {replacement.reversed
+                  ? `fits ${replacement.identifier}, ends swapped`
+                  : `fits ${replacement.identifier}`}
+              </span>
             )}
           </li>
         ))}
@@ -135,7 +140,7 @@ export function InUseResolver({
           >
             {replacements.map((r) => (
               <Select.Item key={r.property_id} value={r.property_id}>
-                {r.property_id === proposedId ? `${r.identifier} (proposed)` : r.identifier}
+                {replacementLabel(r, r.property_id === proposedId)}
               </Select.Item>
             ))}
           </Select>

@@ -3,6 +3,8 @@ import {
   CLASS_ID_FIELDS,
   asApplied,
   changeRows,
+  dataValues,
+  fieldLabel,
   formatValue,
   operationSubject,
   propertyTriples,
@@ -62,7 +64,19 @@ function fieldText(
     CLASS_ID_FIELDS.has(field) && typeof value === "string"
       ? context.endLabel(value, operation)
       : formatValue(value);
+  return clipped(text);
+}
+
+function clipped(text: string): string {
   return text.length > INLINE_CHARS ? `${text.slice(0, INLINE_CHARS - 1)}…` : text;
+}
+
+/** "brand Makita, watts 1200": the attribute values an individual create sets. */
+function createdValues(operation: ProposedOperation): string {
+  if (operation.kind !== "individual" || operation.op !== "create") return "";
+  return Object.entries(dataValues(operation.fields?.data_properties))
+    .map(([key, value]) => `${key} ${formatValue(value)}`)
+    .join(", ");
 }
 
 /** The entity an operation creates or targets; a class target resolves to its identifier. */
@@ -144,11 +158,17 @@ export function OperationDiff({ operation: proposed, context }: OperationDiffPro
 
   const subject = subjectOf(operation, context);
   if (operation.op === "create" || operation.op === "delete") {
+    const values = createdValues(operation);
     return (
       <div className="op-diff" data-testid={testId} data-op={operation.op}>
         <span className={operation.op === "delete" ? "op-diff__removed" : undefined}>
           <span className="op-diff__kind">{operation.kind}</span> {subject}
         </span>
+        {values && (
+          <span className="op-diff__note" data-testid={`operation-diff-data-${operation.id}`}>
+            {clipped(values)}
+          </span>
+        )}
       </div>
     );
   }
@@ -161,7 +181,7 @@ export function OperationDiff({ operation: proposed, context }: OperationDiffPro
       </span>
       {changed.slice(0, INLINE_FIELDS).map((row) => (
         <span key={row.field} className="op-diff__field">
-          <span className="op-diff__to">{row.field}</span>{" "}
+          <span className="op-diff__to">{fieldLabel(row.field)}</span>{" "}
           <span className="op-diff__before">
             {fieldText(row.field, row.before, operation, context)}
           </span>{" "}

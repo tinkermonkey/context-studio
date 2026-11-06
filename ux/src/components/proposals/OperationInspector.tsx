@@ -7,6 +7,7 @@ import {
   asApplied,
   SCOPE_VARIANT,
   changeRows,
+  fieldLabel,
   formatProbability,
   formatValue,
   planKind,
@@ -144,7 +145,7 @@ export function OperationInspector({ operation, context, decision }: OperationIn
   const kind = planKind(operation);
   const evidence = (operation.evidence ?? []) as EvidenceItem[];
   const label = (field: string) =>
-    operation.kind === "property" ? (PROPERTY_FIELD_LABELS[field] ?? field) : field;
+    operation.kind === "property" ? (PROPERTY_FIELD_LABELS[field] ?? field) : fieldLabel(field);
   const value = (field: string, v: unknown): ReactNode => {
     if (field === "evidence" && Array.isArray(v) && v.length > 0) {
       return (

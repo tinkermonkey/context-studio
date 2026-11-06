@@ -96,6 +96,7 @@ describe("IndividualPage", () => {
     const properties = screen.getByTestId("individual-data-properties-panel");
     expect(within(properties).getByText("language")).toBeInTheDocument();
     expect(within(properties).getByText("python")).toBeInTheDocument();
+    expect(within(properties).getByText("[80,443]")).toBeInTheDocument();
     expect(screen.getByTestId("individual-provenance-panel")).toHaveTextContent(
       "Imported from documentation_robotics",
     );

@@ -6,13 +6,26 @@ matches an operation when every key it sets matches:
 
 - op: create, update, move or delete
 - kind: the kind of entity
-- class: a class id or identifier the operation's entity is typed by (an
-  individual's classes, an attribute's class, or the class itself)
+- class: a class id or identifier the operation's entity is typed by, or an
+  ancestor of one (a rule naming a class covers its subclasses, following
+  parent classes as `InUseInspector.ancestors_of` does)
 - scope: editorial, additive or breaking
 
+The classes an operation's entity is typed by:
+
+- an individual: its current classes plus any it would gain (a create: the
+  class_ids it is given);
+- an attribute: its class (a create: its class_id);
+- a class: the class itself; a create: its proposed parent class, so a class
+  create at the top of a scheme has none and only rules without a class
+  match it;
+- a relationship: the classes of its source and of its target (an
+  individual's classes, or a class end itself);
+- a class the proposal creates ("$ref"): its identifier, then its parent's.
+
 An entity typed by several classes needs every one of them covered: by a
-matching rule naming that class, or by a matching rule with no class at all.
-For an update that is the entity's current classes plus any it would gain.
+matching rule naming that class or an ancestor of it, or by a matching rule
+with no class at all. A relationship needs both its ends covered.
 
 An operation also needs at least the policy's min_probability; one without a
 probability counts as 0. Operations of a bundle import (source "bundle") are
@@ -177,8 +190,9 @@ class ApprovalPolicy:
 
         Args:
             operation: The operation
-            classes: One set of keys (id and identifier) per class the entity
-                will be typed by; an empty set for a class no rule can name
+            classes: One set of keys per class the entity will be typed by: the
+                ids and identifiers of that class and every class above it; an
+                empty set for a class no rule can name
             source: Who or what made the operation's proposal
         """
         if operation.scope is ChangeScope.BREAKING or operation.op is OperationType.DELETE:

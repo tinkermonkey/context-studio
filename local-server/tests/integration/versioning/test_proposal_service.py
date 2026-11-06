@@ -573,3 +573,53 @@ def test_revert_refused_when_an_identifier_is_freed_only_after_it_is_given_back(
         repo.get_property_definition(p1.id).title,
     ) == ("k_ident", "Renamed")
     assert service.get(proposal.id).status is ProposalStatus.DONE
+
+
+def test_attribute_values_set_by_a_proposal_revert(parts):
+    """#1415: a create and an update with data_properties apply on SQLite and revert."""
+    ontology, repo, change_repo, service = parts
+    taxonomy = ontology.create_taxonomy(title="House")
+    vocab = ontology.create_scheme(taxonomy_id=taxonomy.id, title="Vocabulary")
+    resource = ontology.create_class(vocab.id, "Resource")
+    tool = ontology.create_class(vocab.id, "Tool", parent_class_id=resource.id)
+    ontology.create_attribute_definition(resource.id, "brand", "Brand", "string")
+    ontology.create_attribute_definition(tool.id, "sizes", "Sizes", "array")
+    drill = ontology.create_individual(tool.id, "Drill")
+    before = snap(repo.get_individual(drill.id))
+
+    proposal = service.propose(
+        taxonomy.id,
+        "Kit",
+        [
+            OperationDraft(
+                1,
+                T.CREATE,
+                K.INDIVIDUAL,
+                fields={
+                    "class_ids": [tool.id],
+                    "title": "Saw",
+                    "data_properties": {"brand": "Makita", "sizes": ["S", "M"]},
+                },
+            ),
+            OperationDraft(
+                2, T.UPDATE, K.INDIVIDUAL, drill.id, fields={"data_properties": {"brand": "Bosch"}}
+            ),
+        ],
+        ProposalSource.MCP,
+    )
+    applied = service.apply(proposal.id, [o.id for o in proposal.operations])
+    assert [o.status for o in applied.operations] == [OperationStatus.APPLIED] * 2, [
+        o.reason for o in applied.operations
+    ]
+    saw = repo.get_individual(applied.operations[0].result_entity_id)
+    assert {v.property_identifier: v.value for v in saw.data_properties} == {
+        "brand": "Makita",
+        "sizes": ["S", "M"],
+    }
+    drill_values = repo.get_individual(drill.id).data_properties
+    assert [(v.property_identifier, v.value) for v in drill_values] == [("brand", "Bosch")]
+
+    service.revert(proposal.id)
+
+    assert repo.get_individual(saw.id) is None
+    assert snap(repo.get_individual(drill.id)) == before

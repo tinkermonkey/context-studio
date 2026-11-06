@@ -3815,6 +3815,10 @@ export interface paths {
     /**
      * Get Approval Policy
      * @description The taxonomy's approval policy; empty (nothing auto-applies) if none is set.
+     *
+     *     A rule naming a class matches entities typed by it or any subclass of it:
+     *     individuals, attributes, the class itself, class creates under it (by the
+     *     proposed parent) and relationships (by the source's and target's classes).
      */
     get: operations["get_approval_policy_api_taxonomies__taxonomy_id__approval_policy_get"];
     /**
@@ -3824,7 +3828,9 @@ export interface paths {
      *     Operations proposed afterwards apply as soon as they are proposed, under the
      *     proposal's run, when they reach min_probability and matching rules cover
      *     every class their entity will have (a rule matches when every key it sets
-     *     does; one without a class covers any). Never auto-applied: breaking
+     *     does; one without a class covers any, and one naming a class covers its
+     *     subclasses, class creates under it and relationships between entities of
+     *     it; see ApprovalPolicyResponse). Never auto-applied: breaking
      *     operations, deletes, taxonomy creates, changes to the taxonomy's vision,
      *     property-definition changes, and anything that touches or points at an
      *     entity outside this taxonomy.
@@ -4114,6 +4120,13 @@ export interface components {
     /**
      * ApprovalPolicyResponse
      * @description A taxonomy's approval policy; empty (nothing auto-applies) until one is set.
+     *
+     *     A rule naming a class matches an operation on an entity typed by that class
+     *     or any subclass of it: an individual (its current classes plus any it is
+     *     given; for a create, its class_ids), an attribute (its class), a class (the
+     *     class itself; for a create, its proposed parent, so a top-level class create
+     *     matches only rules without a class) or a relationship (the classes of its
+     *     source and of its target). Every class must be covered.
      */
     ApprovalPolicyResponse: {
       /** Taxonomy Id */
@@ -4314,7 +4327,7 @@ export interface components {
       kind?: components["schemas"]["OperationKind"] | null;
       /**
        * Class
-       * @description Only entities typed by this class (id or identifier): an individual's classes, an attribute's class, or the class itself
+       * @description Only entities typed by this class (id or identifier) or a subclass of it: an individual's classes (for a create, the class_ids it is given), an attribute's class, the class itself (for a class create, its proposed parent), or the classes of a relationship's source and target. Every class an entity is typed by must be covered, by a rule naming it or an ancestor, or by a rule with no class
        */
       class?: string | null;
       /** @description Only this scope */
@@ -5301,9 +5314,9 @@ export interface components {
       property_identifier: string;
       /**
        * Value
-       * @description Value of the property
+       * @description Value of the property: text, number, boolean, null, or a JSON array or object for an array or object attribute
        */
-      value: string | number | boolean | null;
+      value: unknown;
       /**
        * Datatype
        * @description Type of the value
@@ -5525,7 +5538,7 @@ export interface components {
       edges: components["schemas"]["BlockingEdgeResponse"][];
       /**
        * Replacements
-       * @description Types whose domain and range accept both ends of every edge (inheritance-aware) and that allow their attributes; empty when none does
+       * @description Types whose domain and range accept both ends of every edge (inheritance-aware; swapped, for a reversed type) and that allow their attributes; empty when none does
        */
       replacements?: components["schemas"]["ReplacementTypeResponse"][];
       /**
@@ -6478,6 +6491,12 @@ export interface components {
       replacement_property_id?: string | null;
       /** Replacement Identifier */
       replacement_identifier?: string | null;
+      /**
+       * Reversed
+       * @description A move to a reversed type: each relationship was re-created with its ends swapped (edges keep the original ends)
+       * @default false
+       */
+      reversed: boolean;
       /**
        * Edges
        * @description The relationships moved or deleted
@@ -8419,6 +8438,12 @@ export interface components {
       identifier: string;
       /** Title */
       title: string;
+      /**
+       * Reversed
+       * @description Its domain and range are the deleted type's reversed: moving re-creates each relationship with its source and target swapped
+       * @default false
+       */
+      reversed: boolean;
     };
     /**
      * ResolutionRecordResponse

@@ -218,7 +218,8 @@ class ResolvedEdge:
 
     Attributes:
         relationship_id: The relationship that used the deleted type
-        source_id, target_id: Its ends
+        source_id, target_id: Its ends (the relationship made in its place by
+            a reversed move runs the other way)
         source_title, target_title: The ends' titles when it was resolved
         moved_to_id: The relationship of the replacement type made in its place
             (a move only)
@@ -242,6 +243,9 @@ class InUseResolution:
             either way the type is deleted afterwards
         replacement_property_id: The type they move to (a move only)
         replacement_identifier: That type's identifier, recorded when applied
+        reversed: The replacement's domain and range are the deleted type's
+            reversed, so each moved relationship was made with its ends
+            swapped; recorded when applied
         edges: The relationships moved or deleted, recorded when applied
         relationship_ids: The relationships the reviewer saw using the type
             (a request only, not stored); the apply fails if the relationships
@@ -251,6 +255,7 @@ class InUseResolution:
     strategy: ResolutionStrategy
     replacement_property_id: str | None = None
     replacement_identifier: str | None = None
+    reversed: bool = False
     edges: list[ResolvedEdge] = field(default_factory=list)
     relationship_ids: list[str] | None = None
 
@@ -267,6 +272,7 @@ class InUseResolution:
             "strategy": self.strategy.value,
             "replacement_property_id": self.replacement_property_id,
             "replacement_identifier": self.replacement_identifier,
+            "reversed": self.reversed,
             "edges": [vars(edge).copy() for edge in self.edges],
         }
 
@@ -276,6 +282,7 @@ class InUseResolution:
             strategy=ResolutionStrategy(data["strategy"]),
             replacement_property_id=data.get("replacement_property_id"),
             replacement_identifier=data.get("replacement_identifier"),
+            reversed=bool(data.get("reversed")),
             edges=[ResolvedEdge(**edge) for edge in data.get("edges") or []],
         )
 

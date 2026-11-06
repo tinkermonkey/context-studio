@@ -81,6 +81,14 @@ from .value_objects import (
 _logger = logging.getLogger(__name__)
 
 
+def _serialize_data_properties(values: list[DataPropertyValue]) -> list[dict[str, object]]:
+    """JSON-compatible form of data property values, for event payloads."""
+    return [
+        {"property_identifier": v.property_identifier, "value": v.value, "datatype": v.datatype}
+        for v in values
+    ]
+
+
 def _serialize_external_references(refs: list[ExternalReference]) -> list[dict[str, object]]:
     """JSON-compatible form of external references, for event payloads."""
     return [
@@ -2519,6 +2527,7 @@ class OntologyService:
         description: str | None = None,
         source_run_id: str | None = None,
         external_references: list[ExternalReference] | None = None,
+        data_properties: list[DataPropertyValue] | None = None,
     ) -> Individual:
         """
         Create a new individual instance of one or more classes.
@@ -2536,6 +2545,8 @@ class OntologyService:
                 individual, for provenance tracking
             external_references: Optional links to the individual in external
                 sources (e.g. an importer's idempotency key)
+            data_properties: Optional attribute values (not checked against
+                the classes' attribute definitions here; callers validate)
 
         Returns:
             The created Individual
@@ -2584,6 +2595,7 @@ class OntologyService:
             last_modified=now,
             source_run_id=source_run_id,
             external_references=list(external_references or []),
+            data_properties=list(data_properties or []),
         )
         individual = self._repository.save_individual(individual)
         self._sync_individual_index(individual_id, title, description)
@@ -2596,6 +2608,7 @@ class OntologyService:
                 title=title,
                 class_ids=class_ids_list,
                 external_references=_serialize_external_references(individual.external_references),
+                data_properties=_serialize_data_properties(individual.data_properties),
             )
         )
         if failures:
@@ -2703,9 +2716,11 @@ class OntologyService:
         title: str | None = None,
         description: str | None = None,
         external_references: list[ExternalReference] | None = None,
+        data_properties: list[DataPropertyValue] | None = None,
     ) -> Individual:
         """
-        Update an individual's title, description, and/or external references.
+        Update an individual's title, description, external references and/or
+        data property (attribute) values.
 
         Validates that:
         - The individual exists
@@ -2719,6 +2734,9 @@ class OntologyService:
                 (optional). The list *replaces* the current references; to add
                 one, pass the existing references plus the new one. None leaves
                 them untouched.
+            data_properties: Replacement list of attribute values (optional),
+                like external_references; not checked against the classes'
+                attribute definitions here (callers validate)
 
         Returns:
             The updated Individual
@@ -2736,6 +2754,7 @@ class OntologyService:
         old_title = individual.title
         old_description = individual.description
         old_external_references = list(individual.external_references)
+        old_data_properties = list(individual.data_properties)
 
         # Track what actually changed
         title_changed = title is not None and title != individual.title
@@ -2743,6 +2762,9 @@ class OntologyService:
         refs_changed = (
             external_references is not None
             and list(external_references) != individual.external_references
+        )
+        data_changed = (
+            data_properties is not None and list(data_properties) != individual.data_properties
         )
 
         # If title is provided, validate emptiness first, then uniqueness
@@ -2766,9 +2788,11 @@ class OntologyService:
 
         if refs_changed:
             individual.external_references = list(external_references or [])
+        if data_changed:
+            individual.data_properties = list(data_properties or [])
 
         # Guard against no-op updates
-        if not (title_changed or desc_changed or refs_changed):
+        if not (title_changed or desc_changed or refs_changed or data_changed):
             return individual
 
         # Update timestamp and save only if something actually changed
@@ -2786,6 +2810,7 @@ class OntologyService:
                 ("title", title_changed),
                 ("description", desc_changed),
                 ("external_references", refs_changed),
+                ("data_properties", data_changed),
             ]
             if was_changed
         )
@@ -2804,6 +2829,10 @@ class OntologyService:
             new_values["external_references"] = _serialize_external_references(
                 individual.external_references
             )
+
+        if data_changed:
+            old_values["data_properties"] = _serialize_data_properties(old_data_properties)
+            new_values["data_properties"] = _serialize_data_properties(individual.data_properties)
 
         failures = self._event_publisher.publish(
             IndividualUpdated(

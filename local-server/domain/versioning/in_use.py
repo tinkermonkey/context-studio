@@ -9,6 +9,11 @@ a subclass of it. A type without a domain (or range) accepts any source (or
 target). It must also allow the relationship's attributes, and not already
 have a relationship between the same two ends.
 
+A type whose domain and range are the deleted type's reversed (see
+`compare_pair`) takes the relationships over with their ends swapped: each
+moved relationship runs from the old target to the old source, and fitting is
+checked that way round.
+
 Only types that share a taxonomy with the deleted type (the taxonomies of
 their domain and range classes) are offered as replacements, so a generic
 untyped type from elsewhere isn't offered just because it accepts anything. A
@@ -18,7 +23,8 @@ replace it.
 A property delete may also name its replacement (`proposed_replacement_id`).
 Its pair of classes is compared with the deleted type's: the same domain and
 range, the two reversed, or a different pair. Only a same or reversed pair can
-take over the deleted type's relationships as they are (DR's `dr upgrade`
+take over the deleted type's relationships as they are (a reversed one with
+their ends swapped, as above; DR's `dr upgrade`
 rewrites only those; see `pairOf` in DR's apply-reflect-plan.ts), so a
 different pair is flagged for review. The comparison is exact, as DR's: a
 subclass or superclass is a different class, and an untyped end (None) differs
@@ -68,6 +74,9 @@ class ReplacementType:
     property_id: str
     identifier: str
     title: str
+    # Its domain and range are the deleted type's reversed: moving swaps each
+    # relationship's source and target
+    reversed: bool = False
 
 
 @dataclass(frozen=True)
@@ -216,29 +225,41 @@ class InUseInspector:
             for p in self._types
             if p.id not in skip and (not home or self._taxonomies_of(p) & home)
         ]
-        fitting = [p for p in candidates if not self.misfits(p, edges)]
+        swaps = {p.id: reverses(deleted, p) for p in candidates}
+        fitting = [p for p in candidates if not self.misfits(p, edges, swaps[p.id])]
         replacements = tuple(
-            ReplacementType(property_id=p.id, identifier=p.identifier, title=p.title)
+            ReplacementType(
+                property_id=p.id, identifier=p.identifier, title=p.title, reversed=swaps[p.id]
+            )
             for p in sorted(fitting, key=lambda p: p.identifier)
         )
-        reason = None if replacements else self._no_fit_reason(candidates, edges)
+        reason = None if replacements else self._no_fit_reason(candidates, edges, swaps)
         return DeleteBlockers(tuple(edges), replacements, reason)
 
-    def misfits(self, prop: PropertyDefinition, edges: Iterable[BlockingEdge]) -> list[str]:
-        """Why each relationship that doesn't fit the type doesn't; empty when all fit."""
+    def misfits(
+        self, prop: PropertyDefinition, edges: Iterable[BlockingEdge], swap: bool = False
+    ) -> list[str]:
+        """
+        Why each relationship that doesn't fit the type doesn't; empty when all fit.
+
+        Args:
+            swap: Check each relationship with its ends swapped, as a move to a
+                reversed replacement re-creates it (see `reverses`)
+        """
         problems: list[str] = []
         allowed = prop.edge_attribute_names()
         for edge in edges:
-            label = f"{edge.source.title} → {edge.target.title}"
-            if not self._accepts(prop.domain_class_id, edge.source):
+            source, target = moved_ends(edge, swap)
+            label = f"{source.title} → {target.title}"
+            if not self._accepts(prop.domain_class_id, source):
                 problems.append(
-                    f"{label}: source is {_classes(edge.source)}, not "
+                    f"{label}: source is {_classes(source)}, not "
                     f"{self._class_title(prop.domain_class_id)}"  # type: ignore[arg-type]
                 )
                 continue
-            if not self._accepts(prop.range_class_id, edge.target):
+            if not self._accepts(prop.range_class_id, target):
                 problems.append(
-                    f"{label}: target is {_classes(edge.target)}, not "
+                    f"{label}: target is {_classes(target)}, not "
                     f"{self._class_title(prop.range_class_id)}"  # type: ignore[arg-type]
                 )
                 continue
@@ -247,7 +268,7 @@ class InUseInspector:
                 problems.append(f"{label}: {prop.identifier} doesn't allow attributes {unknown}")
                 continue
             if self._repo.list_relationships(
-                source_id=edge.source.id, target_id=edge.target.id, property_id=prop.id, limit=1
+                source_id=source.id, target_id=target.id, property_id=prop.id, limit=1
             ):
                 problems.append(f"{label}: already related by {prop.identifier}")
         return problems
@@ -255,17 +276,23 @@ class InUseInspector:
     # ------------------------------------------------------------------ helpers
 
     def _no_fit_reason(
-        self, candidates: list[PropertyDefinition], edges: list[BlockingEdge]
+        self,
+        candidates: list[PropertyDefinition],
+        edges: list[BlockingEdge],
+        swaps: dict[str, bool],
     ) -> str:
         """Why no type fits: the sources, the targets, or something about the edges."""
         source_classes = _end_classes(e.source for e in edges)
         target_classes = _end_classes(e.target for e in edges)
-        sources = [
-            p for p in candidates if all(self._accepts(p.domain_class_id, e.source) for e in edges)
-        ]
+
+        def accepts(p: PropertyDefinition, end: int) -> bool:
+            class_id = p.domain_class_id if end == 0 else p.range_class_id
+            return all(self._accepts(class_id, moved_ends(e, swaps[p.id])[end]) for e in edges)
+
+        sources = [p for p in candidates if accepts(p, 0)]
         if not sources:
             return f"No other relationship type accepts {source_classes} sources"
-        both = [p for p in sources if all(self._accepts(p.range_class_id, e.target) for e in edges)]
+        both = [p for p in sources if accepts(p, 1)]
         if not both:
             return (
                 f"{_count(len(sources), 'type')} accept{'s' if len(sources) == 1 else ''} "
@@ -274,7 +301,7 @@ class InUseInspector:
             )
         first = sorted(both, key=lambda p: p.identifier)[0]
         return f"{_names(both)} fit both ends, but not every relationship: " + "; ".join(
-            self.misfits(first, edges)
+            self.misfits(first, edges, swaps[first.id])
         )
 
     def _taxonomies_of(self, prop: PropertyDefinition) -> set[str]:
@@ -294,9 +321,9 @@ class InUseInspector:
     def _accepts(self, class_id: str | None, end: EdgeEnd) -> bool:
         if class_id is None:
             return True
-        return any(class_id in self._ancestors_of(c) for c in end.class_ids)
+        return any(class_id in self.ancestors_of(c) for c in end.class_ids)
 
-    def _ancestors_of(self, class_id: str) -> frozenset[str]:
+    def ancestors_of(self, class_id: str) -> frozenset[str]:
         """The class and every class above it."""
         if class_id not in self._ancestors:
             seen: list[str] = []
@@ -338,6 +365,26 @@ class InUseInspector:
                 class_titles=tuple(self._class_title(c) for c in class_ids),
             )
         return self._ends[entity_id]
+
+
+def reverses(deleted: PropertyDefinition | None, replacement: PropertyDefinition) -> bool:
+    """
+    Whether a move from the deleted type to the replacement swaps each
+    relationship's ends: the replacement's domain and range are the deleted
+    type's reversed (`compare_pair`, exact).
+    """
+    if deleted is None:
+        return False
+    pair = compare_pair(
+        (deleted.domain_class_id, deleted.range_class_id),
+        (replacement.domain_class_id, replacement.range_class_id),
+    )
+    return pair is PairMatch.REVERSED
+
+
+def moved_ends(edge: BlockingEdge, swap: bool) -> tuple[EdgeEnd, EdgeEnd]:
+    """The (source, target) a relationship moved to another type gets."""
+    return (edge.target, edge.source) if swap else (edge.source, edge.target)
 
 
 def _classes(end: EdgeEnd) -> str:

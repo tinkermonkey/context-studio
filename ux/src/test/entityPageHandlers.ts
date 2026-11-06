@@ -50,7 +50,10 @@ export const router = createIndividual({
   title: "LLM Provider Router",
   description: "Routes completion requests",
   class_ids: ["class-1"],
-  data_properties: [{ property_identifier: "language", value: "python", datatype: "string" }],
+  data_properties: [
+    { property_identifier: "language", value: "python", datatype: "string" },
+    { property_identifier: "ports", value: [80, 443], datatype: "rdf:JSON" },
+  ],
   external_references: [{ source: "documentation_robotics", identifier: "app.router" }],
 });
 export const api = createIndividual({
