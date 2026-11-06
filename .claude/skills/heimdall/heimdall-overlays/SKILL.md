@@ -1,6 +1,6 @@
 ---
 name: heimdall-overlays
-description: Heimdall component guide for Overlays: Modal, ConfirmDialog, Toast, CommandPalette, WorkspaceSwitcherDialog, Drawer
+description: Heimdall component guide for Overlays: Modal, ConfirmDialog, Toast, Tooltip, Popover, CommandPalette, WorkspaceSwitcherDialog, Drawer
 ---
 
 Import all components from `@tinkermonkey/heimdall-ui`. Import the CSS once at your app entry point:
@@ -8,6 +8,10 @@ Import all components from `@tinkermonkey/heimdall-ui`. Import the CSS once at y
 ```tsx
 import '@tinkermonkey/heimdall-ui/css'
 ```
+
+None of these overlays use a portal. Modal, ConfirmDialog, CommandPalette, WorkspaceSwitcherDialog and Drawer render in place with `position: fixed`, so an ancestor with `transform`, `filter` or `contain` breaks their positioning. Tooltip and Popover position absolutely inside their own wrapper, so an ancestor with `overflow: hidden` or `overflow: auto` clips them.
+
+For a non-modal side panel that leaves the page interactive, use `DetailDrawer` (documented in the `heimdall-graph` skill) instead of `Drawer`.
 
 ## Modal
 
@@ -21,26 +25,25 @@ import { Modal } from '@tinkermonkey/heimdall-ui'
 
 | Prop | Type | Default | Description |
 | ---- | ---- | ------- | ----------- |
-| `isOpen` | `boolean` | required | Controls visibility |
+| `isOpen` | `boolean` | required | Renders the modal when true |
 | `onClose` | `() => void` | required | Called on Escape, backdrop click, or close button |
-| `title` | `string` | — | Header title |
+| `title` | `string` | — | Header title; header renders only when set |
 | `subtitle` | `string` | — | Secondary line below title |
 | `children` | `ReactNode` | required | Modal body |
-| `footer` | `ReactNode` | — | Footer slot (typically action buttons) |
+| `footer` | `ReactNode` | — | Footer row, typically action buttons |
 | `hintFooter` | `string` | — | Monospace hint strip below footer |
-| `size` | `'sm' \| 'md' \| 'lg' \| 'xl'` | `'md'` | Width: sm=360px, md=480px, lg=640px, xl=820px |
+| `size` | `ModalSize` (`'sm' \| 'md' \| 'lg' \| 'xl'`) | `'md'` | Width: 360 / 480 / 640 / 820px |
+| `...divProps` | | | Remaining props spread onto the `role="dialog"` `<div>` |
 
 ### Usage
 
 ```tsx
-// Minimal
-<Modal isOpen={open} onClose={() => setOpen(false)} title="Create entity">
+<Modal isOpen={open} onClose={() => setOpen(false)} title="Create class">
   <p>Modal body content.</p>
 </Modal>
 ```
 
 ```tsx
-// With footer and hint
 <Modal
   isOpen={open}
   onClose={() => setOpen(false)}
@@ -48,29 +51,37 @@ import { Modal } from '@tinkermonkey/heimdall-ui'
   subtitle="428 individuals · last synced 2m ago"
   size="lg"
   footer={
-    <div className="flex gap-2 justify-end">
-      <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-      <Button variant="primary" onClick={handleImport}>Import</Button>
-    </div>
+    <>
+      <span style={{ flex: 1 }} />
+      <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>Cancel</Button>
+      <Button variant="primary" size="sm" onClick={handleImport}>Import</Button>
+    </>
   }
   hintFooter="↵ confirm  esc close"
 >
-  {/* form content */}
+  <Field label="Source">
+    <TextInput placeholder="s3://bucket/path" mono />
+  </Field>
 </Modal>
 ```
 
 ### Gotchas
 
-- Focus is automatically trapped inside when open (`useFocusTrap`)
-- Body scroll is blocked when open (`useBodyOverflow`)
-- Close button in the header only renders when `title` is provided
-- Backdrop click triggers `onClose` only when clicking the backdrop itself, not child elements
+- Fully controlled: the modal never closes itself. Every close path calls `onClose`; you set `isOpen` to false.
+- Returns `null` when closed, so body state (form inputs) resets on every open.
+- The header, including the close button, renders only when `title` is set. Without `title` the only close paths are Escape and backdrop click.
+- On open, focus moves to the first focusable element. With a `title`, that is the header close button, not the first form field. Focus returns to the previously focused element on close.
+- Tab is trapped inside the dialog and body scroll is locked while open.
+- Backdrop click closes only when the click lands on the backdrop itself, not on the dialog.
+- Escape is a `document` listener. Two open modals (or a Modal over a Drawer) both close on one Escape press.
+- The footer is a left-aligned flex row with an 8px gap. Add a `flex: 1` spacer (as above) to right-align buttons.
+- The dialog caps at `90%` width and `90vh` height and scrolls internally (`overflow: auto`), which also clips any Tooltip or Popover inside it.
 
 ---
 
 ## ConfirmDialog
 
-Specialized two-button confirmation dialog. Default variant is `'danger'` (red confirm button).
+Two-button confirmation built on `Modal`. Defaults to the `danger` variant.
 
 ```tsx
 import { ConfirmDialog } from '@tinkermonkey/heimdall-ui'
@@ -80,15 +91,15 @@ import { ConfirmDialog } from '@tinkermonkey/heimdall-ui'
 
 | Prop | Type | Default | Description |
 | ---- | ---- | ------- | ----------- |
-| `isOpen` | `boolean` | required | Controls visibility |
-| `onClose` | `() => void` | required | Cancel handler |
-| `onConfirm` | `() => void` | required | Confirm handler |
-| `title` | `string` | — | Dialog title |
+| `isOpen` | `boolean` | required | Renders the dialog when true |
+| `onClose` | `() => void` | required | Cancel button, Escape, backdrop, close button |
+| `onConfirm` | `() => void` | required | Confirm button handler |
+| `title` | `string` | — | Dialog title; header renders only when set |
 | `subtitle` | `string` | — | Secondary line below title |
 | `message` | `ReactNode` | required | Consequence description |
 | `confirmLabel` | `string` | `'Confirm'` | Confirm button text |
 | `cancelLabel` | `string` | `'Cancel'` | Cancel button text |
-| `variant` | `'primary' \| 'danger'` | `'danger'` | Confirm button color |
+| `variant` | `ConfirmDialogVariant` (`'primary' \| 'danger'`) | `'danger'` | Confirm button variant |
 
 ### Usage
 
@@ -96,37 +107,39 @@ import { ConfirmDialog } from '@tinkermonkey/heimdall-ui'
 <ConfirmDialog
   isOpen={open}
   onClose={() => setOpen(false)}
-  onConfirm={() => { deleteEntity(); setOpen(false) }}
-  title="Delete entity"
+  onConfirm={() => { deleteClass('cls_organism'); setOpen(false) }}
+  title="Delete class"
   message={<>Delete <code>cls_organism</code>? 47 individuals will be unlinked.</>}
   confirmLabel="Delete"
 />
 ```
 
 ```tsx
-// Primary variant (non-destructive confirmation)
 <ConfirmDialog
   isOpen={open}
   onClose={() => setOpen(false)}
   onConfirm={() => { deploy(); setOpen(false) }}
   title="Deploy to production"
-  message="This will push the current build to the production environment."
+  subtitle="svc_ingest · build 4f3a"
+  message="Active connections will restart."
   confirmLabel="Deploy"
+  cancelLabel="Keep current"
   variant="primary"
 />
 ```
 
 ### Gotchas
 
-- `onConfirm` does **not** auto-close — you must call `setOpen(false)` inside your `onConfirm` handler
-- `onClose` is wired to the Cancel button and does auto-close
-- Always wraps `Modal`; inherits Escape key, backdrop click, and focus trap behavior
+- `onConfirm` does not close the dialog. Set `isOpen` to false inside the handler.
+- `onClose` covers Cancel, Escape, backdrop click and the header close button; it does not close by itself either.
+- Inherits Modal behavior: focus trap, scroll lock, and initial focus on the header close button when `title` is set (otherwise on the Cancel button).
+- No rest props: `className`, `style` and other DOM attributes are not accepted.
 
 ---
 
 ## Toast
 
-Auto-dismissing notification. Positioned via `style` prop — the component does not self-position.
+Single dismissible notification with optional auto-dismiss. Does not position itself.
 
 ```tsx
 import { Toast } from '@tinkermonkey/heimdall-ui'
@@ -136,52 +149,212 @@ import { Toast } from '@tinkermonkey/heimdall-ui'
 
 | Prop | Type | Default | Description |
 | ---- | ---- | ------- | ----------- |
-| `isOpen` | `boolean` | required | Controls visibility |
-| `onClose` | `() => void` | required | Called after auto-dismiss or dismiss button click |
+| `isOpen` | `boolean` | required | Renders the toast when true |
+| `onClose` | `() => void` | required | Called on auto-dismiss or dismiss button |
 | `title` | `string` | — | Primary message |
 | `subtitle` | `string` | — | Secondary detail |
-| `variant` | `'success' \| 'error' \| 'warning' \| 'info'` | `'info'` | Color and icon preset |
-| `icon` | `IconName` | — | Overrides variant's default icon |
-| `duration` | `number` | `4000` | Auto-dismiss delay in ms; `0` disables auto-dismiss |
+| `variant` | `ToastVariant` (`'success' \| 'error' \| 'warning' \| 'info'`) | `'info'` | Icon, color and ARIA role preset |
+| `icon` | `IconName` | — | Overrides the variant icon |
+| `duration` | `number` | `4000` | Auto-dismiss delay in ms; `0` disables |
+| `...divProps` | | | Remaining props spread onto the root `<div>` |
 
 ### Usage
 
 ```tsx
-// Positioned at bottom-right
 <Toast
   isOpen={toastOpen}
   onClose={() => setToastOpen(false)}
   title="Pipeline complete"
-  subtitle="1,234 records processed."
   variant="success"
-  style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999 }}
+  style={{ position: 'fixed', bottom: 24, right: 24 }}
 />
 ```
 
 ```tsx
-// Error that stays open until dismissed
-<Toast
-  isOpen={toastOpen}
-  onClose={() => setToastOpen(false)}
-  title="Sync failed"
-  subtitle="Connection timeout after 30s."
-  variant="error"
-  duration={0}
-  style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999 }}
-/>
+// Stacked toasts: fixed container, error stays until dismissed
+<div style={{ position: 'fixed', bottom: 24, right: 24, display: 'flex', flexDirection: 'column', gap: 8, zIndex: 300 }}>
+  <Toast
+    isOpen={syncFailed}
+    onClose={closeSyncToast}
+    title="Sync failed"
+    subtitle="svc_ingest timed out after 30s."
+    variant="error"
+    duration={0}
+  />
+  <Toast
+    isOpen={pulling}
+    onClose={closePullToast}
+    title="Pulling image"
+    subtitle="registry/svc_ingest:4f3a"
+    icon="download"
+  />
+</div>
 ```
 
 ### Gotchas
 
-- **You must position the Toast yourself** using `style` — it has no built-in fixed positioning
-- `duration={0}` disables auto-dismiss; the user must click the dismiss button
-- `variant` controls both color (emerald/rose/amber/cyan) and ARIA role (`role="alert"` for error/warning, `role="status"` for others)
+- Position it yourself: the root is `position: relative` with `max-width: 400px`. Pass `style` for one toast, or wrap several in a fixed flex column.
+- Variant icons: success `check`, error `x`, warning `alert`, info `info`. Colors: emerald, rose, amber, cyan.
+- `error` and `warning` render `role="alert"` with `aria-live="assertive"`; the others `role="status"` with `aria-live="polite"`.
+- The auto-dismiss timer restarts whenever `onClose` changes identity. An inline arrow in a parent that re-renders often keeps postponing the dismissal; pass a stable callback (`useCallback`).
+- `duration={0}` keeps the toast open until the dismiss button is clicked. The dismiss button always renders.
+- There is no queue. Manage which toasts are open in your own state.
+
+---
+
+## Tooltip
+
+Short hover/focus hint attached to a single child element.
+
+```tsx
+import { Tooltip } from '@tinkermonkey/heimdall-ui'
+```
+
+### Props
+
+| Prop | Type | Default | Description |
+| ---- | ---- | ------- | ----------- |
+| `content` | `ReactNode` | required | Tooltip body; `null`/`undefined` shows nothing |
+| `children` | `ReactElement` | required | Single trigger element |
+| `placement` | `TooltipPlacement` (`'top' \| 'bottom' \| 'left' \| 'right'`) | `'top'` | Preferred side; flips at viewport edge |
+| `delay` | `number` | `200` | Show delay in ms (uncontrolled only) |
+| `offset` | `number` | `6` | Gap between trigger and tooltip in px |
+| `className` | `string` | `''` | Extra class on the tooltip card |
+| `disabled` | `boolean` | `false` | Suppresses the tooltip |
+| `open` | `boolean` | — | Controlled visibility; ignores hover and focus |
+| `id` | `string` | auto (`useId`) | Tooltip element id |
+
+### Usage
+
+```tsx
+<Tooltip content="Reload schema">
+  <Button variant="ghost" size="sm" aria-label="Reload schema">
+    <Icon name="reload" size={14} />
+  </Button>
+</Tooltip>
+```
+
+```tsx
+<Tooltip
+  content={<><code>cls_4f3a</code> · 47 individuals</>}
+  placement="right"
+  delay={0}
+  offset={10}
+  disabled={!showHints}
+>
+  <span className="font-mono">life.organism</span>
+</Tooltip>
+
+// Controlled: visibility follows `open` only
+<Tooltip content="Unsaved changes" open={isDirty} placement="bottom">
+  <Button variant="primary" size="sm">Save</Button>
+</Tooltip>
+```
+
+### Gotchas
+
+- Wraps `children` in an inline-flex `<span>` that listens for pointer enter/leave and focus/blur. A block-level child no longer stretches to full width.
+- `children` must be a single React element. It receives `aria-describedby` while the tooltip is visible.
+- The card is `position: absolute` inside the wrapper (`z-index: 300`, `max-width: 240px`). Ancestors with `overflow: hidden` or `auto` (Panel, Modal, SplitPane panes, table cells) clip it.
+- Edge handling only flips to the opposite side (top↔bottom, left↔right); a top tooltip near the left edge is not shifted horizontally.
+- With `open` set, `delay` has no effect and there is no change callback; drive `open` from your own state.
+- The card uses shell colors (dark) in both canvas modes.
+- Not interactive: it hides when the pointer leaves the trigger. Use Popover for clickable content.
+
+---
+
+## Popover
+
+Click-to-open non-modal panel anchored to a trigger. Compound component: `Popover` + `Popover.Trigger` + `Popover.Panel`.
+
+```tsx
+import { Popover } from '@tinkermonkey/heimdall-ui'
+```
+
+### Props
+
+| Prop | Type | Default | Description |
+| ---- | ---- | ------- | ----------- |
+| `children` | `ReactNode` | required | `Popover.Trigger` and `Popover.Panel` |
+| `placement` | `PopoverPlacement` (`'top' \| 'bottom' \| 'left' \| 'right'`) | `'bottom'` | Preferred side; flips at viewport edge |
+| `offset` | `number` | `8` | Gap between trigger and panel in px |
+| `open` | `boolean` | — | Controlled open state; requires `onOpenChange` |
+| `onOpenChange` | `(open: boolean) => void` | — | Open-state change handler; required with `open` |
+| `disableOutsideClick` | `boolean` | `false` | Keep open on outside mousedown |
+| `panelId` | `string` | auto (`useId`) | Panel element id |
+| `autoFocus` | `boolean` | `false` | Focus first focusable panel element on open |
+
+### Usage
+
+```tsx
+<Popover>
+  <Popover.Trigger>
+    <Button variant="secondary" size="sm">Details</Button>
+  </Popover.Trigger>
+  <Popover.Panel aria-label="Class details">
+    <div style={{ padding: 12 }}>
+      <code>cls_organism</code> · 47 individuals
+    </div>
+  </Popover.Panel>
+</Popover>
+```
+
+```tsx
+const [open, setOpen] = useState(false)
+
+<Popover open={open} onOpenChange={setOpen} placement="right" offset={12} autoFocus>
+  <Popover.Trigger>
+    <Button variant="ghost" size="sm" aria-label="Rename class">
+      <Icon name="edit" size={14} />
+    </Button>
+  </Popover.Trigger>
+  <Popover.Panel aria-labelledby="rename-title" className="rename-popover">
+    <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div id="rename-title">Rename class</div>
+      <TextInput defaultValue="life.organism" mono />
+      <Button variant="primary" size="sm" onClick={() => setOpen(false)}>Save</Button>
+    </div>
+  </Popover.Panel>
+</Popover>
+```
+
+### Compound subcomponents
+
+#### Popover.Trigger
+
+Clones its single child and wires click and Enter/Space to toggle the panel, plus `aria-haspopup`, `aria-expanded` and `aria-controls`.
+
+| Prop | Type | Default | Description |
+| ---- | ---- | ------- | ----------- |
+| `children` | `ReactElement` | required | Single focusable element that accepts a ref |
+
+#### Popover.Panel
+
+The floating `role="dialog"` panel. Renders nothing while closed.
+
+| Prop | Type | Default | Description |
+| ---- | ---- | ------- | ----------- |
+| `children` | `ReactNode` | required | Panel content |
+| `aria-label` | `string` | — | Accessible name for the dialog |
+| `aria-labelledby` | `string` | — | Id of the element naming the dialog |
+| `className` | `string` | `''` | Extra class on the panel |
+
+### Gotchas
+
+- `Popover.Trigger` and `Popover.Panel` throw outside a `Popover`.
+- The trigger child must forward refs (Heimdall `Button` does) and accept `onClick`/`onKeyDown`. Its own handlers still run. Its `id` is replaced with a generated one.
+- Controlled mode: `open` without `onOpenChange` is a type error and logs a console warning; the popover stays stuck. Omit both for uncontrolled mode.
+- Closes on Escape (focus returns to the trigger) and on any mousedown outside the wrapper unless `disableOutsideClick`. Escape is stopped at the wrapper, so a Popover inside a Modal closes without closing the Modal.
+- Tab wraps inside the open panel. Focus moves into the panel only with `autoFocus`.
+- The panel has no padding; add your own. It uses shell colors (dark) in both canvas modes, `min-width: 200px`, `max-width: 360px`, `z-index: 1000`.
+- The panel is `position: absolute` in an inline-flex wrapper, so `overflow: hidden`/`auto` ancestors (Panel, Modal) clip it. Edge handling only flips to the opposite side.
+- Remounts panel content on every open; keep form state outside the panel if it must persist.
 
 ---
 
 ## CommandPalette
 
-Full-screen command search overlay with fuzzy text filter and keyboard navigation.
+Keyboard-driven command launcher with substring search and optional groups.
 
 ```tsx
 import { CommandPalette } from '@tinkermonkey/heimdall-ui'
@@ -191,18 +364,21 @@ import { CommandPalette } from '@tinkermonkey/heimdall-ui'
 
 | Prop | Type | Default | Description |
 | ---- | ---- | ------- | ----------- |
-| `isOpen` | `boolean` | required | Controls visibility |
-| `onClose` | `() => void` | required | Called on Escape or backdrop click |
+| `isOpen` | `boolean` | required | Renders the palette when true |
+| `onClose` | `() => void` | required | Escape, backdrop click, or after a selection |
 | `commands` | `Command[]` | `[]` | Available commands |
-| `placeholder` | `string` | `'Search commands…'` | Search input placeholder |
-| `emptyMessage` | `string` | `'No commands found'` | Message when no results match |
+| `placeholder` | `string` | `'Search commands…'` | Input placeholder and aria-label |
+| `emptyMessage` | `string` | `'No commands found'` | Shown when nothing matches |
+
+### Data types
 
 ```ts
 interface Command {
-  id: string
+  id: string          // unique; used in element ids
   label: string
   description?: string
   icon?: IconName
+  group?: string      // section header; groups render in first-appearance order
   onSelect: () => void
 }
 ```
@@ -214,27 +390,51 @@ interface Command {
   isOpen={paletteOpen}
   onClose={() => setPaletteOpen(false)}
   commands={[
-    { id: 'create', label: 'Create class', description: 'Add a new schema class', icon: 'plus', onSelect: () => navigate('/schema/new') },
-    { id: 'run', label: 'Run pipeline', icon: 'pipeline', onSelect: () => runPipeline() },
-    { id: 'settings', label: 'Open settings', icon: 'settings', onSelect: () => navigate('/settings') },
+    { id: 'create_class', label: 'Create class', icon: 'plus', onSelect: () => navigate('/schema/new') },
+    { id: 'run_pipeline', label: 'Run pipeline', icon: 'pipeline', onSelect: runPipeline },
   ]}
+/>
+```
+
+```tsx
+const commands: Command[] = [
+  { id: 'nav_graph', label: 'Graph view', description: 'Switch to graph visualization', icon: 'graph', group: 'Navigate', onSelect: () => navigate('/graph') },
+  { id: 'nav_settings', label: 'Open settings', icon: 'settings', group: 'Navigate', onSelect: () => navigate('/settings') },
+  { id: 'act_export', label: 'Export data', description: 'Download current view as CSV', icon: 'download', group: 'Actions', onSelect: exportCsv },
+]
+
+useEffect(() => {
+  const onKey = (e: KeyboardEvent) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setPaletteOpen(true) }
+  }
+  document.addEventListener('keydown', onKey)
+  return () => document.removeEventListener('keydown', onKey)
+}, [])
+
+<CommandPalette
+  isOpen={paletteOpen}
+  onClose={() => setPaletteOpen(false)}
+  commands={commands}
+  placeholder="Search or run command…"
+  emptyMessage="No commands match."
 />
 ```
 
 ### Gotchas
 
-- Search input auto-focuses when `isOpen` becomes true
-- Fuzzy search is simple substring match on `label` and `description` (case-insensitive)
-- Arrow keys wrap around: Up at index 0 goes to last command
-- Enter executes the selected command, calls `onSelect()`, and closes the palette
-- Typing resets the selected index to 0
-- Focus is trapped and body scroll is blocked while open
+- No built-in shortcut: bind ⌘K / Ctrl+K yourself (as above).
+- Selecting a command (click or Enter) calls `onSelect()` and then `onClose()`; do not close it again in `onSelect`.
+- Search is a case-insensitive substring match on `label` and `description` only, not `group`.
+- ArrowUp/ArrowDown wrap around; typing resets the selection to the first match. The search and selection reset when the palette closes.
+- Commands are grouped by first appearance of each `group`; ungrouped commands form a header-less section in their position. Keyboard order follows the `commands` array, so keep each group's commands contiguous.
+- `id` must be unique; it builds the option element ids used by `aria-activedescendant`.
+- Focus moves to the input on open; Tab is trapped and body scroll is locked. No `className`/`style` passthrough.
 
 ---
 
 ## WorkspaceSwitcherDialog
 
-Modal for switching between workspaces, with recent workspace list and optional action tiles.
+Modal for switching workspaces: optional action tiles plus a recent-workspace list.
 
 ```tsx
 import { WorkspaceSwitcherDialog } from '@tinkermonkey/heimdall-ui'
@@ -244,23 +444,25 @@ import { WorkspaceSwitcherDialog } from '@tinkermonkey/heimdall-ui'
 
 | Prop | Type | Default | Description |
 | ---- | ---- | ------- | ----------- |
-| `isOpen` | `boolean` | required | Controls visibility |
-| `onClose` | `() => void` | required | Called when dialog should close |
+| `isOpen` | `boolean` | required | Renders the dialog when true |
+| `onClose` | `() => void` | required | Escape, backdrop, or close button |
+| `onPickRecent` | `(workspace: Workspace) => void` | required | Recent workspace clicked |
 | `title` | `string` | `'Switch Workspace'` | Dialog heading |
-| `current` | `Workspace` | — | Currently active workspace (highlighted with "open" badge) |
-| `recent` | `Workspace[]` | `[]` | List of recent workspaces |
-| `onPickRecent` | `(workspace: Workspace) => void` | required | Called when a recent workspace is selected |
-| `onOpenFolder` | `() => void` | — | When provided, renders "Open folder…" action tile |
-| `onNewWorkspace` | `() => void` | — | When provided, renders "New workspace…" action tile |
-| `onCloneFromGit` | `() => void` | — | When provided, renders "Clone from git…" action tile |
+| `current` | `Workspace` | — | Active workspace; marked "open" in the list |
+| `recent` | `Workspace[]` | `[]` | Recent workspaces |
+| `onOpenFolder` | `() => void` | — | Shows the "Open folder…" tile |
+| `onNewWorkspace` | `() => void` | — | Shows the "New workspace…" tile |
+| `onCloneFromGit` | `() => void` | — | Shows the "Clone from git…" tile |
+
+### Data types
 
 ```ts
 interface Workspace {
   id: string
   name: string
   path?: string
-  classCount?: number
-  individualCount?: number
+  classCount?: number       // rendered as "14 cls"
+  individualCount?: number  // rendered as "302 ind"
 }
 ```
 
@@ -270,29 +472,44 @@ interface Workspace {
 <WorkspaceSwitcherDialog
   isOpen={open}
   onClose={() => setOpen(false)}
-  current={{ id: 'ws-1', name: 'Production', path: '/workspaces/prod' }}
-  recent={[
-    { id: 'ws-1', name: 'Production', path: '/workspaces/prod', classCount: 14, individualCount: 302 },
-    { id: 'ws-2', name: 'Staging', path: '/workspaces/staging', classCount: 12, individualCount: 145 },
-  ]}
-  onPickRecent={ws => { switchWorkspace(ws); setOpen(false) }}
-  onOpenFolder={() => openFolderPicker()}
-  onNewWorkspace={() => navigate('/new')}
+  recent={workspaces}
+  onPickRecent={ws => { switchWorkspace(ws.id); setOpen(false) }}
+/>
+```
+
+```tsx
+const workspaces: Workspace[] = [
+  { id: 'ws_prod', name: 'prod_ontology', path: '~/workspaces/prod_ontology', classCount: 14, individualCount: 302 },
+  { id: 'ws_staging', name: 'staging_ontology', path: '~/workspaces/staging_ontology', classCount: 12, individualCount: 145 },
+]
+
+<WorkspaceSwitcherDialog
+  isOpen={open}
+  onClose={() => setOpen(false)}
+  title="Switch workspace"
+  current={workspaces[0]}
+  recent={workspaces}
+  onPickRecent={ws => { switchWorkspace(ws.id); setOpen(false) }}
+  onOpenFolder={() => { setOpen(false); openFolderPicker() }}
+  onNewWorkspace={() => { setOpen(false); navigate('/workspaces/new') }}
+  onCloneFromGit={() => { setOpen(false); openCloneDialog() }}
 />
 ```
 
 ### Gotchas
 
-- Action tiles only render when their corresponding callback prop is provided
-- `onPickRecent` is required and does not auto-close — you must call `setOpen(false)` inside it
-- Action callbacks (onOpenFolder, etc.) also do not auto-close — call `setOpen(false)` there too
-- The "open" badge appears on the workspace whose `id` matches `current?.id`
+- None of the callbacks close the dialog; set `isOpen` to false yourself.
+- Each action tile renders only when its callback is provided; with none, the tile row is omitted.
+- The "open" badge goes on the `recent` entry whose `id` equals `current.id`. `current` is not rendered on its own, so include it in `recent` to show it.
+- An empty `recent` hides the "Recent" section entirely; there is no empty-state message.
+- Always `size="lg"` (640px) Modal with a title, so initial focus lands on the header close button.
+- The default title is title case (`'Switch Workspace'`); pass `title="Switch workspace"` for sentence case.
 
 ---
 
 ## Drawer
 
-Slide-in side panel with optional title, configurable edge, and custom width.
+Modal slide-in side panel with backdrop, optional title, and configurable edge and width.
 
 ```tsx
 import { Drawer } from '@tinkermonkey/heimdall-ui'
@@ -302,45 +519,45 @@ import { Drawer } from '@tinkermonkey/heimdall-ui'
 
 | Prop | Type | Default | Description |
 | ---- | ---- | ------- | ----------- |
-| `isOpen` | `boolean` | required | Controls visibility |
-| `onClose` | `() => void` | required | Called on Escape or backdrop click |
-| `title` | `string` | — | Header title; omit for titleless drawer |
-| `position` | `'left' \| 'right'` | `'right'` | Which edge to slide in from |
-| `width` | `string` | `'320px'` | Width as any CSS length |
+| `isOpen` | `boolean` | required | Shows the drawer when true |
+| `onClose` | `() => void` | required | Escape, backdrop click, or close button |
 | `children` | `ReactNode` | required | Drawer body |
-| `...HTMLAttributes` | | | Standard div attributes |
+| `title` | `string` | — | Header title; close button renders regardless |
+| `position` | `'left' \| 'right'` | `'right'` | Edge it slides in from |
+| `width` | `string` | `'320px'` | Any CSS length |
+| `keepMounted` | `boolean` | `false` | Hide instead of unmount when closed |
+| `...divProps` | | | Remaining props spread onto the drawer `<div role="dialog">` |
 
 ### Usage
 
 ```tsx
-// Right drawer (default)
 <Drawer isOpen={open} onClose={() => setOpen(false)} title="Record details">
-  <KVGrid rows={metadataRows} />
+  <KVGrid rows={[{ key: 'Identifier', value: <code>cls_4f3a</code> }]} />
 </Drawer>
 ```
 
 ```tsx
-// Left navigation drawer
 <Drawer
-  isOpen={open}
-  onClose={() => setOpen(false)}
+  isOpen={filtersOpen}
+  onClose={() => setFiltersOpen(false)}
   title="Filters"
   position="left"
-  width="380px"
+  width="min(380px, 100vw)"
+  keepMounted
+  className="filters-drawer"
 >
-  {/* filter controls */}
-</Drawer>
-```
-
-```tsx
-// Titleless drawer
-<Drawer isOpen={open} onClose={() => setOpen(false)}>
-  {/* custom header rendered inside */}
+  <Field label="Domain">
+    <TextInput placeholder="life" mono />
+  </Field>
 </Drawer>
 ```
 
 ### Gotchas
 
-- The close button (×) always renders regardless of whether `title` is provided
-- `width` accepts any valid CSS length: `'320px'`, `'50vw'`, `'400px'`
-- Focus is trapped and body scroll is blocked while open
+- Modal behavior: backdrop, Tab trapped inside, body scroll locked, focus moved to the first focusable element (the close button) on open. Use `DetailDrawer` for a non-modal panel.
+- The close button always renders; without `title` the header shrinks to a right-aligned close button.
+- Without `keepMounted` the drawer unmounts on close and children lose state. With `keepMounted` it stays in the DOM under a `display: none` backdrop, so inputs and scroll position survive.
+- `style` replaces the inline `width` style; set width through `width`, not `style.width`.
+- `width` is not responsive; use `min(…, 100vw)` on narrow screens.
+- Body has 16px padding and scrolls vertically.
+- Escape is a `document` listener, so a Modal opened from inside a Drawer closes both on one Escape press.

@@ -357,8 +357,12 @@ Before using any `@tinkermonkey/heimdall-ui` component, read the relevant skill 
 | `.claude/skills/heimdall/heimdall-data-display/SKILL.md` | StatTile, StatGrid, Table, KVGrid, InspectorPanel |
 | `.claude/skills/heimdall/heimdall-page-patterns/SKILL.md` | PageHeader, FilterBar, ActivityTimeline, AlertStrip, QuickAccessGrid, QuickAccessTile, ConfigTile, PipelineCard, FormCallout, RowMenu |
 | `.claude/skills/heimdall/heimdall-charts/SKILL.md` | Sparkline, LineChart, BarChart, BarV, BarH, StackedBar, Donut, PieChart, Heatmap, StatusTimeline, ProgressBar, MetricRow |
-| `.claude/skills/heimdall/heimdall-graph/SKILL.md` | GraphCanvas, GraphNode, GraphEdge, GraphInspector, TopologyNode, HierarchyRow, HierarchyTree |
+| `.claude/skills/heimdall/heimdall-graph/SKILL.md` | GraphCanvas (layouts: organic, orthogonal, force-clustered, radial-tree, galaxy, …), GraphNode, GraphEdge, GraphEdgeShape, GraphInspector, TopologyNode, HierarchyRow, HierarchyTree |
 | `.claude/skills/heimdall/heimdall-chat/SKILL.md` | ChatMessage, ToolBlock, ThinkingBlock, ChatDivider, ChatSuggestions, ChatComposer, ChatContainer |
+| `.claude/skills/heimdall/heimdall-observability/SKILL.md` | TraceViewer, LogStream, DiffViewer, HashSetDiff, SideBySideDiff, VersionTimeline, LineageRail |
+| `.claude/skills/heimdall/heimdall-planning/SKILL.md` | Calendar, MiniCalendar, KanbanBoard |
+
+The skill files are copied from the installed package (`ux/node_modules/@tinkermonkey/heimdall-ui/agent-skills/`); refresh them whenever Heimdall is upgraded.
 
 ### API Client Architecture
 
