@@ -14,7 +14,7 @@ You consume an approved spec from `ux/e2e/documentation/specs/<feature>.md` and 
 2. Read `ux/e2e/documentation/app-context.md` — page map, entity fields, invariants, anti-patterns.
 3. Read `ux/selector-registry.yaml` and verify every `getByTestId(...)` you intend to emit exists (or matches a registry pattern like `{entity}-row-{id}`).
 4. Read `ux/e2e/fixtures/factories.ts` and `ux/e2e/fixtures/test-helpers.ts` to find the factories and helpers you need.
-5. Read `ux/src/api/client/types.ts` for entity field names — never invent fields.
+5. Read `ux/src/api/types/index.ts` for entity field names — never invent fields.
 
 ## Hard rules
 
