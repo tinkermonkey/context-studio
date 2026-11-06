@@ -13,7 +13,7 @@ import type {
   ProposedOperation,
 } from "@/api/services/proposals";
 import type { components } from "@/api/types";
-import { isAwaiting, propertyTriples, type TripleSource } from "./proposalModel";
+import { isAwaiting, propertyTriples, type ChipVariant, type TripleSource } from "./proposalModel";
 
 export type DeleteBlockers = components["schemas"]["DeleteBlockersResponse"];
 export type BlockingEdge = components["schemas"]["BlockingEdgeResponse"];
@@ -196,6 +196,248 @@ export function resolutionResult(operation: ProposedOperation): string | undefin
   return resolution.strategy === "move"
     ? `moved ${edges} to ${replacement}${swapped}, removed the type`
     : `deleted ${edges} and the type`;
+}
+
+// ==================== Decision state (colour means you have something to decide) ====================
+
+/**
+ * Where an operation stands for the reviewer. Amber: it needs a decision or a
+ * choice; rose: it failed; once decided it is applied (emerald) or rejected.
+ */
+export type DecisionState =
+  | "needs_decision"
+  | "needs_choice"
+  | "failed"
+  | "applied"
+  | "applied_with_edits"
+  | "rejected"
+  | "reverted";
+
+export interface DecisionStateView {
+  state: DecisionState;
+  label: string;
+  variant: ChipVariant;
+}
+
+/**
+ * The one status chip an operation row shows, from its status, blockers and
+ * edit. Once the proposal is `reverted`, what it applied is undone: neutral "reverted".
+ */
+export function decisionState(operation: ProposedOperation, reverted = false): DecisionStateView {
+  if (reverted && operation.status === "applied") {
+    return { state: "reverted", label: "reverted", variant: "neutral" };
+  }
+  if (isBlocked(operation)) {
+    return { state: "needs_choice", label: "needs a choice", variant: "amber" };
+  }
+  switch (operation.status) {
+    case "pending":
+      return { state: "needs_decision", label: "needs decision", variant: "amber" };
+    case "failed":
+      return { state: "failed", label: "failed", variant: "rose" };
+    case "applied":
+      return operation.applied_fields
+        ? { state: "applied_with_edits", label: "applied with edits", variant: "emerald" }
+        : { state: "applied", label: "applied", variant: "emerald" };
+    default:
+      return { state: "rejected", label: "rejected", variant: "neutral" };
+  }
+}
+
+/** A flag's colour while the operation awaits a decision; neutral (a record) once decided. */
+export function flagVariant(operation: ProposedOperation, variant: ChipVariant): ChipVariant {
+  return isAwaiting(operation) ? variant : "neutral";
+}
+
+/** "moved 2 relationships" / "dropped 1 relationship": a decided delete's resolution, for its row. */
+export function resolutionChip(operation: ProposedOperation): string | undefined {
+  const resolution = operation.resolution;
+  if (isAwaiting(operation) || !resolution) return undefined;
+  const verb = resolution.strategy === "move" ? "moved" : "dropped";
+  const count = resolution.edges?.length;
+  return count ? `${verb} ${plural(count, "relationship")}` : `${verb} relationships`;
+}
+
+const PAIR_RECORD: Partial<Record<string, string>> = {
+  reversed: "The replacement linked the pair reversed",
+  different: "The replacement linked a different pair",
+  missing: "The named replacement was gone",
+};
+
+/**
+ * One line on what a decided operation did beyond its change: how its
+ * replacement's pair compared and what happened to the relationships using the
+ * type ("The replacement linked the pair reversed; 2 relationships moved to x
+ * with their ends swapped."). Undefined when there is nothing to add.
+ */
+export function decidedRecord(operation: ProposedOperation): string | undefined {
+  if (isAwaiting(operation)) return undefined;
+  const parts: string[] = [];
+  const pair = PAIR_RECORD[operation.replacement_check?.pair ?? ""];
+  if (pair) parts.push(pair);
+  const resolution = operation.status === "applied" ? operation.resolution : undefined;
+  if (resolution) {
+    const count = resolution.edges?.length;
+    const edges = count ? plural(count, "relationship") : "relationships";
+    const replacement = resolution.replacement_identifier;
+    const swapped = resolution.reversed ? " with their ends swapped" : "";
+    parts.push(
+      resolution.strategy === "move"
+        ? `${edges} moved${replacement ? ` to ${replacement}` : ""}${swapped}`
+        : `${edges} deleted with the type`,
+    );
+  }
+  if (operation.status === "applied" && operation.applied_fields) {
+    parts.push("applied with a reviewer's edit");
+  }
+  if (parts.length === 0) return undefined;
+  const text = parts.join("; ");
+  return `${text.charAt(0).toUpperCase()}${text.slice(1)}.`;
+}
+
+/** "by you · Nov 6, 12:53" from a recorded decision; undefined when none was recorded. */
+export function decidedByLabel(
+  decidedBy: string | null | undefined,
+  decidedAt: string | null | undefined,
+  timeZone?: string,
+): string | undefined {
+  const parts: string[] = [];
+  if (decidedBy && decidedBy !== "unknown") {
+    parts.push(`by ${decidedBy === "user" ? "you" : decidedBy}`);
+  }
+  const at = decidedAt ? new Date(decidedAt) : undefined;
+  if (at && !Number.isNaN(at.getTime())) {
+    const date = new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      timeZone,
+    }).format(at);
+    const time = new Intl.DateTimeFormat("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+      timeZone,
+    }).format(at);
+    parts.push(`${date}, ${time}`);
+  }
+  return parts.length > 0 ? parts.join(" · ") : undefined;
+}
+
+// ==================== Decision progress (the summary banner) ====================
+
+export interface DecisionProgress {
+  total: number;
+  /** Still needing a decision: pending or failed. */
+  awaiting: number;
+  applied: number;
+  rejected: number;
+  /** Pending, not blocked, not stale: accept or reject. */
+  toDecide: number;
+  /** Blocked deletes (pending or failed): move or drop the relationships using the type. */
+  needChoice: number;
+  /** Failed, not blocked: apply again or reject. */
+  failed: number;
+  /** Pending and stale, not blocked: Apply anyway or reject. */
+  stale: number;
+  /** What "Accept N ready" sends: awaiting, not stale, not blocked. */
+  ready: number;
+  /** Share decided (applied or rejected), 0 to 100. */
+  percent: number;
+}
+
+/** The banner's counts; toDecide + needChoice + failed + stale = awaiting. */
+export function decisionProgress(operations: ProposedOperation[]): DecisionProgress {
+  const awaiting = operations.filter(isAwaiting);
+  const unblocked = awaiting.filter((o) => !isBlocked(o));
+  const total = operations.length;
+  return {
+    total,
+    awaiting: awaiting.length,
+    applied: operations.filter((o) => o.status === "applied").length,
+    rejected: operations.filter((o) => o.status === "rejected").length,
+    toDecide: unblocked.filter((o) => o.status === "pending" && !o.stale).length,
+    needChoice: awaiting.length - unblocked.length,
+    failed: unblocked.filter((o) => o.status === "failed").length,
+    stale: unblocked.filter((o) => o.status === "pending" && o.stale).length,
+    ready: unblocked.filter((o) => !o.stale).length,
+    percent: total === 0 ? 100 : Math.round(((total - awaiting.length) / total) * 100),
+  };
+}
+
+/** "3 of 79 need a decision", or "All 79 decided". */
+export function decisionHeadline(progress: DecisionProgress): string {
+  return progress.awaiting > 0
+    ? `${progress.awaiting} of ${progress.total} need a decision`
+    : `All ${progress.total} decided`;
+}
+
+export interface ProgressPill {
+  key: "to-decide" | "need-choice" | "failed" | "stale";
+  count: number;
+  label: string;
+  variant: "amber" | "rose";
+}
+
+/** The banner's breakdown of what needs a decision, each only when non-zero. */
+export function progressPills(progress: DecisionProgress): ProgressPill[] {
+  const pills: ProgressPill[] = [
+    {
+      key: "to-decide",
+      count: progress.toDecide,
+      label: `${progress.toDecide} to accept or reject`,
+      variant: "amber",
+    },
+    {
+      key: "need-choice",
+      count: progress.needChoice,
+      label: `${progress.needChoice} need an in-use choice`,
+      variant: "amber",
+    },
+    {
+      key: "failed",
+      count: progress.failed,
+      label: `${progress.failed} failed: retry or reject`,
+      variant: "rose",
+    },
+    {
+      key: "stale",
+      count: progress.stale,
+      label: `${progress.stale} stale: apply anyway or reject`,
+      variant: "rose",
+    },
+  ];
+  return pills.filter((pill) => pill.count > 0);
+}
+
+// ==================== Table filter ====================
+
+export type OperationFilter = "needs" | "decided" | "all";
+
+/**
+ * True when a deep link (?op=) names an operation that was already decided
+ * when the page loaded: the table opens on "All", so its row is there. Work it
+ * out once, at load; deciding the linked operation later must not switch the filter.
+ */
+export function linksToDecided(operations: ProposedOperation[], linkedId?: string): boolean {
+  const linked = linkedId ? operations.find((o) => o.id === linkedId) : undefined;
+  return !!linked && !isAwaiting(linked);
+}
+
+/** "Needs decision" while anything awaits, else "All"; `openOnAll` (see linksToDecided) forces "All". */
+export function defaultOperationFilter(
+  progress: DecisionProgress,
+  openOnAll = false,
+): OperationFilter {
+  if (openOnAll) return "all";
+  return progress.awaiting > 0 ? "needs" : "all";
+}
+
+export function filterOperations(
+  operations: ProposedOperation[],
+  filter: OperationFilter,
+): ProposedOperation[] {
+  if (filter === "all") return operations;
+  return operations.filter((o) => isAwaiting(o) === (filter === "needs"));
 }
 
 // ==================== DR triple edits (accept with edit) ====================

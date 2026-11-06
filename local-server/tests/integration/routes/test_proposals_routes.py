@@ -599,6 +599,22 @@ class TestGold:
         assert seqs(limit=1, offset=1) == [2]
         assert client.get(url, params={"decision": "maybe"}).status_code == 422
 
+    def test_filters_by_proposal(self, client, graph):
+        first = self._decide(client, graph)
+        second = _propose(client, graph, _describe_room(graph, seq=1, text="Every room"))
+        client.post(
+            f"/api/proposals/{second['id']}/apply", json={"operation_ids": _op_ids(second, 1)}
+        )
+        url = f"/api/taxonomies/{graph['taxonomy']}/gold"
+
+        def proposal_ids(**params):
+            return [d["proposal_id"] for d in client.get(url, params=params).json()["items"]]
+
+        assert proposal_ids(proposal_id=first["id"]) == [first["id"], first["id"]]
+        assert proposal_ids(proposal_id=second["id"]) == [second["id"]]
+        assert proposal_ids(proposal_id="nope") == []
+        assert client.get(url, params={"proposal_id": first["id"]}).json()["total"] == 2
+
     def test_a_revert_supersedes(self, client, graph):
         proposal = self._decide(client, graph)
         assert client.post(f"/api/proposals/{proposal['id']}/revert").status_code == 200

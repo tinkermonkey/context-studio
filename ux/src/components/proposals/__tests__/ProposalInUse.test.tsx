@@ -150,7 +150,7 @@ describe("a blocked relationship-type delete", () => {
     renderPage();
 
     const chip = await screen.findByTestId("operation-blocked-op-delete");
-    expect(chip).toHaveTextContent("Blocked: in use by 2");
+    expect(chip).toHaveTextContent("2 in use: move or drop");
     expect(chip).toHaveClass("chip--amber");
     expect(screen.queryByTestId("operation-blocked-op-rename")).not.toBeInTheDocument();
   });

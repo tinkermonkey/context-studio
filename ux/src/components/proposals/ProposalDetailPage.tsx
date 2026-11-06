@@ -5,10 +5,12 @@ import {
   ConfirmDialog,
   Icon,
   PageHeader,
+  ProgressBar,
+  SegmentedControl,
   Table,
   type Column,
 } from "@tinkermonkey/heimdall-ui";
-import { useChangeProposal } from "@/api/hooks/proposals";
+import { useChangeProposal, useProposalDecisions } from "@/api/hooks/proposals";
 import { useTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
 import { ApiError } from "@/api/client/interceptors";
 import type { ProposedOperation } from "@/api/services/proposals";
@@ -19,6 +21,7 @@ import { usePageBreadcrumbs } from "@/hooks/usePageBreadcrumbs";
 import { linkPath } from "@/lib/entityPaths";
 import { ApplyResults } from "./ApplyResults";
 import { SelectionBar, ThresholdBar } from "./DecisionBars";
+import { OperationDecided } from "./OperationDecided";
 import { OperationDecision } from "./OperationDecision";
 import { OperationDiff } from "./OperationDiff";
 import { OperationInspector, operationTitle } from "./OperationInspector";
@@ -28,17 +31,26 @@ import {
   DR_TAXONOMY_IDENTIFIER,
   atOrAboveThreshold,
   blockersOf,
+  decisionHeadline,
+  decisionProgress,
+  decisionState,
+  defaultOperationFilter,
+  linksToDecided,
+  filterOperations,
+  flagVariant,
   hasProbabilities,
   isBlocked,
   isBelowThreshold,
+  progressPills,
+  resolutionChip,
   revertSummary,
   staleCause,
   staleCauseText,
   takesDecisions,
+  type OperationFilter,
   type RevertSummary,
 } from "./decisionModel";
 import {
-  OPERATION_STATUS_VARIANT,
   OP_VARIANT,
   PROPOSAL_STATUS_VARIANT,
   formatAgo,
@@ -50,8 +62,6 @@ import {
   replacementEndLabel,
   replacementDeletedFlag,
   replacementFlag,
-  tallyLabel,
-  tallyOperations,
 } from "./proposalModel";
 import { useOperationContext, type OperationContext } from "./useOperationContext";
 import { useProposalActions } from "./useProposalActions";
@@ -75,10 +85,12 @@ interface ColumnOptions {
   threshold?: number;
   /** Checkbox selection of awaiting operations, while the proposal takes decisions. */
   selection?: { checked: Set<string>; toggle: (id: string) => void };
+  /** The proposal was reverted: what it applied reads as reverted. */
+  reverted: boolean;
 }
 
 function operationColumns(context: OperationContext, options: ColumnOptions): OperationColumn[] {
-  const { showPlanKind, threshold, selection } = options;
+  const { showPlanKind, threshold, selection, reverted } = options;
   return [
     ...(selection
       ? [
@@ -86,18 +98,19 @@ function operationColumns(context: OperationContext, options: ColumnOptions): Op
             key: "id",
             label: "",
             width: "34px",
-            render: (_: unknown, row: ProposedOperation) => (
-              <input
-                type="checkbox"
-                className="table__checkbox"
-                checked={selection.checked.has(row.id)}
-                disabled={!isAwaiting(row)}
-                onChange={() => selection.toggle(row.id)}
-                onClick={(e) => e.stopPropagation()}
-                aria-label={`Select operation ${row.seq}`}
-                data-testid={`operation-check-${row.id}`}
-              />
-            ),
+            // Only an operation awaiting a decision can be picked for a bulk decision.
+            render: (_: unknown, row: ProposedOperation) =>
+              isAwaiting(row) ? (
+                <input
+                  type="checkbox"
+                  className="table__checkbox"
+                  checked={selection.checked.has(row.id)}
+                  onChange={() => selection.toggle(row.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label={`Select operation ${row.seq}`}
+                  data-testid={`operation-check-${row.id}`}
+                />
+              ) : null,
           } as OperationColumn,
         ]
       : []),
@@ -111,14 +124,26 @@ function operationColumns(context: OperationContext, options: ColumnOptions): Op
       key: "op",
       label: "Op",
       width: "84px",
-      render: (value) => (
-        <Chip variant={OP_VARIANT[value as ProposedOperation["op"]]}>{value as string}</Chip>
+      // Neutral once decided: colour means there is something to decide.
+      render: (value, row) => (
+        <Chip
+          variant={flagVariant(row, OP_VARIANT[value as ProposedOperation["op"]])}
+          data-testid={`operation-op-${row.id}`}
+        >
+          {value as string}
+        </Chip>
       ),
     },
     {
       key: "fields",
       label: "Change",
-      render: (_, row) => <OperationDiff operation={row} context={context} />,
+      render: (_, row) => (
+        <div
+          className={isAwaiting(row) ? "op-change-cell" : "op-change-cell op-change-cell--decided"}
+        >
+          <OperationDiff operation={row} context={context} />
+        </div>
+      ),
     },
     ...(showPlanKind
       ? [
@@ -152,26 +177,63 @@ function operationColumns(context: OperationContext, options: ColumnOptions): Op
     {
       key: "status",
       label: "Status",
-      width: "110px",
-      render: (_, row) => (
-        <div className="op-status" data-testid={`operation-status-${row.id}`}>
-          <Chip variant={OPERATION_STATUS_VARIANT[row.status]}>{row.status}</Chip>
-          {row.stale && (
-            <Chip variant="rose" data-testid={`operation-stale-${row.id}`}>
-              stale
-            </Chip>
-          )}
-          {blockersOf(row) && (
-            <Chip variant="amber" data-testid={`operation-blocked-${row.id}`}>
-              Blocked: in use by {blockersOf(row)?.edges.length}
-            </Chip>
-          )}
-          {row.applied_fields && <Chip variant="violet">edited</Chip>}
-          <ReplacementChip operation={row} context={context} />
-        </div>
-      ),
+      width: "180px",
+      render: (_, row) => <OperationStatus operation={row} context={context} reverted={reverted} />,
     },
   ];
+}
+
+/**
+ * The operation's decision state, then its flags: coloured while it awaits a
+ * decision, neutral once decided (a record of what was there).
+ */
+function OperationStatus({
+  operation,
+  context,
+  reverted,
+}: {
+  operation: ProposedOperation;
+  context: OperationContext;
+  reverted: boolean;
+}) {
+  const state = decisionState(operation, reverted);
+  const blockers = blockersOf(operation);
+  const resolved = resolutionChip(operation);
+  return (
+    <div
+      className="op-status"
+      data-testid={`operation-status-${operation.id}`}
+      data-status={operation.status}
+      data-state={state.state}
+    >
+      <Chip
+        variant={state.variant}
+        data-testid={`operation-state-${operation.id}`}
+        title={`status: ${operation.status}`}
+      >
+        {state.label}
+      </Chip>
+      {operation.stale && (
+        <Chip
+          variant={flagVariant(operation, "rose")}
+          data-testid={`operation-stale-${operation.id}`}
+        >
+          stale
+        </Chip>
+      )}
+      {blockers && (
+        <Chip variant="amber" data-testid={`operation-blocked-${operation.id}`}>
+          {blockers.edges.length} in use: move or drop
+        </Chip>
+      )}
+      {resolved && (
+        <Chip variant="neutral" data-testid={`operation-resolved-${operation.id}`}>
+          {resolved}
+        </Chip>
+      )}
+      <ReplacementChip operation={operation} context={context} />
+    </div>
+  );
 }
 
 /** A delete whose named replacement links a different or reversed pair, or is gone. */
@@ -202,8 +264,10 @@ function ReplacementChip({
       data-pair={flag.pair}
       data-replacement-deleted={gone ? (check.cycle ? "cycle" : "chain") : undefined}
     >
-      {check.pair !== "same" && <Chip variant={flag.variant}>{flag.chip}</Chip>}
-      {gone && <Chip variant="rose">{gone.chip}</Chip>}
+      {check.pair !== "same" && (
+        <Chip variant={flagVariant(operation, flag.variant)}>{flag.chip}</Chip>
+      )}
+      {gone && <Chip variant={flagVariant(operation, "rose")}>{gone.chip}</Chip>}
     </span>
   );
 }
@@ -262,14 +326,44 @@ export function ProposalDetailPage({
   const [checkedIds, setChecked] = useState<string[]>([]);
   const [confirmRejectAll, setConfirmRejectAll] = useState(false);
   const [confirmRevert, setConfirmRevert] = useState(false);
+  // Undefined until the reviewer picks one: then it follows defaultOperationFilter.
+  const [chosenFilter, setFilter] = useState<OperationFilter>();
+  // Whether the page opened (?op=) on an already decided operation: worked out
+  // once, when the proposal loads, so deciding the linked operation keeps the filter.
+  const openOnAll = useRef<boolean | undefined>(undefined);
+  if (openOnAll.current === undefined && proposal) {
+    openOnAll.current = linksToDecided(operations, selectedOperationId);
+  }
 
   const deciding = !!proposal && takesDecisions(proposal);
-  const awaitingOps = useMemo(() => operations.filter(isAwaiting), [operations]);
-  // Only awaiting operations stay checked once their outcomes come back.
-  const checked = useMemo(
-    () => new Set(checkedIds.filter((i) => awaitingOps.some((o) => o.id === i))),
-    [checkedIds, awaitingOps],
+  const reverted = proposal?.status === "reverted";
+  const progress = useMemo(() => decisionProgress(operations), [operations]);
+  const filter = chosenFilter ?? defaultOperationFilter(progress, openOnAll.current);
+  const shownOperations = useMemo(() => filterOperations(operations, filter), [operations, filter]);
+  const decisionsQuery = useProposalDecisions(
+    proposal?.taxonomy_id ?? "",
+    id,
+    !!proposal && !reverted && progress.awaiting < progress.total,
   );
+  // A reverted proposal's decisions no longer stand: never show cached ones.
+  const decisions = reverted ? undefined : decisionsQuery.data;
+  const awaitingOps = useMemo(() => operations.filter(isAwaiting), [operations]);
+  // Only awaiting operations the table shows stay checked once their outcomes come back.
+  const checked = useMemo(
+    () =>
+      new Set(
+        checkedIds.filter(
+          (i) => awaitingOps.some((o) => o.id === i) && shownOperations.some((o) => o.id === i),
+        ),
+      ),
+    [checkedIds, awaitingOps, shownOperations],
+  );
+  // A filter that hides checked rows unchecks them, so a bulk decision only covers what is shown.
+  const chooseFilter = (next: OperationFilter) => {
+    setFilter(next);
+    const shown = filterOperations(operations, next);
+    setChecked((ids) => ids.filter((i) => shown.some((o) => o.id === i)));
+  };
   const showThreshold = deciding && awaitingOps.length > 0 && hasProbabilities(operations);
   const matching = showThreshold ? atOrAboveThreshold(operations, threshold) : [];
   const showPlanKind = operations.some((o) => planKind(o) !== undefined);
@@ -288,8 +382,9 @@ export function ProposalDetailPage({
                 ),
             }
           : undefined,
+        reverted,
       }),
-    [context, showPlanKind, showThreshold, threshold, selectable, checked],
+    [context, showPlanKind, showThreshold, threshold, selectable, checked, reverted],
   );
 
   // A deep link (?op=) scrolls its row into view once the operations load.
@@ -327,7 +422,6 @@ export function ProposalDetailPage({
     );
   }
 
-  const tally = tallyOperations(operations);
   const taxonomyLabel = taxonomy?.identifier ?? proposal.taxonomy_id;
   const isDr = taxonomy?.identifier === DR_TAXONOMY_IDENTIFIER;
   const proposedBy = proposal.source_detail ? ` by ${proposal.source_detail}` : "";
@@ -347,8 +441,7 @@ export function ProposalDetailPage({
   ).length;
   const checkedBlocked = operations.filter((o) => checked.has(o.id) && isBlocked(o)).length;
   const awaitingIds = awaitingOps.map((o) => o.id);
-  const blockedAwaiting = awaitingOps.filter(isBlocked).length;
-  const freshAwaiting = awaitingOps.filter((o) => !o.stale && !isBlocked(o)).length;
+  const blockedAwaiting = progress.needChoice;
   const force = actions.forceRequest;
   const forceStale = force
     ? operations.filter((o) => force.operationIds.includes(o.id) && o.stale)
@@ -364,76 +457,121 @@ export function ProposalDetailPage({
         subtitle={subtitle}
       />
 
-      <div className="proposal-summary" data-testid="proposal-summary">
-        <Chip variant={PROPOSAL_STATUS_VARIANT[proposal.status]} data-testid="proposal-status">
-          {proposal.status}
-        </Chip>
-        <span className="proposal-summary__tally" data-testid="proposal-tally">
-          {tallyLabel(tally)}
-        </span>
-        <span className="proposal-summary__mix" data-testid="proposal-op-mix">
-          {opMixLabel(operations)} · {scopeMixLabel(operations)}
-        </span>
-        {deciding && (
-          <span className="proposal-summary__actions" data-testid="proposal-actions">
-            {isDr && (
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={actions.exporting}
-                onClick={actions.downloadDecisions}
-                data-testid="proposal-export-decisions"
-              >
-                <Icon name="download" size={13} /> Export decisions
-              </Button>
-            )}
-            {tally.applied > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={actions.busy}
-                onClick={() => setConfirmRevert(true)}
-                data-testid="proposal-revert"
-              >
-                <Icon name="reload" size={13} /> Revert proposal
-              </Button>
-            )}
-            {awaitingOps.length > 0 && (
-              <>
+      <div
+        className={[
+          "proposal-summary",
+          deciding && (progress.awaiting > 0 ? "proposal-summary--open" : "proposal-summary--done"),
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        data-testid="proposal-summary"
+      >
+        <div className="proposal-summary__row">
+          <Chip variant={PROPOSAL_STATUS_VARIANT[proposal.status]} data-testid="proposal-status">
+            {proposal.status}
+          </Chip>
+          <div className="proposal-summary__progress">
+            <span className="proposal-summary__tally" data-testid="proposal-tally">
+              {decisionHeadline(progress)}
+            </span>
+            <span className="proposal-summary__decided" data-testid="proposal-decided-counts">
+              {progress.applied} applied · {progress.rejected} rejected
+            </span>
+          </div>
+          <span className="proposal-summary__mix" data-testid="proposal-op-mix">
+            {opMixLabel(operations)} · {scopeMixLabel(operations)}
+          </span>
+          {deciding && (
+            <span className="proposal-summary__actions" data-testid="proposal-actions">
+              {isDr && (
                 <Button
-                  variant="secondary"
+                  variant="ghost"
+                  size="sm"
+                  disabled={actions.exporting}
+                  onClick={actions.downloadDecisions}
+                  data-testid="proposal-export-decisions"
+                >
+                  <Icon name="download" size={13} /> Export decisions
+                </Button>
+              )}
+              {progress.applied > 0 && (
+                <Button
+                  variant="ghost"
                   size="sm"
                   disabled={actions.busy}
-                  onClick={() => setConfirmRejectAll(true)}
-                  data-testid="proposal-reject-all"
+                  onClick={() => setConfirmRevert(true)}
+                  data-testid="proposal-revert"
                 >
-                  Reject all awaiting
+                  <Icon name="reload" size={13} /> Revert proposal
                 </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={actions.busy || freshAwaiting === 0}
-                  title={
-                    awaitingOps.length > freshAwaiting
-                      ? [
-                          awaitingOps.some((o) => o.stale && !isBlocked(o)) &&
-                            "Stale operations are left for Apply anyway",
-                          blockedAwaiting > 0 &&
-                            "Blocked deletes are left for a resolution in the inspector",
-                        ]
-                          .filter(Boolean)
-                          .join(". ")
-                      : undefined
-                  }
-                  onClick={() => actions.acceptFresh(awaitingIds)}
-                  data-testid="proposal-accept-all"
-                >
-                  Accept all awaiting
-                </Button>
-              </>
-            )}
-          </span>
+              )}
+              {awaitingOps.length > 0 && (
+                <>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={actions.busy}
+                    onClick={() => setConfirmRejectAll(true)}
+                    data-testid="proposal-reject-all"
+                  >
+                    Reject all awaiting
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={actions.busy || progress.ready === 0}
+                    title={
+                      awaitingOps.length > progress.ready
+                        ? [
+                            awaitingOps.some((o) => o.stale && !isBlocked(o)) &&
+                              "Stale operations are left for Apply anyway",
+                            blockedAwaiting > 0 &&
+                              "Blocked deletes are left for a resolution in the inspector",
+                          ]
+                            .filter(Boolean)
+                            .join(". ")
+                        : undefined
+                    }
+                    onClick={() => actions.acceptFresh(awaitingIds)}
+                    data-testid="proposal-accept-all"
+                  >
+                    Accept {progress.ready} ready
+                  </Button>
+                </>
+              )}
+            </span>
+          )}
+        </div>
+        {deciding && progress.awaiting > 0 && (
+          <div
+            className="proposal-summary__pills"
+            role="group"
+            aria-label="What needs a decision"
+            data-testid="proposal-progress-pills"
+          >
+            {progressPills(progress).map((pill) => (
+              <button
+                key={pill.key}
+                type="button"
+                className="proposal-pill"
+                aria-controls="proposal-operations"
+                aria-label={`${pill.label}: show the operations that need a decision`}
+                onClick={() => chooseFilter("needs")}
+                data-testid={`proposal-pill-${pill.key}`}
+              >
+                <Chip variant={pill.variant}>{pill.label}</Chip>
+              </button>
+            ))}
+          </div>
         )}
+        <ProgressBar
+          className="proposal-summary__bar"
+          percent={progress.percent}
+          color={progress.awaiting > 0 ? "amber" : "emerald"}
+          height={4}
+          label={`${progress.total - progress.awaiting} of ${progress.total} decided`}
+          data-testid="proposal-progress-bar"
+        />
       </div>
 
       {actions.revertConflict && (
@@ -498,11 +636,30 @@ export function ProposalDetailPage({
                   staleCause={operation.stale ? causeOf(operation) : undefined}
                   actions={actions}
                 />
+              ) : !isAwaiting(operation) ? (
+                <OperationDecided
+                  operation={operation}
+                  decision={decisions?.find((d) => d.operation_id === operation.id)}
+                  reverted={reverted}
+                />
               ) : undefined
             }
+            reverted={reverted}
           />
         )}
       >
+        <div className="proposal-table-filter" data-testid="proposal-operation-filter">
+          <SegmentedControl
+            value={filter}
+            onChange={(value) => chooseFilter(value as OperationFilter)}
+            aria-label="Show operations"
+            options={[
+              { value: "needs", label: `Needs decision · ${progress.awaiting}` },
+              { value: "decided", label: `Decided · ${progress.total - progress.awaiting}` },
+              { value: "all", label: `All · ${progress.total}` },
+            ]}
+          />
+        </div>
         {/* Above the table, so the table frame is the last thing in the list
             column and its sticky header never scrolls under the topbar. */}
         <p className="proposals-footnote">
@@ -510,16 +667,30 @@ export function ProposalDetailPage({
             ? "This proposal was reverted: what it applied is undone, and it takes no more decisions."
             : `Amber marks the part of a triple or the field an update changes.${showThreshold ? " Probabilities below the threshold are muted." : ""} Select an operation to see its change, rationale and evidence.`}
         </p>
-        <div ref={tableRef} className="schema-table-wrap" data-testid="proposal-operations-table">
+        <div
+          ref={tableRef}
+          id="proposal-operations"
+          className="schema-table-wrap"
+          data-testid="proposal-operations-table"
+          data-filter={filter}
+        >
           <Table<ProposedOperation>
             rowKey="id"
             columns={columns}
-            data={operations}
+            data={shownOperations}
             selectedRows={selectedOperationId ? [selectedOperationId] : []}
             onRowClick={(row) =>
               onSelectOperation(row.id === selectedOperationId ? undefined : row.id)
             }
-            emptyState={<span className="entity-note">This proposal has no operations.</span>}
+            emptyState={
+              <span className="entity-note">
+                {operations.length === 0
+                  ? "This proposal has no operations."
+                  : filter === "needs"
+                    ? "Nothing needs a decision."
+                    : "Nothing is decided yet."}
+              </span>
+            }
           />
         </div>
       </SchemaPageLayout>

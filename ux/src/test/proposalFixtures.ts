@@ -5,6 +5,7 @@
  * Component class's description; "proposal-2" is done.
  */
 import { http, HttpResponse } from "msw";
+import type { ProposedOperation } from "@/api/services/proposals";
 import {
   createChangeProposal,
   createProposedOperation,
@@ -119,8 +120,38 @@ export const doneProposal = createChangeProposal({
 
 const PROPOSALS = [openProposal, doneProposal];
 
-/** GET /api/proposals (status and taxonomy_id filters) and GET /api/proposals/:id. */
+export const DECIDED_AT = "2026-11-06T12:53:08+00:00";
+
+/** A gold list page for the decided operations among `operations`, all decided by the user at DECIDED_AT. */
+export function goldPage(operations: ProposedOperation[]) {
+  const items = operations
+    .filter((o) => o.status === "applied" || o.status === "rejected")
+    .map((o) => ({
+      id: `gold-${o.id}`,
+      operation_id: o.id,
+      proposal_id: "proposal-1",
+      taxonomy_id: "tax-1",
+      seq: o.seq,
+      kind: o.kind,
+      op: o.op,
+      decision: o.status === "rejected" ? "rejected" : "applied",
+      decided_at: DECIDED_AT,
+      decided_by: "user",
+      proposed: {},
+    }));
+  return { items, total: items.length, limit: 500, offset: 0 };
+}
+
+/**
+ * GET /api/proposals (status and taxonomy_id filters), GET /api/proposals/:id
+ * and GET /api/taxonomies/:id/gold?proposal_id= (each decided operation decided by the user at DECIDED_AT).
+ */
 export const proposalHandlers = [
+  http.get("*/api/taxonomies/:id/gold", ({ request }) => {
+    const proposalId = new URL(request.url).searchParams.get("proposal_id");
+    const proposal = PROPOSALS.find((p) => p.id === proposalId);
+    return HttpResponse.json(goldPage(proposal?.operations ?? []));
+  }),
   http.get("*/api/proposals/:id", ({ params }) => {
     const proposal = PROPOSALS.find((p) => p.id === params.id);
     return proposal

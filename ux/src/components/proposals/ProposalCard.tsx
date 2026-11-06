@@ -30,10 +30,11 @@ export function ProposalCard({ proposalId }: ProposalCardProps) {
   }
 
   const tally = tallyOperations(proposal.operations);
+  // Failed operations still need a decision (apply again or reject), so they count as to decide.
   const counts = [
     `${tally.total} operation${tally.total === 1 ? "" : "s"}`,
     `${tally.applied} applied`,
-    `${tally.pending} pending`,
+    `${tally.awaiting} to decide`,
     ...(tally.failed ? [`${tally.failed} failed`] : []),
   ].join(" · ");
 

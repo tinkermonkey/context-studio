@@ -1,4 +1,4 @@
-export { useChangeProposals, useChangeProposal } from "./useProposals";
+export { useChangeProposals, useChangeProposal, useProposalDecisions } from "./useProposals";
 export {
   useCreateChangeProposal,
   useApplyChangeProposal,

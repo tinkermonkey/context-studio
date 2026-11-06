@@ -1,10 +1,11 @@
 import { Fragment, type ReactNode } from "react";
 import { Chip, FormCallout, InspectorPanel } from "@tinkermonkey/heimdall-ui";
 import type { ProposedOperation } from "@/api/services/proposals";
+import { decisionState, flagVariant } from "./decisionModel";
 import {
   CLASS_ID_FIELDS,
-  OPERATION_STATUS_VARIANT,
   asApplied,
+  isAwaiting,
   SCOPE_VARIANT,
   changeRows,
   fieldLabel,
@@ -98,6 +99,8 @@ function ReplacementSection({
     check,
     typeof identifier === "string" ? identifier : (operation.target_id ?? "this type"),
   );
+  // Once decided the warnings are a record: plain text and neutral chips.
+  const awaiting = isAwaiting(operation);
   return (
     <InspectorPanel.Section title="Replacement">
       <div
@@ -105,27 +108,51 @@ function ReplacementSection({
         data-testid="operation-replacement"
         data-pair={flag.pair}
       >
-        <FormCallout
-          variant={flag.warn ? "warn" : "info"}
-          icon={flag.warn ? "alert" : "info"}
-          data-testid="operation-replacement-callout"
-        >
-          {flag.text}
-        </FormCallout>
-        {gone && (
+        {awaiting ? (
           <FormCallout
-            variant="warn"
-            icon="alert"
-            data-testid="operation-replacement-deleted-callout"
-            data-cycle={check.cycle ? "true" : "false"}
+            variant={flag.warn ? "warn" : "info"}
+            icon={flag.warn ? "alert" : "info"}
+            data-testid="operation-replacement-callout"
           >
-            {gone.text}
+            {flag.text}
           </FormCallout>
+        ) : (
+          <p className="op-decided__note" data-testid="operation-replacement-callout">
+            {flag.text}
+          </p>
         )}
+        {gone &&
+          (awaiting ? (
+            <FormCallout
+              variant="warn"
+              icon="alert"
+              data-testid="operation-replacement-deleted-callout"
+              data-cycle={check.cycle ? "true" : "false"}
+            >
+              {gone.text}
+            </FormCallout>
+          ) : (
+            <p
+              className="op-decided__note"
+              data-testid="operation-replacement-deleted-callout"
+              data-cycle={check.cycle ? "true" : "false"}
+            >
+              {gone.text}
+            </p>
+          ))}
         <div className="op-inspector__chips">
-          <Chip form="id-tag">{check.identifier ?? check.replacement_id}</Chip>
-          <Chip variant={flag.variant}>{flag.chip}</Chip>
-          {gone && <Chip variant="rose">{gone.chip}</Chip>}
+          <Chip
+            form="id-tag"
+            className="op-replacement__id"
+            title={check.identifier ?? check.replacement_id}
+            data-testid="operation-replacement-id"
+          >
+            <span className="op-replacement__id-text">
+              {check.identifier ?? check.replacement_id}
+            </span>
+          </Chip>
+          <Chip variant={flagVariant(operation, flag.variant)}>{flag.chip}</Chip>
+          {gone && <Chip variant={flagVariant(operation, "rose")}>{gone.chip}</Chip>}
         </div>
       </div>
     </InspectorPanel.Section>
@@ -135,13 +162,23 @@ function ReplacementSection({
 interface OperationInspectorProps {
   operation: ProposedOperation;
   context: OperationContext;
-  /** The Decision section (accept / reject / edit) goes first; decided operations have none. */
+  /** The Decision section goes first: accept / reject / edit, or a decided operation's record. */
   decision?: ReactNode;
+  /** The proposal was reverted: what it applied reads as reverted. */
+  reverted?: boolean;
 }
 
 /** The selected operation: its change field by field, rationale and evidence. */
-export function OperationInspector({ operation, context, decision }: OperationInspectorProps) {
+export function OperationInspector({
+  operation,
+  context,
+  decision,
+  reverted = false,
+}: OperationInspectorProps) {
   const rows = changeRows(operation);
+  const state = decisionState(operation, reverted);
+  // A decided operation's Decision section carries its state chip; don't repeat it here.
+  const showState = isAwaiting(operation) || !decision;
   const kind = planKind(operation);
   const evidence = (operation.evidence ?? []) as EvidenceItem[];
   const label = (field: string) =>
@@ -189,7 +226,11 @@ export function OperationInspector({ operation, context, decision }: OperationIn
               </FormCallout>
             )}
             <div className="op-inspector__status">
-              <Chip variant={OPERATION_STATUS_VARIANT[operation.status]}>{operation.status}</Chip>
+              {showState && (
+                <Chip variant={state.variant} data-status={operation.status}>
+                  {state.label}
+                </Chip>
+              )}
               {operation.reason && (
                 <span className="op-inspector__reason" data-testid="operation-reason">
                   {operation.reason}

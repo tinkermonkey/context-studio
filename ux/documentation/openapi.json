@@ -7325,6 +7325,24 @@
             "description": "Number of results to skip"
           },
           {
+            "name": "proposal_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only this proposal's operations",
+              "title": "Proposal Id"
+            },
+            "description": "Only this proposal's operations"
+          },
+          {
             "name": "kind",
             "in": "query",
             "required": false,
@@ -7491,6 +7509,24 @@
               "type": "string",
               "title": "Taxonomy Id"
             }
+          },
+          {
+            "name": "proposal_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only this proposal's operations",
+              "title": "Proposal Id"
+            },
+            "description": "Only this proposal's operations"
           },
           {
             "name": "kind",

@@ -2904,7 +2904,7 @@ selectors:
     description: "Proposal title link in a list row, by proposal id"
   - selector: proposal-pending-*
     component: src/components/proposals/ProposalsListPage.tsx
-    description: "Pending \"N of M\" label and decided ProgressBar in a list row, by proposal id"
+    description: "Needs-decision \"N of M\" label (failed operations included) and decided ProgressBar in a list row, by proposal id"
 
   # Review queue: proposal detail (/app/proposals/$proposalId)
   - selector: proposal-page
@@ -2912,13 +2912,28 @@ selectors:
     description: "Root of a proposal's detail page"
   - selector: proposal-summary
     component: src/components/proposals/ProposalDetailPage.tsx
-    description: "Summary row: status chip, tally and op mix"
+    description: "Decision progress banner: status chip, headline, op mix, actions, breakdown pills and ProgressBar; proposal-summary--open (amber) while anything awaits, --done (emerald) once all decided"
   - selector: proposal-status
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Proposal status chip (open / done / reverted)"
   - selector: proposal-tally
     component: src/components/proposals/ProposalDetailPage.tsx
-    description: "\"N pending · N applied · N rejected · N failed\" tally"
+    description: "Banner headline: \"X of N need a decision\" (pending or failed), or \"All N decided\""
+  - selector: proposal-decided-counts
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Banner sub-line: \"A applied · R rejected\""
+  - selector: proposal-progress-pills
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Group of breakdown pills (to accept or reject, in-use choice, failed, stale), each only when non-zero"
+  - selector: proposal-pill-*
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Breakdown pill button by key (to-decide, need-choice, failed, stale); a click filters the table to Needs decision"
+  - selector: proposal-progress-bar
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Banner ProgressBar: percent decided, amber while open, emerald when all decided"
+  - selector: proposal-operation-filter
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Wrapper of the SegmentedControl above the operations table: Needs decision · X, Decided · D, All · N"
   - selector: proposal-op-mix
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Op mix and scope mix, e.g. \"7 update · 15 delete · all breaking\""
@@ -2927,10 +2942,19 @@ selectors:
     description: "Wrapper of the operations table; a row click selects the operation into the inspector"
   - selector: operation-status-*
     component: src/components/proposals/ProposalDetailPage.tsx
-    description: "Status chip plus stale chip cell of an operation row, by operation id"
+    description: "Status cell of an operation row (decision state chip, then flags), by operation id; data-status is the raw status, data-state the decision state"
+  - selector: operation-state-*
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Decision state chip: needs decision / needs a choice (amber), failed (rose), applied / applied with edits (emerald), rejected or reverted (neutral), by operation id"
+  - selector: operation-op-*
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Op chip (create / update / move / delete) of an operation row: coloured while awaiting, neutral once decided, by operation id"
+  - selector: operation-resolved-*
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Neutral record chip on a decided delete applied with a resolution: \"moved N relationships\" / \"dropped N relationships\", by operation id"
   - selector: operation-stale-*
     component: src/components/proposals/ProposalDetailPage.tsx
-    description: "Rose \"stale\" chip on an operation whose target changed since proposed, by operation id"
+    description: "\"stale\" chip on an operation whose target changed since proposed: rose while awaiting, neutral once decided, by operation id"
   - selector: operation-diff-*
     component: src/components/proposals/OperationDiff.tsx
     description: "An operation's change cell (triple diff or field change), by operation id; data-op holds the op"
@@ -2974,13 +2998,13 @@ selectors:
     description: "Reject all awaiting (pending and failed) operations, after a ConfirmDialog"
   - selector: proposal-accept-all
     component: src/components/proposals/ProposalDetailPage.tsx
-    description: "Accept all awaiting operations that aren't stale"
+    description: "\"Accept N ready\": accepts the awaiting operations that aren't stale or blocked"
   - selector: proposal-force-message
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Apply anyway ConfirmDialog body: each stale operation and what changed, or that its target is gone"
   - selector: operation-check-*
     component: src/components/proposals/ProposalDetailPage.tsx
-    description: "Selection checkbox of an operation row, by operation id (disabled once decided)"
+    description: "Selection checkbox of an operation row awaiting a decision, by operation id (decided rows have none)"
   - selector: operation-probability-*
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Probability cell, by operation id; op-probability--below when under the threshold"
@@ -3017,6 +3041,18 @@ selectors:
   - selector: operation-decision
     component: src/components/proposals/OperationDecision.tsx
     description: "Inspector Decision section of an operation awaiting a decision"
+  - selector: operation-decided
+    component: src/components/proposals/OperationDecided.tsx
+    description: "Inspector Decision section of a decided operation (data-state): state chip, who and when, record, nothing left to decide"
+  - selector: operation-decided-state
+    component: src/components/proposals/OperationDecided.tsx
+    description: "Decision state chip in a decided operation's Decision section"
+  - selector: operation-decided-by
+    component: src/components/proposals/OperationDecided.tsx
+    description: "\"by you · Nov 6, 12:53\": who decided and when, from the taxonomy's gold (GET /api/taxonomies/{id}/gold?proposal_id=); absent once the proposal is reverted"
+  - selector: operation-decided-record
+    component: src/components/proposals/OperationDecided.tsx
+    description: "One line on what the decision did: the replacement's pair and the relationships moved or deleted"
   - selector: operation-failed-callout
     component: src/components/proposals/OperationDecision.tsx
     description: "Error callout when the last apply of the operation failed"
@@ -3126,7 +3162,7 @@ selectors:
   # Review queue: relationship-type deletes still in use (#1393)
   - selector: operation-blocked-*
     component: src/components/proposals/ProposalDetailPage.tsx
-    description: "Amber \"Blocked: in use by N\" chip on an awaiting relationship-type delete whose type relationships still use, by operation id"
+    description: "Amber \"N in use: move or drop\" chip on an awaiting relationship-type delete whose type relationships still use, by operation id"
   - selector: proposal-selection-note
     component: src/components/proposals/DecisionBars.tsx
     description: "Selection bar text: stale and blocked operations Accept selected leaves out, else how it applies"
@@ -3191,10 +3227,13 @@ selectors:
     description: "Inspector Replacement section of a relationship-type delete that names its replacement; data-pair is same, reversed, different or missing"
   - selector: operation-replacement-callout
     component: src/components/proposals/OperationInspector.tsx
-    description: "Callout comparing the replacement's pair of classes with the deleted type's (warn for a different pair or a missing replacement)"
+    description: "Callout comparing the replacement's pair of classes with the deleted type's (warn for a different pair or a missing replacement); plain text once the operation is decided"
   - selector: operation-replacement-chip-*
     component: src/components/proposals/ProposalDetailPage.tsx
-    description: "Row chips (role=note) on a delete whose named replacement links a reversed or different pair, is gone, or is deleted by the proposal too, by operation id; data-pair holds the pair verdict, data-replacement-deleted is chain or cycle"
+    description: "Row chips (role=note) on a delete whose named replacement links a reversed or different pair, is gone, or is deleted by the proposal too, by operation id; coloured while awaiting, neutral once decided; data-pair holds the pair verdict, data-replacement-deleted is chain or cycle"
+  - selector: operation-replacement-id
+    component: src/components/proposals/OperationInspector.tsx
+    description: "Replacement identifier id-tag chip in the inspector: ellipsed to the panel width, full identifier in its title"
   - selector: operation-replacement-deleted-callout
     component: src/components/proposals/OperationInspector.tsx
     description: "Warning that the proposal deletes the named replacement too: the chain of replacements to the type it ends at, or the cycle (data-cycle)"

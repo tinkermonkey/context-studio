@@ -443,6 +443,7 @@ async def revert_proposal(
 
 def _gold_filter(
     taxonomy_id: str,
+    proposal_id: Optional[str] = Query(None, description="Only this proposal's operations"),
     kind: Optional[OperationKind] = Query(None, description="Only operations on this kind"),
     op: Optional[OperationType] = Query(
         None, description="Only this operation: create, update, move or delete"
@@ -460,6 +461,7 @@ def _gold_filter(
     """The gold routes' filters."""
     return DecisionFilter(
         taxonomy_id=taxonomy_id,
+        proposal_id=proposal_id,
         kind=kind,
         op=op,
         decision=decision,

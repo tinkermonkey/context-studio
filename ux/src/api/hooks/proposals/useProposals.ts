@@ -14,6 +14,20 @@ export function useChangeProposals(
   });
 }
 
+/**
+ * The proposal's standing decisions (its gold), with who decided each and
+ * when. `enabled` is false for a reverted proposal (a revert supersedes what
+ * it applied) and while nothing is decided.
+ */
+export function useProposalDecisions(taxonomyId: string, proposalId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: QUERY_KEYS.changeProposalDecisions(proposalId),
+    queryFn: () => proposalsService.listProposalGold(taxonomyId, proposalId),
+    enabled: !!taxonomyId && !!proposalId && enabled,
+    retry: false,
+  });
+}
+
 export function useChangeProposal(id: string) {
   return useQuery({
     queryKey: QUERY_KEYS.changeProposal(id),

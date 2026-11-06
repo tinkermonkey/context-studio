@@ -263,7 +263,7 @@ describe("ChatPanel", () => {
     expect(within(card).getByText("open")).toBeInTheDocument();
     expect(await within(card).findByText("house")).toBeInTheDocument();
     expect(screen.getByTestId("chat-proposal-counts")).toHaveTextContent(
-      "3 operations · 2 applied · 1 pending",
+      "3 operations · 2 applied · 1 to decide",
     );
     const review = screen.getByTestId("chat-proposal-review");
     expect(review).toHaveTextContent("Review 1");
