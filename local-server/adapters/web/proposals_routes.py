@@ -345,6 +345,10 @@ async def apply_proposal(
     A property update that reverses the type (domain and range swapped) swaps
     the ends of every relationship using it in place (each keeps its id), and
     a rename keeps them, in one transaction with the update; Revert undoes both.
+
+    chosen_alternatives records, in each applied operation's decision, the
+    alternative the reviewer chose over the proposal's pick (gold's
+    chosen_alternative), e.g. a reflection's answers when accepted with an edit.
     """
 
     def run() -> ChangeProposalResponse:
@@ -357,7 +361,12 @@ async def apply_proposal(
             for op_id, r in request.resolutions.items()
         }
         proposal = service.apply(
-            proposal_id, request.operation_ids, request.force_stale, request.edits, resolutions
+            proposal_id,
+            request.operation_ids,
+            request.force_stale,
+            request.edits,
+            resolutions,
+            chosen_alternatives=request.chosen_alternatives,
         )
         return proposal_response(service, proposal)
 

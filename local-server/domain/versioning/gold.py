@@ -119,6 +119,7 @@ def decision_of(
     decided_by: str,
     decided_at: datetime,
     proposed: dict[str, Any] | None = None,
+    chosen_alternative: dict[str, Any] | None = None,
 ) -> ProposalDecision:
     """
     The decision an applied or rejected operation records.
@@ -126,6 +127,7 @@ def decision_of(
     Args:
         proposed: The operation as proposed, taken before applying it (an edit
             rewrites its base); defaults to a snapshot of it as it is now
+        chosen_alternative: The alternative the reviewer chose, when there is one
 
     Raises:
         ValueError: If the operation is neither applied nor rejected
@@ -155,6 +157,7 @@ def decision_of(
         ),
         reason=operation.reason,
         resolution=operation.resolution.to_json() if operation.resolution else None,
+        chosen_alternative=dict(chosen_alternative) if chosen_alternative is not None else None,
         probability=operation.probability,
     )
 

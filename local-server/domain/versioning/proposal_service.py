@@ -1101,6 +1101,7 @@ class ProposalService:
         edits: Mapping[str, dict[str, Any]] | None = None,
         resolutions: Mapping[str, InUseResolution] | None = None,
         decided_by: str = DECIDED_BY_USER,
+        chosen_alternatives: Mapping[str, dict[str, Any]] | None = None,
     ) -> ChangeProposal:
         """
         Apply the chosen operations, in seq order, under the proposal's run id.
@@ -1162,6 +1163,9 @@ class ProposalService:
                 no longer fits
             decided_by: Who decided: "user" (a reviewer), "policy" (auto-apply)
                 or an agent source
+            chosen_alternatives: Operation id -> the alternative the reviewer
+                chose over the proposal's pick, recorded in its decision when
+                it applies
 
         Returns:
             The proposal with updated outcomes
@@ -1174,8 +1178,9 @@ class ProposalService:
                 misplaced (its operation isn't being applied or isn't a property
                 update or delete, it is empty, or it points at a "$ref"), or a
                 resolution is (its operation isn't being applied, isn't a
-                property delete or update, or is an edited delete); nothing
-                is applied
+                property delete or update, or is an edited delete), or a chosen
+                alternative is (its operation isn't being applied); nothing is
+                applied
         """
         with self._lock(proposal_id):
             proposal = self._get(proposal_id)
@@ -1186,6 +1191,12 @@ class ProposalService:
             self._check_edits_placed(chosen, edits)
             resolutions = dict(resolutions or {})
             self._check_resolutions_placed(proposal, chosen, edits, resolutions)
+            alternatives = dict(chosen_alternatives or {})
+            misplaced = sorted(set(alternatives) - {o.id for o in chosen})
+            if misplaced:
+                raise ValueError(
+                    f"Chosen alternatives for operations not being applied: {misplaced}"
+                )
             force = set(force_stale)
             refs = {o.ref: o for o in proposal.operations if o.ref}
 
@@ -1213,6 +1224,7 @@ class ProposalService:
                                 decided_by,
                                 datetime.now(timezone.utc),
                                 proposed[operation.id],
+                                chosen_alternative=alternatives.get(operation.id),
                             )
                         )
                     self._proposals.save_operations(proposal.id, [operation], decisions)

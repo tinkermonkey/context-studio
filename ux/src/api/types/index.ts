@@ -3761,6 +3761,10 @@ export interface paths {
      *     A property update that reverses the type (domain and range swapped) swaps
      *     the ends of every relationship using it in place (each keeps its id), and
      *     a rename keeps them, in one transaction with the update; Revert undoes both.
+     *
+     *     chosen_alternatives records, in each applied operation's decision, the
+     *     alternative the reviewer chose over the proposal's pick (gold's
+     *     chosen_alternative), e.g. a reflection's answers when accepted with an edit.
      */
     post: operations["apply_proposal_api_proposals__proposal_id__apply_post"];
     delete?: never;
@@ -4718,6 +4722,15 @@ export interface components {
        */
       resolutions?: {
         [key: string]: components["schemas"]["InUseResolutionRequest"];
+      };
+      /**
+       * Chosen Alternatives
+       * @description Operation id -> the alternative the reviewer chose over the proposal's pick (e.g. a reflection's answers per question), for an operation in operation_ids; recorded in its decision as chosen_alternative. Usually with an edit that applies it
+       */
+      chosen_alternatives?: {
+        [key: string]: {
+          [key: string]: unknown;
+        };
       };
     };
     /**
@@ -8077,6 +8090,8 @@ export interface components {
        * @description A dry run only: eligible to auto-apply, i.e. the taxonomy's approval policy would apply it as soon as proposed and no in-use blockers stop it (applying can still fail). Null otherwise
        */
       auto_apply?: boolean | null;
+      /** @description A schema relationship reflection operation's plan row: kind, p, the ranked answers to its sorting questions and the evidence pack. Null otherwise */
+      reflection?: components["schemas"]["ReflectionResponse"] | null;
     };
     /**
      * PublishDiffStats
@@ -8485,6 +8500,89 @@ export interface components {
        * @default
        */
       source: string;
+    };
+    /**
+     * ReflectionOptionResponse
+     * @description One option of a sorting question.
+     */
+    ReflectionOptionResponse: {
+      /**
+       * Option
+       * @description A class label, a predicate, "reverse:<p>" or "none"
+       */
+      option: string;
+      /** Probability */
+      probability: number;
+      /**
+       * Class Id
+       * @description The class the option names (source and target questions); null for a predicate, none, or an operation proposed before class ids were kept
+       */
+      class_id?: string | null;
+      /**
+       * Current
+       * @description The type's current answer
+       */
+      current: boolean;
+      /**
+       * Plan
+       * @description The answer the change plan took
+       */
+      plan: boolean;
+    };
+    /**
+     * ReflectionQuestionResponse
+     * @description One sorting question and its options, likeliest first.
+     */
+    ReflectionQuestionResponse: {
+      /**
+       * Question
+       * @description source_for, target_for or predicate_for
+       */
+      question: string;
+      /** Options */
+      options: components["schemas"]["ReflectionOptionResponse"][];
+    };
+    /**
+     * ReflectionResponse
+     * @description A schema relationship reflection operation's plan row, read from its evidence.
+     */
+    ReflectionResponse: {
+      /**
+       * Plan Kind
+       * @description remove-duplicate, rename-predicate, reverse, retarget, compound or conflict
+       */
+      plan_kind: string;
+      /**
+       * P
+       * @description The minimum probability of the change
+       */
+      p?: number | null;
+      /** @description The type's triple when reflected (null on older proposals) */
+      current?: components["schemas"]["ReflectionTripleResponse"] | null;
+      /**
+       * Replacement
+       * @description The plan's triple, "source p target"
+       */
+      replacement?: string | null;
+      /** Questions */
+      questions: components["schemas"]["ReflectionQuestionResponse"][];
+      /**
+       * Evidence Pack
+       * @description The evidence pack the decision model read, by block
+       */
+      evidence_pack?: string[];
+    };
+    /**
+     * ReflectionTripleResponse
+     * @description A relationship type as the decision model read it: class labels and predicate.
+     */
+    ReflectionTripleResponse: {
+      /** Source */
+      source: string;
+      /** Predicate */
+      predicate: string;
+      /** Target */
+      target: string;
     };
     /**
      * RelationshipCreateRequest

@@ -7125,7 +7125,7 @@
           "proposals"
         ],
         "summary": "Apply Proposal",
-        "description": "Apply the chosen operations in seq order under the proposal's run.\n\nEach operation records its own outcome; one that fails (e.g. \"target_changed\")\ndoes not undo the others. Pass a stale operation in force_stale to apply it\nanyway (edited ones too).\n\nedits corrects property-definition updates and deletes before they apply:\neach replaces the operation's proposed fields, applied as an update. A field\nproblem, or a breach of the taxonomy's rules (for dr_spec: both classes are\nDR spec classes, the predicate is in its predicate catalog, and no other\nrelationship type or operation has the triple), fails only that operation\nwith \"invalid_edit: ...\"; it stays open, to apply again with a corrected\nedit or reject. For dr_spec the identifier and DR external reference follow\nfrom the triple. What was applied is returned as the operation's\napplied_fields.\n\nresolutions lets a relationship-type delete apply although relationships\nstill use the type (its blockers list them): \"move\" gives each the\nreplacement type instead (all must fit its domain and range, inheritance-\naware, and allow their attributes, or nothing moves), \"delete\" deletes them\ntoo. The relationships and the type change in one transaction tagged with\nthe proposal's run, so Revert restores them together; a failure fails only\nthat operation (\"unresolvable: ...\" for a misfit) and changes nothing.\nWithout a resolution such a delete fails as in use. A property update that\nretargets a type relationships use (another domain and range pair) needs\none the same way (its blockers list them); a retarget of an unused type\nneeds none. What was moved or deleted is returned as the operation's\nresolution.\n\nA property update that reverses the type (domain and range swapped) swaps\nthe ends of every relationship using it in place (each keeps its id), and\na rename keeps them, in one transaction with the update; Revert undoes both.",
+        "description": "Apply the chosen operations in seq order under the proposal's run.\n\nEach operation records its own outcome; one that fails (e.g. \"target_changed\")\ndoes not undo the others. Pass a stale operation in force_stale to apply it\nanyway (edited ones too).\n\nedits corrects property-definition updates and deletes before they apply:\neach replaces the operation's proposed fields, applied as an update. A field\nproblem, or a breach of the taxonomy's rules (for dr_spec: both classes are\nDR spec classes, the predicate is in its predicate catalog, and no other\nrelationship type or operation has the triple), fails only that operation\nwith \"invalid_edit: ...\"; it stays open, to apply again with a corrected\nedit or reject. For dr_spec the identifier and DR external reference follow\nfrom the triple. What was applied is returned as the operation's\napplied_fields.\n\nresolutions lets a relationship-type delete apply although relationships\nstill use the type (its blockers list them): \"move\" gives each the\nreplacement type instead (all must fit its domain and range, inheritance-\naware, and allow their attributes, or nothing moves), \"delete\" deletes them\ntoo. The relationships and the type change in one transaction tagged with\nthe proposal's run, so Revert restores them together; a failure fails only\nthat operation (\"unresolvable: ...\" for a misfit) and changes nothing.\nWithout a resolution such a delete fails as in use. A property update that\nretargets a type relationships use (another domain and range pair) needs\none the same way (its blockers list them); a retarget of an unused type\nneeds none. What was moved or deleted is returned as the operation's\nresolution.\n\nA property update that reverses the type (domain and range swapped) swaps\nthe ends of every relationship using it in place (each keeps its id), and\na rename keeps them, in one transaction with the update; Revert undoes both.\n\nchosen_alternatives records, in each applied operation's decision, the\nalternative the reviewer chose over the proposal's pick (gold's\nchosen_alternative), e.g. a reflection's answers when accepted with an edit.",
         "operationId": "apply_proposal_api_proposals__proposal_id__apply_post",
         "parameters": [
           {
@@ -9117,6 +9117,15 @@
             "type": "object",
             "title": "Resolutions",
             "description": "Operation id -> how to resolve the relationships still using the relationship type a property delete in operation_ids removes (see the operation's blockers), or a property update that retargets (gives the type another domain and range pair) needs while relationships use it. Moved or deleted in one transaction with the type; a misfit or any failing step fails only that operation, changing nothing. Not with an edit of the same delete; an update that renames or reverses the type takes none (a reverse always swaps the ends of its relationships)"
+          },
+          "chosen_alternatives": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Chosen Alternatives",
+            "description": "Operation id -> the alternative the reviewer chose over the proposal's pick (e.g. a reflection's answers per question), for an operation in operation_ids; recorded in its decision as chosen_alternative. Usually with an edit that applies it"
           }
         },
         "type": "object",
@@ -14885,6 +14894,17 @@
             ],
             "title": "Auto Apply",
             "description": "A dry run only: eligible to auto-apply, i.e. the taxonomy's approval policy would apply it as soon as proposed and no in-use blockers stop it (applying can still fail). Null otherwise"
+          },
+          "reflection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReflectionResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A schema relationship reflection operation's plan row: kind, p, the ranked answers to its sorting questions and the evidence pack. Null otherwise"
           }
         },
         "type": "object",
@@ -15513,6 +15533,163 @@
         ],
         "title": "RefinementCandidate",
         "description": "Refined definition or connection candidate from refinement pipelines.\n\nRepresents a proposed refinement to an existing schema entity or relationship.\nFollows the same shape as GroundingCandidate for consistency."
+      },
+      "ReflectionOptionResponse": {
+        "properties": {
+          "option": {
+            "type": "string",
+            "title": "Option",
+            "description": "A class label, a predicate, \"reverse:<p>\" or \"none\""
+          },
+          "probability": {
+            "type": "number",
+            "title": "Probability"
+          },
+          "class_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Id",
+            "description": "The class the option names (source and target questions); null for a predicate, none, or an operation proposed before class ids were kept"
+          },
+          "current": {
+            "type": "boolean",
+            "title": "Current",
+            "description": "The type's current answer"
+          },
+          "plan": {
+            "type": "boolean",
+            "title": "Plan",
+            "description": "The answer the change plan took"
+          }
+        },
+        "type": "object",
+        "required": [
+          "option",
+          "probability",
+          "current",
+          "plan"
+        ],
+        "title": "ReflectionOptionResponse",
+        "description": "One option of a sorting question."
+      },
+      "ReflectionQuestionResponse": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "title": "Question",
+            "description": "source_for, target_for or predicate_for"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/ReflectionOptionResponse"
+            },
+            "type": "array",
+            "title": "Options"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question",
+          "options"
+        ],
+        "title": "ReflectionQuestionResponse",
+        "description": "One sorting question and its options, likeliest first."
+      },
+      "ReflectionResponse": {
+        "properties": {
+          "plan_kind": {
+            "type": "string",
+            "title": "Plan Kind",
+            "description": "remove-duplicate, rename-predicate, reverse, retarget, compound or conflict"
+          },
+          "p": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P",
+            "description": "The minimum probability of the change"
+          },
+          "current": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReflectionTripleResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The type's triple when reflected (null on older proposals)"
+          },
+          "replacement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replacement",
+            "description": "The plan's triple, \"source p target\""
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/ReflectionQuestionResponse"
+            },
+            "type": "array",
+            "title": "Questions"
+          },
+          "evidence_pack": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Pack",
+            "description": "The evidence pack the decision model read, by block"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plan_kind",
+          "questions"
+        ],
+        "title": "ReflectionResponse",
+        "description": "A schema relationship reflection operation's plan row, read from its evidence."
+      },
+      "ReflectionTripleResponse": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "predicate": {
+            "type": "string",
+            "title": "Predicate"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "predicate",
+          "target"
+        ],
+        "title": "ReflectionTripleResponse",
+        "description": "A relationship type as the decision model read it: class labels and predicate."
       },
       "RelationshipCreateRequest": {
         "properties": {

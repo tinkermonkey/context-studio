@@ -9,6 +9,10 @@ from typing import Any, Collection, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from domain.pipelines.schema_relationship_reflection.drafts import (
+    ReflectionView,
+    reflection_view,
+)
 from domain.versioning.approval_policy import ApprovalPolicy
 from domain.versioning.gold import DecisionKind, ProposalDecision
 from domain.versioning.in_use import DeleteBlockers, PairMatch, ReplacementCheck
@@ -124,6 +128,13 @@ class ChangeProposalApplyRequest(BaseModel):
         "misfit or any failing step fails only that operation, changing nothing. Not with an "
         "edit of the same delete; an update that renames or reverses the type takes none "
         "(a reverse always swaps the ends of its relationships)",
+    )
+    chosen_alternatives: dict[str, dict[str, Any]] = Field(
+        default_factory=dict,
+        description="Operation id -> the alternative the reviewer chose over the proposal's "
+        "pick (e.g. a reflection's answers per question), for an operation in "
+        "operation_ids; recorded in its decision as chosen_alternative. Usually with an "
+        "edit that applies it",
     )
 
 
@@ -286,6 +297,80 @@ class ReplacementCheckResponse(BaseModel):
     )
 
 
+class ReflectionTripleResponse(BaseModel):
+    """A relationship type as the decision model read it: class labels and predicate."""
+
+    source: str
+    predicate: str
+    target: str
+
+
+class ReflectionOptionResponse(BaseModel):
+    """One option of a sorting question."""
+
+    option: str = Field(..., description='A class label, a predicate, "reverse:<p>" or "none"')
+    probability: float
+    class_id: Optional[str] = Field(
+        None,
+        description="The class the option names (source and target questions); null for a "
+        "predicate, none, or an operation proposed before class ids were kept",
+    )
+    current: bool = Field(..., description="The type's current answer")
+    plan: bool = Field(..., description="The answer the change plan took")
+
+
+class ReflectionQuestionResponse(BaseModel):
+    """One sorting question and its options, likeliest first."""
+
+    question: str = Field(..., description="source_for, target_for or predicate_for")
+    options: list[ReflectionOptionResponse]
+
+
+class ReflectionResponse(BaseModel):
+    """
+    A schema relationship reflection operation's plan row, read from its evidence.
+    """
+
+    plan_kind: str = Field(
+        ...,
+        description="remove-duplicate, rename-predicate, reverse, retarget, compound or "
+        "conflict",
+    )
+    p: Optional[float] = Field(None, description="The minimum probability of the change")
+    current: Optional[ReflectionTripleResponse] = Field(
+        None, description="The type's triple when reflected (null on older proposals)"
+    )
+    replacement: Optional[str] = Field(None, description='The plan\'s triple, "source p target"')
+    questions: list[ReflectionQuestionResponse]
+    evidence_pack: list[str] = Field(
+        default_factory=list, description="The evidence pack the decision model read, by block"
+    )
+
+    @classmethod
+    def from_view(cls, view: ReflectionView) -> "ReflectionResponse":
+        current = view.current
+        return cls(
+            plan_kind=view.plan_kind,
+            p=view.p,
+            current=(
+                ReflectionTripleResponse(
+                    source=current.source, predicate=current.predicate, target=current.target
+                )
+                if current is not None
+                else None
+            ),
+            replacement=view.replacement,
+            questions=[
+                ReflectionQuestionResponse(
+                    question=question,
+                    options=[ReflectionOptionResponse(**vars(o)) for o in options],
+                )
+                for question, options in view.answers.items()
+            ],
+            evidence_pack=list(view.evidence_pack),
+        )
+
+
 class ProposedOperationResponse(BaseModel):
     """One proposed operation and its outcome."""
 
@@ -347,6 +432,11 @@ class ProposedOperationResponse(BaseModel):
         description="A dry run only: eligible to auto-apply, i.e. the taxonomy's approval "
         "policy would apply it as soon as proposed and no in-use blockers stop it (applying "
         "can still fail). Null otherwise",
+    )
+    reflection: Optional[ReflectionResponse] = Field(
+        None,
+        description="A schema relationship reflection operation's plan row: kind, p, the "
+        "ranked answers to its sorting questions and the evidence pack. Null otherwise",
     )
 
 
@@ -422,6 +512,9 @@ def _operation(
         response.blockers = DeleteBlockersResponse.model_validate(blockers)
     if check is not None:
         response.replacement_check = ReplacementCheckResponse.model_validate(check)
+    view = reflection_view(operation.evidence)
+    if view is not None:
+        response.reflection = ReflectionResponse.from_view(view)
     return response
 
 
