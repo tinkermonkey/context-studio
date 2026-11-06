@@ -1,7 +1,7 @@
 """add type_change to proposal operations
 
 Revision ID: 6f2ab6f75f48
-Revises: 3c4daf0cc8ca
+Revises: ff1d44173d26
 Create Date: 2026-11-06 09:53:59.113347
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '6f2ab6f75f48'
-down_revision = '3c4daf0cc8ca'
+down_revision = 'ff1d44173d26'
 branch_labels = None
 depends_on = None
 
