@@ -6,6 +6,7 @@ import { DrTripleEditor } from "./DrTripleEditor";
 import { InUseResolver } from "./InUseResolver";
 import { blockersOf, isDrEditable, staleCauseText, type StaleCause } from "./decisionModel";
 import type { TripleSource } from "./proposalModel";
+import type { PickOutcome } from "./tieredModel";
 import type { ProposalActions } from "./useProposalActions";
 import "./proposals.css";
 
@@ -19,6 +20,8 @@ interface OperationDecisionProps {
   current?: TripleSource;
   staleCause?: StaleCause;
   actions: ProposalActions;
+  /** A reflection operation: what the reviewer's answer picks make of it. */
+  picks?: PickOutcome;
 }
 
 /**
@@ -49,6 +52,7 @@ export function OperationDecision({
   current,
   staleCause,
   actions,
+  picks,
 }: OperationDecisionProps) {
   const [note, setNote] = useState("");
   const [editing, setEditing] = useState(false);
@@ -58,13 +62,27 @@ export function OperationDecision({
   const noteId = `operation-reject-note-${operation.id}`;
   // After a failed edit the generic button applies the proposal, not the edit.
   const editFailed = actions.editFailed(operation);
+  // Answers other than the plan's apply as an edit, unless a failed edit is applied as proposed.
+  const withPicks = !editFailed && !!picks?.changed && !!picks.fields;
+  const keepsCurrent = !editFailed && !!picks?.keepsCurrent;
   const acceptLabel = editFailed
     ? "Apply as proposed"
-    : operation.stale
-      ? "Apply anyway"
-      : failed
-        ? "Apply again"
-        : "Accept";
+    : withPicks
+      ? "Accept with my picks"
+      : operation.stale
+        ? "Apply anyway"
+        : failed
+          ? "Apply again"
+          : operation.reflection
+            ? "Accept plan"
+            : "Accept";
+  const acceptOperation = () =>
+    withPicks && picks?.fields && picks.chosenAlternative
+      ? actions.accept([operation.id], {
+          edits: { [operation.id]: picks.fields },
+          chosenAlternatives: { [operation.id]: picks.chosenAlternative },
+        })
+      : actions.accept([operation.id]);
 
   return (
     <InspectorPanel.Section title="Decision">
@@ -84,6 +102,17 @@ export function OperationDecision({
           </FormCallout>
         )}
 
+        {withPicks && picks && (
+          <FormCallout variant="info" icon="info" data-testid="operation-picks-callout">
+            Your picks make {picks.triple} instead of the plan&apos;s {picks.planTriple}. It applies
+            as an edit, and gold records the alternative you chose.
+          </FormCallout>
+        )}
+        {keepsCurrent && picks && (
+          <FormCallout variant="warn" icon="alert" data-testid="operation-picks-callout">
+            Your picks keep the current triple {picks.triple}. To keep it, reject the operation.
+          </FormCallout>
+        )}
         {editing && taxonomy ? (
           <DrTripleEditor
             operation={operation}
@@ -119,8 +148,8 @@ export function OperationDecision({
                 <Button
                   variant="primary"
                   size="sm"
-                  disabled={actions.busy}
-                  onClick={() => actions.accept([operation.id])}
+                  disabled={actions.busy || keepsCurrent}
+                  onClick={acceptOperation}
                   data-testid="operation-accept"
                 >
                   {acceptLabel}
