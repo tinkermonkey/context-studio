@@ -82,41 +82,44 @@ function canvasNode(page: Page, name: string) {
 }
 
 /**
- * Largest gap, in canvas units, between an edge's end and the outline of the
- * rendered node it touches (0 when every edge ends exactly on a node's border).
+ * Measures where the canvas's edges end: how many edges were measured and the
+ * largest gap, in canvas units, between an edge's end and the outline of the
+ * nearest rendered node (0 when every edge ends exactly on a node's border).
  * Self-loops render as zero-length paths and are skipped.
  */
-function maxEdgeEndpointGap(page: Page): Promise<number> {
+function measureEdgeEndpoints(page: Page): Promise<{ edges: number; maxGap: number }> {
   return page.getByTestId("graph-canvas").evaluate((canvas) => {
     const nodeRects = [...canvas.querySelectorAll("g.graph-canvas-node foreignObject > *")].map(
       (el) => el.getBoundingClientRect(),
     );
     const anyNode = canvas.querySelector<SVGGraphicsElement>("g.graph-canvas-node");
     const zoom = anyNode?.getScreenCTM()?.a ?? 1;
-    // Signed distance from a point to a rect's border: negative inside, positive outside.
+    // Distance from a point to a rect's border, whether the point is inside or outside.
     const borderDistance = (x: number, y: number, r: DOMRect) => {
       const dx = Math.max(r.left - x, 0, x - r.right);
       const dy = Math.max(r.top - y, 0, y - r.bottom);
       if (dx === 0 && dy === 0) {
-        return -Math.min(x - r.left, r.right - x, y - r.top, r.bottom - y);
+        return Math.min(x - r.left, r.right - x, y - r.top, r.bottom - y);
       }
       return Math.hypot(dx, dy);
     };
-    let worst = 0;
+    let edges = 0;
+    let maxGap = 0;
     for (const path of canvas.querySelectorAll<SVGPathElement>(
       "g.graph-edge path.graph-edge__line",
     )) {
       const length = path.getTotalLength();
       const ctm = path.getScreenCTM();
       if (length < 1 || !ctm) continue;
+      edges += 1;
       for (const at of [0, length]) {
         const local = path.getPointAtLength(at);
         const p = new DOMPoint(local.x, local.y).matrixTransform(ctm);
-        const nearest = Math.min(...nodeRects.map((r) => Math.abs(borderDistance(p.x, p.y, r))));
-        worst = Math.max(worst, nearest / zoom);
+        const nearest = Math.min(...nodeRects.map((r) => borderDistance(p.x, p.y, r)));
+        maxGap = Math.max(maxGap, nearest / zoom);
       }
     }
-    return nodeRects.length === 0 ? Infinity : worst;
+    return { edges, maxGap };
   });
 }
 
@@ -411,8 +414,14 @@ test.describe("Layered Graph View", () => {
       await expect(canvas).toHaveAttribute("data-layout", layout);
       await expect(canvasNode(page, "CRM System (individual)")).toBeVisible();
       await expect
-        .poll(() => maxEdgeEndpointGap(page), { message: `${layout} edge endpoints` })
-        .toBeLessThanOrEqual(1);
+        .poll(
+          async () => {
+            const { edges, maxGap } = await measureEdgeEndpoints(page);
+            return { edges, onOutline: maxGap <= 1 };
+          },
+          { message: `${layout} edge endpoints` },
+        )
+        .toEqual({ edges: 5, onOutline: true });
     }
   });
 

@@ -748,9 +748,9 @@ body.dark-canvas .gt-chip.irrelevant {
      - it measures each node inside an inline-block wrapper, so an inline-flex node adds the
        line-height strut (a 24px box for a 20px node) and edges stop short of its bottom edge;
        block-level flex keeps the box at the node's height.
-     - it rounds the measured width down (offsetWidth), so the node's box can be a fraction of
-       a pixel narrower than its label; max-content keeps the label whole instead of
-       ellipsizing it. */
+     - it rounds the measured width to a whole pixel (offsetWidth), so the node's box can be a
+       fraction of a pixel narrower than its label; max-content keeps the label whole instead
+       of ellipsizing it. */
   display: flex;
   width: max-content;
 }
