@@ -141,7 +141,16 @@ function ReplacementSection({
             </p>
           ))}
         <div className="op-inspector__chips">
-          <Chip form="id-tag">{check.identifier ?? check.replacement_id}</Chip>
+          <Chip
+            form="id-tag"
+            className="op-replacement__id"
+            title={check.identifier ?? check.replacement_id}
+            data-testid="operation-replacement-id"
+          >
+            <span className="op-replacement__id-text">
+              {check.identifier ?? check.replacement_id}
+            </span>
+          </Chip>
           <Chip variant={flagVariant(operation, flag.variant)}>{flag.chip}</Chip>
           {gone && <Chip variant={flagVariant(operation, "rose")}>{gone.chip}</Chip>}
         </div>
@@ -155,12 +164,21 @@ interface OperationInspectorProps {
   context: OperationContext;
   /** The Decision section goes first: accept / reject / edit, or a decided operation's record. */
   decision?: ReactNode;
+  /** The proposal was reverted: what it applied reads as reverted. */
+  reverted?: boolean;
 }
 
 /** The selected operation: its change field by field, rationale and evidence. */
-export function OperationInspector({ operation, context, decision }: OperationInspectorProps) {
+export function OperationInspector({
+  operation,
+  context,
+  decision,
+  reverted = false,
+}: OperationInspectorProps) {
   const rows = changeRows(operation);
-  const state = decisionState(operation);
+  const state = decisionState(operation, reverted);
+  // A decided operation's Decision section carries its state chip; don't repeat it here.
+  const showState = isAwaiting(operation) || !decision;
   const kind = planKind(operation);
   const evidence = (operation.evidence ?? []) as EvidenceItem[];
   const label = (field: string) =>
@@ -208,9 +226,11 @@ export function OperationInspector({ operation, context, decision }: OperationIn
               </FormCallout>
             )}
             <div className="op-inspector__status">
-              <Chip variant={state.variant} data-status={operation.status}>
-                {state.label}
-              </Chip>
+              {showState && (
+                <Chip variant={state.variant} data-status={operation.status}>
+                  {state.label}
+                </Chip>
+              )}
               {operation.reason && (
                 <span className="op-inspector__reason" data-testid="operation-reason">
                   {operation.reason}

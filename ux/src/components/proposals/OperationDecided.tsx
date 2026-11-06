@@ -1,25 +1,25 @@
 import { Chip, InspectorPanel } from "@tinkermonkey/heimdall-ui";
-import type { DrDecision, ProposedOperation } from "@/api/services/proposals";
+import type { GoldDecision, ProposedOperation } from "@/api/services/proposals";
 import { decidedByLabel, decidedRecord, decisionState } from "./decisionModel";
 import "./proposals.css";
 
 interface OperationDecidedProps {
   operation: ProposedOperation;
-  /** Its recorded decision (who and when), once loaded. */
-  decision?: DrDecision;
-  /** False once the proposal is reverted: nothing it applied stands to undo. */
-  revertible: boolean;
+  /** Its standing decision from gold (who and when), once loaded. */
+  decision?: GoldDecision;
+  /** The proposal was reverted: what it applied is undone. */
+  reverted: boolean;
 }
 
 /**
  * The inspector's Decision section for a decided operation: its state, who
  * decided it and when, what the decision did, and that nothing is left to decide.
  */
-export function OperationDecided({ operation, decision, revertible }: OperationDecidedProps) {
-  const state = decisionState(operation);
-  const who = decidedByLabel(decision?.decided_by, decision?.decided_at);
+export function OperationDecided({ operation, decision, reverted }: OperationDecidedProps) {
+  const state = decisionState(operation, reverted);
+  const who = reverted ? undefined : decidedByLabel(decision?.decided_by, decision?.decided_at);
   const record = decidedRecord(operation);
-  const undo = revertible && operation.status === "applied";
+  const applied = operation.status === "applied";
   return (
     <InspectorPanel.Section title="Decision">
       <div
@@ -43,7 +43,11 @@ export function OperationDecided({ operation, decision, revertible }: OperationD
           </p>
         )}
         <p className="op-decided__note">
-          Nothing left to decide.{undo ? " Revert the proposal to undo it." : ""}
+          Nothing left to decide.
+          {applied &&
+            (reverted
+              ? " The proposal was reverted, so this is undone."
+              : " Revert the proposal to undo it.")}
         </p>
       </div>
     </InspectorPanel.Section>

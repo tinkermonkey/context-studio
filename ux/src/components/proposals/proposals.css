@@ -148,9 +148,38 @@
     align-items: center;
   }
 
-  /* A decided operation's change: still readable, but out of the way. */
+  /* A decided operation's change: still readable, but out of the way, in
+     neutral tones (no rose strike, no amber change). */
   .op-change-cell--decided {
     opacity: 0.72;
+  }
+
+  .op-change-cell--decided .op-diff,
+  .op-change-cell--decided :is(a, .op-diff__class, .op-diff__after) {
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .op-change-cell--decided .op-diff__removed {
+    text-decoration-color: rgb(var(--canvas-fg-4));
+  }
+
+  .op-change-cell--decided :is(.op-diff__changed, .op-diff__predicate.op-diff__changed) {
+    color: rgb(var(--canvas-fg-2));
+    font-weight: 500;
+  }
+
+  /* A long replacement identifier: ellipsis inside the panel, full id in the title. */
+  .op-replacement__id {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .op-replacement__id-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .op-decided__who {

@@ -13,6 +13,7 @@ import {
   decisionState,
   defaultOperationFilter,
   filterOperations,
+  linksToDecided,
   flagVariant,
   progressPills,
   resolutionChip,
@@ -76,6 +77,16 @@ describe("decisionState", () => {
       label,
       variant,
     });
+  });
+
+  it("reads a reverted proposal's applied operations as reverted, in neutral", () => {
+    const reverted = { state: "reverted", label: "reverted", variant: "neutral" };
+    expect(decisionState(op({ status: "applied" }), true)).toEqual(reverted);
+    expect(decisionState(op({ status: "applied", applied_fields: { a: 1 } }), true)).toEqual(
+      reverted,
+    );
+    // A revert rejects what was still open, and rejections stand.
+    expect(decisionState(op({ status: "rejected" }), true).state).toBe("rejected");
   });
 });
 
@@ -239,8 +250,12 @@ describe("table filter", () => {
   });
 
   it("opens on All when deep-linked to a decided operation", () => {
-    expect(defaultOperationFilter(decisionProgress(ops), ops[2])).toBe("all");
-    expect(defaultOperationFilter(decisionProgress(ops), ops[0])).toBe("needs");
+    expect(linksToDecided(ops, "c")).toBe(true);
+    expect(linksToDecided(ops, "a")).toBe(false);
+    expect(linksToDecided(ops, "gone")).toBe(false);
+    expect(linksToDecided(ops)).toBe(false);
+    expect(defaultOperationFilter(decisionProgress(ops), true)).toBe("all");
+    expect(defaultOperationFilter(decisionProgress(ops), false)).toBe("needs");
   });
 
   it("filters by awaiting or decided", () => {

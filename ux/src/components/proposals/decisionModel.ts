@@ -210,7 +210,8 @@ export type DecisionState =
   | "failed"
   | "applied"
   | "applied_with_edits"
-  | "rejected";
+  | "rejected"
+  | "reverted";
 
 export interface DecisionStateView {
   state: DecisionState;
@@ -218,8 +219,14 @@ export interface DecisionStateView {
   variant: ChipVariant;
 }
 
-/** The one status chip an operation row shows, from its status, blockers and edit. */
-export function decisionState(operation: ProposedOperation): DecisionStateView {
+/**
+ * The one status chip an operation row shows, from its status, blockers and
+ * edit. Once the proposal is `reverted`, what it applied is undone: neutral "reverted".
+ */
+export function decisionState(operation: ProposedOperation, reverted = false): DecisionStateView {
+  if (reverted && operation.status === "applied") {
+    return { state: "reverted", label: "reverted", variant: "neutral" };
+  }
   if (isBlocked(operation)) {
     return { state: "needs_choice", label: "needs a choice", variant: "amber" };
   }
@@ -407,14 +414,21 @@ export function progressPills(progress: DecisionProgress): ProgressPill[] {
 export type OperationFilter = "needs" | "decided" | "all";
 
 /**
- * "Needs decision" while anything awaits, else "All". A deep link to a decided
- * operation opens on "All", so its row is in the table.
+ * True when a deep link (?op=) names an operation that was already decided
+ * when the page loaded: the table opens on "All", so its row is there. Work it
+ * out once, at load; deciding the linked operation later must not switch the filter.
  */
+export function linksToDecided(operations: ProposedOperation[], linkedId?: string): boolean {
+  const linked = linkedId ? operations.find((o) => o.id === linkedId) : undefined;
+  return !!linked && !isAwaiting(linked);
+}
+
+/** "Needs decision" while anything awaits, else "All"; `openOnAll` (see linksToDecided) forces "All". */
 export function defaultOperationFilter(
   progress: DecisionProgress,
-  linked?: ProposedOperation,
+  openOnAll = false,
 ): OperationFilter {
-  if (linked && !isAwaiting(linked)) return "all";
+  if (openOnAll) return "all";
   return progress.awaiting > 0 ? "needs" : "all";
 }
 

@@ -10,7 +10,7 @@ import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
 import { entityPageHandlers } from "@/test/entityPageHandlers";
-import { DECIDED_AT, openProposal, proposalHandlers } from "@/test/proposalFixtures";
+import { goldPage, openProposal, proposalHandlers } from "@/test/proposalFixtures";
 import type { ChangeProposal, ProposedOperation } from "@/api/services/proposals";
 import { ProposalDetailPage } from "../ProposalDetailPage";
 
@@ -57,21 +57,29 @@ function opById(id: string): ProposedOperation {
 }
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+/** Apply request bodies, and the gold requests' query strings. */
+let applied: { operation_ids: string[] }[];
+let goldQueries: URLSearchParams[];
+
 beforeEach(() => {
   proposal = structuredClone(openProposal);
+  applied = [];
+  goldQueries = [];
   server.use(
     http.get("*/api/proposals/:id", () => HttpResponse.json(proposal)),
-    http.get("*/api/proposals/:id/decisions", () =>
-      HttpResponse.json(
-        proposal.operations.map((o) => ({
-          seq: o.seq,
-          op_id: o.id,
-          status: o.status,
-          decided_at: o.status === "applied" || o.status === "rejected" ? DECIDED_AT : null,
-          decided_by: o.status === "applied" || o.status === "rejected" ? "user" : null,
-        })),
-      ),
-    ),
+    http.get("*/api/taxonomies/:id/gold", ({ request }) => {
+      goldQueries.push(new URL(request.url).searchParams);
+      return HttpResponse.json(goldPage(proposal.operations));
+    }),
+    http.post("*/api/proposals/:id/apply", async ({ request }) => {
+      const body = (await request.json()) as { operation_ids: string[] };
+      applied.push(body);
+      for (const o of proposal.operations) {
+        if (body.operation_ids.includes(o.id))
+          Object.assign(o, { status: "applied", stale: false });
+      }
+      return HttpResponse.json(proposal);
+    }),
   );
 });
 afterEach(() => server.resetHandlers());
@@ -187,12 +195,50 @@ describe("a proposal with everything decided", () => {
     );
     expect(decided).toHaveTextContent("Nothing left to decide. Revert the proposal to undo it.");
     expect(screen.queryByTestId("operation-accept")).not.toBeInTheDocument();
+    // Who and when come from the taxonomy's gold, filtered to this proposal.
+    expect(goldQueries.at(-1)?.get("proposal_id")).toBe("proposal-1");
+    // One state chip: the Decision section's, not repeated under Change.
+    const inspector = screen.getByTestId("operation-inspector");
+    expect(within(inspector).getAllByText("applied", { exact: true })).toHaveLength(1);
 
     const replacement = screen.getByTestId("operation-replacement");
     expect(within(replacement).getByText("reversed pair")).toHaveClass("chip--neutral");
     expect(within(replacement).getByTestId("operation-replacement-callout")).toHaveClass(
       "op-decided__note",
     );
+    // A long replacement id ellipses inside the panel, with the full id as its title.
+    const id = within(replacement).getByTestId("operation-replacement-id");
+    expect(id).toHaveClass("chip", "op-replacement__id");
+    expect(id).toHaveAttribute("title", "service_realizes_component");
+    expect(id.querySelector(".op-replacement__id-text")).toHaveTextContent(
+      "service_realizes_component",
+    );
+  });
+
+  it("turns decided rows' op chips neutral", async () => {
+    decideAll();
+    renderPage();
+
+    expect(await screen.findByTestId("operation-op-op-delete")).toHaveClass("chip--neutral");
+    expect(screen.getByTestId("operation-op-op-class")).toHaveClass("chip--neutral");
+  });
+
+  it("reads a reverted proposal's applied operations as reverted, without who or when", async () => {
+    decideAll();
+    proposal.status = "reverted";
+    renderPage("op-delete");
+
+    const decided = await screen.findByTestId("operation-decided");
+    expect(decided).toHaveAttribute("data-state", "reverted");
+    expect(within(decided).getByTestId("operation-decided-state")).toHaveClass("chip--neutral");
+    expect(within(decided).getByTestId("operation-decided-state")).toHaveTextContent("reverted");
+    expect(decided).toHaveTextContent("The proposal was reverted, so this is undone.");
+    expect(screen.getByTestId("operation-state-op-delete")).toHaveTextContent("reverted");
+    expect(screen.getByTestId("operation-state-op-delete")).toHaveClass("chip--neutral");
+    expect(screen.getByTestId("operation-state-op-rename")).toHaveTextContent("rejected");
+    expect(within(decided).queryByTestId("operation-decided-by")).not.toBeInTheDocument();
+    expect(goldQueries).toHaveLength(0);
+    expect(screen.getByTestId("proposal-summary")).toHaveAttribute("class", "proposal-summary");
   });
 
   it("a rejected operation has nothing to revert", async () => {
@@ -315,5 +361,76 @@ describe("a proposal with decisions outstanding", () => {
     await waitFor(() =>
       expect(screen.getByTestId("operation-decided")).toHaveAttribute("data-state", "applied"),
     );
+  });
+});
+
+describe("deciding from the banner and the table", () => {
+  it("Accept N ready sends exactly the N ready operations", async () => {
+    failSome();
+    const user = userEvent.setup();
+    renderPage();
+
+    const accept = await screen.findByTestId("proposal-accept-all");
+    expect(accept).toHaveTextContent("Accept 2 ready");
+    await user.click(accept);
+    await waitFor(() => expect(applied).toHaveLength(1));
+    expect(applied[0].operation_ids).toHaveLength(2);
+    expect([...applied[0].operation_ids].sort()).toEqual(["op-class", "op-rename"]);
+  });
+
+  it("deciding a deep-linked operation keeps the Needs decision filter", async () => {
+    failSome();
+    const user = userEvent.setup();
+    renderPage("op-rename");
+
+    const needs = await screen.findByRole("radio", { name: "Needs decision · 3" });
+    expect(needs).toHaveAttribute("aria-checked", "true");
+    await user.click(await screen.findByTestId("operation-accept"));
+    await waitFor(() => expect(applied).toHaveLength(1));
+    await waitFor(() =>
+      expect(screen.getByRole("radio", { name: "Needs decision · 2" })).toHaveAttribute(
+        "aria-checked",
+        "true",
+      ),
+    );
+    const table = screen.getByTestId("proposal-operations-table");
+    expect(table).toHaveAttribute("data-filter", "needs");
+    // The decided row left the table (the apply results above it still show its diff).
+    expect(within(table).queryByTestId("operation-diff-op-rename")).not.toBeInTheDocument();
+    expect(within(table).getByTestId("operation-diff-op-class")).toBeInTheDocument();
+  });
+
+  it("a filter that hides checked rows unchecks them", async () => {
+    failSome();
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByTestId("operation-check-op-rename"));
+    expect(screen.getByTestId("proposal-selection-count")).toHaveTextContent("1 selected");
+    await user.click(screen.getByRole("radio", { name: "Decided · 1" }));
+    expect(screen.queryByTestId("proposal-selection-bar")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: "Needs decision · 3" }));
+    expect(screen.getByTestId("operation-check-op-rename")).not.toBeChecked();
+    expect(screen.queryByTestId("proposal-selection-bar")).not.toBeInTheDocument();
+  });
+
+  it("reverting drops the cached who and when", async () => {
+    decideAll();
+    const user = userEvent.setup();
+    server.use(
+      http.post("*/api/proposals/:id/revert", () => {
+        proposal.status = "reverted";
+        return HttpResponse.json({ events_reverted: 3, proposal });
+      }),
+    );
+    renderPage("op-delete");
+
+    expect(await screen.findByTestId("operation-decided-by")).toBeInTheDocument();
+    await user.click(screen.getByTestId("proposal-revert"));
+    await user.click(screen.getByRole("button", { name: "Revert proposal" }));
+    await waitFor(() =>
+      expect(screen.getByTestId("operation-decided")).toHaveAttribute("data-state", "reverted"),
+    );
+    expect(screen.queryByTestId("operation-decided-by")).not.toBeInTheDocument();
   });
 });

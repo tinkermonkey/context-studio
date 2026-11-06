@@ -35,6 +35,7 @@ import {
   decisionProgress,
   decisionState,
   defaultOperationFilter,
+  linksToDecided,
   filterOperations,
   flagVariant,
   hasProbabilities,
@@ -84,10 +85,12 @@ interface ColumnOptions {
   threshold?: number;
   /** Checkbox selection of awaiting operations, while the proposal takes decisions. */
   selection?: { checked: Set<string>; toggle: (id: string) => void };
+  /** The proposal was reverted: what it applied reads as reverted. */
+  reverted: boolean;
 }
 
 function operationColumns(context: OperationContext, options: ColumnOptions): OperationColumn[] {
-  const { showPlanKind, threshold, selection } = options;
+  const { showPlanKind, threshold, selection, reverted } = options;
   return [
     ...(selection
       ? [
@@ -121,8 +124,14 @@ function operationColumns(context: OperationContext, options: ColumnOptions): Op
       key: "op",
       label: "Op",
       width: "84px",
-      render: (value) => (
-        <Chip variant={OP_VARIANT[value as ProposedOperation["op"]]}>{value as string}</Chip>
+      // Neutral once decided: colour means there is something to decide.
+      render: (value, row) => (
+        <Chip
+          variant={flagVariant(row, OP_VARIANT[value as ProposedOperation["op"]])}
+          data-testid={`operation-op-${row.id}`}
+        >
+          {value as string}
+        </Chip>
       ),
     },
     {
@@ -169,7 +178,7 @@ function operationColumns(context: OperationContext, options: ColumnOptions): Op
       key: "status",
       label: "Status",
       width: "180px",
-      render: (_, row) => <OperationStatus operation={row} context={context} />,
+      render: (_, row) => <OperationStatus operation={row} context={context} reverted={reverted} />,
     },
   ];
 }
@@ -181,11 +190,13 @@ function operationColumns(context: OperationContext, options: ColumnOptions): Op
 function OperationStatus({
   operation,
   context,
+  reverted,
 }: {
   operation: ProposedOperation;
   context: OperationContext;
+  reverted: boolean;
 }) {
-  const state = decisionState(operation);
+  const state = decisionState(operation, reverted);
   const blockers = blockersOf(operation);
   const resolved = resolutionChip(operation);
   return (
@@ -317,28 +328,42 @@ export function ProposalDetailPage({
   const [confirmRevert, setConfirmRevert] = useState(false);
   // Undefined until the reviewer picks one: then it follows defaultOperationFilter.
   const [chosenFilter, setFilter] = useState<OperationFilter>();
-  // The operation the page opened on (?op=), for the default filter.
-  const linkedOperationId = useRef(selectedOperationId);
+  // Whether the page opened (?op=) on an already decided operation: worked out
+  // once, when the proposal loads, so deciding the linked operation keeps the filter.
+  const openOnAll = useRef<boolean | undefined>(undefined);
+  if (openOnAll.current === undefined && proposal) {
+    openOnAll.current = linksToDecided(operations, selectedOperationId);
+  }
 
   const deciding = !!proposal && takesDecisions(proposal);
+  const reverted = proposal?.status === "reverted";
   const progress = useMemo(() => decisionProgress(operations), [operations]);
-  const filter =
-    chosenFilter ??
-    defaultOperationFilter(
-      progress,
-      operations.find((o) => o.id === linkedOperationId.current),
-    );
+  const filter = chosenFilter ?? defaultOperationFilter(progress, openOnAll.current);
   const shownOperations = useMemo(() => filterOperations(operations, filter), [operations, filter]);
-  const { data: decisions } = useProposalDecisions(
+  const decisionsQuery = useProposalDecisions(
+    proposal?.taxonomy_id ?? "",
     id,
-    !!proposal && proposal.status !== "reverted" && progress.awaiting < progress.total,
+    !!proposal && !reverted && progress.awaiting < progress.total,
   );
+  // A reverted proposal's decisions no longer stand: never show cached ones.
+  const decisions = reverted ? undefined : decisionsQuery.data;
   const awaitingOps = useMemo(() => operations.filter(isAwaiting), [operations]);
-  // Only awaiting operations stay checked once their outcomes come back.
+  // Only awaiting operations the table shows stay checked once their outcomes come back.
   const checked = useMemo(
-    () => new Set(checkedIds.filter((i) => awaitingOps.some((o) => o.id === i))),
-    [checkedIds, awaitingOps],
+    () =>
+      new Set(
+        checkedIds.filter(
+          (i) => awaitingOps.some((o) => o.id === i) && shownOperations.some((o) => o.id === i),
+        ),
+      ),
+    [checkedIds, awaitingOps, shownOperations],
   );
+  // A filter that hides checked rows unchecks them, so a bulk decision only covers what is shown.
+  const chooseFilter = (next: OperationFilter) => {
+    setFilter(next);
+    const shown = filterOperations(operations, next);
+    setChecked((ids) => ids.filter((i) => shown.some((o) => o.id === i)));
+  };
   const showThreshold = deciding && awaitingOps.length > 0 && hasProbabilities(operations);
   const matching = showThreshold ? atOrAboveThreshold(operations, threshold) : [];
   const showPlanKind = operations.some((o) => planKind(o) !== undefined);
@@ -357,8 +382,9 @@ export function ProposalDetailPage({
                 ),
             }
           : undefined,
+        reverted,
       }),
-    [context, showPlanKind, showThreshold, threshold, selectable, checked],
+    [context, showPlanKind, showThreshold, threshold, selectable, checked, reverted],
   );
 
   // A deep link (?op=) scrolls its row into view once the operations load.
@@ -432,13 +458,12 @@ export function ProposalDetailPage({
       />
 
       <div
-        className={`proposal-summary ${
-          !deciding
-            ? ""
-            : progress.awaiting > 0
-              ? "proposal-summary--open"
-              : "proposal-summary--done"
-        }`}
+        className={[
+          "proposal-summary",
+          deciding && (progress.awaiting > 0 ? "proposal-summary--open" : "proposal-summary--done"),
+        ]
+          .filter(Boolean)
+          .join(" ")}
         data-testid="proposal-summary"
       >
         <div className="proposal-summary__row">
@@ -531,7 +556,7 @@ export function ProposalDetailPage({
                 className="proposal-pill"
                 aria-controls="proposal-operations"
                 aria-label={`${pill.label}: show the operations that need a decision`}
-                onClick={() => setFilter("needs")}
+                onClick={() => chooseFilter("needs")}
                 data-testid={`proposal-pill-${pill.key}`}
               >
                 <Chip variant={pill.variant}>{pill.label}</Chip>
@@ -614,18 +639,19 @@ export function ProposalDetailPage({
               ) : !isAwaiting(operation) ? (
                 <OperationDecided
                   operation={operation}
-                  decision={decisions?.find((d) => d.op_id === operation.id)}
-                  revertible={deciding}
+                  decision={decisions?.find((d) => d.operation_id === operation.id)}
+                  reverted={reverted}
                 />
               ) : undefined
             }
+            reverted={reverted}
           />
         )}
       >
         <div className="proposal-table-filter" data-testid="proposal-operation-filter">
           <SegmentedControl
             value={filter}
-            onChange={(value) => setFilter(value as OperationFilter)}
+            onChange={(value) => chooseFilter(value as OperationFilter)}
             aria-label="Show operations"
             options={[
               { value: "needs", label: `Needs decision · ${progress.awaiting}` },

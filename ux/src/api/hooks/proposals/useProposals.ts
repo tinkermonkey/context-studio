@@ -15,15 +15,15 @@ export function useChangeProposals(
 }
 
 /**
- * Each operation's decision, with who decided it and when. `enabled` is false
- * for a reverted proposal (its decisions no longer stand; the server answers
- * 409) and while nothing is decided.
+ * The proposal's standing decisions (its gold), with who decided each and
+ * when. `enabled` is false for a reverted proposal (a revert supersedes what
+ * it applied) and while nothing is decided.
  */
-export function useProposalDecisions(id: string, enabled: boolean) {
+export function useProposalDecisions(taxonomyId: string, proposalId: string, enabled: boolean) {
   return useQuery({
-    queryKey: QUERY_KEYS.changeProposalDecisions(id),
-    queryFn: () => proposalsService.getDecisions(id),
-    enabled: !!id && enabled,
+    queryKey: QUERY_KEYS.changeProposalDecisions(proposalId),
+    queryFn: () => proposalsService.listProposalGold(taxonomyId, proposalId),
+    enabled: !!taxonomyId && !!proposalId && enabled,
     retry: false,
   });
 }

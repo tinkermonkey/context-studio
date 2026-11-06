@@ -2945,7 +2945,10 @@ selectors:
     description: "Status cell of an operation row (decision state chip, then flags), by operation id; data-status is the raw status, data-state the decision state"
   - selector: operation-state-*
     component: src/components/proposals/ProposalDetailPage.tsx
-    description: "Decision state chip: needs decision / needs a choice (amber), failed (rose), applied / applied with edits (emerald), rejected (neutral), by operation id"
+    description: "Decision state chip: needs decision / needs a choice (amber), failed (rose), applied / applied with edits (emerald), rejected or reverted (neutral), by operation id"
+  - selector: operation-op-*
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Op chip (create / update / move / delete) of an operation row: coloured while awaiting, neutral once decided, by operation id"
   - selector: operation-resolved-*
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Neutral record chip on a decided delete applied with a resolution: \"moved N relationships\" / \"dropped N relationships\", by operation id"
@@ -3046,7 +3049,7 @@ selectors:
     description: "Decision state chip in a decided operation's Decision section"
   - selector: operation-decided-by
     component: src/components/proposals/OperationDecided.tsx
-    description: "\"by you · Nov 6, 12:53\": who decided and when, from GET /api/proposals/{id}/decisions"
+    description: "\"by you · Nov 6, 12:53\": who decided and when, from the taxonomy's gold (GET /api/taxonomies/{id}/gold?proposal_id=); absent once the proposal is reverted"
   - selector: operation-decided-record
     component: src/components/proposals/OperationDecided.tsx
     description: "One line on what the decision did: the replacement's pair and the relationships moved or deleted"
@@ -3228,6 +3231,9 @@ selectors:
   - selector: operation-replacement-chip-*
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Row chips (role=note) on a delete whose named replacement links a reversed or different pair, is gone, or is deleted by the proposal too, by operation id; coloured while awaiting, neutral once decided; data-pair holds the pair verdict, data-replacement-deleted is chain or cycle"
+  - selector: operation-replacement-id
+    component: src/components/proposals/OperationInspector.tsx
+    description: "Replacement identifier id-tag chip in the inspector: ellipsed to the panel width, full identifier in its title"
   - selector: operation-replacement-deleted-callout
     component: src/components/proposals/OperationInspector.tsx
     description: "Warning that the proposal deletes the named replacement too: the chain of replacements to the type it ends at, or the cycle (data-cycle)"

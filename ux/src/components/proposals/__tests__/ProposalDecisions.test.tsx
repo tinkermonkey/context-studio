@@ -175,6 +175,8 @@ describe("deciding one operation in the inspector", () => {
       "component_uses_service",
     );
     // The diffs (results and operations table) show the triple that applied, not the proposed one.
+    // The applied row is decided now: it shows under All, not Needs decision.
+    await user.click(screen.getByRole("radio", { name: /^All · / }));
     await waitFor(() =>
       expect(
         screen

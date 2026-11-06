@@ -14279,6 +14279,8 @@ export interface operations {
         limit?: number;
         /** @description Number of results to skip */
         offset?: number;
+        /** @description Only this proposal's operations */
+        proposal_id?: string | null;
         /** @description Only operations on this kind */
         kind?: components["schemas"]["OperationKind"] | null;
         /** @description Only this operation: create, update, move or delete */
@@ -14332,6 +14334,8 @@ export interface operations {
   export_gold_api_taxonomies__taxonomy_id__gold_export_get: {
     parameters: {
       query?: {
+        /** @description Only this proposal's operations */
+        proposal_id?: string | null;
         /** @description Only operations on this kind */
         kind?: components["schemas"]["OperationKind"] | null;
         /** @description Only this operation: create, update, move or delete */
