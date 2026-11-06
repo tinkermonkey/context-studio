@@ -1036,6 +1036,9 @@ async def run_pipeline(
         status_code, message = _handle_domain_error(exc)
         try:
             repo.update_failure_info(run_id, str(exc), output_summary={"error": message})
+            spent = getattr(exc, "llm_metadata", None)
+            if spent:
+                repo.update_summaries(run_id=run_id, llm_metadata=dict(spent))
             # Update batch timestamps and status when run fails
             batch_repo.update_completed_at(batch_id)
             batch_repo.update_status(batch_id, batch_repo.compute_aggregate_status(batch_id))

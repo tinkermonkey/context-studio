@@ -81,6 +81,11 @@ class RelationshipCatalog:
     given (it alone then says which predicates exist, as in DR); otherwise the
     predicates are those the taxonomy's relationship types use, each meaning
     the description of the first type using it.
+
+    Classes are keyed by id. Each gets a label unique within the catalog, as
+    the decision model reads it: its identifier, else its title; a label two
+    classes share (or that reads as an option keyword) gets the scheme's name
+    added, and the class id if that still collides.
     """
 
     def __init__(
@@ -88,11 +93,11 @@ class RelationshipCatalog:
         classes: Sequence[Class],
         relationship_types: Sequence[PropertyDefinition],
         predicate_catalog: Mapping[str, Mapping[str, object]] | None = None,
+        scheme_labels: Mapping[str, str] | None = None,
     ) -> None:
         self.classes: dict[str, Class] = {c.id: c for c in classes}
-        self._by_label: dict[str, Class] = {}
-        for cls in sorted(classes, key=lambda c: (class_label(c), c.id)):
-            self._by_label.setdefault(class_label(cls), cls)
+        self._labels = _unique_labels(list(self.classes.values()), scheme_labels or {})
+        self._ids = {label: class_id for class_id, label in self._labels.items()}
         self.relationship_types: list[PropertyDefinition] = sorted(
             (
                 p
@@ -121,20 +126,25 @@ class RelationshipCatalog:
         predicate_catalog: Mapping[str, Mapping[str, object]] | None = None,
     ) -> "RelationshipCatalog":
         """The catalog of one taxonomy, read from the repository."""
+        schemes = repo.list_concept_schemes(taxonomy_id=taxonomy_id, limit=None)
         classes = [
             c
-            for scheme in repo.list_concept_schemes(taxonomy_id=taxonomy_id, limit=None)
+            for scheme in schemes
             for c in repo.list_classes(concept_scheme_id=scheme.id, limit=None)
         ]
-        return cls(classes, repo.list_property_definitions(limit=None), predicate_catalog)
+        return cls(
+            classes,
+            repo.list_property_definitions(limit=None),
+            predicate_catalog,
+            {s.id: s.identifier or s.title for s in schemes},
+        )
 
     def label(self, class_id: str) -> str:
-        return class_label(self.classes[class_id])
+        return self._labels[class_id]
 
     def class_id(self, label: str) -> str | None:
         """The class a label names (None for 'none' or an unknown label)."""
-        found = self._by_label.get(label)
-        return found.id if found else None
+        return self._ids.get(label)
 
     def triple(self, prop: PropertyDefinition) -> Triple:
         return Triple(
@@ -145,16 +155,43 @@ class RelationshipCatalog:
 
     def siblings(self, label: str) -> list[str]:
         """The other classes of the class's scheme, by label."""
-        cls = self._by_label[label]
+        cls = self.classes[self._ids[label]]
         return sorted(
-            class_label(c)
+            self._labels[c.id]
             for c in self.classes.values()
             if c.concept_scheme_id == cls.concept_scheme_id and c.id != cls.id
         )
 
     def describe(self, label: str) -> str:
-        cls = self._by_label.get(label)
+        class_id = self._ids.get(label)
+        cls = self.classes[class_id] if class_id else None
         return first_sentence(cls.description or label) if cls else label
+
+
+def _unique_labels(classes: list[Class], scheme_labels: Mapping[str, str]) -> dict[str, str]:
+    """Class id -> a label no other class has (see RelationshipCatalog)."""
+
+    def colliding(labels: dict[str, str]) -> set[str]:
+        seen: dict[str, int] = {}
+        for label in labels.values():
+            seen[label] = seen.get(label, 0) + 1
+        return {
+            label
+            for label, count in seen.items()
+            if count > 1 or label == NONE_OPTION or label.startswith(REVERSE_PREFIX)
+        }
+
+    labels = {c.id: class_label(c) for c in classes}
+    clash = colliding(labels)
+    for c in classes:
+        if labels[c.id] in clash:
+            scheme = scheme_labels.get(c.concept_scheme_id, c.concept_scheme_id)
+            labels[c.id] = f"{class_label(c)} ({scheme})"
+    clash = colliding(labels)
+    for c in classes:
+        if labels[c.id] in clash:
+            labels[c.id] = f"{class_label(c)} ({c.id})"
+    return labels
 
 
 @dataclass(frozen=True)

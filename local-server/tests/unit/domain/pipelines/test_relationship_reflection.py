@@ -14,6 +14,7 @@ import pytest
 
 from domain.decision.exceptions import DecisionModelUnavailableError, UnknownDecisionModelError
 from domain.decision.value_objects import ChoiceAnswer
+from domain.ontology.entities import Class, ConceptScheme, PropertyDefinition, Taxonomy
 from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
@@ -47,6 +48,7 @@ from domain.pipelines.schema_relationship_reflection.questions import (
     first_sentence,
     sorting_questions,
 )
+from domain.versioning.exceptions import OperationError, ProposalValidationError
 from domain.versioning.proposal_service import ProposalService
 from domain.versioning.proposals import ChangeScope, OperationType, ProposalSource
 from domain.versioning.revert_service import RevertResult
@@ -327,32 +329,6 @@ class TestPlan:
             ("a", RENAME_PREDICATE),
         ]
 
-    def test_reflections_about_one_type_disagreeing_are_a_conflict_with_max_p(self):
-        plan = build_plan(
-            [
-                reflection("a", self.A, predicate="requires", p=0.6),
-                reflection("a", self.A, target="tag", p=0.7),
-            ],
-            {self.A},
-        )
-        assert len(plan) == 1
-        assert plan[0].kind == CONFLICT
-        assert plan[0].p == 0.7
-        assert plan[0].replacement == (
-            Triple("task", "requires", "place"),
-            Triple("task", "located_in", "tag"),
-        )
-
-    def test_agreeing_reflections_take_min_p(self):
-        plan = build_plan(
-            [
-                reflection("a", self.A, predicate="requires", p=0.6),
-                reflection("a", self.A, predicate="requires", p=0.8),
-            ],
-            {self.A},
-        )
-        assert (plan[0].kind, plan[0].p) == (RENAME_PREDICATE, 0.6)
-
     def test_replacing_with_a_type_that_is_itself_changed_is_a_conflict(self):
         # A wants to become B; B's own reflection wants B changed
         plan = build_plan(
@@ -363,6 +339,8 @@ class TestPlan:
             {self.A, self.B},
         )
         assert {row.property_id: row.kind for row in plan} == {"a": CONFLICT, "b": CONFLICT}
+        # each conflict row keeps its own p
+        assert {row.property_id: row.p for row in plan} == {"a": 0.8, "b": 0.7}
 
 
 # ------------------------------------------------------------------ drafts
@@ -581,7 +559,9 @@ class TestOrchestrator:
         assert writer.running and writer.progress[0] == (0, 7) and writer.progress[-1] == (7, 7)
         # task in_project project reversed is project contains task, which exists
         assert result["plan"][0]["kind"] == REVERSE
-        assert result["plan"][0]["replacement"] == ["project contains task"]
+        assert result["plan"][0]["replacement"] == "project contains task"
+        assert result["status"] == "completed"
+        assert state.parse_warnings == []
 
         proposal = proposals.get(result["proposal_id"])
         assert proposal.source is ProposalSource.PIPELINE
@@ -658,3 +638,198 @@ class TestOrchestrator:
         by_id = run(orchestrator, house["taxonomy"], {"concept_scheme_id": house["vocabulary"]})
         assert by_id.result["relationship_types"] == 1  # place part_of place
         assert by_id.result["scope"] == {"concept_scheme_id": house["vocabulary"]}
+
+
+# ------------------------------------------------------------------ labels
+
+
+class TestLabels:
+    @pytest.fixture()
+    def people(self):
+        """
+        Classes without identifiers: 'Person' in two schemes, and one titled
+        'Person (staff)' that the first disambiguation collides with.
+        """
+        repo = FakeOntologyRepository()
+        repo.save_taxonomy(Taxonomy(id="t", title="Org", identifier="org"))
+        for scheme in ("staff", "guests"):
+            repo.save_concept_scheme(
+                ConceptScheme(id=scheme, taxonomy_id="t", title=scheme.title(), identifier=scheme)
+            )
+        for class_id, scheme, title in [
+            ("p1", "staff", "Person"),
+            ("p2", "guests", "Person"),
+            ("p3", "guests", "Person (staff)"),
+        ]:
+            repo.save_class(
+                Class(
+                    id=class_id,
+                    concept_scheme_id=scheme,
+                    taxonomy_id="t",
+                    title=title,
+                    description=f"Person {class_id}.",
+                )
+            )
+        repo.save_class(Class(id="desk", concept_scheme_id="staff", taxonomy_id="t", title="Desk"))
+        repo.save_property_definition(
+            PropertyDefinition(
+                id="sits",
+                identifier="sits_at",
+                title="sits at",
+                canonical_predicate="sits_at",
+                domain_class_id="p1",
+                range_class_id="desk",
+            )
+        )
+        repo.save_property_definition(
+            PropertyDefinition(
+                id="visits",
+                identifier="visits",
+                title="visits",
+                canonical_predicate="sits_at",
+                domain_class_id="p2",
+                range_class_id="desk",
+            )
+        )
+        return repo
+
+    def test_colliding_titles_get_the_scheme_then_the_id(self, people):
+        catalog = RelationshipCatalog.for_taxonomy(people, "t")
+
+        assert catalog.label("p1") == "Person (p1)"
+        assert catalog.label("p2") == "Person (guests)"
+        assert catalog.label("p3") == "Person (staff) (p3)"
+        assert catalog.label("desk") == "Desk"
+        for class_id in ("p1", "p2", "p3", "desk"):
+            assert catalog.class_id(catalog.label(class_id)) == class_id
+
+    def test_questions_offer_distinct_options_that_resolve_to_the_right_class(self, people):
+        catalog = RelationshipCatalog.for_taxonomy(people, "t")
+        sq = sorting_questions(people.get_property_definition("sits"), catalog)
+
+        sources = sq.candidates[SOURCE_FOR]
+        assert sources == ["Person (p1)", "Person (guests)", "Desk"]
+        assert len(set(sources)) == len(sources)
+        assert sq.questions[SOURCE_FOR].criteria["Person (guests)"] == "Person p2."
+
+        # choosing the guests' Person retargets to p2, not to the first 'Person'
+        plan = build_plan(
+            [reflection("sits", sq.triple, source="Person (guests)")], catalog.by_triple
+        )
+        (planned,) = plan_drafts(plan, catalog)
+        assert planned.draft.op is OperationType.DELETE  # p2 sits_at desk exists
+        assert planned.draft.replacement == "visits"
+
+
+# ------------------------------------------------------------------ partial failures
+
+
+class RefusingProposals:
+    """Delegates to a real ProposalService but refuses operations on some targets."""
+
+    def __init__(self, service, refuse=(), fail=None):
+        self.service = service
+        self.refuse = set(refuse)
+        self.fail = fail
+        self.calls = []
+
+    def propose(self, **kwargs):
+        self.calls.append(kwargs)
+        if self.fail is not None:
+            raise self.fail
+        bad = [d for d in kwargs["operations"] if d.target_id in self.refuse]
+        if bad:
+            raise ProposalValidationError(
+                [OperationError(d.seq, "refused", f"no {d.target_id}") for d in bad]
+            )
+        return self.service.propose(**kwargs)
+
+    def get(self, proposal_id):
+        return self.service.get(proposal_id)
+
+
+class TestPartialFailures:
+    SCRIPT = {
+        # both retarget their source to project: item (first by label) is the
+        # update, task a delete naming item's type, which that update produces
+        "task located_in place": {SOURCE_FOR: "project"},
+        "item located_in place": {SOURCE_FOR: "project"},
+    }
+
+    def make(self, repo, proposals, model):
+        return RelationshipReflectionOrchestrator(repo, FakeDecisionModels(model), proposals)
+
+    def test_a_refused_operation_is_dropped_and_its_dependent_planned_afresh(
+        self, repo, house, proposals
+    ):
+        refusing = RefusingProposals(proposals, refuse={house["item_located_in"]})
+        state = run(self.make(repo, refusing, ScriptedModel(self.SCRIPT)), house["taxonomy"])
+        result = state.result
+
+        first, second = refusing.calls
+        assert [(d.op, d.target_id) for d in first["operations"]] == [
+            (OperationType.UPDATE, house["item_located_in"]),
+            (OperationType.DELETE, house["task_located_in"]),
+        ]
+        # without the refused update there is no type for the delete to name:
+        # task located_in place is now the update itself
+        (op,) = proposals.get(result["proposal_id"]).operations
+        assert (op.op, op.target_id) == (OperationType.UPDATE, house["task_located_in"])
+        assert op.fields == {"domain_class_id": house["project"]}
+        assert op.proposed_replacement_id is None
+
+        assert result["operations"] == 1
+        assert result["refused_operations"] == [
+            {
+                "relationship_type": "item located_in place",
+                "property_id": house["item_located_in"],
+                "kind": RETARGET,
+                "error": f"refused: no {house['item_located_in']}",
+            }
+        ]
+        assert result["status"] == "completed_with_warnings"
+        assert state.parse_warnings == [{"stage": "propose", **result["refused_operations"][0]}]
+        assert "1 operations refused: item located_in place (refused:" in second["rationale"]
+
+    def test_every_operation_refused_says_so(self, repo, house, proposals):
+        refusing = RefusingProposals(
+            proposals, refuse={house["task_located_in"], house["item_located_in"]}
+        )
+        state = run(self.make(repo, refusing, ScriptedModel(self.SCRIPT)), house["taxonomy"])
+
+        assert state.result["proposal_id"] is None
+        assert state.result["operations"] == 0
+        assert len(state.result["refused_operations"]) == 2
+        assert state.parse_warnings[-1] == {
+            "stage": "propose",
+            "error": "All 2 planned operations were refused; no proposal was made",
+        }
+
+    def test_types_not_asked_are_warned_and_named_in_the_rationale(self, repo, house, proposals):
+        model = ScriptedModel(
+            {"task requires resource": {TARGET_FOR: "tag"}}, fail={"item tagged tag"}
+        )
+        state = run(make(repo, proposals, model), house["taxonomy"], "records")
+
+        assert state.parse_warnings == [
+            {"stage": "reflect", "relationship_type": "item tagged tag", "error": "down"}
+        ]
+        proposal = proposals.get(state.result["proposal_id"])
+        assert "1 of 7 types not asked: item tagged tag (down)." in proposal.rationale
+
+    def test_a_failure_after_the_model_calls_keeps_their_cost(self, repo, house, proposals):
+        refusing = RefusingProposals(proposals, fail=RuntimeError("disk full"))
+        with pytest.raises(PipelineExecutionError, match="disk full") as raised:
+            run(
+                self.make(repo, refusing, ScriptedModel(self.SCRIPT, cost=0.003)), house["taxonomy"]
+            )
+
+        meta = raised.value.llm_metadata
+        assert meta["requests"] == 8
+        assert meta["cost_usd"] == pytest.approx(0.024)
+
+    def test_no_answers_at_all_keeps_the_failed_calls_count(self, repo, house, proposals):
+        model = ScriptedModel(fail={"task requires resource"})
+        with pytest.raises(PipelineExecutionError) as raised:
+            run(make(repo, proposals, model), house["taxonomy"], [house["task_requires"]])
+        assert raised.value.llm_metadata["failed_requests"] == 1

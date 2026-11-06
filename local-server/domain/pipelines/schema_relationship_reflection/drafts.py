@@ -63,7 +63,7 @@ def plan_drafts(
     out: list[PlannedDraft] = []
     for row in plan:
         target = props[row.property_id]
-        replacement = row.replacement[0]
+        replacement = row.replacement
         if replacement == row.current:
             continue
         seq = len(out) + 1
@@ -127,9 +127,6 @@ def _triple_fields(
 def _conflict_note(row: PlannedChange) -> str:
     if row.kind != CONFLICT:
         return ""
-    if len(row.replacement) > 1:
-        others = " | ".join(str(r) for r in row.replacement[1:])
-        return f" The reflections disagree; also preferred: {others}."
     return (
         " Another reflection in this run disagrees: the replacement, or this type, is"
         " itself proposed for change."
@@ -137,24 +134,24 @@ def _conflict_note(row: PlannedChange) -> str:
 
 
 def _evidence(row: PlannedChange, target: PropertyDefinition) -> list[dict[str, str]]:
-    items: list[dict[str, str]] = []
-    for reflection in row.reflections:
-        item = {
-            "quote": reflection.summary(),
-            "entity_id": target.id,
-            "plan_kind": row.kind,
-            "p": f"{row.p:.3f}",
-            "alternatives": "; ".join(row.alternatives),
-            "replacement": " | ".join(str(r) for r in row.replacement),
-            "probabilities": json.dumps(
-                {q: dict(a.probabilities) for q, a in reflection.answers.items()},
-                sort_keys=True,
-            ),
-        }
-        for question, answer in reflection.answers.items():
-            item[question] = answer.top3()
-        items.append(item)
-    packs = dict.fromkeys(r.evidence for r in row.reflections if r.evidence)
-    for pack in packs:
-        items.append({"quote": pack, "entity_id": target.id, "label": "Evidence pack"})
+    reflection = row.reflection
+    item = {
+        "quote": reflection.summary(),
+        "entity_id": target.id,
+        "plan_kind": row.kind,
+        "p": f"{row.p:.3f}",
+        "alternatives": "; ".join(row.alternatives),
+        "replacement": str(row.replacement),
+        "probabilities": json.dumps(
+            {q: dict(a.probabilities) for q, a in reflection.answers.items()},
+            sort_keys=True,
+        ),
+    }
+    for question, answer in reflection.answers.items():
+        item[question] = answer.top3()
+    items = [item]
+    if reflection.evidence:
+        items.append(
+            {"quote": reflection.evidence, "entity_id": target.id, "label": "Evidence pack"}
+        )
     return items

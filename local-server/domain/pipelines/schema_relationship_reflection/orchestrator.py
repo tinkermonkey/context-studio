@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from typing import Any, cast
 
@@ -41,8 +41,9 @@ from domain.versioning.proposal_service import ProposalService
 from domain.versioning.proposals import ProposalSource
 
 from .configurations.default import get_default_config
-from .drafts import PlannedDraft, TripleFieldCompleter, plan_drafts
+from .drafts import TripleFieldCompleter, plan_drafts
 from .plan import (
+    PlannedChange,
     RankedAnswer,
     Reflection,
     build_plan,
@@ -53,7 +54,9 @@ from .plan import (
 from .questions import QUESTION_NAMES, RelationshipCatalog, sorting_questions
 
 PredicateCatalogLookup = Callable[[str], Mapping[str, Mapping[str, Any]] | None]
+GeneralPredicatesLookup = Callable[[str], Sequence[str]]
 MAX_REPORTED_ERRORS = 20
+MAX_LISTED = 5
 
 
 @dataclass
@@ -77,6 +80,7 @@ class RelationshipReflectionOrchestrator(PipelineOrchestrator):
         decision_models: DecisionModels,
         proposal_service: ProposalService,
         predicate_catalog: PredicateCatalogLookup | None = None,
+        general_predicates: GeneralPredicatesLookup | None = None,
         complete_fields: TripleFieldCompleter | None = None,
         config: dict[str, Any] | None = None,
         run_id: str | None = None,
@@ -89,6 +93,9 @@ class RelationshipReflectionOrchestrator(PipelineOrchestrator):
             proposal_service: Where the change proposal goes
             predicate_catalog: Taxonomy id -> predicate catalog (predicate ->
                 {"description": ...}), or None where a taxonomy has none
+            general_predicates: Taxonomy id -> predicates to offer after a
+                type's own (only those the taxonomy knows are offered); none
+                when omitted
             complete_fields: Completes an update that changes a type's triple
                 (e.g. a DR identifier and reference); None leaves it as is
             config: The run's configuration (see configurations/default.py)
@@ -98,6 +105,7 @@ class RelationshipReflectionOrchestrator(PipelineOrchestrator):
         self._decision_models = decision_models
         self._proposals = proposal_service
         self._predicate_catalog = predicate_catalog
+        self._general_predicates = general_predicates
         self._complete_fields = complete_fields
         self._config = {**get_default_config(), **(config or {})}
 
@@ -117,6 +125,7 @@ class RelationshipReflectionOrchestrator(PipelineOrchestrator):
         model = self._decision_models.get(self._config.get("decision_model"))
         builder = EvidencePackBuilder(self._repo, predicates)
         policy = ContextPolicy(self._config.get("context_policy") or ContextPolicy.SUMMARY)
+        general = tuple(self._general_predicates(taxonomy_id)) if self._general_predicates else ()
 
         total = len(scope.types)
         done = 0
@@ -125,7 +134,7 @@ class RelationshipReflectionOrchestrator(PipelineOrchestrator):
         async def reflect(prop: PropertyDefinition) -> Reflection:
             nonlocal done
             try:
-                return await self._reflect(prop, catalog, model, builder, policy)
+                return await self._reflect(prop, catalog, model, builder, policy, general)
             finally:
                 done += 1
                 self._report_progress(done, total)
@@ -134,41 +143,51 @@ class RelationshipReflectionOrchestrator(PipelineOrchestrator):
             *(reflect(prop) for prop in scope.types), return_exceptions=True
         )
         reflections: list[Reflection] = []
-        errors: list[str] = []
+        failed: list[tuple[str, str]] = []  # (relationship type, error)
         for prop, outcome in zip(scope.types, outcomes):
             if isinstance(outcome, asyncio.CancelledError):
                 raise outcome
             if isinstance(outcome, BaseException):
-                errors.append(f"{catalog.triple(prop)}: {outcome}")
+                failed.append((str(catalog.triple(prop)), str(outcome) or type(outcome).__name__))
             else:
                 reflections.append(outcome)
+        llm_metadata = _llm_metadata(model.name, reflections, len(failed), started)
         if total and not reflections:
             raise PipelineExecutionError(
-                f"The decision model answered none of {total} relationship types: {errors[0]}"
+                f"The decision model answered none of {total} relationship types:"
+                f" {failed[0][0]}: {failed[0][1]}",
+                llm_metadata=llm_metadata,
             )
 
-        plan = build_plan(reflections, catalog.by_triple)
-        planned = plan_drafts(plan, catalog, self._complete_fields)
-        proposal_id, proposed, dropped = self._propose(
-            taxonomy_id, scope, model.name, planned, state.run_id
-        )
+        try:
+            plan = build_plan(reflections, catalog.by_triple)
+            proposal_id, proposed, refused = self._propose(
+                taxonomy_id, scope, model.name, plan, catalog, failed, total, state.run_id
+            )
+        except Exception as exc:
+            raise PipelineExecutionError(
+                f"Proposing the change plan failed: {exc}", llm_metadata=llm_metadata
+            ) from exc
+        llm_metadata["wall_ms"] = _since(started)
 
-        costs = [r.cost_usd for r in reflections if r.cost_usd is not None]
-        latencies = [r.latency_ms for r in reflections if r.latency_ms is not None]
-        cost = sum(costs) if costs else None
-        wall_ms = round((time.monotonic() - started) * 1000, 1)
-        llm_metadata = {
-            "decision_model": model.name,
-            "requests": len(reflections) + len(errors),
-            "failed_requests": len(errors),
-            "cost_usd": round(cost, 6) if cost is not None else None,
-            "latency_ms_total": round(sum(latencies), 1),
-            "latency_ms_mean": round(sum(latencies) / len(latencies), 1) if latencies else None,
-            "latency_ms_max": round(max(latencies), 1) if latencies else None,
-            "wall_ms": wall_ms,
-        }
+        warnings: list[dict[str, Any]] = [
+            {"stage": "reflect", "relationship_type": triple, "error": error}
+            for triple, error in failed
+        ]
+        warnings += [{"stage": "propose", **item} for item in refused]
+        planned_rows = sum(1 for row in plan if row.replacement != row.current)
+        if planned_rows and proposal_id is None:
+            warnings.append(
+                {
+                    "stage": "propose",
+                    "error": (
+                        f"All {planned_rows} planned operations were refused;"
+                        " no proposal was made"
+                    ),
+                }
+            )
         result = {
-            "status": "completed",
+            "status": "completed_with_warnings" if warnings else "completed",
             "taxonomy_id": taxonomy_id,
             "scope": scope.description,
             "scope_label": scope.label,
@@ -180,7 +199,7 @@ class RelationshipReflectionOrchestrator(PipelineOrchestrator):
                     "property_id": row.property_id,
                     "current": str(row.current),
                     "kind": row.kind,
-                    "replacement": [str(r) for r in row.replacement],
+                    "replacement": str(row.replacement),
                     "replacement_exists": row.replacement_exists,
                     "p": round(row.p, 3),
                     "alternatives": list(row.alternatives),
@@ -188,13 +207,13 @@ class RelationshipReflectionOrchestrator(PipelineOrchestrator):
                 for row in plan
             ],
             "operations": proposed,
-            "dropped_operations": dropped,
+            "refused_operations": refused,
             "proposal_id": proposal_id,
-            "errors": errors[:MAX_REPORTED_ERRORS],
-            "error_count": len(errors),
+            "errors": [f"{t}: {e}" for t, e in failed][:MAX_REPORTED_ERRORS],
+            "error_count": len(failed),
             "cost_usd": llm_metadata["cost_usd"],
             "latency_ms_total": llm_metadata["latency_ms_total"],
-            "wall_ms": wall_ms,
+            "wall_ms": llm_metadata["wall_ms"],
             "reflections": [r.to_json() for r in reflections],
         }
         return replace(
@@ -202,6 +221,7 @@ class RelationshipReflectionOrchestrator(PipelineOrchestrator):
             current_status=PipelineRunStatus.COMPLETED,
             result=result,
             llm_metadata=llm_metadata,
+            parse_warnings=[*state.parse_warnings, *warnings],
         )
 
     async def _reflect(
@@ -211,12 +231,10 @@ class RelationshipReflectionOrchestrator(PipelineOrchestrator):
         model: DecisionModel,
         builder: EvidencePackBuilder,
         policy: ContextPolicy,
+        general: Sequence[str],
     ) -> Reflection:
         sq = sorting_questions(
-            prop,
-            catalog,
-            top=int(self._config.get("top") or 8),
-            general_predicates=self._config.get("general_predicates") or (),
+            prop, catalog, top=int(self._config.get("top") or 8), general_predicates=general
         )
         pack = builder.build_for_relationship_type(prop.id, policy)
         answers = await model.decide_async(pack.text, sq.questions)
@@ -303,46 +321,106 @@ class RelationshipReflectionOrchestrator(PipelineOrchestrator):
         taxonomy_id: str,
         scope: _Scope,
         model_name: str,
-        planned: list[PlannedDraft],
+        plan: list[PlannedChange],
+        catalog: RelationshipCatalog,
+        failed: list[tuple[str, str]],
+        total: int,
         run_id: str,
     ) -> tuple[str | None, int, list[dict[str, Any]]]:
         """
-        Propose the operations as one proposal. Operations the proposal
-        service refuses are dropped (and reported) and the rest proposed again,
-        so one bad row does not waste the run.
+        Propose the plan as one proposal. When the proposal service refuses
+        operations, their rows are dropped and the operations rebuilt from the
+        rows left, so one that leaned on a dropped one (a delete naming the type
+        a dropped update would have produced) is planned afresh.
 
         Returns:
             The proposal id (None when nothing was proposed), the number of
-            operations proposed, and the problems of those dropped
+            operations proposed, and the refused rows with the reasons
         """
-        dropped: list[dict[str, Any]] = []
-        drafts = [p.draft for p in planned]
-        while drafts:
+        refused: list[dict[str, Any]] = []
+        rows = list(plan)
+        while True:
+            planned = plan_drafts(rows, catalog, self._complete_fields)
+            if not planned:
+                return None, 0, refused
+            drafts = [p.draft for p in planned]
             try:
                 proposal = self._proposals.propose(
                     taxonomy_id=taxonomy_id,
                     title=f"Reflection: {scope.label} ({len(drafts)} relationship changes)",
                     operations=drafts,
                     source=ProposalSource.PIPELINE,
-                    rationale=(
-                        "Relationship types whose sorting questions (best source, best target,"
-                        " best predicate) a concrete alternative won. Each operation carries its"
-                        " plan kind, p, the ranked answers and the evidence pack the decision"
-                        " model read."
-                    ),
+                    rationale=_rationale(failed, total, refused),
                     source_detail=(
                         f"schema_relationship_reflection run {run_id}; decision model {model_name}"
                     ),
                 )
-                return proposal.id, len(drafts), dropped
+                return proposal.id, len(drafts), refused
             except ProposalValidationError as exc:
-                bad = {e.seq for e in exc.errors if e.seq is not None}
-                if not bad:
+                by_seq = {p.draft.seq: p.row for p in planned}
+                reasons: dict[int, list[str]] = {}
+                for error in exc.errors:
+                    if error.seq in by_seq:
+                        reasons.setdefault(error.seq, []).append(f"{error.code}: {error.message}")
+                if not reasons:
                     raise
-                dropped += [
-                    {"seq": e.seq, "code": e.code, "message": e.message}
-                    for e in exc.errors
-                    if e.seq is not None
-                ]
-                drafts = [d for d in drafts if d.seq not in bad]
-        return None, 0, dropped
+                for seq, messages in reasons.items():
+                    row = by_seq[seq]
+                    refused.append(
+                        {
+                            "relationship_type": str(row.current),
+                            "property_id": row.property_id,
+                            "kind": row.kind,
+                            "error": "; ".join(messages),
+                        }
+                    )
+                dropped = {by_seq[seq].property_id for seq in reasons}
+                rows = [row for row in rows if row.property_id not in dropped]
+
+
+def _since(started: float) -> float:
+    return round((time.monotonic() - started) * 1000, 1)
+
+
+def _llm_metadata(
+    model_name: str, reflections: list[Reflection], failures: int, started: float
+) -> dict[str, Any]:
+    """Cost and latency of the run's decision-model calls."""
+    costs = [r.cost_usd for r in reflections if r.cost_usd is not None]
+    latencies = [r.latency_ms for r in reflections if r.latency_ms is not None]
+    return {
+        "decision_model": model_name,
+        "requests": len(reflections) + failures,
+        "failed_requests": failures,
+        "cost_usd": round(sum(costs), 6) if costs else None,
+        "latency_ms_total": round(sum(latencies), 1),
+        "latency_ms_mean": round(sum(latencies) / len(latencies), 1) if latencies else None,
+        "latency_ms_max": round(max(latencies), 1) if latencies else None,
+        "wall_ms": _since(started),
+    }
+
+
+def _listed(items: list[str]) -> str:
+    shown = "; ".join(items[:MAX_LISTED])
+    return shown + (f"; and {len(items) - MAX_LISTED} more" if len(items) > MAX_LISTED else "")
+
+
+def _rationale(failed: list[tuple[str, str]], total: int, refused: list[dict[str, Any]]) -> str:
+    """The proposal's rationale, saying what the run could not ask or propose."""
+    text = (
+        "Relationship types whose sorting questions (best source, best target, best"
+        " predicate) a concrete alternative won. Each operation carries its plan kind, p,"
+        " the ranked answers and the evidence pack the decision model read."
+    )
+    notes = []
+    if failed:
+        notes.append(
+            f"{len(failed)} of {total} types not asked: "
+            + _listed([f"{t} ({e})" for t, e in failed])
+        )
+    if refused:
+        notes.append(
+            f"{len(refused)} operations refused: "
+            + _listed([f"{r['relationship_type']} ({r['error']})" for r in refused])
+        )
+    return text + (f" {'. '.join(notes)}." if notes else "")

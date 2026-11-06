@@ -285,6 +285,10 @@ class BackgroundRunExecutor:
                     run.id, reason, output_summary={"error": reason}
                 )
             )
+            spent = getattr(exc, "llm_metadata", None)
+            if spent:
+                # The model calls made before the failure still cost money and time
+                self._record(lambda: self._runs.update_summaries(run.id, llm_metadata=dict(spent)))
         self._refresh_batch(run.batch_run_id, finished=True)
 
     async def _run_pipeline(self, run: PipelineRun, input_data: dict[str, Any]) -> None:

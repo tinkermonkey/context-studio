@@ -34,6 +34,23 @@ DR_SPEC_REFERENCE = "spec"
 # "cardinality" and "strength" (the schema's properties.<name>.const) and
 # "evidence" (its x-dr-evidence lines; absent when the schema has none).
 DR_ATTRIBUTE_KEYS = ("cardinality", "strength", "evidence")
+# The ArchiMate 3.2 core relationships DR's reflection offers after a type's own
+# predicates (`sortingQuestions()` in cli/scripts/spec-enrich/triage-reflect.ts).
+DR_GENERAL_PREDICATES = (
+    "realizes",
+    "serves",
+    "assigned-to",
+    "composes",
+    "aggregates",
+    "accesses",
+    "triggers",
+    "flows-to",
+    "uses",
+    "depends-on",
+    "associated-with",
+    "specializes",
+    "references",
+)
 
 _IDENTIFIER_MAX_LENGTH = 64
 _TRUNCATED_LENGTH = 59
@@ -321,14 +338,22 @@ def dr_predicate_catalog(repo: OntologyRepository) -> dict[str, dict[str, Any]] 
     return None
 
 
+def is_dr_taxonomy(repo: OntologyRepository, taxonomy_id: str) -> bool:
+    """Whether the taxonomy is the imported DR spec (dr_spec)."""
+    taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    return taxonomy is not None and taxonomy.id == taxonomy_id
+
+
 def dr_predicate_catalog_for(
     repo: OntologyRepository, taxonomy_id: str
 ) -> dict[str, dict[str, Any]] | None:
     """The DR predicate catalog when the taxonomy is the dr_spec taxonomy; else None."""
-    taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
-    if taxonomy is None or taxonomy.id != taxonomy_id:
-        return None
-    return dr_predicate_catalog(repo)
+    return dr_predicate_catalog(repo) if is_dr_taxonomy(repo, taxonomy_id) else None
+
+
+def dr_general_predicates_for(repo: OntologyRepository, taxonomy_id: str) -> tuple[str, ...]:
+    """DR_GENERAL_PREDICATES for the dr_spec taxonomy; none for any other."""
+    return DR_GENERAL_PREDICATES if is_dr_taxonomy(repo, taxonomy_id) else ()
 
 
 def swapped_dr_reference(

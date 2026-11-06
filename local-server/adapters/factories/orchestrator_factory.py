@@ -8,7 +8,11 @@ and pipeline states based on pipeline type and available services.
 from hashlib import sha256
 from typing import Any, Callable, Type
 
-from adapters.interchange.dr_relationships import DrRelationshipRules, dr_predicate_catalog_for
+from adapters.interchange.dr_relationships import (
+    DrRelationshipRules,
+    dr_general_predicates_for,
+    dr_predicate_catalog_for,
+)
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.open_orchestrator import (
     OpenIndividualExtractionOrchestrator,
@@ -201,14 +205,18 @@ def _build_relationship_reflection(
             "ontology_repo, decision_models and proposal_service are required for "
             "RelationshipReflectionOrchestrator"
         )
-    # DR's predicate catalog and relationship identity apply to the dr_spec
-    # taxonomy only; any other taxonomy reflects on its own predicates.
+    # DR's predicate catalog, general predicates and relationship identity
+    # apply to the dr_spec taxonomy only; any other taxonomy reflects on its
+    # own predicates.
     dr_rules = DrRelationshipRules(ontology_repo)
     return RelationshipReflectionOrchestrator(
         ontology_repo=ontology_repo,
         decision_models=decision_models,
         proposal_service=proposal_service,
         predicate_catalog=lambda taxonomy_id: dr_predicate_catalog_for(ontology_repo, taxonomy_id),
+        general_predicates=lambda taxonomy_id: dr_general_predicates_for(
+            ontology_repo, taxonomy_id
+        ),
         complete_fields=dr_rules.complete_triple_fields,
         config=services.get("refinement_config", {}),
         run_id=services.get("run_id"),

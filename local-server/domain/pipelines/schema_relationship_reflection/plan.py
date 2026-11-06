@@ -17,18 +17,20 @@ DR's `reflect-plan.ts`). Kinds:
 - reverse:           swap source and target (and possibly the predicate)
 - retarget:          change the source and/or target class
 - compound:          more than one of the above at once
-- conflict:          the reflections disagree: several about one type name
-                     different replacements, or one type's replacement is
-                     another type that its own reflection wants changed
+- conflict:          one type's replacement is another type that its own
+                     reflection wants changed, so the two rows disagree
 
-`p` is the minimum probability over a change's alternatives; for a conflict
-it is the maximum over the disagreeing changes.
+`p` is the minimum probability over a change's alternatives. (DR takes the
+maximum for a conflict because there several claims about one triple
+disagree; a run here asks once per relationship type, so each row holds one
+change, DR's per-triple conflict cannot arise, and a conflict row keeps its
+own p.)
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, replace
 
 from domain.decision.value_objects import NONE_OPTION
 
@@ -217,22 +219,16 @@ def change_of(reflection: Reflection, existing: Iterable[Triple]) -> Change:
 
 @dataclass(frozen=True)
 class PlannedChange:
-    """
-    One row of the change plan: what to do with one relationship type.
-
-    replacement lists the triples the reflections prefer, the first being the
-    one proposed (a conflict has several, or names a type that is itself
-    being changed).
-    """
+    """One row of the change plan: what to do with one relationship type."""
 
     property_id: str
     current: Triple
     kind: str
-    replacement: tuple[Triple, ...]
+    replacement: Triple
     replacement_exists: bool
     p: float
     alternatives: tuple[str, ...]
-    reflections: tuple[Reflection, ...] = field(default_factory=tuple)
+    reflection: Reflection
     reversed: bool = False
 
 
@@ -243,33 +239,27 @@ def build_plan(
     The change plan for the reflections with a concrete alternative, highest p first.
 
     Args:
-        reflections: Reflections (any outcome; only alternatives make rows)
+        reflections: One reflection per relationship type (any outcome; only
+            alternatives make rows)
         existing: Every relationship type of the taxonomy, as triples
     """
     known = set(existing)
-    grouped: dict[str, list[tuple[Reflection, Change]]] = {}
+    plan = []
     for reflection in reflections:
-        if reflection.outcome == ALTERNATIVE:
-            grouped.setdefault(reflection.property_id, []).append(
-                (reflection, change_of(reflection, known))
-            )
-    plan: list[PlannedChange] = []
-    for property_id, rows in grouped.items():
-        replacements = tuple(dict.fromkeys(change.replacement for _, change in rows))
-        conflict = len(replacements) > 1
-        kinds = list(dict.fromkeys(change.kind for _, change in rows))
-        ps = [change.p for _, change in rows]
+        if reflection.outcome != ALTERNATIVE:
+            continue
+        change = change_of(reflection, known)
         plan.append(
             PlannedChange(
-                property_id=property_id,
-                current=rows[0][0].triple,
-                kind=CONFLICT if conflict else kinds[0],
-                replacement=replacements,
-                replacement_exists=all(r in known for r in replacements),
-                p=max(ps) if conflict else min(ps),
-                alternatives=tuple(alt for _, change in rows for alt in change.alternatives),
-                reflections=tuple(reflection for reflection, _ in rows),
-                reversed=rows[0][1].reversed,
+                property_id=reflection.property_id,
+                current=reflection.triple,
+                kind=change.kind,
+                replacement=change.replacement,
+                replacement_exists=change.replacement in known,
+                p=change.p,
+                alternatives=change.alternatives,
+                reflection=reflection,
+                reversed=change.reversed,
             )
         )
     plan = _mark_contradictions(plan)
@@ -285,9 +275,9 @@ def _mark_contradictions(plan: list[PlannedChange]) -> list[PlannedChange]:
     changing = {row.current for row in plan}
 
     def contradicts(row: PlannedChange) -> bool:
-        return row.replacement[0] != row.current and row.replacement[0] in changing
+        return row.replacement != row.current and row.replacement in changing
 
-    contradicted = {row.replacement[0] for row in plan if contradicts(row)}
+    contradicted = {row.replacement for row in plan if contradicts(row)}
     marked = []
     for row in plan:
         if row.kind != CONFLICT and (contradicts(row) or row.current in contradicted):
