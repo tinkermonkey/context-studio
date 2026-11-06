@@ -18,7 +18,7 @@ from domain.ontology.entities import Class, ConceptScheme, PropertyDefinition, T
 from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
-from domain.pipelines.schema_relationship_reflection.drafts import plan_drafts
+from domain.pipelines.schema_relationship_reflection.drafts import plan_drafts, reflection_view
 from domain.pipelines.schema_relationship_reflection.orchestrator import (
     RelationshipReflectionOrchestrator,
     RelationshipReflectionState,
@@ -376,6 +376,114 @@ class TestDrafts:
         assert merge.op is OperationType.DELETE
         assert merge.replacement == house["item_located_in"]
         assert merge.claimed_scope is ChangeScope.BREAKING  # compound
+
+    def test_the_plan_row_reads_back_for_review(self, repo, house):
+        catalog = catalog_of(repo, house)
+        triple = catalog.triple(repo.get_property_definition(house["task_requires"]))
+        row = Reflection(
+            house["task_requires"],
+            triple,
+            {
+                SOURCE_FOR: RankedAnswer.of("project", {"project": 0.6, "task": 0.3, "none": 0.1}),
+                TARGET_FOR: RankedAnswer.of("resource", {"resource": 0.9, "place": 0.004}),
+                PREDICATE_FOR: RankedAnswer.of(
+                    "requires", {"requires": 0.8, "reverse:part_of": 0.2}
+                ),
+            },
+            {},
+            *reflection_outcome(
+                triple,
+                {
+                    SOURCE_FOR: RankedAnswer.of("project", {"project": 0.6}),
+                    TARGET_FOR: RankedAnswer.of("resource", {"resource": 0.9}),
+                    PREDICATE_FOR: RankedAnswer.of("requires", {"requires": 0.8}),
+                },
+            ),
+            evidence="Design intent:\n  Charter\n\nRelationship types between task, resource",
+        )
+        (planned,) = plan_drafts(build_plan([row], catalog.by_triple), catalog)
+        item = planned.draft.evidence[0]
+        assert json.loads(item["current"]) == {
+            "source": "task",
+            "predicate": "requires",
+            "target": "resource",
+        }
+        assert json.loads(item["picks"]) == {
+            SOURCE_FOR: "project",
+            TARGET_FOR: "resource",
+            PREDICATE_FOR: "requires",
+        }
+        assert json.loads(item["class_ids"]) == {
+            "project": house["project"],
+            "resource": house["resource"],
+            "task": house["task"],
+        }
+
+        view = reflection_view(planned.draft.evidence)
+        assert view.plan_kind == RETARGET and view.p == 0.6
+        assert view.current == triple and view.replacement == "project requires resource"
+        assert view.evidence_pack == [
+            "Design intent:\n  Charter",
+            "Relationship types between task, resource",
+        ]
+        source = [
+            (o.option, o.probability, o.class_id, o.current, o.plan)
+            for o in view.answers[SOURCE_FOR]
+        ]
+        assert source == [
+            ("project", 0.6, house["project"], False, True),
+            ("task", 0.3, house["task"], True, False),
+            ("none", 0.1, None, False, False),
+        ]
+        predicate = view.answers[PREDICATE_FOR]
+        assert [(o.option, o.class_id) for o in predicate] == [
+            ("requires", None),
+            ("reverse:part_of", None),
+        ]
+        assert predicate[0].current and predicate[0].plan
+
+    def test_an_older_plan_row_reads_its_picks_from_the_alternatives(self):
+        evidence = [
+            {
+                "plan_kind": "reverse",
+                "p": "0.700",
+                "alternatives": "predicate=reverse:part_of|0.70",
+                "probabilities": json.dumps({PREDICATE_FOR: {"reverse:part_of": 0.7, "a": 0.3}}),
+            }
+        ]
+        view = reflection_view(evidence)
+        assert view.current is None and view.evidence_pack == []
+        assert [(o.option, o.plan, o.current) for o in view.answers[PREDICATE_FOR]] == [
+            ("reverse:part_of", True, False),
+            ("a", False, False),
+        ]
+        assert reflection_view([{"quote": "not a plan row"}]) is None
+
+    @pytest.mark.parametrize(
+        "malformed",
+        [
+            # a probability that isn't a number drops that option only
+            {"probabilities": json.dumps({PREDICATE_FOR: {"a": "high", "b": 0.4, "c": None}})},
+            # a triple part that isn't a string: no current triple
+            {
+                "probabilities": json.dumps({PREDICATE_FOR: {"b": 0.4}}),
+                "current": json.dumps({"source": 1, "predicate": ["p"], "target": "t"}),
+            },
+            # class ids that aren't strings, and JSON that isn't an object
+            {
+                "probabilities": json.dumps({PREDICATE_FOR: {"b": 0.4}, SOURCE_FOR: [1]}),
+                "class_ids": json.dumps({"b": 7}),
+                "picks": "not json",
+            },
+        ],
+        ids=["probability", "triple", "class-ids"],
+    )
+    def test_malformed_evidence_reads_what_it_can(self, malformed):
+        view = reflection_view([{"plan_kind": "rename-predicate", "p": "x", **malformed}])
+        assert view.p is None and view.current is None
+        assert [(o.option, o.probability, o.class_id) for o in view.answers[PREDICATE_FOR]] == [
+            ("b", 0.4, None)
+        ]
 
     def test_a_second_update_onto_the_same_new_triple_deletes_naming_the_first(self, repo, house):
         catalog = catalog_of(repo, house)

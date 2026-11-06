@@ -21,6 +21,11 @@ interface InUseResolverProps {
   lastResolution?: Resolution;
   /** Why the last apply failed, when it did. */
   failureReason?: string | null;
+  /**
+   * The reviewer's edit retargets the type (gives it another pair of classes):
+   * the relationships are resolved before the retarget instead of a delete.
+   */
+  retargetEdit?: string;
   onApply: (resolution: Resolution) => void;
 }
 
@@ -35,6 +40,7 @@ export function InUseResolver({
   busy,
   lastResolution,
   failureReason,
+  retargetEdit,
   onApply,
 }: InUseResolverProps) {
   const replacements = blockers.replacements ?? [];
@@ -73,7 +79,9 @@ export function InUseResolver({
   return (
     <div className="op-resolver" data-testid="operation-in-use">
       <FormCallout variant="warn" icon="alert" data-testid="operation-in-use-callout">
-        {`Blocked: ${plural(count, "relationship")} still ${count === 1 ? "uses" : "use"} this type, so deleting it as proposed fails. Move them to another type or delete them too, and the type is deleted after them; or keep the type by rejecting.`}
+        {retargetEdit
+          ? `Your picks retarget this type to ${retargetEdit}, and ${plural(count, "relationship")} still ${count === 1 ? "uses" : "use"} it. Move them to another type or delete them, and the type is retargeted after them; or keep the type by rejecting.`
+          : `Blocked: ${plural(count, "relationship")} still ${count === 1 ? "uses" : "use"} this type, so deleting it as proposed fails. Move them to another type or delete them too, and the type is deleted after them; or keep the type by rejecting.`}
       </FormCallout>
       {failureReason && (
         <FormCallout variant="error" icon="alert" data-testid="operation-resolution-failed">
@@ -161,7 +169,12 @@ export function InUseResolver({
           onClick={apply}
           data-testid="operation-resolution-apply"
         >
-          {resolutionLabel(blockers, moving ? "move" : "delete", replacement?.identifier)}
+          {resolutionLabel(
+            blockers,
+            moving ? "move" : "delete",
+            replacement?.identifier,
+            retargetEdit ? "retarget" : "delete",
+          )}
         </Button>
       </div>
     </div>

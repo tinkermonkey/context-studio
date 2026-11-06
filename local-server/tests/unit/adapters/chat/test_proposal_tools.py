@@ -131,6 +131,9 @@ class FakeProposalService:
     def in_use_blockers(self, proposal):
         return self.blockers
 
+    def in_use(self, proposal, with_usage=True):
+        return self.blockers, {}
+
     def auto_apply_operation_ids(self, proposal):
         return self.auto
 
@@ -809,10 +812,10 @@ class TestRestParityFields:
         proposal = make_proposal([make_operation(1, OperationStatus.APPLIED)])
         service = FakeProposalService(proposal=proposal)
 
-        def broken(proposal):
+        def broken(proposal, with_usage=True):
             raise RuntimeError("database is locked")
 
-        service.in_use_blockers = broken
+        service.in_use = broken
 
         outcome, result = await call(
             service, "propose_changes", taxonomy_id=TAXONOMY, title="t", operations=[update_op(1)]

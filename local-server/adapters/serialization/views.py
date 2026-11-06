@@ -46,19 +46,24 @@ _EXCLUDED_REST_FIELDS = {"color", "embedding"}
 
 
 def proposal_response(
-    service: ProposalService, proposal: ChangeProposal, dry_run: bool = False
+    service: ProposalService,
+    proposal: ChangeProposal,
+    dry_run: bool = False,
+    with_usage: bool = True,
 ) -> ChangeProposalResponse:
     """
     The REST view of a proposal: stale flags, in-use blockers and replacement
     checks; for a dry run, each operation's auto-apply eligibility too (see
     ProposalService.auto_apply_operation_ids).
     """
+    blockers, usage = service.in_use(proposal, with_usage=with_usage)
     return ChangeProposalResponse.from_domain(
         proposal,
         service.stale_operation_ids(proposal),
-        service.in_use_blockers(proposal),
+        blockers,
         service.replacement_checks(proposal),
         service.auto_apply_operation_ids(proposal) if dry_run else None,
+        usage,
     )
 
 

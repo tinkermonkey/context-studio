@@ -151,6 +151,49 @@ def test_editing_records_applied_with_edits_and_both_versions(parts, house):
     assert decision.result_entity_id == house["near"]
 
 
+def test_a_chosen_alternative_lands_in_gold_with_the_edit(parts, house):
+    service = parts[3]
+    proposal = propose(service, house)
+    ops = {o.seq: o for o in proposal.operations}
+    alternative = {"predicate_for": "next_to", "triple": "Room next_to Room"}
+
+    service.apply(
+        proposal.id,
+        [ops[3].id, ops[2].id],
+        edits={ops[3].id: {"title": "next to"}},
+        chosen_alternatives={ops[3].id: alternative},
+    )
+
+    decisions = {d.seq: d for d in gold(service, house)}
+    assert decisions[3].decision is DecisionKind.APPLIED_WITH_EDITS
+    assert decisions[3].chosen_alternative == alternative
+    assert decisions[2].chosen_alternative is None
+    # read back from SQLite as stored
+    with parts[4]() as session:
+        row = session.query(ProposalDecisionRecord).filter_by(operation_id=ops[3].id).one()
+        assert row.chosen_alternative == alternative
+
+
+def test_a_chosen_alternative_for_an_operation_not_applied_is_refused(parts, house):
+    service = parts[3]
+    proposal = propose(service, house)
+    ops = {o.seq: o for o in proposal.operations}
+
+    with pytest.raises(ValueError, match="Chosen alternatives"):
+        service.apply(proposal.id, [ops[2].id], chosen_alternatives={ops[3].id: {"x": 1}})
+    # an alternative records what an edit applies: it needs one, and isn't empty
+    with pytest.raises(ValueError, match="needs the edit"):
+        service.apply(proposal.id, [ops[3].id], chosen_alternatives={ops[3].id: {"x": 1}})
+    with pytest.raises(ValueError, match="is empty"):
+        service.apply(
+            proposal.id,
+            [ops[3].id],
+            edits={ops[3].id: {"title": "next to"}},
+            chosen_alternatives={ops[3].id: {}},
+        )
+    assert gold(service, house) == []
+
+
 def test_rejecting_records_a_rejected_decision_with_its_note(parts, house):
     service = parts[3]
     proposal = propose(service, house)

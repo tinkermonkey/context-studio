@@ -18,6 +18,8 @@ import {
   replacementFlag,
 } from "./proposalModel";
 import { subjectOf } from "./OperationDiff";
+import { EvidencePack, ReflectionAnswers } from "./ReflectionAnswers";
+import type { Picks } from "./tieredModel";
 import type { OperationContext } from "./useOperationContext";
 import "./proposals.css";
 
@@ -166,6 +168,10 @@ interface OperationInspectorProps {
   decision?: ReactNode;
   /** The proposal was reverted: what it applied reads as reverted. */
   reverted?: boolean;
+  /** A reflection operation's answers the reviewer picked over the plan's. */
+  picks?: Picks;
+  /** Picking an answer; absent when the answers are read-only. */
+  onPick?: (question: string, option: string) => void;
 }
 
 /** The selected operation: its change field by field, rationale and evidence. */
@@ -174,6 +180,8 @@ export function OperationInspector({
   context,
   decision,
   reverted = false,
+  picks = {},
+  onPick,
 }: OperationInspectorProps) {
   const rows = changeRows(operation);
   const state = decisionState(operation, reverted);
@@ -214,6 +222,15 @@ export function OperationInspector({
         {/* Before the change: a replacement linking a different pair is what to judge first. */}
         {operation.replacement_check && (
           <ReplacementSection operation={operation} context={context} />
+        )}
+
+        {operation.reflection && operation.reflection.questions.length > 0 && (
+          <ReflectionAnswers
+            operationId={operation.id}
+            reflection={operation.reflection}
+            picks={picks}
+            onPick={onPick}
+          />
         )}
 
         <InspectorPanel.Section title="Change">
@@ -291,29 +308,33 @@ export function OperationInspector({
           </div>
         </InspectorPanel.Section>
 
-        <InspectorPanel.Section title="Evidence" count={evidence.length}>
-          {evidence.length > 0 ? (
-            <div className="op-inspector__stack" data-testid="operation-evidence">
-              {evidence.map((item, index) => {
-                const caption = evidenceCaption(item);
-                return (
-                  <figure key={index} className="op-evidence">
-                    <blockquote className="op-evidence__quote">
-                      {typeof item.quote === "string" ? item.quote : formatValue(item.quote)}
-                    </blockquote>
-                    {caption.length > 0 && (
-                      <figcaption className="op-evidence__caption">
-                        {caption.join(" · ")}
-                      </figcaption>
-                    )}
-                  </figure>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="entity-note">No evidence given.</p>
-          )}
-        </InspectorPanel.Section>
+        {operation.reflection ? (
+          <EvidencePack blocks={operation.reflection.evidence_pack ?? []} />
+        ) : (
+          <InspectorPanel.Section title="Evidence" count={evidence.length}>
+            {evidence.length > 0 ? (
+              <div className="op-inspector__stack" data-testid="operation-evidence">
+                {evidence.map((item, index) => {
+                  const caption = evidenceCaption(item);
+                  return (
+                    <figure key={index} className="op-evidence">
+                      <blockquote className="op-evidence__quote">
+                        {typeof item.quote === "string" ? item.quote : formatValue(item.quote)}
+                      </blockquote>
+                      {caption.length > 0 && (
+                        <figcaption className="op-evidence__caption">
+                          {caption.join(" · ")}
+                        </figcaption>
+                      )}
+                    </figure>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="entity-note">No evidence given.</p>
+            )}
+          </InspectorPanel.Section>
+        )}
       </InspectorPanel>
     </div>
   );

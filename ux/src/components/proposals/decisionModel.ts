@@ -169,11 +169,16 @@ export function resolutionLabel(
   blockers: DeleteBlockers,
   strategy: Resolution["strategy"],
   replacementIdentifier?: string,
+  /** What happens to the type after its relationships: deleted, or retargeted by an edit. */
+  then: "delete" | "retarget" = "delete",
 ): string {
   const edges = plural(blockers.edges.length, "relationship");
+  const after = then === "delete" ? "delete the type" : "retarget the type";
   return strategy === "move"
-    ? `Apply: move ${edges} to ${replacementIdentifier ?? "another type"} and delete the type`
-    : `Apply: delete ${edges} and the type`;
+    ? `Apply: move ${edges} to ${replacementIdentifier ?? "another type"} and ${after}`
+    : then === "delete"
+      ? `Apply: delete ${edges} and the type`
+      : `Apply: delete ${edges} and ${after}`;
 }
 
 /** A move target in the picker: "(proposed)" and "(reversed: ends swap)" as they apply. */

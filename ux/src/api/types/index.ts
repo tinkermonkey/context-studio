@@ -3761,6 +3761,10 @@ export interface paths {
      *     A property update that reverses the type (domain and range swapped) swaps
      *     the ends of every relationship using it in place (each keeps its id), and
      *     a rename keeps them, in one transaction with the update; Revert undoes both.
+     *
+     *     chosen_alternatives records, in each applied operation's decision, the
+     *     alternative the reviewer chose over the proposal's pick (gold's
+     *     chosen_alternative), e.g. a reflection's answers when accepted with an edit.
      */
     post: operations["apply_proposal_api_proposals__proposal_id__apply_post"];
     delete?: never;
@@ -4714,10 +4718,19 @@ export interface components {
       };
       /**
        * Resolutions
-       * @description Operation id -> how to resolve the relationships still using the relationship type a property delete in operation_ids removes (see the operation's blockers), or a property update that retargets (gives the type another domain and range pair) needs while relationships use it. Moved or deleted in one transaction with the type; a misfit or any failing step fails only that operation, changing nothing. Not with an edit of the same delete; an update that renames or reverses the type takes none (a reverse always swaps the ends of its relationships)
+       * @description Operation id -> how to resolve the relationships still using the relationship type a property delete in operation_ids removes (see the operation's blockers), or a property update that retargets (gives the type another domain and range pair) needs while relationships use it. Moved or deleted in one transaction with the type; a misfit or any failing step fails only that operation, changing nothing. An edited delete applies as an update, so with an edit it takes a resolution only when the edit retargets the type; an update that renames or reverses the type takes none (a reverse always swaps the ends of its relationships)
        */
       resolutions?: {
         [key: string]: components["schemas"]["InUseResolutionRequest"];
+      };
+      /**
+       * Chosen Alternatives
+       * @description Operation id -> the alternative the reviewer chose over the proposal's pick (e.g. a reflection's answers per question): a non-empty object, for an operation in operation_ids that edits also has (the edit applies it); recorded in its decision as chosen_alternative
+       */
+      chosen_alternatives?: {
+        [key: string]: {
+          [key: string]: unknown;
+        };
       };
     };
     /**
@@ -8063,6 +8076,8 @@ export interface components {
        * @default false
        */
       stale: boolean;
+      /** @description A pending or failed relationship-type update that keeps its pair (a rename or reverse) while relationships use the type: those relationships and the types they all fit. Applying it as proposed needs nothing, but an edit that retargets the type needs a resolution of them. Null otherwise */
+      type_usage?: components["schemas"]["DeleteBlockersResponse"] | null;
       /** @description A pending or failed relationship-type delete, or update that retargets the type, whose type relationships still use: applying it as proposed fails; it needs a resolution. Null otherwise. The proposed replacement, when it fits, is listed first */
       blockers?: components["schemas"]["DeleteBlockersResponse"] | null;
       /**
@@ -8077,6 +8092,8 @@ export interface components {
        * @description A dry run only: eligible to auto-apply, i.e. the taxonomy's approval policy would apply it as soon as proposed and no in-use blockers stop it (applying can still fail). Null otherwise
        */
       auto_apply?: boolean | null;
+      /** @description A schema relationship reflection operation's plan row: kind, p, the ranked answers to its sorting questions and the evidence pack. Null otherwise */
+      reflection?: components["schemas"]["ReflectionResponse"] | null;
     };
     /**
      * PublishDiffStats
@@ -8485,6 +8502,89 @@ export interface components {
        * @default
        */
       source: string;
+    };
+    /**
+     * ReflectionOptionResponse
+     * @description One option of a sorting question.
+     */
+    ReflectionOptionResponse: {
+      /**
+       * Option
+       * @description A class label, a predicate, "reverse:<p>" or "none"
+       */
+      option: string;
+      /** Probability */
+      probability: number;
+      /**
+       * Class Id
+       * @description The class the option names (source and target questions); null for a predicate, none, or an operation proposed before class ids were kept
+       */
+      class_id?: string | null;
+      /**
+       * Current
+       * @description The type's current answer
+       */
+      current: boolean;
+      /**
+       * Plan
+       * @description The answer the change plan took
+       */
+      plan: boolean;
+    };
+    /**
+     * ReflectionQuestionResponse
+     * @description One sorting question and its options, likeliest first.
+     */
+    ReflectionQuestionResponse: {
+      /**
+       * Question
+       * @description source_for, target_for or predicate_for
+       */
+      question: string;
+      /** Options */
+      options: components["schemas"]["ReflectionOptionResponse"][];
+    };
+    /**
+     * ReflectionResponse
+     * @description A schema relationship reflection operation's plan row, read from its evidence.
+     */
+    ReflectionResponse: {
+      /**
+       * Plan Kind
+       * @description remove-duplicate, rename-predicate, reverse, retarget, compound or conflict
+       */
+      plan_kind: string;
+      /**
+       * P
+       * @description The minimum probability of the change
+       */
+      p?: number | null;
+      /** @description The type's triple when reflected (null on older proposals) */
+      current?: components["schemas"]["ReflectionTripleResponse"] | null;
+      /**
+       * Replacement
+       * @description The plan's triple, "source p target"
+       */
+      replacement?: string | null;
+      /** Questions */
+      questions: components["schemas"]["ReflectionQuestionResponse"][];
+      /**
+       * Evidence Pack
+       * @description The evidence pack the decision model read, by block
+       */
+      evidence_pack?: string[];
+    };
+    /**
+     * ReflectionTripleResponse
+     * @description A relationship type as the decision model read it: class labels and predicate.
+     */
+    ReflectionTripleResponse: {
+      /** Source */
+      source: string;
+      /** Predicate */
+      predicate: string;
+      /** Target */
+      target: string;
     };
     /**
      * RelationshipCreateRequest

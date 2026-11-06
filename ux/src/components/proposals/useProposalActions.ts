@@ -20,17 +20,23 @@ import {
   splitStale,
   type Resolutions,
 } from "./decisionModel";
+import { keptNote } from "./tieredModel";
 
 export type Edits = Record<string, Record<string, unknown>>;
+/** Operation id -> the alternative the reviewer chose over the plan's (recorded in gold). */
+export type ChosenAlternatives = Record<string, Record<string, unknown>>;
 
 /** How an apply ended: the server's error, or the reviewer cancelled the Apply anyway. */
 export interface ApplyOutcome {
   error?: unknown;
   cancelled?: boolean;
+  /** The proposal as the apply returned it. */
+  proposal?: ChangeProposal;
 }
 
 interface ApplyOptions {
   edits?: Edits;
+  chosenAlternatives?: ChosenAlternatives;
   /** How blocked relationship-type deletes resolve the relationships still using the type. */
   resolutions?: Resolutions;
   /** Add these outcomes to the results view instead of replacing it (a retry from it). */
@@ -71,6 +77,8 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
   const [revertConflict, setRevertConflict] = useState<ChangeProposalRevertConflict | null>(null);
   // The edit each operation's last apply sent: the server keeps none for a failed one.
   const [lastEdits, setLastEdits] = useState<Edits>({});
+  // Likewise the alternative each edited operation's last apply chose.
+  const [lastAlternatives, setLastAlternatives] = useState<ChosenAlternatives>({});
   // Likewise the resolution each blocked delete's last apply sent.
   const [lastResolutions, setLastResolutions] = useState<Resolutions>({});
   const id = proposal?.id ?? "";
@@ -78,7 +86,7 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
   const send = async (
     operationIds: string[],
     forceStale: string[],
-    { edits = {}, resolutions = {}, merge = false }: ApplyOptions = {},
+    { edits = {}, chosenAlternatives = {}, resolutions = {}, merge = false }: ApplyOptions = {},
   ): Promise<ApplyOutcome> => {
     const remember = <T>(previous: Record<string, T>, sent: Record<string, T>) => {
       const next = { ...previous };
@@ -89,14 +97,18 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
       return next;
     };
     setLastEdits((previous) => remember(previous, edits));
+    setLastAlternatives((previous) => remember(previous, chosenAlternatives));
     setLastResolutions((previous) => remember(previous, resolutions));
     try {
-      await apply.mutateAsync({
+      const proposal = await apply.mutateAsync({
         id,
         data: {
           operation_ids: operationIds,
           force_stale: forceStale,
           edits,
+          ...(Object.keys(chosenAlternatives).length > 0
+            ? { chosen_alternatives: chosenAlternatives }
+            : {}),
           ...(Object.keys(resolutions).length > 0 ? { resolutions } : {}),
         },
       });
@@ -104,7 +116,7 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
         merge && previous ? [...new Set([...previous, ...operationIds])] : operationIds,
       );
       setRevertConflict(null);
-      return {};
+      return { proposal };
     } catch (error) {
       return { error };
     }
@@ -140,15 +152,21 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
     operation.status === "failed" &&
     (!!lastEdits[operation.id] || EDIT_FAILURE.test(operation.reason ?? ""));
 
+  /** True when the operation failed because its edit was refused (invalid_edit, refused). */
+  const editRefused = (operation: ProposedOperation) =>
+    operation.status === "failed" && EDIT_FAILURE.test(operation.reason ?? "");
+
   /** The resolution this blocked delete's last apply sent, if any. */
   const lastResolutionOf = (opId: string) => lastResolutions[opId];
 
   /** Apply a failed operation again from the results: with its last edit or resolution. */
   const retry = (opId: string, { asProposed = false } = {}) => {
     const edit = asProposed ? undefined : lastEdits[opId];
+    const alternative = edit ? lastAlternatives[opId] : undefined;
     const resolution = asProposed ? undefined : lastResolutions[opId];
     return accept([opId], {
       edits: edit ? { [opId]: edit } : undefined,
+      chosenAlternatives: alternative ? { [opId]: alternative } : undefined,
       resolutions: resolution ? { [opId]: resolution } : undefined,
       merge: true,
     });
@@ -208,6 +226,18 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
     }
   };
 
+  /**
+   * Keep one operation of a conflict: apply it, then reject the others with
+   * "conflict: kept seq N". Nothing is rejected unless it applied.
+   */
+  const keepConflict = async (keep: ProposedOperation, others: string[]) => {
+    const outcome = await accept([keep.id]);
+    if (outcome.error || outcome.cancelled) return;
+    const kept = outcome.proposal?.operations.find((o) => o.id === keep.id);
+    if (kept?.status !== "applied") return;
+    await rejectOperations(others, keptNote(keep.seq));
+  };
+
   const revertProposal = async () => {
     try {
       const result = await revert.mutateAsync(id);
@@ -238,6 +268,7 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
     accept,
     acceptFresh,
     rejectOperations,
+    keepConflict,
     revertProposal,
     downloadDecisions,
     forceRequest,
@@ -247,6 +278,7 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
     lastEditOf,
     lastResolutionOf,
     editFailed,
+    editRefused,
     /** Operation ids the last apply sent; null until one ran (or after a revert). */
     lastApplied,
     closeResults: () => setLastApplied(null),

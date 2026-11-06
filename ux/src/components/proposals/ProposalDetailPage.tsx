@@ -8,7 +8,6 @@ import {
   ProgressBar,
   SegmentedControl,
   Table,
-  type Column,
 } from "@tinkermonkey/heimdall-ui";
 import { useChangeProposal, useProposalDecisions } from "@/api/hooks/proposals";
 import { useTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
@@ -23,26 +22,22 @@ import { ApplyResults } from "./ApplyResults";
 import { SelectionBar, ThresholdBar } from "./DecisionBars";
 import { OperationDecided } from "./OperationDecided";
 import { OperationDecision } from "./OperationDecision";
-import { OperationDiff } from "./OperationDiff";
+import { operationColumns } from "./OperationColumns";
 import { OperationInspector, operationTitle } from "./OperationInspector";
 import { RevertConflict } from "./RevertConflict";
+import { TieredOperations } from "./TieredOperations";
 import {
   DEFAULT_THRESHOLD,
   DR_TAXONOMY_IDENTIFIER,
   atOrAboveThreshold,
-  blockersOf,
   decisionHeadline,
   decisionProgress,
-  decisionState,
   defaultOperationFilter,
   linksToDecided,
   filterOperations,
-  flagVariant,
   hasProbabilities,
   isBlocked,
-  isBelowThreshold,
   progressPills,
-  resolutionChip,
   revertSummary,
   staleCause,
   staleCauseText,
@@ -51,23 +46,26 @@ import {
   type RevertSummary,
 } from "./decisionModel";
 import {
-  OP_VARIANT,
   PROPOSAL_STATUS_VARIANT,
   formatAgo,
-  formatProbability,
   isAwaiting,
   opMixLabel,
   planKind,
   refsByOperation,
-  replacementEndLabel,
-  replacementDeletedFlag,
-  replacementFlag,
 } from "./proposalModel";
-import { useOperationContext, type OperationContext } from "./useOperationContext";
+import {
+  conflictedIds,
+  defaultGroupBy,
+  isBulkEligible,
+  offersGroupBy,
+  pickOutcome,
+  takesPicks,
+  type GroupBy,
+  type Picks,
+} from "./tieredModel";
+import { useOperationContext } from "./useOperationContext";
 import { useProposalActions } from "./useProposalActions";
 import "./proposals.css";
-
-type OperationColumn = Column<ProposedOperation>;
 
 function scopeMixLabel(operations: ProposedOperation[]): string {
   const scopes = [...new Set(operations.map((o) => o.scope))];
@@ -77,205 +75,6 @@ function scopeMixLabel(operations: ProposedOperation[]): string {
     .filter(([, count]) => count > 0)
     .map(([scope, count]) => `${count} ${scope}`)
     .join(" · ");
-}
-
-interface ColumnOptions {
-  showPlanKind: boolean;
-  /** Probabilities below it are muted; undefined without a threshold bar. */
-  threshold?: number;
-  /** Checkbox selection of awaiting operations, while the proposal takes decisions. */
-  selection?: { checked: Set<string>; toggle: (id: string) => void };
-  /** The proposal was reverted: what it applied reads as reverted. */
-  reverted: boolean;
-}
-
-function operationColumns(context: OperationContext, options: ColumnOptions): OperationColumn[] {
-  const { showPlanKind, threshold, selection, reverted } = options;
-  return [
-    ...(selection
-      ? [
-          {
-            key: "id",
-            label: "",
-            width: "34px",
-            // Only an operation awaiting a decision can be picked for a bulk decision.
-            render: (_: unknown, row: ProposedOperation) =>
-              isAwaiting(row) ? (
-                <input
-                  type="checkbox"
-                  className="table__checkbox"
-                  checked={selection.checked.has(row.id)}
-                  onChange={() => selection.toggle(row.id)}
-                  onClick={(e) => e.stopPropagation()}
-                  aria-label={`Select operation ${row.seq}`}
-                  data-testid={`operation-check-${row.id}`}
-                />
-              ) : null,
-          } as OperationColumn,
-        ]
-      : []),
-    {
-      key: "seq",
-      label: "Seq",
-      width: "52px",
-      render: (value) => <span className="op-seq">{value as number}</span>,
-    },
-    {
-      key: "op",
-      label: "Op",
-      width: "84px",
-      // Neutral once decided: colour means there is something to decide.
-      render: (value, row) => (
-        <Chip
-          variant={flagVariant(row, OP_VARIANT[value as ProposedOperation["op"]])}
-          data-testid={`operation-op-${row.id}`}
-        >
-          {value as string}
-        </Chip>
-      ),
-    },
-    {
-      key: "fields",
-      label: "Change",
-      render: (_, row) => (
-        <div
-          className={isAwaiting(row) ? "op-change-cell" : "op-change-cell op-change-cell--decided"}
-        >
-          <OperationDiff operation={row} context={context} />
-        </div>
-      ),
-    },
-    ...(showPlanKind
-      ? [
-          {
-            key: "rationale",
-            label: "Plan kind",
-            width: "140px",
-            render: (_: unknown, row: ProposedOperation) => (
-              <span className="op-plan-kind">{planKind(row) ?? "—"}</span>
-            ),
-          } as OperationColumn,
-        ]
-      : []),
-    {
-      key: "probability",
-      label: "P",
-      width: "56px",
-      render: (value, row) => (
-        <span
-          className={
-            threshold !== undefined && isBelowThreshold(row, threshold)
-              ? "op-probability op-probability--below"
-              : "op-probability"
-          }
-          data-testid={`operation-probability-${row.id}`}
-        >
-          {formatProbability(value as number | null)}
-        </span>
-      ),
-    },
-    {
-      key: "status",
-      label: "Status",
-      width: "180px",
-      render: (_, row) => <OperationStatus operation={row} context={context} reverted={reverted} />,
-    },
-  ];
-}
-
-/**
- * The operation's decision state, then its flags: coloured while it awaits a
- * decision, neutral once decided (a record of what was there).
- */
-function OperationStatus({
-  operation,
-  context,
-  reverted,
-}: {
-  operation: ProposedOperation;
-  context: OperationContext;
-  reverted: boolean;
-}) {
-  const state = decisionState(operation, reverted);
-  const blockers = blockersOf(operation);
-  const resolved = resolutionChip(operation);
-  return (
-    <div
-      className="op-status"
-      data-testid={`operation-status-${operation.id}`}
-      data-status={operation.status}
-      data-state={state.state}
-    >
-      <Chip
-        variant={state.variant}
-        data-testid={`operation-state-${operation.id}`}
-        title={`status: ${operation.status}`}
-      >
-        {state.label}
-      </Chip>
-      {operation.stale && (
-        <Chip
-          variant={flagVariant(operation, "rose")}
-          data-testid={`operation-stale-${operation.id}`}
-        >
-          stale
-        </Chip>
-      )}
-      {blockers && (
-        <Chip variant="amber" data-testid={`operation-blocked-${operation.id}`}>
-          {blockers.edges.length} in use: move or drop
-        </Chip>
-      )}
-      {resolved && (
-        <Chip variant="neutral" data-testid={`operation-resolved-${operation.id}`}>
-          {resolved}
-        </Chip>
-      )}
-      <ReplacementChip operation={operation} context={context} />
-    </div>
-  );
-}
-
-/** A delete whose named replacement links a different or reversed pair, or is gone. */
-function ReplacementChip({
-  operation,
-  context,
-}: {
-  operation: ProposedOperation;
-  context: OperationContext;
-}) {
-  const check = operation.replacement_check;
-  if (!check) return null;
-  const flag = replacementFlag(check, (end) =>
-    replacementEndLabel(end, (id) => context.endLabel(id, operation)),
-  );
-  const gone = replacementDeletedFlag(check, deletedIdentifier(operation));
-  if (check.pair === "same" && !gone) return null;
-  const text = [check.pair === "same" ? undefined : flag.text, gone?.text]
-    .filter(Boolean)
-    .join(" ");
-  return (
-    <span
-      className="op-replacement-chips"
-      role="note"
-      aria-label={text}
-      title={text}
-      data-testid={`operation-replacement-chip-${operation.id}`}
-      data-pair={flag.pair}
-      data-replacement-deleted={gone ? (check.cycle ? "cycle" : "chain") : undefined}
-    >
-      {check.pair !== "same" && (
-        <Chip variant={flagVariant(operation, flag.variant)}>{flag.chip}</Chip>
-      )}
-      {gone && <Chip variant={flagVariant(operation, "rose")}>{gone.chip}</Chip>}
-    </span>
-  );
-}
-
-/** A delete's own type, by identifier, for naming it in a cycle. */
-function deletedIdentifier(operation: ProposedOperation): string {
-  const identifier = operation.base?.identifier;
-  return typeof identifier === "string" ? identifier : (operation.target_id ?? "this type");
 }
 
 function revertMessage(summary: RevertSummary): string {
@@ -328,6 +127,10 @@ export function ProposalDetailPage({
   const [confirmRevert, setConfirmRevert] = useState(false);
   // Undefined until the reviewer picks one: then it follows defaultOperationFilter.
   const [chosenFilter, setFilter] = useState<OperationFilter>();
+  // Undefined until the reviewer picks one: then it follows defaultGroupBy.
+  const [chosenGroupBy, setGroupBy] = useState<GroupBy>();
+  // Reflection answers the reviewer picked over the plan's, by operation.
+  const [picksByOperation, setPicksByOperation] = useState<Record<string, Picks>>({});
   // Whether the page opened (?op=) on an already decided operation: worked out
   // once, when the proposal loads, so deciding the linked operation keeps the filter.
   const openOnAll = useRef<boolean | undefined>(undefined);
@@ -364,8 +167,21 @@ export function ProposalDetailPage({
     const shown = filterOperations(operations, next);
     setChecked((ids) => ids.filter((i) => shown.some((o) => o.id === i)));
   };
-  const showThreshold = deciding && awaitingOps.length > 0 && hasProbabilities(operations);
-  const matching = showThreshold ? atOrAboveThreshold(operations, threshold) : [];
+  const groupBy = offersGroupBy(operations)
+    ? (chosenGroupBy ?? defaultGroupBy(operations))
+    : "sequence";
+  const byKind = groupBy === "kind";
+  // Judgment and conflict rows of a change plan are never bulk-decided.
+  // So are the operations a conflict card shows, in either view.
+  const conflicted = useMemo(() => conflictedIds(operations), [operations]);
+  const bulkOps = useMemo(
+    () => awaitingOps.filter((o) => isBulkEligible(o, conflicted)),
+    [awaitingOps, conflicted],
+  );
+  const bulkReady = bulkOps.filter((o) => !o.stale && !isBlocked(o));
+  const showThreshold =
+    !byKind && deciding && awaitingOps.length > 0 && hasProbabilities(operations);
+  const matching = showThreshold ? atOrAboveThreshold(bulkOps, threshold) : [];
   const showPlanKind = operations.some((o) => planKind(o) !== undefined);
   const selectable = deciding && awaitingOps.length > 0;
   const columns = useMemo(
@@ -380,11 +196,12 @@ export function ProposalDetailPage({
                 setChecked((ids) =>
                   ids.includes(opId) ? ids.filter((i) => i !== opId) : [...ids, opId],
                 ),
+              eligible: (row) => isBulkEligible(row, conflicted),
             }
           : undefined,
         reverted,
       }),
-    [context, showPlanKind, showThreshold, threshold, selectable, checked, reverted],
+    [context, showPlanKind, showThreshold, threshold, selectable, checked, reverted, conflicted],
   );
 
   // A deep link (?op=) scrolls its row into view once the operations load.
@@ -441,6 +258,8 @@ export function ProposalDetailPage({
   ).length;
   const checkedBlocked = operations.filter((o) => checked.has(o.id) && isBlocked(o)).length;
   const awaitingIds = awaitingOps.map((o) => o.id);
+  const bulkIds = bulkOps.map((o) => o.id);
+  const neverBulk = awaitingOps.length - bulkOps.length;
   const blockedAwaiting = progress.needChoice;
   const force = actions.forceRequest;
   const forceStale = force
@@ -519,23 +338,24 @@ export function ProposalDetailPage({
                   <Button
                     variant="secondary"
                     size="sm"
-                    disabled={actions.busy || progress.ready === 0}
+                    disabled={actions.busy || bulkReady.length === 0}
                     title={
-                      awaitingOps.length > progress.ready
+                      awaitingOps.length > bulkReady.length
                         ? [
                             awaitingOps.some((o) => o.stale && !isBlocked(o)) &&
                               "Stale operations are left for Apply anyway",
                             blockedAwaiting > 0 &&
                               "Blocked deletes are left for a resolution in the inspector",
+                            neverBulk > 0 && "Judgment and conflict changes are decided one by one",
                           ]
                             .filter(Boolean)
                             .join(". ")
                         : undefined
                     }
-                    onClick={() => actions.acceptFresh(awaitingIds)}
+                    onClick={() => actions.acceptFresh(bulkIds)}
                     data-testid="proposal-accept-all"
                   >
-                    Accept {progress.ready} ready
+                    Accept {bulkReady.length} ready
                   </Button>
                 </>
               )}
@@ -601,7 +421,7 @@ export function ProposalDetailPage({
         />
       )}
 
-      {selectable && checked.size > 0 && (
+      {!byKind && selectable && checked.size > 0 && (
         <SelectionBar
           selected={checked.size}
           stale={checkedStale}
@@ -621,34 +441,65 @@ export function ProposalDetailPage({
       <SchemaPageLayout
         data={operations}
         selectedId={selectedOperationId}
-        renderInspectorContent={(operation) => (
-          <OperationInspector
-            key={operation.id}
-            operation={operation}
-            context={context}
-            decision={
-              deciding && isAwaiting(operation) ? (
-                <OperationDecision
-                  operation={operation}
-                  proposal={proposal}
-                  taxonomy={taxonomy}
-                  current={context.currentProperty(operation.target_id)}
-                  staleCause={operation.stale ? causeOf(operation) : undefined}
-                  actions={actions}
-                />
-              ) : !isAwaiting(operation) ? (
-                <OperationDecided
-                  operation={operation}
-                  decision={decisions?.find((d) => d.operation_id === operation.id)}
-                  reverted={reverted}
-                />
-              ) : undefined
-            }
-            reverted={reverted}
-          />
-        )}
+        renderInspectorContent={(operation) => {
+          const picks = picksByOperation[operation.id] ?? {};
+          const picking = deciding && takesPicks(operation);
+          return (
+            <OperationInspector
+              key={operation.id}
+              operation={operation}
+              context={context}
+              picks={picks}
+              onPick={
+                picking
+                  ? (question, option) =>
+                      setPicksByOperation((all) => ({
+                        ...all,
+                        [operation.id]: { ...all[operation.id], [question]: option },
+                      }))
+                  : undefined
+              }
+              decision={
+                deciding && isAwaiting(operation) ? (
+                  <OperationDecision
+                    operation={operation}
+                    proposal={proposal}
+                    taxonomy={taxonomy}
+                    current={context.currentProperty(operation.target_id)}
+                    staleCause={operation.stale ? causeOf(operation) : undefined}
+                    actions={actions}
+                    picks={
+                      operation.reflection ? pickOutcome(operation.reflection, picks) : undefined
+                    }
+                  />
+                ) : !isAwaiting(operation) ? (
+                  <OperationDecided
+                    operation={operation}
+                    decision={decisions?.find((d) => d.operation_id === operation.id)}
+                    reverted={reverted}
+                  />
+                ) : undefined
+              }
+              reverted={reverted}
+            />
+          );
+        }}
       >
         <div className="proposal-table-filter" data-testid="proposal-operation-filter">
+          {offersGroupBy(operations) && (
+            <span className="proposal-group-by" data-testid="proposal-group-by">
+              <span className="proposal-bar__label">Group by</span>
+              <SegmentedControl
+                value={groupBy}
+                onChange={(value) => setGroupBy(value as GroupBy)}
+                aria-label="Group operations by"
+                options={[
+                  { value: "kind", label: "Change kind" },
+                  { value: "sequence", label: "Sequence" },
+                ]}
+              />
+            </span>
+          )}
           <SegmentedControl
             value={filter}
             onChange={(value) => chooseFilter(value as OperationFilter)}
@@ -665,7 +516,7 @@ export function ProposalDetailPage({
         <p className="proposals-footnote">
           {proposal.status === "reverted"
             ? "This proposal was reverted: what it applied is undone, and it takes no more decisions."
-            : `Amber marks the part of a triple or the field an update changes.${showThreshold ? " Probabilities below the threshold are muted." : ""} Select an operation to see its change, rationale and evidence.`}
+            : `Amber marks the part of a triple or the field an update changes.${showThreshold || byKind ? " Probabilities below the threshold are muted." : ""} Select an operation to see its change, rationale and evidence.`}
         </p>
         <div
           ref={tableRef}
@@ -673,25 +524,41 @@ export function ProposalDetailPage({
           className="schema-table-wrap"
           data-testid="proposal-operations-table"
           data-filter={filter}
+          data-group-by={groupBy}
         >
-          <Table<ProposedOperation>
-            rowKey="id"
-            columns={columns}
-            data={shownOperations}
-            selectedRows={selectedOperationId ? [selectedOperationId] : []}
-            onRowClick={(row) =>
-              onSelectOperation(row.id === selectedOperationId ? undefined : row.id)
-            }
-            emptyState={
-              <span className="entity-note">
-                {operations.length === 0
-                  ? "This proposal has no operations."
-                  : filter === "needs"
-                    ? "Nothing needs a decision."
-                    : "Nothing is decided yet."}
-              </span>
-            }
-          />
+          {byKind ? (
+            <TieredOperations
+              operations={shownOperations}
+              allOperations={operations}
+              context={context}
+              deciding={deciding}
+              reverted={reverted}
+              threshold={threshold}
+              onThresholdChange={setThreshold}
+              actions={actions}
+              selectedOperationId={selectedOperationId}
+              onSelectOperation={onSelectOperation}
+            />
+          ) : (
+            <Table<ProposedOperation>
+              rowKey="id"
+              columns={columns}
+              data={shownOperations}
+              selectedRows={selectedOperationId ? [selectedOperationId] : []}
+              onRowClick={(row) =>
+                onSelectOperation(row.id === selectedOperationId ? undefined : row.id)
+              }
+              emptyState={
+                <span className="entity-note">
+                  {operations.length === 0
+                    ? "This proposal has no operations."
+                    : filter === "needs"
+                      ? "Nothing needs a decision."
+                      : "Nothing is decided yet."}
+                </span>
+              }
+            />
+          )}
         </div>
       </SchemaPageLayout>
 

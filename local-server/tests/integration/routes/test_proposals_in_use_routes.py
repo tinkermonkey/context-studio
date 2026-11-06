@@ -228,6 +228,43 @@ class TestApply:
         assert restored is not None
         assert _ends(ontology, graph["blocked"]) == graph["ends"]
 
+    def test_an_edited_delete_resolved_as_a_retarget_then_revert_restores_both(
+        self, client, graph, ontology
+    ):
+        """A reviewer's picks turn a blocked delete into a retarget (#1411)."""
+        proposal, op = _propose_delete(client, graph)
+        process = ontology._repository.get_property_definition(graph["blocked"])
+        process_id = next(
+            p.range_class_id
+            for p in ontology._repository.list_property_definitions(limit=None)
+            if p.identifier == "businessevent_triggers_businessprocess"
+        )
+        seen = [e["relationship_id"] for e in op["blockers"]["edges"]]
+
+        response = client.post(
+            f"/api/proposals/{proposal['id']}/apply",
+            json={
+                "operation_ids": [op["id"]],
+                "edits": {op["id"]: {"range_class_id": process_id}},
+                "resolutions": {op["id"]: {"strategy": "delete", "relationship_ids": seen}},
+                "chosen_alternatives": {op["id"]: {"target_for": "BusinessProcess"}},
+            },
+        )
+
+        applied = response.json()["operations"][0]
+        assert applied["status"] == "applied", applied["reason"]
+        assert applied["applied_fields"] == {"range_class_id": process_id}
+        assert applied["resolution"]["strategy"] == "delete"
+        retargeted = ontology._repository.get_property_definition(graph["blocked"])
+        assert retargeted.range_class_id == process_id
+        assert _ends(ontology, graph["blocked"]) == set()
+
+        reverted = client.post(f"/api/proposals/{proposal['id']}/revert")
+        assert reverted.status_code == 200, reverted.text
+        restored = ontology._repository.get_property_definition(graph["blocked"])
+        assert restored.range_class_id == process.range_class_id == graph["function"]
+        assert _ends(ontology, graph["blocked"]) == graph["ends"]
+
     def test_move_then_revert_puts_the_relationships_back_on_the_type(
         self, client, graph, ontology
     ):

@@ -349,6 +349,100 @@ class TestApplyWithEdits:
         got = client.get(f"/api/proposals/{proposal['id']}").json()["operations"][0]
         assert got["applied_fields"] == edit
 
+    def test_a_reflection_operation_reads_its_plan_and_records_the_chosen_alternative(
+        self, client, graph, near
+    ):
+        plan = {
+            "quote": "Sorting answers: ...",
+            "entity_id": near,
+            "plan_kind": "rename-predicate",
+            "p": "0.700",
+            "alternatives": "predicate=close_to|0.70",
+            "replacement": "Room close_to Room",
+            "probabilities": json.dumps(
+                {
+                    "source_for": {"Room": 0.9, "none": 0.1},
+                    "target_for": {"Room": 0.95},
+                    "predicate_for": {"close_to": 0.7, "near": 0.2, "adjacent": 0.1},
+                }
+            ),
+            "current": json.dumps({"source": "Room", "predicate": "near", "target": "Room"}),
+            "picks": json.dumps(
+                {"source_for": "Room", "target_for": "Room", "predicate_for": "close_to"}
+            ),
+            "class_ids": json.dumps({"Room": graph["room"]}),
+        }
+        pack = {
+            "quote": "Design intent: rooms\n\nRelationship types: near",
+            "label": "Evidence pack",
+        }
+        operation = {**self._rename_near(near), "evidence": [plan, pack], "probability": 0.7}
+        proposal = _propose(client, graph, operation)
+        [op_id] = _op_ids(proposal, 1)
+
+        reflection = proposal["operations"][0]["reflection"]
+        assert reflection["plan_kind"] == "rename-predicate" and reflection["p"] == 0.7
+        assert reflection["current"] == {"source": "Room", "predicate": "near", "target": "Room"}
+        assert reflection["evidence_pack"] == ["Design intent: rooms", "Relationship types: near"]
+        questions = {q["question"]: q["options"] for q in reflection["questions"]}
+        assert [o["option"] for o in questions["predicate_for"]] == ["close_to", "near", "adjacent"]
+        assert questions["predicate_for"][0]["plan"] and questions["predicate_for"][1]["current"]
+        assert questions["source_for"][0] == {
+            "option": "Room",
+            "probability": 0.9,
+            "class_id": graph["room"],
+            "current": True,
+            "plan": True,
+        }
+        assert questions["source_for"][1]["class_id"] is None  # none
+
+        alternative = {"predicate_for": "adjacent", "triple": "Room adjacent Room"}
+        response = client.post(
+            f"/api/proposals/{proposal['id']}/apply",
+            json={
+                "operation_ids": [op_id],
+                "edits": {op_id: {"canonical_predicate": "adjacent"}},
+                "chosen_alternatives": {op_id: alternative},
+            },
+        )
+        assert response.status_code == 200, response.text
+        [decision] = client.get(f"/api/taxonomies/{graph['taxonomy']}/gold").json()["items"]
+        assert decision["decision"] == "applied_with_edits"
+        assert decision["chosen_alternative"] == alternative
+
+    @pytest.mark.parametrize(
+        "plan",
+        [
+            {"plan_kind": "reverse", "probabilities": json.dumps({"predicate_for": {"a": "x"}})},
+            {"plan_kind": "reverse", "current": json.dumps({"source": 1, "target": None})},
+            {"plan_kind": "reverse", "class_ids": "[1, 2]", "probabilities": "{"},
+        ],
+        ids=["probability", "triple", "class-ids"],
+    )
+    def test_malformed_reflection_evidence_never_fails_the_proposal(
+        self, client, graph, near, plan
+    ):
+        operation = {**self._rename_near(near), "evidence": [plan]}
+        proposal = _propose(client, graph, operation)
+
+        got = client.get(f"/api/proposals/{proposal['id']}")
+        assert got.status_code == 200
+        reflection = got.json()["operations"][0]["reflection"]
+        assert reflection["plan_kind"] == "reverse" and reflection["current"] is None
+
+    def test_an_unreadable_plan_row_is_left_out(self, client, graph, near, monkeypatch, caplog):
+        def broken(evidence):
+            raise RuntimeError("boom")
+
+        monkeypatch.setattr("adapters.web.schemas.proposals.reflection_view", broken)
+        proposal = _propose(client, graph, self._rename_near(near))
+        assert proposal["operations"][0]["reflection"] is None
+        assert "Unreadable reflection evidence" in caplog.text
+
+    def test_other_operations_have_no_reflection(self, client, graph, near):
+        proposal = _propose(client, graph, self._rename_near(near))
+        assert proposal["operations"][0]["reflection"] is None
+
     def test_unedited_operations_return_null_applied_fields(self, client, graph, near):
         proposal = _propose(client, graph, self._rename_near(near))
         [op_id] = _op_ids(proposal, 1)

@@ -2941,19 +2941,19 @@ selectors:
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Wrapper of the operations table; a row click selects the operation into the inspector"
   - selector: operation-status-*
-    component: src/components/proposals/ProposalDetailPage.tsx
+    component: src/components/proposals/OperationColumns.tsx
     description: "Status cell of an operation row (decision state chip, then flags), by operation id; data-status is the raw status, data-state the decision state"
   - selector: operation-state-*
-    component: src/components/proposals/ProposalDetailPage.tsx
+    component: src/components/proposals/OperationColumns.tsx
     description: "Decision state chip: needs decision / needs a choice (amber), failed (rose), applied / applied with edits (emerald), rejected or reverted (neutral), by operation id"
   - selector: operation-op-*
-    component: src/components/proposals/ProposalDetailPage.tsx
+    component: src/components/proposals/OperationColumns.tsx
     description: "Op chip (create / update / move / delete) of an operation row: coloured while awaiting, neutral once decided, by operation id"
   - selector: operation-resolved-*
-    component: src/components/proposals/ProposalDetailPage.tsx
+    component: src/components/proposals/OperationColumns.tsx
     description: "Neutral record chip on a decided delete applied with a resolution: \"moved N relationships\" / \"dropped N relationships\", by operation id"
   - selector: operation-stale-*
-    component: src/components/proposals/ProposalDetailPage.tsx
+    component: src/components/proposals/OperationColumns.tsx
     description: "\"stale\" chip on an operation whose target changed since proposed: rose while awaiting, neutral once decided, by operation id"
   - selector: operation-diff-*
     component: src/components/proposals/OperationDiff.tsx
@@ -3003,10 +3003,10 @@ selectors:
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Apply anyway ConfirmDialog body: each stale operation and what changed, or that its target is gone"
   - selector: operation-check-*
-    component: src/components/proposals/ProposalDetailPage.tsx
+    component: src/components/proposals/OperationColumns.tsx
     description: "Selection checkbox of an operation row awaiting a decision, by operation id (decided rows have none)"
   - selector: operation-probability-*
-    component: src/components/proposals/ProposalDetailPage.tsx
+    component: src/components/proposals/OperationColumns.tsx
     description: "Probability cell, by operation id; op-probability--below when under the threshold"
   - selector: proposal-threshold-bar
     component: src/components/proposals/DecisionBars.tsx
@@ -3023,6 +3023,96 @@ selectors:
   - selector: proposal-threshold-select
     component: src/components/proposals/DecisionBars.tsx
     description: "\"Select N\": checks the awaiting, non-stale operations at or above the threshold"
+  - selector: proposal-group-by
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Group by control (Change kind / Sequence), shown when some operation carries a plan kind"
+  - selector: tiered-operations
+    component: src/components/proposals/TieredOperations.tsx
+    description: "Change kind view of a change plan: mechanical, judgment and conflict sections"
+  - selector: tiered-mechanical
+    component: src/components/proposals/TieredOperations.tsx
+    description: "Mechanical section (remove-duplicate, rename-predicate, reverse): accept by threshold"
+  - selector: tiered-judgment
+    component: src/components/proposals/TieredOperations.tsx
+    description: "Judgment section (retarget, compound): decided row by row, never bulk-selected"
+  - selector: tiered-conflicts
+    component: src/components/proposals/TieredOperations.tsx
+    description: "Conflicts section: one card per cluster of contradicting operations"
+  - selector: tiered-other
+    component: src/components/proposals/TieredOperations.tsx
+    description: "Operations of no known plan kind in the Change kind view"
+  - selector: tiered-threshold
+    component: src/components/proposals/TieredOperations.tsx
+    description: "The mechanical section's threshold (p >=) and its Accept button"
+  - selector: tiered-threshold-slider
+    component: src/components/proposals/TieredOperations.tsx
+    description: "Mechanical threshold range input (0 to 1, step 0.05, default 0.60)"
+  - selector: tiered-threshold-value
+    component: src/components/proposals/TieredOperations.tsx
+    description: "The mechanical threshold as two decimals"
+  - selector: tiered-accept-threshold
+    component: src/components/proposals/TieredOperations.tsx
+    description: "\"Accept N at or above\": applies the mechanical, awaiting, non-stale, non-blocked operations at or above the threshold"
+  - selector: tiered-group-*
+    component: src/components/proposals/TieredOperations.tsx
+    description: "One plan kind's group, by kind (e.g. tiered-group-reverse): count and p range"
+  - selector: tiered-group-selected-*
+    component: src/components/proposals/TieredOperations.tsx
+    description: "\"k of n selected\" by the threshold in a mechanical kind group, by kind"
+  - selector: operation-threshold-mark-*
+    component: src/components/proposals/OperationColumns.tsx
+    description: "Check mark on a mechanical row the threshold selects, by operation id"
+  - selector: judgment-change-*
+    component: src/components/proposals/TieredOperations.tsx
+    description: "A judgment row's change: current triple struck through and the plan's pick, by operation id"
+  - selector: judgment-alt-*
+    component: src/components/proposals/TieredOperations.tsx
+    description: "A judgment row's best alternative with its p, by operation id"
+  - selector: conflict-card-*
+    component: src/components/proposals/TieredOperations.tsx
+    description: "A conflict cluster card, by its lowest seq's operation id"
+  - selector: conflict-op-*
+    component: src/components/proposals/TieredOperations.tsx
+    description: "One operation in a conflict card: its change, kind, p, state and rationale, by operation id"
+  - selector: conflict-select-*
+    component: src/components/proposals/TieredOperations.tsx
+    description: "\"seq N\" toggle button selecting a conflict card's operation for the inspector (aria-pressed), by operation id"
+  - selector: conflict-kept-*
+    component: src/components/proposals/TieredOperations.tsx
+    description: "\"Seq N is applied.\": a member of the conflict is applied, by cluster id"
+  - selector: conflict-reject-rest-*
+    component: src/components/proposals/TieredOperations.tsx
+    description: "\"Reject the rest (conflict: kept seq N)\" once a member is applied, by cluster id"
+  - selector: conflict-back-*
+    component: src/components/proposals/TieredOperations.tsx
+    description: "Back from Keep both to the conflict's choices, by cluster id"
+  - selector: conflict-keep-*
+    component: src/components/proposals/TieredOperations.tsx
+    description: "\"Keep seq N\": applies that operation and rejects the others (\"conflict: kept seq N\"), by operation id"
+  - selector: conflict-keep-all-*
+    component: src/components/proposals/TieredOperations.tsx
+    description: "\"Keep both\" / \"Keep all\": changes nothing, decide each in the inspector; by cluster id"
+  - selector: conflict-reject-all-*
+    component: src/components/proposals/TieredOperations.tsx
+    description: "\"Reject both\" / \"Reject all N\" of a conflict cluster, by cluster id"
+  - selector: conflict-individual-*
+    component: src/components/proposals/TieredOperations.tsx
+    description: "Shown after Keep both: decide each in the inspector, by cluster id"
+  - selector: reflection-answers
+    component: src/components/proposals/ReflectionAnswers.tsx
+    description: "Inspector: the reflection's three sorting questions with ranked options"
+  - selector: reflection-question-*
+    component: src/components/proposals/ReflectionAnswers.tsx
+    description: "One sorting question's radio group, by question (source_for, target_for, predicate_for)"
+  - selector: reflection-option-*
+    component: src/components/proposals/ReflectionAnswers.tsx
+    description: "One option of a sorting question with its probability bar and current/plan marks, by question and option"
+  - selector: reflection-evidence-pack
+    component: src/components/proposals/ReflectionAnswers.tsx
+    description: "Inspector: the evidence pack blocks the decision model read"
+  - selector: operation-picks-callout
+    component: src/components/proposals/OperationDecision.tsx
+    description: "Decision callout: the reviewer's picks make another triple (accept with my picks), or the current one"
   - selector: proposal-selection-bar
     component: src/components/proposals/DecisionBars.tsx
     description: "Bulk bar shown while operations are checked"
@@ -3161,7 +3251,7 @@ selectors:
 
   # Review queue: relationship-type deletes still in use (#1393)
   - selector: operation-blocked-*
-    component: src/components/proposals/ProposalDetailPage.tsx
+    component: src/components/proposals/OperationColumns.tsx
     description: "Amber \"N in use: move or drop\" chip on an awaiting relationship-type delete whose type relationships still use, by operation id"
   - selector: proposal-selection-note
     component: src/components/proposals/DecisionBars.tsx
@@ -3229,7 +3319,7 @@ selectors:
     component: src/components/proposals/OperationInspector.tsx
     description: "Callout comparing the replacement's pair of classes with the deleted type's (warn for a different pair or a missing replacement); plain text once the operation is decided"
   - selector: operation-replacement-chip-*
-    component: src/components/proposals/ProposalDetailPage.tsx
+    component: src/components/proposals/OperationColumns.tsx
     description: "Row chips (role=note) on a delete whose named replacement links a reversed or different pair, is gone, or is deleted by the proposal too, by operation id; coloured while awaiting, neutral once decided; data-pair holds the pair verdict, data-replacement-deleted is chain or cycle"
   - selector: operation-replacement-id
     component: src/components/proposals/OperationInspector.tsx
