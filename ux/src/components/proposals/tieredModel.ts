@@ -31,11 +31,20 @@ export function isMechanical(operation: ProposedOperation): boolean {
 }
 
 /**
- * True unless the operation is a judgment or conflict row: those are decided
- * one by one, never by a threshold, a checkbox or "Accept N ready".
+ * True unless the operation is a judgment or conflict row, or sits in a
+ * conflict card (`conflicted`, see conflictedIds): those are decided one by
+ * one, never by a threshold, a checkbox or "Accept N ready".
  */
-export function isBulkEligible(operation: ProposedOperation): boolean {
-  return !NEVER_BULK.has(kindOf(operation) ?? "");
+export function isBulkEligible(
+  operation: ProposedOperation,
+  conflicted: ReadonlySet<string> = new Set(),
+): boolean {
+  return !NEVER_BULK.has(kindOf(operation) ?? "") && !conflicted.has(operation.id);
+}
+
+/** The operations conflict cards show. */
+export function conflictedIds(operations: ProposedOperation[]): Set<string> {
+  return new Set(conflictClusters(operations).flatMap((c) => c.operations.map((o) => o.id)));
 }
 
 /** Group by is offered when some operation carries a plan kind. */
@@ -52,8 +61,12 @@ export function defaultGroupBy(operations: ProposedOperation[]): GroupBy {
 export function mechanicalAtOrAbove(
   operations: ProposedOperation[],
   threshold: number,
+  conflicted: ReadonlySet<string> = new Set(),
 ): ProposedOperation[] {
-  return atOrAboveThreshold(operations.filter(isMechanical), threshold);
+  return atOrAboveThreshold(
+    operations.filter((o) => isMechanical(o) && !conflicted.has(o.id)),
+    threshold,
+  );
 }
 
 // ==================== Groups ====================
@@ -99,19 +112,20 @@ function keysOf(operation: ProposedOperation): string[] {
   );
 }
 
-/** The type an operation's change lands on: a delete's replacement, the plan's triple. */
+/** The triple an operation's change makes (the plan's replacement). */
 function linksOf(operation: ProposedOperation): string[] {
-  return [operation.proposed_replacement_id, operation.reflection?.replacement].filter(
-    (k): k is string => !!k,
-  );
+  const replacement = operation.reflection?.replacement;
+  return replacement ? [replacement] : [];
 }
 
 /**
- * Conflict operations with the operations they contradict: two operations are
- * linked when they change the same type, or one's change lands on the type the
- * other changes. Each cluster holds at least one conflict-kind operation; it
- * and everything linked to it are decided together. Clusters and their
- * operations are in seq order.
+ * Conflict operations with the operations they contradict (the reflection
+ * pipeline's rule): two operations are linked when they change the same type,
+ * or one's replacement triple is the current triple of a type the other
+ * changes. A delete that merely names another operation's type as its
+ * replacement depends on it, but doesn't contradict it. Each cluster holds at
+ * least one conflict-kind operation. Clusters and their operations are in seq
+ * order.
  */
 export function conflictClusters(operations: ProposedOperation[]): ConflictCluster[] {
   const parent = new Map(operations.map((o) => [o.id, o.id]));
@@ -180,15 +194,33 @@ export function effectiveOption(
   );
 }
 
-/** An option the reviewer can pick: not 'none', and a class option needs its class id. */
-export function isPickable(question: string, option: ReflectionOption): boolean {
+/**
+ * An option the reviewer can pick: never 'none'; a class option needs its
+ * class id; a predicate only when the answers it makes can be applied as an
+ * edit (an older proposal without class ids can still rename its type, but
+ * not reverse or retarget it). The plan's own answer can always be picked back.
+ */
+export function isPickable(
+  reflection: Reflection,
+  question: string,
+  option: ReflectionOption,
+  picks: Picks = {},
+): boolean {
   if (option.option === NONE) return false;
-  return question === "predicate_for" || !!option.class_id;
+  if (question !== "predicate_for") return !!option.class_id;
+  if (option.plan) return true;
+  const outcome = pickOutcome(reflection, { ...picks, [question]: option.option });
+  return !!outcome && (!outcome.changed || outcome.keepsCurrent || !!outcome.fields);
 }
+
+/** How a type's new pair of classes compares with its current one. */
+export type PairChange = "same" | "reversed" | "different";
 
 interface Resolved {
   triple: string;
   fields?: Record<string, unknown>;
+  /** Unknown without the current triple. */
+  pair?: PairChange;
 }
 
 function resolve(reflection: Reflection, picks: Picks): Resolved | undefined {
@@ -199,12 +231,24 @@ function resolve(reflection: Reflection, picks: Picks): Resolved | undefined {
   const reversed = predicate.startsWith(REVERSE);
   const name = reversed ? predicate.slice(REVERSE.length) : predicate;
   const [from, to] = reversed ? [target, source] : [source, target];
+  const current = reflection.current;
+  const pair: PairChange | undefined = !current
+    ? undefined
+    : from.option === current.source && to.option === current.target
+      ? "same"
+      : from.option === current.target && to.option === current.source
+        ? "reversed"
+        : "different";
   return {
     triple: `${from.option} ${name} ${to.option}`,
+    pair,
     fields:
       from.class_id && to.class_id
         ? { canonical_predicate: name, domain_class_id: from.class_id, range_class_id: to.class_id }
-        : undefined,
+        : pair === "same"
+          ? // No class ids recorded, but the pair stays: the predicate alone renames it.
+            { canonical_predicate: name }
+          : undefined,
   };
 }
 
@@ -217,8 +261,10 @@ export interface PickOutcome {
   changed: boolean;
   /** The picks make the current triple: nothing to accept (reject to keep it). */
   keepsCurrent: boolean;
-  /** The `edits[op_id]` entry when changed. */
+  /** The `edits[op_id]` entry when changed; absent when the answers can't be applied. */
   fields?: Record<string, unknown>;
+  /** How the picks' pair compares with the type's current one (a retarget is "different"). */
+  pair?: PairChange;
   /** The gold record of the picks when changed. */
   chosenAlternative?: Record<string, unknown>;
 }
@@ -242,6 +288,7 @@ export function pickOutcome(reflection: Reflection, picks: Picks = {}): PickOutc
     planTriple: plan.triple,
     changed,
     keepsCurrent,
+    pair: mine.pair,
     fields: changed && !keepsCurrent ? mine.fields : undefined,
     chosenAlternative:
       changed && !keepsCurrent ? { ...answers, triple: mine.triple, plan: plan.triple } : undefined,

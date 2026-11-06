@@ -4718,14 +4718,14 @@ export interface components {
       };
       /**
        * Resolutions
-       * @description Operation id -> how to resolve the relationships still using the relationship type a property delete in operation_ids removes (see the operation's blockers), or a property update that retargets (gives the type another domain and range pair) needs while relationships use it. Moved or deleted in one transaction with the type; a misfit or any failing step fails only that operation, changing nothing. Not with an edit of the same delete; an update that renames or reverses the type takes none (a reverse always swaps the ends of its relationships)
+       * @description Operation id -> how to resolve the relationships still using the relationship type a property delete in operation_ids removes (see the operation's blockers), or a property update that retargets (gives the type another domain and range pair) needs while relationships use it. Moved or deleted in one transaction with the type; a misfit or any failing step fails only that operation, changing nothing. An edited delete applies as an update, so with an edit it takes a resolution only when the edit retargets the type; an update that renames or reverses the type takes none (a reverse always swaps the ends of its relationships)
        */
       resolutions?: {
         [key: string]: components["schemas"]["InUseResolutionRequest"];
       };
       /**
        * Chosen Alternatives
-       * @description Operation id -> the alternative the reviewer chose over the proposal's pick (e.g. a reflection's answers per question), for an operation in operation_ids; recorded in its decision as chosen_alternative. Usually with an edit that applies it
+       * @description Operation id -> the alternative the reviewer chose over the proposal's pick (e.g. a reflection's answers per question): a non-empty object, for an operation in operation_ids that edits also has (the edit applies it); recorded in its decision as chosen_alternative
        */
       chosen_alternatives?: {
         [key: string]: {
@@ -8076,6 +8076,8 @@ export interface components {
        * @default false
        */
       stale: boolean;
+      /** @description A pending or failed relationship-type update that keeps its pair (a rename or reverse) while relationships use the type: those relationships and the types they all fit. Applying it as proposed needs nothing, but an edit that retargets the type needs a resolution of them. Null otherwise */
+      type_usage?: components["schemas"]["DeleteBlockersResponse"] | null;
       /** @description A pending or failed relationship-type delete, or update that retargets the type, whose type relationships still use: applying it as proposed fails; it needs a resolution. Null otherwise. The proposed replacement, when it fits, is listed first */
       blockers?: components["schemas"]["DeleteBlockersResponse"] | null;
       /**

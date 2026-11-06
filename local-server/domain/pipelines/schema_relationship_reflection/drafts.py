@@ -17,6 +17,7 @@ pack the decision model read. `reflection_view` reads them back for a reviewer.
 from __future__ import annotations
 
 import json
+import math
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -234,6 +235,10 @@ def reflection_view(evidence: Sequence[Mapping[str, Any]]) -> ReflectionView | N
     Operations recorded before the current triple, picks and class ids were
     kept read their picks from the alternatives and have no current marks.
 
+    Evidence is free-form, so what doesn't read is left out: a probability
+    that isn't a number drops its option, a triple part or class id that isn't
+    a string is ignored.
+
     Returns:
         None when the evidence is not a reflection plan row's
     """
@@ -242,25 +247,23 @@ def reflection_view(evidence: Sequence[Mapping[str, Any]]) -> ReflectionView | N
         return None
     probabilities = _json(item.get("probabilities"))
     current_json = _json(item.get("current"))
-    current = (
-        Triple(current_json["source"], current_json["predicate"], current_json["target"])
-        if {"source", "predicate", "target"} <= current_json.keys()
-        else None
-    )
+    parts = [current_json.get(k) for k in ("source", "predicate", "target")]
+    current = Triple(*parts) if all(isinstance(x, str) for x in parts) else None
     picks = {k: v for k, v in _json(item.get("picks")).items() if isinstance(v, str)}
     if not picks:
         picks = _alternative_picks(str(item.get("alternatives") or "").split("; "))
     if current is not None:
         picks = {**_current_answers(current), **picks}
-    class_ids = _json(item.get("class_ids"))
+    class_ids = {k: v for k, v in _json(item.get("class_ids")).items() if isinstance(v, str)}
     currents = _current_answers(current) if current is not None else {}
     answers: dict[str, list[AnswerOption]] = {}
     for question in QUESTION_NAMES:
         options = probabilities.get(question)
         if not isinstance(options, Mapping):
             continue
-        ranked = sorted(
-            ((str(k), float(v)) for k, v in options.items()), key=lambda kv: (-kv[1], kv[0])
+        numeric = ((str(k), _number(v)) for k, v in options.items())
+        ranked: list[tuple[str, float]] = sorted(
+            ((k, v) for k, v in numeric if v is not None), key=lambda kv: (-kv[1], kv[0])
         )
         listed = {option for option, _ in ranked}
         for marked in dict.fromkeys((currents.get(question), picks.get(question))):
@@ -292,7 +295,7 @@ def reflection_view(evidence: Sequence[Mapping[str, Any]]) -> ReflectionView | N
         plan_kind=str(item["plan_kind"]),
         p=_number(item.get("p")),
         current=current,
-        replacement=item.get("replacement") if isinstance(item.get("replacement"), str) else None,
+        replacement=_text(item.get("replacement")),
         answers=answers,
         evidence_pack=(
             [block.strip() for block in pack.split("\n\n") if block.strip()]
@@ -300,6 +303,10 @@ def reflection_view(evidence: Sequence[Mapping[str, Any]]) -> ReflectionView | N
             else []
         ),
     )
+
+
+def _text(value: Any) -> str | None:
+    return value if isinstance(value, str) else None
 
 
 def _json(value: Any) -> dict[str, Any]:
@@ -313,10 +320,13 @@ def _json(value: Any) -> dict[str, Any]:
 
 
 def _number(value: Any) -> float | None:
+    if isinstance(value, bool):
+        return None
     try:
-        return float(value)
+        number = float(value)
     except (TypeError, ValueError):
         return None
+    return number if math.isfinite(number) else None
 
 
 def _alternative_picks(alternatives: Sequence[str]) -> dict[str, str]:

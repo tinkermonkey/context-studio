@@ -18,7 +18,6 @@ import {
   replacementEndLabel,
   replacementFlag,
 } from "./proposalModel";
-import { isBulkEligible } from "./tieredModel";
 import type { OperationContext } from "./useOperationContext";
 import "./proposals.css";
 
@@ -28,8 +27,15 @@ export interface ColumnOptions {
   showPlanKind: boolean;
   /** Probabilities below it are muted; undefined without a threshold bar. */
   threshold?: number;
-  /** Checkbox selection of awaiting operations, while the proposal takes decisions. */
-  selection?: { checked: Set<string>; toggle: (id: string) => void };
+  /**
+   * Checkbox selection of awaiting operations, while the proposal takes
+   * decisions; `eligible` says which may be bulk-decided at all.
+   */
+  selection?: {
+    checked: Set<string>;
+    toggle: (id: string) => void;
+    eligible: (row: ProposedOperation) => boolean;
+  };
   /** The proposal was reverted: what it applied reads as reverted. */
   reverted: boolean;
   /** Operations the threshold selects: marked in a leading column. */
@@ -73,7 +79,7 @@ export function operationColumns(
             // Only an operation awaiting a decision can be picked for a bulk decision,
             // and never a judgment or conflict row of a change plan.
             render: (_: unknown, row: ProposedOperation) =>
-              isAwaiting(row) && isBulkEligible(row) ? (
+              isAwaiting(row) && selection.eligible(row) ? (
                 <input
                   type="checkbox"
                   className="table__checkbox"

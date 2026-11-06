@@ -410,6 +410,35 @@ class TestApplyWithEdits:
         assert decision["decision"] == "applied_with_edits"
         assert decision["chosen_alternative"] == alternative
 
+    @pytest.mark.parametrize(
+        "plan",
+        [
+            {"plan_kind": "reverse", "probabilities": json.dumps({"predicate_for": {"a": "x"}})},
+            {"plan_kind": "reverse", "current": json.dumps({"source": 1, "target": None})},
+            {"plan_kind": "reverse", "class_ids": "[1, 2]", "probabilities": "{"},
+        ],
+        ids=["probability", "triple", "class-ids"],
+    )
+    def test_malformed_reflection_evidence_never_fails_the_proposal(
+        self, client, graph, near, plan
+    ):
+        operation = {**self._rename_near(near), "evidence": [plan]}
+        proposal = _propose(client, graph, operation)
+
+        got = client.get(f"/api/proposals/{proposal['id']}")
+        assert got.status_code == 200
+        reflection = got.json()["operations"][0]["reflection"]
+        assert reflection["plan_kind"] == "reverse" and reflection["current"] is None
+
+    def test_an_unreadable_plan_row_is_left_out(self, client, graph, near, monkeypatch, caplog):
+        def broken(evidence):
+            raise RuntimeError("boom")
+
+        monkeypatch.setattr("adapters.web.schemas.proposals.reflection_view", broken)
+        proposal = _propose(client, graph, self._rename_near(near))
+        assert proposal["operations"][0]["reflection"] is None
+        assert "Unreadable reflection evidence" in caplog.text
+
     def test_other_operations_have_no_reflection(self, client, graph, near):
         proposal = _propose(client, graph, self._rename_near(near))
         assert proposal["operations"][0]["reflection"] is None

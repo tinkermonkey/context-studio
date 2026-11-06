@@ -181,6 +181,16 @@ def test_a_chosen_alternative_for_an_operation_not_applied_is_refused(parts, hou
 
     with pytest.raises(ValueError, match="Chosen alternatives"):
         service.apply(proposal.id, [ops[2].id], chosen_alternatives={ops[3].id: {"x": 1}})
+    # an alternative records what an edit applies: it needs one, and isn't empty
+    with pytest.raises(ValueError, match="needs the edit"):
+        service.apply(proposal.id, [ops[3].id], chosen_alternatives={ops[3].id: {"x": 1}})
+    with pytest.raises(ValueError, match="is empty"):
+        service.apply(
+            proposal.id,
+            [ops[3].id],
+            edits={ops[3].id: {"title": "next to"}},
+            chosen_alternatives={ops[3].id: {}},
+        )
     assert gold(service, house) == []
 
 

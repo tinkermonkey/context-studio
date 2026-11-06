@@ -131,6 +131,9 @@ class FakeProposalService:
     def in_use_blockers(self, proposal):
         return self.blockers
 
+    def type_usage(self, proposal):
+        return {}
+
     def auto_apply_operation_ids(self, proposal):
         return self.auto
 

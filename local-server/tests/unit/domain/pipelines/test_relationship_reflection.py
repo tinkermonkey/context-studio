@@ -459,6 +459,32 @@ class TestDrafts:
         ]
         assert reflection_view([{"quote": "not a plan row"}]) is None
 
+    @pytest.mark.parametrize(
+        "malformed",
+        [
+            # a probability that isn't a number drops that option only
+            {"probabilities": json.dumps({PREDICATE_FOR: {"a": "high", "b": 0.4, "c": None}})},
+            # a triple part that isn't a string: no current triple
+            {
+                "probabilities": json.dumps({PREDICATE_FOR: {"b": 0.4}}),
+                "current": json.dumps({"source": 1, "predicate": ["p"], "target": "t"}),
+            },
+            # class ids that aren't strings, and JSON that isn't an object
+            {
+                "probabilities": json.dumps({PREDICATE_FOR: {"b": 0.4}, SOURCE_FOR: [1]}),
+                "class_ids": json.dumps({"b": 7}),
+                "picks": "not json",
+            },
+        ],
+        ids=["probability", "triple", "class-ids"],
+    )
+    def test_malformed_evidence_reads_what_it_can(self, malformed):
+        view = reflection_view([{"plan_kind": "rename-predicate", "p": "x", **malformed}])
+        assert view.p is None and view.current is None
+        assert [(o.option, o.probability, o.class_id) for o in view.answers[PREDICATE_FOR]] == [
+            ("b", 0.4, None)
+        ]
+
     def test_a_second_update_onto_the_same_new_triple_deletes_naming_the_first(self, repo, house):
         catalog = catalog_of(repo, house)
         task = catalog.triple(repo.get_property_definition(house["task_located_in"]))

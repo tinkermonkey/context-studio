@@ -59,6 +59,7 @@ def proposal_response(
         service.in_use_blockers(proposal),
         service.replacement_checks(proposal),
         service.auto_apply_operation_ids(proposal) if dry_run else None,
+        service.type_usage(proposal),
     )
 
 

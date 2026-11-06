@@ -860,18 +860,29 @@
     border: 1px solid rgb(var(--canvas-border));
     border-radius: 6px;
     background: rgb(var(--canvas-bg));
-    color: inherit;
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
   }
 
-  .conflict-op:hover,
-  .conflict-op[aria-pressed="true"] {
+  .conflict-op--selected {
     border-color: var(--accent-amber);
   }
 
-  .conflict-op:focus-visible {
+  .conflict-op__select {
+    padding: 1px 6px;
+    border: 1px solid rgb(var(--canvas-border-strong));
+    border-radius: 4px;
+    background: transparent;
+    color: rgb(var(--canvas-fg-1));
+    font-family: var(--font-mono);
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .conflict-op__select:hover,
+  .conflict-op__select[aria-pressed="true"] {
+    border-color: var(--accent-amber);
+  }
+
+  .conflict-op__select:focus-visible {
     outline: 2px solid var(--accent-amber);
     outline-offset: 2px;
   }

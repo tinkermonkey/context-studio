@@ -3073,7 +3073,19 @@ selectors:
     description: "A conflict cluster card, by its lowest seq's operation id"
   - selector: conflict-op-*
     component: src/components/proposals/TieredOperations.tsx
-    description: "One operation in a conflict card (selects it for the inspector), by operation id"
+    description: "One operation in a conflict card: its change, kind, p, state and rationale, by operation id"
+  - selector: conflict-select-*
+    component: src/components/proposals/TieredOperations.tsx
+    description: "\"seq N\" toggle button selecting a conflict card's operation for the inspector (aria-pressed), by operation id"
+  - selector: conflict-kept-*
+    component: src/components/proposals/TieredOperations.tsx
+    description: "\"Seq N is applied.\": a member of the conflict is applied, by cluster id"
+  - selector: conflict-reject-rest-*
+    component: src/components/proposals/TieredOperations.tsx
+    description: "\"Reject the rest (conflict: kept seq N)\" once a member is applied, by cluster id"
+  - selector: conflict-back-*
+    component: src/components/proposals/TieredOperations.tsx
+    description: "Back from Keep both to the conflict's choices, by cluster id"
   - selector: conflict-keep-*
     component: src/components/proposals/TieredOperations.tsx
     description: "\"Keep seq N\": applies that operation and rejects the others (\"conflict: kept seq N\"), by operation id"

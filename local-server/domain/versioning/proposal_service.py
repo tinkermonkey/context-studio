@@ -1178,9 +1178,9 @@ class ProposalService:
                 misplaced (its operation isn't being applied or isn't a property
                 update or delete, it is empty, or it points at a "$ref"), or a
                 resolution is (its operation isn't being applied, isn't a
-                property delete or update, or is an edited delete), or a chosen
-                alternative is (its operation isn't being applied); nothing is
-                applied
+                property delete or update), or a chosen alternative is (its
+                operation isn't being applied with an edit, or it is empty);
+                nothing is applied
         """
         with self._lock(proposal_id):
             proposal = self._get(proposal_id)
@@ -1192,11 +1192,7 @@ class ProposalService:
             resolutions = dict(resolutions or {})
             self._check_resolutions_placed(proposal, chosen, edits, resolutions)
             alternatives = dict(chosen_alternatives or {})
-            misplaced = sorted(set(alternatives) - {o.id for o in chosen})
-            if misplaced:
-                raise ValueError(
-                    f"Chosen alternatives for operations not being applied: {misplaced}"
-                )
+            self._check_alternatives_placed(chosen, edits, alternatives)
             force = set(force_stale)
             refs = {o.ref: o for o in proposal.operations if o.ref}
 
@@ -1264,6 +1260,24 @@ class ProposalService:
                 raise ValueError(f"{label}: an edit can't point at a $ref ({refs})")
 
     @staticmethod
+    def _check_alternatives_placed(
+        chosen: list[ProposedOperation],
+        edits: dict[str, dict[str, Any]],
+        alternatives: dict[str, dict[str, Any]],
+    ) -> None:
+        """Each chosen alternative is non-empty, for an operation being applied with an edit."""
+        misplaced = sorted(set(alternatives) - {o.id for o in chosen})
+        if misplaced:
+            raise ValueError(f"Chosen alternatives for operations not being applied: {misplaced}")
+        for operation_id, alternative in alternatives.items():
+            if not isinstance(alternative, dict) or not alternative:
+                raise ValueError(f"The chosen alternative for {operation_id} is empty")
+            if operation_id not in edits:
+                raise ValueError(
+                    f"The chosen alternative for {operation_id} needs the edit that applies it"
+                )
+
+    @staticmethod
     def _check_resolutions_placed(
         proposal: ChangeProposal,
         chosen: list[ProposedOperation],
@@ -1271,9 +1285,9 @@ class ProposalService:
         resolutions: dict[str, InUseResolution],
     ) -> None:
         """
-        Each resolution is for a property delete (not also edited) or update
-        being applied, and doesn't move relationships to a type the proposal
-        also deletes.
+        Each resolution is for a property delete or update being applied (an
+        edited delete applies as an update, so its resolution is a retarget's),
+        and doesn't move relationships to a type the proposal also deletes.
         """
         deleted = {
             o.target_id: o.seq
@@ -1294,8 +1308,6 @@ class ProposalService:
                     f"seq {operation.seq} is a {operation.kind.value} {operation.op.value}; "
                     "only a property delete or update takes a resolution"
                 )
-            if operation_id in edits and operation.op is OperationType.DELETE:
-                raise ValueError(f"seq {operation.seq} has both an edit and a resolution")
             replacement = resolutions[operation_id].replacement_property_id
             if replacement is not None and replacement in deleted:
                 raise ValueError(
@@ -1901,9 +1913,37 @@ class ProposalService:
             for o in proposal.pending
             if o.kind is K.PROPERTY and o.op is OperationType.UPDATE and self._retargets(o)
         ]
-        if not deletes and not retargets:
+        return self._blockers_of(proposal, deletes + retargets)
+
+    def type_usage(self, proposal: ChangeProposal) -> dict[str, DeleteBlockers]:
+        """
+        For each pending or failed property update that keeps its type's pair
+        (a rename or reverse, which needs no resolution) while relationships use
+        the type: those relationships and the types they all fit, as
+        `in_use_blockers` lists them. A reviewer's edit that retargets such an
+        update instead needs a resolution of them.
+        """
+        updates = [
+            o
+            for o in proposal.pending
+            if o.kind is K.PROPERTY
+            and o.op is OperationType.UPDATE
+            and o.target_id
+            and not self._retargets(o)
+        ]
+        return self._blockers_of(proposal, updates)
+
+    def _blockers_of(
+        self, proposal: ChangeProposal, operations: list[ProposedOperation]
+    ) -> dict[str, DeleteBlockers]:
+        """The relationships using each operation's type, and the types they all fit."""
+        if not operations:
             return {}
-        deleted = {o.id: str(o.target_id) for o in deletes}
+        deleted = {
+            o.id: str(o.target_id)
+            for o in proposal.pending
+            if o.kind is K.PROPERTY and o.op is OperationType.DELETE and o.target_id
+        }
         covered = {
             str(o.target_id)
             for o in proposal.pending
@@ -1911,7 +1951,7 @@ class ProposalService:
         }
         inspector = InUseInspector(self._repo)
         found: dict[str, DeleteBlockers] = {}
-        for operation in deletes + retargets:
+        for operation in operations:
             target_id = str(operation.target_id)
             others = set(deleted.values()) - {target_id}
             blockers = inspector.blockers(target_id, excluded=others, covered=covered)

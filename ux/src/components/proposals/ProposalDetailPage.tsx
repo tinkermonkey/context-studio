@@ -54,6 +54,7 @@ import {
   refsByOperation,
 } from "./proposalModel";
 import {
+  conflictedIds,
   defaultGroupBy,
   isBulkEligible,
   offersGroupBy,
@@ -171,7 +172,12 @@ export function ProposalDetailPage({
     : "sequence";
   const byKind = groupBy === "kind";
   // Judgment and conflict rows of a change plan are never bulk-decided.
-  const bulkOps = useMemo(() => awaitingOps.filter(isBulkEligible), [awaitingOps]);
+  // So are the operations a conflict card shows, in either view.
+  const conflicted = useMemo(() => conflictedIds(operations), [operations]);
+  const bulkOps = useMemo(
+    () => awaitingOps.filter((o) => isBulkEligible(o, conflicted)),
+    [awaitingOps, conflicted],
+  );
   const bulkReady = bulkOps.filter((o) => !o.stale && !isBlocked(o));
   const showThreshold =
     !byKind && deciding && awaitingOps.length > 0 && hasProbabilities(operations);
@@ -190,11 +196,12 @@ export function ProposalDetailPage({
                 setChecked((ids) =>
                   ids.includes(opId) ? ids.filter((i) => i !== opId) : [...ids, opId],
                 ),
+              eligible: (row) => isBulkEligible(row, conflicted),
             }
           : undefined,
         reverted,
       }),
-    [context, showPlanKind, showThreshold, threshold, selectable, checked, reverted],
+    [context, showPlanKind, showThreshold, threshold, selectable, checked, reverted, conflicted],
   );
 
   // A deep link (?op=) scrolls its row into view once the operations load.
@@ -522,6 +529,7 @@ export function ProposalDetailPage({
           {byKind ? (
             <TieredOperations
               operations={shownOperations}
+              allOperations={operations}
               context={context}
               deciding={deciding}
               reverted={reverted}

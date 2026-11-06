@@ -4,6 +4,7 @@ Pydantic schemas for the change proposal API.
 Names carry the ChangeProposal prefix, the domain's name for a proposal.
 """
 
+import logging
 from datetime import datetime
 from typing import Any, Collection, Optional
 
@@ -27,6 +28,8 @@ from domain.versioning.proposals import (
     ProposedOperation,
     ResolutionStrategy,
 )
+
+logger = logging.getLogger(__name__)
 
 # ==================== Requests ====================
 
@@ -125,16 +128,17 @@ class ChangeProposalApplyRequest(BaseModel):
         "blockers), or a property update that retargets (gives the type another domain and "
         "range pair) needs while relationships use it. Moved or deleted in one transaction "
         "with the type; a "
-        "misfit or any failing step fails only that operation, changing nothing. Not with an "
-        "edit of the same delete; an update that renames or reverses the type takes none "
+        "misfit or any failing step fails only that operation, changing nothing. An edited "
+        "delete applies as an update, so with an edit it takes a resolution only when the "
+        "edit retargets the type; an update that renames or reverses the type takes none "
         "(a reverse always swaps the ends of its relationships)",
     )
     chosen_alternatives: dict[str, dict[str, Any]] = Field(
         default_factory=dict,
         description="Operation id -> the alternative the reviewer chose over the proposal's "
-        "pick (e.g. a reflection's answers per question), for an operation in "
-        "operation_ids; recorded in its decision as chosen_alternative. Usually with an "
-        "edit that applies it",
+        "pick (e.g. a reflection's answers per question): a non-empty object, for an "
+        "operation in operation_ids that edits also has (the edit applies it); recorded in "
+        "its decision as chosen_alternative",
     )
 
 
@@ -412,6 +416,13 @@ class ProposedOperationResponse(BaseModel):
         description="Pending or failed, and its target is gone or a field it touches "
         "changed since proposed; applying it needs force_stale",
     )
+    type_usage: Optional[DeleteBlockersResponse] = Field(
+        None,
+        description="A pending or failed relationship-type update that keeps its pair (a "
+        "rename or reverse) while relationships use the type: those relationships and the "
+        "types they all fit. Applying it as proposed needs nothing, but an edit that "
+        "retargets the type needs a resolution of them. Null otherwise",
+    )
     blockers: Optional[DeleteBlockersResponse] = Field(
         None,
         description="A pending or failed relationship-type delete, or update that retargets "
@@ -467,6 +478,7 @@ class ChangeProposalResponse(BaseModel):
         blockers: Optional[dict[str, DeleteBlockers]] = None,
         replacement_checks: Optional[dict[str, ReplacementCheck]] = None,
         auto_apply_ids: Optional[Collection[str]] = None,
+        type_usage: Optional[dict[str, DeleteBlockers]] = None,
     ) -> "ChangeProposalResponse":
         """
         Build the response, flagging the operations in stale_ids, with their blockers.
@@ -475,6 +487,7 @@ class ChangeProposalResponse(BaseModel):
             auto_apply_ids: A dry run's auto-apply verdict (see
                 ProposalService.auto_apply_operation_ids); given, the response
                 is a dry run and each operation says whether it would auto-apply
+            type_usage: See ProposalService.type_usage
         """
         blockers = blockers or {}
         checks = replacement_checks or {}
@@ -488,7 +501,13 @@ class ChangeProposalResponse(BaseModel):
             created_at=proposal.created_at,
             status=proposal.status,
             operations=[
-                _operation(o, o.id in stale_ids, blockers.get(o.id), checks.get(o.id))
+                _operation(
+                    o,
+                    o.id in stale_ids,
+                    blockers.get(o.id),
+                    checks.get(o.id),
+                    (type_usage or {}).get(o.id),
+                )
                 for o in proposal.operations
             ],
         )
@@ -505,6 +524,7 @@ def _operation(
     stale: bool,
     blockers: Optional[DeleteBlockers],
     check: Optional[ReplacementCheck],
+    usage: Optional[DeleteBlockers] = None,
 ) -> ProposedOperationResponse:
     response = ProposedOperationResponse.model_validate(operation)
     response.stale = stale
@@ -512,10 +532,22 @@ def _operation(
         response.blockers = DeleteBlockersResponse.model_validate(blockers)
     if check is not None:
         response.replacement_check = ReplacementCheckResponse.model_validate(check)
-    view = reflection_view(operation.evidence)
-    if view is not None:
-        response.reflection = ReflectionResponse.from_view(view)
+    if usage is not None:
+        response.type_usage = DeleteBlockersResponse.model_validate(usage)
+    response.reflection = _reflection(operation)
     return response
+
+
+def _reflection(operation: ProposedOperation) -> Optional[ReflectionResponse]:
+    """The operation's reflection plan row; None (logged) when its evidence won't read."""
+    try:
+        view = reflection_view(operation.evidence)
+        return ReflectionResponse.from_view(view) if view is not None else None
+    except Exception:  # evidence is free-form JSON: never fail the proposal over it
+        logger.warning(
+            "Unreadable reflection evidence on operation %s", operation.id, exc_info=True
+        )
+        return None
 
 
 class OperationErrorResponse(BaseModel):

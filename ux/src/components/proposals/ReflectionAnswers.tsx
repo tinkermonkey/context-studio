@@ -42,10 +42,11 @@ export function ReflectionAnswers({
               <legend className="reflection-question__label">
                 {QUESTION_LABELS[q.question] ?? q.question}
               </legend>
-              <div role="radiogroup" aria-label={QUESTION_LABELS[q.question] ?? q.question}>
-                {q.options.map((o) => {
-                  const pickable = !!onPick && isPickable(q.question, o);
-                  const id = `${name}-${o.option}`;
+              <div className="reflection-question__options">
+                {q.options.map((o, index) => {
+                  const pickable = !!onPick && isPickable(reflection, q.question, o, picks);
+                  const id = `${name}-${index}`;
+                  const marked = o.current || o.plan;
                   return (
                     <label
                       key={o.option}
@@ -68,10 +69,13 @@ export function ReflectionAnswers({
                         disabled={!pickable}
                         onChange={() => onPick?.(q.question, o.option)}
                         className="reflection-option__radio"
-                        aria-label={`${o.option}, p ${o.probability.toFixed(2)}`}
+                        aria-labelledby={`${id}-name ${id}-p`}
+                        aria-describedby={marked ? `${id}-marks` : undefined}
                       />
-                      <span className="reflection-option__name">{o.option}</span>
-                      <span className="reflection-option__marks">
+                      <span id={`${id}-name`} className="reflection-option__name">
+                        {o.option}
+                      </span>
+                      <span id={`${id}-marks`} className="reflection-option__marks">
                         {o.current && <Chip variant="neutral">current</Chip>}
                         {o.plan && <Chip variant="amber">plan</Chip>}
                       </span>
@@ -83,7 +87,9 @@ export function ReflectionAnswers({
                           label={`${o.option} probability`}
                         />
                       </span>
-                      <span className="reflection-option__p">{o.probability.toFixed(2)}</span>
+                      <span id={`${id}-p`} className="reflection-option__p">
+                        p {o.probability.toFixed(2)}
+                      </span>
                     </label>
                   );
                 })}

@@ -469,13 +469,6 @@ class TestMisplacedResolutions:
 
         with pytest.raises(ValueError, match="not being applied"):
             service.apply(proposal.id, [update], resolutions={delete: resolution})
-        with pytest.raises(ValueError, match="both an edit and a resolution"):
-            service.apply(
-                proposal.id,
-                [delete],
-                edits={delete: {"title": "x"}},
-                resolutions={delete: resolution},
-            )
         assert all(o.status is OperationStatus.PENDING for o in service.get(proposal.id).operations)
 
 
@@ -1086,3 +1079,75 @@ def test_a_reverted_proposal_has_no_records(service, graph):
     reverted = service.get(proposal.id)
     reverted.status = ProposalStatus.REVERTED
     assert schema_change_records(reverted) == []
+
+
+def test_an_edited_delete_that_retargets_takes_a_resolution(service, graph, repo):
+    """A reviewer's edit turns a blocked delete into a retarget: it resolves as one."""
+    proposal = propose_delete(service, graph)
+    op_id = the_op(proposal).id
+
+    op = apply(
+        service,
+        proposal,
+        edits={op_id: {"range_class_id": graph["process"]}},
+        resolutions={op_id: InUseResolution(strategy=DELETE)},
+    )
+
+    assert op.status is OperationStatus.APPLIED, op.reason
+    assert op.applied_fields == {"range_class_id": graph["process"]}
+    assert edges_of(repo, graph["triggers_function"]) == []
+    assert (
+        repo.get_property_definition(graph["triggers_function"]).range_class_id == graph["process"]
+    )
+
+
+def test_an_edited_delete_that_renames_takes_none(service, graph, repo):
+    before = ends(repo, graph["triggers_function"])
+    proposal = propose_delete(service, graph)
+    op_id = the_op(proposal).id
+
+    op = apply(service, proposal, edits={op_id: {"canonical_predicate": "starts"}})
+
+    assert op.status is OperationStatus.APPLIED, op.reason
+    assert ends(repo, graph["triggers_function"]) == before
+
+
+def test_type_usage_lists_the_relationships_a_rename_keeps(service, graph, ontology):
+    unused = unused_type(ontology, graph)
+    proposal = service.propose(
+        graph["taxonomy"],
+        "Renames",
+        [
+            OperationDraft(
+                seq=1,
+                op=T.UPDATE,
+                kind=K.PROPERTY,
+                target_id=graph["triggers_function"],
+                fields={"canonical_predicate": "starts"},
+            ),
+            OperationDraft(
+                seq=2,
+                op=T.UPDATE,
+                kind=K.PROPERTY,
+                target_id=unused,
+                fields={"canonical_predicate": "starts"},
+            ),
+            OperationDraft(
+                seq=3,
+                op=T.UPDATE,
+                kind=K.PROPERTY,
+                target_id=graph["triggers_process"],
+                fields={"range_class_id": graph["function"]},
+            ),
+        ],
+        ProposalSource.MCP,
+    )
+
+    usage = service.type_usage(proposal)
+
+    assert list(usage) == [the_op(proposal, 1).id]  # not the unused type, nor a retarget
+    assert [e.relationship_id for e in usage[the_op(proposal, 1).id].edges] == [
+        graph["first"],
+        graph["second"],
+    ]
+    assert service.in_use_blockers(proposal) == {}

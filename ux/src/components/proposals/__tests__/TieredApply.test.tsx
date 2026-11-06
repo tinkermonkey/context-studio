@@ -258,7 +258,7 @@ describe("Conflicts", () => {
     const onSelect = vi.fn();
     render(<ProposalDetailPage id="proposal-1" onSelectOperation={onSelect} />);
     await tiered();
-    const op = screen.getByTestId("conflict-op-c-delete");
+    const op = screen.getByTestId("conflict-select-c-delete");
     expect(op).toHaveAttribute("aria-pressed", "false");
 
     await userEvent.click(op);
@@ -272,7 +272,7 @@ describe("Reflection answers in the inspector", () => {
     const answers = await screen.findByTestId("reflection-answers");
 
     const source = within(answers).getByTestId("reflection-question-source_for");
-    expect(within(source).getByRole("radiogroup")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Best source" })).toBe(source); // a fieldset
     const project = within(source).getByTestId("reflection-option-source_for-project");
     expect(within(project).getByRole("radio")).toBeChecked();
     expect(within(project).getByText("plan")).toBeInTheDocument();
@@ -378,5 +378,234 @@ describe("Reflection answers in the inspector", () => {
     renderPage("j-retarget");
     const answers = await screen.findByTestId("reflection-answers");
     for (const radio of within(answers).getAllByRole("radio")) expect(radio).toBeDisabled();
+  });
+});
+
+describe("Conflicts: dependents, bulk and a kept operation", () => {
+  it("never rejects a delete that only names the kept operation's type as its replacement", async () => {
+    proposal.operations.push({
+      ...proposal.operations[0],
+      id: "x-dependent",
+      seq: 10,
+      target_id: "prop-x",
+      proposed_replacement_id: "prop-c-rename",
+      reflection: null,
+      rationale: "Remove it. Plan kind remove-duplicate, p 0.90.",
+    });
+    renderPage();
+    await tiered();
+    const card = screen.getByTestId("conflict-card-c-rename");
+    expect(within(card).queryByTestId("conflict-op-x-dependent")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByTestId("conflict-keep-c-rename"));
+
+    await waitFor(() => expect(rejected).toHaveLength(1));
+    expect(rejected[0].operation_ids).toEqual(["c-delete"]);
+  });
+
+  it("leaves a mechanical change shown in a conflict card out of every bulk decision", async () => {
+    const linked = structuredClone(proposal.operations.find((o) => o.id === "m-rename")!);
+    Object.assign(linked, {
+      id: "m-linked",
+      seq: 10,
+      target_id: "prop-m-linked",
+      probability: 0.99,
+    });
+    linked.reflection = {
+      ...linked.reflection!,
+      current: { source: "task", predicate: "employs", target: "tool" },
+      replacement: "task uses tool",
+    };
+    proposal.operations.push(linked);
+    renderPage();
+    await tiered();
+
+    expect(
+      within(screen.getByTestId("conflict-card-c-rename")).getByTestId("conflict-op-m-linked"),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("operation-threshold-mark-m-linked")).not.toBeInTheDocument();
+    expect(screen.getByTestId("tiered-accept-threshold")).toHaveTextContent("Accept 2 at or above");
+    expect(screen.getByTestId("proposal-accept-all")).toHaveTextContent("Accept 3 ready");
+
+    await userEvent.click(
+      within(screen.getByRole("group", { name: "Group operations by" })).getByText("Sequence"),
+    );
+    expect(screen.getByTestId("operation-check-m-rename")).toBeInTheDocument();
+    expect(screen.queryByTestId("operation-check-m-linked")).not.toBeInTheDocument();
+  });
+
+  it("once a member is applied, the rest can only be rejected as kept against it", async () => {
+    proposal.operations.find((o) => o.id === "c-rename")!.status = "applied";
+    renderPage();
+    await tiered();
+    const card = screen.getByTestId("conflict-card-c-rename");
+
+    expect(within(card).getByTestId("conflict-kept-c-rename")).toHaveTextContent(
+      "Seq 8 is applied.",
+    );
+    expect(within(card).queryByTestId("conflict-keep-c-delete")).not.toBeInTheDocument();
+    expect(within(card).queryByTestId("conflict-keep-all-c-rename")).not.toBeInTheDocument();
+
+    await userEvent.click(within(card).getByTestId("conflict-reject-rest-c-rename"));
+    await waitFor(() => expect(rejected).toHaveLength(1));
+    expect(rejected[0]).toEqual({ operation_ids: ["c-delete"], note: "conflict: kept seq 8" });
+  });
+
+  it("shows the kept state when the reject after a keep fails", async () => {
+    server.use(
+      http.post("*/api/proposals/:id/reject", () =>
+        HttpResponse.json({ detail: "boom" }, { status: 500 }),
+      ),
+    );
+    renderPage();
+    await tiered();
+
+    await userEvent.click(screen.getByTestId("conflict-keep-c-rename"));
+
+    expect(await screen.findByTestId("conflict-kept-c-rename")).toBeInTheDocument();
+    expect(screen.getByTestId("conflict-reject-rest-c-rename")).toHaveTextContent(
+      "Reject the rest (conflict: kept seq 8)",
+    );
+    expect(screen.queryByTestId("conflict-keep-c-delete")).not.toBeInTheDocument();
+  });
+});
+
+describe("Picks on a type relationships use", () => {
+  const edges = (n: number) => ({
+    edges: Array.from({ length: n }, (_, i) => ({
+      relationship_id: `rel-${i}`,
+      source: { id: `a-${i}`, title: `A${i}`, class_ids: [], class_titles: [] },
+      target: { id: `b-${i}`, title: `B${i}`, class_ids: [], class_titles: [] },
+      attributes: {},
+    })),
+    replacements: [],
+  });
+  const op = (id: string) => proposal.operations.find((o) => o.id === id)!;
+  const addOption = (id: string, question: string, option: string, classId: string | null) =>
+    op(id)
+      .reflection!.questions.find((q) => q.question === question)!
+      .options.push({ option, probability: 0.04, class_id: classId, current: false, plan: false });
+  const pick = async (question: string, option: string) =>
+    userEvent.click(
+      within(await screen.findByTestId(`reflection-option-${question}-${option}`)).getByRole(
+        "radio",
+      ),
+    );
+
+  it("a blocked operation whose picks retarget it resolves with the edit and the alternative", async () => {
+    addOption("m-blocked", "target_for", "room", "class-room");
+    renderPage("m-blocked");
+    await pick("target_for", "room");
+
+    expect(screen.queryByTestId("operation-accept")).not.toBeInTheDocument();
+    expect(screen.getByTestId("operation-in-use-callout")).toHaveTextContent(
+      "Your picks retarget this type to project contains room",
+    );
+    await userEvent.click(screen.getByTestId("operation-resolution-apply"));
+
+    await waitFor(() => expect(applied).toHaveLength(1));
+    expect(applied[0]).toMatchObject({
+      operation_ids: ["m-blocked"],
+      edits: {
+        "m-blocked": {
+          canonical_predicate: "contains",
+          domain_class_id: "class-project",
+          range_class_id: "class-room",
+        },
+      },
+      chosen_alternatives: { "m-blocked": { target_for: "room", triple: "project contains room" } },
+      resolutions: { "m-blocked": { strategy: "delete", relationship_ids: ["rel-1"] } },
+    });
+  });
+
+  it("a blocked operation whose picks only rename it applies as an edit, without a resolution", async () => {
+    addOption("m-blocked", "predicate_for", "includes", null);
+    renderPage("m-blocked");
+    await pick("predicate_for", "includes");
+
+    expect(screen.queryByTestId("operation-in-use")).not.toBeInTheDocument();
+    const accept = screen.getByTestId("operation-accept");
+    expect(accept).toHaveTextContent("Accept with my picks");
+    await userEvent.click(accept);
+
+    await waitFor(() => expect(applied).toHaveLength(1));
+    expect(applied[0]).toMatchObject({
+      operation_ids: ["m-blocked"],
+      edits: { "m-blocked": { canonical_predicate: "includes" } },
+      chosen_alternatives: { "m-blocked": { predicate_for: "includes" } },
+    });
+    expect(applied[0]).not.toHaveProperty("resolutions");
+  });
+
+  it("a rename in use whose picks retarget it offers the resolver over its usage", async () => {
+    op("m-rename").type_usage = edges(2);
+    addOption("m-rename", "source_for", "task", "class-task");
+    renderPage("m-rename");
+    expect(await screen.findByTestId("operation-accept")).toHaveTextContent("Accept plan");
+
+    await pick("source_for", "task");
+
+    expect(screen.queryByTestId("operation-accept")).not.toBeInTheDocument();
+    expect(screen.getByTestId("operation-in-use-callout")).toHaveTextContent(
+      "2 relationships still use it",
+    );
+    await userEvent.click(screen.getByTestId("operation-resolution-apply"));
+    await waitFor(() => expect(applied).toHaveLength(1));
+    expect(applied[0]).toMatchObject({
+      edits: { "m-rename": { domain_class_id: "class-task" } },
+      resolutions: { "m-rename": { strategy: "delete", relationship_ids: ["rel-0", "rel-1"] } },
+    });
+  });
+
+  it("after a pick edit fails, other picks can be accepted again", async () => {
+    addOption("j-retarget", "source_for", "room", "class-room");
+    server.use(
+      http.post("*/api/proposals/:id/apply", async ({ request }) => {
+        applied.push((await request.json()) as Record<string, unknown>);
+        Object.assign(op("j-retarget"), { status: "failed", reason: "invalid_edit: exists" });
+        return HttpResponse.json(proposal);
+      }),
+    );
+    renderPage("j-retarget");
+    await pick("source_for", "tool");
+    await userEvent.click(screen.getByTestId("operation-accept"));
+    await waitFor(() =>
+      expect(screen.getByTestId("operation-accept")).toHaveTextContent("Apply as proposed"),
+    );
+
+    await pick("source_for", "room");
+    const accept = screen.getByTestId("operation-accept");
+    expect(accept).toHaveTextContent("Accept with my picks");
+    await userEvent.click(accept);
+    await waitFor(() => expect(applied).toHaveLength(2));
+    expect(applied[1]).toMatchObject({
+      edits: { "j-retarget": { domain_class_id: "class-room" } },
+      chosen_alternatives: { "j-retarget": { source_for: "room" } },
+    });
+  });
+
+  it("picks that can't be written as an edit disable accept instead of accepting the plan", async () => {
+    const reflection = op("j-retarget").reflection!;
+    for (const q of reflection.questions) for (const o of q.options) o.class_id = null;
+    renderPage("j-retarget");
+    // a reverse needs class ids: not pickable
+    const reverse = await screen.findByTestId("reflection-option-predicate_for-reverse:holds");
+    expect(within(reverse).getByRole("radio")).toBeDisabled();
+    expect(screen.getByTestId("operation-accept")).toHaveTextContent("Accept plan");
+  });
+
+  it("a predicate-only pick without class ids applies as a rename edit", async () => {
+    const reflection = op("m-rename").reflection!;
+    for (const q of reflection.questions) for (const o of q.options) o.class_id = null;
+    addOption("m-rename", "predicate_for", "keeps", null);
+    renderPage("m-rename");
+    await pick("predicate_for", "keeps");
+    await userEvent.click(screen.getByTestId("operation-accept"));
+
+    await waitFor(() => expect(applied).toHaveLength(1));
+    expect(applied[0]).toMatchObject({
+      edits: { "m-rename": { canonical_predicate: "keeps" } },
+      chosen_alternatives: { "m-rename": { predicate_for: "keeps" } },
+    });
   });
 });

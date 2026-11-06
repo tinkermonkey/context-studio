@@ -11,6 +11,7 @@ import {
   QUESTION_LABELS,
   bestAlternative,
   conflictClusters,
+  keptNote,
   kindGroups,
   kindOf,
   mechanicalAtOrAbove,
@@ -24,6 +25,8 @@ import "./proposals.css";
 interface TieredOperationsProps {
   /** The operations the filter shows. */
   operations: ProposedOperation[];
+  /** Every operation of the proposal: conflicts are worked out over all of them. */
+  allOperations: ProposedOperation[];
   context: OperationContext;
   /** The proposal takes decisions (it isn't reverted). */
   deciding: boolean;
@@ -42,6 +45,7 @@ interface TieredOperationsProps {
  */
 export function TieredOperations({
   operations,
+  allOperations,
   context,
   deciding,
   reverted,
@@ -51,8 +55,14 @@ export function TieredOperations({
   selectedOperationId,
   onSelectOperation,
 }: TieredOperationsProps) {
-  const clusters = conflictClusters(operations);
-  const clustered = new Set(clusters.flatMap((c) => c.operations.map((o) => o.id)));
+  // A card shows every member of a conflict, decided or not, while the filter shows any of them.
+  const shown = new Set(operations.map((o) => o.id));
+  const clusters = conflictClusters(allOperations).filter((c) =>
+    c.operations.some((o) => shown.has(o.id)),
+  );
+  const clustered = new Set(
+    conflictClusters(allOperations).flatMap((c) => c.operations.map((o) => o.id)),
+  );
   const rest = operations.filter((o) => !clustered.has(o.id));
   const mechanical = kindGroups(rest, MECHANICAL_KINDS);
   const judgment = kindGroups(rest, JUDGMENT_KINDS);
@@ -96,6 +106,7 @@ export function TieredOperations({
                   value={threshold}
                   onChange={(e) => onThresholdChange(Number(e.target.value))}
                   className="proposal-bar__slider"
+                  aria-label="Accept threshold"
                   aria-valuetext={threshold.toFixed(2)}
                   data-testid="tiered-threshold-slider"
                 />
@@ -297,7 +308,8 @@ interface ConflictCardProps {
 /**
  * Operations that contradict each other, side by side: keep one (it applies,
  * the others are rejected as "conflict: kept seq N"), keep them all to decide
- * each in the inspector, or reject them all.
+ * each in the inspector, or reject them all. Once one is applied, by Keep or
+ * in the inspector, the rest can only be rejected as kept against it.
  */
 function ConflictCard({
   cluster,
@@ -310,44 +322,84 @@ function ConflictCard({
 }: ConflictCardProps) {
   const [individually, setIndividually] = useState(false);
   const awaiting = cluster.operations.filter(isAwaiting);
+  const kept = cluster.operations.find((o) => o.status === "applied");
   const both = cluster.operations.length === 2;
   const open = deciding && awaiting.length > 0;
+  const rejectNote =
+    awaiting.length === 1
+      ? "conflict: rejected"
+      : both
+        ? "conflict: rejected both"
+        : "conflict: rejected all";
   return (
     <div
       className="conflict-card"
       role="group"
       aria-label={`Conflict between seq ${cluster.operations.map((o) => o.seq).join(", ")}`}
       data-testid={`conflict-card-${cluster.id}`}
+      data-kept={kept?.id}
     >
       <div className="conflict-card__ops">
         {cluster.operations.map((o) => {
           const state = decisionState(o, reverted);
+          const selected = o.id === selectedOperationId;
           return (
-            <button
+            <div
               key={o.id}
-              type="button"
-              className="conflict-op"
-              aria-pressed={o.id === selectedOperationId}
-              onClick={() => onSelectOperation(o.id === selectedOperationId ? undefined : o.id)}
+              className={selected ? "conflict-op conflict-op--selected" : "conflict-op"}
               data-testid={`conflict-op-${o.id}`}
             >
               <span className="conflict-op__head">
-                <span className="op-seq">seq {o.seq}</span>
+                <button
+                  type="button"
+                  className="conflict-op__select"
+                  aria-pressed={selected}
+                  aria-label={`Inspect seq ${o.seq}`}
+                  onClick={() => onSelectOperation(selected ? undefined : o.id)}
+                  data-testid={`conflict-select-${o.id}`}
+                >
+                  seq {o.seq}
+                </button>
                 <Chip form="id-tag">{kindOf(o) ?? "—"}</Chip>
                 <span className="op-probability">p {formatProbability(o.probability)}</span>
                 <Chip variant={state.variant}>{state.label}</Chip>
               </span>
               <OperationDiff operation={o} context={context} />
               <span className="conflict-op__rationale">{o.rationale}</span>
-            </button>
+            </div>
           );
         })}
       </div>
       {open &&
-        (individually ? (
+        (kept ? (
+          <div className="conflict-card__actions" role="group" aria-label="Resolve the conflict">
+            <span className="tiered-section__note" data-testid={`conflict-kept-${cluster.id}`}>
+              Seq {kept.seq} is applied.
+            </span>
+            <Button
+              variant="danger"
+              size="sm"
+              disabled={actions.busy}
+              onClick={() =>
+                actions.rejectOperations(
+                  awaiting.map((o) => o.id),
+                  keptNote(kept.seq),
+                )
+              }
+              data-testid={`conflict-reject-rest-${cluster.id}`}
+            >
+              Reject the rest ({keptNote(kept.seq)})
+            </Button>
+          </div>
+        ) : individually ? (
           <p className="tiered-section__note" data-testid={`conflict-individual-${cluster.id}`}>
             Decide each in the inspector.{" "}
-            <Button variant="ghost" size="sm" onClick={() => setIndividually(false)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIndividually(false)}
+              data-testid={`conflict-back-${cluster.id}`}
+            >
               Back
             </Button>
           </p>
@@ -379,6 +431,7 @@ function ConflictCard({
               <Button
                 variant="ghost"
                 size="sm"
+                disabled={actions.busy}
                 onClick={() => setIndividually(true)}
                 data-testid={`conflict-keep-all-${cluster.id}`}
               >
@@ -392,11 +445,7 @@ function ConflictCard({
               onClick={() =>
                 actions.rejectOperations(
                   awaiting.map((o) => o.id),
-                  awaiting.length === 1
-                    ? "conflict: rejected"
-                    : both
-                      ? "conflict: rejected both"
-                      : "conflict: rejected all",
+                  rejectNote,
                 )
               }
               data-testid={`conflict-reject-all-${cluster.id}`}

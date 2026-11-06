@@ -4,8 +4,10 @@ import { reflectionProposal, retargetReflection } from "@/test/reflectionFixture
 import {
   bestAlternative,
   conflictClusters,
+  conflictedIds,
   defaultGroupBy,
   isBulkEligible,
+  isPickable,
   kindOf,
   mechanicalAtOrAbove,
   offersGroupBy,
@@ -27,7 +29,7 @@ describe("kinds", () => {
   it("never bulk-decides judgment or conflict kinds", () => {
     expect(
       ops()
-        .filter(isBulkEligible)
+        .filter((o) => isBulkEligible(o))
         .map((o) => o.id),
     ).toEqual(["m-dup", "m-rename", "m-reverse", "m-stale", "m-blocked"]);
     expect(isBulkEligible(createProposedOperation())).toBe(true);
@@ -61,8 +63,8 @@ describe("conflictClusters", () => {
     expect(clusters.map((c) => c.operations.map((o) => o.id))).toEqual([["c-rename", "c-delete"]]);
   });
 
-  it("pulls in a non-conflict delete naming a conflict's type as replacement", () => {
-    const extra = createProposedOperation({
+  it("leaves out a delete that only names a conflict's type as its replacement", () => {
+    const dependent = createProposedOperation({
       id: "x",
       seq: 10,
       op: "delete",
@@ -70,8 +72,22 @@ describe("conflictClusters", () => {
       target_id: "prop-x",
       proposed_replacement_id: "prop-c-delete",
     });
-    const clusters = conflictClusters([...ops(), extra]);
-    expect(clusters[0].operations.map((o) => o.id)).toEqual(["c-rename", "c-delete", "x"]);
+    const clusters = conflictClusters([...ops(), dependent]);
+    expect(clusters[0].operations.map((o) => o.id)).toEqual(["c-rename", "c-delete"]);
+    expect(conflictedIds([...ops(), dependent])).toEqual(new Set(["c-rename", "c-delete"]));
+  });
+
+  it("pulls in a mechanical change whose replacement is a conflict's current triple", () => {
+    const linked = { ...byId("m-rename"), id: "m-linked" };
+    linked.reflection = {
+      ...linked.reflection!,
+      current: { source: "task", predicate: "employs", target: "tool" },
+      replacement: "task uses tool",
+    };
+    const conflicted = conflictedIds([...ops(), linked]);
+    expect(conflicted.has("m-linked")).toBe(true);
+    expect(isBulkEligible(linked, conflicted)).toBe(false);
+    expect(mechanicalAtOrAbove([linked], 0, conflicted)).toEqual([]);
   });
 
   it("keeps a lone conflict as its own cluster", () => {
@@ -121,5 +137,47 @@ describe("bestAlternative", () => {
       probability: expect.closeTo(0.1, 5),
       current: true,
     });
+  });
+});
+
+describe("picks without class ids", () => {
+  const withoutIds = (reflection: typeof retargetReflection) => ({
+    ...reflection,
+    questions: reflection.questions.map((q) => ({
+      ...q,
+      options: q.options.map((o) => ({ ...o, class_id: null })),
+    })),
+  });
+
+  it("a predicate that keeps the pair is a predicate-only edit", () => {
+    const rename = withoutIds(byId("m-rename").reflection!);
+    rename.questions[2].options.push({
+      option: "keeps",
+      probability: 0.05,
+      class_id: null,
+      current: false,
+      plan: false,
+    });
+    const outcome = pickOutcome(rename, { predicate_for: "keeps" });
+    expect(outcome).toMatchObject({ changed: true, pair: "same" });
+    expect(outcome?.fields).toEqual({ canonical_predicate: "keeps" });
+    expect(isPickable(rename, "predicate_for", rename.questions[2].options[2])).toBe(true);
+  });
+
+  it("a predicate that reverses or keeps a retarget can't be picked", () => {
+    const retarget = withoutIds(retargetReflection);
+    const reverse = retarget.questions[2].options.find((o) => o.option === "reverse:holds")!;
+    expect(isPickable(retarget, "predicate_for", reverse)).toBe(false);
+    expect(pickOutcome(retarget, { predicate_for: "reverse:holds" })?.fields).toBeUndefined();
+  });
+});
+
+describe("pair change", () => {
+  it("tells a retarget from a rename or reverse", () => {
+    expect(pickOutcome(retargetReflection, { source_for: "tool" })?.pair).toBe("different");
+    expect(pickOutcome(retargetReflection, { source_for: "task" })?.pair).toBe("same");
+    expect(
+      pickOutcome(retargetReflection, { source_for: "task", predicate_for: "reverse:holds" })?.pair,
+    ).toBe("reversed");
   });
 });
