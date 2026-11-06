@@ -2,7 +2,7 @@
 Pipeline registries for type, implementation, and configuration discovery.
 
 Three registries enable runtime enumeration and instantiation:
-1. PipelineTypeRegistry — enumerates the six pipeline types with input/output contracts
+1. PipelineTypeRegistry — enumerates the pipeline types with input/output contracts
 2. PipelineImplementationRegistry — maps (type, impl_id) → implementation class
 3. PipelineConfigurationRegistry — maps (type, impl_id, config_ref) → configuration object
    (versioned; once referenced by a run, the version is immutable)
@@ -38,7 +38,7 @@ class PipelineTypeRegistry:
     """
     Registry of all pipeline types.
 
-    Enumerates the six pipeline types with their input/output contracts.
+    Enumerates the pipeline types with their input/output contracts.
     Discoverable at runtime by UX listing endpoints and script harness.
     """
 
@@ -113,6 +113,26 @@ class PipelineTypeRegistry:
             },
             output_contract={
                 "refined_connections": "list[dict] — refined connections with updated properties",
+            },
+        ),
+        PipelineType.SCHEMA_RELATIONSHIP_REFLECTION: PipelineTypeDefinition(
+            pipeline_type=PipelineType.SCHEMA_RELATIONSHIP_REFLECTION,
+            description=(
+                "Ask sorting questions (best source, target, predicate) per relationship"
+                " type and propose the resulting change plan"
+            ),
+            input_contract={
+                "taxonomy_id": "str (required) — taxonomy to reflect on",
+                "scope": (
+                    "str | list[str] | None — a scheme id or identifier, relationship type"
+                    " ids, or None for the whole taxonomy"
+                ),
+            },
+            output_contract={
+                "proposal_id": "str | None — the change proposal made from the plan",
+                "outcomes": "dict — reflections per outcome (reproduced, no_better, alternative)",
+                "plan": "list[dict] — change plan rows (kind, replacement, p)",
+                "reflections": "list[dict] — ranked answers per relationship type",
             },
         ),
     }

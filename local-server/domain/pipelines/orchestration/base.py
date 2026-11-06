@@ -33,6 +33,7 @@ class PipelineState:
         llm_provider: Injected LLM provider for completions
         result: Accumulated result (populated as execution progresses)
         parse_warnings: List of parse/validation warnings encountered during execution
+        llm_metadata: Model, cost and latency of the run's model calls, recorded on the run
     """
 
     run_id: str
@@ -42,6 +43,7 @@ class PipelineState:
     llm_provider: LLMProvider | None = None
     result: dict[str, Any] | None = None
     parse_warnings: list[dict[str, Any]] = field(default_factory=list)
+    llm_metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class PipelineOrchestrator(ABC):

@@ -1295,6 +1295,34 @@ class SchemaConnectionRefinementRun(PipelineRun):
         return f"<SchemaConnectionRefinementRun(id={self.id}, status={self.status})>"
 
 
+class SchemaRelationshipReflectionRun(PipelineRun):
+    """
+    Schema relationship reflection runs (sorting questions per relationship
+    type, emitted as a change proposal).
+
+    Uses joined-table inheritance from PipelineRun with discriminator
+    run_type='schema_relationship_reflection'.
+
+    Per-type fields: (none)
+    """
+
+    __tablename__ = "schema_relationship_reflection_runs"
+
+    id = Column(
+        String(36),
+        ForeignKey("pipeline_runs.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+
+    __mapper_args__: Dict[str, Any] = {
+        "polymorphic_identity": "schema_relationship_reflection",
+    }
+
+    def __repr__(self) -> str:
+        return f"<SchemaRelationshipReflectionRun(id={self.id}, status={self.status})>"
+
+
 class ChangeProposalRun(BatchRun):
     """
     A change proposal: ontology changes proposed by an agent, pipeline, bundle

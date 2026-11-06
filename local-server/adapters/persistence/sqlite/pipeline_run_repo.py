@@ -23,6 +23,7 @@ from adapters.persistence.sqlite.models import (
     SchemaDefinitionRefinementRun,
     SchemaExtractionRun,
     SchemaGroundingRun,
+    SchemaRelationshipReflectionRun,
 )
 from domain.pipelines.entities import (
     IndividualExtractionRun as DomainIndividualExtractionRun,
@@ -49,6 +50,9 @@ from domain.pipelines.entities import (
 from domain.pipelines.entities import (
     SchemaGroundingRun as DomainSchemaGroundingRun,
 )
+from domain.pipelines.entities import (
+    SchemaRelationshipReflectionRun as DomainSchemaRelationshipReflectionRun,
+)
 from domain.pipelines.exceptions import PipelineStorageError
 from utils.logger import get_logger
 
@@ -67,6 +71,7 @@ _PIPELINE_TYPE_TO_ORM = {
     PipelineType.SCHEMA_NODE_GROUNDING: SchemaGroundingRun,
     PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT: SchemaDefinitionRefinementRun,
     PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT: SchemaConnectionRefinementRun,
+    PipelineType.SCHEMA_RELATIONSHIP_REFLECTION: SchemaRelationshipReflectionRun,
 }
 
 
@@ -972,6 +977,10 @@ class PipelineRepository:
             )
         elif isinstance(orm_obj, SchemaConnectionRefinementRun):
             return DomainSchemaConnectionRefinementRun(
+                **common,  # type: ignore[arg-type]
+            )
+        elif isinstance(orm_obj, SchemaRelationshipReflectionRun):
+            return DomainSchemaRelationshipReflectionRun(
                 **common,  # type: ignore[arg-type]
             )
         else:
