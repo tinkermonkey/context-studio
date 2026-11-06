@@ -503,6 +503,13 @@ export function ProposalDetailPage({
           />
         )}
       >
+        {/* Above the table, so the table frame is the last thing in the list
+            column and its sticky header never scrolls under the topbar. */}
+        <p className="proposals-footnote">
+          {proposal.status === "reverted"
+            ? "This proposal was reverted: what it applied is undone, and it takes no more decisions."
+            : `Amber marks the part of a triple or the field an update changes.${showThreshold ? " Probabilities below the threshold are muted." : ""} Select an operation to see its change, rationale and evidence.`}
+        </p>
         <div ref={tableRef} className="schema-table-wrap" data-testid="proposal-operations-table">
           <Table<ProposedOperation>
             rowKey="id"
@@ -515,11 +522,6 @@ export function ProposalDetailPage({
             emptyState={<span className="entity-note">This proposal has no operations.</span>}
           />
         </div>
-        <p className="proposals-footnote">
-          {proposal.status === "reverted"
-            ? "This proposal was reverted: what it applied is undone, and it takes no more decisions."
-            : `Amber marks the part of a triple or the field an update changes.${showThreshold ? " Probabilities below the threshold are muted." : ""} Select an operation to see its change, rationale and evidence.`}
-        </p>
       </SchemaPageLayout>
 
       <ConfirmDialog

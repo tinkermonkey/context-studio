@@ -962,3 +962,25 @@ class TestClassRulesFollowInheritance:
         ]
         proposal = service.propose(house["taxonomy"], "Kits", drafts, ProposalSource.MCP)
         assert statuses(proposal) == {1: PENDING, 2: PENDING, 3: APPLIED, 4: APPLIED, 5: PENDING}
+
+
+def test_a_subclass_rule_is_honoured_by_the_dry_run_verdict_and_a_real_propose(
+    service, policies, house, chores
+):
+    """The dry run's verdict and propose share _policy_auto_apply_ids (#1414 with #1425)."""
+    policies.save(ApprovalPolicy.from_rules(house["taxonomy"], HOUSE_RULES))
+    drafts = [
+        OperationDraft(
+            1, T.CREATE, K.INDIVIDUAL, fields={"class_ids": [chores["dusting"]], "title": "Dust"}
+        ),
+        OperationDraft(
+            2, T.CREATE, K.INDIVIDUAL, fields={"class_ids": [chores["resource"]], "title": "Pail"}
+        ),
+    ]
+
+    dry = service.propose(house["taxonomy"], "Chores", drafts, ProposalSource.MCP, dry_run=True)
+    verdict = service.auto_apply_operation_ids(dry)
+    assert [o.seq for o in dry.operations if o.id in verdict] == [1]
+
+    proposal = service.propose(house["taxonomy"], "Chores", drafts, ProposalSource.MCP)
+    assert statuses(proposal) == {1: APPLIED, 2: PENDING}

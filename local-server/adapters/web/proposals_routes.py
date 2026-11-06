@@ -9,11 +9,12 @@ service calls touch SQLite, so they run in the thread pool.
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from fastapi.responses import JSONResponse
 
 from adapters.interchange.dr_decisions import decisions_for
 from adapters.persistence.sqlite.transaction import TransactionAbortedError
+from adapters.serialization.views import proposal_response
 from adapters.web.dependencies import get_approval_policy_service, get_proposal_service
 from adapters.web.schemas.ontology import ListResponse
 from adapters.web.schemas.proposals import (
@@ -39,7 +40,6 @@ from domain.versioning.exceptions import (
 )
 from domain.versioning.proposal_service import OperationDraft, ProposalService
 from domain.versioning.proposals import (
-    ChangeProposal,
     InUseResolution,
     ProposalSource,
     ProposalStatus,
@@ -109,15 +109,6 @@ def _http_error(exc: Exception, unknown_ids_are_invalid: bool = False) -> HTTPEx
     )
 
 
-def _response(service: ProposalService, proposal: ChangeProposal) -> ChangeProposalResponse:
-    return ChangeProposalResponse.from_domain(
-        proposal,
-        service.stale_operation_ids(proposal),
-        service.in_use_blockers(proposal),
-        service.replacement_checks(proposal),
-    )
-
-
 # ==================== Read ====================
 
 
@@ -137,7 +128,7 @@ async def list_proposals(
     def run() -> ListResponse[ChangeProposalResponse]:
         proposals = service.list_proposals(taxonomy_id, proposal_status, source, limit, offset)
         return ListResponse(
-            items=[_response(service, p) for p in proposals],
+            items=[proposal_response(service, p) for p in proposals],
             total=service.count_proposals(taxonomy_id, proposal_status, source),
             limit=limit,
             offset=offset,
@@ -156,7 +147,9 @@ async def get_proposal(
 ) -> ChangeProposalResponse:
     """A proposal; each pending or failed operation says whether it is stale."""
     try:
-        return await run_sync_in_executor(lambda: _response(service, service.get(proposal_id)))
+        return await run_sync_in_executor(
+            lambda: proposal_response(service, service.get(proposal_id))
+        )
     except Exception as exc:
         raise _http_error(exc) from exc
 
@@ -208,17 +201,28 @@ async def get_proposal_decisions(
     response_model=ChangeProposalResponse,
     status_code=status.HTTP_201_CREATED,
     responses={
+        200: {
+            "model": ChangeProposalResponse,
+            "description": "A dry run: the proposal as it would be stored, nothing stored",
+        },
         422: {
             "model": ChangeProposalValidationErrorResponse,
             "description": (
                 "The proposal is invalid; detail.errors lists every problem by "
                 "operation seq, and nothing was stored"
             ),
-        }
+        },
     },
 )
 async def create_proposal(
     request: ChangeProposalCreateRequest,
+    response: Response,
+    dry_run: bool = Query(
+        False,
+        description="Validate only (200): return the computed scopes, "
+        "stale flags, blockers, replacement checks and which operations are eligible to "
+        "auto-apply; store and apply nothing",
+    ),
     service: ProposalService = Depends(get_proposal_service),
 ) -> ChangeProposalResponse:
     """
@@ -264,9 +268,12 @@ async def create_proposal(
             request.source,
             rationale=request.rationale,
             source_detail=request.source_detail,
+            dry_run=dry_run,
         )
-        return _response(service, proposal)
+        return proposal_response(service, proposal, dry_run=dry_run)
 
+    if dry_run:
+        response.status_code = status.HTTP_200_OK
     try:
         return await run_sync_in_executor(run)
     except Exception as exc:
@@ -338,7 +345,7 @@ async def apply_proposal(
         proposal = service.apply(
             proposal_id, request.operation_ids, request.force_stale, request.edits, resolutions
         )
-        return _response(service, proposal)
+        return proposal_response(service, proposal)
 
     try:
         return await run_sync_in_executor(run)
@@ -367,7 +374,7 @@ async def reject_proposal(
         if operation_ids is None:
             operation_ids = [o.id for o in service.get(proposal_id).pending]
         proposal = service.reject(proposal_id, operation_ids, request.note)
-        return _response(service, proposal)
+        return proposal_response(service, proposal)
 
     try:
         return await run_sync_in_executor(run)
@@ -415,7 +422,7 @@ async def revert_proposal(
             taxonomies_deleted=result.taxonomies_deleted,
             concept_schemes_deleted=result.concept_schemes_deleted,
             entities_restored=result.entities_restored,
-            proposal=_response(service, service.get(proposal_id)),
+            proposal=proposal_response(service, service.get(proposal_id)),
         )
 
     try:

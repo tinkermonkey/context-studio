@@ -29,6 +29,7 @@ from adapters.clustering.sklearn_clusterer import SklearnClusterer
 
 # Import admin adapters and services
 from adapters.config.json_store import JSONFileConfigStore
+from adapters.decision.registry import build_decision_models
 from adapters.demo import CanonDemoDatasetLoader
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.events.change_recorder import ChangeEventRecorder
@@ -82,6 +83,7 @@ from adapters.telemetry.log_bridge import OTLPLogHandler
 from adapters.web.admin_routes import router as admin_router
 from adapters.web.bundle_routes import router as bundle_router
 from adapters.web.chat_routes import router as chat_router
+from adapters.web.decision_routes import router as decision_router
 from adapters.web.extraction_routes import router as extraction_router
 from adapters.web.graph_routes import router as graph_router
 from adapters.web.interchange_routes import router as interchange_router
@@ -288,6 +290,9 @@ async def lifespan(app: FastAPI):
             openrouter_api_key=settings.llm.openrouter_api_key,
         )
         logger.info("LLM provider router created")
+
+        # Decision models: the named instances in config.json's decision_models
+        app.state.decision_models = build_decision_models(settings.decision_models, llm_router)
 
         # NLP processor
         nlp_processor = SpacyNLPProcessor()
@@ -905,6 +910,7 @@ app.include_router(interchange_router)
 app.include_router(chat_router)
 app.include_router(proposals_router)
 app.include_router(bundle_router)
+app.include_router(decision_router)
 # A route rather than a mount, so POST /mcp is served without a redirect to /mcp/
 app.add_route("/mcp", mcp_endpoint, include_in_schema=False)
 

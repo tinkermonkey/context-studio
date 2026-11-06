@@ -3831,6 +3831,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/decision-models": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Decision Models
+     * @description List the configured decision-model instances: name, adapter, model, configured.
+     */
+    get: operations["list_decision_models_api_decision_models_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4693,6 +4713,12 @@ export interface components {
        */
       created_at: string;
       status: components["schemas"]["ProposalStatus"];
+      /**
+       * Dry Run
+       * @description Validated only: nothing was stored or applied, and the ids are not kept
+       * @default false
+       */
+      dry_run: boolean;
       /** Operations */
       operations: components["schemas"]["ProposedOperationResponse"][];
     };
@@ -5401,6 +5427,55 @@ export interface components {
        * @description New description
        */
       description?: string | null;
+    };
+    /**
+     * DecisionModelListResponse
+     * @description Every configured decision-model instance and the default's name.
+     */
+    DecisionModelListResponse: {
+      /**
+       * Default
+       * @description Default instance name
+       */
+      default?: string | null;
+      /** Models */
+      models: components["schemas"]["DecisionModelResponse"][];
+    };
+    /**
+     * DecisionModelResponse
+     * @description A configured decision-model instance. Credentials are never included.
+     */
+    DecisionModelResponse: {
+      /**
+       * Name
+       * @description Instance name from config.json
+       */
+      name: string;
+      /**
+       * Adapter
+       * @description Adapter serving the instance, e.g. 'workers_ai' or 'llm'
+       */
+      adapter: string;
+      /**
+       * Model
+       * @description Model id the adapter calls
+       */
+      model: string;
+      /**
+       * Configured
+       * @description Whether the instance has what it needs to make a call
+       */
+      configured: boolean;
+      /**
+       * Is Default
+       * @description Whether callers get this instance when naming none
+       */
+      is_default: boolean;
+      /**
+       * Fallback
+       * @description Instance used when this one is unconfigured or fails
+       */
+      fallback?: string | null;
     };
     /**
      * DegreeDistributionResponse
@@ -7775,6 +7850,11 @@ export interface components {
       proposed_replacement_id?: string | null;
       /** @description Set when proposed_replacement_id is: how its pair compares */
       replacement_check?: components["schemas"]["ReplacementCheckResponse"] | null;
+      /**
+       * Auto Apply
+       * @description A dry run only: eligible to auto-apply, i.e. the taxonomy's approval policy would apply it as soon as proposed and no in-use blockers stop it (applying can still fail). Null otherwise
+       */
+      auto_apply?: boolean | null;
     };
     /**
      * PublishDiffStats
@@ -13645,7 +13725,10 @@ export interface operations {
   };
   create_proposal_api_proposals_post: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description Validate only (200): return the computed scopes, stale flags, blockers, replacement checks and which operations are eligible to auto-apply; store and apply nothing */
+        dry_run?: boolean;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -13656,6 +13739,15 @@ export interface operations {
       };
     };
     responses: {
+      /** @description A dry run: the proposal as it would be stored, nothing stored */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangeProposalResponse"];
+        };
+      };
       /** @description Successful Response */
       201: {
         headers: {
@@ -14024,6 +14116,26 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+    };
+  };
+  list_decision_models_api_decision_models_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DecisionModelListResponse"];
+        };
       };
     };
   };

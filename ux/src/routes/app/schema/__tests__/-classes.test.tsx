@@ -151,10 +151,35 @@ describe("Classes Schema Page", () => {
       });
 
       // The identifier cell renders the id truncated to 8 chars ("class-12")
-      // in a mono-font span, no longer a <code> element.
+      // in a mono-font span that does not wrap, no longer a <code> element.
       const monoId = screen.getByText("class-12");
       expect(monoId.tagName.toLowerCase()).toBe("span");
-      expect(monoId).toHaveStyle({ fontFamily: "var(--font-mono)" });
+      expect(monoId).toHaveClass("class-cell__id");
+    });
+
+    it("styles each cell so the table can narrow beside the inspector", async () => {
+      const mockClasses = createListClasses([
+        createClass({
+          id: "class-1",
+          title: "Person",
+          description: "A person entity",
+        }),
+      ]);
+
+      server.use(http.get("*/api/classes", () => HttpResponse.json(mockClasses)));
+
+      render(<ClassesPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("Person")).toBeInTheDocument();
+      });
+
+      expect(screen.getByText("Person")).toHaveClass("class-cell__title");
+      expect(screen.getByText("A person entity")).toHaveClass("class-cell__description");
+      expect(screen.getByText("— root —")).toHaveClass("class-cell__root");
+      const schemeChip = screen.getByTestId("class-domain-class-1");
+      expect(schemeChip).toHaveClass("chip", "class-cell__scheme");
+      expect(schemeChip.querySelector(".class-cell__scheme-label")).toBeInTheDocument();
     });
 
     it("displays description column with em-dash placeholder when empty", async () => {

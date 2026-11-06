@@ -5,7 +5,7 @@ Names carry the ChangeProposal prefix, the domain's name for a proposal.
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Collection, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -337,6 +337,12 @@ class ProposedOperationResponse(BaseModel):
     replacement_check: Optional[ReplacementCheckResponse] = Field(
         None, description="Set when proposed_replacement_id is: how its pair compares"
     )
+    auto_apply: Optional[bool] = Field(
+        None,
+        description="A dry run only: eligible to auto-apply, i.e. the taxonomy's approval "
+        "policy would apply it as soon as proposed and no in-use blockers stop it (applying "
+        "can still fail). Null otherwise",
+    )
 
 
 class ChangeProposalResponse(BaseModel):
@@ -352,6 +358,10 @@ class ChangeProposalResponse(BaseModel):
     source_detail: Optional[str] = None
     created_at: datetime
     status: ProposalStatus
+    dry_run: bool = Field(
+        False,
+        description="Validated only: nothing was stored or applied, and the ids are not kept",
+    )
     operations: list[ProposedOperationResponse]
 
     @classmethod
@@ -361,11 +371,19 @@ class ChangeProposalResponse(BaseModel):
         stale_ids: set[str],
         blockers: Optional[dict[str, DeleteBlockers]] = None,
         replacement_checks: Optional[dict[str, ReplacementCheck]] = None,
+        auto_apply_ids: Optional[Collection[str]] = None,
     ) -> "ChangeProposalResponse":
-        """Build the response, flagging the operations in stale_ids, with their blockers."""
+        """
+        Build the response, flagging the operations in stale_ids, with their blockers.
+
+        Args:
+            auto_apply_ids: A dry run's auto-apply verdict (see
+                ProposalService.auto_apply_operation_ids); given, the response
+                is a dry run and each operation says whether it would auto-apply
+        """
         blockers = blockers or {}
         checks = replacement_checks or {}
-        return cls(
+        response = cls(
             id=proposal.id,
             taxonomy_id=proposal.taxonomy_id,
             title=proposal.title,
@@ -379,6 +397,12 @@ class ChangeProposalResponse(BaseModel):
                 for o in proposal.operations
             ],
         )
+        if auto_apply_ids is not None:
+            auto = set(auto_apply_ids)
+            response.dry_run = True
+            for operation in response.operations:
+                operation.auto_apply = operation.id in auto
+        return response
 
 
 def _operation(

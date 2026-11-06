@@ -32,6 +32,7 @@ export function createChangeProposal(overrides?: Partial<ChangeProposal>): Chang
     source: "mcp",
     created_at: "2026-10-28T12:00:00Z",
     status: "open",
+    dry_run: false,
     operations: [createProposedOperation()],
     ...overrides,
   };
