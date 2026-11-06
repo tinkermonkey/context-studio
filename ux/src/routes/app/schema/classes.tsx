@@ -126,26 +126,20 @@ export function ClassesPage() {
     {
       key: "id",
       label: "Identifier",
-      width: "120px",
-      render: (value) => (
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5 }}>
-          {(value as string).slice(0, 8)}
-        </span>
-      ),
+      width: "96px",
+      render: (value) => <span className="class-cell__id">{(value as string).slice(0, 8)}</span>,
     },
     {
       key: "title",
       label: "Title",
       sortable: true,
-      render: (value) => <span style={{ fontWeight: 500 }}>{value as string}</span>,
+      render: (value) => <span className="class-cell__title">{value as string}</span>,
     },
     {
       key: "description",
       label: "Description",
       render: (value) => (
-        <span style={{ color: "rgb(var(--canvas-fg-3))", fontSize: 12.5 }}>
-          {(value as string) || "—"}
-        </span>
+        <span className="class-cell__description">{(value as string) || "—"}</span>
       ),
     },
     {
@@ -155,8 +149,13 @@ export function ClassesPage() {
       render: (value, row) => {
         const schemeName = schemeMap.get(value as string) || "—";
         return (
-          <Chip variant="neutral" data-testid={`class-domain-${row.id}`}>
-            {schemeName}
+          <Chip
+            variant="neutral"
+            className="class-cell__scheme"
+            title={schemeName}
+            data-testid={`class-domain-${row.id}`}
+          >
+            <span className="class-cell__scheme-label">{schemeName}</span>
           </Chip>
         );
       },
@@ -167,20 +166,9 @@ export function ClassesPage() {
       width: "120px",
       render: (value) => {
         const parentId = value as string | null | undefined;
-        if (!parentId)
-          return <em style={{ color: "rgb(var(--canvas-fg-3))", fontSize: 12 }}>— root —</em>;
+        if (!parentId) return <em className="class-cell__root">— root —</em>;
         const parentName = classMap.get(parentId);
-        return (
-          <span
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 11.5,
-              color: "rgb(var(--canvas-fg-2))",
-            }}
-          >
-            {parentName || parentId.slice(0, 8)}
-          </span>
-        );
+        return <span className="class-cell__parent">{parentName || parentId.slice(0, 8)}</span>;
       },
     },
     {
