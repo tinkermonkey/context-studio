@@ -118,92 +118,10 @@ body.dark-canvas .graph-edge-label.is-hot text {
 }
 
 /* ============ Nodes ============ */
-.graph-node {
-  position: absolute;
-  background: rgb(var(--canvas-card));
-  border: 1px solid rgb(var(--canvas-border-strong));
-  font-family: var(--font-sans);
-  font-size: 12px;
-  color: rgb(var(--canvas-fg-1));
-  display: inline-flex;
-  align-items: center;
-  padding: 0 8px 0 6px;
-  border-radius: 4px;
-  cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  transition:
-    border-color 0.1s,
-    box-shadow 0.1s,
-    transform 0.08s;
-  z-index: 2;
-}
-.graph-node:hover {
-  border-color: rgb(var(--accent-primary));
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
-  z-index: 3;
-}
-.graph-node.selected {
-  border-color: rgb(var(--accent-primary));
-  box-shadow:
-    0 0 0 2px rgb(var(--accent-primary)),
-    0 4px 10px rgba(15, 23, 42, 0.1);
-  z-index: 4;
-}
-body.dark-canvas .graph-node.selected {
-  box-shadow:
-    0 0 0 2px rgb(var(--accent-primary)),
-    0 4px 10px rgba(0, 0, 0, 0.5);
-}
-.graph-node.is-orphan {
-  opacity: 0.55;
-}
-
-.graph-node .swatch {
-  width: 3px;
-  height: 16px;
-  border-radius: 1px;
-  background: rgb(var(--dom-default));
-  margin-right: 7px;
-  flex: none;
-}
-.graph-node[data-domain="life"] .swatch {
-  background: rgb(var(--dom-life));
-}
-.graph-node[data-domain="climate"] .swatch {
-  background: rgb(var(--dom-climate));
-}
-.graph-node[data-domain="software"] .swatch {
-  background: rgb(var(--dom-software));
-}
-
-.graph-node-title {
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.graph-node-kind {
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  color: rgb(var(--canvas-fg-3));
-  margin-left: 7px;
-  padding: 1px 5px;
-  border-radius: 2px;
-  background: rgb(var(--canvas-bg-2));
-  border: 1px solid rgb(var(--canvas-border));
-  flex: none;
-}
-.graph-node[data-kind="individual"] .graph-node-kind {
-  color: var(--accent-cyan-deep);
-  background: rgba(var(--status-cyan) / 0.08);
-  border-color: rgba(var(--status-cyan) / 0.25);
-}
+/* Heimdall's GraphNode carries the base node styling. Never take .graph-node out of flow
+   (e.g. position: absolute): GraphCanvas measures each node inside an inline-block wrapper,
+   and an out-of-flow node collapses that wrapper to 0x0, so the layout and edge endpoints
+   fall back to a default box that doesn't match the rendered node. */
 
 /* ============ Floating legend (top-left) ============ */
 .graph-legend {
@@ -826,6 +744,15 @@ body.dark-canvas .gt-chip.irrelevant {
 /* Cap label width so nodes fit the layered grid (LAYERED_CELL_WIDTH in graphLayers.ts) */
 .graph-canvas-shell .graph-node {
   max-width: 152px;
+  /* Work around two GraphCanvas measurement quirks (Heimdall 0.9.5, tinkermonkey/heimdall#331):
+     - it measures each node inside an inline-block wrapper, so an inline-flex node adds the
+       line-height strut (a 24px box for a 20px node) and edges stop short of its bottom edge;
+       block-level flex keeps the box at the node's height.
+     - it rounds the measured width to a whole pixel (offsetWidth), so the node's box can be a
+       fraction of a pixel narrower than its label; max-content keeps the label whole instead
+       of ellipsizing it. */
+  display: flex;
+  width: max-content;
 }
 
 /* Class vs individual: individuals get a dashed border and a highlighted badge */

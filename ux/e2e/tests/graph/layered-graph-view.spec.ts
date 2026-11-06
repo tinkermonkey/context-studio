@@ -81,6 +81,48 @@ function canvasNode(page: Page, name: string) {
   return page.getByTestId("graph-canvas").getByRole("button", { name, exact: true });
 }
 
+/**
+ * Measures where the canvas's edges end: how many edges were measured and the
+ * largest gap, in canvas units, between an edge's end and the outline of the
+ * nearest rendered node (0 when every edge ends exactly on a node's border).
+ * Self-loops render as zero-length paths and are skipped.
+ */
+function measureEdgeEndpoints(page: Page): Promise<{ edges: number; maxGap: number }> {
+  return page.getByTestId("graph-canvas").evaluate((canvas) => {
+    const nodeRects = [...canvas.querySelectorAll("g.graph-canvas-node foreignObject > *")].map(
+      (el) => el.getBoundingClientRect(),
+    );
+    const anyNode = canvas.querySelector<SVGGraphicsElement>("g.graph-canvas-node");
+    const zoom = anyNode?.getScreenCTM()?.a ?? 1;
+    // Distance from a point to a rect's border, whether the point is inside or outside.
+    const borderDistance = (x: number, y: number, r: DOMRect) => {
+      const dx = Math.max(r.left - x, 0, x - r.right);
+      const dy = Math.max(r.top - y, 0, y - r.bottom);
+      if (dx === 0 && dy === 0) {
+        return Math.min(x - r.left, r.right - x, y - r.top, r.bottom - y);
+      }
+      return Math.hypot(dx, dy);
+    };
+    let edges = 0;
+    let maxGap = 0;
+    for (const path of canvas.querySelectorAll<SVGPathElement>(
+      "g.graph-edge path.graph-edge__line",
+    )) {
+      const length = path.getTotalLength();
+      const ctm = path.getScreenCTM();
+      if (length < 1 || !ctm) continue;
+      edges += 1;
+      for (const at of [0, length]) {
+        const local = path.getPointAtLength(at);
+        const p = new DOMPoint(local.x, local.y).matrixTransform(ctm);
+        const nearest = Math.min(...nodeRects.map((r) => borderDistance(p.x, p.y, r)));
+        maxGap = Math.max(maxGap, nearest / zoom);
+      }
+    }
+    return { edges, maxGap };
+  });
+}
+
 function layerHeader(page: Page, schemeId: string) {
   return page.getByTestId(`graph-layer-header-${schemeId}`);
 }
@@ -352,6 +394,35 @@ test.describe("Layered Graph View", () => {
       await expect(canvasNode(page, name)).not.toHaveClass(/graph-node--focus/);
     }
     await expect(inspector).toContainText("Billing Service");
+  });
+
+  test("edges end on the outline of the nodes they connect in every layout", async ({ page }) => {
+    const canvas = page.getByTestId("graph-canvas");
+    const layoutToggle = page.getByTestId("graph-layout-toggle");
+    const kindFilter = page.getByTestId("graph-node-kind-filter");
+
+    await kindFilter.getByRole("radio", { name: "All" }).click();
+    await expect(page.getByTestId("graph-visible-counts")).toHaveText("7 nodes · 5 edges");
+
+    for (const [name, layout] of [
+      ["Organic", "organic"],
+      ["Clustered", "clustered"],
+      ["Orthogonal", "orthogonal"],
+      ["Layered", "layered"],
+    ]) {
+      await layoutToggle.getByRole("radio", { name }).click();
+      await expect(canvas).toHaveAttribute("data-layout", layout);
+      await expect(canvasNode(page, "CRM System (individual)")).toBeVisible();
+      await expect
+        .poll(
+          async () => {
+            const { edges, maxGap } = await measureEdgeEndpoints(page);
+            return { edges, onOutline: maxGap <= 1 };
+          },
+          { message: `${layout} edge endpoints` },
+        )
+        .toEqual({ edges: 5, onOutline: true });
+    }
   });
 
   test("layout switch keeps the same nodes and edges across every layout", async ({ page }) => {
