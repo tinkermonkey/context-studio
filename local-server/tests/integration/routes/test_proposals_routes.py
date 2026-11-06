@@ -604,9 +604,10 @@ class TestGold:
         assert client.post(f"/api/proposals/{proposal['id']}/revert").status_code == 200
         url = f"/api/taxonomies/{graph['taxonomy']}/gold"
 
-        assert client.get(url).json()["total"] == 0
+        # The rejection still stands; the applied decision is superseded.
+        assert [d["decision"] for d in client.get(url).json()["items"]] == ["rejected"]
         items = client.get(url, params={"include_superseded": True}).json()["items"]
-        assert [d["superseded_by"] for d in items] == ["user", "user"]
+        assert [d["superseded_by"] for d in items] == ["user", None]
 
     def test_exports_jsonl(self, client, graph):
         self._decide(client, graph)

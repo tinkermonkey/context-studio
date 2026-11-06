@@ -27,6 +27,7 @@ from adapters.persistence.sqlite.transaction import SharedSessionFactory, Sqlite
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.services import OntologyService
 from domain.versioning.approval_policy import ApprovalPolicy, AutoApplyRule
+from domain.versioning.bundle_import import SUPERSEDED_REASON
 from domain.versioning.gold import DecisionFilter, DecisionKind
 from domain.versioning.proposal_service import OperationDraft, ProposalService
 from domain.versioning.proposals import OperationKind as K
@@ -178,7 +179,7 @@ def test_a_failed_apply_records_nothing_until_it_applies(parts, house):
     assert [d.decision for d in gold(service, house)] == [DecisionKind.APPLIED]
 
 
-def test_reverting_supersedes_the_decisions_and_records_none_of_its_own(parts, house):
+def test_reverting_supersedes_the_applied_decisions_and_records_none_of_its_own(parts, house):
     service = parts[3]
     proposal = propose(service, house)
     ops = {o.seq: o for o in proposal.operations}
@@ -187,11 +188,18 @@ def test_reverting_supersedes_the_decisions_and_records_none_of_its_own(parts, h
 
     service.revert(proposal.id)
 
-    assert gold(service, house) == []  # superseded decisions are left out by default
+    # Superseded decisions are left out by default; the rejection still stands.
+    [standing] = gold(service, house)
+    assert (standing.seq, standing.decision, standing.superseded_at) == (
+        4,
+        DecisionKind.REJECTED,
+        None,
+    )
     decisions = gold(service, house, include_superseded=True)
     assert [d.seq for d in decisions] == [1, 2, 4]  # seq 3, rejected by the revert: none
-    assert all(d.superseded_by == "user" for d in decisions)
-    assert all(d.superseded_at >= d.decided_at for d in decisions)
+    undone = [d for d in decisions if d.seq != 4]
+    assert all(d.superseded_by == "user" for d in undone)
+    assert all(d.superseded_at >= d.decided_at for d in undone)
     reverted = service.get(proposal.id).operations[2]
     assert (reverted.seq, reverted.status) == (3, OperationStatus.REJECTED)
 
@@ -241,14 +249,24 @@ def test_backfill_records_earlier_decisions_once(parts, house):
     service.reject(done.id, [ops[2].id], note="no")
     reverted = propose(service, house)
     service.apply(reverted.id, [reverted.operations[1].id])
-    service.revert(reverted.id)  # rejects seqs 1, 3 and 4 of it: nobody judged those
+    # A reviewer's own note that happens to start like a bundle's: still judged.
+    service.reject(reverted.id, [reverted.operations[3].id], note="superseded by my plan")
+    service.revert(reverted.id)  # rejects seqs 1 and 3 of it: nobody judged those
+    # A newer bundle import rejecting an older one's operations: nobody judged those.
+    bundle = propose(service, house, source=ProposalSource.BUNDLE)
+    service.reject(
+        bundle.id,
+        [o.id for o in bundle.operations],
+        note=SUPERSEDED_REASON.format("newer"),
+        decided_by=None,
+    )
     recorded = {d.operation_id: d for d in gold(service, house, include_superseded=True)}
     # As if decided before decisions were recorded.
     with session_factory() as session:
         session.query(ProposalDecisionRecord).delete()
         session.commit()
 
-    assert proposals.backfill_decisions() == 3
+    assert proposals.backfill_decisions() == 4
     assert proposals.backfill_decisions() == 0
 
     decisions = {d.operation_id: d for d in gold(service, house, include_superseded=True)}
@@ -265,4 +283,9 @@ def test_backfill_records_earlier_decisions_once(parts, house):
     undone = decisions[reverted.operations[1].id]
     assert undone.superseded_by == "unknown"
     assert undone.superseded_at >= undone.decided_at
-    assert {d.operation_id for d in gold(service, house)} == {ops[1].id, ops[2].id}
+    noted = decisions[reverted.operations[3].id]
+    assert (noted.decision, noted.reason) == (DecisionKind.REJECTED, "superseded by my plan")
+    assert noted.superseded_at is None  # a revert leaves rejections standing
+    assert not {o.id for o in bundle.operations} & set(decisions)
+    standing = {d.operation_id for d in gold(service, house)}
+    assert standing == {ops[1].id, ops[2].id, reverted.operations[3].id}

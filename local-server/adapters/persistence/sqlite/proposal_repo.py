@@ -12,7 +12,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional, Sequence
 
-from sqlalchemy import func
+from sqlalchemy import and_, func, not_, or_
 from sqlalchemy.orm import Session, sessionmaker
 
 from adapters.persistence.sqlite.models import (
@@ -22,6 +22,7 @@ from adapters.persistence.sqlite.models import (
     ProposalDecisionRecord,
     ProposalOperation,
 )
+from domain.versioning.bundle_import import MATCHED_PREFIX, SUPERSEDED_PREFIX
 from domain.versioning.gold import (
     DECIDED_BY_UNKNOWN,
     DecisionFilter,
@@ -148,6 +149,7 @@ class SQLiteChangeProposalRepository:
                 .filter(
                     ProposalDecisionRecord.proposal_id == proposal_id,
                     ProposalDecisionRecord.superseded_at.is_(None),
+                    ProposalDecisionRecord.decision != DecisionKind.REJECTED.value,
                 )
                 .update(
                     {
@@ -188,30 +190,31 @@ class SQLiteChangeProposalRepository:
 
         decided_by is "unknown"; decided_at is when the operation's change was
         made (the first change event of the proposal's run for its entity), else
-        when it was proposed. A reverted proposal's decisions are superseded at
-        its run's last change event (the revert's), else at decided_at.
-        Rejections nobody judged (by a revert, or a bundle import superseding an
-        older plan) are left out, as they are when made now.
+        when it was proposed. A reverted proposal's applied decisions are
+        superseded at its run's last change event (the revert's), else at
+        decided_at; its rejections still stand. Rejections nobody judged (by a
+        revert, or a bundle import superseding an older plan) are left out, as
+        they are when made now; that filter runs in SQL, so the rows it skips
+        for good are never loaded.
 
         Returns:
             How many decisions were recorded
         """
         with self._session_factory() as session:
             decided = session.query(ProposalDecisionRecord.operation_id)
-            rows = [
-                row
-                for row in (
-                    session.query(ProposalOperation)
-                    .filter(
-                        ProposalOperation.status.in_(
-                            [OperationStatus.APPLIED.value, OperationStatus.REJECTED.value]
-                        ),
-                        ProposalOperation.id.not_in(decided),
-                    )
-                    .order_by(ProposalOperation.proposal_id, ProposalOperation.seq)
+            rows = (
+                session.query(ProposalOperation)
+                .join(ChangeProposalRun, ChangeProposalRun.id == ProposalOperation.proposal_id)
+                .filter(
+                    ProposalOperation.status.in_(
+                        [OperationStatus.APPLIED.value, OperationStatus.REJECTED.value]
+                    ),
+                    ProposalOperation.id.not_in(decided),
+                    not_(_unjudged_rejection()),
                 )
-                if not _unjudged_rejection(row)
-            ]
+                .order_by(ProposalOperation.proposal_id, ProposalOperation.seq)
+                .all()
+            )
             proposals: dict[str, ChangeProposal] = {}
             for row in rows:
                 proposal_id: str = row.proposal_id  # type: ignore[assignment]
@@ -232,7 +235,10 @@ class SQLiteChangeProposalRepository:
                     )
                     decided_at = _utc(first) or decided_at
                 decision = decision_of(proposal, operation, DECIDED_BY_UNKNOWN, decided_at)
-                if proposal.status is ProposalStatus.REVERTED:
+                if (
+                    proposal.status is ProposalStatus.REVERTED
+                    and decision.decision is not DecisionKind.REJECTED
+                ):
                     last = (
                         session.query(func.max(ChangeEvent.timestamp))
                         .filter(ChangeEvent.batch_run_id == proposal_id)
@@ -253,15 +259,29 @@ class SQLiteChangeProposalRepository:
             session.commit()
 
 
-# A bundle import's rejections of an older plan's operations start with this.
-_SUPERSEDED_PREFIX = "superseded"
-
-
-def _unjudged_rejection(row: ProposalOperation) -> bool:
-    """A rejection made by a revert or a bundle import's superseding, not by anyone judging it."""
-    reason: str = row.reason or ""  # type: ignore[assignment]
-    return row.status == OperationStatus.REJECTED.value and (
-        reason == REVERTED_REASON or reason.startswith(_SUPERSEDED_PREFIX)
+def _unjudged_rejection():
+    """
+    SQL for a rejection nobody judged: a revert's of what was undecided (a
+    reverted proposal, rejected as "proposal reverted"), or a new bundle
+    import's of an earlier import's (a bundle proposal, rejected as superseded).
+    Needs ProposalOperation joined to ChangeProposalRun.
+    """
+    reason = func.coalesce(ProposalOperation.reason, "")
+    return and_(
+        ProposalOperation.status == OperationStatus.REJECTED.value,
+        or_(
+            and_(
+                ChangeProposalRun.status == ProposalStatus.REVERTED.value,
+                reason == REVERTED_REASON,
+            ),
+            and_(
+                ChangeProposalRun.source == ProposalSource.BUNDLE.value,
+                or_(
+                    reason.startswith(SUPERSEDED_PREFIX, autoescape=True),
+                    reason.startswith(MATCHED_PREFIX, autoescape=True),
+                ),
+            ),
+        ),
     )
 
 

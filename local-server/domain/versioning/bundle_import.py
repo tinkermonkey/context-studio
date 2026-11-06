@@ -26,6 +26,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from domain.interchange.bundle import BundlePlan, plan_bundle
+from domain.versioning.gold import DECIDED_BY_BUNDLE
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
@@ -38,7 +39,12 @@ if TYPE_CHECKING:
     from domain.ontology.services import OntologyService
     from domain.versioning.proposal_service import ProposalService
 
-SUPERSEDED_REASON = "superseded by bundle proposal {}"
+# Why a new import rejects what is undecided in an earlier import's open proposal:
+# a newer proposal of the same bundle replaces it, or the bundle now matches.
+SUPERSEDED_PREFIX = "superseded by bundle proposal "
+SUPERSEDED_REASON = SUPERSEDED_PREFIX + "{}"
+MATCHED_PREFIX = "superseded: the "
+MATCHED_REASON = MATCHED_PREFIX + "{!r} bundle now matches the workspace"
 _PAGE = 200
 
 
@@ -131,7 +137,9 @@ class BundleImportService:
             if proposal is not None and apply:
                 chosen = [o.id for o in proposal.pending if o.scope is not ChangeScope.BREAKING]
                 if chosen:
-                    proposal = self._proposals.apply(proposal.id, chosen)
+                    proposal = self._proposals.apply(
+                        proposal.id, chosen, decided_by=DECIDED_BY_BUNDLE
+                    )
             return BundleImportResult(plan, proposal, False, created_taxonomy_id is not None)
 
     def _propose(
@@ -176,7 +184,7 @@ class BundleImportService:
         reason = (
             SUPERSEDED_REASON.format(proposal.id)
             if proposal is not None
-            else f"superseded: the {plan.source!r} bundle now matches the workspace"
+            else MATCHED_REASON.format(plan.source)
         )
         for other in older:
             if other.source_detail != detail or not other.pending:

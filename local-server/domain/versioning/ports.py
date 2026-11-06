@@ -151,7 +151,10 @@ class ChangeProposalRepository(Protocol):
         ...
 
     def supersede_decisions(self, proposal_id: str, superseded_at: datetime, by: str) -> int:
-        """Mark the proposal's decisions not yet superseded as superseded; return how many."""
+        """
+        Mark the proposal's applied decisions (applied, applied_with_edits) not yet
+        superseded as superseded; rejections still stand. Return how many.
+        """
         ...
 
     def list_decisions(

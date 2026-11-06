@@ -6,7 +6,7 @@ import copy
 from datetime import datetime
 from typing import Optional, Sequence
 
-from domain.versioning.gold import DecisionFilter, ProposalDecision
+from domain.versioning.gold import DecisionFilter, DecisionKind, ProposalDecision
 from domain.versioning.proposals import (
     ChangeProposal,
     ProposalSource,
@@ -80,7 +80,11 @@ class FakeChangeProposalRepository:
 
     def supersede_decisions(self, proposal_id: str, superseded_at: datetime, by: str) -> int:
         standing = [
-            d for d in self.decisions if d.proposal_id == proposal_id and d.superseded_at is None
+            d
+            for d in self.decisions
+            if d.proposal_id == proposal_id
+            and d.superseded_at is None
+            and d.decision is not DecisionKind.REJECTED
         ]
         for decision in standing:
             decision.superseded_at = superseded_at

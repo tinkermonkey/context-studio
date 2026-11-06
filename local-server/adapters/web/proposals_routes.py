@@ -483,8 +483,8 @@ async def list_gold(
 ) -> ListResponse[GoldDecisionResponse]:
     """
     The taxonomy's gold: every reviewer or policy decision on its proposals'
-    operations, oldest first. Decisions a revert superseded are left out unless
-    include_superseded.
+    operations, oldest first. Applied decisions a revert superseded are left out
+    unless include_superseded (a revert leaves rejections standing).
     """
 
     def run() -> ListResponse[GoldDecisionResponse]:

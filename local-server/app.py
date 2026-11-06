@@ -581,6 +581,8 @@ async def lifespan(app: FastAPI):
                 logger.info("Gold backfill: recorded %d decisions", backfilled)
         except OperationalError as exc:  # local.db not migrated to the gold table yet
             logger.error("Gold backfill skipped (run migrations): %s", exc)
+        except Exception:  # noqa: BLE001 - history must never stop the app starting
+            logger.exception("Gold backfill failed; skipped")
         proposal_service = ProposalService(
             proposals=proposal_repo,
             ontology_service=ontology_service,

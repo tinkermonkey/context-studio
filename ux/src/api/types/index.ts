@@ -3815,8 +3815,8 @@ export interface paths {
     /**
      * List Gold
      * @description The taxonomy's gold: every reviewer or policy decision on its proposals'
-     *     operations, oldest first. Decisions a revert superseded are left out unless
-     *     include_superseded.
+     *     operations, oldest first. Applied decisions a revert superseded are left out
+     *     unless include_superseded (a revert leaves rejections standing).
      */
     get: operations["list_gold_api_taxonomies__taxonomy_id__gold_get"];
     put?: never;
@@ -6015,8 +6015,8 @@ export interface components {
      * GoldDecisionResponse
      * @description One reviewer or policy decision on a proposal operation: gold.
      *
-     *     A revert supersedes the proposal's decisions (superseded_at, superseded_by)
-     *     rather than deleting them.
+     *     A revert supersedes the proposal's applied decisions (superseded_at,
+     *     superseded_by) rather than deleting them; its rejections still stand.
      */
     GoldDecisionResponse: {
       /** Id */

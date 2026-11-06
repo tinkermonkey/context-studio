@@ -7285,7 +7285,7 @@
           "proposals"
         ],
         "summary": "List Gold",
-        "description": "The taxonomy's gold: every reviewer or policy decision on its proposals'\noperations, oldest first. Decisions a revert superseded are left out unless\ninclude_superseded.",
+        "description": "The taxonomy's gold: every reviewer or policy decision on its proposals'\noperations, oldest first. Applied decisions a revert superseded are left out\nunless include_superseded (a revert leaves rejections standing).",
         "operationId": "list_gold_api_taxonomies__taxonomy_id__gold_get",
         "parameters": [
           {
@@ -11477,7 +11477,7 @@
           "proposed"
         ],
         "title": "GoldDecisionResponse",
-        "description": "One reviewer or policy decision on a proposal operation: gold.\n\nA revert supersedes the proposal's decisions (superseded_at, superseded_by)\nrather than deleting them."
+        "description": "One reviewer or policy decision on a proposal operation: gold.\n\nA revert supersedes the proposal's applied decisions (superseded_at,\nsuperseded_by) rather than deleting them; its rejections still stand."
       },
       "GraphMetricsResponse": {
         "properties": {

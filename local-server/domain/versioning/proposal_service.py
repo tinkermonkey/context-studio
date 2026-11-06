@@ -1573,8 +1573,8 @@ class ProposalService:
         Operations still undecided (pending or failed) are rejected ("proposal
         reverted"), since a reverted proposal takes no more decisions; nobody
         judged them, so they record no decision. Applied and rejected operations
-        keep their recorded outcomes, and their decisions are marked superseded
-        by reverted_by.
+        keep their recorded outcomes; the applied ones' decisions are marked
+        superseded by reverted_by (a rejection still stands).
 
         Raises:
             ChangeProposalNotFoundError: If the proposal does not exist

@@ -3,10 +3,10 @@ Gold: every reviewer or policy decision on a proposal operation, kept as data.
 
 A decision is recorded when an operation is applied (as proposed or with a
 reviewer's edits) or rejected, with when, by whom, the operation as proposed
-and what was finally applied. Reverting a proposal supersedes its decisions;
-they are kept, marked, not deleted. Closing an operation that nobody judged
-(a revert rejecting what was still undecided, a bundle import superseding an
-older plan) records no decision.
+and what was finally applied. Reverting a proposal supersedes its applied
+decisions (kept, marked, not deleted); its rejections still stand. Closing
+an operation that nobody judged (a revert rejecting what was still
+undecided, a bundle import superseding an older plan) records no decision.
 """
 
 from __future__ import annotations
@@ -27,6 +27,8 @@ from domain.versioning.proposals import (
 
 DECIDED_BY_USER = "user"
 DECIDED_BY_POLICY = "policy"
+# A bundle import applying its non-breaking operations (apply=true).
+DECIDED_BY_BUNDLE = "bundle"
 # Decisions backfilled from operations decided before decisions were recorded.
 DECIDED_BY_UNKNOWN = "unknown"
 
@@ -49,7 +51,8 @@ class ProposalDecision:
         seq, kind, op: The operation's position, entity kind and type
         decision: Applied, rejected or applied with edits
         decided_at: When (timezone-aware)
-        decided_by: "user", "policy", an agent source, or "unknown" (backfilled)
+        decided_by: "user", "policy", "bundle", an agent source, or "unknown"
+            (backfilled)
         proposed: The operation as proposed (see `proposed_snapshot`)
         applied_fields: The fields finally applied (the edit, if edited); None
             when rejected
@@ -60,7 +63,7 @@ class ProposalDecision:
         chosen_alternative: The alternative the reviewer chose, when there is one
         probability: The operation's probability, if it had one
         model: The decision model that produced the probability, if one did
-        superseded_at, superseded_by: Set when a revert undid the decision
+        superseded_at, superseded_by: Set when a revert undid the (applied) decision
         id: Unique id
     """
 

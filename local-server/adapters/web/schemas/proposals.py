@@ -527,8 +527,8 @@ class GoldDecisionResponse(BaseModel):
     """
     One reviewer or policy decision on a proposal operation: gold.
 
-    A revert supersedes the proposal's decisions (superseded_at, superseded_by)
-    rather than deleting them.
+    A revert supersedes the proposal's applied decisions (superseded_at,
+    superseded_by) rather than deleting them; its rejections still stand.
     """
 
     id: str
