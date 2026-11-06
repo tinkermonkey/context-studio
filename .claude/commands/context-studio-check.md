@@ -31,7 +31,7 @@ In **strict** mode (`npm run validate-selectors -- --strict`), it also hard-fail
 ```bash
 cd local-server && python scripts/update_api_specs.py --check 2>/dev/null || python scripts/update_api_specs.py
 cd ux && npm run generate-types
-git diff --quiet ux/src/api/client/types.ts ux/documentation/openapi.json && echo "✓ types in sync" || echo "✗ types drifted — commit regenerated files"
+git diff --quiet -- ux/src/api/types/index.ts ux/documentation/openapi.json local-server/documentation/openapi.json && echo "✓ types in sync" || echo "✗ types drifted — commit regenerated files"
 ```
 
 If the generated files have changes after regeneration, the OpenAPI spec is stale.

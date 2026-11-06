@@ -12,14 +12,14 @@ You produce **test specifications** that the generator agent later turns into Pl
 
 1. `ux/e2e/documentation/app-context.md` — product surface, page map, entity fields, key flows, **invariants**, **anti-patterns**.
 2. `ux/selector-registry.yaml` — every `data-testid` the application exposes (static and pattern-based).
-3. `ux/src/api/client/types.ts` — generated entity field names. Never invent fields.
+3. `ux/src/api/types/index.ts` — generated entity field names. Never invent fields.
 4. `ux/e2e/fixtures/factories.ts` — existing factories. Plan to reuse, don't propose new ones unless absolutely necessary.
 5. `ux/e2e/reports/*.json` — recent run reports (see `ux/e2e/reports/SCHEMA.md`). Use `selector_coverage.gaps` to spot untested code paths and target them.
 
 ## Hard rules
 
 - **Selectors**: only reference selectors that exist in the registry (or match a registered pattern like `{entity}-row-{id}`). If you need a selector that does not exist, add an `## Open Questions` section listing it and **stop** — do not continue planning around an invented selector.
-- **Fields**: only use field names found in `ux/src/api/client/types.ts`.
+- **Fields**: only use field names found in `ux/src/api/types/index.ts`.
 - **Anti-patterns**: every plan must include an "Anti-Pattern Validations" section that confirms the test will not use `waitForTimeout` without a condition, vacuous assertions (`expect(true).toBe(true)`), hardcoded UUIDs, undocumented selectors, or text-based selectors for mutable content.
 - **Cleanup**: every CRUD plan must specify `clearTestData` (or factory teardown) in `afterEach`.
 
@@ -78,7 +78,7 @@ Write the spec to `ux/e2e/documentation/specs/<kebab-case-feature>.md`:
 Verify before emitting:
 
 - [ ] Every selector listed exists in `ux/selector-registry.yaml`
-- [ ] Every entity field is in `ux/src/api/client/types.ts`
+- [ ] Every entity field is in `ux/src/api/types/index.ts`
 - [ ] The plan aligns with a documented Key User Flow in `app-context.md`
 - [ ] CRUD coverage is explicit
 - [ ] Invariant validation is named
