@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from "react";
+import { useEffect, useRef, type KeyboardEvent } from "react";
 import { segmentText, type KeyedSpan } from "./reviewUtils";
 import "./ExtractionReview.css";
 
@@ -24,9 +24,22 @@ export function SourceText({
   "data-testid": testId,
 }: SourceTextProps) {
   const segments = segmentText(text, spans);
+  const containerRef = useRef<HTMLParagraphElement>(null);
+
+  // Bring the active item's first highlight into view inside the scrolling box.
+  useEffect(() => {
+    const box = containerRef.current;
+    if (!box || !activeKey) return;
+    const mark = box.querySelector<HTMLElement>('mark[aria-current="true"]');
+    if (!mark) return;
+    const top = mark.offsetTop;
+    if (top < box.scrollTop || top + mark.offsetHeight > box.scrollTop + box.clientHeight) {
+      box.scrollTo?.({ top: Math.max(0, top - box.clientHeight / 3), behavior: "smooth" });
+    }
+  }, [activeKey, text]);
 
   return (
-    <p className="xr-source-text" data-testid={testId}>
+    <p className="xr-source-text" data-testid={testId} ref={containerRef}>
       {segments.map(({ start, end, covering }) => {
         const chunk = text.slice(start, end);
         if (covering.length === 0) return <span key={start}>{chunk}</span>;

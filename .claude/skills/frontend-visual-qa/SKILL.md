@@ -58,6 +58,18 @@ Toggle back to light canvas when done.
 
 ---
 
+## 2b. Console Errors
+
+A page that renders but logs errors does not pass. For **every** state captured in sections 1 and 2, read the browser console (errors and warnings) after the state settles:
+
+- Any `console.error`, uncaught exception, or React warning (duplicate or missing `key`, "Cannot update a component while rendering…") is a **fail**. Record the message and the state that produced it.
+- Failed network requests that the state did not intend (a 4xx/5xx the UI didn't ask for) are a fail too.
+- Only errors the state is meant to produce (an error-state screenshot blocking an API call, say) may pass, and the report must name them.
+
+The unit suite (`vitest.setup.ts`) and the Playwright fixture (`e2e/fixtures/app-test.ts`) enforce the same rule; this check catches what their mocks miss.
+
+---
+
 ## 3. Layout Composition Check
 
 This section enforces structural patterns. A wrong layout passes all unit tests but is visually broken.
@@ -187,6 +199,9 @@ After completing all sections, report:
 - [ ] Chips: pass / fail
 - [ ] Primary button: pass / fail
 - [ ] Skeletons: pass / fail
+
+### Console errors
+- [ ] No console errors or React warnings in any captured state: pass / fail
 
 ### Layout composition
 - [ ] split-2 grid present when drawer open: pass / fail / n/a

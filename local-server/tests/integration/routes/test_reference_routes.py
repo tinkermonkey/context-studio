@@ -13,11 +13,15 @@ These tests use fake reference sources and verify:
 - Proper error handling and graceful degradation
 """
 
+import asyncio
+import time
+
 import pytest
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
 from adapters.web.dependencies import get_reference_sources
+from adapters.web import reference_routes
 from adapters.web.reference_routes import router
 from tests.fakes.fake_reference_source import FakeReferenceSource
 
@@ -105,6 +109,27 @@ class TestReferenceStatusEndpoint:
 
         # Clean up dependency override
         app.dependency_overrides.clear()
+
+
+    def test_reference_status_reports_a_slow_source_unavailable(self, app, monkeypatch):
+        """A source that doesn't answer in time is unavailable; it doesn't hold the response."""
+        monkeypatch.setattr(reference_routes, "STATUS_CHECK_TIMEOUT_SECONDS", 0.05)
+        slow = FakeReferenceSource(name="slow")
+
+        async def never_answers() -> bool:
+            await asyncio.sleep(5)
+            return True
+
+        slow.is_available_async = never_answers  # type: ignore[method-assign]
+        app.state.reference_sources = [FakeReferenceSource(name="fast"), slow]
+
+        started = time.monotonic()
+        response = TestClient(app).get("/api/reference/status")
+
+        assert time.monotonic() - started < 2
+        assert response.status_code == status.HTTP_200_OK
+        by_name = {s["name"]: s["available"] for s in response.json()["sources"]}
+        assert by_name == {"fast": True, "slow": False}
 
 
 class TestReferenceSearchEndpoint:

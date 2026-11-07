@@ -1309,8 +1309,33 @@ Object.defineProperty(navigator, "clipboard", {
 });
 (globalThis as any).__mockClipboardWriteText = mockClipboardWriteText;
 
+// React warnings that mean the rendered UI is wrong. A test that triggers one
+// fails, so bugs like duplicate column keys can't pass silently (#1447).
+const FAILING_REACT_WARNINGS = [
+  /Encountered two children with the same key/,
+  /Each child in a list should have a unique "key" prop/,
+  /Cannot update a component .* while rendering a different component/,
+];
+let reactWarnings: string[] = [];
+let originalConsoleError: typeof console.error;
+
+beforeEach(() => {
+  reactWarnings = [];
+  originalConsoleError = console.error;
+  console.error = (...args: unknown[]) => {
+    const message = args.map(String).join(" ");
+    if (FAILING_REACT_WARNINGS.some((re) => re.test(message))) reactWarnings.push(message);
+    originalConsoleError(...args);
+  };
+});
+
 afterEach(() => {
   cleanup();
+  console.error = originalConsoleError;
+  if (reactWarnings.length > 0) {
+    const first = reactWarnings[0].slice(0, 300);
+    throw new Error(`React logged ${reactWarnings.length} render warning(s): ${first}`);
+  }
 });
 
 beforeEach(() => {

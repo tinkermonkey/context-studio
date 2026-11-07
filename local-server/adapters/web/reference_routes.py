@@ -54,6 +54,11 @@ logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api/reference", tags=["reference"])
 
+# How long the status check waits on one source before reporting it unavailable.
+# A source that is down (a homelab ConceptNet, say) would otherwise hold the
+# whole response for its full request timeout.
+STATUS_CHECK_TIMEOUT_SECONDS = 3.0
+
 
 # ==================== Status Endpoint ====================
 
@@ -89,7 +94,9 @@ async def reference_status(
         source: ReferenceSource,
     ) -> tuple[ReferenceSourceStatusSchema, bool]:
         try:
-            is_available = await source.is_available_async()
+            is_available = await asyncio.wait_for(
+                source.is_available_async(), timeout=STATUS_CHECK_TIMEOUT_SECONDS
+            )
 
             return (
                 ReferenceSourceStatusSchema(
@@ -98,6 +105,19 @@ async def reference_status(
                     last_checked=datetime.now(timezone.utc).isoformat(),
                 ),
                 is_available,
+            )
+        except asyncio.TimeoutError:
+            logger.warning(
+                f"{source.source_name} did not answer the availability check within "
+                f"{STATUS_CHECK_TIMEOUT_SECONDS:g}s; reporting it unavailable"
+            )
+            return (
+                ReferenceSourceStatusSchema(
+                    name=source.source_name,
+                    available=False,
+                    last_checked=datetime.now(timezone.utc).isoformat(),
+                ),
+                False,
             )
         except Exception as e:
             logger.warning(f"Error checking availability of {source.source_name}: {e}")

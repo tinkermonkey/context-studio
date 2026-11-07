@@ -910,59 +910,64 @@ test.describe("Extraction review", () => {
     expect(await relationships(page, seed.orderService.id, seed.exposes.id)).toHaveLength(0);
   });
 
-  test("one tab fails while the other completes; retry re-runs only the failed tab", async ({
-    page,
-  }) => {
-    const seed = await seedDrScope(page);
-    await routeRunToFailure(page, "schema_extraction", "LLM provider timed out");
-    const ind = await routeRunsToSeededOutput(page, {
-      individual_extraction: individualOutput(seed),
+  test.describe("a failing tab", () => {
+    // One pipeline fails (500) on purpose; the review shows the failure and retries it.
+    test.use({ allowedConsoleErrors: [/status of 500/] });
+
+    test("one tab fails while the other completes; retry re-runs only the failed tab", async ({
+      page,
+    }) => {
+      const seed = await seedDrScope(page);
+      await routeRunToFailure(page, "schema_extraction", "LLM provider timed out");
+      const ind = await routeRunsToSeededOutput(page, {
+        individual_extraction: individualOutput(seed),
+      });
+      const posts = countRunPosts(page);
+      await openReview(page);
+
+      await page.getByTestId("extraction-review-text").fill(TEXT);
+      await page.getByTestId("extraction-review-run").click();
+
+      const failed = page.getByTestId("extraction-review-schema-failed");
+      await expect(failed).toBeVisible({ timeout: RUN_TIMEOUT });
+      await expect(failed).toContainText(
+        "Run failed: LLM provider timed out. The other extraction tab is unaffected.",
+      );
+      await expect(page.getByTestId("extraction-review-schema-run-meta")).toContainText("FAILED");
+      await expect(page.getByTestId("extraction-review-schema-retry")).toBeVisible();
+      await expect(page.getByTestId("extraction-review-schema-apply-bar")).toHaveCount(0);
+
+      await tab(page, INDIVIDUAL_TAB).click();
+      const individualMeta = page.getByTestId("extraction-review-individual-run-meta");
+      await expect(individualMeta).toContainText("COMPLETED", { timeout: RUN_TIMEOUT });
+      const individualRunId = ind.individual_extraction!.run.id;
+      await expect(individualMeta).toContainText(individualRunId);
+      await decide(page, "extraction-review-individual-decision-triple-0-yes");
+
+      // Swap the failing route for a seeded one, then retry the schema tab only.
+      await page.unroute("**/api/pipelines/schema_extraction/run");
+      const schema = await routeRunsToSeededOutput(page, { schema_extraction: schemaOutput() });
+
+      await tab(page, SCHEMA_TAB).click();
+      await page.getByTestId("extraction-review-schema-retry").click();
+
+      const schemaMeta = page.getByTestId("extraction-review-schema-run-meta");
+      await expect(schemaMeta).toContainText("COMPLETED", { timeout: RUN_TIMEOUT });
+      await expect(schemaMeta).toContainText(schema.schema_extraction!.run.id);
+      await expect(page.getByTestId("extraction-review-schema-decision-class-0")).toBeVisible();
+      await expect(failed).toHaveCount(0);
+      const retried = schema.schema_extraction!.request;
+      expect(retried.documents).toEqual([TEXT]);
+      expect(retried.scope).toBe(seed.tax.id);
+      expect(retried.concept_scheme_id).toBe(seed.scheme.id);
+
+      // The other tab's run and decisions survive.
+      expect(posts).toEqual({ schema_extraction: 2, individual_extraction: 1 });
+      await tab(page, INDIVIDUAL_TAB).click();
+      await expect(individualMeta).toContainText(individualRunId);
+      await expect(
+        page.getByTestId("extraction-review-individual-decision-triple-0-yes"),
+      ).toHaveAttribute("aria-pressed", "true");
     });
-    const posts = countRunPosts(page);
-    await openReview(page);
-
-    await page.getByTestId("extraction-review-text").fill(TEXT);
-    await page.getByTestId("extraction-review-run").click();
-
-    const failed = page.getByTestId("extraction-review-schema-failed");
-    await expect(failed).toBeVisible({ timeout: RUN_TIMEOUT });
-    await expect(failed).toContainText(
-      "Run failed: LLM provider timed out. The other extraction tab is unaffected.",
-    );
-    await expect(page.getByTestId("extraction-review-schema-run-meta")).toContainText("FAILED");
-    await expect(page.getByTestId("extraction-review-schema-retry")).toBeVisible();
-    await expect(page.getByTestId("extraction-review-schema-apply-bar")).toHaveCount(0);
-
-    await tab(page, INDIVIDUAL_TAB).click();
-    const individualMeta = page.getByTestId("extraction-review-individual-run-meta");
-    await expect(individualMeta).toContainText("COMPLETED", { timeout: RUN_TIMEOUT });
-    const individualRunId = ind.individual_extraction!.run.id;
-    await expect(individualMeta).toContainText(individualRunId);
-    await decide(page, "extraction-review-individual-decision-triple-0-yes");
-
-    // Swap the failing route for a seeded one, then retry the schema tab only.
-    await page.unroute("**/api/pipelines/schema_extraction/run");
-    const schema = await routeRunsToSeededOutput(page, { schema_extraction: schemaOutput() });
-
-    await tab(page, SCHEMA_TAB).click();
-    await page.getByTestId("extraction-review-schema-retry").click();
-
-    const schemaMeta = page.getByTestId("extraction-review-schema-run-meta");
-    await expect(schemaMeta).toContainText("COMPLETED", { timeout: RUN_TIMEOUT });
-    await expect(schemaMeta).toContainText(schema.schema_extraction!.run.id);
-    await expect(page.getByTestId("extraction-review-schema-decision-class-0")).toBeVisible();
-    await expect(failed).toHaveCount(0);
-    const retried = schema.schema_extraction!.request;
-    expect(retried.documents).toEqual([TEXT]);
-    expect(retried.scope).toBe(seed.tax.id);
-    expect(retried.concept_scheme_id).toBe(seed.scheme.id);
-
-    // The other tab's run and decisions survive.
-    expect(posts).toEqual({ schema_extraction: 2, individual_extraction: 1 });
-    await tab(page, INDIVIDUAL_TAB).click();
-    await expect(individualMeta).toContainText(individualRunId);
-    await expect(
-      page.getByTestId("extraction-review-individual-decision-triple-0-yes"),
-    ).toHaveAttribute("aria-pressed", "true");
   });
 });

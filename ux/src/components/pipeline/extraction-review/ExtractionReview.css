@@ -15,6 +15,9 @@
   flex-direction: column;
   gap: 14px;
   min-width: 0;
+  /* In the sticky inspector column, keep full height so the column scrolls
+     instead of squeezing (and clipping) the panels. */
+  flex-shrink: 0;
 }
 
 .xr-stack-sm {
@@ -135,6 +138,11 @@
   line-height: 1.85;
   color: rgb(var(--canvas-fg-1));
   white-space: pre-wrap;
+  /* A long source scrolls in its own box, so the candidate details below stay in view. */
+  max-height: min(45vh, 440px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  position: relative; /* offset parent for scrolling a highlight into view */
 }
 
 .xr-span {

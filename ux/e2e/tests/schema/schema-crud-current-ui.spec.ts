@@ -104,46 +104,52 @@ test.describe("Schema CRUD — current UI", () => {
     await expect(table.getByText("e2e_predicate")).toHaveCount(0, { timeout: 5000 });
   });
 
-  test("scheme: blocks deleting a scheme that still has classes and surfaces the reason", async ({
-    page,
-  }) => {
-    const taxonomy = await createTaxonomy(page, { title: "E2E Block Taxonomy" });
-    const scheme = await createConceptScheme(page, taxonomy.id, { title: "E2E Block Scheme" });
-    await createClass(page, scheme.id, { title: "E2E Block Class" });
+  test.describe("blocked deletes", () => {
+    // The API refuses these deletes (422) on purpose; the UI surfaces the reason.
+    test.use({ allowedConsoleErrors: [/status of 422/] });
 
-    await page.goto("/app/schema/schemes");
-    await page.waitForLoadState("networkidle");
+    test("scheme: blocks deleting a scheme that still has classes and surfaces the reason", async ({
+      page,
+    }) => {
+      const taxonomy = await createTaxonomy(page, { title: "E2E Block Taxonomy" });
+      const scheme = await createConceptScheme(page, taxonomy.id, { title: "E2E Block Scheme" });
+      await createClass(page, scheme.id, { title: "E2E Block Class" });
 
-    await deleteViaRowMenu(page, /E2E Block Scheme/);
+      await page.goto("/app/schema/schemes");
+      await page.waitForLoadState("networkidle");
 
-    await expect(page.getByText(/Cannot delete/i).first()).toBeVisible({ timeout: 5000 });
-    await expect(page.getByTestId("selectable-table").getByText("E2E Block Scheme")).toBeVisible();
-  });
+      await deleteViaRowMenu(page, /E2E Block Scheme/);
 
-  test("class: blocks deleting a class that still has subclasses and surfaces the reason", async ({
-    page,
-  }) => {
-    const taxonomy = await createTaxonomy(page, { title: "E2E Class Block Taxonomy" });
-    const scheme = await createConceptScheme(page, taxonomy.id, {
-      title: "E2E Class Block Scheme",
+      await expect(page.getByText(/Cannot delete/i).first()).toBeVisible({ timeout: 5000 });
+      await expect(
+        page.getByTestId("selectable-table").getByText("E2E Block Scheme"),
+      ).toBeVisible();
     });
-    const parent = await createClass(page, scheme.id, { title: "E2E Parent Class" });
-    await createClass(page, scheme.id, { title: "E2E Child Class", parent_class_id: parent.id });
 
-    await page.goto("/app/schema/classes");
-    await page.waitForLoadState("networkidle");
+    test("class: blocks deleting a class that still has subclasses and surfaces the reason", async ({
+      page,
+    }) => {
+      const taxonomy = await createTaxonomy(page, { title: "E2E Class Block Taxonomy" });
+      const scheme = await createConceptScheme(page, taxonomy.id, {
+        title: "E2E Class Block Scheme",
+      });
+      const parent = await createClass(page, scheme.id, { title: "E2E Parent Class" });
+      await createClass(page, scheme.id, { title: "E2E Child Class", parent_class_id: parent.id });
 
-    // Locate the parent row by its id prefix (the classes table shows the UUID
-    // prefix as the identifier). Matching by title would be ambiguous because
-    // the child row references the parent's title in its Parent column.
-    await deleteViaRowMenu(page, new RegExp(parent.id.slice(0, 8)));
+      await page.goto("/app/schema/classes");
+      await page.waitForLoadState("networkidle");
 
-    await expect(page.getByText(/Cannot delete/i).first()).toBeVisible({ timeout: 5000 });
-    await expect(
-      page.getByTestId("selectable-table").getByText("E2E Parent Class").first(),
-    ).toBeVisible();
+      // Locate the parent row by its id prefix (the classes table shows the UUID
+      // prefix as the identifier). Matching by title would be ambiguous because
+      // the child row references the parent's title in its Parent column.
+      await deleteViaRowMenu(page, new RegExp(parent.id.slice(0, 8)));
+
+      await expect(page.getByText(/Cannot delete/i).first()).toBeVisible({ timeout: 5000 });
+      await expect(
+        page.getByTestId("selectable-table").getByText("E2E Parent Class").first(),
+      ).toBeVisible();
+    });
   });
-
   test("scheme: create via the drawer with a taxonomy selection", async ({ page }) => {
     await createTaxonomy(page, { title: "E2E Scheme Parent Tax" });
     await page.goto("/app/schema/schemes");
