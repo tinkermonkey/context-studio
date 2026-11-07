@@ -16,12 +16,32 @@ import { clearTestData } from "./factories";
  * behind (even one that crashed before its own cleanup) — the single source of
  * test isolation. Individual specs must NOT rely on data from other specs.
  *
+ * Console errors fail the test (#1447): a page that renders but logs an error
+ * or throws is not passing. A spec that triggers an expected error (an API
+ * 4xx it is testing, say) lists it with
+ * `test.use({ allowedConsoleErrors: [/pattern/] })`.
+ *
  * Usage: import { test, expect } from "../../fixtures/app-test";
  */
 export const WORKSPACE_PATH = "/e2e/workspace/local.db";
 
-export const test = base.extend({
-  page: async ({ page }, use) => {
+type AppFixtures = {
+  allowedConsoleErrors: RegExp[];
+};
+
+export const test = base.extend<AppFixtures>({
+  allowedConsoleErrors: [[], { option: true }],
+
+  page: async ({ page, allowedConsoleErrors }, use) => {
+    const consoleErrors: string[] = [];
+    const record = (text: string) => {
+      if (!allowedConsoleErrors.some((re) => re.test(text))) consoleErrors.push(text);
+    };
+    page.on("console", (msg) => {
+      if (msg.type() === "error") record(msg.text());
+    });
+    page.on("pageerror", (err) => record(`Uncaught: ${err.message}`));
+
     await page.addInitScript((path) => {
       try {
         localStorage.setItem("context-studio:workspace-path", path);
@@ -31,6 +51,8 @@ export const test = base.extend({
     }, WORKSPACE_PATH);
     await clearTestData(page);
     await use(page);
+
+    expect(consoleErrors, "the page logged console errors").toEqual([]);
   },
 });
 

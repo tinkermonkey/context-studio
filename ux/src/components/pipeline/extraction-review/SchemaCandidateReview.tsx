@@ -280,15 +280,17 @@ function SchemaCandidateReviewBody({
       />
     ),
   };
+  // Table keys header and cells by column key, so this column can't reuse "id"
+  // (the decision column has it); it reads the id from the row instead.
   const existingCol = {
-    key: "id" as const,
+    key: "candidate_type" as const,
     label: "Existing",
     width: "180px",
-    render: (k: unknown) => (
+    render: (_: unknown, r: SchemaRow) => (
       <ExistingMatchCell
-        hit={hitById.get(String(k))}
+        hit={hitById.get(r.id)}
         loaded={recognitionHits !== undefined}
-        data-testid={`extraction-review-schema-existing-${k}`}
+        data-testid={`extraction-review-schema-existing-${r.id}`}
       />
     ),
   };
