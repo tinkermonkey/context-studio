@@ -2,6 +2,7 @@
 
 import httpx
 
+from adapters.reference.http_headers import REFERENCE_HEADERS
 from domain.extraction.ports import ReferenceRelation, ReferenceResult
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
@@ -57,9 +58,15 @@ class ConceptNetSource:
         try:
             response = httpx.get(
                 f"{self._base_url}/c/en/test",
+                headers=REFERENCE_HEADERS,
                 timeout=self._timeout,
             )
-            return response.status_code == 200
+            if response.status_code != 200:
+                logger.warning(
+                    f"ConceptNet availability check answered HTTP {response.status_code}"
+                )
+                return False
+            return True
         except httpx.TimeoutException as e:
             logger.warning(f"ConceptNet availability check timed out: {e}")
             return False
@@ -113,6 +120,7 @@ class ConceptNetSource:
             response = httpx.get(
                 f"{self._base_url}/query",
                 params={"text": term, "limit": limit},
+                headers=REFERENCE_HEADERS,
                 timeout=self._timeout,
             )
             response.raise_for_status()
@@ -152,6 +160,7 @@ class ConceptNetSource:
             response = httpx.get(
                 f"{self._base_url}/query",
                 params={"start": uri, "limit": limit},
+                headers=REFERENCE_HEADERS,
                 timeout=self._timeout,
             )
             response.raise_for_status()
@@ -231,6 +240,7 @@ class ConceptNetSource:
             response = await self._async_client.get(
                 f"{self._base_url}/query",
                 params={"text": term, "limit": limit},
+                headers=REFERENCE_HEADERS,
                 timeout=self._timeout,
             )
             response.raise_for_status()
