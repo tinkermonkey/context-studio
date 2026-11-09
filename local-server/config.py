@@ -215,18 +215,24 @@ class ReferenceUpstreamConfig(BaseModel):
     )
 
 
+class ConceptNetUpstreamConfig(ReferenceUpstreamConfig):
+    upstream: str = Field(default="https://api.conceptnet.io", description="The API's base URL")
+
+
+class DBpediaUpstreamConfig(ReferenceUpstreamConfig):
+    upstream: str = Field(default="https://lookup.dbpedia.org", description="The API's base URL")
+
+
+class WikidataUpstreamConfig(ReferenceUpstreamConfig):
+    upstream: str = Field(default="https://www.wikidata.org", description="The API's base URL")
+
+
 class ReferenceUpstreamsConfig(BaseModel):
     """The reference APIs the reference proxy fronts"""
 
-    conceptnet: ReferenceUpstreamConfig = Field(
-        default_factory=lambda: ReferenceUpstreamConfig(upstream="https://api.conceptnet.io")
-    )
-    dbpedia: ReferenceUpstreamConfig = Field(
-        default_factory=lambda: ReferenceUpstreamConfig(upstream="https://lookup.dbpedia.org")
-    )
-    wikidata: ReferenceUpstreamConfig = Field(
-        default_factory=lambda: ReferenceUpstreamConfig(upstream="https://www.wikidata.org")
-    )
+    conceptnet: ConceptNetUpstreamConfig = Field(default_factory=ConceptNetUpstreamConfig)
+    dbpedia: DBpediaUpstreamConfig = Field(default_factory=DBpediaUpstreamConfig)
+    wikidata: WikidataUpstreamConfig = Field(default_factory=WikidataUpstreamConfig)
 
 
 class ReferenceProxyConfig(BaseModel):

@@ -207,6 +207,30 @@ def test_burst_is_held_to_requests_per_hour(make_proxy, upstream):
     assert len(upstream.requests) == 3
 
 
+def test_throttled_term_asked_again_is_answered_at_once(make_proxy, upstream):
+    """A 429 must not leave the term stuck in-flight (reference-api-buddy 0.5.0 bug)."""
+    base_url = make_proxy(requests_per_hour=1).base_url("conceptnet")
+    httpx.get(f"{base_url}/query", params={"text": "first"}, timeout=5)
+
+    for _ in range(2):
+        started = time.monotonic()
+        response = httpx.get(f"{base_url}/query", params={"text": "second"}, timeout=5)
+        assert response.status_code == 429
+        assert time.monotonic() - started < 2
+
+    assert len(upstream.requests) == 1
+
+
+def test_a_source_can_set_only_its_rate_limit():
+    config = ReferenceProxyConfig.model_validate(
+        {"sources": {"dbpedia": {"requests_per_hour": 600}}}
+    )
+
+    assert config.sources.dbpedia.upstream == "https://lookup.dbpedia.org"
+    assert config.sources.dbpedia.requests_per_hour == 600
+    assert config.sources.wikidata.upstream == "https://www.wikidata.org"
+
+
 def test_throttled_search_returns_no_results(make_proxy, upstream):
     conceptnet, _, _ = _sources(make_proxy(requests_per_hour=1))
 

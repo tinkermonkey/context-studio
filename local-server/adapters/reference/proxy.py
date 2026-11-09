@@ -7,11 +7,16 @@ their requests to `ReferenceProxy.base_url(source)`, which is the proxy while it
 runs and the source's own API when the proxy is off or failed to start.
 """
 
+import logging
 import os
+import threading
 from typing import Any
 
 from reference_api_buddy.cache.engine import CacheEngine
+from reference_api_buddy.core.handler import ProxyHTTPRequestHandler
+from reference_api_buddy.core.inflight_tracker import InFlightTracker
 from reference_api_buddy.core.proxy import CachingProxy
+from reference_api_buddy.core.server import ThreadedHTTPServer
 from reference_api_buddy.database.models import CachedResponse
 
 from config import ReferenceProxyConfig
@@ -46,6 +51,67 @@ class SuccessOnlyCacheEngine(CacheEngine):
         if response.status_code >= 400:
             return False
         return super().set(cache_key, response, domain_key=domain_key)
+
+
+class OwnedInFlightTracker(InFlightTracker):
+    """
+    Remembers which handler thread registered each in-flight request.
+
+    reference-api-buddy 0.5.0 registers a request as in-flight before checking the
+    rate limit, and its 429 answer never completes it. Every later request for that
+    term then waits 60s on a result that never comes. `release_current_thread`
+    completes whatever the finished request left behind.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._owners: dict[str, int] = {}
+
+    def should_wait(self, cache_key: str):
+        """Register the request, noting this thread as its owner when it goes upstream."""
+        request = super().should_wait(cache_key)
+        if request is None:
+            with self.lock:
+                self._owners[cache_key] = threading.get_ident()
+        return request
+
+    def complete_request(self, cache_key: str, result=None, error=None) -> None:
+        """Complete the request and forget its owner."""
+        with self.lock:
+            self._owners.pop(cache_key, None)
+        super().complete_request(cache_key, result=result, error=error)
+
+    def release_current_thread(self) -> None:
+        """Complete every request this thread registered but never completed."""
+        thread_id = threading.get_ident()
+        with self.lock:
+            leaked = [key for key, owner in self._owners.items() if owner == thread_id]
+        for cache_key in leaked:
+            self.complete_request(
+                cache_key, error=RuntimeError("Request ended without an upstream answer")
+            )
+
+
+class ReleasingRequestHandler(ProxyHTTPRequestHandler):
+    """Proxy handler that releases leaked in-flight requests and logs quietly."""
+
+    def _handle_request(self, method: str) -> None:
+        try:
+            super()._handle_request(method)
+        finally:
+            self.proxy.inflight_tracker.release_current_thread()
+
+    def log_message(self, format: str, *args: Any) -> None:
+        """Send per-request access lines to the debug log instead of stderr."""
+        logger.debug("Reference proxy: " + format % args)
+
+
+def _route_library_logs() -> None:
+    """Send reference-api-buddy's warnings and errors to the app log, not stdout."""
+    library_logger = logging.getLogger("api_buddy")
+    library_logger.handlers.clear()
+    get_logger("api_buddy")  # attaches the app's log handler
+    library_logger.setLevel(logging.WARNING)
 
 
 class ReferenceProxy:
@@ -93,12 +159,16 @@ class ReferenceProxy:
                 os.makedirs(cache_dir, exist_ok=True)
 
             proxy = CachingProxy(self._proxy_config())
+            _route_library_logs()
+            proxy.inflight_tracker = OwnedInFlightTracker()
             proxy.cache_engine = SuccessOnlyCacheEngine(
                 proxy.db_manager,
                 config=proxy.config,
                 max_response_size=MAX_CACHED_RESPONSE_BYTES,
                 max_cache_entries=MAX_CACHE_ENTRIES,
             )
+            # start() serves on a server that already exists, so this handler is used
+            proxy.server = ThreadedHTTPServer((PROXY_HOST, 0), ReleasingRequestHandler, proxy)
             proxy.start(blocking=False)
         except Exception as e:
             logger.error(
@@ -166,5 +236,5 @@ class ReferenceProxy:
                 "domain_limits": {name: src.requests_per_hour for name, src in sources.items()},
             },
             "admin": {"enabled": False},
-            "logging": {"level": "WARNING"},
+            "logging": {"level": "WARNING", "enable_console": False},
         }
