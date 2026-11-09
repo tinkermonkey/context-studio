@@ -94,3 +94,33 @@ describe("PropertyDrawer - canonical_predicate", () => {
     );
   });
 });
+
+describe("PropertyDrawer - definition Suggest", () => {
+  it("refines the property's own definition", async () => {
+    const user = userEvent.setup();
+    let runBody: Record<string, unknown> | null = null;
+
+    setupDefaultHandlers();
+    server.use(
+      http.post("*/api/pipelines/schema_node_definition_refinement/run", async ({ request }) => {
+        runBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ id: "run-1", status: "pending" });
+      }),
+      http.get("*/api/pipelines/runs/run-1", () =>
+        HttpResponse.json({ id: "run-1", status: "completed" }),
+      ),
+      http.get("*/api/pipelines/runs/run-1/candidates", () => HttpResponse.json([])),
+    );
+
+    render(<PropertyDrawer property={createPropertyDefinition({ id: "prop-001" })} />);
+    await enterEditMode(user);
+    await user.click(screen.getByRole("button", { name: /Suggest/ }));
+
+    await waitFor(() => {
+      expect(runBody).toMatchObject({
+        configuration_ref: "definition-refinement-default",
+        node_id: "prop-001",
+      });
+    });
+  });
+});

@@ -18,7 +18,7 @@ const isSuggestCandidate = (c: CandidateItem): c is SuggestCandidate =>
   c.candidate_type === "refinement" || c.candidate_type === "grounding";
 
 interface SuggestFieldProps {
-  /** Class whose definition Suggest refines; without one, Suggest is hidden. */
+  /** Class or property definition whose definition Suggest refines; without one, Suggest is hidden. */
   entityId?: string;
   value: string;
   onChange: (value: string) => void;

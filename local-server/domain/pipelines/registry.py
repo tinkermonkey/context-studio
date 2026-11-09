@@ -95,7 +95,7 @@ class PipelineTypeRegistry:
             pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
             description="Refine schema node definitions using LLM",
             input_contract={
-                "node_id": "str (required) — UUID of the node to refine",
+                "node_id": "str (required) — UUID of the class or property definition to refine",
                 "current_definition": "str (required) — current definition text",
                 "context": "str (optional) — additional context for refinement",
             },

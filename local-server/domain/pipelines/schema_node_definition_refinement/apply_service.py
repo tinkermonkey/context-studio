@@ -2,9 +2,10 @@
 Apply service for schema node definition refinement pipeline.
 
 Applies the chosen (or else the highest-confidence) refined definition candidate from
-a completed definition refinement run to an existing ontology Class entity. The write goes through
-OntologyService.update_class, so a ClassUpdated event (and thus a ChangeEvent with the
-previous description) is recorded and reverting the run restores it.
+a completed definition refinement run to the class or property definition it refined.
+The write goes through OntologyService.update_class or update_property_definition, so
+an update event (and thus a ChangeEvent with the previous description) is recorded and
+reverting the run restores it.
 Idempotent: re-applying the same run leaves the description unchanged.
 """
 
@@ -27,7 +28,7 @@ if TYPE_CHECKING:
 
 class SchemaDefinitionRefinementApplyService:
     """
-    Applies the best definition candidate from a definition refinement run to a Class.
+    Applies the best definition candidate from a definition refinement run to its node.
     """
 
     def __init__(
@@ -43,10 +44,11 @@ class SchemaDefinitionRefinementApplyService:
         accepted_candidate_ids: "set[str] | list[str] | None" = None,
     ) -> ApplyResult:
         """
-        Apply a definition candidate to the target class: the highest-confidence one
+        Apply a definition candidate to the target node: the highest-confidence one
         among those selected or, without a selection, among those over the threshold.
 
-        The node_id is sourced from run.output_summary["node_id"] (set by the orchestrator).
+        The node_id and node_type come from run.output_summary (set by the orchestrator);
+        node_type is "Class" or "PropertyDefinition", and Class when absent.
 
         Args:
             run: Completed definition refinement PipelineRun
@@ -55,10 +57,11 @@ class SchemaDefinitionRefinementApplyService:
             accepted_candidate_ids: Explicit selection of ``refinement-{i}`` ids
 
         Returns:
-            ApplyResult (classes_updated=1 if applied, classes_skipped=1 if no candidate qualifies)
+            ApplyResult with classes_updated / classes_skipped for a class, or
+            properties_updated / properties_skipped for a property definition
 
         Raises:
-            ValueError: If node_id is missing from output_summary or the class does not exist
+            ValueError: If node_id is missing from output_summary or the node does not exist
             ApplySelectionError: If an accepted id is not a candidate of this run
         """
         result = ApplyResult()
@@ -66,8 +69,11 @@ class SchemaDefinitionRefinementApplyService:
         if not node_id:
             raise ValueError("node_id missing from output_summary — cannot apply definition")
 
-        cls = self._repo.get_class(node_id)
-        if cls is None:
+        is_property = run.output_summary.get("node_type") == "PropertyDefinition"
+        if is_property:
+            if self._repo.get_property_definition(node_id) is None:
+                raise ValueError(f"Property definition {node_id} not found")
+        elif self._repo.get_class(node_id) is None:
             raise ValueError(f"Class {node_id} not found")
 
         candidates = enumerate_items(run.output_summary.get("candidates"), "refinement")
@@ -80,19 +86,29 @@ class SchemaDefinitionRefinementApplyService:
                 c for _, c in candidates if c.get("confidence", 0.0) >= confidence_threshold
             ]
         if not qualifying:
-            result.classes_skipped += 1
-            result.validate()
-            return result
+            return self._skipped(result, is_property)
 
         # Pick highest-confidence candidate
         best = max(qualifying, key=lambda c: c.get("confidence", 0.0))
         new_definition = (best.get("definition") or "").strip()
         if not new_definition:
-            result.classes_skipped += 1
-            result.validate()
-            return result
+            return self._skipped(result, is_property)
 
-        self._ontology_service.update_class(node_id, description=new_definition)
-        result.classes_updated += 1
+        if is_property:
+            self._ontology_service.update_property_definition(node_id, description=new_definition)
+            result.properties_updated += 1
+        else:
+            self._ontology_service.update_class(node_id, description=new_definition)
+            result.classes_updated += 1
+        result.validate()
+        return result
+
+    @staticmethod
+    def _skipped(result: ApplyResult, is_property: bool) -> ApplyResult:
+        """Record that no candidate was applied."""
+        if is_property:
+            result.properties_skipped += 1
+        else:
+            result.classes_skipped += 1
         result.validate()
         return result

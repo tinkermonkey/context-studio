@@ -41,6 +41,7 @@ from domain.ontology.entities import (
 )
 from domain.ontology.events import (
     ClassUpdated,
+    PropertyDefinitionUpdated,
     RelationshipCreated,
     RelationshipDeleted,
 )
@@ -133,6 +134,7 @@ def client(session_factory, pipeline_repo, ontology_repo, change_repo):
     publisher = InProcessEventPublisher()
     recorder = ChangeEventRecorder(change_repo)
     publisher.subscribe(ClassUpdated, recorder.on_class_updated)
+    publisher.subscribe(PropertyDefinitionUpdated, recorder.on_property_definition_updated)
     publisher.subscribe(RelationshipCreated, recorder.on_relationship_created)
     publisher.subscribe(RelationshipDeleted, recorder.on_relationship_deleted)
     ontology_service = OntologyService(
@@ -254,6 +256,31 @@ class TestDefinitionRefinementApplyRevert:
         reverted = _revert(client, run_id)
         assert reverted["events_reverted"] == 1
         assert ontology_repo.get_class(SERVICE_ID).description == ORIGINAL_DEFINITION
+
+    def test_property_definition_apply_and_revert(self, client, pipeline_repo, ontology_repo):
+        run_id = _completed_run(
+            pipeline_repo,
+            PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
+            {
+                "node_id": USES_ID,
+                "node_type": "PropertyDefinition",
+                "candidates": [{"definition": "Depends on at run time.", "confidence": 0.9}],
+            },
+        )
+
+        applied = client.post(f"/api/pipelines/runs/{run_id}/apply")
+        assert applied.status_code == status.HTTP_200_OK, applied.text
+        assert applied.json()["properties_updated"] == 1
+        assert applied.json()["classes_updated"] == 0
+        assert ontology_repo.get_property_definition(USES_ID).description == (
+            "Depends on at run time."
+        )
+        events = _change_events(client, run_id)
+        assert [(e["entity_id"], e["operation"]) for e in events] == [(USES_ID, "update")]
+
+        reverted = _revert(client, run_id)
+        assert reverted["events_reverted"] == 1
+        assert ontology_repo.get_property_definition(USES_ID).description is None
 
     def test_reapply_after_revert_then_revert_again_restores_definition(
         self, client, pipeline_repo, ontology_repo

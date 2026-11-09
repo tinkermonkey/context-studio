@@ -27,7 +27,7 @@ from sqlalchemy.orm import sessionmaker
 
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from domain.ontology.entities import Class, ConceptScheme, Taxonomy
+from domain.ontology.entities import Class, ConceptScheme, PropertyDefinition, Taxonomy
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
@@ -43,6 +43,7 @@ from domain.pipelines.schema_node_definition_refinement.orchestrator import (
     DefinitionRefinementState,
 )
 from tests.fakes.fake_llm_provider import FakeLLMProvider
+from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.integration.fixtures.pipelines.harness import (
     run_pipeline_against_fixture,
 )
@@ -158,7 +159,7 @@ class TestDefinitionRefinementExecution:
                 "current_definition": "anything",
             },
         )
-        with pytest.raises(PipelineInputError, match="Node with id"):
+        with pytest.raises(PipelineInputError, match="No class or property definition"):
             asyncio.run(orchestrator.execute(state))
 
     def test_refinement_against_canon_rest_class_emits_candidates(
@@ -303,3 +304,105 @@ class TestDefinitionRefinementViaHarness:
         assert expected is not None
         assert actual["status"] == "completed"
         assert "result" in actual
+
+
+# ---------------------------------------------------------------------------- #
+# Property definitions                                                         #
+# ---------------------------------------------------------------------------- #
+
+
+@pytest.fixture
+def exposes_property(ontology_with_rest_class):
+    """A property declared from REST (domain) to HTTP API (range), with no relationships."""
+    repo, rest_cls = ontology_with_rest_class
+    api_cls = Class(
+        id=str(uuid4()),
+        identifier="http_api",
+        concept_scheme_id=rest_cls.concept_scheme_id,
+        taxonomy_id=rest_cls.taxonomy_id,
+        title="HTTP API",
+        description="An interface reached over HTTP.",
+    )
+    repo.save_class(api_cls)
+    prop = PropertyDefinition(
+        id=str(uuid4()),
+        identifier="exposes",
+        title="exposes",
+        description="Links things.",
+        domain_class_id=rest_cls.id,
+        range_class_id=api_cls.id,
+    )
+    repo.save_property_definition(prop)
+    return prop
+
+
+def _run_refinement(traversal, node_id: str) -> tuple[DefinitionRefinementState, FakeLLMProvider]:
+    llm = FakeLLMProvider(
+        response_content=_refinement_response(
+            [{"definition": "Refined.", "rationale": "r", "sources_used": [], "confidence": 0.8}]
+        )
+    )
+    orchestrator = DefinitionRefinementOrchestrator(llm_provider=llm, traversal=traversal)
+    state = DefinitionRefinementState(
+        run_id=str(uuid4()),
+        pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
+        input_data={"node_id": node_id, "current_definition": "Links things."},
+    )
+    return asyncio.run(orchestrator.execute(state)), llm
+
+
+class TestPropertyDefinitionRefinement:
+    def test_property_is_refined_with_its_domain_and_range(self, traversal, exposes_property):
+        state, llm = _run_refinement(traversal, exposes_property.id)
+
+        assert state.result["node_type"] == "PropertyDefinition"
+        assert state.result["node_label"] == "exposes"
+        assert state.result["total_candidates"] == 1
+        prompt = llm.last_call_args["user_prompt"]
+        assert prompt.startswith("Refine this property definition:")
+        assert "Property label: exposes" in prompt
+        assert "Domain class (subject): REST (definition: A web style.)" in prompt
+        assert (
+            "Range class (object): HTTP API (definition: An interface reached over HTTP.)"
+            in prompt
+        )
+        system_prompt = llm.last_call_args["system_prompt"]
+        assert "property (a relationship type between classes)" in system_prompt
+
+    def test_class_prompt_is_unchanged(self, traversal, ontology_with_rest_class):
+        _, rest_cls = ontology_with_rest_class
+
+        state, llm = _run_refinement(traversal, rest_cls.id)
+
+        assert state.result["node_type"] == "Class"
+        prompt = llm.last_call_args["user_prompt"]
+        assert prompt.startswith("Refine this class definition:")
+        assert "Class label: REST" in prompt
+        assert "definitions for a schema class." in llm.last_call_args["system_prompt"]
+
+    def test_declared_domain_that_cannot_be_found_is_left_out(self):
+        # SQLite's foreign keys prevent a dangling domain, so this uses the fake repository.
+        repo = FakeOntologyRepository()
+        api_cls = Class(
+            id=str(uuid4()),
+            identifier="http_api",
+            concept_scheme_id=str(uuid4()),
+            taxonomy_id=str(uuid4()),
+            title="HTTP API",
+        )
+        repo.save_class(api_cls)
+        prop = PropertyDefinition(
+            id=str(uuid4()),
+            identifier="hosts",
+            title="hosts",
+            domain_class_id=str(uuid4()),
+            range_class_id=api_cls.id,
+        )
+        repo.save_property_definition(prop)
+
+        neighborhood = SchemaNeighborhoodTraversal(ontology_repo=repo).get_property_neighborhood(
+            prop.id
+        )
+
+        assert neighborhood.domain_neighborhood is None
+        assert neighborhood.range_neighborhood.class_label == "HTTP API"

@@ -46,6 +46,7 @@ class ApplyResult:
     classes_updated: int = 0
     classes_skipped: int = 0
     properties_created: int = 0
+    properties_updated: int = 0
     properties_skipped: int = 0
     relationships_created: int = 0
     relationships_removed: int = 0
