@@ -766,6 +766,7 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+    padding: 14px 16px 16px;
   }
 
   .tiered-section {
@@ -876,6 +877,11 @@
     border: 1px solid rgb(var(--canvas-border));
     border-radius: 6px;
     background: rgb(var(--canvas-bg));
+    cursor: pointer;
+  }
+
+  .conflict-op:hover {
+    border-color: rgb(var(--canvas-border-strong));
   }
 
   .conflict-op--selected {
@@ -984,6 +990,55 @@
 
   .reflection-option__bar {
     grid-area: bar;
+  }
+
+  .reflection-option[data-defined="true"] .reflection-option__name {
+    text-decoration: underline dotted rgb(var(--canvas-fg-3));
+    text-underline-offset: 3px;
+  }
+
+  .reflection-option__name:focus-visible {
+    outline: 2px solid var(--accent-amber);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* An answer's definition, beside the inspector (portaled to body, fixed). */
+  .definition-overlay {
+    position: fixed;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    border: 1px solid rgb(var(--canvas-border-strong));
+    border-radius: 8px;
+    background: rgb(var(--canvas-bg));
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+    max-height: calc(100vh - 24px);
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .definition-overlay__term {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
+    overflow-wrap: anywhere;
+  }
+
+  .definition-overlay__note {
+    font-family: var(--font-sans);
+    font-weight: 400;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .definition-overlay__text {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: rgb(var(--canvas-fg-2));
   }
 
   .reflection-option__p {

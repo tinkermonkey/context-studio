@@ -18,6 +18,7 @@ const context: OperationContext = {
   relationship: () => undefined,
   nameOf: () => undefined,
   predicateOf: () => undefined,
+  classDefinition: () => undefined,
 };
 
 const created = createProposedOperation({

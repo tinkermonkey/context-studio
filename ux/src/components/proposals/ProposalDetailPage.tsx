@@ -35,6 +35,7 @@ import {
   ANY_FACETS,
   defaultOperationFilter,
   facetCounts,
+  drPredicateDescriptions,
   linksToDecided,
   operationsShown,
   nextSelection,
@@ -62,11 +63,13 @@ import {
   defaultGroupBy,
   isBulkEligible,
   offersGroupBy,
+  optionDefinition,
   pickOutcome,
   takesPicks,
   tieredOrder,
   type GroupBy,
   type Picks,
+  type ReflectionOption,
 } from "./tieredModel";
 import { useOperationContext } from "./useOperationContext";
 import { pendingLabel, useProposalActions } from "./useProposalActions";
@@ -126,6 +129,7 @@ export function ProposalDetailPage({
   const refs = useMemo(() => (proposal ? refsByOperation([proposal]) : undefined), [proposal]);
   const context = useOperationContext(operations, refs);
   const actions = useProposalActions(proposal);
+  const predicateCatalog = useMemo(() => drPredicateDescriptions(taxonomy), [taxonomy]);
   const [threshold, setThreshold] = useState(DEFAULT_THRESHOLD);
   const [checkedIds, setChecked] = useState<string[]>([]);
   const [confirmRejectAll, setConfirmRejectAll] = useState(false);
@@ -311,6 +315,20 @@ export function ProposalDetailPage({
         : filter === "needs"
           ? "Nothing needs a decision."
           : "Nothing is decided yet.";
+  // A reflection answer's definition: a class's description; a predicate's
+  // curated catalog entry, else the description of the type the operation changes.
+  const definitionOf =
+    (operation: ProposedOperation) => (question: string, option: ReflectionOption) =>
+      optionDefinition(question, option, {
+        classDefinition: context.classDefinition,
+        predicateDefinition: (predicate) => {
+          const current = context.currentProperty(operation.target_id) as
+            | { canonical_predicate?: string | null; description?: string | null }
+            | undefined;
+          const own = current?.canonical_predicate === predicate ? current.description : undefined;
+          return predicateCatalog.get(predicate) ?? (own || undefined);
+        },
+      });
   const causeOf = (operation: ProposedOperation) =>
     staleCause(
       operation,
@@ -529,6 +547,7 @@ export function ProposalDetailPage({
               operation={operation}
               context={context}
               picks={picks}
+              definitionOf={definitionOf(operation)}
               onPick={
                 picking
                   ? (question, option) =>

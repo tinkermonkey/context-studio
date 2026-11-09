@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 import { Button, Chip, Table } from "@tinkermonkey/heimdall-ui";
 import type { ProposedOperation } from "@/api/services/proposals";
 import { decisionState, isBlocked } from "./decisionModel";
@@ -56,8 +56,9 @@ export function TieredOperations({
   onSelectOperation,
   emptyMessage,
 }: TieredOperationsProps) {
-  // A card shows every member of a conflict, decided or not, while the filter shows any of them.
+  // A card lists the members the filter shows, and goes once it shows none.
   const { mechanical, judgment, clusters, other } = tieredSections(operations, allOperations);
+  const shown = new Set(operations.map((o) => o.id));
   const mechanicalOps = mechanical.flatMap((g) => g.operations);
   const picked = deciding ? mechanicalAtOrAbove(mechanicalOps, threshold) : [];
   const pickedIds = new Set(picked.map((o) => o.id));
@@ -224,6 +225,7 @@ export function TieredOperations({
               deciding={deciding}
               reverted={reverted}
               actions={actions}
+              shown={shown}
               selectedOperationId={selectedOperationId}
               onSelectOperation={onSelectOperation}
             />
@@ -291,6 +293,8 @@ interface ConflictCardProps {
   deciding: boolean;
   reverted: boolean;
   actions: ProposalActions;
+  /** The operations the filter shows: the card lists only those of its members. */
+  shown: ReadonlySet<string>;
   selectedOperationId?: string;
   onSelectOperation: (operationId: string | undefined) => void;
 }
@@ -307,6 +311,7 @@ function ConflictCard({
   deciding,
   reverted,
   actions,
+  shown,
   selectedOperationId,
   onSelectOperation,
 }: ConflictCardProps) {
@@ -316,7 +321,9 @@ function ConflictCard({
   // Once one is applied, only what contradicts it directly is rejected as kept against it.
   const keptAgainst = kept ? awaiting.filter((o) => contradicts(kept, o)) : [];
   const both = cluster.operations.length === 2;
-  const open = deciding && awaiting.length > 0;
+  // Actions only while the card shows a member awaiting a decision: under
+  // Decided, a card never acts on members it hides.
+  const open = deciding && awaiting.some((o) => shown.has(o.id));
   const rejectNote =
     awaiting.length === 1
       ? "conflict: rejected"
@@ -332,35 +339,47 @@ function ConflictCard({
       data-kept={kept?.id}
     >
       <div className="conflict-card__ops">
-        {cluster.operations.map((o) => {
-          const state = decisionState(o, reverted);
-          const selected = o.id === selectedOperationId;
-          return (
-            <div
-              key={o.id}
-              className={selected ? "conflict-op conflict-op--selected" : "conflict-op"}
-              data-testid={`conflict-op-${o.id}`}
-            >
-              <span className="conflict-op__head">
-                <button
-                  type="button"
-                  className="conflict-op__select"
-                  aria-pressed={selected}
-                  aria-label={`Inspect seq ${o.seq}`}
-                  onClick={() => onSelectOperation(selected ? undefined : o.id)}
-                  data-testid={`conflict-select-${o.id}`}
-                >
-                  seq {o.seq}
-                </button>
-                <Chip form="id-tag">{kindOf(o) ?? "—"}</Chip>
-                <span className="op-probability">p {formatProbability(o.probability)}</span>
-                <Chip variant={state.variant}>{state.label}</Chip>
-              </span>
-              <OperationDiff operation={o} context={context} />
-              <span className="conflict-op__rationale">{o.rationale}</span>
-            </div>
-          );
-        })}
+        {cluster.operations
+          .filter((o) => shown.has(o.id))
+          .map((o) => {
+            const state = decisionState(o, reverted);
+            const selected = o.id === selectedOperationId;
+            const select = () => onSelectOperation(selected ? undefined : o.id);
+            // Clicking anywhere on the item selects it, as a row click does; the seq
+            // button stays the control for keyboard and screen-reader users.
+            const onItemClick = (e: MouseEvent<HTMLDivElement>) => {
+              if ((e.target as HTMLElement).closest("button, a, input, select, textarea")) return;
+              // Selecting text to copy it isn't a click on the item.
+              if (window.getSelection()?.toString()) return;
+              select();
+            };
+            return (
+              <div
+                key={o.id}
+                className={selected ? "conflict-op conflict-op--selected" : "conflict-op"}
+                onClick={onItemClick}
+                data-testid={`conflict-op-${o.id}`}
+              >
+                <span className="conflict-op__head">
+                  <button
+                    type="button"
+                    className="conflict-op__select"
+                    aria-pressed={selected}
+                    aria-label={`Inspect seq ${o.seq}`}
+                    onClick={select}
+                    data-testid={`conflict-select-${o.id}`}
+                  >
+                    seq {o.seq}
+                  </button>
+                  <Chip form="id-tag">{kindOf(o) ?? "—"}</Chip>
+                  <span className="op-probability">p {formatProbability(o.probability)}</span>
+                  <Chip variant={state.variant}>{state.label}</Chip>
+                </span>
+                <OperationDiff operation={o} context={context} />
+                <span className="conflict-op__rationale">{o.rationale}</span>
+              </div>
+            );
+          })}
       </div>
       {open &&
         (kept && keptAgainst.length > 0 ? (
