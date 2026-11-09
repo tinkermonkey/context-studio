@@ -12,7 +12,12 @@ import tempfile
 from pathlib import Path
 
 import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
+
+from adapters.chat.proposal_tools import DrSpecDriftTool
+from adapters.web.drift_routes import router as drift_router
 
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.interchange.dr_drift import DrDriftPlanner
@@ -139,13 +144,19 @@ def _delete_node(spec, node_id):
     _node_file(spec, node_id).unlink()
     for rel in _relationship_files(spec):
         props = json.loads(rel.read_text())["properties"]
-        if node_id in (props["source_spec_node_id"]["const"], props["destination_spec_node_id"]["const"]):
+        if node_id in (
+            props["source_spec_node_id"]["const"],
+            props["destination_spec_node_id"]["const"],
+        ):
             rel.unlink()
 
 
 def _add_relationship(spec, source, predicate, destination, cardinality="one-to-many"):
     path = spec / "schemas" / "relationships" / source.split(".")[0]
-    path = path / f"{source.split('.')[1]}.{predicate}.{destination.split('.')[1]}.relationship.schema.json"
+    path = (
+        path
+        / f"{source.split('.')[1]}.{predicate}.{destination.split('.')[1]}.relationship.schema.json"
+    )
     path.write_text(
         json.dumps(
             {
@@ -183,14 +194,18 @@ def _set_relationship(spec, rel_id, key, value):
 def _class(repo, node_id):
     for scheme in repo.list_concept_schemes(limit=None):
         for cls in repo.list_classes(concept_scheme_id=scheme.id, limit=None):
-            if any(r.source == DR_SOURCE and r.identifier == node_id for r in cls.external_references):
+            if any(
+                r.source == DR_SOURCE and r.identifier == node_id for r in cls.external_references
+            ):
                 return cls
     return None
 
 
 def _apply_all(world, proposal):
     applied = world.proposals.apply(proposal.id, [o.id for o in proposal.operations])
-    failed = {o.seq: o.reason for o in applied.operations if o.status is not OperationStatus.APPLIED}
+    failed = {
+        o.seq: o.reason for o in applied.operations if o.status is not OperationStatus.APPLIED
+    }
     assert failed == {}
     return applied
 
@@ -218,7 +233,9 @@ def test_hand_edits_are_reported_proposed_and_cleared_once_applied(world, spec):
             launched={"type": "boolean"},
         ),
     )
-    _set_relationship(spec, "business.product.composes.business.contract", "cardinality", "one-to-many")
+    _set_relationship(
+        spec, "business.product.composes.business.contract", "cardinality", "one-to-many"
+    )
     new_rel = _add_relationship(spec, "business.product", "serves", "business.businessactor")
     _delete_node(spec, "api.license")
     (spec / "dist" / "base.json").write_text(
@@ -254,7 +271,9 @@ def test_hand_edits_are_reported_proposed_and_cleared_once_applied(world, spec):
     assert _class(world.repo, "api.license") is None
     assert dr_predicate_catalog(world.repo)["serves"]["inverse"] == "served-by"
     product = _class(world.repo, "business.product")
-    attributes = {a.title: a for a in world.repo.list_attribute_definitions(class_id=product.id, limit=None)}
+    attributes = {
+        a.title: a for a in world.repo.list_attribute_definitions(class_id=product.id, limit=None)
+    }
     assert attributes["launched"].datatype.value == "boolean"
 
 
@@ -266,7 +285,9 @@ def test_a_move_dr_landed_moves_the_class_and_its_relationship_types(world, spec
 
     entry = next(e for e in plan.entries if e.kind == "class")
     assert (entry.source_id, entry.change, entry.entity_id) == (new_id, "move", product.id)
-    assert ("property", "application.product.composes.business.contract", "update") in _changes(plan)
+    assert ("property", "application.product.composes.business.contract", "update") in _changes(
+        plan
+    )
     assert not any(e.change in ("create", "delete") for e in plan.entries)
 
     _apply_all(world, world.drift.reimport(str(spec), dry_run=False).proposal)
@@ -302,7 +323,9 @@ def test_a_new_run_supersedes_the_open_proposal_of_an_earlier_one(world, spec):
     second = world.drift.reimport(str(spec), dry_run=False).proposal
 
     assert world.proposals.get(first.id).status is ProposalStatus.DONE
-    assert all(o.status is OperationStatus.REJECTED for o in world.proposals.get(first.id).operations)
+    assert all(
+        o.status is OperationStatus.REJECTED for o in world.proposals.get(first.id).operations
+    )
     assert second.operations[0].fields["description"] == "Second"
 
 
@@ -319,3 +342,70 @@ def test_no_drift_records_the_spec_revision_on_the_taxonomy(world, spec):
 def test_a_directory_that_isnt_a_spec_is_refused(world, tmp_path):
     with pytest.raises(DriftError, match="not a DR spec directory"):
         world.drift.reimport(str(tmp_path))
+
+
+# ------------------------------------------------------------ REST and MCP
+
+
+@pytest.fixture()
+def client(world):
+    app = FastAPI()
+    app.include_router(drift_router)
+    app.state.drift_import_service = world.drift
+    app.state.proposal_service = world.proposals
+    return TestClient(app)
+
+
+def test_rest_dry_run_reports_and_the_real_run_proposes(client, world, spec):
+    _edit_node(spec, "api.contact", lambda d: d.update(description="Who to contact."))
+
+    dry = client.post("/api/v1/interchange/dr-spec/drift", json={"spec_dir": str(spec)})
+
+    assert dry.status_code == 200, dry.text
+    body = dry.json()
+    assert body["dry_run"] is True
+    assert body["source_revision"]["spec_version"] == MODEL_DR_SPEC_VERSION
+    (entry,) = body["entries"]
+    assert (entry["kind"], entry["source_id"], entry["change"]) == (
+        "class",
+        "api.contact",
+        "update",
+    )
+    assert entry["fields"]["description"]["source"] == "Who to contact."
+    assert body["proposal"]["dry_run"] is True
+    assert world.proposals.count_proposals() == 0
+
+    real = client.post(
+        "/api/v1/interchange/dr-spec/drift", json={"spec_dir": str(spec), "dry_run": False}
+    ).json()
+
+    assert real["proposal"]["source"] == "bundle"
+    assert real["proposal"]["status"] == "open"
+    assert world.proposals.count_proposals() == 1
+
+
+def test_rest_refuses_a_directory_that_isnt_a_spec(client, tmp_path):
+    response = client.post(
+        "/api/v1/interchange/dr-spec/drift", json={"spec_dir": str(tmp_path / "nowhere")}
+    )
+    assert response.status_code == 422
+    assert "not a DR spec directory" in response.json()["detail"]
+
+
+async def test_mcp_tool_reports_by_default_and_proposes_on_request(world, spec):
+    _edit_node(spec, "api.contact", lambda d: d.update(description="Who to contact."))
+    tool = DrSpecDriftTool(world.drift)
+
+    dry = await tool.execute({"spec_dir": str(spec)})
+    real = await tool.execute({"spec_dir": str(spec), "dry_run": False})
+    missing = await tool.execute({"spec_dir": "/nowhere"})
+
+    report = json.loads(dry.content)
+    assert report["dry_run"] is True and report["total"] == 1
+    assert report["entries"][0]["source_id"] == "api.contact"
+    assert "proposal" not in report and report["operations"] == 1
+    proposed = json.loads(real.content)
+    assert proposed["proposal"]["status"] == "open"
+    assert real.entities[0].id == proposed["proposal"]["id"]
+    assert world.proposals.count_proposals() == 1
+    assert missing.is_error

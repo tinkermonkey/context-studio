@@ -3946,6 +3946,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/interchange/dr-spec/drift": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Dr Spec Drift
+     * @description Report, or propose, the drift between the DR spec and its taxonomy; see the module.
+     */
+    post: operations["dr_spec_drift_api_v1_interchange_dr_spec_drift_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/decision-models": {
     parameters: {
       query?: never;
@@ -5801,6 +5821,23 @@ export interface components {
       decided_by?: string | null;
     };
     /**
+     * DrSpecDriftRequest
+     * @description Where the DR spec is, and whether to store anything.
+     */
+    DrSpecDriftRequest: {
+      /**
+       * Spec Dir
+       * @description The DR checkout's spec/ directory on this machine (holds dist/manifest.json)
+       */
+      spec_dir: string;
+      /**
+       * Dry Run
+       * @description Report the drift only; store nothing
+       * @default true
+       */
+      dry_run: boolean;
+    };
+    /**
      * DrTripleFields
      * @description A DR relationship's triple in DR's vocabulary.
      */
@@ -5811,6 +5848,66 @@ export interface components {
       source_spec_node_id: string;
       /** Destination Spec Node Id */
       destination_spec_node_id: string;
+    };
+    /**
+     * DriftEntryResponse
+     * @description One entity that differs between the taxonomy and its source.
+     */
+    DriftEntryResponse: {
+      /**
+       * Kind
+       * @description taxonomy, scheme, class, property or attribute
+       */
+      kind: string;
+      /**
+       * Source Id
+       * @description Its id in the source (a DR id; an attribute's is '<node id>#<name>')
+       */
+      source_id: string;
+      /**
+       * Change
+       * @description create (only in the source), update, move (it changed layer in the source) or delete (only in the taxonomy)
+       */
+      change: string;
+      /**
+       * Entity Id
+       * @description The taxonomy's entity (None for a create)
+       */
+      entity_id?: string | null;
+      /**
+       * Fields
+       * @description Each differing field's value: {name: {taxonomy, source}}
+       */
+      fields?: {
+        [key: string]: {
+          [key: string]: unknown;
+        };
+      };
+    };
+    /**
+     * DriftResponse
+     * @description The drift between a mirrored taxonomy and its source, and its proposal.
+     */
+    DriftResponse: {
+      /**
+       * Taxonomy Id
+       * @description The mirrored taxonomy
+       */
+      taxonomy_id: string;
+      /** @description The source's revision as read */
+      source_revision?: components["schemas"]["SourceRevisionSchema"] | null;
+      /**
+       * Dry Run
+       * @description Nothing was stored
+       */
+      dry_run: boolean;
+      /**
+       * Entries
+       * @description What differs, by entity
+       */
+      entries: components["schemas"]["DriftEntryResponse"][];
+      /** @description The proposal that removes the drift (not stored on a dry run); None when nothing differs */
+      proposal?: components["schemas"]["ChangeProposalResponse"] | null;
     };
     /**
      * EdgeEndResponse
@@ -14864,6 +14961,37 @@ export interface operations {
         content?: never;
       };
       /** @description The bundle is malformed, conflicts with the workspace, or its plan does not validate; nothing is stored */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  dr_spec_drift_api_v1_interchange_dr_spec_drift_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DrSpecDriftRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DriftResponse"];
+        };
+      };
+      /** @description The directory isn't a DR spec, the DR spec hasn't been imported yet, or the planned proposal doesn't validate; nothing is stored */
       422: {
         headers: {
           [name: string]: unknown;

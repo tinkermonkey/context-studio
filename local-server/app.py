@@ -24,7 +24,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import OperationalError
 
 from adapters.chat.context import ConfigChatSettings, OntologyWorkspaceContext
-from adapters.chat.proposal_tools import MarkProposalLandedTool, build_proposal_tools
+from adapters.chat.proposal_tools import (
+    DrSpecDriftTool,
+    MarkProposalLandedTool,
+    build_proposal_tools,
+)
 from adapters.chat.run_tools import build_run_tools
 from adapters.chat.tools import build_chat_tools
 from adapters.clustering.sklearn_clusterer import SklearnClusterer
@@ -38,6 +42,7 @@ from adapters.events.change_recorder import ChangeEventRecorder
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.graph.networkx_engine import NetworkXGraphEngine
 from adapters.graph.rdflib_engine import RDFLibQueryEngine
+from adapters.interchange.dr_drift import DrDriftPlanner
 from adapters.interchange.dr_relationships import DrRelationshipRules
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.mcp.server import McpEndpoint, is_loopback_host, start_mcp_server
@@ -87,6 +92,7 @@ from adapters.web.admin_routes import router as admin_router
 from adapters.web.bundle_routes import router as bundle_router
 from adapters.web.chat_routes import router as chat_router
 from adapters.web.decision_routes import router as decision_router
+from adapters.web.drift_routes import router as drift_router
 from adapters.web.extraction_routes import router as extraction_router
 from adapters.web.graph_routes import router as graph_router
 from adapters.web.interchange_routes import router as interchange_router
@@ -176,6 +182,7 @@ from domain.pipelines.schema_relationship_reflection import (
 )
 from domain.versioning.approval_policy import ApprovalPolicyService
 from domain.versioning.bundle_import import BundleImportService
+from domain.versioning.drift import DriftImportService
 from domain.versioning.events import SyncCompleted
 from domain.versioning.ports import SyncTarget
 from domain.versioning.proposal_service import ProposalService
@@ -776,6 +783,11 @@ async def lifespan(app: FastAPI):
         app.state.bundle_import_service = BundleImportService(
             proposal_service, ontology_service, cast(OntologyRepository, ontology_repo)
         )
+        app.state.drift_import_service = DriftImportService(
+            proposal_service,
+            ontology_service,
+            DrDriftPlanner(cast(OntologyRepository, ontology_repo)),
+        )
         app.state.approval_policy_service = approval_policy_service
         app.state.admin_service = admin_service
         app.state.load_demo_dataset = load_demo_dataset
@@ -884,6 +896,7 @@ async def lifespan(app: FastAPI):
                     write_tools=[
                         *build_proposal_tools(proposal_service, ProposalSource.MCP),
                         MarkProposalLandedTool(proposal_service, ProposalSource.MCP),
+                        DrSpecDriftTool(app.state.drift_import_service),
                         *run_tools,
                     ],
                 )
@@ -953,6 +966,7 @@ app.include_router(interchange_router)
 app.include_router(chat_router)
 app.include_router(proposals_router)
 app.include_router(bundle_router)
+app.include_router(drift_router)
 app.include_router(decision_router)
 # A route rather than a mount, so POST /mcp is served without a redirect to /mcp/
 app.add_route("/mcp", mcp_endpoint, include_in_schema=False)

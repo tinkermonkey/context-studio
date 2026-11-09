@@ -7985,6 +7985,41 @@
         }
       }
     },
+    "/api/v1/interchange/dr-spec/drift": {
+      "post": {
+        "tags": [
+          "interchange"
+        ],
+        "summary": "Dr Spec Drift",
+        "description": "Report, or propose, the drift between the DR spec and its taxonomy; see the module.",
+        "operationId": "dr_spec_drift_api_v1_interchange_dr_spec_drift_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DrSpecDriftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriftResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The directory isn't a DR spec, the DR spec hasn't been imported yet, or the planned proposal doesn't validate; nothing is stored"
+          }
+        }
+      }
+    },
     "/api/decision-models": {
       "get": {
         "tags": [
@@ -11069,6 +11104,29 @@
         "title": "DrDecisionResponse",
         "description": "One operation's decision, as DR's `proposal-import.ts --decisions` reads it.\n\n`fields` is present only on an operation a reviewer edited before applying\nit: the triple that was applied. `resolution` is present only on a\nrelationship-type delete applied with the relationships using it moved or\ndeleted."
       },
+      "DrSpecDriftRequest": {
+        "properties": {
+          "spec_dir": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Spec Dir",
+            "description": "The DR checkout's spec/ directory on this machine (holds dist/manifest.json)"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "title": "Dry Run",
+            "description": "Report the drift only; store nothing",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "spec_dir"
+        ],
+        "title": "DrSpecDriftRequest",
+        "description": "Where the DR spec is, and whether to store anything."
+      },
       "DrTripleFields": {
         "properties": {
           "predicate": {
@@ -11092,6 +11150,106 @@
         ],
         "title": "DrTripleFields",
         "description": "A DR relationship's triple in DR's vocabulary."
+      },
+      "DriftEntryResponse": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "description": "taxonomy, scheme, class, property or attribute"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id",
+            "description": "Its id in the source (a DR id; an attribute's is '<node id>#<name>')"
+          },
+          "change": {
+            "type": "string",
+            "title": "Change",
+            "description": "create (only in the source), update, move (it changed layer in the source) or delete (only in the taxonomy)"
+          },
+          "entity_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Id",
+            "description": "The taxonomy's entity (None for a create)"
+          },
+          "fields": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Fields",
+            "description": "Each differing field's value: {name: {taxonomy, source}}"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "source_id",
+          "change"
+        ],
+        "title": "DriftEntryResponse",
+        "description": "One entity that differs between the taxonomy and its source."
+      },
+      "DriftResponse": {
+        "properties": {
+          "taxonomy_id": {
+            "type": "string",
+            "title": "Taxonomy Id",
+            "description": "The mirrored taxonomy"
+          },
+          "source_revision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceRevisionSchema"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The source's revision as read"
+          },
+          "dry_run": {
+            "type": "boolean",
+            "title": "Dry Run",
+            "description": "Nothing was stored"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/DriftEntryResponse"
+            },
+            "type": "array",
+            "title": "Entries",
+            "description": "What differs, by entity"
+          },
+          "proposal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChangeProposalResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The proposal that removes the drift (not stored on a dry run); None when nothing differs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "taxonomy_id",
+          "dry_run",
+          "entries"
+        ],
+        "title": "DriftResponse",
+        "description": "The drift between a mirrored taxonomy and its source, and its proposal."
       },
       "EdgeEndResponse": {
         "properties": {
