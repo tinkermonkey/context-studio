@@ -47,7 +47,6 @@ def _make_config(repo, name="My Config", pipeline_type="individual_extraction", 
         name=name,
         provider="anthropic",
         model="claude-3-5-sonnet-20241022",
-        user_prompt_template="Extract: {text}",
     )
 
 
@@ -97,7 +96,6 @@ class TestPipelineConfigurationRepositoryCreate:
                     name="Fail",
                     provider="openai",
                     model="gpt-4o",
-                    user_prompt_template="Extract: {text}",
                 )
 
 
@@ -125,7 +123,6 @@ class TestPipelineConfigurationRepositoryUpdate:
             name="New Name",
             provider="openai",
             model="gpt-4o",
-            user_prompt_template="Updated: {text}",
         )
         assert updated.version == 2
 
@@ -136,7 +133,6 @@ class TestPipelineConfigurationRepositoryUpdate:
             name="Renamed",
             provider="anthropic",
             model="claude-3-5-sonnet-20241022",
-            user_prompt_template="Extract: {text}",
         )
         assert updated.name == "Renamed"
 
@@ -146,7 +142,6 @@ class TestPipelineConfigurationRepositoryUpdate:
             name="x",
             provider="x",
             model="x",
-            user_prompt_template="x",
         )
         assert result is None
 
@@ -158,7 +153,6 @@ class TestPipelineConfigurationRepositoryUpdate:
             name="x",
             provider="x",
             model="x",
-            user_prompt_template="x",
         )
         assert result is None
 
@@ -222,3 +216,29 @@ class TestPipelineConfigurationRepositoryListKnownConfigRefs:
         repo.soft_delete(created.id)
         refs = repo.list_known_config_refs("individual_extraction", "default")
         assert "cfg_gone_config" in refs
+
+
+class TestPipelineConfigurationRepositoryStagePrompts:
+    def test_stage_prompts_round_trip(self, repo):
+        overrides = {"disambiguation": {"system": "Only split real homonyms."}}
+        created = repo.create(
+            pipeline_type="schema_extraction",
+            implementation_id="default",
+            name="Prompted",
+            provider="openrouter",
+            model="google/gemini-3-flash-preview",
+            stage_prompts=overrides,
+        )
+        assert repo.get(created.id).stage_prompts == overrides
+
+    def test_update_clears_stage_prompts(self, repo):
+        created = repo.create(
+            pipeline_type="schema_extraction",
+            implementation_id="default",
+            name="Prompted",
+            provider="openrouter",
+            model="m",
+            stage_prompts={"disambiguation": {"user": "x"}},
+        )
+        repo.update(config_id=created.id, name="Prompted", provider="openrouter", model="m")
+        assert repo.get(created.id).stage_prompts is None

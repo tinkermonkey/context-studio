@@ -84,6 +84,35 @@ class PipelineConfigurationParameters(BaseModel):
     top_p: float = Field(default=0.9, ge=0.0, le=1.0, description="Nucleus sampling probability")
 
 
+class StagePromptPayload(BaseModel):
+    """A configuration's prompts for one stage; a blank or missing field keeps the default."""
+
+    system: Optional[str] = Field(None, description="System prompt")
+    user: Optional[str] = Field(
+        None, description="User prompt template; {placeholder} names are filled per call"
+    )
+
+
+class StagePromptView(BaseModel):
+    """The prompts a configuration sends at one LLM stage."""
+
+    key: str = Field(..., description="Stage key used in stage_prompts")
+    label: str = Field(..., description="Stage name")
+    description: str = Field(..., description="What the stage does")
+    placeholders: dict[str, str] = Field(
+        ..., description="Placeholder name -> what it is filled with"
+    )
+    system: str = Field(..., description="System prompt in effect")
+    user: str = Field(..., description="User prompt template in effect")
+    is_default: bool = Field(..., description="True when both prompts are the defaults")
+
+
+STAGE_PROMPTS_FIELD_DESCRIPTION = (
+    "Stage key -> prompts to use instead of the defaults; a stage that is left out, "
+    "null, or equal to the default uses the default. Only for implementations with stages."
+)
+
+
 class PipelineConfigurationCreateRequest(BaseModel):
     """Request body for creating a new user pipeline configuration."""
 
@@ -91,9 +120,8 @@ class PipelineConfigurationCreateRequest(BaseModel):
     description: Optional[str] = Field(None, max_length=1000, description="Optional description")
     provider: str = Field(..., description="LLM provider (openai or anthropic)")
     model: str = Field(..., description="Model identifier")
-    system_prompt: Optional[str] = Field(None, description="System prompt text")
-    user_prompt_template: str = Field(
-        ..., min_length=1, description="User prompt template (Jinja2)"
+    stage_prompts: Optional[dict[str, Optional[StagePromptPayload]]] = Field(
+        None, description=STAGE_PROMPTS_FIELD_DESCRIPTION
     )
     parameters: PipelineConfigurationParameters = Field(
         default_factory=PipelineConfigurationParameters,
@@ -109,9 +137,8 @@ class PipelineConfigurationUpdateRequest(BaseModel):
     description: Optional[str] = Field(None, max_length=1000, description="Optional description")
     provider: str = Field(..., description="LLM provider (openai or anthropic)")
     model: str = Field(..., description="Model identifier")
-    system_prompt: Optional[str] = Field(None, description="System prompt text")
-    user_prompt_template: str = Field(
-        ..., min_length=1, description="User prompt template (Jinja2)"
+    stage_prompts: Optional[dict[str, Optional[StagePromptPayload]]] = Field(
+        None, description=STAGE_PROMPTS_FIELD_DESCRIPTION
     )
     parameters: PipelineConfigurationParameters = Field(
         ..., description="LLM generation parameters"
@@ -132,8 +159,10 @@ class PipelineConfigurationResponse(BaseModel):
     description: Optional[str] = Field(None, description="Optional description")
     provider: Optional[str] = Field(None, description="LLM provider")
     model: Optional[str] = Field(None, description="Model identifier")
-    system_prompt: Optional[str] = Field(None, description="System prompt text")
-    user_prompt_template: Optional[str] = Field(None, description="User prompt template")
+    stage_prompts: Optional[list[StagePromptView]] = Field(
+        None,
+        description="The prompts sent at each LLM stage; null when the implementation has none",
+    )
     parameters: Optional[PipelineConfigurationParameters] = Field(
         None, description="LLM generation parameters"
     )

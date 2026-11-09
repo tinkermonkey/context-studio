@@ -15,6 +15,7 @@ from typing import Any, Literal
 
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.ports import LLMProvider, LLMResponse, PipelineRunStatusWriter
+from domain.pipelines.stage_prompts import StageDefinition
 
 
 @dataclass
@@ -53,6 +54,10 @@ class PipelineOrchestrator(ABC):
     Subclasses define the execution flow for their pipeline type
     and implement the execute method.
     """
+
+    # The LLM stages whose prompts a configuration can override (see
+    # domain/pipelines/stage_prompts.py); empty for pipelines without them.
+    STAGE_PROMPTS: tuple[StageDefinition, ...] = ()
 
     def __init__(
         self,

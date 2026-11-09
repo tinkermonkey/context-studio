@@ -16,6 +16,7 @@ import logging
 from dataclasses import dataclass, field, replace
 from typing import Any
 
+from domain.extraction.prompts import INDIVIDUAL_EXTRACTION_STAGES
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipelines.orchestration.base import (
@@ -61,12 +62,17 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
     - Return extracted triples with confidence and provenance
     """
 
+    # The LLM stages and their default prompts (owned by the extraction
+    # context); a configuration's ``stage_prompts`` override them.
+    STAGE_PROMPTS = INDIVIDUAL_EXTRACTION_STAGES
+
     def __init__(
         self,
         llm_provider: LLMProvider,
         extraction_service: ExtractionPort,
         run_id: str | None = None,
         status_writer: PipelineRunStatusWriter | None = None,
+        config: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize the orchestrator.
@@ -76,9 +82,12 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             extraction_service: Port implementation for extraction logic
             run_id: Pipeline run ID for writing RUNNING status
             status_writer: Optional port for writing run status to persistence
+            config: The run's configuration; its ``stage_prompts`` override the
+                default stage prompts
         """
         super().__init__(llm_provider, run_id, status_writer)
         self._extraction_service = extraction_service
+        self._stage_prompts = (config or {}).get("stage_prompts")
 
     async def execute(self, state: PipelineState) -> PipelineState:
         """
@@ -161,6 +170,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 ontology_id=ontology_id,
                 model=model,
                 temperature=temperature,
+                stage_prompts=self._stage_prompts,
             )
 
             # Populate result state

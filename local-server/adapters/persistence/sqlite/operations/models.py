@@ -38,8 +38,9 @@ class PipelineConfiguration(OperationsBase):  # type: ignore[valid-type,misc]
     description: Optional[str] = Column(Text)  # type: ignore[assignment]
     provider: str = Column(String, nullable=False)  # type: ignore[assignment]
     model: str = Column(String, nullable=False)  # type: ignore[assignment]
-    system_prompt: Optional[str] = Column(Text)  # type: ignore[assignment]
-    user_prompt_template: str = Column(Text, nullable=False)  # type: ignore[assignment]
+    # Stage key -> {"system"?, "user"?}: only the prompts that differ from the
+    # implementation's defaults (see domain/pipelines/stage_prompts.py)
+    stage_prompts: Optional[dict] = Column(JSON)  # type: ignore[assignment]
     temperature: float = Column(Float, nullable=False, default=0.4)  # type: ignore[assignment]
     max_tokens: int = Column(Integer, nullable=False, default=800)  # type: ignore[assignment]
     top_p: float = Column(Float, nullable=False, default=0.9)  # type: ignore[assignment]

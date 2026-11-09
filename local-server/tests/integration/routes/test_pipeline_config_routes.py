@@ -23,16 +23,18 @@ from adapters.persistence.sqlite.pipeline_config_repo import (
     PipelineConfigurationRepository,
 )
 from adapters.web.pipelines_routes import config_router, router
+from domain.pipelines.entities import PipelineType
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
 )
+from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionOrchestrator
+from domain.pipelines.schema_extraction.prompts import SCHEMA_EXTRACTION_STAGES
 
 _CREATE_BODY = {
     "name": "Test Config",
     "provider": "anthropic",
     "model": "claude-3-5-sonnet-20241022",
-    "user_prompt_template": "Extract: {text}",
     "parameters": {"temperature": 0.4, "max_tokens": 800, "top_p": 0.9},
     "enabled": True,
 }
@@ -69,6 +71,7 @@ def impl_registry():
         "default",
         object,  # placeholder — CRUD routes don't invoke it
     )
+    reg.register_impl(PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator)
     return reg
 
 
@@ -227,7 +230,7 @@ class TestUpdateConfiguration:
 
     def test_update_missing_required_field_returns_422(self, client):
         created = _create_config(client).json()
-        bad_body = {"name": "x"}  # missing provider, model, user_prompt_template, parameters
+        bad_body = {"name": "x"}  # missing provider, model, parameters
         response = client.put(f"/api/pipeline_configurations/{created['id']}", json=bad_body)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -258,3 +261,71 @@ class TestDeleteConfiguration:
     def test_delete_without_repo_returns_503(self, client_no_repo):
         response = client_no_repo.delete("/api/pipeline_configurations/any-id")
         assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+
+
+_SCHEMA_CONFIGS = "/api/pipelines/types/schema_extraction/implementations/default/configurations"
+_DEFAULT_DISAMBIGUATION = next(s for s in SCHEMA_EXTRACTION_STAGES if s.key == "disambiguation")
+
+
+class TestStagePrompts:
+    def test_impl_without_stages_has_no_stage_prompts(self, client):
+        assert _create_config(client).json()["stage_prompts"] is None
+
+    def test_new_config_shows_every_stage_with_defaults(self, client):
+        body = client.post(_SCHEMA_CONFIGS, json=_CREATE_BODY).json()
+        stages = body["stage_prompts"]
+        assert [s["key"] for s in stages] == [s.key for s in SCHEMA_EXTRACTION_STAGES]
+        assert all(s["is_default"] for s in stages)
+        disambiguation = stages[-1]
+        assert disambiguation["system"] == _DEFAULT_DISAMBIGUATION.default.system
+        assert set(disambiguation["placeholders"]) == {"terms", "context"}
+
+    def test_override_is_returned_and_stored_sparsely(self, client, config_repo):
+        body = {
+            **_CREATE_BODY,
+            "stage_prompts": {
+                "disambiguation": {"system": "Only split real homonyms."},
+                # Equal to the default: nothing to store
+                "definition_synthesis": {
+                    "system": SCHEMA_EXTRACTION_STAGES[1].default.system,
+                },
+            },
+        }
+        created = client.post(_SCHEMA_CONFIGS, json=body).json()
+        by_key = {s["key"]: s for s in created["stage_prompts"]}
+        assert by_key["disambiguation"]["system"] == "Only split real homonyms."
+        assert by_key["disambiguation"]["user"] == _DEFAULT_DISAMBIGUATION.default.user
+        assert by_key["disambiguation"]["is_default"] is False
+        assert by_key["definition_synthesis"]["is_default"] is True
+        assert config_repo.get(created["id"]).stage_prompts == {
+            "disambiguation": {"system": "Only split real homonyms."}
+        }
+
+    def test_override_reaches_the_registry(self, client, config_registry):
+        body = {**_CREATE_BODY, "stage_prompts": {"disambiguation": {"user": "Terms: {terms}"}}}
+        created = client.post(_SCHEMA_CONFIGS, json=body).json()
+        version = config_registry.get_latest(
+            PipelineType.SCHEMA_EXTRACTION, "default", created["config_ref"]
+        )
+        assert version.config["stage_prompts"] == {"disambiguation": {"user": "Terms: {terms}"}}
+
+    def test_update_with_null_stage_resets_it_to_default(self, client):
+        body = {**_CREATE_BODY, "stage_prompts": {"disambiguation": {"system": "Custom."}}}
+        created = client.post(_SCHEMA_CONFIGS, json=body).json()
+        updated = client.put(
+            f"/api/pipeline_configurations/{created['id']}",
+            json={**_CREATE_BODY, "stage_prompts": {"disambiguation": None}},
+        ).json()
+        assert all(s["is_default"] for s in updated["stage_prompts"])
+
+    def test_unknown_stage_returns_422(self, client):
+        body = {**_CREATE_BODY, "stage_prompts": {"no_such_stage": {"system": "x"}}}
+        response = client.post(_SCHEMA_CONFIGS, json=body)
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+        assert "no_such_stage" in response.json()["detail"]
+
+    def test_unknown_placeholder_returns_422(self, client):
+        body = {**_CREATE_BODY, "stage_prompts": {"disambiguation": {"user": "Terms: {term}"}}}
+        response = client.post(_SCHEMA_CONFIGS, json=body)
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+        assert "{term}" in response.json()["detail"]

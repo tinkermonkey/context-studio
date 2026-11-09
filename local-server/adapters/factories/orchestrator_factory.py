@@ -76,6 +76,7 @@ def _build_individual_extraction(
         extraction_service=extraction_service,
         run_id=services.get("run_id"),
         status_writer=services.get("status_writer"),
+        config=services.get("config"),
     )
 
 
@@ -87,6 +88,7 @@ def _build_schema_extraction(
         ontology_repo=services.get("ontology_repo"),
         run_id=services.get("run_id"),
         status_writer=services.get("status_writer"),
+        config=services.get("config"),
     )
 
 
@@ -291,6 +293,7 @@ def build_orchestrator_services(
         "extraction_repo": getattr(app_state, "extraction_repo", None),
         "grounding_adapter": getattr(app_state, "grounding_adapter", None),
         "scorer": getattr(app_state, "grounding_scorer", None),
+        "config": config,
         "grounding_config": _grounding_config(config),
         "refinement_config": config,
         # Ports + config for the open extraction implementations (open_v1)

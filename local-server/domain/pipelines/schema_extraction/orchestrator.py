@@ -32,6 +32,8 @@ from domain.pipelines.orchestration.base import (
     PipelineState,
 )
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
+from domain.pipelines.schema_extraction.prompts import SCHEMA_EXTRACTION_STAGES
+from domain.pipelines.stage_prompts import render, resolve_stage_prompts
 
 _logger = logging.getLogger(__name__)
 
@@ -209,12 +211,17 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
     Transitions are deterministic (no branching on LLM output).
     """
 
+    # The LLM stages and their default prompts; a configuration's
+    # ``stage_prompts`` override them.
+    STAGE_PROMPTS = SCHEMA_EXTRACTION_STAGES
+
     def __init__(
         self,
         llm_provider: LLMProvider,
         ontology_repo=None,
         run_id: str | None = None,
         status_writer: PipelineRunStatusWriter | None = None,
+        config: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize orchestrator with LLM provider and optional ontology repo.
@@ -224,9 +231,14 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             ontology_repo: Optional OntologyRepository for existing-schema classification
             run_id: Pipeline run ID for writing RUNNING status
             status_writer: Optional port for writing run status to persistence
+            config: The run's configuration; its ``stage_prompts`` override the
+                default stage prompts
         """
         super().__init__(llm_provider, run_id, status_writer)
         self._ontology_repo = ontology_repo
+        self._prompts = resolve_stage_prompts(
+            self.STAGE_PROMPTS, (config or {}).get("stage_prompts")
+        )
 
     async def execute(self, state: PipelineState) -> PipelineState:
         """
@@ -423,27 +435,18 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                 steps_completed=state.steps_completed + ["candidate_identification"],
             )
 
-        system_prompt = (
-            "You are an expert in ontology design and schema extraction. "
-            "Extract candidate classes and key terms from the text. "
-            "Return a JSON array of candidate labels. "
-            "Be precise and extract technical/domain terms, not generic words."
-        )
+        prompt = self._prompts["candidate_identification"]
 
         seen: set[str] = set()
         all_candidates: list[str] = []
 
         for chunk in state.text_chunks:
-            user_prompt = (
-                f"Extract candidate classes and technical terms from this text:\n\n{chunk}\n\n"
-                "Return a JSON array of strings (labels only). "
-                'Example: ["Microservice", "Message Queue", "API Gateway"]'
-            )
+            user_prompt = render(prompt.user, {"chunk": chunk})
 
             # No response_format="json" here: providers map it to JSON-object mode,
             # which forbids the top-level array this stage asks for.
             response = await self._call_llm(
-                system_prompt=system_prompt,
+                system_prompt=prompt.system,
                 user_prompt=user_prompt,
                 model=state.input_data.get("model", "google/gemini-3-flash-preview"),
                 temperature=0.0,
@@ -517,16 +520,11 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         label_list = ", ".join(f'"{label}"' for label in labels)
         example = ", ".join(f'"{label}": "definition..."' for label in labels[:2])
 
-        system_prompt = (
-            "You are an expert in ontology definition writing. "
-            "Return a JSON object mapping each label to its definition (1-2 sentences). "
-            "Only output the JSON object, nothing else."
-        )
-        user_prompt = (
-            f"Define these classes for a technical ontology.\n\n"
-            f"Labels: {label_list}\n\n"
-            f"Context: {state.normalized_text[:3000]}\n\n"
-            f"Return JSON: {{{example}, ...}}"
+        prompt = self._prompts["definition_synthesis"]
+        system_prompt = prompt.system
+        user_prompt = render(
+            prompt.user,
+            {"labels": label_list, "context": state.normalized_text[:3000], "example": example},
         )
 
         response = await self._call_llm(
@@ -614,30 +612,12 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         connections: list[CandidateConnection] = []
         properties: list[CandidatePropertyDefinition] = []
 
-        system_prompt = (
-            "You are an expert in ontology design. "
-            "Identify relationships and properties between the given classes. "
-            'Return a JSON object with "relationships" and "properties" arrays.'
-        )
-
         labels = [c.label for c in state.candidate_classes]
-        user_prompt = (
-            f"For these candidate classes, identify relationships and properties:\n\n"
-            f"Classes: {', '.join(labels)}\n\n"
-            f"Context: {state.normalized_text[:3000]}\n\n"
-            "Return JSON:\n"
-            "{\n"
-            '  "relationships": [\n'
-            '    {"subject": "Class1", "predicate": "subclass_of", '
-            '"object": "Class2", "confidence": 0.8},\n'
-            "    ...\n"
-            "  ],\n"
-            '  "properties": [\n'
-            '    {"name": "Property1", "domain": "Class1", '
-            '"range": "Class2", "confidence": 0.7},\n'
-            "    ...\n"
-            "  ]\n"
-            "}"
+        prompt = self._prompts["connection_proposal"]
+        system_prompt = prompt.system
+        user_prompt = render(
+            prompt.user,
+            {"classes": ", ".join(labels), "context": state.normalized_text[:3000]},
         )
 
         response = await self._call_llm(
@@ -750,30 +730,12 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         if not state.candidate_classes:
             return replace(state, steps_completed=state.steps_completed + ["disambiguation"])
 
-        system_prompt = (
-            "You are an expert in word sense disambiguation for ontology design. "
-            "Report only terms that the given text itself uses in MORE THAN ONE distinct "
-            "sense. Ignore senses that do not occur in the text, such as everyday or "
-            "dictionary meanings unrelated to its subject. "
-            "Return a JSON object with ambiguous terms and their senses."
-        )
-
         labels = [c.label for c in state.candidate_classes]
-        user_prompt = (
-            f"Check these terms for multiple senses used in the text:\n\n"
-            f"Terms: {', '.join(labels)}\n\n"
-            f"Context: {state.normalized_text[:3000]}\n\n"
-            "Most terms have a single sense in the text; return an empty list then.\n"
-            "Return JSON:\n"
-            "{\n"
-            '  "ambiguous_terms": [\n'
-            '    {"term": "Term1", "rationale": "Why the text uses it in several senses",\n'
-            '     "senses": [\n'
-            '       {"qualifier": "1-3 word sense name", "definition": "One-sentence '
-            'definition of this sense", "used_in_text": true}\n'
-            "     ]}\n"
-            "  ]\n"
-            "}"
+        prompt = self._prompts["disambiguation"]
+        system_prompt = prompt.system
+        user_prompt = render(
+            prompt.user,
+            {"terms": ", ".join(labels), "context": state.normalized_text[:3000]},
         )
 
         response = await self._call_llm(

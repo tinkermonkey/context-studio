@@ -2439,19 +2439,28 @@ selectors:
     description: Optional description input for a pipeline configuration
   - selector: config-provider-select
     component: src/components/pipeline/ConfigEditor.tsx
-    description: LLM provider selector (anthropic or openai)
+    description: LLM provider selector (openai, anthropic or openrouter)
   - selector: config-model-select
     component: src/components/pipeline/ConfigEditor.tsx
     description: Model identifier selector for the chosen LLM provider
   - selector: config-status-control
     component: src/components/pipeline/ConfigEditor.tsx
     description: Toggle control for enabling or disabling a pipeline configuration
-  - selector: config-system-prompt-input
-    component: src/components/pipeline/ConfigEditor.tsx
-    description: System prompt textarea in the configuration editor
-  - selector: config-user-prompt-input
-    component: src/components/pipeline/ConfigEditor.tsx
-    description: User prompt template textarea in the configuration editor
+  - selector: stage-prompts-section
+    component: src/components/pipeline/StagePromptsSection.tsx
+    description: Stage prompts section of a pipeline configuration (one block per LLM stage)
+  - selector: stage-prompt-system-*
+    component: src/components/pipeline/StagePromptsSection.tsx
+    description: System prompt textarea for one stage (suffix is the stage key)
+  - selector: stage-prompt-user-*
+    component: src/components/pipeline/StagePromptsSection.tsx
+    description: User prompt template textarea for one stage (suffix is the stage key)
+  - selector: stage-prompt-reset-*
+    component: src/components/pipeline/StagePromptsSection.tsx
+    description: Reset-to-default button for an edited stage (suffix is the stage key)
+  - selector: stage-prompt-*
+    component: src/components/pipeline/StagePromptsSection.tsx
+    description: One stage's prompts block (suffix is the stage key)
   - selector: config-create-btn
     component: src/components/pipeline/ConfigEditor.tsx
     description: Submit button to save a new pipeline configuration
@@ -2467,9 +2476,6 @@ selectors:
   - selector: pipeline-new-config-icon-btn
     component: src/components/pipeline/PipelineTypeDetail.tsx
     description: Icon-only button to create a new configuration in the configs list header
-  - selector: variable-chips
-    component: src/components/pipeline/VariableChips.tsx
-    description: Container for the set of available template variable chips
   - selector: pipeline-type-no-selection
     component: src/routes/app/pipelines/index.tsx
     description: Empty state shown in the right panel when no pipeline type is selected

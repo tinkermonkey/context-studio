@@ -5,6 +5,7 @@ Tests the four-layer extraction pipeline, deduplication logic, error handling,
 and configuration options.
 """
 
+from types import SimpleNamespace
 from unittest.mock import Mock
 
 import pytest
@@ -14,6 +15,7 @@ from domain.extraction.exceptions import ExtractionError
 from domain.extraction.ports import RecognitionMatch
 from domain.extraction.services import ExtractionService
 from domain.ontology.ports import SchemaVectorIndex
+from domain.pipelines.stage_prompts import StagePrompt
 
 
 class FakeOntologyRepository:
@@ -2306,3 +2308,35 @@ class TestPreviewRecognition:
 
         assert len(received_thresholds) == 1
         assert received_thresholds[0] == 0.75
+
+
+class TestConfiguredStagePrompts:
+    """A configuration's prompts replace the defaults in both LLM passes (#1317)."""
+
+    @pytest.fixture
+    def bare_service(self, service_with_fakes):
+        service = service_with_fakes["service"]
+        # No class catalog or predicate vocabulary: the prompts' dynamic parts stay small
+        service._relevant_class_catalog = lambda text, ontology: []
+        service._predicate_options_by_class = lambda ontology, individuals: {}
+        service._ontology_predicate_vocabulary = lambda ontology: []
+        return service
+
+    def test_identify_individuals_uses_the_configured_prompt(self, bare_service):
+        system, user = bare_service._build_individual_extraction_prompt(
+            "Nextflow runs pipelines.",
+            SimpleNamespace(title="Tools"),
+            StagePrompt(system="Custom.", user="T={text} G={grounding}"),
+        )
+        assert system == "Custom."
+        assert user == "T=Nextflow runs pipelines. G=Ontology: Tools"
+
+    def test_derive_relationships_uses_the_configured_prompt(self, bare_service):
+        system, user = bare_service._build_relationship_extraction_prompt(
+            "Nextflow runs pipelines.",
+            SimpleNamespace(title="Tools"),
+            [("Nextflow", "Tool")],
+            StagePrompt(system="Rule: {predicate_instruction}", user="{ontology}|{individuals}"),
+        )
+        assert system.startswith("Rule: predicate.label should be a short verb phrase")
+        assert user == "Tools|- Nextflow (a Tool)"

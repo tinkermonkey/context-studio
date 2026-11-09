@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Panel,
   Field,
@@ -21,7 +21,8 @@ import {
   useDeleteConfiguration,
 } from "@/api/hooks/pipeline/useConfigurationMutations";
 import { ParamSlider } from "./ParamSlider";
-import { VariableChips } from "./VariableChips";
+import { StagePromptsSection } from "./StagePromptsSection";
+import { stagePromptsBody, type StagePromptsBody } from "./stagePrompts";
 import type { components } from "@/api/types";
 import "./ConfigEditor.css";
 
@@ -31,11 +32,13 @@ type PipelineConfigurationParameters = components["schemas"]["PipelineConfigurat
 const PROVIDERS = [
   { value: "openai", label: "OpenAI" },
   { value: "anthropic", label: "Anthropic" },
+  { value: "openrouter", label: "OpenRouter" },
 ];
 
 const MODELS: Record<string, string[]> = {
   openai: ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"],
   anthropic: ["claude-3-5-sonnet", "claude-3-opus", "claude-3-sonnet", "claude-3-haiku"],
+  openrouter: ["google/gemini-3-flash-preview"],
 };
 
 const DEFAULT_PARAMS: PipelineConfigurationParameters = {
@@ -49,8 +52,6 @@ interface DraftConfig {
   description: string;
   provider: string;
   model: string;
-  system_prompt: string;
-  user_prompt_template: string;
   parameters: PipelineConfigurationParameters;
   enabled: boolean;
 }
@@ -62,8 +63,6 @@ function makeDraft(config: PipelineConfigurationResponse | null): DraftConfig {
       description: "",
       provider: "openai",
       model: "gpt-4o",
-      system_prompt: "",
-      user_prompt_template: "",
       parameters: { ...DEFAULT_PARAMS },
       enabled: true,
     };
@@ -73,8 +72,6 @@ function makeDraft(config: PipelineConfigurationResponse | null): DraftConfig {
     description: config.description ?? "",
     provider: config.provider ?? "openai",
     model: config.model ?? MODELS[config.provider ?? "openai"]?.[0] ?? "",
-    system_prompt: config.system_prompt ?? "",
-    user_prompt_template: config.user_prompt_template ?? "",
     parameters: config.parameters ?? { ...DEFAULT_PARAMS },
     enabled: config.enabled ?? true,
   };
@@ -121,15 +118,24 @@ export function ConfigEditor({
     setDraft(makeDraft(isCreate ? null : config));
   }, [config?.id, mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Saves run one after another, each built on the previous save's result:
+  // an update replaces the whole configuration, so two overlapping saves built
+  // from the same stale copy would undo each other's change.
+  const saveQueue = useRef<Promise<void>>(Promise.resolve());
+  const latestSaved = useRef(config);
+  useEffect(() => {
+    if (!latestSaved.current || config?.id !== latestSaved.current.id) {
+      latestSaved.current = config;
+    } else if (config && config.version > latestSaved.current.version) {
+      latestSaved.current = config;
+    }
+  }, [config]);
+
   // Current display values: draft for create, config for view/edit
   const displayName = isCreate ? draft.name : (config?.name ?? "");
   const displayDesc = isCreate ? draft.description : (config?.description ?? "");
   const displayProvider = isCreate ? draft.provider : (config?.provider ?? "openai");
   const displayModel = isCreate ? draft.model : (config?.model ?? "");
-  const displaySystemPrompt = isCreate ? draft.system_prompt : (config?.system_prompt ?? "");
-  const displayUserPrompt = isCreate
-    ? draft.user_prompt_template
-    : (config?.user_prompt_template ?? "");
   const displayEnabled = isCreate ? draft.enabled : (config?.enabled ?? true);
   const displayParams = isCreate ? draft.parameters : (config?.parameters ?? DEFAULT_PARAMS);
 
@@ -145,27 +151,31 @@ export function ConfigEditor({
     if (!isCreate) void handleSaveField({ provider: v, model: firstModel });
   };
 
-  const handleSaveField = async (patch: Partial<DraftConfig>) => {
-    if (isCreate || !config || config.is_system) return;
-    const current = makeDraft(config);
-    const updated = { ...current, ...patch };
-    try {
-      await updateMutation.mutateAsync({
-        configId: config.id,
-        body: {
-          name: updated.name,
-          description: updated.description || undefined,
-          provider: updated.provider,
-          model: updated.model,
-          system_prompt: updated.system_prompt || undefined,
-          user_prompt_template: updated.user_prompt_template,
-          parameters: updated.parameters,
-          enabled: updated.enabled,
-        },
-      });
-    } catch (err) {
-      toast("error", err instanceof Error ? err.message : "Failed to save");
-    }
+  /** Save a change; stagePrompts replaces every stage's prompts when given. */
+  const handleSaveField = (patch: Partial<DraftConfig>, stagePrompts?: StagePromptsBody) => {
+    if (isCreate || !config || config.is_system) return Promise.resolve();
+    saveQueue.current = saveQueue.current.then(async () => {
+      const base = latestSaved.current ?? config;
+      const updated = { ...makeDraft(base), ...patch };
+      try {
+        latestSaved.current = await updateMutation.mutateAsync({
+          configId: base.id,
+          body: {
+            name: updated.name,
+            description: updated.description || undefined,
+            provider: updated.provider,
+            model: updated.model,
+            // Always sent: the update replaces the whole configuration
+            stage_prompts: stagePrompts ?? stagePromptsBody(base.stage_prompts),
+            parameters: updated.parameters,
+            enabled: updated.enabled,
+          },
+        });
+      } catch (err) {
+        toast("error", err instanceof Error ? err.message : "Failed to save");
+      }
+    });
+    return saveQueue.current;
   };
 
   const handleCreate = async () => {
@@ -175,8 +185,6 @@ export function ConfigEditor({
         description: draft.description || undefined,
         provider: draft.provider,
         model: draft.model,
-        system_prompt: draft.system_prompt || undefined,
-        user_prompt_template: draft.user_prompt_template,
         parameters: draft.parameters,
         enabled: draft.enabled,
       });
@@ -198,15 +206,14 @@ export function ConfigEditor({
   };
 
   const handleDuplicate = async () => {
-    if (!config || config.is_system) return;
+    if (!config) return;
     try {
       const result = await createMutation.mutateAsync({
         name: `${config.name} (copy)`,
         description: config.description || undefined,
         provider: config.provider ?? "openai",
         model: config.model ?? "",
-        system_prompt: config.system_prompt || undefined,
-        user_prompt_template: config.user_prompt_template ?? "",
+        stage_prompts: stagePromptsBody(config.stage_prompts),
         parameters: config.parameters ?? { ...DEFAULT_PARAMS },
         enabled: config.enabled,
       });
@@ -216,19 +223,13 @@ export function ConfigEditor({
     }
   };
 
-  const insertVar = (v: string) => {
-    const t = displayUserPrompt;
-    const next = t + (t.endsWith(" ") || t === "" ? "" : " ") + `{{${v}}}`;
-    if (isCreate) setField("user_prompt_template", next);
-    else void handleSaveField({ user_prompt_template: next });
-  };
-
   const isSystemConfig = !isCreate && (config?.is_system ?? false);
-  const validNew = isCreate && draft.name.trim() !== "" && draft.user_prompt_template.trim() !== "";
+  const validNew = isCreate && draft.name.trim() !== "";
   const modelOptions = MODELS[displayProvider] ?? [];
 
+  // A system configuration is read-only: duplicate it to get an editable copy
   const rowMenuActions = isSystemConfig
-    ? []
+    ? [{ id: "duplicate", label: "Duplicate", icon: "copy" as const }]
     : [
         { id: "edit", label: "Edit", icon: "edit" as const },
         { id: "duplicate", label: "Duplicate", icon: "copy" as const },
@@ -242,18 +243,16 @@ export function ConfigEditor({
     </Button>
   ) : (
     <div className="ce-header-actions">
-      {!isSystemConfig && (
-        <RowMenu
-          actions={rowMenuActions}
-          onAction={(actionId) => {
-            if (actionId === "edit") onEnterEdit();
-            if (actionId === "duplicate") void handleDuplicate();
-            if (actionId === "delete") setShowDeleteConfirm(true);
-          }}
-          triggerLabel="Configuration actions"
-          data-testid="config-editor-menu-btn"
-        />
-      )}
+      <RowMenu
+        actions={rowMenuActions}
+        onAction={(actionId) => {
+          if (actionId === "edit") onEnterEdit();
+          if (actionId === "duplicate") void handleDuplicate();
+          if (actionId === "delete") setShowDeleteConfirm(true);
+        }}
+        triggerLabel="Configuration actions"
+        data-testid="config-editor-menu-btn"
+      />
     </div>
   );
 
@@ -287,7 +286,7 @@ export function ConfigEditor({
           )}
           {isSystemConfig && (
             <FormCallout variant="info" icon="info">
-              System configuration — read-only.
+              System configuration — read-only. Duplicate it to edit a copy.
             </FormCallout>
           )}
 
@@ -390,52 +389,15 @@ export function ConfigEditor({
             </div>
           </section>
 
-          {/* Prompts */}
-          <section>
-            <div className="cfg-section-title">Prompts</div>
-            <div className="cfg-prompts-fields">
-              <Field label="System prompt">
-                {active && !isSystemConfig ? (
-                  <TextArea
-                    className="cfg-prompt"
-                    mono
-                    value={isCreate ? draft.system_prompt : (config?.system_prompt ?? "")}
-                    rows={3}
-                    onChange={(e) => setField("system_prompt", e.target.value)}
-                    onBlur={(e) => {
-                      void handleSaveField({ system_prompt: e.target.value });
-                    }}
-                    data-testid="config-system-prompt-input"
-                  />
-                ) : (
-                  <pre className="cfg-prompt-preview">{displaySystemPrompt || "—"}</pre>
-                )}
-              </Field>
-              <Field label="User prompt template" hint="Jinja2 · {{variables}}">
-                {active && !isSystemConfig ? (
-                  <TextArea
-                    className="cfg-prompt"
-                    mono
-                    value={
-                      isCreate ? draft.user_prompt_template : (config?.user_prompt_template ?? "")
-                    }
-                    rows={4}
-                    onChange={(e) => setField("user_prompt_template", e.target.value)}
-                    onBlur={(e) => {
-                      void handleSaveField({ user_prompt_template: e.target.value });
-                    }}
-                    data-testid="config-user-prompt-input"
-                  />
-                ) : (
-                  <pre className="cfg-prompt-preview">{displayUserPrompt || "—"}</pre>
-                )}
-                <VariableChips
-                  template={displayUserPrompt}
-                  onInsert={active && !isSystemConfig ? insertVar : undefined}
-                />
-              </Field>
-            </div>
-          </section>
+          {!isCreate && config?.stage_prompts && (
+            <StagePromptsSection
+              stages={config.stage_prompts}
+              editable={isEdit && !isSystemConfig}
+              onSave={(body) => {
+                void handleSaveField({}, body);
+              }}
+            />
+          )}
 
           {/* Parameters */}
           <section>
