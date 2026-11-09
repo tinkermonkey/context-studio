@@ -341,7 +341,7 @@ def test_undecided_and_non_type_operations_are_skipped(parts):
     assert document["changes"] == []
     assert [(s["seq"], s["why"]) for s in document["skipped"]] == [
         (1, "rejected"),
-        (2, "a taxonomy operation, not a relationship or node type"),
+        (2, "a taxonomy operation, which DR's spec doesn't hold"),
     ]
 
 

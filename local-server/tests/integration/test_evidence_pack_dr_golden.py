@@ -12,12 +12,9 @@ predicate, same-pair predicates and reverse predicates); the formatting is
 Context Studio's own and is pinned separately.
 
 The attribute case does the same for the `type` attribute across the security
-layer (`DR_ATTRIBUTE_EVIDENCE`). The DR importer brings in no attribute
-definitions, so the fixture adds them from the snapshot's node schemas
-(`properties.attributes`), one per node type declaring `type`. It pins the
-attribute section's scope (the scheme), row order and clipping; it does not
-test import fidelity, since the fixture builds the attributes from the same
-schemas DR reads.
+layer (`DR_ATTRIBUTE_EVIDENCE`), on the attribute definitions the DR importer
+brings in from the snapshot's node schemas (`properties.attributes`). It pins
+the attribute section's scope (the scheme), row order and clipping.
 
 To regenerate the DR strings, from a documentation_robotics checkout at the
 snapshot's commit (see tests/integration/fixtures/dr_spec/README.md):
@@ -43,7 +40,6 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from uuid import uuid4
 
 import pytest
 
@@ -51,7 +47,6 @@ from adapters.interchange.dr_relationships import dr_property_definitions
 from adapters.persistence.sqlite.connection import create_local_db_engine, create_session_factory
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from domain.ontology.entities import AttributeDefinition
 from domain.ontology.evidence import ContextPolicy, EvidencePackBuilder
 from scripts.dr_ontology_loader import import_dr_ontology, slugify_spec_node_id
 from scripts.import_dr_model import build_import_service
@@ -166,33 +161,13 @@ def _dr_facts(evidence: str) -> dict:
     }
 
 
-def _add_security_type_attributes(repo, spec_dir) -> dict[str, str]:
-    """
-    An attribute definition for `type` on each security node type that declares
-    it, from its node schema; returns every security class id -> DR type name.
-    """
+def _security_types(repo, spec_dir) -> dict[str, str]:
+    """Every security class id -> its DR type name."""
     type_by_class_id = {}
     for path in sorted((spec_dir / "schemas" / "nodes" / "security").glob("*.node.schema.json")):
-        props = json.loads(path.read_text())["properties"]
-        spec_node_id = props["spec_node_id"]["const"]
+        spec_node_id = json.loads(path.read_text())["properties"]["spec_node_id"]["const"]
         cls = repo.get_by_identifier(slugify_spec_node_id(spec_node_id))
         type_by_class_id[cls.id] = spec_node_id.split(".")[1]
-        attributes = props.get("attributes", {})
-        spec = attributes.get("properties", {}).get("type")
-        if spec is None:
-            continue
-        repo.save_attribute_definition(
-            AttributeDefinition(
-                id=str(uuid4()),
-                class_id=cls.id,
-                identifier="type",
-                title="Type",
-                datatype=spec["type"],
-                description=spec.get("description"),
-                is_required="type" in attributes.get("required", []),
-                allowed_values=[str(v) for v in spec["enum"]] if spec.get("enum") else None,
-            )
-        )
     return type_by_class_id
 
 
@@ -208,7 +183,7 @@ def workspace(tmp_path_factory):
     import_dr_ontology(
         build_import_service(session_factory, FakeEmbeddingService()), repo, spec_dir
     )
-    type_by_class_id = _add_security_type_attributes(repo, spec_dir)
+    type_by_class_id = _security_types(repo, spec_dir)
     catalog = json.loads((spec_dir / "schemas" / "base" / "predicates.json").read_text())
     by_dr_id = dr_property_definitions(repo)
     return {

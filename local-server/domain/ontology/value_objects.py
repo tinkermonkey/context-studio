@@ -112,6 +112,7 @@ class DataType(str, Enum):
 
     STRING = "string"
     INTEGER = "integer"
+    NUMBER = "number"
     BOOLEAN = "boolean"
     ARRAY = "array"
     OBJECT = "object"

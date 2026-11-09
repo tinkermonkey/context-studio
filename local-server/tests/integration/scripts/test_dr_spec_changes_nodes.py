@@ -398,7 +398,7 @@ def test_operations_on_other_kinds_are_skipped_as_neither_type(parts):
     )
 
     (skipped,) = spec_changes_for(proposal, repo)["skipped"]
-    assert skipped["why"] == "a taxonomy operation, not a relationship or node type"
+    assert skipped["why"] == "a taxonomy operation, which DR's spec doesn't hold"
 
 
 def test_a_class_delete_fails_while_relationship_types_still_use_it(parts):

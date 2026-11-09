@@ -153,6 +153,7 @@ _JSON_VALUE_TYPES = (str, int, float, bool, list, dict, type(None))
 _DATATYPE_TYPES: dict[DataType, tuple[type, ...]] = {
     DataType.STRING: (str,),
     DataType.INTEGER: (int,),
+    DataType.NUMBER: (int, float),
     DataType.BOOLEAN: (bool,),
     DataType.ARRAY: (list,),
     DataType.OBJECT: (dict,),
@@ -162,6 +163,7 @@ _DATATYPE_TYPES: dict[DataType, tuple[type, ...]] = {
 _DATATYPE_HINTS: dict[DataType, str] = {
     DataType.STRING: "xsd:string",
     DataType.INTEGER: "xsd:integer",
+    DataType.NUMBER: "xsd:decimal",
     DataType.BOOLEAN: "xsd:boolean",
     DataType.ARRAY: "rdf:JSON",
     DataType.OBJECT: "rdf:JSON",
@@ -333,7 +335,7 @@ def _value_problem(attribute: AttributeDefinition, value: Any) -> str | None:
     """Why a (non-None) value doesn't fit an attribute's datatype or allowed values."""
     datatype = DataType(attribute.datatype)
     wrong_type = not isinstance(value, _DATATYPE_TYPES[datatype]) or (
-        datatype is DataType.INTEGER and isinstance(value, bool)
+        datatype in (DataType.INTEGER, DataType.NUMBER) and isinstance(value, bool)
     )
     if wrong_type:
         return f"is {datatype.value}, so {value!r} doesn't fit"

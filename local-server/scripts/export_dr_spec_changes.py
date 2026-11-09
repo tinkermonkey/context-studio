@@ -2,11 +2,13 @@
 """
 Write a decided change proposal's DR relationship-type and node-type changes
 for DR's `cli/scripts/spec-enrich/cs-decisions-to-spec.ts`, which writes them
-into `spec/schemas/relationships/**` and `spec/schemas/nodes/**`.
+into `spec/schemas/relationships/**` and `spec/schemas/nodes/**` (node types
+and their attributes).
 
 Works for any proposal on the DR spec, reflection plan or not: every applied
-create, update and delete of a DR relationship type, and every applied
-create, update, move and delete of a DR node type, with the values it
+create, update and delete of a DR relationship type, every applied create,
+update, move and delete of a DR node type, and every applied create, update
+and delete of a node type's attribute, with the values it
 applied (format `cs-dr-spec-changes/1`; see `adapters/interchange/dr_spec_changes.py`).
 A reverted proposal is refused. For a reflection plan, `export_dr_decisions.py`
 still writes the seq-joined decisions DR's `proposal-import.ts` reads.
@@ -66,7 +68,9 @@ def main() -> int:
     print(
         f"Wrote {len(document['changes'])} relationship type changes "
         f"({_counts(document['changes'])}) and {len(document['node_changes'])} node type "
-        f"changes ({_counts(document['node_changes'])}) to {args.out}; "
+        f"changes ({_counts(document['node_changes'])}) and "
+        f"{len(document['attribute_changes'])} attribute changes "
+        f"({_counts(document['attribute_changes'])}) to {args.out}; "
         f"{len(document['skipped'])} operations skipped"
     )
     for item in document["skipped"]:

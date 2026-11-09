@@ -34,6 +34,10 @@ DR_SPEC_REFERENCE = "spec"
 # "cardinality" and "strength" (the schema's properties.<name>.const) and
 # "evidence" (its x-dr-evidence lines; absent when the schema has none).
 DR_ATTRIBUTE_KEYS = ("cardinality", "strength", "evidence")
+# A node attribute's attribute definition keeps the attribute's JSON Schema,
+# less what the definition itself holds, under this key of its DR reference's
+# metadata (the reference's identifier is the attribute's name).
+DR_ATTRIBUTE_SCHEMA = "schema"
 # The ArchiMate 3.2 core relationships DR's reflection offers after a type's own
 # predicates (`sortingQuestions()` in cli/scripts/spec-enrich/triage-reflect.ts).
 DR_GENERAL_PREDICATES = (
