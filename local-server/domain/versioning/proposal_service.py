@@ -202,7 +202,7 @@ OPERATION_FIELDS: dict[OperationKind, OperationFields] = {
     K.TAXONOMY: OperationFields(
         create=frozenset({"title", "description", "color", "identifier", "vision"}),
         required=frozenset({"title"}),
-        update=frozenset({"title", "description", "color", "vision"}),
+        update=frozenset({"title", "description", "color", "vision", "external_references"}),
         clearable=frozenset({"description", "color", "vision"}),
     ),
     K.SCHEME: OperationFields(
@@ -290,6 +290,7 @@ OPERATION_FIELDS: dict[OperationKind, OperationFields] = {
                 "allowed_values",
                 "default_value",
                 "sort_order",
+                "external_references",
             }
         ),
         clearable=frozenset({"description", "allowed_values", "default_value"}),

@@ -1,0 +1,35 @@
+@layer app {
+  /* ============= DR spec drift check ============= */
+  .drift-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .drift-dialog__spacer {
+    flex: 1;
+  }
+
+  .drift-dialog__summary {
+    margin: 0;
+    font-size: 13px;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .drift-dialog__table {
+    max-height: 360px;
+    overflow-y: auto;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: var(--radius-sm);
+  }
+
+  .drift-dialog__id {
+    font-size: 12.5px;
+    overflow-wrap: anywhere;
+  }
+
+  .drift-dialog__fields {
+    font-size: 12.5px;
+    color: rgb(var(--canvas-fg-3));
+  }
+}

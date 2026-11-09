@@ -7,7 +7,8 @@ proposals. Accepting, rejecting, applying or reverting operations, and setting a
 taxonomy's approval policy or mirrored flag, are a person's decisions in the app
 and are never offered as tools. The one exception is `mark_proposal_landed`, MCP
 only: a client mirroring a taxonomy reports that it wrote a decided proposal into
-its source, which decides nothing.
+its source, which decides nothing. `dr_spec_drift` (MCP only too) re-imports
+the DR spec as a drift report or proposal: what it proposes waits for review.
 
 `build_proposal_tools` is instantiated once per caller with its ProposalSource
 (chat or MCP). Every result names its proposals with kind "proposal", so chat
@@ -36,6 +37,7 @@ from adapters.chat.tools import (
 from adapters.serialization.views import proposal_response
 from domain.chat.value_objects import EntityRef, ToolOutcome
 from domain.ontology.value_objects import SourceRevision
+from domain.versioning.drift import DriftError, DriftImportService
 from domain.versioning.exceptions import (
     ChangeProposalNotFoundError,
     ChangeProposalStateError,
@@ -820,6 +822,81 @@ class MarkProposalLandedTool(_ProposalTool):
             content=dumps(_proposal_summary(proposal)),
             summary=f"Proposal marked landed: {proposal.title}",
             entities=(proposal_ref(proposal),),
+        )
+
+
+class DrSpecDriftTool(ToolBase):
+    """Report, or propose, the drift between the DR spec on disk and its taxonomy."""
+
+    name = "dr_spec_drift"
+    description = (
+        "Compare the DR spec on disk with Context Studio's dr_spec taxonomy, matched by"
+        " DR id (node types moved to another layer are followed), and list what differs:"
+        " each entry has kind (taxonomy, scheme, class, property, attribute), source_id"
+        " (the DR id; an attribute is '<node id>#<name>'), change (create, update, move,"
+        " delete) and, for an update or move, each field's taxonomy and source value."
+        " With dry_run true (the default) nothing is stored; with dry_run false the drift"
+        " is proposed as one change proposal for a person to review (it supersedes the"
+        " open proposal of an earlier re-import). Pass the spec/ directory of your DR"
+        " checkout, the one holding dist/manifest.json."
+    )
+    input_schema = {
+        "type": "object",
+        "properties": {
+            "spec_dir": {
+                "type": "string",
+                "description": "Absolute path of the DR checkout's spec/ directory",
+            },
+            "dry_run": {
+                "type": "boolean",
+                "description": "Report only (default true); false proposes the drift",
+            },
+        },
+        "required": ["spec_dir"],
+    }
+
+    def __init__(self, service: DriftImportService) -> None:
+        self._service = service
+
+    def run(self, args: dict[str, Any]) -> ToolOutcome:
+        spec_dir = required_str(args, "spec_dir")
+        dry_run = args.get("dry_run", True)
+        if not isinstance(dry_run, bool):
+            raise ToolArgumentError("'dry_run' must be true or false")
+        try:
+            result = self._service.reimport(spec_dir, dry_run=dry_run)
+        except DriftError as exc:
+            return error_outcome(str(exc), "Drift not checked")
+        except ProposalValidationError as exc:
+            errors = [{"seq": e.seq, "code": e.code, "message": e.message} for e in exc.errors]
+            return error_outcome(
+                dumps({"stored": False, "errors": errors}), "Drift proposal invalid"
+            )
+        plan, proposal = result.plan, result.proposal
+        revision = plan.source_revision
+        stored = proposal is not None and not result.dry_run
+        payload: dict[str, Any] = _compact(
+            {
+                "taxonomy_id": plan.taxonomy_id,
+                "source_revision": revision.to_dict() if revision else None,
+                "dry_run": result.dry_run,
+                "total": len(plan.entries),
+                "proposal": _proposal_summary(proposal) if stored else None,  # type: ignore[arg-type]
+                "operations": len(proposal.operations) if proposal and not stored else None,
+            }
+        )
+        # Entries stay even when empty: "no drift" is the answer.
+        payload["entries"] = [_compact(vars(entry).copy()) for entry in plan.entries]
+        content, _ = _capped(
+            payload, "entries", lambda kept: "the proposal's review page lists every change"
+        )
+        summary = f"{len(plan.entries)} entities differ" + (
+            f"; proposed as {proposal.title}" if stored else ""
+        )  # type: ignore[union-attr]
+        return ToolOutcome(
+            content=content,
+            summary=summary,
+            entities=(proposal_ref(proposal),) if stored else (),  # type: ignore[arg-type]
         )
 
 

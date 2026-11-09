@@ -133,7 +133,9 @@ class BundleImportService:
                     self._ontology.delete_taxonomy(created_taxonomy_id)
                 raise
             # Even an empty plan supersedes: older proposals would undo the bundle.
-            self._supersede(plan, proposal)
+            supersede_earlier_imports(
+                self._proposals, plan.taxonomy_id, plan.source, proposal  # type: ignore[arg-type]
+            )
             if proposal is not None and apply:
                 chosen = [o.id for o in proposal.pending if o.scope is not ChangeScope.BREAKING]
                 if chosen:
@@ -161,40 +163,46 @@ class BundleImportService:
             dry_run=dry_run,
         )
 
-    def _supersede(self, plan: BundlePlan, proposal: ChangeProposal | None) -> None:
-        """
-        Reject what is undecided in the taxonomy's open proposals from earlier
-        imports of the same bundle source (other bundle-source proposals are left).
-        """
-        detail = bundle_source_detail(plan.source)
-        offset = 0
-        older: list[ChangeProposal] = []
-        while True:
-            page = self._proposals.list_proposals(
-                taxonomy_id=plan.taxonomy_id,
-                status=ProposalStatus.OPEN,
-                source=ProposalSource.BUNDLE,
-                limit=_PAGE,
-                offset=offset,
-            )
-            older += page
-            if len(page) < _PAGE:
-                break
-            offset += _PAGE
-        reason = (
-            SUPERSEDED_REASON.format(proposal.id)
-            if proposal is not None
-            else MATCHED_REASON.format(plan.source)
+
+def supersede_earlier_imports(
+    proposals: ProposalService,
+    taxonomy_id: str,
+    source: str,
+    proposal: ChangeProposal | None,
+) -> None:
+    """
+    Reject what is undecided in the taxonomy's open proposals from earlier
+    imports of the same source (other bundle-source proposals are left): the
+    new proposal repeats whatever still applies, and with no new proposal the
+    source matches the workspace, so applying them would undo it.
+    """
+    detail = bundle_source_detail(source)
+    offset = 0
+    older: list[ChangeProposal] = []
+    while True:
+        page = proposals.list_proposals(
+            taxonomy_id=taxonomy_id,
+            status=ProposalStatus.OPEN,
+            source=ProposalSource.BUNDLE,
+            limit=_PAGE,
+            offset=offset,
         )
-        for other in older:
-            if other.source_detail != detail or not other.pending:
-                continue
-            if proposal is not None and other.id == proposal.id:
-                continue
-            # Nobody judged these: no decision is recorded.
-            self._proposals.reject(
-                other.id, [o.id for o in other.pending], note=reason, decided_by=None
-            )
+        older += page
+        if len(page) < _PAGE:
+            break
+        offset += _PAGE
+    reason = (
+        SUPERSEDED_REASON.format(proposal.id)
+        if proposal is not None
+        else MATCHED_REASON.format(source)
+    )
+    for other in older:
+        if other.source_detail != detail or not other.pending:
+            continue
+        if proposal is not None and other.id == proposal.id:
+            continue
+        # Nobody judged these: no decision is recorded.
+        proposals.reject(other.id, [o.id for o in other.pending], note=reason, decided_by=None)
 
 
 def bundle_source_detail(source: str) -> str:

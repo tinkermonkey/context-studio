@@ -10,9 +10,12 @@ PropertyDefinition per DR relationship schema. Reads only from
 in the sibling `documentation_robotics` checkout — that spec is an external,
 versioned dependency and is never copied into this repository.
 
-Safe to re-run: entities are keyed on the preserved DR schema id, so importing
-against the same or an updated spec version updates existing entities in
-place instead of creating duplicates.
+The first import writes the taxonomy directly. Once it exists, a re-run is a
+re-import (#1464): it compares the spec with the taxonomy, matched by DR id
+(following node types DR moved to another layer), and proposes what differs
+as one change proposal for review instead of writing anything; with
+--dry-run it only reports the drift. The app offers the same re-import over
+REST and MCP (`adapters/interchange/dr_drift.py`).
 
 A successful import against a spec version not already recorded in
 `experiments/ledger.jsonl` appends a `baseline_reset` checkpoint entry there
@@ -24,13 +27,8 @@ recorded since the import, so pre-import experiment results never judge
 post-import ones. A spec-version upgrade is therefore always a deliberate,
 baseline-resetting re-import — never an in-place, silent update.
 
-Entities from an earlier import that the spec no longer defines are listed as
-stale. With --prune they are deleted (each delete recorded as a change event),
-but only if nothing uses any of them; otherwise nothing is deleted, each use
-is listed and the script exits non-zero.
-
 Usage (from local-server/, venv active):
-    python scripts/import_dr_ontology.py [--spec-dir PATH] [--prune]
+    python scripts/import_dr_ontology.py [--spec-dir PATH] [--dry-run]
 """
 
 import argparse
@@ -38,13 +36,15 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.events.change_recorder import ChangeEventRecorder
 from adapters.events.in_process import InProcessEventPublisher
+from adapters.interchange.dr_drift import DrDriftPlanner
+from adapters.interchange.dr_relationships import DR_TAXONOMY_IDENTIFIER, DrRelationshipRules
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.connection import DatabaseManager
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
@@ -54,7 +54,11 @@ from config import get_config_manager
 from domain.ontology.entities import AttributeDefinition, PropertyDefinition
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
+from domain.versioning.drift import DriftError, DriftImportService, DriftResult
+from domain.versioning.exceptions import ProposalValidationError
 from domain.versioning.ports import ChangeProposalRepository
+from domain.versioning.proposal_service import ProposalService
+from domain.versioning.revert_service import RevertService
 from experiments.ledger import append_baseline_reset, latest_baseline_reset
 from scripts.dr_ontology_loader import (
     ImportSummary,
@@ -137,14 +141,62 @@ def parse_args() -> argparse.Namespace:
         help=f"Path to the documentation_robotics spec checkout (default: {DEFAULT_SPEC_DIR})",
     )
     parser.add_argument(
-        "--prune",
+        "--dry-run",
         action="store_true",
-        help=(
-            "Delete stale entities (from an earlier import, not in this spec) when nothing "
-            "uses them (without it, they are only listed)"
-        ),
+        help="Re-import: report the drift between the spec and the taxonomy; store nothing",
     )
     return parser.parse_args()
+
+
+def reimport(
+    session_factory: Any,
+    ontology_service: OntologyService,
+    repo: OntologyRepository,
+    spec_dir: Path,
+    dry_run: bool,
+) -> int:
+    """Propose (or with dry_run, report) the drift between the spec and the taxonomy."""
+    proposals = ProposalService(
+        SQLiteChangeProposalRepository(session_factory),
+        ontology_service,
+        repo,
+        RevertService(SQLiteChangeRepository(session_factory), repo),
+        apply_rules=[DrRelationshipRules(repo)],
+    )
+    service = DriftImportService(proposals, ontology_service, DrDriftPlanner(repo))
+    try:
+        result = service.reimport(str(spec_dir), dry_run=dry_run)
+    except (DriftError, ProposalValidationError) as exc:
+        print(f"Re-import refused: {exc}", file=sys.stderr)
+        return 1
+    for line in describe_drift(result):
+        print(line)
+    return 0
+
+
+def describe_drift(result: DriftResult) -> list[str]:
+    """A drift result as lines of text."""
+    revision = result.plan.source_revision
+    lines = [
+        f"Spec revision: {revision.spec_version if revision else '?'}"
+        f" @ {(revision.commit if revision else None) or '?'}",
+        f"Drift: {len(result.plan.entries)} entities differ",
+    ]
+    for entry in result.plan.entries:
+        fields = f" ({', '.join(sorted(entry.fields))})" if entry.fields else ""
+        lines.append(f"  {entry.change:6s} {entry.kind:9s} {entry.source_id}{fields}")
+    if result.proposal is None:
+        lines.append("No drift: nothing to propose.")
+    elif result.dry_run:
+        lines.append(
+            f"Dry run: {len(result.proposal.operations)} operations validated; nothing stored."
+        )
+    else:
+        lines.append(
+            f"Proposed as {result.proposal.id} ({len(result.proposal.operations)} operations);"
+            " review it in the app."
+        )
+    return lines
 
 
 def report_and_prune(
@@ -236,6 +288,22 @@ def main() -> int:
         schema_index=None,
     )
 
+    if ontology_repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER) is not None:
+        print(f"Re-importing DR spec from {spec_dir} as a drift proposal ...")
+        ChangeEventRecorder(SQLiteChangeRepository(session_factory)).subscribe_ontology_events(
+            event_publisher
+        )
+        return reimport(
+            session_factory,
+            ontology_service,
+            cast(OntologyRepository, ontology_repo),
+            spec_dir,
+            args.dry_run,
+        )
+    if args.dry_run:
+        print("Nothing to compare: the DR spec hasn't been imported yet.", file=sys.stderr)
+        return 1
+
     print(f"Importing DR ontology spec from {spec_dir} ...")
     summary = import_dr_ontology(
         ontology_service, cast(OntologyRepository, ontology_repo), spec_dir
@@ -272,17 +340,12 @@ def main() -> int:
         print("Design charter: taxonomy vision and summary set from DESIGN_CHARTER.md")
     else:
         print("Design charter: none in this spec; existing vision and summary left as they were")
-    if args.prune:
-        # Prune deletes are recorded as change events, like any other delete.
-        ChangeEventRecorder(SQLiteChangeRepository(session_factory)).subscribe_ontology_events(
-            event_publisher
-        )
     prune_ok = report_and_prune(
         summary,
         ontology_service,
         cast(OntologyRepository, ontology_repo),
         SQLiteChangeProposalRepository(session_factory),
-        args.prune,
+        False,
     )
 
     print("Reindexing schema vector index ...")
