@@ -531,6 +531,6 @@ class TestDerivedTypesAreSkipped:
         }
         run = _run(summary, PipelineType.SCHEMA_EXTRACTION)
 
-        result = schema_svc.apply(run, SCHEME_ID, TAXONOMY_ID, confidence_threshold=0.5)
+        result = schema_svc.apply(run, TAXONOMY_ID, SCHEME_ID, confidence_threshold=0.5)
 
         assert result.skip_reasons == {"connection-0": "derived_type"}
