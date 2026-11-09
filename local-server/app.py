@@ -70,10 +70,10 @@ from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIn
 from adapters.persistence.sqlite.transaction import SharedSessionFactory, SqliteTransactionScope
 from adapters.pipelines.run_executor import BackgroundRunExecutor
 from adapters.recognition.individual_recognizer import CascadeIndividualRecognizer
-from adapters.reference.cache import CachedReferenceSource
 from adapters.reference.conceptnet import ConceptNetSource
 from adapters.reference.dbpedia import DBpediaSource
 from adapters.reference.grounding import GroundingAdapter
+from adapters.reference.proxy import ReferenceProxy
 from adapters.reference.schema_org import SchemaOrgSource
 from adapters.reference.wikidata import WikidataSource
 from adapters.sync.duckdb_sync import DuckDBSyncAdapter
@@ -248,6 +248,9 @@ async def lifespan(app: FastAPI):
     )
     logger.info("Database connections initialized")
 
+    # Caching, rate-limiting proxy for reference API calls (started with the sources below)
+    reference_proxy = ReferenceProxy(settings.reference.proxy)
+
     try:
         # --- Driven Adapters (Infrastructure) ---
 
@@ -304,21 +307,30 @@ async def lifespan(app: FastAPI):
         nlp_processor = SpacyNLPProcessor()
         logger.info("NLP processor created")
 
-        # Reference sources (wrapped in cache)
-        raw_sources: list[ReferenceSource] = [
-            ConceptNetSource(
-                base_url=settings.reference.conceptnet_base_url,
-                timeout=settings.reference.conceptnet_timeout,
-            ),
-            DBpediaSource(),
-            WikidataSource(),
-            SchemaOrgSource(),
-        ]
+        # Reference sources: every API call goes through the reference proxy, which
+        # caches and rate limits it; schema.org is local and makes no calls.
+        reference_proxy.start()
+        conceptnet_source = ConceptNetSource(
+            base_url=reference_proxy.base_url("conceptnet"),
+            upstream_url=reference_proxy.upstream_url("conceptnet"),
+            timeout=settings.reference.conceptnet_timeout,
+        )
+        dbpedia_source = DBpediaSource(
+            base_url=reference_proxy.base_url("dbpedia"),
+            upstream_url=reference_proxy.upstream_url("dbpedia"),
+        )
+        wikidata_source = WikidataSource(
+            base_url=reference_proxy.base_url("wikidata"),
+            upstream_url=reference_proxy.upstream_url("wikidata"),
+        )
+        schema_org_source = SchemaOrgSource()
         reference_sources: list[ReferenceSource] = [
-            CachedReferenceSource(src, cache_db_path=settings.reference.cache_db_path)
-            for src in raw_sources
+            conceptnet_source,
+            dbpedia_source,
+            wikidata_source,
+            schema_org_source,
         ]
-        logger.info("Reference sources created and wrapped with caching")
+        logger.info("Reference sources created")
 
         # Event publisher
         event_publisher = InProcessEventPublisher()
@@ -421,8 +433,10 @@ async def lifespan(app: FastAPI):
 
         # Create schema node grounding orchestrator
         grounding_adapter = GroundingAdapter(
-            dbpedia=DBpediaSource(),
-            conceptnet=ConceptNetSource(base_url=settings.reference.conceptnet_base_url),
+            dbpedia=dbpedia_source,
+            conceptnet=conceptnet_source,
+            wikidata=wikidata_source,
+            schema_org=schema_org_source,
         )
 
         def log_embedding_error(node_label: str, candidate_label: str, error: Exception) -> None:
@@ -781,8 +795,8 @@ async def lifespan(app: FastAPI):
         app.state.load_demo_dataset = load_demo_dataset
         app.state.db_manager = db_manager
         app.state.reference_sources = reference_sources
-        # Cached ConceptNet source for open-extraction enrichment (first/only entry).
-        app.state.conceptnet_source = reference_sources[0] if reference_sources else None
+        # ConceptNet source for open-extraction enrichment.
+        app.state.conceptnet_source = conceptnet_source
         app.state.ontology_repo = ontology_repo
         app.state.change_repo = change_repo
         app.state.interchange_repo = interchange_repo
@@ -917,6 +931,11 @@ async def lifespan(app: FastAPI):
             embedding_service.cleanup()
         except Exception as e:
             logger.error(f"Error cleaning up embedding service: {e}")
+
+        try:
+            reference_proxy.stop()
+        except Exception as e:
+            logger.error(f"Error stopping reference proxy: {e}")
 
         try:
             telemetry.shutdown()
