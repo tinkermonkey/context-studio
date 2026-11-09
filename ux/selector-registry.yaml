@@ -2958,6 +2958,12 @@ selectors:
   - selector: proposal-operation-filter
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Wrapper of the SegmentedControl above the operations table: Needs decision · X, Decided · D, All · N"
+  - selector: proposal-op-filter
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Op filter (Any op, create · N, update · N, move · N, delete · N) narrowing the primary filter; shown when the proposal has more than one op"
+  - selector: proposal-scope-filter
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Scope filter (Any scope, breaking · N, additive · N, editorial · N) narrowing the primary filter; shown when the proposal has more than one scope"
   - selector: proposal-op-mix
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Op mix and scope mix, e.g. \"7 update · 15 delete · all breaking\""

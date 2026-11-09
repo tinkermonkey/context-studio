@@ -37,6 +37,8 @@ interface TieredOperationsProps {
   actions: ProposalActions;
   selectedOperationId?: string;
   onSelectOperation: (operationId: string | undefined) => void;
+  /** What to say when the filters show nothing. */
+  emptyMessage: string;
 }
 
 /**
@@ -55,6 +57,7 @@ export function TieredOperations({
   actions,
   selectedOperationId,
   onSelectOperation,
+  emptyMessage,
 }: TieredOperationsProps) {
   // A card shows every member of a conflict, decided or not, while the filter shows any of them.
   const shown = new Set(operations.map((o) => o.id));
@@ -78,7 +81,7 @@ export function TieredOperations({
     onSelectOperation(row.id === selectedOperationId ? undefined : row.id);
 
   if (operations.length === 0) {
-    return <p className="entity-note">Nothing to show.</p>;
+    return <p className="entity-note">{emptyMessage}</p>;
   }
 
   return (

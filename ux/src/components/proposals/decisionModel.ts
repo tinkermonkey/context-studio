@@ -445,6 +445,60 @@ export function filterOperations(
   return operations.filter((o) => isAwaiting(o) === (filter === "needs"));
 }
 
+/** The secondary filters: an op and a scope, each "any" when cleared. */
+export interface Facets {
+  op: ProposedOperation["op"] | "any";
+  scope: ProposedOperation["scope"] | "any";
+}
+
+export const ANY_FACETS: Facets = { op: "any", scope: "any" };
+
+const OP_ORDER: ProposedOperation["op"][] = ["create", "update", "move", "delete"];
+const SCOPE_ORDER: ProposedOperation["scope"][] = ["breaking", "additive", "editorial"];
+
+/** The operations the primary filter shows, narrowed to the chosen op and scope. */
+export function operationsShown(
+  operations: ProposedOperation[],
+  filter: OperationFilter,
+  facets: Facets,
+): ProposedOperation[] {
+  return filterOperations(operations, filter).filter(
+    (o) =>
+      (facets.op === "any" || o.op === facets.op) &&
+      (facets.scope === "any" || o.scope === facets.scope),
+  );
+}
+
+export interface FacetCount<T> {
+  value: T;
+  count: number;
+}
+
+/**
+ * Each op and scope the proposal has, with how many operations it would show
+ * under the primary filter and the other facet's choice: picking it shows that many.
+ */
+export function facetCounts(
+  operations: ProposedOperation[],
+  filter: OperationFilter,
+  facets: Facets,
+): {
+  ops: FacetCount<ProposedOperation["op"]>[];
+  scopes: FacetCount<ProposedOperation["scope"]>[];
+} {
+  const byOp = operationsShown(operations, filter, { ...facets, op: "any" });
+  const byScope = operationsShown(operations, filter, { ...facets, scope: "any" });
+  return {
+    ops: OP_ORDER.filter((op) => operations.some((o) => o.op === op)).map((op) => ({
+      value: op,
+      count: byOp.filter((o) => o.op === op).length,
+    })),
+    scopes: SCOPE_ORDER.filter((scope) => operations.some((o) => o.scope === scope)).map(
+      (scope) => ({ value: scope, count: byScope.filter((o) => o.scope === scope).length }),
+    ),
+  };
+}
+
 // ==================== DR triple edits (accept with edit) ====================
 
 export const DR_SOURCE = "documentation_robotics";
