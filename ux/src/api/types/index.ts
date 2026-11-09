@@ -1726,10 +1726,9 @@ export interface paths {
      *     The request body structure depends on the pipeline type. Supported types:
      *     - individual_extraction: requires text and ontology_id
      *     - schema_extraction: requires documents, optional scope
-     *     - schema_node_grounding: requires node_id (a class, or a property definition
-     *       with node_type PropertyDefinition) or node_label; optional sources (default:
-     *       the configuration's sources). An unknown node_id is a 400; with async it
-     *       fails the run instead
+     *     - schema_node_grounding: requires node_id (a class) or node_label; optional
+     *       sources (default: the configuration's sources). An unknown node_id is a 400;
+     *       with async it fails the run instead
      *     - schema_node_definition_refinement: requires node_id and
      *       current_definition, optional groundings and extraction_usages
      *     - schema_node_connection_refinement: requires scope_id and
@@ -2120,8 +2119,8 @@ export interface paths {
      *         confidence_threshold: Minimum confidence score (0.0–1.0) for candidates to include
      *         recognition_threshold: Minimum similarity (0.0–1.0) for individual_extraction's
      *             recognition stage; defaults to the recognizer's configured value
-     *         body: Optional explicit selections. ``accepted_candidate_ids`` (schema_extraction
-     *             and individual_extraction) is the full selection when present and overrides
+     *         body: Optional explicit selections. ``accepted_candidate_ids`` (extraction,
+     *             grounding and refinement runs) is the full selection when present and overrides
      *             confidence_threshold; ``recognition_decisions`` (individual_extraction only)
      *             sets merge/separate per mention. Unknown ids, mentions, or merge targets → 422.
      *
@@ -4059,7 +4058,7 @@ export interface components {
     ApplyRunRequest: {
       /**
        * Accepted Candidate Ids
-       * @description candidate_ids to apply (schema_extraction and individual_extraction). When present this is the full selection: every other candidate is skipped and confidence_threshold is ignored. Unknown ids are rejected with 422.
+       * @description candidate_ids to apply (extraction, grounding and refinement runs). When present this is the full selection: every other candidate is skipped and confidence_threshold is ignored. Unknown ids are rejected with 422.
        */
       accepted_candidate_ids?: string[] | null;
       /**

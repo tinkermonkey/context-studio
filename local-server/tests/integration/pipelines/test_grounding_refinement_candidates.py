@@ -62,6 +62,21 @@ class TestGroundingCandidateMapping:
         assert result.provenance[0].start == 0
         assert result.provenance[0].end == 17
 
+    def test_map_grounding_candidate_with_null_description(self):
+        """A source that returns no description (null) maps to an empty description."""
+        grounding_dict = {
+            "uri": "http://de.dbpedia.org/resource/Mitochondrion",
+            "label": "Mitochondrion",
+            "description": None,
+            "source": "DBpedia",
+            "confidence": 0.9,
+        }
+
+        result = _map_grounding_candidate("grounding-0", grounding_dict)
+
+        assert result.description == ""
+        assert result.label == "Mitochondrion"
+
     def test_map_grounding_candidate_with_missing_fields(self):
         """Missing optional fields default gracefully."""
         grounding_dict = {

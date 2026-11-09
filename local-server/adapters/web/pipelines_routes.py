@@ -385,10 +385,10 @@ def _map_grounding_candidate(
 
     return GroundingCandidate(
         candidate_id=candidate_id,
-        uri=grounding_dict.get("uri", ""),
-        label=grounding_dict.get("label", ""),
-        description=grounding_dict.get("description", ""),
-        source=grounding_dict.get("source", ""),
+        uri=grounding_dict.get("uri") or "",
+        label=grounding_dict.get("label") or "",
+        description=grounding_dict.get("description") or "",
+        source=grounding_dict.get("source") or "",
         confidence=_safe_confidence(grounding_dict.get("confidence")),
         provenance=provenance,
     )
@@ -420,10 +420,27 @@ def _map_refinement_candidate(
     scope_id = refinement_dict.get("scope_id", "")
     provenance = _normalize_provenance(refinement_dict.get("provenance", []))
 
+    # A connection delta is labelled with the change it makes, so a removal is
+    # visible before it is accepted.
+    operation = refinement_dict.get("operation")
+    if operation:
+        label = " ".join(
+            part
+            for part in (
+                f"{str(operation).capitalize()}:",
+                refinement_dict.get("subject", ""),
+                refinement_dict.get("predicate", ""),
+                refinement_dict.get("object", ""),
+            )
+            if part
+        )
+    else:
+        label = refined_text[:100] if refined_text else ""
+
     return RefinementCandidate(
         candidate_id=candidate_id,
         uri=scope_id,
-        label=refined_text[:100] if refined_text else "",
+        label=label,
         description=refined_text,
         source=refinement_dict.get("source", "refinement_pipeline"),
         confidence=_safe_confidence(refinement_dict.get("confidence")),
@@ -948,10 +965,9 @@ async def run_pipeline(
     The request body structure depends on the pipeline type. Supported types:
     - individual_extraction: requires text and ontology_id
     - schema_extraction: requires documents, optional scope
-    - schema_node_grounding: requires node_id (a class, or a property definition
-      with node_type PropertyDefinition) or node_label; optional sources (default:
-      the configuration's sources). An unknown node_id is a 400; with async it
-      fails the run instead
+    - schema_node_grounding: requires node_id (a class) or node_label; optional
+      sources (default: the configuration's sources). An unknown node_id is a 400;
+      with async it fails the run instead
     - schema_node_definition_refinement: requires node_id and
       current_definition, optional groundings and extraction_usages
     - schema_node_connection_refinement: requires scope_id and
@@ -1762,8 +1778,8 @@ async def apply_pipeline_run(
         confidence_threshold: Minimum confidence score (0.0–1.0) for candidates to include
         recognition_threshold: Minimum similarity (0.0–1.0) for individual_extraction's
             recognition stage; defaults to the recognizer's configured value
-        body: Optional explicit selections. ``accepted_candidate_ids`` (schema_extraction
-            and individual_extraction) is the full selection when present and overrides
+        body: Optional explicit selections. ``accepted_candidate_ids`` (extraction,
+            grounding and refinement runs) is the full selection when present and overrides
             confidence_threshold; ``recognition_decisions`` (individual_extraction only)
             sets merge/separate per mention. Unknown ids, mentions, or merge targets → 422.
 
@@ -1805,6 +1821,9 @@ async def apply_pipeline_run(
     if accepted_candidate_ids is not None and ptype not in (
         PipelineType.SCHEMA_EXTRACTION,
         PipelineType.INDIVIDUAL_EXTRACTION,
+        PipelineType.SCHEMA_NODE_GROUNDING,
+        PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
+        PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
     ):
         raise HTTPException(
             status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -1875,15 +1894,24 @@ async def apply_pipeline_run(
                     run=run,
                     node_id=node_id,
                     confidence_threshold=confidence_threshold,
+                    accepted_candidate_ids=accepted_candidate_ids,
                 )
 
             elif ptype == PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT:
                 svc = request.app.state.schema_definition_apply_svc
-                apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
+                apply_result = svc.apply(
+                    run=run,
+                    confidence_threshold=confidence_threshold,
+                    accepted_candidate_ids=accepted_candidate_ids,
+                )
 
             elif ptype == PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT:
                 svc = request.app.state.schema_connection_apply_svc
-                apply_result = svc.apply(run=run, confidence_threshold=confidence_threshold)
+                apply_result = svc.apply(
+                    run=run,
+                    confidence_threshold=confidence_threshold,
+                    accepted_candidate_ids=accepted_candidate_ids,
+                )
 
             else:
                 # NO_OP and any future types return empty result

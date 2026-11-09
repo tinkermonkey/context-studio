@@ -9,6 +9,8 @@ from unittest.mock import Mock
 
 import pytest
 
+from domain.pipelines.apply_selection import ApplySelectionError
+
 from domain.ontology.entities import Class
 from domain.ontology.value_objects import ExternalReference
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus
@@ -407,3 +409,41 @@ class TestSchemaGroundingApplyServiceEdgeCases:
         # confidence 0.95 (included), 0.85 (included), 0.75 (excluded)
         assert result.external_references_created == 2
         assert result.external_references_skipped == 1
+
+
+class TestGroundingApplySelection:
+    """accepted_candidate_ids applies exactly the chosen groundings."""
+
+    def test_applies_only_the_chosen_grounding(
+        self, mock_ontology_repo, mock_ontology_service, sample_class, sample_pipeline_run
+    ):
+        """Choosing grounding-2 adds that reference and not the higher-confidence ones."""
+        mock_ontology_repo.get_class.return_value = sample_class
+        service = SchemaGroundingApplyService(mock_ontology_service, mock_ontology_repo)
+
+        result = service.apply(
+            sample_pipeline_run,
+            sample_class.id,
+            confidence_threshold=0.75,
+            accepted_candidate_ids=["grounding-2"],
+        )
+
+        assert result.created_external_reference_ids == ["https://schema.org/Service"]
+        refs = mock_ontology_service.update_class.call_args.kwargs["external_references"]
+        assert [r.uri for r in refs] == [
+            "https://www.wikidata.org/wiki/Q12345",
+            "https://schema.org/Service",
+        ]
+
+    def test_unknown_candidate_id_is_rejected(
+        self, mock_ontology_repo, mock_ontology_service, sample_class, sample_pipeline_run
+    ):
+        """An id the run does not contain raises ApplySelectionError."""
+        mock_ontology_repo.get_class.return_value = sample_class
+        service = SchemaGroundingApplyService(mock_ontology_service, mock_ontology_repo)
+
+        with pytest.raises(ApplySelectionError, match="grounding-5"):
+            service.apply(
+                sample_pipeline_run, sample_class.id, accepted_candidate_ids=["grounding-5"]
+            )
+        mock_ontology_service.update_class.assert_not_called()

@@ -22,6 +22,8 @@ from typing import TYPE_CHECKING
 
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.pipelines.apply_result import ApplyResult
+from domain.pipelines.apply_selection import check_accepted_ids
+from domain.pipelines.candidate_ids import enumerate_items
 
 _logger = logging.getLogger(__name__)
 
@@ -53,6 +55,7 @@ class SchemaConnectionRefinementApplyService:
         self,
         run: "PipelineRun",
         confidence_threshold: float = 0.0,
+        accepted_candidate_ids: "set[str] | list[str] | None" = None,
     ) -> ApplyResult:
         """
         Apply connection deltas to the ontology.
@@ -66,14 +69,19 @@ class SchemaConnectionRefinementApplyService:
 
         Args:
             run: Completed connection refinement PipelineRun
-            confidence_threshold: Minimum delta confidence to apply
+            confidence_threshold: Minimum delta confidence to apply.
+                Ignored when ``accepted_candidate_ids`` is given.
+            accepted_candidate_ids: Explicit selection of ``refinement-{i}`` ids; when
+                given, only these deltas are applied
 
         Returns:
             ApplyResult with relationships_created, relationships_removed,
             relationships_modified, and relationships_skipped counts
         """
         result = ApplyResult()
-        deltas = run.output_summary.get("deltas", [])
+        deltas = enumerate_items(run.output_summary.get("deltas"), "refinement")
+        check_accepted_ids(accepted_candidate_ids, {cid for cid, _ in deltas})
+        selected = set(accepted_candidate_ids) if accepted_candidate_ids is not None else None
         scope_id = run.output_summary.get("scope_id", "")
 
         # Build title→id lookup from classes scoped to the refinement's concept scheme.
@@ -98,9 +106,12 @@ class SchemaConnectionRefinementApplyService:
         for cls in self._repo.list_classes(concept_scheme_id=scheme_id, limit=None):
             title_to_class_id[cls.title.lower()] = cls.id
 
-        for delta in deltas:
-            confidence = delta.get("confidence", 0.0)
-            if confidence < confidence_threshold:
+        for candidate_id, delta in deltas:
+            if selected is not None:
+                wanted = candidate_id in selected
+            else:
+                wanted = delta.get("confidence", 0.0) >= confidence_threshold
+            if not wanted:
                 result.relationships_skipped += 1
                 continue
 

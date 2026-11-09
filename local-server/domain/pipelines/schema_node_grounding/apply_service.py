@@ -15,6 +15,8 @@ from typing import TYPE_CHECKING
 
 from domain.ontology.value_objects import ExternalReference
 from domain.pipelines.apply_result import ApplyResult
+from domain.pipelines.apply_selection import check_accepted_ids
+from domain.pipelines.candidate_ids import enumerate_items
 
 _logger = logging.getLogger(__name__)
 
@@ -43,6 +45,7 @@ class SchemaGroundingApplyService:
         run: "PipelineRun",
         node_id: str,
         confidence_threshold: float = 0.0,
+        accepted_candidate_ids: "set[str] | list[str] | None" = None,
     ) -> ApplyResult:
         """
         Apply grounding results to the given class node.
@@ -50,13 +53,17 @@ class SchemaGroundingApplyService:
         Args:
             run: Completed grounding PipelineRun with output_summary["groundings"]
             node_id: ID of the Class to apply groundings to
-            confidence_threshold: Minimum confidence to include a grounding
+            confidence_threshold: Minimum confidence to include a grounding.
+                Ignored when ``accepted_candidate_ids`` is given.
+            accepted_candidate_ids: Explicit selection of ``grounding-{i}`` ids; when
+                given, only these groundings are applied
 
         Returns:
             ApplyResult with external_references_created and external_references_skipped
 
         Raises:
             ValueError: If node_id is empty or the class does not exist
+            ApplySelectionError: If an accepted id is not a grounding of this run
         """
         if not node_id:
             raise ValueError("node_id is required for grounding apply")
@@ -66,14 +73,19 @@ class SchemaGroundingApplyService:
             raise ValueError(f"Class {node_id} not found")
 
         result = ApplyResult()
-        groundings = run.output_summary.get("groundings", [])
+        groundings = enumerate_items(run.output_summary.get("groundings"), "grounding")
+        check_accepted_ids(accepted_candidate_ids, {cid for cid, _ in groundings})
+        selected = set(accepted_candidate_ids) if accepted_candidate_ids is not None else None
         existing_uris = {ref.identifier for ref in cls.external_references}
         new_references: list[ExternalReference] = []
 
-        for grounding in groundings:
+        for candidate_id, grounding in groundings:
             uri = (grounding.get("uri") or "").strip()
-            confidence = grounding.get("confidence", 0.0)
-            if not uri or confidence < confidence_threshold:
+            if selected is not None:
+                wanted = candidate_id in selected
+            else:
+                wanted = grounding.get("confidence", 0.0) >= confidence_threshold
+            if not uri or not wanted:
                 result.external_references_skipped += 1
                 continue
             if uri in existing_uris:

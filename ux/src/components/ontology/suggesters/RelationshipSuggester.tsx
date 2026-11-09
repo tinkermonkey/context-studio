@@ -59,19 +59,16 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
     }
   };
 
-  const handleAccept = async (idx: number, confidence: number) => {
+  const handleAccept = async (idx: number, candidateId: string) => {
     if (!runId) return;
     setAcceptingIdx(idx);
     try {
       await applyMutation.mutateAsync({
         runId,
-        params: { confidence_threshold: confidence, node_id: classId },
+        params: { node_id: classId },
+        body: { accepted_candidate_ids: [candidateId] },
       });
-      // The apply endpoint applies all candidates at or above the threshold; dismiss them all
-      const applied = new Set(
-        allCandidates.flatMap((c, i) => (c.confidence >= confidence ? [i] : [])),
-      );
-      setDismissedIndices((prev) => new Set([...prev, ...applied]));
+      setDismissedIndices((prev) => new Set([...prev, idx]));
       toast("success", "Relationship applied");
     } catch (err) {
       toast("error", err instanceof Error ? err.message : "Failed to apply relationship");
@@ -180,7 +177,7 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
                   <button
                     type="button"
                     className="relationship-suggestion-accept-btn"
-                    onClick={() => void handleAccept(candidate.originalIdx, candidate.confidence)}
+                    onClick={() => void handleAccept(candidate.originalIdx, candidate.candidate_id)}
                     disabled={isAccepting || applyMutation.isPending}
                     data-testid={`relationship-accept-${candidate.originalIdx}`}
                   >

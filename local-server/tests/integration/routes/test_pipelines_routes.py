@@ -21,6 +21,7 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.extraction_examples import load_extraction_examples
 from adapters.web.pipelines_routes import router
+from domain.pipelines.apply_result import ApplyResult
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.exceptions import (
     PipelineExecutionError,
@@ -729,6 +730,28 @@ class TestSchemaGroundingRunFromNodeId:
         items = candidates.json()
         assert [(c["candidate_type"], c["label"]) for c in items] == [("grounding", "Bicycle")]
 
+    def test_apply_passes_the_chosen_candidate(self, grounding_client):
+        """POST apply with accepted_candidate_ids applies only the chosen grounding."""
+        run = grounding_client.post(
+            "/api/pipelines/schema_node_grounding/run",
+            json={"configuration_ref": "grounding-default", "node_id": "cls-1"},
+        ).json()
+        apply_svc = MagicMock()
+        apply_svc.apply.return_value = ApplyResult(
+            external_references_created=1,
+            created_external_reference_ids=["http://dbpedia.org/resource/Bicycle"],
+        )
+        grounding_client.app.state.schema_grounding_apply_svc = apply_svc
+
+        response = grounding_client.post(
+            f"/api/pipelines/runs/{run['id']}/apply",
+            params={"node_id": "cls-1", "confidence_threshold": 0.0},
+            json={"accepted_candidate_ids": ["grounding-0"]},
+        )
+
+        assert response.status_code == status.HTTP_200_OK, response.text
+        assert apply_svc.apply.call_args.kwargs["accepted_candidate_ids"] == ["grounding-0"]
+
     def test_unknown_node_id_is_a_bad_request(self, grounding_client):
         """POST run with a node_id that names no class returns 400."""
         response = grounding_client.post(
@@ -741,7 +764,7 @@ class TestSchemaGroundingRunFromNodeId:
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "No Class with id 'missing'" in response.json()["detail"]
+        assert "No class with id 'missing'" in response.json()["detail"]
         grounding_client.app.state.grounding_adapter.query_sources.assert_not_awaited()
 
 

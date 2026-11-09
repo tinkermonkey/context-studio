@@ -80,7 +80,7 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
             config: Configuration dict (top_n, weights, sources, etc.)
             run_id: Pipeline run ID for writing RUNNING status
             status_writer: Optional port for writing run status to persistence
-            ontology_repo: Reads the class or property definition a node_id names
+            ontology_repo: Reads the class a node_id names
         """
         super().__init__(llm_provider, run_id, status_writer)
         self._grounding_adapter = grounding_adapter
@@ -93,25 +93,24 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
         The label and node type to ground.
 
         A node_label in the input is used as given. Otherwise a node_id names
-        the class (or, with node_type PropertyDefinition, the property
-        definition) whose title is grounded.
+        the class whose title is grounded.
 
         Raises:
-            PipelineInputError: If node_id names no node of that type
+            PipelineInputError: If node_id names no class
+            PipelineExecutionError: If node_id is given but no ontology repository is wired
         """
         node_label = input_data.get("node_label", "")
         node_type = input_data.get("node_type") or NodeType.CLASS.value
         node_id = input_data.get("node_id")
-        if node_label or not node_id or self._ontology_repo is None:
+        if node_label or not node_id:
             return node_label, node_type
+        if self._ontology_repo is None:
+            raise PipelineExecutionError("node_id needs an ontology repository to resolve")
 
-        if node_type == NodeType.PROPERTY_DEFINITION.value:
-            node = self._ontology_repo.get_property_definition(node_id)
-        else:
-            node = self._ontology_repo.get_class(node_id)
-        if node is None:
-            raise PipelineInputError(f"No {node_type} with id '{node_id}'")
-        return node.title, node_type
+        node_class = self._ontology_repo.get_class(node_id)
+        if node_class is None:
+            raise PipelineInputError(f"No class with id '{node_id}'")
+        return node_class.title, NodeType.CLASS.value
 
     async def execute(self, state: PipelineState) -> PipelineState:
         """

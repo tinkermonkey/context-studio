@@ -236,7 +236,6 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
                 >
                   <label className="form-group-label">Description</label>
                   <SuggestField
-                    entityId={property.id}
                     value={descriptionDraft}
                     onChange={setDescriptionDraft}
                     rows={4}
