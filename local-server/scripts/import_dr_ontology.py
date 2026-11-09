@@ -51,7 +51,7 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from config import get_config_manager
-from domain.ontology.entities import PropertyDefinition
+from domain.ontology.entities import AttributeDefinition, PropertyDefinition
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
 from domain.versioning.ports import ChangeProposalRepository
@@ -198,9 +198,10 @@ def report_and_prune(
         return False
 
     properties = sum(isinstance(entity, PropertyDefinition) for entity in deleted)
+    attributes = sum(isinstance(entity, AttributeDefinition) for entity in deleted)
     print(
         f"Pruned {len(deleted)} stale entities: {properties} property definition(s), "
-        f"{len(deleted) - properties} class(es)"
+        f"{attributes} attribute definition(s), {len(deleted) - properties - attributes} class(es)"
     )
     for entity in deleted:
         print(f"  - {describe_stale(entity)}")
@@ -261,6 +262,10 @@ def main() -> int:
     print(
         f"Property definitions:  created={summary.property_definitions_created:4d}  "
         f"updated={summary.property_definitions_updated:4d}"
+    )
+    print(
+        f"Attribute definitions: created={summary.attribute_definitions_created:4d}  "
+        f"updated={summary.attribute_definitions_updated:4d}"
     )
 
     if summary.charter_found:

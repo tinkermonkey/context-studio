@@ -209,6 +209,33 @@ class TestGetEntity:
         assert result["counts"]["individuals"] == 2
         assert ref_ids(outcome) == {OPERATION_ID, API_SCHEME_ID, TAXONOMY_ID}
 
+    async def test_class_details_list_its_attribute_definitions(self, tools, dr_workspace):
+        method = dr_workspace.ontology.create_attribute_definition(
+            class_id=OPERATION_ID,
+            identifier="http_method",
+            title="httpMethod",
+            datatype="string",
+            description="The HTTP method",
+            is_required=True,
+            allowed_values=["GET", "POST"],
+        )
+
+        _, result = await call(tools, "get_entity", id=OPERATION_ID)
+
+        assert result["counts"]["attributes"] == 1
+        assert result["attribute_definitions"] == [
+            {
+                "id": method.id,
+                "identifier": "http_method",
+                "title": "httpMethod",
+                "datatype": "string",
+                "is_required": True,
+                "allowed_values": ["GET", "POST"],
+                "default_value": None,
+                "description": "The HTTP method",
+            }
+        ]
+
     async def test_individual_details(self, tools):
         outcome, result = await call(tools, "get_entity", id=ADMIN_HEALTH_ID)
 

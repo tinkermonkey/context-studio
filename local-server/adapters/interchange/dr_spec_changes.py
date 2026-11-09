@@ -1,8 +1,9 @@
 """
-A decided change proposal's DR relationship-type and node-type changes, for DR
-to write into its spec.
+A decided change proposal's DR relationship-type, node-type and attribute
+changes, for DR to write into its spec.
 
-Any proposal whose property-definition or class operations touch the DR spec
+Any proposal whose property-definition, class or attribute definition
+operations touch the DR spec
 (see `dr_relationships.py`), whether a reflection plan or one proposed over
 MCP or in the app, exports as one `cs-dr-spec-changes/1` document:
 
@@ -34,6 +35,15 @@ MCP or in the app, exports as one `cs-dr-spec-changes/1` document:
         "replacement_spec_node_id",   # delete only: the class the delete names as its
                                       # replacement (followed through the proposal's other deletes)
         "note",                       # delete only, when that chain is a cycle
+        "decided_at", "decided_by"
+     }],
+     "attribute_changes": [{          # attribute definition operations on DR node types
+        "seq", "op_id", "op": "create" | "update" | "delete",
+        "spec_node_id",               # the node type the attribute is on
+        "attribute",                  # its DR name (its DR reference's identifier)
+        "identifier",                 # Context Studio's identifier for it
+        "set": {"datatype"?, "is_required"?, "allowed_values"?, "description"?},
+        "schema",                     # create only, when any: its other JSON Schema keywords
         "decided_at", "decided_by"
      }],
      "skipped": [{"seq", "op_id", "why"}],
@@ -89,6 +99,14 @@ to the new one. Until DR's spec with a move is re-imported, the moved class
 keeps its old DR id; the importer refuses a spec with a moved node type,
 as it can't follow one yet.
 
+An attribute's `set` holds the attribute definition's datatype (the JSON
+Schema type), is_required (whether the node's required list names it),
+allowed_values (its enum) and description. A create gives all it set, and
+`schema`, the other JSON Schema keywords its DR reference keeps (metadata
+"schema"; see the importer). An update gives only those it changed,
+allowed_values null when it removed them; one that changed none of them (a
+title, default value or order) is skipped.
+
 What an update didn't set is read from the workspace as it is now, so export
 and land proposals in the order they were applied: exported after a later
 change to the same type, an older proposal's triple comes out wrong (DR's
@@ -103,6 +121,7 @@ from typing import Any, Callable, Mapping
 from adapters.interchange.dr_decisions import decided_fields
 from adapters.interchange.dr_relationships import (
     DR_ATTRIBUTE_KEYS,
+    DR_ATTRIBUTE_SCHEMA,
     DR_SOURCE,
     DR_TAXONOMY_IDENTIFIER,
     Triple,
@@ -125,6 +144,9 @@ from domain.versioning.proposals import (
 )
 
 SPEC_CHANGES_FORMAT = "cs-dr-spec-changes/1"
+_EXPORTED_KINDS = (OperationKind.PROPERTY, OperationKind.CLASS, OperationKind.ATTRIBUTE)
+# The attribute definition fields an attribute change carries in `set`.
+_ATTRIBUTE_FIELDS = ("datatype", "is_required", "allowed_values", "description")
 
 
 def spec_changes_for(
@@ -149,6 +171,7 @@ def spec_changes_for(
         )
     changes: list[dict[str, Any]] = []
     node_changes: list[dict[str, Any]] = []
+    attribute_changes: list[dict[str, Any]] = []
     skipped: list[dict[str, Any]] = []
     # "$<ref>" -> the entity the proposal's create of that ref made.
     refs = {o.ref: o.result_entity_id for o in proposal.operations if o.ref}
@@ -163,9 +186,14 @@ def spec_changes_for(
             change, found_in = _change(operation, repo, refs, deletes), changes
             why = None if change else "not a DR relationship type"
         elif why is None:
-            found = _node_change(operation, repo, refs, class_deletes, layers)
-            change, found_in = (found, node_changes) if isinstance(found, dict) else (None, None)
-            why = found if isinstance(found, str) else None if change else "not a DR node type"
+            if operation.kind is OperationKind.CLASS:
+                found = _node_change(operation, repo, refs, class_deletes, layers)
+                found_in, what = node_changes, "not a DR node type"
+            else:
+                found = _attribute_change(operation, repo, refs, class_deletes)
+                found_in, what = attribute_changes, "not an attribute of a DR node type"
+            change = found if isinstance(found, dict) else None
+            why = found if isinstance(found, str) else None if change else what
         if change is None:
             skipped.append({"seq": operation.seq, "op_id": operation.id, "why": why})
         else:
@@ -179,6 +207,7 @@ def spec_changes_for(
         "landed": proposal.landed.to_dict() if proposal.landed else None,
         "changes": changes,
         "node_changes": node_changes,
+        "attribute_changes": attribute_changes,
         "skipped": skipped,
         "records": [
             *dr_change_actions(proposal, repo, decisions),
@@ -270,8 +299,8 @@ def _pair_of(old: str, new: str) -> str:
 
 
 def _not_exported(operation: ProposedOperation) -> str | None:
-    if operation.kind not in (OperationKind.PROPERTY, OperationKind.CLASS):
-        return f"a {operation.kind.value} operation, not a relationship or node type"
+    if operation.kind not in _EXPORTED_KINDS:
+        return f"a {operation.kind.value} operation, which DR's spec doesn't hold"
     if operation.status is not OperationStatus.APPLIED:
         return operation.status.value
     return None
@@ -467,6 +496,124 @@ def _final_replacement(
             return None, True
         seen.add(candidate)
         current = deletes[candidate]
+
+
+# --------------------------------------------------------------- attributes
+
+
+def _attribute_change(
+    operation: ProposedOperation,
+    repo: OntologyRepository,
+    refs: dict[str, str | None],
+    class_deletes: dict[str, ProposedOperation],
+) -> dict[str, Any] | str | None:
+    """
+    An applied attribute definition operation as a change of a DR node type's
+    attribute, keyed by the node's spec node id and the attribute's DR name
+    (its DR reference's identifier). `set` holds the definition's datatype,
+    is_required, allowed_values and description: all a create gave, the ones
+    an update changed (allowed_values null removes them). A create also
+    gives `schema`, the other JSON Schema keywords its DR reference keeps.
+    """
+    label = f"seq {operation.seq}"
+    if operation.op is OperationType.CREATE:
+        fields = operation.fields
+        class_id = _resolve_ref(fields.get("class_id"), refs, label)
+        references = fields.get("external_references") or []
+        identifier = fields.get("identifier")
+    elif operation.op is OperationType.UPDATE:
+        attribute = repo.get_attribute_definition(operation.target_id or "")
+        if attribute is None:
+            raise ValueError(f"{label}: its attribute definition no longer exists")
+        class_id, identifier = attribute.class_id, attribute.identifier
+        references = [r.to_dict() for r in attribute.external_references]
+    else:
+        base = operation.base
+        class_id, identifier = base.get("class_id"), base.get("identifier")
+        references = base.get("external_references") or []
+    node_id = _node_id_of(repo, class_id, class_deletes)
+    if node_id is None:
+        return None
+    name = dr_relationship_id(references)
+    if name is None:
+        raise ValueError(
+            f"{label}: it {operation.op.value}s an attribute of the DR node type {node_id} "
+            f"without a DR reference (source {DR_SOURCE!r}, identifier the DR attribute "
+            "name), so it can't land in DR's spec; give it one"
+        )
+    schema: dict[str, Any] = {}
+    if operation.op is OperationType.CREATE:
+        values: dict[str, Any] | str
+        values, schema = _created_attribute(operation.fields, references)
+    elif operation.op is OperationType.UPDATE:
+        values = _updated_attribute(operation.fields, operation.base)
+    else:
+        values = {}
+    if isinstance(values, str):
+        return values
+    entry = {
+        "seq": operation.seq,
+        "op_id": operation.id,
+        "op": operation.op.value,
+        "spec_node_id": node_id,
+        "attribute": name,
+        "identifier": identifier,
+        "set": values,
+    }
+    if schema:
+        entry["schema"] = schema
+    return entry
+
+
+def _node_id_of(
+    repo: OntologyRepository, class_id: Any, class_deletes: dict[str, ProposedOperation]
+) -> str | None:
+    """A class's spec node id; for a class the proposal deleted, as its delete saw it."""
+    cls = repo.get_class(class_id) if isinstance(class_id, str) else None
+    if cls is not None:
+        return dr_relationship_id(cls.external_references)
+    delete = class_deletes.get(class_id) if isinstance(class_id, str) else None
+    return dr_relationship_id(delete.base.get("external_references") or []) if delete else None
+
+
+def _created_attribute(
+    fields: dict[str, Any], references: list[Any]
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """
+    A created attribute's values, and the other JSON Schema keywords its DR
+    reference keeps. An untyped attribute (schema "type" null) still a
+    string gives no datatype.
+    """
+    schema = dict(_dr_metadata(references).get(DR_ATTRIBUTE_SCHEMA) or {})
+    untyped = "type" in schema and schema.pop("type") is None
+    values = {
+        name: fields[name]
+        for name in _ATTRIBUTE_FIELDS
+        if fields.get(name) not in (None, [])
+        and not (name == "datatype" and untyped and fields[name] == "string")
+    }
+    values["is_required"] = bool(fields.get("is_required"))
+    return values, schema
+
+
+def _updated_attribute(fields: dict[str, Any], base: dict[str, Any]) -> dict[str, Any] | str:
+    """The values an update changed; a reason when it changed none DR holds."""
+    values = {
+        name: (fields[name] or None) if name == "allowed_values" else fields[name]
+        for name in _ATTRIBUTE_FIELDS
+        if name in fields and fields[name] != base.get(name)
+    }
+    return values or "it changes nothing DR's spec holds for an attribute"
+
+
+def _dr_metadata(references: Any) -> dict[str, Any]:
+    """The metadata of the DR reference among references (dicts or objects)."""
+    for ref in references or []:
+        source = ref.get("source") if isinstance(ref, dict) else getattr(ref, "source", None)
+        if source == DR_SOURCE:
+            metadata = ref.get("metadata") if isinstance(ref, dict) else ref.metadata
+            return dict(metadata or {})
+    return {}
 
 
 # --------------------------------------------------------------- node types

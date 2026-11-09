@@ -4,8 +4,10 @@ DR spec -> Context Studio ontology transform.
 Translates the Documentation Robotics (DR) spec's node/relationship JSON
 schemas (`documentation_robotics/spec/schemas/{nodes,relationships}/`) into
 Context Studio's ontology domain model: one Taxonomy for the spec as a whole,
-one ConceptScheme per DR layer, one Class per node schema, and one
-PropertyDefinition per relationship schema. A relationship schema's
+one ConceptScheme per DR layer, one Class per node schema, one
+AttributeDefinition per node attribute (keyed in its class by the attribute's
+DR name; its remaining JSON Schema rides on its DR reference as metadata
+`{"schema"}`), and one PropertyDefinition per relationship schema. A relationship schema's
 cardinality, strength and x-dr-evidence ride on its property definition's DR
 reference as metadata (`{"cardinality", "strength", "evidence"}`; see
 `DR_ATTRIBUTE_KEYS`), so a change proposal can change them and
@@ -34,6 +36,7 @@ duplicating them.
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 from collections import Counter
 from dataclasses import dataclass, field
@@ -43,6 +46,7 @@ from typing import Any, Callable, Iterator
 from uuid import uuid4
 
 from adapters.interchange.dr_relationships import (  # noqa: F401 - re-exported for the scripts
+    DR_ATTRIBUTE_SCHEMA,
     DR_SOURCE,
     DR_SPEC_REFERENCE,
     DR_TAXONOMY_IDENTIFIER,
@@ -52,18 +56,48 @@ from adapters.interchange.dr_relationships import (  # noqa: F401 - re-exported 
     dr_property_definitions,
 )
 from domain.interchange.bundle import stale_entities
-from domain.ontology.entities import Class, PropertyDefinition, Taxonomy
+from domain.ontology.entities import AttributeDefinition, Class, PropertyDefinition, Taxonomy
 from domain.ontology.exceptions import OntologyError
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
-from domain.ontology.value_objects import ExternalReference, SourceRevision
+from domain.ontology.value_objects import DataType, ExternalReference, SourceRevision
 from domain.versioning.ports import ChangeProposalRepository
 from domain.versioning.proposals import OperationStatus, ProposalStatus
 
 DR_TAXONOMY_TITLE = "Documentation Robotics"
 
+# An entity an import loads from a spec schema, so a later spec can leave it stale.
+SpecEntity = Class | PropertyDefinition | AttributeDefinition
+
 CHARTER_FILE = "DESIGN_CHARTER.md"
 _SUMMARY_HEADING = "## In one paragraph"
+
+
+@dataclass(frozen=True)
+class AttributeSchemaRecord:
+    """
+    One attribute of a node schema (`properties.attributes.properties.<name>`).
+
+    `schema` is the attribute's JSON Schema without the keywords the
+    attribute definition holds itself (type, description, and enum or const
+    when its values are strings), kept on its DR reference as metadata
+    `{"schema": ...}` so a round trip loses nothing: `{"minimum": 0}`,
+    `{"items": {...}}`, `{}`. An untyped attribute is a string whose schema
+    has `"type": null`, so it goes back without a type. The attribute
+    definition's own fields are the truth; the schema only adds to them.
+    """
+
+    name: str
+    datatype: str
+    description: str | None
+    is_required: bool
+    allowed_values: tuple[str, ...] | None
+    schema: dict[str, Any] = field(default_factory=dict, hash=False)
+
+    @property
+    def metadata(self) -> dict[str, Any]:
+        """Its DR reference's metadata."""
+        return {DR_ATTRIBUTE_SCHEMA: self.schema}
 
 
 @dataclass(frozen=True)
@@ -74,6 +108,7 @@ class NodeSchemaRecord:
     layer_id: str
     title: str
     description: str | None
+    attributes: tuple[AttributeSchemaRecord, ...] = ()
 
 
 @dataclass
@@ -89,11 +124,13 @@ class ImportSummary:
     classes_updated: int = 0
     property_definitions_created: int = 0
     property_definitions_updated: int = 0
+    attribute_definitions_created: int = 0
+    attribute_definitions_updated: int = 0
     charter_found: bool = False
     source_revision: SourceRevision | None = None
     stale: list[str] = field(default_factory=list)
-    # The stale classes and property definitions themselves, for pruning.
-    stale_entities: list[Class | PropertyDefinition] = field(default_factory=list)
+    # The stale classes, property definitions and attribute definitions, for pruning.
+    stale_entities: list[SpecEntity] = field(default_factory=list)
 
 
 def _load_json(path: Path) -> Any:
@@ -216,9 +253,53 @@ def iter_node_schemas(spec_dir: Path) -> Iterator[NodeSchemaRecord]:
                 layer_id=props["layer_id"]["const"],
                 title=data["title"],
                 description=data.get("description"),
+                attributes=_attribute_records(path, props.get("attributes") or {}),
             )
         except KeyError as exc:
             raise ValueError(f"Node schema {path} is missing required key {exc}") from exc
+
+
+def _attribute_records(path: Path, attributes: dict[str, Any]) -> tuple[AttributeSchemaRecord, ...]:
+    """
+    A node schema's attributes, in schema order. The datatype is the JSON
+    Schema type, or a const's type; an untyped attribute is a string.
+    """
+    properties = attributes.get("properties") or {}
+    required = set(attributes.get("required") or [])
+    records = []
+    for name, schema in properties.items():
+        if not isinstance(schema, dict):
+            raise ValueError(f"Node schema {path}: attribute {name!r} is not an object")
+        json_type = schema.get("type")
+        const = schema.get("const")
+        if json_type is None and isinstance(const, str):
+            json_type = "string"
+        datatype = json_type or DataType.STRING.value
+        try:
+            DataType(datatype)
+        except ValueError as exc:
+            raise ValueError(
+                f"Node schema {path}: attribute {name!r} has type {json_type!r}, which an "
+                "attribute definition can't hold"
+            ) from exc
+        enum = schema.get("enum")
+        strings = isinstance(enum, list) and all(isinstance(v, str) for v in enum)
+        allowed = tuple(enum) if strings else (const,) if isinstance(const, str) else None
+        held = {"type", "description", "enum" if strings else "", "const" if allowed else ""}
+        rest = {key: value for key, value in schema.items() if key not in held}
+        if "type" not in schema and not isinstance(const, str):
+            rest["type"] = None
+        records.append(
+            AttributeSchemaRecord(
+                name=name,
+                datatype=datatype,
+                description=schema.get("description"),
+                is_required=name in required,
+                allowed_values=allowed,
+                schema=rest,
+            )
+        )
+    return tuple(records)
 
 
 def iter_relationship_schemas(spec_dir: Path) -> Iterator[RelationshipSchemaRecord]:
@@ -497,6 +578,102 @@ def _upsert_classes(
     return class_id_by_spec_node_id
 
 
+def attribute_identifier(name: str) -> str:
+    """A DR attribute name as an identifier: 'operationId' -> 'operation_id'."""
+    snake = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", name)
+    snake = re.sub(r"(?<=[A-Z])(?=[A-Z][a-z])", "_", snake)
+    return re.sub(r"[^A-Za-z0-9]+", "_", snake).strip("_").lower()
+
+
+def _upsert_attributes(
+    service: OntologyService,
+    repo: OntologyRepository,
+    nodes: list[NodeSchemaRecord],
+    class_id_by_spec_node_id: dict[str, str],
+    summary: ImportSummary,
+) -> set[str]:
+    """
+    One attribute definition per node attribute, keyed within its class by the
+    attribute's DR name (its DR reference's identifier; the definition's
+    identifier is the name in snake case, its title the name): created, or
+    updated in place (an unchanged one saves nothing). Its DR reference
+    carries the attribute's remaining JSON Schema. Returns the ids of the
+    attribute definitions loaded.
+    """
+    loaded: set[str] = set()
+    for node in nodes:
+        class_id = class_id_by_spec_node_id[node.spec_node_id]
+        identifiers = {record.name: attribute_identifier(record.name) for record in node.attributes}
+        clashes = sorted(
+            name
+            for name, identifier in identifiers.items()
+            if list(identifiers.values()).count(identifier) > 1
+        )
+        if clashes:
+            raise ValueError(
+                f"Node schema {node.spec_node_id}: attributes {clashes} have the same identifier"
+            )
+        attributes = repo.list_attribute_definitions(class_id=class_id, limit=None)
+        by_identifier = {attr.identifier: attr for attr in attributes}
+        by_name = {
+            ref.identifier: attr
+            for attr in attributes
+            for ref in attr.external_references
+            if ref.source == DR_SOURCE
+        }
+        for order, record in enumerate(node.attributes):
+            reference = ExternalReference(
+                source=DR_SOURCE,
+                identifier=record.name,
+                metadata=MappingProxyType(record.metadata),
+            )
+            allowed = list(record.allowed_values) if record.allowed_values else None
+            current = by_name.get(record.name) or by_identifier.get(identifiers[record.name])
+            if current is None:
+                attr = service.create_attribute_definition(
+                    class_id=class_id,
+                    identifier=identifiers[record.name],
+                    title=record.name,
+                    datatype=record.datatype,
+                    description=record.description,
+                    is_required=record.is_required,
+                    allowed_values=allowed,
+                    sort_order=order,
+                    external_references=[reference],
+                )
+                summary.attribute_definitions_created += 1
+            else:
+                attr = service.update_attribute_definition(
+                    current.id,
+                    title=record.name,
+                    description=record.description,
+                    datatype=record.datatype,
+                    is_required=record.is_required,
+                    allowed_values=allowed or [],
+                    sort_order=order,
+                )
+                summary.attribute_definitions_updated += 1
+                _sync_attribute_reference(repo, attr, reference)
+            loaded.add(attr.id)
+    return loaded
+
+
+def _sync_attribute_reference(
+    repo: OntologyRepository, attr: AttributeDefinition, reference: ExternalReference
+) -> None:
+    """Give an attribute definition its DR reference (replacing a differing one); others stay."""
+    others = [ref for ref in attr.external_references if ref.source != DR_SOURCE]
+    current = [ref for ref in attr.external_references if ref.source == DR_SOURCE]
+    if (
+        len(current) == 1
+        and current[0].identifier == reference.identifier
+        and dict(current[0].metadata or {}) == dict(reference.metadata or {})
+    ):
+        return
+    attr.external_references = [*others, reference]
+    repo.save_attribute_definition(attr)
+
+
 def _existing_property_definitions(
     repo: OntologyRepository, records: list[RelationshipSchemaRecord]
 ) -> dict[str, PropertyDefinition]:
@@ -649,6 +826,13 @@ def import_dr_ontology(
     property_ids = _upsert_property_definitions(
         ontology_service, ontology_repo, class_id_by_spec_node_id, spec_dir, summary
     )
+    attribute_ids = _upsert_attributes(
+        ontology_service,
+        ontology_repo,
+        list(iter_node_schemas(spec_dir)),
+        class_id_by_spec_node_id,
+        summary,
+    )
 
     # Spec entities from an earlier import that this spec version no longer defines.
     dr_classes = [
@@ -656,8 +840,17 @@ def import_dr_ontology(
         for scheme in ontology_repo.list_concept_schemes(taxonomy_id=taxonomy.id, limit=None)
         for cls in ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None)
     ]
-    candidates = [*dr_classes, *ontology_repo.list_property_definitions(limit=None)]
-    loaded_ids = {*class_id_by_spec_node_id.values(), *property_ids}
+    dr_attributes = [
+        attr
+        for cls in dr_classes
+        for attr in ontology_repo.list_attribute_definitions(class_id=cls.id, limit=None)
+    ]
+    candidates = [
+        *dr_classes,
+        *ontology_repo.list_property_definitions(limit=None),
+        *dr_attributes,
+    ]
+    loaded_ids = {*class_id_by_spec_node_id.values(), *property_ids, *attribute_ids}
     summary.stale = stale_entities(candidates, DR_SOURCE, loaded_ids)
     summary.stale_entities = [
         entity
@@ -668,7 +861,7 @@ def import_dr_ontology(
     return summary
 
 
-def describe_stale(entity: Class | PropertyDefinition) -> str:
+def describe_stale(entity: SpecEntity) -> str:
     """'PropertyDefinition 'Title' (<DR id>)', as `ImportSummary.stale` lists it."""
     kind = type(entity).__name__
     ref = next(r.identifier for r in entity.external_references if r.source == DR_SOURCE)
@@ -690,7 +883,7 @@ def _strings_in(value: Any) -> Iterator[str]:
 def find_prune_blockers(
     repo: OntologyRepository,
     proposals: ChangeProposalRepository,
-    stale: list[Class | PropertyDefinition],
+    stale: list[SpecEntity],
 ) -> list[tuple[str, str]]:
     """
     What still uses the stale entities, as (stale entity, user) descriptions.
@@ -745,8 +938,8 @@ class PruneFailed(Exception):
 
     def __init__(
         self,
-        deleted: list[Class | PropertyDefinition],
-        failed: Class | PropertyDefinition,
+        deleted: list[SpecEntity],
+        failed: SpecEntity,
         error: Exception,
     ):
         self.deleted = deleted
@@ -755,13 +948,13 @@ class PruneFailed(Exception):
         super().__init__(f"Deleting {describe_stale(failed)} failed: {error}")
 
 
-def prune_stale(
-    service: OntologyService, stale: list[Class | PropertyDefinition]
-) -> list[Class | PropertyDefinition]:
+def prune_stale(service: OntologyService, stale: list[SpecEntity]) -> list[SpecEntity]:
     """
     Delete the stale entities through the service, so each delete is recorded
-    like any other. Property definitions go first (they may have a stale class
-    as domain or range), then classes, subclasses before their parents.
+    like any other. Attribute definitions go first (but not those of a stale
+    class, which go with it), then property definitions (they may have a
+    stale class as domain or range), then classes, subclasses before their
+    parents.
     Callers check `find_prune_blockers` first.
 
     Returns:
@@ -776,14 +969,17 @@ def prune_stale(
         parent = classes.get(cls.parent_class_id or "")
         return 0 if parent is None else 1 + depth(parent)
 
-    order: list[Class | PropertyDefinition] = [
+    order: list[SpecEntity] = [
+        *(e for e in stale if isinstance(e, AttributeDefinition) and e.class_id not in classes),
         *(e for e in stale if isinstance(e, PropertyDefinition)),
         *sorted(classes.values(), key=depth, reverse=True),
     ]
-    deleted: list[Class | PropertyDefinition] = []
+    deleted: list[SpecEntity] = []
     for entity in order:
         try:
-            if isinstance(entity, PropertyDefinition):
+            if isinstance(entity, AttributeDefinition):
+                service.delete_attribute_definition(entity.id)
+            elif isinstance(entity, PropertyDefinition):
                 service.delete_property_definition(entity.id)
             else:
                 service.delete_class(entity.id)

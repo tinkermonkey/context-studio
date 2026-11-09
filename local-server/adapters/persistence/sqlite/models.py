@@ -502,7 +502,7 @@ class AttributeDefinition(Base):  # type: ignore[valid-type,misc]
         class_id: ID of the class this attribute is scoped to (required; FK with CASCADE)
         identifier: Machine-readable identifier for the attribute within its class
         title: Display name for the attribute
-        datatype: The data type (string, integer, boolean, array, object, etc.)
+        datatype: The data type (string, integer, number, boolean, array or object)
         description: Optional longer description
         is_required: Whether this attribute must be present on instances
         allowed_values: Enum constraint; a list of allowed string values, or None
@@ -535,7 +535,7 @@ class AttributeDefinition(Base):  # type: ignore[valid-type,misc]
     datatype = Column(
         String(50),
         nullable=False,
-        doc="Data type: string, integer, boolean, array, object, etc.",
+        doc="Data type: string, integer, number, boolean, array or object",
     )
     description = Column(Text, nullable=True)
     is_required = Column(

@@ -22,6 +22,7 @@ from domain.chat.value_objects import ENTITY_KINDS, EntityRef, ToolOutcome, Tool
 from domain.graph.exceptions import NodeNotFoundError
 from domain.graph.services import GraphAnalysisService
 from domain.ontology.entities import (
+    AttributeDefinition,
     Class,
     ConceptScheme,
     Individual,
@@ -442,6 +443,8 @@ class SearchEntitiesTool(_Tool):
 
 # get_entity shows at most this many items of an entity's lists; <key>_total counts them.
 MAX_ENTITY_LIST_ITEMS = 20
+# get_entity lists at most this many of a class's attribute definitions.
+MAX_CLASS_ATTRIBUTES = 100
 _CAPPED_ENTITY_LISTS = ("external_references", "lexical_senses", "data_properties")
 
 
@@ -456,6 +459,20 @@ def _entity_fields(entity: Any) -> dict[str, Any]:
     return fields
 
 
+def _attribute_summary(attribute: AttributeDefinition) -> dict[str, Any]:
+    """An attribute definition as get_entity lists it on its class."""
+    return {
+        "id": attribute.id,
+        "identifier": attribute.identifier,
+        "title": attribute.title,
+        "datatype": attribute.datatype.value,
+        "is_required": attribute.is_required,
+        "allowed_values": attribute.allowed_values,
+        "default_value": attribute.default_value,
+        "description": attribute.description,
+    }
+
+
 class GetEntityTool(_Tool):
     """Details of one entity."""
 
@@ -465,9 +482,12 @@ class GetEntityTool(_Tool):
         " description, external_references, lexical_senses, data_properties with their"
         " datatype, created_at, last_modified, version, status, ...), its parents"
         " (taxonomy, scheme, parent class), the classes of an individual, and counts of"
-        " children and relationships. For a taxonomy, description is its one-paragraph"
-        " summary and vision is its full vision statement: what it is for, what its"
-        " classes and relationships model, and how changes are judged. A relationship"
+        " children and relationships. A class lists its attribute_definitions (id,"
+        " identifier, title, datatype, is_required, allowed_values, default_value,"
+        " description); propose an attribute update or delete by that id. For a taxonomy,"
+        " description is its one-paragraph summary and vision is its full vision"
+        " statement: what it is for, what its classes and relationships model, and how"
+        " changes are judged. A relationship"
         " (kind relationship) has its source, target and type; an attribute definition"
         " (kind attribute) has its class, datatype and constraints. Lists longer than"
         f" {MAX_ENTITY_LIST_ITEMS} are cut, with <name>_total giving the full count."
@@ -506,6 +526,12 @@ class GetEntityTool(_Tool):
             counts["subclasses"] = self._ontology.count_classes(parent_class_id=entity.id)
             counts["individuals"] = self._ontology.count_individuals(class_id=entity.id)
             counts["attributes"] = self._ontology.count_attribute_definitions(class_id=entity.id)
+            result["attribute_definitions"] = [
+                _attribute_summary(attribute)
+                for attribute in self._ontology.list_attribute_definitions(
+                    class_id=entity.id, limit=MAX_CLASS_ATTRIBUTES
+                )
+            ]
         elif isinstance(entity, Individual):
             link("classes", list(entity.class_ids))
         elif isinstance(entity, PropertyDefinition):
