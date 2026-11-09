@@ -34,6 +34,8 @@ _original_connect = socket.socket.connect
 # One body answers all three APIs: each adapter reads only its own key.
 UPSTREAM_BODY = {
     "edges": [{"start": {"@id": "/c/en/water", "label": "water"}}],
+    # DBpedia Lookup: the current "docs" shape (#1500) and the older "results" shape.
+    "docs": [{"resource": ["http://dbpedia.org/resource/Water"], "label": ["Water"]}],
     "results": [{"uri": "http://dbpedia.org/resource/Water", "label": "Water"}],
     "search": [{"id": "Q283", "label": "water", "description": "chemical compound"}],
 }
