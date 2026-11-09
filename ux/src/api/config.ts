@@ -40,6 +40,8 @@ export const QUERY_KEYS = {
   classesRoot: ["classes"] as const,
   classes: (params?: object) => ["classes", params] as const,
   class: (id: string) => ["classes", id] as const,
+  // Under the classes root, so class and proposal mutations refresh it.
+  attributeDefinition: (id: string) => ["classes", "attribute-definitions", id] as const,
   // Content counts live under the classes root: class, individual and
   // relationship mutations already invalidate it.
   contentCountsRoot: ["classes", "counts"] as const,
@@ -53,6 +55,8 @@ export const QUERY_KEYS = {
   property: (id: string) => ["properties", id] as const,
   relationshipsRoot: ["relationships"] as const,
   relationships: (params?: object) => ["relationships", params] as const,
+  // Under the relationships root, so relationship and proposal mutations refresh it.
+  relationship: (id: string) => ["relationships", "by-id", id] as const,
   // Graph
   graph: ["graph"] as const,
   graphMetrics: ["graph", "metrics"] as const,

@@ -3148,7 +3148,10 @@ selectors:
     description: "One sorting question's radio group, by question (source_for, target_for, predicate_for)"
   - selector: reflection-option-*
     component: src/components/proposals/ReflectionAnswers.tsx
-    description: "One option of a sorting question with its probability bar and current/plan marks, by question and option"
+    description: "One option of a sorting question with its probability bar and current/plan marks, by question and option; data-defined=\"true\" when it has a definition"
+  - selector: reflection-definition
+    component: src/components/proposals/ReflectionAnswers.tsx
+    description: "Overlay (role=tooltip) beside the inspector with a reflection answer's definition, shown on hover or focus of the option"
   - selector: reflection-evidence-pack
     component: src/components/proposals/ReflectionAnswers.tsx
     description: "Inspector: the evidence pack blocks the decision model read"

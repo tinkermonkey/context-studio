@@ -565,6 +565,22 @@ export function drPredicateCatalog(taxonomy?: {
     : undefined;
 }
 
+/** dr_spec's predicate definitions from its catalog, by predicate; empty without one. */
+export function drPredicateDescriptions(taxonomy?: {
+  external_references?: ExternalRef[] | null;
+}): Map<string, string> {
+  const spec = (taxonomy?.external_references ?? []).find(
+    (r) => r.source === DR_SOURCE && r.identifier === DR_SPEC_REFERENCE,
+  );
+  const predicates = spec?.metadata?.predicates;
+  if (!predicates || typeof predicates !== "object") return new Map();
+  return new Map(
+    Object.entries(predicates as Record<string, { description?: unknown } | null>)
+      .filter(([, entry]) => typeof entry?.description === "string" && entry.description)
+      .map(([name, entry]) => [name, entry!.description as string]),
+  );
+}
+
 export function drSpecOf(
   classes: { id: string; external_references?: ExternalRef[] | null }[],
   predicates?: Set<string>,
