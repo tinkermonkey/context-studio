@@ -27,6 +27,12 @@ revision DR drafted it against) is recorded on the proposal and comes back in
 the `cs-dr-spec-changes/1` header; without one, the proposal records the
 revision the taxonomy was last imported at.
 
+The plan's top-level `predicate_retirements` ([{from, to, note}]: retire
+predicate `from` into `to`) are checked against the spec's predicate catalog
+and kept on the proposal's client metadata, for `cs-dr-spec-changes/1` to
+send back as `retire-predicate` records. An operation's `kind` is the kind of
+entity it changes and must be "property"; a plan kind there is refused, saying so.
+
 `decisions_for` (in `adapters/interchange/dr_decisions.py`, re-exported here)
 writes the decisions file DR's `proposal-import.ts --decisions` reads: one
 `{seq, op_id, status, reason, result_entity_id}` per operation, plus `fields`
@@ -45,8 +51,10 @@ from adapters.interchange.dr_decisions import decisions_for  # noqa: F401 - re-e
 from adapters.interchange.dr_relationships import (
     DR_SOURCE,
     DR_TAXONOMY_IDENTIFIER,
+    PREDICATE_RETIREMENTS,
     Triple,
     assign_relationship_identifiers,
+    dr_predicate_catalog,
     dr_property_definitions,
     dr_spec_classes,
     swapped_dr_reference,
@@ -222,7 +230,11 @@ def _replacements(
 
 def _resolve(item: dict[str, Any], workspace: _Workspace) -> _Planned:
     if item.get("kind") != "property":
-        raise ValueError(f"kind {item.get('kind')!r} is not supported (only 'property')")
+        raise ValueError(
+            f"kind {item.get('kind')!r} is not supported: an operation's kind is the kind of "
+            "entity it changes, and must be 'property' (a relationship type); a plan kind "
+            "such as 'principles' or 'reverse' belongs in its dr bookkeeping, which is not read"
+        )
     int(item["seq"])
     op = OperationType(item["op"])
     fields = item.get("fields") or {}
@@ -371,6 +383,7 @@ def import_reflection_plan(
     _check_shape(plan)
     workspace = _Workspace(repo)
     drafts = drafts_for(plan, workspace)
+    retirements = predicate_retirements(plan, repo)
     return proposal_service.propose(
         taxonomy_id=workspace.taxonomy_id,
         title=plan.get("title") or f"DR reflection plan: {plan.get('layer')} layer",
@@ -379,4 +392,52 @@ def import_reflection_plan(
         rationale=plan.get("rationale"),
         source_detail=plan.get("source_detail"),
         source_revision=_source_revision(plan),
+        client_metadata={PREDICATE_RETIREMENTS: retirements} if retirements else None,
     )
+
+
+def predicate_retirements(plan: dict[str, Any], repo: OntologyRepository) -> list[dict[str, Any]]:
+    """
+    The plan's `predicate_retirements` ([{from, to, note}]: retire predicate
+    `from` into `to`), checked: from and to differ, and both are in the spec's
+    predicate catalog (or `to` is a predicate one of the plan's operations
+    sets). Without a stored catalog only the shape is checked.
+
+    Raises:
+        PlanError: Listing each retirement that doesn't hold
+    """
+    retirements = plan.get(PREDICATE_RETIREMENTS)
+    if retirements is None:
+        return []
+    if not isinstance(retirements, list):
+        raise PlanError([f"{PREDICATE_RETIREMENTS} is not a list"])
+    catalog = dr_predicate_catalog(repo)
+    planned = {
+        (item.get("fields") or {}).get("predicate")
+        for item in plan["operations"]
+        if isinstance(item, dict) and isinstance(item.get("fields"), dict)
+    }
+    problems: list[str] = []
+    kept: list[dict[str, Any]] = []
+    for index, retirement in enumerate(retirements, start=1):
+        label = f"{PREDICATE_RETIREMENTS} {index}"
+        if not isinstance(retirement, dict) or not all(
+            isinstance(retirement.get(key), str) and retirement[key] for key in ("from", "to")
+        ):
+            problems.append(f"{label}: not an object with from and to predicates")
+            continue
+        old, new = retirement["from"], retirement["to"]
+        if old == new:
+            problems.append(f"{label}: retires {old} into itself")
+        elif catalog is not None and old not in catalog:
+            problems.append(f"{label}: {old} is not in the spec's predicate catalog")
+        elif catalog is not None and new not in catalog and new not in planned:
+            problems.append(
+                f"{label}: {new} is neither in the spec's predicate catalog nor set by the plan"
+            )
+        else:
+            note = retirement.get("note")
+            kept.append({"from": old, "to": new, **({"note": note} if note else {})})
+    if problems:
+        raise PlanError(problems)
+    return kept

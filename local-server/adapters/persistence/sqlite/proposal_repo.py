@@ -73,6 +73,7 @@ class SQLiteChangeProposalRepository:
                         proposal.source_revision.to_dict() if proposal.source_revision else None
                     ),
                     landed=proposal.landed.to_dict() if proposal.landed else None,
+                    client_metadata=proposal.client_metadata,
                 )
             )
             session.flush()
@@ -514,4 +515,5 @@ def _to_domain(run: ChangeProposalRun, operations: list[ProposedOperation]) -> C
             else None
         ),
         landed=Landing.from_dict(run.landed) if run.landed else None,  # type: ignore[arg-type]
+        client_metadata=dict(run.client_metadata or {}),  # type: ignore[arg-type]
     )

@@ -436,6 +436,7 @@ class ProposalService:
         source_detail: str | None = None,
         dry_run: bool = False,
         source_revision: SourceRevision | None = None,
+        client_metadata: Mapping[str, Any] | None = None,
     ) -> ChangeProposal:
         """
         Validate and store a proposal; every operation starts pending.
@@ -457,6 +458,8 @@ class ProposalService:
             source_revision: The revision of the taxonomy's external source the
                 proposal was drafted against; without one, the revision the
                 taxonomy was last imported at, if it records one
+            client_metadata: Kept on the proposal for the proposing client
+                (see ChangeProposal.client_metadata)
 
         Returns:
             The stored proposal, with any auto-applied outcomes (with dry_run,
@@ -523,6 +526,7 @@ class ProposalService:
                 created_at=datetime.now(timezone.utc),
                 operations=built,
                 source_revision=source_revision,
+                client_metadata=dict(client_metadata or {}),
             )
         except ValueError as exc:
             errors.append(OperationError(None, "invalid", str(exc)))

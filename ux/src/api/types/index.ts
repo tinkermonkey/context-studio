@@ -4872,6 +4872,13 @@ export interface components {
       dry_run: boolean;
       /** Operations */
       operations: components["schemas"]["ProposedOperationResponse"][];
+      /**
+       * Client Metadata
+       * @description What the proposing client keeps on the proposal for itself (e.g. a DR reflection plan's predicate_retirements: [{from, to, note}]); Context Studio acts on none of it
+       */
+      client_metadata?: {
+        [key: string]: unknown;
+      };
     };
     /**
      * ChangeProposalRevertConflictDetail
