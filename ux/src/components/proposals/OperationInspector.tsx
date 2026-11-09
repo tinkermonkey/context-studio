@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from "react";
-import { Chip, FormCallout, InspectorPanel } from "@tinkermonkey/heimdall-ui";
+import { Chip, FormCallout, InspectorPanel, SideBySideDiff } from "@tinkermonkey/heimdall-ui";
 import type { ProposedOperation } from "@/api/services/proposals";
 import { decisionState, flagVariant } from "./decisionModel";
 import {
@@ -19,6 +19,7 @@ import {
 } from "./proposalModel";
 import { subjectOf } from "./OperationDiff";
 import { EvidencePack, ReflectionAnswers } from "./ReflectionAnswers";
+import { textDiffOf } from "./textDiff";
 import type { OptionDefinition, Picks, ReflectionOption } from "./tieredModel";
 import type { OperationContext } from "./useOperationContext";
 import "./proposals.css";
@@ -274,38 +275,60 @@ export function OperationInspector({
             </div>
             {rows.length > 0 ? (
               <dl className="op-change-list" data-testid="operation-change-table">
-                {rows.map((row, index) => (
-                  <div
-                    key={row.field}
-                    className="op-change"
-                    data-testid={`operation-change-row-${row.field}`}
-                  >
-                    <dt className="op-change__field">{label(row.field)}</dt>
-                    {operation.op !== "create" && (
-                      <dd
-                        className={`${valueClass(row.field)} ${
-                          row.changed ? "op-change__before--changed" : "op-change__unchanged"
-                        }`}
-                      >
-                        {value(row.field, row.before)}
+                {rows.map((row, index) => {
+                  // A long text change reads as a diff that marks the sentences that changed.
+                  const diff =
+                    operation.op !== "create" && operation.op !== "delete" && row.changed
+                      ? textDiffOf(row.before, row.after)
+                      : undefined;
+                  return diff ? (
+                    <div
+                      key={row.field}
+                      className="op-change"
+                      data-testid={`operation-change-row-${row.field}`}
+                    >
+                      <dt className="op-change__field">{label(row.field)}</dt>
+                      <dd className="op-text-diff">
+                        <SideBySideDiff
+                          lines={diff}
+                          aria-label={`${label(row.field)}: what changed`}
+                          data-testid={`operation-text-diff-${row.field}`}
+                        />
                       </dd>
-                    )}
-                    {operation.op === "delete"
-                      ? index === 0 && <dd className="op-change__removed">removed</dd>
-                      : row.changed && (
-                          <dd
-                            className={[
-                              valueClass(row.field),
-                              operation.op === "create" ? "" : "op-change__after--changed",
-                            ]
-                              .filter(Boolean)
-                              .join(" ")}
-                          >
-                            {value(row.field, row.after)}
-                          </dd>
-                        )}
-                  </div>
-                ))}
+                    </div>
+                  ) : (
+                    <div
+                      key={row.field}
+                      className="op-change"
+                      data-testid={`operation-change-row-${row.field}`}
+                    >
+                      <dt className="op-change__field">{label(row.field)}</dt>
+                      {operation.op !== "create" && (
+                        <dd
+                          className={`${valueClass(row.field)} ${
+                            row.changed ? "op-change__before--changed" : "op-change__unchanged"
+                          }`}
+                        >
+                          {value(row.field, row.before)}
+                        </dd>
+                      )}
+                      {operation.op === "delete"
+                        ? index === 0 && <dd className="op-change__removed">removed</dd>
+                        : row.changed && (
+                            <dd
+                              className={[
+                                valueClass(row.field),
+                                operation.op === "create" ? "" : "op-change__after--changed",
+                              ]
+                                .filter(Boolean)
+                                .join(" ")}
+                            >
+                              {value(row.field, row.after)}
+                            </dd>
+                          )}
+                    </div>
+                  );
+                })}
               </dl>
             ) : (
               <p className="entity-note">No field changes recorded.</p>

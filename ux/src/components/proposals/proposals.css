@@ -310,6 +310,43 @@
     gap: 6px;
   }
 
+  /* A long text change as Heimdall's line diff, fitted to the inspector:
+     a narrower gutter and line padding, so DIFF_WIDTH characters fit a row. */
+  .op-text-diff {
+    margin: 4px 0 0;
+    min-width: 0;
+  }
+
+  .op-text-diff .side-by-side-diff__header {
+    grid-template-columns: 28px 1fr 1fr;
+    padding: 6px 8px;
+  }
+
+  .op-text-diff .side-by-side-diff__gutter {
+    width: 28px;
+    padding: 0 6px;
+  }
+
+  .op-text-diff .side-by-side-diff__line {
+    padding: 6px 8px;
+  }
+
+  /* Rows are a fixed height: a row too wide for the inspector ends in an
+     ellipsis instead of wrapping out of sight. */
+  .op-text-diff .side-by-side-diff__content {
+    display: block;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* A short diff takes the height of its rows, not Heimdall's 200px minimum. */
+  .op-text-diff .side-by-side-diff__viewport {
+    min-height: 0;
+    max-height: 360px;
+  }
+
   /* Change: one stacked row per field: name, then before above after. */
   .op-change-list {
     display: flex;

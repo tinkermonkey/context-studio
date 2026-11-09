@@ -3012,6 +3012,9 @@ selectors:
   - selector: operation-change-row-*
     component: src/components/proposals/OperationInspector.tsx
     description: "One Change table row, by field name (e.g. canonical_predicate)"
+  - selector: operation-text-diff-*
+    component: src/components/proposals/OperationInspector.tsx
+    description: "A long text change (e.g. description) as Heimdall's SideBySideDiff, by field name: changed sentences removed then added, unchanged ones as context"
   - selector: operation-rationale
     component: src/components/proposals/OperationInspector.tsx
     description: "The operation's rationale text"

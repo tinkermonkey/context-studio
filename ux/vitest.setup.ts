@@ -1127,6 +1127,29 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         meta && React.createElement("span", { className: "hierarchy-row__meta" }, meta),
       ),
   ),
+  // A line diff: one row per line, its type as a class and data attribute.
+  SideBySideDiff: ({ lines = [], className = "", ...props }: any) =>
+    React.createElement(
+      "div",
+      { className: ["side-by-side-diff", className].filter(Boolean).join(" "), ...props },
+      lines.length === 0
+        ? React.createElement(
+            "div",
+            { className: "side-by-side-diff__empty" },
+            "No changes between these versions",
+          )
+        : lines.map((line: any, i: number) =>
+            React.createElement(
+              "div",
+              {
+                key: i,
+                className: `side-by-side-diff__row side-by-side-diff__row--${line.type}`,
+                "data-line-type": line.type,
+              },
+              line.content,
+            ),
+          ),
+    ),
   SegmentedControl: React.forwardRef(
     ({ value, onChange, options = [], className = "", disabled, ...props }: any, ref: any) =>
       React.createElement(
