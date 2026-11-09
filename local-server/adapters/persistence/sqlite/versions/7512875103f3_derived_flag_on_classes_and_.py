@@ -1,8 +1,8 @@
 """derived flag on classes and relationship types
 
-Revision ID: 7b38611bb7b3
-Revises: 3996bcd54aab
-Create Date: 2026-11-09 15:14:36.121488
+Revision ID: 7512875103f3
+Revises: 962a1c1b8e08
+Create Date: 2026-11-09 15:27:46.079260
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '7b38611bb7b3'
-down_revision = '3996bcd54aab'
+revision = '7512875103f3'
+down_revision = '962a1c1b8e08'
 branch_labels = None
 depends_on = None
 
