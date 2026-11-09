@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Where proposals appear elsewhere</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/heimdall/tokens.css">
+<link rel="stylesheet" href="ds/heimdall/components/bundle.css">
+<script src="ds/heimdall/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:var(--font-sans)}
+a{color:#b45309;text-decoration:none}
+a:hover{color:#92400e;text-decoration:underline}
+</style>
+</helmet>
+<div style="box-sizing: border-box; min-height: 900px; padding: 32px 36px; background: rgb(var(--canvas-bg-2)); color: rgb(var(--canvas-fg-1)); display: flex; flex-direction: column; gap: 20px;">
+
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<span style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: rgb(var(--canvas-fg-3));">Entry points</span>
+<h1 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.02em;">Where proposals show up outside the queue</h1>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
+
+<section style="flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 10px;" aria-labelledby="nav-h">
+<h2 id="nav-h" style="margin: 0; font-size: 14px; font-weight: 600;">Nav badge</h2>
+<div style="height: 470px; border-radius: 8px; overflow: hidden; border: 1px solid rgb(var(--canvas-border));">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Sidebar" sections="{{sections}}" active-item-id="schema-classes" default-expanded-ids="{{expanded}}" app-title="{{appTitle}}" style="height: 100%;"></x-import>
+</div>
+<p style="margin: 0; font-size: 12.5px; line-height: 1.55; color: rgb(var(--canvas-fg-2));">The count is open proposals, not pending operations, so a 60-operation layer walk reads as one item of work. It refreshes when a proposal arrives from MCP, chat or an import.</p>
+</section>
+
+<section style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 10px;" aria-labelledby="chat-h">
+<h2 id="chat-h" style="margin: 0; font-size: 14px; font-weight: 600;">Proposal card in chat</h2>
+<div style="padding: 14px; border-radius: 8px; border: 1px solid rgb(var(--canvas-border)); background: rgb(var(--canvas-bg)); display: flex; flex-direction: column; gap: 12px;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.ChatMessage" role="user" sender-name="you" timestamp="10:42" body="Propose starter kits for the starter activities: what each needs, with quantities."></x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.ChatMessage" role="bot" sender-name="Context Studio" timestamp="10:42" body="I proposed 14 kit relationships. The house policy applied the 9 additive ones with a known unit; 5 are waiting for you, including two that change an existing quantity." tool-block="{{toolBlock}}"></x-import>
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border: 1px solid rgb(var(--canvas-border-strong)); border-radius: 8px; background: rgb(var(--canvas-bg-2));">
+<div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+<span style="font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(var(--canvas-fg-3));">Proposal</span>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="amber">open</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" form="id-tag">house</x-import>
+</div>
+<a href="Detail.dc.html" style="font-weight: 600; font-size: 13.5px; color: rgb(var(--canvas-fg-1));">Starter kits for the starter activities</a>
+<span style="font-family: var(--font-mono); font-size: 12px; color: rgb(var(--canvas-fg-2));">14 operations · 9 applied by policy · 5 pending · 2 breaking</span>
+<div style="display: flex; gap: 8px;">
+<a href="Detail.dc.html" class="btn btn--primary btn--sm" style="text-decoration: none;">Review 5 pending</a>
+<a href="Results.dc.html" class="btn btn--ghost btn--sm" style="text-decoration: none;">What was applied</a>
+</div>
+</div>
+</div>
+<p style="margin: 0; font-size: 12.5px; line-height: 1.55; color: rgb(var(--canvas-fg-2));">Chat and MCP can only propose. The card is how a person gets from the conversation to the decision; there is no accept button in chat.</p>
+</section>
+
+<section style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 10px;" aria-labelledby="entity-h">
+<h2 id="entity-h" style="margin: 0; font-size: 14px; font-weight: 600;">On entity pages</h2>
+<div style="padding: 18px; border-radius: 8px; border: 1px solid rgb(var(--canvas-border)); background: rgb(var(--canvas-bg)); display: flex; flex-direction: column; gap: 14px;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.PageHeader" eyebrow="CLASS · dr_spec · business" title="BusinessRole" id-chip="business.businessrole" subtitle="The responsibility for performing specific behavior, to which an actor can be assigned."></x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.FormCallout" variant="info" icon="gitBranch">7 pending operations in 1 proposal would change relationship types on this class.</x-import>
+<table class="table">
+<thead class="table__head">
+<tr class="table__row">
+<th class="table__header">Pending change</th>
+<th class="table__header" style="width: 64px; text-align: right;">P</th>
+</tr>
+</thead>
+<tbody class="table__body">
+<sc-for list="{{pending}}" as="p" hint-placeholder-count="5">
+<tr class="table__row">
+<td class="table__cell">
+<div style="display: flex; flex-direction: column; gap: 2px;">
+<a href="Detail.dc.html" style="font-family: var(--font-mono); font-size: 12px;">{{p.change}}</a>
+<span style="font-size: 11.5px; color: rgb(var(--canvas-fg-3));">{{p.where}}</span>
+</div>
+</td>
+<td class="table__cell" style="text-align: right; font-family: var(--font-mono); font-size: 12px;">{{p.p}}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<p style="margin: 0; font-size: 12.5px; line-height: 1.55; color: rgb(var(--canvas-fg-2));">Class, property and taxonomy pages list the pending operations that touch them, each linking to the operation on its proposal page. The relationships table marks affected rows the same way.</p>
+</section>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      appTitle: { title: 'Context Studio', version: 'v0.2.0 · LOCAL' },
+      expanded: ['schema'],
+      sections: [{ title: '', items: [
+        { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+        { id: 'proposals', label: 'Proposals', icon: 'gitBranch', count: 4 },
+        { id: 'schema', label: 'Schema', icon: 'schema', children: [
+          { id: 'schema-taxonomies', label: 'Taxonomies' },
+          { id: 'schema-schemes', label: 'Concept schemes' },
+          { id: 'schema-classes', label: 'Classes' },
+          { id: 'schema-properties', label: 'Properties' },
+          { id: 'schema-relationships', label: 'Relationships' }
+        ] },
+        { id: 'data', label: 'Data', icon: 'data' },
+        { id: 'pipelines', label: 'Pipelines', icon: 'pipeline' },
+        { id: 'graph', label: 'Graph view', icon: 'graph' },
+        { id: 'settings', label: 'Configuration', icon: 'settings' }
+      ] }],
+      toolBlock: { name: 'propose_changes', status: 'success', output: [
+        { key: 'proposal', value: 'Starter kits for the starter activities' },
+        { key: 'operations', value: '14 · 9 applied by policy · 5 pending' }
+      ] },
+      pending: [
+        { change: 'businessrole assigned-to → performs businessprocess', where: 'DR reflection plan: business layer · seq 1 · update', p: '0.82' },
+        { change: 'remove businessrole assigned-to businessinterface', where: 'seq 4 · delete', p: '0.68' },
+        { change: 'businesscollaboration composes → uses businessrole', where: 'seq 3 · update', p: '0.29' },
+        { change: 'remove contract serves businessrole', where: 'seq 5 · delete', p: '0.67' },
+        { change: 'remove businessfunction serves businessrole', where: 'seq 6 · delete', p: '0.65' },
+        { change: 'remove businessrole triggers businessevent', where: 'seq 13 · delete', p: '0.32' },
+        { change: 'remove businessrole performs businessfunction', where: 'seq 17 · delete · stale', p: '0.41' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

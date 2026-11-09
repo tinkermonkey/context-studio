@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tiered apply</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/heimdall/tokens.css">
+<link rel="stylesheet" href="ds/heimdall/components/bundle.css">
+<script src="ds/heimdall/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:var(--font-sans)}
+a{color:#b45309;text-decoration:none}
+a:hover{color:#92400e;text-decoration:underline}
+</style>
+</helmet>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.ShellLayout" app-title="{{appTitle}}" sidebar="{{sidebar}}" topbar="{{topbar}}" style="display: block;">
+<div style="display: flex; flex-direction: column; gap: 16px;">
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.PageHeader" eyebrow="PROPOSAL · dr_spec · pipeline" title="Reflection: product layer (22 changes)" id-chip="b71c0e42" subtitle="The schema_relationship_reflection run asked, for each of the layer's 96 relationship types, the best source, target and predicate. 74 were reproduced or had no better answer; 22 alternatives became this plan."></x-import>
+
+<div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="amber">open</x-import>
+<span style="font-family: var(--font-mono); font-size: 12px; color: rgb(var(--canvas-fg-3));">run 3f02 · default decision model · 288 questions · $0.04 · 52 s</span>
+<span style="flex-grow: 1;"></span>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="ghost" size="sm">Export decisions</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="secondary" size="sm">Reject all awaiting</x-import>
+</div>
+
+<section aria-label="Decision progress" style="display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; padding: 14px 16px; border: 1px solid rgba(217, 119, 6, 0.35); border-radius: 8px; background: rgba(251, 191, 36, 0.06);">
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 180px;">
+<span style="font-size: 20px; font-weight: 600;">{{headline}}</span>
+<span style="font-size: 12.5px; color: rgb(var(--canvas-fg-2));">{{decidedLine}}</span>
+</div>
+<span style="flex-grow: 1;"></span>
+<div style="flex: 0 1 260px; min-width: 160px;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.ProgressBar" percent="{{percent}}" color="amber"></x-import>
+</div>
+</section>
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+<span style="font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(var(--canvas-fg-3));">Group by</span>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.SegmentedControl" value="kind" options="{{groupOptions}}"></x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.SegmentedControl" value="needs" options="{{filterOptions}}"></x-import>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start;">
+
+<div style="flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 16px;">
+
+<section aria-labelledby="mech-title" style="border: 1px solid rgb(var(--canvas-border)); border-radius: 8px; overflow: hidden;">
+<header style="display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; padding: 12px 14px; background: rgb(var(--canvas-bg-2)); border-bottom: 1px solid rgb(var(--canvas-border));">
+<div style="display: flex; flex-direction: column; gap: 2px;">
+<h2 id="mech-title" style="margin: 0; font-size: 14px; font-weight: 600;">Mechanical · accept by threshold</h2>
+<span style="font-size: 12px; color: rgb(var(--canvas-fg-3));">Duplicate removals, predicate renames and reversals. The slider selects only these.</span>
+</div>
+<span style="flex-grow: 1;"></span>
+<label for="threshold" style="font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(var(--canvas-fg-3));">p ≥</label>
+<input id="threshold" type="range" min="0" max="1" step="0.05" value="{{threshold}}" onChange="{{setThreshold}}" style="width: 180px; accent-color: #b45309;">
+<span style="font-family: var(--font-mono); font-size: 13px; font-weight: 600; width: 36px;">{{thresholdLabel}}</span>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="primary" size="sm">{{acceptMechLabel}}</x-import>
+</header>
+<sc-for list="{{mech}}" as="g" hint-placeholder-count="3">
+<div style="border-top: 1px solid rgb(var(--canvas-border));">
+<div style="display: flex; gap: 10px; align-items: center; padding: 8px 14px;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="cyan">{{g.kind}}</x-import>
+<span style="font-size: 12.5px; color: rgb(var(--canvas-fg-2));">{{g.count}} · p {{g.range}}</span>
+<span style="flex-grow: 1;"></span>
+<span style="font-size: 12px; color: rgb(var(--canvas-fg-3));">{{g.selectedLabel}}</span>
+</div>
+<table class="table">
+<tbody class="table__body">
+<sc-for list="{{g.ops}}" as="op" hint-placeholder-count="3">
+<tr class="{{op.rowClass}}" onClick="{{op.pick}}">
+<td class="table__cell table__cell--checkbox" style="width: 30px;"><input type="checkbox" class="table__checkbox" checked="{{op.checked}}" aria-label="{{op.checkLabel}}"></td>
+<td class="table__cell" style="width: 40px; font-family: var(--font-mono); font-size: 12px; color: rgb(var(--canvas-fg-3));">{{op.seq}}</td>
+<td class="table__cell" style="font-family: var(--font-mono); font-size: 12px;">{{op.change}}</td>
+<td class="table__cell" style="width: 60px; text-align: right; font-family: var(--font-mono); font-size: 12px; {{op.pStyle}}">{{op.p}}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</sc-for>
+</section>
+
+<section aria-labelledby="judge-title" style="border: 1px solid rgb(var(--canvas-border)); border-radius: 8px; overflow: hidden;">
+<header style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 12px 14px; background: rgb(var(--canvas-bg-2)); border-bottom: 1px solid rgb(var(--canvas-border));">
+<div style="display: flex; flex-direction: column; gap: 2px;">
+<h2 id="judge-title" style="margin: 0; font-size: 14px; font-weight: 600;">Judgment · decide row by row</h2>
+<span style="font-size: 12px; color: rgb(var(--canvas-fg-3));">Retargets, compound changes and conflicts are never bulk-selected. Each row shows the plan's pick and the best alternative.</span>
+</div>
+</header>
+<sc-for list="{{judge}}" as="g" hint-placeholder-count="2">
+<div style="border-top: 1px solid rgb(var(--canvas-border));">
+<div style="display: flex; gap: 10px; align-items: center; padding: 8px 14px;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="violet">{{g.kind}}</x-import>
+<span style="font-size: 12.5px; color: rgb(var(--canvas-fg-2));">{{g.count}} · p {{g.range}}</span>
+</div>
+<table class="table">
+<tbody class="table__body">
+<sc-for list="{{g.ops}}" as="op" hint-placeholder-count="3">
+<tr class="{{op.rowClass}}" onClick="{{op.pick}}">
+<td class="table__cell" style="width: 40px; font-family: var(--font-mono); font-size: 12px; color: rgb(var(--canvas-fg-3));">{{op.seq}}</td>
+<td class="table__cell">
+<div style="display: flex; flex-direction: column; gap: 3px; font-family: var(--font-mono); font-size: 12px;">
+<span><span style="color: rgb(var(--canvas-fg-3)); text-decoration: line-through;">{{op.from}}</span></span>
+<span><span style="color: rgb(var(--canvas-fg-3));">plan</span> {{op.to}}</span>
+<span style="font-family: var(--font-sans); color: rgb(var(--canvas-fg-2));">alternative: <span style="font-family: var(--font-mono);">{{op.alt}}</span> · {{op.altP}}</span>
+</div>
+</td>
+<td class="table__cell" style="width: 60px; text-align: right; font-family: var(--font-mono); font-size: 12px;">{{op.p}}</td>
+<td class="table__cell" style="width: 150px;"><x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="amber">needs decision</x-import></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</sc-for>
+
+<div style="border-top: 1px solid rgb(var(--canvas-border)); padding: 10px 14px 14px; display: flex; flex-direction: column; gap: 10px;">
+<div style="display: flex; gap: 10px; align-items: center;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="rose">conflict</x-import>
+<span style="font-size: 12.5px; color: rgb(var(--canvas-fg-2));">Rows 19 and 21 both replace <span style="font-family: var(--font-mono);">feature realizes softwarecapability</span>. Decide them together.</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
+<sc-for list="{{conflict}}" as="c" hint-placeholder-count="2">
+<article style="border: 1px solid rgb(var(--canvas-border)); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; background: rgb(var(--canvas-bg));">
+<span style="font-family: var(--font-mono); font-size: 11px; color: rgb(var(--canvas-fg-3));">seq {{c.seq}} · {{c.kind}} · p {{c.p}}</span>
+<span style="font-family: var(--font-mono); font-size: 12.5px;">{{c.change}}</span>
+<span style="font-size: 12px; line-height: 1.5; color: rgb(var(--canvas-fg-2));">{{c.why}}</span>
+<div style="display: flex; gap: 8px;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="secondary" size="sm">{{c.keepLabel}}</x-import>
+</div>
+</article>
+</sc-for>
+</div>
+<div style="display: flex; gap: 8px; flex-wrap: wrap;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="ghost" size="sm">Keep both</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="danger" size="sm">Reject both</x-import>
+<span style="font-size: 12px; color: rgb(var(--canvas-fg-3)); align-self: center;">Keeping one rejects the other with the reason "conflict: kept seq N".</span>
+</div>
+</div>
+</section>
+
+</div>
+
+<div style="flex: 1 1 400px; max-width: 440px; min-width: 0;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.InspectorPanel" eyebrow="{{sel.eyebrow}}" title="{{sel.title}}" id="{{sel.opId}}">
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.InspectorPanel.Section" title="Decision">
+<div style="display: flex; flex-direction: column; gap: 10px;">
+<p style="margin: 0; font-size: 12.5px; line-height: 1.5; color: rgb(var(--canvas-fg-2));">Accept the plan's pick, or pick another answer below. Picking another is saved as an accept with edit, and gold records the alternative you chose.</p>
+<div style="display: flex; gap: 8px; flex-wrap: wrap;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="primary" size="sm">{{sel.acceptLabel}}</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="danger" size="sm">Reject</x-import>
+</div>
+</div>
+</x-import>
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.InspectorPanel.Section" title="Reflection answers">
+<div style="display: flex; flex-direction: column; gap: 14px;">
+<sc-for list="{{sel.questions}}" as="q" hint-placeholder-count="3">
+<fieldset style="margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 6px;">
+<legend style="font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(var(--canvas-fg-3)); margin-bottom: 4px;">{{q.label}}</legend>
+<sc-for list="{{q.options}}" as="o" hint-placeholder-count="3">
+<label style="display: grid; grid-template-columns: 18px 1fr 44px; gap: 8px; align-items: center; font-size: 12px; cursor: pointer;">
+<input type="radio" name="{{q.name}}" checked="{{o.chosen}}" onChange="{{o.choose}}">
+<span style="display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+<span style="font-family: var(--font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{o.value}} <span style="font-family: var(--font-sans); color: rgb(var(--canvas-fg-3));">{{o.tag}}</span></span>
+<span style="height: 4px; border-radius: 2px; background: rgb(var(--canvas-bg-2));"><span style="display: block; height: 4px; border-radius: 2px; width: {{o.width}}; background: {{o.barColor}};"></span></span>
+</span>
+<span style="font-family: var(--font-mono); text-align: right; color: rgb(var(--canvas-fg-2));">{{o.p}}</span>
+</label>
+</sc-for>
+</fieldset>
+</sc-for>
+</div>
+</x-import>
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.InspectorPanel.Section" title="Evidence pack" count="{{sel.evidenceCount}}">
+<ul style="margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 12px; line-height: 1.5; color: rgb(var(--canvas-fg-2));">
+<sc-for list="{{sel.evidence}}" as="e" hint-placeholder-count="4">
+<li>{{e}}</li>
+</sc-for>
+</ul>
+</x-import>
+
+</x-import>
+</div>
+
+</div>
+</div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { threshold: 0.6, selected: 14, picks: {} };
+  }
+  data() {
+    const M = (seq, change, p) => ({ seq, change, p });
+    const J = (seq, from, to, alt, altP, p) => ({ seq, from, to, alt, altP, p });
+    return {
+      mech: [
+        { kind: 'remove-duplicate', ops: [M(1, 'persona references stakeholder (duplicate of persona serves stakeholder)', 0.96), M(2, 'userworkflow composes workflowstep (duplicate of aggregates)', 0.88), M(3, 'feature depends-on feature (duplicate of requires)', 0.71), M(4, 'milestone aggregates milestone (duplicate of composes)', 0.52)] },
+        { kind: 'rename-predicate', ops: [M(5, 'softwarecapability supports goal → realizes goal', 0.93), M(6, 'feature uses softwarecapability → realizes softwarecapability', 0.81), M(7, 'persona uses feature → accesses feature', 0.64), M(8, 'milestone references requirement → satisfies requirement', 0.47), M(9, 'workflowstep triggers workflowstep → flows-to workflowstep', 0.42)] },
+        { kind: 'reverse', ops: [M(10, 'feature serves persona → persona uses feature', 0.88), M(11, 'businesscapability realizes softwarecapability → reversed', 0.69), M(12, 'milestone scheduled-for feature → reversed', 0.55)] }
+      ],
+      judge: [
+        { kind: 'retarget', ops: [J(13, 'persona serves businessrole', 'persona references businessrole', 'businessactor references persona', '0.27', 0.58), J(14, 'feature realizes businessservice', 'softwarecapability realizes businessservice', 'feature serves businessprocess', '0.31', 0.61), J(15, 'workflowstep uses softwarecapability', 'feature realizes softwarecapability', 'none', '0.22', 0.49)] },
+        { kind: 'compound', ops: [J(16, 'userworkflow aggregates businessprocess', 'userworkflow realizes businessprocess', 'businessprocess aggregates userworkflow', '0.24', 0.66), J(17, 'milestone depends-on softwarecapability', 'softwarecapability scheduled-for milestone', 'none', '0.19', 0.44)] }
+      ],
+      conflict: [
+        { seq: 19, kind: 'retarget', p: '0.72', change: 'feature realizes softwarecapability → softwarecapability realizes feature', why: 'Realization runs upward through product: features realize capabilities, not the other way round.', keepLabel: 'Keep seq 19' },
+        { seq: 21, kind: 'remove-duplicate', p: '0.66', change: 'remove feature realizes softwarecapability', why: 'Duplicate of feature implements softwarecapability, introduced by the capability split.', keepLabel: 'Keep seq 21' }
+      ]
+    };
+  }
+  renderVals() {
+    const t = this.state.threshold;
+    const d = this.data();
+    const pick = (seq) => () => this.setState({ selected: seq });
+    const rowClass = (seq) => 'table__row table__row--clickable' + (seq === this.state.selected ? ' table__row--selected' : '');
+    let selectedMech = 0;
+    const mech = d.mech.map((g) => {
+      const ps = g.ops.map((o) => o.p);
+      const ops = g.ops.map((o) => {
+        const checked = o.p >= t;
+        if (checked) selectedMech += 1;
+        return Object.assign({}, o, { p: o.p.toFixed(2), checked, checkLabel: 'Select operation ' + o.seq, rowClass: rowClass(o.seq), pick: pick(o.seq), pStyle: checked ? 'font-weight: 600;' : 'color: rgb(var(--canvas-fg-4));' });
+      });
+      const n = ops.filter((o) => o.checked).length;
+      return { kind: g.kind, count: g.ops.length + ' ops', range: Math.min.apply(null, ps).toFixed(2) + '–' + Math.max.apply(null, ps).toFixed(2), selectedLabel: n + ' of ' + g.ops.length + ' selected', ops };
+    });
+    const judge = d.judge.map((g) => {
+      const ps = g.ops.map((o) => o.p);
+      return { kind: g.kind, count: g.ops.length + ' ops', range: Math.min.apply(null, ps).toFixed(2) + '–' + Math.max.apply(null, ps).toFixed(2), ops: g.ops.map((o) => Object.assign({}, o, { p: o.p.toFixed(2), rowClass: rowClass(o.seq), pick: pick(o.seq) })) };
+    });
+    const total = 22;
+    const picks = this.state.picks;
+    const Q = (name, label, opts) => ({
+      name, label,
+      options: opts.map((o) => {
+        const chosen = (picks[name] || opts.find((x) => x.plan).value) === o.value;
+        return {
+          value: o.value,
+          p: o.p.toFixed(2),
+          tag: [o.current && 'current', o.plan && 'plan'].filter(Boolean).join(' · '),
+          width: Math.round(o.p * 100) + '%',
+          barColor: chosen ? '#d97706' : 'rgb(var(--canvas-fg-4))',
+          chosen,
+          choose: () => this.setState({ picks: Object.assign({}, picks, { [name]: o.value }) })
+        };
+      })
+    });
+    const questions = [
+      Q('source', 'Best source for "realizes businessservice"', [
+        { value: 'product.softwarecapability', p: 0.61, plan: true },
+        { value: 'product.feature', p: 0.24, current: true },
+        { value: 'business.businessprocess', p: 0.09 },
+        { value: 'none', p: 0.06 }
+      ]),
+      Q('target', 'Best target for "feature realizes"', [
+        { value: 'product.softwarecapability', p: 0.52 },
+        { value: 'business.businessservice', p: 0.33, current: true, plan: true },
+        { value: 'business.businessprocess', p: 0.11 },
+        { value: 'none', p: 0.04 }
+      ]),
+      Q('predicate', 'Best predicate for feature → businessservice', [
+        { value: 'serves', p: 0.38 },
+        { value: 'realizes', p: 0.31, current: true, plan: true },
+        { value: 'reverse:serves', p: 0.18 },
+        { value: 'none', p: 0.13 }
+      ])
+    ];
+    const edited = Object.keys(picks).length > 0;
+    return {
+      appTitle: { title: 'Context Studio', version: 'v0.2.0 · LOCAL' },
+      sidebar: {
+        activeItemId: 'proposals',
+        sections: [{ title: '', items: [
+          { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+          { id: 'proposals', label: 'Proposals', icon: 'gitBranch', count: 1 },
+          { id: 'schema', label: 'Schema', icon: 'schema' },
+          { id: 'data', label: 'Data', icon: 'data' },
+          { id: 'external-reference', label: 'External Reference', icon: 'link' },
+          { id: 'pipelines', label: 'Pipelines', icon: 'pipeline' },
+          { id: 'graph', label: 'Graph view', icon: 'graph' },
+          { id: 'settings', label: 'Configuration', icon: 'settings' }
+        ] }]
+      },
+      topbar: { breadcrumbs: [{ label: 'workspace' }, { label: 'Proposals' }, { label: 'Reflection: product layer' }], searchPlaceholder: 'Search' },
+      headline: total + ' of ' + total + ' need a decision',
+      decidedLine: '0 applied · 0 rejected',
+      percent: 0,
+      groupOptions: [{ value: 'kind', label: 'Change kind' }, { value: 'seq', label: 'Sequence' }],
+      filterOptions: [{ value: 'needs', label: 'Needs decision · 22' }, { value: 'decided', label: 'Decided · 0' }, { value: 'all', label: 'All · 22' }],
+      threshold: t,
+      thresholdLabel: t.toFixed(2),
+      setThreshold: (e) => this.setState({ threshold: parseFloat(e.target.value) }),
+      acceptMechLabel: 'Accept ' + selectedMech + ' at or above',
+      mech, judge, conflict: d.conflict,
+      sel: {
+        eyebrow: 'OPERATION · seq 14 · retarget',
+        title: 'feature realizes businessservice',
+        opId: 'op_410e',
+        acceptLabel: edited ? 'Accept with my picks' : 'Accept plan',
+        questions,
+        evidenceCount: 4,
+        evidence: [
+          'Definition of feature: a unit of user-visible functionality delivered by one or more software capabilities.',
+          'Product rule: realization runs upward through product; product reaches business through software capabilities.',
+          'Current relationships of feature: realizes softwarecapability (14), serves persona (6), realizes businessservice (3).',
+          'Sibling types: softwarecapability realizes businessfunction, userworkflow realizes businessprocess.'
+        ]
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

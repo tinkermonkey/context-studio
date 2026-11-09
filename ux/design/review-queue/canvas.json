@@ -1,0 +1,92 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-03T15:00:00Z"
+  },
+  "title": "Review queue design (#1359)",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "1 \u00b7 Proposals list",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Detail.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1440,
+      "h": 1180,
+      "title": "2 \u00b7 Proposal detail and decisions",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Edit.dc.html": {
+      "x": 0,
+      "y": 1300,
+      "w": 1440,
+      "h": 1060,
+      "title": "3 \u00b7 Accept with edit",
+      "expand": "fill",
+      "is_interactive": true
+    },
+    "Results.dc.html": {
+      "x": 1520,
+      "y": 1300,
+      "w": 1440,
+      "h": 1060,
+      "title": "4 \u00b7 Apply results and revert",
+      "expand": "fill"
+    },
+    "Elsewhere.dc.html": {
+      "x": 0,
+      "y": 2480,
+      "w": 1440,
+      "h": 900,
+      "title": "5 \u00b7 Where proposals appear elsewhere",
+      "expand": "fill"
+    },
+    "Tiered.dc.html": {
+      "x": 1520,
+      "y": 2480,
+      "w": 1440,
+      "h": 1500,
+      "title": "6 \u00b7 Tiered apply (#1411)",
+      "expand": "fill",
+      "is_interactive": true
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Detail.dc.html",
+    "Edit.dc.html",
+    "Results.dc.html",
+    "Elsewhere.dc.html",
+    "Tiered.dc.html"
+  ],
+  "notes": {
+    "title": {
+      "x": 0,
+      "y": -300,
+      "text": "Review queue and operation diff (#1359)",
+      "kind": "title1",
+      "maxW": 2960
+    }
+  },
+  "designSystems": [
+    {
+      "title": "Heimdall Design System",
+      "namespace": "heimdall",
+      "artifact": "https://claude.ai/artifact/CXEhqwb8YDNrHWi5cvTDaU",
+      "version": "1793712721-c744",
+      "copiedAt": "2026-11-03T15:00:00Z"
+    }
+  ]
+}

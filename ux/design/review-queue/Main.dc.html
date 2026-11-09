@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Proposals list</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/heimdall/tokens.css">
+<link rel="stylesheet" href="ds/heimdall/components/bundle.css">
+<script src="ds/heimdall/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:var(--font-sans)}
+a{color:rgb(var(--canvas-fg-1));text-decoration:none}
+a:hover{color:#b45309;text-decoration:underline}
+</style>
+</helmet>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.ShellLayout" app-title="{{appTitle}}" sidebar="{{sidebar}}" topbar="{{topbar}}" style="display: block;">
+<div style="display: flex; flex-direction: column; gap: 18px; max-width: 1280px;">
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.PageHeader" eyebrow="VERSIONING · change_proposal" title="Proposals" id-chip="/app/proposals" subtitle="Changes proposed by pipelines, chat, Claude Code over MCP and bundle imports. Nothing changes the ontology until it is applied here, except what a taxonomy's approval policy applies by itself."></x-import>
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;">
+<div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.SegmentedControl" value="{{status}}" on-change="{{setStatus}}" options="{{statusOptions}}" aria-label="Status"></x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.SegmentedControl" value="{{taxonomy}}" on-change="{{setTaxonomy}}" options="{{taxonomyOptions}}" aria-label="Taxonomy"></x-import>
+</div>
+<span style="font-family: var(--font-mono); font-size: 12px; color: rgb(var(--canvas-fg-3));">{{countLabel}}</span>
+</div>
+
+<table class="table">
+<thead class="table__head">
+<tr class="table__row">
+<th class="table__header">Proposal</th>
+<th class="table__header" style="width: 120px;">Taxonomy</th>
+<th class="table__header" style="width: 130px;">Source</th>
+<th class="table__header" style="width: 110px;">Status</th>
+<th class="table__header" style="width: 150px;">Pending</th>
+<th class="table__header" style="width: 120px;">Scope</th>
+<th class="table__header" style="width: 70px; text-align: right;">Age</th>
+</tr>
+</thead>
+<tbody class="table__body">
+<sc-for list="{{rows}}" as="row" hint-placeholder-count="6">
+<tr class="table__row table__row--clickable">
+<td class="table__cell">
+<div style="display: flex; flex-direction: column; gap: 3px;">
+<a href="Detail.dc.html" style="font-weight: 600; font-size: 13.5px;">{{row.title}}</a>
+<span style="font-family: var(--font-mono); font-size: 11.5px; color: rgb(var(--canvas-fg-3));">{{row.detail}}</span>
+</div>
+</td>
+<td class="table__cell"><x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" form="id-tag">{{row.taxonomy}}</x-import></td>
+<td class="table__cell"><x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="{{row.sourceTone}}">{{row.source}}</x-import></td>
+<td class="table__cell"><x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="{{row.statusTone}}">{{row.status}}</x-import></td>
+<td class="table__cell">
+<div style="display: flex; flex-direction: column; gap: 5px;">
+<span style="font-family: var(--font-mono); font-size: 12px;">{{row.pendingLabel}}</span>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.ProgressBar" percent="{{row.decidedPercent}}" color="emerald" height="{{barHeight}}"></x-import>
+</div>
+</td>
+<td class="table__cell"><x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="{{row.scopeTone}}">{{row.scope}}</x-import></td>
+<td class="table__cell" style="text-align: right; font-family: var(--font-mono); font-size: 12px; color: rgb(var(--canvas-fg-3));">{{row.age}}</td>
+</tr>
+</sc-for>
+<sc-if value="{{empty}}" hint-placeholder-val="{{false}}">
+<tr class="table__row"><td class="table__cell" colspan="7" style="text-align: center; padding: 36px; color: rgb(var(--canvas-fg-3));">No proposals match these filters.</td></tr>
+</sc-if>
+</tbody>
+</table>
+
+<p style="margin: 0; font-size: 12.5px; color: rgb(var(--canvas-fg-3));">Pending counts operations still waiting for a decision. Scope is the strictest scope in the proposal; breaking changes and deletes never apply by themselves.</p>
+
+</div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { status: 'open', taxonomy: 'all' };
+  }
+  renderVals() {
+    const all = [
+      { title: 'DR reflection plan: business layer (22 relationship changes)', detail: 'documentation_robotics proposal-export.ts · plan-clef.json', taxonomy: 'dr_spec', tax: 'dr_spec', source: 'pipeline', sourceTone: 'violet', status: 'open', statusTone: 'amber', st: 'open', pendingLabel: '22 of 22', decidedPercent: 0, scope: 'breaking', scopeTone: 'rose', age: '6d' },
+      { title: 'DR catalog additions for codebase-memory-mcp edges: application layer (9 new relationship types)', detail: 'documentation_robotics catalog-additions.ts · catalog-additions-cbm.json', taxonomy: 'dr_spec', tax: 'dr_spec', source: 'pipeline', sourceTone: 'violet', status: 'open', statusTone: 'amber', st: 'open', pendingLabel: '9 of 9', decidedPercent: 0, scope: 'additive', scopeTone: 'emerald', age: '5d' },
+      { title: 'DR catalog additions for codebase-memory-mcp edges: technology layer (2 new relationship types)', detail: 'documentation_robotics catalog-additions.ts · catalog-additions-cbm.json', taxonomy: 'dr_spec', tax: 'dr_spec', source: 'pipeline', sourceTone: 'violet', status: 'open', statusTone: 'amber', st: 'open', pendingLabel: '2 of 2', decidedPercent: 0, scope: 'additive', scopeTone: 'emerald', age: '5d' },
+      { title: 'Starter kits for the starter activities', detail: 'chat · conversation 3f1c', taxonomy: 'house', tax: 'house', source: 'chat', sourceTone: 'cyan', status: 'open', statusTone: 'amber', st: 'open', pendingLabel: '5 of 14 · 9 auto-applied', decidedPercent: 64, scope: 'additive', scopeTone: 'emerald', age: '2h' },
+      { title: 'Sharpen the applicationcomponent definition; add component consumes operation', detail: 'mcp · Claude Code', taxonomy: 'dr_spec', tax: 'dr_spec', source: 'mcp', sourceTone: 'cyan', status: 'done', statusTone: 'emerald', st: 'done', pendingLabel: '0 of 2', decidedPercent: 100, scope: 'additive', scopeTone: 'emerald', age: '1d' },
+      { title: 'Bundle import: house-bundle.json', detail: 'bundle · house-bundle.json', taxonomy: 'house', tax: 'house', source: 'bundle', sourceTone: 'neutral', status: 'reverted', statusTone: 'neutral', st: 'reverted', pendingLabel: '0 of 31', decidedPercent: 100, scope: 'breaking', scopeTone: 'rose', age: '3d' }
+    ];
+    const s = this.state.status, t = this.state.taxonomy;
+    const rows = all.filter((r) => (s === 'all' || r.st === s) && (t === 'all' || r.tax === t));
+    const open = all.filter((r) => r.st === 'open').length;
+    return {
+      appTitle: { title: 'Context Studio', version: 'v0.2.0 · LOCAL' },
+      sidebar: {
+        activeItemId: 'proposals',
+        defaultExpandedIds: [],
+        sections: [{ title: '', items: [
+          { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+          { id: 'proposals', label: 'Proposals', icon: 'gitBranch', count: open },
+          { id: 'schema', label: 'Schema', icon: 'schema', children: [
+            { id: 'schema-taxonomies', label: 'Taxonomies' },
+            { id: 'schema-schemes', label: 'Concept schemes' },
+            { id: 'schema-classes', label: 'Classes' },
+            { id: 'schema-properties', label: 'Properties' },
+            { id: 'schema-relationships', label: 'Relationships' }
+          ] },
+          { id: 'data', label: 'Data', icon: 'data' },
+          { id: 'external-reference', label: 'External Reference', icon: 'link' },
+          { id: 'pipelines', label: 'Pipelines', icon: 'pipeline' },
+          { id: 'graph', label: 'Graph view', icon: 'graph' },
+          { id: 'settings', label: 'Configuration', icon: 'settings' }
+        ] }]
+      },
+      topbar: { breadcrumbs: [{ label: 'workspace' }, { label: 'Proposals' }], searchPlaceholder: 'Search' },
+      status: s,
+      taxonomy: t,
+      statusOptions: [
+        { value: 'open', label: 'Open' },
+        { value: 'done', label: 'Done' },
+        { value: 'reverted', label: 'Reverted' },
+        { value: 'all', label: 'All' }
+      ],
+      taxonomyOptions: [
+        { value: 'all', label: 'All taxonomies' },
+        { value: 'dr_spec', label: 'dr_spec' },
+        { value: 'house', label: 'house' }
+      ],
+      setStatus: (v) => this.setState({ status: v }),
+      setTaxonomy: (v) => this.setState({ taxonomy: v }),
+      rows: rows,
+      empty: rows.length === 0,
+      countLabel: rows.length + ' of ' + all.length + ' proposals',
+      barHeight: 4,
+      false: false
+    };
+  }
+}
+</script>
+</body>
+</html>

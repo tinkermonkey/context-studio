@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Accept with edit</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/heimdall/tokens.css">
+<link rel="stylesheet" href="ds/heimdall/components/bundle.css">
+<script src="ds/heimdall/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:var(--font-sans)}
+a{color:#b45309;text-decoration:none}
+a:hover{color:#92400e;text-decoration:underline}
+</style>
+</helmet>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.ShellLayout" app-title="{{appTitle}}" sidebar="{{sidebar}}" topbar="{{topbar}}" style="display: block;">
+<div style="display: flex; flex-direction: column; gap: 16px;">
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.PageHeader" eyebrow="PROPOSAL · dr_spec · accept with edit" title="Correct a triple before accepting it" subtitle="The reviewer changes the predicate, source or destination of an update, or gives a replacement triple for a delete. The edited triple is checked as it is typed and is what applies; the decisions export sends it back to DR as fields."></x-import>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start;">
+
+<div style="flex: 1 1 560px; min-width: 0;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Panel" title="Edit an update · seq 16" subtitle="Plan kind compound, p 0.73">
+<div style="display: flex; flex-direction: column; gap: 14px;">
+
+<div style="display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 8px 12px; font-family: var(--font-mono); font-size: 12.5px; align-items: baseline;">
+<span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(var(--canvas-fg-3));">Current</span>
+<span style="color: rgb(var(--canvas-fg-3));">business.contract triggers business.businessprocess</span>
+<span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(var(--canvas-fg-3));">Proposed</span>
+<span style="text-decoration: line-through; color: rgb(var(--canvas-fg-2));">business.businessprocess accesses business.businessevent</span>
+<span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #b45309;">Your edit</span>
+<span><span style="{{u.srcStyle}}">{{u.src}}</span> <span style="{{u.predStyle}}">{{u.pred}}</span> <span style="{{u.dstStyle}}">{{u.dst}}</span></span>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Field" label="Source" html-for="u-src" error="{{u.srcError}}" hint="A dr_spec class">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.TextInput" id="u-src" mono="{{yes}}" value="{{u.src}}" on-change="{{u.setSrc}}" error="{{u.srcBad}}"></x-import>
+</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Field" label="Predicate" html-for="u-pred" error="{{u.predError}}" hint="From the 69-predicate catalog">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.TextInput" id="u-pred" mono="{{yes}}" value="{{u.pred}}" on-change="{{u.setPred}}" error="{{u.predBad}}"></x-import>
+</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Field" label="Destination" html-for="u-dst" error="{{u.dstError}}" hint="A dr_spec class">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.TextInput" id="u-dst" mono="{{yes}}" value="{{u.dst}}" on-change="{{u.setDst}}" error="{{u.dstBad}}"></x-import>
+</x-import>
+</div>
+
+<sc-if value="{{u.exists}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.FormCallout" variant="error" icon="alert">{{u.existsMessage}}</x-import>
+</sc-if>
+<sc-if value="{{u.ok}}" hint-placeholder-val="{{false}}">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.FormCallout" variant="info" icon="info">{{u.okMessage}}</x-import>
+</sc-if>
+
+<div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="primary" size="sm" disabled="{{u.blocked}}">Apply edited</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="ghost" size="sm" on-click="{{u.reset}}">Back to proposed</x-import>
+<span style="flex-grow: 1;"></span>
+<span style="font-size: 12px; color: rgb(var(--canvas-fg-3));">Try <span style="font-family: var(--font-mono);">business.businessevent triggers business.businessfunction</span>, a typo, or an unknown predicate.</span>
+</div>
+
+<div>
+<div style="font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(var(--canvas-fg-3)); margin-bottom: 6px;">Decision sent back to DR</div>
+<pre style="margin: 0; padding: 10px 12px; border: 1px solid rgb(var(--canvas-border)); border-radius: 6px; background: rgb(var(--canvas-bg-2)); font-family: var(--font-mono); font-size: 11.5px; line-height: 1.55; white-space: pre-wrap; color: rgb(var(--canvas-fg-1));">{{u.export}}</pre>
+</div>
+
+</div>
+</x-import>
+</div>
+
+<div style="flex: 1 1 520px; min-width: 0;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Panel" title="Replace a delete · seq 4" subtitle="Plan kind reverse, p 0.68">
+<div style="display: flex; flex-direction: column; gap: 14px;">
+
+<div style="display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 8px 12px; font-family: var(--font-mono); font-size: 12.5px; align-items: baseline;">
+<span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(var(--canvas-fg-3));">Current</span>
+<span>business.businessrole assigned-to business.businessinterface</span>
+<span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(var(--canvas-fg-3));">Proposed</span>
+<span style="color: #9f1239;">remove it: business.businessinterface serves business.businessrole covers it</span>
+</div>
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.SegmentedControl" value="{{d.mode}}" on-change="{{d.setMode}}" options="{{d.modes}}" aria-label="Delete or replace"></x-import>
+
+<sc-if value="{{d.replacing}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Field" label="Source" html-for="d-src" error="{{d.srcError}}">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.TextInput" id="d-src" mono="{{yes}}" value="{{d.src}}" on-change="{{d.setSrc}}" error="{{d.srcBad}}"></x-import>
+</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Field" label="Predicate" html-for="d-pred" error="{{d.predError}}">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.TextInput" id="d-pred" mono="{{yes}}" value="{{d.pred}}" on-change="{{d.setPred}}" error="{{d.predBad}}"></x-import>
+</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Field" label="Destination" html-for="d-dst" error="{{d.dstError}}">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.TextInput" id="d-dst" mono="{{yes}}" value="{{d.dst}}" on-change="{{d.setDst}}" error="{{d.dstBad}}"></x-import>
+</x-import>
+</div>
+<sc-if value="{{d.exists}}" hint-placeholder-val="{{false}}">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.FormCallout" variant="error" icon="alert">{{d.existsMessage}}</x-import>
+</sc-if>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.FormCallout" variant="info" icon="info">A replaced delete applies as an update: the relationship type keeps its history and changes to the new triple, instead of being removed.</x-import>
+</div>
+</sc-if>
+
+<div style="display: flex; gap: 8px; flex-wrap: wrap;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="{{d.applyVariant}}" size="sm" disabled="{{d.blocked}}">{{d.applyLabel}}</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="ghost" size="sm">Cancel</x-import>
+</div>
+
+<div>
+<div style="font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(var(--canvas-fg-3)); margin-bottom: 6px;">Decision sent back to DR</div>
+<pre style="margin: 0; padding: 10px 12px; border: 1px solid rgb(var(--canvas-border)); border-radius: 6px; background: rgb(var(--canvas-bg-2)); font-family: var(--font-mono); font-size: 11.5px; line-height: 1.55; white-space: pre-wrap; color: rgb(var(--canvas-fg-1));">{{d.export}}</pre>
+</div>
+
+</div>
+</x-import>
+</div>
+
+</div>
+
+<p style="margin: 0; font-size: 12.5px; color: rgb(var(--canvas-fg-3));">In the one manual DR walk, the reviewer corrected 14 of 18 proposed triples. In the app this panel opens in the inspector from Edit, then accept, or Replace instead, on the proposal page.</p>
+
+</div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1060}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      u: { src: 'business.businessevent', pred: 'triggers', dst: 'business.businessprocess' },
+      d: { mode: 'replace', src: 'business.businessinterface', pred: 'assigned-to', dst: 'business.businessrole' }
+    };
+  }
+  check(t, proposedId) {
+    const classes = ['business.businessactor', 'business.businessrole', 'business.businesscollaboration', 'business.businessinterface', 'business.businessprocess', 'business.businessfunction', 'business.businessinteraction', 'business.businessevent', 'business.businessservice', 'business.businessobject', 'business.contract', 'business.product', 'motivation.goal', 'motivation.outcome', 'motivation.requirement'];
+    const predicates = ['accesses', 'aggregates', 'assigned-to', 'composes', 'consumes', 'depends-on', 'flows-to', 'influences', 'performs', 'realizes', 'serves', 'specializes', 'triggers', 'uses'];
+    const existing = {
+      'business.businessevent.triggers.business.businessprocess': 'businessevent_triggers_businessprocess',
+      'business.businessinterface.serves.business.businessrole': 'businessinterface_serves_businessrole',
+      'business.businessprocess.realizes.business.businessservice': 'businessprocess_realizes_businessservice',
+      'business.businessrole.accesses.business.contract': 'businessrole_accesses_contract'
+    };
+    const srcBad = classes.indexOf(t.src) < 0;
+    const dstBad = classes.indexOf(t.dst) < 0;
+    const predBad = predicates.indexOf(t.pred) < 0;
+    const id = t.src + '.' + t.pred + '.' + t.dst;
+    const exists = !srcBad && !dstBad && !predBad && existing[id] !== undefined && id !== proposedId;
+    return {
+      srcBad, dstBad, predBad, exists, id,
+      srcError: srcBad ? 'No class ' + (t.src || '(empty)') + ' in dr_spec' : undefined,
+      dstError: dstBad ? 'No class ' + (t.dst || '(empty)') + ' in dr_spec' : undefined,
+      predError: predBad ? (t.pred || '(empty)') + ' is not in the predicate catalog' : undefined,
+      existsMessage: exists ? id + ' already exists as ' + existing[id] + '. Accepting this would duplicate it; reject the operation, or delete the target instead.' : '',
+      blocked: srcBad || dstBad || predBad || exists
+    };
+  }
+  renderVals() {
+    const hi = 'color: #b45309; font-weight: 600;';
+    const proposed = { src: 'business.businessprocess', pred: 'accesses', dst: 'business.businessevent' };
+    const uv = this.state.u;
+    const uc = this.check(uv, '');
+    const setU = (k) => (e) => this.setState({ u: Object.assign({}, this.state.u, { [k]: e.target.value.trim() }) });
+    const dv = this.state.d;
+    const replacing = dv.mode === 'replace';
+    const dc = this.check(dv, '');
+    const setD = (k) => (e) => this.setState({ d: Object.assign({}, this.state.d, { [k]: e.target.value.trim() }) });
+    const fieldsJson = (t) => '{"seq": %S, "op_id": "%O", "status": "applied",\n "fields": {"predicate": "' + t.pred + '",\n  "source_spec_node_id": "' + t.src + '",\n  "destination_spec_node_id": "' + t.dst + '"},\n "reason": null}';
+    return {
+      yes: true,
+      appTitle: { title: 'Context Studio', version: 'v0.2.0 · LOCAL' },
+      sidebar: {
+        activeItemId: 'proposals',
+        sections: [{ title: '', items: [
+          { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+          { id: 'proposals', label: 'Proposals', icon: 'gitBranch', count: 4 },
+          { id: 'schema', label: 'Schema', icon: 'schema' },
+          { id: 'data', label: 'Data', icon: 'data' },
+          { id: 'pipelines', label: 'Pipelines', icon: 'pipeline' },
+          { id: 'graph', label: 'Graph view', icon: 'graph' },
+          { id: 'settings', label: 'Configuration', icon: 'settings' }
+        ] }]
+      },
+      topbar: { breadcrumbs: [{ label: 'workspace' }, { label: 'Proposals' }, { label: 'DR reflection plan: business layer' }, { label: 'seq 16' }], searchPlaceholder: 'Search' },
+      u: Object.assign({}, uv, uc, {
+        srcStyle: uv.src !== proposed.src ? hi : '',
+        predStyle: uv.pred !== proposed.pred ? hi : '',
+        dstStyle: uv.dst !== proposed.dst ? hi : '',
+        ok: !uc.blocked,
+        okMessage: 'Valid. Applies as identifier ' + uv.src.split('.').pop() + '_' + uv.pred.replace(/-/g, '_') + '_' + uv.dst.split('.').pop() + ', DR reference ' + uc.id + '. Scope: breaking.',
+        setSrc: setU('src'), setPred: setU('pred'), setDst: setU('dst'),
+        reset: () => this.setState({ u: proposed }),
+        export: uc.blocked ? 'Nothing yet: fix the edit to apply it.' : fieldsJson(uv).replace('%S', '16').replace('%O', 'op_4110')
+      }),
+      d: Object.assign({}, dv, replacing ? dc : { srcBad: false, dstBad: false, predBad: false, exists: false, blocked: false }, {
+        replacing: replacing,
+        modes: [{ value: 'delete', label: 'Delete as proposed' }, { value: 'replace', label: 'Replace with another triple' }],
+        setMode: (v) => this.setState({ d: Object.assign({}, this.state.d, { mode: v }) }),
+        setSrc: setD('src'), setPred: setD('pred'), setDst: setD('dst'),
+        applyLabel: replacing ? 'Apply replacement' : 'Accept delete',
+        applyVariant: replacing ? 'primary' : 'danger',
+        export: !replacing ? '{"seq": 4, "op_id": "op_4104", "status": "applied", "reason": null}' : (dc.blocked ? 'Nothing yet: fix the replacement to apply it.' : fieldsJson(dv).replace('%S', '4').replace('%O', 'op_4104'))
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>
