@@ -8,6 +8,7 @@ import {
 } from "@/api/hooks/pipeline/usePipelineRuns";
 import { useToasts } from "@/components/ui/Toast";
 import { provenanceText } from "./provenanceText";
+import { DEFINITION_REFINEMENT_CONFIG_REF } from "./defaultConfigs";
 import { hasRunStatus } from "@/api/hooks/pipeline/runStatus";
 import "./Suggesters.css";
 
@@ -60,7 +61,7 @@ export function SuggestField({
         type: "schema_node_definition_refinement",
         request: {
           implementation_id: "default",
-          configuration_ref: "default",
+          configuration_ref: DEFINITION_REFINEMENT_CONFIG_REF,
           node_id: entityId,
           current_definition: value,
         },

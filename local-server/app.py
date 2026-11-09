@@ -69,6 +69,9 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.pipeline_config_repo import (
     PipelineConfigurationRepository as PipelineConfigRepo,
 )
+from adapters.persistence.sqlite.pipeline_config_repo import (
+    load_user_configurations,
+)
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
@@ -486,24 +489,9 @@ async def lifespan(app: FastAPI):
 
         # Load user-created pipeline configurations from DB into the in-memory registry
         try:
-            from domain.pipelines.entities import PipelineType as _PipelineType
-
-            user_configs = pipeline_config_repo.list_all()
-            for user_cfg in user_configs:
-                try:
-                    ptype = _PipelineType(user_cfg.pipeline_type)
-                    config_registry.register(
-                        ptype,
-                        user_cfg.implementation_id,
-                        user_cfg.config_ref,
-                        registry_config(user_cfg),
-                    )
-                except Exception as load_exc:
-                    logger.warning(
-                        f"Failed to load user config {user_cfg.id} into registry: {load_exc}"
-                    )
-            if user_configs:
-                logger.info(f"Loaded {len(user_configs)} user pipeline configurations from DB")
+            loaded = load_user_configurations(pipeline_config_repo, config_registry)
+            if loaded:
+                logger.info(f"Loaded {loaded} user pipeline configurations from DB")
         except Exception as cfg_exc:
             logger.warning(f"Failed to load user pipeline configurations: {cfg_exc}")
 

@@ -2244,6 +2244,15 @@ selectors:
   - selector: relationship-suggester-retry-btn
     component: src/components/ontology/suggesters/RelationshipSuggester.tsx
     description: Button to re-trigger the relationship suggestion pipeline after a completed or empty run
+  - selector: relationship-suggestion-*
+    component: src/components/ontology/suggesters/RelationshipSuggester.tsx
+    description: One relationship suggestion card (pattern matches relationship-suggestion-{index})
+  - selector: relationship-accept-*
+    component: src/components/ontology/suggesters/RelationshipSuggester.tsx
+    description: Accept button on a relationship suggestion card (pattern matches relationship-accept-{index})
+  - selector: relationship-dismiss-*
+    component: src/components/ontology/suggesters/RelationshipSuggester.tsx
+    description: Dismiss button on a relationship suggestion card (pattern matches relationship-dismiss-{index})
   - selector: suggest-field-loading
     component: src/components/ontology/suggesters/SuggestField.tsx
     description: Shimmer skeleton shown while the definition refinement pipeline run is PENDING or RUNNING
@@ -2958,6 +2967,12 @@ selectors:
   - selector: proposal-operation-filter
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Wrapper of the SegmentedControl above the operations table: Needs decision · X, Decided · D, All · N"
+  - selector: proposal-op-filter
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Op filter (Any op, create · N, update · N, move · N, delete · N) narrowing the primary filter; shown when the proposal has more than one op"
+  - selector: proposal-scope-filter
+    component: src/components/proposals/ProposalDetailPage.tsx
+    description: "Scope filter (Any scope, breaking · N, additive · N, editorial · N) narrowing the primary filter; shown when the proposal has more than one scope"
   - selector: proposal-op-mix
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Op mix and scope mix, e.g. \"7 update · 15 delete · all breaking\""
@@ -2997,6 +3012,9 @@ selectors:
   - selector: operation-change-row-*
     component: src/components/proposals/OperationInspector.tsx
     description: "One Change table row, by field name (e.g. canonical_predicate)"
+  - selector: operation-text-diff-*
+    component: src/components/proposals/OperationInspector.tsx
+    description: "A long text change (e.g. description) as Heimdall's SideBySideDiff, by field name: changed sentences removed then added, unchanged ones as context"
   - selector: operation-rationale
     component: src/components/proposals/OperationInspector.tsx
     description: "The operation's rationale text"
@@ -3133,7 +3151,10 @@ selectors:
     description: "One sorting question's radio group, by question (source_for, target_for, predicate_for)"
   - selector: reflection-option-*
     component: src/components/proposals/ReflectionAnswers.tsx
-    description: "One option of a sorting question with its probability bar and current/plan marks, by question and option"
+    description: "One option of a sorting question with its probability bar and current/plan marks, by question and option; data-defined=\"true\" when it has a definition"
+  - selector: reflection-definition
+    component: src/components/proposals/ReflectionAnswers.tsx
+    description: "Overlay (role=tooltip) beside the inspector with a reflection answer's definition, shown on hover or focus of the option"
   - selector: reflection-evidence-pack
     component: src/components/proposals/ReflectionAnswers.tsx
     description: "Inspector: the evidence pack blocks the decision model read"

@@ -2,7 +2,7 @@
 Default configuration for Schema Node Grounding pipeline.
 
 Uses OpenRouter with google/gemini-3-flash-preview for semantic scoring,
-queries DBpedia and ConceptNet, and applies weighted scoring strategy.
+queries DBpedia, Wikidata and ConceptNet, and applies weighted scoring strategy.
 """
 
 
@@ -11,7 +11,7 @@ def get_default_config() -> dict:
     Return the default schema node grounding configuration.
 
     Uses OpenRouter + Gemini 3 Flash for semantic similarity scoring,
-    queries both DBpedia and ConceptNet in parallel, and combines scores
+    queries DBpedia, Wikidata and ConceptNet in parallel, and combines scores
     using weighted average (0.3 source + 0.3 label_match + 0.4 semantic_sim).
 
     Returns:
@@ -23,7 +23,7 @@ def get_default_config() -> dict:
         "model": "google/gemini-3-flash-preview",
         "temperature": 0.0,
         "max_tokens": 500,
-        "sources": ["DBpedia", "ConceptNet"],
+        "sources": ["DBpedia", "Wikidata", "ConceptNet"],
         "scoring_strategy": "weighted_average",
         "weights": {
             "source_score": 0.3,

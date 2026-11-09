@@ -92,6 +92,56 @@ export function pRangeLabel(operations: ProposedOperation[]): string {
   return low === high ? `p ${low}` : `p ${low}–${high}`;
 }
 
+// ==================== Sections ====================
+
+/** What the change-kind view shows, section by section, in display order. */
+export interface TieredSections {
+  mechanical: KindGroup[];
+  judgment: KindGroup[];
+  /**
+   * Conflict cards with a shown member, each with all its members (its actions
+   * weigh them all); the view lists only the members the filter shows.
+   */
+  clusters: ConflictCluster[];
+  other: ProposedOperation[];
+}
+
+/**
+ * The change-kind sections for the shown `operations`. Conflicts are worked
+ * out over `allOperations`, so a card keeps every member while any is shown.
+ */
+export function tieredSections(
+  operations: ProposedOperation[],
+  allOperations: ProposedOperation[],
+): TieredSections {
+  const shown = new Set(operations.map((o) => o.id));
+  const allClusters = conflictClusters(allOperations);
+  const clustered = new Set(allClusters.flatMap((c) => c.operations.map((o) => o.id)));
+  const rest = operations.filter((o) => !clustered.has(o.id));
+  const known = new Set<string>([...MECHANICAL_KINDS, ...JUDGMENT_KINDS]);
+  return {
+    mechanical: kindGroups(rest, MECHANICAL_KINDS),
+    judgment: kindGroups(rest, JUDGMENT_KINDS),
+    clusters: allClusters.filter((c) => c.operations.some((o) => shown.has(o.id))),
+    other: rest.filter((o) => !known.has(kindOf(o) ?? "")),
+  };
+}
+
+/** The operation ids the change-kind view shows, top to bottom. */
+export function tieredOrder(
+  operations: ProposedOperation[],
+  allOperations: ProposedOperation[],
+): string[] {
+  const { mechanical, judgment, clusters, other } = tieredSections(operations, allOperations);
+  const shown = new Set(operations.map((o) => o.id));
+  return [
+    ...mechanical.flatMap((g) => g.operations),
+    ...judgment.flatMap((g) => g.operations),
+    ...clusters.flatMap((c) => c.operations.filter((o) => shown.has(o.id))),
+    ...other,
+  ].map((o) => o.id);
+}
+
 // ==================== Conflicts ====================
 
 export interface ConflictCluster {
@@ -187,6 +237,39 @@ export const QUESTION_LABELS: Record<string, string> = {
 
 const NONE = "none";
 const REVERSE = "reverse:";
+
+/** What an answer means: the class or predicate it names and its definition. */
+export interface OptionDefinition {
+  /** The class or predicate the definition is of. */
+  term: string;
+  text: string;
+  /** A "reverse:" predicate: the definition reads with the ends swapped. */
+  reversed?: boolean;
+}
+
+export interface DefinitionSources {
+  /** A class's definition (its description), by class id. */
+  classDefinition: (classId: string) => string | undefined;
+  /** A predicate's definition: its curated catalog entry, else a type's description. */
+  predicateDefinition: (predicate: string) => string | undefined;
+}
+
+/** An answer's definition; undefined for "none" or when nothing defines it. */
+export function optionDefinition(
+  question: string,
+  option: ReflectionOption,
+  sources: DefinitionSources,
+): OptionDefinition | undefined {
+  if (option.option === NONE) return undefined;
+  if (question === "predicate_for") {
+    const reversed = option.option.startsWith(REVERSE);
+    const term = reversed ? option.option.slice(REVERSE.length) : option.option;
+    const text = sources.predicateDefinition(term);
+    return text ? { term, text, reversed } : undefined;
+  }
+  const text = option.class_id ? sources.classDefinition(option.class_id) : undefined;
+  return text ? { term: option.option, text } : undefined;
+}
 
 /** Question -> the option the reviewer picked, where it differs from what was shown. */
 export type Picks = Record<string, string>;

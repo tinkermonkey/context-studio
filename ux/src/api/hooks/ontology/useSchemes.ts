@@ -1,8 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueries, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
 import { ontologyService, type ListPageParams } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 import { listQueryOptions, type ListQueryOptions } from "./listQueryOptions";
+import { loadedData, uniqueIds } from "./idChunks";
 
 type ConceptSchemeCreateRequest = components["schemas"]["ConceptSchemeCreateRequest"];
 type ConceptSchemeUpdateRequest = components["schemas"]["ConceptSchemeUpdateRequest"];
@@ -28,6 +29,18 @@ export function useScheme(id: string) {
     queryKey: QUERY_KEYS.scheme(id),
     queryFn: () => ontologyService.getScheme(id),
     enabled: !!id,
+  });
+}
+
+/** Fetch the concept schemes with these ids, one request each (they share useScheme's cache). */
+export function useSchemesByIds(ids: Array<string | null | undefined>) {
+  return useQueries({
+    queries: uniqueIds(ids).map((id) => ({
+      queryKey: QUERY_KEYS.scheme(id),
+      queryFn: () => ontologyService.getScheme(id),
+      retry: false,
+    })),
+    combine: loadedData,
   });
 }
 

@@ -18,6 +18,7 @@ import {
   formatAgo,
   formatValue,
   isAwaiting,
+  namedEntityIds,
   operationTouchesClass,
   opMixLabel,
   pendingLabel,
@@ -317,5 +318,55 @@ describe("asApplied", () => {
       op: "update",
       fields: { canonical_predicate: "serves" },
     });
+  });
+});
+
+describe("namedEntityIds", () => {
+  const op = (fields: Partial<Parameters<typeof createProposedOperation>[0]>) =>
+    createProposedOperation({ status: "pending", ...fields });
+
+  it("looks up update targets, whose base names only the fields they touch", () => {
+    const ids = namedEntityIds([
+      op({ op: "update", kind: "attribute", target_id: "attr-1", base: { description: "x" } }),
+      op({ op: "update", kind: "individual", target_id: "ind-1", base: { description: "x" } }),
+      op({ op: "update", kind: "taxonomy", target_id: "tax-1", base: { description: "x" } }),
+    ]);
+    expect(ids.attributes).toEqual(["attr-1"]);
+    expect(ids.individuals).toEqual(["ind-1"]);
+    expect(ids.taxonomies).toEqual(["tax-1"]);
+  });
+
+  it("leaves out deletes, whose base is the whole entity, and creates", () => {
+    const ids = namedEntityIds([
+      op({
+        op: "delete",
+        kind: "attribute",
+        target_id: "attr-gone",
+        base: { title: "Status", class_id: "class-1" },
+      }),
+      op({ op: "create", kind: "attribute", target_id: null, fields: { class_id: "class-2" } }),
+    ]);
+    expect(ids.attributes).toEqual([]);
+    expect(ids.classes).toEqual(["class-1", "class-2"]);
+  });
+
+  it("names a relationship's ends and type, resolving applied $refs and leaving out the rest", () => {
+    const refs = new Map([
+      ["$made", { title: "Made", resultId: "ind-made" }],
+      ["$pending", { title: "Pending" }],
+    ]);
+    const ids = namedEntityIds(
+      [
+        op({
+          op: "create",
+          kind: "relationship",
+          target_id: null,
+          fields: { property_definition_id: "prop-1", source_id: "$made", target_id: "$pending" },
+        }),
+      ],
+      () => refs,
+    );
+    expect(ids.individuals).toEqual(["ind-made"]);
+    expect(ids.properties).toEqual(["prop-1"]);
   });
 });

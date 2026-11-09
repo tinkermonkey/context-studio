@@ -948,7 +948,10 @@ async def run_pipeline(
     The request body structure depends on the pipeline type. Supported types:
     - individual_extraction: requires text and ontology_id
     - schema_extraction: requires documents, optional scope
-    - schema_node_grounding: requires nodes and sources
+    - schema_node_grounding: requires node_id (a class, or a property definition
+      with node_type PropertyDefinition) or node_label; optional sources (default:
+      the configuration's sources). An unknown node_id is a 400; with async it
+      fails the run instead
     - schema_node_definition_refinement: requires node_id and
       current_definition, optional groundings and extraction_usages
     - schema_node_connection_refinement: requires scope_id and

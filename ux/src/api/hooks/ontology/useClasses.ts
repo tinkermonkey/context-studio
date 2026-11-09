@@ -3,7 +3,7 @@ import { QUERY_KEYS, SMALL_SET_LIMIT } from "@/api/config";
 import { ontologyService, type ClassListParams } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 import { listQueryOptions, type ListQueryOptions } from "./listQueryOptions";
-import { listByIdChunks, uniqueIds } from "./idChunks";
+import { listByIdChunks, loadedData, uniqueIds } from "./idChunks";
 
 type ClassCreateRequest = components["schemas"]["ClassCreateRequest"];
 type ClassUpdateRequest = components["schemas"]["ClassUpdateRequest"];
@@ -101,6 +101,22 @@ export function useClassAttributeDefinitions(classId: string) {
     queryKey: [...QUERY_KEYS.class(classId), "attribute-definitions"],
     queryFn: () => ontologyService.listClassAttributeDefinitions(classId, { limit: 500 }),
     enabled: !!classId,
+  });
+}
+
+/**
+ * Fetch the attribute definitions with these ids, one request each (the API
+ * has no ids filter for them). Skips the requests when there are no ids.
+ */
+export function useAttributeDefinitionsByIds(ids: Array<string | null | undefined>) {
+  return useQueries({
+    queries: uniqueIds(ids).map((id) => ({
+      queryKey: QUERY_KEYS.attributeDefinition(id),
+      queryFn: () => ontologyService.getAttributeDefinition(id),
+      staleTime: 5 * 60 * 1000,
+      retry: false,
+    })),
+    combine: loadedData,
   });
 }
 

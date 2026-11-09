@@ -144,8 +144,106 @@ class TestSchemaGroundingOrchestrator:
             input_data={"node_type": "Class"},
         )
 
-        with pytest.raises(PipelineInputError, match="node_label is required"):
+        with pytest.raises(PipelineInputError, match="node_id or node_label is required"):
             await orchestrator.execute(state)
+
+    @pytest.mark.asyncio
+    async def test_execute_resolves_class_label_from_node_id(
+        self, mock_adapter, mock_scorer, mock_llm_provider
+    ):
+        """A node_id grounds the title of the class it names."""
+        ontology_repo = MagicMock()
+        ontology_repo.get_class.return_value = MagicMock(title="Bicycle")
+        orchestrator = SchemaGroundingOrchestrator(
+            llm_provider=mock_llm_provider,
+            grounding_adapter=mock_adapter,
+            scorer=mock_scorer,
+            ontology_repo=ontology_repo,
+        )
+
+        state = SchemaGroundingState(
+            run_id="run-123",
+            pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
+            input_data={"node_id": "cls-1"},
+        )
+        result = await orchestrator.execute(state)
+
+        ontology_repo.get_class.assert_called_once_with("cls-1")
+        assert result.node_label == "Bicycle"
+        assert result.result["node_label"] == "Bicycle"
+        mock_adapter.query_sources.assert_awaited_once()
+        assert mock_adapter.query_sources.await_args.kwargs["label"] == "Bicycle"
+
+    @pytest.mark.asyncio
+    async def test_execute_resolves_property_label_from_node_id(
+        self, mock_adapter, mock_scorer, mock_llm_provider
+    ):
+        """With node_type PropertyDefinition, a node_id names a property definition."""
+        ontology_repo = MagicMock()
+        ontology_repo.get_property_definition.return_value = MagicMock(title="owns")
+        orchestrator = SchemaGroundingOrchestrator(
+            llm_provider=mock_llm_provider,
+            grounding_adapter=mock_adapter,
+            scorer=mock_scorer,
+            ontology_repo=ontology_repo,
+        )
+
+        state = SchemaGroundingState(
+            run_id="run-123",
+            pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
+            input_data={"node_id": "prop-1", "node_type": "PropertyDefinition"},
+        )
+        result = await orchestrator.execute(state)
+
+        ontology_repo.get_class.assert_not_called()
+        assert result.node_label == "owns"
+        assert result.node_type.value == "PropertyDefinition"
+
+    @pytest.mark.asyncio
+    async def test_execute_unknown_node_id(self, mock_adapter, mock_scorer, mock_llm_provider):
+        """A node_id that names no class raises PipelineInputError."""
+        ontology_repo = MagicMock()
+        ontology_repo.get_class.return_value = None
+        orchestrator = SchemaGroundingOrchestrator(
+            llm_provider=mock_llm_provider,
+            grounding_adapter=mock_adapter,
+            scorer=mock_scorer,
+            ontology_repo=ontology_repo,
+        )
+
+        state = SchemaGroundingState(
+            run_id="run-123",
+            pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
+            input_data={"node_id": "missing"},
+        )
+
+        with pytest.raises(PipelineInputError, match="No Class with id 'missing'"):
+            await orchestrator.execute(state)
+        mock_adapter.query_sources.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_execute_defaults_sources_to_configuration(
+        self, mock_adapter, mock_scorer, mock_llm_provider
+    ):
+        """Without sources in the input, the configuration's sources are queried."""
+        orchestrator = SchemaGroundingOrchestrator(
+            llm_provider=mock_llm_provider,
+            grounding_adapter=mock_adapter,
+            scorer=mock_scorer,
+            config={"sources": ["Wikidata", "schema.org"]},
+        )
+
+        state = SchemaGroundingState(
+            run_id="run-123",
+            pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
+            input_data={"node_label": "Bicycle"},
+        )
+        await orchestrator.execute(state)
+
+        assert mock_adapter.query_sources.await_args.kwargs["sources"] == [
+            "Wikidata",
+            "schema.org",
+        ]
 
     @pytest.mark.asyncio
     async def test_execute_invalid_node_type(self, mock_adapter, mock_scorer, mock_llm_provider):

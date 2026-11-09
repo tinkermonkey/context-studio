@@ -8,6 +8,7 @@ import {
 } from "@/api/hooks/pipeline/usePipelineRuns";
 import { useToasts } from "@/components/ui/Toast";
 import { provenanceText } from "./provenanceText";
+import { GROUNDING_CONFIG_REF } from "./defaultConfigs";
 import type { components } from "@/api/types";
 import { hasRunStatus } from "@/api/hooks/pipeline/runStatus";
 import "./Suggesters.css";
@@ -59,7 +60,7 @@ export function GroundingSection({
         type: "schema_node_grounding",
         request: {
           implementation_id: "default",
-          configuration_ref: "default",
+          configuration_ref: GROUNDING_CONFIG_REF,
           node_id: classId,
         },
       });

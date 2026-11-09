@@ -8,3 +8,5 @@
 @import "./design-system/graph.css" layer(graph);
 
 @import "tailwindcss";
+/* Heimdall components use Tailwind's sr-only (SideBySideDiff's gutter labels); nothing in src does, so generate it. */
+@source inline("sr-only");

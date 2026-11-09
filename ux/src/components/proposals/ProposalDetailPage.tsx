@@ -32,9 +32,13 @@ import {
   atOrAboveThreshold,
   decisionHeadline,
   decisionProgress,
+  ANY_FACETS,
   defaultOperationFilter,
+  facetCounts,
+  drPredicateDescriptions,
   linksToDecided,
-  filterOperations,
+  operationsShown,
+  nextSelection,
   hasProbabilities,
   isBlocked,
   progressPills,
@@ -42,6 +46,7 @@ import {
   staleCause,
   staleCauseText,
   takesDecisions,
+  type Facets,
   type OperationFilter,
   type RevertSummary,
 } from "./decisionModel";
@@ -58,10 +63,13 @@ import {
   defaultGroupBy,
   isBulkEligible,
   offersGroupBy,
+  optionDefinition,
   pickOutcome,
   takesPicks,
+  tieredOrder,
   type GroupBy,
   type Picks,
+  type ReflectionOption,
 } from "./tieredModel";
 import { useOperationContext } from "./useOperationContext";
 import { pendingLabel, useProposalActions } from "./useProposalActions";
@@ -121,12 +129,15 @@ export function ProposalDetailPage({
   const refs = useMemo(() => (proposal ? refsByOperation([proposal]) : undefined), [proposal]);
   const context = useOperationContext(operations, refs);
   const actions = useProposalActions(proposal);
+  const predicateCatalog = useMemo(() => drPredicateDescriptions(taxonomy), [taxonomy]);
   const [threshold, setThreshold] = useState(DEFAULT_THRESHOLD);
   const [checkedIds, setChecked] = useState<string[]>([]);
   const [confirmRejectAll, setConfirmRejectAll] = useState(false);
   const [confirmRevert, setConfirmRevert] = useState(false);
   // Undefined until the reviewer picks one: then it follows defaultOperationFilter.
   const [chosenFilter, setFilter] = useState<OperationFilter>();
+  // The op and scope narrowing whichever primary filter is chosen.
+  const [facets, setFacets] = useState<Facets>(ANY_FACETS);
   // Undefined until the reviewer picks one: then it follows defaultGroupBy.
   const [chosenGroupBy, setGroupBy] = useState<GroupBy>();
   // Reflection answers the reviewer picked over the plan's, by operation.
@@ -142,7 +153,15 @@ export function ProposalDetailPage({
   const reverted = proposal?.status === "reverted";
   const progress = useMemo(() => decisionProgress(operations), [operations]);
   const filter = chosenFilter ?? defaultOperationFilter(progress, openOnAll.current);
-  const shownOperations = useMemo(() => filterOperations(operations, filter), [operations, filter]);
+  const shownOperations = useMemo(
+    () => operationsShown(operations, filter, facets),
+    [operations, filter, facets],
+  );
+  const counts = useMemo(
+    () => facetCounts(operations, filter, facets),
+    [operations, filter, facets],
+  );
+  const shownIds = useMemo(() => new Set(shownOperations.map((o) => o.id)), [shownOperations]);
   const decisionsQuery = useProposalDecisions(
     proposal?.taxonomy_id ?? "",
     id,
@@ -162,15 +181,51 @@ export function ProposalDetailPage({
     [checkedIds, awaitingOps, shownOperations],
   );
   // A filter that hides checked rows unchecks them, so a bulk decision only covers what is shown.
+  const uncheckHidden = (nextFilter: OperationFilter, nextFacets: Facets) => {
+    const shown = operationsShown(operations, nextFilter, nextFacets);
+    setChecked((ids) => ids.filter((i) => shown.some((o) => o.id === i)));
+  };
   const chooseFilter = (next: OperationFilter) => {
     setFilter(next);
-    const shown = filterOperations(operations, next);
-    setChecked((ids) => ids.filter((i) => shown.some((o) => o.id === i)));
+    uncheckHidden(next, facets);
+  };
+  const chooseFacets = (next: Facets) => {
+    setFacets(next);
+    uncheckHidden(filter, next);
   };
   const groupBy = offersGroupBy(operations)
     ? (chosenGroupBy ?? defaultGroupBy(operations))
     : "sequence";
   const byKind = groupBy === "kind";
+  // The ids the filters show, top to bottom, as the table or the grouping lists
+  // them. A conflict card can also list members the filter doesn't show: those
+  // are left out, so selection never moves onto one.
+  const shownOrder = useMemo(
+    () =>
+      byKind
+        ? tieredOrder(shownOperations, operations).filter((id) => shownIds.has(id))
+        : shownOperations.map((o) => o.id),
+    [byKind, shownOperations, operations, shownIds],
+  );
+  // When a decision drops the selected operation out of the list, select the
+  // one below it, so the reviewer can decide row after row. A filter or
+  // grouping change, or a deep link to an operation not shown, moves nothing.
+  const lastShown = useRef<{
+    order: string[];
+    filter: OperationFilter;
+    facets: Facets;
+    groupBy: GroupBy;
+  }>(undefined);
+  useEffect(() => {
+    const last = lastShown.current;
+    lastShown.current = { order: shownOrder, filter, facets, groupBy };
+    const sameView =
+      !!last && last.filter === filter && last.facets === facets && last.groupBy === groupBy;
+    if (!selectedOperationId || !last || !sameView) return;
+    if (!last.order.includes(selectedOperationId) || shownOrder.includes(selectedOperationId))
+      return;
+    onSelectOperation(nextSelection(last.order, shownOrder, selectedOperationId));
+  }, [shownOrder, filter, facets, groupBy, selectedOperationId, onSelectOperation]);
   // Judgment and conflict rows of a change plan are never bulk-decided.
   // So are the operations a conflict card shows, in either view.
   const conflicted = useMemo(() => conflictedIds(operations), [operations]);
@@ -181,7 +236,14 @@ export function ProposalDetailPage({
   const bulkReady = bulkOps.filter((o) => !o.stale && !isBlocked(o));
   const showThreshold =
     !byKind && deciding && awaitingOps.length > 0 && hasProbabilities(operations);
-  const matching = showThreshold ? atOrAboveThreshold(bulkOps, threshold) : [];
+  // The threshold picks only from what the filters show, so it never checks hidden rows.
+  const shownAwaiting = awaitingOps.filter((o) => shownIds.has(o.id)).length;
+  const matching = showThreshold
+    ? atOrAboveThreshold(
+        bulkOps.filter((o) => shownIds.has(o.id)),
+        threshold,
+      )
+    : [];
   const showPlanKind = operations.some((o) => planKind(o) !== undefined);
   const selectable = deciding && awaitingOps.length > 0;
   const columns = useMemo(
@@ -245,6 +307,28 @@ export function ProposalDetailPage({
   const subtitle = [proposal.rationale, `Proposed ${formatAgo(proposal.created_at)}${proposedBy}.`]
     .filter(Boolean)
     .join(" ");
+  const emptyMessage =
+    operations.length === 0
+      ? "This proposal has no operations."
+      : facets.op !== "any" || facets.scope !== "any"
+        ? "No operations match these filters."
+        : filter === "needs"
+          ? "Nothing needs a decision."
+          : "Nothing is decided yet.";
+  // A reflection answer's definition: a class's description; a predicate's
+  // curated catalog entry, else the description of the type the operation changes.
+  const definitionOf =
+    (operation: ProposedOperation) => (question: string, option: ReflectionOption) =>
+      optionDefinition(question, option, {
+        classDefinition: context.classDefinition,
+        predicateDefinition: (predicate) => {
+          const current = context.currentProperty(operation.target_id) as
+            | { canonical_predicate?: string | null; description?: string | null }
+            | undefined;
+          const own = current?.canonical_predicate === predicate ? current.description : undefined;
+          return predicateCatalog.get(predicate) ?? (own || undefined);
+        },
+      });
   const causeOf = (operation: ProposedOperation) =>
     staleCause(
       operation,
@@ -384,7 +468,12 @@ export function ProposalDetailPage({
                 className="proposal-pill"
                 aria-controls="proposal-operations"
                 aria-label={`${pill.label}: show the operations that need a decision`}
-                onClick={() => chooseFilter("needs")}
+                onClick={() => {
+                  // Everything that needs a decision: the op and scope filters clear too.
+                  setFilter("needs");
+                  setFacets(ANY_FACETS);
+                  uncheckHidden("needs", ANY_FACETS);
+                }}
                 data-testid={`proposal-pill-${pill.key}`}
               >
                 <Chip variant={pill.variant}>{pill.label}</Chip>
@@ -424,7 +513,7 @@ export function ProposalDetailPage({
           threshold={threshold}
           onThresholdChange={setThreshold}
           matching={matching.length}
-          awaiting={awaitingOps.length}
+          awaiting={shownAwaiting}
           onSelect={() => setChecked(matching.map((o) => o.id))}
         />
       )}
@@ -458,6 +547,7 @@ export function ProposalDetailPage({
               operation={operation}
               context={context}
               picks={picks}
+              definitionOf={definitionOf(operation)}
               onPick={
                 picking
                   ? (question, option) =>
@@ -518,6 +608,38 @@ export function ProposalDetailPage({
               { value: "all", label: `All · ${progress.total}` },
             ]}
           />
+          {counts.ops.length > 1 && (
+            <div data-testid="proposal-op-filter">
+              <SegmentedControl
+                value={facets.op}
+                onChange={(value) => chooseFacets({ ...facets, op: value as Facets["op"] })}
+                aria-label="Show operations by op"
+                options={[
+                  { value: "any", label: "Any op" },
+                  ...counts.ops.map(({ value, count }) => ({
+                    value,
+                    label: `${value} · ${count}`,
+                  })),
+                ]}
+              />
+            </div>
+          )}
+          {counts.scopes.length > 1 && (
+            <div data-testid="proposal-scope-filter">
+              <SegmentedControl
+                value={facets.scope}
+                onChange={(value) => chooseFacets({ ...facets, scope: value as Facets["scope"] })}
+                aria-label="Show operations by scope"
+                options={[
+                  { value: "any", label: "Any scope" },
+                  ...counts.scopes.map(({ value, count }) => ({
+                    value,
+                    label: `${value} · ${count}`,
+                  })),
+                ]}
+              />
+            </div>
+          )}
         </div>
         {/* Above the table, so the table frame is the last thing in the list
             column and its sticky header never scrolls under the topbar. */}
@@ -546,6 +668,7 @@ export function ProposalDetailPage({
               actions={actions}
               selectedOperationId={selectedOperationId}
               onSelectOperation={onSelectOperation}
+              emptyMessage={emptyMessage}
             />
           ) : (
             <Table<ProposedOperation>
@@ -556,15 +679,7 @@ export function ProposalDetailPage({
               onRowClick={(row) =>
                 onSelectOperation(row.id === selectedOperationId ? undefined : row.id)
               }
-              emptyState={
-                <span className="entity-note">
-                  {operations.length === 0
-                    ? "This proposal has no operations."
-                    : filter === "needs"
-                      ? "Nothing needs a decision."
-                      : "Nothing is decided yet."}
-                </span>
-              }
+              emptyState={<span className="entity-note">{emptyMessage}</span>}
             />
           )}
         </div>

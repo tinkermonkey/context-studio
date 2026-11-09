@@ -7,6 +7,7 @@ import {
   type CandidateItem,
 } from "@/api/hooks/pipeline/usePipelineRuns";
 import { provenanceText } from "./provenanceText";
+import { CONNECTION_REFINEMENT_CONFIG_REF } from "./defaultConfigs";
 import { useToasts } from "@/components/ui/Toast";
 import { hasRunStatus } from "@/api/hooks/pipeline/runStatus";
 import "./Suggesters.css";
@@ -17,8 +18,9 @@ interface RelationshipSuggesterProps {
 
 export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
   const [runId, setRunId] = useState<string | null>(null);
-  const [dismissedUris, setDismissedUris] = useState<Set<string>>(new Set());
-  const [acceptingUri, setAcceptingUri] = useState<string | null>(null);
+  // Refinement candidates carry no uri, so they are tracked by index.
+  const [dismissedIndices, setDismissedIndices] = useState<Set<number>>(new Set());
+  const [acceptingIdx, setAcceptingIdx] = useState<number | null>(null);
 
   const { toast } = useToasts();
   const runMutation = useRunPipeline();
@@ -37,18 +39,18 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
 
   const visibleCandidates = allCandidates
     .map((c, i) => ({ ...c, originalIdx: i }))
-    .filter((c) => !dismissedUris.has(c.uri));
+    .filter((c) => !dismissedIndices.has(c.originalIdx));
 
   const handleSuggest = async () => {
     setRunId(null);
-    setDismissedUris(new Set());
+    setDismissedIndices(new Set());
     try {
       const result = await runMutation.mutateAsync({
         type: "schema_node_connection_refinement",
         request: {
           implementation_id: "default",
-          configuration_ref: "default",
-          node_id: classId,
+          configuration_ref: CONNECTION_REFINEMENT_CONFIG_REF,
+          scope_id: classId,
         },
       });
       setRunId(result.id);
@@ -57,9 +59,9 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
     }
   };
 
-  const handleAccept = async (uri: string, confidence: number) => {
+  const handleAccept = async (idx: number, confidence: number) => {
     if (!runId) return;
-    setAcceptingUri(uri);
+    setAcceptingIdx(idx);
     try {
       await applyMutation.mutateAsync({
         runId,
@@ -67,19 +69,19 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
       });
       // The apply endpoint applies all candidates at or above the threshold; dismiss them all
       const applied = new Set(
-        allCandidates.filter((c) => c.confidence >= confidence).map((c) => c.uri),
+        allCandidates.flatMap((c, i) => (c.confidence >= confidence ? [i] : [])),
       );
-      setDismissedUris((prev) => new Set([...prev, ...applied]));
+      setDismissedIndices((prev) => new Set([...prev, ...applied]));
       toast("success", "Relationship applied");
     } catch (err) {
       toast("error", err instanceof Error ? err.message : "Failed to apply relationship");
     } finally {
-      setAcceptingUri(null);
+      setAcceptingIdx(null);
     }
   };
 
-  const handleDismiss = (uri: string) => {
-    setDismissedUris((prev) => new Set([...prev, uri]));
+  const handleDismiss = (idx: number) => {
+    setDismissedIndices((prev) => new Set([...prev, idx]));
   };
 
   const hasRun = isCompleted || isRunning || isFailed;
@@ -144,10 +146,10 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
       {isCompleted && visibleCandidates.length > 0 && (
         <>
           {visibleCandidates.map((candidate) => {
-            const isAccepting = acceptingUri === candidate.uri;
+            const isAccepting = acceptingIdx === candidate.originalIdx;
             return (
               <div
-                key={candidate.uri}
+                key={candidate.originalIdx}
                 className="relationship-suggestion-card"
                 data-testid={`relationship-suggestion-${candidate.originalIdx}`}
               >
@@ -178,7 +180,7 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
                   <button
                     type="button"
                     className="relationship-suggestion-accept-btn"
-                    onClick={() => void handleAccept(candidate.uri, candidate.confidence)}
+                    onClick={() => void handleAccept(candidate.originalIdx, candidate.confidence)}
                     disabled={isAccepting || applyMutation.isPending}
                     data-testid={`relationship-accept-${candidate.originalIdx}`}
                   >
@@ -187,7 +189,7 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
                   <button
                     type="button"
                     className="relationship-suggestion-dismiss-btn"
-                    onClick={() => handleDismiss(candidate.uri)}
+                    onClick={() => handleDismiss(candidate.originalIdx)}
                     data-testid={`relationship-dismiss-${candidate.originalIdx}`}
                   >
                     Dismiss

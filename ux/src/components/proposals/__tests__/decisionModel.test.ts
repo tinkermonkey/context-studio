@@ -11,12 +11,14 @@ import {
   decisionPreview,
   drEditFields,
   drPredicateCatalog,
+  drPredicateDescriptions,
   drSpecOf,
   drTriplesOf,
   hasProbabilities,
   hasTripleErrors,
   isBelowThreshold,
   isDrEditable,
+  nextSelection,
   outcomeRows,
   replacementLabel,
   resolutionLabel,
@@ -499,5 +501,39 @@ describe("blocked relationship-type deletes", () => {
     expect(resolutionResult(applied)).toBe(
       "moved 2 relationships to triggered_by with their ends swapped, removed the type",
     );
+  });
+});
+
+describe("nextSelection", () => {
+  const before = ["a", "b", "c", "d"];
+  it("selects the row that was below the decided one", () => {
+    expect(nextSelection(before, ["a", "c", "d"], "b")).toBe("c");
+  });
+  it("skips rows below it that were decided with it", () => {
+    expect(nextSelection(before, ["a", "d"], "b")).toBe("d");
+  });
+  it("selects the new last row when the decided row was last", () => {
+    expect(nextSelection(before, ["a", "b", "c"], "d")).toBe("c");
+  });
+  it("selects nothing when the list is empty", () => {
+    expect(nextSelection(["a"], [], "a")).toBeUndefined();
+  });
+});
+
+describe("drPredicateDescriptions", () => {
+  it("reads each predicate's description from dr_spec's catalog", () => {
+    const taxonomy = {
+      external_references: [
+        {
+          source: "documentation_robotics",
+          identifier: "spec",
+          metadata: { predicates: { holds: { description: "Keeps it." }, uses: {} } },
+        },
+      ],
+    };
+    expect([...drPredicateDescriptions(taxonomy)]).toEqual([["holds", "Keeps it."]]);
+  });
+  it("is empty without a catalog", () => {
+    expect(drPredicateDescriptions(undefined).size).toBe(0);
   });
 });

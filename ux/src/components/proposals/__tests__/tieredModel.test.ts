@@ -13,7 +13,9 @@ import {
   mechanicalAtOrAbove,
   offersGroupBy,
   pRangeLabel,
+  optionDefinition,
   pickOutcome,
+  tieredOrder,
 } from "../tieredModel";
 
 const ops = () => reflectionProposal().operations;
@@ -220,5 +222,60 @@ describe("no current triple (older proposals)", () => {
     expect(outcome?.changed).toBe(true);
     expect(outcome?.pair).toBeUndefined();
     expect(outcome?.fields).toBeUndefined();
+  });
+});
+
+describe("tieredOrder", () => {
+  it("lists mechanical groups, judgment groups, then conflict cards, as the view shows them", () => {
+    expect(tieredOrder(ops(), ops())).toEqual([
+      "m-dup",
+      "m-rename",
+      "m-blocked",
+      "m-reverse",
+      "m-stale",
+      "j-retarget",
+      "j-compound",
+      "c-rename",
+      "c-delete",
+    ]);
+  });
+  it("lists only the card members the filter shows", () => {
+    const all = ops();
+    const shown = all.filter((o) => o.id !== "c-rename");
+    expect(tieredOrder(shown, all).slice(-1)).toEqual(["c-delete"]);
+    expect(tieredOrder(shown, all)).not.toContain("c-rename");
+  });
+});
+
+describe("optionDefinition", () => {
+  const sources = {
+    classDefinition: (id: string) => (id === "class-task" ? "One thing to do." : undefined),
+    predicateDefinition: (p: string) => (p === "holds" ? "Keeps it inside." : undefined),
+  };
+  const opt = (option: string, class_id: string | null = null) => ({
+    option,
+    probability: 0.5,
+    class_id,
+    current: false,
+    plan: false,
+  });
+
+  it("defines a class answer by its class's description", () => {
+    expect(optionDefinition("source_for", opt("task", "class-task"), sources)).toEqual({
+      term: "task",
+      text: "One thing to do.",
+    });
+  });
+  it("defines a predicate answer, marking a reverse one", () => {
+    expect(optionDefinition("predicate_for", opt("reverse:holds"), sources)).toEqual({
+      term: "holds",
+      text: "Keeps it inside.",
+      reversed: true,
+    });
+  });
+  it("defines nothing for none or an undefined answer", () => {
+    expect(optionDefinition("source_for", opt("none"), sources)).toBeUndefined();
+    expect(optionDefinition("source_for", opt("tool", "class-tool"), sources)).toBeUndefined();
+    expect(optionDefinition("predicate_for", opt("uses"), sources)).toBeUndefined();
   });
 });

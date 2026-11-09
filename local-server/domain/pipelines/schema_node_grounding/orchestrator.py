@@ -12,6 +12,7 @@ import logging
 from dataclasses import dataclass, field, replace
 from typing import Any
 
+from domain.ontology.ports import OntologyRepository
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipelines.orchestration.base import (
@@ -67,6 +68,7 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
         config: dict[str, Any] | None = None,
         run_id: str | None = None,
         status_writer: PipelineRunStatusWriter | None = None,
+        ontology_repo: OntologyRepository | None = None,
     ) -> None:
         """
         Initialize the grounding orchestrator.
@@ -75,14 +77,41 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
             llm_provider: LLM provider (not currently used by grounding pipeline)
             grounding_adapter: Adapter for external source queries
             scorer: GroundingScorer instance for combining scores
-            config: Configuration dict (top_n, weights, type preferences, etc.)
+            config: Configuration dict (top_n, weights, sources, etc.)
             run_id: Pipeline run ID for writing RUNNING status
             status_writer: Optional port for writing run status to persistence
+            ontology_repo: Reads the class or property definition a node_id names
         """
         super().__init__(llm_provider, run_id, status_writer)
         self._grounding_adapter = grounding_adapter
         self._scorer = scorer
         self._config = config or {}
+        self._ontology_repo = ontology_repo
+
+    def _resolve_node(self, input_data: dict[str, Any]) -> tuple[str, str]:
+        """
+        The label and node type to ground.
+
+        A node_label in the input is used as given. Otherwise a node_id names
+        the class (or, with node_type PropertyDefinition, the property
+        definition) whose title is grounded.
+
+        Raises:
+            PipelineInputError: If node_id names no node of that type
+        """
+        node_label = input_data.get("node_label", "")
+        node_type = input_data.get("node_type") or NodeType.CLASS.value
+        node_id = input_data.get("node_id")
+        if node_label or not node_id or self._ontology_repo is None:
+            return node_label, node_type
+
+        if node_type == NodeType.PROPERTY_DEFINITION.value:
+            node = self._ontology_repo.get_property_definition(node_id)
+        else:
+            node = self._ontology_repo.get_class(node_id)
+        if node is None:
+            raise PipelineInputError(f"No {node_type} with id '{node_id}'")
+        return node.title, node_type
 
     async def execute(self, state: PipelineState) -> PipelineState:
         """
@@ -90,7 +119,8 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
 
         Args:
             state: SchemaGroundingState with:
-                - input_data containing node_label, node_type, sources
+                - input_data containing node_id (or node_label and node_type),
+                  and optional sources (default: the configuration's sources)
                 - llm_provider (for semantic scoring if configured)
 
         Returns:
@@ -112,12 +142,11 @@ class SchemaGroundingOrchestrator(PipelineOrchestrator):
                 result=state.result,
             )
 
-        node_label = state.input_data.get("node_label", "")
-        node_type_str = state.input_data.get("node_type", "Class")
-        sources = state.input_data.get("sources", [])
+        node_label, node_type_str = self._resolve_node(state.input_data)
+        sources = state.input_data.get("sources") or self._config.get("sources") or []
 
         if not node_label:
-            exc = PipelineInputError("node_label is required and cannot be empty")
+            exc = PipelineInputError("node_id or node_label is required")
             state = replace(
                 state,
                 current_status=PipelineRunStatus.FAILED,
