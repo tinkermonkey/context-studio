@@ -2,6 +2,8 @@ import { useMemo } from "react";
 import { useAttributeDefinitionsByIds, useClassesByIds } from "@/api/hooks/ontology/useClasses";
 import { useIndividualsByIds } from "@/api/hooks/ontology/useIndividuals";
 import { usePropertiesByIds } from "@/api/hooks/ontology/useProperties";
+import { useRelationshipsByIds } from "@/api/hooks/ontology/useRelationships";
+import { useSchemesByIds } from "@/api/hooks/ontology/useSchemes";
 import { useTaxonomiesByIds } from "@/api/hooks/ontology/useTaxonomies";
 import type { ProposedOperation } from "@/api/services/proposals";
 import type { components } from "@/api/types";
@@ -16,6 +18,7 @@ import {
 } from "./proposalModel";
 
 type AttributeDefinition = components["schemas"]["AttributeDefinitionResponse"];
+type Relationship = components["schemas"]["RelationshipResponse"];
 
 /**
  * What rendering an operation needs from the workspace: class labels, current
@@ -37,6 +40,8 @@ export interface OperationContext {
   targetGone: (operation: ProposedOperation) => boolean;
   /** The current attribute definition an attribute update or delete targets, once loaded. */
   attribute: (id: string | null | undefined) => AttributeDefinition | undefined;
+  /** The current relationship an update or delete targets, once loaded (for its ends). */
+  relationship: (id: string | null | undefined) => Relationship | undefined;
   /**
    * A title for an id the operation names: a "$ref" create's, or a class's,
    * individual's or taxonomy's once loaded; undefined when unknown.
@@ -74,15 +79,24 @@ export function useOperationContext(
     ],
     [operations, refs, propertyItems],
   );
-  // Attributes, individuals, taxonomies and relationship types named by id.
+  // Attributes, individuals, taxonomies, schemes, relationships and relationship
+  // types named by id; a looked-up relationship's ends and type are named in turn.
   const named = useMemo(
     () => namedEntityIds(operations, (op) => refs?.get(op.id)),
     [operations, refs],
   );
   const attributes = useAttributeDefinitionsByIds(named.attributes);
-  const { data: individuals } = useIndividualsByIds(named.individuals);
+  const relationships = useRelationshipsByIds(named.relationships);
+  const { data: individuals } = useIndividualsByIds([
+    ...named.individuals,
+    ...relationships.flatMap((r) => [r.source_id, r.target_id]),
+  ]);
   const taxonomies = useTaxonomiesByIds(named.taxonomies);
-  const { data: predicates } = usePropertiesByIds(named.properties);
+  const schemes = useSchemesByIds(named.schemes);
+  const { data: predicates } = usePropertiesByIds([
+    ...named.properties,
+    ...relationships.map((r) => r.property_definition_id),
+  ]);
   const { data: classes } = useClassesByIds([
     ...classIds,
     ...named.classes,
@@ -95,10 +109,12 @@ export function useOperationContext(
     const classById = new Map((classes?.items ?? []).map((c) => [c.id, c]));
     const propertyById = new Map((propertyItems ?? []).map((p) => [p.id, p]));
     const attributeById = new Map(attributes.map((a) => [a.id, a]));
+    const relationshipById = new Map(relationships.map((r) => [r.id, r]));
     const predicateById = new Map((predicates?.items ?? []).map((p) => [p.id, p]));
     const titles = new Map<string, string>([
       ...(individuals?.items ?? []).map((i) => [i.id, i.title] as const),
       ...taxonomies.map((t) => [t.id, t.title] as const),
+      ...schemes.map((s) => [s.id, s.title || s.identifier] as const),
       ...(classes?.items ?? []).map((c) => [c.id, c.title || c.identifier] as const),
     ]);
     const unknownLabel = (operation: ProposedOperation) => {
@@ -125,6 +141,7 @@ export function useOperationContext(
         propertiesLoaded &&
         !propertyById.has(operation.target_id),
       attribute: (id) => (id ? attributeById.get(id) : undefined),
+      relationship: (id) => (id ? relationshipById.get(id) : undefined),
       nameOf: (id, operation) => {
         if (!id) return undefined;
         const opRefs = refs?.get(operation.id);
@@ -143,8 +160,10 @@ export function useOperationContext(
     propertiesLoaded,
     propertiesFailed,
     attributes,
+    relationships,
     individuals,
     taxonomies,
+    schemes,
     predicates,
   ]);
 }

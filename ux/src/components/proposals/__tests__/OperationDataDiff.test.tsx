@@ -15,6 +15,7 @@ const context: OperationContext = {
   currentProperty: () => undefined,
   targetGone: () => false,
   attribute: () => undefined,
+  relationship: () => undefined,
   nameOf: () => undefined,
   predicateOf: () => undefined,
 };

@@ -3,7 +3,7 @@ import { QUERY_KEYS, SMALL_SET_LIMIT } from "@/api/config";
 import { ontologyService, type ClassListParams } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 import { listQueryOptions, type ListQueryOptions } from "./listQueryOptions";
-import { listByIdChunks, uniqueIds } from "./idChunks";
+import { listByIdChunks, loadedData, uniqueIds } from "./idChunks";
 
 type ClassCreateRequest = components["schemas"]["ClassCreateRequest"];
 type ClassUpdateRequest = components["schemas"]["ClassUpdateRequest"];
@@ -118,11 +118,6 @@ export function useAttributeDefinitionsByIds(ids: Array<string | null | undefine
     })),
     combine: loadedData,
   });
-}
-
-/** The loaded results' data; a module-level function, so useQueries keeps the array stable. */
-function loadedData<T>(results: { data?: T }[]): T[] {
-  return results.flatMap((r) => (r.data ? [r.data] : []));
 }
 
 export function useCreateClass() {

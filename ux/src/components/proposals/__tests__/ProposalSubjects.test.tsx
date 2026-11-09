@@ -86,6 +86,42 @@ const relationshipCreate = createProposedOperation({
   status: "pending",
 });
 
+const attributeRename = createProposedOperation({
+  id: "op-attr-rename",
+  seq: 7,
+  op: "update",
+  kind: "attribute",
+  target_id: "attr-1",
+  // A rename's base has the title but not the class.
+  base: { title: "Status" },
+  fields: { title: "State" },
+  scope: "editorial",
+  status: "pending",
+});
+const relationshipUpdate = createProposedOperation({
+  id: "op-rel-update",
+  seq: 8,
+  op: "update",
+  kind: "relationship",
+  target_id: "rel-1",
+  // An attributes-only update names no ends.
+  base: { attributes: { weight: 1 } },
+  fields: { attributes: { weight: 2 } },
+  scope: "editorial",
+  status: "pending",
+});
+const schemeUpdate = createProposedOperation({
+  id: "op-scheme",
+  seq: 9,
+  op: "update",
+  kind: "scheme",
+  target_id: "scheme-1",
+  base: { description: "Old." },
+  fields: { description: "New." },
+  scope: "editorial",
+  status: "pending",
+});
+
 let proposal: ChangeProposal;
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
@@ -102,6 +138,9 @@ beforeEach(() => {
       taxonomyUpdate,
       gatewayCreate,
       relationshipCreate,
+      attributeRename,
+      relationshipUpdate,
+      schemeUpdate,
     ],
   });
   server.use(
@@ -185,5 +224,27 @@ describe("other kinds named by id", () => {
     await waitFor(async () =>
       expect(await inspectorTitle()).toHaveTextContent("LLM Provider Router realizes Gateway"),
     );
+  });
+
+  it("names an attribute rename with its owning class, looked up as its base has none", async () => {
+    renderPage();
+    const cell = await screen.findByTestId("operation-diff-op-attr-rename");
+    await waitFor(() => expect(cell).toHaveTextContent("attribute ApplicationComponent · Status"));
+  });
+
+  it("reads a relationship update by its looked-up triple", async () => {
+    renderPage();
+    const cell = await screen.findByTestId("operation-diff-op-rel-update");
+    await waitFor(() =>
+      expect(cell).toHaveTextContent("relationship LLM Provider Router realizes Pipeline API"),
+    );
+    expect(cell).not.toHaveTextContent("rel-1");
+  });
+
+  it("names a scheme update by its title", async () => {
+    renderPage();
+    const cell = await screen.findByTestId("operation-diff-op-scheme");
+    await waitFor(() => expect(cell).toHaveTextContent("scheme Application Layer"));
+    expect(cell).not.toHaveTextContent("scheme-1");
   });
 });

@@ -192,6 +192,11 @@ export const entityPageHandlers = [
     const domain = url.searchParams.get("domain_class_id");
     return list(byIds([realizes], url).filter((p) => !domain || p.domain_class_id === domain));
   }),
+  http.get("*/api/relationships/:id", ({ params }) =>
+    params.id === relationship.id
+      ? HttpResponse.json(relationship)
+      : HttpResponse.json({ detail: "Relationship not found" }, { status: 404 }),
+  ),
   http.get("*/api/relationships", ({ request }) => {
     const url = new URL(request.url);
     const source = url.searchParams.get("source_id");

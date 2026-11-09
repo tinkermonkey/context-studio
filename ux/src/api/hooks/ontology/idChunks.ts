@@ -22,3 +22,11 @@ export async function listByIdChunks<T, R extends { items: T[]; total: number }>
   const items = pages.flatMap((page) => page.items);
   return { ...pages[0], items, total: items.length, limit: items.length, offset: 0 };
 }
+
+/**
+ * useQueries `combine`: the loaded results' data. Module-level, so useQueries
+ * keeps the combined array stable while the results don't change.
+ */
+export function loadedData<T>(results: { data?: T }[]): T[] {
+  return results.flatMap((r) => (r.data ? [r.data] : []));
+}

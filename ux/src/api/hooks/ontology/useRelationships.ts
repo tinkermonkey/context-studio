@@ -3,6 +3,7 @@ import { QUERY_KEYS } from "@/api/config";
 import { ontologyService, type RelationshipListParams } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 import { listQueryOptions, type ListQueryOptions } from "./listQueryOptions";
+import { loadedData, uniqueIds } from "./idChunks";
 
 type RelationshipCreateRequest = components["schemas"]["RelationshipCreateRequest"];
 
@@ -47,6 +48,19 @@ export function useRelationshipsTouching(entityIds: string[], limit: number) {
     error: results.find((r) => r.error)?.error ?? null,
     refetch: () => results.forEach((r) => void r.refetch()),
   };
+}
+
+/** Fetch the relationships with these ids, one request each (the API has no ids filter). */
+export function useRelationshipsByIds(ids: Array<string | null | undefined>) {
+  return useQueries({
+    queries: uniqueIds(ids).map((id) => ({
+      queryKey: QUERY_KEYS.relationship(id),
+      queryFn: () => ontologyService.getRelationship(id),
+      staleTime: 5 * 60 * 1000,
+      retry: false,
+    })),
+    combine: loadedData,
+  });
 }
 
 export function useCreateRelationship() {

@@ -108,7 +108,12 @@ export function subjectOf(operation: ProposedOperation, context: OperationContex
       return owner ? `${owner} · ${name}` : name;
     }
     case "relationship": {
-      const values = { ...operation.base, ...operation.fields } as Record<string, unknown>;
+      // An update's base may hold only the attributes it changes: the ends come from a lookup.
+      const values = {
+        ...context.relationship(target),
+        ...operation.base,
+        ...operation.fields,
+      } as Record<string, unknown>;
       const end = (key: string) => context.nameOf(text(values[key]), operation) ?? "?";
       const predicate = context.predicateOf(text(values.property_definition_id));
       return predicate || values.source_id || values.target_id

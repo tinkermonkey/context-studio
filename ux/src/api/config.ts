@@ -55,6 +55,8 @@ export const QUERY_KEYS = {
   property: (id: string) => ["properties", id] as const,
   relationshipsRoot: ["relationships"] as const,
   relationships: (params?: object) => ["relationships", params] as const,
+  // Under the relationships root, so relationship and proposal mutations refresh it.
+  relationship: (id: string) => ["relationships", "by-id", id] as const,
   // Graph
   graph: ["graph"] as const,
   graphMetrics: ["graph", "metrics"] as const,

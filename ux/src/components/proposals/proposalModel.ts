@@ -419,6 +419,9 @@ export interface NamedEntityIds {
   properties: string[];
   /** The classes an attribute create or delete belongs to. */
   classes: string[];
+  schemes: string[];
+  /** Relationships an update or delete names only by id: their ends come from a lookup. */
+  relationships: string[];
 }
 
 /**
@@ -438,15 +441,23 @@ export function namedEntityIds(
     taxonomies: [],
     properties: [],
     classes: [],
+    schemes: [],
+    relationships: [],
   };
   for (const operation of operations) {
-    // A delete's base is the whole entity, name included: only a target without one is looked up.
+    // A delete's base is the whole entity, name included: only a target whose
+    // base lacks what names it is looked up (an attribute also needs its class).
     const base = operation.base ?? {};
-    const unnamed = !text(base.title) && !text(base.identifier);
+    const unnamed =
+      (!text(base.title) && !text(base.identifier)) ||
+      (operation.kind === "attribute" && !text(base.class_id)) ||
+      (operation.kind === "relationship" && !text(base.source_id));
     const target = operation.op !== "create" && unnamed ? operation.target_id : undefined;
     if (target && operation.kind === "attribute") ids.attributes.push(target);
     if (target && operation.kind === "individual") ids.individuals.push(target);
     if (target && operation.kind === "taxonomy") ids.taxonomies.push(target);
+    if (target && operation.kind === "scheme") ids.schemes.push(target);
+    if (target && operation.kind === "relationship") ids.relationships.push(target);
     const values = { ...operation.base, ...operation.fields };
     const owner = operation.kind === "attribute" ? text(values.class_id) : undefined;
     const ownerId = owner && resolveRef(owner, refsOf(operation));

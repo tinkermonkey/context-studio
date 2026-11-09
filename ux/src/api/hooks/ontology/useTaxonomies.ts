@@ -3,7 +3,7 @@ import { QUERY_KEYS } from "@/api/config";
 import { ontologyService, type ListPageParams } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 import { listQueryOptions, type ListQueryOptions } from "./listQueryOptions";
-import { uniqueIds } from "./idChunks";
+import { loadedData, uniqueIds } from "./idChunks";
 
 type TaxonomyCreateRequest = components["schemas"]["TaxonomyCreateRequest"];
 type TaxonomyUpdateRequest = components["schemas"]["TaxonomyUpdateRequest"];
@@ -31,13 +31,8 @@ export function useTaxonomiesByIds(ids: Array<string | null | undefined>) {
       queryKey: QUERY_KEYS.taxonomy(id),
       queryFn: () => ontologyService.getTaxonomy(id),
     })),
-    combine: loadedTaxonomies,
+    combine: loadedData,
   });
-}
-
-/** A module-level function, so useQueries keeps the combined array stable. */
-function loadedTaxonomies<T>(results: { data?: T }[]): T[] {
-  return results.flatMap((r) => (r.data ? [r.data] : []));
 }
 
 export function useCreateTaxonomy() {
