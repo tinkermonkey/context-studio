@@ -12,7 +12,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Algorithm\", \"label\": \"Algorithm\", \"description\": \"DBpedia entry for Algorithm\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Algorithm\"], \"label\": [\"Algorithm\"], \"comment\": [\"DBpedia entry for Algorithm\"]}]}"
       }
     },
     {
@@ -57,7 +57,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Animal\", \"label\": \"Animal\", \"description\": \"DBpedia entry for Animal\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Animal\"], \"label\": [\"Animal\"], \"comment\": [\"DBpedia entry for Animal\"]}]}"
       }
     },
     {
@@ -102,7 +102,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Artist\", \"label\": \"Artist\", \"description\": \"DBpedia entry for Artist\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Artist\"], \"label\": [\"Artist\"], \"comment\": [\"DBpedia entry for Artist\"]}]}"
       }
     },
     {
@@ -147,7 +147,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Atom\", \"label\": \"Atom\", \"description\": \"DBpedia entry for Atom\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Atom\"], \"label\": [\"Atom\"], \"comment\": [\"DBpedia entry for Atom\"]}]}"
       }
     },
     {
@@ -192,7 +192,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Bacterium\", \"label\": \"Bacteria\", \"description\": \"DBpedia entry for Bacteria\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Bacterium\"], \"label\": [\"Bacteria\"], \"comment\": [\"DBpedia entry for Bacteria\"]}]}"
       }
     },
     {
@@ -237,7 +237,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Microservice\", \"label\": \"Microservice\", \"description\": \"DBpedia entry for Microservice\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Microservice\"], \"label\": [\"Microservice\"], \"comment\": [\"DBpedia entry for Microservice\"]}]}"
       }
     },
     {
@@ -282,7 +282,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Book\", \"label\": \"Book\", \"description\": \"DBpedia entry for Book\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Book\"], \"label\": [\"Book\"], \"comment\": [\"DBpedia entry for Book\"]}]}"
       }
     },
     {
@@ -327,7 +327,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Building\", \"label\": \"Building\", \"description\": \"DBpedia entry for Building\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Building\"], \"label\": [\"Building\"], \"comment\": [\"DBpedia entry for Building\"]}]}"
       }
     },
     {
@@ -372,7 +372,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Cell\", \"label\": \"Cell\", \"description\": \"DBpedia entry for Cell\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Cell\"], \"label\": [\"Cell\"], \"comment\": [\"DBpedia entry for Cell\"]}]}"
       }
     },
     {
@@ -417,7 +417,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Chemical_compound\", \"label\": \"ChemicalCompound\", \"description\": \"DBpedia entry for ChemicalCompound\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Chemical_compound\"], \"label\": [\"ChemicalCompound\"], \"comment\": [\"DBpedia entry for ChemicalCompound\"]}]}"
       }
     },
     {
@@ -462,7 +462,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Chemical_element\", \"label\": \"ChemicalElement\", \"description\": \"DBpedia entry for ChemicalElement\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Chemical_element\"], \"label\": [\"ChemicalElement\"], \"comment\": [\"DBpedia entry for ChemicalElement\"]}]}"
       }
     },
     {
@@ -507,7 +507,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Color\", \"label\": \"Color\", \"description\": \"DBpedia entry for Color\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Color\"], \"label\": [\"Color\"], \"comment\": [\"DBpedia entry for Color\"]}]}"
       }
     },
     {
@@ -552,7 +552,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Database\", \"label\": \"Database\", \"description\": \"DBpedia entry for Database\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Database\"], \"label\": [\"Database\"], \"comment\": [\"DBpedia entry for Database\"]}]}"
       }
     },
     {
@@ -597,7 +597,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Disease\", \"label\": \"Disease\", \"description\": \"DBpedia entry for Disease\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Disease\"], \"label\": [\"Disease\"], \"comment\": [\"DBpedia entry for Disease\"]}]}"
       }
     },
     {
@@ -642,7 +642,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/DNA\", \"label\": \"DNA\", \"description\": \"DBpedia entry for DNA\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/DNA\"], \"label\": [\"DNA\"], \"comment\": [\"DBpedia entry for DNA\"]}]}"
       }
     },
     {
@@ -687,7 +687,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Energy\", \"label\": \"Energy\", \"description\": \"DBpedia entry for Energy\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Energy\"], \"label\": [\"Energy\"], \"comment\": [\"DBpedia entry for Energy\"]}]}"
       }
     },
     {
@@ -732,7 +732,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Event\", \"label\": \"Event\", \"description\": \"DBpedia entry for Event\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Event\"], \"label\": [\"Event\"], \"comment\": [\"DBpedia entry for Event\"]}]}"
       }
     },
     {
@@ -777,7 +777,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Food\", \"label\": \"Food\", \"description\": \"DBpedia entry for Food\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Food\"], \"label\": [\"Food\"], \"comment\": [\"DBpedia entry for Food\"]}]}"
       }
     },
     {
@@ -822,7 +822,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Government\", \"label\": \"Government\", \"description\": \"DBpedia entry for Government\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Government\"], \"label\": [\"Government\"], \"comment\": [\"DBpedia entry for Government\"]}]}"
       }
     },
     {
@@ -867,7 +867,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Language\", \"label\": \"Language\", \"description\": \"DBpedia entry for Language\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Language\"], \"label\": [\"Language\"], \"comment\": [\"DBpedia entry for Language\"]}]}"
       }
     },
     {
@@ -912,7 +912,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Location\", \"label\": \"Location\", \"description\": \"DBpedia entry for Location\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Location\"], \"label\": [\"Location\"], \"comment\": [\"DBpedia entry for Location\"]}]}"
       }
     },
     {
@@ -957,7 +957,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Motion\", \"label\": \"Motion\", \"description\": \"DBpedia entry for Motion\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Motion\"], \"label\": [\"Motion\"], \"comment\": [\"DBpedia entry for Motion\"]}]}"
       }
     },
     {
@@ -1002,7 +1002,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Mountain\", \"label\": \"Mountain\", \"description\": \"DBpedia entry for Mountain\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Mountain\"], \"label\": [\"Mountain\"], \"comment\": [\"DBpedia entry for Mountain\"]}]}"
       }
     },
     {
@@ -1047,7 +1047,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Music\", \"label\": \"Music\", \"description\": \"DBpedia entry for Music\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Music\"], \"label\": [\"Music\"], \"comment\": [\"DBpedia entry for Music\"]}]}"
       }
     },
     {
@@ -1092,7 +1092,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Network\", \"label\": \"Network\", \"description\": \"DBpedia entry for Network\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Network\"], \"label\": [\"Network\"], \"comment\": [\"DBpedia entry for Network\"]}]}"
       }
     },
     {
@@ -1137,7 +1137,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Ocean\", \"label\": \"Ocean\", \"description\": \"DBpedia entry for Ocean\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Ocean\"], \"label\": [\"Ocean\"], \"comment\": [\"DBpedia entry for Ocean\"]}]}"
       }
     },
     {
@@ -1182,7 +1182,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Organization\", \"label\": \"Organization\", \"description\": \"DBpedia entry for Organization\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Organization\"], \"label\": [\"Organization\"], \"comment\": [\"DBpedia entry for Organization\"]}]}"
       }
     },
     {
@@ -1227,7 +1227,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Person\", \"label\": \"Person\", \"description\": \"DBpedia entry for Person\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Person\"], \"label\": [\"Person\"], \"comment\": [\"DBpedia entry for Person\"]}]}"
       }
     },
     {
@@ -1272,7 +1272,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Plant\", \"label\": \"Plant\", \"description\": \"DBpedia entry for Plant\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Plant\"], \"label\": [\"Plant\"], \"comment\": [\"DBpedia entry for Plant\"]}]}"
       }
     },
     {
@@ -1317,7 +1317,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Protein\", \"label\": \"Protein\", \"description\": \"DBpedia entry for Protein\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Protein\"], \"label\": [\"Protein\"], \"comment\": [\"DBpedia entry for Protein\"]}]}"
       }
     },
     {
@@ -1362,7 +1362,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/River\", \"label\": \"River\", \"description\": \"DBpedia entry for River\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/River\"], \"label\": [\"River\"], \"comment\": [\"DBpedia entry for River\"]}]}"
       }
     },
     {
@@ -1407,7 +1407,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Software\", \"label\": \"Software\", \"description\": \"DBpedia entry for Software\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Software\"], \"label\": [\"Software\"], \"comment\": [\"DBpedia entry for Software\"]}]}"
       }
     },
     {
@@ -1452,7 +1452,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Space\", \"label\": \"Space\", \"description\": \"DBpedia entry for Space\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Space\"], \"label\": [\"Space\"], \"comment\": [\"DBpedia entry for Space\"]}]}"
       }
     },
     {
@@ -1497,7 +1497,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Sport\", \"label\": \"Sport\", \"description\": \"DBpedia entry for Sport\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Sport\"], \"label\": [\"Sport\"], \"comment\": [\"DBpedia entry for Sport\"]}]}"
       }
     },
     {
@@ -1542,7 +1542,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Star\", \"label\": \"Star\", \"description\": \"DBpedia entry for Star\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Star\"], \"label\": [\"Star\"], \"comment\": [\"DBpedia entry for Star\"]}]}"
       }
     },
     {
@@ -1587,7 +1587,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Time\", \"label\": \"Time\", \"description\": \"DBpedia entry for Time\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Time\"], \"label\": [\"Time\"], \"comment\": [\"DBpedia entry for Time\"]}]}"
       }
     },
     {
@@ -1632,7 +1632,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/University\", \"label\": \"University\", \"description\": \"DBpedia entry for University\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/University\"], \"label\": [\"University\"], \"comment\": [\"DBpedia entry for University\"]}]}"
       }
     },
     {
@@ -1677,7 +1677,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Vehicle\", \"label\": \"Vehicle\", \"description\": \"DBpedia entry for Vehicle\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Vehicle\"], \"label\": [\"Vehicle\"], \"comment\": [\"DBpedia entry for Vehicle\"]}]}"
       }
     },
     {
@@ -1722,7 +1722,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Virus\", \"label\": \"Virus\", \"description\": \"DBpedia entry for Virus\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Virus\"], \"label\": [\"Virus\"], \"comment\": [\"DBpedia entry for Virus\"]}]}"
       }
     },
     {
