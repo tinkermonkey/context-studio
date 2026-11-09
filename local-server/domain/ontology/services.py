@@ -355,9 +355,11 @@ class OntologyService:
         description: str | None = None,
         color: str | None = None,
         vision: str | None = None,
+        external_references: list[ExternalReference] | None = None,
     ) -> Taxonomy:
         """
-        Update a taxonomy's title, summary (description), vision, and/or color.
+        Update a taxonomy's title, summary (description), vision, color, and/or
+        external references.
 
         Identifier is immutable post-create and cannot be updated.
 
@@ -367,6 +369,8 @@ class OntologyService:
             description: New one-paragraph summary (optional)
             color: New hex color string (optional, '' or None clears)
             vision: New vision statement (optional; None leaves it, '' clears it)
+            external_references: The whole new list of references (optional;
+                None leaves them)
 
         Returns:
             The updated Taxonomy
@@ -385,6 +389,7 @@ class OntologyService:
         old_description = taxonomy.description
         old_vision = taxonomy.vision
         old_color = taxonomy.color
+        old_references = list(taxonomy.external_references)
 
         # Check if new title is unique
         if title is not None and title != taxonomy.title:
@@ -407,13 +412,19 @@ class OntologyService:
 
             taxonomy.color = _vc(color)
 
+        if external_references is not None:
+            taxonomy.external_references = list(external_references)
+
         # Guard against no-op updates
         title_changed = title is not None and title != old_title
         desc_changed = description is not None and description != old_description
         vision_changed = vision is not None and taxonomy.vision != old_vision
         color_changed = color is not None and taxonomy.color != old_color
+        refs_changed = external_references is not None and (
+            taxonomy.external_references != old_references
+        )
 
-        if not (title_changed or desc_changed or vision_changed or color_changed):
+        if not (title_changed or desc_changed or vision_changed or color_changed or refs_changed):
             return taxonomy
 
         taxonomy.last_modified = datetime.now(timezone.utc)
@@ -427,12 +438,13 @@ class OntologyService:
                 ("description", desc_changed),
                 ("vision", vision_changed),
                 ("color", color_changed),
+                ("external_references", refs_changed),
             ]
             if was_changed
         )
 
-        old_values: dict[str, str | None] = {}
-        new_values: dict[str, str | None] = {}
+        old_values: dict[str, object] = {}
+        new_values: dict[str, object] = {}
         if title_changed:
             old_values["title"] = old_title
             new_values["title"] = title
@@ -445,6 +457,11 @@ class OntologyService:
         if color_changed:
             old_values["color"] = old_color
             new_values["color"] = taxonomy.color
+        if refs_changed:
+            old_values["external_references"] = [ref.to_dict() for ref in old_references]
+            new_values["external_references"] = [
+                ref.to_dict() for ref in taxonomy.external_references
+            ]
 
         failures = self._event_publisher.publish(
             TaxonomyUpdated(
@@ -3490,6 +3507,7 @@ class OntologyService:
         allowed_values: list[str] | None = None,
         default_value: str | None = None,
         sort_order: int | None = None,
+        external_references: list[ExternalReference] | None = None,
     ) -> AttributeDefinition:
         """
         Update an attribute definition (partial update).
@@ -3503,6 +3521,8 @@ class OntologyService:
             allowed_values: New allowed values list (or None to leave unchanged; pass [] to clear)
             default_value: New default value (or None to leave unchanged; pass "" to clear)
             sort_order: New sort order (or None to leave unchanged)
+            external_references: The whole new list of references (or None to
+                leave unchanged)
 
         Returns:
             The updated AttributeDefinition
@@ -3580,6 +3600,14 @@ class OntologyService:
             old_values["sort_order"] = attr_def.sort_order
             new_values["sort_order"] = sort_order
             attr_def.sort_order = sort_order
+
+        if external_references is not None and external_references != list(
+            attr_def.external_references
+        ):
+            changed_fields.append("external_references")
+            old_values["external_references"] = [r.to_dict() for r in attr_def.external_references]
+            new_values["external_references"] = [r.to_dict() for r in external_references]
+            attr_def.external_references = list(external_references)
 
         # Validate cross-field constraint after all updates are applied
         validate_default_value_against_allowed_values(
