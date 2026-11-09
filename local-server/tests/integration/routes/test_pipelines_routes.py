@@ -19,6 +19,7 @@ from sqlalchemy.orm import sessionmaker
 from adapters.persistence.sqlite.batch_repo import BatchRepository
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
+from adapters.web.extraction_examples import load_extraction_examples
 from adapters.web.pipelines_routes import router
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.exceptions import (
@@ -496,6 +497,44 @@ class TestPipelineRunEndpoints:
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
         assert body["total"] == 0
+
+    def test_list_runs_filters_by_extraction_example(self, client, registries):
+        """GET /api/pipelines/runs?example_id= lists only runs started from that example."""
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_EXTRACTION, "default", "default", {"model": "test-model"}
+        )
+        body = {
+            "documents": ["doc1"],
+            "implementation_id": "default",
+            "configuration_ref": "default",
+        }
+        from_example = client.post(
+            "/api/pipelines/schema_extraction/run", json={**body, "example_id": "ddd"}
+        ).json()
+        client.post("/api/pipelines/schema_extraction/run", json=body)
+
+        response = client.get("/api/pipelines/runs?example_id=ddd")
+
+        assert response.status_code == status.HTTP_200_OK
+        page = response.json()
+        assert page["total"] == 1
+        assert page["items"][0]["id"] == from_example["id"]
+        assert page["items"][0]["input_summary"]["example_id"] == "ddd"
+        assert client.get("/api/pipelines/runs?example_id=other").json()["total"] == 0
+
+    def test_list_extraction_examples(self, client):
+        """GET /api/pipelines/extraction-examples serves the loaded library."""
+        client.app.state.extraction_examples = load_extraction_examples()
+
+        response = client.get("/api/pipelines/extraction-examples")
+
+        assert response.status_code == status.HTTP_200_OK
+        examples = response.json()
+        assert len(examples) >= 10
+        assert {"id", "title", "description", "pipelines", "text"} <= set(examples[0])
 
     def test_list_runs_filters_by_applied_status(self, client, registries, temp_local_db):
         """GET /api/pipelines/runs?applied=... filters by applied status correctly."""

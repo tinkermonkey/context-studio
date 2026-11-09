@@ -2019,6 +2019,32 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/pipelines/extraction-examples": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Extraction Examples
+     * @description The library of example paragraphs for trying the extraction pipelines.
+     *
+     *     Curated examples ship with the app; a run started from one records its id
+     *     (``example_id``), so runs on the same example can be listed and compared.
+     *
+     *     Returns:
+     *         The examples, in library order
+     */
+    get: operations["list_extraction_examples_api_pipelines_extraction_examples_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/pipelines/runs": {
     parameters: {
       query?: never;
@@ -2039,6 +2065,7 @@ export interface paths {
      *         start_date: Filter by start date (ISO 8601 format, optional)
      *         end_date: Filter by end date (ISO 8601 format, optional)
      *         applied: Filter by applied status ('applied' or 'not-applied', optional)
+     *         example_id: Only runs started from this extraction example (optional)
      *         limit: Maximum number of results (1-500, default 100)
      *         offset: Number of results to skip for pagination (default 0)
      *         request: FastAPI request (for service access)
@@ -6022,6 +6049,42 @@ export interface components {
       properties?: {
         [key: string]: unknown;
       };
+    };
+    /**
+     * ExtractionExampleResponse
+     * @description An example paragraph from the library for trying the extraction pipelines.
+     */
+    ExtractionExampleResponse: {
+      /**
+       * Id
+       * @description Stable example id; runs started from it record it
+       */
+      id: string;
+      /**
+       * Title
+       * @description Short name
+       */
+      title: string;
+      /**
+       * Description
+       * @description What the example exercises
+       */
+      description: string;
+      /**
+       * Pipelines
+       * @description Pipeline types the example is written for
+       */
+      pipelines: string[];
+      /**
+       * Taxonomy Hint
+       * @description Identifier of the taxonomy the example suits (e.g. dr_spec), if any
+       */
+      taxonomy_hint?: string | null;
+      /**
+       * Text
+       * @description The paragraph
+       */
+      text: string;
     };
     /**
      * ExtractionLayerResultSchema
@@ -12488,6 +12551,26 @@ export interface operations {
       };
     };
   };
+  list_extraction_examples_api_pipelines_extraction_examples_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ExtractionExampleResponse"][];
+        };
+      };
+    };
+  };
   list_pipeline_runs_api_pipelines_runs_get: {
     parameters: {
       query?: {
@@ -12503,6 +12586,8 @@ export interface operations {
         end_date?: string | null;
         /** @description Filter by applied status: 'applied' or 'not-applied' */
         applied?: string | null;
+        /** @description Only runs started from this extraction example */
+        example_id?: string | null;
         /** @description Maximum number of results */
         limit?: number;
         /** @description Number of results to skip */

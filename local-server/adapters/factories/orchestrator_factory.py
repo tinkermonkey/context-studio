@@ -406,6 +406,10 @@ def build_run_specific_data(
         if ontology_name:
             input_summary["taxonomy_name"] = str(ontology_name)
 
+        example_id = input_data.get("example_id")
+        if example_id:
+            input_summary["example_id"] = str(example_id)
+
         if input_summary:
             specific["input_summary"] = input_summary
 
@@ -421,6 +425,10 @@ def build_run_specific_data(
         scope_name = input_data.get("scope_name")
         if scope_name:
             schema_input_summary["taxonomy_name"] = str(scope_name)
+
+        example_id = input_data.get("example_id")
+        if example_id:
+            schema_input_summary["example_id"] = str(example_id)
 
         schema_specific: dict[str, Any] = {}
         documents = input_data.get("documents")

@@ -87,6 +87,7 @@ from adapters.web.admin_routes import router as admin_router
 from adapters.web.bundle_routes import router as bundle_router
 from adapters.web.chat_routes import router as chat_router
 from adapters.web.decision_routes import router as decision_router
+from adapters.web.extraction_examples import load_extraction_examples
 from adapters.web.extraction_routes import router as extraction_router
 from adapters.web.graph_routes import router as graph_router
 from adapters.web.interchange_routes import router as interchange_router
@@ -644,6 +645,10 @@ async def lifespan(app: FastAPI):
         logger.info(
             "AdminService created and wired with metrics, config store, and dataset" " repository"
         )
+
+        # Example paragraphs for the extraction review page (read-only, ships with the app)
+        app.state.extraction_examples = load_extraction_examples()
+        logger.info(f"Loaded {len(app.state.extraction_examples)} extraction examples")
 
         # Demo dataset loader (canon-backed, offline)
         canon_root = Path(__file__).resolve().parent / "datafiles" / "canon"

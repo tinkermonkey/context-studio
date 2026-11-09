@@ -20,6 +20,7 @@ function ExtractionReviewRoute() {
     <ExtractionReviewPage
       initialRunId={runId}
       onOpenRunHistory={() => navigate({ to: "/app/pipelines/runs" })}
+      onOpenRun={(id) => navigate({ to: "/app/pipelines/review", search: { runId: id } })}
     />
   );
 }
