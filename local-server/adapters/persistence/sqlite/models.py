@@ -256,6 +256,18 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
         nullable=True,
         doc="Tri-state relevance: NULL=not evaluated, 0=not relevant, 1=relevant",
     )
+    mirrored = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("0"),
+        doc="The taxonomy mirrors an external source of truth (for taxonomy)",
+    )
+    source_revision = Column(
+        JSON(none_as_null=True),
+        nullable=True,
+        doc="{repo, commit, spec_version} the taxonomy was last imported at (for taxonomy)",
+    )
 
     # Constraints
     __table_args__ = (
@@ -1340,6 +1352,10 @@ class ChangeProposalRun(BatchRun):
         rationale: Why these changes, as a whole
         source: chat, mcp, pipeline, bundle or user
         source_detail: More about the source (MCP client, conversation, file)
+        source_revision: {repo, commit, spec_version} of the source the proposal
+            was drafted against
+        landed: {repo, commit, spec_version, landed_at} once the client landed
+            the decided proposal in its source; NULL while unlanded
     """
 
     __tablename__ = "change_proposals"
@@ -1355,6 +1371,8 @@ class ChangeProposalRun(BatchRun):
     rationale = Column(Text, nullable=True)
     source = Column(String(20), nullable=False, index=True)
     source_detail = Column(String(255), nullable=True)
+    source_revision = Column(JSON(none_as_null=True), nullable=True)
+    landed = Column(JSON(none_as_null=True), nullable=True)
 
     __mapper_args__: Dict[str, Any] = {
         "polymorphic_identity": "proposal",

@@ -15,6 +15,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 import pytest
 
 from adapters.interchange.dr_spec_changes import spec_changes_for
+from domain.ontology.value_objects import SourceRevision
 from domain.versioning.proposal_service import OperationDraft
 from domain.versioning.proposals import (
     InUseResolution,
@@ -534,3 +535,31 @@ def test_a_replacement_chain_that_cycles_names_none_and_says_so(parts):
     for change in changes:
         assert "replacement_relationship_id" not in change
         assert "comes back round" in change["note"]
+
+
+def test_the_header_carries_the_drafted_revision_and_the_landing(parts):
+    _, repo, proposals = parts
+    taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    drafted = SourceRevision(repo="documentation_robotics", commit="bbb222", spec_version="0.8.4")
+    proposal = proposals.propose(
+        taxonomy.id, "Spec changes", [create_new(repo)], ProposalSource.MCP, source_revision=drafted
+    )
+    proposal = apply_all(proposals, proposal)
+
+    unlanded = spec_changes_for(proposal, repo)
+    landing = SourceRevision(repo="documentation_robotics", commit="ccc333", spec_version="0.8.5")
+    landed = spec_changes_for(proposals.mark_landed(proposal.id, landing), repo)
+
+    assert unlanded["source_revision"] == {
+        "repo": "documentation_robotics",
+        "commit": "bbb222",
+        "spec_version": "0.8.4",
+    }
+    assert unlanded["landed"] is None
+    assert landed["source_revision"] == unlanded["source_revision"]
+    assert {k: landed["landed"][k] for k in ("repo", "commit", "spec_version")} == {
+        "repo": "documentation_robotics",
+        "commit": "ccc333",
+        "spec_version": "0.8.5",
+    }
+    assert landed["landed"]["landed_at"]

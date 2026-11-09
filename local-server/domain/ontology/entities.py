@@ -19,6 +19,7 @@ from .value_objects import (
     ExternalReference,
     LexicalSense,
     OntologyMapping,
+    SourceRevision,
     Status,
     validate_default_value_against_allowed_values,
     validate_hex_color,
@@ -47,6 +48,11 @@ class Taxonomy:
         status: Publication status (draft or published)
         external_references: References to the source the taxonomy was imported
             from (e.g. the DR spec, whose predicate catalog rides in the metadata)
+        mirrored: The taxonomy mirrors an external source of truth (a client's
+            spec): nothing auto-applies to it, Context Studio runs no proposals
+            of its own on it, and a proposal the client has landed can't be
+            reverted here
+        source_revision: The source revision the taxonomy was last imported at
     """
 
     id: str
@@ -60,6 +66,8 @@ class Taxonomy:
     version: int = 1
     status: Status = Status.DRAFT
     external_references: list[ExternalReference] = field(default_factory=list)
+    mirrored: bool = False
+    source_revision: SourceRevision | None = None
 
     def __post_init__(self) -> None:
         if self.identifier is not None:

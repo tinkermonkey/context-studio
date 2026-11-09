@@ -94,6 +94,7 @@ class FakeProposalService:
         self.blockers = blockers or {}
         self.auto = list(auto)
         self.dry_runs = []
+        self.revisions = []
         self.error = error
         self.stale = set(stale)
         self.listed = list(listed)
@@ -109,9 +110,11 @@ class FakeProposalService:
         rationale=None,
         source_detail=None,
         dry_run=False,
+        source_revision=None,
     ):
         self.calls.append(("propose", taxonomy_id, title, list(operations), source, rationale))
         self.dry_runs.append(dry_run)
+        self.revisions.append(source_revision)
         if self.error is not None:
             raise self.error
         return self.proposal
@@ -137,11 +140,13 @@ class FakeProposalService:
     def auto_apply_operation_ids(self, proposal):
         return self.auto
 
-    def list_proposals(self, taxonomy_id=None, status=None, source=None, limit=50, offset=0):
+    def list_proposals(
+        self, taxonomy_id=None, status=None, source=None, limit=50, offset=0, landed=None
+    ):
         self.calls.append(("list", taxonomy_id, status, source, limit, offset))
         return self.listed
 
-    def count_proposals(self, taxonomy_id=None, status=None, source=None):
+    def count_proposals(self, taxonomy_id=None, status=None, source=None, landed=None):
         return self.total
 
 

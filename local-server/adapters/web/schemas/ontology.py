@@ -30,7 +30,7 @@ from typing import Any, Generic, Literal, Optional, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from domain.ontology.value_objects import DataType
+from domain.ontology.value_objects import DataType, SourceRevision
 
 T = TypeVar("T")
 
@@ -104,6 +104,13 @@ class TaxonomyUpdateRequest(BaseModel):
         None, description="New vision statement (markdown); empty string clears it"
     )
     color: Optional[str] = Field(None, description="New hex color '#rrggbb' or null to clear")
+    mirrored: Optional[bool] = Field(
+        None,
+        description=(
+            "Whether the taxonomy mirrors an external source of truth; a governance"
+            " setting, recorded without a change event"
+        ),
+    )
 
     @field_validator("color")
     @classmethod
@@ -166,6 +173,28 @@ class ExternalReferenceResponse(BaseModel):
     metadata: Optional[dict[str, Any]] = Field(None, description="Source-specific metadata")
 
 
+class SourceRevisionSchema(BaseModel):
+    """A revision of a mirrored taxonomy's external source (a client's spec)."""
+
+    model_config = ConfigDict(extra="forbid", from_attributes=True)
+
+    repo: Optional[str] = Field(None, min_length=1, description="The source repository")
+    commit: Optional[str] = Field(None, min_length=1, description="The commit")
+    spec_version: Optional[str] = Field(
+        None, min_length=1, description="The source's own version label"
+    )
+
+    def to_domain(self) -> SourceRevision:
+        """The domain value; ValueError when every key is missing."""
+        return SourceRevision(repo=self.repo, commit=self.commit, spec_version=self.spec_version)
+
+    @classmethod
+    def from_domain(cls, revision: Optional[SourceRevision]) -> Optional["SourceRevisionSchema"]:
+        if revision is None:
+            return None
+        return cls(repo=revision.repo, commit=revision.commit, spec_version=revision.spec_version)
+
+
 class TaxonomyResponse(BaseModel):
     """Response containing taxonomy data."""
 
@@ -187,6 +216,17 @@ class TaxonomyResponse(BaseModel):
     version: int = Field(default=1, description="Version number for optimistic concurrency control")
     status: Literal["draft", "published"] = Field(
         default="draft", description="Publication status (draft or published)"
+    )
+    mirrored: bool = Field(
+        default=False,
+        description=(
+            "Mirrors an external source of truth (a client's spec): nothing auto-applies,"
+            " Context Studio runs no reflection on it, and a landed proposal can't be"
+            " reverted here"
+        ),
+    )
+    source_revision: Optional[SourceRevisionSchema] = Field(
+        None, description="The source revision the taxonomy was last imported at"
     )
 
 

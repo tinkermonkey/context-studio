@@ -24,6 +24,7 @@ from adapters.web.schemas.proposals import (
     ApprovalPolicyResponse,
     ChangeProposalApplyRequest,
     ChangeProposalCreateRequest,
+    ChangeProposalLandedRequest,
     ChangeProposalRejectRequest,
     ChangeProposalResponse,
     ChangeProposalRevertConflictResponse,
@@ -33,6 +34,7 @@ from adapters.web.schemas.proposals import (
     GoldDecisionResponse,
 )
 from domain.ontology.exceptions import EntityNotFoundError
+from domain.ontology.value_objects import SourceRevision
 from domain.versioning.approval_policy import ApprovalPolicyService
 from domain.versioning.exceptions import (
     ChangeProposalNotFoundError,
@@ -125,6 +127,13 @@ async def list_proposals(
         None, alias="status", description="open, done or reverted"
     ),
     source: Optional[ProposalSource] = Query(None, description="Who or what proposed them"),
+    landed: Optional[bool] = Query(
+        None,
+        description=(
+            "Only proposals the client has (true) or hasn't (false) landed in the"
+            " taxonomy's source; with status=done, false lists decided-but-unlanded"
+        ),
+    ),
     limit: int = Query(50, ge=1, le=500, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     service: ProposalService = Depends(get_proposal_service),
@@ -132,11 +141,13 @@ async def list_proposals(
     """List proposals, newest first, each operation with its stale flag."""
 
     def run() -> ListResponse[ChangeProposalResponse]:
-        proposals = service.list_proposals(taxonomy_id, proposal_status, source, limit, offset)
+        proposals = service.list_proposals(
+            taxonomy_id, proposal_status, source, limit, offset, landed=landed
+        )
         return ListResponse(
             # A list needs no type usage: only the review page's picks read it.
             items=[proposal_response(service, p, with_usage=False) for p in proposals],
-            total=service.count_proposals(taxonomy_id, proposal_status, source),
+            total=service.count_proposals(taxonomy_id, proposal_status, source, landed=landed),
             limit=limit,
             offset=offset,
         )
@@ -268,6 +279,13 @@ async def create_proposal(
         for o in request.operations
     ]
 
+    try:
+        revision = request.source_revision.to_domain() if request.source_revision else None
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
+        ) from exc
+
     def run() -> ChangeProposalResponse:
         proposal = service.propose(
             request.taxonomy_id,
@@ -277,6 +295,7 @@ async def create_proposal(
             rationale=request.rationale,
             source_detail=request.source_detail,
             dry_run=dry_run,
+            source_revision=revision,
         )
         return proposal_response(service, proposal, dry_run=dry_run)
 
@@ -436,7 +455,14 @@ async def revert_proposal(
     """
 
     def run() -> ChangeProposalRevertResponse:
-        result = service.revert(proposal_id)
+        try:
+            result = service.revert(proposal_id)
+        except ChangeProposalStateError as exc:
+            # Landed on a mirrored taxonomy: no entity blocks it, the source does.
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={"message": str(exc), "blocking": []},
+            ) from exc
         return ChangeProposalRevertResponse(
             events_reverted=result.events_reverted,
             classes_deleted=result.classes_deleted,
@@ -448,6 +474,60 @@ async def revert_proposal(
             entities_restored=result.entities_restored,
             proposal=proposal_response(service, service.get(proposal_id)),
         )
+
+    try:
+        return await run_sync_in_executor(run)
+    except Exception as exc:
+        raise _http_error(exc) from exc
+
+
+# ==================== Landing ====================
+
+
+@router.put(
+    "/proposals/{proposal_id}/landed",
+    response_model=ChangeProposalResponse,
+    responses={
+        **_NOT_FOUND,
+        409: {"description": "The proposal is open or reverted: only a done one can land"},
+    },
+)
+async def mark_proposal_landed(
+    proposal_id: str,
+    request: ChangeProposalLandedRequest,
+    service: ProposalService = Depends(get_proposal_service),
+) -> ChangeProposalResponse:
+    """
+    Record that the client landed this decided proposal in the taxonomy's
+    source (its landing script calls this after writing the change). The same
+    revision again changes nothing; another one replaces the landing.
+    """
+    revision = SourceRevision(
+        repo=request.repo, commit=request.commit, spec_version=request.spec_version
+    )
+
+    def run() -> ChangeProposalResponse:
+        return proposal_response(service, service.mark_landed(proposal_id, revision))
+
+    try:
+        return await run_sync_in_executor(run)
+    except Exception as exc:
+        raise _http_error(exc) from exc
+
+
+@router.delete(
+    "/proposals/{proposal_id}/landed",
+    response_model=ChangeProposalResponse,
+    responses=_NOT_FOUND,
+)
+async def clear_proposal_landed(
+    proposal_id: str,
+    service: ProposalService = Depends(get_proposal_service),
+) -> ChangeProposalResponse:
+    """Forget that the proposal landed, to correct a wrong mark."""
+
+    def run() -> ChangeProposalResponse:
+        return proposal_response(service, service.clear_landing(proposal_id))
 
     try:
         return await run_sync_in_executor(run)

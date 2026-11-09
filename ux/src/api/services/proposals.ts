@@ -23,6 +23,8 @@ export interface ChangeProposalListParams {
   taxonomy_id?: string;
   status?: ChangeProposal["status"];
   source?: ChangeProposal["source"];
+  /** Landed (true) or not yet landed (false) in a mirrored taxonomy's source. */
+  landed?: boolean;
   limit?: number;
   offset?: number;
 }

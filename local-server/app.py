@@ -24,7 +24,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import OperationalError
 
 from adapters.chat.context import ConfigChatSettings, OntologyWorkspaceContext
-from adapters.chat.proposal_tools import build_proposal_tools
+from adapters.chat.proposal_tools import MarkProposalLandedTool, build_proposal_tools
 from adapters.chat.run_tools import build_run_tools
 from adapters.chat.tools import build_chat_tools
 from adapters.clustering.sklearn_clusterer import SklearnClusterer
@@ -893,6 +893,7 @@ async def lifespan(app: FastAPI):
                     BundleExporter(ontology_repo),
                     write_tools=[
                         *build_proposal_tools(proposal_service, ProposalSource.MCP),
+                        MarkProposalLandedTool(proposal_service, ProposalSource.MCP),
                         *run_tools,
                     ],
                 )

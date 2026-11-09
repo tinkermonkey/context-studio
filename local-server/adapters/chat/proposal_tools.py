@@ -4,8 +4,10 @@ taxonomy, then follow them.
 
 An agent proposes; a person reviews. These tools can only make and read change
 proposals. Accepting, rejecting, applying or reverting operations, and setting a
-taxonomy's approval policy, are a person's decisions in the app and are never
-offered as tools.
+taxonomy's approval policy or mirrored flag, are a person's decisions in the app
+and are never offered as tools. The one exception is `mark_proposal_landed`, MCP
+only: a client mirroring a taxonomy reports that it wrote a decided proposal into
+its source, which decides nothing.
 
 `build_proposal_tools` is instantiated once per caller with its ProposalSource
 (chat or MCP). Every result names its proposals with kind "proposal", so chat
@@ -33,8 +35,10 @@ from adapters.chat.tools import (
 )
 from adapters.serialization.views import proposal_response
 from domain.chat.value_objects import EntityRef, ToolOutcome
+from domain.ontology.value_objects import SourceRevision
 from domain.versioning.exceptions import (
     ChangeProposalNotFoundError,
+    ChangeProposalStateError,
     OperationError,
     ProposalValidationError,
 )
@@ -56,6 +60,16 @@ from domain.versioning.proposals import (
 )
 
 _logger = logging.getLogger(__name__)
+
+SOURCE_REVISION_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "repo": {"type": "string", "description": "The source repository"},
+        "commit": {"type": "string", "description": "The commit"},
+        "spec_version": {"type": "string", "description": "The source's version label"},
+    },
+    "additionalProperties": False,
+}
 
 PROPOSAL_KIND = "proposal"
 MAX_OPERATIONS = 200
@@ -317,6 +331,14 @@ class ProposeChangesTool(_ProposalTool):
                 "type": "boolean",
                 "description": "Validate and preview only; store and apply nothing",
             },
+            "source_revision": {
+                **SOURCE_REVISION_SCHEMA,
+                "description": (
+                    "For a taxonomy that mirrors your source (a spec in your repository):"
+                    " the revision you drafted the proposal against. Without it, the"
+                    " revision the taxonomy was last imported at is recorded."
+                ),
+            },
         },
         "required": ["taxonomy_id", "title", "operations"],
     }
@@ -332,12 +354,19 @@ class ProposeChangesTool(_ProposalTool):
         if not isinstance(raw, list) or not 1 <= len(raw) <= MAX_OPERATIONS:
             raise ToolArgumentError(f"'operations' must be a list of 1 to {MAX_OPERATIONS} items")
 
+        revision = _revision(args.get("source_revision"), "source_revision")
         drafts, errors = _drafts(raw)
         if errors:
             return _not_stored(errors, drafts, checked=False)
         try:
             proposal = self._service.propose(
-                taxonomy_id, title, drafts, self._source, rationale=rationale, dry_run=dry_run
+                taxonomy_id,
+                title,
+                drafts,
+                self._source,
+                rationale=rationale,
+                dry_run=dry_run,
+                source_revision=revision,
             )
         except ProposalValidationError as exc:
             return _not_stored(exc.errors, drafts)
@@ -606,7 +635,7 @@ def _timestamp(value: datetime) -> str:
 
 
 def _proposal_summary(proposal: ChangeProposal) -> dict[str, Any]:
-    return {
+    summary: dict[str, Any] = {
         "id": proposal.id,
         "kind": PROPOSAL_KIND,
         "title": proposal.title,
@@ -616,6 +645,12 @@ def _proposal_summary(proposal: ChangeProposal) -> dict[str, Any]:
         "status": proposal.status.value,
         "counts": _counts(proposal),
     }
+    if proposal.landed is not None:
+        summary["landed"] = {
+            **{k: v for k, v in proposal.landed.revision.to_dict().items() if v is not None},
+            "landed_at": _timestamp(proposal.landed.landed_at),
+        }
+    return summary
 
 
 class ListProposalsTool(_ProposalTool):
@@ -625,15 +660,21 @@ class ListProposalsTool(_ProposalTool):
     description = (
         "List change proposals, newest first, optionally for one taxonomy and with one"
         " status (open: awaiting decisions; done: every operation applied or rejected;"
-        " reverted). Each has its id, title, source and operation counts by status."
-        " Done proposals with applied operations are the record of what changed in a"
-        " taxonomy; read one with get_proposal."
+        " reverted). Each has its id, title, source, operation counts by status and,"
+        " once its client landed it in the taxonomy's source, landed (repo, commit,"
+        " spec_version, landed_at). landed false with status done lists the decided"
+        " proposals not yet landed. Done proposals with applied operations are the"
+        " record of what changed in a taxonomy; read one with get_proposal."
     )
     input_schema = {
         "type": "object",
         "properties": {
             "taxonomy_id": {"type": "string", "description": "Only proposals about this taxonomy"},
             "status": {"type": "string", "enum": [s.value for s in ProposalStatus]},
+            "landed": {
+                "type": "boolean",
+                "description": "Only proposals landed (true) or not landed (false) in the source",
+            },
             "limit": {
                 "type": "integer",
                 "minimum": 1,
@@ -649,10 +690,13 @@ class ListProposalsTool(_ProposalTool):
         status = _status(optional_str(args, "status"))
         limit = int_arg(args, "limit", DEFAULT_LIMIT, 1, MAX_LIMIT)
         offset = int_arg(args, "offset", 0, 0, 1_000_000)
+        landed = args.get("landed")
+        if landed is not None and not isinstance(landed, bool):
+            raise ToolArgumentError("'landed' must be true or false")
         proposals = self._service.list_proposals(
-            taxonomy_id=taxonomy_id, status=status, limit=limit, offset=offset
+            taxonomy_id=taxonomy_id, status=status, limit=limit, offset=offset, landed=landed
         )
-        total = self._service.count_proposals(taxonomy_id=taxonomy_id, status=status)
+        total = self._service.count_proposals(taxonomy_id=taxonomy_id, status=status, landed=landed)
         payload = {
             "items": [_proposal_summary(p) for p in proposals],
             "total": total,
@@ -667,6 +711,59 @@ class ListProposalsTool(_ProposalTool):
             summary=f"{len(proposals)} of {total} proposals",
             entities=tuple(proposal_ref(p) for p in proposals if p.id in shown),
         )
+
+
+class MarkProposalLandedTool(_ProposalTool):
+    """A client reports that it landed a decided proposal in its source."""
+
+    name = "mark_proposal_landed"
+    description = (
+        "Record that you landed a decided (done) proposal in the taxonomy's source: the"
+        " repository, the commit that holds the change, and the spec version. Call it"
+        " from your landing step after writing the proposal's changes into your source;"
+        " it changes nothing in the taxonomy. The same revision again changes nothing;"
+        " another revision replaces the landing. An open or reverted proposal can't be"
+        " marked landed. list_proposals with status done and landed false lists what is"
+        " still to land."
+    )
+    input_schema = {
+        "type": "object",
+        "properties": {
+            "id": {"type": "string", "description": "Proposal id"},
+            "repo": {"type": "string", "description": "The source repository"},
+            "commit": {"type": "string", "description": "The commit that holds the change"},
+            "spec_version": {"type": "string", "description": "The source's version label"},
+        },
+        "required": ["id", "commit"],
+    }
+
+    def run(self, args: dict[str, Any]) -> ToolOutcome:
+        proposal_id = required_str(args, "id")
+        revision = _revision(
+            {k: args.get(k) for k in ("repo", "commit", "spec_version") if args.get(k) is not None},
+            "the revision",
+        )
+        try:
+            proposal = self._service.mark_landed(proposal_id, revision)  # type: ignore[arg-type]
+        except ChangeProposalStateError as exc:
+            return error_outcome(str(exc), "Proposal not marked landed")
+        except ValueError as exc:
+            raise ToolArgumentError(str(exc)) from None
+        return ToolOutcome(
+            content=dumps(_proposal_summary(proposal)),
+            summary=f"Proposal marked landed: {proposal.title}",
+            entities=(proposal_ref(proposal),),
+        )
+
+
+def _revision(value: Any, name: str) -> Optional[SourceRevision]:
+    """A source revision argument ({repo, commit, spec_version}), or None when absent."""
+    if value is None:
+        return None
+    try:
+        return SourceRevision.from_dict(value)
+    except ValueError as exc:
+        raise ToolArgumentError(f"{name}: {exc}") from None
 
 
 def _status(value: Optional[str]) -> Optional[ProposalStatus]:

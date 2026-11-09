@@ -36,6 +36,7 @@ from domain.ontology.value_objects import (
     LexicalSense,
     NodeType,
     OntologyMapping,
+    SourceRevision,
     Status,
 )
 
@@ -262,6 +263,12 @@ def map_orm_to_domain(
             external_references=deserialize_external_references(
                 cast(list[dict[str, Any]], orm_entity.external_references) or []
             ),
+            mirrored=bool(orm_entity.mirrored),
+            source_revision=(
+                SourceRevision.from_dict(cast(dict[str, Any], orm_entity.source_revision))
+                if orm_entity.source_revision
+                else None
+            ),
         )
 
     elif orm_entity.node_type == NodeType.CONCEPT_SCHEME:
@@ -375,6 +382,8 @@ def map_domain_to_orm(
             identifier=entity.identifier,
             vision=entity.vision,
             color=entity.color,
+            mirrored=entity.mirrored,
+            source_revision=entity.source_revision.to_dict() if entity.source_revision else None,
         )
 
     elif isinstance(entity, ConceptScheme):

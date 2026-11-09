@@ -10,6 +10,7 @@ from domain.versioning.entities import ChangeEvent
 from domain.versioning.gold import DecisionFilter, ProposalDecision
 from domain.versioning.proposals import (
     ChangeProposal,
+    Landing,
     ProposalSource,
     ProposalStatus,
     ProposedOperation,
@@ -123,8 +124,9 @@ class ChangeProposalRepository(Protocol):
         source: Optional[ProposalSource] = None,
         limit: int = 50,
         offset: int = 0,
+        landed: Optional[bool] = None,
     ) -> list[ChangeProposal]:
-        """Return proposals, newest first, optionally filtered."""
+        """Return proposals, newest first, optionally filtered (landed: landed or not)."""
         ...
 
     def count_proposals(
@@ -132,8 +134,13 @@ class ChangeProposalRepository(Protocol):
         taxonomy_id: Optional[str] = None,
         status: Optional[ProposalStatus] = None,
         source: Optional[ProposalSource] = None,
+        landed: Optional[bool] = None,
     ) -> int:
         """Count proposals matching the filters."""
+        ...
+
+    def set_landed(self, proposal_id: str, landed: Optional[Landing]) -> None:
+        """Record where the proposal landed, or clear it (None)."""
         ...
 
     def save_operations(

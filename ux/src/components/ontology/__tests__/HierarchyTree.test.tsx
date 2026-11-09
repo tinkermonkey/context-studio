@@ -18,6 +18,7 @@ const taxonomies: TaxonomyResponse[] = [
     description: "Alpha root",
     version: 1,
     status: "draft",
+    mirrored: false,
   },
   {
     id: "tax-2",
@@ -26,6 +27,7 @@ const taxonomies: TaxonomyResponse[] = [
     description: "Beta root",
     version: 1,
     status: "draft",
+    mirrored: false,
   },
 ];
 

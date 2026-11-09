@@ -7,6 +7,7 @@ import { render } from "@/test/test-utils";
 import {
   createOperation,
   deleteOperation,
+  doneProposal,
   openProposal,
   proposalHandlers,
   renameOperation,
@@ -139,6 +140,48 @@ describe("ProposalsListPage", () => {
 
     rerender(<ProposalsListPage status="reverted" onFiltersChange={vi.fn()} />);
     expect(await screen.findByText("No proposals match these filters.")).toBeInTheDocument();
+  });
+
+  it("lists done proposals not yet landed, and marks landed ones", async () => {
+    const landedProposal = {
+      ...doneProposal,
+      id: "proposal-3",
+      title: "Landed in the spec",
+      landed: {
+        repo: "documentation_robotics",
+        commit: "ccc333",
+        spec_version: "0.10.1",
+        landed_at: "2026-11-09T12:00:00+00:00",
+      },
+    };
+    const requests: string[] = [];
+    server.use(
+      http.get("*/api/proposals", ({ request }) => {
+        const url = new URL(request.url);
+        requests.push(url.search);
+        const landed = url.searchParams.get("landed");
+        const items = [doneProposal, landedProposal].filter(
+          (p) => landed === null || !!p.landed === (landed === "true"),
+        );
+        return HttpResponse.json({ items, total: items.length, limit: 500, offset: 0 });
+      }),
+    );
+
+    const { rerender } = render(<ProposalsListPage status="unlanded" onFiltersChange={vi.fn()} />);
+
+    expect(await screen.findByTestId("proposal-link-proposal-2")).toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-link-proposal-3")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("proposal-landed-proposal-2")).not.toBeInTheDocument();
+    expect(requests.at(-1)).toContain("status=done");
+    expect(requests.at(-1)).toContain("landed=false");
+
+    rerender(<ProposalsListPage status="done" onFiltersChange={vi.fn()} />);
+
+    const landed = await screen.findByTestId("proposal-landed-proposal-3");
+    expect(landed).toHaveTextContent("landed");
+    expect(landed).toHaveClass("chip--cyan");
+    expect(landed.closest(".proposal-status")).not.toBeNull();
+    expect(requests.at(-1)).not.toContain("landed=");
   });
 
   it("shows an error banner when the list fails", async () => {
