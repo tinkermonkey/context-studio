@@ -620,6 +620,8 @@ def _normalized(bundle):
     for cls in result["classes"]:
         cls.setdefault("parent", None)
         cls.setdefault("attributes", [])
+        # House's file predates class constraints (#1465); absent keeps a class's metadata.
+        cls.setdefault("constraints", {})
     result["relationships"] = sorted(
         result["relationships"], key=lambda r: (r["source"], r["property"], r["target"])
     )
@@ -942,3 +944,139 @@ def test_export_refuses_a_class_without_an_identifier(service, repo, authored):
 
     with pytest.raises(BundleError, match="Class 'Path'"):
         BundleExporter(repo).export(authored["taxonomy"].id)
+
+
+# ------------------------------------- external references and derived flags (#1465)
+
+
+def dr_reference(identifier, **metadata):
+    return ExternalReference(
+        source="documentation_robotics",
+        identifier=identifier,
+        metadata=MappingProxyType(metadata) if metadata else None,
+    )
+
+
+@pytest.fixture()
+def dr_tagged(service, repo, authored):
+    """The authored taxonomy as DR loads one: each entity carries its DR id."""
+    bed = repo.get_by_identifier("garden_bed")
+    grows_in = repo.get_property_definition_by_identifier("garden_grows_in")
+    service.update_class(bed.id, external_references=[dr_reference("garden.bed")])
+    service.update_property_definition(
+        grows_in.id,
+        external_references=[
+            dr_reference(
+                "garden.plant.grows-in.garden.bed", cardinality="many-to-one", strength="high"
+            )
+        ],
+    )
+    service.update_individual(
+        authored["tomato"].id, external_references=[dr_reference("garden.plant.tomato")]
+    )
+    return authored
+
+
+def by_key(entries, key, value):
+    return next(e for e in entries if e[key] == value)
+
+
+def test_dr_ids_cardinality_and_strength_travel_in_the_bundle(
+    importer, repo, session_factory, dr_tagged, tmp_path
+):
+    exported = _assert_round_trip_writes_nothing(
+        importer, repo, session_factory, dr_tagged["taxonomy"].id
+    )
+
+    bed = by_key(exported["classes"], "identifier", "garden_bed")
+    assert bed["external_references"] == [
+        {"source": "documentation_robotics", "identifier": "garden.bed"}
+    ]
+    [grows_in] = exported["properties"]
+    assert grows_in["external_references"] == [
+        {
+            "source": "documentation_robotics",
+            "identifier": "garden.plant.grows-in.garden.bed",
+            "metadata": {"cardinality": "many-to-one", "strength": "high"},
+        }
+    ]
+    tomato = by_key(exported["individuals"], "id", dr_tagged["tomato"].id)
+    assert tomato["external_references"][0]["identifier"] == "garden.plant.tomato"
+    assert "external_references" not in by_key(exported["classes"], "identifier", "garden_plant")
+
+    # Another workspace gets the same DR ids and metadata.
+    other_factory = _workspace(tmp_path / "other.db")
+    other_repo = SQLiteOntologyRepository(other_factory)
+    load_bundle(build_bundle_importer(other_factory, FakeEmbeddingService()), exported)
+    assert BundleExporter(other_repo).export(_taxonomy_id(other_repo, "garden")) == exported
+    other_factory.kw["bind"].dispose()
+
+
+def test_listed_references_are_added_or_updated_never_removed(
+    importer, service, repo, dr_tagged
+):
+    exported = BundleExporter(repo).export(dr_tagged["taxonomy"].id)
+    bed = repo.get_by_identifier("garden_bed")
+    # Context Studio grounds the class after the client pulled its file.
+    wikidata = ExternalReference(source="wikidata", identifier="Q1")
+    service.update_class(bed.id, external_references=[*bed.external_references, wikidata])
+    [grows_in] = exported["properties"]
+    grows_in["external_references"][0]["metadata"]["strength"] = "low"
+    plant = by_key(exported["classes"], "identifier", "garden_plant")
+    plant["external_references"] = [{"source": "dbpedia", "identifier": "Plant"}]
+
+    load_bundle(importer, exported)
+
+    assert repo.get_by_identifier("garden_bed").external_references == [
+        dr_reference("garden.bed"),
+        wikidata,
+    ]
+    [reference] = repo.get_property_definition_by_identifier(
+        "garden_grows_in"
+    ).external_references
+    assert dict(reference.metadata) == {"cardinality": "many-to-one", "strength": "low"}
+    assert repo.get_by_identifier("garden_plant").external_references == [
+        ExternalReference(source="dbpedia", identifier="Plant")
+    ]
+
+
+def test_house_derived_class_flag_round_trips(importer, service, repo, session_factory):
+    bundle = _bundle()
+    by_key(bundle["classes"], "identifier", "house_place")["constraints"] = {"derived": True}
+    load_bundle(importer, bundle)
+
+    place = repo.get_by_identifier("house_place")
+    assert [dict(r.metadata or {}) for r in place.external_references] == [{"derived": True}]
+    exported = _assert_round_trip_writes_nothing(
+        importer, repo, session_factory, _taxonomy_id(repo, "house")
+    )
+    assert by_key(exported["classes"], "identifier", "house_place")["constraints"] == {
+        "derived": True
+    }
+    assert by_key(exported["classes"], "identifier", "house_room")["constraints"] == {}
+
+    # A file from before class constraints keeps the flag; an empty object clears it.
+    assert load_bundle(importer, _bundle()).changed == 0
+    cleared = _bundle()
+    by_key(cleared["classes"], "identifier", "house_place")["constraints"] = {}
+    load_bundle(importer, cleared)
+    assert repo.get_by_identifier("house_place").external_references[0].metadata is None
+
+
+@pytest.mark.parametrize(
+    "references, message",
+    [
+        ({"source": "x"}, "needs a source and an identifier"),
+        ([{"source": "house", "identifier": "house_place"}], "lists a 'house' external reference"),
+        ([{"source": "x", "identifier": "y", "metadata": []}], "metadata must be an object"),
+        ([{"source": "x", "identifier": ""}], "needs a source and an identifier"),
+    ],
+)
+def test_malformed_external_references_are_refused(importer, references, message):
+    bundle = _bundle()
+    by_key(bundle["classes"], "identifier", "house_place")["external_references"] = (
+        references if isinstance(references, list) else [references]
+    )
+
+    with pytest.raises(BundleError, match=message):
+        load_bundle(importer, bundle)
