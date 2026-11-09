@@ -143,7 +143,7 @@ _TEXT_FIELDS = frozenset(
         "default_value",
     }
 )
-_BOOL_FIELDS = frozenset({"is_required", "is_relevant"})
+_BOOL_FIELDS = frozenset({"is_required", "is_relevant", "derived"})
 _INT_FIELDS = frozenset({"sort_order"})
 _TEXT_LIST_FIELDS = frozenset({"allowed_values", "class_ids"})
 # An individual's attribute values: identifier -> value (see the module docstring).
@@ -221,10 +221,11 @@ OPERATION_FIELDS: dict[OperationKind, OperationFields] = {
                 "parent_class_id",
                 "identifier",
                 "external_references",
+                "derived",
             }
         ),
         required=frozenset({"concept_scheme_id", "title"}),
-        update=frozenset({"title", "description", "color", "external_references"}),
+        update=frozenset({"title", "description", "color", "external_references", "derived"}),
         clearable=frozenset({"description", "color"}),
     ),
     K.PROPERTY: OperationFields(
@@ -237,6 +238,7 @@ OPERATION_FIELDS: dict[OperationKind, OperationFields] = {
                 "domain_class_id",
                 "range_class_id",
                 "external_references",
+                "derived",
             }
         ),
         required=frozenset({"identifier", "title"}),
@@ -250,6 +252,7 @@ OPERATION_FIELDS: dict[OperationKind, OperationFields] = {
                 "domain_class_id",
                 "range_class_id",
                 "external_references",
+                "derived",
             }
         ),
         clearable=frozenset(
@@ -2415,7 +2418,7 @@ class ProposalService:
 
     def _update_property(self, target: str, v: dict[str, Any]) -> str:
         kwargs: dict[str, Any] = {}
-        for name in ("identifier", "title", "external_references"):
+        for name in ("identifier", "title", "external_references", "derived"):
             if name in v:
                 kwargs[name] = v[name]
         if "description" in v:

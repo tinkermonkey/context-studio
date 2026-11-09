@@ -1,0 +1,145 @@
+{
+  "examples": [
+    {
+      "id": "waypoint-product-vision",
+      "title": "Waypoint product vision",
+      "description": "Product-vision prose for a fictional field-service platform. Exercises all ten motivation-layer node types.",
+      "pipelines": [
+        "individual_extraction"
+      ],
+      "taxonomy_hint": "dr_spec",
+      "source": "tests/integration/fixtures/pipelines/individual_extraction/sme_waypoint_product_vision",
+      "text": "Product Vision: Waypoint Field Service Platform\n\nWaypoint is a scheduling and dispatch platform for HVAC and plumbing contractors who send technicians into the field every day.\n\nField Technicians are the platform's most demanding stakeholders: they work out of a truck, often in basements or backyards with no signal, and they are the ones customers actually see.\n\nRising Customer Expectations for On-Time Arrival Windows is the driver behind this release. Customers increasingly expect a narrow, reliable arrival window instead of a vague \"sometime this afternoon,\" and contractors that cannot deliver on that lose repeat business to competitors who can.\n\nThat driver motivates our top goal: Reduce Missed Service Appointments.\n\nAn internal review found that nearly a third of missed appointments trace to double-booked technicians, and that assessment is a major reason this goal is on the roadmap this quarter.\n\nTo reduce missed appointments, this goal aggregates one concrete requirement: an Offline-Capable Mobile Technician App. Field Technicians are the stakeholder most directly associated with this requirement, since they are the ones who lose the job the moment their signal drops.\n\nThe requirement is bounded by a hard constraint: Technicians Must Be Able to Complete Work Orders Without a Reliable Cellular Connection. Rural service routes and basement mechanical rooms routinely have no signal at all, so this constraint constrains exactly how the offline app requirement can be implemented -- data has to be captured locally and synced later, not streamed live.\n\nWe are guided by one principle above all: A Technician Should Never Need to Call Dispatch to Confirm a Job. Everything the technician needs -- the address, the access code, the customer's history -- should already be on the device. This principle realizes our top goal directly: fewer confirmation calls means fewer chances for a job to slip through the cracks.\n\nSuccess here shows up as a specific outcome: Missed-Appointment Rate Cut in Half. That outcome is what actually realizes the goal -- the goal is the direction, the outcome is proof we got there.\n\nUnderneath all of this is a value we protect above almost anything else: Customer Trust. Every goal on this roadmap is, in the end, associated with preserving that value; a customer who has been stood up once rarely gives a contractor a third chance.\n\nFinally, a note on Meaning: On-Time Means Arriving Within the Committed Appointment Window, Not Just the Same Day. That specific interpretation is associated with both the top goal and with Field Technicians, because a technician who shows up at 4:58 on a 3-5pm window has, by this definition, still met the goal -- arriving on the same day is not enough."
+    },
+    {
+      "id": "waypoint-business-operations",
+      "title": "Waypoint operations runbook",
+      "description": "Operations-runbook prose. Exercises the business layer (products, services, actors, roles, processes) with role-vs-actor near misses.",
+      "pipelines": [
+        "individual_extraction"
+      ],
+      "taxonomy_hint": "dr_spec",
+      "source": "tests/integration/fixtures/pipelines/individual_extraction/sme_waypoint_business_operations",
+      "text": "Operations Runbook: Waypoint Dispatch\n\nWaypoint Field Service Platform is the product our dispatch and field teams run on every day. It bundles two customer-facing services into one subscription: Scheduling & Dispatch and Work Order Management.\n\nThe Regional Operations Manager, a business actor covering the region, is assigned to the Dispatcher role during a call-out or a busy morning -- never to the Field Technician role, which is a separate assignment reserved for field crew. The Dispatcher role is the one who actually performs the Work Order Fulfillment process -- walking a job from \"customer called\" to \"technician on site\" to \"invoice sent.\"\n\nWork Order Fulfillment kicks off the moment a Customer Reports an Issue: that business event triggers the whole process. Most of those reports still come in through the Dispatch Call Center, a business interface staffed during business hours; a call landing there triggers Work Order Fulfillment just as reliably as a report submitted through the app.\n\nOnce a job is scheduled, the Field Technician role performs Route Optimization -- a function, not a process, because there's no single finish line; it's an ongoing capability the role exercises on every run, sequencing stops to minimize drive time between jobs. Route Optimization realizes the Scheduling & Dispatch service: the service exists, from the customer's point of view, because that underlying capability keeps it running efficiently.\n\nWork Order Fulfillment itself realizes the Work Order Management service -- the process is how the service actually gets delivered, even though customers only ever see the service, never the process behind it.\n\nEvery customer account is covered by a Service Level Agreement, a contract that governs the Work Order Management service: it's what obligates us to a same-day response window. The Waypoint Field Service Platform product composes that contract and aggregates both of the services above -- Scheduling & Dispatch and Work Order Management ship together under one subscription.\n\nUltimately, the Dispatcher role serves our Customers -- the stakeholder whose experience the whole operation exists to protect. Work Order Fulfillment realizes a specific goal on our roadmap, On-Time Service Delivery, and the Scheduling & Dispatch service satisfies a requirement that goal depends on: Real-Time Technician Location Visibility, without which a dispatcher can't tell a customer an honest ETA."
+    },
+    {
+      "id": "waypoint-job-event-store",
+      "title": "Waypoint job event data store",
+      "description": "Engineering note full of data-store jargon (databases, collections, fields, access patterns). Tests relationship direction and three plausible wrong triples.",
+      "pipelines": [
+        "individual_extraction"
+      ],
+      "taxonomy_hint": "dr_spec",
+      "source": "tests/integration/fixtures/pipelines/individual_extraction/sme_waypoint_tech_database_selection",
+      "text": "Engineering Note: Choosing the Job Event Data Store\n\nThe Job Event Store is the database of record for every location ping, status change, and completion event a field technician's app produces throughout a shift. We chose a document-oriented engine over a normalized relational schema because job events arrive as heterogeneous, semi-structured payloads -- a status-change event and a photo-upload event share almost no fields -- and a document store lets us keep the whole event shape from day one without a migration every time a new event type ships.\n\nThe Job Event Store depends on two things: the Field Ops Compute Cluster, the compute node in our primary region that actually runs it, and the DocumentDB Engine, the system software that runs the storage engine itself.\n\nInternally, the Job Event Store composes a single Job Events Collection, the collection that holds every event document regardless of type. Two fields matter for indexing, and the Job Events Collection composes both of them: the Technician ID Field, which identifies which technician's device produced the event, and the Event Timestamp Field, which orders events within a shift.\n\nOur dominant read pattern is Recent Job Events by Technician, an access pattern dispatchers trigger dozens of times a day, always filtered by technician and sorted by time. That access pattern accesses the Job Events Collection directly, and it is optimized by the Technician-and-Timestamp Compound Index, a compound index over exactly those two fields, so the database never has to scan the whole collection to answer it. That index aggregates the Technician ID Field and the Event Timestamp Field.\n\nJob events don't need to live forever. The Ninety-Day Job Event Retention Policy, the retention policy that governs the Job Events Collection, ages events out after ninety days, well past the longest dispute-resolution window our operations team has ever needed. That retention policy uses the Cold Storage Archival Service, a technology service that moves expired events to cheap, rarely-read storage instead of deleting them outright.\n\nNone of this would matter if queries were slow. The Job Event Store satisfies a hard requirement: Technician Activity Queries Must Return Within Two Hundred Milliseconds at Peak Dispatch Load. That's the number that ruled out a plain full scan and justified building the compound index in the first place."
+    },
+    {
+      "id": "waypoint-rate-limiting",
+      "title": "Waypoint endpoint rate limiting",
+      "description": "Engineering note mixing the API layer (operations, rate limits, security schemes) with monitoring metrics and alerts.",
+      "pipelines": [
+        "individual_extraction"
+      ],
+      "taxonomy_hint": "dr_spec",
+      "source": "tests/integration/fixtures/pipelines/individual_extraction/sme_waypoint_tech_api_rate_limiting",
+      "text": "Engineering Note: Rate Limiting and Tracing the Assign Job Endpoint\n\nDispatchers batch-assign jobs to technicians at shift start, which used to hammer our API with hundreds of near-simultaneous calls to the same endpoint. The Assign Job Operation is the operation that actually performs a single assignment, and it is the one we chose to protect first.\n\nWe protect it with the Dispatcher Burst Rate Limit, a rate limit that governs the Assign Job Operation and caps each dispatcher to thirty assignment calls per ten-second window. That rate limit uses the Edge Gateway Software, the system software running at our API edge that actually enforces the throttling before a request ever reaches application code. The rate limit also satisfies a hard constraint we inherited from the mobile team: Assignment Calls Must Fail Fast Rather Than Queue, because a dispatcher who is mid-shift cannot afford to wait on a stuck request.\n\nThe Assign Job Operation also uses the Dispatcher API Key Scheme, the security scheme that authenticates every dispatcher call, and it uses the Assignment Fan-Out Service, a technology service that actually delivers the assignment to the technician's device once the API call succeeds.\n\nBecause this endpoint has caused incidents before, it is also the most heavily instrumented one we operate. The Assign Job Operation references the Assign Job Trace Configuration, the trace configuration that controls how spans for this endpoint are sampled and propagated. That trace configuration aggregates the Assign Job Latency Histogram, the metric instrument that records how long each assignment call takes end to end, and the Assign Job Latency Histogram is the metric instrument that monitors the Assign Job Operation directly. The trace configuration depends on the Telemetry Pipeline Service, the technology service that actually carries span and metric data off the API nodes. From there, the Assign Job Latency Histogram flows to the Observability Backend Exporter, the exporter configuration that finally ships the data to our monitoring backend, and that exporter configuration itself depends on the same Telemetry Pipeline Service."
+    },
+    {
+      "id": "waypoint-technician-ux",
+      "title": "Waypoint technician app UX",
+      "description": "UX-spec excerpt. Exercises the UX layer: application, views, components and actions, with a button-vs-action near miss.",
+      "pipelines": [
+        "individual_extraction"
+      ],
+      "taxonomy_hint": "dr_spec",
+      "source": "tests/integration/fixtures/pipelines/individual_extraction/sme_waypoint_technician_ux",
+      "text": "UX Spec Excerpt: Waypoint Technician App\n\nThe Waypoint Technician App is the mobile application field technicians carry from job to job. As a UX application, it aggregates one UX spec, Technician Daily Workflow, which in turn aggregates both of the app's two core views: Today's Jobs and Job Detail.\n\nToday's Jobs is the view a technician lands on after signing in. It renders the Job List, a component instance that pulls the day's assigned jobs into a single scrollable list. Today's Jobs also aggregates a View Job button, an action component that, when tapped, navigates to the Job Detail view for the selected job.\n\nJob Detail composes a Signature Capture Panel, a subview embedded directly in the page rather than a separate screen, so the technician never has to leave the job to collect a customer's signature. Job Detail also aggregates the Complete Job button, another action component. Tapping Complete Job triggers a business event, Job Marked Complete, which is what actually closes out the work order on the backend. That same Complete Job button satisfies a requirement we shipped this app specifically to meet: One-Tap Job Completion -- no technician should need more than one tap to close a finished job.\n\nBecause technicians frequently lose signal mid-route, Today's Jobs requires an error config, the Offline Sync Error Banner, so the view always has somewhere to surface a sync failure instead of failing silently. And because this whole screen exists for one audience, Job Detail serves the Field Technician business role directly -- it was not designed with dispatchers or managers in mind."
+    },
+    {
+      "id": "waypoint-help-article",
+      "title": "Waypoint help center article",
+      "description": "The job event store facts again, in help-desk language. Generic lowercase mentions should not become individuals; compare with the engineering note.",
+      "pipelines": [
+        "individual_extraction"
+      ],
+      "taxonomy_hint": "dr_spec",
+      "source": "tests/integration/fixtures/pipelines/individual_extraction/informal_support_article",
+      "text": "Help Center: Why Don't I See Jobs From Last Quarter?\n\nSome technicians notice that jobs older than about three months no longer show up when they search their history. This is expected behavior, governed by our 90-Day Retention Policy, not a bug.\n\nWaypoint keeps a rolling window of recent job records in the Job Event Store, the database that holds every job event for fast lookup. The 90-Day Retention Policy moves anything older than ninety days out of that active database and into cold storage, where it's kept for compliance but isn't available for quick searching inside the app.\n\nIf you need a record older than ninety days -- for a warranty dispute or an insurance claim, for example -- contact your regional operations manager and they can request a manual pull from archive. It typically takes one business day.\n\nWhy do we do this? Keeping every job forever in the fast-access database would slow down the exact search dispatchers use dozens of times a day: pulling up a technician's recent job history. The 90-Day Retention Policy exists specifically to keep that search fast for everyone.\n\nOne more thing worth knowing: if you're offline when you close out a job, that job is held locally on your device and doesn't show up in the Job Event Store -- or count against the 90-Day Retention Policy's clock -- until it actually syncs."
+    },
+    {
+      "id": "waypoint-marketing-copy",
+      "title": "Waypoint blog post",
+      "description": "Benefit-led marketing copy where values and backend details leak in. Tests over-eager extraction of invented relationships.",
+      "pipelines": [
+        "individual_extraction"
+      ],
+      "taxonomy_hint": "dr_spec",
+      "source": "tests/integration/fixtures/pipelines/individual_extraction/informal_marketing_copy",
+      "text": "Never Lose a Job to a Dead Signal Again\n\nEvery field service company has a horror story: a technician loses signal in a basement, the app freezes, and by the time it reconnects, the job's gone -- or worse, gotten double-booked. Waypoint was built to make that story impossible.\n\nUnder the hood, every action a technician takes -- every photo, every status update, every signature -- gets written straight to the Job Event Store, the single source of truth for what actually happened on a job, whether you're standing in a fiber-connected office building or three floors underground with zero bars. Nothing waits on a network round-trip to be real.\n\nThat's not a nice-to-have. It's the whole reason our customers tell us they've cut missed appointments in half since switching. When your technicians never lose a job to a dead zone, your customers stop losing patience with you.\n\nWe built Waypoint around one value that never changes, no matter how many features we ship: Customer Trust. Every login screen, every offline sync, every dashboard alert -- all of it exists in service of one thing: making sure the promise you made to a customer actually gets kept.\n\nTry it risk-free for thirty days. Once your dispatchers see it, they'll wonder how they ever ran a business without it."
+    },
+    {
+      "id": "waypoint-sales-one-pager",
+      "title": "Waypoint sales one-pager",
+      "description": "Prospect-facing sales prose about products, services and contracts, with rhetorical mentions that are not real entities.",
+      "pipelines": [
+        "individual_extraction"
+      ],
+      "taxonomy_hint": "dr_spec",
+      "source": "tests/integration/fixtures/pipelines/individual_extraction/informal_sales_literature",
+      "text": "Why Contractors Choose Waypoint\n\nWaypoint Field Service Platform is the all-in-one system HVAC and plumbing contractors trust to run their day. One subscription bundles everything you need: Scheduling & Dispatch keeps your crews moving, and Work Order Management keeps every job documented from first call to final invoice.\n\nEvery Waypoint account ships with a Service Level Agreement that guarantees a same-day response window -- if we don't meet it, you don't pay for that job's platform fee. That's how confident we are.\n\nYour dispatchers can see exactly where every technician is on Waypoint's live map, and your customers get a text the moment their tech is five minutes out. No more \"sometime this afternoon.\"\n\nBehind the scenes, our team watches the whole platform around the clock from the Waypoint Operations Dashboard, so a slowdown gets caught and fixed before it ever touches your business.\n\nAnd your data is safe with bank-level encryption, full stop -- that's a promise, not a technical footnote.\n\nJoin the thousands of contractors who've already made the switch. Waypoint doesn't just track your jobs. It grows your business."
+    },
+    {
+      "id": "kubernetes-energy-abstract",
+      "title": "Kubernetes energy monitoring abstract",
+      "description": "Research-paper abstract (academic register) about energy attribution for workflows on Kubernetes. Tests named tools and systems in dense prose.",
+      "pipelines": [
+        "schema_extraction",
+        "individual_extraction"
+      ],
+      "taxonomy_hint": "dr_spec",
+      "source": "tests/integration/fixtures/pipelines/individual_extraction/arxiv_kubernetes_energy_monitoring",
+      "text": "Scientific workflows are pipelines of interdependent tasks. They are increasingly executed on shared Kubernetes clusters via workflow engines such as Nextflow. Their energy consumption matters for both cost and sustainability. It is necessary to examine and optimize workflow tasks individually, because they can be very heterogeneous. However, estimating task-level energy on clusters is difficult: Intel RAPL counters report only node-level energy, access to counters and host process information is typically restricted, and concurrent workloads introduce resource contention and measurement noise. We present Nf-PEAK, a containerized method to attribute CPU-package and DRAM energy to individual processes and Nextflow tasks. Nf-PEAK (i) identifies workflow pods, (ii) maps pods to host processes via cgroup metadata, (iii) samples RAPL and per-process performance counters, and (iv) applies a non-linear energy-credit model before aggregating results at task level. On a Kubernetes cluster, we evaluate three nf-core workflows under controlled co-located CPU load. Nf-PEAK reaches an average Mean Absolute Percentage Error of 6.6% in isolated runs and 10.9% when an unrelated workload saturates 8 of 32 hardware threads per node, and remains stable across 2, 3, 4, and 8 nodes. Compared to the state-of-the-art Kubernetes tool Kepler, Nf-PEAK yields lower error on average, particularly under co-located load."
+    },
+    {
+      "id": "domain-driven-design",
+      "title": "Domain-driven design building blocks",
+      "description": "Short, classic schema paragraph: bounded contexts, entities, value objects, aggregates and repositories, and how they relate.",
+      "pipelines": [
+        "schema_extraction"
+      ],
+      "source": "tests/integration/fixtures/pipelines/schema_extraction/domain_driven_design",
+      "text": "Domain-Driven Design focuses on modeling the business domain. Bounded contexts define clear boundaries around models. Entities have identity and lifecycle. Value objects are immutable and defined by their attributes. Aggregates group related entities with a root entity. Repositories abstract persistence concerns. Ubiquitous language ensures consistent terminology."
+    },
+    {
+      "id": "microservices-architecture",
+      "title": "Microservices architecture",
+      "description": "Schema paragraph about microservices patterns: API gateway, event bus, service mesh and circuit breaker.",
+      "pipelines": [
+        "schema_extraction"
+      ],
+      "source": "tests/integration/fixtures/pipelines/schema_extraction/microservices_architecture",
+      "text": "Microservices architecture decomposes systems into independently deployable services. Each service owns its data and exposes APIs. An API gateway routes requests to appropriate services. Services communicate synchronously via REST or gRPC, or asynchronously via events. An event bus facilitates loose coupling. Service mesh manages inter-service communication. Circuit breakers prevent cascading failures."
+    },
+    {
+      "id": "distributed-systems",
+      "title": "Distributed systems trade-offs",
+      "description": "Schema paragraph about consensus, replication and consistency models, including trade-offs rather than only things.",
+      "pipelines": [
+        "schema_extraction"
+      ],
+      "source": "tests/integration/fixtures/pipelines/schema_extraction/distributed_systems",
+      "text": "Distributed systems must handle challenges of network latency, failures, and asynchrony. Consensus algorithms like Raft ensure agreement on state. Replication improves availability and fault tolerance. Partitioning distributes data across nodes. Consistency models trade off between safety and performance. Strong consistency guarantees immediate visibility of updates. Eventual consistency allows temporary divergence."
+    },
+    {
+      "id": "waypoint-two-senses-of-service",
+      "title": "Two senses of \"service\"",
+      "description": "Written for this library. Uses \"service\" for both a customer's repair visit and a backend software service, and \"job\" for both a work order and a scheduled batch task. Exercises disambiguation: senses should become separate candidates without the definitions leaking into class labels.",
+      "pipelines": [
+        "schema_extraction",
+        "individual_extraction"
+      ],
+      "taxonomy_hint": "dr_spec",
+      "text": "Waypoint customers book a service when an appliance breaks: a technician visits, diagnoses the fault and closes the service with a signed report. Behind the scenes, the Dispatch Service is a backend service that assigns each booked visit to a technician, and the Billing Service is a separate backend service that invoices the customer once the visit is closed. Every visit is tracked as a job, and a technician can hold several open jobs at once. Each night a reconciliation job runs on the scheduler, compares closed jobs against invoices, and flags any job the Billing Service has not invoiced."
+    }
+  ]
+}

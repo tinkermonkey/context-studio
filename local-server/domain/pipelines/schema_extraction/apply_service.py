@@ -272,6 +272,8 @@ class SchemaExtractionApplyService:
                 unresolved = "unresolved_endpoint"
             elif not prop_def:
                 unresolved = "unresolved_predicate"
+            elif prop_def.derived:
+                unresolved = "derived_type"
             elif src_id == tgt_id:
                 unresolved = "self_loop"
             if unresolved is not None:

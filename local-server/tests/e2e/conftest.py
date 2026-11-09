@@ -37,8 +37,8 @@ def e2e_config_file(temp_db_dir):
         "llm": {"openai_api_key": "sk-test-key-123456789", "anthropic_api_key": ""},
         "nlp": {},
         "reference": {
-            "cache_db_path": str(temp_db_dir / "reference_api_cache.db"),
             "reference_db_path": str(temp_db_dir / "reference.db"),
+            "proxy": {"cache_db_path": str(temp_db_dir / "reference_api_cache.db")},
         },
         "sync": {"adapter": "none"},
     }

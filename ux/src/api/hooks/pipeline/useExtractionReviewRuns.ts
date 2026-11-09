@@ -25,6 +25,8 @@ export interface ReviewScopeRef {
 export interface ExtractionReviewRequest {
   text: string;
   taxonomy: ReviewScopeRef;
+  /** The library example the text came from, while it is unedited. */
+  exampleId?: string;
   implementationId: string;
   schemaConfigRef: string;
   individualConfigRef: string;
@@ -54,6 +56,7 @@ function buildRunRequest(kind: ReviewKind, req: ExtractionReviewRequest): Pipeli
       scope: req.taxonomy.id,
       scope_name: req.taxonomy.label,
       ...(req.schemaModel ? { model: req.schemaModel } : {}),
+      ...(req.exampleId ? { example_id: req.exampleId } : {}),
     } as PipelineRunRequest;
   }
   return {
@@ -63,6 +66,7 @@ function buildRunRequest(kind: ReviewKind, req: ExtractionReviewRequest): Pipeli
     ontology_id: req.taxonomy.id,
     ontology_name: req.taxonomy.label,
     ...(req.individualModel ? { model: req.individualModel } : {}),
+    ...(req.exampleId ? { example_id: req.exampleId } : {}),
   } as PipelineRunRequest;
 }
 

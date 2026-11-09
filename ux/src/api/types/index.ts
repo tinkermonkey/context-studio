@@ -2019,6 +2019,32 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/pipelines/extraction-examples": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Extraction Examples
+     * @description The library of example paragraphs for trying the extraction pipelines.
+     *
+     *     Curated examples ship with the app; a run started from one records its id
+     *     (``example_id``), so runs on the same example can be listed and compared.
+     *
+     *     Returns:
+     *         The examples, in library order
+     */
+    get: operations["list_extraction_examples_api_pipelines_extraction_examples_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/pipelines/runs": {
     parameters: {
       query?: never;
@@ -2039,6 +2065,7 @@ export interface paths {
      *         start_date: Filter by start date (ISO 8601 format, optional)
      *         end_date: Filter by end date (ISO 8601 format, optional)
      *         applied: Filter by applied status ('applied' or 'not-applied', optional)
+     *         example_id: Only runs started from this extraction example (optional)
      *         limit: Maximum number of results (1-500, default 100)
      *         offset: Number of results to skip for pagination (default 0)
      *         request: FastAPI request (for service access)
@@ -4179,7 +4206,7 @@ export interface components {
       skipped_candidate_ids?: string[];
       /**
        * Skip Reasons
-       * @description Why each skipped_candidate_id was skipped (one entry per id). not_selected / below_threshold: never selected for apply. Every other reason means the candidate was selected but could not be applied: invalid (malformed candidate), unresolved_endpoint (a relationship endpoint is neither accepted nor in the graph), unresolved_predicate (the property definition does not exist), title_conflict (an existing entity owns the title), missing_class (no existing class to type an individual), self_loop (source and target are the same entity). Populated for schema_extraction and individual_extraction.
+       * @description Why each skipped_candidate_id was skipped (one entry per id). not_selected / below_threshold: never selected for apply. Every other reason means the candidate was selected but could not be applied: invalid (malformed candidate), unresolved_endpoint (a relationship endpoint is neither accepted nor in the graph), unresolved_predicate (the property definition does not exist), title_conflict (an existing entity owns the title), missing_class (no existing class to type an individual), self_loop (source and target are the same entity), derived_type (its class or relationship type is derived: the client computes those, so none is created). Populated for schema_extraction and individual_extraction.
        */
       skip_reasons?: {
         [key: string]:
@@ -4190,7 +4217,8 @@ export interface components {
           | "unresolved_predicate"
           | "title_conflict"
           | "missing_class"
-          | "self_loop";
+          | "self_loop"
+          | "derived_type";
       };
       /**
        * Existing Candidate Ids
@@ -5157,6 +5185,12 @@ export interface components {
        * @description Optional structural property ID
        */
       structural_property_id?: string | null;
+      /**
+       * Derived
+       * @description The client computes its individuals from other data: none is created directly, and extraction doesn't target it
+       * @default false
+       */
+      derived: boolean;
       /** External References */
       external_references?: components["schemas"]["ExternalReferenceResponse"][];
       /** Lexical Senses */
@@ -6119,6 +6153,42 @@ export interface components {
       properties?: {
         [key: string]: unknown;
       };
+    };
+    /**
+     * ExtractionExampleResponse
+     * @description An example paragraph from the library for trying the extraction pipelines.
+     */
+    ExtractionExampleResponse: {
+      /**
+       * Id
+       * @description Stable example id; runs started from it record it
+       */
+      id: string;
+      /**
+       * Title
+       * @description Short name
+       */
+      title: string;
+      /**
+       * Description
+       * @description What the example exercises
+       */
+      description: string;
+      /**
+       * Pipelines
+       * @description Pipeline types the example is written for
+       */
+      pipelines: string[];
+      /**
+       * Taxonomy Hint
+       * @description Identifier of the taxonomy the example suits (e.g. dr_spec), if any
+       */
+      taxonomy_hint?: string | null;
+      /**
+       * Text
+       * @description The paragraph
+       */
+      text: string;
     };
     /**
      * ExtractionLayerResultSchema
@@ -8051,6 +8121,12 @@ export interface components {
        * @description Class the relationship's target must belong to, if constrained
        */
       range_class_id?: string | null;
+      /**
+       * Derived
+       * @description The client computes its relationships from other data: none is created directly, and extraction doesn't target it
+       * @default false
+       */
+      derived: boolean;
       /**
        * Is Relevant
        * @description Relevance flag (None=not evaluated, True=relevant, False=irrelevant)
@@ -12585,6 +12661,26 @@ export interface operations {
       };
     };
   };
+  list_extraction_examples_api_pipelines_extraction_examples_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ExtractionExampleResponse"][];
+        };
+      };
+    };
+  };
   list_pipeline_runs_api_pipelines_runs_get: {
     parameters: {
       query?: {
@@ -12600,6 +12696,8 @@ export interface operations {
         end_date?: string | null;
         /** @description Filter by applied status: 'applied' or 'not-applied' */
         applied?: string | null;
+        /** @description Only runs started from this extraction example */
+        example_id?: string | null;
         /** @description Maximum number of results */
         limit?: number;
         /** @description Number of results to skip */

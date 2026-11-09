@@ -110,6 +110,12 @@
   color: rgb(var(--status-rose));
 }
 
+.xr-example-desc {
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgb(var(--canvas-fg-3));
+}
+
 .xr-mono-muted {
   font-family: var(--font-mono);
   font-size: 11px;

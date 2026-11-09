@@ -2553,6 +2553,15 @@ selectors:
   - selector: extraction-review-schema-no-schemes
     component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
     description: "Apply bar: alert when the taxonomy has no concept scheme for new classes"
+  - selector: extraction-review-example
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "Example paragraph select; picking one fills the paragraph (and the taxonomy when hinted)"
+  - selector: extraction-review-example-description
+    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: "What the picked example exercises; notes when the paragraph was edited"
+  - selector: extraction-review-example-runs
+    component: src/components/pipeline/extraction-review/ExampleRuns.tsx
+    description: "Earlier extraction runs started from the picked example; a row opens that run"
   - selector: extraction-review-config
     component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
     description: "Configuration (implementation) select shared by both runs"

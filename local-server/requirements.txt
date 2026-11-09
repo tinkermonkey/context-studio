@@ -30,6 +30,8 @@ openai
 # extra_body); re-check the provider's request kwargs before bumping.
 anthropic==1.5.0
 httpx
+# Caching, rate-limiting proxy for reference API calls (adapters/reference/proxy.py)
+reference-api-buddy==0.5.0
 python-dotenv
 boto3
 python-multipart

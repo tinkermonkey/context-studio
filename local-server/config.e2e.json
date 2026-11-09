@@ -21,8 +21,10 @@
     "anthropic_api_key": "sk-dummy-key"
   },
   "reference": {
-    "cache_db_path": "./datafiles/e2e-test/reference_api_cache.db",
-    "reference_db_path": "./datafiles/e2e-test/reference.db"
+    "reference_db_path": "./datafiles/e2e-test/reference.db",
+    "proxy": {
+      "cache_db_path": "./datafiles/e2e-test/reference_api_cache.db"
+    }
   },
   "mcp": {
     "auth_token": "e2e-test-token"

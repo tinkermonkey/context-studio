@@ -24,7 +24,11 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from domain.ontology.exceptions import DuplicateEntityError, EntityNotFoundError
+from domain.ontology.exceptions import (
+    DerivedTypeError,
+    DuplicateEntityError,
+    EntityNotFoundError,
+)
 from domain.pipelines.apply_result import ApplyResult, MergedMention
 from domain.pipelines.apply_selection import (
     MERGE,
@@ -225,6 +229,13 @@ class IndividualExtractionApplyService:
                     result.individuals_skipped += 1
                     result.skip(candidate_id, "missing_class")
                     continue
+                # A derived class's individuals are computed by its client, never extracted.
+                typed = [cls for cls in valid_classes if not cls.derived]
+                if valid_classes and not typed:
+                    result.individuals_skipped += 1
+                    result.skip(candidate_id, "derived_type")
+                    continue
+                valid_classes = typed
                 valid_class_ids = [cls.id for cls in valid_classes]
                 taxonomy_id = valid_classes[0].taxonomy_id if valid_classes else None
 
@@ -559,10 +570,12 @@ class IndividualExtractionApplyService:
                 property_definition_id=property_definition_id,
                 source_run_id=source_run_id,
             )
-        except EntityNotFoundError:
-            # The extracted predicate or object refers to an entity that does not exist.
+        except (EntityNotFoundError, DerivedTypeError):
+            # The extracted predicate or object refers to an entity that does not exist,
+            # or the relationship type is derived (its client computes those).
             _logger.warning(
-                "Skipping relationship %s -[%s]-> %s: endpoint or property not found",
+                "Skipping relationship %s -[%s]-> %s: endpoint or property not found, or"
+                " the relationship type is derived",
                 source_id,
                 property_definition_id,
                 target_id,

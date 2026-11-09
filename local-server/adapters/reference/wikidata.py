@@ -18,16 +18,27 @@ class WikidataSource:
     Gracefully handles network failures without raising exceptions.
     """
 
-    BASE_URL = "https://www.wikidata.org/w/api.php"
+    DEFAULT_BASE_URL = "https://www.wikidata.org"
+    API_PATH = "/w/api.php"
 
-    def __init__(self, timeout: int = 10, async_client: httpx.AsyncClient | None = None):
+    def __init__(
+        self,
+        base_url: str = DEFAULT_BASE_URL,
+        timeout: int = 10,
+        async_client: httpx.AsyncClient | None = None,
+        upstream_url: str | None = None,
+    ):
         """
         Initialize the Wikidata source adapter.
 
         Args:
+            base_url: Where API requests go: Wikidata or the reference proxy
             timeout: HTTP request timeout in seconds
             async_client: Optional httpx.AsyncClient for async operations (e.g., with cassettes)
+            upstream_url: Wikidata itself, checked by is_available (defaults to base_url)
         """
+        self._api_url = base_url.rstrip("/") + self.API_PATH
+        self._availability_url = (upstream_url or base_url).rstrip("/") + self.API_PATH
         self._timeout = timeout
         self._async_client = async_client
 
@@ -50,7 +61,7 @@ class WikidataSource:
         """
         try:
             response = httpx.get(
-                self.BASE_URL,
+                self._availability_url,
                 params={
                     "action": "wbsearchentities",
                     "search": "test",
@@ -112,7 +123,7 @@ class WikidataSource:
         """
         try:
             response = httpx.get(
-                self.BASE_URL,
+                self._api_url,
                 params={
                     "action": "wbsearchentities",
                     "search": term,
@@ -166,7 +177,7 @@ class WikidataSource:
                 return []
 
             response = httpx.get(
-                self.BASE_URL,
+                self._api_url,
                 params={
                     "action": "wbgetentities",
                     "ids": entity_id,
@@ -261,7 +272,7 @@ class WikidataSource:
 
         try:
             response = await self._async_client.get(
-                self.BASE_URL,
+                self._api_url,
                 params={
                     "action": "wbsearchentities",
                     "search": term,

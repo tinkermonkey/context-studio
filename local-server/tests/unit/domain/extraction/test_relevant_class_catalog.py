@@ -214,6 +214,30 @@ class TestRelevantClassCatalog:
         for i in retrieved_indices:
             assert f"external.{i}" in refs
 
+    def test_retrieval_leaves_out_derived_classes(self, service, ontology_repo, schema_index):
+        """#1465: a derived class is computed by its client, never an extraction target."""
+        taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 100)
+        derived = ontology_repo.get_class("class_15")
+        derived.derived = True
+        ontology_repo.save_class(derived)
+        matches = [
+            SchemaMatch(
+                entity_id=f"class_{i}",
+                kind="class",
+                label=f"Class {i}",
+                score=0.9,
+                matched_field="title",
+                external_id=f"external.{i}",
+                identifier=f"ref_{i}",
+            )
+            for i in (5, 15, 25, 35, 45, 55, 65)
+        ]
+        schema_index.set_search_results(matches, {m.entity_id: "tax_1" for m in matches})
+
+        refs = [ref for ref, _ in service._relevant_class_catalog("test text", taxonomy)]
+
+        assert refs == [f"external.{i}" for i in (5, 25, 35, 45, 55, 65)]
+
     def test_deduplicates_class_references(self, service, ontology_repo, schema_index):
         """Deduplicates retrieved classes by reference; falls back if post-dedup count too low."""
         taxonomy = self._setup_taxonomy_with_classes(ontology_repo, "tax_1", "scheme_1", 100)

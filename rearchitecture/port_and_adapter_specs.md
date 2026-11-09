@@ -529,11 +529,11 @@ class ReferenceRelation:
 
 | Adapter | Location | Notes |
 |---|---|---|
-| `ConceptNetSource` | `adapters/reference/conceptnet.py` | ConceptNet API with caching. |
+| `ConceptNetSource` | `adapters/reference/conceptnet.py` | ConceptNet API. |
 | `DBpediaSource` | `adapters/reference/dbpedia.py` | DBpedia Lookup + SPARQL + Spotlight. |
 | `WikidataSource` | `adapters/reference/wikidata.py` | Wikidata SPARQL endpoint. |
 | `SchemaOrgSource` | `adapters/reference/schema_org.py` | Schema.org vocabulary. |
-| `CachedReferenceSource` | `adapters/reference/cache.py` | Decorator that adds caching to any ReferenceSource. Uses `reference_api_cache.db`. |
+| `ReferenceProxy` | `adapters/reference/proxy.py` | Runs the reference-api-buddy proxy in-process; ConceptNet, DBpedia and Wikidata requests go through it for caching (`reference_api_cache.db`) and per-source rate limits. Falls back to the APIs directly when disabled or not started. |
 
 **Current code this replaces:**
 - `reference_api/service.py` and all source-specific modules
@@ -853,9 +853,11 @@ async def lifespan(app: FastAPI):
     nlp_processor = SpacyNLPProcessor(model="en_core_web_sm")
 
     # Reference sources
-    conceptnet = CachedReferenceSource(ConceptNetSource(), cache_db=config.reference_cache_db)
-    dbpedia = CachedReferenceSource(DBpediaSource(), cache_db=config.reference_cache_db)
-    wikidata = CachedReferenceSource(WikidataSource(), cache_db=config.reference_cache_db)
+    reference_proxy = ReferenceProxy(config.reference.proxy)
+    reference_proxy.start()
+    conceptnet = ConceptNetSource(base_url=reference_proxy.base_url("conceptnet"))
+    dbpedia = DBpediaSource(base_url=reference_proxy.base_url("dbpedia"))
+    wikidata = WikidataSource(base_url=reference_proxy.base_url("wikidata"))
     reference_sources = [conceptnet, dbpedia, wikidata]
 
     # Graph engines

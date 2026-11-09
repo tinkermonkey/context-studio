@@ -173,6 +173,25 @@ class PipelineConfigurationResponse(BaseModel):
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
 
 
+class ExtractionExampleResponse(BaseModel):
+    """An example paragraph from the library for trying the extraction pipelines."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: str = Field(
+        ..., min_length=1, description="Stable example id; runs started from it record it"
+    )
+    title: str = Field(..., min_length=1, description="Short name")
+    description: str = Field(..., min_length=1, description="What the example exercises")
+    pipelines: list[str] = Field(
+        ..., min_length=1, description="Pipeline types the example is written for"
+    )
+    taxonomy_hint: Optional[str] = Field(
+        None, description="Identifier of the taxonomy the example suits (e.g. dr_spec), if any"
+    )
+    text: str = Field(..., min_length=1, description="The paragraph")
+
+
 class PipelineRunRequest(BaseModel):
     """Base request to invoke a pipeline (polymorphic)."""
 
@@ -378,7 +397,9 @@ class ApplyRunResponse(BaseModel):
             "endpoint is neither accepted nor in the graph), unresolved_predicate "
             "(the property definition does not exist), title_conflict (an existing "
             "entity owns the title), missing_class (no existing class to type an "
-            "individual), self_loop (source and target are the same entity). "
+            "individual), self_loop (source and target are the same entity), "
+            "derived_type (its class or relationship type is derived: the client "
+            "computes those, so none is created). "
             "Populated for schema_extraction and individual_extraction."
         ),
     )

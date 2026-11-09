@@ -156,6 +156,8 @@ class Class:
         parent_class_id: Optional ID of the parent class for hierarchy
         structural_property_id: Optional ID of the primary structural relationship property
         definition
+        derived: Computed by the client from other data (a House kit, say): its
+            individuals are never created directly, and extraction doesn't target it
         external_references: List of references to external knowledge bases
         lexical_senses: List of word sense disambiguation entries
         data_properties: List of data property values on this class
@@ -175,6 +177,7 @@ class Class:
     color: str | None = None
     parent_class_id: str | None = None
     structural_property_id: str | None = None
+    derived: bool = False
     external_references: list[ExternalReference] = field(default_factory=list)
     lexical_senses: list[LexicalSense] = field(default_factory=list)
     data_properties: list[DataPropertyValue] = field(default_factory=list)
@@ -425,6 +428,8 @@ class PropertyDefinition:
             must belong to (rdfs:domain)
         range_class_id: Optional ID of the Class this property's target/object
             must belong to (rdfs:range)
+        derived: Computed by the client from other data: its relationships are
+            never created directly, and extraction doesn't target it
         external_references: List of references to external knowledge bases
         is_relevant: Optional relevance flag (None=not evaluated, True=relevant, False=irrelevant)
         lexical_senses: Word-sense disambiguation entries. A property whose
@@ -444,6 +449,7 @@ class PropertyDefinition:
     ontology_mapping: OntologyMapping | None = None
     domain_class_id: str | None = None
     range_class_id: str | None = None
+    derived: bool = False
     external_references: list[ExternalReference] = field(default_factory=list)
     is_relevant: bool | None = None
     lexical_senses: list[LexicalSense] = field(default_factory=list)

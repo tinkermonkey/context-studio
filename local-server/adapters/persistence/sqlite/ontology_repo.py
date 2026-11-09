@@ -756,6 +756,7 @@ class SQLiteOntologyRepository:
                 orm_entity.structural_property_id = (
                     structural_property_id  # type: ignore[assignment]
                 )
+                orm_entity.derived = cls.derived  # type: ignore[assignment]
                 orm_entity.external_references = mapped_orm.external_references
                 orm_entity.lexical_senses = mapped_orm.lexical_senses  # type: ignore[assignment]
                 orm_entity.data_properties = mapped_orm.data_properties  # type: ignore[assignment]
@@ -1536,6 +1537,7 @@ class SQLiteOntologyRepository:
                 )  # type: ignore[assignment]
                 orm_entity.domain_class_id = prop.domain_class_id  # type: ignore[assignment]
                 orm_entity.range_class_id = prop.range_class_id  # type: ignore[assignment]
+                orm_entity.derived = prop.derived  # type: ignore[assignment]
                 orm_entity.external_references = (
                     mapped_orm.external_references
                 )  # type: ignore[assignment]

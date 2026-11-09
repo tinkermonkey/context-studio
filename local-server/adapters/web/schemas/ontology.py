@@ -396,6 +396,13 @@ class ClassResponse(BaseModel):
     structural_property_id: Optional[str] = Field(
         None, description="Optional structural property ID"
     )
+    derived: bool = Field(
+        default=False,
+        description=(
+            "The client computes its individuals from other data: none is created"
+            " directly, and extraction doesn't target it"
+        ),
+    )
     external_references: list[ExternalReferenceResponse] = Field(default_factory=list)
     lexical_senses: list[LexicalSenseResponse] = Field(default_factory=list)
     data_properties: list[DataPropertyValueResponse] = Field(default_factory=list)
@@ -510,6 +517,13 @@ class PropertyDefinitionResponse(BaseModel):
     )
     range_class_id: Optional[str] = Field(
         None, description="Class the relationship's target must belong to, if constrained"
+    )
+    derived: bool = Field(
+        default=False,
+        description=(
+            "The client computes its relationships from other data: none is created"
+            " directly, and extraction doesn't target it"
+        ),
     )
     is_relevant: Optional[bool] = Field(
         None,
