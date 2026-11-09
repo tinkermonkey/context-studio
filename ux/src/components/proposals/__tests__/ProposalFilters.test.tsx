@@ -286,6 +286,53 @@ describe("op and scope filters", () => {
     expect(screen.getByTestId("operation-check-op-class")).toBeChecked();
   });
 
+  it("limit the threshold's Select N to the rows they show", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByTestId("proposal-threshold-bar");
+    // At p >= 0.60: op-rename (0.82, breaking) and op-class (0.90, editorial).
+    expect(screen.getByTestId("proposal-threshold-count")).toHaveTextContent(
+      "2 of 3 awaiting at or above",
+    );
+
+    await byScope(/^editorial/);
+    expect(screen.getByTestId("proposal-threshold-count")).toHaveTextContent(
+      "1 of 1 awaiting at or above",
+    );
+    await user.click(screen.getByTestId("proposal-threshold-select"));
+    expect(screen.getByTestId("operation-check-op-class")).toBeChecked();
+
+    // The breaking row the filter hid was never checked.
+    await byScope(/^Any scope/);
+    expect(screen.getByTestId("operation-check-op-rename")).not.toBeChecked();
+    expect(screen.getByTestId("operation-check-op-class")).toBeChecked();
+  });
+
+  it("clear when a progress pill shows everything that needs a decision", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByTestId("proposal-op-filter");
+    await byOp(/^delete/);
+    expect(shownIds()).toEqual(["op-delete"]);
+
+    await user.click(screen.getByTestId("proposal-pill-to-decide"));
+    expect(shownIds()).toEqual(["op-rename", "op-delete", "op-class"]);
+    const anyOp = within(screen.getByRole("group", { name: "Show operations by op" })).getByRole(
+      "radio",
+      { name: "Any op" },
+    );
+    expect(anyOp).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("say so in the change-kind grouping when they leave nothing", async () => {
+    proposal = reflectionProposal();
+    renderPage();
+    await screen.findByTestId("tiered-operations");
+    await primary(/^Decided/);
+    await byOp(/^delete/);
+    expect(screen.getByText("No operations match these filters.")).toBeInTheDocument();
+  });
+
   it("are left out when the proposal has a single op and scope", async () => {
     proposal.operations = proposal.operations.filter((o) => o.id === "op-rename");
     renderPage();

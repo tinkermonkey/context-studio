@@ -200,7 +200,15 @@ export function ProposalDetailPage({
   const bulkReady = bulkOps.filter((o) => !o.stale && !isBlocked(o));
   const showThreshold =
     !byKind && deciding && awaitingOps.length > 0 && hasProbabilities(operations);
-  const matching = showThreshold ? atOrAboveThreshold(bulkOps, threshold) : [];
+  // The threshold picks only from what the filters show, so it never checks hidden rows.
+  const shownIds = useMemo(() => new Set(shownOperations.map((o) => o.id)), [shownOperations]);
+  const shownAwaiting = awaitingOps.filter((o) => shownIds.has(o.id)).length;
+  const matching = showThreshold
+    ? atOrAboveThreshold(
+        bulkOps.filter((o) => shownIds.has(o.id)),
+        threshold,
+      )
+    : [];
   const showPlanKind = operations.some((o) => planKind(o) !== undefined);
   const selectable = deciding && awaitingOps.length > 0;
   const columns = useMemo(
@@ -264,6 +272,14 @@ export function ProposalDetailPage({
   const subtitle = [proposal.rationale, `Proposed ${formatAgo(proposal.created_at)}${proposedBy}.`]
     .filter(Boolean)
     .join(" ");
+  const emptyMessage =
+    operations.length === 0
+      ? "This proposal has no operations."
+      : facets.op !== "any" || facets.scope !== "any"
+        ? "No operations match these filters."
+        : filter === "needs"
+          ? "Nothing needs a decision."
+          : "Nothing is decided yet.";
   const causeOf = (operation: ProposedOperation) =>
     staleCause(
       operation,
@@ -403,7 +419,12 @@ export function ProposalDetailPage({
                 className="proposal-pill"
                 aria-controls="proposal-operations"
                 aria-label={`${pill.label}: show the operations that need a decision`}
-                onClick={() => chooseFilter("needs")}
+                onClick={() => {
+                  // Everything that needs a decision: the op and scope filters clear too.
+                  setFilter("needs");
+                  setFacets(ANY_FACETS);
+                  uncheckHidden("needs", ANY_FACETS);
+                }}
                 data-testid={`proposal-pill-${pill.key}`}
               >
                 <Chip variant={pill.variant}>{pill.label}</Chip>
@@ -443,7 +464,7 @@ export function ProposalDetailPage({
           threshold={threshold}
           onThresholdChange={setThreshold}
           matching={matching.length}
-          awaiting={awaitingOps.length}
+          awaiting={shownAwaiting}
           onSelect={() => setChecked(matching.map((o) => o.id))}
         />
       )}
@@ -597,6 +618,7 @@ export function ProposalDetailPage({
               actions={actions}
               selectedOperationId={selectedOperationId}
               onSelectOperation={onSelectOperation}
+              emptyMessage={emptyMessage}
             />
           ) : (
             <Table<ProposedOperation>
@@ -607,17 +629,7 @@ export function ProposalDetailPage({
               onRowClick={(row) =>
                 onSelectOperation(row.id === selectedOperationId ? undefined : row.id)
               }
-              emptyState={
-                <span className="entity-note">
-                  {operations.length === 0
-                    ? "This proposal has no operations."
-                    : facets.op !== "any" || facets.scope !== "any"
-                      ? "No operations match these filters."
-                      : filter === "needs"
-                        ? "Nothing needs a decision."
-                        : "Nothing is decided yet."}
-                </span>
-              }
+              emptyState={<span className="entity-note">{emptyMessage}</span>}
             />
           )}
         </div>
