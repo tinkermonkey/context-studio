@@ -1,0 +1,517 @@
+{
+  "docs": [
+    {
+      "score": [
+        "17069.863"
+      ],
+      "refCount": [
+        "714"
+      ],
+      "resource": [
+        "http://dbpedia.org/resource/Road_bicycle_racing"
+      ],
+      "redirectlabel": [
+        "<B>Bicycle</B> road cycling",
+        "<B>Bicycle</B> road race",
+        "<B>Bicycle</B> road racing",
+        "Cycling road race",
+        "Cycling stage race",
+        "One-day races",
+        "Road <B>Bicycle</B> Racing",
+        "Road <B>bicycle</B> race",
+        "Road <B>bicycle</B> racer",
+        "Road bike racing",
+        "Road cycle racing",
+        "Road cycling (sport)",
+        "Road cycling race",
+        "Road racing cyclist"
+      ],
+      "typeName": [
+        "Activity",
+        "Sport"
+      ],
+      "comment": [
+        "Road <B>bicycle</B> racing is the cycle sport discipline of road cycling, held on paved roads. Road racing"
+      ],
+      "label": [
+        "Road <B>bicycle</B> racing"
+      ],
+      "id": [
+        "http://dbpedia.org/resource/Road_bicycle_racing"
+      ],
+      "type": [
+        "http://dbpedia.org/ontology/Activity",
+        "http://dbpedia.org/ontology/Sport"
+      ],
+      "category": [
+        "http://dbpedia.org/resource/Category:Cycle_racing_by_discipline",
+        "http://dbpedia.org/resource/Category:Endurance_games",
+        "http://dbpedia.org/resource/Category:Road_bicycle_racing",
+        "http://dbpedia.org/resource/Category:Summer_Olympic_disciplines"
+      ]
+    },
+    {
+      "score": [
+        "6830.7026"
+      ],
+      "refCount": [
+        "106"
+      ],
+      "resource": [
+        "http://dbpedia.org/resource/Bicycle"
+      ],
+      "redirectlabel": [
+        "<B>Bicicle</B>",
+        "<B>Bicycles</B>",
+        "Bike",
+        "<B>Bikecycle</B>",
+        "Bikes",
+        "Bycicle",
+        "Bycycle",
+        "Dutch <B>bicycles</B>",
+        "Pedal <B>bicycle</B>",
+        "Pedal bike",
+        "Pedal cycle",
+        "Pedalcycle",
+        "Push-bike",
+        "Push bike",
+        "Pushbike",
+        "🚲",
+        "🚳"
+      ],
+      "comment": [
+        "A <B>bicycle</B>, also called a bike or cycle, is a human-powered or motor-powered, pedal-driven, single"
+      ],
+      "label": [
+        "<B>Bicycle</B>"
+      ],
+      "id": [
+        "http://dbpedia.org/resource/Bicycle"
+      ],
+      "category": [
+        "http://dbpedia.org/resource/Category:19th-century_inventions",
+        "http://dbpedia.org/resource/Category:Appropriate_technology",
+        "http://dbpedia.org/resource/Category:Articles_containing_video_clips",
+        "http://dbpedia.org/resource/Category:Bicycles",
+        "http://dbpedia.org/resource/Category:Cycle_types",
+        "http://dbpedia.org/resource/Category:German_inventions",
+        "http://dbpedia.org/resource/Category:Sustainable_technologies",
+        "http://dbpedia.org/resource/Category:Sustainable_transport"
+      ]
+    },
+    {
+      "score": [
+        "4998.0195"
+      ],
+      "refCount": [
+        "53"
+      ],
+      "resource": [
+        "http://dbpedia.org/resource/Bicycle-sharing_system"
+      ],
+      "redirectlabel": [
+        "Automated <B>bicycle</B> sharing system",
+        "<B>Bicycle</B>-Sharing System",
+        "<B>Bicycle</B>-sharing",
+        "<B>Bicycle</B> Sharing",
+        "<B>Bicycle</B> hire system",
+        "<B>Bicycle</B> sharing",
+        "<B>Bicycle</B> sharing system",
+        "Bike-share",
+        "Bike-sharing",
+        "Bike-sharing system",
+        "BikeShare",
+        "Bike share",
+        "Bike share scheme",
+        "Bike sharing",
+        "Bike sharing service",
+        "Bike sharing system",
+        "Bikeshare",
+        "Bikeshare scheme",
+        "Bikeshare system",
+        "Bikesharing",
+        "Campus <B>Bicycle</B> Share",
+        "Campus <B>bicycle</B> sharing system",
+        "Community <B>bicycle</B> program",
+        "Community bike program",
+        "Dockless <B>bicycle</B>",
+        "Dockless <B>bicycles</B>",
+        "Dockless bike",
+        "Dockless bikes",
+        "Public <B>bicycle</B> rental",
+        "Public <B>bicycle</B> system",
+        "Public bike system",
+        "Shared <B>bicycle</B>",
+        "Shared bike",
+        "White <B>bicycles</B>",
+        "Yellow Bike",
+        "Yellow Bike Program",
+        "Yellow <B>bicycle</B> program",
+        "Yellow bikes"
+      ],
+      "comment": [
+        "A <B>bicycle</B>-sharing system, public <B>bicycle</B> scheme, or public bike share  (PBS) scheme, is a service"
+      ],
+      "label": [
+        "<B>Bicycle</B>-sharing system"
+      ],
+      "id": [
+        "http://dbpedia.org/resource/Bicycle-sharing_system"
+      ],
+      "category": [
+        "http://dbpedia.org/resource/Category:Articles_containing_video_clips",
+        "http://dbpedia.org/resource/Category:Bicycle_sharing",
+        "http://dbpedia.org/resource/Category:Cycling_infrastructure"
+      ]
+    },
+    {
+      "score": [
+        "3753.1543"
+      ],
+      "refCount": [
+        "31"
+      ],
+      "resource": [
+        "http://dbpedia.org/resource/Bicycle_brake"
+      ],
+      "redirectlabel": [
+        "Back-pedal brake",
+        "Back pedal",
+        "Back pedal brake",
+        "Backpedal brake",
+        "<B>Bicycle</B> brake system",
+        "<B>Bicycle</B> brake systems",
+        "<B>Bicycle</B> brakes",
+        "<B>Bicycle</B> braking system",
+        "<B>Bicycle</B> braking systems",
+        "<B>Bicycle</B> drum brake",
+        "<B>Bicycle</B> drum brakes",
+        "Bike brake",
+        "Bike brakes",
+        "Brake lever",
+        "Brake levers",
+        "Cable-actuated brake",
+        "Caliper brake",
+        "Cantilever brake",
+        "Coaster brake",
+        "Coaster brakes",
+        "Coastie (<B>bicycle</B>)",
+        "Plunger brake",
+        "Rim brake",
+        "Rod-actuated brake",
+        "Roller Brake",
+        "Spoon brake",
+        "V-Brake",
+        "V-brake",
+        "V brake"
+      ],
+      "comment": [
+        "A <B>bicycle</B> brake reduces the speed of a <B>bicycle</B> or prevents it from moving. The three main types are"
+      ],
+      "label": [
+        "<B>Bicycle</B> brake"
+      ],
+      "id": [
+        "http://dbpedia.org/resource/Bicycle_brake"
+      ],
+      "category": [
+        "http://dbpedia.org/resource/Category:Bicycle_brakes",
+        "http://dbpedia.org/resource/Category:Bicycle_parts",
+        "http://dbpedia.org/resource/Category:Brakes",
+        "http://dbpedia.org/resource/Category:Vehicle_braking_technologies"
+      ]
+    },
+    {
+      "score": [
+        "3714.6838"
+      ],
+      "refCount": [
+        "21"
+      ],
+      "resource": [
+        "http://dbpedia.org/resource/Bicycle_infantry"
+      ],
+      "redirectlabel": [
+        "<B>Bicycle</B> brigade",
+        "<B>Bicycle</B> soldier",
+        "<B>Bicycle</B> soldiers",
+        "<B>Bicycle</B> troops",
+        "<B>Bicycle</B> warfare",
+        "<B>Bicycles</B> in war",
+        "<B>Bicycles</B> in warfare",
+        "Military use of <B>bicycles</B>"
+      ],
+      "comment": [
+        " military <B>bicycles</B>. The term dates from the late 19th century, when the \"safety <B>bicycle</B>\" became"
+      ],
+      "label": [
+        "<B>Bicycle</B> infantry"
+      ],
+      "id": [
+        "http://dbpedia.org/resource/Bicycle_infantry"
+      ],
+      "category": [
+        "http://dbpedia.org/resource/Category:Combat_occupations",
+        "http://dbpedia.org/resource/Category:Infantry",
+        "http://dbpedia.org/resource/Category:Military_bicycling"
+      ]
+    },
+    {
+      "score": [
+        "3503.6743"
+      ],
+      "refCount": [
+        "53"
+      ],
+      "resource": [
+        "http://dbpedia.org/resource/Single-speed_bicycle"
+      ],
+      "redirectlabel": [
+        "Single-speed",
+        "Single-speed <B>bicycles</B>",
+        "Single-speed bicycling",
+        "Single-speed bicyclist",
+        "Single-speed bicyclists",
+        "Single-speed bike",
+        "Single-speed biker",
+        "Single-speed bikers",
+        "Single-speed bikes",
+        "Single-speed biking",
+        "Single-speed cycle",
+        "Single-speed cycles",
+        "Single-speed cycling",
+        "Single-speed cyclist",
+        "Single-speed cyclists",
+        "Single-speeded <B>bicycle</B>",
+        "Single-speeded <B>bicycles</B>",
+        "Single Speed",
+        "Single speed",
+        "Single speed <B>bicycle</B>",
+        "Single speed <B>bicycles</B>",
+        "Single speed bicycling",
+        "Single speed bicyclist",
+        "Single speed bicyclists",
+        "Single speed bike",
+        "Single speed biker",
+        "Single speed bikers",
+        "Single speed bikes",
+        "Single speed biking",
+        "Single speed cycle",
+        "Single speed cycles",
+        "Single speed cycling",
+        "Single speed cyclist",
+        "Single speed cyclists",
+        "Single speeded <B>bicycle</B>",
+        "Single speeded <B>bicycles</B>",
+        "Singlespeed",
+        "Singlespeed <B>bicycles</B>",
+        "Singlespeed bicycling",
+        "Singlespeed bicyclist",
+        "Singlespeed bicyclists",
+        "Singlespeed bike",
+        "Singlespeed biker",
+        "Singlespeed bikers",
+        "Singlespeed bikes",
+        "Singlespeed biking",
+        "Singlespeed cycle",
+        "Singlespeed cycles",
+        "Singlespeed cycling",
+        "Singlespeed cyclist",
+        "Singlespeed cyclists",
+        "Singlespeeded <B>bicycle</B>",
+        "Singlespeeded <B>bicycles</B>"
+      ],
+      "comment": [
+        "A single-speed <B>bicycle</B> is a type of <B>bicycle</B> with a single gear ratio. These <B>bicycles</B> are without"
+      ],
+      "label": [
+        "Single-speed <B>bicycle</B>"
+      ],
+      "id": [
+        "http://dbpedia.org/resource/Single-speed_bicycle"
+      ],
+      "category": [
+        "http://dbpedia.org/resource/Category:1_(number)",
+        "http://dbpedia.org/resource/Category:Cycle_types"
+      ]
+    },
+    {
+      "score": [
+        "3490.3206"
+      ],
+      "refCount": [
+        "23"
+      ],
+      "resource": [
+        "http://dbpedia.org/resource/Electric_bicycle"
+      ],
+      "redirectlabel": [
+        "Bike motor",
+        "E-Bike",
+        "E-<B>bicycle</B>",
+        "E-bike",
+        "EBike",
+        "Ebike",
+        "Electric assist <B>bicycle</B>",
+        "Electric <B>bicycle</B> conversion kit",
+        "Electric <B>bicycles</B>",
+        "Electric bike",
+        "Electric power-assist system",
+        "Mid-drive electric <B>bicycle</B>",
+        "Solar powered <B>bicycle</B>"
+      ],
+      "comment": [
+        " <B>bicycles</B>, which have been in use since the late 19th century. Some <B>bicycle</B>-sharing systems use them."
+      ],
+      "label": [
+        "Electric <B>bicycle</B>"
+      ],
+      "id": [
+        "http://dbpedia.org/resource/Electric_bicycle"
+      ],
+      "category": [
+        "http://dbpedia.org/resource/Category:Cycle_types",
+        "http://dbpedia.org/resource/Category:Electric_bicycles",
+        "http://dbpedia.org/resource/Category:Electric_vehicles",
+        "http://dbpedia.org/resource/Category:Micromobility",
+        "http://dbpedia.org/resource/Category:Motorized_bicycles",
+        "http://dbpedia.org/resource/Category:Road_cycles",
+        "http://dbpedia.org/resource/Category:Vehicles_introduced_in_1897"
+      ]
+    },
+    {
+      "score": [
+        "3148.094"
+      ],
+      "refCount": [
+        "95"
+      ],
+      "resource": [
+        "http://dbpedia.org/resource/Cycling"
+      ],
+      "redirectlabel": [
+        "<B>Bicycle</B> rider",
+        "<B>Bicycle</B> riding",
+        "<B>Bicycle</B> user",
+        "<B>Bicycle</B> uses",
+        "Bicycling",
+        "Bicyclist",
+        "Bicyclists",
+        "Bike rider",
+        "Bike riding",
+        "Biked",
+        "Bikeriding",
+        "Biking",
+        "Cyclism",
+        "Cyclist",
+        "Cyclists",
+        "Health effects of cycling",
+        "Pedal cyclist",
+        "People on bikes",
+        "🚴"
+      ],
+      "comment": [
+        "Cycling, also called biking or bicycling, is the use of <B>bicycles</B> for transport, recreation"
+      ],
+      "label": [
+        "Cycling"
+      ],
+      "id": [
+        "http://dbpedia.org/resource/Cycling"
+      ],
+      "category": [
+        "http://dbpedia.org/resource/Category:Aerobic_exercise",
+        "http://dbpedia.org/resource/Category:Articles_containing_video_clips",
+        "http://dbpedia.org/resource/Category:Cycling",
+        "http://dbpedia.org/resource/Category:Emissions_reduction",
+        "http://dbpedia.org/resource/Category:Sustainable_transport",
+        "http://dbpedia.org/resource/Category:Symbols_of_Illinois"
+      ]
+    },
+    {
+      "score": [
+        "3035.9387"
+      ],
+      "refCount": [
+        "163"
+      ],
+      "resource": [
+        "http://dbpedia.org/resource/Motorcycle"
+      ],
+      "redirectlabel": [
+        "Auto <B>bicycle</B>",
+        "Environmental impact of motorcycles",
+        "Moterbike",
+        "Motercycle",
+        "Motercycles",
+        "Motobike",
+        "Motor-cycle",
+        "Motor Cycle",
+        "Motor <B>bicycle</B>",
+        "Motor bike",
+        "Motor cycle",
+        "Motorbike",
+        "Motorbikes",
+        "Motorcycle industry",
+        "Motorcycles",
+        "Motorsiklo",
+        "Steel horse"
+      ],
+      "comment": [
+        "A motorcycle, often called a motorbike, bike, or cycle, is a two- or three-wheeled motor vehicle. Motorcycle design varies greatly to suit a range of different purposes: long distance travel, commuting, cruising, sport including racing, and off-road riding. Motorcycling is riding a motorcycle and related social activity such as joining a motorcycle club and attending motorcycle rallies. According to the US Department of Transportation the number of fatalities per vehicle mile traveled was 37 times higher for motorcycles than for cars."
+      ],
+      "label": [
+        "Motorcycle"
+      ],
+      "id": [
+        "http://dbpedia.org/resource/Motorcycle"
+      ],
+      "category": [
+        "http://dbpedia.org/resource/Category:Motorcycle_technology",
+        "http://dbpedia.org/resource/Category:Motorcycles",
+        "http://dbpedia.org/resource/Category:Motorcycling",
+        "http://dbpedia.org/resource/Category:Wheeled_vehicles"
+      ]
+    },
+    {
+      "score": [
+        "2895.667"
+      ],
+      "refCount": [
+        "17"
+      ],
+      "resource": [
+        "http://dbpedia.org/resource/Bicycle_frame"
+      ],
+      "redirectlabel": [
+        "<B>Bicycle</B> frame construction",
+        "<B>Bicycle</B> frame size",
+        "<B>Bicycle</B> size",
+        "Bike frame",
+        "Chain stay",
+        "Chainstay",
+        "Diamond frame",
+        "Down tube",
+        "Downtube",
+        "Frame geometry",
+        "Frameset (<B>bicycle</B>)",
+        "Seat Stay",
+        "Seat tube",
+        "Top tube"
+      ],
+      "comment": [
+        "A <B>bicycle</B> frame is the main component of a <B>bicycle</B>, onto which wheels and other components are"
+      ],
+      "label": [
+        "<B>Bicycle</B> frame"
+      ],
+      "id": [
+        "http://dbpedia.org/resource/Bicycle_frame"
+      ],
+      "category": [
+        "http://dbpedia.org/resource/Category:Bicycle_parts",
+        "http://dbpedia.org/resource/Category:Cycle_sport"
+      ]
+    }
+  ]
+}

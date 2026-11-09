@@ -1,5 +1,7 @@
 """DBpedia reference source adapter for knowledge base queries."""
 
+import re
+
 import httpx
 
 from adapters.reference.http_headers import REFERENCE_HEADERS
@@ -8,6 +10,19 @@ from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+HIGHLIGHT_TAGS = re.compile(r"</?B>", re.IGNORECASE)
+
+
+def _first(doc: dict, field: str) -> str | None:
+    """Return the first value of a list-valued Lookup field, or None."""
+    values = doc.get(field) or []
+    return values[0] if values else None
+
+
+def _strip_highlights(text: str | None) -> str | None:
+    """Remove the <B>...</B> tags Lookup wraps around matched words."""
+    return HIGHLIGHT_TAGS.sub("", text) if text else text
 
 
 class DBpediaSource:
@@ -75,23 +90,28 @@ class DBpediaSource:
             return False
 
     def _parse_search_response(self, data: dict, limit: int) -> list[ReferenceResult]:
-        """Parse DBpedia search response into ReferenceResult objects."""
-        results = []
-        if "results" in data:
-            for result in data["results"][:limit]:
-                uri = result.get("uri", "")
-                label = result.get("label", "")
-                description = result.get("description", None)
+        """
+        Parse a DBpedia Lookup response into ReferenceResult objects.
 
-                if uri:
-                    results.append(
-                        ReferenceResult(
-                            uri=uri,
-                            label=label,
-                            description=description,
-                            source=self.source_name,
-                        )
-                    )
+        The Lookup API answers {"docs": [...]}. Each field in a doc is a list, and
+        labels and comments carry <B> tags around the matched words.
+        """
+        if "docs" not in data:
+            logger.warning(f"DBpedia Lookup response has no 'docs' key: {sorted(data)}")
+            return []
+        results = []
+        for doc in data["docs"][:limit]:
+            uri = _first(doc, "resource")
+            if not uri:
+                continue
+            results.append(
+                ReferenceResult(
+                    uri=uri,
+                    label=_strip_highlights(_first(doc, "label") or ""),
+                    description=_strip_highlights(_first(doc, "comment")) or None,
+                    source=self.source_name,
+                )
+            )
         return results
 
     def search(self, term: str, limit: int = 10) -> list[ReferenceResult]:

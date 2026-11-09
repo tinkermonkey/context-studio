@@ -44,16 +44,16 @@ def load_expected_uris(fixture_scenario: str) -> dict[str, str]:
 
 
 def generate_dbpedia_response(label: str, uri: str | None = None) -> str:
-    """Generate a DBpedia response matching the adapter's expected format."""
+    """Generate a DBpedia Lookup response: a "docs" list with list-valued fields."""
     if uri is None:
         uri = f"http://dbpedia.org/resource/{label.replace(' ', '_')}"
 
     response = {
-        "results": [
+        "docs": [
             {
-                "uri": uri,
-                "label": label,
-                "description": f"DBpedia entry for {label}",
+                "resource": [uri],
+                "label": [label],
+                "comment": [f"DBpedia entry for {label}"],
             }
         ]
     }

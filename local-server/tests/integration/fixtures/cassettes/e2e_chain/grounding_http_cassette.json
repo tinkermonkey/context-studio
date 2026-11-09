@@ -12,7 +12,7 @@
         "headers": {
           "content-type": "application/json"
         },
-        "body": "{\"results\": [{\"uri\": \"http://dbpedia.org/resource/Technology\", \"label\": \"technical\", \"description\": \"DBpedia entry for technical\"}]}"
+        "body": "{\"docs\": [{\"resource\": [\"http://dbpedia.org/resource/Technology\"], \"label\": [\"technical\"], \"comment\": [\"DBpedia entry for technical\"]}]}"
       }
     },
     {
