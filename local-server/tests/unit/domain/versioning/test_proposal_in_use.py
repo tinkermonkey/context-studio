@@ -1238,7 +1238,10 @@ class TestCoveredRelationships:
         self, service, graph, repo
     ):
         proposal = propose(
-            service, graph, rel_delete(1, graph["first"]), type_delete(2, graph["triggers_function"])
+            service,
+            graph,
+            rel_delete(1, graph["first"]),
+            type_delete(2, graph["triggers_function"]),
         )
         reviewed = self.reviewed(service, proposal)
         assert reviewed == [graph["second"]]
@@ -1254,7 +1257,10 @@ class TestCoveredRelationships:
     def test_a_move_takes_only_the_reviewed_relationships(self, service, graph, repo, ontology):
         serves = add_fitting_type(ontology, graph)
         proposal = propose(
-            service, graph, rel_delete(1, graph["first"]), type_delete(2, graph["triggers_function"])
+            service,
+            graph,
+            rel_delete(1, graph["first"]),
+            type_delete(2, graph["triggers_function"]),
         )
         reviewed = self.reviewed(service, proposal)
         op_ids = [o.id for o in proposal.operations]
@@ -1272,7 +1278,10 @@ class TestCoveredRelationships:
 
     def test_waits_while_the_relationship_delete_is_unapplied(self, service, graph, repo):
         proposal = propose(
-            service, graph, rel_delete(1, graph["first"]), type_delete(2, graph["triggers_function"])
+            service,
+            graph,
+            rel_delete(1, graph["first"]),
+            type_delete(2, graph["triggers_function"]),
         )
         reviewed = self.reviewed(service, proposal)
         op_id = the_op(proposal, 2).id
@@ -1293,7 +1302,10 @@ class TestCoveredRelationships:
         self, service, graph, repo
     ):
         proposal = propose(
-            service, graph, type_delete(1, graph["triggers_function"]), rel_delete(2, graph["first"])
+            service,
+            graph,
+            type_delete(1, graph["triggers_function"]),
+            rel_delete(2, graph["first"]),
         )
         reviewed = self.reviewed(service, proposal, seq=1)
         op_ids = [o.id for o in proposal.operations]
@@ -1309,7 +1321,10 @@ class TestCoveredRelationships:
         self, service, graph, repo
     ):
         proposal = propose(
-            service, graph, rel_delete(1, graph["first"]), type_delete(2, graph["triggers_function"])
+            service,
+            graph,
+            rel_delete(1, graph["first"]),
+            type_delete(2, graph["triggers_function"]),
         )
         reviewed = self.reviewed(service, proposal)
         service.reject(proposal.id, [the_op(proposal, 1).id])
@@ -1338,7 +1353,10 @@ class TestCoveredRelationships:
 
     def test_a_delete_without_a_resolution_says_the_others_need_one(self, service, graph):
         proposal = propose(
-            service, graph, rel_delete(1, graph["first"]), type_delete(2, graph["triggers_function"])
+            service,
+            graph,
+            rel_delete(1, graph["first"]),
+            type_delete(2, graph["triggers_function"]),
         )
 
         applied = service.apply(proposal.id, [the_op(proposal, 2).id])
