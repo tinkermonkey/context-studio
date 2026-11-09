@@ -15,6 +15,7 @@ export const SKIP_REASON_LABEL: Record<SkipReason, string> = {
   title_conflict: "title already used by another entity",
   missing_class: "no existing class to type it",
   self_loop: "source and target are the same",
+  derived_type: "its type is derived: the client computes those",
 };
 
 /** Reasons meaning the candidate was never selected (rejected or below threshold). */

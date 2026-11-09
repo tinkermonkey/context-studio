@@ -134,7 +134,8 @@ class SchemaConnectionRefinementApplyService:
             )
 
             if operation == "add":
-                if existing:
+                # A derived type's relationships are computed by its client.
+                if existing or prop_def.derived:
                     result.relationships_skipped += 1
                     continue
                 new_rel = self._ontology_service.create_relationship(

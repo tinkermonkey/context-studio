@@ -1015,9 +1015,7 @@ def test_dr_ids_cardinality_and_strength_travel_in_the_bundle(
     other_factory.kw["bind"].dispose()
 
 
-def test_listed_references_are_added_or_updated_never_removed(
-    importer, service, repo, dr_tagged
-):
+def test_listed_references_are_added_or_updated_never_removed(importer, service, repo, dr_tagged):
     exported = BundleExporter(repo).export(dr_tagged["taxonomy"].id)
     bed = repo.get_by_identifier("garden_bed")
     # Context Studio grounds the class after the client pulled its file.
@@ -1034,9 +1032,7 @@ def test_listed_references_are_added_or_updated_never_removed(
         dr_reference("garden.bed"),
         wikidata,
     ]
-    [reference] = repo.get_property_definition_by_identifier(
-        "garden_grows_in"
-    ).external_references
+    [reference] = repo.get_property_definition_by_identifier("garden_grows_in").external_references
     assert dict(reference.metadata) == {"cardinality": "many-to-one", "strength": "low"}
     assert repo.get_by_identifier("garden_plant").external_references == [
         ExternalReference(source="dbpedia", identifier="Plant")
@@ -1100,18 +1096,52 @@ def test_house_derived_flags_lift_into_the_field_and_round_trip(
     assert repo.get_by_identifier("house_place").derived is True
 
 
-def test_a_bundle_relationship_of_a_derived_type_fails_to_apply(importer, repo):
-    bundle = _bundle()
-    bundle["properties"][0]["derived"] = True
+def test_a_bundle_cant_add_members_to_a_derived_type(importer, repo):
+    flagged = _bundle()
+    flagged["properties"][0]["derived"] = True
+    with pytest.raises(BundleError, match="new member of a derived class or relationship"):
+        load_bundle(importer, flagged)
 
-    result = importer.import_bundle(bundle)
-    applied = importer._proposals.apply(
-        result.proposal.id, [o.id for o in result.proposal.pending]
+    load_bundle(importer, _bundle())
+    kinds = _bundle()
+    by_key(kinds["classes"], "identifier", "house_activity")["derived"] = True
+    kinds["individuals"].append(
+        {"id": "mopping", "classes": ["house_activity"], "title": "Mopping", "data": {}}
+    )
+    with pytest.raises(BundleError, match="Individual 'mopping' would be a new member"):
+        load_bundle(importer, kinds)
+
+    # Members that already exist are left alone: the flag isn't enforced on stored data.
+    by_key(kinds["classes"], "identifier", "house_activity")["derived"] = True
+    kinds["individuals"].pop()
+    load_bundle(importer, kinds)
+    assert repo.get_by_identifier("house_activity").derived is True
+
+
+def test_clearing_a_derived_flag_comes_before_adding_members(importer, service, repo):
+    load_bundle(importer, _bundle(relationships=[]))
+    prop = repo.get_property_definition_by_identifier("house_activity_is_a_activity")
+    service.update_property_definition(prop.id, derived=True)
+    activity = repo.get_by_identifier("house_activity")
+    service.update_class(activity.id, derived=True)
+    bundle = _bundle()
+    by_key(bundle["classes"], "identifier", "house_activity")["derived"] = False
+    bundle["properties"][0]["derived"] = False
+    bundle["individuals"].append(
+        {"id": "mopping", "classes": ["house_activity"], "title": "Mopping", "data": {}}
     )
 
-    [failed] = [o for o in applied.operations if o.status.value == "failed"]
-    assert failed.kind.value == "relationship"
-    assert "'house_activity_is_a_activity' is derived" in failed.reason
+    plan = load_bundle(importer, bundle)
+
+    first = [(o.kind.value, o.fields) for o in plan.operations[:2]]
+    assert sorted(first, key=str) == [
+        ("class", {"derived": False}),
+        ("property", {"derived": False}),
+    ]
+    assert repo.get_by_identifier("house_activity").derived is False
+    assert len(repo.list_relationships(property_id=prop.id, limit=None)) == 1
+    titles = [i.title for i in repo.list_individuals(class_id=activity.id, limit=None)]
+    assert "Mopping" in titles
 
 
 def test_a_derived_flag_that_isnt_a_boolean_is_refused(importer):

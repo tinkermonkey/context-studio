@@ -103,6 +103,13 @@ def persist_incoming_entities(
     return affected_entity_ids
 
 
+def _derived(entity_dict: Dict[str, Any], existing: Any) -> bool:
+    """The imported derived flag, else the existing entity's (formats without it keep it)."""
+    if "derived" in entity_dict:
+        return bool(entity_dict["derived"])
+    return bool(getattr(existing, "derived", False))
+
+
 def _persist_class(
     entity_dict: Dict[str, Any],
     incoming_entities: Dict[str, Dict[str, Any]],
@@ -124,6 +131,7 @@ def _persist_class(
         description=entity_dict.get("description"),
         color=entity_dict.get("color"),
         parent_class_id=entity_dict.get("parent_class_id"),
+        derived=_derived(entity_dict, ontology_repo.get_class(entity_dict["id"])),
         external_references=[
             ExternalReference(
                 source=ref["source"],
@@ -176,6 +184,13 @@ def _persist_individual(
     class_ids = entity_dict.get("class_ids", [])
     if not class_ids:
         raise ValueError(f"Individual {entity_dict['id']} has no parent classes")
+    if ontology_repo.get_individual(entity_dict["id"]) is None:
+        derived = [c for c in class_ids if getattr(ontology_repo.get_class(c), "derived", False)]
+        if derived:
+            raise ValueError(
+                f"Individual {entity_dict['id']} is in derived class(es) {derived}; its"
+                " client computes those, so none is created directly"
+            )
 
     individual = Individual(
         id=entity_dict["id"],
@@ -205,6 +220,7 @@ def _persist_property_definition(
         title=entity_dict["title"],
         description=entity_dict.get("description"),
         is_relevant=entity_dict.get("is_relevant"),
+        derived=_derived(entity_dict, ontology_repo.get_property_definition(entity_dict["id"])),
     )
     ontology_repo.save_property_definition(prop)
 
@@ -214,6 +230,15 @@ def _persist_relationship(
     ontology_repo,
 ) -> None:
     """Persist a Relationship entity."""
+    prop = ontology_repo.get_property_definition(entity_dict["property_definition_id"])
+    if (
+        getattr(prop, "derived", False)
+        and ontology_repo.get_relationship(entity_dict["id"]) is None
+    ):
+        raise ValueError(
+            f"Relationship {entity_dict['id']} is of derived type {prop.identifier!r}; its"
+            " client computes those, so none is created directly"
+        )
     relationship = Relationship(
         id=entity_dict["id"],
         source_id=entity_dict["source_id"],

@@ -49,7 +49,10 @@ Derived. A class or relationship type the client computes from other data (a
 House kit) has `derived: true` (Class.derived, PropertyDefinition.derived). A
 bundle without the key takes it from its `constraints` (House's earlier
 `{"derived": true}`), else leaves the entity's flag as it is. The metadata flag
-is kept in `constraints` too until the bundle's next version (#1483).
+is kept in `constraints` too until the bundle's next version (#1483). A bundle
+can't add an individual to a derived class or a relationship of a derived type
+(the client computes those); one that clears a flag clears it before creating
+anything, so it can add members in the same import.
 
 Other sources' references. A class, property or individual also lists every
 reference of another source as `external_references` ({source, identifier,
@@ -127,7 +130,8 @@ class BundlePlan:
         taxonomy: The bundle's taxonomy entry (identifier, title, description, vision)
         taxonomy_id: The matching taxonomy, or None when the import would create it
             (its schemes then point at the placeholder NEW_TAXONOMY)
-        operations: Drafts in apply order: creates, then updates and moves, then deletes
+        operations: Drafts in apply order: updates that clear a derived flag, then
+            creates, then other updates and moves, then deletes
         counts: Per kind of entity, what the plan does
         deletes: A description of each entity the plan deletes
     """
@@ -194,11 +198,16 @@ class _Planner:
         self._bundle = bundle
         self._source = bundle["source"]
         self.plan = BundlePlan(source=self._source, taxonomy=bundle["taxonomy"])
+        # Updates that clear a derived flag, applied before the creates that may add
+        # members to that class or relationship type.
+        self._early: list[OperationDraft] = []
         self._creates: list[OperationDraft] = []
         self._updates: list[OperationDraft] = []
         self._deletes: list[OperationDraft] = []
         self._deleted_ids: set[str] = set()
         self._bundle_triples: set[tuple[str, str, str]] = set()
+        # Classes and relationship types (ids or "$refs") derived once the plan applies.
+        self._derived_ids: set[str] = set()
 
     # ------------------------------------------------------------------ run
 
@@ -224,7 +233,8 @@ class _Planner:
             individual_ids, property_ids, self._bundle.get("relationships", [])
         )
         self._plan_deletes(taxonomy_id, taxonomy_classes, class_ids, property_ids, individual_ids)
-        for seq, draft in enumerate([*self._creates, *self._updates, *self._deletes], start=1):
+        planned = [*self._early, *self._creates, *self._updates, *self._deletes]
+        for seq, draft in enumerate(planned, start=1):
             draft.seq = seq
             self.plan.operations.append(draft)
         self.plan.deletes.sort()
@@ -342,6 +352,7 @@ class _Planner:
                     )
             existing = self._in_taxonomy(Class, taxonomy_id, identifier)
             if existing is None:
+                derived = _derived(spec, spec.get("constraints"), None, where)
                 ids[identifier] = self._create(
                     K.CLASS,
                     _ref("class", identifier),
@@ -351,13 +362,15 @@ class _Planner:
                         "description": spec.get("description"),
                         "parent_class_id": parent_id,
                         "identifier": identifier,
-                        "derived": _derived(spec, spec.get("constraints"), None, where) or None,
+                        "derived": derived or None,
                         "external_references": [
                             self._reference(identifier, spec.get("constraints")).to_dict(),
                             *(r.to_dict() for r in _listed(spec, self._source, where)),
                         ],
                     },
                 )
+                if derived:
+                    self._derived_ids.add(ids[identifier])
                 counts.record("created")
                 self._plan_attributes(identifier, ids[identifier], {}, spec.get("attributes", []))
                 continue
@@ -368,10 +381,10 @@ class _Planner:
             )
             references = _with_listed(references, _listed(spec, self._source, where))
             derived = _derived(spec, self._own_metadata(references), existing, where)
+            if derived:
+                self._derived_ids.add(existing.id)
             counts.record(
-                self._plan_class_update(
-                    existing, spec, scheme_id, parent_id, references, derived
-                )
+                self._plan_class_update(existing, spec, scheme_id, parent_id, references, derived)
             )
             ids[identifier] = existing.id
             current = {
@@ -401,6 +414,7 @@ class _Planner:
         )
         if existing.external_references != references:
             changed["external_references"] = [r.to_dict() for r in references]
+        cleared = self._clear_derived(K.CLASS, existing, changed)
         if changed:
             self._update(K.CLASS, existing.id, changed)
         move: dict[str, Any] = {}
@@ -411,7 +425,7 @@ class _Planner:
             move = {"parent_class_id": parent_id}
         if move:
             self._update(K.CLASS, existing.id, move, op=T.MOVE)
-        return "updated" if changed or move else "unchanged"
+        return "updated" if changed or move or cleared else "unchanged"
 
     def _plan_attributes(
         self,
@@ -489,6 +503,7 @@ class _Planner:
                     " bundle's identifiers"
                 )
             if existing is None:
+                derived = _derived(spec, spec.get("constraints"), None, where)
                 ids[identifier] = self._create(
                     K.PROPERTY,
                     _ref("property", identifier),
@@ -499,18 +514,23 @@ class _Planner:
                         "canonical_predicate": spec.get("predicate"),
                         "domain_class_id": domain_id,
                         "range_class_id": range_id,
-                        "derived": _derived(spec, spec.get("constraints"), None, where) or None,
+                        "derived": derived or None,
                         "external_references": [
                             self._reference(identifier, spec.get("constraints")).to_dict(),
                             *(r.to_dict() for r in listed),
                         ],
                     },
                 )
+                if derived:
+                    self._derived_ids.add(ids[identifier])
                 counts.record("created")
                 continue
             references = _with_listed(
                 self._references(existing, identifier, spec.get("constraints")), listed
             )
+            derived = _derived(spec, spec.get("constraints"), existing, where)
+            if derived:
+                self._derived_ids.add(existing.id)
             changed = _changed(
                 {
                     "title": (existing.title, spec["title"]),
@@ -518,17 +538,15 @@ class _Planner:
                     "canonical_predicate": (existing.canonical_predicate, spec.get("predicate")),
                     "domain_class_id": (existing.domain_class_id, domain_id),
                     "range_class_id": (existing.range_class_id, range_id),
-                    "derived": (
-                        existing.derived,
-                        _derived(spec, spec.get("constraints"), existing, where),
-                    ),
+                    "derived": (existing.derived, derived),
                 }
             )
             if existing.external_references != references:
                 changed["external_references"] = [r.to_dict() for r in references]
+            cleared = self._clear_derived(K.PROPERTY, existing, changed)
             if changed:
                 self._update(K.PROPERTY, existing.id, changed)
-            counts.record("updated" if changed else "unchanged")
+            counts.record("updated" if changed or cleared else "unchanged")
             ids[identifier] = existing.id
         return ids
 
@@ -555,6 +573,7 @@ class _Planner:
                 bundle_id, taxonomy_class_ids
             )
             if existing is None:
+                self._check_not_derived(wanted_classes, f"Individual {bundle_id!r}")
                 ids[bundle_id] = self._create(
                     K.INDIVIDUAL,
                     _ref("individual", bundle_id),
@@ -586,6 +605,8 @@ class _Planner:
                 c for c in existing.class_ids if c not in taxonomy_class_ids or c in wanted_classes
             ]
             classes = kept + [c for c in wanted_classes if c not in kept]
+            added = [c for c in classes if c not in existing.class_ids]
+            self._check_not_derived(added, f"Individual {bundle_id!r}")
             if classes != list(existing.class_ids):
                 changed["class_ids"] = classes
             if changed:
@@ -628,6 +649,7 @@ class _Planner:
                     source_id=source_id, target_id=target_id, property_id=property_id, limit=None
                 )
             if not existing:
+                self._check_not_derived([property_id], f"Relationship {spec}")
                 self._create(
                     K.RELATIONSHIP,
                     _ref("relationship", f"{spec['source']}/{spec['property']}/{spec['target']}"),
@@ -716,6 +738,34 @@ class _Planner:
             identifier=identifier,
             metadata=MappingProxyType(dict(metadata)) if metadata else None,
         )
+
+    def _clear_derived(self, kind: OperationKind, existing: Any, changed: dict[str, Any]) -> bool:
+        """
+        Move a change that clears an entity's derived flag out of its update and
+        into an update applied before every create, so the plan's new members of
+        that class or relationship type are created once it is no longer derived.
+        Returns whether it did.
+        """
+        if changed.get("derived") is not False:
+            return False
+        del changed["derived"]
+        self._early.append(
+            OperationDraft(
+                seq=0, op=T.UPDATE, kind=kind, target_id=existing.id, fields={"derived": False}
+            )
+        )
+        return True
+
+    def _check_not_derived(self, ids: Iterable[str], where: str) -> None:
+        """
+        Refuse a new individual of a derived class or relationship of a derived
+        type: its client computes those (OntologyService refuses them too).
+        """
+        if any(i in self._derived_ids for i in ids):
+            raise BundleError(
+                f"{where} would be a new member of a derived class or relationship type;"
+                " its client computes those, so a bundle can't carry new ones"
+            )
 
     def _own_metadata(self, references: list[ExternalReference]) -> dict[str, Any]:
         """The metadata of this source's reference among these, if any."""
@@ -1152,9 +1202,7 @@ def _with_listed(
     result = list(references)
     for reference in listed:
         key = (reference.source, reference.identifier)
-        position = next(
-            (i for i, r in enumerate(result) if (r.source, r.identifier) == key), None
-        )
+        position = next((i for i, r in enumerate(result) if (r.source, r.identifier) == key), None)
         if position is None:
             result.append(reference)
         else:

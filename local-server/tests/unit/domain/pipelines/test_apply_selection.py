@@ -474,3 +474,63 @@ class TestIndividualSkipReasons:
         }
         # Only selected triples that could not be applied are counted.
         assert result.individuals_skipped == 3
+
+
+class TestDerivedTypesAreSkipped:
+    """#1465: a derived class's or relationship type's members are computed by its client."""
+
+    def test_an_individual_of_only_a_derived_class_is_skipped(self, svc, repo):
+        repo.save_class(
+            Class(
+                id="cls-kit",
+                concept_scheme_id=SCHEME_ID,
+                taxonomy_id=TAXONOMY_ID,
+                identifier="kit",
+                title="Kit",
+                derived=True,
+            )
+        )
+        kit = _triple("Starter kit")
+        kit["subject"]["class_ids"] = ["cls-kit"]
+        both = _triple("Carol")
+        both["subject"]["class_ids"] = [CLASS_ID, "cls-kit"]
+
+        result = svc.apply(_run({"triples": [kit, both]}), confidence_threshold=0.5)
+
+        assert result.skip_reasons == {"triple-0": "derived_type"}
+        assert result.applied_candidate_ids == ["triple-1"]
+        [carol] = [i for i in repo.list_individuals(class_id=CLASS_ID, limit=None)]
+        assert carol.class_ids == [CLASS_ID]
+
+    def test_a_relationship_of_a_derived_type_is_skipped(self, svc, repo):
+        repo.save_property_definition(
+            PropertyDefinition(id="p-knows", identifier="knows", title="knows", derived=True)
+        )
+        triple = _triple("Alice", obj_label="Bob", prop_id="p-knows")
+        triple["object"]["class_ids"] = [CLASS_ID]
+
+        result = svc.apply(_run({"triples": [triple]}), confidence_threshold=0.5)
+
+        assert result.relationships_created == 0
+        assert repo.list_relationships(property_id="p-knows", limit=None) == []
+
+    def test_a_schema_connection_of_a_derived_type_is_skipped(self, schema_svc, repo):
+        repo.save_property_definition(
+            PropertyDefinition(id="p-uses", identifier="uses", title="uses", derived=True)
+        )
+        summary = {
+            "candidates": [{"kind": "class", "label": "Service", "confidence": 0.9}],
+            "connections": [
+                {
+                    "subject_ref": "Service",
+                    "predicate": "uses",
+                    "object_ref": "Person",
+                    "confidence": 0.9,
+                }
+            ],
+        }
+        run = _run(summary, PipelineType.SCHEMA_EXTRACTION)
+
+        result = schema_svc.apply(run, SCHEME_ID, TAXONOMY_ID, confidence_threshold=0.5)
+
+        assert result.skip_reasons == {"connection-0": "derived_type"}

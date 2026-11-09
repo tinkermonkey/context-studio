@@ -4159,7 +4159,7 @@ export interface components {
       skipped_candidate_ids?: string[];
       /**
        * Skip Reasons
-       * @description Why each skipped_candidate_id was skipped (one entry per id). not_selected / below_threshold: never selected for apply. Every other reason means the candidate was selected but could not be applied: invalid (malformed candidate), unresolved_endpoint (a relationship endpoint is neither accepted nor in the graph), unresolved_predicate (the property definition does not exist), title_conflict (an existing entity owns the title), missing_class (no existing class to type an individual), self_loop (source and target are the same entity). Populated for schema_extraction and individual_extraction.
+       * @description Why each skipped_candidate_id was skipped (one entry per id). not_selected / below_threshold: never selected for apply. Every other reason means the candidate was selected but could not be applied: invalid (malformed candidate), unresolved_endpoint (a relationship endpoint is neither accepted nor in the graph), unresolved_predicate (the property definition does not exist), title_conflict (an existing entity owns the title), missing_class (no existing class to type an individual), self_loop (source and target are the same entity), derived_type (its class or relationship type is derived: the client computes those, so none is created). Populated for schema_extraction and individual_extraction.
        */
       skip_reasons?: {
         [key: string]:
@@ -4170,7 +4170,8 @@ export interface components {
           | "unresolved_predicate"
           | "title_conflict"
           | "missing_class"
-          | "self_loop";
+          | "self_loop"
+          | "derived_type";
       };
       /**
        * Existing Candidate Ids

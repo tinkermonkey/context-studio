@@ -1013,7 +1013,8 @@ class ExtractionService:
             if self._is_concept_object(obj_kind, obj_id, obj_label, pass_1_individual_labels):
                 if prop_def and prop_def.range_class_id:
                     range_class = by_id.get(str(prop_def.range_class_id))
-                    if range_class:
+                    # A derived range class is computed by its client: never type to it.
+                    if range_class and not range_class.derived:
                         obj_label_lower = obj_label.lower()
                         if obj_label_lower not in concept_object_labels_typed:
                             concept_object_labels_typed.add(obj_label_lower)
@@ -1613,6 +1614,8 @@ class ExtractionService:
         ):
             for cls in self._ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None):
                 by_id[str(cls.id)] = cls
+                if cls.derived:
+                    continue  # kept for ancestry, never a type an extraction resolves to
                 for alias in _class_reference_aliases(cls):
                     by_alias.setdefault(alias.strip().lower(), cls)
         return by_alias, by_id
@@ -1880,6 +1883,8 @@ class ExtractionService:
         schemes = self._ontology_repo.list_concept_schemes(taxonomy_id=str(taxonomy_id), limit=None)
         for scheme in schemes:
             for cls in self._ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None):
+                if cls.derived:
+                    continue  # computed by its client, never an extraction target
                 for alias in _class_reference_aliases(cls):
                     alias_to_canonical.setdefault(alias.strip().lower(), alias)
 
