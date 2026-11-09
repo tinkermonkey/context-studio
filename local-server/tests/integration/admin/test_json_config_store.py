@@ -31,8 +31,8 @@ def test_load_configuration():
             "logging": {"log_level": "INFO", "max_bytes": 10485760, "backup_count": 5},
             "llm": {"openai_api_key": "", "anthropic_api_key": ""},
             "reference": {
-                "cache_db_path": "./reference_api_cache.db",
                 "reference_db_path": "./reference.db",
+                "proxy": {"cache_db_path": "./reference_api_cache.db"},
             },
         }
 
@@ -67,8 +67,8 @@ def test_load_and_save_roundtrip():
             "logging": {"log_level": "INFO", "max_bytes": 10485760, "backup_count": 5},
             "llm": {"openai_api_key": "", "anthropic_api_key": ""},
             "reference": {
-                "cache_db_path": "./reference_api_cache.db",
                 "reference_db_path": "./reference.db",
+                "proxy": {"cache_db_path": "./reference_api_cache.db"},
             },
         }
 
@@ -107,8 +107,8 @@ def test_save_with_nonexistent_directory():
             "logging": {"log_level": "INFO", "max_bytes": 10485760, "backup_count": 5},
             "llm": {"openai_api_key": "", "anthropic_api_key": ""},
             "reference": {
-                "cache_db_path": "./reference_api_cache.db",
                 "reference_db_path": "./reference.db",
+                "proxy": {"cache_db_path": "./reference_api_cache.db"},
             },
         }
 
@@ -141,8 +141,8 @@ def test_load_and_save_preserves_sections():
             "logging": {"log_level": "DEBUG", "max_bytes": 5242880, "backup_count": 3},
             "llm": {"openai_api_key": "sk-test", "anthropic_api_key": ""},
             "reference": {
-                "cache_db_path": "./reference_api_cache.db",
                 "reference_db_path": "./reference.db",
+                "proxy": {"cache_db_path": "./reference_api_cache.db"},
             },
         }
 
@@ -196,8 +196,8 @@ def test_reset_to_defaults_preserves_credentials():
                 "anthropic_api_key": "sk-ant-test-456",
             },
             "reference": {
-                "cache_db_path": "./custom_cache.db",
                 "reference_db_path": "./custom_ref.db",
+                "proxy": {"cache_db_path": "./custom_cache.db"},
             },
         }
 
@@ -245,8 +245,8 @@ def test_reset_to_defaults_persists_changes():
                 "anthropic_api_key": "sk-ant-test-456",
             },
             "reference": {
-                "cache_db_path": "./custom_cache.db",
                 "reference_db_path": "./custom_ref.db",
+                "proxy": {"cache_db_path": "./custom_cache.db"},
             },
         }
 
@@ -293,8 +293,8 @@ def test_reset_to_defaults_removes_sync_not_in_defaults():
                 "anthropic_api_key": "sk-ant-test-456",
             },
             "reference": {
-                "cache_db_path": "./custom_cache.db",
                 "reference_db_path": "./custom_ref.db",
+                "proxy": {"cache_db_path": "./custom_cache.db"},
             },
             "sync": {
                 "adapter": "s3",
@@ -348,8 +348,8 @@ def test_reset_to_defaults_preserves_nested_s3_credentials():
                 "anthropic_api_key": "sk-ant-test-456",
             },
             "reference": {
-                "cache_db_path": "./custom_cache.db",
                 "reference_db_path": "./custom_ref.db",
+                "proxy": {"cache_db_path": "./custom_cache.db"},
             },
             "sync": {
                 "adapter": "s3",
@@ -398,8 +398,8 @@ def test_update_config_silently_skips_unknown_section():
             "logging": {"log_level": "INFO", "max_bytes": 10485760, "backup_count": 5},
             "llm": {"openai_api_key": "", "anthropic_api_key": ""},
             "reference": {
-                "cache_db_path": "./reference_api_cache.db",
                 "reference_db_path": "./reference.db",
+                "proxy": {"cache_db_path": "./reference_api_cache.db"},
             },
         }
 

@@ -206,29 +206,55 @@ def without_env_derived_keys(settings_dump: dict) -> dict:
     return settings_dump
 
 
+class ReferenceUpstreamConfig(BaseModel):
+    """One reference API behind the reference proxy"""
+
+    upstream: str = Field(description="The API's base URL")
+    requests_per_hour: int = Field(
+        default=3600, gt=0, description="Most requests per hour the proxy sends upstream"
+    )
+
+
+class ReferenceUpstreamsConfig(BaseModel):
+    """The reference APIs the reference proxy fronts"""
+
+    conceptnet: ReferenceUpstreamConfig = Field(
+        default_factory=lambda: ReferenceUpstreamConfig(upstream="https://api.conceptnet.io")
+    )
+    dbpedia: ReferenceUpstreamConfig = Field(
+        default_factory=lambda: ReferenceUpstreamConfig(upstream="https://lookup.dbpedia.org")
+    )
+    wikidata: ReferenceUpstreamConfig = Field(
+        default_factory=lambda: ReferenceUpstreamConfig(upstream="https://www.wikidata.org")
+    )
+
+
+class ReferenceProxyConfig(BaseModel):
+    """Caching, rate-limiting proxy for reference API calls (reference-api-buddy)"""
+
+    enabled: bool = Field(
+        default=True,
+        description="Send reference API calls through the proxy; off calls the APIs directly",
+    )
+    cache_db_path: str = Field(
+        default="./reference_api_cache.db", description="Proxy response cache database path"
+    )
+    cache_ttl_hours: int = Field(
+        default=168, gt=0, description="How long a cached response is reused (default: 1 week)"
+    )
+    sources: ReferenceUpstreamsConfig = Field(default_factory=ReferenceUpstreamsConfig)
+
+
 class ReferenceConfig(BaseModel):
     """Reference data configuration section"""
 
-    cache_db_path: str = Field(
-        default="./reference_api_cache.db",
-        description="Reference API cache database path",
-    )
     reference_db_path: str = Field(
         default="./reference.db", description="Reference data database path"
-    )
-    conceptnet_base_url: str = Field(
-        default="https://api.conceptnet.io", description="ConceptNet API base URL"
     )
     conceptnet_timeout: int = Field(
         default=30, description="ConceptNet API request timeout in seconds"
     )
-
-    @model_validator(mode="after")
-    def apply_env_fallbacks(self) -> "ReferenceConfig":
-        env_url = os.environ.get("CONCEPTNET_BASE_URL")
-        if env_url:
-            self.conceptnet_base_url = env_url
-        return self
+    proxy: ReferenceProxyConfig = Field(default_factory=ReferenceProxyConfig)
 
 
 class RecognitionConfig(BaseModel):

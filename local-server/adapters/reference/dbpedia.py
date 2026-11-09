@@ -33,16 +33,27 @@ class DBpediaSource:
     Gracefully handles network failures without raising exceptions.
     """
 
-    LOOKUP_URL = "https://lookup.dbpedia.org/api/search"
+    DEFAULT_BASE_URL = "https://lookup.dbpedia.org"
+    SEARCH_PATH = "/api/search"
 
-    def __init__(self, timeout: int = 10, async_client: httpx.AsyncClient | None = None):
+    def __init__(
+        self,
+        base_url: str = DEFAULT_BASE_URL,
+        timeout: int = 10,
+        async_client: httpx.AsyncClient | None = None,
+        upstream_url: str | None = None,
+    ):
         """
         Initialize the DBpedia source adapter.
 
         Args:
+            base_url: Where search requests go: the Lookup API or the reference proxy
             timeout: HTTP request timeout in seconds
             async_client: Optional httpx.AsyncClient for async operations (e.g., with cassettes)
+            upstream_url: The Lookup API itself, checked by is_available (defaults to base_url)
         """
+        self._search_url = base_url.rstrip("/") + self.SEARCH_PATH
+        self._availability_url = (upstream_url or base_url).rstrip("/") + self.SEARCH_PATH
         self._timeout = timeout
         self._async_client = async_client
 
@@ -65,7 +76,7 @@ class DBpediaSource:
         """
         try:
             response = httpx.get(
-                self.LOOKUP_URL,
+                self._availability_url,
                 params={"query": "test", "format": "json"},
                 headers=REFERENCE_HEADERS,
                 timeout=self._timeout,
@@ -127,7 +138,7 @@ class DBpediaSource:
         """
         try:
             response = httpx.get(
-                self.LOOKUP_URL,
+                self._search_url,
                 params={
                     "query": term,
                     "format": "json",
@@ -207,7 +218,7 @@ class DBpediaSource:
 
         try:
             response = await self._async_client.get(
-                self.LOOKUP_URL,
+                self._search_url,
                 params={
                     "query": term,
                     "format": "json",

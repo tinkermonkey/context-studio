@@ -38,6 +38,7 @@ Examples:
 """
 
 import argparse
+import atexit
 import asyncio
 import json
 import sys
@@ -62,10 +63,10 @@ from adapters.persistence.sqlite.extraction_run_repo import (
     SQLiteExtractionRunRepository,
 )
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from adapters.reference.cache import CachedReferenceSource
 from adapters.reference.conceptnet import ConceptNetSource
 from adapters.reference.dbpedia import DBpediaSource
 from adapters.reference.grounding import GroundingAdapter
+from adapters.reference.proxy import ReferenceProxy
 from adapters.reference.schema_org import SchemaOrgSource
 from adapters.reference.wikidata import WikidataSource
 from config import get_settings
@@ -220,11 +221,29 @@ def main() -> int:
         # Create services
         embedding_service = SentenceTransformerEmbedding(model_name="all-MiniLM-L12-v2")
         nlp_processor = SpacyNLPProcessor()
+        # Reference calls go through the caching, rate-limiting reference proxy
+        reference_proxy = ReferenceProxy(settings.reference.proxy)
+        reference_proxy.start()
+        atexit.register(reference_proxy.stop)
+        conceptnet_source = ConceptNetSource(
+            base_url=reference_proxy.base_url("conceptnet"),
+            upstream_url=reference_proxy.upstream_url("conceptnet"),
+            timeout=settings.reference.conceptnet_timeout,
+        )
+        dbpedia_source = DBpediaSource(
+            base_url=reference_proxy.base_url("dbpedia"),
+            upstream_url=reference_proxy.upstream_url("dbpedia"),
+        )
+        wikidata_source = WikidataSource(
+            base_url=reference_proxy.base_url("wikidata"),
+            upstream_url=reference_proxy.upstream_url("wikidata"),
+        )
+        schema_org_source = SchemaOrgSource()
         reference_sources: list[ReferenceSource] = [
-            CachedReferenceSource(ConceptNetSource()),
-            CachedReferenceSource(DBpediaSource()),
-            CachedReferenceSource(WikidataSource()),
-            CachedReferenceSource(SchemaOrgSource()),
+            conceptnet_source,
+            dbpedia_source,
+            wikidata_source,
+            schema_org_source,
         ]
 
         extraction_service = ExtractionService(
@@ -244,8 +263,10 @@ def main() -> int:
             "ontology_repo": ontology_repo,
             "extraction_repo": extraction_repo,
             "grounding_adapter": GroundingAdapter(
-                dbpedia=DBpediaSource(),
-                conceptnet=ConceptNetSource(),
+                dbpedia=dbpedia_source,
+                conceptnet=conceptnet_source,
+                wikidata=wikidata_source,
+                schema_org=schema_org_source,
             ),
             "scorer": GroundingScorer(embedding_service=embedding_service),
             "grounding_config": {

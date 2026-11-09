@@ -25,16 +25,19 @@ class ConceptNetSource:
         base_url: str = DEFAULT_BASE_URL,
         timeout: int = 10,
         async_client: httpx.AsyncClient | None = None,
+        upstream_url: str | None = None,
     ):
         """
         Initialize the ConceptNet source adapter.
 
         Args:
-            base_url: ConceptNet API base URL
+            base_url: Where API requests go: ConceptNet or the reference proxy
             timeout: HTTP request timeout in seconds
             async_client: Optional httpx.AsyncClient for async operations (e.g., with cassettes)
+            upstream_url: ConceptNet itself, checked by is_available (defaults to base_url)
         """
         self._base_url = base_url.rstrip("/")
+        self._upstream_url = (upstream_url or base_url).rstrip("/")
         self._timeout = timeout
         self._async_client = async_client
 
@@ -57,7 +60,7 @@ class ConceptNetSource:
         """
         try:
             response = httpx.get(
-                f"{self._base_url}/c/en/test",
+                f"{self._upstream_url}/c/en/test",
                 headers=REFERENCE_HEADERS,
                 timeout=self._timeout,
             )
