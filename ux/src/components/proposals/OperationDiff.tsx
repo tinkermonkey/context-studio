@@ -79,13 +79,47 @@ function createdValues(operation: ProposedOperation): string {
     .join(", ");
 }
 
-/** The entity an operation creates or targets; a class target resolves to its identifier. */
+function text(value: unknown): string | undefined {
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+/**
+ * The entity an operation creates or targets, by name. Its own fields name it
+ * when they can (a create's, a delete's whole-entity base); else a lookup does,
+ * as an update's base holds only the fields it touches. A class reads by its
+ * identifier, an attribute with its owning class ("Task · Status"), a
+ * relationship as its triple; the id is the last resort.
+ */
 export function subjectOf(operation: ProposedOperation, context: OperationContext): string {
   const subject = operationSubject(operation);
-  if (operation.kind === "class" && operation.target_id && subject === operation.target_id) {
-    return context.endLabel(operation.target_id, operation);
+  const target = operation.target_id;
+  switch (operation.kind) {
+    case "class":
+      return target && subject === target ? context.endLabel(target, operation) : subject;
+    case "attribute": {
+      const values = {
+        ...context.attribute(target),
+        ...operation.base,
+        ...(operation.op === "create" ? operation.fields : {}),
+      } as Record<string, unknown>;
+      const name = text(values.title) ?? text(values.identifier);
+      if (!name) return subject;
+      const owner = context.nameOf(text(values.class_id), operation);
+      return owner ? `${owner} · ${name}` : name;
+    }
+    case "relationship": {
+      const values = { ...operation.base, ...operation.fields } as Record<string, unknown>;
+      const end = (key: string) => context.nameOf(text(values[key]), operation) ?? "?";
+      const predicate = context.predicateOf(text(values.property_definition_id));
+      return predicate || values.source_id || values.target_id
+        ? `${end("source_id")} ${predicate ?? "?"} ${end("target_id")}`
+        : subject;
+    }
+    default:
+      return target && subject === target
+        ? (context.nameOf(target, operation) ?? subject)
+        : subject;
   }
-  return subject;
 }
 
 interface OperationDiffProps {

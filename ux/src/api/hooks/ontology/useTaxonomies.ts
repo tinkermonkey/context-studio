@@ -1,8 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueries, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
 import { ontologyService, type ListPageParams } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 import { listQueryOptions, type ListQueryOptions } from "./listQueryOptions";
+import { uniqueIds } from "./idChunks";
 
 type TaxonomyCreateRequest = components["schemas"]["TaxonomyCreateRequest"];
 type TaxonomyUpdateRequest = components["schemas"]["TaxonomyUpdateRequest"];
@@ -21,6 +22,22 @@ export function useTaxonomy(id: string) {
     queryFn: () => ontologyService.getTaxonomy(id),
     enabled: !!id,
   });
+}
+
+/** Fetch the taxonomies with these ids, one request each (they share useTaxonomy's cache). */
+export function useTaxonomiesByIds(ids: Array<string | null | undefined>) {
+  return useQueries({
+    queries: uniqueIds(ids).map((id) => ({
+      queryKey: QUERY_KEYS.taxonomy(id),
+      queryFn: () => ontologyService.getTaxonomy(id),
+    })),
+    combine: loadedTaxonomies,
+  });
+}
+
+/** A module-level function, so useQueries keeps the combined array stable. */
+function loadedTaxonomies<T>(results: { data?: T }[]): T[] {
+  return results.flatMap((r) => (r.data ? [r.data] : []));
 }
 
 export function useCreateTaxonomy() {

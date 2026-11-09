@@ -14,6 +14,9 @@ const context: OperationContext = {
   endTitle: () => undefined,
   currentProperty: () => undefined,
   targetGone: () => false,
+  attribute: () => undefined,
+  nameOf: () => undefined,
+  predicateOf: () => undefined,
 };
 
 const created = createProposedOperation({

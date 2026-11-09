@@ -3,6 +3,7 @@ import { QUERY_KEYS } from "@/api/config";
 import { ontologyService, type IndividualListParams } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 import { listQueryOptions, type ListQueryOptions } from "./listQueryOptions";
+import { listByIdChunks, uniqueIds } from "./idChunks";
 
 type IndividualCreateRequest = components["schemas"]["IndividualCreateRequest"];
 type IndividualUpdateRequest = components["schemas"]["IndividualUpdateRequest"];
@@ -37,6 +38,22 @@ export function useIndividualsInClasses(classIds: string[], limit: number) {
     for (const ind of result.data?.items ?? []) if (!byId.has(ind.id)) byId.set(ind.id, ind);
   }
   return [...byId.values()];
+}
+
+/**
+ * Fetch exactly the individuals with these ids (e.g. to name them in a
+ * proposal), in chunks of 100. Skips the request when there are no ids.
+ */
+export function useIndividualsByIds(ids: Array<string | null | undefined>) {
+  const unique = uniqueIds(ids);
+  return useQuery({
+    queryKey: QUERY_KEYS.individuals({ ids: unique, limit: Math.max(unique.length, 1) }),
+    queryFn: () =>
+      listByIdChunks(unique, (chunk) =>
+        ontologyService.listIndividuals({ ids: chunk, limit: chunk.length }),
+      ),
+    ...listQueryOptions({ enabled: unique.length > 0, keepPrevious: true }),
+  });
 }
 
 export function useIndividual(id: string) {

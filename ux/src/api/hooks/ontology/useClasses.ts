@@ -104,6 +104,27 @@ export function useClassAttributeDefinitions(classId: string) {
   });
 }
 
+/**
+ * Fetch the attribute definitions with these ids, one request each (the API
+ * has no ids filter for them). Skips the requests when there are no ids.
+ */
+export function useAttributeDefinitionsByIds(ids: Array<string | null | undefined>) {
+  return useQueries({
+    queries: uniqueIds(ids).map((id) => ({
+      queryKey: QUERY_KEYS.attributeDefinition(id),
+      queryFn: () => ontologyService.getAttributeDefinition(id),
+      staleTime: 5 * 60 * 1000,
+      retry: false,
+    })),
+    combine: loadedData,
+  });
+}
+
+/** The loaded results' data; a module-level function, so useQueries keeps the array stable. */
+function loadedData<T>(results: { data?: T }[]): T[] {
+  return results.flatMap((r) => (r.data ? [r.data] : []));
+}
+
 export function useCreateClass() {
   const queryClient = useQueryClient();
   return useMutation({

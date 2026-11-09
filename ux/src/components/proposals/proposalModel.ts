@@ -410,6 +410,59 @@ export function referencedPropertyIds(operations: ProposedOperation[]): string[]
     .map((o) => o.target_id as string);
 }
 
+/** Ids an operation names that only a lookup can put a name to, by what they are. */
+export interface NamedEntityIds {
+  attributes: string[];
+  individuals: string[];
+  taxonomies: string[];
+  /** Relationship types (property definitions) a relationship operation names. */
+  properties: string[];
+  /** The classes an attribute create or delete belongs to. */
+  classes: string[];
+}
+
+/**
+ * The attributes, individuals, taxonomies and relationship types the
+ * operations name by id: targets whose base carries no name (an update's base
+ * holds only the fields it touches; a delete's is the whole entity), and a
+ * relationship's ends and type.
+ * "$ref" ids resolve to what an applied create made; unapplied ones are left out.
+ */
+export function namedEntityIds(
+  operations: ProposedOperation[],
+  refsOf: (operation: ProposedOperation) => RefMap | undefined = () => undefined,
+): NamedEntityIds {
+  const ids: NamedEntityIds = {
+    attributes: [],
+    individuals: [],
+    taxonomies: [],
+    properties: [],
+    classes: [],
+  };
+  for (const operation of operations) {
+    // A delete's base is the whole entity, name included: only a target without one is looked up.
+    const base = operation.base ?? {};
+    const unnamed = !text(base.title) && !text(base.identifier);
+    const target = operation.op !== "create" && unnamed ? operation.target_id : undefined;
+    if (target && operation.kind === "attribute") ids.attributes.push(target);
+    if (target && operation.kind === "individual") ids.individuals.push(target);
+    if (target && operation.kind === "taxonomy") ids.taxonomies.push(target);
+    const values = { ...operation.base, ...operation.fields };
+    const owner = operation.kind === "attribute" ? text(values.class_id) : undefined;
+    const ownerId = owner && resolveRef(owner, refsOf(operation));
+    if (ownerId && !ownerId.startsWith("$")) ids.classes.push(ownerId);
+    if (operation.kind !== "relationship") continue;
+    for (const key of ["source_id", "target_id"]) {
+      const value = text(values[key]);
+      const id = value && resolveRef(value, refsOf(operation));
+      if (id && !id.startsWith("$")) ids.individuals.push(id);
+    }
+    const property = text(values.property_definition_id);
+    if (property) ids.properties.push(property);
+  }
+  return ids;
+}
+
 /**
  * True when the operation touches a class: as its target, or as a property
  * operation's domain or range, before or after. An update's base carries only
@@ -631,7 +684,12 @@ export function formatValue(value: unknown): string {
 }
 
 /** Field names that hold a class id, so their values render as class labels. */
-export const CLASS_ID_FIELDS = new Set(["domain_class_id", "range_class_id", "parent_class_id"]);
+export const CLASS_ID_FIELDS = new Set([
+  "domain_class_id",
+  "range_class_id",
+  "parent_class_id",
+  "class_id",
+]);
 
 /** A short name for the entity an operation creates or targets, from its own fields. */
 export function operationSubject(operation: ProposedOperation): string {
