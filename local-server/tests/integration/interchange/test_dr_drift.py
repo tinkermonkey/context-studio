@@ -17,8 +17,6 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
 
 from adapters.chat.proposal_tools import DrSpecDriftTool
-from adapters.web.drift_routes import router as drift_router
-
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.interchange.dr_drift import DrDriftPlanner
 from adapters.interchange.dr_relationships import (
@@ -32,6 +30,7 @@ from adapters.persistence.sqlite.connection import create_local_db_engine
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
+from adapters.web.drift_routes import router as drift_router
 from domain.ontology.services import OntologyService
 from domain.versioning.drift import DriftError, DriftImportService
 from domain.versioning.proposal_service import ProposalService

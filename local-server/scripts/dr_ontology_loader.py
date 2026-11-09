@@ -84,6 +84,7 @@ DR_TAXONOMY_TITLE = "Documentation Robotics"
 # An entity an import loads from a spec schema, so a later spec can leave it stale.
 SpecEntity = Class | PropertyDefinition | AttributeDefinition
 
+
 @dataclass
 class ImportSummary:
     """Row counts produced by an `import_dr_ontology` run."""

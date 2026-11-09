@@ -272,5 +272,3 @@ def attribute_identifier(name: str) -> str:
     snake = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", name)
     snake = re.sub(r"(?<=[A-Z])(?=[A-Z][a-z])", "_", snake)
     return re.sub(r"[^A-Za-z0-9]+", "_", snake).strip("_").lower()
-
-
