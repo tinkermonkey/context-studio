@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Button,
@@ -17,6 +17,7 @@ import { SMALL_SET_LIMIT } from "@/api/config";
 import { EntityNavigator } from "@/components/entity/EntityNavigator";
 import { EntityLink } from "@/components/entity/EntityLink";
 import { IntentPanel } from "@/components/entity/IntentPanel";
+import { DrSpecDriftDialog } from "@/components/ontology/DrSpecDriftDialog";
 import { PendingProposalOperations } from "@/components/entity/PendingProposalOperations";
 import {
   EntityActions,
@@ -86,6 +87,7 @@ export function TaxonomyPage({ id }: { id: string }) {
   const { data: counts } = useSchemeCounts(id);
   const updateTaxonomy = useUpdateTaxonomy();
   const exportBundle = useExportBundle();
+  const [driftOpen, setDriftOpen] = useState(false);
 
   const schemes = useMemo(() => schemesResponse?.items ?? [], [schemesResponse]);
   const countsByScheme = useMemo(
@@ -155,6 +157,16 @@ export function TaxonomyPage({ id }: { id: string }) {
             >
               <Icon name="download" size={13} /> {taxonomiesCopy.exportBundle.buttonLabel}
             </Button>
+            {taxonomy.identifier === DR_TAXONOMY_IDENTIFIER && (
+              <Button
+                variant="ghost"
+                onClick={() => setDriftOpen(true)}
+                title={taxonomiesCopy.drift.hint}
+                data-testid="taxonomy-check-drift"
+              >
+                <Icon name="gitBranch" size={13} /> {taxonomiesCopy.drift.buttonLabel}
+              </Button>
+            )}
             <EntityActions
               entity={{ kind: "taxonomy", id, title: taxonomy.title }}
               graph={{ layers: schemes.map((s) => s.id) }}
@@ -198,6 +210,9 @@ export function TaxonomyPage({ id }: { id: string }) {
               { key: "version", value: String(taxonomy.version) },
               { key: "created", value: formatDate(taxonomy.created_at) },
               { key: "modified", value: formatDate(taxonomy.last_modified) },
+              ...(taxonomy.mirrored
+                ? [{ key: "mirrors", value: sourceRevisionLabel(taxonomy.source_revision) }]
+                : []),
             ]}
           />
         }
@@ -237,7 +252,26 @@ export function TaxonomyPage({ id }: { id: string }) {
           />
         </Panel>
       </EntityBody>
+      <DrSpecDriftDialog open={driftOpen} onClose={() => setDriftOpen(false)} />
     </EntityPageLayout>
+  );
+}
+
+/** The DR spec's taxonomy: the one the DR spec drift check compares. */
+const DR_TAXONOMY_IDENTIFIER = "dr_spec";
+
+function sourceRevisionLabel(
+  revision:
+    | { repo?: string | null; commit?: string | null; spec_version?: string | null }
+    | null
+    | undefined,
+) {
+  if (!revision) return <span data-testid="taxonomy-mirrors">its source</span>;
+  const parts = [revision.spec_version, revision.commit?.slice(0, 8)].filter(Boolean).join(" · ");
+  return (
+    <span className="mono" title={revision.repo ?? undefined} data-testid="taxonomy-mirrors">
+      {parts || revision.repo}
+    </span>
   );
 }
 

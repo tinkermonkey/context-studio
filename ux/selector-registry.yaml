@@ -3345,3 +3345,34 @@ selectors:
   - selector: operation-replacement-deleted-callout
     component: src/components/proposals/OperationInspector.tsx
     description: "Warning that the proposal deletes the named replacement too: the chain of replacements to the type it ends at, or the cycle (data-cycle)"
+
+  - selector: dr-drift-dialog
+    component: src/components/ontology/DrSpecDriftDialog.tsx
+    description: "DR spec drift check dialog (#1464): compares the spec on disk with the dr_spec taxonomy by DR id"
+  - selector: dr-drift-close
+    component: src/components/ontology/DrSpecDriftDialog.tsx
+    description: "Closes the drift check dialog"
+  - selector: dr-drift-check
+    component: src/components/ontology/DrSpecDriftDialog.tsx
+    description: "Runs the drift check as a dry run (stores nothing); disabled without a spec directory or once proposed"
+  - selector: dr-drift-propose
+    component: src/components/ontology/DrSpecDriftDialog.tsx
+    description: "Proposes the checked drift as one change proposal; enabled only after a dry run that found drift"
+  - selector: dr-drift-spec-dir
+    component: src/components/ontology/DrSpecDriftDialog.tsx
+    description: "Spec directory input (the DR checkout's spec/ folder); remembered per browser; aria-invalid when refused"
+  - selector: dr-drift-summary
+    component: src/components/ontology/DrSpecDriftDialog.tsx
+    description: "How many entities differ from which spec revision, or that there is no drift"
+  - selector: dr-drift-proposal-link
+    component: src/components/ontology/DrSpecDriftDialog.tsx
+    description: "Link to the proposal a real drift run made"
+  - selector: dr-drift-entries
+    component: src/components/ontology/DrSpecDriftDialog.tsx
+    description: "Table of drift entries: change chip, kind, DR id, fields that differ"
+  - selector: taxonomy-check-drift
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: "Taxonomy page header button that opens the DR spec drift check (dr_spec taxonomy only)"
+  - selector: taxonomy-mirrors
+    component: src/routes/app/schema/taxonomies_.$id.tsx
+    description: "Identity card value: the source revision (spec version · commit) a mirrored taxonomy follows"

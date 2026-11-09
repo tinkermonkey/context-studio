@@ -26,4 +26,8 @@ export const taxonomiesCopy = {
     buttonLabel: "Export bundle",
     hint: (identifier: string) => `Download ${identifier}.bundle.json`,
   },
+  drift: {
+    buttonLabel: "Check drift",
+    hint: "Compare the DR spec on disk with this taxonomy and propose what differs",
+  },
 };

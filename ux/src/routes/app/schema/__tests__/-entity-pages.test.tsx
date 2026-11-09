@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
-import { entityPageHandlers } from "@/test/entityPageHandlers";
+import { entityPageHandlers, taxonomy } from "@/test/entityPageHandlers";
 import { ASK_ABOUT_EVENT } from "@/components/entity/EntityPageParts";
 import { ToastViewport, useToasts } from "@/components/ui/Toast";
 import { useBreadcrumbStore } from "@/stores/breadcrumbs";
@@ -150,6 +150,57 @@ describe("TaxonomyPage", () => {
       title: "Documentation Robotics",
     });
     window.removeEventListener(ASK_ABOUT_EVENT, listener);
+  });
+
+  describe("Mirrored DR spec", () => {
+    it("shows the source revision a mirrored taxonomy follows", async () => {
+      server.use(
+        http.get("*/api/taxonomies/:id", () =>
+          HttpResponse.json({
+            ...taxonomy,
+            mirrored: true,
+            source_revision: {
+              repo: "git@github.com:x/dr.git",
+              commit: "b016a07412",
+              spec_version: "0.11.0",
+            },
+          }),
+        ),
+      );
+      render(<TaxonomyPage id="tax-1" />);
+
+      const mirrors = await screen.findByTestId("taxonomy-mirrors");
+      expect(mirrors).toHaveTextContent("0.11.0 · b016a074");
+      expect(mirrors).toHaveClass("mono");
+      expect(mirrors).toHaveAttribute("title", "git@github.com:x/dr.git");
+    });
+
+    it("opens the drift check from the DR taxonomy's header", async () => {
+      const user = userEvent.setup();
+      render(<TaxonomyPage id="tax-1" />);
+
+      const button = await screen.findByTestId("taxonomy-check-drift");
+      expect(button).toBe(screen.getByRole("button", { name: /Check drift/ }));
+      expect(button).toHaveClass("btn", "btn--ghost");
+      expect(screen.queryByTestId("taxonomy-mirrors")).not.toBeInTheDocument();
+
+      await user.click(button);
+
+      expect(screen.getByTestId("dr-drift-dialog")).toBeInTheDocument();
+      expect(screen.getByTestId("dr-drift-spec-dir")).toBeInTheDocument();
+    });
+
+    it("offers no drift check on another taxonomy", async () => {
+      server.use(
+        http.get("*/api/taxonomies/:id", () =>
+          HttpResponse.json({ ...taxonomy, identifier: "house" }),
+        ),
+      );
+      render(<TaxonomyPage id="tax-1" />);
+
+      expect(await screen.findByTestId("taxonomy-export-bundle")).toBeInTheDocument();
+      expect(screen.queryByTestId("taxonomy-check-drift")).not.toBeInTheDocument();
+    });
   });
 
   describe("Export bundle", () => {
