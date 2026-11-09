@@ -1,5 +1,5 @@
 """
-Integration test for migration df5096c1a2ef (#1465): ontology entities gain a
+Integration test for migration 7b38611bb7b3 (#1465): ontology entities gain a
 derived flag, and rows that already exist read back as not derived.
 """
 
@@ -15,8 +15,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 ALEMBIC_INI = os.path.join(
     os.path.dirname(__file__), "../../adapters/persistence/sqlite/alembic.ini"
 )
-REVISION = "df5096c1a2ef"
-PREVIOUS_REVISION = "6f2ab6f75f48"
+REVISION = "7b38611bb7b3"
+PREVIOUS_REVISION = "3996bcd54aab"
 
 
 def _config(db_path: str) -> Config:
