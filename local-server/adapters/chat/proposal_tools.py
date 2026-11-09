@@ -132,7 +132,11 @@ def _compact(value: Any) -> Any:
 
 
 def _capped(
-    payload: dict[str, Any], list_key: str, note: Callable[[int], str]
+    payload: dict[str, Any],
+    list_key: str,
+    note: Callable[[int], str],
+    total: Optional[int] = None,
+    offset: int = 0,
 ) -> tuple[str, list[Any]]:
     """
     Serialize a result within MAX_PROPOSAL_CHARS; returns the content and the
@@ -146,15 +150,19 @@ def _capped(
         payload: The result
         list_key: The list to cut
         note: What to do about the cut entries, given how many were kept
+        total: How many entries there are in all, when the list is one page
+            of them (default: the list's length)
+        offset: Where the list starts among them, for a page
     """
-    total = len(payload[list_key])
+    total = len(payload[list_key]) + offset if total is None else total
 
     def fit(current: dict[str, Any]) -> tuple[str, dict[str, Any]]:
         items = list(current[list_key])
         content = dumps(current)
         while len(items) > 1 and len(content) > MAX_PROPOSAL_CHARS:
             items = items[: max(len(items) * 3 // 4, 1)]
-            truncated = f"showing {len(items)} of {total}; {note(len(items))}"
+            shown = f"{offset + 1}-{offset + len(items)}" if offset else str(len(items))
+            truncated = f"showing {shown} of {total}; {note(len(items))}"
             current = {**current, list_key: items, "truncated": truncated}
             content = dumps(current)
         return content, current
@@ -544,17 +552,24 @@ def _dry_run(view: dict[str, Any]) -> ToolOutcome:
         "operations": operations,
         "next": " ".join(notes),
     }
+    note = "the rest validated; split the proposal to see them"
     if len(dumps(payload)) > MAX_PROPOSAL_CHARS:
         payload = _dry_run_digest(payload)
-    content, _ = _capped(
-        payload, "operations", lambda _: "the rest validated; split the proposal to see them"
-    )
+        note = "attention_seqs lists every operation that needs attention"
+    content, _ = _capped(payload, "operations", lambda _: note)
     return ToolOutcome(content=content, summary=f"Dry run “{view['title']}”: {auto} would apply")
 
 
 def _needs_attention(operation: dict[str, Any]) -> bool:
-    """A dry-run operation that is blocked, stale or has a replacement check."""
-    return any(operation.get(key) for key in ("blockers", "stale", "replacement_check"))
+    """
+    A dry-run operation that is blocked, stale, or names a replacement that
+    isn't the same pair of classes or that the proposal also deletes.
+    """
+    check = operation.get("replacement_check") or {}
+    flagged = check and (
+        check.get("pair") != "same" or check.get("replacement_deleted") or check.get("cycle")
+    )
+    return bool(operation.get("blockers") or operation.get("stale") or flagged)
 
 
 def _dry_run_digest(payload: dict[str, Any]) -> dict[str, Any]:
@@ -563,15 +578,18 @@ def _dry_run_digest(payload: dict[str, Any]) -> dict[str, Any]:
     full, and every other one by seq, split by whether it would auto-apply.
     """
     operations = payload["operations"]
+    attention = [o for o in operations if _needs_attention(o)]
     plain = [o for o in operations if not _needs_attention(o)]
     return {
         **payload,
-        "operations": [o for o in operations if _needs_attention(o)],
+        "operations": attention,
+        "attention_seqs": [o["seq"] for o in attention],
         "auto_apply_seqs": [o["seq"] for o in plain if o.get("auto_apply")],
         "review_seqs": [o["seq"] for o in plain if not o.get("auto_apply")],
         "digest": (
-            "too many operations to list whole: operations lists those blocked, stale or"
-            " with a replacement check; the rest validated and are listed by seq"
+            "too many operations to list whole: operations details those blocked, stale"
+            " or with a flagged replacement (attention_seqs lists them all); the rest"
+            " validated and are listed by seq"
         ),
     }
 
@@ -652,9 +670,25 @@ class GetProposalTool(_ProposalTool):
                 f"{' and '.join(BULKY_OPERATION_KEYS)} are left out to fit (the review page"
                 " shows them); fields and applied_fields are kept"
             )
-            content, _ = _capped(
-                payload, "operations", lambda kept: f"pass offset {offset + kept} for the rest"
-            )
+            total = len(view["operations"])
+
+            def note(kept: int) -> str:
+                return f"pass offset {offset + kept} for the rest"
+
+            content, kept = _capped(payload, "operations", note, total, offset)
+            if len(content) > MAX_PROPOSAL_CHARS:
+                # One operation's own fields are too large: they go too.
+                payload["operations"] = [
+                    {k: v for k, v in o.items() if k not in ("fields", "applied_fields")}
+                    for o in kept
+                ]
+                payload["fields_omitted_seqs"] = [o["seq"] for o in kept]
+                if offset + len(kept) < total:
+                    payload["truncated"] = (
+                        f"showing {offset + 1}-{offset + len(kept)} of {total};"
+                        f" {note(len(kept))}"
+                    )
+                content, _ = _capped(payload, "operations", note, total, offset)
         return ToolOutcome(
             content=content,
             summary=_summary("Proposal", proposal.title, payload["counts"]),

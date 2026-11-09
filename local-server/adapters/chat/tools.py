@@ -757,8 +757,10 @@ class ListRelationshipTypesTool(_Tool):
     description = (
         "List relationship types (property definitions) with their domain and range"
         " classes, by title, optionally only those of one taxonomy (its domain or range"
-        " is one of the taxonomy's classes) or whose title or identifier contains a"
-        " text. Page with offset: total says how many match."
+        " is one of the taxonomy's classes, so a type linking two taxonomies is listed"
+        " under both; the taxonomy's bundle carries only types wholly inside it) or"
+        " whose title or identifier contains a text. Page with offset: total says how"
+        " many match."
     )
     input_schema = {
         "type": "object",

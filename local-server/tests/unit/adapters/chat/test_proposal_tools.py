@@ -701,6 +701,33 @@ class TestGetProposal:
 
         assert seen == list(range(1, count + 1))
 
+    async def test_a_page_note_counts_every_operation(self):
+        operations = [
+            make_operation(seq, fields={"description": "d" * 400}) for seq in range(1, 101)
+        ]
+        service = FakeProposalService(proposal=make_proposal(operations))
+
+        _, first = await call(service, "get_proposal", id="prop-1")
+        kept = len(first["operations"])
+        _, second = await call(service, "get_proposal", id="prop-1", offset=kept)
+
+        assert first["truncated"].startswith(f"showing {kept} of 100;")
+        shown = len(second["operations"])
+        assert second["truncated"].startswith(f"showing {kept + 1}-{kept + shown} of 100;")
+
+    async def test_one_operation_too_large_even_alone_leaves_its_fields_out(self):
+        huge = {f"key_{i}": "v" for i in range(3000)}
+        operations = [make_operation(1, fields={"data_properties": huge}), make_operation(2)]
+        service = FakeProposalService(proposal=make_proposal(operations))
+
+        outcome, result = await call(service, "get_proposal", id="prop-1")
+
+        assert len(outcome.content) <= MAX_PROPOSAL_CHARS
+        assert result["fields_omitted_seqs"] == [1]
+        assert [o["seq"] for o in result["operations"]] == [1]
+        assert "fields" not in result["operations"][0]
+        assert result["truncated"].endswith("pass offset 1 for the rest")
+
     async def test_a_small_proposal_keeps_fields(self):
         service = FakeProposalService(proposal=make_proposal([make_operation(1)]))
 
@@ -930,6 +957,63 @@ class TestDryRun:
         listed = result["auto_apply_seqs"] + result["review_seqs"]
         listed += [o["seq"] for o in result["operations"]]
         assert sorted(listed) == list(range(1, MAX_OPERATIONS + 1))
+
+    async def test_a_large_dry_run_where_every_operation_needs_attention_lists_every_seq(self):
+        operations = [
+            make_operation(seq, fields={"description": "d" * 300})
+            for seq in range(1, MAX_OPERATIONS + 1)
+        ]
+        service = FakeProposalService(
+            proposal=make_proposal(operations), stale={o.id for o in operations}
+        )
+
+        outcome, result = await call(
+            service,
+            "propose_changes",
+            taxonomy_id=TAXONOMY,
+            title="t",
+            operations=[update_op(seq) for seq in range(1, MAX_OPERATIONS + 1)],
+            dry_run=True,
+        )
+
+        assert len(outcome.content) <= MAX_PROPOSAL_CHARS
+        assert result["attention_seqs"] == list(range(1, MAX_OPERATIONS + 1))
+        assert 0 < len(result["operations"]) < MAX_OPERATIONS
+        assert result["truncated"].endswith(
+            "attention_seqs lists every operation that needs attention"
+        )
+
+    async def test_a_same_pair_replacement_isnt_flagged_in_a_large_dry_run(self):
+        operations = [
+            make_operation(seq, fields={"description": "d" * 300})
+            for seq in range(1, MAX_OPERATIONS + 1)
+        ]
+        same = ReplacementCheck(
+            replacement_id="p-2",
+            property_id="p-2",
+            identifier="b",
+            title="b",
+            pair=PairMatch.SAME,
+            deleted_domain=ClassEnd("c-1", "A"),
+            deleted_range=ClassEnd("c-2", "B"),
+            domain=ClassEnd("c-1", "A"),
+            range=ClassEnd("c-2", "B"),
+        )
+        service = FakeProposalService(
+            proposal=make_proposal(operations), checks={o.id: same for o in operations}
+        )
+
+        _, result = await call(
+            service,
+            "propose_changes",
+            taxonomy_id=TAXONOMY,
+            title="t",
+            operations=[update_op(seq) for seq in range(1, MAX_OPERATIONS + 1)],
+            dry_run=True,
+        )
+
+        assert result["attention_seqs"] == [] and result["operations"] == []
+        assert result["review_seqs"] == list(range(1, MAX_OPERATIONS + 1))
 
     def test_schema_offers_dry_run(self):
         schema = tools_for(FakeProposalService())["propose_changes"].spec.input_schema

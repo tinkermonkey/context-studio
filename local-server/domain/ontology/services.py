@@ -1112,7 +1112,7 @@ class OntologyService:
         self,
         concept_scheme_id: str | None = None,
         parent_class_id: str | None = None,
-        limit: int = 100,
+        limit: int | None = 100,
         offset: int = 0,
         sort_by: str | None = None,
         sort_order: Literal["asc", "desc"] = "asc",
@@ -1125,7 +1125,7 @@ class OntologyService:
         Args:
             concept_scheme_id: Optional concept scheme ID to filter by
             parent_class_id: Optional parent class ID to filter by (for hierarchy)
-            limit: Maximum number of results to return
+            limit: Maximum number of results to return; None means no limit
             offset: Number of results to skip
             sort_by: Field to sort by (title, created_at, last_modified); None for default
             sort_order: Sort direction (asc or desc)
