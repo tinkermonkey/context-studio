@@ -8264,10 +8264,10 @@ export interface components {
        */
       recognition_threshold: number;
       /**
-       * Concept Scheme Id
-       * @description Concept scheme the run would be applied to. Required for schema_extraction runs, whose candidates are matched against its classes; ignored for individual_extraction runs.
+       * Taxonomy Id
+       * @description Taxonomy the run would be applied to. Required for schema_extraction runs, whose candidates are matched against every class in it; ignored for individual_extraction runs.
        */
-      concept_scheme_id?: string | null;
+      taxonomy_id?: string | null;
     };
     /**
      * RecognitionPreviewResponse
@@ -12537,7 +12537,7 @@ export interface operations {
   apply_pipeline_run_api_pipelines_runs__run_id__apply_post: {
     parameters: {
       query?: {
-        /** @description Target concept scheme (required for schema_extraction) */
+        /** @description schema_extraction: the concept scheme new classes go to; required only when the selection creates a class */
         concept_scheme_id?: string | null;
         /** @description Parent taxonomy (required for schema_extraction) */
         taxonomy_id?: string | null;

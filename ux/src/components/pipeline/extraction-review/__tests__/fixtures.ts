@@ -220,6 +220,4 @@ export const SCHEMA_RECOGNITION: RecognitionPreviewResponse = {
 export const SCOPE = {
   taxonomyId: "tax-dr",
   taxonomyLabel: "Documentation Robotics · dr_spec",
-  conceptSchemeId: "scheme-app",
-  conceptSchemeLabel: "Application Layer · application",
 };

@@ -2543,7 +2543,16 @@ selectors:
     description: "Taxonomy select for the extraction scope"
   - selector: extraction-review-scheme
     component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
-    description: "Concept scheme select (schema apply target), filtered by taxonomy"
+    description: "Removed in #1314 (extraction is not scoped to a scheme); E2E asserts it is absent"
+  - selector: extraction-review-schema-target-scheme
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Apply bar: concept scheme new classes go to (a static label for one scheme, a select for several)"
+  - selector: extraction-review-schema-target-hint
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Apply bar: status message asking where new classes go while none is chosen"
+  - selector: extraction-review-schema-no-schemes
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Apply bar: alert when the taxonomy has no concept scheme for new classes"
   - selector: extraction-review-config
     component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
     description: "Configuration (implementation) select shared by both runs"

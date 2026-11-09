@@ -23,9 +23,20 @@ const completed = { status: "completed" as const, run: makeRun() };
 
 let previewBody: unknown = null;
 
-function renderReady(recognition: () => Response = () => HttpResponse.json(SCHEMA_RECOGNITION)) {
+const APP_SCHEME = { id: "scheme-app", identifier: "application", title: "Application Layer" };
+const BIZ_SCHEME = { id: "scheme-biz", identifier: "business", title: "Business Layer" };
+
+function renderReady(
+  recognition: () => Response = () => HttpResponse.json(SCHEMA_RECOGNITION),
+  schemes: Array<typeof APP_SCHEME> | (() => Response) = [APP_SCHEME],
+) {
   previewBody = null;
   server.use(
+    http.get("*/api/schemes", () =>
+      typeof schemes === "function"
+        ? schemes()
+        : HttpResponse.json({ items: schemes, total: schemes.length, limit: 100, offset: 0 }),
+    ),
     http.get("*/api/pipelines/runs/run-s/schema-extraction-candidates", () =>
       HttpResponse.json(SCHEMA_CANDIDATES),
     ),
@@ -187,6 +198,7 @@ describe("SchemaCandidateReview — review", () => {
       }),
     );
     await renderReady();
+    await screen.findByTestId("extraction-review-schema-existing-class-0");
     await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-0-yes"));
     await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-1-no"));
     const panel = screen.getByTestId("extraction-review-schema-candidates");
@@ -202,7 +214,8 @@ describe("SchemaCandidateReview — review", () => {
     expect(applyBody).toEqual({ accepted_candidate_ids: ["class-0", "connection-0"] });
     expect(applyUrl!.searchParams.get("confidence_threshold")).toBeNull();
     expect(applyUrl!.searchParams.get("taxonomy_id")).toBe("tax-dr");
-    expect(applyUrl!.searchParams.get("concept_scheme_id")).toBe("scheme-app");
+    // Policyholder already exists, so nothing new needs a concept scheme.
+    expect(applyUrl!.searchParams.get("concept_scheme_id")).toBeNull();
 
     expect(screen.getByTestId("extraction-review-apply-result-created")).toHaveTextContent(
       "1 classes created",
@@ -313,10 +326,13 @@ describe("SchemaCandidateReview — review", () => {
 });
 
 describe("SchemaCandidateReview — existing-match hints", () => {
-  it("requests the preview for the target concept scheme and labels each class", async () => {
+  it("requests the preview for the whole taxonomy and labels each class", async () => {
     await renderReady();
     const exists = await screen.findByTestId("extraction-review-schema-existing-class-0");
-    expect(previewBody).toEqual({ confidence_threshold: 0, concept_scheme_id: "scheme-app" });
+    expect(previewBody).toEqual({ confidence_threshold: 0, taxonomy_id: "tax-dr" });
+    expect(screen.getByTestId("extraction-review-schema-candidates")).toHaveTextContent(
+      "close to a class already in Documentation Robotics · dr_spec",
+    );
 
     expect(within(exists).getByText("exists")).toHaveClass("chip--emerald");
     expect(exists).toHaveTextContent("Policyholder");
@@ -357,6 +373,7 @@ describe("SchemaCandidateReview — existing-match hints", () => {
     await screen.findByTestId("extraction-review-schema-existing-class-0");
     // Policyholder (exists) is left pending; Insurance Claim is accepted.
     await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-1-yes"));
+    await screen.findByText("Application Layer · application");
     const panel = screen.getByTestId("extraction-review-schema-candidates");
     await userEvent.click(within(panel).getByRole("radio", { name: /Connections/ }));
     await userEvent.click(screen.getByTestId("extraction-review-schema-decision-connection-0-yes"));
@@ -370,6 +387,7 @@ describe("SchemaCandidateReview — existing-match hints", () => {
     await screen.findByTestId("extraction-review-schema-existing-class-0");
     await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-0-yes"));
     await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-1-yes"));
+    await screen.findByText("Application Layer · application");
     await userEvent.click(screen.getByTestId("extraction-review-schema-apply"));
     const confirm = screen.getByTestId("extraction-review-schema-confirm");
     expect(within(confirm).getByText("1 reuse existing")).toHaveClass("chip--emerald");
@@ -382,5 +400,89 @@ describe("SchemaCandidateReview — existing-match hints", () => {
     expect(
       within(screen.getByTestId("extraction-review-schema-existing-class-0")).getByText("—"),
     ).toBeInTheDocument();
+  });
+});
+
+describe("SchemaCandidateReview — where new classes go", () => {
+  function captureApply() {
+    const seen: { url: URL | null } = { url: null };
+    server.use(
+      http.post("*/api/pipelines/runs/run-s/apply", ({ request }) => {
+        seen.url = new URL(request.url);
+        return HttpResponse.json({
+          run_id: "run-s",
+          pipeline_type: "schema_extraction",
+          classes_created: 1,
+          applied_candidate_ids: ["class-2"],
+          skipped_candidate_ids: [],
+          skip_reasons: {},
+          merged_mentions: [],
+        });
+      }),
+    );
+    return seen;
+  }
+
+  const bar = () => screen.getByTestId("extraction-review-schema-apply-bar");
+
+  it("asks nothing when every accepted class already exists", async () => {
+    await renderReady(undefined, [APP_SCHEME, BIZ_SCHEME]);
+    await screen.findByTestId("extraction-review-schema-existing-class-0");
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-0-yes"));
+    expect(bar()).not.toHaveTextContent("new classes go to");
+    expect(screen.getByTestId("extraction-review-schema-apply")).toBeEnabled();
+  });
+
+  it("names the only concept scheme without asking", async () => {
+    const seen = captureApply();
+    await renderReady();
+    await screen.findByTestId("extraction-review-schema-existing-class-2");
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-2-yes"));
+    expect(await within(bar()).findByText("Application Layer · application")).toBeInTheDocument();
+    expect(bar()).toHaveTextContent("new classes go to");
+
+    await userEvent.click(screen.getByTestId("extraction-review-schema-apply"));
+    await userEvent.click(screen.getByRole("button", { name: "Apply 1 accepted" }));
+    await screen.findByTestId("extraction-review-schema-revert");
+    expect(seen.url!.searchParams.get("concept_scheme_id")).toBe("scheme-app");
+  });
+
+  it("blocks apply until the reviewer chooses among several schemes", async () => {
+    const seen = captureApply();
+    await renderReady(undefined, [APP_SCHEME, BIZ_SCHEME]);
+    await screen.findByTestId("extraction-review-schema-existing-class-2");
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-2-yes"));
+
+    const picker = await screen.findByTestId("extraction-review-schema-target-scheme");
+    expect(screen.getByTestId("extraction-review-schema-apply")).toBeDisabled();
+    const hint = screen.getByTestId("extraction-review-schema-target-hint");
+    expect(hint).toHaveAttribute("role", "status");
+    expect(hint).toHaveTextContent("Choose where the 1 new class goes.");
+
+    await userEvent.selectOptions(picker, "scheme-biz");
+    expect(screen.queryByText("Choose where the 1 new class goes.")).not.toBeInTheDocument();
+    expect(screen.getByTestId("extraction-review-schema-apply")).toBeEnabled();
+
+    await userEvent.click(screen.getByTestId("extraction-review-schema-apply"));
+    await userEvent.click(screen.getByRole("button", { name: "Apply 1 accepted" }));
+    await screen.findByTestId("extraction-review-schema-revert");
+    expect(seen.url!.searchParams.get("concept_scheme_id")).toBe("scheme-biz");
+  });
+
+  it("shows a failed concept scheme load and keeps apply blocked", async () => {
+    await renderReady(undefined, () => HttpResponse.json({ detail: "boom" }, { status: 500 }));
+    await screen.findByTestId("extraction-review-schema-existing-class-2");
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-2-yes"));
+    expect(await within(bar()).findByText(/Could not load concept schemes/)).toBeInTheDocument();
+    expect(screen.getByTestId("extraction-review-schema-apply")).toBeDisabled();
+  });
+
+  it("explains a taxonomy without concept schemes and blocks apply", async () => {
+    await renderReady(undefined, []);
+    await screen.findByTestId("extraction-review-schema-existing-class-2");
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-2-yes"));
+    const message = await screen.findByTestId("extraction-review-schema-no-schemes");
+    expect(message).toHaveAttribute("role", "alert");
+    expect(screen.getByTestId("extraction-review-schema-apply")).toBeDisabled();
   });
 });

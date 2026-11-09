@@ -60,6 +60,7 @@ export interface RunListParams {
 export interface ApplyParams {
   /** Ignored by the server when the body carries accepted_candidate_ids. */
   confidence_threshold?: number;
+  /** schema_extraction: where new classes go; needed only when apply creates a class. */
   concept_scheme_id?: string;
   taxonomy_id?: string;
   node_id?: string;
@@ -156,7 +157,7 @@ class PipelineService extends BaseService {
   /**
    * Zero-write preview of which candidates already exist: individual mentions that
    * resolve to existing individuals (`hits`), or schema candidates that match
-   * existing classes / properties / relationships in `concept_scheme_id` (`schema_hits`).
+   * existing classes / properties / relationships in `taxonomy_id` (`schema_hits`).
    */
   async previewRecognition(
     runId: string,

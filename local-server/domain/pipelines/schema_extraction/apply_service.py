@@ -7,7 +7,7 @@ created via OntologyService, so each creation publishes its domain event and is
 recorded as a ChangeEvent that the run's revert can undo.
 
 Idempotent: applying the same run twice produces no duplicates. Deduplication is
-content-based (class title within concept scheme, compared by ``class_title_key``;
+content-based (class title anywhere in the taxonomy, compared by ``class_title_key``;
 identifier for property definitions; source+target+property triple for relationships).
 """
 
@@ -28,6 +28,7 @@ from domain.pipelines.candidate_ids import (
 _logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from domain.ontology.entities import Class
     from domain.ontology.ports import OntologyRepository
     from domain.ontology.services import OntologyService
     from domain.pipelines.entities import PipelineRun
@@ -40,13 +41,39 @@ def slugify(text: str) -> str:
 
 def class_title_key(title: str | None) -> str:
     """
-    Dedup key for a class title within a concept scheme.
+    Dedup key for a class title within a taxonomy.
 
     Case, whitespace, hyphens and underscores are ignored, so a proposed
     "Data Object" resolves to an existing "DataObject" (the DR spec's CamelCase
     titles) instead of creating a near-duplicate class.
     """
     return re.sub(r"[\s_-]+", "", (title or "").lower())
+
+
+def taxonomy_classes(repo: "OntologyRepository", taxonomy_id: str) -> "list[Class]":
+    """
+    Every class in a taxonomy, scheme by scheme, oldest scheme first.
+
+    Recognition preview and apply both read classes through this, so a class
+    the preview reports as existing is the one apply reuses.
+    """
+    classes: list[Class] = []
+    for scheme in repo.list_concept_schemes(
+        taxonomy_id=taxonomy_id, limit=None, sort_by="created_at", sort_order="asc"
+    ):
+        classes.extend(repo.list_classes(concept_scheme_id=scheme.id, limit=None))
+    return classes
+
+
+def class_title_index(classes: "list[Class]") -> "dict[str, Class]":
+    """
+    Title key -> class. Titles are unique per scheme, not per taxonomy; when two
+    schemes share one, the first class (oldest scheme) wins.
+    """
+    index: dict[str, Class] = {}
+    for cls in classes:
+        index.setdefault(class_title_key(cls.title), cls)
+    return index
 
 
 class SchemaExtractionApplyService:
@@ -72,8 +99,8 @@ class SchemaExtractionApplyService:
     def apply(
         self,
         run: "PipelineRun",
-        concept_scheme_id: str,
         taxonomy_id: str,
+        concept_scheme_id: str | None = None,
         confidence_threshold: float = 0.0,
         accepted_candidate_ids: "set[str] | list[str] | None" = None,
     ) -> ApplyResult:
@@ -82,9 +109,11 @@ class SchemaExtractionApplyService:
 
         Args:
             run: Completed PipelineRun with output_summary containing candidates/connections
-            concept_scheme_id: Target concept scheme for Class entities
-            taxonomy_id: Parent taxonomy for Class entities; must be the concept
-                scheme's taxonomy
+            taxonomy_id: The taxonomy to apply to. A selected class whose title
+                already exists anywhere in it is reused, never duplicated, and
+                connections resolve their endpoints across the whole taxonomy.
+            concept_scheme_id: Where new classes go; must belong to taxonomy_id.
+                Only needed when the selection creates a class.
             confidence_threshold: Minimum confidence to include a candidate (0.0–1.0).
                 Ignored when ``accepted_candidate_ids`` is given.
             accepted_candidate_ids: Explicit reviewer selection of ``class-{i}``,
@@ -99,21 +128,22 @@ class SchemaExtractionApplyService:
             ``applied_candidate_ids`` and ``existing_candidate_ids``.
 
         Raises:
-            ValueError: If concept_scheme_id or taxonomy_id is empty, the concept
-                scheme does not exist, or it does not belong to taxonomy_id
+            ValueError: If taxonomy_id is empty; the concept scheme does not exist
+                or does not belong to taxonomy_id; or the selection creates a class
+                and no concept scheme was given (checked before anything is written)
             ApplySelectionError: If an accepted id is not a candidate of this run
         """
-        if not concept_scheme_id:
-            raise ValueError("concept_scheme_id is required for schema extraction apply")
         if not taxonomy_id:
             raise ValueError("taxonomy_id is required for schema extraction apply")
-        scheme = self._repo.get_concept_scheme(concept_scheme_id)
-        if scheme is None:
-            raise ValueError(f"Concept scheme {concept_scheme_id} not found")
-        if scheme.taxonomy_id != taxonomy_id:
-            raise ValueError(
-                f"Concept scheme {concept_scheme_id} does not belong to taxonomy {taxonomy_id}"
-            )
+        if concept_scheme_id:
+            scheme = self._repo.get_concept_scheme(concept_scheme_id)
+            if scheme is None:
+                raise ValueError(f"Concept scheme {concept_scheme_id} not found")
+            if scheme.taxonomy_id != taxonomy_id:
+                raise ValueError(
+                    f"Concept scheme {concept_scheme_id} does not belong to taxonomy "
+                    f"{taxonomy_id}"
+                )
 
         result = ApplyResult()
         candidates = enumerate_schema_candidates(run.output_summary)
@@ -136,11 +166,11 @@ class SchemaExtractionApplyService:
             result.existing_candidate_ids.append(candidate_id)
 
         # --- Classes ---
-        existing_classes = self._repo.list_classes(concept_scheme_id=concept_scheme_id, limit=None)
-        # Lower-cased title -> id, for existing and newly created classes alike
-        # (used for dedup and for resolving connection endpoints).
+        # Title key -> id across the taxonomy, for existing and newly created
+        # classes alike (used for dedup and for resolving connection endpoints).
         class_title_to_id: dict[str, str] = {
-            class_title_key(c.title): c.id for c in existing_classes
+            key: c.id
+            for key, c in class_title_index(taxonomy_classes(self._repo, taxonomy_id)).items()
         }
 
         class_candidates = [(cid, c) for cid, c in candidates if c.get("kind") == "class"]
@@ -159,6 +189,10 @@ class SchemaExtractionApplyService:
                 result.classes_skipped += 1
                 _already_present(candidate_id)
                 continue
+            if not concept_scheme_id:
+                # Classes are written first and earlier ones were only reused,
+                # so nothing has been written yet.
+                raise ValueError("Choose a concept scheme for the new classes")
             new_class = self._ontology_service.create_class(
                 concept_scheme_id=concept_scheme_id,
                 title=label,

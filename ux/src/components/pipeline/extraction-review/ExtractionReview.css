@@ -100,6 +100,16 @@
   overflow-wrap: anywhere;
 }
 
+.xr-target-hint {
+  font-size: 12px;
+  color: rgb(var(--status-amber));
+}
+
+.xr-target-error {
+  font-size: 12px;
+  color: rgb(var(--status-rose));
+}
+
 .xr-mono-muted {
   font-family: var(--font-mono);
   font-size: 11px;

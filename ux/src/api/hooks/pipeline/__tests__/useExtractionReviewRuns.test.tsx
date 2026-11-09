@@ -22,7 +22,6 @@ const run = (id: string, pipeline_type: string, status: string, failure_reason?:
 const REQUEST: ExtractionReviewRequest = {
   text: "Context Studio is a local-first app.",
   taxonomy: { id: "tax-1", label: "Tax" },
-  conceptScheme: { id: "scheme-1", label: "Scheme" },
   implementationId: "default",
   schemaConfigRef: "schema-default",
   individualConfigRef: "individual-default",

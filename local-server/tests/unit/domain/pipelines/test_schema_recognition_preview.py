@@ -58,9 +58,7 @@ def repo():
     r.save_class(_class("cls-service", "Service"))
     r.save_class(_class("cls-database", "Database"))
     r.save_class(_class("cls-other", "Queue", scheme=OTHER_SCHEME_ID))
-    r.save_property_definition(
-        PropertyDefinition(id="prop-uses", identifier="uses", title="uses")
-    )
+    r.save_property_definition(PropertyDefinition(id="prop-uses", identifier="uses", title="uses"))
     r.save_relationship(
         Relationship(
             id="rel-1",
@@ -99,7 +97,7 @@ def _svc(repo, index=None):
 
 
 def test_exact_class_title_matches_case_insensitively(repo):
-    hits = _svc(repo).preview(_summary([_cls("service"), _cls("Cache")]), SCHEME_ID)
+    hits = _svc(repo).preview(_summary([_cls("service"), _cls("Cache")]), TAXONOMY_ID)
 
     assert hits[0] == SchemaRecognitionHit(
         candidate_id="class-0",
@@ -118,20 +116,39 @@ def test_exact_class_title_matches_case_insensitively(repo):
 
 def test_exact_match_ignores_spacing_like_apply(repo):
     repo.save_class(_class("cls-data-object", "DataObject"))
-    hits = _svc(repo).preview(_summary([_cls("Data Object")]), SCHEME_ID)
+    hits = _svc(repo).preview(_summary([_cls("Data Object")]), TAXONOMY_ID)
     assert hits[0].will_match_existing is True
     assert hits[0].existing_entity_title == "DataObject"
 
 
-def test_exact_match_is_scoped_to_the_concept_scheme(repo):
-    hits = _svc(repo).preview(_summary([_cls("Queue")]), SCHEME_ID)
+def test_exact_match_spans_every_scheme_in_the_taxonomy(repo):
+    hits = _svc(repo).preview(_summary([_cls("Queue")]), TAXONOMY_ID)
+    assert hits[0].will_match_existing is True
+    assert hits[0].existing_entity_id == "cls-other"
+
+
+def test_exact_match_ignores_other_taxonomies(repo):
+    repo.save_taxonomy(Taxonomy(id="tx-2", identifier="other", title="Other"))
+    repo.save_concept_scheme(
+        ConceptScheme(id="cs-x", taxonomy_id="tx-2", identifier="cs_x", title="X")
+    )
+    cache = _class("cls-cache", "Cache", scheme="cs-x")
+    cache.taxonomy_id = "tx-2"
+    repo.save_class(cache)
+    hits = _svc(repo).preview(_summary([_cls("Cache")]), TAXONOMY_ID)
     assert hits[0].existing_entity_id is None
+
+
+def test_same_title_in_two_schemes_matches_the_oldest_scheme(repo):
+    repo.save_class(_class("cls-service-2", "Service", scheme=OTHER_SCHEME_ID))
+    hits = _svc(repo).preview(_summary([_cls("Service")]), TAXONOMY_ID)
+    assert hits[0].existing_entity_id == "cls-service"
 
 
 def test_vector_hint_for_a_clear_title_match_is_advisory(repo):
     index = _index(_match("cls-database", "Database", 0.94))
 
-    hits = _svc(repo, index).preview(_summary([_cls("Data store")]), SCHEME_ID)
+    hits = _svc(repo, index).preview(_summary([_cls("Data store")]), TAXONOMY_ID)
 
     assert hits[0].match_method == "vector"
     assert hits[0].existing_entity_id == "cls-database"
@@ -143,7 +160,7 @@ def test_vector_hint_for_a_clear_title_match_is_advisory(repo):
 
 def test_vector_hint_withheld_below_threshold(repo):
     index = _index(_match("cls-database", "Database", 0.85))
-    hits = _svc(repo, index).preview(_summary([_cls("Data store")]), SCHEME_ID)
+    hits = _svc(repo, index).preview(_summary([_cls("Data store")]), TAXONOMY_ID)
     assert hits[0].match_method is None
 
 
@@ -152,22 +169,26 @@ def test_vector_hint_withheld_when_ambiguous(repo):
         _match("cls-database", "Database", 0.94),
         _match("cls-service", "Service", 0.92),
     )
-    hits = _svc(repo, index).preview(_summary([_cls("Data service")]), SCHEME_ID)
+    hits = _svc(repo, index).preview(_summary([_cls("Data service")]), TAXONOMY_ID)
     assert hits[0].match_method is None
 
 
-def test_vector_hint_ignores_definition_matches_and_other_schemes(repo):
-    index = _index(
-        _match("cls-database", "Database", 0.97, field="definition"),
-        _match("cls-other", "Queue", 0.96),
-    )
-    hits = _svc(repo, index).preview(_summary([_cls("Message queue")]), SCHEME_ID)
+def test_vector_hint_ignores_definition_matches(repo):
+    index = _index(_match("cls-database", "Database", 0.97, field="definition"))
+    hits = _svc(repo, index).preview(_summary([_cls("Data store")]), TAXONOMY_ID)
     assert hits[0].match_method is None
+
+
+def test_vector_hint_covers_other_schemes_in_the_taxonomy(repo):
+    index = _index(_match("cls-other", "Queue", 0.96))
+    hits = _svc(repo, index).preview(_summary([_cls("Message queue")]), TAXONOMY_ID)
+    assert hits[0].match_method == "vector"
+    assert hits[0].existing_entity_id == "cls-other"
 
 
 def test_exact_match_wins_over_vector(repo):
     index = _index(_match("cls-database", "Database", 0.99))
-    hits = _svc(repo, index).preview(_summary([_cls("Service")]), SCHEME_ID)
+    hits = _svc(repo, index).preview(_summary([_cls("Service")]), TAXONOMY_ID)
     assert hits[0].match_method == "exact"
     assert hits[0].existing_entity_id == "cls-service"
 
@@ -177,7 +198,7 @@ def test_property_matches_by_identifier(repo):
         {"kind": "property_definition", "label": "Uses", "confidence": 0.7},
         {"kind": "property_definition", "label": "depends on", "confidence": 0.7},
     ]
-    hits = _svc(repo).preview(_summary(props), SCHEME_ID)
+    hits = _svc(repo).preview(_summary(props), TAXONOMY_ID)
 
     assert [h.candidate_id for h in hits] == ["property-0", "property-1"]
     assert hits[0].candidate_type == "schema_property"
@@ -192,7 +213,7 @@ def test_connection_matches_an_existing_relationship(repo):
         {"subject_ref": "Database", "predicate": "uses", "object_ref": "Service"},
         {"subject_ref": "Service", "predicate": "uses", "object_ref": "Cache"},
     ]
-    hits = _svc(repo).preview(_summary(connections=connections), SCHEME_ID)
+    hits = _svc(repo).preview(_summary(connections=connections), TAXONOMY_ID)
 
     assert [h.candidate_id for h in hits] == ["connection-0", "connection-1", "connection-2"]
     assert hits[0].label == "service → uses → database"
@@ -208,11 +229,11 @@ def test_hits_keep_candidate_ids_across_kinds(repo):
         [_cls("A"), {"kind": "property_definition", "label": "p"}, _cls("B")],
         [{"subject_ref": "A", "predicate": "p", "object_ref": "B"}],
     )
-    hits = _svc(repo).preview(summary, SCHEME_ID)
+    hits = _svc(repo).preview(summary, TAXONOMY_ID)
     assert [h.candidate_id for h in hits] == ["class-0", "property-0", "class-1", "connection-0"]
 
 
-def test_requires_an_existing_concept_scheme(repo):
+def test_requires_an_existing_taxonomy(repo):
     with pytest.raises(PipelineInputError):
         _svc(repo).preview(_summary(), "")
     with pytest.raises(PipelineInputError):
@@ -221,8 +242,12 @@ def test_requires_an_existing_concept_scheme(repo):
 
 def test_preview_writes_nothing(repo):
     before = (len(repo.list_classes(limit=None)), len(repo.list_relationships(limit=None)))
-    _svc(repo).preview(_summary([_cls("New")], [{"subject_ref": "New", "predicate": "x",
-                                                  "object_ref": "Service"}]), SCHEME_ID)
+    _svc(repo).preview(
+        _summary(
+            [_cls("New")], [{"subject_ref": "New", "predicate": "x", "object_ref": "Service"}]
+        ),
+        TAXONOMY_ID,
+    )
     assert (len(repo.list_classes(limit=None)), len(repo.list_relationships(limit=None))) == before
 
 
@@ -233,6 +258,10 @@ def test_hit_invariants():
         SchemaRecognitionHit("class-0", "schema_class", "x", match_method="vector")
     with pytest.raises(ValueError):
         SchemaRecognitionHit(
-            "class-0", "schema_class", "x", existing_entity_id="c", match_method="vector",
+            "class-0",
+            "schema_class",
+            "x",
+            existing_entity_id="c",
+            match_method="vector",
             will_match_existing=True,
         )

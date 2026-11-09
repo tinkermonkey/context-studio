@@ -92,7 +92,7 @@ export function SchemaExtractionWizard() {
         />
       </Field>
 
-      <Field label="Scope (Optional)" hint="Taxonomy or Concept Scheme to constrain extraction">
+      <Field label="Scope (Optional)" hint="Taxonomy the run is reviewed and applied against">
         <EntitySearchPicker
           entityType="Taxonomy"
           selectedId={selectedScope?.id}

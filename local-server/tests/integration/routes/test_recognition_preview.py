@@ -399,7 +399,7 @@ def test_schema_recognition_preview_reports_existing_classes(
 
     response = client.post(
         f"/api/pipelines/runs/{run_id}/recognition-preview",
-        json={"concept_scheme_id": SCHEME_ID},
+        json={"taxonomy_id": TAXONOMY_ID},
     )
 
     assert response.status_code == status.HTTP_200_OK

@@ -147,7 +147,7 @@ class FakeOntologyRepository:
             results.sort(key=lambda s: s.title, reverse=(sort_order == "desc"))
         elif sort_by == "created_at" and hasattr(results[0] if results else None, "created_at"):
             results.sort(
-                key=lambda s: getattr(s, "created_at", ""),
+                key=lambda s: getattr(s, "created_at", None) or "",
                 reverse=(sort_order == "desc"),
             )
 

@@ -29,7 +29,12 @@ from domain.pipelines.candidate_ids import (
     enumerate_schema_connections,
 )
 from domain.pipelines.exceptions import PipelineInputError
-from domain.pipelines.schema_extraction.apply_service import class_title_key, slugify
+from domain.pipelines.schema_extraction.apply_service import (
+    class_title_index,
+    class_title_key,
+    slugify,
+    taxonomy_classes,
+)
 
 if TYPE_CHECKING:
     from domain.ontology.ports import EmbeddingService, OntologyRepository, SchemaVectorIndex
@@ -124,29 +129,31 @@ class SchemaRecognitionPreviewService:
         self._ambiguity_margin = ambiguity_margin
 
     def preview(
-        self, output_summary: dict[str, Any] | None, concept_scheme_id: str
+        self, output_summary: dict[str, Any] | None, taxonomy_id: str
     ) -> list[SchemaRecognitionHit]:
         """
         Report one hit per class, property and connection candidate of a run.
 
+        Proposed classes are compared with every class in the taxonomy, the
+        same classes apply reuses (``taxonomy_classes``).
+
         Args:
             output_summary: The schema extraction run's output_summary.
-            concept_scheme_id: Concept scheme the run would be applied to.
+            taxonomy_id: Taxonomy the run would be applied to.
 
         Returns:
             Hits in candidate order: classes and properties, then connections.
 
         Raises:
-            PipelineInputError: If concept_scheme_id is empty or does not exist
+            PipelineInputError: If taxonomy_id is empty or does not exist
         """
-        if not concept_scheme_id:
-            raise PipelineInputError("concept_scheme_id is required for schema recognition")
-        scheme = self._repo.get_concept_scheme(concept_scheme_id)
-        if scheme is None:
-            raise PipelineInputError(f"Concept scheme {concept_scheme_id} not found")
+        if not taxonomy_id:
+            raise PipelineInputError("taxonomy_id is required for schema recognition")
+        if self._repo.get_taxonomy(taxonomy_id) is None:
+            raise PipelineInputError(f"Taxonomy {taxonomy_id} not found")
 
-        classes = self._repo.list_classes(concept_scheme_id=concept_scheme_id, limit=None)
-        class_by_title = {class_title_key(c.title): c for c in classes}
+        classes = taxonomy_classes(self._repo, taxonomy_id)
+        class_by_title = class_title_index(classes)
         class_by_id = {c.id: c for c in classes}
 
         hits: list[SchemaRecognitionHit] = []
@@ -154,9 +161,7 @@ class SchemaRecognitionPreviewService:
             label = (candidate.get("label") or "").strip()
             if candidate.get("kind") == "class":
                 hits.append(
-                    self._class_hit(
-                        candidate_id, label, class_by_title, class_by_id, scheme.taxonomy_id
-                    )
+                    self._class_hit(candidate_id, label, class_by_title, class_by_id, taxonomy_id)
                 )
             else:
                 hits.append(self._property_hit(candidate_id, label))
@@ -202,7 +207,7 @@ class SchemaRecognitionPreviewService:
         )
 
     def _similar_class(self, label: str, class_by_id: dict, taxonomy_id: str):
-        """Return (class, score) for a single clear title match in the scheme, else None."""
+        """Return (class, score) for a single clear title match in the taxonomy, else None."""
         if self._schema_index is None or self._embedding is None or not class_by_id:
             return None
         matches = self._schema_index.search(
@@ -212,17 +217,17 @@ class SchemaRecognitionPreviewService:
             threshold=0.0,
             taxonomy_id=taxonomy_id,
         )
-        # Only titles in the target scheme: a proposed class is compared to class
-        # names, not to definitions that merely mention the same words.
-        in_scheme = sorted(
+        # Only class titles: a proposed class is compared to class names, not to
+        # definitions that merely mention the same words.
+        in_taxonomy = sorted(
             (m for m in matches if m.entity_id in class_by_id and m.matched_field == "title"),
             key=lambda m: m.score,
             reverse=True,
         )
-        if not in_scheme or in_scheme[0].score < self._vector_threshold:
+        if not in_taxonomy or in_taxonomy[0].score < self._vector_threshold:
             return None
-        best = in_scheme[0]
-        if len(in_scheme) > 1 and best.score - in_scheme[1].score < self._ambiguity_margin:
+        best = in_taxonomy[0]
+        if len(in_taxonomy) > 1 and best.score - in_taxonomy[1].score < self._ambiguity_margin:
             return None
         return class_by_id[best.entity_id], best.score
 

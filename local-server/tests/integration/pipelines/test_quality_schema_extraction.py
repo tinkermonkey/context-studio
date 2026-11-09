@@ -546,7 +546,7 @@ class TestQualitySchemaExtraction:
         )
 
         # Apply results to ontology
-        apply_result1 = apply_service.apply(mock_run, concept_scheme_id, taxonomy_id)
+        apply_result1 = apply_service.apply(mock_run, taxonomy_id, concept_scheme_id)
 
         # Snapshot ontology state after first apply
         classes_after_apply1 = [
@@ -573,7 +573,7 @@ class TestQualitySchemaExtraction:
                 ontology_repo.delete_relationship(rel_id)
 
         # Second execution: re-apply with same run output
-        apply_service.apply(mock_run, concept_scheme_id, taxonomy_id)
+        apply_service.apply(mock_run, taxonomy_id, concept_scheme_id)
 
         # Snapshot ontology state after second apply
         classes_after_apply2 = [

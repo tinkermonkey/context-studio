@@ -413,7 +413,7 @@ def build_run_specific_data(
     elif pipeline_type == PipelineType.SCHEMA_EXTRACTION:
         schema_input_summary: dict[str, Any] = {}
 
-        # Store taxonomy_id and concept_scheme_id for apply operations
+        # Store the taxonomy for apply; the scheme new classes go to is chosen at apply
         scope = input_data.get("scope")
         if scope:
             schema_input_summary["taxonomy_id"] = str(scope)
@@ -421,10 +421,6 @@ def build_run_specific_data(
         scope_name = input_data.get("scope_name")
         if scope_name:
             schema_input_summary["taxonomy_name"] = str(scope_name)
-
-        concept_scheme_id = input_data.get("concept_scheme_id")
-        if concept_scheme_id:
-            schema_input_summary["concept_scheme_id"] = str(concept_scheme_id)
 
         schema_specific: dict[str, Any] = {}
         documents = input_data.get("documents")
