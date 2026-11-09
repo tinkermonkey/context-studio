@@ -11,15 +11,19 @@ from __future__ import annotations
 import re
 import uuid
 from datetime import datetime, timezone
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import and_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
 from adapters.persistence.sqlite.operations.models import PipelineConfiguration
+from domain.pipelines.entities import PipelineType
 from domain.pipelines.exceptions import PipelineStorageError
 from utils.logger import get_logger
+
+if TYPE_CHECKING:
+    from domain.pipelines.registry import PipelineConfigurationRegistry
 
 logger = get_logger(__name__)
 
@@ -46,6 +50,29 @@ def registry_config(record: PipelineConfiguration) -> dict:
         "top_p": record.top_p,
         "enabled": record.enabled,
     }
+
+
+def load_user_configurations(
+    repo: PipelineConfigurationRepository, registry: PipelineConfigurationRegistry
+) -> int:
+    """
+    Register every stored user configuration in the in-memory registry (at
+    startup). A record that won't register is logged and skipped. Returns how
+    many registered.
+    """
+    loaded = 0
+    for record in repo.list_all():
+        try:
+            registry.register(
+                PipelineType(record.pipeline_type),
+                record.implementation_id,
+                record.config_ref,
+                registry_config(record),
+            )
+            loaded += 1
+        except Exception as exc:  # noqa: BLE001 - one bad record mustn't stop startup
+            logger.warning(f"Failed to load user config {record.id} into registry: {exc}")
+    return loaded
 
 
 class PipelineConfigurationRepository:

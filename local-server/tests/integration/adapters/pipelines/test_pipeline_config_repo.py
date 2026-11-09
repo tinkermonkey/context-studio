@@ -20,8 +20,11 @@ from sqlalchemy.pool import StaticPool
 from adapters.persistence.sqlite.operations.models import OperationsBase
 from adapters.persistence.sqlite.pipeline_config_repo import (
     PipelineConfigurationRepository,
+    load_user_configurations,
 )
+from domain.pipelines.entities import PipelineType
 from domain.pipelines.exceptions import PipelineStorageError
+from domain.pipelines.registry import PipelineConfigurationRegistry
 
 
 @pytest.fixture
@@ -242,3 +245,34 @@ class TestPipelineConfigurationRepositoryStagePrompts:
         )
         repo.update(config_id=created.id, name="Prompted", provider="openrouter", model="m")
         assert repo.get(created.id).stage_prompts is None
+
+
+class TestLoadUserConfigurations:
+    """Startup loads stored configurations into the in-memory registry (#1490 regression)."""
+
+    def test_stored_configurations_register_with_their_settings(self, repo):
+        record = repo.create(
+            pipeline_type="individual_extraction",
+            implementation_id="default",
+            name="Tuned",
+            provider="anthropic",
+            model="claude-sonnet",
+            stage_prompts={"extract": "Find the people."},
+            temperature=0.2,
+        )
+        registry = PipelineConfigurationRegistry()
+
+        assert load_user_configurations(repo, registry) == 1
+
+        latest = registry.get_latest(
+            PipelineType.INDIVIDUAL_EXTRACTION, "default", record.config_ref
+        )
+        assert latest.config["model"] == "claude-sonnet"
+        assert latest.config["temperature"] == 0.2
+        assert latest.config["stage_prompts"] == {"extract": "Find the people."}
+
+    def test_a_record_that_wont_register_is_skipped(self, repo):
+        _make_config(repo, name="Good")
+        _make_config(repo, name="Bad", pipeline_type="no_such_pipeline")
+
+        assert load_user_configurations(repo, PipelineConfigurationRegistry()) == 1
