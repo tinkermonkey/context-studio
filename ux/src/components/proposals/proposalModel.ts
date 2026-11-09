@@ -281,6 +281,10 @@ export function referencedClassIds(operation: ProposedOperation, refs?: RefMap):
     const id = end?.id && resolveRef(end.id, refs);
     if (id && !id.startsWith("$")) ids.push(id);
   }
+  // A reflection's class answers, for their definitions.
+  for (const question of operation.reflection?.questions ?? []) {
+    for (const option of question.options) if (option.class_id) ids.push(option.class_id);
+  }
   return ids;
 }
 

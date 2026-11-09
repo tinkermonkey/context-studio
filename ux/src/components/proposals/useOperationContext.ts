@@ -49,6 +49,8 @@ export interface OperationContext {
   nameOf: (id: string | null | undefined, operation: ProposedOperation) => string | undefined;
   /** A property definition's predicate (else identifier), once loaded. */
   predicateOf: (id: string | null | undefined) => string | undefined;
+  /** A class's definition (its description), once loaded. */
+  classDefinition: (classId: string) => string | undefined;
 }
 
 type PropertyList = ReturnType<typeof usePropertiesByIds>;
@@ -152,6 +154,7 @@ export function useOperationContext(
         const property = id ? predicateById.get(id) : undefined;
         return property ? property.canonical_predicate || property.identifier : undefined;
       },
+      classDefinition: (classId) => classById.get(classId)?.description || undefined,
     };
   }, [
     classes,

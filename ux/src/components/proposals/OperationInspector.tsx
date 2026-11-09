@@ -19,7 +19,7 @@ import {
 } from "./proposalModel";
 import { subjectOf } from "./OperationDiff";
 import { EvidencePack, ReflectionAnswers } from "./ReflectionAnswers";
-import type { Picks } from "./tieredModel";
+import type { OptionDefinition, Picks, ReflectionOption } from "./tieredModel";
 import type { OperationContext } from "./useOperationContext";
 import "./proposals.css";
 
@@ -172,6 +172,8 @@ interface OperationInspectorProps {
   picks?: Picks;
   /** Picking an answer; absent when the answers are read-only. */
   onPick?: (question: string, option: string) => void;
+  /** A reflection answer's definition, for its overlay. */
+  definitionOf?: (question: string, option: ReflectionOption) => OptionDefinition | undefined;
 }
 
 /** The selected operation: its change field by field, rationale and evidence. */
@@ -182,6 +184,7 @@ export function OperationInspector({
   reverted = false,
   picks = {},
   onPick,
+  definitionOf,
 }: OperationInspectorProps) {
   const rows = changeRows(operation);
   const state = decisionState(operation, reverted);
@@ -224,12 +227,27 @@ export function OperationInspector({
           <ReplacementSection operation={operation} context={context} />
         )}
 
+        {/* Why, before the details: after the replacement, ahead of the answers and the change. */}
+        <InspectorPanel.Section title="Rationale">
+          <div className="op-inspector__stack">
+            <p className="op-inspector__rationale" data-testid="operation-rationale">
+              {operation.rationale || "No rationale given."}
+            </p>
+            <div className="op-inspector__chips">
+              {kind && <Chip form="id-tag">{kind}</Chip>}
+              <Chip form="id-tag">p {formatProbability(operation.probability)}</Chip>
+              <Chip variant={SCOPE_VARIANT[operation.scope]}>{operation.scope}</Chip>
+            </div>
+          </div>
+        </InspectorPanel.Section>
+
         {operation.reflection && operation.reflection.questions.length > 0 && (
           <ReflectionAnswers
             operationId={operation.id}
             reflection={operation.reflection}
             picks={picks}
             onPick={onPick}
+            definitionOf={definitionOf}
           />
         )}
 
@@ -292,19 +310,6 @@ export function OperationInspector({
             ) : (
               <p className="entity-note">No field changes recorded.</p>
             )}
-          </div>
-        </InspectorPanel.Section>
-
-        <InspectorPanel.Section title="Rationale">
-          <div className="op-inspector__stack">
-            <p className="op-inspector__rationale" data-testid="operation-rationale">
-              {operation.rationale || "No rationale given."}
-            </p>
-            <div className="op-inspector__chips">
-              {kind && <Chip form="id-tag">{kind}</Chip>}
-              <Chip form="id-tag">p {formatProbability(operation.probability)}</Chip>
-              <Chip variant={SCOPE_VARIANT[operation.scope]}>{operation.scope}</Chip>
-            </div>
           </div>
         </InspectorPanel.Section>
 
