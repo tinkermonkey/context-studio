@@ -823,20 +823,16 @@ class TestPruneStale:
         assert "not deleted" in capsys.readouterr().out
 
 
-class TestImportScriptExitCode:
-    def test_main_exits_1_when_the_prune_is_refused(self, spec_dir, tmp_path, monkeypatch):
+class TestImportScriptReimport:
+    def test_a_rerun_proposes_the_drift_and_writes_nothing(
+        self, spec_dir, tmp_path, monkeypatch, capsys
+    ):
         db_path = tmp_path / "local.db"
         engine = create_local_db_engine(f"sqlite:///{db_path}")
         Base.metadata.create_all(engine)
         repo = SQLiteOntologyRepository(sessionmaker(bind=engine))
         service = OntologyService(repo, FakeEmbeddingService(), _NoOpEventPublisher())
         import_dr_ontology(service, repo, spec_dir)
-        goal = repo.get_by_identifier("motivation_goal")
-        service_class = repo.get_by_identifier("business_businessservice")
-        source = service.create_individual(goal.id, "Grow revenue")
-        target = service.create_individual(service_class.id, "Billing")
-        service.create_relationship(source.id, target.id, _realizes(repo).id)
-        engine.dispose()
         _drop_spec_files(spec_dir, "*realizes*.json")
 
         database = SimpleNamespace(
@@ -851,15 +847,25 @@ class TestImportScriptExitCode:
         monkeypatch.setattr(
             import_script, "SentenceTransformerEmbedding", lambda **_: FakeEmbeddingService()
         )
-        monkeypatch.setattr(import_script, "record_baseline_reset_if_new", lambda *_: False)
-        monkeypatch.setattr(
-            sys, "argv", ["import_dr_ontology.py", "--spec-dir", str(spec_dir), "--prune"]
+        proposals = SQLiteChangeProposalRepository(sessionmaker(bind=engine))
+
+        argv = ["import_dr_ontology.py", "--spec-dir", str(spec_dir), "--dry-run"]
+        monkeypatch.setattr(sys, "argv", argv)
+        assert import_script.main() == 0
+        assert proposals.count_proposals() == 0
+        assert "delete property  motivation.goal.realizes.business.businessservice" in (
+            capsys.readouterr().out
         )
 
-        assert import_script.main() == 1
-
-        monkeypatch.setattr(sys, "argv", ["import_dr_ontology.py", "--spec-dir", str(spec_dir)])
+        monkeypatch.setattr(sys, "argv", argv[:-1])
         assert import_script.main() == 0
+
+        (proposal,) = proposals.list_proposals()
+        assert [(o.op, o.kind) for o in proposal.operations] == [
+            (OperationType.DELETE, OperationKind.PROPERTY)
+        ]
+        assert _realizes(repo) is not None  # proposed, not deleted
+        assert f"Proposed as {proposal.id}" in capsys.readouterr().out
 
 
 class TestImportDrOntologyMirrorsTheSpec:

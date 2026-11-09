@@ -30,7 +30,10 @@ the DR-spec-transform logic is not duplicated between them.
 Idempotent: entities are keyed on the preserved DR schema id (as the entity's
 `identifier` and/or `ExternalReference`), so re-running against the same or an
 updated spec version updates existing entities in place rather than
-duplicating them.
+duplicating them. That direct path is for the first import and for test
+fixtures: `import_dr_ontology.py` re-imports an existing taxonomy as a drift
+proposal for review (`adapters/interchange/dr_drift.py`), which also follows
+node types DR moved to another layer.
 """
 
 from __future__ import annotations
@@ -267,10 +270,10 @@ def _refuse_moved_node_types(
     """
     Refuse a spec in which a node type moved to another layer (a class move
     exported to DR and landed there): its new id is a new node schema whose type
-    matches a DR class whose node schema is gone. The import would duplicate it,
-    as classes are keyed by an identifier that holds the layer, so it stops
-    before writing any class or relationship type until re-import can follow
-    a move.
+    matches a DR class whose node schema is gone. A direct import would
+    duplicate it, as classes are keyed by an identifier that holds the layer,
+    so it stops before writing any class or relationship type; the drift
+    re-import follows the move instead.
     """
     taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
     if taxonomy is None:
@@ -291,8 +294,9 @@ def _refuse_moved_node_types(
     ]
     if moved:
         raise ValueError(
-            "These node types moved to another layer, which a re-import can't follow yet "
-            f"(it would duplicate them): {', '.join(sorted(moved))}"
+            "These node types moved to another layer, which a direct import can't follow"
+            f" (it would duplicate them): {', '.join(sorted(moved))}. Re-import with"
+            " scripts/import_dr_ontology.py, which proposes the drift and follows moves."
         )
 
 
