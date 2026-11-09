@@ -15,8 +15,9 @@ The spec's design charter (`spec/DESIGN_CHARTER.md`) becomes the taxonomy's
 vision, and its "In one paragraph" section the taxonomy's summary
 (description). Its predicate catalog (`spec/dist/base.json`) is kept on the
 taxonomy's DR external reference, for reviewers' edits to check predicates
-against (see `adapters.interchange.dr_relationships.dr_predicate_catalog`). Each layer file's description (`spec/layers/*.layer.json`)
-becomes its scheme's scope note. Entities from an earlier import that the spec
+against (see `adapters.interchange.dr_relationships.dr_predicate_catalog`).
+Each layer file's description (`spec/layers/*.layer.json`) becomes its
+scheme's scope note. Entities from an earlier import that the spec
 no longer defines are reported as stale; they are deleted only on request
 (`find_prune_blockers` / `prune_stale`), and only when nothing uses them.
 
@@ -415,6 +416,41 @@ def _sync_external_reference(save_fn: Callable[[Any], Any], entity: Any, identif
     save_fn(entity)
 
 
+def _refuse_moved_node_types(
+    repo: OntologyRepository, nodes: list[NodeSchemaRecord], slug_by_spec_node_id: dict[str, str]
+) -> None:
+    """
+    Refuse a spec in which a node type moved to another layer (a class move
+    exported to DR and landed there): its new id is a new node schema whose type
+    matches a DR class whose node schema is gone. The import would duplicate it,
+    as classes are keyed by an identifier that holds the layer, so it stops
+    before writing any class or relationship type until re-import can follow
+    a move.
+    """
+    taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    if taxonomy is None:
+        return
+    spec_ids = {node.spec_node_id for node in nodes}
+    gone_by_type: dict[str, list[str]] = {}
+    for scheme in repo.list_concept_schemes(taxonomy_id=taxonomy.id, limit=None):
+        for cls in repo.list_classes(concept_scheme_id=scheme.id, limit=None):
+            for ref in cls.external_references:
+                if ref.source == DR_SOURCE and ref.identifier not in spec_ids:
+                    type_name = ref.identifier.partition(".")[2]
+                    gone_by_type.setdefault(type_name, []).append(ref.identifier)
+    moved = [
+        f"{old} -> {node.spec_node_id}"
+        for node in nodes
+        if repo.get_by_identifier(slug_by_spec_node_id[node.spec_node_id]) is None
+        for old in gone_by_type.get(node.spec_node_id.partition(".")[2], [])
+    ]
+    if moved:
+        raise ValueError(
+            "These node types moved to another layer, which a re-import can't follow yet "
+            f"(it would duplicate them): {', '.join(sorted(moved))}"
+        )
+
+
 def _upsert_classes(
     service: OntologyService,
     repo: OntologyRepository,
@@ -432,6 +468,8 @@ def _upsert_classes(
     }
     if collisions:
         raise ValueError(f"DR node schema identifiers collide after slugification: {collisions}")
+
+    _refuse_moved_node_types(repo, nodes, slug_by_spec_node_id)
 
     class_id_by_spec_node_id: dict[str, str] = {}
     for node in nodes:

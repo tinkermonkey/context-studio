@@ -37,7 +37,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Sequence
 from uuid import uuid4
 
 from domain.interchange.services import get_current_batch_run_id, set_batch_run_context
-from domain.ontology.entities import validate_relationship_attributes
+from domain.ontology.entities import Class, validate_relationship_attributes
 from domain.ontology.events import GraphInvalidated
 from domain.ontology.exceptions import EntityNotFoundError, OntologyError
 from domain.ontology.snapshots import decode_field, entity_snapshot
@@ -166,6 +166,9 @@ _DATATYPE_HINTS: dict[DataType, str] = {
     DataType.ARRAY: "rdf:JSON",
     DataType.OBJECT: "rdf:JSON",
 }
+
+# The kinds whose delete may name a replacement, and what to call them.
+_REPLACEABLE: dict[OperationKind, str] = {K.PROPERTY: "relationship type", K.CLASS: "class"}
 
 # Id fields and the kinds of entity they may point at.
 ID_FIELDS: dict[str, tuple[OperationKind, ...]] = {
@@ -934,21 +937,22 @@ class ProposalService:
         self, name: Any, operation: ProposedOperation, refs: dict[str, OperationKind]
     ) -> str | None:
         """
-        A property delete's named replacement, resolved: an existing property
-        definition's id (named by id or identifier), or "$<ref>" of an earlier
-        property create.
+        A delete's named replacement, resolved: an existing entity of the same
+        kind (named by id or identifier), or "$<ref>" of an earlier create of
+        that kind. Property (relationship type) and class deletes may name one.
         """
         if name is None:
             return None
-        if operation.op is not OperationType.DELETE or operation.kind is not K.PROPERTY:
-            raise _Invalid(
-                "invalid", "Only a property (relationship type) delete can name a replacement"
-            )
-        if not isinstance(name, str) or not name:
+        kind = operation.kind
+        if operation.op is not OperationType.DELETE or kind not in _REPLACEABLE:
             raise _Invalid(
                 "invalid",
-                'replacement must be a relationship type id, identifier or "$<ref>",'
-                f" not {name!r}",
+                "Only a property (relationship type) or class delete can name a replacement",
+            )
+        what = _REPLACEABLE[kind]
+        if not isinstance(name, str) or not name:
+            raise _Invalid(
+                "invalid", f'replacement must be a {what} id, identifier or "$<ref>", not {name!r}'
             )
         if _is_ref(name):
             ref_kind = refs.get(name[1:])
@@ -956,22 +960,28 @@ class ProposalService:
                 raise _Invalid(
                     "unknown_ref", f"replacement {name} names no create earlier in the proposal"
                 )
-            if ref_kind is not K.PROPERTY:
+            if ref_kind is not kind:
                 raise _Invalid(
                     "replacement_not_found",
-                    f"replacement {name} is a {ref_kind.value}, not a property",
+                    f"replacement {name} is a {ref_kind.value}, not a {kind.value}",
                 )
             return name
-        found = self._repo.get_property_definition(
-            name
-        ) or self._repo.get_property_definition_by_identifier(name)
+        if kind is K.PROPERTY:
+            found = self._repo.get_property_definition(
+                name
+            ) or self._repo.get_property_definition_by_identifier(name)
+        else:
+            found = self._repo.get_class(name)
+            if found is None:
+                by_identifier = self._repo.get_by_identifier(name)
+                found = by_identifier if isinstance(by_identifier, Class) else None
         if found is None:
             raise _Invalid(
                 "replacement_not_found",
-                f"replacement {name} is not the id or identifier of a relationship type",
+                f"replacement {name} is not the id or identifier of a {what}",
             )
         if found.id == operation.target_id:
-            raise _Invalid("invalid", "A relationship type can't replace itself")
+            raise _Invalid("invalid", f"A {what} can't replace itself")
         return found.id
 
     @staticmethod
@@ -2097,7 +2107,7 @@ class ProposalService:
         checks: dict[str, ReplacementCheck] = {}
         for operation in proposal.operations:
             replacement_id = operation.proposed_replacement_id
-            if not replacement_id:
+            if not replacement_id or operation.kind is not K.PROPERTY:
                 continue
             deleted = (operation.base.get("domain_class_id"), operation.base.get("range_class_id"))
             ends = {

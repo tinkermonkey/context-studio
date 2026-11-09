@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 """
-Write a decided change proposal's DR relationship-type changes for DR's
-`cli/scripts/spec-enrich/cs-decisions-to-spec.ts`, which writes them into
-`spec/schemas/relationships/**`.
+Write a decided change proposal's DR relationship-type and node-type changes
+for DR's `cli/scripts/spec-enrich/cs-decisions-to-spec.ts`, which writes them
+into `spec/schemas/relationships/**` and `spec/schemas/nodes/**`.
 
 Works for any proposal on the DR spec, reflection plan or not: every applied
-create, update and delete of a DR relationship type, with the values it
+create, update and delete of a DR relationship type, and every applied
+create, update, move and delete of a DR node type, with the values it
 applied (format `cs-dr-spec-changes/1`; see `adapters/interchange/dr_spec_changes.py`).
 A reverted proposal is refused. For a reflection plan, `export_dr_decisions.py`
 still writes the seq-joined decisions DR's `proposal-import.ts` reads.
@@ -62,17 +63,23 @@ def main() -> int:
         return 1
 
     args.out.write_text(json.dumps(document, indent=2) + "\n")
-    counts: dict[str, int] = {}
-    for change in document["changes"]:
-        counts[change["op"]] = counts.get(change["op"], 0) + 1
-    summary = ", ".join(f"{count} {op}" for op, count in sorted(counts.items())) or "none"
     print(
-        f"Wrote {len(document['changes'])} spec changes ({summary}) to {args.out}; "
+        f"Wrote {len(document['changes'])} relationship type changes "
+        f"({_counts(document['changes'])}) and {len(document['node_changes'])} node type "
+        f"changes ({_counts(document['node_changes'])}) to {args.out}; "
         f"{len(document['skipped'])} operations skipped"
     )
     for item in document["skipped"]:
         print(f"  skipped seq {item['seq']}: {item['why']}")
     return 0
+
+
+def _counts(changes: list[dict]) -> str:
+    """'2 create, 1 delete': how many changes of each op."""
+    counts: dict[str, int] = {}
+    for change in changes:
+        counts[change["op"]] = counts.get(change["op"], 0) + 1
+    return ", ".join(f"{count} {op}" for op, count in sorted(counts.items())) or "none"
 
 
 if __name__ == "__main__":
