@@ -72,8 +72,9 @@ SOURCE_REVISION_SCHEMA: dict[str, Any] = {
 }
 
 PROPOSAL_KIND = "proposal"
-MAX_OPERATIONS = 200
-# Large enough for a full 200-operation propose result.
+# A cleanup pass reached 477 operations (#1466); a larger pass is a bundle import.
+MAX_OPERATIONS = 500
+# A propose or get_proposal result longer than this pages its operations.
 MAX_PROPOSAL_CHARS = 16000
 # A result too large even with one entry has its texts cut to this length.
 CLIPPED_TEXT_CHARS = 300
@@ -82,8 +83,9 @@ MAX_LIMIT = 50
 # An in-use blocker lists at most this many relationships and move targets; the review
 # page has all.
 MAX_BLOCKER_EDGES = 10
-# Dropped from get_proposal's operations first when a result is too large.
-BULKY_OPERATION_KEYS = ("fields", "base", "applied_fields", "evidence")
+# Dropped from get_proposal's operations first when a result is too large; fields and
+# applied_fields stay, and the operations page instead.
+BULKY_OPERATION_KEYS = ("base", "evidence")
 
 
 def proposal_ref(proposal: ChangeProposal) -> EntityRef:
@@ -313,7 +315,11 @@ class ProposeChangesTool(_ProposalTool):
         " of the attribute's datatype; on an update, only those given change and null"
         " removes one. Id fields"
         f' ({", ".join(sorted(ID_FIELDS))}) take an existing id or "$<ref>" of an'
-        " earlier create in the same proposal."
+        " earlier create in the same proposal.\n"
+        f"At most {MAX_OPERATIONS} operations per proposal. For a larger pass, export"
+        " the taxonomy's bundle (GET /api/v1/interchange/bundles/{taxonomy_id}), edit"
+        " it and import it (POST /api/v1/interchange/bundles): the import proposes"
+        " every change it plans as one proposal."
     )
     input_schema = {
         "type": "object",
@@ -538,10 +544,36 @@ def _dry_run(view: dict[str, Any]) -> ToolOutcome:
         "operations": operations,
         "next": " ".join(notes),
     }
+    if len(dumps(payload)) > MAX_PROPOSAL_CHARS:
+        payload = _dry_run_digest(payload)
     content, _ = _capped(
         payload, "operations", lambda _: "the rest validated; split the proposal to see them"
     )
     return ToolOutcome(content=content, summary=f"Dry run “{view['title']}”: {auto} would apply")
+
+
+def _needs_attention(operation: dict[str, Any]) -> bool:
+    """A dry-run operation that is blocked, stale or has a replacement check."""
+    return any(operation.get(key) for key in ("blockers", "stale", "replacement_check"))
+
+
+def _dry_run_digest(payload: dict[str, Any]) -> dict[str, Any]:
+    """
+    A dry run too large to list whole: the operations that need attention in
+    full, and every other one by seq, split by whether it would auto-apply.
+    """
+    operations = payload["operations"]
+    plain = [o for o in operations if not _needs_attention(o)]
+    return {
+        **payload,
+        "operations": [o for o in operations if _needs_attention(o)],
+        "auto_apply_seqs": [o["seq"] for o in plain if o.get("auto_apply")],
+        "review_seqs": [o["seq"] for o in plain if not o.get("auto_apply")],
+        "digest": (
+            "too many operations to list whole: operations lists those blocked, stale or"
+            " with a replacement check; the rest validated and are listed by seq"
+        ),
+    }
 
 
 def _next_step(counts: dict[str, int]) -> str:
@@ -583,7 +615,8 @@ class GetProposalTool(_ProposalTool):
         " base (the touched values when proposed; a delete's whole entity), rationale,"
         " evidence and probability, and once decided applied_fields (a reviewer's edit),"
         " resolution (what happened to a delete's relationships) and reason. Empty"
-        " values are left out. A large proposal's operations page with offset."
+        " values are left out. A large proposal leaves out base and evidence, keeps"
+        " fields, and pages its operations: pass the offset its truncated note gives."
     )
     input_schema = {
         "type": "object",
@@ -600,7 +633,7 @@ class GetProposalTool(_ProposalTool):
 
     def run(self, args: dict[str, Any]) -> ToolOutcome:
         proposal = self._service.get(required_str(args, "id"))
-        offset = int_arg(args, "offset", 0, 0, MAX_OPERATIONS)
+        offset = int_arg(args, "offset", 0, 0, len(proposal.operations))
         view = _view(self._service, proposal)
         payload: dict[str, Any] = {
             **_proposal_summary(proposal),
@@ -616,8 +649,8 @@ class GetProposalTool(_ProposalTool):
                 for o in payload["operations"]
             ]
             payload["fields_omitted"] = (
-                f"{', '.join(BULKY_OPERATION_KEYS)} are too large for one result; the review"
-                " page shows them"
+                f"{' and '.join(BULKY_OPERATION_KEYS)} are left out to fit (the review page"
+                " shows them); fields and applied_fields are kept"
             )
             content, _ = _capped(
                 payload, "operations", lambda kept: f"pass offset {offset + kept} for the rest"

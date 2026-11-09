@@ -121,6 +121,8 @@ async def test_initialize_names_the_server_and_its_instructions(
 
         assert result["serverInfo"]["name"] == "context-studio"
         assert "list_taxonomies" in result["instructions"]
+        # #1466: scripts find the REST bundle endpoint House's pull:ontology uses.
+        assert "/api/v1/interchange/bundles/{taxonomy_id}" in result["instructions"]
         assert {"tools", "resources"} <= result["capabilities"].keys()
 
 
@@ -209,6 +211,9 @@ async def test_taxonomy_bundle_is_a_json_resource(dr_workspace):
         ]
         assert listed["resources"][1]["mimeType"] == "application/json"
         assert listed["resources"][1]["name"] == "Documentation Robotics bundle"
+        assert listed["resources"][1]["description"].endswith(
+            f"/api/v1/interchange/bundles/{TAXONOMY_ID}"
+        )
 
         read = await result_of(client, "resources/read", {"uri": uri})
 

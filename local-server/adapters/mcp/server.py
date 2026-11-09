@@ -46,6 +46,8 @@ _logger = logging.getLogger(__name__)
 SERVER_NAME = "context-studio"
 VISION_URI = "contextstudio://taxonomies/{id}/vision"
 BUNDLE_URI = "contextstudio://taxonomies/{id}/bundle"
+# The same bundle over REST, on this server's host and port, for scripts.
+BUNDLE_PATH = "/api/v1/interchange/bundles/{id}"
 _TAXONOMY_URI_PATTERN = re.compile(
     r"^contextstudio://taxonomies/(?P<id>[^/]+)/(?P<kind>vision|bundle)$"
 )
@@ -58,8 +60,9 @@ INSTRUCTIONS = (
     " details. A taxonomy's description is its one-paragraph summary; its full"
     " vision statement (what it is for, what its classes and relationships model,"
     " how changes are judged) is in get_entity and in the taxonomy's vision"
-    " resource. A taxonomy's full contents are its bundle resource (JSON)."
-    " Results include links to the pages in the app."
+    " resource. A taxonomy's full contents are its bundle resource (JSON); scripts"
+    f" can GET the same bundle over REST at {BUNDLE_PATH.format(id='{taxonomy_id}')}"
+    " on this server's host and port. Results include links to the pages in the app."
 )
 READ_ONLY_INSTRUCTIONS = " All tools are read-only."
 PROPOSE_INSTRUCTIONS = (
@@ -170,7 +173,10 @@ def _bundle_resource(taxonomy: Taxonomy) -> types.Resource:
     return types.Resource(
         uri=AnyUrl(BUNDLE_URI.format(id=taxonomy.id)),
         name=f"{taxonomy.title} bundle",
-        description=f"The {taxonomy.title} taxonomy as a Context Studio bundle",
+        description=(
+            f"The {taxonomy.title} taxonomy as a Context Studio bundle; scripts can GET it"
+            f" at {BUNDLE_PATH.format(id=taxonomy.id)}"
+        ),
         mimeType="application/json",
     )
 

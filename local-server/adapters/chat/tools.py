@@ -755,24 +755,38 @@ class ListRelationshipTypesTool(_Tool):
 
     name = "list_relationship_types"
     description = (
-        "List relationship types (property definitions), optionally filtered by text,"
-        " with their domain and range classes."
+        "List relationship types (property definitions) with their domain and range"
+        " classes, by title, optionally only those of one taxonomy (its domain or range"
+        " is one of the taxonomy's classes) or whose title or identifier contains a"
+        " text. Page with offset: total says how many match."
     )
     input_schema = {
         "type": "object",
         "properties": {
+            "taxonomy_id": {
+                "type": "string",
+                "description": "Only types whose domain or range is a class of this taxonomy",
+            },
             "query": {"type": "string", "description": "Text the title or identifier contains"},
             "limit": _LIMIT_SCHEMA,
+            "offset": {"type": "integer", "minimum": 0, "description": "Types to skip"},
         },
     }
 
     def run(self, args: dict[str, Any]) -> ToolOutcome:
+        taxonomy_id = optional_str(args, "taxonomy_id")
         query = optional_str(args, "query")
         limit = int_arg(args, "limit", DEFAULT_LIMIT, 1, MAX_LIMIT)
-        properties = self._ontology.list_property_definitions(
-            query=query, limit=limit, sort_by="title"
-        )
-        total = self._ontology.count_property_definitions(query=query)
+        offset = int_arg(args, "offset", 0, 0, 1_000_000)
+        if taxonomy_id is None:
+            properties = self._ontology.list_property_definitions(
+                query=query, limit=limit, offset=offset, sort_by="title"
+            )
+            total = self._ontology.count_property_definitions(query=query)
+        else:
+            matching = self._of_taxonomy(taxonomy_id, query)
+            total = len(matching)
+            properties = matching[offset : offset + limit]
         found = self._resolver.get_many(
             [p.domain_class_id for p in properties if p.domain_class_id]
             + [p.range_class_id for p in properties if p.range_class_id]
@@ -792,11 +806,27 @@ class ListRelationshipTypesTool(_Tool):
             items.append(item)
         label = f" matching “{query}”" if query else ""
         return _outcome(
-            {"items": items, "total": total},
+            {"items": items, "total": total, "offset": offset},
             "items",
             f"{len(items)} of {total} relationship types{label}",
             refs,
         )
+
+    def _of_taxonomy(self, taxonomy_id: str, query: Optional[str]) -> list[PropertyDefinition]:
+        """The types whose domain or range is one of the taxonomy's classes, by title."""
+        self._ontology.get_taxonomy(taxonomy_id)
+        class_ids = {
+            cls.id
+            for scheme in self._ontology.list_concept_schemes(taxonomy_id=taxonomy_id, limit=None)
+            for cls in self._ontology.list_classes(concept_scheme_id=scheme.id, limit=None)
+        }
+        return [
+            p
+            for p in self._ontology.list_property_definitions(
+                query=query, limit=None, sort_by="title"
+            )
+            if p.domain_class_id in class_ids or p.range_class_id in class_ids
+        ]
 
 
 class GetNeighborsTool(_Tool):
