@@ -10,6 +10,7 @@ from typing import Any, Collection, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from adapters.web.schemas.ontology import SourceRevisionSchema
 from domain.pipelines.schema_relationship_reflection.drafts import (
     ReflectionView,
     reflection_view,
@@ -20,6 +21,7 @@ from domain.versioning.in_use import DeleteBlockers, PairMatch, ReplacementCheck
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
+    Landing,
     OperationKind,
     OperationStatus,
     OperationType,
@@ -71,6 +73,38 @@ class ProposedOperationRequest(BaseModel):
     )
 
 
+class ChangeProposalLandedRequest(BaseModel):
+    """Where the client landed a decided proposal in its source."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    repo: Optional[str] = Field(None, min_length=1, description="The source repository")
+    commit: str = Field(..., min_length=1, description="The commit that holds the change")
+    spec_version: Optional[str] = Field(
+        None, min_length=1, description="The source's version label at that commit"
+    )
+
+
+class LandingResponse(BaseModel):
+    """Where and when a decided proposal landed in its taxonomy's source."""
+
+    repo: Optional[str] = None
+    commit: str
+    spec_version: Optional[str] = None
+    landed_at: datetime
+
+    @classmethod
+    def from_domain(cls, landing: Optional[Landing]) -> Optional["LandingResponse"]:
+        if landing is None:
+            return None
+        return cls(
+            repo=landing.revision.repo,
+            commit=landing.revision.commit,  # type: ignore[arg-type]
+            spec_version=landing.revision.spec_version,
+            landed_at=landing.landed_at,
+        )
+
+
 class ChangeProposalCreateRequest(BaseModel):
     """A new change proposal, validated as a whole; nothing is stored if any operation fails."""
 
@@ -80,6 +114,13 @@ class ChangeProposalCreateRequest(BaseModel):
     source: ProposalSource = Field(ProposalSource.USER, description="Who or what proposed them")
     source_detail: Optional[str] = Field(
         None, description="More about the source (MCP client, conversation id, bundle file)"
+    )
+    source_revision: Optional[SourceRevisionSchema] = Field(
+        None,
+        description=(
+            "The revision of the taxonomy's external source the proposal was drafted"
+            " against; defaults to the revision the taxonomy was last imported at"
+        ),
     )
     operations: list[ProposedOperationRequest] = Field(..., description="The operations")
 
@@ -464,6 +505,15 @@ class ChangeProposalResponse(BaseModel):
     source_detail: Optional[str] = None
     created_at: datetime
     status: ProposalStatus
+    source_revision: Optional[SourceRevisionSchema] = Field(
+        None, description="The source revision the proposal was drafted against"
+    )
+    landed: Optional[LandingResponse] = Field(
+        None,
+        description=(
+            "Set once the client landed the decided proposal in its source; null while" " unlanded"
+        ),
+    )
     dry_run: bool = Field(
         False,
         description="Validated only: nothing was stored or applied, and the ids are not kept",
@@ -500,6 +550,8 @@ class ChangeProposalResponse(BaseModel):
             source_detail=proposal.source_detail,
             created_at=proposal.created_at,
             status=proposal.status,
+            source_revision=SourceRevisionSchema.from_domain(proposal.source_revision),
+            landed=LandingResponse.from_domain(proposal.landed),
             operations=[
                 _operation(
                     o,

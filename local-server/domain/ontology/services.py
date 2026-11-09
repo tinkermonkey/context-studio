@@ -74,6 +74,7 @@ from .value_objects import (
     DataType,
     ExternalReference,
     SchemeCounts,
+    SourceRevision,
     Status,
     validate_default_value_against_allowed_values,
     validate_identifier,
@@ -463,6 +464,42 @@ class OntologyService:
             )
 
         return taxonomy
+
+    def set_taxonomy_mirrored(self, taxonomy_id: str, mirrored: bool) -> Taxonomy:
+        """
+        Mark a taxonomy as mirroring an external source of truth, or not.
+
+        A governance setting like the approval policy: it changes no ontology
+        content, so it records no change event and a revert never touches it.
+
+        Raises:
+            EntityNotFoundError: If the taxonomy does not exist
+        """
+        taxonomy = self._repository.get_taxonomy(taxonomy_id)
+        if taxonomy is None:
+            raise EntityNotFoundError("Taxonomy", taxonomy_id)
+        if taxonomy.mirrored is mirrored:
+            return taxonomy
+        taxonomy.mirrored = mirrored
+        return self._repository.save_taxonomy(taxonomy)
+
+    def set_taxonomy_source_revision(
+        self, taxonomy_id: str, revision: SourceRevision | None
+    ) -> Taxonomy:
+        """
+        Record the source revision a taxonomy was imported at (None clears it).
+        Like `set_taxonomy_mirrored`, it records no change event.
+
+        Raises:
+            EntityNotFoundError: If the taxonomy does not exist
+        """
+        taxonomy = self._repository.get_taxonomy(taxonomy_id)
+        if taxonomy is None:
+            raise EntityNotFoundError("Taxonomy", taxonomy_id)
+        if taxonomy.source_revision == revision:
+            return taxonomy
+        taxonomy.source_revision = revision
+        return self._repository.save_taxonomy(taxonomy)
 
     def rename_taxonomy(self, taxonomy_id: str, new_title: str) -> Taxonomy:
         """

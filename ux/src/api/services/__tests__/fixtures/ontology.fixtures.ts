@@ -21,6 +21,7 @@ export function createTaxonomy(
     last_modified: new Date().toISOString(),
     version: 1,
     status: "draft",
+    mirrored: false,
     ...overrides,
   };
 }

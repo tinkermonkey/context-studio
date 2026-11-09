@@ -741,6 +741,16 @@ class TestOrchestrator:
         with pytest.raises(PipelineInputError, match="taxonomy_id"):
             run(orchestrator, "")
 
+    def test_a_mirrored_taxonomy_is_refused(self, repo, house, proposals):
+        # Its client drives proposals; Context Studio runs no reflection of its own on it.
+        taxonomy = repo.get_taxonomy(house["taxonomy"])
+        taxonomy.mirrored = True
+        repo.save_taxonomy(taxonomy)
+        orchestrator = make(repo, proposals, ScriptedModel())
+        with pytest.raises(PipelineInputError, match="mirrors an external source"):
+            run(orchestrator, house["taxonomy"])
+        assert proposals.list_proposals() == []
+
     def test_scope_by_scheme_id_or_dict(self, repo, house, proposals):
         orchestrator = make(repo, proposals, ScriptedModel())
         by_id = run(orchestrator, house["taxonomy"], {"concept_scheme_id": house["vocabulary"]})

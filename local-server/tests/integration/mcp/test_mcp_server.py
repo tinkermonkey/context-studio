@@ -13,7 +13,7 @@ import httpx
 from starlette.applications import Starlette
 from starlette.routing import Route
 
-from adapters.chat.proposal_tools import build_proposal_tools
+from adapters.chat.proposal_tools import MarkProposalLandedTool, build_proposal_tools
 from adapters.chat.tools import build_chat_tools
 from adapters.mcp.links import EntityLinks
 from adapters.mcp.server import (
@@ -649,3 +649,67 @@ async def test_get_and_list_proposals_through_mcp(dr_workspace, proposals):
     assert f"{UI}/app/proposals/{proposal_id}" in list_links
 
     assert missing["isError"] is True
+
+
+async def test_a_client_drafts_against_a_revision_and_marks_the_decided_proposal_landed(
+    dr_workspace, proposals
+):
+    dr_workspace.ontology.set_taxonomy_mirrored(TAXONOMY_ID, True)
+    proposals.policies.save(
+        ApprovalPolicy(TAXONOMY_ID, auto_apply=(AutoApplyRule(scope=ChangeScope.EDITORIAL),))
+    )
+    write_tools = [
+        *build_proposal_tools(proposals.service, ProposalSource.MCP),
+        MarkProposalLandedTool(proposals.service, ProposalSource.MCP),
+    ]
+    drafted = {"repo": "documentation_robotics", "commit": "bbb222", "spec_version": "0.10.0"}
+    arguments = {
+        "taxonomy_id": TAXONOMY_ID,
+        "title": "Reword Operation",
+        "operations": [update_operation(1, OPERATION_ID, description="One endpoint and method")],
+        "source_revision": drafted,
+    }
+    landed = {
+        "id": None,
+        "repo": "documentation_robotics",
+        "commit": "ccc333",
+        "spec_version": "0.10.1",
+    }
+    async with mcp_client(dr_workspace, write_tools) as client:
+        tools = await result_of(client, "tools/list")
+        proposed = await result_of(client, "tools/call", call_params("propose_changes", arguments))
+        proposal = tool_payload(proposed)[0]
+        landed["id"] = proposal["id"]
+        too_early = await result_of(
+            client, "tools/call", call_params("mark_proposal_landed", landed)
+        )
+        # A person decides it in the app.
+        operation_ids = [o.id for o in proposals.service.get(proposal["id"]).operations]
+        proposals.service.apply(proposal["id"], operation_ids)
+        unlanded = await result_of(
+            client,
+            "tools/call",
+            call_params("list_proposals", {"status": "done", "landed": False}),
+        )
+        marked = await result_of(client, "tools/call", call_params("mark_proposal_landed", landed))
+        after = await result_of(
+            client,
+            "tools/call",
+            call_params("list_proposals", {"status": "done", "landed": False}),
+        )
+
+    assert "mark_proposal_landed" in [t["name"] for t in tools["tools"]]
+    # Mirrored: the policy applies nothing; the proposal waits for a person.
+    assert proposal["status"] == "open"
+    assert proposals.service.get(proposal["id"]).source_revision.commit == "bbb222"
+    assert too_early["isError"] is True
+    assert "only a done proposal" in too_early["content"][0]["text"]
+    assert [i["id"] for i in tool_payload(unlanded)[0]["items"]] == [proposal["id"]]
+
+    summary, links = tool_payload(marked)
+    assert summary["landed"]["commit"] == "ccc333"
+    assert summary["landed"]["spec_version"] == "0.10.1"
+    assert f"{UI}/app/proposals/{proposal['id']}" in links
+    stored = proposals.service.get(proposal["id"]).landed
+    assert (stored.revision.repo, stored.revision.commit) == ("documentation_robotics", "ccc333")
+    assert tool_payload(after)[0]["items"] == []

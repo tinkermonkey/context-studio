@@ -41,7 +41,7 @@ from domain.ontology.entities import validate_relationship_attributes
 from domain.ontology.events import GraphInvalidated
 from domain.ontology.exceptions import EntityNotFoundError, OntologyError
 from domain.ontology.snapshots import decode_field, entity_snapshot
-from domain.ontology.value_objects import DataPropertyValue, DataType
+from domain.ontology.value_objects import DataPropertyValue, DataType, SourceRevision
 from domain.versioning.approval_policy import auto_apply_ids
 from domain.versioning.exceptions import (
     ChangeProposalNotFoundError,
@@ -74,6 +74,7 @@ from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
     InUseResolution,
+    Landing,
     OperationDraft,
     OperationKind,
     OperationStatus,
@@ -429,6 +430,7 @@ class ProposalService:
         rationale: str | None = None,
         source_detail: str | None = None,
         dry_run: bool = False,
+        source_revision: SourceRevision | None = None,
     ) -> ChangeProposal:
         """
         Validate and store a proposal; every operation starts pending.
@@ -447,6 +449,9 @@ class ProposalService:
         Args:
             dry_run: Validate only: return the proposal, scopes and bases filled
                 in, without storing or applying anything
+            source_revision: The revision of the taxonomy's external source the
+                proposal was drafted against; without one, the revision the
+                taxonomy was last imported at, if it records one
 
         Returns:
             The stored proposal, with any auto-applied outcomes (with dry_run,
@@ -456,8 +461,11 @@ class ProposalService:
             ProposalValidationError: With every problem found; nothing is stored
         """
         errors: list[OperationError] = []
-        if self._repo.get_taxonomy(taxonomy_id) is None:
+        taxonomy = self._repo.get_taxonomy(taxonomy_id)
+        if taxonomy is None:
             errors.append(OperationError(None, "taxonomy_not_found", f"No taxonomy {taxonomy_id}"))
+        elif source_revision is None:
+            source_revision = taxonomy.source_revision
         if not operations:
             errors.append(
                 OperationError(None, "invalid", "A proposal needs at least one operation")
@@ -509,6 +517,7 @@ class ProposalService:
                 source_detail=source_detail,
                 created_at=datetime.now(timezone.utc),
                 operations=built,
+                source_revision=source_revision,
             )
         except ValueError as exc:
             errors.append(OperationError(None, "invalid", str(exc)))
@@ -569,8 +578,12 @@ class ProposalService:
         """
         What the policy allows, less the relationship-type deletes still in use:
         applying one as proposed would fail, so it waits for a reviewer to
-        resolve its relationships.
+        resolve its relationships. Nothing auto-applies to a mirrored taxonomy:
+        its source applies a change first, so a person decides each one.
         """
+        taxonomy = self._repo.get_taxonomy(proposal.taxonomy_id)
+        if taxonomy is None or taxonomy.mirrored:
+            return []
         creates = {o.ref: o for o in proposal.operations if o.ref}
         inspector = InUseInspector(self._repo)
         allowed = auto_apply_ids(
@@ -1783,13 +1796,23 @@ class ProposalService:
         keep their recorded outcomes; the applied ones' decisions are marked
         superseded by reverted_by (a rejection still stands).
 
+        A proposal its client has landed on a mirrored taxonomy can't be
+        reverted here: the source already holds it, so the client proposes the
+        reversal instead. Unlanded, it can (that is how it is abandoned).
+
         Raises:
             ChangeProposalNotFoundError: If the proposal does not exist
+            ChangeProposalStateError: If it is landed on a mirrored taxonomy
             RevertConflictError, RevertRefusedError: From RevertService when the
                 run can't be undone; nothing is changed and the status is left as it was
         """
         with self._lock(proposal_id):
             proposal = self._get(proposal_id)
+            if proposal.landed is not None and self._mirrored(proposal.taxonomy_id):
+                raise ChangeProposalStateError(
+                    f"Change proposal {proposal_id} has landed in the taxonomy's source;"
+                    " propose the reversal from the source instead of reverting it here"
+                )
 
             def close_proposal(_result: RevertResult) -> None:
                 # Inside the revert's transaction: the status commits with the revert.
@@ -1805,6 +1828,52 @@ class ProposalService:
                 self._proposals.set_status(proposal.id, ProposalStatus.REVERTED)
 
             return self._revert.revert_with_summary(proposal.id, on_reverted=close_proposal)
+
+    # ------------------------------------------------------------------ landing
+
+    def mark_landed(self, proposal_id: str, revision: SourceRevision) -> ChangeProposal:
+        """
+        Record that the client landed the decided proposal in its source at this
+        revision. Marking it again with the same revision changes nothing; another
+        revision replaces the landing (a re-landing records its latest commit).
+
+        Raises:
+            ChangeProposalNotFoundError: If the proposal does not exist
+            ChangeProposalStateError: If it is still open (only a decided
+                proposal can land) or reverted
+            ValueError: If the revision has no commit
+        """
+        with self._lock(proposal_id):
+            proposal = self._get(proposal_id)
+            if proposal.status is not ProposalStatus.DONE:
+                raise ChangeProposalStateError(
+                    f"Change proposal {proposal_id} is {proposal.status.value}; only a"
+                    " done proposal can be marked landed"
+                )
+            if proposal.landed is not None and proposal.landed.revision == revision:
+                return proposal
+            self._proposals.set_landed(
+                proposal_id, Landing(revision=revision, landed_at=datetime.now(timezone.utc))
+            )
+            return self._get(proposal_id)
+
+    def clear_landing(self, proposal_id: str) -> ChangeProposal:
+        """
+        Forget that the proposal landed (a person correcting a wrong mark).
+
+        Raises:
+            ChangeProposalNotFoundError: If the proposal does not exist
+        """
+        with self._lock(proposal_id):
+            proposal = self._get(proposal_id)
+            if proposal.landed is None:
+                return proposal
+            self._proposals.set_landed(proposal_id, None)
+            return self._get(proposal_id)
+
+    def _mirrored(self, taxonomy_id: str) -> bool:
+        taxonomy = self._repo.get_taxonomy(taxonomy_id)
+        return taxonomy is not None and taxonomy.mirrored
 
     # ------------------------------------------------------------------ helpers
 
@@ -1861,18 +1930,25 @@ class ProposalService:
         source: ProposalSource | None = None,
         limit: int = 50,
         offset: int = 0,
+        landed: bool | None = None,
     ) -> list[ChangeProposal]:
-        """Proposals, newest first, optionally filtered."""
-        return self._proposals.list_proposals(taxonomy_id, status, source, limit, offset)
+        """
+        Proposals, newest first, optionally filtered. landed False with status
+        done lists the decided proposals their client hasn't landed yet.
+        """
+        return self._proposals.list_proposals(
+            taxonomy_id, status, source, limit, offset, landed=landed
+        )
 
     def count_proposals(
         self,
         taxonomy_id: str | None = None,
         status: ProposalStatus | None = None,
         source: ProposalSource | None = None,
+        landed: bool | None = None,
     ) -> int:
         """How many proposals match the filters."""
-        return self._proposals.count_proposals(taxonomy_id, status, source)
+        return self._proposals.count_proposals(taxonomy_id, status, source, landed=landed)
 
     def stale_operation_ids(self, proposal: ChangeProposal) -> set[str]:
         """

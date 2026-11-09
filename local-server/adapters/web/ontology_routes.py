@@ -55,6 +55,7 @@ from adapters.web.schemas.ontology import (
     TaxonomyResponse,
     TaxonomyUpdateRequest,
 )
+from domain.ontology.entities import Taxonomy
 from domain.ontology.exceptions import (
     CircularReferenceError,
     DuplicateEntityError,
@@ -226,7 +227,8 @@ async def update_taxonomy(
     service: OntologyService = Depends(get_ontology_service),
 ) -> TaxonomyResponse:
     """
-    Update a taxonomy's title, summary (description), vision, and/or color.
+    Update a taxonomy's title, summary (description), vision, and/or color, and
+    whether it mirrors an external source (set by a person here; never an agent tool).
 
     Args:
         taxonomy_id: The taxonomy ID
@@ -239,15 +241,21 @@ async def update_taxonomy(
     Raises:
         HTTPException: 400 if invalid input, 404 if not found, 409 if title exists
     """
-    try:
-        taxonomy = await run_sync_in_executor(
-            service.update_taxonomy,
+
+    def run() -> Taxonomy:
+        taxonomy = service.update_taxonomy(
             taxonomy_id=taxonomy_id,
             title=request.title,
             description=request.description,
             color=request.color,
             vision=request.vision,
         )
+        if request.mirrored is not None:
+            taxonomy = service.set_taxonomy_mirrored(taxonomy_id, request.mirrored)
+        return taxonomy
+
+    try:
+        taxonomy = await run_sync_in_executor(run)
         return TaxonomyResponse.model_validate(taxonomy)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)

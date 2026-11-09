@@ -241,6 +241,11 @@ def main() -> int:
     )
 
     print(f"Spec version: {summary.spec_version}")
+    if summary.source_revision is not None:
+        print(
+            f"Source revision: {summary.source_revision.repo or '?'}"
+            f" @ {summary.source_revision.commit or '?'} (taxonomy marked mirrored)"
+        )
     print(
         f"Taxonomies:            created={summary.taxonomies_created:4d}  "
         f"updated={summary.taxonomies_updated:4d}"

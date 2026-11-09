@@ -162,8 +162,12 @@ export const proposalHandlers = [
     const url = new URL(request.url);
     const status = url.searchParams.get("status");
     const taxonomyId = url.searchParams.get("taxonomy_id");
+    const landed = url.searchParams.get("landed");
     const items = PROPOSALS.filter(
-      (p) => (!status || p.status === status) && (!taxonomyId || p.taxonomy_id === taxonomyId),
+      (p) =>
+        (!status || p.status === status) &&
+        (!taxonomyId || p.taxonomy_id === taxonomyId) &&
+        (landed === null || !!p.landed === (landed === "true")),
     );
     return HttpResponse.json({ items, total: items.length, limit: 500, offset: 0 });
   }),

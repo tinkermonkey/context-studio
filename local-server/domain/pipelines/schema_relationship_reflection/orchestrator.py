@@ -118,6 +118,12 @@ class RelationshipReflectionOrchestrator(PipelineOrchestrator):
         taxonomy = self._repo.get_taxonomy(taxonomy_id)
         if taxonomy is None:
             raise PipelineInputError(f"No taxonomy {taxonomy_id}")
+        if taxonomy.mirrored:
+            # Its source drives proposals; Context Studio only adjudicates them.
+            raise PipelineInputError(
+                f"{taxonomy.title} mirrors an external source: its client proposes"
+                " changes, so Context Studio runs no reflection on it"
+            )
 
         predicates = self._predicate_catalog(taxonomy_id) if self._predicate_catalog else None
         catalog = RelationshipCatalog.for_taxonomy(self._repo, taxonomy_id, predicates)

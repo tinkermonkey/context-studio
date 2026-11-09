@@ -63,6 +63,7 @@ from domain.ontology.value_objects import (
     NodeType,
     SchemeCounts,
     SearchCriteria,
+    SourceRevision,
     Status,
 )
 from utils.async_executor import run_sync_in_executor
@@ -82,6 +83,11 @@ _ENTITY_REFERENCE_COLUMNS = (
 )
 # Stay well under SQLite's bound-parameter limit in IN (...) clauses
 _SQLITE_IN_CHUNK = 500
+
+
+def _revision_json(revision: Optional[SourceRevision]) -> Optional[dict[str, Any]]:
+    """A source revision as stored JSON, or None."""
+    return revision.to_dict() if revision is not None else None
 
 
 def _text_match(query: str) -> Any:
@@ -310,6 +316,8 @@ class SQLiteOntologyRepository:
                     external_references=serialize_external_references(
                         taxonomy.external_references
                     ),
+                    mirrored=taxonomy.mirrored,
+                    source_revision=_revision_json(taxonomy.source_revision),
                     created_at=taxonomy.created_at or datetime.now(timezone.utc),
                     last_modified=datetime.now(timezone.utc),
                     version=1,
@@ -324,6 +332,9 @@ class SQLiteOntologyRepository:
                 refs = serialize_external_references(taxonomy.external_references)
                 orm_entity.external_references = refs  # type: ignore[assignment]
                 orm_entity.status = taxonomy.status.value  # type: ignore[assignment]
+                orm_entity.mirrored = taxonomy.mirrored  # type: ignore[assignment]
+                revision = _revision_json(taxonomy.source_revision)
+                orm_entity.source_revision = revision  # type: ignore[assignment]
                 orm_entity.last_modified = datetime.now(timezone.utc)  # type: ignore[assignment]
                 orm_entity.version = orm_entity.version + 1  # type: ignore[assignment]
 

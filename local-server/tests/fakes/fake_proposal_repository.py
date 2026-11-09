@@ -9,6 +9,7 @@ from typing import Optional, Sequence
 from domain.versioning.gold import DecisionFilter, DecisionKind, ProposalDecision
 from domain.versioning.proposals import (
     ChangeProposal,
+    Landing,
     ProposalSource,
     ProposalStatus,
     ProposedOperation,
@@ -39,9 +40,10 @@ class FakeChangeProposalRepository:
         source: Optional[ProposalSource] = None,
         limit: int = 50,
         offset: int = 0,
+        landed: Optional[bool] = None,
     ) -> list[ChangeProposal]:
         matches = sorted(
-            self._matching(taxonomy_id, status, source),
+            self._matching(taxonomy_id, status, source, landed),
             key=lambda p: (p.created_at, p.id),
             reverse=True,
         )
@@ -52,8 +54,14 @@ class FakeChangeProposalRepository:
         taxonomy_id: Optional[str] = None,
         status: Optional[ProposalStatus] = None,
         source: Optional[ProposalSource] = None,
+        landed: Optional[bool] = None,
     ) -> int:
-        return len(self._matching(taxonomy_id, status, source))
+        return len(self._matching(taxonomy_id, status, source, landed))
+
+    def set_landed(self, proposal_id: str, landed: Optional[Landing]) -> None:
+        if proposal_id not in self._proposals:
+            raise ValueError(f"No proposal {proposal_id}")
+        self._proposals[proposal_id].landed = landed
 
     def save_operations(
         self,
@@ -114,6 +122,7 @@ class FakeChangeProposalRepository:
         taxonomy_id: Optional[str],
         status: Optional[ProposalStatus],
         source: Optional[ProposalSource],
+        landed: Optional[bool] = None,
     ) -> list[ChangeProposal]:
         return [
             p
@@ -121,6 +130,7 @@ class FakeChangeProposalRepository:
             if (taxonomy_id is None or p.taxonomy_id == taxonomy_id)
             and (status is None or p.status == status)
             and (source is None or p.source == source)
+            and (landed is None or (p.landed is not None) == landed)
         ]
 
 

@@ -33,6 +33,7 @@ duplicating them.
 from __future__ import annotations
 
 import json
+import subprocess
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -54,7 +55,7 @@ from domain.ontology.entities import Class, PropertyDefinition, Taxonomy
 from domain.ontology.exceptions import OntologyError
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
-from domain.ontology.value_objects import ExternalReference
+from domain.ontology.value_objects import ExternalReference, SourceRevision
 from domain.versioning.ports import ChangeProposalRepository
 from domain.versioning.proposals import OperationStatus, ProposalStatus
 
@@ -88,6 +89,7 @@ class ImportSummary:
     property_definitions_created: int = 0
     property_definitions_updated: int = 0
     charter_found: bool = False
+    source_revision: SourceRevision | None = None
     stale: list[str] = field(default_factory=list)
     # The stale classes and property definitions themselves, for pruning.
     stale_entities: list[Class | PropertyDefinition] = field(default_factory=list)
@@ -109,6 +111,29 @@ def read_manifest(spec_dir: Path) -> tuple[str, list[dict[str, Any]]]:
         return manifest["specVersion"], manifest["layers"]
     except KeyError as exc:
         raise ValueError(f"Manifest {manifest_path} is missing required key {exc}") from exc
+
+
+def read_source_revision(spec_dir: Path, spec_version: str) -> SourceRevision:
+    """
+    The spec's revision: its repository's origin URL and HEAD commit (each None
+    when git can't tell, e.g. a spec outside a git checkout) and its version.
+    """
+    return SourceRevision(
+        repo=_git(spec_dir, "remote", "get-url", "origin"),
+        commit=_git(spec_dir, "rev-parse", "HEAD"),
+        spec_version=spec_version,
+    )
+
+
+def _git(directory: Path, *args: str) -> str | None:
+    """A git command's output in `directory`, or None if it fails."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(directory), *args], capture_output=True, text=True, check=True
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return result.stdout.strip() or None
 
 
 def read_predicate_catalog(spec_dir: Path) -> dict[str, dict[str, Any]] | None:
@@ -568,6 +593,10 @@ def import_dr_ontology(
     summary = ImportSummary(spec_version=spec_version)
 
     taxonomy = _upsert_taxonomy(ontology_service, ontology_repo, spec_dir, spec_version, summary)
+    # The DR spec is the source of truth: the taxonomy mirrors it, at this revision.
+    summary.source_revision = read_source_revision(spec_dir, spec_version)
+    ontology_service.set_taxonomy_mirrored(taxonomy.id, True)
+    ontology_service.set_taxonomy_source_revision(taxonomy.id, summary.source_revision)
     scheme_id_by_layer = _upsert_concept_schemes(
         ontology_service,
         ontology_repo,

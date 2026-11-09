@@ -22,6 +22,11 @@ that DR id, the one an update in the plan turns into it, or "$<ref>" of the
 plan's create of it; review compares its pair of classes with the deleted
 type's (see `domain.versioning.in_use`).
 
+A plan's top-level `source_revision` ({repo, commit, spec_version}: the spec
+revision DR drafted it against) is recorded on the proposal and comes back in
+the `cs-dr-spec-changes/1` header; without one, the proposal records the
+revision the taxonomy was last imported at.
+
 `decisions_for` (in `adapters/interchange/dr_decisions.py`, re-exported here)
 writes the decisions file DR's `proposal-import.ts --decisions` reads: one
 `{seq, op_id, status, reason, result_entity_id}` per operation, plus `fields`
@@ -48,7 +53,7 @@ from adapters.interchange.dr_relationships import (
 )
 from domain.ontology.entities import PropertyDefinition
 from domain.ontology.ports import OntologyRepository
-from domain.ontology.value_objects import ExternalReference
+from domain.ontology.value_objects import ExternalReference, SourceRevision
 from domain.versioning.proposal_service import OperationDraft, ProposalService
 from domain.versioning.proposals import (
     ChangeProposal,
@@ -92,6 +97,18 @@ def _check_shape(plan: Any, label: str = "plan") -> None:
         raise PlanError([f"{label}: format is {plan.get('format')!r}, expected {PLAN_FORMAT}"])
     if not isinstance(plan.get("operations"), list):
         raise PlanError([f"{label}: operations is not a list"])
+    _source_revision(plan, label)
+
+
+def _source_revision(plan: dict[str, Any], label: str = "plan") -> SourceRevision | None:
+    """The plan's source_revision, or None when it has none."""
+    revision = plan.get("source_revision")
+    if revision is None:
+        return None
+    try:
+        return SourceRevision.from_dict(revision)
+    except ValueError as exc:
+        raise PlanError([f"{label}: source_revision: {exc}"]) from exc
 
 
 class _Workspace:
@@ -361,4 +378,5 @@ def import_reflection_plan(
         source=ProposalSource.PIPELINE,
         rationale=plan.get("rationale"),
         source_detail=plan.get("source_detail"),
+        source_revision=_source_revision(plan),
     )

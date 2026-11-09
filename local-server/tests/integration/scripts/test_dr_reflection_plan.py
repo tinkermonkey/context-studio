@@ -445,7 +445,15 @@ def test_renames_onto_an_existing_or_shared_triple_are_refused_by_seq(parts):
     ]
 
 
-@pytest.mark.parametrize("plan", [[], "plan", {"format": "dr-reflection-plan/1", "operations": 5}])
+@pytest.mark.parametrize(
+    "plan",
+    [
+        [],
+        "plan",
+        {"format": "dr-reflection-plan/1", "operations": 5},
+        {"format": "dr-reflection-plan/1", "operations": [], "source_revision": {"sha": "x"}},
+    ],
+)
 def test_a_malformed_plan_is_a_plan_error(parts, plan):
     _, repo, proposals = parts
     with pytest.raises(PlanError):
@@ -1175,3 +1183,17 @@ def test_an_unknown_replacement_is_a_plan_error(parts):
     with pytest.raises(PlanError) as caught:
         import_reflection_plan(plan_with(delete), proposals, repo)
     assert "replacement business.businessrole.nothing.business.nowhere" in caught.value.problems[0]
+
+
+def test_the_plans_source_revision_is_recorded_on_the_proposal(parts):
+    _, repo, proposals = parts
+    revision = {
+        "repo": "git@github.com:tinkermonkey/documentation_robotics.git",
+        "commit": "b016a074",
+        "spec_version": "0.8.4",
+    }
+    plan = {**read_plan(PLAN_FILE), "source_revision": revision}
+
+    proposal = import_reflection_plan(plan, proposals, repo)
+
+    assert proposals.get(proposal.id).source_revision.to_dict() == revision

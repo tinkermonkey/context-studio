@@ -9,7 +9,7 @@ interface ProposalsSearch {
   taxonomy?: string;
 }
 
-const STATUSES: ProposalStatusFilter[] = ["open", "done", "reverted", "all"];
+const STATUSES: ProposalStatusFilter[] = ["open", "done", "unlanded", "reverted", "all"];
 
 function ProposalsRoute() {
   const navigate = useNavigate();

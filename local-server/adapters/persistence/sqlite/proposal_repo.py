@@ -22,6 +22,7 @@ from adapters.persistence.sqlite.models import (
     ProposalDecisionRecord,
     ProposalOperation,
 )
+from domain.ontology.value_objects import SourceRevision
 from domain.versioning.bundle_import import MATCHED_PREFIX, SUPERSEDED_PREFIX
 from domain.versioning.gold import (
     DECIDED_BY_UNKNOWN,
@@ -35,6 +36,7 @@ from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
     InUseResolution,
+    Landing,
     OperationKind,
     OperationStatus,
     OperationType,
@@ -67,6 +69,10 @@ class SQLiteChangeProposalRepository:
                     rationale=proposal.rationale,
                     source=proposal.source.value,
                     source_detail=proposal.source_detail,
+                    source_revision=(
+                        proposal.source_revision.to_dict() if proposal.source_revision else None
+                    ),
+                    landed=proposal.landed.to_dict() if proposal.landed else None,
                 )
             )
             session.flush()
@@ -89,10 +95,11 @@ class SQLiteChangeProposalRepository:
         source: Optional[ProposalSource] = None,
         limit: int = 50,
         offset: int = 0,
+        landed: Optional[bool] = None,
     ) -> list[ChangeProposal]:
         with self._session_factory() as session:
             runs = (
-                _filtered(session, taxonomy_id, status, source)
+                _filtered(session, taxonomy_id, status, source, landed)
                 .order_by(ChangeProposalRun.created_at.desc(), ChangeProposalRun.id.desc())
                 .offset(offset)
                 .limit(limit)
@@ -106,9 +113,18 @@ class SQLiteChangeProposalRepository:
         taxonomy_id: Optional[str] = None,
         status: Optional[ProposalStatus] = None,
         source: Optional[ProposalSource] = None,
+        landed: Optional[bool] = None,
     ) -> int:
         with self._session_factory() as session:
-            return _filtered(session, taxonomy_id, status, source).count()
+            return _filtered(session, taxonomy_id, status, source, landed).count()
+
+    def set_landed(self, proposal_id: str, landed: Optional[Landing]) -> None:
+        with self._session_factory() as session:
+            proposal = session.get(ChangeProposalRun, proposal_id)
+            if proposal is None:
+                raise ValueError(f"No proposal {proposal_id}")
+            proposal.landed = landed.to_dict() if landed else None  # type: ignore[assignment]
+            session.commit()
 
     def save_operations(
         self,
@@ -384,8 +400,12 @@ def _filtered(
     taxonomy_id: Optional[str],
     status: Optional[ProposalStatus],
     source: Optional[ProposalSource],
+    landed: Optional[bool] = None,
 ):
     query = session.query(ChangeProposalRun)
+    if landed is not None:
+        column = ChangeProposalRun.landed
+        query = query.filter(column.isnot(None) if landed else column.is_(None))
     if taxonomy_id is not None:
         query = query.filter(ChangeProposalRun.taxonomy_id == taxonomy_id)
     if status is not None:
@@ -488,4 +508,10 @@ def _to_domain(run: ChangeProposalRun, operations: list[ProposedOperation]) -> C
         created_at=created_at,  # type: ignore[arg-type]
         status=ProposalStatus(run.status),
         operations=operations,
+        source_revision=(
+            SourceRevision.from_dict(run.source_revision)  # type: ignore[arg-type]
+            if run.source_revision
+            else None
+        ),
+        landed=Landing.from_dict(run.landed) if run.landed else None,  # type: ignore[arg-type]
     )

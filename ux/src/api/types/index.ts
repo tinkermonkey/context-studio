@@ -73,7 +73,8 @@ export interface paths {
     get: operations["get_taxonomy_api_taxonomies__taxonomy_id__get"];
     /**
      * Update Taxonomy
-     * @description Update a taxonomy's title, summary (description), vision, and/or color.
+     * @description Update a taxonomy's title, summary (description), vision, and/or color, and
+     *     whether it mirrors an external source (set by a person here; never an agent tool).
      *
      *     Args:
      *         taxonomy_id: The taxonomy ID
@@ -3819,6 +3820,32 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/proposals/{proposal_id}/landed": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Mark Proposal Landed
+     * @description Record that the client landed this decided proposal in the taxonomy's
+     *     source (its landing script calls this after writing the change). The same
+     *     revision again changes nothing; another one replaces the landing.
+     */
+    put: operations["mark_proposal_landed_api_proposals__proposal_id__landed_put"];
+    post?: never;
+    /**
+     * Clear Proposal Landed
+     * @description Forget that the proposal landed, to correct a wrong mark.
+     */
+    delete: operations["clear_proposal_landed_api_proposals__proposal_id__landed_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/taxonomies/{taxonomy_id}/gold": {
     parameters: {
       query?: never;
@@ -4763,11 +4790,34 @@ export interface components {
        * @description More about the source (MCP client, conversation id, bundle file)
        */
       source_detail?: string | null;
+      /** @description The revision of the taxonomy's external source the proposal was drafted against; defaults to the revision the taxonomy was last imported at */
+      source_revision?: components["schemas"]["SourceRevisionSchema"] | null;
       /**
        * Operations
        * @description The operations
        */
       operations: components["schemas"]["ProposedOperationRequest"][];
+    };
+    /**
+     * ChangeProposalLandedRequest
+     * @description Where the client landed a decided proposal in its source.
+     */
+    ChangeProposalLandedRequest: {
+      /**
+       * Repo
+       * @description The source repository
+       */
+      repo?: string | null;
+      /**
+       * Commit
+       * @description The commit that holds the change
+       */
+      commit: string;
+      /**
+       * Spec Version
+       * @description The source's version label at that commit
+       */
+      spec_version?: string | null;
     };
     /**
      * ChangeProposalRejectRequest
@@ -4810,6 +4860,10 @@ export interface components {
        */
       created_at: string;
       status: components["schemas"]["ProposalStatus"];
+      /** @description The source revision the proposal was drafted against */
+      source_revision?: components["schemas"]["SourceRevisionSchema"] | null;
+      /** @description Set once the client landed the decided proposal in its source; null while unlanded */
+      landed?: components["schemas"]["LandingResponse"] | null;
       /**
        * Dry Run
        * @description Validated only: nothing was stored or applied, and the ids are not kept
@@ -6844,6 +6898,23 @@ export interface components {
        * @description Timestamp when the graph was last built
        */
       timestamp: string;
+    };
+    /**
+     * LandingResponse
+     * @description Where and when a decided proposal landed in its taxonomy's source.
+     */
+    LandingResponse: {
+      /** Repo */
+      repo?: string | null;
+      /** Commit */
+      commit: string;
+      /** Spec Version */
+      spec_version?: string | null;
+      /**
+       * Landed At
+       * Format: date-time
+       */
+      landed_at: string;
     };
     /**
      * LexicalSenseResponse
@@ -9212,6 +9283,27 @@ export interface components {
       llm_providers_available?: string[];
     };
     /**
+     * SourceRevisionSchema
+     * @description A revision of a mirrored taxonomy's external source (a client's spec).
+     */
+    SourceRevisionSchema: {
+      /**
+       * Repo
+       * @description The source repository
+       */
+      repo?: string | null;
+      /**
+       * Commit
+       * @description The commit
+       */
+      commit?: string | null;
+      /**
+       * Spec Version
+       * @description The source's own version label
+       */
+      spec_version?: string | null;
+    };
+    /**
      * SourceSpanSchema
      * @description Immutable representation of a span in source text with provenance information.
      */
@@ -9521,6 +9613,14 @@ export interface components {
        * @enum {string}
        */
       status: "draft" | "published";
+      /**
+       * Mirrored
+       * @description Mirrors an external source of truth (a client's spec): nothing auto-applies, Context Studio runs no reflection on it, and a landed proposal can't be reverted here
+       * @default false
+       */
+      mirrored: boolean;
+      /** @description The source revision the taxonomy was last imported at */
+      source_revision?: components["schemas"]["SourceRevisionSchema"] | null;
     };
     /**
      * TaxonomyUpdateRequest
@@ -9547,6 +9647,11 @@ export interface components {
        * @description New hex color '#rrggbb' or null to clear
        */
       color?: string | null;
+      /**
+       * Mirrored
+       * @description Whether the taxonomy mirrors an external source of truth; a governance setting, recorded without a change event
+       */
+      mirrored?: boolean | null;
     };
     /** TextBlockSchema */
     TextBlockSchema: {
@@ -14082,6 +14187,8 @@ export interface operations {
         status?: components["schemas"]["ProposalStatus"] | null;
         /** @description Who or what proposed them */
         source?: components["schemas"]["ProposalSource"] | null;
+        /** @description Only proposals the client has (true) or hasn't (false) landed in the taxonomy's source; with status=done, false lists decided-but-unlanded */
+        landed?: boolean | null;
         /** @description Maximum number of results */
         limit?: number;
         /** @description Number of results to skip */
@@ -14370,6 +14477,93 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["ChangeProposalRevertConflictResponse"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  mark_proposal_landed_api_proposals__proposal_id__landed_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        proposal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ChangeProposalLandedRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangeProposalResponse"];
+        };
+      };
+      /** @description Change proposal not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The proposal is open or reverted: only a done one can land */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  clear_proposal_landed_api_proposals__proposal_id__landed_delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        proposal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChangeProposalResponse"];
+        };
+      };
+      /** @description Change proposal not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {

@@ -29,6 +29,7 @@ from typing import Any
 from uuid import uuid4
 
 from domain.ontology.entities import same_attribute_value
+from domain.ontology.value_objects import SourceRevision
 
 
 class ProposalSource(str, Enum):
@@ -484,6 +485,38 @@ class ProposedOperation:
         return self.status in (OperationStatus.APPLIED, OperationStatus.REJECTED)
 
 
+@dataclass(frozen=True)
+class Landing:
+    """
+    Where and when the client landed a decided proposal in its source.
+
+    Attributes:
+        revision: The source revision that holds the change; its commit is required
+        landed_at: When it was marked landed
+    """
+
+    revision: SourceRevision
+    landed_at: datetime
+
+    def __post_init__(self) -> None:
+        if not self.revision.commit:
+            raise ValueError("A landing needs the commit that holds the change")
+        if self.landed_at.tzinfo is None:
+            raise ValueError("landed_at must be timezone-aware")
+
+    def to_dict(self) -> dict[str, Any]:
+        """{repo, commit, spec_version, landed_at} with landed_at as ISO 8601."""
+        return {**self.revision.to_dict(), "landed_at": self.landed_at.isoformat()}
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "Landing":
+        revision = {k: v for k, v in data.items() if k != "landed_at"}
+        return cls(
+            revision=SourceRevision.from_dict(revision),
+            landed_at=datetime.fromisoformat(data["landed_at"]),
+        )
+
+
 @dataclass
 class ChangeProposal:
     """
@@ -500,6 +533,11 @@ class ChangeProposal:
         created_at: When it was proposed
         status: Open while any operation is pending
         operations: The proposed operations, in seq order
+        source_revision: The revision of the taxonomy's external source the
+            proposal was drafted against (a mirrored taxonomy's spec), if known
+        landed: Set once the client has landed the decided proposal in its
+            source; independent of status (a done proposal is decided, not
+            necessarily landed)
     """
 
     id: str
@@ -511,6 +549,8 @@ class ChangeProposal:
     source_detail: str | None = None
     status: ProposalStatus = ProposalStatus.OPEN
     operations: list[ProposedOperation] = field(default_factory=list)
+    source_revision: SourceRevision | None = None
+    landed: Landing | None = None
 
     def __post_init__(self) -> None:
         if not self.title or not self.title.strip():

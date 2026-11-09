@@ -28,6 +28,7 @@ from domain.ontology.value_objects import (
     ExternalReference,
     LexicalSense,
     OntologyMapping,
+    SourceRevision,
     Status,
 )
 
@@ -57,6 +58,7 @@ _DECODERS: dict[str, Callable[[Any], Any]] = {
     "lexical_senses": lambda senses: [LexicalSense(**s) for s in senses],
     "data_properties": lambda values: [DataPropertyValue(**v) for v in values],
     "ontology_mapping": lambda mapping: OntologyMapping(**mapping),
+    "source_revision": SourceRevision.from_dict,
 }
 
 
@@ -65,7 +67,7 @@ def _encode(value: Any) -> Any:
         return value.value
     if isinstance(value, datetime):
         return value.isoformat()
-    if isinstance(value, ExternalReference):
+    if isinstance(value, (ExternalReference, SourceRevision)):
         return value.to_dict()
     if isinstance(value, (LexicalSense, DataPropertyValue, OntologyMapping)):
         return asdict(value)

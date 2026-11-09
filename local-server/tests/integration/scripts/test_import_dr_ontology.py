@@ -12,6 +12,7 @@ schema_index=None embedding-suppression contract.
 
 import json
 import os
+import subprocess
 import sys
 from datetime import datetime, timezone
 from types import SimpleNamespace
@@ -859,3 +860,35 @@ class TestImportScriptExitCode:
 
         monkeypatch.setattr(sys, "argv", ["import_dr_ontology.py", "--spec-dir", str(spec_dir)])
         assert import_script.main() == 0
+
+
+class TestImportDrOntologyMirrorsTheSpec:
+    def test_the_taxonomy_is_mirrored_at_the_spec_revision(self, ontology_service, repo, spec_dir):
+        git = ["git", "-C", str(spec_dir)]
+        subprocess.run([*git, "init", "-q"], check=True)
+        subprocess.run([*git, "remote", "add", "origin", "https://example.com/dr.git"], check=True)
+        subprocess.run([*git, "add", "-A"], check=True)
+        subprocess.run(
+            [*git, "-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-qm", "spec"],
+            check=True,
+        )
+        head = subprocess.run(
+            [*git, "rev-parse", "HEAD"], capture_output=True, text=True, check=True
+        ).stdout.strip()
+
+        summary = import_dr_ontology(ontology_service, repo, spec_dir)
+
+        taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+        assert taxonomy.mirrored is True
+        assert taxonomy.source_revision.to_dict() == {
+            "repo": "https://example.com/dr.git",
+            "commit": head,
+            "spec_version": "0.8.4",
+        }
+        assert summary.source_revision == taxonomy.source_revision
+
+    def test_a_spec_outside_git_still_records_its_version(self, ontology_service, repo, spec_dir):
+        import_dr_ontology(ontology_service, repo, spec_dir)
+
+        revision = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER).source_revision
+        assert revision.spec_version == "0.8.4"

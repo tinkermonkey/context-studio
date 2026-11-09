@@ -28,7 +28,8 @@ import {
 } from "./proposalModel";
 import "./proposals.css";
 
-export type ProposalStatusFilter = ChangeProposal["status"] | "all";
+/** "unlanded": done, but its client hasn't landed it in the taxonomy's source yet. */
+export type ProposalStatusFilter = ChangeProposal["status"] | "unlanded" | "all";
 
 /** The list API's maximum page; the queue is small enough to load whole. */
 const LIST_LIMIT = 500;
@@ -36,6 +37,7 @@ const LIST_LIMIT = 500;
 const STATUS_OPTIONS: Array<{ value: ProposalStatusFilter; label: string }> = [
   { value: "open", label: "Open" },
   { value: "done", label: "Done" },
+  { value: "unlanded", label: "Unlanded" },
   { value: "reverted", label: "Reverted" },
   { value: "all", label: "All" },
 ];
@@ -49,6 +51,7 @@ interface ProposalRow {
   taxonomy: string;
   source: ChangeProposal["source"];
   status: ChangeProposal["status"];
+  landed: boolean;
   tally: OperationTally;
   scope?: ChangeScope;
   age: string;
@@ -89,10 +92,17 @@ const columns: Column<ProposalRow>[] = [
     key: "status",
     label: "Status",
     width: "110px",
-    render: (value) => (
-      <Chip variant={PROPOSAL_STATUS_VARIANT[value as ChangeProposal["status"]]}>
-        {value as string}
-      </Chip>
+    render: (value, row) => (
+      <div className="proposal-status">
+        <Chip variant={PROPOSAL_STATUS_VARIANT[value as ChangeProposal["status"]]}>
+          {value as string}
+        </Chip>
+        {row.landed && (
+          <Chip variant="cyan" data-testid={`proposal-landed-${row.id}`}>
+            landed
+          </Chip>
+        )}
+      </div>
     ),
   },
   {
@@ -141,7 +151,9 @@ interface ProposalsListPageProps {
 export function ProposalsListPage({ status, taxonomyId, onFiltersChange }: ProposalsListPageProps) {
   const navigate = useNavigate();
   const { data, isLoading, error, refetch } = useChangeProposals({
-    status: status === "all" ? undefined : status,
+    ...(status === "unlanded"
+      ? { status: "done", landed: false }
+      : { status: status === "all" ? undefined : status }),
     limit: LIST_LIMIT,
   });
   const { data: taxonomies } = useTaxonomies({ limit: SMALL_SET_LIMIT });
@@ -170,6 +182,7 @@ export function ProposalsListPage({ status, taxonomyId, onFiltersChange }: Propo
       taxonomy: taxonomyName(p.taxonomy_id),
       source: p.source,
       status: p.status,
+      landed: !!p.landed,
       tally: tallyOperations(p.operations),
       scope: strictestScope(p.operations),
       age: formatAge(p.created_at, now),
@@ -236,6 +249,8 @@ export function ProposalsListPage({ status, taxonomyId, onFiltersChange }: Propo
       <p className="proposals-footnote">
         Needs decision counts operations still waiting for one, failed ones included. Scope is the
         strictest scope in the proposal; breaking changes and deletes never apply by themselves.
+        Unlanded lists done proposals the client of a mirrored taxonomy hasn&apos;t yet landed in
+        its source.
       </p>
     </div>
   );

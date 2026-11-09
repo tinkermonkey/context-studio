@@ -189,6 +189,52 @@ class DataPropertyValue:
 
 
 @dataclass(frozen=True)
+class SourceRevision:
+    """
+    A revision of the external source a mirrored taxonomy follows (a client's
+    spec in its repository).
+
+    Attributes:
+        repo: The source repository (a URL or a name)
+        commit: The commit
+        spec_version: The source's own version label
+    """
+
+    repo: str | None = None
+    commit: str | None = None
+    spec_version: str | None = None
+
+    def __post_init__(self) -> None:
+        for name in ("repo", "commit", "spec_version"):
+            value = getattr(self, name)
+            if value is not None and (not isinstance(value, str) or not value.strip()):
+                raise ValueError(f"A source revision's {name} must be a non-empty string")
+        if self.repo is None and self.commit is None and self.spec_version is None:
+            raise ValueError("A source revision needs at least one of repo, commit, spec_version")
+
+    def to_dict(self) -> dict[str, str | None]:
+        """The revision as JSON: every key, None when unknown."""
+        return {"repo": self.repo, "commit": self.commit, "spec_version": self.spec_version}
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> SourceRevision:
+        """
+        Read {"repo", "commit", "spec_version"}; missing keys are None.
+
+        Raises:
+            ValueError: For an unknown key, a blank value, or no value at all
+        """
+        if not isinstance(data, dict):
+            raise ValueError("A source revision must be an object")
+        unknown = sorted(set(data) - {"repo", "commit", "spec_version"})
+        if unknown:
+            raise ValueError(f"Unknown source revision keys {unknown}")
+        return cls(
+            repo=data.get("repo"), commit=data.get("commit"), spec_version=data.get("spec_version")
+        )
+
+
+@dataclass(frozen=True)
 class OntologyMapping:
     """
     Maps between entities in different ontologies.

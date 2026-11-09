@@ -203,7 +203,7 @@
           "ontology"
         ],
         "summary": "Update Taxonomy",
-        "description": "Update a taxonomy's title, summary (description), vision, and/or color.\n\nArgs:\n    taxonomy_id: The taxonomy ID\n    request: TaxonomyUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated TaxonomyResponse\n\nRaises:\n    HTTPException: 400 if invalid input, 404 if not found, 409 if title exists",
+        "description": "Update a taxonomy's title, summary (description), vision, and/or color, and\nwhether it mirrors an external source (set by a person here; never an agent tool).\n\nArgs:\n    taxonomy_id: The taxonomy ID\n    request: TaxonomyUpdateRequest with optional fields to update\n    service: OntologyService from dependency injection\n\nReturns:\n    Updated TaxonomyResponse\n\nRaises:\n    HTTPException: 400 if invalid input, 404 if not found, 409 if title exists",
         "operationId": "update_taxonomy_api_taxonomies__taxonomy_id__put",
         "parameters": [
           {
@@ -6905,6 +6905,24 @@
             "description": "Who or what proposed them"
           },
           {
+            "name": "landed",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only proposals the client has (true) or hasn't (false) landed in the taxonomy's source; with status=done, false lists decided-but-unlanded",
+              "title": "Landed"
+            },
+            "description": "Only proposals the client has (true) or hasn't (false) landed in the taxonomy's source; with status=done, false lists decided-but-unlanded"
+          },
+          {
             "name": "limit",
             "in": "query",
             "required": false,
@@ -7265,6 +7283,109 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proposals/{proposal_id}/landed": {
+      "put": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Mark Proposal Landed",
+        "description": "Record that the client landed this decided proposal in the taxonomy's\nsource (its landing script calls this after writing the change). The same\nrevision again changes nothing; another one replaces the landing.",
+        "operationId": "mark_proposal_landed_api_proposals__proposal_id__landed_put",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeProposalLandedRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeProposalResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Change proposal not found"
+          },
+          "409": {
+            "description": "The proposal is open or reverted: only a done one can land"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "proposals"
+        ],
+        "summary": "Clear Proposal Landed",
+        "description": "Forget that the proposal landed, to correct a wrong mark.",
+        "operationId": "clear_proposal_landed_api_proposals__proposal_id__landed_delete",
+        "parameters": [
+          {
+            "name": "proposal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Proposal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeProposalResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Change proposal not found"
           },
           "422": {
             "description": "Validation Error",
@@ -9177,6 +9298,17 @@
             "title": "Source Detail",
             "description": "More about the source (MCP client, conversation id, bundle file)"
           },
+          "source_revision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceRevisionSchema"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The revision of the taxonomy's external source the proposal was drafted against; defaults to the revision the taxonomy was last imported at"
+          },
           "operations": {
             "items": {
               "$ref": "#/components/schemas/ProposedOperationRequest"
@@ -9194,6 +9326,49 @@
         ],
         "title": "ChangeProposalCreateRequest",
         "description": "A new change proposal, validated as a whole; nothing is stored if any operation fails."
+      },
+      "ChangeProposalLandedRequest": {
+        "properties": {
+          "repo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repo",
+            "description": "The source repository"
+          },
+          "commit": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Commit",
+            "description": "The commit that holds the change"
+          },
+          "spec_version": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spec Version",
+            "description": "The source's version label at that commit"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "commit"
+        ],
+        "title": "ChangeProposalLandedRequest",
+        "description": "Where the client landed a decided proposal in its source."
       },
       "ChangeProposalRejectRequest": {
         "properties": {
@@ -9276,6 +9451,28 @@
           },
           "status": {
             "$ref": "#/components/schemas/ProposalStatus"
+          },
+          "source_revision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceRevisionSchema"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The source revision the proposal was drafted against"
+          },
+          "landed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LandingResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set once the client landed the decided proposal in its source; null while unlanded"
           },
           "dry_run": {
             "type": "boolean",
@@ -12780,6 +12977,48 @@
         ],
         "title": "KnowledgeGraphResponse",
         "description": "Response containing knowledge graph metadata."
+      },
+      "LandingResponse": {
+        "properties": {
+          "repo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repo"
+          },
+          "commit": {
+            "type": "string",
+            "title": "Commit"
+          },
+          "spec_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spec Version"
+          },
+          "landed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Landed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "commit",
+          "landed_at"
+        ],
+        "title": "LandingResponse",
+        "description": "Where and when a decided proposal landed in its taxonomy's source."
       },
       "LexicalSenseResponse": {
         "properties": {
@@ -16767,6 +17006,53 @@
         "title": "ServiceMetricsResponse",
         "description": "Response containing service-level metrics."
       },
+      "SourceRevisionSchema": {
+        "properties": {
+          "repo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repo",
+            "description": "The source repository"
+          },
+          "commit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commit",
+            "description": "The commit"
+          },
+          "spec_version": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spec Version",
+            "description": "The source's own version label"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SourceRevisionSchema",
+        "description": "A revision of a mirrored taxonomy's external source (a client's spec)."
+      },
       "SourceSpanSchema": {
         "properties": {
           "quote": {
@@ -17289,6 +17575,23 @@
             "title": "Status",
             "description": "Publication status (draft or published)",
             "default": "draft"
+          },
+          "mirrored": {
+            "type": "boolean",
+            "title": "Mirrored",
+            "description": "Mirrors an external source of truth (a client's spec): nothing auto-applies, Context Studio runs no reflection on it, and a landed proposal can't be reverted here",
+            "default": false
+          },
+          "source_revision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceRevisionSchema"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The source revision the taxonomy was last imported at"
           }
         },
         "type": "object",
@@ -17350,6 +17653,18 @@
             ],
             "title": "Color",
             "description": "New hex color '#rrggbb' or null to clear"
+          },
+          "mirrored": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mirrored",
+            "description": "Whether the taxonomy mirrors an external source of truth; a governance setting, recorded without a change event"
           }
         },
         "type": "object",

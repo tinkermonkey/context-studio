@@ -7,6 +7,10 @@ Any proposal whose property-definition operations touch DR relationship types
 MCP or in the app, exports as one `cs-dr-spec-changes/1` document:
 
     {"format": "cs-dr-spec-changes/1", "proposal_id", "title",
+     "source_revision": {"repo", "commit", "spec_version"} | null,
+                                      # the spec revision the proposal was drafted against
+     "landed": {"repo", "commit", "spec_version", "landed_at"} | null,
+                                      # set once DR marked it landed
      "changes": [{
         "seq", "op_id", "op": "create" | "update" | "delete",
         "relationship_id",            # the type after the operation (a delete: the one removed)
@@ -146,6 +150,8 @@ def spec_changes_for(
         "format": SPEC_CHANGES_FORMAT,
         "proposal_id": proposal.id,
         "title": proposal.title,
+        "source_revision": proposal.source_revision.to_dict() if proposal.source_revision else None,
+        "landed": proposal.landed.to_dict() if proposal.landed else None,
         "changes": changes,
         "skipped": skipped,
         "records": dr_change_actions(proposal, repo, decisions),
