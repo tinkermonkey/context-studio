@@ -524,6 +524,12 @@ class ChangeProposalResponse(BaseModel):
         description="Validated only: nothing was stored or applied, and the ids are not kept",
     )
     operations: list[ProposedOperationResponse]
+    client_metadata: dict[str, Any] = Field(
+        default_factory=dict,
+        description="What the proposing client keeps on the proposal for itself (e.g. a DR "
+        "reflection plan's predicate_retirements: [{from, to, note}]); Context Studio acts "
+        "on none of it",
+    )
 
     @classmethod
     def from_domain(
@@ -557,6 +563,7 @@ class ChangeProposalResponse(BaseModel):
             status=proposal.status,
             source_revision=SourceRevisionSchema.from_domain(proposal.source_revision),
             landed=LandingResponse.from_domain(proposal.landed),
+            client_metadata=proposal.client_metadata,
             operations=[
                 _operation(
                     o,

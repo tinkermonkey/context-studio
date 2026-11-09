@@ -1356,6 +1356,8 @@ class ChangeProposalRun(BatchRun):
             was drafted against
         landed: {repo, commit, spec_version, landed_at} once the client landed
             the decided proposal in its source; NULL while unlanded
+        client_metadata: JSON object the proposing client keeps on the proposal
+            (e.g. a DR plan's predicate_retirements); {} when none
     """
 
     __tablename__ = "change_proposals"
@@ -1373,6 +1375,7 @@ class ChangeProposalRun(BatchRun):
     source_detail = Column(String(255), nullable=True)
     source_revision = Column(JSON(none_as_null=True), nullable=True)
     landed = Column(JSON(none_as_null=True), nullable=True)
+    client_metadata = Column(JSON, nullable=False, default=dict, server_default="{}")
 
     __mapper_args__: Dict[str, Any] = {
         "polymorphic_identity": "proposal",

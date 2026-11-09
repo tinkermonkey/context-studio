@@ -46,12 +46,15 @@ MCP or in the app, exports as one `cs-dr-spec-changes/1` document:
         "schema",                     # create only, when any: its other JSON Schema keywords
         "decided_at", "decided_by"
      }],
-     "skipped": [{"seq", "op_id", "why"}],
+     "skipped": [{"seq", "op_id", "why"}  # an operation not exported
+                 | {"seq": null, "op_id": null, "retire_predicate", "why",
+                    "relationship_ids"}],  # a retirement types still use
      "records": [{                    # the schema change records, as DR's change-record actions
-        "action": "rename" | "delete" | "create" | "rename-type",
+        "action": "rename" | "delete" | "create" | "rename-type" | "retire-predicate",
         "kind": "cs:rename" | "cs:reverse" | "cs:retarget" | "cs:delete" | "cs:create"
-                | "cs:move",
-        "from", "to",                 # DR relationship ids (rename-type: spec node ids);
+                | "cs:move" | "cs:retire-predicate",
+        "from", "to",                 # DR relationship ids (rename-type: spec node ids;
+                                      # retire-predicate: predicates);
                                       # to is null for a dropped delete
         "swap", "p", "proposal_id", "operation_id", "applied_at",
         "note"?                       # why a delete or retarget drops relationships
@@ -107,6 +110,13 @@ allowed_values (its enum) and description. A create gives all it set, and
 allowed_values null when it removed them; one that changed none of them (a
 title, default value or order) is skipped.
 
+A DR reflection plan's `predicate_retirements` ([{from, to, note}]), kept on
+its proposal's client metadata, come back as `retire-predicate` records
+(with the note, and the latest applied operation's decision time) once no
+DR relationship type uses the retired predicate, judged against the
+workspace as it is now; a retirement some type still uses is listed in
+`skipped` with those types' DR relationship ids.
+
 What an update didn't set is read from the workspace as it is now, so export
 and land proposals in the order they were applied: exported after a later
 change to the same type, an older proposal's triple comes out wrong (DR's
@@ -124,7 +134,9 @@ from adapters.interchange.dr_relationships import (
     DR_ATTRIBUTE_SCHEMA,
     DR_SOURCE,
     DR_TAXONOMY_IDENTIFIER,
+    PREDICATE_RETIREMENTS,
     Triple,
+    dr_property_definitions,
     dr_relationship_id,
 )
 from domain.ontology.ports import OntologyRepository
@@ -199,6 +211,7 @@ def spec_changes_for(
         else:
             change.update(decided_fields((decisions or {}).get(operation.id)))
             found_in.append(change)  # type: ignore[union-attr]
+    retirements, unretired = _retirements(proposal, repo, decisions)
     return {
         "format": SPEC_CHANGES_FORMAT,
         "proposal_id": proposal.id,
@@ -208,10 +221,11 @@ def spec_changes_for(
         "changes": changes,
         "node_changes": node_changes,
         "attribute_changes": attribute_changes,
-        "skipped": skipped,
+        "skipped": [*skipped, *unretired],
         "records": [
             *dr_change_actions(proposal, repo, decisions),
             *_node_actions(proposal, node_changes, decisions),
+            *retirements,
         ],
     }
 
@@ -496,6 +510,72 @@ def _final_replacement(
             return None, True
         seen.add(candidate)
         current = deletes[candidate]
+
+
+# --------------------------------------------------------------- predicates
+
+
+def _retirements(
+    proposal: ChangeProposal,
+    repo: OntologyRepository,
+    decisions: Mapping[str, ProposalDecision] | None,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """
+    The proposal's predicate retirements (its client metadata's
+    "predicate_retirements", kept from a DR reflection plan) as DR's
+    `retire-predicate` records, and the ones skipped: a retirement holds only
+    once no DR relationship type uses the retired predicate, judged against
+    the workspace as it is now (so after this proposal's deletes and renames).
+    """
+    records: list[dict[str, Any]] = []
+    skipped: list[dict[str, Any]] = []
+    retirements = proposal.client_metadata.get(PREDICATE_RETIREMENTS) or []
+    if not retirements:
+        return records, skipped
+    using: dict[str, list[str]] = {}
+    for relationship_id, prop in dr_property_definitions(repo).items():
+        if prop.canonical_predicate:
+            using.setdefault(prop.canonical_predicate, []).append(relationship_id)
+    applied = [
+        decision.decided_at
+        for o in proposal.operations
+        if o.status is OperationStatus.APPLIED
+        and (decision := (decisions or {}).get(o.id)) is not None
+    ]
+    applied_at = max(applied).isoformat() if applied else None
+    for retirement in retirements:
+        still = sorted(using.get(retirement["from"], []))
+        if still:
+            skipped.append(
+                {
+                    "seq": None,
+                    "op_id": None,
+                    "retire_predicate": retirement["from"],
+                    "why": (
+                        f"retiring {retirement['from']} into {retirement['to']}: "
+                        + (
+                            "a relationship type still uses it"
+                            if len(still) == 1
+                            else f"{len(still)} relationship types still use it"
+                        )
+                    ),
+                    "relationship_ids": still,
+                }
+            )
+            continue
+        record = {
+            "action": "retire-predicate",
+            "kind": "cs:retire-predicate",
+            "from": retirement["from"],
+            "to": retirement["to"],
+            "p": 1.0,
+            "proposal_id": proposal.id,
+            "applied_at": applied_at,
+        }
+        if retirement.get("note"):
+            record["note"] = retirement["note"]
+        records.append(record)
+    return records, skipped
 
 
 # --------------------------------------------------------------- attributes

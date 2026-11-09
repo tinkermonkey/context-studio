@@ -38,6 +38,10 @@ DR_ATTRIBUTE_KEYS = ("cardinality", "strength", "evidence")
 # less what the definition itself holds, under this key of its DR reference's
 # metadata (the reference's identifier is the attribute's name).
 DR_ATTRIBUTE_SCHEMA = "schema"
+# A DR reflection plan's predicate retirements ([{from, to, note}]: retire
+# predicate `from` into `to`), kept under this key of its proposal's client
+# metadata and exported as `retire-predicate` records.
+PREDICATE_RETIREMENTS = "predicate_retirements"
 # The ArchiMate 3.2 core relationships DR's reflection offers after a type's own
 # predicates (`sortingQuestions()` in cli/scripts/spec-enrich/triage-reflect.ts).
 DR_GENERAL_PREDICATES = (

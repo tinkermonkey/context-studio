@@ -544,6 +544,9 @@ class ChangeProposal:
         landed: Set once the client has landed the decided proposal in its
             source; independent of status (a done proposal is decided, not
             necessarily landed)
+        client_metadata: What the proposing client keeps on the proposal for
+            itself (JSON values, e.g. a DR plan's predicate retirements);
+            Context Studio stores and returns it, and acts on none of it
     """
 
     id: str
@@ -557,6 +560,7 @@ class ChangeProposal:
     operations: list[ProposedOperation] = field(default_factory=list)
     source_revision: SourceRevision | None = None
     landed: Landing | None = None
+    client_metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.title or not self.title.strip():
