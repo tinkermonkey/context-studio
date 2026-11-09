@@ -6,17 +6,14 @@ import { OperationDiff } from "./OperationDiff";
 import { operationColumns } from "./OperationColumns";
 import { formatProbability, isAwaiting } from "./proposalModel";
 import {
-  JUDGMENT_KINDS,
-  MECHANICAL_KINDS,
   QUESTION_LABELS,
   bestAlternative,
-  conflictClusters,
   contradicts,
   keptNote,
-  kindGroups,
   kindOf,
   mechanicalAtOrAbove,
   pRangeLabel,
+  tieredSections,
   type ConflictCluster,
 } from "./tieredModel";
 import type { OperationContext } from "./useOperationContext";
@@ -60,18 +57,7 @@ export function TieredOperations({
   emptyMessage,
 }: TieredOperationsProps) {
   // A card shows every member of a conflict, decided or not, while the filter shows any of them.
-  const shown = new Set(operations.map((o) => o.id));
-  const clusters = conflictClusters(allOperations).filter((c) =>
-    c.operations.some((o) => shown.has(o.id)),
-  );
-  const clustered = new Set(
-    conflictClusters(allOperations).flatMap((c) => c.operations.map((o) => o.id)),
-  );
-  const rest = operations.filter((o) => !clustered.has(o.id));
-  const mechanical = kindGroups(rest, MECHANICAL_KINDS);
-  const judgment = kindGroups(rest, JUDGMENT_KINDS);
-  const known = new Set<string>([...MECHANICAL_KINDS, ...JUDGMENT_KINDS]);
-  const other = rest.filter((o) => !known.has(kindOf(o) ?? ""));
+  const { mechanical, judgment, clusters, other } = tieredSections(operations, allOperations);
   const mechanicalOps = mechanical.flatMap((g) => g.operations);
   const picked = deciding ? mechanicalAtOrAbove(mechanicalOps, threshold) : [];
   const pickedIds = new Set(picked.map((o) => o.id));

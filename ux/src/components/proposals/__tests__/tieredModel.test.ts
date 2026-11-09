@@ -14,6 +14,7 @@ import {
   offersGroupBy,
   pRangeLabel,
   pickOutcome,
+  tieredOrder,
 } from "../tieredModel";
 
 const ops = () => reflectionProposal().operations;
@@ -220,5 +221,26 @@ describe("no current triple (older proposals)", () => {
     expect(outcome?.changed).toBe(true);
     expect(outcome?.pair).toBeUndefined();
     expect(outcome?.fields).toBeUndefined();
+  });
+});
+
+describe("tieredOrder", () => {
+  it("lists mechanical groups, judgment groups, then conflict cards, as the view shows them", () => {
+    expect(tieredOrder(ops(), ops())).toEqual([
+      "m-dup",
+      "m-rename",
+      "m-blocked",
+      "m-reverse",
+      "m-stale",
+      "j-retarget",
+      "j-compound",
+      "c-rename",
+      "c-delete",
+    ]);
+  });
+  it("keeps every member of a card while any of them is shown", () => {
+    const all = ops();
+    const shown = all.filter((o) => o.id !== "c-rename");
+    expect(tieredOrder(shown, all).slice(-2)).toEqual(["c-rename", "c-delete"]);
   });
 });

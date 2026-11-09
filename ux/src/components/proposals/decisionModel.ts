@@ -499,6 +499,22 @@ export function facetCounts(
   };
 }
 
+/**
+ * What to select once the selected operation drops out of the shown list (a
+ * decision under Needs decision): the row that was below it, else the new last
+ * row, else nothing. `before` and `after` are the shown ids, top to bottom.
+ */
+export function nextSelection(
+  before: string[],
+  after: string[],
+  selectedId: string,
+): string | undefined {
+  const still = new Set(after);
+  const index = before.indexOf(selectedId);
+  const below = before.slice(index + 1).find((id) => still.has(id));
+  return below ?? after[after.length - 1];
+}
+
 // ==================== DR triple edits (accept with edit) ====================
 
 export const DR_SOURCE = "documentation_robotics";

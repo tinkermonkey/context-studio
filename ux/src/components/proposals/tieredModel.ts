@@ -92,6 +92,52 @@ export function pRangeLabel(operations: ProposedOperation[]): string {
   return low === high ? `p ${low}` : `p ${low}–${high}`;
 }
 
+// ==================== Sections ====================
+
+/** What the change-kind view shows, section by section, in display order. */
+export interface TieredSections {
+  mechanical: KindGroup[];
+  judgment: KindGroup[];
+  /** Conflict cards with a shown member; a card lists all its members. */
+  clusters: ConflictCluster[];
+  other: ProposedOperation[];
+}
+
+/**
+ * The change-kind sections for the shown `operations`. Conflicts are worked
+ * out over `allOperations`, so a card keeps every member while any is shown.
+ */
+export function tieredSections(
+  operations: ProposedOperation[],
+  allOperations: ProposedOperation[],
+): TieredSections {
+  const shown = new Set(operations.map((o) => o.id));
+  const allClusters = conflictClusters(allOperations);
+  const clustered = new Set(allClusters.flatMap((c) => c.operations.map((o) => o.id)));
+  const rest = operations.filter((o) => !clustered.has(o.id));
+  const known = new Set<string>([...MECHANICAL_KINDS, ...JUDGMENT_KINDS]);
+  return {
+    mechanical: kindGroups(rest, MECHANICAL_KINDS),
+    judgment: kindGroups(rest, JUDGMENT_KINDS),
+    clusters: allClusters.filter((c) => c.operations.some((o) => shown.has(o.id))),
+    other: rest.filter((o) => !known.has(kindOf(o) ?? "")),
+  };
+}
+
+/** The operation ids the change-kind view shows, top to bottom. */
+export function tieredOrder(
+  operations: ProposedOperation[],
+  allOperations: ProposedOperation[],
+): string[] {
+  const { mechanical, judgment, clusters, other } = tieredSections(operations, allOperations);
+  return [
+    ...mechanical.flatMap((g) => g.operations),
+    ...judgment.flatMap((g) => g.operations),
+    ...clusters.flatMap((c) => c.operations),
+    ...other,
+  ].map((o) => o.id);
+}
+
 // ==================== Conflicts ====================
 
 export interface ConflictCluster {
