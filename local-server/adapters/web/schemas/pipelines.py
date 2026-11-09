@@ -252,7 +252,9 @@ class SchemaGroundingRunRequest(PipelineRunRequest):
 class SchemaDefinitionRefinementRunRequest(PipelineRunRequest):
     """Request to invoke schema_node_definition_refinement pipeline."""
 
-    node_id: str = Field(..., min_length=1, description="Schema node ID to refine")
+    node_id: str = Field(
+        ..., min_length=1, description="ID of the class or property definition to refine"
+    )
     current_definition: str = Field(..., description="Current definition to refine")
     groundings: Optional[list[dict[str, Any]]] = Field(
         None, description="External groundings (optional)"
@@ -341,6 +343,7 @@ class ApplyRunResponse(BaseModel):
     classes_updated: int = Field(default=0, description="Class entities updated")
     classes_skipped: int = Field(default=0, description="Class candidates skipped (already exist)")
     properties_created: int = Field(default=0, description="PropertyDefinition entities created")
+    properties_updated: int = Field(default=0, description="PropertyDefinition entities updated")
     properties_skipped: int = Field(
         default=0, description="PropertyDefinition candidates skipped (already exist)"
     )

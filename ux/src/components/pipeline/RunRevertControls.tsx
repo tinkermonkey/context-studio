@@ -63,7 +63,9 @@ export function RunRevertControls({
     (applyResult.classes_created || 0) +
     (applyResult.classes_updated || 0) +
     (applyResult.properties_created || 0) +
+    (applyResult.properties_updated || 0) +
     (applyResult.relationships_created || 0) +
+    (applyResult.relationships_removed || 0) +
     (applyResult.relationships_modified || 0) +
     (applyResult.individuals_created || 0) +
     (applyResult.external_references_created || 0);

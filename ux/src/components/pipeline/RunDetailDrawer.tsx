@@ -339,6 +339,17 @@ export function RunDetailDrawer({ runId, onClose, onOpenExtractionReview }: RunD
                             </div>
                           )}
 
+                          {applyResult.properties_updated > 0 && (
+                            <div className="apply-result-item">
+                              <span className="item-count">{applyResult.properties_updated}</span>
+                              <span className="item-label">
+                                {applyResult.properties_updated === 1
+                                  ? "Property updated"
+                                  : "Properties updated"}
+                              </span>
+                            </div>
+                          )}
+
                           {(applyResult.relationships_created || 0) +
                             (applyResult.relationships_modified || 0) >
                             0 && (

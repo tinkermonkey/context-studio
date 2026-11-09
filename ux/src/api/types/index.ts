@@ -1729,8 +1729,8 @@ export interface paths {
      *     - schema_node_grounding: requires node_id (a class) or node_label; optional
      *       sources (default: the configuration's sources). An unknown node_id is a 400;
      *       with async it fails the run instead
-     *     - schema_node_definition_refinement: requires node_id and
-     *       current_definition, optional groundings and extraction_usages
+     *     - schema_node_definition_refinement: requires node_id (a class or a property
+     *       definition) and current_definition, optional groundings and extraction_usages
      *     - schema_node_connection_refinement: requires scope_id and
      *       current_connections, optional groundings and extraction_usages
      *     - schema_relationship_reflection: requires taxonomy_id, optional scope (a
@@ -2105,6 +2105,7 @@ export interface paths {
      *     - individual_extraction: creates Individual and Relationship entities
      *     - schema_node_grounding: adds ExternalReference entries to an existing Class
      *     - schema_node_definition_refinement: updates the description of an existing Class
+     *       or PropertyDefinition
      *     - schema_node_connection_refinement: adds or removes Relationship entities
      *
      *     All created entities are stamped with Status.DRAFT and source_run_id set to the run ID
@@ -4106,6 +4107,12 @@ export interface components {
        * @default 0
        */
       properties_created: number;
+      /**
+       * Properties Updated
+       * @description PropertyDefinition entities updated
+       * @default 0
+       */
+      properties_updated: number;
       /**
        * Properties Skipped
        * @description PropertyDefinition candidates skipped (already exist)

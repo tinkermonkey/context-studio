@@ -124,7 +124,7 @@ class TestDefinitionRefinementOrchestrator:
             llm_provider=llm,
         )
 
-        with pytest.raises(PipelineInputError, match="Node with id"):
+        with pytest.raises(PipelineInputError, match="No class or property definition"):
             asyncio.run(orchestrator.execute(state))
 
     def test_handles_llm_json_with_code_fence(self, sample_class, session_factory):

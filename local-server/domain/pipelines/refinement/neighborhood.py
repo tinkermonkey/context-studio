@@ -21,6 +21,7 @@ class ClassNeighborhood:
 
     class_id: str
     class_label: str
+    class_description: str | None = None
     parent_class: Class | None = None
     sibling_classes: list[Class] | None = None
     child_classes: list[Class] | None = None
@@ -160,11 +161,40 @@ class SchemaNeighborhoodTraversal:
         return ClassNeighborhood(
             class_id=class_id,
             class_label=cls.title,
+            class_description=cls.description,
             parent_class=parent_class,
             sibling_classes=sibling_classes,
             child_classes=child_classes,
             property_definitions=property_defs,
         )
+
+    def get_node_neighborhood(self, node_id: str) -> ClassNeighborhood | PropertyNeighborhood:
+        """
+        Get neighborhood context for a class or a property definition.
+
+        Args:
+            node_id: ID of a class or a property definition
+
+        Returns:
+            ClassNeighborhood for a class, PropertyNeighborhood for a property definition
+
+        Raises:
+            ValueError: If node_id names neither
+        """
+        if self._ontology.get_class(node_id) is not None:
+            return self.get_class_neighborhood(node_id)
+        if self._ontology.get_property_definition(node_id) is not None:
+            return self.get_property_neighborhood(node_id)
+        raise ValueError(f"No class or property definition with id {node_id}")
+
+    def _declared_class_neighborhood(self, class_id: str | None) -> ClassNeighborhood | None:
+        """Neighborhood of a property's declared domain or range class, if it still exists."""
+        if not class_id:
+            return None
+        try:
+            return self.get_class_neighborhood(class_id)
+        except ValueError:
+            return None
 
     def get_property_neighborhood(
         self,
@@ -174,7 +204,9 @@ class SchemaNeighborhoodTraversal:
         Get neighborhood context for a property definition.
 
         Returns domain class neighborhood, range class neighborhood,
-        and sibling properties on the same domain class.
+        and sibling properties on the same domain class. The property's declared
+        domain and range classes come first; relationships that use the property
+        fill in whichever is missing.
 
         Args:
             property_id: ID of the property definition
@@ -189,8 +221,8 @@ class SchemaNeighborhoodTraversal:
         if prop_def is None:
             raise ValueError(f"Property definition not found: {property_id}")
 
-        domain_neighborhood = None
-        range_neighborhood = None
+        domain_neighborhood = self._declared_class_neighborhood(prop_def.domain_class_id)
+        range_neighborhood = self._declared_class_neighborhood(prop_def.range_class_id)
         sibling_properties = []
 
         # Find classes using this property by querying relationships
@@ -202,11 +234,11 @@ class SchemaNeighborhoodTraversal:
         if relationships_using_prop:
             # Get neighborhoods from the first few classes using this property
             domain_classes = set(r.source_id for r in relationships_using_prop)
-            if domain_classes:
+            if domain_classes and domain_neighborhood is None:
                 domain_neighborhood = self.get_class_neighborhood(next(iter(domain_classes)))
 
             range_classes = set(r.target_id for r in relationships_using_prop)
-            if range_classes:
+            if range_classes and range_neighborhood is None:
                 range_neighborhood = self.get_class_neighborhood(next(iter(range_classes)))
 
             # Get sibling properties from the domain class

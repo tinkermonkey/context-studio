@@ -1,8 +1,9 @@
 """
 Orchestrator for schema node definition refinement pipeline.
 
-Refines schema node definitions based on neighborhood context (parent,
-siblings, properties) and extraction examples. Uses LLM to generate
+Refines the definition of a class or a property definition from its
+neighborhood (for a class: parent, siblings, properties; for a property:
+domain and range classes, sibling properties) and extraction examples. Uses LLM to generate
 up to 3 candidate refined definitions with rationale citing inputs.
 """
 
@@ -21,7 +22,11 @@ from domain.pipelines.orchestration.base import (
     PipelineState,
 )
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
-from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
+from domain.pipelines.refinement.neighborhood import (
+    ClassNeighborhood,
+    PropertyNeighborhood,
+    SchemaNeighborhoodTraversal,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -31,6 +36,7 @@ class DefinitionRefinementState(PipelineState):
     """State for definition refinement pipeline execution."""
 
     node_id: str = ""
+    node_type: str = "Class"
     node_label: str = ""
     current_definition: str = ""
     candidates: list[dict[str, Any]] = field(default_factory=list)
@@ -122,10 +128,19 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
         try:
             # Step 1: Assemble context
             try:
-                neighborhood = self._traversal.get_class_neighborhood(node_id)
+                neighborhood = self._traversal.get_node_neighborhood(node_id)
             except ValueError as exc:
-                raise PipelineInputError(f"Node with id '{node_id}' not found or invalid") from exc
-            state = replace(state, node_label=neighborhood.class_label)
+                raise PipelineInputError(
+                    f"No class or property definition with id '{node_id}'"
+                ) from exc
+            if isinstance(neighborhood, PropertyNeighborhood):
+                state = replace(
+                    state,
+                    node_type="PropertyDefinition",
+                    node_label=neighborhood.property_label,
+                )
+            else:
+                state = replace(state, node_type="Class", node_label=neighborhood.class_label)
 
             # Step 2-4: Generate and score candidates
             model = state.input_data.get("model")
@@ -145,6 +160,7 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
                 current_status=PipelineRunStatus.COMPLETED,
                 result={
                     "node_id": node_id,
+                    "node_type": state.node_type,
                     "node_label": state.node_label,
                     "candidates": [
                         {
@@ -185,7 +201,7 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
 
     async def _generate_candidates(
         self,
-        neighborhood: Any,
+        neighborhood: ClassNeighborhood | PropertyNeighborhood,
         current_definition: str,
         groundings: list[dict[str, Any]],
         extraction_usages: list[dict[str, Any]],
@@ -196,7 +212,7 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
         Generate up to 3 candidate refined definitions.
 
         Args:
-            neighborhood: ClassNeighborhood context
+            neighborhood: ClassNeighborhood or PropertyNeighborhood context
             current_definition: Current definition to refine
             groundings: External groundings (optional)
             extraction_usages: Extraction usage examples (optional)
@@ -213,24 +229,14 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
         max_tokens = self._config.get("max_tokens", 2000)
 
         # Build context prompt
-        context_parts = [
-            f"Current definition: {current_definition}",
-            f"Class label: {neighborhood.class_label}",
-        ]
-
-        if neighborhood.parent_class:
-            context_parts.append(
-                f"Parent class: {neighborhood.parent_class.title} "
-                f"(definition: {neighborhood.parent_class.description or 'none'})"
-            )
-
-        if neighborhood.sibling_classes:
-            sibling_info = ", ".join([f"{s.title}" for s in neighborhood.sibling_classes[:3]])
-            context_parts.append(f"Sibling classes: {sibling_info}")
-
-        if neighborhood.property_definitions:
-            props_info = ", ".join([p.title for p in neighborhood.property_definitions[:3]])
-            context_parts.append(f"Properties: {props_info}")
+        if isinstance(neighborhood, PropertyNeighborhood):
+            context_parts = _property_context(neighborhood, current_definition)
+            node_kind = "property"
+            node_kind_detail = "property (a relationship type between classes)"
+        else:
+            context_parts = _class_context(neighborhood, current_definition)
+            node_kind = "class"
+            node_kind_detail = "schema class"
 
         if groundings:
             groundings_text = "\n".join(
@@ -246,13 +252,13 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
 
         system_prompt = (
             "You are an ontology refinement expert. Generate 2-3 alternative, improved "
-            "definitions for a schema class. Each definition should be grounded in specific "
+            f"definitions for a {node_kind_detail}. Each definition should be grounded in specific "
             "inputs (parent class definitions, sibling patterns, external sources, or usage "
             "examples). For each variant, cite which inputs informed it."
         )
 
         user_prompt = (
-            f"Refine this class definition:\n\n{context_str}\n\n"
+            f"Refine this {node_kind} definition:\n\n{context_str}\n\n"
             f"Return exactly 2-3 alternative definitions as a JSON array with keys: "
             f"'definition', 'rationale' (which inputs drove this variant), "
             f"'sources_used' (list of input types), 'confidence' (0.0-1.0)."
@@ -306,3 +312,51 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
 
         # Limit to 3 candidates
         return candidates[:3]
+
+
+def _class_context(neighborhood: ClassNeighborhood, current_definition: str) -> list[str]:
+    """Prompt lines describing a class and its neighbors."""
+    context_parts = [
+        f"Current definition: {current_definition}",
+        f"Class label: {neighborhood.class_label}",
+    ]
+
+    if neighborhood.parent_class:
+        context_parts.append(
+            f"Parent class: {neighborhood.parent_class.title} "
+            f"(definition: {neighborhood.parent_class.description or 'none'})"
+        )
+
+    if neighborhood.sibling_classes:
+        sibling_info = ", ".join([f"{s.title}" for s in neighborhood.sibling_classes[:3]])
+        context_parts.append(f"Sibling classes: {sibling_info}")
+
+    if neighborhood.property_definitions:
+        props_info = ", ".join([p.title for p in neighborhood.property_definitions[:3]])
+        context_parts.append(f"Properties: {props_info}")
+
+    return context_parts
+
+
+def _property_context(neighborhood: PropertyNeighborhood, current_definition: str) -> list[str]:
+    """Prompt lines describing a property definition, its domain and range, and siblings."""
+    context_parts = [
+        f"Current definition: {current_definition}",
+        f"Property label: {neighborhood.property_label}",
+    ]
+
+    for role, class_neighborhood in (
+        ("Domain class (subject)", neighborhood.domain_neighborhood),
+        ("Range class (object)", neighborhood.range_neighborhood),
+    ):
+        if class_neighborhood:
+            context_parts.append(
+                f"{role}: {class_neighborhood.class_label} "
+                f"(definition: {class_neighborhood.class_description or 'none'})"
+            )
+
+    if neighborhood.sibling_properties:
+        siblings = ", ".join([p.title for p in neighborhood.sibling_properties[:3]])
+        context_parts.append(f"Sibling properties: {siblings}")
+
+    return context_parts

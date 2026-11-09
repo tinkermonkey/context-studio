@@ -66,8 +66,6 @@ from adapters.web.schemas.pipelines import (
     NodeReference,
     PipelineConfigurationCreateRequest,
     PipelineConfigurationParameters,
-    StagePromptPayload,
-    StagePromptView,
     PipelineConfigurationResponse,
     PipelineConfigurationUpdateRequest,
     PipelineRunRequest,
@@ -80,6 +78,8 @@ from adapters.web.schemas.pipelines import (
     SchemaClassCandidate,
     SchemaConnectionCandidate,
     SchemaPropertyCandidate,
+    StagePromptPayload,
+    StagePromptView,
     TripleCandidate,
 )
 from adapters.web.schemas.versioning import VersioningChangeEventResponse
@@ -968,8 +968,8 @@ async def run_pipeline(
     - schema_node_grounding: requires node_id (a class) or node_label; optional
       sources (default: the configuration's sources). An unknown node_id is a 400;
       with async it fails the run instead
-    - schema_node_definition_refinement: requires node_id and
-      current_definition, optional groundings and extraction_usages
+    - schema_node_definition_refinement: requires node_id (a class or a property
+      definition) and current_definition, optional groundings and extraction_usages
     - schema_node_connection_refinement: requires scope_id and
       current_connections, optional groundings and extraction_usages
     - schema_relationship_reflection: requires taxonomy_id, optional scope (a
@@ -1764,6 +1764,7 @@ async def apply_pipeline_run(
     - individual_extraction: creates Individual and Relationship entities
     - schema_node_grounding: adds ExternalReference entries to an existing Class
     - schema_node_definition_refinement: updates the description of an existing Class
+      or PropertyDefinition
     - schema_node_connection_refinement: adds or removes Relationship entities
 
     All created entities are stamped with Status.DRAFT and source_run_id set to the run ID
@@ -1949,6 +1950,7 @@ async def apply_pipeline_run(
         classes_updated=apply_result.classes_updated,
         classes_skipped=apply_result.classes_skipped,
         properties_created=apply_result.properties_created,
+        properties_updated=apply_result.properties_updated,
         properties_skipped=apply_result.properties_skipped,
         relationships_created=apply_result.relationships_created,
         relationships_removed=apply_result.relationships_removed,

@@ -9,9 +9,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from domain.pipelines.apply_selection import ApplySelectionError
-
 from domain.ontology.entities import Class
+from domain.pipelines.apply_selection import ApplySelectionError
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus
 from domain.pipelines.schema_node_definition_refinement.apply_service import (
     SchemaDefinitionRefinementApplyService,
@@ -449,3 +448,66 @@ class TestDefinitionRefinementApplySelection:
                 sample_pipeline_run_with_candidates, accepted_candidate_ids=["refinement-9"]
             )
         mock_ontology_service.update_class.assert_not_called()
+
+
+def _property_run(candidates):
+    return PipelineRun(
+        id="run-prop-1",
+        batch_run_id="batch-prop-1",
+        implementation_id="default",
+        configuration_slug="definition-refinement-default",
+        configuration_version=1,
+        status=PipelineRunStatus.COMPLETED,
+        output_summary={
+            "node_id": "prop-7",
+            "node_type": "PropertyDefinition",
+            "candidates": candidates,
+        },
+    )
+
+
+class TestDefinitionRefinementApplyToProperty:
+    """A run that refined a property definition updates the property, not a class."""
+
+    def test_updates_the_property_definition(self, mock_ontology_repo, mock_ontology_service):
+        mock_ontology_repo.get_property_definition.return_value = Mock()
+        service = SchemaDefinitionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
+
+        result = service.apply(
+            _property_run(
+                [
+                    {"definition": "Weaker.", "confidence": 0.4},
+                    {"definition": "Links a service to what it calls.", "confidence": 0.9},
+                ]
+            )
+        )
+
+        assert result.properties_updated == 1
+        assert result.classes_updated == 0
+        mock_ontology_service.update_property_definition.assert_called_once_with(
+            "prop-7", description="Links a service to what it calls."
+        )
+        mock_ontology_service.update_class.assert_not_called()
+        mock_ontology_repo.get_class.assert_not_called()
+
+    def test_no_qualifying_candidate_skips_the_property(
+        self, mock_ontology_repo, mock_ontology_service
+    ):
+        mock_ontology_repo.get_property_definition.return_value = Mock()
+        service = SchemaDefinitionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
+
+        result = service.apply(
+            _property_run([{"definition": "Too unsure.", "confidence": 0.2}]),
+            confidence_threshold=0.5,
+        )
+
+        assert result.properties_skipped == 1
+        assert result.classes_skipped == 0
+        mock_ontology_service.update_property_definition.assert_not_called()
+
+    def test_missing_property_definition_raises(self, mock_ontology_repo, mock_ontology_service):
+        mock_ontology_repo.get_property_definition.return_value = None
+        service = SchemaDefinitionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
+
+        with pytest.raises(ValueError, match="Property definition prop-7 not found"):
+            service.apply(_property_run([{"definition": "x", "confidence": 0.9}]))
