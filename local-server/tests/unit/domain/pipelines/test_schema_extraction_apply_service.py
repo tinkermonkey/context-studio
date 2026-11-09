@@ -400,10 +400,23 @@ class TestRelationships:
 
 
 class TestValidation:
-    def test_raises_when_concept_scheme_id_empty(self, svc):
-        run = _make_run()
-        with pytest.raises(ValueError, match="concept_scheme_id"):
-            svc.apply(run, concept_scheme_id="", taxonomy_id=TAXONOMY_ID)
+    def test_new_class_without_a_scheme_raises_before_any_write(self, svc, repo):
+        repo.save_class(_existing_class("cls-existing", "Existing"))
+        run = _make_run(
+            candidates=[
+                {"kind": "class", "label": "Existing", "confidence": 0.9},
+                {"kind": "class", "label": "Brand New", "confidence": 0.9},
+            ]
+        )
+        with pytest.raises(ValueError, match="concept scheme for the new classes"):
+            svc.apply(run, taxonomy_id=TAXONOMY_ID)
+        assert [c.title for c in repo.list_classes(limit=None)] == ["Existing"]
+
+    def test_no_scheme_needed_when_every_class_exists(self, svc, repo):
+        repo.save_class(_existing_class("cls-existing", "Existing"))
+        run = _make_run(candidates=[{"kind": "class", "label": "existing", "confidence": 0.9}])
+        result = svc.apply(run, taxonomy_id=TAXONOMY_ID)
+        assert result.existing_candidate_ids == ["class-0"]
 
     def test_raises_when_taxonomy_id_empty(self, svc):
         run = _make_run()
@@ -509,3 +522,70 @@ class TestChangeTracking:
         result = svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
         assert result.properties_created == 0
         assert result.skipped_candidate_ids == ["property-0"]
+
+
+# ---------------------------------------------------------------------------
+# The whole taxonomy, not one scheme (#1314)
+# ---------------------------------------------------------------------------
+
+
+def _existing_class(cid, title, scheme=SCHEME_ID):
+    return Class(
+        id=cid,
+        concept_scheme_id=scheme,
+        taxonomy_id=TAXONOMY_ID,
+        identifier=cid.replace("-", "_"),
+        title=title,
+    )
+
+
+class TestTaxonomyWideClasses:
+    @pytest.fixture()
+    def other_scheme(self, repo):
+        repo.save_concept_scheme(
+            ConceptScheme(id="cs-other", taxonomy_id=TAXONOMY_ID, identifier="other", title="Other")
+        )
+        return "cs-other"
+
+    def test_class_in_another_scheme_is_reused_not_duplicated(self, svc, repo, other_scheme):
+        repo.save_class(_existing_class("cls-queue", "Queue", scheme=other_scheme))
+        run = _make_run(candidates=[{"kind": "class", "label": "queue", "confidence": 0.9}])
+
+        result = svc.apply(run, taxonomy_id=TAXONOMY_ID, concept_scheme_id=SCHEME_ID)
+
+        assert result.classes_created == 0
+        assert result.existing_candidate_ids == ["class-0"]
+        assert repo.list_classes(concept_scheme_id=SCHEME_ID, limit=None) == []
+
+    def test_connection_resolves_endpoints_across_schemes(self, svc, repo, other_scheme):
+        repo.save_class(_existing_class("cls-service", "Service"))
+        repo.save_class(_existing_class("cls-queue", "Queue", scheme=other_scheme))
+        repo.save_property_definition(
+            PropertyDefinition(id="prop-uses", identifier="uses", title="uses")
+        )
+        run = _make_run(
+            connections=[{"subject_ref": "Service", "predicate": "uses", "object_ref": "Queue"}]
+        )
+
+        result = svc.apply(run, taxonomy_id=TAXONOMY_ID)
+
+        assert result.relationships_created == 1
+        rel = repo.list_relationships(limit=None)[0]
+        assert (rel.source_id, rel.target_id) == ("cls-service", "cls-queue")
+
+    def test_same_title_in_two_schemes_reuses_the_oldest_schemes_class(
+        self, svc, repo, other_scheme
+    ):
+        repo.save_class(_existing_class("cls-a", "Service"))
+        repo.save_class(_existing_class("cls-b", "Service", scheme=other_scheme))
+        repo.save_property_definition(
+            PropertyDefinition(id="prop-uses", identifier="uses", title="uses")
+        )
+        repo.save_class(_existing_class("cls-db", "Database"))
+        run = _make_run(
+            connections=[{"subject_ref": "Service", "predicate": "uses", "object_ref": "Database"}]
+        )
+
+        svc.apply(run, taxonomy_id=TAXONOMY_ID)
+
+        assert repo.list_relationships(limit=None)[0].source_id == "cls-a"

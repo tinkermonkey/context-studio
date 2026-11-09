@@ -386,13 +386,18 @@ class TestApplyEndpointErrors:
         )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_schema_extraction_missing_concept_scheme_id_returns_400(self, client, pipeline_repo):
-        run_id = _create_and_complete_schema_run(pipeline_repo)
+    def test_schema_extraction_new_classes_without_a_scheme_returns_400(
+        self, client, pipeline_repo
+    ):
+        run_id = _create_and_complete_schema_run(
+            pipeline_repo, candidates=[{"kind": "class", "label": "Brand New", "confidence": 0.9}]
+        )
         response = client.post(
             f"/api/pipelines/runs/{run_id}/apply",
             params={"taxonomy_id": TAXONOMY_ID},
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "concept scheme for the new classes" in response.json()["detail"]
 
     def test_schema_extraction_missing_taxonomy_id_returns_400(self, client, pipeline_repo):
         run_id = _create_and_complete_schema_run(pipeline_repo)

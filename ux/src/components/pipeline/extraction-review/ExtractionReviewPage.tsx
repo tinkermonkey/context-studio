@@ -11,7 +11,6 @@ import {
   TextArea,
 } from "@tinkermonkey/heimdall-ui";
 import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
-import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { usePipelineImplementations } from "@/api/hooks/pipeline/usePipelineImplementations";
 import { usePipelineConfigurations } from "@/api/hooks/pipeline/usePipelineConfigurations";
 import {
@@ -35,18 +34,15 @@ const REVIEW_TABS: Array<{ id: ReviewKind; label: string }> = [
 const tabId = (kind: ReviewKind) => `extraction-review-tab-${kind}`;
 const tabPanelId = (kind: ReviewKind) => `extraction-review-tabpanel-${kind}`;
 
-/** Scope a run was started with; apply reads it, so it is fixed per run. */
+/** Taxonomy a run was started with; review and apply compare against it, so it is fixed per run. */
 export interface ReviewScope {
   taxonomyId: string;
   taxonomyLabel: string;
-  conceptSchemeId: string;
-  conceptSchemeLabel: string;
 }
 
 interface FormErrors {
   text?: string;
   taxonomy?: string;
-  scheme?: string;
   config?: string;
 }
 
@@ -83,7 +79,6 @@ export function ExtractionReviewPage({
 }: ExtractionReviewPageProps) {
   const [text, setText] = useState("");
   const [taxonomyChoice, setTaxonomyChoice] = useState("");
-  const [schemeChoice, setSchemeChoice] = useState("");
   const [implChoice, setImplChoice] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   // After the first run attempt, an emptied paragraph re-shows its error on blur.
@@ -110,12 +105,6 @@ export function ExtractionReviewPage({
     taxonomies[0]?.id ||
     "";
   const taxonomy = taxonomies.find((t) => t.id === taxonomyId);
-
-  const { data: schemeList } = useSchemes(taxonomyId || undefined);
-  const schemes = taxonomyId ? (schemeList?.items ?? []) : [];
-  const schemeId =
-    (schemes.some((s) => s.id === schemeChoice) ? schemeChoice : "") || schemes[0]?.id || "";
-  const scheme = schemes.find((s) => s.id === schemeId);
 
   const { data: schemaImpls } = usePipelineImplementations("schema_extraction");
   const { data: individualImpls } = usePipelineImplementations("individual_extraction");
@@ -147,12 +136,9 @@ export function ExtractionReviewPage({
     setText(initialRun.source_text ?? "");
     // Point the scope pickers at the run's scope so its labels resolve.
     setTaxonomyChoice(asText(input.taxonomy_id));
-    setSchemeChoice(asText(input.concept_scheme_id));
     setScope({
       taxonomyId: asText(input.taxonomy_id),
       taxonomyLabel: asText(input.taxonomy_name) || asText(input.taxonomy_id) || "—",
-      conceptSchemeId: asText(input.concept_scheme_id),
-      conceptSchemeLabel: asText(input.concept_scheme_id) || "—",
     });
     openRun(initialRun);
   }, [initialRun, openedRunId, openRun]);
@@ -178,24 +164,18 @@ export function ExtractionReviewPage({
     const next: FormErrors = {};
     if (!text.trim()) next.text = TEXT_REQUIRED;
     if (!taxonomy) next.taxonomy = "Select a taxonomy";
-    if (!scheme) next.scheme = "Select a concept scheme";
     if (!schemaConfig || !individualConfig) next.config = "Select a configuration";
     setErrors(next);
     setAttempted(true);
-    if (Object.keys(next).length > 0 || !taxonomy || !scheme) return;
+    if (Object.keys(next).length > 0 || !taxonomy) return;
 
-    const taxonomyLabel = `${taxonomy.title} · ${taxonomy.identifier}`;
-    const schemeLabel = `${scheme.title} · ${scheme.identifier}`;
     setScope({
       taxonomyId: taxonomy.id,
-      taxonomyLabel,
-      conceptSchemeId: scheme.id,
-      conceptSchemeLabel: schemeLabel,
+      taxonomyLabel: `${taxonomy.title} · ${taxonomy.identifier}`,
     });
     void runs.start({
       text,
       taxonomy: { id: taxonomy.id, label: taxonomy.title },
-      conceptScheme: { id: scheme.id, label: scheme.title },
       implementationId: implId,
       schemaConfigRef: schemaConfig!.config_ref,
       individualConfigRef: individualConfig!.config_ref,
@@ -204,22 +184,10 @@ export function ExtractionReviewPage({
     });
   };
 
-  const reviewScope: ReviewScope = {
-    ...(scope ?? {
-      taxonomyId: "",
-      taxonomyLabel: "—",
-      conceptSchemeId: "",
-      conceptSchemeLabel: "—",
-    }),
-  };
-  // An opened run only carries its scope ids; use the picker labels once they load.
-  if (showingOpenedRun) {
-    if (taxonomy?.id === reviewScope.taxonomyId) {
-      reviewScope.taxonomyLabel = `${taxonomy.title} · ${taxonomy.identifier}`;
-    }
-    if (scheme?.id === reviewScope.conceptSchemeId) {
-      reviewScope.conceptSchemeLabel = `${scheme.title} · ${scheme.identifier}`;
-    }
+  const reviewScope: ReviewScope = { ...(scope ?? { taxonomyId: "", taxonomyLabel: "—" }) };
+  // An opened run only carries its taxonomy id; use the picker label once it loads.
+  if (showingOpenedRun && taxonomy?.id === reviewScope.taxonomyId) {
+    reviewScope.taxonomyLabel = `${taxonomy.title} · ${taxonomy.identifier}`;
   }
 
   return (
@@ -296,8 +264,7 @@ export function ExtractionReviewPage({
                 value={taxonomyId}
                 onChange={(v) => {
                   setTaxonomyChoice(v);
-                  setSchemeChoice("");
-                  setErrors((prev) => ({ ...prev, taxonomy: undefined, scheme: undefined }));
+                  setErrors((prev) => ({ ...prev, taxonomy: undefined }));
                 }}
                 placeholder="Select a taxonomy"
                 ariaLabel="Taxonomy"
@@ -307,25 +274,6 @@ export function ExtractionReviewPage({
                 {taxonomies.map((t) => (
                   <Select.Item key={t.id} value={t.id}>
                     {`${t.title} · ${t.identifier}`}
-                  </Select.Item>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Concept scheme" required hint="schema target" error={errors.scheme}>
-              <Select
-                value={schemeId}
-                onChange={(v) => {
-                  setSchemeChoice(v);
-                  setErrors((prev) => ({ ...prev, scheme: undefined }));
-                }}
-                placeholder="Select a concept scheme"
-                ariaLabel="Concept scheme"
-                error={!!errors.scheme}
-                data-testid="extraction-review-scheme"
-              >
-                {schemes.map((s) => (
-                  <Select.Item key={s.id} value={s.id}>
-                    {`${s.title} · ${s.identifier}`}
                   </Select.Item>
                 ))}
               </Select>

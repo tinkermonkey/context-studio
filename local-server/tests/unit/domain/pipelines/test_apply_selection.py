@@ -338,7 +338,7 @@ def _schema_summary():
 class TestSchemaAcceptedCandidates:
     def test_threshold_only_apply_reports_outcomes(self, schema_svc, repo):
         run = _run(_schema_summary(), PipelineType.SCHEMA_EXTRACTION)
-        result = schema_svc.apply(run, SCHEME_ID, TAXONOMY_ID, confidence_threshold=0.5)
+        result = schema_svc.apply(run, TAXONOMY_ID, SCHEME_ID, confidence_threshold=0.5)
         assert result.classes_created == 1
         assert result.applied_candidate_ids == ["class-0", "property-0"]
         # Connection skipped because its subject class (Client) was below threshold.
@@ -348,8 +348,8 @@ class TestSchemaAcceptedCandidates:
         run = _run(_schema_summary(), PipelineType.SCHEMA_EXTRACTION)
         result = schema_svc.apply(
             run,
-            SCHEME_ID,
             TAXONOMY_ID,
+            SCHEME_ID,
             confidence_threshold=0.5,
             accepted_candidate_ids=["class-0", "class-1", "property-0", "connection-0"],
         )
@@ -364,8 +364,8 @@ class TestSchemaAcceptedCandidates:
         run = _run(_schema_summary(), PipelineType.SCHEMA_EXTRACTION)
         result = schema_svc.apply(
             run,
-            SCHEME_ID,
             TAXONOMY_ID,
+            SCHEME_ID,
             accepted_candidate_ids=["class-0", "property-0", "connection-0"],
         )
         assert result.relationships_created == 0
@@ -374,7 +374,7 @@ class TestSchemaAcceptedCandidates:
     def test_unknown_ids_raise_before_any_write(self, schema_svc, repo):
         run = _run(_schema_summary(), PipelineType.SCHEMA_EXTRACTION)
         with pytest.raises(ApplySelectionError, match="class-9"):
-            schema_svc.apply(run, SCHEME_ID, TAXONOMY_ID, accepted_candidate_ids=["class-9"])
+            schema_svc.apply(run, TAXONOMY_ID, SCHEME_ID, accepted_candidate_ids=["class-9"])
         assert len(repo.list_classes(concept_scheme_id=SCHEME_ID, limit=None)) == 1
 
 
@@ -424,7 +424,7 @@ class TestSchemaSkipReasons:
         }
         run = _run(summary, PipelineType.SCHEMA_EXTRACTION)
 
-        result = schema_svc.apply(run, SCHEME_ID, TAXONOMY_ID, confidence_threshold=0.5)
+        result = schema_svc.apply(run, TAXONOMY_ID, SCHEME_ID, confidence_threshold=0.5)
 
         assert result.applied_candidate_ids == ["class-0"]
         assert result.skip_reasons == {
@@ -439,7 +439,7 @@ class TestSchemaSkipReasons:
     def test_unaccepted_candidates_are_not_selected(self, schema_svc, repo):
         run = _run(_schema_summary(), PipelineType.SCHEMA_EXTRACTION)
         result = schema_svc.apply(
-            run, SCHEME_ID, TAXONOMY_ID, accepted_candidate_ids=["class-0", "connection-0"]
+            run, TAXONOMY_ID, SCHEME_ID, accepted_candidate_ids=["class-0", "connection-0"]
         )
         assert result.skip_reasons == {
             "class-1": "not_selected",

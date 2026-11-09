@@ -17,7 +17,7 @@ The expected apply/revert results below were verified on 2026-10-23 against a sc
   - `POST /api/pipelines/{schema_extraction|individual_extraction}/run`: **intercepted** (seeded or failed)
   - `GET /api/pipelines/runs/{id}/schema-extraction-candidates`, `GET /api/pipelines/runs/{id}/individual-extraction-candidates`
   - `POST /api/pipelines/runs/{id}/recognition-preview` (UI sends `confidence_threshold: 0`, `recognition_threshold: 0.9`)
-  - `POST /api/pipelines/runs/{id}/apply` (schema: `taxonomy_id` + `concept_scheme_id` query params; individual: `taxonomy_id` + `recognition_threshold=0.9`; body `{accepted_candidate_ids, recognition_decisions?}`)
+  - `POST /api/pipelines/runs/{id}/apply` (schema: `taxonomy_id`, plus `concept_scheme_id` only when new classes are created; individual: `taxonomy_id` + `recognition_threshold=0.9`; body `{accepted_candidate_ids, recognition_decisions?}`)
   - `POST /api/pipelines/runs/{id}/revert`, `GET /api/pipelines/runs/{id}/change-events`
   - Verification reads: `GET /api/classes?concept_scheme_id=`, `GET /api/properties`, `GET /api/relationships?source_id=&property_id=`, `GET /api/individuals?class_id=`, `GET /api/individuals/{id}`
 - **DB state**: ontology wiped before each test by `fixtures/app-test`. Pipeline runs are NOT wiped (no delete endpoint), so never assert global run counts; always address runs by the id from the intercepted record.
@@ -38,7 +38,7 @@ Created in this order (order matters for the taxonomy auto-pick check):
 |---|---|---|
 | `decoy` | `createTaxonomy(page, { title: "Acme Glossary" })` | created FIRST so `taxonomies[0]` is not `dr_spec` |
 | `tax` | `apiRequest(page, "/api/taxonomies", { method: "POST", body: { title: "Documentation Robotics", identifier: "dr_spec", description: "DR spec ontology" } })` | select label `Documentation Robotics · dr_spec` |
-| `scheme` | `apiRequest` POST `/api/taxonomies/{tax.id}/schemes` with `{ title: "Application Layer", identifier: "application", description: "DR application layer" }` | select label `Application Layer · application` |
+| `scheme` | `apiRequest` POST `/api/taxonomies/{tax.id}/schemes` with `{ title: "Application Layer", identifier: "application", description: "DR application layer" }` | apply-bar label `Application Layer · application` (the only scheme, so new classes go there) |
 | `componentClass` | `createClass(page, scheme.id, { title: "Application Component" })` | |
 | `serviceClass` | `createClass(page, scheme.id, { title: "Application Service" })` | |
 | `interfaceClass` | `createClass(page, scheme.id, { title: "Application Interface" })` | has NO individuals (keeps recognition for new mentions deterministic, no LLM tiebreak) |
@@ -146,7 +146,7 @@ Individual-tab highlight segments:
 - **Preconditions**: `seedDrScope(page)`; `routeRunsToSeededOutput(page, { schema_extraction: schemaOutput(), individual_extraction: individualOutput(seed) })`; run-POST counter attached. Navigate to `/app/pipelines/review`.
 - **Steps**:
   1. Wait for `extraction-review-page`.
-  2. Assert `extraction-review-taxonomy` contains `Documentation Robotics · dr_spec` (auto-picked over the earlier-created "Acme Glossary") and `extraction-review-scheme` contains `Application Layer · application`. Assert `extraction-review-config-refs` is visible and contains `schema-extraction-default`.
+  2. Assert `extraction-review-taxonomy` contains `Documentation Robotics · dr_spec` (auto-picked over the earlier-created "Acme Glossary") and `extraction-review-scheme` is absent (extraction is not scoped to a scheme). Assert `extraction-review-config-refs` is visible and contains `schema-extraction-default`.
   3. Assert both tabs idle: `extraction-review-schema-idle` is visible; switch to the Individual tab, `extraction-review-individual-idle` is visible; switch back.
   4. With an empty paragraph, click `extraction-review-run`.
   5. Assert `getByText("Paste a paragraph to extract from", { exact: true })` is visible and `extraction-review-text` has `aria-invalid="true"`. Assert the run-POST counter is 0 for both types and `extraction-review-schema-idle` is still visible.
@@ -158,14 +158,14 @@ Individual-tab highlight segments:
   11. Assert `extraction-review-stale` is visible and `extraction-review-schema-source` still has text exactly `TEXT` (highlights show the text that was run).
   12. `fill(TEXT)`. Assert `extraction-review-stale` has count 0.
 - **Expected Result**: dr_spec is preferred. The empty-paragraph error blocks the run (no POST), clears on the first keystroke, and returns on blur. A valid run completes both tabs. Editing the text after the run shows the stale warning without changing the highlighted run text, and restoring the exact text clears it.
-- **Selectors Used**: `extraction-review-page`, `extraction-review-taxonomy`, `extraction-review-scheme`, `extraction-review-config-refs`, `extraction-review-run`, `extraction-review-text`, `extraction-review-tabs`, `extraction-review-schema-idle`, `extraction-review-individual-idle`, `extraction-review-schema-run-meta`, `extraction-review-schema-candidates`, `extraction-review-stale`, `extraction-review-schema-source`
+- **Selectors Used**: `extraction-review-page`, `extraction-review-taxonomy`, `extraction-review-config-refs`, `extraction-review-run`, `extraction-review-text`, `extraction-review-tabs`, `extraction-review-schema-idle`, `extraction-review-individual-idle`, `extraction-review-schema-run-meta`, `extraction-review-schema-candidates`, `extraction-review-stale`, `extraction-review-schema-source`
 - **Invariants Verified**: INV-7, INV-8, INV-1 (no run POST on invalid input)
 
 ### Test Case 2: Schema tab: review, span → inspector, confirm with orphan warning, apply result, persistence
 
 - **Preconditions**: as TC1; `intercepted = await routeRunsToSeededOutput(...)`. Navigate, `fill(TEXT)`, click Run, wait for `extraction-review-schema-run-meta` to contain `COMPLETED`.
 - **Steps**:
-  1. Assert `extraction-review-schema-run-meta` contains `intercepted.schema_extraction.run.id`. Assert the intercepted request: `documents` equals `[TEXT]`, `scope === tax.id`, `concept_scheme_id === scheme.id`, `implementation_id === "default"`.
+  1. Assert `extraction-review-schema-run-meta` contains `intercepted.schema_extraction.run.id`. Assert the intercepted request: `documents` equals `[TEXT]`, `scope === tax.id`, no `concept_scheme_id`, `implementation_id === "default"`.
   2. **Nothing written yet**: `GET /api/classes?concept_scheme_id={scheme.id}` titles (sorted) equal `["Application Component", "Application Interface", "Application Service"]`.
   3. Classes filter is active by default: `extraction-review-schema-decision-class-0`, `-class-1`, `-class-2` are visible; `extraction-review-schema-decision-property-0` has count 0.
   4. Click `...-decision-class-0-yes`, `...-decision-class-1-yes`, `...-decision-class-2-no`. Assert each has `aria-pressed="true"`.
@@ -173,7 +173,7 @@ Individual-tab highlight segments:
   6. Click `extraction-review-schema-inspector-decision-yes`. Assert `extraction-review-schema-decision-property-0-yes` has `aria-pressed="true"`.
   7. Click the same span again (it cycles through overlapping items). Assert the Connections radio is checked and the inspector contains `SCHEMA CONNECTION CANDIDATE` and `Application Service → publishes → Event Stream`.
   8. Click `...-decision-connection-0-yes` and `...-decision-connection-1-yes`.
-  9. Assert `extraction-review-schema-apply-bar` contains `5 accepted`, `1 rejected`, `0 pending`, `Documentation Robotics · dr_spec`, `Application Layer · application`. `extraction-review-schema-apply` is enabled and contains `Apply 5 accepted`.
+  9. Assert `extraction-review-schema-apply-bar` contains `5 accepted`, `1 rejected`, `0 pending`, `Documentation Robotics · dr_spec`, `new classes go to`, `Application Layer · application`. `extraction-review-schema-apply` is enabled and contains `Apply 5 accepted`.
   10. Click `extraction-review-schema-apply`. Assert `extraction-review-schema-confirm` is visible and `extraction-review-schema-orphan-warning` contains `1 accepted connection points at a proposed class you did not accept` and `Billing System → publishes → Event Stream`.
   11. Start the apply request/response wait, then click the dialog button `Apply 5 accepted`.
   12. Request: query `taxonomy_id === tax.id`, `concept_scheme_id === scheme.id`, no `confidence_threshold`. Body `accepted_candidate_ids` (sorted) equals `["class-0","class-1","connection-0","connection-1","property-0"]` and has no `recognition_decisions`.
@@ -248,7 +248,7 @@ Individual-tab highlight segments:
   2. Switch to the Individual tab. Assert `extraction-review-individual-run-meta` contains `COMPLETED` and `ind.individual_extraction.run.id`. Click `extraction-review-individual-decision-triple-0-yes` and assert pressed.
   3. `await page.unroute("**/api/pipelines/schema_extraction/run")`, then `const schema = await routeRunsToSeededOutput(page, { schema_extraction: schemaOutput() })`.
   4. Switch to the Schema tab and click `extraction-review-schema-retry`.
-  5. Assert `extraction-review-schema-run-meta` contains `COMPLETED` and `schema.schema_extraction.run.id`. `extraction-review-schema-decision-class-0` is visible and `extraction-review-schema-failed` has count 0. The retried request still carries `documents: [TEXT]`, `scope: tax.id`, `concept_scheme_id: scheme.id`.
+  5. Assert `extraction-review-schema-run-meta` contains `COMPLETED` and `schema.schema_extraction.run.id`. `extraction-review-schema-decision-class-0` is visible and `extraction-review-schema-failed` has count 0. The retried request still carries `documents: [TEXT]`, `scope: tax.id`, and no `concept_scheme_id`.
   6. Other tab untouched: the counter shows exactly 1 individual_extraction POST and 2 schema_extraction POSTs. On the Individual tab the run-meta still shows the original `ind.individual_extraction.run.id` and `...-decision-triple-0-yes` still has `aria-pressed="true"`.
 - **Expected Result**: A failed run is isolated to its tab with the server reason and a retry. Retry re-runs only that pipeline with the last request, and the other review session (run and decisions) survives.
 - **Selectors Used**: `extraction-review-run`, `extraction-review-text`, `extraction-review-tabs`, `extraction-review-schema-failed`, `extraction-review-schema-run-meta`, `extraction-review-schema-retry`, `extraction-review-schema-apply-bar`, `extraction-review-schema-decision-class-0`, `extraction-review-individual-run-meta`, `extraction-review-individual-decision-triple-0-yes`

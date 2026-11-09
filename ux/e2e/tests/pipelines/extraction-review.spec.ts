@@ -288,7 +288,8 @@ async function openReview(page: Page): Promise<void> {
   await page.waitForLoadState("networkidle");
   await expect(page.getByTestId("extraction-review-page")).toBeVisible();
   await expect(page.getByTestId("extraction-review-taxonomy")).toContainText(TAXONOMY_LABEL);
-  await expect(page.getByTestId("extraction-review-scheme")).toContainText(SCHEME_LABEL);
+  // Extraction is not scoped to a concept scheme: the form only picks a taxonomy.
+  await expect(page.getByTestId("extraction-review-scheme")).toHaveCount(0);
   await expect(page.getByTestId("extraction-review-config-refs")).toBeVisible();
 }
 
@@ -458,7 +459,7 @@ test.describe("Extraction review", () => {
     await expect(page.getByTestId("extraction-review-schema-run-meta")).toContainText(runId);
     expect(schemaRun.request.documents).toEqual([TEXT]);
     expect(schemaRun.request.scope).toBe(seed.tax.id);
-    expect(schemaRun.request.concept_scheme_id).toBe(seed.scheme.id);
+    expect(schemaRun.request.concept_scheme_id).toBeUndefined();
     expect(schemaRun.request.implementation_id).toBe("default");
 
     // Nothing written yet.
@@ -514,6 +515,8 @@ test.describe("Extraction review", () => {
       "1 rejected",
       "0 pending",
       TAXONOMY_LABEL,
+      // The taxonomy's only scheme is named, not asked for.
+      "new classes go to",
       SCHEME_LABEL,
     ]) {
       await expect(applyBar).toContainText(expected);
@@ -959,7 +962,7 @@ test.describe("Extraction review", () => {
       const retried = schema.schema_extraction!.request;
       expect(retried.documents).toEqual([TEXT]);
       expect(retried.scope).toBe(seed.tax.id);
-      expect(retried.concept_scheme_id).toBe(seed.scheme.id);
+      expect(retried.concept_scheme_id).toBeUndefined();
 
       // The other tab's run and decisions survive.
       expect(posts).toEqual({ schema_extraction: 2, individual_extraction: 1 });

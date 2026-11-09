@@ -130,11 +130,11 @@ class RecognitionPreviewRequest(BaseModel):
         description="Minimum confidence threshold for individual recognition matches (0.0–1.0). "
         "Matches below this threshold are not reported.",
     )
-    concept_scheme_id: Optional[str] = Field(
+    taxonomy_id: Optional[str] = Field(
         None,
-        description="Concept scheme the run would be applied to. Required for "
-        "schema_extraction runs, whose candidates are matched against its classes; "
-        "ignored for individual_extraction runs.",
+        description="Taxonomy the run would be applied to. Required for "
+        "schema_extraction runs, whose candidates are matched against every class "
+        "in it; ignored for individual_extraction runs.",
     )
 
 

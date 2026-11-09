@@ -37,7 +37,7 @@ export function useIndividualExtractionCandidates(runId: string, enabled?: boole
 
 /**
  * Recognition preview is a zero-write POST, so it is modelled as a query keyed
- * on the run and request (thresholds; concept_scheme_id for schema runs); it
+ * on the run and request (thresholds; taxonomy_id for schema runs); it
  * recomputes against the current graph on refetch.
  */
 export function useRecognitionPreview(

@@ -4405,10 +4405,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Target concept scheme (required for schema_extraction)",
+              "description": "schema_extraction: the concept scheme new classes go to; required only when the selection creates a class",
               "title": "Concept Scheme Id"
             },
-            "description": "Target concept scheme (required for schema_extraction)"
+            "description": "schema_extraction: the concept scheme new classes go to; required only when the selection creates a class"
           },
           {
             "name": "taxonomy_id",
@@ -15334,7 +15334,7 @@
             "description": "Minimum confidence threshold for individual recognition matches (0.0\u20131.0). Matches below this threshold are not reported.",
             "default": 0.9
           },
-          "concept_scheme_id": {
+          "taxonomy_id": {
             "anyOf": [
               {
                 "type": "string"
@@ -15343,8 +15343,8 @@
                 "type": "null"
               }
             ],
-            "title": "Concept Scheme Id",
-            "description": "Concept scheme the run would be applied to. Required for schema_extraction runs, whose candidates are matched against its classes; ignored for individual_extraction runs."
+            "title": "Taxonomy Id",
+            "description": "Taxonomy the run would be applied to. Required for schema_extraction runs, whose candidates are matched against every class in it; ignored for individual_extraction runs."
           }
         },
         "type": "object",

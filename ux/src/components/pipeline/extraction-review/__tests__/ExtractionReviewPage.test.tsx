@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
@@ -105,9 +105,6 @@ describe("ExtractionReviewPage", () => {
     await renderPage();
     expect(screen.getByTestId("extraction-review-page")).toBeInTheDocument();
     expect(screen.getByTestId("extraction-review-taxonomy")).toHaveValue("tax-dr");
-    await waitFor(() =>
-      expect(screen.getByTestId("extraction-review-scheme")).toHaveValue("scheme-app"),
-    );
     // Individual config is paired with the schema config by provider + model.
     expect(screen.getByTestId("extraction-review-config-refs")).toHaveTextContent(
       "schema-extraction-default v1 · extraction-openrouter-default v1",
@@ -142,9 +139,6 @@ describe("ExtractionReviewPage", () => {
   it("starts both runs on the same text and reviews them in place", async () => {
     mockRuns("ok");
     await renderPage();
-    await waitFor(() =>
-      expect(screen.getByTestId("extraction-review-scheme")).toHaveValue("scheme-app"),
-    );
     await userEvent.type(screen.getByTestId("extraction-review-text"), XR_TEXT);
     await userEvent.click(screen.getByTestId("extraction-review-run"));
 
@@ -154,7 +148,6 @@ describe("ExtractionReviewPage", () => {
       configuration_ref: "schema-extraction-default",
       documents: [XR_TEXT],
       scope: "tax-dr",
-      concept_scheme_id: "scheme-app",
       model: "gemini-flash",
     });
     expect(runBodies.individual_extraction).toMatchObject({
@@ -195,9 +188,6 @@ describe("ExtractionReviewPage", () => {
   it("keeps one tab reviewable when the other run fails", async () => {
     mockRuns("fail");
     await renderPage();
-    await waitFor(() =>
-      expect(screen.getByTestId("extraction-review-scheme")).toHaveValue("scheme-app"),
-    );
     await userEvent.type(screen.getByTestId("extraction-review-text"), XR_TEXT);
     await userEvent.click(screen.getByTestId("extraction-review-run"));
     expect(await screen.findByTestId("extraction-review-schema-candidates")).toBeInTheDocument();
@@ -210,9 +200,6 @@ describe("ExtractionReviewPage", () => {
   it("warns that highlights are stale once the paragraph changes after a run", async () => {
     mockRuns("ok");
     await renderPage();
-    await waitFor(() =>
-      expect(screen.getByTestId("extraction-review-scheme")).toHaveValue("scheme-app"),
-    );
     const textarea = screen.getByTestId("extraction-review-text");
     await userEvent.type(textarea, XR_TEXT);
     expect(screen.queryByTestId("extraction-review-stale")).not.toBeInTheDocument();

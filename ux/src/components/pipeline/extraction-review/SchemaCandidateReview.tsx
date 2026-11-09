@@ -7,11 +7,13 @@ import {
   KVGrid,
   Panel,
   SegmentedControl,
+  Select,
   StatGrid,
   StatTile,
   Table,
 } from "@tinkermonkey/heimdall-ui";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { useSchemes } from "@/api/hooks/ontology/useSchemes";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
 import {
   useRecognitionPreview,
@@ -136,8 +138,8 @@ export function SchemaCandidateReview({ slot, text, scope, onRetry }: SchemaCand
   const { data, isLoading, error, refetch } = useSchemaExtractionCandidates(runId, completed);
   const previewQuery = useRecognitionPreview(
     runId,
-    { confidence_threshold: 0, concept_scheme_id: scope.conceptSchemeId },
-    completed && !!scope.conceptSchemeId,
+    { confidence_threshold: 0, taxonomy_id: scope.taxonomyId },
+    completed && !!scope.taxonomyId,
   );
 
   let body;
@@ -239,13 +241,33 @@ function SchemaCandidateReviewBody({
     [rows],
   );
 
+  const accepted = rows.filter((r) => decisions[r.id] === "yes");
+  // Accepted classes that don't exist yet need a concept scheme to go to;
+  // classes that already exist anywhere in the taxonomy are reused.
+  const newClassCount = accepted.filter(
+    (r) => r.candidate_type === "schema_class" && !hitById.get(r.id)?.will_match_existing,
+  ).length;
+  const { data: schemeList, error: schemesError } = useSchemes(
+    scope.taxonomyId || undefined,
+    undefined,
+    { enabled: !!scope.taxonomyId },
+  );
+  const schemes = schemeList?.items ?? [];
+  const [targetChoice, setTargetChoice] = useState("");
+  const targetScheme =
+    schemes.length === 1 ? schemes[0] : schemes.find((s) => s.id === targetChoice);
+  const targetMissing = newClassCount > 0 && !targetScheme;
+  const targetLabel = targetScheme ? `${targetScheme.title} · ${targetScheme.identifier}` : "";
+
   const applyInput = {
     runId,
     kind: "schema" as const,
-    scope: { taxonomy_id: scope.taxonomyId, concept_scheme_id: scope.conceptSchemeId },
+    scope: {
+      taxonomy_id: scope.taxonomyId,
+      concept_scheme_id: newClassCount > 0 ? targetScheme?.id : undefined,
+    },
     decisions,
   };
-  const accepted = rows.filter((r) => decisions[r.id] === "yes");
   // A connection whose endpoint is a proposed class that is not accepted (and does
   // not already exist) is skipped on apply.
   const unacceptedClassLabels = new Set(
@@ -505,7 +527,7 @@ function SchemaCandidateReviewBody({
         <Panel
           noPadding
           title="Candidates"
-          subtitle={`Accept or reject each proposal. Existing: "exists" is reused on apply, "similar" is close to a class already in ${scope.conceptSchemeLabel}.`}
+          subtitle={`Accept or reject each proposal. Existing: "exists" is reused on apply, "similar" is close to a class already in ${scope.taxonomyLabel}.`}
           headerAction={
             <SegmentedControl
               value={kind}
@@ -535,7 +557,25 @@ function SchemaCandidateReviewBody({
       <ApplyBar
         kind="schema"
         counts={counts}
-        scope={{ taxonomyLabel: scope.taxonomyLabel, conceptSchemeLabel: scope.conceptSchemeLabel }}
+        scope={{ taxonomyLabel: scope.taxonomyLabel }}
+        target={
+          newClassCount > 0 && !flow.applied
+            ? {
+                key: "new classes go to",
+                value: (
+                  <TargetSchemePicker
+                    schemes={schemes}
+                    loaded={schemeList !== undefined}
+                    error={schemesError}
+                    value={targetChoice}
+                    onChange={setTargetChoice}
+                    newClassCount={newClassCount}
+                  />
+                ),
+              }
+            : undefined
+        }
+        applyDisabled={targetMissing}
         applied={flow.applied}
         busy={flow.busy}
         onApply={flow.openConfirm}
@@ -556,7 +596,7 @@ function SchemaCandidateReviewBody({
         onConfirm={() => flow.confirm(applyInput)}
         variant="primary"
         title="Apply schema extraction"
-        subtitle={`${runId} → ${scope.taxonomyLabel} / ${scope.conceptSchemeLabel}`}
+        subtitle={`${runId} → ${scope.taxonomyLabel}${newClassCount > 0 ? ` · new classes go to ${targetLabel}` : ""}`}
         confirmLabel={`Apply ${counts.yes} accepted`}
         message={
           <div className="xr-stack-sm" data-testid="extraction-review-schema-confirm">
@@ -583,5 +623,76 @@ function SchemaCandidateReviewBody({
         }
       />
     </>
+  );
+}
+
+type SchemeOption = { id: string; title: string; identifier: string };
+
+/** Where the accepted classes that don't exist yet are created. */
+function TargetSchemePicker({
+  schemes,
+  loaded,
+  error,
+  value,
+  onChange,
+  newClassCount,
+}: {
+  schemes: SchemeOption[];
+  loaded: boolean;
+  error?: Error | null;
+  value: string;
+  onChange: (id: string) => void;
+  newClassCount: number;
+}) {
+  const label = (s: SchemeOption) => `${s.title} · ${s.identifier}`;
+  if (error) {
+    return <ErrorBanner error={error} compact message="Could not load concept schemes" />;
+  }
+  if (!loaded) return <span className="xr-mono-muted">loading concept schemes…</span>;
+  if (schemes.length === 0) {
+    return (
+      <span
+        className="xr-target-error"
+        role="alert"
+        data-testid="extraction-review-schema-no-schemes"
+      >
+        This taxonomy has no concept schemes. Add one before applying new classes.
+      </span>
+    );
+  }
+  if (schemes.length === 1) {
+    return (
+      <span className="xr-mono" data-testid="extraction-review-schema-target-scheme">
+        {label(schemes[0])}
+      </span>
+    );
+  }
+  const chosen = schemes.some((s) => s.id === value);
+  return (
+    <div className="xr-stack-sm">
+      <Select
+        value={chosen ? value : ""}
+        onChange={onChange}
+        placeholder="Choose a concept scheme"
+        ariaLabel="Concept scheme for new classes"
+        data-testid="extraction-review-schema-target-scheme"
+      >
+        {schemes.map((s) => (
+          <Select.Item key={s.id} value={s.id}>
+            {label(s)}
+          </Select.Item>
+        ))}
+      </Select>
+      {!chosen && (
+        // A polite live region: says why Apply is disabled without shouting
+        <span
+          className="xr-target-hint"
+          role="status"
+          data-testid="extraction-review-schema-target-hint"
+        >
+          {`Choose where the ${newClassCount} new class${newClassCount > 1 ? "es go" : " goes"}.`}
+        </span>
+      )}
+    </div>
   );
 }

@@ -1684,7 +1684,10 @@ async def apply_pipeline_run(
     request: Request,
     concept_scheme_id: Optional[str] = Query(
         None,
-        description="Target concept scheme (required for schema_extraction)",
+        description=(
+            "schema_extraction: the concept scheme new classes go to; required only "
+            "when the selection creates a class"
+        ),
     ),
     taxonomy_id: Optional[str] = Query(
         None, description="Parent taxonomy (required for schema_extraction)"
@@ -1795,11 +1798,6 @@ async def apply_pipeline_run(
     try:
         try:
             if ptype == PipelineType.SCHEMA_EXTRACTION:
-                if not concept_scheme_id:
-                    raise HTTPException(
-                        status_code=http_status.HTTP_400_BAD_REQUEST,
-                        detail="concept_scheme_id is required for schema_extraction apply",
-                    )
                 if not taxonomy_id:
                     raise HTTPException(
                         status_code=http_status.HTTP_400_BAD_REQUEST,
@@ -2011,7 +2009,7 @@ async def preview_recognition(
         svc = request.app.state.schema_recognition_preview_svc
         try:
             schema_hits = svc.preview(
-                run.output_summary, concept_scheme_id=request_body.concept_scheme_id or ""
+                run.output_summary, taxonomy_id=request_body.taxonomy_id or ""
             )
         except Exception as exc:
             status_code, message = _handle_domain_error(exc)

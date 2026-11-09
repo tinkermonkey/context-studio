@@ -323,6 +323,8 @@ export function ApplyBar({
   kind,
   counts,
   scope,
+  target,
+  applyDisabled,
   applied,
   busy,
   onApply,
@@ -331,7 +333,11 @@ export function ApplyBar({
 }: {
   kind: ReviewKind;
   counts: Record<ReviewDecisionValue, number>;
-  scope: { taxonomyLabel: string; conceptSchemeLabel?: string };
+  scope: { taxonomyLabel: string };
+  /** Where new entities go, when the reviewer has to choose (schema only). */
+  target?: { key: string; value: ReactNode };
+  /** Apply is blocked for a reason shown in the target row. */
+  applyDisabled?: boolean;
   applied: boolean;
   busy?: boolean;
   onApply: () => void;
@@ -345,7 +351,7 @@ export function ApplyBar({
       subtitle={
         applied
           ? "Draft entities were written. Revert removes everything this run created."
-          : "Accepted candidates are written as DRAFT entities in the run's scope."
+          : "Accepted candidates are written as DRAFT entities in the run's taxonomy."
       }
     >
       <div className="xr-apply-bar">
@@ -353,14 +359,7 @@ export function ApplyBar({
           keyWidth={150}
           rows={[
             { key: "taxonomy", value: <span className="xr-mono">{scope.taxonomyLabel}</span> },
-            ...(kind === "schema"
-              ? [
-                  {
-                    key: "concept_scheme",
-                    value: <span className="xr-mono">{scope.conceptSchemeLabel ?? "—"}</span>,
-                  },
-                ]
-              : []),
+            ...(target ? [target] : []),
             {
               key: "decisions",
               value: (
@@ -388,7 +387,7 @@ export function ApplyBar({
           ) : (
             <Button
               variant="primary"
-              disabled={counts.yes === 0 || busy}
+              disabled={counts.yes === 0 || busy || applyDisabled}
               aria-busy={busy}
               onClick={onApply}
               data-testid={`extraction-review-${kind}-apply`}

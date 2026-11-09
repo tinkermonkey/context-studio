@@ -25,7 +25,6 @@ export interface ReviewScopeRef {
 export interface ExtractionReviewRequest {
   text: string;
   taxonomy: ReviewScopeRef;
-  conceptScheme: ReviewScopeRef;
   implementationId: string;
   schemaConfigRef: string;
   individualConfigRef: string;
@@ -54,7 +53,6 @@ function buildRunRequest(kind: ReviewKind, req: ExtractionReviewRequest): Pipeli
       documents: [req.text],
       scope: req.taxonomy.id,
       scope_name: req.taxonomy.label,
-      concept_scheme_id: req.conceptScheme.id,
       ...(req.schemaModel ? { model: req.schemaModel } : {}),
     } as PipelineRunRequest;
   }
