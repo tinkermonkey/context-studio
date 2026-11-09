@@ -694,6 +694,8 @@ class ExtractionService:
         schemes = self._ontology_repo.list_concept_schemes(taxonomy_id=str(taxonomy_id), limit=None)
         for scheme in schemes:
             for cls in self._ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None):
+                if cls.derived:
+                    continue  # computed by its client, never an extraction target
                 class_ref = _canonical_class_ref(cls)
                 if not class_ref or class_ref in seen_refs:
                     continue
@@ -702,6 +704,17 @@ class ExtractionService:
                 if len(catalog) >= _MAX_CATALOG_CLASSES:
                     return catalog
         return catalog
+
+    def _derived_class_ids(self, taxonomy_id: str) -> set[str]:
+        """The taxonomy's derived classes, which extraction never targets."""
+        return {
+            str(cls.id)
+            for scheme in self._ontology_repo.list_concept_schemes(
+                taxonomy_id=taxonomy_id, limit=None
+            )
+            for cls in self._ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None)
+            if cls.derived
+        }
 
     def _relevant_class_catalog(self, text: str, ontology) -> list[tuple[str, str]]:
         """
@@ -781,7 +794,10 @@ class ExtractionService:
         # "web_server"), else empty string. This matches _canonical_class_ref behavior.
         catalog: list[tuple[str, str]] = []
         seen_refs: set[str] = set()
+        derived = self._derived_class_ids(str(taxonomy_id))
         for match in matches:
+            if str(match.entity_id) in derived:
+                continue  # computed by its client, never an extraction target
             class_ref = match.external_id or match.identifier or ""
             if not class_ref or class_ref in seen_refs:
                 continue
@@ -1051,6 +1067,8 @@ class ExtractionService:
         """
         index: dict[str, Any] = {}
         for prop_def in self._ontology_repo.list_property_definitions(limit=None):
+            if prop_def.derived:
+                continue  # computed by its client, never an extraction target
             predicate = (prop_def.canonical_predicate or prop_def.title or "").strip()
             if not predicate:
                 continue
@@ -1562,6 +1580,8 @@ class ExtractionService:
         vocabulary: list[str] = []
         seen: set[str] = set()
         for prop in self._ontology_repo.list_property_definitions(limit=None):
+            if prop.derived:
+                continue  # computed by its client, never an extraction target
             predicate = (prop.canonical_predicate or prop.title or "").strip()
             if not predicate:
                 continue
@@ -1648,7 +1668,7 @@ class ExtractionService:
         options: dict[str, list[tuple[str, str | None]]] = {}
         for prop in self._ontology_repo.list_property_definitions(limit=None):
             domain_id = getattr(prop, "domain_class_id", None)
-            if not domain_id:
+            if not domain_id or prop.derived:
                 continue
             predicate = (prop.canonical_predicate or prop.title or "").strip()
             if not predicate:

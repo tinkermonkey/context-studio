@@ -11,11 +11,12 @@ reading and writing files is left to the scripts.
       "taxonomy": {"identifier", "title", "description", "vision"},
       "schemes": [{"identifier", "title", "description"}],
       "classes": [{"identifier", "scheme", "parent", "title", "description",
-                   "constraints": {}, "external_references": [...],
+                   "derived", "constraints": {}, "external_references": [...],
                    "attributes": [{"identifier", "title", "datatype", "description",
                                    "required", "allowed_values"}]}],
       "properties": [{"identifier", "title", "description", "predicate",
-                      "domain", "range", "constraints": {}, "external_references": [...]}],
+                      "domain", "range", "derived", "constraints": {},
+                      "external_references": [...]}],
       "individuals": [{"id", "classes": [...], "title", "description", "data": {},
                        "external_references": [...]}],
       "relationships": [{"source", "property", "target", "attributes": {}}]
@@ -40,11 +41,15 @@ its metadata is set; one without gets a reference only if the bundle carries
 `constraints` or `data` for it. A relationship type that is not the source's is
 matched only if every end it has lies in this taxonomy. What v0 cannot model is
 carried in that reference's metadata, out of the definitions that drive vector
-matching: a class's or property's `constraints` (a House class's or relationship
-type's `derived` flag, say, until #1467 decides what becomes first-class) and an
-individual's `data`. A class without `constraints` keeps its metadata (bundles
-before #1465 had none for classes); a property or individual without its key
-has none.
+matching: a class's or property's `constraints` and an individual's `data`. A
+class without `constraints` keeps its metadata (bundles before #1465 had none
+for classes); a property or individual without its key has none.
+
+Derived. A class or relationship type the client computes from other data (a
+House kit) has `derived: true` (Class.derived, PropertyDefinition.derived). A
+bundle without the key takes it from its `constraints` (House's earlier
+`{"derived": true}`), else leaves the entity's flag as it is. The metadata flag
+is kept in `constraints` too until the bundle's next version (#1483).
 
 Other sources' references. A class, property or individual also lists every
 reference of another source as `external_references` ({source, identifier,
@@ -346,6 +351,7 @@ class _Planner:
                         "description": spec.get("description"),
                         "parent_class_id": parent_id,
                         "identifier": identifier,
+                        "derived": _derived(spec, spec.get("constraints"), None, where) or None,
                         "external_references": [
                             self._reference(identifier, spec.get("constraints")).to_dict(),
                             *(r.to_dict() for r in _listed(spec, self._source, where)),
@@ -361,8 +367,11 @@ class _Planner:
                 else list(existing.external_references)
             )
             references = _with_listed(references, _listed(spec, self._source, where))
+            derived = _derived(spec, self._own_metadata(references), existing, where)
             counts.record(
-                self._plan_class_update(existing, spec, scheme_id, parent_id, references)
+                self._plan_class_update(
+                    existing, spec, scheme_id, parent_id, references, derived
+                )
             )
             ids[identifier] = existing.id
             current = {
@@ -381,11 +390,13 @@ class _Planner:
         scheme_id: str,
         parent_id: str | None,
         references: list[ExternalReference],
+        derived: bool,
     ) -> str:
         changed = _changed(
             {
                 "title": (existing.title, spec["title"]),
                 "description": (_text(existing.description), _text(spec.get("description"))),
+                "derived": (existing.derived, derived),
             }
         )
         if existing.external_references != references:
@@ -464,7 +475,8 @@ class _Planner:
         ids: dict[str, str] = {}
         for spec in specs:
             identifier = spec["identifier"]
-            listed = _listed(spec, self._source, f"Relationship type {identifier!r}")
+            where = f"Relationship type {identifier!r}"
+            listed = _listed(spec, self._source, where)
             domain_id = self._class_ref(class_ids, spec.get("domain"), f"property {identifier}")
             range_id = self._class_ref(class_ids, spec.get("range"), f"property {identifier}")
             existing = self._repo.get_property_definition_by_identifier(identifier)
@@ -487,6 +499,7 @@ class _Planner:
                         "canonical_predicate": spec.get("predicate"),
                         "domain_class_id": domain_id,
                         "range_class_id": range_id,
+                        "derived": _derived(spec, spec.get("constraints"), None, where) or None,
                         "external_references": [
                             self._reference(identifier, spec.get("constraints")).to_dict(),
                             *(r.to_dict() for r in listed),
@@ -505,6 +518,10 @@ class _Planner:
                     "canonical_predicate": (existing.canonical_predicate, spec.get("predicate")),
                     "domain_class_id": (existing.domain_class_id, domain_id),
                     "range_class_id": (existing.range_class_id, range_id),
+                    "derived": (
+                        existing.derived,
+                        _derived(spec, spec.get("constraints"), existing, where),
+                    ),
                 }
             )
             if existing.external_references != references:
@@ -700,6 +717,11 @@ class _Planner:
             metadata=MappingProxyType(dict(metadata)) if metadata else None,
         )
 
+    def _own_metadata(self, references: list[ExternalReference]) -> dict[str, Any]:
+        """The metadata of this source's reference among these, if any."""
+        own = next((r for r in references if r.source == self._source), None)
+        return dict(own.metadata) if own and own.metadata else {}
+
     def _owns(self, entity: Any) -> bool:
         return any(ref.source == self._source for ref in entity.external_references)
 
@@ -884,6 +906,7 @@ class BundleExporter:
             "scheme": scheme_keys[cls.concept_scheme_id],
             "title": cls.title,
             "description": cls.description,
+            "derived": cls.derived,
             "constraints": _metadata(cls, source),
         }
         if cls.parent_class_id:
@@ -1026,6 +1049,7 @@ def _property(prop: PropertyDefinition, source: str, class_keys: dict[str, str])
         "predicate": prop.canonical_predicate,
         "domain": class_keys.get(prop.domain_class_id) if prop.domain_class_id else None,
         "range": class_keys.get(prop.range_class_id) if prop.range_class_id else None,
+        "derived": prop.derived,
         "constraints": _metadata(prop, source),
     }
     return _add_other_references(spec, prop, source)
@@ -1086,6 +1110,26 @@ def _listed(spec: dict[str, Any], source: str, where: str) -> list[ExternalRefer
             )
         listed.append(ExternalReference.from_dict(item))
     return listed
+
+
+def _derived(
+    spec: dict[str, Any], metadata: dict[str, Any] | None, existing: Any, where: str
+) -> bool:
+    """
+    A bundle class's or property's derived flag: its `derived` key, else the
+    `derived` its source metadata carries (House's earlier convention), else
+    what the entity has (False for a new one).
+
+    Raises:
+        BundleError: If `derived` is given and isn't true or false
+    """
+    if "derived" in spec:
+        if not isinstance(spec["derived"], bool):
+            raise BundleError(f"{where}: derived must be true or false")
+        return spec["derived"]
+    if metadata and "derived" in metadata:
+        return bool(metadata["derived"])
+    return bool(existing.derived) if existing is not None else False
 
 
 def _is_reference(item: Any) -> bool:

@@ -176,6 +176,17 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
             "for other node types and property definitions with none supplied."
         ),
     )
+    derived = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("0"),
+        doc=(
+            "Computed by the client from other data (for class and property_definition):"
+            " no direct creates of its individuals or relationships, not an extraction"
+            " target. False for other node types."
+        ),
+    )
 
     # Nested value objects (stored as JSON)
     external_references = Column(

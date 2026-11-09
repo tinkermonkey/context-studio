@@ -622,6 +622,9 @@ def _normalized(bundle):
         cls.setdefault("attributes", [])
         # House's file predates class constraints (#1465); absent keeps a class's metadata.
         cls.setdefault("constraints", {})
+    for entry in result["classes"] + result["properties"]:
+        # And derived (#1465): without the key, import takes it from constraints.
+        entry.setdefault("derived", bool(entry["constraints"].get("derived")))
     result["relationships"] = sorted(
         result["relationships"], key=lambda r: (r["source"], r["property"], r["target"])
     )
@@ -1040,27 +1043,83 @@ def test_listed_references_are_added_or_updated_never_removed(
     ]
 
 
-def test_house_derived_class_flag_round_trips(importer, service, repo, session_factory):
+def test_class_constraints_round_trip(importer, service, repo, session_factory):
     bundle = _bundle()
-    by_key(bundle["classes"], "identifier", "house_place")["constraints"] = {"derived": True}
+    by_key(bundle["classes"], "identifier", "house_place")["constraints"] = {"rollup": "rooms"}
     load_bundle(importer, bundle)
 
     place = repo.get_by_identifier("house_place")
-    assert [dict(r.metadata or {}) for r in place.external_references] == [{"derived": True}]
+    assert [dict(r.metadata or {}) for r in place.external_references] == [{"rollup": "rooms"}]
     exported = _assert_round_trip_writes_nothing(
         importer, repo, session_factory, _taxonomy_id(repo, "house")
     )
     assert by_key(exported["classes"], "identifier", "house_place")["constraints"] == {
-        "derived": True
+        "rollup": "rooms"
     }
     assert by_key(exported["classes"], "identifier", "house_room")["constraints"] == {}
 
-    # A file from before class constraints keeps the flag; an empty object clears it.
+    # A file from before class constraints keeps the metadata; an empty object clears it.
     assert load_bundle(importer, _bundle()).changed == 0
     cleared = _bundle()
     by_key(cleared["classes"], "identifier", "house_place")["constraints"] = {}
     load_bundle(importer, cleared)
     assert repo.get_by_identifier("house_place").external_references[0].metadata is None
+
+
+def test_house_derived_flags_lift_into_the_field_and_round_trip(
+    importer, service, repo, session_factory
+):
+    """House's earlier {"derived": true} metadata becomes the first-class flag."""
+    bundle = _bundle()
+    by_key(bundle["classes"], "identifier", "house_place")["constraints"] = {"derived": True}
+    [prop] = bundle["properties"]
+    prop["constraints"]["derived"] = True
+    # The client computes a derived type's relationships; a bundle doesn't carry them.
+    bundle["relationships"] = []
+    load_bundle(importer, bundle)
+
+    assert repo.get_by_identifier("house_place").derived is True
+    assert repo.get_by_identifier("house_room").derived is False
+    assert repo.get_property_definition_by_identifier(prop["identifier"]).derived is True
+    exported = _assert_round_trip_writes_nothing(
+        importer, repo, session_factory, _taxonomy_id(repo, "house")
+    )
+    place = by_key(exported["classes"], "identifier", "house_place")
+    assert (place["derived"], place["constraints"]) == (True, {"derived": True})
+    assert by_key(exported["classes"], "identifier", "house_room")["derived"] is False
+    assert exported["properties"][0]["derived"] is True
+
+    # The derived key wins over the metadata; a file without either keeps the flag.
+    place["derived"] = False
+    load_bundle(importer, exported)
+    assert repo.get_by_identifier("house_place").derived is False
+    service.update_class(repo.get_by_identifier("house_place").id, derived=True)
+    older = _bundle(relationships=[])
+    older["properties"][0]["constraints"]["derived"] = True
+    assert load_bundle(importer, older).kind("class").updated == 0
+    assert repo.get_by_identifier("house_place").derived is True
+
+
+def test_a_bundle_relationship_of_a_derived_type_fails_to_apply(importer, repo):
+    bundle = _bundle()
+    bundle["properties"][0]["derived"] = True
+
+    result = importer.import_bundle(bundle)
+    applied = importer._proposals.apply(
+        result.proposal.id, [o.id for o in result.proposal.pending]
+    )
+
+    [failed] = [o for o in applied.operations if o.status.value == "failed"]
+    assert failed.kind.value == "relationship"
+    assert "'house_activity_is_a_activity' is derived" in failed.reason
+
+
+def test_a_derived_flag_that_isnt_a_boolean_is_refused(importer):
+    bundle = _bundle()
+    by_key(bundle["classes"], "identifier", "house_place")["derived"] = "yes"
+
+    with pytest.raises(BundleError, match="'house_place': derived must be true or false"):
+        load_bundle(importer, bundle)
 
 
 @pytest.mark.parametrize(

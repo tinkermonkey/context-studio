@@ -55,3 +55,12 @@ class EntityInUseError(OntologyError):
     """Raised when deleting an entity that other entities still reference."""
 
     pass
+
+
+class DerivedTypeError(OntologyError):
+    """
+    Raised when creating an individual of a derived class or a relationship of a
+    derived relationship type: the client computes those from other data.
+    """
+
+    pass

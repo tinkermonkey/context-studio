@@ -5137,6 +5137,12 @@ export interface components {
        * @description Optional structural property ID
        */
       structural_property_id?: string | null;
+      /**
+       * Derived
+       * @description The client computes its individuals from other data: none is created directly, and extraction doesn't target it
+       * @default false
+       */
+      derived: boolean;
       /** External References */
       external_references?: components["schemas"]["ExternalReferenceResponse"][];
       /** Lexical Senses */
@@ -7954,6 +7960,12 @@ export interface components {
        * @description Class the relationship's target must belong to, if constrained
        */
       range_class_id?: string | null;
+      /**
+       * Derived
+       * @description The client computes its relationships from other data: none is created directly, and extraction doesn't target it
+       * @default false
+       */
+      derived: boolean;
       /**
        * Is Relevant
        * @description Relevance flag (None=not evaluated, True=relevant, False=irrelevant)

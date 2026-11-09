@@ -9947,6 +9947,12 @@
             "title": "Structural Property Id",
             "description": "Optional structural property ID"
           },
+          "derived": {
+            "type": "boolean",
+            "title": "Derived",
+            "description": "The client computes its individuals from other data: none is created directly, and extraction doesn't target it",
+            "default": false
+          },
           "external_references": {
             "items": {
               "$ref": "#/components/schemas/ExternalReferenceResponse"
@@ -14688,6 +14694,12 @@
             ],
             "title": "Range Class Id",
             "description": "Class the relationship's target must belong to, if constrained"
+          },
+          "derived": {
+            "type": "boolean",
+            "title": "Derived",
+            "description": "The client computes its relationships from other data: none is created directly, and extraction doesn't target it",
+            "default": false
           },
           "is_relevant": {
             "anyOf": [
