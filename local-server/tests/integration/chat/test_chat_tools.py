@@ -314,6 +314,63 @@ class TestRelationships:
         assert item["range"]["id"] == SERVICE_CLASS_ID
         assert ref_ids(outcome) == {REALIZES_ID, OPERATION_ID, SERVICE_CLASS_ID}
 
+    async def test_list_relationship_types_of_one_taxonomy_page_with_offset(
+        self, tools, dr_workspace
+    ):
+        """#1466: a client lists one taxonomy's types, page by page."""
+        ontology = dr_workspace.ontology
+        house = ontology.create_taxonomy(title="House", identifier="house")
+        rooms = ontology.create_scheme(taxonomy_id=house.id, title="Rooms")
+        room = ontology.create_class(rooms.id, "Room")
+        for name in ("adjoins", "contains"):
+            ontology.create_property_definition(
+                f"room_{name}_room", name, domain_class_id=room.id, range_class_id=room.id
+            )
+        ontology.create_property_definition(
+            "operation_documents_room",
+            "documents",
+            domain_class_id=OPERATION_ID,
+            range_class_id=room.id,
+        )
+
+        _, everything = await call(tools, "list_relationship_types")
+        _, dr = await call(tools, "list_relationship_types", taxonomy_id=TAXONOMY_ID)
+        _, first = await call(tools, "list_relationship_types", taxonomy_id=house.id, limit=2)
+        _, rest = await call(
+            tools, "list_relationship_types", taxonomy_id=house.id, limit=2, offset=2
+        )
+
+        assert everything["total"] == 4
+        # A type spanning two taxonomies (Operation -> Room) belongs to both.
+        assert [i["identifier"] for i in dr["items"]] == [
+            "operation_realizes_service",
+            "operation_documents_room",
+        ]
+        assert (first["total"], first["offset"], rest["offset"]) == (3, 0, 2)
+        assert [i["title"] for i in first["items"] + rest["items"]] == [
+            "adjoins",
+            "contains",
+            "documents",
+        ]
+
+    async def test_list_relationship_types_offset_without_a_taxonomy(self, tools, dr_workspace):
+        dr_workspace.ontology.create_property_definition(
+            "operation_calls_operation",
+            "calls",
+            domain_class_id=OPERATION_ID,
+            range_class_id=OPERATION_ID,
+        )
+
+        _, page = await call(tools, "list_relationship_types", limit=1, offset=1)
+
+        assert (page["total"], page["offset"]) == (2, 1)
+        assert [i["title"] for i in page["items"]] == ["calls"]
+
+    async def test_list_relationship_types_of_an_unknown_taxonomy_is_an_error(self, tools):
+        outcome, result = await call(tools, "list_relationship_types", taxonomy_id="missing")
+
+        assert outcome.is_error and "missing" in result["error"]
+
 
 class TestGraphTools:
     async def test_neighbors(self, tools):

@@ -72,8 +72,9 @@ SOURCE_REVISION_SCHEMA: dict[str, Any] = {
 }
 
 PROPOSAL_KIND = "proposal"
-MAX_OPERATIONS = 200
-# Large enough for a full 200-operation propose result.
+# A cleanup pass reached 477 operations (#1466); a larger pass is a bundle import.
+MAX_OPERATIONS = 500
+# A propose or get_proposal result longer than this pages its operations.
 MAX_PROPOSAL_CHARS = 16000
 # A result too large even with one entry has its texts cut to this length.
 CLIPPED_TEXT_CHARS = 300
@@ -82,8 +83,9 @@ MAX_LIMIT = 50
 # An in-use blocker lists at most this many relationships and move targets; the review
 # page has all.
 MAX_BLOCKER_EDGES = 10
-# Dropped from get_proposal's operations first when a result is too large.
-BULKY_OPERATION_KEYS = ("fields", "base", "applied_fields", "evidence")
+# Dropped from get_proposal's operations first when a result is too large; fields and
+# applied_fields stay, and the operations page instead.
+BULKY_OPERATION_KEYS = ("base", "evidence")
 
 
 def proposal_ref(proposal: ChangeProposal) -> EntityRef:
@@ -130,7 +132,11 @@ def _compact(value: Any) -> Any:
 
 
 def _capped(
-    payload: dict[str, Any], list_key: str, note: Callable[[int], str]
+    payload: dict[str, Any],
+    list_key: str,
+    note: Callable[[int], str],
+    total: Optional[int] = None,
+    offset: int = 0,
 ) -> tuple[str, list[Any]]:
     """
     Serialize a result within MAX_PROPOSAL_CHARS; returns the content and the
@@ -144,15 +150,19 @@ def _capped(
         payload: The result
         list_key: The list to cut
         note: What to do about the cut entries, given how many were kept
+        total: How many entries there are in all, when the list is one page
+            of them (default: the list's length)
+        offset: Where the list starts among them, for a page
     """
-    total = len(payload[list_key])
+    total = len(payload[list_key]) + offset if total is None else total
 
     def fit(current: dict[str, Any]) -> tuple[str, dict[str, Any]]:
         items = list(current[list_key])
         content = dumps(current)
         while len(items) > 1 and len(content) > MAX_PROPOSAL_CHARS:
             items = items[: max(len(items) * 3 // 4, 1)]
-            truncated = f"showing {len(items)} of {total}; {note(len(items))}"
+            shown = f"{offset + 1}-{offset + len(items)}" if offset else str(len(items))
+            truncated = f"showing {shown} of {total}; {note(len(items))}"
             current = {**current, list_key: items, "truncated": truncated}
             content = dumps(current)
         return content, current
@@ -313,7 +323,11 @@ class ProposeChangesTool(_ProposalTool):
         " of the attribute's datatype; on an update, only those given change and null"
         " removes one. Id fields"
         f' ({", ".join(sorted(ID_FIELDS))}) take an existing id or "$<ref>" of an'
-        " earlier create in the same proposal."
+        " earlier create in the same proposal.\n"
+        f"At most {MAX_OPERATIONS} operations per proposal. For a larger pass, export"
+        " the taxonomy's bundle (GET /api/v1/interchange/bundles/{taxonomy_id}), edit"
+        " it and import it (POST /api/v1/interchange/bundles): the import proposes"
+        " every change it plans as one proposal."
     )
     input_schema = {
         "type": "object",
@@ -538,10 +552,46 @@ def _dry_run(view: dict[str, Any]) -> ToolOutcome:
         "operations": operations,
         "next": " ".join(notes),
     }
-    content, _ = _capped(
-        payload, "operations", lambda _: "the rest validated; split the proposal to see them"
-    )
+    note = "the rest validated; split the proposal to see them"
+    if len(dumps(payload)) > MAX_PROPOSAL_CHARS:
+        payload = _dry_run_digest(payload)
+        note = "attention_seqs lists every operation that needs attention"
+    content, _ = _capped(payload, "operations", lambda _: note)
     return ToolOutcome(content=content, summary=f"Dry run “{view['title']}”: {auto} would apply")
+
+
+def _needs_attention(operation: dict[str, Any]) -> bool:
+    """
+    A dry-run operation that is blocked, stale, or names a replacement that
+    isn't the same pair of classes or that the proposal also deletes.
+    """
+    check = operation.get("replacement_check") or {}
+    flagged = check and (
+        check.get("pair") != "same" or check.get("replacement_deleted") or check.get("cycle")
+    )
+    return bool(operation.get("blockers") or operation.get("stale") or flagged)
+
+
+def _dry_run_digest(payload: dict[str, Any]) -> dict[str, Any]:
+    """
+    A dry run too large to list whole: the operations that need attention in
+    full, and every other one by seq, split by whether it would auto-apply.
+    """
+    operations = payload["operations"]
+    attention = [o for o in operations if _needs_attention(o)]
+    plain = [o for o in operations if not _needs_attention(o)]
+    return {
+        **payload,
+        "operations": attention,
+        "attention_seqs": [o["seq"] for o in attention],
+        "auto_apply_seqs": [o["seq"] for o in plain if o.get("auto_apply")],
+        "review_seqs": [o["seq"] for o in plain if not o.get("auto_apply")],
+        "digest": (
+            "too many operations to list whole: operations details those blocked, stale"
+            " or with a flagged replacement (attention_seqs lists them all); the rest"
+            " validated and are listed by seq"
+        ),
+    }
 
 
 def _next_step(counts: dict[str, int]) -> str:
@@ -583,7 +633,8 @@ class GetProposalTool(_ProposalTool):
         " base (the touched values when proposed; a delete's whole entity), rationale,"
         " evidence and probability, and once decided applied_fields (a reviewer's edit),"
         " resolution (what happened to a delete's relationships) and reason. Empty"
-        " values are left out. A large proposal's operations page with offset."
+        " values are left out. A large proposal leaves out base and evidence, keeps"
+        " fields, and pages its operations: pass the offset its truncated note gives."
     )
     input_schema = {
         "type": "object",
@@ -600,7 +651,7 @@ class GetProposalTool(_ProposalTool):
 
     def run(self, args: dict[str, Any]) -> ToolOutcome:
         proposal = self._service.get(required_str(args, "id"))
-        offset = int_arg(args, "offset", 0, 0, MAX_OPERATIONS)
+        offset = int_arg(args, "offset", 0, 0, len(proposal.operations))
         view = _view(self._service, proposal)
         payload: dict[str, Any] = {
             **_proposal_summary(proposal),
@@ -616,12 +667,28 @@ class GetProposalTool(_ProposalTool):
                 for o in payload["operations"]
             ]
             payload["fields_omitted"] = (
-                f"{', '.join(BULKY_OPERATION_KEYS)} are too large for one result; the review"
-                " page shows them"
+                f"{' and '.join(BULKY_OPERATION_KEYS)} are left out to fit (the review page"
+                " shows them); fields and applied_fields are kept"
             )
-            content, _ = _capped(
-                payload, "operations", lambda kept: f"pass offset {offset + kept} for the rest"
-            )
+            total = len(view["operations"])
+
+            def note(kept: int) -> str:
+                return f"pass offset {offset + kept} for the rest"
+
+            content, kept = _capped(payload, "operations", note, total, offset)
+            if len(content) > MAX_PROPOSAL_CHARS:
+                # One operation's own fields are too large: they go too.
+                payload["operations"] = [
+                    {k: v for k, v in o.items() if k not in ("fields", "applied_fields")}
+                    for o in kept
+                ]
+                payload["fields_omitted_seqs"] = [o["seq"] for o in kept]
+                if offset + len(kept) < total:
+                    payload["truncated"] = (
+                        f"showing {offset + 1}-{offset + len(kept)} of {total};"
+                        f" {note(len(kept))}"
+                    )
+                content, _ = _capped(payload, "operations", note, total, offset)
         return ToolOutcome(
             content=content,
             summary=_summary("Proposal", proposal.title, payload["counts"]),
