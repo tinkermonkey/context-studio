@@ -892,3 +892,29 @@ class TestImportDrOntologyMirrorsTheSpec:
 
         revision = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER).source_revision
         assert revision.spec_version == "0.8.4"
+
+
+class TestMovedNodeTypes:
+    def test_a_node_type_moved_to_another_layer_is_refused_before_writing(
+        self, ontology_service, repo, spec_dir
+    ):
+        import_dr_ontology(ontology_service, repo, spec_dir)
+        # DR landed a class move: motivation.stakeholder is now business.stakeholder.
+        (spec_dir / "schemas" / "nodes" / "motivation" / "stakeholder.node.schema.json").unlink()
+        _write_node_schema(spec_dir, "business", "stakeholder", "Stakeholder", "A person or role")
+        before = len(repo.list_classes(limit=None))
+
+        with pytest.raises(ValueError, match="motivation.stakeholder -> business.stakeholder"):
+            import_dr_ontology(ontology_service, repo, spec_dir)
+
+        assert len(repo.list_classes(limit=None)) == before
+
+    def test_a_new_type_named_like_a_type_still_in_the_spec_is_no_move(
+        self, ontology_service, repo, spec_dir
+    ):
+        import_dr_ontology(ontology_service, repo, spec_dir)
+        _write_node_schema(spec_dir, "business", "goal", "Business Goal", "Another goal")
+
+        summary = import_dr_ontology(ontology_service, repo, spec_dir)
+
+        assert summary.classes_created == 1

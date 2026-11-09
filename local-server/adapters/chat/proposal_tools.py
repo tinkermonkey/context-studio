@@ -249,10 +249,10 @@ OPERATION_SCHEMA: dict[str, Any] = {
         "replacement": {
             "type": "string",
             "description": (
-                "Property delete only: the relationship type that replaces the deleted one,"
-                ' by id, identifier or "$<ref>" of an earlier property create. Name it'
-                " whenever another type expresses the deleted one; review flags a replacement"
-                " that links a different pair of classes"
+                "Property or class delete only: the relationship type or class that replaces"
+                ' the deleted one, by id, identifier or "$<ref>" of an earlier create of the'
+                " same kind. Name it whenever another type expresses the deleted one; review"
+                " flags a relationship type replacement that links a different pair of classes"
             ),
         },
     },

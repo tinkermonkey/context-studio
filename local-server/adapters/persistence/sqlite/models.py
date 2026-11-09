@@ -1408,9 +1408,9 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
         resolution: JSON {strategy, replacement_property_id, replacement_identifier,
             edges} when a relationship-type delete was applied with the relationships
             using it moved or deleted; null otherwise
-        proposed_replacement_id: A relationship-type delete only: the type the proposer
-            names as its replacement, a property definition id or "$<ref>" of a create in
-            the same proposal; null otherwise
+        proposed_replacement_id: A relationship-type or class delete only: the type the
+            proposer names as its replacement, an id or "$<ref>" of a create of the same
+            kind in the same proposal; null otherwise
         type_change: JSON {action, before, after, swap, replacement} when an applied
             relationship-type create, update or delete changed the type (see the
             domain's TypeChange); null otherwise

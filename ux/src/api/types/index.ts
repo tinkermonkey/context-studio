@@ -8082,7 +8082,7 @@ export interface components {
       scope?: components["schemas"]["ChangeScope"] | null;
       /**
        * Replacement
-       * @description A property (relationship type) delete only: the type that replaces it, by id, identifier or "$<ref>" of an earlier property create. Its domain and range are compared with the deleted type's (see replacement_check)
+       * @description A property (relationship type) or class delete only: what replaces it, by id, identifier or "$<ref>" of an earlier create of the same kind. A relationship type's domain and range are compared with the deleted type's (see replacement_check); a class's replacement tells a mirroring client what to migrate its elements to
        */
       replacement?: string | null;
     };
@@ -8153,10 +8153,10 @@ export interface components {
       blockers?: components["schemas"]["DeleteBlockersResponse"] | null;
       /**
        * Proposed Replacement Id
-       * @description A relationship-type delete only: the type the proposer names as its replacement (a property definition id, or "$<ref>" of a create in this proposal)
+       * @description A relationship-type or class delete only: the type the proposer names as its replacement (an id, or "$<ref>" of a create of the same kind in this proposal). A class's replacement is informational: it tells a client that mirrors the taxonomy what to migrate the deleted class's elements to
        */
       proposed_replacement_id?: string | null;
-      /** @description Set when proposed_replacement_id is: how its pair compares */
+      /** @description Set when a relationship-type delete's proposed_replacement_id is: how its pair compares */
       replacement_check?: components["schemas"]["ReplacementCheckResponse"] | null;
       /**
        * Auto Apply

@@ -1,8 +1,8 @@
 """
-A decided change proposal's DR relationship-type changes, for DR to write
-into its spec.
+A decided change proposal's DR relationship-type and node-type changes, for DR
+to write into its spec.
 
-Any proposal whose property-definition operations touch DR relationship types
+Any proposal whose property-definition or class operations touch the DR spec
 (see `dr_relationships.py`), whether a reflection plan or one proposed over
 MCP or in the app, exports as one `cs-dr-spec-changes/1` document:
 
@@ -24,11 +24,25 @@ MCP or in the app, exports as one `cs-dr-spec-changes/1` document:
         "note",                       # delete only, when that chain is a cycle
         "decided_at", "decided_by"    # the operation's recorded decision (null if none)
      }],
+     "node_changes": [{               # class operations on DR node types
+        "seq", "op_id", "op": "create" | "update" | "move" | "delete",
+        "spec_node_id",               # "{layer}.{type}" after it (a delete: the one removed)
+        "previous_spec_node_id",      # move only: the id before it
+        "layer_id",                   # spec_node_id's layer
+        "identifier",                 # Context Studio's identifier for the class
+        "set": {"title"?, "description"?},
+        "replacement_spec_node_id",   # delete only: the class the delete names as its
+                                      # replacement (followed through the proposal's other deletes)
+        "note",                       # delete only, when that chain is a cycle
+        "decided_at", "decided_by"
+     }],
      "skipped": [{"seq", "op_id", "why"}],
      "records": [{                    # the schema change records, as DR's change-record actions
-        "action": "rename" | "delete" | "create",
-        "kind": "cs:rename" | "cs:reverse" | "cs:retarget" | "cs:delete" | "cs:create",
-        "from", "to",                 # DR relationship ids; to is null for a dropped delete
+        "action": "rename" | "delete" | "create" | "rename-type",
+        "kind": "cs:rename" | "cs:reverse" | "cs:retarget" | "cs:delete" | "cs:create"
+                | "cs:move",
+        "from", "to",                 # DR relationship ids (rename-type: spec node ids);
+                                      # to is null for a dropped delete
         "swap", "p", "proposal_id", "operation_id", "applied_at",
         "note"?                       # why a delete or retarget drops relationships
      }]}
@@ -62,6 +76,19 @@ actions DR's cs-decisions-to-spec.ts derives from `changes`, except that a
 chain of replaced deletes is left for the generator to fold, and a
 retarget's resolution (which `changes` doesn't carry) is kept.
 
+A class is a DR node type when its scheme is a layer of the dr_spec taxonomy
+(the layer its DR classes' spec node ids share). Its DR reference's
+identifier is its spec node id, which a create must give, in its scheme's
+layer, and an update may not change. A move to another scheme moves it to
+that layer: the type is kept, so "motivation.capability" moved to the
+business scheme becomes "business.capability". A move of the parent class
+only is skipped (DR's spec has no class hierarchy), as is an update of
+nothing but the color. A move, and a delete with a replacement, also give
+a `rename-type` record, so `dr upgrade` moves model elements of the old type
+to the new one. Until DR's spec with a move is re-imported, the moved class
+keeps its old DR id; the importer refuses a spec with a moved node type,
+as it can't follow one yet.
+
 What an update didn't set is read from the workspace as it is now, so export
 and land proposals in the order they were applied: exported after a later
 change to the same type, an older proposal's triple comes out wrong (DR's
@@ -70,12 +97,14 @@ writer then refuses it, as the file it names is gone).
 
 from __future__ import annotations
 
-from typing import Any, Mapping
+from collections import Counter
+from typing import Any, Callable, Mapping
 
 from adapters.interchange.dr_decisions import decided_fields
 from adapters.interchange.dr_relationships import (
     DR_ATTRIBUTE_KEYS,
     DR_SOURCE,
+    DR_TAXONOMY_IDENTIFIER,
     Triple,
     dr_relationship_id,
 )
@@ -119,33 +148,29 @@ def spec_changes_for(
             f"Change proposal {proposal.id} was reverted; its decisions no longer hold"
         )
     changes: list[dict[str, Any]] = []
+    node_changes: list[dict[str, Any]] = []
     skipped: list[dict[str, Any]] = []
     # "$<ref>" -> the entity the proposal's create of that ref made.
     refs = {o.ref: o.result_entity_id for o in proposal.operations if o.ref}
-    # The relationship types this proposal deleted, by id -> the delete.
-    deletes = {
-        o.target_id: o
-        for o in proposal.operations
-        if o.kind is OperationKind.PROPERTY
-        and o.op is OperationType.DELETE
-        and o.status is OperationStatus.APPLIED
-        and o.applied_fields is None
-        and o.target_id
-    }
+    # The relationship types and classes this proposal deleted, by id -> the delete.
+    deletes = _applied_deletes(proposal, OperationKind.PROPERTY)
+    class_deletes = _applied_deletes(proposal, OperationKind.CLASS)
+    layers = _dr_layers(repo)
     for operation in proposal.operations:
         why = _not_exported(operation)
-        change = None if why else _change(operation, repo, refs, deletes)
+        change = None
+        if why is None and operation.kind is OperationKind.PROPERTY:
+            change, found_in = _change(operation, repo, refs, deletes), changes
+            why = None if change else "not a DR relationship type"
+        elif why is None:
+            found = _node_change(operation, repo, refs, class_deletes, layers)
+            change, found_in = (found, node_changes) if isinstance(found, dict) else (None, None)
+            why = found if isinstance(found, str) else None if change else "not a DR node type"
         if change is None:
-            skipped.append(
-                {
-                    "seq": operation.seq,
-                    "op_id": operation.id,
-                    "why": why or "not a DR relationship type",
-                }
-            )
+            skipped.append({"seq": operation.seq, "op_id": operation.id, "why": why})
         else:
             change.update(decided_fields((decisions or {}).get(operation.id)))
-            changes.append(change)
+            found_in.append(change)  # type: ignore[union-attr]
     return {
         "format": SPEC_CHANGES_FORMAT,
         "proposal_id": proposal.id,
@@ -153,8 +178,25 @@ def spec_changes_for(
         "source_revision": proposal.source_revision.to_dict() if proposal.source_revision else None,
         "landed": proposal.landed.to_dict() if proposal.landed else None,
         "changes": changes,
+        "node_changes": node_changes,
         "skipped": skipped,
-        "records": dr_change_actions(proposal, repo, decisions),
+        "records": [
+            *dr_change_actions(proposal, repo, decisions),
+            *_node_actions(proposal, node_changes, decisions),
+        ],
+    }
+
+
+def _applied_deletes(proposal: ChangeProposal, kind: OperationKind) -> dict[str, ProposedOperation]:
+    """The entities of a kind this proposal deleted (applied as proposed), by id -> the delete."""
+    return {
+        o.target_id: o
+        for o in proposal.operations
+        if o.kind is kind
+        and o.op is OperationType.DELETE
+        and o.status is OperationStatus.APPLIED
+        and o.applied_fields is None
+        and o.target_id
     }
 
 
@@ -228,8 +270,8 @@ def _pair_of(old: str, new: str) -> str:
 
 
 def _not_exported(operation: ProposedOperation) -> str | None:
-    if operation.kind is not OperationKind.PROPERTY:
-        return f"a {operation.kind.value} operation, not a relationship type"
+    if operation.kind not in (OperationKind.PROPERTY, OperationKind.CLASS):
+        return f"a {operation.kind.value} operation, not a relationship or node type"
     if operation.status is not OperationStatus.APPLIED:
         return operation.status.value
     return None
@@ -373,7 +415,9 @@ def _delete(
         return None
     triple = Triple.parse(relationship_id)
     entry = _entry(operation, "delete", triple, base.get("identifier"), {})
-    replacement_property_id, cycle = _final_replacement(operation, repo, refs, deletes)
+    replacement_property_id, cycle = _final_replacement(
+        operation, repo.get_property_definition, refs, deletes
+    )
     if cycle:
         entry["note"] = (
             "its replacement chain comes back round to a type this proposal deletes, so no "
@@ -394,14 +438,15 @@ def _delete(
 
 def _final_replacement(
     operation: ProposedOperation,
-    repo: OntologyRepository,
+    exists: Callable[[str], Any],
     refs: dict[str, str | None],
     deletes: dict[str, ProposedOperation],
 ) -> tuple[str | None, bool]:
     """
-    The type that ends up replacing a delete's target, and whether its chain is a
-    cycle: each delete's named replacement, else its resolution's, followed
-    through the proposal's other deletes to one that still exists.
+    The entity that ends up replacing a delete's target, and whether its chain
+    is a cycle: each delete's named replacement, else its resolution's (a
+    relationship type's), followed through the proposal's other deletes of
+    the same kind to one that still exists.
     """
     seen = {operation.target_id}
     current = operation
@@ -411,11 +456,7 @@ def _final_replacement(
             named = refs.get(named[1:])
         moved_to = current.resolution.replacement_property_id if current.resolution else None
         candidate = next(
-            (
-                c
-                for c in (named, moved_to)
-                if c and (c in deletes or repo.get_property_definition(c) is not None)
-            ),
+            (c for c in (named, moved_to) if c and (c in deletes or exists(c) is not None)),
             None,
         )
         if candidate is None:
@@ -426,6 +467,257 @@ def _final_replacement(
             return None, True
         seen.add(candidate)
         current = deletes[candidate]
+
+
+# --------------------------------------------------------------- node types
+
+
+def _dr_layers(repo: OntologyRepository) -> dict[str, str | None]:
+    """
+    The dr_spec taxonomy's schemes by id -> the DR layer each holds: the layer
+    prefix most of its DR classes' spec node ids ("{layer}.{type}") share
+    (a class moved in but not yet re-imported keeps its old prefix). None
+    when a scheme has no DR class or two prefixes tie.
+    """
+    taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    if taxonomy is None:
+        return {}
+    layers: dict[str, str | None] = {}
+    for scheme in repo.list_concept_schemes(taxonomy_id=taxonomy.id, limit=None):
+        prefixes = Counter(
+            node_id.split(".", 1)[0]
+            for cls in repo.list_classes(concept_scheme_id=scheme.id, limit=None)
+            if (node_id := dr_relationship_id(cls.external_references)) and "." in node_id
+        ).most_common(2)
+        tied = len(prefixes) == 2 and prefixes[0][1] == prefixes[1][1]
+        layers[scheme.id] = prefixes[0][0] if prefixes and not tied else None
+    return layers
+
+
+def _layer_of(layers: dict[str, str | None], scheme_id: Any, label: str) -> str | None:
+    """A scheme's DR layer; None when it isn't one of the DR spec's schemes."""
+    if scheme_id not in layers:
+        return None
+    layer = layers[scheme_id]
+    if layer is None:
+        raise ValueError(
+            f"{label}: its scheme {scheme_id} is in the DR spec, but no layer can be read "
+            "from its classes' DR references"
+        )
+    return layer
+
+
+def _check_node_id(node_id: str, layer: str, label: str) -> None:
+    """A DR spec node id is "{layer}.{type}", in the class's layer."""
+    prefix, _, type_name = node_id.partition(".")
+    if prefix != layer or not type_name or "." in type_name:
+        raise ValueError(
+            f"{label}: its DR id {node_id!r} is not '{layer}.<type>', a node type of the "
+            f"{layer!r} layer its scheme holds"
+        )
+
+
+def _node_change(
+    operation: ProposedOperation,
+    repo: OntologyRepository,
+    refs: dict[str, str | None],
+    deletes: dict[str, ProposedOperation],
+    layers: dict[str, str | None],
+) -> dict[str, Any] | str | None:
+    """
+    An applied class operation as a DR node type change; a string says why it
+    doesn't export, None that the class isn't a DR node type.
+    """
+    label = f"seq {operation.seq}"
+    if operation.op is OperationType.CREATE:
+        return _node_create(operation, refs, layers, label)
+    if operation.op is OperationType.MOVE:
+        return _node_move(operation, repo, refs, layers, label)
+    if operation.op is OperationType.UPDATE:
+        return _node_update(operation, repo, layers, label)
+    return _node_delete(operation, repo, refs, deletes, label)
+
+
+def _node_create(
+    operation: ProposedOperation,
+    refs: dict[str, str | None],
+    layers: dict[str, str | None],
+    label: str,
+) -> dict[str, Any] | None:
+    fields = operation.fields
+    layer = _layer_of(layers, _resolve_ref(fields.get("concept_scheme_id"), refs, label), label)
+    node_id = dr_relationship_id(fields.get("external_references") or [])
+    if layer is None:
+        if node_id is not None:
+            raise ValueError(
+                f"{label}: it created a class with DR id {node_id!r} outside the DR spec's layers"
+            )
+        return None
+    if node_id is None:
+        raise ValueError(
+            f"{label}: it created a class in the DR layer {layer!r} without a DR reference "
+            f"(source {DR_SOURCE!r}, identifier '{layer}.<type>'), so it can't land in "
+            "DR's spec; give it one"
+        )
+    _check_node_id(node_id, layer, label)
+    values = {key: fields[key] for key in ("title", "description") if fields.get(key) is not None}
+    return _node_entry(operation, "create", node_id, fields.get("identifier"), values)
+
+
+def _node_update(
+    operation: ProposedOperation,
+    repo: OntologyRepository,
+    layers: dict[str, str | None],
+    label: str,
+) -> dict[str, Any] | str | None:
+    fields, base = operation.fields, operation.base
+    cls = repo.get_class(operation.target_id or "")
+    if cls is None:
+        raise ValueError(f"{label}: its class no longer exists")
+    node_id = dr_relationship_id(cls.external_references)
+    if "external_references" in fields:
+        before = dr_relationship_id(base.get("external_references") or [])
+        after = dr_relationship_id(fields["external_references"] or [])
+        if before != after:
+            raise ValueError(
+                f"{label}: it changed the class's DR id from {before!r} to {after!r}, which "
+                "DR's spec can't follow; move the class, or delete it with a replacement"
+            )
+    if node_id is None:
+        if _layer_of(layers, cls.concept_scheme_id, label) is not None:
+            raise ValueError(
+                f"{label}: it changed a class in the DR spec without a DR reference "
+                f"(source {DR_SOURCE!r}), so it can't land in DR's spec; give it one"
+            )
+        return None
+    values = {
+        key: fields[key]
+        for key in ("title", "description")
+        if key in fields and fields[key] != base.get(key)
+    }
+    if not values:
+        return "it changes nothing DR's spec holds for a node type"
+    return _node_entry(operation, "update", node_id, cls.identifier, values)
+
+
+def _node_move(
+    operation: ProposedOperation,
+    repo: OntologyRepository,
+    refs: dict[str, str | None],
+    layers: dict[str, str | None],
+    label: str,
+) -> dict[str, Any] | str | None:
+    """
+    A move to another scheme moves the node type to that scheme's layer: DR's
+    spec node id "{layer}.{type}" keeps its type and takes the new layer.
+    """
+    fields = operation.fields
+    if "concept_scheme_id" not in fields:
+        return "a parent class move; DR's spec has no class hierarchy"
+    cls = repo.get_class(operation.target_id or "")
+    if cls is None:
+        raise ValueError(f"{label}: its class no longer exists")
+    node_id = dr_relationship_id(cls.external_references)
+    previous = _layer_of(layers, operation.base.get("concept_scheme_id"), label)
+    layer = _layer_of(layers, _resolve_ref(fields["concept_scheme_id"], refs, label), label)
+    if node_id is None and previous is None and layer is None:
+        return None
+    if node_id is None or previous is None or layer is None:
+        raise ValueError(
+            f"{label}: it moved a class into or out of the DR spec's layers, or one without "
+            f"a DR reference (source {DR_SOURCE!r}), so it can't land in DR's spec"
+        )
+    type_name = node_id.partition(".")[2]
+    entry = _node_entry(operation, "move", f"{layer}.{type_name}", cls.identifier, {})
+    entry["previous_spec_node_id"] = f"{previous}.{type_name}"
+    return entry
+
+
+def _node_delete(
+    operation: ProposedOperation,
+    repo: OntologyRepository,
+    refs: dict[str, str | None],
+    deletes: dict[str, ProposedOperation],
+    label: str,
+) -> dict[str, Any] | None:
+    """
+    A deleted node type, with the class the delete names as its replacement,
+    followed through the proposal's other class deletes as for relationship
+    types (see `_delete`).
+    """
+    base = operation.base
+    node_id = dr_relationship_id(base.get("external_references") or [])
+    if node_id is None:
+        return None
+    entry = _node_entry(operation, "delete", node_id, base.get("identifier"), {})
+    replacement_class_id, cycle = _final_replacement(operation, repo.get_class, refs, deletes)
+    if cycle:
+        entry["note"] = (
+            "its replacement chain comes back round to a class this proposal deletes, so no "
+            "node type survives to replace it"
+        )
+    if replacement_class_id:
+        replacement = repo.get_class(replacement_class_id)
+        replacement_id = (
+            dr_relationship_id(replacement.external_references) if replacement else None
+        )
+        if replacement_id is None:
+            raise ValueError(
+                f"{label}: its replacement {replacement_class_id} is not a DR node type"
+            )
+        entry["replacement_spec_node_id"] = replacement_id
+    return entry
+
+
+def _node_entry(
+    operation: ProposedOperation, op: str, node_id: str, identifier: Any, values: dict
+) -> dict[str, Any]:
+    return {
+        "seq": operation.seq,
+        "op_id": operation.id,
+        "op": op,
+        "spec_node_id": node_id,
+        "layer_id": node_id.partition(".")[0],
+        "identifier": identifier,
+        "set": values,
+    }
+
+
+def _node_actions(
+    proposal: ChangeProposal,
+    node_changes: list[dict[str, Any]],
+    decisions: Mapping[str, ProposalDecision] | None,
+) -> list[dict[str, Any]]:
+    """
+    DR's `rename-type` change actions for the node type changes whose elements
+    a model migration can carry over: a move (to its new id) and a delete
+    with a replacement (to the replacement).
+    """
+    probabilities = {o.id: o.probability for o in proposal.operations}
+    actions = []
+    for change in node_changes:
+        if change["op"] == "move":
+            from_, to, kind = change["previous_spec_node_id"], change["spec_node_id"], "cs:move"
+        elif change.get("replacement_spec_node_id"):
+            from_, to = change["spec_node_id"], change["replacement_spec_node_id"]
+            kind = "cs:delete"
+        else:
+            continue
+        decision = (decisions or {}).get(change["op_id"])
+        actions.append(
+            {
+                "action": "rename-type",
+                "kind": kind,
+                "from": from_,
+                "to": to,
+                "swap": False,
+                "p": probabilities.get(change["op_id"]) or 1.0,
+                "proposal_id": proposal.id,
+                "operation_id": change["op_id"],
+                "applied_at": decision.decided_at.isoformat() if decision else None,
+            }
+        )
+    return actions
 
 
 def _entry(

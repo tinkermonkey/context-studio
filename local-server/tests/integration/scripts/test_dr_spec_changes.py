@@ -319,10 +319,10 @@ def test_a_named_replacement_whose_create_was_rejected_names_none(parts):
     assert "replacement_relationship_id" not in change
 
 
-def test_undecided_and_non_property_operations_are_skipped(parts):
+def test_undecided_and_non_type_operations_are_skipped(parts):
     _, repo, proposals = parts
     delivers = prop_by_dr_id(repo, DELIVERS)
-    operation_class = class_by_dr_id(repo, "api.operation")
+    taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
     proposal = propose(
         repo,
         proposals,
@@ -330,11 +330,7 @@ def test_undecided_and_non_property_operations_are_skipped(parts):
             seq=1, op="update", kind="property", target_id=delivers.id, fields={"title": "x"}
         ),
         OperationDraft(
-            seq=2,
-            op="update",
-            kind="class",
-            target_id=operation_class.id,
-            fields={"title": "Operation"},
+            seq=2, op="update", kind="taxonomy", target_id=taxonomy.id, fields={"color": "#123456"}
         ),
     )
     proposals.reject(proposal.id, [proposal.operations[0].id], "no")
@@ -345,7 +341,7 @@ def test_undecided_and_non_property_operations_are_skipped(parts):
     assert document["changes"] == []
     assert [(s["seq"], s["why"]) for s in document["skipped"]] == [
         (1, "rejected"),
-        (2, "a class operation, not a relationship type"),
+        (2, "a taxonomy operation, not a relationship or node type"),
     ]
 
 
@@ -406,7 +402,8 @@ def test_a_create_naming_a_class_the_proposal_created_resolves_its_ref(parts):
     (change,) = document["changes"]
     assert change["relationship_id"] == "api.widget.uses.api.operation"
     assert change["source_spec_node_id"] == "api.widget"
-    assert [s["seq"] for s in document["skipped"]] == [1]
+    assert document["skipped"] == []
+    assert [(c["seq"], c["spec_node_id"]) for c in document["node_changes"]] == [(1, "api.widget")]
 
 
 def test_a_type_on_dr_spec_classes_without_a_dr_reference_is_refused(parts):

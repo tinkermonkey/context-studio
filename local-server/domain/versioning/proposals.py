@@ -413,10 +413,13 @@ class ProposedOperation:
             applied. `fields` keeps what was proposed.
         resolution: How an applied relationship-type delete resolved the
             relationships still using the type, if they were moved or deleted
-        proposed_replacement_id: A property delete only: the relationship type
-            the proposer says replaces the deleted one, as an id or "$<ref>" of
-            an earlier property create (see `domain.versioning.in_use` for how
-            its pair of classes is compared with the deleted type's)
+        proposed_replacement_id: A property or class delete only: the
+            relationship type or class the proposer says replaces the deleted
+            one, as an id or "$<ref>" of an earlier create of the same kind (see
+            `domain.versioning.in_use` for how a relationship type's pair of
+            classes is compared with the deleted type's). A class's replacement
+            changes nothing in Context Studio; it tells a client that mirrors
+            the taxonomy (e.g. DR) what to migrate the deleted type's elements to
         type_change: Set when an applied property operation created or deleted
             the type, or changed its pair or keys: what it did (see TypeChange)
         id: Unique id
@@ -472,9 +475,12 @@ class ProposedOperation:
         if self.probability is not None and not 0.0 <= self.probability <= 1.0:
             raise ValueError("probability must be between 0 and 1")
         if self.proposed_replacement_id is not None and (
-            self.op is not OperationType.DELETE or self.kind is not OperationKind.PROPERTY
+            self.op is not OperationType.DELETE
+            or self.kind not in (OperationKind.PROPERTY, OperationKind.CLASS)
         ):
-            raise ValueError("Only a property (relationship type) delete can name a replacement")
+            raise ValueError(
+                "Only a property (relationship type) or class delete can name a replacement"
+            )
 
     @property
     def decided(self) -> bool:
