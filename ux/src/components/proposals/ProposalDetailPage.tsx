@@ -32,9 +32,11 @@ import {
   atOrAboveThreshold,
   decisionHeadline,
   decisionProgress,
+  ANY_FACETS,
   defaultOperationFilter,
+  facetCounts,
   linksToDecided,
-  filterOperations,
+  operationsShown,
   hasProbabilities,
   isBlocked,
   progressPills,
@@ -42,6 +44,7 @@ import {
   staleCause,
   staleCauseText,
   takesDecisions,
+  type Facets,
   type OperationFilter,
   type RevertSummary,
 } from "./decisionModel";
@@ -127,6 +130,8 @@ export function ProposalDetailPage({
   const [confirmRevert, setConfirmRevert] = useState(false);
   // Undefined until the reviewer picks one: then it follows defaultOperationFilter.
   const [chosenFilter, setFilter] = useState<OperationFilter>();
+  // The op and scope narrowing whichever primary filter is chosen.
+  const [facets, setFacets] = useState<Facets>(ANY_FACETS);
   // Undefined until the reviewer picks one: then it follows defaultGroupBy.
   const [chosenGroupBy, setGroupBy] = useState<GroupBy>();
   // Reflection answers the reviewer picked over the plan's, by operation.
@@ -142,7 +147,14 @@ export function ProposalDetailPage({
   const reverted = proposal?.status === "reverted";
   const progress = useMemo(() => decisionProgress(operations), [operations]);
   const filter = chosenFilter ?? defaultOperationFilter(progress, openOnAll.current);
-  const shownOperations = useMemo(() => filterOperations(operations, filter), [operations, filter]);
+  const shownOperations = useMemo(
+    () => operationsShown(operations, filter, facets),
+    [operations, filter, facets],
+  );
+  const counts = useMemo(
+    () => facetCounts(operations, filter, facets),
+    [operations, filter, facets],
+  );
   const decisionsQuery = useProposalDecisions(
     proposal?.taxonomy_id ?? "",
     id,
@@ -162,10 +174,17 @@ export function ProposalDetailPage({
     [checkedIds, awaitingOps, shownOperations],
   );
   // A filter that hides checked rows unchecks them, so a bulk decision only covers what is shown.
+  const uncheckHidden = (nextFilter: OperationFilter, nextFacets: Facets) => {
+    const shown = operationsShown(operations, nextFilter, nextFacets);
+    setChecked((ids) => ids.filter((i) => shown.some((o) => o.id === i)));
+  };
   const chooseFilter = (next: OperationFilter) => {
     setFilter(next);
-    const shown = filterOperations(operations, next);
-    setChecked((ids) => ids.filter((i) => shown.some((o) => o.id === i)));
+    uncheckHidden(next, facets);
+  };
+  const chooseFacets = (next: Facets) => {
+    setFacets(next);
+    uncheckHidden(filter, next);
   };
   const groupBy = offersGroupBy(operations)
     ? (chosenGroupBy ?? defaultGroupBy(operations))
@@ -518,6 +537,38 @@ export function ProposalDetailPage({
               { value: "all", label: `All · ${progress.total}` },
             ]}
           />
+          {counts.ops.length > 1 && (
+            <div data-testid="proposal-op-filter">
+              <SegmentedControl
+                value={facets.op}
+                onChange={(value) => chooseFacets({ ...facets, op: value as Facets["op"] })}
+                aria-label="Show operations by op"
+                options={[
+                  { value: "any", label: "Any op" },
+                  ...counts.ops.map(({ value, count }) => ({
+                    value,
+                    label: `${value} · ${count}`,
+                  })),
+                ]}
+              />
+            </div>
+          )}
+          {counts.scopes.length > 1 && (
+            <div data-testid="proposal-scope-filter">
+              <SegmentedControl
+                value={facets.scope}
+                onChange={(value) => chooseFacets({ ...facets, scope: value as Facets["scope"] })}
+                aria-label="Show operations by scope"
+                options={[
+                  { value: "any", label: "Any scope" },
+                  ...counts.scopes.map(({ value, count }) => ({
+                    value,
+                    label: `${value} · ${count}`,
+                  })),
+                ]}
+              />
+            </div>
+          )}
         </div>
         {/* Above the table, so the table frame is the last thing in the list
             column and its sticky header never scrolls under the topbar. */}
@@ -560,9 +611,11 @@ export function ProposalDetailPage({
                 <span className="entity-note">
                   {operations.length === 0
                     ? "This proposal has no operations."
-                    : filter === "needs"
-                      ? "Nothing needs a decision."
-                      : "Nothing is decided yet."}
+                    : facets.op !== "any" || facets.scope !== "any"
+                      ? "No operations match these filters."
+                      : filter === "needs"
+                        ? "Nothing needs a decision."
+                        : "Nothing is decided yet."}
                 </span>
               }
             />
