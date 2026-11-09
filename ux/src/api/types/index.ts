@@ -7527,15 +7527,12 @@ export interface components {
        */
       model: string;
       /**
-       * System Prompt
-       * @description System prompt text
+       * Stage Prompts
+       * @description Stage key -> prompts to use instead of the defaults; a stage that is left out, null, or equal to the default uses the default. Only for implementations with stages.
        */
-      system_prompt?: string | null;
-      /**
-       * User Prompt Template
-       * @description User prompt template (Jinja2)
-       */
-      user_prompt_template: string;
+      stage_prompts?: {
+        [key: string]: components["schemas"]["StagePromptPayload"] | null;
+      } | null;
       /** @description LLM generation parameters */
       parameters?: components["schemas"]["PipelineConfigurationParameters"];
       /**
@@ -7615,15 +7612,10 @@ export interface components {
        */
       model?: string | null;
       /**
-       * System Prompt
-       * @description System prompt text
+       * Stage Prompts
+       * @description The prompts sent at each LLM stage; null when the implementation has none
        */
-      system_prompt?: string | null;
-      /**
-       * User Prompt Template
-       * @description User prompt template
-       */
-      user_prompt_template?: string | null;
+      stage_prompts?: components["schemas"]["StagePromptView"][] | null;
       /** @description LLM generation parameters */
       parameters?: components["schemas"]["PipelineConfigurationParameters"] | null;
       /**
@@ -7679,15 +7671,12 @@ export interface components {
        */
       model: string;
       /**
-       * System Prompt
-       * @description System prompt text
+       * Stage Prompts
+       * @description Stage key -> prompts to use instead of the defaults; a stage that is left out, null, or equal to the default uses the default. Only for implementations with stages.
        */
-      system_prompt?: string | null;
-      /**
-       * User Prompt Template
-       * @description User prompt template (Jinja2)
-       */
-      user_prompt_template: string;
+      stage_prompts?: {
+        [key: string]: components["schemas"]["StagePromptPayload"] | null;
+      } | null;
       /** @description LLM generation parameters */
       parameters: components["schemas"]["PipelineConfigurationParameters"];
       /**
@@ -9323,6 +9312,65 @@ export interface components {
        * @description Zero-indexed character position where the span ends (exclusive), or None if unresolved
        */
       end?: number | null;
+    };
+    /**
+     * StagePromptPayload
+     * @description A configuration's prompts for one stage; a blank or missing field keeps the default.
+     */
+    StagePromptPayload: {
+      /**
+       * System
+       * @description System prompt
+       */
+      system?: string | null;
+      /**
+       * User
+       * @description User prompt template; {placeholder} names are filled per call
+       */
+      user?: string | null;
+    };
+    /**
+     * StagePromptView
+     * @description The prompts a configuration sends at one LLM stage.
+     */
+    StagePromptView: {
+      /**
+       * Key
+       * @description Stage key used in stage_prompts
+       */
+      key: string;
+      /**
+       * Label
+       * @description Stage name
+       */
+      label: string;
+      /**
+       * Description
+       * @description What the stage does
+       */
+      description: string;
+      /**
+       * Placeholders
+       * @description Placeholder name -> what it is filled with
+       */
+      placeholders: {
+        [key: string]: string;
+      };
+      /**
+       * System
+       * @description System prompt in effect
+       */
+      system: string;
+      /**
+       * User
+       * @description User prompt template in effect
+       */
+      user: string;
+      /**
+       * Is Default
+       * @description True when both prompts are the defaults
+       */
+      is_default: boolean;
     };
     /**
      * StatsTrendsResponse

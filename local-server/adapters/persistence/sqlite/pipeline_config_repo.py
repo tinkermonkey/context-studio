@@ -35,6 +35,19 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def registry_config(record: PipelineConfiguration) -> dict:
+    """The configuration dict a stored record registers in the in-memory registry."""
+    return {
+        "provider": record.provider,
+        "model": record.model,
+        "stage_prompts": record.stage_prompts or {},
+        "temperature": record.temperature,
+        "max_tokens": record.max_tokens,
+        "top_p": record.top_p,
+        "enabled": record.enabled,
+    }
+
+
 class PipelineConfigurationRepository:
     """Repository for user-created pipeline configurations in operations.db."""
 
@@ -51,9 +64,8 @@ class PipelineConfigurationRepository:
         name: str,
         provider: str,
         model: str,
-        user_prompt_template: str,
         description: Optional[str] = None,
-        system_prompt: Optional[str] = None,
+        stage_prompts: Optional[dict] = None,
         temperature: float = 0.4,
         max_tokens: int = 800,
         top_p: float = 0.9,
@@ -78,8 +90,7 @@ class PipelineConfigurationRepository:
             description=description,
             provider=provider,
             model=model,
-            system_prompt=system_prompt,
-            user_prompt_template=user_prompt_template,
+            stage_prompts=stage_prompts or None,
             temperature=temperature,
             max_tokens=max_tokens,
             top_p=top_p,
@@ -165,9 +176,8 @@ class PipelineConfigurationRepository:
         name: str,
         provider: str,
         model: str,
-        user_prompt_template: str,
         description: Optional[str] = None,
-        system_prompt: Optional[str] = None,
+        stage_prompts: Optional[dict] = None,
         temperature: float = 0.4,
         max_tokens: int = 800,
         top_p: float = 0.9,
@@ -193,8 +203,7 @@ class PipelineConfigurationRepository:
                 record.description = description
                 record.provider = provider
                 record.model = model
-                record.system_prompt = system_prompt
-                record.user_prompt_template = user_prompt_template
+                record.stage_prompts = stage_prompts or None
                 record.temperature = temperature
                 record.max_tokens = max_tokens
                 record.top_p = top_p

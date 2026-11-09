@@ -13980,23 +13980,27 @@
             "title": "Model",
             "description": "Model identifier"
           },
-          "system_prompt": {
+          "stage_prompts": {
             "anyOf": [
               {
-                "type": "string"
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/StagePromptPayload"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "object"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "System Prompt",
-            "description": "System prompt text"
-          },
-          "user_prompt_template": {
-            "type": "string",
-            "minLength": 1,
-            "title": "User Prompt Template",
-            "description": "User prompt template (Jinja2)"
+            "title": "Stage Prompts",
+            "description": "Stage key -> prompts to use instead of the defaults; a stage that is left out, null, or equal to the default uses the default. Only for implementations with stages."
           },
           "parameters": {
             "$ref": "#/components/schemas/PipelineConfigurationParameters",
@@ -14013,8 +14017,7 @@
         "required": [
           "name",
           "provider",
-          "model",
-          "user_prompt_template"
+          "model"
         ],
         "title": "PipelineConfigurationCreateRequest",
         "description": "Request body for creating a new user pipeline configuration."
@@ -14113,29 +14116,20 @@
             "title": "Model",
             "description": "Model identifier"
           },
-          "system_prompt": {
+          "stage_prompts": {
             "anyOf": [
               {
-                "type": "string"
+                "items": {
+                  "$ref": "#/components/schemas/StagePromptView"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "System Prompt",
-            "description": "System prompt text"
-          },
-          "user_prompt_template": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "User Prompt Template",
-            "description": "User prompt template"
+            "title": "Stage Prompts",
+            "description": "The prompts sent at each LLM stage; null when the implementation has none"
           },
           "parameters": {
             "anyOf": [
@@ -14236,23 +14230,27 @@
             "title": "Model",
             "description": "Model identifier"
           },
-          "system_prompt": {
+          "stage_prompts": {
             "anyOf": [
               {
-                "type": "string"
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/StagePromptPayload"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "object"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "System Prompt",
-            "description": "System prompt text"
-          },
-          "user_prompt_template": {
-            "type": "string",
-            "minLength": 1,
-            "title": "User Prompt Template",
-            "description": "User prompt template (Jinja2)"
+            "title": "Stage Prompts",
+            "description": "Stage key -> prompts to use instead of the defaults; a stage that is left out, null, or equal to the default uses the default. Only for implementations with stages."
           },
           "parameters": {
             "$ref": "#/components/schemas/PipelineConfigurationParameters",
@@ -14269,7 +14267,6 @@
           "name",
           "provider",
           "model",
-          "user_prompt_template",
           "parameters",
           "enabled"
         ],
@@ -17097,6 +17094,91 @@
         "type": "object",
         "title": "SourceSpanSchema",
         "description": "Immutable representation of a span in source text with provenance information."
+      },
+      "StagePromptPayload": {
+        "properties": {
+          "system": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System",
+            "description": "System prompt"
+          },
+          "user": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User",
+            "description": "User prompt template; {placeholder} names are filled per call"
+          }
+        },
+        "type": "object",
+        "title": "StagePromptPayload",
+        "description": "A configuration's prompts for one stage; a blank or missing field keeps the default."
+      },
+      "StagePromptView": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "Stage key used in stage_prompts"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Stage name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "What the stage does"
+          },
+          "placeholders": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Placeholders",
+            "description": "Placeholder name -> what it is filled with"
+          },
+          "system": {
+            "type": "string",
+            "title": "System",
+            "description": "System prompt in effect"
+          },
+          "user": {
+            "type": "string",
+            "title": "User",
+            "description": "User prompt template in effect"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "True when both prompts are the defaults"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "description",
+          "placeholders",
+          "system",
+          "user",
+          "is_default"
+        ],
+        "title": "StagePromptView",
+        "description": "The prompts a configuration sends at one LLM stage."
       },
       "StatsTrendsResponse": {
         "properties": {

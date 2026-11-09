@@ -15,7 +15,7 @@ import re
 import time
 from datetime import datetime, timezone
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Mapping
 from uuid import uuid4
 
 from domain.interchange.services import set_batch_run_context
@@ -27,6 +27,7 @@ from domain.ontology.ports import (
 )
 from domain.pipelines.candidate_ids import mention_key
 from domain.pipelines.ports import LLMProvider
+from domain.pipelines.stage_prompts import StagePrompt, render, resolve_stage_prompts
 from domain.ports import EventPublisher
 
 if TYPE_CHECKING:
@@ -44,6 +45,7 @@ from .entities import (
 )
 from .events import ExtractionCompleted
 from .exceptions import ExtractionError
+from .prompts import DERIVE_RELATIONSHIPS, IDENTIFY_INDIVIDUALS, INDIVIDUAL_EXTRACTION_STAGES
 from .ports import (
     ExtractionRepository,
     ExtractionRunRepository,
@@ -54,6 +56,9 @@ from .span_resolution import resolve_span
 from .value_objects import ExtractionLayerResult, LayerInput, LayerOutput, SourceSpan
 
 _logger = logging.getLogger(__name__)
+
+# Default prompts for the two LLM passes, used when no configuration overrides them.
+_DEFAULT_PROMPTS = resolve_stage_prompts(INDIVIDUAL_EXTRACTION_STAGES, None)
 
 
 def _serialize_triple_provenance(triple: dict) -> dict:
@@ -508,6 +513,7 @@ class ExtractionService:
         ontology_id: str,
         model: str,
         temperature: float,
+        stage_prompts: Mapping[str, Any] | None = None,
     ) -> TripleExtractionResult:
         """
         Extract RDF triples from text, scoped to a specific ontology.
@@ -521,6 +527,9 @@ class ExtractionService:
             ontology_id: ID of the target ontology
             model: LLM model name (e.g., 'gpt-4', 'claude-opus')
             temperature: Sampling temperature (0.0–2.0)
+            stage_prompts: A configuration's prompt overrides, stage key ->
+                {"system", "user"} (see domain/extraction/prompts.py); None or a
+                missing stage uses the default prompts
 
         Returns:
             Dictionary with keys:
@@ -536,6 +545,8 @@ class ExtractionService:
             raise ExtractionError("Text cannot be empty")
         if not 0.0 <= temperature <= 2.0:
             raise ValueError(f"temperature must be 0.0–2.0, got {temperature}")
+
+        prompts = resolve_stage_prompts(INDIVIDUAL_EXTRACTION_STAGES, stage_prompts)
 
         # Create extraction run record
         run_id = str(uuid4())
@@ -582,7 +593,7 @@ class ExtractionService:
                         tokens_used,
                         extraction_warnings,
                     ) = self._extract_triples_nlp_grounded(
-                        text, ontology, ontology_id, model, temperature
+                        text, ontology, ontology_id, model, temperature, prompts
                     )
                 else:
                     (
@@ -590,7 +601,7 @@ class ExtractionService:
                         tokens_used,
                         extraction_warnings,
                     ) = self._extract_triples_two_pass(
-                        text, ontology, ontology_id, model, temperature
+                        text, ontology, ontology_id, model, temperature, prompts
                     )
                 triples_extracted = len(extracted_triples)
                 triples_committed = triples_extracted
@@ -788,7 +799,13 @@ class ExtractionService:
         return catalog
 
     def _extract_triples_two_pass(
-        self, text: str, ontology, ontology_id: str, model: str, temperature: float
+        self,
+        text: str,
+        ontology,
+        ontology_id: str,
+        model: str,
+        temperature: float,
+        prompts: Mapping[str, StagePrompt] | None = None,
     ) -> tuple[list[dict], int, list[str]]:
         """
         Run the two-pass individual-then-relationship extraction (design doc §7).
@@ -815,7 +832,7 @@ class ExtractionService:
             Tuple of (combined typing + relationship triples, total tokens used, warnings).
         """
         individual_system, individual_user = self._build_individual_extraction_prompt(
-            text, ontology
+            text, ontology, (prompts or {}).get(IDENTIFY_INDIVIDUALS)
         )
         individual_response = self._llm.complete(
             system_prompt=individual_system,
@@ -836,7 +853,7 @@ class ExtractionService:
 
         individuals = self._identified_individuals(individual_triples)
         relationship_triples, rel_tokens, rel_warnings = self._derive_relationships(
-            text, ontology, individuals, ontology_id, model, temperature
+            text, ontology, individuals, ontology_id, model, temperature, prompts
         )
         tokens_used += rel_tokens
         all_relationship_triples, typing_warnings = self._type_concept_objects(
@@ -849,7 +866,7 @@ class ExtractionService:
         return combined, tokens_used, all_warnings
 
     def _derive_relationships(
-        self, text, ontology, individuals, ontology_id, model, temperature
+        self, text, ontology, individuals, ontology_id, model, temperature, prompts=None
     ) -> tuple[list[dict], int, list[str]]:
         """
         Derive relationships over already-identified individuals (shared pass 2).
@@ -865,7 +882,7 @@ class ExtractionService:
         if len(individuals) < 2:
             return [], 0, []
         relationship_system, relationship_user = self._build_relationship_extraction_prompt(
-            text, ontology, individuals
+            text, ontology, individuals, (prompts or {}).get(DERIVE_RELATIONSHIPS)
         )
         relationship_response = self._llm.complete(
             system_prompt=relationship_system,
@@ -1112,7 +1129,13 @@ class ExtractionService:
         }
 
     def _extract_triples_nlp_grounded(
-        self, text: str, ontology, ontology_id: str, model: str, temperature: float
+        self,
+        text: str,
+        ontology,
+        ontology_id: str,
+        model: str,
+        temperature: float,
+        prompts: Mapping[str, StagePrompt] | None = None,
     ) -> tuple[list[dict], int, list[str]]:
         """
         NLP-grounded extraction: spaCy leading edge + retrieval + LLM confirmation (#1141).
@@ -1148,7 +1171,7 @@ class ExtractionService:
         )
         individuals = self._identified_individuals(individual_triples)
         relationship_triples, rel_tokens, rel_warnings = self._derive_relationships(
-            text, ontology, individuals, ontology_id, model, temperature
+            text, ontology, individuals, ontology_id, model, temperature, prompts
         )
         tokens_used += rel_tokens
         all_relationship_triples, typing_warnings = self._type_concept_objects(
@@ -1643,7 +1666,9 @@ class ExtractionService:
                     bucket.append((predicate, range_title))
         return options
 
-    def _build_individual_extraction_prompt(self, text: str, ontology) -> tuple[str, str]:
+    def _build_individual_extraction_prompt(
+        self, text: str, ontology, prompt: StagePrompt | None = None
+    ) -> tuple[str, str]:
         """
         Build the pass-1 prompt: identify and ground individuals only (design doc §7).
 
@@ -1664,38 +1689,7 @@ class ExtractionService:
         Returns:
             Tuple of (system_prompt, user_prompt)
         """
-        system_prompt = """You are an expert knowledge graph extraction assistant.
-Your task is to identify the individuals a text mentions, scoped to an ontology context.
-
-Extract triples in the following JSON format:
-{
-  "triples": [
-    {
-      "subject": {"kind": "individual", "id": "...", "label": "...", "class_id": "..."},
-      "predicate": {"property_definition_id": "...", "label": "is_a"},
-      "object": {"kind": "class", "id": "...", "label": "..."},
-      "confidence": 0.95,
-      "provenance": {"text_offset_start": 0, "text_offset_end": 10, "raw": "..."}
-    }
-  ]
-}
-
-For each extracted triple, set provenance.raw to an exact, verbatim substring from
-the source text (not a paraphrase), and set text_offset_start/text_offset_end to the
-best-effort character positions of that substring.
-
-Extract every distinct individual (a concrete named thing, concept, or component)
-the text mentions. For each individual, emit exactly one typing triple: subject =
-the individual, predicate.label = "is_a", object = the ontology class it belongs to.
-For an "is_a" triple, object.kind must be "class" and object.label MUST be one of
-the class references listed in the prompt, copied EXACTLY (do not invent, rename,
-pluralize, or reformat class references). Every distinct individual the text
-mentions MUST appear: when no listed class fits well, still emit the individual,
-choosing the CLOSEST listed class rather than omitting it — never drop an
-individual for lack of a perfect type. Do NOT emit relationship triples between
-individuals in this step.
-
-Return only valid JSON. If no individuals can be extracted, return {"triples": []}."""
+        prompt = prompt or _DEFAULT_PROMPTS[IDENTIFY_INDIVIDUALS]
 
         catalog = self._relevant_class_catalog(text, ontology)
         ontology_title = ontology.title if hasattr(ontology, "title") else str(ontology)
@@ -1711,18 +1705,14 @@ Return only valid JSON. If no individuals can be extracted, return {"triples": [
         else:
             grounding = f"Ontology: {ontology_title}"
 
-        user_prompt = f"""Identify the individuals in the following text, scoped to the ontology
-        context provided.
-
-Text:
-{text}
-
-{grounding}"""
-
-        return system_prompt, user_prompt
+        return prompt.system, render(prompt.user, {"text": text, "grounding": grounding})
 
     def _build_relationship_extraction_prompt(
-        self, text: str, ontology, individuals: list[tuple[str, str]]
+        self,
+        text: str,
+        ontology,
+        individuals: list[tuple[str, str]],
+        prompt: StagePrompt | None = None,
     ) -> tuple[str, str]:
         """
         Build the pass-2 prompt: derive relationships over the identified individuals.
@@ -1782,39 +1772,8 @@ Text:
                 "predicate.label should be a short verb phrase describing the relationship."
             )
 
-        system_prompt = f"""You are an expert knowledge graph extraction assistant.
-Your task is to state the relationships a text asserts between a fixed set of
-already-identified individuals.
-
-Extract relationship triples in the following JSON format:
-{{
-  "triples": [
-    {{
-      "subject": {{"kind": "individual", "id": "...", "label": "..."}},
-      "predicate": {{"property_definition_id": "...", "label": "..."}},
-      "object": {{"kind": "individual", "id": "...", "label": "..."}},
-      "confidence": 0.95,
-      "provenance": {{"text_offset_start": 0, "text_offset_end": 10, "raw": "..."}}
-    }}
-  ]
-}}
-
-For each relationship triple, set provenance.raw to an exact, verbatim substring that
-evidences the relationship (typically spanning both entities and the connecting clause,
-not just a single entity mention), and set text_offset_start/text_offset_end to the
-best-effort character positions of that substring.
-
-Use one of the individuals listed in the prompt as the SUBJECT of each relationship,
-copying its label EXACTLY. The OBJECT may be one of the listed individuals OR a new
-concept, quality, or outcome the text names as what the subject relates to (for example
-an abstract quality such as "readability", "loose coupling", or "duplication") — many
-relationships point at such concepts even though they are not concrete typeable
-entities. When the object is a new concept, set object.kind to "individual" and give it
-a concise label taken from the text; never introduce a new SUBJECT this way. Emit a
-relationship only when the text states one. Do NOT emit typing ("is_a") triples in this
-step. {predicate_instruction}
-
-Return only valid JSON. If no relationships can be extracted, return {{"triples": []}}."""
+        prompt = prompt or _DEFAULT_PROMPTS[DERIVE_RELATIONSHIPS]
+        system_prompt = render(prompt.system, {"predicate_instruction": predicate_instruction})
 
         ontology_title = ontology.title if hasattr(ontology, "title") else str(ontology)
         individuals_block = "\n".join(
@@ -1850,18 +1809,15 @@ Return only valid JSON. If no relationships can be extracted, return {{"triples"
         else:
             allowed = ""
 
-        user_prompt = f"""State the relationships the following text asserts, scoped to the
-        ontology context provided. Each relationship's subject is one of the identified
-        individuals; its object is either another identified individual or a new concept
-        the text names as the relationship's target.
-
-Text:
-{text}
-
-Ontology: {ontology_title}
-
-Identified individuals:
-{individuals_block}{allowed}"""
+        user_prompt = render(
+            prompt.user,
+            {
+                "text": text,
+                "ontology": ontology_title,
+                "individuals": individuals_block,
+                "allowed": allowed,
+            },
+        )
 
         return system_prompt, user_prompt
 
@@ -2352,9 +2308,7 @@ Identified individuals:
                 continue
 
             class_id = subject.get("class_id")
-            class_ids = subject.get("class_ids") or (
-                [class_id] if class_id else []
-            )
+            class_ids = subject.get("class_ids") or ([class_id] if class_id else [])
             if not class_ids:
                 hits.append(
                     RecognitionPreviewHit(

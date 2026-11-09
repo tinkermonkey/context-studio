@@ -39,6 +39,7 @@ from adapters.factories.orchestrator_factory import (
 )
 from adapters.persistence.sqlite.pipeline_config_repo import (
     PipelineConfigurationRepository,
+    registry_config,
 )
 from adapters.pipelines.run_executor import BackgroundRunExecutor, UnknownPipelineError
 from adapters.web.dependencies import get_versioning_service
@@ -64,6 +65,8 @@ from adapters.web.schemas.pipelines import (
     NodeReference,
     PipelineConfigurationCreateRequest,
     PipelineConfigurationParameters,
+    StagePromptPayload,
+    StagePromptView,
     PipelineConfigurationResponse,
     PipelineConfigurationUpdateRequest,
     PipelineRunRequest,
@@ -104,6 +107,11 @@ from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
     PipelineTypeRegistry,
+)
+from domain.pipelines.stage_prompts import (
+    StageDefinition,
+    resolve_stage_prompts,
+    strip_defaults,
 )
 from domain.versioning.exceptions import RevertConflictError
 from domain.versioning.services import VersioningService
@@ -614,11 +622,72 @@ async def list_implementations(
     ]
 
 
+def _impl_stages(
+    impl_registry: PipelineImplementationRegistry, ptype: PipelineType, impl_id: str
+) -> tuple[StageDefinition, ...] | None:
+    """The LLM stages an implementation declares, or None when it declares none."""
+    # Registered implementations are PipelineOrchestrator subclasses; anything
+    # else (or an empty STAGE_PROMPTS) has no configurable stages.
+    return getattr(impl_registry.get(ptype, impl_id), "STAGE_PROMPTS", ()) or None
+
+
+def _record_stages(request: Request, record: Any) -> tuple[StageDefinition, ...] | None:
+    """The stages of a stored configuration's implementation (None if unknown)."""
+    try:
+        ptype = PipelineType(record.pipeline_type)
+    except ValueError:
+        return None
+    return _impl_stages(request.app.state.implementation_registry, ptype, record.implementation_id)
+
+
+def _stage_prompt_views(
+    stages: tuple[StageDefinition, ...] | None, overrides: Any
+) -> list[StagePromptView] | None:
+    """The prompts in effect at each stage, for a configuration's overrides."""
+    if not stages:
+        return None
+    resolved = resolve_stage_prompts(stages, overrides)
+    return [
+        StagePromptView(
+            key=stage.key,
+            label=stage.label,
+            description=stage.description,
+            placeholders=dict(stage.placeholders),
+            system=resolved[stage.key].system,
+            user=resolved[stage.key].user,
+            is_default=resolved[stage.key] == stage.default,
+        )
+        for stage in stages
+    ]
+
+
+def _stored_stage_prompts(
+    stages: tuple[StageDefinition, ...] | None,
+    payload: dict[str, StagePromptPayload | None] | None,
+) -> dict[str, dict[str, str]]:
+    """
+    The overrides to store: only what differs from the defaults.
+
+    Raises:
+        HTTPException: 422 when the payload names stages the implementation lacks
+    """
+    if not payload:
+        return {}
+    raw = {key: value.model_dump() if value else None for key, value in payload.items()}
+    try:
+        return strip_defaults(stages or (), raw)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=http_status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
+        ) from exc
+
+
 def _system_config_to_response(
     pipeline_type: str,
     impl_id: str,
     config_ref: str,
     version_obj: Any,
+    stages: tuple[StageDefinition, ...] | None = None,
 ) -> PipelineConfigurationResponse:
     """Convert an in-memory system configuration to a response schema."""
     cfg = version_obj.config
@@ -639,8 +708,7 @@ def _system_config_to_response(
         description=cfg.get("description"),
         provider=provider,
         model=cfg.get("model"),
-        system_prompt=cfg.get("system_prompt"),
-        user_prompt_template=cfg.get("user_prompt_template"),
+        stage_prompts=_stage_prompt_views(stages, cfg.get("stage_prompts")),
         parameters=params,
         enabled=cfg.get("enabled", True),
         version=version_obj.version,
@@ -650,7 +718,9 @@ def _system_config_to_response(
     )
 
 
-def _db_config_to_response(record: Any) -> PipelineConfigurationResponse:
+def _db_config_to_response(
+    record: Any, stages: tuple[StageDefinition, ...] | None = None
+) -> PipelineConfigurationResponse:
     """Convert a DB pipeline configuration record to a response schema."""
 
     def _parse_dt(s: Optional[str]) -> Optional[datetime]:
@@ -670,8 +740,7 @@ def _db_config_to_response(record: Any) -> PipelineConfigurationResponse:
         description=record.description,
         provider=record.provider,
         model=record.model,
-        system_prompt=record.system_prompt,
-        user_prompt_template=record.user_prompt_template,
+        stage_prompts=_stage_prompt_views(stages, record.stage_prompts),
         parameters=PipelineConfigurationParameters(
             temperature=record.temperature,
             max_tokens=record.max_tokens,
@@ -752,13 +821,14 @@ async def list_configurations(
 
     # System configs from the in-memory registry, excluding user-owned refs (active or deleted)
     system_configs = config_registry.list_configs(ptype, impl_id)
+    stages = _impl_stages(impl_registry, ptype, impl_id)
     result: list[PipelineConfigurationResponse] = [
-        _system_config_to_response(ptype.value, impl_id, config_ref, version_obj)
+        _system_config_to_response(ptype.value, impl_id, config_ref, version_obj, stages)
         for config_ref, version_obj in system_configs
         if config_ref not in known_user_refs
     ]
 
-    result.extend(_db_config_to_response(r) for r in user_configs)
+    result.extend(_db_config_to_response(r, stages) for r in user_configs)
     return result
 
 
@@ -807,6 +877,8 @@ async def create_configuration(
             status_code=http_status.HTTP_404_NOT_FOUND,
             detail=f"Implementation not found: {ptype.value}:{impl_id}",
         )
+    stages = _impl_stages(impl_registry, ptype, impl_id)
+    stage_prompts = _stored_stage_prompts(stages, body.stage_prompts)
 
     if not hasattr(request.app.state, "pipeline_config_repo"):
         raise HTTPException(
@@ -823,9 +895,8 @@ async def create_configuration(
         name=body.name,
         provider=body.provider,
         model=body.model,
-        user_prompt_template=body.user_prompt_template,
         description=body.description,
-        system_prompt=body.system_prompt,
+        stage_prompts=stage_prompts,
         temperature=params.temperature,
         max_tokens=params.max_tokens,
         top_p=params.top_p,
@@ -833,19 +904,9 @@ async def create_configuration(
     )
 
     # Register in the in-memory registry so runs can use it immediately
-    config_dict = {
-        "provider": record.provider,
-        "model": record.model,
-        "system_prompt": record.system_prompt or "",
-        "user_prompt_template": record.user_prompt_template,
-        "temperature": record.temperature,
-        "max_tokens": record.max_tokens,
-        "top_p": record.top_p,
-        "enabled": record.enabled,
-    }
-    config_registry.register(ptype, impl_id, record.config_ref, config_dict)
+    config_registry.register(ptype, impl_id, record.config_ref, registry_config(record))
 
-    return _db_config_to_response(record)
+    return _db_config_to_response(record, stages)
 
 
 # ==================== Pipeline Execution ====================
@@ -2411,7 +2472,7 @@ async def get_configuration(
             status_code=http_status.HTTP_404_NOT_FOUND,
             detail=f"Configuration not found: {config_id}",
         )
-    return _db_config_to_response(record)
+    return _db_config_to_response(record, _record_stages(request, record))
 
 
 @config_router.put(
@@ -2449,15 +2510,23 @@ async def update_configuration(
     config_repo: PipelineConfigurationRepository = request.app.state.pipeline_config_repo
     config_registry: PipelineConfigurationRegistry = request.app.state.config_registry
 
+    existing = config_repo.get(config_id)
+    if existing is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"Configuration not found: {config_id}",
+        )
+    stages = _record_stages(request, existing)
+    stage_prompts = _stored_stage_prompts(stages, body.stage_prompts)
+
     params = body.parameters
     record = config_repo.update(
         config_id=config_id,
         name=body.name,
         provider=body.provider,
         model=body.model,
-        user_prompt_template=body.user_prompt_template,
         description=body.description,
-        system_prompt=body.system_prompt,
+        stage_prompts=stage_prompts,
         temperature=params.temperature,
         max_tokens=params.max_tokens,
         top_p=params.top_p,
@@ -2472,17 +2541,9 @@ async def update_configuration(
     # Register new version in the in-memory registry
     try:
         ptype = PipelineType(record.pipeline_type)
-        config_dict = {
-            "provider": record.provider,
-            "model": record.model,
-            "system_prompt": record.system_prompt or "",
-            "user_prompt_template": record.user_prompt_template,
-            "temperature": record.temperature,
-            "max_tokens": record.max_tokens,
-            "top_p": record.top_p,
-            "enabled": record.enabled,
-        }
-        config_registry.register(ptype, record.implementation_id, record.config_ref, config_dict)
+        config_registry.register(
+            ptype, record.implementation_id, record.config_ref, registry_config(record)
+        )
     except Exception as exc:
         _logger.error(
             f"Failed to register updated config {config_id} in registry",
@@ -2494,7 +2555,7 @@ async def update_configuration(
             "Pipeline runs may use stale configuration until server restart.",
         ) from exc
 
-    return _db_config_to_response(record)
+    return _db_config_to_response(record, stages)
 
 
 @config_router.delete(

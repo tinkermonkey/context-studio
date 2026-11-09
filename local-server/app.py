@@ -470,21 +470,11 @@ async def lifespan(app: FastAPI):
             for user_cfg in user_configs:
                 try:
                     ptype = _PipelineType(user_cfg.pipeline_type)
-                    config_dict = {
-                        "provider": user_cfg.provider,
-                        "model": user_cfg.model,
-                        "system_prompt": user_cfg.system_prompt or "",
-                        "user_prompt_template": user_cfg.user_prompt_template,
-                        "temperature": user_cfg.temperature,
-                        "max_tokens": user_cfg.max_tokens,
-                        "top_p": user_cfg.top_p,
-                        "enabled": user_cfg.enabled,
-                    }
                     config_registry.register(
                         ptype,
                         user_cfg.implementation_id,
                         user_cfg.config_ref,
-                        config_dict,
+                        registry_config(user_cfg),
                     )
                 except Exception as load_exc:
                     logger.warning(

@@ -139,23 +139,60 @@
     transition: width 0.1s;
   }
 
-  /* VariableChips */
-  .variable-chips {
+  /* StagePromptsSection */
+  .cfg-stage-list {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .cfg-stage {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 6px;
+  }
+
+  .cfg-stage__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cfg-stage__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .cfg-stage__reset {
+    margin-left: auto;
+  }
+
+  .cfg-stage__desc {
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .cfg-stage__placeholders {
+    display: flex;
+    flex-direction: column;
     gap: 4px;
-    margin-top: 6px;
-  }
-
-  .variable-chip-btn {
-    background: none;
-    border: none;
+    margin: 0;
     padding: 0;
-    cursor: pointer;
+    list-style: none;
+    font-size: 12px;
   }
 
-  .variable-chip-btn:disabled {
-    cursor: default;
-    opacity: 0.6;
+  .cfg-stage__placeholder {
+    font-family: var(--font-mono);
+    color: rgb(var(--canvas-fg-1));
+    margin-right: 8px;
+  }
+
+  .cfg-stage__placeholder-meaning {
+    color: rgb(var(--canvas-fg-3));
   }
 }

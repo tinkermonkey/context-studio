@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Literal, Protocol
+from typing import Any, Literal, Mapping, Protocol
 
 from .entities import Batch, BatchStatus, PipelineRun, PipelineRunStatus, PipelineType
 
@@ -108,8 +108,14 @@ class ExtractionPort(Protocol):
         ontology_id: str,
         model: str,
         temperature: float,
+        stage_prompts: Mapping[str, Any] | None = None,
     ) -> TripleExtractionResult:
-        """Extract RDF triples from text scoped to a specific ontology."""
+        """
+        Extract RDF triples from text scoped to a specific ontology.
+
+        stage_prompts are a configuration's prompt overrides (stage key ->
+        {"system", "user"}); None uses the default prompts.
+        """
         ...
 
 
