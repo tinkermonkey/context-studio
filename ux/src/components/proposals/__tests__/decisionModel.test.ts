@@ -17,6 +17,7 @@ import {
   hasTripleErrors,
   isBelowThreshold,
   isDrEditable,
+  nextSelection,
   outcomeRows,
   replacementLabel,
   resolutionLabel,
@@ -499,5 +500,21 @@ describe("blocked relationship-type deletes", () => {
     expect(resolutionResult(applied)).toBe(
       "moved 2 relationships to triggered_by with their ends swapped, removed the type",
     );
+  });
+});
+
+describe("nextSelection", () => {
+  const before = ["a", "b", "c", "d"];
+  it("selects the row that was below the decided one", () => {
+    expect(nextSelection(before, ["a", "c", "d"], "b")).toBe("c");
+  });
+  it("skips rows below it that were decided with it", () => {
+    expect(nextSelection(before, ["a", "d"], "b")).toBe("d");
+  });
+  it("selects the new last row when the decided row was last", () => {
+    expect(nextSelection(before, ["a", "b", "c"], "d")).toBe("c");
+  });
+  it("selects nothing when the list is empty", () => {
+    expect(nextSelection(["a"], [], "a")).toBeUndefined();
   });
 });

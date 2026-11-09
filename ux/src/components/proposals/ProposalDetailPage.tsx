@@ -37,6 +37,7 @@ import {
   facetCounts,
   linksToDecided,
   operationsShown,
+  nextSelection,
   hasProbabilities,
   isBlocked,
   progressPills,
@@ -63,6 +64,7 @@ import {
   offersGroupBy,
   pickOutcome,
   takesPicks,
+  tieredOrder,
   type GroupBy,
   type Picks,
 } from "./tieredModel";
@@ -155,6 +157,7 @@ export function ProposalDetailPage({
     () => facetCounts(operations, filter, facets),
     [operations, filter, facets],
   );
+  const shownIds = useMemo(() => new Set(shownOperations.map((o) => o.id)), [shownOperations]);
   const decisionsQuery = useProposalDecisions(
     proposal?.taxonomy_id ?? "",
     id,
@@ -190,6 +193,35 @@ export function ProposalDetailPage({
     ? (chosenGroupBy ?? defaultGroupBy(operations))
     : "sequence";
   const byKind = groupBy === "kind";
+  // The ids the filters show, top to bottom, as the table or the grouping lists
+  // them. A conflict card can also list members the filter doesn't show: those
+  // are left out, so selection never moves onto one.
+  const shownOrder = useMemo(
+    () =>
+      byKind
+        ? tieredOrder(shownOperations, operations).filter((id) => shownIds.has(id))
+        : shownOperations.map((o) => o.id),
+    [byKind, shownOperations, operations, shownIds],
+  );
+  // When a decision drops the selected operation out of the list, select the
+  // one below it, so the reviewer can decide row after row. A filter or
+  // grouping change, or a deep link to an operation not shown, moves nothing.
+  const lastShown = useRef<{
+    order: string[];
+    filter: OperationFilter;
+    facets: Facets;
+    groupBy: GroupBy;
+  }>(undefined);
+  useEffect(() => {
+    const last = lastShown.current;
+    lastShown.current = { order: shownOrder, filter, facets, groupBy };
+    const sameView =
+      !!last && last.filter === filter && last.facets === facets && last.groupBy === groupBy;
+    if (!selectedOperationId || !last || !sameView) return;
+    if (!last.order.includes(selectedOperationId) || shownOrder.includes(selectedOperationId))
+      return;
+    onSelectOperation(nextSelection(last.order, shownOrder, selectedOperationId));
+  }, [shownOrder, filter, facets, groupBy, selectedOperationId, onSelectOperation]);
   // Judgment and conflict rows of a change plan are never bulk-decided.
   // So are the operations a conflict card shows, in either view.
   const conflicted = useMemo(() => conflictedIds(operations), [operations]);
@@ -201,7 +233,6 @@ export function ProposalDetailPage({
   const showThreshold =
     !byKind && deciding && awaitingOps.length > 0 && hasProbabilities(operations);
   // The threshold picks only from what the filters show, so it never checks hidden rows.
-  const shownIds = useMemo(() => new Set(shownOperations.map((o) => o.id)), [shownOperations]);
   const shownAwaiting = awaitingOps.filter((o) => shownIds.has(o.id)).length;
   const matching = showThreshold
     ? atOrAboveThreshold(
