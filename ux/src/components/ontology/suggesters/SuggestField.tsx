@@ -18,9 +18,12 @@ const isSuggestCandidate = (c: CandidateItem): c is SuggestCandidate =>
   c.candidate_type === "refinement" || c.candidate_type === "grounding";
 
 interface SuggestFieldProps {
+  /** Class whose definition Suggest refines; without one, Suggest is hidden. */
   entityId?: string;
   value: string;
   onChange: (value: string) => void;
+  /** Saves the field. Append calls it directly: its button unmounts, so the blur that normally saves may never fire. */
+  onCommit?: (value: string) => void;
   placeholder?: string;
   rows?: number;
   testId?: string;
@@ -30,6 +33,7 @@ export function SuggestField({
   entityId,
   value,
   onChange,
+  onCommit,
   placeholder,
   rows = 4,
   testId,
@@ -79,7 +83,8 @@ export function SuggestField({
     try {
       await applyMutation.mutateAsync({
         runId,
-        params: { confidence_threshold: candidate.confidence, node_id: entityId },
+        params: { node_id: entityId },
+        body: { accepted_candidate_ids: [candidate.candidate_id] },
       });
       return true;
     } catch (err) {
@@ -97,13 +102,13 @@ export function SuggestField({
     }
   };
 
-  const handleAppend = async (candidate: SuggestCandidate & { originalIdx: number }) => {
+  // Append edits the field and saves it through the drawer, not the pipeline's apply.
+  const handleAppend = (candidate: SuggestCandidate & { originalIdx: number }) => {
     if (!candidate.description) return;
-    const success = await applyCandidate(candidate);
-    if (success) {
-      onChange(value ? `${value}\n\n${candidate.description}` : candidate.description);
-      setRunId(null);
-    }
+    const appended = value ? `${value}\n\n${candidate.description}` : candidate.description;
+    onChange(appended);
+    onCommit?.(appended);
+    setRunId(null);
   };
 
   const handleDismiss = (originalIdx: number) => {
@@ -124,17 +129,19 @@ export function SuggestField({
         data-testid={testId}
         rows={rows}
       />
-      <div className="suggest-field-actions">
-        <button
-          type="button"
-          className="suggest-field-action-btn"
-          onClick={() => void handleSuggest()}
-          disabled={isRunning || !entityId}
-          data-testid={testId ? `${testId}-suggest-btn` : "suggest-field-btn"}
-        >
-          {isRunning ? "Suggesting…" : "✦ Suggest"}
-        </button>
-      </div>
+      {entityId && (
+        <div className="suggest-field-actions">
+          <button
+            type="button"
+            className="suggest-field-action-btn"
+            onClick={() => void handleSuggest()}
+            disabled={isRunning}
+            data-testid={testId ? `${testId}-suggest-btn` : "suggest-field-btn"}
+          >
+            {isRunning ? "Suggesting…" : "✦ Suggest"}
+          </button>
+        </div>
+      )}
 
       {isRunning && (
         <div className="suggest-field-shimmer" data-testid="suggest-field-loading">
@@ -211,7 +218,7 @@ export function SuggestField({
                 <button
                   type="button"
                   className="suggest-field-action-btn suggest-field-action-append"
-                  onClick={() => void handleAppend(candidate)}
+                  onClick={() => handleAppend(candidate)}
                   disabled={applyMutation.isPending || !candidate.description}
                   data-testid={`suggest-candidate-append-${candidate.originalIdx}`}
                 >

@@ -234,13 +234,13 @@ class SchemaGroundingRunRequest(PipelineRunRequest):
     node_id: Optional[str] = Field(
         None,
         min_length=1,
-        description="Class (or, with node_type PropertyDefinition, property definition) to ground",
+        description="Class to ground (its title is the label)",
     )
     node_label: Optional[str] = Field(
         None, min_length=1, description="Label to ground directly, instead of node_id"
     )
     node_type: Literal["Class", "PropertyDefinition"] = Field(
-        "Class", description="What node_id names"
+        "Class", description="Node type of node_label"
     )
     sources: Optional[list[str]] = Field(
         None,
@@ -475,7 +475,7 @@ class ApplyRunRequest(BaseModel):
     accepted_candidate_ids: Optional[list[str]] = Field(
         None,
         description=(
-            "candidate_ids to apply (schema_extraction and individual_extraction). When "
+            "candidate_ids to apply (extraction, grounding and refinement runs). When "
             "present this is the full selection: every other candidate is skipped and "
             "confidence_threshold is ignored. Unknown ids are rejected with 422."
         ),

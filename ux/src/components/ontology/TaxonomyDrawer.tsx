@@ -205,7 +205,6 @@ export function TaxonomyDrawer({ taxonomy }: TaxonomyDrawerProps) {
                 >
                   <label className="form-group-label">Summary</label>
                   <SuggestField
-                    entityId={taxonomy.id}
                     value={descriptionDraft}
                     onChange={setDescriptionDraft}
                     rows={4}

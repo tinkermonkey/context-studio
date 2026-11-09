@@ -10,6 +10,8 @@ from unittest.mock import Mock
 
 import pytest
 
+from domain.pipelines.apply_selection import ApplySelectionError
+
 from domain.ontology.entities import Class, PropertyDefinition, Relationship
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus
 from domain.pipelines.schema_node_connection_refinement.apply_service import (
@@ -1005,3 +1007,82 @@ class TestSchemaConnectionRefinementApplyServiceEdgeCases:
         assert result.classes_updated == 0
         assert result.classes_skipped == 0
         assert result.external_references_created == 0
+
+
+class TestConnectionRefinementApplySelection:
+    """accepted_candidate_ids applies exactly the chosen deltas."""
+
+    def _run(self, scope_id):
+        return PipelineRun(
+            id="run-select",
+            batch_run_id="batch-select",
+            implementation_id="default",
+            configuration_slug="connection-refinement-default",
+            configuration_version=1,
+            status=PipelineRunStatus.COMPLETED,
+            output_summary={
+                "scope_id": scope_id,
+                "deltas": [
+                    {
+                        "operation": "add",
+                        "subject": "Microservice",
+                        "predicate": "depends on",
+                        "object": "API",
+                        "confidence": 0.6,
+                    },
+                    {
+                        "operation": "remove",
+                        "subject": "Microservice",
+                        "predicate": "depends on",
+                        "object": "Service",
+                        "confidence": 0.9,
+                    },
+                ],
+            },
+        )
+
+    def test_accepting_an_add_leaves_a_higher_confidence_remove_alone(
+        self,
+        mock_ontology_repo,
+        mock_ontology_service,
+        sample_classes,
+        sample_property_definition,
+        sample_scope_id,
+    ):
+        """Accepting refinement-0 creates its relationship and deletes nothing."""
+        existing_rel = Relationship(
+            id="rel-1",
+            source_id="class-1",
+            target_id="class-2",
+            property_definition_id="prop-1",
+            source_run_id="run-orig",
+        )
+        mock_ontology_repo.get_class.side_effect = lambda ref: sample_classes.get(ref)
+        mock_ontology_repo.list_relationships.side_effect = lambda **kw: (
+            [existing_rel] if kw.get("target_id") == "class-2" else []
+        )
+        mock_ontology_repo.get_property_definition_by_identifier.return_value = (
+            sample_property_definition
+        )
+        mock_ontology_repo.list_classes.return_value = list(sample_classes.values())
+
+        service = SchemaConnectionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
+        result = service.apply(
+            self._run(sample_scope_id),
+            confidence_threshold=0.6,
+            accepted_candidate_ids=["refinement-0"],
+        )
+
+        assert result.relationships_created == 1
+        assert result.relationships_removed == 0
+        mock_ontology_service.delete_relationship.assert_not_called()
+
+    def test_unknown_candidate_id_is_rejected(
+        self, mock_ontology_repo, mock_ontology_service, sample_scope_id
+    ):
+        """An id the run does not contain raises ApplySelectionError."""
+        service = SchemaConnectionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
+
+        with pytest.raises(ApplySelectionError, match="refinement-7"):
+            service.apply(self._run(sample_scope_id), accepted_candidate_ids=["refinement-7"])
+        mock_ontology_service.create_relationship.assert_not_called()

@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from domain.pipelines.entities import PipelineType
-from domain.pipelines.exceptions import PipelineInputError
+from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipelines.schema_node_grounding.orchestrator import (
     SchemaGroundingOrchestrator,
     SchemaGroundingState,
@@ -175,29 +175,25 @@ class TestSchemaGroundingOrchestrator:
         assert mock_adapter.query_sources.await_args.kwargs["label"] == "Bicycle"
 
     @pytest.mark.asyncio
-    async def test_execute_resolves_property_label_from_node_id(
+    async def test_execute_node_id_without_ontology_repo(
         self, mock_adapter, mock_scorer, mock_llm_provider
     ):
-        """With node_type PropertyDefinition, a node_id names a property definition."""
-        ontology_repo = MagicMock()
-        ontology_repo.get_property_definition.return_value = MagicMock(title="owns")
+        """A node_id with no ontology repository wired is a wiring error, not missing input."""
         orchestrator = SchemaGroundingOrchestrator(
             llm_provider=mock_llm_provider,
             grounding_adapter=mock_adapter,
             scorer=mock_scorer,
-            ontology_repo=ontology_repo,
         )
 
         state = SchemaGroundingState(
             run_id="run-123",
             pipeline_type=PipelineType.SCHEMA_NODE_GROUNDING,
-            input_data={"node_id": "prop-1", "node_type": "PropertyDefinition"},
+            input_data={"node_id": "cls-1"},
         )
-        result = await orchestrator.execute(state)
 
-        ontology_repo.get_class.assert_not_called()
-        assert result.node_label == "owns"
-        assert result.node_type.value == "PropertyDefinition"
+        with pytest.raises(PipelineExecutionError, match="needs an ontology repository"):
+            await orchestrator.execute(state)
+        mock_adapter.query_sources.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_execute_unknown_node_id(self, mock_adapter, mock_scorer, mock_llm_provider):
@@ -217,7 +213,7 @@ class TestSchemaGroundingOrchestrator:
             input_data={"node_id": "missing"},
         )
 
-        with pytest.raises(PipelineInputError, match="No Class with id 'missing'"):
+        with pytest.raises(PipelineInputError, match="No class with id 'missing'"):
             await orchestrator.execute(state)
         mock_adapter.query_sources.assert_not_awaited()
 

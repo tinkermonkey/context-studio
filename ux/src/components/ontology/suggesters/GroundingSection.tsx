@@ -70,18 +70,15 @@ export function GroundingSection({
     }
   };
 
-  const handleAdd = async (uri: string, confidence: number) => {
+  const handleAdd = async (candidateId: string, uri: string) => {
     if (!runId) return;
     try {
       await applyMutation.mutateAsync({
         runId,
-        params: { confidence_threshold: confidence, node_id: classId },
+        params: { node_id: classId },
+        body: { accepted_candidate_ids: [candidateId] },
       });
-      // The apply endpoint applies all candidates at or above the threshold
-      const applied = new Set(
-        allCandidates.filter((c) => c.confidence >= confidence).map((c) => c.uri),
-      );
-      setAppliedUris((prev) => new Set([...prev, ...applied]));
+      setAppliedUris((prev) => new Set([...prev, uri]));
       toast("success", "Grounding applied");
     } catch (err) {
       toast("error", err instanceof Error ? err.message : "Failed to apply grounding");
@@ -236,7 +233,7 @@ export function GroundingSection({
                   <button
                     type="button"
                     className="grounding-proposal-add-btn"
-                    onClick={() => void handleAdd(candidate.uri, candidate.confidence)}
+                    onClick={() => void handleAdd(candidate.candidate_id, candidate.uri)}
                     data-added={isApplied}
                     disabled={isApplied || applyMutation.isPending}
                     data-testid={`grounding-add-${candidate.originalIdx}`}

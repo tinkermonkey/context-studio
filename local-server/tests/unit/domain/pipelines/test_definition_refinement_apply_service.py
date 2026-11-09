@@ -9,6 +9,8 @@ from unittest.mock import Mock
 
 import pytest
 
+from domain.pipelines.apply_selection import ApplySelectionError
+
 from domain.ontology.entities import Class
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus
 from domain.pipelines.schema_node_definition_refinement.apply_service import (
@@ -405,3 +407,45 @@ class TestSchemaDefinitionRefinementApplyServiceEdgeCases:
         result = service.apply(run, confidence_threshold=0.0)
 
         assert result.classes_updated == 1
+
+
+class TestDefinitionRefinementApplySelection:
+    """accepted_candidate_ids applies the chosen definition, not the best one."""
+
+    def test_applies_the_chosen_candidate(
+        self,
+        mock_ontology_repo,
+        mock_ontology_service,
+        sample_class,
+        sample_pipeline_run_with_candidates,
+    ):
+        """Choosing refinement-2 writes that definition even though refinement-1 scores higher."""
+        mock_ontology_repo.get_class.return_value = sample_class
+        service = SchemaDefinitionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
+
+        result = service.apply(
+            sample_pipeline_run_with_candidates,
+            confidence_threshold=0.8,
+            accepted_candidate_ids=["refinement-2"],
+        )
+
+        assert result.classes_updated == 1
+        saved = mock_ontology_service.update_class.call_args
+        assert saved.kwargs["description"] == "A mid-confidence definition"
+
+    def test_unknown_candidate_id_is_rejected(
+        self,
+        mock_ontology_repo,
+        mock_ontology_service,
+        sample_class,
+        sample_pipeline_run_with_candidates,
+    ):
+        """An id the run does not contain raises ApplySelectionError."""
+        mock_ontology_repo.get_class.return_value = sample_class
+        service = SchemaDefinitionRefinementApplyService(mock_ontology_service, mock_ontology_repo)
+
+        with pytest.raises(ApplySelectionError, match="refinement-9"):
+            service.apply(
+                sample_pipeline_run_with_candidates, accepted_candidate_ids=["refinement-9"]
+            )
+        mock_ontology_service.update_class.assert_not_called()

@@ -197,7 +197,6 @@ export function SchemeDrawer({ scheme, taxonomyName }: SchemeDrawerProps) {
                 >
                   <label className="form-group-label">Scope note</label>
                   <SuggestField
-                    entityId={scheme.id}
                     value={descriptionDraft}
                     onChange={setDescriptionDraft}
                     rows={4}
