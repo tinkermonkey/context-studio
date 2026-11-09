@@ -15,6 +15,7 @@ SkipReason = Literal[
     "title_conflict",  # an existing entity with a different identifier owns the title
     "missing_class",  # an individual has no existing class to be typed as
     "self_loop",  # a relationship whose source and target resolve to the same entity
+    "derived_type",  # its class or relationship type is derived: its client computes those
 ]
 
 

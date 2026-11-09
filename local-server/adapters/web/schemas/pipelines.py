@@ -378,7 +378,9 @@ class ApplyRunResponse(BaseModel):
             "endpoint is neither accepted nor in the graph), unresolved_predicate "
             "(the property definition does not exist), title_conflict (an existing "
             "entity owns the title), missing_class (no existing class to type an "
-            "individual), self_loop (source and target are the same entity). "
+            "individual), self_loop (source and target are the same entity), "
+            "derived_type (its class or relationship type is derived: the client "
+            "computes those, so none is created). "
             "Populated for schema_extraction and individual_extraction."
         ),
     )

@@ -55,6 +55,7 @@ from .events import (
 )
 from .exceptions import (
     CircularReferenceError,
+    DerivedTypeError,
     DuplicateEntityError,
     EntityInUseError,
     EntityNotFoundError,
@@ -114,8 +115,18 @@ def _property_event_values(prop_def: PropertyDefinition) -> dict[str, object]:
         "is_relevant": prop_def.is_relevant,
         "domain_class_id": prop_def.domain_class_id,
         "range_class_id": prop_def.range_class_id,
+        "derived": prop_def.derived,
         "external_references": _serialize_external_references(prop_def.external_references),
     }
+
+
+def _check_not_derived(cls: Class) -> None:
+    """Refuse to make an individual of a derived class: its client computes them."""
+    if cls.derived:
+        raise DerivedTypeError(
+            f"Class {cls.title!r} is derived: its individuals are computed from other"
+            " data, not created directly"
+        )
 
 
 def _blank_to_none(text: str | None) -> str | None:
@@ -985,6 +996,7 @@ class OntologyService:
         identifier: str | None = None,
         source_run_id: str | None = None,
         external_references: list[ExternalReference] | None = None,
+        derived: bool = False,
     ) -> Class:
         """
         Create a new class within a concept scheme.
@@ -1008,6 +1020,8 @@ class OntologyService:
                 class, for provenance tracking
             external_references: Optional references to external sources (e.g. the
                 bundle the class was loaded from)
+            derived: Whether the client computes its individuals from other data
+                (then none is created directly; see Class.derived)
 
         Returns:
             The created Class with generated embedding
@@ -1067,6 +1081,7 @@ class OntologyService:
             last_modified=now,
             source_run_id=source_run_id,
             external_references=list(external_references or []),
+            derived=bool(derived),
         )
         cls = self._repository.save_class(cls)
         self._sync_vector_index(cls.id, cls.title, cls.description)
@@ -1153,9 +1168,11 @@ class OntologyService:
         description: str | None = None,
         color: str | None = None,
         external_references: list[ExternalReference] | None = None,
+        derived: bool | None = None,
     ) -> Class:
         """
-        Update a class's title, description, color, and/or external references.
+        Update a class's title, description, color, external references and/or
+        derived flag.
 
         Identifier is immutable post-create and cannot be updated.
 
@@ -1173,6 +1190,7 @@ class OntologyService:
             color: New hex color string (optional)
             external_references: New list of external references, replacing the
                 existing list (optional)
+            derived: New derived flag (optional; see Class.derived)
 
         Returns:
             The updated Class
@@ -1224,6 +1242,11 @@ class OntologyService:
         if refs_changed:
             cls.external_references = list(external_references)
 
+        old_derived = cls.derived
+        derived_changed = derived is not None and bool(derived) != cls.derived
+        if derived_changed:
+            cls.derived = bool(derived)
+
         # Regenerate embedding only if title or description changed
         if title_changed or desc_changed:
             embed_text = f"{cls.title} {cls.description or ''}".strip()
@@ -1231,7 +1254,7 @@ class OntologyService:
             cls.embedding = embedding
 
         # Guard against no-op updates
-        if not (title_changed or desc_changed or color_changed or refs_changed):
+        if not (title_changed or desc_changed or color_changed or refs_changed or derived_changed):
             return cls
 
         cls.last_modified = datetime.now(timezone.utc)
@@ -1245,6 +1268,7 @@ class OntologyService:
                 ("title", title_changed),
                 ("description", desc_changed),
                 ("external_references", refs_changed),
+                ("derived", derived_changed),
             ]
             if was_changed
         )
@@ -1260,6 +1284,9 @@ class OntologyService:
         if refs_changed:
             old_values["external_references"] = [ref.to_dict() for ref in old_references]
             new_values["external_references"] = [ref.to_dict() for ref in cls.external_references]
+        if derived_changed:
+            old_values["derived"] = old_derived
+            new_values["derived"] = cls.derived
 
         failures = self._event_publisher.publish(
             ClassUpdated(
@@ -1623,6 +1650,11 @@ class OntologyService:
         prop_def = self._repository.get_property_definition(property_definition_id)
         if prop_def is None:
             raise EntityNotFoundError("PropertyDefinition", property_definition_id)
+        if prop_def.derived:
+            raise DerivedTypeError(
+                f"Relationship type {prop_def.identifier!r} is derived: its relationships"
+                " are computed from other data, not created directly"
+            )
         attributes = dict(attributes or {})
         _check_edge_attributes(prop_def, attributes)
 
@@ -2046,9 +2078,13 @@ class OntologyService:
         range_class_id: str | None = None,
         external_references: list[ExternalReference] | None = None,
         source_run_id: str | None = None,
+        derived: bool = False,
     ) -> PropertyDefinition:
         """
         Create a new property definition (relationship type).
+
+        A derived one (see PropertyDefinition.derived) gets no relationships
+        created directly.
 
         Validates that:
         - The identifier is unique across all property definitions
@@ -2112,6 +2148,7 @@ class OntologyService:
             created_at=now,
             last_modified=now,
             source_run_id=source_run_id,
+            derived=bool(derived),
         )
         prop_def = self._repository.save_property_definition(prop_def)
         self._sync_vector_index(prop_def.id, prop_def.title, prop_def.description)
@@ -2289,10 +2326,11 @@ class OntologyService:
         update_range_class_id: bool = False,
         external_references: list[ExternalReference] | None = None,
         identifier: str | None = None,
+        derived: bool | None = None,
     ) -> PropertyDefinition:
         """
         Update a property definition's identifier, wording, predicate, relevance,
-        domain/range or references.
+        domain/range, references or derived flag (None: unchanged).
 
         Relationships typed by the property keep pointing at it whatever changes,
         so a rename, reversal or retarget of an in-use relationship type keeps its
@@ -2390,6 +2428,9 @@ class OntologyService:
 
         if external_references is not None:
             prop_def.external_references = external_references
+
+        if derived is not None:
+            prop_def.derived = bool(derived)
 
         after = _property_event_values(prop_def)
         changed_fields = tuple(name for name in before if before[name] != after[name])
@@ -2691,6 +2732,7 @@ class OntologyService:
             cls = self._repository.get_class(class_id)
             if cls is None:
                 raise EntityNotFoundError("Class", class_id)
+            _check_not_derived(cls)
             parent_classes.append(cls)
 
         # Check for duplicate title within each class
@@ -3094,6 +3136,7 @@ class OntologyService:
         cls = self._repository.get_class(class_id)
         if cls is None:
             raise EntityNotFoundError("Class", class_id)
+        _check_not_derived(cls)
 
         # Check if class is already a parent (will raise ValueError if present)
         if class_id in individual.class_ids:

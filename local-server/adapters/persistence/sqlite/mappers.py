@@ -299,6 +299,7 @@ def map_orm_to_domain(
             taxonomy_id=cast(str, orm_entity.taxonomy_id),
             parent_class_id=cast(str | None, orm_entity.parent_class_id),
             structural_property_id=cast(str | None, orm_entity.structural_property_id),
+            derived=bool(orm_entity.derived),
             external_references=deserialize_external_references(
                 cast(list[dict[str, Any]], orm_entity.external_references) or []
             ),
@@ -335,6 +336,7 @@ def map_orm_to_domain(
             ),
             domain_class_id=cast(str | None, orm_entity.domain_class_id),
             range_class_id=cast(str | None, orm_entity.range_class_id),
+            derived=bool(orm_entity.derived),
             external_references=deserialize_external_references(
                 cast(list[dict[str, Any]], orm_entity.external_references) or []
             ),
@@ -403,6 +405,7 @@ def map_domain_to_orm(
             taxonomy_id=entity.taxonomy_id,
             parent_class_id=entity.parent_class_id,
             structural_property_id=entity.structural_property_id,
+            derived=entity.derived,
             external_references=serialize_external_references(entity.external_references),
             lexical_senses=serialize_lexical_senses(entity.lexical_senses),
             data_properties=serialize_data_properties(entity.data_properties),
@@ -430,6 +433,7 @@ def map_domain_to_orm(
             ontology_mapping=serialize_ontology_mapping(entity.ontology_mapping),
             domain_class_id=entity.domain_class_id,
             range_class_id=entity.range_class_id,
+            derived=entity.derived,
             external_references=serialize_external_references(entity.external_references),
             is_relevant=entity.is_relevant,
             lexical_senses=serialize_lexical_senses(entity.lexical_senses),
