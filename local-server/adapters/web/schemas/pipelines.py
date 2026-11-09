@@ -231,8 +231,22 @@ class SchemaExtractionRunRequest(PipelineRunRequest):
 class SchemaGroundingRunRequest(PipelineRunRequest):
     """Request to invoke schema_node_grounding pipeline."""
 
-    nodes: list[dict[str, Any]] = Field(..., min_length=1, description="Schema nodes to ground")
-    sources: list[str] = Field(..., min_length=1, description="External knowledge sources")
+    node_id: Optional[str] = Field(
+        None,
+        min_length=1,
+        description="Class (or, with node_type PropertyDefinition, property definition) to ground",
+    )
+    node_label: Optional[str] = Field(
+        None, min_length=1, description="Label to ground directly, instead of node_id"
+    )
+    node_type: Literal["Class", "PropertyDefinition"] = Field(
+        "Class", description="What node_id names"
+    )
+    sources: Optional[list[str]] = Field(
+        None,
+        min_length=1,
+        description="External knowledge sources (default: the configuration's sources)",
+    )
 
 
 class SchemaDefinitionRefinementRunRequest(PipelineRunRequest):

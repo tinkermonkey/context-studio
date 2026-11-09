@@ -73,26 +73,25 @@ class TestPipelineRunRequestExtraFieldPreservation:
         assert "scope" in dumped
         assert dumped["scope"] == "custom_scope"
 
-    def test_schema_grounding_nodes_field_survives_model_dump(self) -> None:
-        """Test that nodes field is preserved in model_dump() for SchemaGroundingRunRequest."""
-        nodes = [{"id": "node1", "label": "Node 1"}, {"id": "node2", "label": "Node 2"}]
+    def test_schema_grounding_node_id_field_survives_model_dump(self) -> None:
+        """Test that node_id is preserved in model_dump() for SchemaGroundingRunRequest."""
         request = SchemaGroundingRunRequest(
-            nodes=nodes,
-            sources=["source1"],
+            node_id="cls-1",
             implementation_id="default",
-            configuration_ref="default",
+            configuration_ref="grounding-default",
         )
 
         dumped = request.model_dump()
 
-        assert "nodes" in dumped
-        assert dumped["nodes"] == nodes
+        assert dumped["node_id"] == "cls-1"
+        assert dumped["node_type"] == "Class"
+        assert dumped["sources"] is None
 
     def test_schema_grounding_sources_field_survives_model_dump(self) -> None:
         """Test that sources field is preserved in model_dump()."""
         sources = ["dbpedia", "wikidata", "conceptnet"]
         request = SchemaGroundingRunRequest(
-            nodes=[{"id": "n1"}],
+            node_id="n1",
             sources=sources,
             implementation_id="default",
             configuration_ref="default",
