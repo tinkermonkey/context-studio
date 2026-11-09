@@ -364,6 +364,7 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
                     entityId={classData.id}
                     value={descriptionDraft}
                     onChange={setDescriptionDraft}
+                    onCommit={(v) => void handleSaveDescription(v)}
                     rows={4}
                     testId="class-drawer-description-input"
                   />

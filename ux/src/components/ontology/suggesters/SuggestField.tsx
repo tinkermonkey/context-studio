@@ -22,6 +22,8 @@ interface SuggestFieldProps {
   entityId?: string;
   value: string;
   onChange: (value: string) => void;
+  /** Saves the field. Append calls it directly: its button unmounts, so the blur that normally saves may never fire. */
+  onCommit?: (value: string) => void;
   placeholder?: string;
   rows?: number;
   testId?: string;
@@ -31,6 +33,7 @@ export function SuggestField({
   entityId,
   value,
   onChange,
+  onCommit,
   placeholder,
   rows = 4,
   testId,
@@ -99,10 +102,12 @@ export function SuggestField({
     }
   };
 
-  // Append only edits the field; the drawer saves it like any other edit.
+  // Append edits the field and saves it through the drawer, not the pipeline's apply.
   const handleAppend = (candidate: SuggestCandidate & { originalIdx: number }) => {
     if (!candidate.description) return;
-    onChange(value ? `${value}\n\n${candidate.description}` : candidate.description);
+    const appended = value ? `${value}\n\n${candidate.description}` : candidate.description;
+    onChange(appended);
+    onCommit?.(appended);
     setRunId(null);
   };
 

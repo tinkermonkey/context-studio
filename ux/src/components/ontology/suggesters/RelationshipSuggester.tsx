@@ -63,13 +63,19 @@ export function RelationshipSuggester({ classId }: RelationshipSuggesterProps) {
     if (!runId) return;
     setAcceptingIdx(idx);
     try {
-      await applyMutation.mutateAsync({
+      const result = await applyMutation.mutateAsync({
         runId,
         params: { node_id: classId },
         body: { accepted_candidate_ids: [candidateId] },
       });
       setDismissedIndices((prev) => new Set([...prev, idx]));
-      toast("success", "Relationship applied");
+      if (result.relationships_created + result.relationships_removed > 0) {
+        toast("success", "Relationship applied");
+      } else if (result.relationships_modified > 0) {
+        toast("warning", "Changing an existing relationship isn't supported yet; nothing changed");
+      } else {
+        toast("info", "Nothing changed: the relationship is already as suggested");
+      }
     } catch (err) {
       toast("error", err instanceof Error ? err.message : "Failed to apply relationship");
     } finally {

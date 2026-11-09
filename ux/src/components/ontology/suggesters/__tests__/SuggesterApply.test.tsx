@@ -1,11 +1,18 @@
+import type { ReactNode } from "react";
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "@/test/test-utils";
 import { pipelineService } from "@/api/services/pipeline";
 import { GroundingSection } from "../GroundingSection";
 import { RelationshipSuggester } from "../RelationshipSuggester";
 import { SuggestField } from "../SuggestField";
+
+const { toastSpy } = vi.hoisted(() => ({ toastSpy: vi.fn() }));
+vi.mock("@/components/ui/Toast", () => ({
+  ToastProvider: ({ children }: { children: ReactNode }) => children,
+  useToasts: () => ({ toast: toastSpy, toasts: [], dismiss: vi.fn() }),
+}));
 
 function mockCompletedRun(candidates: unknown[]) {
   vi.spyOn(pipelineService, "runPipeline").mockResolvedValue({
@@ -17,7 +24,12 @@ function mockCompletedRun(candidates: unknown[]) {
     status: "completed",
   } as never);
   vi.spyOn(pipelineService, "getCandidates").mockResolvedValue(candidates as never);
-  return vi.spyOn(pipelineService, "applyRun").mockResolvedValue({} as never);
+  return vi.spyOn(pipelineService, "applyRun").mockResolvedValue({
+    relationships_created: 1,
+    relationships_removed: 0,
+    relationships_modified: 0,
+    relationships_skipped: 0,
+  } as never);
 }
 
 function refinement(candidateId: string, text: string, confidence: number) {
@@ -36,6 +48,7 @@ function refinement(candidateId: string, text: string, confidence: number) {
 describe("Class drawer suggesters apply only the chosen candidate", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    toastSpy.mockClear();
   });
 
   it("applies one grounding by its candidate id", async () => {
@@ -87,6 +100,31 @@ describe("Class drawer suggesters apply only the chosen candidate", () => {
     );
   });
 
+  it("says nothing changed when an accepted modify can't be applied", async () => {
+    const applyRun = mockCompletedRun([
+      refinement("refinement-0", "Modify: Mitochondrion part of Cell", 0.8),
+    ]);
+    applyRun.mockResolvedValue({
+      relationships_created: 0,
+      relationships_removed: 0,
+      relationships_modified: 1,
+      relationships_skipped: 0,
+    } as never);
+
+    renderWithProviders(<RelationshipSuggester classId="cls-1" />);
+    await userEvent.click(screen.getByRole("button", { name: /Suggest relationships/ }));
+    const card = await screen.findByTestId("relationship-suggestion-0");
+    await userEvent.click(within(card).getByRole("button", { name: "Accept" }));
+
+    await waitFor(() =>
+      expect(toastSpy).toHaveBeenLastCalledWith(
+        "warning",
+        expect.stringContaining("isn't supported yet; nothing changed"),
+      ),
+    );
+    expect(toastSpy).not.toHaveBeenCalledWith("success", "Relationship applied");
+  });
+
   it("replaces the definition with the chosen candidate", async () => {
     const applyRun = mockCompletedRun([
       refinement("refinement-0", "The best definition.", 0.9),
@@ -110,13 +148,18 @@ describe("Class drawer suggesters apply only the chosen candidate", () => {
   it("appends a definition by editing the field, without applying the run", async () => {
     const applyRun = mockCompletedRun([refinement("refinement-0", "More detail.", 0.9)]);
     const onChange = vi.fn();
+    const onCommit = vi.fn();
 
-    renderWithProviders(<SuggestField entityId="cls-1" value="Old." onChange={onChange} />);
+    renderWithProviders(
+      <SuggestField entityId="cls-1" value="Old." onChange={onChange} onCommit={onCommit} />,
+    );
     await userEvent.click(screen.getByRole("button", { name: /Suggest/ }));
     await screen.findByTestId("suggest-field-proposals");
     await userEvent.click(screen.getByRole("button", { name: "Append" }));
 
     expect(onChange).toHaveBeenCalledWith("Old.\n\nMore detail.");
+    // Saved directly: the Append button unmounts, so a blur-save can't be relied on.
+    expect(onCommit).toHaveBeenCalledWith("Old.\n\nMore detail.");
     expect(applyRun).not.toHaveBeenCalled();
   });
 

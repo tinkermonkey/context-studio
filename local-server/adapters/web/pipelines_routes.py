@@ -417,7 +417,7 @@ def _map_refinement_candidate(
         or refinement_dict.get("content")
         or ""
     )
-    scope_id = refinement_dict.get("scope_id", "")
+    scope_id = refinement_dict.get("scope_id") or ""
     provenance = _normalize_provenance(refinement_dict.get("provenance", []))
 
     # A connection delta is labelled with the change it makes, so a removal is
@@ -442,7 +442,7 @@ def _map_refinement_candidate(
         uri=scope_id,
         label=label,
         description=refined_text,
-        source=refinement_dict.get("source", "refinement_pipeline"),
+        source=refinement_dict.get("source") or "refinement_pipeline",
         confidence=_safe_confidence(refinement_dict.get("confidence")),
         provenance=provenance,
     )

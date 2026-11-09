@@ -202,6 +202,15 @@ class TestRefinementCandidateMapping:
         assert result.confidence == 0.5  # Default
         assert result.provenance == []
 
+    def test_map_refinement_candidate_with_null_scope_and_source(self):
+        """Explicit nulls map to defaults instead of failing response validation."""
+        refinement_dict = {"content": "Refined content", "scope_id": None, "source": None}
+
+        result = _map_refinement_candidate("refinement-0", refinement_dict)
+
+        assert result.uri == ""
+        assert result.source == "refinement_pipeline"
+
     def test_map_refinement_candidate_with_definition_key(self):
         """Refinement mapper reads from definition key (actual definition orchestrator output)."""
         refinement_dict = {
