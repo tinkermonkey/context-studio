@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Proposal detail</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/heimdall/tokens.css">
+<link rel="stylesheet" href="ds/heimdall/components/bundle.css">
+<script src="ds/heimdall/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:var(--font-sans)}
+a{color:#b45309;text-decoration:none}
+a:hover{color:#92400e;text-decoration:underline}
+</style>
+</helmet>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.ShellLayout" app-title="{{appTitle}}" sidebar="{{sidebar}}" topbar="{{topbar}}" style="display: block;">
+<div style="display: flex; flex-direction: column; gap: 16px;">
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.PageHeader" eyebrow="PROPOSAL · dr_spec · user" title="Remove the types DR's main spec retired" id-chip="85e85700" subtitle="Relationship types the DR spec no longer has, each with the replacement DR's change records name. Deletes of types still in use wait for a choice about their relationships."></x-import>
+
+<div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="{{proposalTone}}">{{proposalStatus}}</x-import>
+<span style="font-family: var(--font-mono); font-size: 12px; color: rgb(var(--canvas-fg-3));">12 delete · 2 update · all breaking</span>
+<span style="flex-grow: 1;"></span>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="ghost" size="sm">Export decisions</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="ghost" size="sm">Revert proposal</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="secondary" size="sm">Reject all awaiting</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="secondary" size="sm">{{acceptAllLabel}}</x-import>
+</div>
+
+<section aria-label="Decision progress" style="display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; padding: 14px 16px; border: 1px solid {{bannerBorder}}; border-radius: 8px; background: {{bannerBg}};">
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 180px;">
+<span style="font-size: 20px; font-weight: 600; color: rgb(var(--canvas-fg-1));">{{headline}}</span>
+<span style="font-size: 12.5px; color: rgb(var(--canvas-fg-2));">{{decidedLine}}</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+<sc-for list="{{needs}}" as="n" hint-placeholder-count="3">
+<button type="button" onClick="{{n.pick}}" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; border: 1px solid {{n.border}}; background: {{n.bg}}; color: {{n.fg}}; font: 600 12px var(--font-sans); cursor: pointer;">{{n.label}}</button>
+</sc-for>
+</div>
+<span style="flex-grow: 1;"></span>
+<div style="flex: 0 1 260px; min-width: 160px;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.ProgressBar" percent="{{percent}}" color="{{progressColor}}"></x-import>
+</div>
+</section>
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.SegmentedControl" value="{{filter}}" options="{{filterOptions}}" on-change="{{setFilter}}"></x-import>
+<span style="font-size: 12px; color: rgb(var(--canvas-fg-3));">{{filterHint}}</span>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start;">
+
+<div style="flex: 999 1 640px; min-width: 0; overflow-x: auto;">
+<table class="table">
+<thead class="table__head">
+<tr class="table__row">
+<th class="table__header table__header--checkbox" style="width: 30px;"><span style="position: absolute; left: -9999px;">Select</span></th>
+<th class="table__header" style="width: 44px;">Seq</th>
+<th class="table__header" style="width: 74px;">Op</th>
+<th class="table__header">Change</th>
+<th class="table__header" style="width: 56px; text-align: right;">P</th>
+<th class="table__header" style="width: 230px;">Status</th>
+</tr>
+</thead>
+<tbody class="table__body">
+<sc-for list="{{rows}}" as="op" hint-placeholder-count="10">
+<tr class="{{op.rowClass}}" onClick="{{op.pick}}">
+<td class="table__cell table__cell--checkbox"><sc-if value="{{op.awaiting}}" hint-placeholder-val="{{true}}"><input type="checkbox" class="table__checkbox" aria-label="{{op.checkLabel}}"></sc-if></td>
+<td class="table__cell" style="font-family: var(--font-mono); font-size: 12px; color: rgb(var(--canvas-fg-3));">{{op.seq}}</td>
+<td class="table__cell"><x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="{{op.opTone}}">{{op.op}}</x-import></td>
+<td class="table__cell">
+<div style="display: flex; flex-direction: column; gap: 3px; font-family: var(--font-mono); font-size: 12px; {{op.changeStyle}}">
+<span style="{{op.beforeStyle}}">{{op.src}} <span style="color: rgb(var(--canvas-fg-3));">{{op.pred}}</span> {{op.dst}}</span>
+<span style="font-family: var(--font-sans); font-size: 12px; color: rgb(var(--canvas-fg-3));">{{op.note}}</span>
+</div>
+</td>
+<td class="table__cell" style="text-align: right; font-family: var(--font-mono); font-size: 12px; color: rgb(var(--canvas-fg-3));">{{op.p}}</td>
+<td class="table__cell">
+<div style="display: flex; gap: 4px; flex-wrap: wrap;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="{{op.stateTone}}">{{op.stateLabel}}</x-import>
+<sc-for list="{{op.flags}}" as="f" hint-placeholder-count="1">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="{{f.tone}}">{{f.label}}</x-import>
+</sc-for>
+</div>
+</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+<p style="margin: 10px 0 0; font-size: 12px; line-height: 1.5; color: rgb(var(--canvas-fg-3));">Colour means you have something to decide: amber needs a decision or a choice, red needs a decision and carries a risk. Once an operation is decided, its flags turn grey and stay as a record of what was reviewed.</p>
+</div>
+
+<div style="flex: 1 1 380px; max-width: 420px; min-width: 0;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.InspectorPanel" eyebrow="{{sel.eyebrow}}" title="{{sel.title}}" id="{{sel.opId}}">
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.InspectorPanel.Section" title="Decision">
+<div style="display: flex; flex-direction: column; gap: 10px;">
+<sc-if value="{{sel.awaiting}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 10px;">
+<sc-if value="{{sel.blocked}}" hint-placeholder-val="{{false}}">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.FormCallout" variant="warn" icon="alert">{{sel.blockedText}}</x-import>
+</sc-if>
+<sc-if value="{{sel.failed}}" hint-placeholder-val="{{false}}">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.FormCallout" variant="error" icon="alert">{{sel.failedText}}</x-import>
+</sc-if>
+<sc-if value="{{sel.risk}}" hint-placeholder-val="{{false}}">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.FormCallout" variant="{{sel.riskVariant}}" icon="alert">{{sel.riskText}}</x-import>
+</sc-if>
+<div style="display: flex; gap: 8px; flex-wrap: wrap;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="primary" size="sm">{{sel.acceptLabel}}</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="danger" size="sm">Reject</x-import>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{sel.decided}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="{{sel.stateTone}}">{{sel.stateLabel}}</x-import>
+<span style="font-size: 12.5px; color: rgb(var(--canvas-fg-2));">{{sel.decidedBy}}</span>
+</div>
+<sc-if value="{{sel.hasRecord}}" hint-placeholder-val="{{false}}">
+<p style="margin: 0; font-size: 12.5px; line-height: 1.5; color: rgb(var(--canvas-fg-2));">{{sel.record}}</p>
+</sc-if>
+<p style="margin: 0; font-size: 12px; color: rgb(var(--canvas-fg-3));">Nothing left to decide. Revert the proposal to undo it.</p>
+</div>
+</sc-if>
+</div>
+</x-import>
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.InspectorPanel.Section" title="Rationale">
+<p style="margin: 0; font-size: 12.5px; line-height: 1.55; color: rgb(var(--canvas-fg-2));">{{sel.rationale}}</p>
+</x-import>
+
+</x-import>
+</div>
+
+</div>
+</div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { filter: 'needs', selected: 7 };
+  }
+  baseOps() {
+    // state: pending | blocked | failed | applied | rejected. pair: same | reversed | different.
+    const O = (seq, op, src, pred, dst, note, state, extra) => Object.assign({ seq, op, src, pred, dst, note, state, pair: 'same', p: null }, extra || {});
+    return [
+      O(1, 'delete', 'collaboration', 'depends-on', 'interface', 'Replaced by component provides interface', 'applied', { pair: 'different', resolution: 'Moved 1 relationship to the replacement' }),
+      O(2, 'delete', 'component', 'consumes', 'api.operation', 'Replaced by api.operation serves component', 'applied', { pair: 'reversed' }),
+      O(3, 'delete', 'jsonschema', 'aggregates', 'arrayschema', 'Replaced by jsonschema composes arrayschema', 'applied'),
+      O(4, 'delete', 'process', 'depends-on', 'interface', 'No replacement: DR retired it', 'applied', { resolution: 'Dropped 1 relationship' }),
+      O(5, 'delete', 'interaction', 'depends-on', 'collaboration', 'Replaced by collaboration assigned-to interaction', 'pending', { pair: 'reversed' }),
+      O(6, 'delete', 'service', 'realizes', 'product.capability', 'Replaced by service realizes product.softwarecapability', 'pending', { pair: 'different' }),
+      O(7, 'delete', 'objectschema', 'depends-on', 'systemsoftware', 'No replacement: DR retired it', 'blocked', { inUse: 6 }),
+      O(8, 'delete', 'objectschema', 'extends', 'objectschema', 'Replaced by objectschema specializes objectschema', 'failed', { inUse: 15 }),
+      O(9, 'delete', 'arrayschema', 'aggregates', 'stringschema', 'Replaced by arrayschema composes stringschema', 'blocked', { inUse: 2 }),
+      O(10, 'update', 'persona', 'serves', 'businessrole', 'Rename predicate to references', 'pending', { stale: true, p: 0.71 }),
+      O(11, 'update', 'userworkflow', 'aggregates', 'businessprocess', 'Rename predicate to realizes', 'applied', { edited: true, p: 0.82 }),
+      O(12, 'delete', 'component', 'triggers', 'event', 'No replacement: never landed in DR', 'rejected', { note: 'No replacement: never landed in DR' }),
+      O(13, 'delete', 'workflowstep', 'uses', 'product.capability', 'No replacement: DR retired it', 'pending'),
+      O(14, 'delete', 'feature', 'realizes', 'businessservice', 'No replacement: DR retired it', 'applied')
+    ];
+  }
+  view(o) {
+    const awaiting = o.state === 'pending' || o.state === 'blocked' || o.state === 'failed';
+    const STATE = {
+      pending: ['needs decision', 'amber'],
+      blocked: ['needs a choice', 'amber'],
+      failed: ['failed', 'rose'],
+      applied: [o.edited ? 'applied with edits' : 'applied', 'emerald'],
+      rejected: ['rejected', 'neutral']
+    }[o.state];
+    // Flags keep their colour only while there is something to decide; decided rows keep them grey as a record.
+    const flags = [];
+    const tone = (t) => (awaiting ? t : 'neutral');
+    if (o.inUse && awaiting) flags.push({ label: o.inUse + ' in use: move or drop', tone: 'amber' });
+    if (o.pair === 'reversed') flags.push({ label: 'reversed pair', tone: tone('amber') });
+    if (o.pair === 'different') flags.push({ label: 'different pair', tone: tone('rose') });
+    if (o.stale) flags.push({ label: 'stale', tone: tone('rose') });
+    if (o.resolution && !awaiting) flags.push({ label: o.resolution.toLowerCase(), tone: 'neutral' });
+    return { awaiting, stateLabel: STATE[0], stateTone: STATE[1], flags };
+  }
+  renderVals() {
+    const ops = this.baseOps().map((o) => Object.assign({}, o, this.view(o)));
+    const count = (f) => ops.filter(f).length;
+    const awaitingN = count((o) => o.awaiting);
+    const blockedN = count((o) => o.state === 'blocked');
+    const failedN = count((o) => o.state === 'failed');
+    const staleN = count((o) => o.awaiting && o.stale);
+    const pendingN = awaitingN - blockedN - failedN;
+    const appliedN = count((o) => o.state === 'applied');
+    const rejectedN = count((o) => o.state === 'rejected');
+    const total = ops.length;
+    const f = this.state.filter;
+    const shown = ops.filter((o) => (f === 'all' ? true : f === 'needs' ? o.awaiting : !o.awaiting));
+    const rows = shown.map((o) => Object.assign({}, o, {
+      p: o.p == null ? '—' : o.p.toFixed(2),
+      opTone: o.op === 'update' ? 'cyan' : 'rose',
+      checkLabel: 'Select operation ' + o.seq,
+      rowClass: 'table__row table__row--clickable' + (o.seq === this.state.selected ? ' table__row--selected' : ''),
+      changeStyle: o.awaiting ? '' : 'opacity: 0.72;',
+      beforeStyle: o.op === 'delete' ? 'text-decoration: line-through; text-decoration-color: rgba(244, 63, 94, 0.6);' : '',
+      pick: () => this.setState({ selected: o.seq })
+    }));
+    const pickFilter = (filter) => () => this.setState({ filter });
+    const needs = [];
+    if (pendingN) needs.push({ label: pendingN + ' to accept or reject', bg: 'rgba(251, 191, 36, 0.12)', border: 'rgba(217, 119, 6, 0.4)', fg: '#92400e', pick: pickFilter('needs') });
+    if (blockedN) needs.push({ label: blockedN + ' need an in-use choice', bg: 'rgba(251, 191, 36, 0.12)', border: 'rgba(217, 119, 6, 0.4)', fg: '#92400e', pick: pickFilter('needs') });
+    if (failedN) needs.push({ label: failedN + ' failed: retry or reject', bg: 'rgba(244, 63, 94, 0.08)', border: 'rgba(225, 29, 72, 0.4)', fg: '#9f1239', pick: pickFilter('needs') });
+    if (staleN) needs.push({ label: staleN + ' stale: apply anyway or reject', bg: 'rgba(244, 63, 94, 0.08)', border: 'rgba(225, 29, 72, 0.4)', fg: '#9f1239', pick: pickFilter('needs') });
+    const done = awaitingN === 0;
+    const s = ops.find((o) => o.seq === this.state.selected) || ops[0];
+    const triple = s.src + ' ' + s.pred + ' ' + s.dst;
+    const acceptable = s.state === 'pending' && !s.stale;
+    return {
+      appTitle: { title: 'Context Studio', version: 'v0.2.0 · LOCAL' },
+      sidebar: {
+        activeItemId: 'proposals',
+        sections: [{ title: '', items: [
+          { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+          { id: 'proposals', label: 'Proposals', icon: 'gitBranch', count: 1 },
+          { id: 'schema', label: 'Schema', icon: 'schema' },
+          { id: 'data', label: 'Data', icon: 'data' },
+          { id: 'external-reference', label: 'External Reference', icon: 'link' },
+          { id: 'pipelines', label: 'Pipelines', icon: 'pipeline' },
+          { id: 'graph', label: 'Graph view', icon: 'graph' },
+          { id: 'settings', label: 'Configuration', icon: 'settings' }
+        ] }]
+      },
+      topbar: { breadcrumbs: [{ label: 'workspace' }, { label: 'Proposals' }, { label: 'Remove the types DR retired' }], searchPlaceholder: 'Search' },
+      proposalStatus: done ? 'decided' : 'open',
+      proposalTone: done ? 'emerald' : 'amber',
+      acceptAllLabel: 'Accept ' + pendingN + ' ready',
+      headline: done ? 'All ' + total + ' decided' : awaitingN + ' of ' + total + ' need a decision',
+      decidedLine: appliedN + ' applied · ' + rejectedN + ' rejected',
+      needs: needs,
+      percent: Math.round(((total - awaitingN) / total) * 100),
+      progressColor: done ? 'emerald' : 'amber',
+      bannerBorder: done ? 'rgba(16, 185, 129, 0.35)' : 'rgba(217, 119, 6, 0.35)',
+      bannerBg: done ? 'rgba(16, 185, 129, 0.06)' : 'rgba(251, 191, 36, 0.06)',
+      filter: f,
+      filterOptions: [
+        { value: 'needs', label: 'Needs decision · ' + awaitingN },
+        { value: 'decided', label: 'Decided · ' + (total - awaitingN) },
+        { value: 'all', label: 'All · ' + total }
+      ],
+      setFilter: (v) => this.setState({ filter: v }),
+      filterHint: f === 'needs' ? 'Opens here while anything needs a decision; switches to All once everything is decided.' : '',
+      rows: rows,
+      sel: {
+        eyebrow: 'OPERATION · seq ' + s.seq + ' · ' + s.op,
+        title: s.op === 'delete' ? 'Remove ' + triple : triple,
+        opId: 'op_' + (4100 + s.seq).toString(16),
+        awaiting: s.awaiting,
+        decided: !s.awaiting,
+        blocked: s.state === 'blocked',
+        blockedText: s.inUse + ' relationships still use this type. Choose: move them to the replacement, or drop them. The delete applies with your choice.',
+        failed: s.state === 'failed',
+        failedText: 'Applying failed: ' + s.inUse + ' relationships still use this type. Choose what happens to them, then apply again, or reject.',
+        risk: s.awaiting && (s.pair !== 'same' || s.stale),
+        riskVariant: s.pair === 'different' || s.stale ? 'error' : 'warn',
+        riskText: s.stale ? 'The target changed after this was proposed. Apply anyway keeps the proposed value.' : s.pair === 'different' ? 'The replacement links a different pair of element types, so it can’t take over these relationships as they are.' : 'The replacement links the same pair reversed: moved relationships swap ends.',
+        acceptLabel: s.stale ? 'Apply anyway' : s.state === 'blocked' || s.state === 'failed' ? 'Apply with choice' : 'Accept',
+        stateLabel: s.stateLabel,
+        stateTone: s.stateTone,
+        decidedBy: 'by you · Nov 6, 12:53',
+        hasRecord: !!s.resolution || s.pair !== 'same',
+        record: [s.resolution, s.pair === 'reversed' ? 'The replacement linked the pair reversed; relationships moved with their ends swapped.' : s.pair === 'different' ? 'The replacement linked a different pair; reviewed and accepted.' : null].filter(Boolean).join('. '),
+        rationale: s.note + '. From DR’s change records.'
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

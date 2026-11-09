@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Apply results and revert</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/heimdall/tokens.css">
+<link rel="stylesheet" href="ds/heimdall/components/bundle.css">
+<script src="ds/heimdall/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:var(--font-sans)}
+a{color:#b45309;text-decoration:none}
+a:hover{color:#92400e;text-decoration:underline}
+</style>
+</helmet>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.ShellLayout" app-title="{{appTitle}}" sidebar="{{sidebar}}" topbar="{{topbar}}" style="display: block;">
+<div style="display: flex; flex-direction: column; gap: 16px;">
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.PageHeader" eyebrow="PROPOSAL · dr_spec · pipeline" title="DR reflection plan: business layer (22 relationship changes)" id-chip="5f0e6a54" subtitle="After Accept selected: the outcome of each operation, and how the proposal is undone."></x-import>
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.FormCallout" variant="warn" icon="alert">Applied 8 of 9. Seq 7 failed and stays failed: retry it, or reject it. Applies aren't atomic; each outcome is recorded, and Revert undoes everything this proposal applied.</x-import>
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.StatGrid" columns="{{four}}">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.StatTile" label="Applied" value="8" color="emerald" icon="check"></x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.StatTile" label="Failed" value="1" color="rose" icon="alert"></x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.StatTile" label="Pending" value="13" color="amber" icon="clock"></x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.StatTile" label="Rejected" value="0" color="neutral" icon="x"></x-import>
+</x-import>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start;">
+
+<div style="flex: 999 1 640px; min-width: 0; overflow-x: auto;">
+<table class="table">
+<thead class="table__head">
+<tr class="table__row">
+<th class="table__header" style="width: 44px;">Seq</th>
+<th class="table__header" style="width: 74px;">Op</th>
+<th class="table__header">Change</th>
+<th class="table__header" style="width: 96px;">Outcome</th>
+<th class="table__header" style="width: 260px;">Result</th>
+</tr>
+</thead>
+<tbody class="table__body">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="9">
+<tr class="table__row">
+<td class="table__cell" style="font-family: var(--font-mono); font-size: 12px; color: rgb(var(--canvas-fg-3));">{{r.seq}}</td>
+<td class="table__cell"><x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="{{r.opTone}}">{{r.op}}</x-import></td>
+<td class="table__cell" style="font-family: var(--font-mono); font-size: 12px;">{{r.change}}</td>
+<td class="table__cell">
+<div style="display: flex; gap: 4px; flex-wrap: wrap;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="{{r.tone}}">{{r.outcome}}</x-import>
+<sc-if value="{{r.edited}}" hint-placeholder-val="{{false}}">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="violet">edited</x-import>
+</sc-if>
+</div>
+</td>
+<td class="table__cell" style="font-family: var(--font-mono); font-size: 11.5px; color: rgb(var(--canvas-fg-2)); word-break: break-word;">{{r.result}}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+
+<div style="flex: 1 1 380px; max-width: 440px; min-width: 0; display: flex; flex-direction: column; gap: 16px;">
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Panel" title="Revert">
+<div style="display: flex; flex-direction: column; gap: 10px; font-size: 12.5px; line-height: 1.55; color: rgb(var(--canvas-fg-2));">
+<p style="margin: 0;">Undoes every operation this proposal applied, in one transaction: 8 relationship types return to their triples before the proposal. Pending operations close; the proposal becomes reverted and its decisions can no longer be exported.</p>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.KVGrid" rows="{{revertRows}}" key-width="{{keyWidth}}"></x-import>
+<div><x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="danger" size="sm">Revert proposal</x-import></div>
+</div>
+</x-import>
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Panel" title="When revert is blocked" subtitle="409 from POST /api/proposals/{id}/revert, shown in the confirm dialog">
+<div style="display: flex; flex-direction: column; gap: 10px; font-size: 12.5px; line-height: 1.55;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.FormCallout" variant="error" icon="lock">Can't revert DR catalog additions: application layer. 3 relationships made after it use relationship types it created. Nothing was changed.</x-import>
+<table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+<thead>
+<tr>
+<th scope="col" style="text-align: left; padding: 0 6px 6px 0; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(var(--canvas-fg-3)); font-weight: 500;">Depends</th>
+<th scope="col" style="text-align: left; padding: 0 0 6px 6px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: rgb(var(--canvas-fg-3)); font-weight: 500;">On what it created</th>
+</tr>
+</thead>
+<tbody>
+<sc-for list="{{blockers}}" as="b" hint-placeholder-count="3">
+<tr style="border-top: 1px dashed rgb(var(--canvas-border));">
+<td style="padding: 6px 6px 6px 0; vertical-align: top;"><span style="color: rgb(var(--canvas-fg-3));">{{b.kind}}</span> <a href="Elsewhere.dc.html" style="font-family: var(--font-mono);">{{b.dependent}}</a></td>
+<td style="padding: 6px 0 6px 6px; font-family: var(--font-mono); vertical-align: top;">{{b.referenced}}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+<p style="margin: 0; color: rgb(var(--canvas-fg-2));">Remove or retype those relationships first, or revert the later proposal that made them. Each row links to the entity.</p>
+</div>
+</x-import>
+
+</div>
+</div>
+</div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1060}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const ok = (seq, op, change, result, edited) => ({ seq, op, change, outcome: 'applied', tone: 'emerald', opTone: op === 'update' ? 'cyan' : 'rose', result, edited: !!edited });
+    return {
+      four: 4,
+      keyWidth: 120,
+      appTitle: { title: 'Context Studio', version: 'v0.2.0 · LOCAL' },
+      sidebar: {
+        activeItemId: 'proposals',
+        sections: [{ title: '', items: [
+          { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+          { id: 'proposals', label: 'Proposals', icon: 'gitBranch', count: 4 },
+          { id: 'schema', label: 'Schema', icon: 'schema' },
+          { id: 'data', label: 'Data', icon: 'data' },
+          { id: 'pipelines', label: 'Pipelines', icon: 'pipeline' },
+          { id: 'graph', label: 'Graph view', icon: 'graph' },
+          { id: 'settings', label: 'Configuration', icon: 'settings' }
+        ] }]
+      },
+      topbar: { breadcrumbs: [{ label: 'workspace' }, { label: 'Proposals' }, { label: 'DR reflection plan: business layer' }], searchPlaceholder: 'Search' },
+      rows: [
+        ok(1, 'update', 'businessrole performs businessprocess', 'businessrole_performs_businessprocess'),
+        ok(2, 'update', 'businessinteraction realizes businessservice', 'businessinteraction_realizes_businessservice'),
+        ok(4, 'delete', 'businessrole assigned-to businessinterface → businessinterface assigned-to businessrole', 'businessinterface_assigned_to_businessrole', true),
+        ok(5, 'delete', 'contract serves businessrole', 'removed'),
+        ok(6, 'delete', 'businessfunction serves businessrole', 'removed'),
+        { seq: 7, op: 'delete', opTone: 'rose', change: 'businesscollaboration accesses businessobject', outcome: 'failed', tone: 'rose', result: 'target_not_found: removed by another proposal after this one was made', edited: false },
+        ok(8, 'delete', 'businessevent triggers businessfunction', 'removed'),
+        ok(16, 'update', 'businessevent triggers businessfunction', 'businessevent_triggers_businessfunction', true),
+        ok(20, 'delete', 'businessservice realizes businessprocess', 'removed')
+      ],
+      revertRows: [
+        { key: 'applied', value: '8 operations · run 5f0e6a54' },
+        { key: 'restores', value: '4 removed relationship types' },
+        { key: 'changes back', value: '2 updated, 2 edited' },
+        { key: 'blocked by', value: 'nothing depends on them' }
+      ],
+      blockers: [
+        { kind: 'relationship', dependent: 'rel_7c21 · llm-router consumes chat-completions', referenced: 'applicationcomponent_consumes_operation' },
+        { kind: 'relationship', dependent: 'rel_7c22 · mcp-server consumes list-nodes', referenced: 'applicationcomponent_consumes_operation' },
+        { kind: 'relationship', dependent: 'rel_7c40 · chat-service triggers turn-completed', referenced: 'applicationcomponent_triggers_applicationevent' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
