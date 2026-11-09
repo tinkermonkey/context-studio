@@ -1232,14 +1232,20 @@ class ProposalService:
                 for operation in chosen:
                     forced = operation.id in force
                     resolution = resolutions.get(operation.id)
+                    # Per operation: relationship deletes applied earlier in this call are gone.
+                    covered = self._covered(proposal)
                     if operation.id in edits:
                         others = {i: e for i, e in edits.items() if i != operation.id}
                         edit = edits[operation.id]
-                        self._apply_edited(proposal, operation, edit, others, forced, resolution)
+                        self._apply_edited(
+                            proposal, operation, edit, others, forced, resolution, covered
+                        )
                     elif resolution is not None and operation.op is OperationType.DELETE:
-                        self._apply_resolved(operation, resolution, refs, proposal.id, forced)
+                        self._apply_resolved(
+                            operation, resolution, refs, proposal.id, forced, covered
+                        )
                     else:
-                        self._apply_one(operation, refs, proposal.id, forced, resolution)
+                        self._apply_one(operation, refs, proposal.id, forced, resolution, covered)
                     decisions = []
                     if operation.status is OperationStatus.APPLIED:
                         decisions.append(
@@ -1316,12 +1322,14 @@ class ProposalService:
         """
         Each resolution is for a property delete or update being applied (an
         edited delete applies as an update, so its resolution is a retarget's),
-        and doesn't move relationships to a type the proposal also deletes.
+        and doesn't move relationships to a type the proposal also deletes. A
+        delete this call applies with an edit keeps its type (it applies as an
+        update), so relationships can move to it.
         """
         deleted = {
             o.target_id: o.seq
             for o in proposal.pending
-            if o.kind is K.PROPERTY and o.op is OperationType.DELETE
+            if o.kind is K.PROPERTY and o.op is OperationType.DELETE and o.id not in edits
         }
         by_id = {o.id: o for o in chosen}
         misplaced = sorted(i for i in resolutions if i not in by_id)
@@ -1358,6 +1366,7 @@ class ProposalService:
         other_edits: dict[str, dict[str, Any]],
         forced: bool,
         resolution: InUseResolution | None = None,
+        covered: Mapping[str, int] | None = None,
     ) -> None:
         """Apply a reviewer's edit of a property update or delete, as an update."""
 
@@ -1379,6 +1388,7 @@ class ProposalService:
                 resolution,
                 proposal.id,
                 lambda: self._dispatch(operation, fields, proposal.id, OperationType.UPDATE),
+                covered,
             )
             base = {
                 name: operation.base[name] if name in operation.base else before.get(name)
@@ -1399,6 +1409,7 @@ class ProposalService:
         refs: dict[str, ProposedOperation],
         run_id: str,
         forced: bool,
+        covered: Mapping[str, int] | None = None,
     ) -> None:
         """
         Apply a relationship-type delete with a resolution of the relationships
@@ -1412,6 +1423,7 @@ class ProposalService:
             with self._atomic():
                 inspector = InUseInspector(self._repo)
                 edges = inspector.edges(target_id)
+                _check_uncovered((e.relationship_id for e in edges), covered)
                 taxonomies = self._taxonomies_of(edges)
                 resolved, replacement, swap = self._resolve_edges(
                     target_id, resolution, inspector, edges, run_id
@@ -1502,6 +1514,7 @@ class ProposalService:
         resolution: InUseResolution | None,
         run_id: str,
         update: Callable[[], str],
+        covered: Mapping[str, int] | None = None,
     ) -> str:
         """
         Run a relationship-type update with the relationships using the type
@@ -1529,6 +1542,8 @@ class ProposalService:
         with self._atomic():
             inspector = InUseInspector(self._repo)
             edges = inspector.edges(target_id) if pair is not PairMatch.SAME else []
+            if pair is PairMatch.DIFFERENT:
+                _check_uncovered((e.relationship_id for e in edges), covered)
             if pair is PairMatch.DIFFERENT and edges and resolution is None:
                 raise _ApplyFailed(
                     APPLY_ERROR,
@@ -1658,6 +1673,7 @@ class ProposalService:
         run_id: str,
         forced: bool,
         resolution: InUseResolution | None = None,
+        covered: Mapping[str, int] | None = None,
     ) -> None:
         def run() -> str:
             fields = {
@@ -1683,8 +1699,11 @@ class ProposalService:
                     resolution,
                     run_id,
                     lambda: self._dispatch(operation, fields, run_id, operation.op),
+                    covered,
                 )
             if operation.kind is K.PROPERTY and operation.op is OperationType.DELETE:
+                using = self._repo.list_relationships(property_id=operation.target_id, limit=None)
+                _check_uncovered((r.id for r in using), covered)
                 before = self._type_fields(operation.target_id)  # type: ignore[arg-type]
                 result = self._dispatch(operation, fields, run_id, operation.op)
                 operation.type_change = self._delete_change(before, operation, refs)
@@ -1990,7 +2009,9 @@ class ProposalService:
         awaiting operation of the proposal deletes). Relationships an awaiting
         relationship delete of the proposal removes don't count (a bundle
         import deletes them before their type), so a delete they all cover has
-        none. Applying a blocked delete as proposed fails; it needs a
+        none; applying it waits until those relationship deletes are applied
+        or rejected, so it acts on the same relationships review showed.
+        Applying a blocked delete as proposed fails; it needs a
         resolution (see `apply`). The same for each pending or failed property
         update that retargets its type (another pair of domain and range
         classes) while relationships use it.
@@ -2032,6 +2053,20 @@ class ProposalService:
             self._blockers_of(proposal, keeps, inspector),
         )
 
+    @staticmethod
+    def _covered(proposal: ChangeProposal) -> dict[str, int]:
+        """
+        Relationship id -> seq of the awaiting relationship delete of the
+        proposal that removes it. Blockers leave these relationships out, so
+        applying a type operation they use waits until those deletes are
+        applied or rejected (`_check_uncovered`): both see the same set.
+        """
+        return {
+            str(o.target_id): o.seq
+            for o in proposal.pending
+            if o.kind is K.RELATIONSHIP and o.op is OperationType.DELETE and o.target_id
+        }
+
     def _blockers_of(
         self,
         proposal: ChangeProposal,
@@ -2046,11 +2081,7 @@ class ProposalService:
             for o in proposal.pending
             if o.kind is K.PROPERTY and o.op is OperationType.DELETE and o.target_id
         }
-        covered = {
-            str(o.target_id)
-            for o in proposal.pending
-            if o.kind is K.RELATIONSHIP and o.op is OperationType.DELETE
-        }
+        covered = self._covered(proposal)
         found: dict[str, DeleteBlockers] = {}
         for operation in operations:
             target_id = str(operation.target_id)
@@ -2422,6 +2453,23 @@ class ProposalService:
                 ) from exc
             return target
         return svc.move_class(target, v["parent_class_id"]).id
+
+
+def _check_uncovered(relationship_ids: Iterable[str], covered: Mapping[str, int] | None) -> None:
+    """
+    Fail a relationship-type delete or retarget while relationships using the
+    type still await the proposal's own relationship deletes. Review leaves
+    those relationships out (see `_covered`), so the apply must not act on
+    them either: the reviewed set and the applied set stay the same.
+    """
+    seqs = sorted({covered[i] for i in relationship_ids if i in (covered or {})})
+    if seqs:
+        listed = ", ".join(str(s) for s in seqs)
+        raise _ApplyFailed(
+            UNRESOLVABLE,
+            f"relationships using the type are deleted by seq {listed} of this proposal,"
+            " not applied yet; apply or reject those first",
+        )
 
 
 def _recorded(

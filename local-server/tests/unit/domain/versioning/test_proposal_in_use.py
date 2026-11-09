@@ -1203,3 +1203,197 @@ def test_type_usage_lists_the_relationships_a_rename_keeps(service, graph, ontol
         graph["second"],
     ]
     assert service.in_use_blockers(proposal) == {}
+
+
+# ------------------------------------- covered edges and edited-delete targets (#1438)
+
+
+def rel_delete(seq, relationship_id):
+    return OperationDraft(seq=seq, op=T.DELETE, kind=K.RELATIONSHIP, target_id=relationship_id)
+
+
+def type_delete(seq, property_id):
+    return OperationDraft(seq=seq, op=T.DELETE, kind=K.PROPERTY, target_id=property_id)
+
+
+def propose(service, graph, *drafts):
+    return service.propose(graph["taxonomy"], "Cleanup", list(drafts), ProposalSource.BUNDLE)
+
+
+COVERED_REASON = (
+    "unresolvable: relationships using the type are deleted by seq 1 of this proposal,"
+    " not applied yet; apply or reject those first"
+)
+
+
+class TestCoveredRelationships:
+    """A type operation whose type has some relationships the same proposal deletes."""
+
+    def reviewed(self, service, proposal, seq=2):
+        """The resolution a reviewer sends: the relationships the blockers listed."""
+        blockers = service.in_use_blockers(proposal)[the_op(proposal, seq).id]
+        return [e.relationship_id for e in blockers.edges]
+
+    def test_applies_with_the_reviewed_set_once_the_relationship_delete_runs_first(
+        self, service, graph, repo
+    ):
+        proposal = propose(
+            service, graph, rel_delete(1, graph["first"]), type_delete(2, graph["triggers_function"])
+        )
+        reviewed = self.reviewed(service, proposal)
+        assert reviewed == [graph["second"]]
+
+        op_ids = [o.id for o in proposal.operations]
+        resolution = InUseResolution(strategy=DELETE, relationship_ids=reviewed)
+        applied = service.apply(proposal.id, op_ids, resolutions={op_ids[1]: resolution})
+
+        assert [o.status for o in applied.operations] == [OperationStatus.APPLIED] * 2
+        assert [e.relationship_id for e in the_op(applied, 2).resolution.edges] == reviewed
+        assert repo.get_property_definition(graph["triggers_function"]) is None
+
+    def test_a_move_takes_only_the_reviewed_relationships(self, service, graph, repo, ontology):
+        serves = add_fitting_type(ontology, graph)
+        proposal = propose(
+            service, graph, rel_delete(1, graph["first"]), type_delete(2, graph["triggers_function"])
+        )
+        reviewed = self.reviewed(service, proposal)
+        op_ids = [o.id for o in proposal.operations]
+        move = InUseResolution(
+            strategy=MOVE, replacement_property_id=serves, relationship_ids=reviewed
+        )
+
+        applied = service.apply(proposal.id, op_ids, resolutions={op_ids[1]: move})
+
+        assert the_op(applied, 2).status is OperationStatus.APPLIED, the_op(applied, 2).reason
+        moved = edges_of(repo, serves)
+        assert [(r.source_id, r.target_id) for r in moved] == [
+            (graph["synced"], graph["conflicts"])
+        ]
+
+    def test_waits_while_the_relationship_delete_is_unapplied(self, service, graph, repo):
+        proposal = propose(
+            service, graph, rel_delete(1, graph["first"]), type_delete(2, graph["triggers_function"])
+        )
+        reviewed = self.reviewed(service, proposal)
+        op_id = the_op(proposal, 2).id
+        resolution = InUseResolution(strategy=DELETE, relationship_ids=reviewed)
+
+        applied = service.apply(proposal.id, [op_id], resolutions={op_id: resolution})
+
+        assert the_op(applied, 2).status is OperationStatus.FAILED
+        assert the_op(applied, 2).reason == COVERED_REASON
+        assert len(edges_of(repo, graph["triggers_function"])) == 2
+
+        # Once the relationship delete applies, the same reviewed resolution goes through.
+        service.apply(proposal.id, [the_op(proposal, 1).id])
+        applied = service.apply(proposal.id, [op_id], resolutions={op_id: resolution})
+        assert the_op(applied, 2).status is OperationStatus.APPLIED, the_op(applied, 2).reason
+
+    def test_waits_when_the_relationship_delete_comes_later_in_the_same_apply(
+        self, service, graph, repo
+    ):
+        proposal = propose(
+            service, graph, type_delete(1, graph["triggers_function"]), rel_delete(2, graph["first"])
+        )
+        reviewed = self.reviewed(service, proposal, seq=1)
+        op_ids = [o.id for o in proposal.operations]
+        resolution = InUseResolution(strategy=DELETE, relationship_ids=reviewed)
+
+        applied = service.apply(proposal.id, op_ids, resolutions={op_ids[0]: resolution})
+
+        assert the_op(applied, 1).reason == COVERED_REASON.replace("seq 1", "seq 2")
+        assert the_op(applied, 2).status is OperationStatus.APPLIED
+        assert repo.get_property_definition(graph["triggers_function"]) is not None
+
+    def test_rejecting_the_relationship_delete_after_review_needs_another_review(
+        self, service, graph, repo
+    ):
+        proposal = propose(
+            service, graph, rel_delete(1, graph["first"]), type_delete(2, graph["triggers_function"])
+        )
+        reviewed = self.reviewed(service, proposal)
+        service.reject(proposal.id, [the_op(proposal, 1).id])
+        op_id = the_op(proposal, 2).id
+        resolution = InUseResolution(strategy=DELETE, relationship_ids=reviewed)
+
+        applied = service.apply(proposal.id, [op_id], resolutions={op_id: resolution})
+
+        assert "changed since reviewed: 2 now, 1 reviewed" in the_op(applied, 2).reason
+        assert len(edges_of(repo, graph["triggers_function"])) == 2
+
+    def test_a_delete_they_all_cover_says_why_it_waits(self, service, graph, repo):
+        proposal = propose(
+            service,
+            graph,
+            rel_delete(1, graph["first"]),
+            rel_delete(2, graph["second"]),
+            type_delete(3, graph["triggers_function"]),
+        )
+        assert service.in_use_blockers(proposal) == {}
+
+        applied = service.apply(proposal.id, [the_op(proposal, 3).id])
+
+        assert the_op(applied, 3).reason == COVERED_REASON.replace("seq 1", "seq 1, 2")
+        assert repo.get_property_definition(graph["triggers_function"]) is not None
+
+    def test_a_retarget_uses_the_reviewed_set_too(self, service, graph, repo):
+        retarget = OperationDraft(
+            seq=2,
+            op=T.UPDATE,
+            kind=K.PROPERTY,
+            target_id=graph["triggers_function"],
+            fields={"range_class_id": graph["process"]},
+        )
+        proposal = propose(service, graph, rel_delete(1, graph["first"]), retarget)
+        reviewed = self.reviewed(service, proposal)
+        assert reviewed == [graph["second"]]
+        op_ids = [o.id for o in proposal.operations]
+        resolution = InUseResolution(strategy=DELETE, relationship_ids=reviewed)
+
+        alone = service.apply(proposal.id, [op_ids[1]], resolutions={op_ids[1]: resolution})
+        assert the_op(alone, 2).reason == COVERED_REASON
+
+        applied = service.apply(proposal.id, op_ids, resolutions={op_ids[1]: resolution})
+        assert the_op(applied, 2).status is OperationStatus.APPLIED, the_op(applied, 2).reason
+        assert edges_of(repo, graph["triggers_function"]) == []
+        assert (
+            repo.get_property_definition(graph["triggers_function"]).range_class_id
+            == graph["process"]
+        )
+
+
+class TestEditedDeleteTargets:
+    """An edited delete applies as an update, so its type survives to take relationships."""
+
+    def test_relationships_can_move_to_a_type_another_operation_edits_instead_of_deleting(
+        self, service, graph, repo, ontology
+    ):
+        serves = add_fitting_type(ontology, graph)
+        proposal = propose_delete(service, graph, type_delete(2, serves))
+        op_ids = [o.id for o in proposal.operations]
+        move = InUseResolution(strategy=MOVE, replacement_property_id=serves)
+
+        applied = service.apply(
+            proposal.id,
+            op_ids,
+            edits={op_ids[1]: {"canonical_predicate": "serves"}},
+            resolutions={op_ids[0]: move},
+        )
+
+        assert [o.status for o in applied.operations] == [OperationStatus.APPLIED] * 2, [
+            o.reason for o in applied.operations
+        ]
+        assert repo.get_property_definition(graph["triggers_function"]) is None
+        assert repo.get_property_definition(serves).canonical_predicate == "serves"
+        assert len(edges_of(repo, serves)) == 2
+
+    def test_a_delete_applied_without_an_edit_still_refuses_the_move(
+        self, service, graph, ontology
+    ):
+        serves = add_fitting_type(ontology, graph)
+        proposal = propose_delete(service, graph, type_delete(2, serves))
+        op_ids = [o.id for o in proposal.operations]
+        move = InUseResolution(strategy=MOVE, replacement_property_id=serves)
+
+        with pytest.raises(ValueError, match="which seq 2 deletes"):
+            service.apply(proposal.id, op_ids, resolutions={op_ids[0]: move})
