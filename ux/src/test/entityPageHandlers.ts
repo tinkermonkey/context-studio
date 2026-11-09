@@ -2,9 +2,11 @@
  * MSW handlers serving a tiny ontology for the entity page tests:
  * taxonomy "tax-1" → scheme "scheme-1" → classes "class-1" (Component) and
  * "class-2" (Service); individuals "ind-1" (Router, a Component) and "ind-2"
- * (API, a Service); "prop-1" realizes Component → Service; "rel-1" Router → API.
+ * (API, a Service); "prop-1" realizes Component → Service; "rel-1" Router → API;
+ * attribute "attr-1" (Status) on Component.
  */
 import { http, HttpResponse } from "msw";
+import type { components } from "@/api/types";
 import {
   createClass,
   createConceptScheme,
@@ -77,6 +79,25 @@ export const relationship = createRelationship({
   property_definition_id: "prop-1",
 });
 
+export const statusAttribute: components["schemas"]["AttributeDefinitionResponse"] = {
+  id: "attr-1",
+  class_id: "class-1",
+  identifier: "component_status",
+  title: "Status",
+  datatype: "string",
+  description: "Open or done.",
+  is_required: false,
+  allowed_values: ["open", "done"],
+  default_value: null,
+  sort_order: 0,
+  external_references: [],
+  created_at: "2026-11-01T00:00:00Z",
+  last_modified: "2026-11-01T00:00:00Z",
+  version: 1,
+  status: "published",
+  source_run_id: null,
+};
+
 const classes = [component, serviceClass];
 const individuals = [router, api];
 
@@ -127,6 +148,11 @@ export const entityPageHandlers = [
   http.get("*/api/schemes/:id", () => HttpResponse.json(scheme)),
   http.get("*/api/schemes", () => list([scheme])),
   http.get("*/api/classes/:id/attribute-definitions", () => list([])),
+  http.get("*/api/attribute-definitions/:id", ({ params }) =>
+    params.id === statusAttribute.id
+      ? HttpResponse.json(statusAttribute)
+      : HttpResponse.json({ detail: "Attribute definition not found" }, { status: 404 }),
+  ),
   http.get("*/api/classes/:id", ({ params }) => {
     const cls = classes.find((c) => c.id === params.id);
     return cls
@@ -166,6 +192,11 @@ export const entityPageHandlers = [
     const domain = url.searchParams.get("domain_class_id");
     return list(byIds([realizes], url).filter((p) => !domain || p.domain_class_id === domain));
   }),
+  http.get("*/api/relationships/:id", ({ params }) =>
+    params.id === relationship.id
+      ? HttpResponse.json(relationship)
+      : HttpResponse.json({ detail: "Relationship not found" }, { status: 404 }),
+  ),
   http.get("*/api/relationships", ({ request }) => {
     const url = new URL(request.url);
     const source = url.searchParams.get("source_id");

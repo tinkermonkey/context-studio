@@ -17,6 +17,7 @@ type ClassUpdateRequest = components["schemas"]["ClassUpdateRequest"];
 type ClassMoveRequest = components["schemas"]["ClassMoveRequest"];
 type ListClasses = components["schemas"]["ListResponse_ClassResponse_"];
 type ListAttributeDefinitions = components["schemas"]["ListResponse_AttributeDefinitionResponse_"];
+type AttributeDefinitionResponse = components["schemas"]["AttributeDefinitionResponse"];
 
 type IndividualResponse = components["schemas"]["IndividualResponse"];
 type IndividualCreateRequest = components["schemas"]["IndividualCreateRequest"];
@@ -160,6 +161,10 @@ class OntologyService extends BaseService {
       `/api/classes/${classId}/attribute-definitions`,
       params as Record<string, unknown>,
     );
+  }
+
+  async getAttributeDefinition(id: string): Promise<AttributeDefinitionResponse> {
+    return this.get<AttributeDefinitionResponse>(`/api/attribute-definitions/${id}`);
   }
 
   async createClass(schemeId: string, data: ClassCreateRequest): Promise<ClassResponse> {
