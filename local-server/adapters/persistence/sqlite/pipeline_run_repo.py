@@ -10,6 +10,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -364,6 +365,7 @@ class PipelineRepository:
         start_date: datetime | None = None,
         end_date: datetime | None = None,
         applied: bool | None = None,
+        example_id: str | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> tuple["PipelineRunList", int]:
@@ -380,6 +382,7 @@ class PipelineRepository:
             start_date: Include only runs created on or after this UTC datetime
             end_date: Include only runs created on or before this UTC datetime
             applied: True for applied runs (have change_events), False for not-applied
+            example_id: Only runs started from this library example
             limit: Maximum number of rows to return
             offset: Number of rows to skip (for pagination)
 
@@ -402,6 +405,10 @@ class PipelineRepository:
                 q = q.filter(PipelineRun.created_at >= start_date)
             if end_date is not None:
                 q = q.filter(PipelineRun.created_at <= end_date)
+            if example_id is not None:
+                q = q.filter(
+                    func.json_extract(PipelineRun.input_summary, "$.example_id") == example_id
+                )
 
             if applied is not None:
                 subquery = (

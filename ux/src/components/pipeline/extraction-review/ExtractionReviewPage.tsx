@@ -23,6 +23,8 @@ import {
   type ReviewKind,
 } from "@/api/hooks/pipeline/useExtractionReviewRuns";
 import { usePipelineRun } from "@/api/hooks/pipeline/usePipelineRuns";
+import { useExtractionExamples } from "@/api/hooks/pipeline/useExtractionExamples";
+import { ExampleRuns } from "./ExampleRuns";
 import { SchemaCandidateReview } from "./SchemaCandidateReview";
 import { IndividualCandidateReview } from "./IndividualCandidateReview";
 import "./ExtractionReview.css";
@@ -69,12 +71,15 @@ const pairedConfig = (configs: ConfigLike[] | undefined, partner?: ConfigLike) =
 
 export interface ExtractionReviewPageProps {
   onOpenRunHistory?: () => void;
+  /** Open an earlier run for review (from the example's run list). */
+  onOpenRun?: (runId: string) => void;
   /** An existing schema/individual extraction run to open for review. */
   initialRunId?: string;
 }
 
 export function ExtractionReviewPage({
   onOpenRunHistory,
+  onOpenRun,
   initialRunId,
 }: ExtractionReviewPageProps) {
   const [text, setText] = useState("");
@@ -120,6 +125,22 @@ export function ExtractionReviewPage({
 
   const runs = useExtractionReviewRuns();
 
+  // The example library: picking one fills the paragraph. A run records the
+  // example only while the paragraph is still the example's text.
+  const { data: examples } = useExtractionExamples();
+  const [exampleChoice, setExampleChoice] = useState("");
+  const example = examples?.find((e) => e.id === exampleChoice);
+  const exampleEdited = !!example && text !== example.text;
+  const pickExample = (id: string) => {
+    const picked = examples?.find((e) => e.id === id);
+    if (!picked) return;
+    setExampleChoice(id);
+    setText(picked.text);
+    setErrors((prev) => ({ ...prev, text: undefined }));
+    const hinted = taxonomies.find((t) => t.identifier === picked.taxonomy_hint);
+    if (hinted) setTaxonomyChoice(hinted.id);
+  };
+
   // Open a run passed by id (from run history) once it loads.
   const { data: initialRun } = usePipelineRun(initialRunId ?? "");
   const [openedRunId, setOpenedRunId] = useState<string | null>(null);
@@ -134,6 +155,7 @@ export function ExtractionReviewPage({
     setTab(kind);
     // Show the paragraph the run read; its highlights index into it.
     setText(initialRun.source_text ?? "");
+    setExampleChoice(asText(input.example_id));
     // Point the scope pickers at the run's scope so its labels resolve.
     setTaxonomyChoice(asText(input.taxonomy_id));
     setScope({
@@ -176,6 +198,7 @@ export function ExtractionReviewPage({
     void runs.start({
       text,
       taxonomy: { id: taxonomy.id, label: taxonomy.title },
+      exampleId: example && !exampleEdited ? example.id : undefined,
       implementationId: implId,
       schemaConfigRef: schemaConfig!.config_ref,
       individualConfigRef: individualConfig!.config_ref,
@@ -259,6 +282,27 @@ export function ExtractionReviewPage({
             />
           </Field>
           <div className="xr-stack-sm">
+            <Field label="Example" hint="optional">
+              <Select
+                value={example ? example.id : ""}
+                onChange={pickExample}
+                placeholder="Pick an example paragraph"
+                ariaLabel="Example paragraph"
+                data-testid="extraction-review-example"
+              >
+                {(examples ?? []).map((e) => (
+                  <Select.Item key={e.id} value={e.id}>
+                    {e.title}
+                  </Select.Item>
+                ))}
+              </Select>
+            </Field>
+            {example && (
+              <span className="xr-example-desc" data-testid="extraction-review-example-description">
+                {example.description}
+                {exampleEdited && " Edited: runs of this text are not linked to the example."}
+              </span>
+            )}
             <Field label="Taxonomy" required error={errors.taxonomy}>
               <Select
                 value={taxonomyId}
@@ -314,6 +358,13 @@ export function ExtractionReviewPage({
           </>
         )}
       </Panel>
+
+      {example && !exampleEdited && (
+        <>
+          <div className="xr-gap-sm" />
+          <ExampleRuns exampleId={example.id} exampleTitle={example.title} onOpenRun={onOpenRun} />
+        </>
+      )}
 
       {showingOpenedRun && (
         <>

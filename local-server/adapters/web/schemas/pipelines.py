@@ -173,6 +173,25 @@ class PipelineConfigurationResponse(BaseModel):
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
 
 
+class ExtractionExampleResponse(BaseModel):
+    """An example paragraph from the library for trying the extraction pipelines."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: str = Field(
+        ..., min_length=1, description="Stable example id; runs started from it record it"
+    )
+    title: str = Field(..., min_length=1, description="Short name")
+    description: str = Field(..., min_length=1, description="What the example exercises")
+    pipelines: list[str] = Field(
+        ..., min_length=1, description="Pipeline types the example is written for"
+    )
+    taxonomy_hint: Optional[str] = Field(
+        None, description="Identifier of the taxonomy the example suits (e.g. dr_spec), if any"
+    )
+    text: str = Field(..., min_length=1, description="The paragraph")
+
+
 class PipelineRunRequest(BaseModel):
     """Base request to invoke a pipeline (polymorphic)."""
 

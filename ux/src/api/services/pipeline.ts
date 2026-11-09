@@ -55,7 +55,11 @@ export interface RunListParams {
   start_date?: string;
   end_date?: string;
   applied?: "applied" | "not-applied";
+  /** Only runs started from this extraction example. */
+  example_id?: string;
 }
+
+export type ExtractionExample = components["schemas"]["ExtractionExampleResponse"];
 
 export interface ApplyParams {
   /** Ignored by the server when the body carries accepted_candidate_ids. */
@@ -123,6 +127,11 @@ class PipelineService extends BaseService {
   // Runs
   async getRun(runId: string): Promise<PipelineRunResponse> {
     return this.get<PipelineRunResponse>(`/api/pipelines/runs/${runId}`);
+  }
+
+  /** The library of example paragraphs for trying extraction. */
+  async listExtractionExamples(): Promise<ExtractionExample[]> {
+    return this.get<ExtractionExample[]>("/api/pipelines/extraction-examples");
   }
 
   async listRuns(params?: RunListParams): Promise<ListPipelineRuns> {

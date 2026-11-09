@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from "vitest";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
@@ -33,10 +33,45 @@ const config = (type: string, ref: string, model: string, provider = "openrouter
 });
 
 let runBodies: Record<string, Record<string, unknown>> = {};
+let runListQueries: URLSearchParams[] = [];
+
+const EXAMPLES = [
+  {
+    id: "glossary-note",
+    title: "Glossary note",
+    description: "Exercises plain glossary prose.",
+    pipelines: ["schema_extraction"],
+    taxonomy_hint: "tax_other",
+    text: "A glossary entry defines one term.",
+  },
+  {
+    id: "no-hint",
+    title: "No hint",
+    description: "Exercises nothing in particular.",
+    pipelines: ["individual_extraction"],
+    text: "Plain text.",
+  },
+];
 
 beforeEach(() => {
   runBodies = {};
+  runListQueries = [];
   server.use(
+    http.get("*/api/pipelines/extraction-examples", () => HttpResponse.json(EXAMPLES)),
+    http.get("*/api/pipelines/runs", ({ request }) => {
+      const query = new URL(request.url).searchParams;
+      runListQueries.push(query);
+      return HttpResponse.json(
+        page(
+          query.get("example_id") === "glossary-note"
+            ? [
+                makeRun({ id: "run-old-s", configuration_slug: "schema-extraction-default" }),
+                makeRun({ id: "run-old-r", pipeline_type: "schema_relationship_reflection" }),
+              ]
+            : [],
+        ),
+      );
+    }),
     http.get("*/api/taxonomies", () =>
       HttpResponse.json(
         page([
@@ -277,5 +312,72 @@ describe("ExtractionReviewPage", () => {
     // Editing the paragraph keeps the run's highlights and flags them as stale.
     await userEvent.type(screen.getByTestId("extraction-review-text"), " More.");
     expect(screen.getByTestId("extraction-review-stale")).toHaveClass("form-callout--warn");
+  });
+});
+
+describe("ExtractionReviewPage — example library", () => {
+  async function pickExample(id: string) {
+    await userEvent.selectOptions(await screen.findByTestId("extraction-review-example"), id);
+  }
+
+  it("fills the paragraph from an example, follows its taxonomy hint and describes it", async () => {
+    await renderPage();
+    await pickExample("glossary-note");
+
+    expect(screen.getByTestId("extraction-review-text")).toHaveValue(
+      "A glossary entry defines one term.",
+    );
+    expect(screen.getByTestId("extraction-review-taxonomy")).toHaveValue("tax-other");
+    expect(screen.getByTestId("extraction-review-example-description")).toHaveTextContent(
+      "Exercises plain glossary prose.",
+    );
+  });
+
+  it("keeps the taxonomy when the example has no hint", async () => {
+    await renderPage();
+    await pickExample("no-hint");
+    expect(screen.getByTestId("extraction-review-taxonomy")).toHaveValue("tax-dr");
+  });
+
+  it("records the example on both runs while the text is unedited", async () => {
+    mockRuns("ok");
+    await renderPage();
+    await pickExample("glossary-note");
+    await userEvent.click(screen.getByTestId("extraction-review-run"));
+
+    await screen.findByTestId("extraction-review-schema-candidates");
+    expect(runBodies.schema_extraction).toMatchObject({ example_id: "glossary-note" });
+    expect(runBodies.individual_extraction).toMatchObject({ example_id: "glossary-note" });
+  });
+
+  it("treats an edited example as free text", async () => {
+    mockRuns("ok");
+    await renderPage();
+    await pickExample("glossary-note");
+    await userEvent.type(screen.getByTestId("extraction-review-text"), " More.");
+
+    expect(screen.getByTestId("extraction-review-example-description")).toHaveTextContent(
+      "Edited: runs of this text are not linked to the example.",
+    );
+    expect(screen.queryByTestId("extraction-review-example-runs")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByTestId("extraction-review-run"));
+    await screen.findByTestId("extraction-review-schema-candidates");
+    expect(runBodies.schema_extraction).not.toHaveProperty("example_id");
+  });
+
+  it("lists earlier extraction runs of the example and opens one", async () => {
+    const onOpenRun = vi.fn();
+    renderWithProviders(<ExtractionReviewPage onOpenRun={onOpenRun} />);
+    await screen.findByTestId("extraction-review-config-refs");
+    await pickExample("glossary-note");
+
+    const runs = await screen.findByTestId("extraction-review-example-runs");
+    await within(runs).findByText("schema-extraction-default v1");
+    expect(runListQueries.some((q) => q.get("example_id") === "glossary-note")).toBe(true);
+    // Only extraction runs are listed.
+    expect(within(runs).queryByText(/schema_relationship_reflection/)).not.toBeInTheDocument();
+
+    await userEvent.click(within(runs).getByText("schema-extraction-default v1"));
+    expect(onOpenRun).toHaveBeenCalledWith("run-old-s");
   });
 });

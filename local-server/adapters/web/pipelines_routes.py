@@ -59,6 +59,7 @@ from adapters.web.schemas.pipelines import (
     CandidateItem,
     EnqueueBatchRunsRequest,
     EnqueueBatchRunsResponse,
+    ExtractionExampleResponse,
     GroundingCandidate,
     ImplementationResponse,
     MergedMentionSchema,
@@ -1564,6 +1565,20 @@ async def get_pipeline_run_change_events(
     )
 
 
+@router.get("/extraction-examples", response_model=list[ExtractionExampleResponse])
+async def list_extraction_examples(request: Request) -> list[ExtractionExampleResponse]:
+    """
+    The library of example paragraphs for trying the extraction pipelines.
+
+    Curated examples ship with the app; a run started from one records its id
+    (``example_id``), so runs on the same example can be listed and compared.
+
+    Returns:
+        The examples, in library order
+    """
+    return list(getattr(request.app.state, "extraction_examples", []))
+
+
 @router.get("/runs", response_model=ListResponse[PipelineRunResponse])
 async def list_pipeline_runs(
     request: Request,
@@ -1574,6 +1589,9 @@ async def list_pipeline_runs(
     end_date: Optional[str] = Query(None, description="Filter by end date (ISO 8601 format)"),
     applied: Optional[str] = Query(
         None, description="Filter by applied status: 'applied' or 'not-applied'"
+    ),
+    example_id: Optional[str] = Query(
+        None, description="Only runs started from this extraction example"
     ),
     limit: int = Query(100, ge=1, le=500, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
@@ -1590,6 +1608,7 @@ async def list_pipeline_runs(
         start_date: Filter by start date (ISO 8601 format, optional)
         end_date: Filter by end date (ISO 8601 format, optional)
         applied: Filter by applied status ('applied' or 'not-applied', optional)
+        example_id: Only runs started from this extraction example (optional)
         limit: Maximum number of results (1-500, default 100)
         offset: Number of results to skip for pagination (default 0)
         request: FastAPI request (for service access)
@@ -1666,6 +1685,7 @@ async def list_pipeline_runs(
         start_date=start_dt,
         end_date=end_dt,
         applied=applied_filter,
+        example_id=example_id or None,
         limit=limit,
         offset=offset,
     )
