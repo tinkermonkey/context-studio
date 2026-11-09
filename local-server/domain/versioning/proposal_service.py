@@ -1324,7 +1324,11 @@ class ProposalService:
         edited delete applies as an update, so its resolution is a retarget's),
         and doesn't move relationships to a type the proposal also deletes. A
         delete this call applies with an edit keeps its type (it applies as an
-        update), so relationships can move to it.
+        update), so relationships can move to it. Operations apply in seq
+        order: if that edit retargets the type after the move, the retarget
+        fails for want of a resolution of the moved relationships; if the edit
+        fails, the moved relationships stay on the type, whose delete stays
+        awaiting and blocked by them. Either way nothing is half-applied.
         """
         deleted = {
             o.target_id: o.seq
@@ -1423,7 +1427,9 @@ class ProposalService:
             with self._atomic():
                 inspector = InUseInspector(self._repo)
                 edges = inspector.edges(target_id)
-                _check_uncovered((e.relationship_id for e in edges), covered)
+                _check_uncovered(
+                    (e.relationship_id for e in edges), covered, needs_resolution=False
+                )
                 taxonomies = self._taxonomies_of(edges)
                 resolved, replacement, swap = self._resolve_edges(
                     target_id, resolution, inspector, edges, run_id
@@ -1542,8 +1548,14 @@ class ProposalService:
         with self._atomic():
             inspector = InUseInspector(self._repo)
             edges = inspector.edges(target_id) if pair is not PairMatch.SAME else []
-            if pair is PairMatch.DIFFERENT:
-                _check_uncovered((e.relationship_id for e in edges), covered)
+            # A reverse swaps relationships in place and a retarget moves or deletes
+            # them: neither may touch ones the proposal's own deletes still cover.
+            if pair is not PairMatch.SAME:
+                _check_uncovered(
+                    (e.relationship_id for e in edges),
+                    covered,
+                    needs_resolution=pair is PairMatch.DIFFERENT and resolution is None,
+                )
             if pair is PairMatch.DIFFERENT and edges and resolution is None:
                 raise _ApplyFailed(
                     APPLY_ERROR,
@@ -1703,7 +1715,7 @@ class ProposalService:
                 )
             if operation.kind is K.PROPERTY and operation.op is OperationType.DELETE:
                 using = self._repo.list_relationships(property_id=operation.target_id, limit=None)
-                _check_uncovered((r.id for r in using), covered)
+                _check_uncovered((r.id for r in using), covered, needs_resolution=True)
                 before = self._type_fields(operation.target_id)  # type: ignore[arg-type]
                 result = self._dispatch(operation, fields, run_id, operation.op)
                 operation.type_change = self._delete_change(before, operation, refs)
@@ -2455,21 +2467,37 @@ class ProposalService:
         return svc.move_class(target, v["parent_class_id"]).id
 
 
-def _check_uncovered(relationship_ids: Iterable[str], covered: Mapping[str, int] | None) -> None:
+def _check_uncovered(
+    relationship_ids: Iterable[str],
+    covered: Mapping[str, int] | None,
+    needs_resolution: bool,
+) -> None:
     """
-    Fail a relationship-type delete or retarget while relationships using the
-    type still await the proposal's own relationship deletes. Review leaves
-    those relationships out (see `_covered`), so the apply must not act on
-    them either: the reviewed set and the applied set stay the same.
+    Fail a relationship-type delete, retarget or reverse while relationships
+    using the type still await the proposal's own relationship deletes. Review
+    leaves those relationships out (see `_covered`), so the apply must not act
+    on them either: the reviewed set and the applied set stay the same.
+
+    Args:
+        relationship_ids: The relationships using the type now
+        covered: Relationship id -> seq of the awaiting delete that removes it
+        needs_resolution: Whether the others (not covered) need a resolution
+            this apply lacks, so the message says that too
     """
-    seqs = sorted({covered[i] for i in relationship_ids if i in (covered or {})})
-    if seqs:
-        listed = ", ".join(str(s) for s in seqs)
-        raise _ApplyFailed(
-            UNRESOLVABLE,
-            f"relationships using the type are deleted by seq {listed} of this proposal,"
-            " not applied yet; apply or reject those first",
-        )
+    covered = covered or {}
+    ids = list(relationship_ids)
+    seqs = sorted({covered[i] for i in ids if i in covered})
+    if not seqs:
+        return
+    listed = ", ".join(str(s) for s in seqs)
+    message = (
+        f"relationships using the type are deleted by seq {listed} of this proposal,"
+        " not applied yet; apply or reject those first"
+    )
+    others = sum(1 for i in ids if i not in covered)
+    if others and needs_resolution:
+        message += f"; the other {others} relationship(s) using it need a resolution too"
+    raise _ApplyFailed(UNRESOLVABLE, message)
 
 
 def _recorded(

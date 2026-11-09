@@ -1336,6 +1336,44 @@ class TestCoveredRelationships:
         assert the_op(applied, 3).reason == COVERED_REASON.replace("seq 1", "seq 1, 2")
         assert repo.get_property_definition(graph["triggers_function"]) is not None
 
+    def test_a_delete_without_a_resolution_says_the_others_need_one(self, service, graph):
+        proposal = propose(
+            service, graph, rel_delete(1, graph["first"]), type_delete(2, graph["triggers_function"])
+        )
+
+        applied = service.apply(proposal.id, [the_op(proposal, 2).id])
+
+        assert the_op(applied, 2).reason == (
+            COVERED_REASON + "; the other 1 relationship(s) using it need a resolution too"
+        )
+
+    def test_a_reverse_leaves_covered_relationships_alone(self, service, graph, repo):
+        """A reverse later in seq than the relationship delete would swap its ends first."""
+        reverse = OperationDraft(
+            seq=1,
+            op=T.UPDATE,
+            kind=K.PROPERTY,
+            target_id=graph["triggers_function"],
+            fields=reverse_fields(graph),
+        )
+        proposal = propose(service, graph, reverse, rel_delete(2, graph["first"]))
+        usage = service.type_usage(proposal)[the_op(proposal, 1).id]
+        assert [e.relationship_id for e in usage.edges] == [graph["second"]]
+        op_ids = [o.id for o in proposal.operations]
+
+        applied = service.apply(proposal.id, op_ids)
+
+        assert the_op(applied, 1).reason == COVERED_REASON.replace("seq 1", "seq 2")
+        assert the_op(applied, 2).status is OperationStatus.APPLIED, the_op(applied, 2).reason
+        applied = service.apply(proposal.id, [op_ids[0]])
+        assert the_op(applied, 1).status is OperationStatus.APPLIED, the_op(applied, 1).reason
+        [left] = edges_of(repo, graph["triggers_function"])
+        assert (left.id, left.source_id, left.target_id) == (
+            graph["second"],
+            graph["conflicts"],
+            graph["synced"],
+        )
+
     def test_a_retarget_uses_the_reviewed_set_too(self, service, graph, repo):
         retarget = OperationDraft(
             seq=2,
