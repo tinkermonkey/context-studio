@@ -153,6 +153,7 @@ def _build_schema_grounding(
         config=services.get("grounding_config", {}),
         run_id=services.get("run_id"),
         status_writer=services.get("status_writer"),
+        ontology_repo=services.get("ontology_repo"),
     )
 
 
@@ -253,9 +254,10 @@ _PIPELINE_TYPE_TO_STATE: dict[PipelineType, Type[PipelineState]] = {
 
 
 def _grounding_config(config: dict[str, Any]) -> dict[str, Any]:
-    """The grounding-specific part of a configuration: top_n and weights."""
+    """The grounding-specific part of a configuration: top_n, weights and sources."""
     return {
         "top_n": config.get("top_n", 10),
+        "sources": config.get("sources", []),
         "weights": config.get(
             "weights",
             {

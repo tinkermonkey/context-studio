@@ -2244,6 +2244,15 @@ selectors:
   - selector: relationship-suggester-retry-btn
     component: src/components/ontology/suggesters/RelationshipSuggester.tsx
     description: Button to re-trigger the relationship suggestion pipeline after a completed or empty run
+  - selector: relationship-suggestion-*
+    component: src/components/ontology/suggesters/RelationshipSuggester.tsx
+    description: One relationship suggestion card (pattern matches relationship-suggestion-{index})
+  - selector: relationship-accept-*
+    component: src/components/ontology/suggesters/RelationshipSuggester.tsx
+    description: Accept button on a relationship suggestion card (pattern matches relationship-accept-{index})
+  - selector: relationship-dismiss-*
+    component: src/components/ontology/suggesters/RelationshipSuggester.tsx
+    description: Dismiss button on a relationship suggestion card (pattern matches relationship-dismiss-{index})
   - selector: suggest-field-loading
     component: src/components/ontology/suggesters/SuggestField.tsx
     description: Shimmer skeleton shown while the definition refinement pipeline run is PENDING or RUNNING

@@ -39,6 +39,10 @@ from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionOrch
 from domain.pipelines.schema_node_grounding.orchestrator import (
     SchemaGroundingOrchestrator,
 )
+from domain.pipelines.schema_node_grounding.scoring import (
+    GroundingCandidate,
+    ScoredCandidate,
+)
 from tests.utils.parent_rows import create_batch_row
 
 # Constant for mocking the orchestrator creation function
@@ -652,6 +656,93 @@ class TestPipelineRunEndpoints:
         ]
         for field in required_fields:
             assert field in body, f"Missing field: {field}"
+
+
+class TestSchemaGroundingRunFromNodeId:
+    """The Class drawer grounds a class by naming it: node_id plus the registered slug."""
+
+    @pytest.fixture
+    def grounding_client(self, client, registries):
+        """A client with grounding registered and a class 'Bicycle' in the ontology."""
+        registries["implementation_registry"].register_impl(
+            PipelineType.SCHEMA_NODE_GROUNDING, "default", SchemaGroundingOrchestrator
+        )
+        registries["config_registry"].register(
+            PipelineType.SCHEMA_NODE_GROUNDING,
+            "default",
+            "grounding-default",
+            {"sources": ["DBpedia"], "top_n": 10},
+        )
+        state = client.app.state
+        state.ontology_repo.get_class.side_effect = lambda class_id: (
+            MagicMock(title="Bicycle") if class_id == "cls-1" else None
+        )
+        candidate = GroundingCandidate(
+            uri="http://dbpedia.org/resource/Bicycle",
+            label="Bicycle",
+            description="A pedal-driven vehicle",
+            source="DBpedia",
+            source_score=0.9,
+        )
+        state.grounding_adapter.query_sources = AsyncMock(return_value=[candidate])
+        state.grounding_scorer.score_candidates = AsyncMock(
+            return_value=[
+                ScoredCandidate(
+                    uri=candidate.uri,
+                    label=candidate.label,
+                    description=candidate.description,
+                    source=candidate.source,
+                    source_score=candidate.source_score,
+                    label_match_score=1.0,
+                    semantic_similarity_score=0.9,
+                    match_confidence=0.93,
+                    match_rationale="exact label match",
+                )
+            ]
+        )
+        return client
+
+    def test_grounds_the_class_a_node_id_names(self, grounding_client):
+        """POST run with node_id resolves the class title and queries the config's sources."""
+        response = grounding_client.post(
+            "/api/pipelines/schema_node_grounding/run",
+            json={
+                "implementation_id": "default",
+                "configuration_ref": "grounding-default",
+                "node_id": "cls-1",
+            },
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED, response.text
+        body = response.json()
+        assert body["status"] == "completed"
+        assert body["configuration_slug"] == "grounding-default"
+        assert body["output_summary"]["node_label"] == "Bicycle"
+        groundings = body["output_summary"]["groundings"]
+        assert [g["uri"] for g in groundings] == ["http://dbpedia.org/resource/Bicycle"]
+        grounding_client.app.state.grounding_adapter.query_sources.assert_awaited_once_with(
+            label="Bicycle", sources=["DBpedia"]
+        )
+
+        candidates = grounding_client.get(f"/api/pipelines/runs/{body['id']}/candidates")
+        assert candidates.status_code == status.HTTP_200_OK
+        items = candidates.json()
+        assert [(c["candidate_type"], c["label"]) for c in items] == [("grounding", "Bicycle")]
+
+    def test_unknown_node_id_is_a_bad_request(self, grounding_client):
+        """POST run with a node_id that names no class returns 400."""
+        response = grounding_client.post(
+            "/api/pipelines/schema_node_grounding/run",
+            json={
+                "implementation_id": "default",
+                "configuration_ref": "grounding-default",
+                "node_id": "missing",
+            },
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "No Class with id 'missing'" in response.json()["detail"]
+        grounding_client.app.state.grounding_adapter.query_sources.assert_not_awaited()
 
 
 class TestPipelineErrorHandling:
