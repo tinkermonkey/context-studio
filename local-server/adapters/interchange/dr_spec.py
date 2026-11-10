@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from adapters.interchange.dr_relationships import DR_ATTRIBUTE_SCHEMA, RelationshipSchemaRecord
-from domain.ontology.value_objects import DataType, SourceRevision
+from domain.ontology.value_objects import DataType, SourceRevision, normalize_evidence_signals
 
 CHARTER_FILE = "DESIGN_CHARTER.md"
 _SUMMARY_HEADING = "## In one paragraph"
@@ -213,10 +213,14 @@ def _node_fields(path: Path, data: dict[str, Any]) -> dict[str, Any]:
         isinstance(text, str) for text in distinguish.values()
     ):
         raise ValueError(f"Node schema {path}: x-dr-distinguish is not a map of node id to text")
+    blank = [key for key, text in distinguish.items() if not text.strip()]
+    if blank:
+        raise ValueError(f"Node schema {path}: x-dr-distinguish has no text for {blank[0]}")
+    # As the class stores them, so an unchanged spec drifts nothing
     return {
-        "standard": standard or None,
-        "evidence": tuple(evidence),
-        "distinguish": tuple(distinguish.items()),
+        "standard": (standard or "").strip() or None,
+        "evidence": tuple(normalize_evidence_signals(evidence)),
+        "distinguish": tuple((key.strip(), text.strip()) for key, text in distinguish.items()),
     }
 
 

@@ -623,3 +623,27 @@ def test_a_distinguish_naming_a_class_outside_the_dr_spec_is_refused(parts):
 
     with pytest.raises(ValueError, match="it has no DR reference"):
         spec_changes_for(proposal, repo)
+
+
+def test_the_export_sends_the_fields_as_the_class_holds_them(parts):
+    _, repo, proposals = parts
+    proposal = apply_all(
+        proposals,
+        propose(
+            repo,
+            proposals,
+            update_definition(
+                repo,
+                1,
+                "api.operation",
+                standard_reference=" OpenAPI ",
+                evidence_signals=["an entry ", "  "],
+            ),
+        ),
+    )
+
+    (change,) = spec_changes_for(proposal, repo)["node_changes"]
+
+    assert change["set"] == {"standard": "OpenAPI", "evidence": ["an entry"]}
+    stored = class_by_dr_id(repo, "api.operation")
+    assert (stored.standard_reference, stored.evidence_signals) == ("OpenAPI", ["an entry"])

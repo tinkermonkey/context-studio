@@ -166,7 +166,11 @@ from adapters.interchange.dr_relationships import (
     dr_relationship_id,
 )
 from domain.ontology.ports import OntologyRepository
-from domain.ontology.value_objects import DataType
+from domain.ontology.value_objects import (
+    DataType,
+    normalize_distinguish_from,
+    normalize_evidence_signals,
+)
 from domain.versioning.change_records import (
     SchemaChangeAction,
     SchemaChangeRecord,
@@ -1070,8 +1074,16 @@ def _node_fields(fields: Mapping[str, Any], repo: OntologyRepository, label: str
         if name not in fields:
             continue
         value = fields[name]
+        # Normalized as the class holds them (a proposal's fields are as sent)
         if name == "distinguish_from":
-            value = {_dr_node_id(e["class_id"], repo, label): e["when"] for e in value or []}
+            value = {
+                _dr_node_id(e["class_id"], repo, label): e["when"]
+                for e in normalize_distinguish_from(value)
+            }
+        elif name == "evidence_signals":
+            value = normalize_evidence_signals(value)
+        else:
+            value = (value or "").strip() or None
         values[key] = value
     return values
 

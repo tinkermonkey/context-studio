@@ -596,6 +596,7 @@ class TestNodeFields:
             ("x-dr-standard", ["not", "a string"]),
             ("x-dr-evidence", "not a list"),
             ("x-dr-distinguish", ["motivation.stakeholder"]),
+            ("x-dr-distinguish", {"motivation.stakeholder": "  "}),
         ],
     )
     def test_a_malformed_field_raises(self, ontology_service, repo, spec_dir, field, value):

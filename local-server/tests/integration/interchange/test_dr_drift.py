@@ -452,6 +452,24 @@ def test_node_fields_in_the_spec_drift_as_the_class_definition(world, spec):
     }
 
 
+def test_node_fields_with_stray_whitespace_settle_after_one_apply(world, spec):
+    """The spec is read as the class stores it, so an applied drift doesn't come back."""
+    _set_node_fields(
+        spec,
+        "api.contact",
+        standard="Std ",
+        evidence=["an entry ", " "],
+        distinguish={"api.license": "lic\n"},
+    )
+
+    _apply_all(world, world.drift.reimport(str(spec), dry_run=False).proposal)
+
+    contact = _class(world.repo, "api.contact")
+    assert (contact.standard_reference, contact.evidence_signals) == ("Std", ["an entry"])
+    assert contact.distinguish_from[0]["when"] == "lic"
+    assert world.drift.reimport(str(spec)).plan.entries == []
+
+
 def test_a_new_run_supersedes_the_open_proposal_of_an_earlier_one(world, spec):
     _edit_node(spec, "api.contact", lambda d: d.update(description="First"))
     first = world.drift.reimport(str(spec), dry_run=False).proposal
