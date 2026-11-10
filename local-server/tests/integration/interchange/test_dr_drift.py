@@ -399,6 +399,77 @@ def test_a_move_made_in_context_studio_and_landed_only_swaps_the_dr_ids(world, s
     assert world.drift.reimport(str(spec)).plan.entries == []
 
 
+def _set_node_fields(spec, node_id, **fields):
+    """Give a node schema DR fields (x-dr-standard, ...); None drops one."""
+
+    def change(data):
+        for key, value in fields.items():
+            if value is None:
+                data.pop(f"x-dr-{key}", None)
+            else:
+                data[f"x-dr-{key}"] = value
+
+    _edit_node(spec, node_id, change)
+
+
+def test_node_fields_in_the_spec_drift_as_the_class_definition(world, spec):
+    """#1515: x-dr-standard, -evidence and -distinguish drift as the class's definition."""
+    _set_node_fields(
+        spec,
+        "api.contact",
+        standard="OpenAPI 3.1 Contact Object",
+        evidence=["an info.contact block"],
+        distinguish={"api.license": "the block names the API's license"},
+    )
+
+    plan = world.drift.reimport(str(spec)).plan
+
+    assert _changes(plan) == {("class", "api.contact", "update")}
+    (entry,) = plan.entries
+    assert entry.fields["standard_reference"]["source"] == "OpenAPI 3.1 Contact Object"
+    assert entry.fields["evidence_signals"]["source"] == ["an info.contact block"]
+    # distinguish shows in DR's terms
+    assert entry.fields["distinguish_from"]["source"] == {
+        "api.license": "the block names the API's license"
+    }
+    _apply_all(world, world.drift.reimport(str(spec), dry_run=False).proposal)
+    contact = _class(world.repo, "api.contact")
+    assert contact.distinguish_from == [
+        {
+            "class_id": _class(world.repo, "api.license").id,
+            "when": "the block names the API's license",
+        }
+    ]
+    assert world.drift.reimport(str(spec)).plan.entries == []
+
+    _set_node_fields(spec, "api.contact", standard=None)
+
+    (entry,) = world.drift.reimport(str(spec)).plan.entries
+    assert set(entry.fields) == {"standard_reference"}
+    assert entry.fields["standard_reference"] == {
+        "taxonomy": "OpenAPI 3.1 Contact Object",
+        "source": None,
+    }
+
+
+def test_node_fields_with_stray_whitespace_settle_after_one_apply(world, spec):
+    """The spec is read as the class stores it, so an applied drift doesn't come back."""
+    _set_node_fields(
+        spec,
+        "api.contact",
+        standard="Std ",
+        evidence=["an entry ", " "],
+        distinguish={"api.license": "lic\n"},
+    )
+
+    _apply_all(world, world.drift.reimport(str(spec), dry_run=False).proposal)
+
+    contact = _class(world.repo, "api.contact")
+    assert (contact.standard_reference, contact.evidence_signals) == ("Std", ["an entry"])
+    assert contact.distinguish_from[0]["when"] == "lic"
+    assert world.drift.reimport(str(spec)).plan.entries == []
+
+
 def test_a_new_run_supersedes_the_open_proposal_of_an_earlier_one(world, spec):
     _edit_node(spec, "api.contact", lambda d: d.update(description="First"))
     first = world.drift.reimport(str(spec), dry_run=False).proposal
