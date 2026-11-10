@@ -4167,7 +4167,7 @@ class TestSchemeAndClassCounts:
 
 
 class TestRelationshipAttributes:
-    """Relationship attributes (#1365): allowed by the property's edge_properties."""
+    """Relationship attributes (#1365): allowed by the type's edge attributes (#1482)."""
 
     @pytest.fixture
     def kit(self, service):
@@ -4175,17 +4175,11 @@ class TestRelationshipAttributes:
         scheme = service.create_scheme(taxonomy_id=tax.id, title="Kinds")
         activity = service.create_class(concept_scheme_id=scheme.id, title="Activity")
         resource = service.create_class(concept_scheme_id=scheme.id, title="Resource")
-        requires = service.create_property_definition(
-            identifier="requires",
-            title="requires",
-            external_references=[
-                ExternalReference(
-                    source="house",
-                    identifier="requires",
-                    metadata={"edge_properties": ["quantity", "unit", "optional"]},
-                )
-            ],
-        )
+        requires = service.create_property_definition(identifier="requires", title="requires")
+        for name, datatype in (("quantity", "number"), ("unit", "string"), ("optional", "boolean")):
+            service.create_attribute_definition(
+                None, name, name, datatype, property_definition_id=requires.id
+            )
         hang = service.create_individual(activity.id, "Hang a picture")
         hooks = service.create_individual(resource.id, "Picture hooks")
         return service, hang.id, hooks.id, requires.id
@@ -4243,16 +4237,16 @@ class TestRelationshipAttributes:
         assert service._event_publisher.get_events_of_type(RelationshipUpdated) == []
 
     def test_a_value_of_another_type_is_a_change(self, kit):
-        """True == 1 and 1 == 1.0 in Python, but optional: 1 -> true is a real edit."""
+        """1 == 1.0 in Python, but quantity: 1 -> 1.0 is a real edit."""
         service, hang, hooks, requires = kit
-        rel = service.create_relationship(hang, hooks, requires, attributes={"optional": 1})
+        rel = service.create_relationship(hang, hooks, requires, attributes={"quantity": 1})
 
-        service.update_relationship(rel.id, {"optional": True})
-        service.update_relationship(rel.id, {"optional": True})
+        service.update_relationship(rel.id, {"quantity": 1.0})
+        service.update_relationship(rel.id, {"quantity": 1.0})
 
         [event] = service._event_publisher.get_events_of_type(RelationshipUpdated)
-        assert event.old_values == {"attributes": {"optional": 1}}
-        assert service.get_relationship(rel.id).attributes["optional"] is True
+        assert event.old_values == {"attributes": {"quantity": 1}}
+        assert isinstance(service.get_relationship(rel.id).attributes["quantity"], float)
 
     def test_check_refuses_attributes_of_a_type_that_does_not_exist(self, kit):
         service, _, _, _ = kit

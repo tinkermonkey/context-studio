@@ -109,13 +109,14 @@ export function useClaimEntities(
       });
     }
     for (const a of attributes) {
-      const owner = classLabel.get(a.class_id);
+      // An edge attribute (#1482) has no class: it belongs to a relationship type.
+      const owner = a.class_id ? classLabel.get(a.class_id) : undefined;
       entities.set(a.id, {
         id: a.id,
         kind: "attribute",
         label: owner ? `${owner}.${a.identifier}` : a.identifier,
         title: a.title,
-        page: { kind: "class", id: a.class_id },
+        page: a.class_id ? { kind: "class", id: a.class_id } : undefined,
       });
     }
     for (const s of schemes) {

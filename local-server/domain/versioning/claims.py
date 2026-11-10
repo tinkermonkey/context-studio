@@ -324,6 +324,8 @@ class ClaimService:
                 return scheme.taxonomy_id == taxonomy_id
             attribute = repo.get_attribute_definition(entity_id)
             if attribute is not None:
+                if attribute.property_definition_id:  # an edge attribute: its type decides
+                    return belongs(attribute.property_definition_id)
                 return class_in(attribute.class_id)
             prop = repo.get_property_definition(entity_id)
             if prop is not None:

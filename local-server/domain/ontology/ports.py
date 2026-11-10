@@ -774,12 +774,15 @@ class OntologyRepository(Protocol):
         class_id: str | None = None,
         limit: int | None = 100,
         offset: int = 0,
+        property_definition_id: str | None = None,
     ) -> list[AttributeDefinition]:
         """
         Retrieve attribute definitions with optional filtering and pagination.
 
         Args:
             class_id: Optional class ID to filter by (primary filter)
+            property_definition_id: Optional relationship type whose edge
+                attributes to list
             limit: Maximum number of results to return; None means no limit
             offset: Number of results to skip
 

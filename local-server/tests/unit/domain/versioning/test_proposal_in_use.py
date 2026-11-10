@@ -75,19 +75,37 @@ class SnapshotScope:
             raise
 
 
+_EDGE_SOURCE = "test-edge-attributes"
+
+
 def edge_attributes(*names):
-    return [
-        ExternalReference(
-            source="test",
-            identifier="x",
-            metadata=MappingProxyType({"edge_properties": list(names)}),
-        )
-    ]
+    """
+    A marker reference: the `ontology` fixture gives a relationship type created
+    with it a number edge attribute per name (#1482: edge attributes are
+    attribute definitions owned by the type).
+    """
+    return [ExternalReference(source=_EDGE_SOURCE, identifier=",".join(names))]
+
+
+class _EdgeAttributeOntology(OntologyService):
+    """OntologyService whose relationship types made with edge_attributes(...) get them."""
+
+    def create_property_definition(self, *args, **kwargs):
+        prop = super().create_property_definition(*args, **kwargs)
+        for ref in kwargs.get("external_references") or []:
+            if ref.source == _EDGE_SOURCE:
+                for name in ref.identifier.split(","):
+                    self.create_attribute_definition(
+                        None, name, name, "number", property_definition_id=prop.id
+                    )
+        return prop
 
 
 @pytest.fixture()
 def ontology():
-    return OntologyService(FakeOntologyRepository(), FakeEmbeddingService(), FakeEventPublisher())
+    return _EdgeAttributeOntology(
+        FakeOntologyRepository(), FakeEmbeddingService(), FakeEventPublisher()
+    )
 
 
 @pytest.fixture()
@@ -289,7 +307,7 @@ class TestBlockers:
         blockers = service.in_use_blockers(proposal)[the_op(proposal).id]
 
         assert blockers.replacements == ()
-        assert "doesn't allow attributes ['weight']" in blockers.move_unavailable_reason
+        assert "does not allow attributes ['weight']" in blockers.move_unavailable_reason
 
     def test_a_subclass_domain_doesnt_accept_its_parents_individuals(
         self, service, graph, ontology
@@ -816,17 +834,17 @@ def test_an_edited_update_that_reverses_swaps_them_too(service, graph, repo):
     assert ends(repo, graph["triggers_function"]) == swapped(before)
 
 
-def test_a_reverse_that_drops_an_attribute_its_relationships_carry_fails(service, graph, repo):
-    before = ends(repo, graph["triggers_function"])
+def test_a_reverse_keeps_the_edge_attributes_its_relationships_carry(service, graph, repo):
+    """#1482: edge attributes belong to the type, so references don't drop them."""
     proposal = propose_update(service, graph, **reverse_fields(graph), external_references=[])
 
     op = apply(service, proposal)
 
-    assert op.status is OperationStatus.FAILED
-    assert op.reason.startswith("unresolvable")
-    assert "['weight']" in op.reason
-    assert ends(repo, graph["triggers_function"]) == before
-    assert op.type_change is None
+    assert op.status is OperationStatus.APPLIED, op.reason
+    attributes = [
+        r.attributes for r in repo.list_relationships(property_id=graph["triggers_function"])
+    ]
+    assert {"weight": 2} in attributes
 
 
 def test_a_rename_keeps_the_relationships_as_they_are(service, graph, repo):

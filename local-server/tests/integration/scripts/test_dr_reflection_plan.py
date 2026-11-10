@@ -66,8 +66,9 @@ PLAN_FILE = (
 )
 DELIVERS = "api.operation.delivers.api.response"
 IN_USE = 3
-# The attributes the pinned spec gives every relationship type (it has no x-dr-evidence).
-SPEC_ATTRIBUTES = {"cardinality": "many-to-many", "strength": "medium"}
+# The DR reference metadata the pinned spec gives every relationship type (it has no
+# x-dr-evidence; its cardinality is the structure fields).
+SPEC_ATTRIBUTES = {"strength": "medium"}
 
 
 def spec_with_catalog(spec):

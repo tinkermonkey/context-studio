@@ -3566,3 +3566,6 @@ selectors:
   - selector: taxonomy-mirrors
     component: src/routes/app/schema/taxonomies_.$id.tsx
     description: "Identity card value: the source revision (spec version · commit) a mirrored taxonomy follows"
+  - selector: property-edge-attributes
+    component: src/components/ontology/PropertyDrawer.tsx
+    description: "Relationship-type drawer: the edge attributes its relationships may carry (identifier, datatype, allowed values, required, default)"

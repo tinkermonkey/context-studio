@@ -284,6 +284,11 @@ class OntologyService extends BaseService {
     return this.get<PropertyDefinitionResponse>(`/api/properties/${id}`);
   }
 
+  /** A relationship type's edge attributes: the values its relationships may carry. */
+  async listEdgeAttributes(propertyId: string): Promise<AttributeDefinitionResponse[]> {
+    return this.get<AttributeDefinitionResponse[]>(`/api/properties/${propertyId}/attributes`);
+  }
+
   async createProperty(data: PropertyDefinitionCreateRequest): Promise<PropertyDefinitionResponse> {
     return this.post<PropertyDefinitionResponse>("/api/properties", data);
   }

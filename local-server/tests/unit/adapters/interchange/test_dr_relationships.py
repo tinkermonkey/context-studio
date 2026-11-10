@@ -1,8 +1,17 @@
-"""Unit tests for DR relationship identifiers (adapters/interchange/dr_relationships.py)."""
+"""
+Unit tests for DR relationship identifiers and the cardinality mapping
+(adapters/interchange/dr_relationships.py).
+"""
 
 import pytest
 
-from adapters.interchange.dr_relationships import Triple, assign_relationship_identifiers
+from adapters.interchange.dr_relationships import (
+    Triple,
+    assign_relationship_identifiers,
+    dr_cardinality,
+    dr_cardinality_fields,
+)
+from domain.ontology.entities import PropertyDefinition
 from domain.ontology.services import OntologyService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
@@ -46,3 +55,43 @@ def test_the_fixture_covers_taken_and_colliding_forms(repo):
     assert full["api.operation.delivers.api.response"] == "operation_delivers_response"
     assert full["api.tag.governs.api.ratelimit"].startswith("tag_governs_ratelimit_")
     assert full["ux.view.serves.business.businessrole"].startswith("view_serves_businessrole_")
+
+
+CARDINALITIES = [
+    ("many-to-many", {"min_per_source": 0, "max_per_source": None, "max_per_target": None}),
+    ("many-to-one", {"min_per_source": 0, "max_per_source": 1, "max_per_target": None}),
+    ("one-to-many", {"min_per_source": 0, "max_per_source": None, "max_per_target": 1}),
+    ("one-to-one", {"min_per_source": 0, "max_per_source": 1, "max_per_target": 1}),
+]
+
+
+@pytest.mark.parametrize("cardinality, fields", CARDINALITIES)
+def test_a_dr_cardinality_maps_to_the_structure_fields_and_back(cardinality, fields):
+    assert dr_cardinality_fields(cardinality) == fields
+    assert dr_cardinality(fields) == cardinality
+    prop = PropertyDefinition(id="p", identifier="p", title="P", **fields)
+    assert dr_cardinality(prop) == cardinality
+
+
+def test_missing_fields_have_their_defaults():
+    assert dr_cardinality({}) == "many-to-many"
+    assert dr_cardinality({"max_per_target": 1}) == "one-to-many"
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [
+        {"min_per_source": 1},
+        {"min_per_source": 2, "max_per_source": 2},
+        {"max_per_source": 3},
+        {"max_per_target": 0},
+        {"max_per_target": True},  # not the number 1
+    ],
+)
+def test_numbers_dr_cannot_express_have_no_cardinality(fields):
+    assert dr_cardinality(fields) is None
+
+
+def test_an_unknown_cardinality_is_refused():
+    with pytest.raises(ValueError, match="not a DR cardinality"):
+        dr_cardinality_fields("one-to-several")

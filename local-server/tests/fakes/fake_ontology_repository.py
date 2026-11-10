@@ -469,6 +469,13 @@ class FakeOntologyRepository:
     def delete_property_definition(self, property_id: str) -> bool:
         if property_id in self._property_definitions:
             self._property_definitions.pop(property_id)
+            # Its edge attributes cascade, as in SQLite
+            for attr_id in [
+                a.id
+                for a in self._attribute_definitions.values()
+                if a.property_definition_id == property_id
+            ]:
+                self._attribute_definitions.pop(attr_id)
             return True
         return False
 
@@ -572,6 +579,7 @@ class FakeOntologyRepository:
                 links.append(("relationship", rel.id, ref))
         for attr in self._attribute_definitions.values():
             links.append(("attribute_definition", attr.id, attr.class_id))
+            links.append(("attribute_definition", attr.id, attr.property_definition_id))
         found = {
             EntityReference(ref, dep, kind) for kind, dep, ref in links if ref in ids and ref != dep
         }
@@ -753,6 +761,7 @@ class FakeOntologyRepository:
         class_id: str | None = None,
         limit: int | None = 100,
         offset: int = 0,
+        property_definition_id: str | None = None,
     ) -> list[AttributeDefinition]:
         """Retrieve attribute definitions with optional filtering and pagination.
 
@@ -760,6 +769,7 @@ class FakeOntologyRepository:
             class_id: Optional class ID to filter by
             limit: Maximum number of results to return; None means no limit
             offset: Number of results to skip
+            property_definition_id: Optional relationship type whose edge attributes to list
 
         Returns:
             List of AttributeDefinition entities
@@ -767,6 +777,8 @@ class FakeOntologyRepository:
         results = list(self._attribute_definitions.values())
         if class_id is not None:
             results = [a for a in results if a.class_id == class_id]
+        if property_definition_id is not None:
+            results = [a for a in results if a.property_definition_id == property_definition_id]
 
         # Sort by sort_order then by identifier for deterministic ordering
         results.sort(key=lambda a: (a.sort_order, a.identifier))
@@ -783,16 +795,18 @@ class FakeOntologyRepository:
         Returns:
             The persisted AttributeDefinition entity
         """
-        # Check for duplicate identifier within the same class
+        # Check for duplicate identifier within the same owner (class or relationship type)
         for existing in self._attribute_definitions.values():
             if (
                 existing.class_id == attr_def.class_id
+                and existing.property_definition_id == attr_def.property_definition_id
                 and existing.identifier == attr_def.identifier
                 and existing.id != attr_def.id
             ):
+                owner = attr_def.class_id or attr_def.property_definition_id
                 raise DuplicateEntityError(
                     f"AttributeDefinition identifier '{attr_def.identifier}' already exists in "
-                    f"class {attr_def.class_id}"
+                    f"owner {owner}"
                 )
         # Increment version if updating existing attribute definition
         if attr_def.id in self._attribute_definitions:
