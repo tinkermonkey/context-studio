@@ -53,6 +53,7 @@ from domain.ontology.value_objects import (
     DataPropertyValue,
     DataType,
     SourceRevision,
+    normalize_distinguish_from,
     validate_predicate_identifier,
 )
 from domain.versioning.approval_policy import auto_apply_ids
@@ -1205,6 +1206,11 @@ class ProposalService:
                     raise _Invalid("invalid", "class_ids has duplicates")
             if name == DATA_FIELD:
                 continue  # an identifier -> value map, checked against the classes
+            if name == "distinguish_from":
+                try:
+                    normalize_distinguish_from(value)
+                except ValueError as exc:
+                    raise _Invalid("invalid", str(exc)) from exc
             try:
                 decode_field(name, value)
             except (TypeError, KeyError, ValueError, AttributeError) as exc:
@@ -1335,6 +1341,7 @@ class ProposalService:
         self, operation: ProposedOperation, refs: dict[str, OperationKind]
     ) -> None:
         """Each id field names an existing entity of an allowed kind, or an earlier ref."""
+        self._check_distinguish_from(operation)
         for name, value in operation.fields.items():
             kinds = ID_FIELDS.get(name)
             if kinds is None or value is None:
@@ -1359,6 +1366,35 @@ class ProposalService:
                         "endpoint_not_found",
                         f"{name} {item} is not an existing {' or '.join(k.value for k in kinds)}",
                     )
+
+    def _check_distinguish_from(self, operation: ProposedOperation) -> None:
+        """
+        A class's distinguish_from names existing classes (of the class's taxonomy,
+        checked when it applies). A class the proposal creates can't be named yet;
+        one the class already names is kept even if it has since been deleted.
+        """
+        entries = operation.fields.get("distinguish_from")
+        if operation.kind is not K.CLASS or not entries:
+            return
+        current = (
+            self._load(K.CLASS, operation.target_id)
+            if operation.op is not OperationType.CREATE and operation.target_id
+            else None
+        )
+        kept = {entry["class_id"] for entry in getattr(current, "distinguish_from", [])}
+        for entry in normalize_distinguish_from(entries):
+            class_id = entry["class_id"]
+            if _is_ref(class_id):
+                raise _Invalid(
+                    "invalid",
+                    f"distinguish_from can't name {class_id}, a class this proposal"
+                    " creates; name it in a later proposal",
+                )
+            if class_id not in kept and self._load(K.CLASS, class_id) is None:
+                raise _Invalid(
+                    "endpoint_not_found",
+                    f"distinguish_from names {class_id}, not an existing class",
+                )
 
     def _check_class_move(self, operation: ProposedOperation, cls: Any) -> None:
         """A class changing scheme also names its new parent (or None) and has no subclasses."""

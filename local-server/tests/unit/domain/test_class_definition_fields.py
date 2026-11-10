@@ -61,6 +61,12 @@ class TestNormalize:
         with pytest.raises(ValueError, match=message):
             normalize_distinguish_from(items)
 
+    def test_a_repeated_class_id_counts_after_trimming(self):
+        with pytest.raises(ValueError, match="twice"):
+            normalize_distinguish_from(
+                [{"class_id": "a", "when": "x"}, {"class_id": " a", "when": "y"}]
+            )
+
     def test_evidence_signals_drop_blanks(self):
         assert normalize_evidence_signals([" a ", "", "b"]) == ["a", "b"]
         with pytest.raises(ValueError, match="list of text"):
@@ -163,3 +169,24 @@ class TestService:
         before = len(publisher.get_events())
         service.update_class(operation.id, evidence_signals=[], standard_reference="")
         assert len(publisher.get_events()) == before
+
+    def test_a_class_deleted_since_doesnt_block_editing_the_others(self, service, dr):
+        operation, endpoint = dr["operation"], dr["endpoint"]
+        callback = service.create_class(dr["scheme"].id, "Callback")
+        service.update_class(
+            operation.id, distinguish_from=[{"class_id": callback.id, "when": "a client calls it"}]
+        )
+        service.delete_class(callback.id)
+
+        kept_and_new = [
+            {"class_id": callback.id, "when": "a client calls it back"},
+            {"class_id": endpoint.id, "when": "the path"},
+        ]
+        updated = service.update_class(operation.id, distinguish_from=kept_and_new)
+
+        assert updated.distinguish_from == kept_and_new
+        with pytest.raises(ValueError, match="not a class of this taxonomy"):
+            service.update_class(
+                operation.id,
+                distinguish_from=[*kept_and_new, {"class_id": "nope", "when": "x"}],
+            )

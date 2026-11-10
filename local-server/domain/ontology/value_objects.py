@@ -137,10 +137,11 @@ def normalize_distinguish_from(items: Any) -> list[dict[str, str]]:
             raise ValueError("A distinguish_from entry needs a class_id")
         if not isinstance(when, str) or not when.strip():
             raise ValueError(f"The distinguish_from entry for {class_id} needs a when")
+        class_id = class_id.strip()
         if class_id in seen:
             raise ValueError(f"distinguish_from names {class_id} twice")
         seen.add(class_id)
-        normalized.append({"class_id": class_id.strip(), "when": when.strip()})
+        normalized.append({"class_id": class_id, "when": when.strip()})
     return normalized
 
 

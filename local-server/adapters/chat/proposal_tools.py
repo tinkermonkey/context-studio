@@ -335,7 +335,10 @@ class ProposeChangesTool(_ProposalTool):
         " map attribute identifiers (of its classes, inherited ones included) to values"
         " of the attribute's datatype (a number is an integer or decimal, a date is"
         ' "YYYY-MM-DD" text); on an update, only those given change and null'
-        " removes one. Id fields"
+        " removes one. A class's operational definition: distinguish_from is"
+        ' [{"class_id": an existing class of the taxonomy, "when": when to use it'
+        " instead}], evidence_signals a list of text, standard_reference text; null"
+        " clears each. Id fields"
         f' ({", ".join(sorted(ID_FIELDS))}) take an existing id or "$<ref>" of an'
         " earlier create in the same proposal.\n"
         f"At most {MAX_OPERATIONS} operations per proposal. For a larger pass, export"
@@ -349,9 +352,11 @@ class ProposeChangesTool(_ProposalTool):
             "taxonomy_id": {"type": "string", "description": "The taxonomy the changes are about"},
             "dataset": {
                 "type": "string",
-                "description": "The dataset (identifier or id) its individual and relationship"
-                " operations are in. Needed only when the taxonomy has several datasets"
-                " (see list_datasets); every individual they reference must be in it",
+                "description": (
+                    "The dataset (identifier or id) its individual and relationship"
+                    " operations are in. Needed only when the taxonomy has several datasets"
+                    " (see list_datasets); every individual they reference must be in it"
+                ),
             },
             "title": {"type": "string", "description": "A short summary of the proposal"},
             "rationale": {"type": "string", "description": "Why these changes, as a whole"},

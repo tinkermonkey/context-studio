@@ -21,6 +21,7 @@ from adapters.persistence.sqlite.transaction import SharedSessionFactory, Sqlite
 from adapters.web.dependencies import get_ontology_service
 from adapters.web.ontology_routes import router
 from domain.ontology.services import OntologyService
+from domain.versioning.exceptions import ProposalValidationError
 from domain.versioning.proposal_service import OperationDraft, ProposalService
 from domain.versioning.proposals import OperationKind as K
 from domain.versioning.proposals import OperationStatus, ProposalSource
@@ -184,22 +185,75 @@ def test_a_proposal_naming_another_taxonomys_class_fails_that_operation(world):
     assert "not a class of this taxonomy" in result.operations[0].reason
 
 
-def test_a_malformed_definition_is_refused_when_proposed(world):
-    with pytest.raises(Exception, match="distinguish_from"):
+@pytest.mark.parametrize(
+    "value, message",
+    [
+        ("the endpoint", "wrong type"),
+        ([{"class_id": "x", "when": "y", "type": "z"}], "{class_id, when}"),
+        ([{"class_id": "ENDPOINT", "when": " "}], "needs a when"),
+        ([{"class_id": "nope", "when": "the path"}], "not an existing class"),
+        ([{"class_id": "$callback", "when": "the path"}], "a class this proposal creates"),
+    ],
+)
+def test_a_bad_definition_is_refused_when_proposed(world, value, message):
+    endpoint_id = world["endpoint"].id
+    if isinstance(value, list):
+        value = [
+            {**v, "class_id": endpoint_id} if v["class_id"] == "ENDPOINT" else v for v in value
+        ]
+    with pytest.raises(ProposalValidationError) as caught:
         world["proposals"].propose(
             world["taxonomy"].id,
             "Bad",
             [
                 OperationDraft(
                     1,
+                    T.CREATE,
+                    K.CLASS,
+                    ref="callback",
+                    fields={"concept_scheme_id": world["scheme"].id, "title": "Callback"},
+                ),
+                OperationDraft(
+                    2,
                     T.UPDATE,
                     K.CLASS,
                     world["operation"].id,
-                    fields={"distinguish_from": "the endpoint"},
-                )
+                    fields={"distinguish_from": value},
+                ),
             ],
             ProposalSource.MCP,
         )
+    assert message in str(caught.value.errors[0].message)
+
+
+def test_a_proposal_can_keep_a_class_deleted_since(world):
+    ontology, proposals = world["ontology"], world["proposals"]
+    operation, endpoint = world["operation"], world["endpoint"]
+    gone = ontology.create_class(world["scheme"].id, "Gone")
+    ontology.update_class(operation.id, distinguish_from=[{"class_id": gone.id, "when": "old"}])
+    ontology.delete_class(gone.id)
+
+    proposal = proposals.propose(
+        world["taxonomy"].id,
+        "Add the endpoint",
+        [
+            OperationDraft(
+                1,
+                T.UPDATE,
+                K.CLASS,
+                operation.id,
+                fields={
+                    "distinguish_from": [
+                        {"class_id": gone.id, "when": "old"},
+                        {"class_id": endpoint.id, "when": "the path"},
+                    ]
+                },
+            )
+        ],
+        ProposalSource.MCP,
+    )
+    result = proposals.apply(proposal.id, [proposal.operations[0].id])
+    assert result.operations[0].status is OperationStatus.APPLIED, result.operations[0].reason
 
 
 def test_rest_reads_and_writes_the_definition(world):

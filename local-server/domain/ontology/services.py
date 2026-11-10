@@ -1325,7 +1325,9 @@ class OntologyService:
         # The operational definition: each given field replaces the old value
         definition_changes: dict[str, tuple[object, object]] = {}
         if distinguish_from is not None:
-            new_distinguish = self._distinguish_from(distinguish_from, cls.taxonomy_id, cls.id)
+            new_distinguish = self._distinguish_from(
+                distinguish_from, cls.taxonomy_id, cls.id, kept=cls.distinguish_from
+            )
             if new_distinguish != cls.distinguish_from:
                 definition_changes["distinguish_from"] = (cls.distinguish_from, new_distinguish)
                 cls.distinguish_from = new_distinguish
@@ -1411,19 +1413,28 @@ class OntologyService:
         return cls
 
     def _distinguish_from(
-        self, items: list[dict[str, str]] | None, taxonomy_id: str, class_id: str | None = None
+        self,
+        items: list[dict[str, str]] | None,
+        taxonomy_id: str,
+        class_id: str | None = None,
+        kept: list[dict[str, str]] | None = None,
     ) -> list[dict[str, str]]:
         """
         A class's distinguish_from, checked: each entry names another class of
-        the same taxonomy.
+        the same taxonomy. Entries naming a class the current value (`kept`)
+        already names aren't checked again, so a class deleted since doesn't
+        block an edit of the others (and a revert of its delete restores it).
 
         Raises:
-            ValueError: If an entry is malformed, names the class itself, or names
-                a class that doesn't exist in the taxonomy
+            ValueError: If an entry is malformed, names the class itself, or newly
+                names a class that doesn't exist in the taxonomy
         """
         normalized = normalize_distinguish_from(items)
+        already = {entry["class_id"] for entry in kept or []}
         for entry in normalized:
             other_id = entry["class_id"]
+            if other_id in already:
+                continue
             if other_id == class_id:
                 raise ValueError("distinguish_from can't name the class itself")
             other = self._repository.get_class(other_id)
