@@ -54,6 +54,7 @@ from domain.ontology.value_objects import (
     DataPropertyValue,
     DataType,
     SourceRevision,
+    normalize_distinguish_from,
     validate_predicate_identifier,
 )
 from domain.versioning.approval_policy import auto_apply_ids
@@ -154,10 +155,15 @@ K = OperationKind
 # taxonomy_id follows its scheme's. Staleness ignores them.
 _DERIVED_FIELDS: dict[OperationKind, frozenset[str]] = {K.CLASS: frozenset({"taxonomy_id"})}
 
+# A class's operational definition (see Class): wording, set and cleared like
+# its description.
+CLASS_DEFINITION_FIELDS = frozenset({"distinguish_from", "evidence_signals", "standard_reference"})
+
 # The JSON type each settable field must have (None is checked separately).
 _TEXT_FIELDS = frozenset(
     {
         "title",
+        "standard_reference",
         "description",
         "color",
         "identifier",
@@ -171,7 +177,7 @@ _BOOL_FIELDS = frozenset({"is_required", "is_relevant", "derived", "hierarchy", 
 _INT_FIELDS = frozenset({"sort_order", "min_per_source", "max_per_source", "max_per_target"})
 # A relationship type's structure (see PropertyDefinition)
 _STRUCTURE_FIELDS = frozenset(STRUCTURE_FIELDS)
-_TEXT_LIST_FIELDS = frozenset({"allowed_values", "class_ids"})
+_TEXT_LIST_FIELDS = frozenset({"allowed_values", "class_ids", "evidence_signals"})
 # An individual's attribute values: identifier -> value (see the module docstring).
 DATA_FIELD = "data_properties"
 # The operation kinds that act on a dataset's data.
@@ -258,11 +264,15 @@ OPERATION_FIELDS: dict[OperationKind, OperationFields] = {
                 "identifier",
                 "external_references",
                 "derived",
+                *CLASS_DEFINITION_FIELDS,
             }
         ),
         required=frozenset({"concept_scheme_id", "title"}),
-        update=frozenset({"title", "description", "color", "external_references", "derived"}),
-        clearable=frozenset({"description", "color"}),
+        update=frozenset(
+            {"title", "description", "color", "external_references", "derived"}
+            | CLASS_DEFINITION_FIELDS
+        ),
+        clearable=frozenset({"description", "color"} | CLASS_DEFINITION_FIELDS),
     ),
     K.PROPERTY: OperationFields(
         create=frozenset(
@@ -432,6 +442,13 @@ def _has_field_type(name: str, value: Any) -> bool:
         return isinstance(value, int) and not isinstance(value, bool)
     if name == "external_references":
         return isinstance(value, list) and all(isinstance(item, dict) for item in value)
+    if name == "distinguish_from":
+        return isinstance(value, list) and all(
+            isinstance(item, dict)
+            and isinstance(item.get("class_id"), str)
+            and isinstance(item.get("when"), str)
+            for item in value
+        )
     if name == DATA_FIELD:
         return isinstance(value, dict) and all(
             isinstance(key, str) and key and isinstance(item, _JSON_VALUE_TYPES)
@@ -1220,6 +1237,11 @@ class ProposalService:
                     raise _Invalid("invalid", "class_ids has duplicates")
             if name == DATA_FIELD:
                 continue  # an identifier -> value map, checked against the classes
+            if name == "distinguish_from":
+                try:
+                    normalize_distinguish_from(value)
+                except ValueError as exc:
+                    raise _Invalid("invalid", str(exc)) from exc
             try:
                 decode_field(name, value)
             except (TypeError, KeyError, ValueError, AttributeError) as exc:
@@ -1350,6 +1372,7 @@ class ProposalService:
         self, operation: ProposedOperation, refs: dict[str, OperationKind]
     ) -> None:
         """Each id field names an existing entity of an allowed kind, or an earlier ref."""
+        self._check_distinguish_from(operation)
         for name, value in operation.fields.items():
             kinds = ID_FIELDS.get(name)
             if kinds is None or value is None:
@@ -1374,6 +1397,35 @@ class ProposalService:
                         "endpoint_not_found",
                         f"{name} {item} is not an existing {' or '.join(k.value for k in kinds)}",
                     )
+
+    def _check_distinguish_from(self, operation: ProposedOperation) -> None:
+        """
+        A class's distinguish_from names existing classes (of the class's taxonomy,
+        checked when it applies). A class the proposal creates can't be named yet;
+        one the class already names is kept even if it has since been deleted.
+        """
+        entries = operation.fields.get("distinguish_from")
+        if operation.kind is not K.CLASS or not entries:
+            return
+        current = (
+            self._load(K.CLASS, operation.target_id)
+            if operation.op is not OperationType.CREATE and operation.target_id
+            else None
+        )
+        kept = {entry["class_id"] for entry in getattr(current, "distinguish_from", [])}
+        for entry in normalize_distinguish_from(entries):
+            class_id = entry["class_id"]
+            if _is_ref(class_id):
+                raise _Invalid(
+                    "invalid",
+                    f"distinguish_from can't name {class_id}, a class this proposal"
+                    " creates; name it in a later proposal",
+                )
+            if class_id not in kept and self._load(K.CLASS, class_id) is None:
+                raise _Invalid(
+                    "endpoint_not_found",
+                    f"distinguish_from names {class_id}, not an existing class",
+                )
 
     def _check_class_move(self, operation: ProposedOperation, cls: Any) -> None:
         """A class changing scheme also names its new parent (or None) and has no subclasses."""
@@ -2944,6 +2996,9 @@ class ProposalService:
         if kind is K.SCHEME:
             return svc.update_concept_scheme(target, **{**v, **cleared}).id
         if kind is K.CLASS:
+            for name in ("distinguish_from", "evidence_signals"):
+                if name in cleared:
+                    cleared[name] = []  # type: ignore[assignment]
             return svc.update_class(target, **{**v, **cleared}).id
         if kind is K.ATTRIBUTE:
             if "allowed_values" in cleared:

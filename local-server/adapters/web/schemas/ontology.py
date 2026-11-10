@@ -361,7 +361,32 @@ class DataPropertyValueRequest(BaseModel):
     )
 
 
-class ClassCreateRequest(BaseModel):
+class DistinguishFromSchema(BaseModel):
+    """When to use another class instead of this one."""
+
+    class_id: str = Field(..., min_length=1, description="The other class, in the same taxonomy")
+    when: str = Field(..., min_length=1, description="When to use it instead")
+
+
+class ClassDefinitionFields(BaseModel):
+    """A class's operational definition (DR's x-dr-distinguish, -evidence, -standard)."""
+
+    distinguish_from: Optional[list[DistinguishFromSchema]] = Field(
+        None, description="When to use a sibling class instead; [] clears it"
+    )
+    evidence_signals: Optional[list[str]] = Field(
+        None, description="Observable signals that something is an instance; [] clears them"
+    )
+    standard_reference: Optional[str] = Field(
+        None, description='The standard the class follows; "" clears it'
+    )
+
+    def definition_kwargs(self) -> dict:
+        """The given fields, as OntologyService takes them (unset ones left out)."""
+        return self.model_dump(include=set(ClassDefinitionFields.model_fields), exclude_none=True)
+
+
+class ClassCreateRequest(ClassDefinitionFields):
     """Request to create a new class."""
 
     title: str = Field(..., description="Display name for the class", min_length=1)
@@ -382,7 +407,7 @@ class ClassCreateRequest(BaseModel):
         return value
 
 
-class ClassUpdateRequest(BaseModel):
+class ClassUpdateRequest(ClassDefinitionFields):
     """Request to update a class. Identifier is immutable post-create."""
 
     title: Optional[str] = Field(None, description="New title", min_length=1)
@@ -448,6 +473,13 @@ class ClassResponse(BaseModel):
             " directly, and extraction doesn't target it"
         ),
     )
+    distinguish_from: list[DistinguishFromSchema] = Field(
+        default_factory=list, description="When to use a sibling class instead"
+    )
+    evidence_signals: list[str] = Field(
+        default_factory=list, description="Observable signals that something is an instance"
+    )
+    standard_reference: Optional[str] = Field(None, description="The standard the class follows")
     external_references: list[ExternalReferenceResponse] = Field(default_factory=list)
     lexical_senses: list[LexicalSenseResponse] = Field(default_factory=list)
     data_properties: list[DataPropertyValueResponse] = Field(default_factory=list)

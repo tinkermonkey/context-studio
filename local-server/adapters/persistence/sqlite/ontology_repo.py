@@ -359,9 +359,7 @@ class SQLiteOntologyRepository:
                     description=taxonomy.description,
                     vision=taxonomy.vision,
                     color=taxonomy.color,
-                    external_references=serialize_external_references(
-                        taxonomy.external_references
-                    ),
+                    external_references=serialize_external_references(taxonomy.external_references),
                     mirrored=taxonomy.mirrored,
                     source_revision=_revision_json(taxonomy.source_revision),
                     created_at=taxonomy.created_at or datetime.now(timezone.utc),
@@ -833,6 +831,9 @@ class SQLiteOntologyRepository:
                     structural_property_id  # type: ignore[assignment]
                 )
                 orm_entity.derived = cls.derived  # type: ignore[assignment]
+                orm_entity.distinguish_from = mapped_orm.distinguish_from
+                orm_entity.evidence_signals = mapped_orm.evidence_signals
+                orm_entity.standard_reference = mapped_orm.standard_reference
                 orm_entity.external_references = mapped_orm.external_references
                 orm_entity.lexical_senses = mapped_orm.lexical_senses  # type: ignore[assignment]
                 orm_entity.data_properties = mapped_orm.data_properties  # type: ignore[assignment]
@@ -1046,9 +1047,7 @@ class SQLiteOntologyRepository:
             Number of matching Individual entities
         """
         with self.session_factory() as session:
-            return int(
-                self._individual_query(session, class_id, query, ids, dataset_id).count()
-            )
+            return int(self._individual_query(session, class_id, query, ids, dataset_id).count())
 
     def save_individual(self, individual: Individual) -> Individual:
         """

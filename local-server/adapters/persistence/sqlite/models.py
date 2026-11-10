@@ -238,6 +238,15 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
         server_default=text("0"),
         doc="A relationship one way holds the other way too (for property_definition)",
     )
+    # A class's operational definition (DR's x-dr-distinguish, x-dr-evidence and
+    # x-dr-standard); null for other node types and for classes without one.
+    distinguish_from = Column(
+        JSON, nullable=True, doc='When to use a sibling class instead: [{"class_id", "when"}]'
+    )
+    evidence_signals = Column(
+        JSON, nullable=True, doc="Observable signals of an instance: a list of text"
+    )
+    standard_reference = Column(Text, nullable=True, doc="The standard the class follows")
 
     # Nested value objects (stored as JSON)
     external_references = Column(

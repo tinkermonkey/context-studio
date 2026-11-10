@@ -1,8 +1,8 @@
 """relationship type structure and edge attributes
 
-Revision ID: 2ad02ed6e4dd
-Revises: b03f04db2ea4
-Create Date: 2026-11-09 23:20:33.616507
+Revision ID: be93d748c37f
+Revises: 025e43bda199
+Create Date: 2026-11-09 23:39:15.816099
 
 Relationship-type structure becomes first-class (#1482): each relationship type
 (property_definition) gets min_per_source, max_per_source, max_per_target,
@@ -49,8 +49,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "2ad02ed6e4dd"
-down_revision = "b03f04db2ea4"
+revision = "be93d748c37f"
+down_revision = "025e43bda199"
 branch_labels = None
 depends_on = None
 

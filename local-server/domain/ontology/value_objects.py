@@ -113,6 +113,52 @@ def validate_hex_color(color: str | None) -> str | None:
     return candidate
 
 
+def normalize_distinguish_from(items: Any) -> list[dict[str, str]]:
+    """
+    A class's distinguish_from in its one shape: [{"class_id", "when"}], each
+    naming another class once, with the text saying when to use it instead.
+
+    Raises:
+        ValueError: If an entry is not an object with a class_id and a non-empty
+            when, or a class_id repeats
+    """
+    if items is None:
+        return []
+    if not isinstance(items, list):
+        raise ValueError("distinguish_from must be a list of {class_id, when}")
+    normalized: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for item in items:
+        if not isinstance(item, dict) or set(item) - {"class_id", "when"}:
+            raise ValueError("Each distinguish_from entry is {class_id, when}")
+        class_id = item.get("class_id")
+        when = item.get("when")
+        if not isinstance(class_id, str) or not class_id.strip():
+            raise ValueError("A distinguish_from entry needs a class_id")
+        if not isinstance(when, str) or not when.strip():
+            raise ValueError(f"The distinguish_from entry for {class_id} needs a when")
+        class_id = class_id.strip()
+        if class_id in seen:
+            raise ValueError(f"distinguish_from names {class_id} twice")
+        seen.add(class_id)
+        normalized.append({"class_id": class_id, "when": when.strip()})
+    return normalized
+
+
+def normalize_evidence_signals(signals: Any) -> list[str]:
+    """
+    A class's evidence signals as non-empty, trimmed text, in order.
+
+    Raises:
+        ValueError: If signals is not a list of text
+    """
+    if signals is None:
+        return []
+    if not isinstance(signals, list) or not all(isinstance(s, str) for s in signals):
+        raise ValueError("evidence_signals must be a list of text")
+    return [s.strip() for s in signals if s.strip()]
+
+
 def validate_default_value_against_allowed_values(
     default_value: str | None,
     allowed_values: list[str] | None,

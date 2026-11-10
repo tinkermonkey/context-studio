@@ -349,7 +349,10 @@ class ProposeChangesTool(_ProposalTool):
         " map attribute identifiers (of its classes, inherited ones included) to values"
         " of the attribute's datatype (a number is an integer or decimal, a date is"
         ' "YYYY-MM-DD" text); on an update, only those given change and null'
-        " removes one. Id fields"
+        " removes one. A class's operational definition: distinguish_from is"
+        ' [{"class_id": an existing class of the taxonomy, "when": when to use it'
+        " instead}], evidence_signals a list of text, standard_reference text; null"
+        " clears each. Id fields"
         f' ({", ".join(sorted(ID_FIELDS))}) take an existing id or "$<ref>" of an'
         " earlier create in the same proposal.\n"
         f"At most {MAX_OPERATIONS} operations per proposal. For a larger pass, export"

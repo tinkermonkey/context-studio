@@ -258,7 +258,9 @@ async def list_predicates_by_ids(
         predicates = []
         for predicate_id in dict.fromkeys(ids):
             try:
-                predicates.append(PredicateResponse.model_validate(service.get_predicate(predicate_id)))
+                predicates.append(
+                    PredicateResponse.model_validate(service.get_predicate(predicate_id))
+                )
             except EntityNotFoundError:
                 continue
         return predicates
@@ -656,6 +658,7 @@ async def create_class(
             color=None,
             parent_class_id=request.parent_class_id,
             identifier=request.identifier,
+            **request.definition_kwargs(),
         )
         return ClassResponse.model_validate(cls)
     except Exception as exc:
@@ -788,6 +791,7 @@ async def update_class(
             title=request.title,
             description=request.description,
             color=request.color,
+            **request.definition_kwargs(),
         )
         return ClassResponse.model_validate(cls)
     except Exception as exc:
