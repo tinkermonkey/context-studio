@@ -29,10 +29,11 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import threading
 from contextlib import nullcontext
 from dataclasses import dataclass, replace
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Sequence
 from uuid import uuid4
 
@@ -154,16 +155,20 @@ _DATATYPE_TYPES: dict[DataType, tuple[type, ...]] = {
     DataType.STRING: (str,),
     DataType.INTEGER: (int,),
     DataType.NUMBER: (int, float),
+    DataType.DATE: (str,),
     DataType.BOOLEAN: (bool,),
     DataType.ARRAY: (list,),
     DataType.OBJECT: (dict,),
 }
+# How a date value is written (ISO 8601 calendar date).
+_ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 # The type hint a stored value carries, as the domain's examples write it
 # (xsd for scalars; rdf:JSON, RDF 1.1's JSON literal, for arrays and objects).
 _DATATYPE_HINTS: dict[DataType, str] = {
     DataType.STRING: "xsd:string",
     DataType.INTEGER: "xsd:integer",
     DataType.NUMBER: "xsd:decimal",
+    DataType.DATE: "xsd:date",
     DataType.BOOLEAN: "xsd:boolean",
     DataType.ARRAY: "rdf:JSON",
     DataType.OBJECT: "rdf:JSON",
@@ -335,6 +340,17 @@ def _data_values(snapshot_values: Any) -> dict[str, Any]:
     return {item["property_identifier"]: item["value"] for item in snapshot_values or []}
 
 
+def _is_iso_date(value: str) -> bool:
+    """Whether value is a calendar date written YYYY-MM-DD."""
+    if not _ISO_DATE.fullmatch(value):
+        return False
+    try:
+        date.fromisoformat(value)
+    except ValueError:
+        return False
+    return True
+
+
 def _value_problem(attribute: AttributeDefinition, value: Any) -> str | None:
     """Why a (non-None) value doesn't fit an attribute's datatype or allowed values."""
     datatype = DataType(attribute.datatype)
@@ -343,6 +359,8 @@ def _value_problem(attribute: AttributeDefinition, value: Any) -> str | None:
     )
     if wrong_type:
         return f"is {datatype.value}, so {value!r} doesn't fit"
+    if datatype is DataType.DATE and not _is_iso_date(value):
+        return f"is a date (YYYY-MM-DD), so {value!r} doesn't fit"
     allowed = attribute.allowed_values
     if allowed and not isinstance(value, dict):
         # Allowed values are text: a number or boolean matches its JSON text ("3", "true").

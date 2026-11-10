@@ -504,7 +504,7 @@ class AttributeDefinition:
         class_id: ID of the class this attribute is scoped to (required; no global registry)
         identifier: Machine-readable identifier for the attribute within its class
         title: Display name for the attribute
-        datatype: The data type (must be one of: string, integer, boolean, array, object)
+        datatype: The data type (one of: string, integer, number, date, boolean, array, object)
         description: Optional longer description
         is_required: Whether this attribute must be present on instances of the class
         allowed_values: Enum constraint; a list of allowed string values, or None if unconstrained

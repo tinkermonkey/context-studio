@@ -108,7 +108,9 @@ allowed_values (its enum) and description. A create gives all it set, and
 `schema`, the other JSON Schema keywords its DR reference keeps (metadata
 "schema"; see the importer). An update gives only those it changed,
 allowed_values null when it removed them; one that changed none of them (a
-title, default value or order) is skipped.
+title, default value or order) is skipped. A date attribute is a JSON Schema
+string with format date: a create sends datatype "string" and `schema`
+format "date"; an update to a date is skipped, as `set` can't carry format.
 
 A DR reflection plan's `predicate_retirements` ([{from, to, note}]), kept on
 its proposal's client metadata, come back as `retire-predicate` records
@@ -140,6 +142,7 @@ from adapters.interchange.dr_relationships import (
     dr_relationship_id,
 )
 from domain.ontology.ports import OntologyRepository
+from domain.ontology.value_objects import DataType
 from domain.versioning.change_records import (
     SchemaChangeAction,
     SchemaChangeRecord,
@@ -159,6 +162,8 @@ SPEC_CHANGES_FORMAT = "cs-dr-spec-changes/1"
 _EXPORTED_KINDS = (OperationKind.PROPERTY, OperationKind.CLASS, OperationKind.ATTRIBUTE)
 # The attribute definition fields an attribute change carries in `set`.
 _ATTRIBUTE_FIELDS = ("datatype", "is_required", "allowed_values", "description")
+# DR's JSON Schema writes a date attribute as a string with format date.
+_DR_DATE = ("string", "date")
 
 
 def spec_changes_for(
@@ -673,6 +678,8 @@ def _created_attribute(
         and not (name == "datatype" and untyped and fields[name] == "string")
     }
     values["is_required"] = bool(fields.get("is_required"))
+    if values.get("datatype") == DataType.DATE.value:
+        values["datatype"], schema["format"] = _DR_DATE
     return values, schema
 
 
@@ -683,6 +690,11 @@ def _updated_attribute(fields: dict[str, Any], base: dict[str, Any]) -> dict[str
         for name in _ATTRIBUTE_FIELDS
         if name in fields and fields[name] != base.get(name)
     }
+    if values.get("datatype") == DataType.DATE.value:
+        return (
+            "it changes an attribute to a date, which DR's spec holds as a string with "
+            "format date, a JSON Schema keyword an update can't send; change it in DR"
+        )
     return values or "it changes nothing DR's spec holds for an attribute"
 
 

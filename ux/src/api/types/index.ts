@@ -4293,7 +4293,7 @@ export interface components {
       title: string;
       /**
        * Datatype
-       * @description Data type (e.g. 'string', 'integer', 'boolean', 'array', 'object')
+       * @description Data type ('string', 'integer', 'number', 'date' as YYYY-MM-DD, 'boolean', 'array' or 'object')
        */
       datatype: string;
       /**
@@ -4351,7 +4351,7 @@ export interface components {
       title: string;
       /**
        * Datatype
-       * @description Data type (e.g. 'string', 'integer', 'boolean')
+       * @description Data type: string, integer, number, date, boolean, array or object
        */
       datatype: string;
       /**
@@ -4432,7 +4432,7 @@ export interface components {
       description?: string | null;
       /**
        * Datatype
-       * @description New data type (e.g. 'string', 'integer', 'boolean', 'array', 'object')
+       * @description New data type ('string', 'integer', 'number', 'date' as YYYY-MM-DD, 'boolean', 'array' or 'object')
        */
       datatype?: string | null;
       /**

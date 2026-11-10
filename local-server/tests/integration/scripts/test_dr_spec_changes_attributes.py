@@ -228,3 +228,53 @@ def test_a_delete_exports_the_attribute_it_removed(parts):
     assert change["spec_node_id"] == "api.operation"
     assert change["attribute"] == dr_name(target)
     assert change["set"] == {}
+
+
+def test_a_date_create_exports_as_a_string_with_format_date(parts):
+    """#1468: DR's JSON Schema has no date type; a date is a string with format date."""
+    _, repo, proposals = parts
+    operation_class = class_by_dr_id(repo, "api.operation")
+    proposal = apply_all(
+        proposals,
+        propose(
+            repo,
+            proposals,
+            OperationDraft(
+                seq=1,
+                op="create",
+                kind="attribute",
+                fields={
+                    "class_id": operation_class.id,
+                    "identifier": "deprecated_on",
+                    "title": "deprecatedOn",
+                    "datatype": "date",
+                    "external_references": [{"source": DR_SOURCE, "identifier": "deprecatedOn"}],
+                },
+            ),
+        ),
+    )
+
+    (change,) = spec_changes_for(proposal, repo)["attribute_changes"]
+
+    assert change["set"] == {"datatype": "string", "is_required": False}
+    assert change["schema"] == {"format": "date"}
+
+
+def test_an_update_to_a_date_is_skipped(parts):
+    _, repo, proposals = parts
+    target = some_attribute(repo)
+    proposal = apply_all(
+        proposals,
+        propose(
+            repo,
+            proposals,
+            OperationDraft(
+                seq=1, op="update", kind="attribute", target_id=target.id, fields={"datatype": "date"}
+            ),
+        ),
+    )
+
+    document = spec_changes_for(proposal, repo)
+
+    assert document["attribute_changes"] == []
+    assert "format date" in document["skipped"][0]["why"]

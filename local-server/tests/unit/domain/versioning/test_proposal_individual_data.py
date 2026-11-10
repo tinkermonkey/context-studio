@@ -358,3 +358,72 @@ class TestReviewRound:
         assert created.data_properties == [
             {"property_identifier": "brand", "value": "Makita", "datatype": "xsd:string"}
         ]
+
+
+class TestNumberAndDate:
+    """#1468: number and date attributes, e.g. House's quantity, budget and due."""
+
+    @pytest.fixture()
+    def task(self, ontology, house):
+        ontology.create_attribute_definition(house["tool"], "price", "Price", "number")
+        ontology.create_attribute_definition(house["tool"], "due", "Due", "date")
+        return house
+
+    def test_a_number_takes_integers_and_decimals_and_a_date_takes_yyyy_mm_dd(
+        self, service, task, ontology
+    ):
+        data = {"price": 12.5, "due": "2026-11-09"}
+        proposal = propose(service, task, create(1, [task["tool"]], "Saw", data))
+
+        applied = apply_all(service, proposal).operations[0]
+
+        assert applied.status is OperationStatus.APPLIED, applied.reason
+        assert values(ontology, applied.result_entity_id) == {
+            "price": (12.5, "xsd:decimal"),
+            "due": ("2026-11-09", "xsd:date"),
+        }
+        proposal = propose(service, task, update(1, applied.result_entity_id, {"price": 3}))
+        assert apply_all(service, proposal).operations[0].status is OperationStatus.APPLIED
+
+    @pytest.mark.parametrize(
+        "data, expected",
+        [
+            ({"price": "12.50"}, "data_properties 'price' is number, so '12.50' doesn't fit"),
+            ({"price": False}, "data_properties 'price' is number, so False doesn't fit"),
+            ({"due": 20261109}, "data_properties 'due' is date, so 20261109 doesn't fit"),
+            (
+                {"due": "2026-02-30"},
+                "data_properties 'due' is a date (YYYY-MM-DD), so '2026-02-30' doesn't fit",
+            ),
+            (
+                {"due": "20261109"},
+                "data_properties 'due' is a date (YYYY-MM-DD), so '20261109' doesn't fit",
+            ),
+            (
+                {"due": "2026-11-09T10:00"},
+                "data_properties 'due' is a date (YYYY-MM-DD), so '2026-11-09T10:00' doesn't fit",
+            ),
+        ],
+    )
+    def test_a_value_that_isnt_a_number_or_date_fails(self, service, task, data, expected):
+        with pytest.raises(ProposalValidationError) as excinfo:
+            propose(service, task, create(1, [task["tool"]], "Saw", data))
+        assert problems(excinfo) == [(1, "invalid", expected)]
+
+    def test_a_date_attribute_is_created_by_proposal(self, service, task, ontology):
+        draft = OperationDraft(
+            1,
+            T.CREATE,
+            K.ATTRIBUTE,
+            fields={
+                "class_id": task["place"],
+                "identifier": "built",
+                "title": "Built",
+                "datatype": "date",
+            },
+        )
+        applied = apply_all(service, propose(service, task, draft)).operations[0]
+
+        assert applied.status is OperationStatus.APPLIED, applied.reason
+        attribute = ontology.get_attribute_definition(applied.result_entity_id)
+        assert attribute.datatype.value == "date"
