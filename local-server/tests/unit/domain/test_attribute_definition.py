@@ -97,7 +97,7 @@ class TestAttributeDefinitionCreation:
 
     def test_attribute_definition_with_different_datatypes(self):
         """Create attribute definitions with various datatypes."""
-        for datatype in ["string", "integer", "boolean", "array", "object"]:
+        for datatype in ["string", "integer", "number", "date", "boolean", "array", "object"]:
             attr_def = AttributeDefinition(
                 id="attr-1",
                 class_id="cls-1",

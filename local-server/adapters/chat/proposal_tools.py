@@ -325,7 +325,8 @@ class ProposeChangesTool(_ProposalTool):
         " change them, update external_references, which replaces the whole list, so"
         " send every reference and every metadata key. An individual's data_properties"
         " map attribute identifiers (of its classes, inherited ones included) to values"
-        " of the attribute's datatype; on an update, only those given change and null"
+        " of the attribute's datatype (a number is an integer or decimal, a date is"
+        ' "YYYY-MM-DD" text); on an update, only those given change and null'
         " removes one. Id fields"
         f' ({", ".join(sorted(ID_FIELDS))}) take an existing id or "$<ref>" of an'
         " earlier create in the same proposal.\n"

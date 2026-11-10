@@ -9117,7 +9117,7 @@
             "type": "string",
             "minLength": 1,
             "title": "Datatype",
-            "description": "Data type (e.g. 'string', 'integer', 'boolean', 'array', 'object')"
+            "description": "Data type ('string', 'integer', 'number', 'date' as YYYY-MM-DD, 'boolean', 'array' or 'object')"
           },
           "description": {
             "anyOf": [
@@ -9205,7 +9205,7 @@
           "datatype": {
             "type": "string",
             "title": "Datatype",
-            "description": "Data type (e.g. 'string', 'integer', 'boolean')"
+            "description": "Data type: string, integer, number, date, boolean, array or object"
           },
           "description": {
             "anyOf": [
@@ -9370,7 +9370,7 @@
               }
             ],
             "title": "Datatype",
-            "description": "New data type (e.g. 'string', 'integer', 'boolean', 'array', 'object')"
+            "description": "New data type ('string', 'integer', 'number', 'date' as YYYY-MM-DD, 'boolean', 'array' or 'object')"
           },
           "is_required": {
             "anyOf": [
