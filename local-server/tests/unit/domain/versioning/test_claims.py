@@ -18,6 +18,7 @@ from domain.versioning.claims import (
     ClaimVerdict,
     NoteSource,
     Validity,
+    score_triage,
 )
 from tests.fakes.fake_claim_repository import FakeClaimRepository
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
@@ -166,3 +167,71 @@ class TestTriageAndVerdict:
     def test_listing_an_unknown_taxonomy_is_refused(self, service):
         with pytest.raises(EntityNotFoundError):
             service.list_claims(ClaimFilter(taxonomy_id="nope"))
+
+
+class TestScoreTriage:
+    @staticmethod
+    def judged(key, got, gold, **kwargs):
+        triage = ClaimTriage(
+            validity=got,
+            model="m",
+            validity_probabilities=kwargs.get("p", {got: 0.8}),
+            category=kwargs.get("category", "other"),
+            severity=kwargs.get("severity", 1),
+            fix_scope=kwargs.get("fix_scope", 0),
+            latency_ms=kwargs.get("latency", 100.0),
+            cost_usd=kwargs.get("cost", 0.001),
+        )
+        verdict = ClaimVerdict(
+            validity=gold,
+            adjudicated_by="user",
+            category=kwargs.get("gold_category", "other"),
+            severity=kwargs.get("gold_severity", 1),
+            fix_scope=kwargs.get("gold_fix_scope"),
+        )
+        return claim(key=key, triage=triage, verdict=verdict)
+
+    def test_metrics_follow_dr_triage_bench(self):
+        score = score_triage(
+            [
+                self.judged(
+                    "a#1",
+                    "real_defect",
+                    "real_defect",
+                    p={"real_defect": 0.9},
+                    severity=3,
+                    gold_severity=1,
+                    fix_scope=2,
+                    gold_fix_scope=1,
+                    latency=300.0,
+                ),
+                self.judged(
+                    "b#1",
+                    "real_defect",
+                    "works_as_designed",
+                    p={"real_defect": 0.7, "works_as_designed": 0.2},
+                    category="type_overlap",
+                    gold_category=None,
+                    latency=100.0,
+                    cost=None,
+                ),
+                self.judged("c#1", "judgment_call", "judgment_call", p={}, latency=200.0),
+                claim(key="untriaged#1"),  # no triage or verdict: left out
+            ]
+        )
+
+        assert score.n == 3
+        assert score.validity_accuracy == pytest.approx(2 / 3)
+        assert score.mean_p_gold_validity == pytest.approx((0.9 + 0.2 + 0.0) / 3)
+        assert score.category_accuracy == pytest.approx(1.0)  # b has no gold category
+        assert score.severity_mae == pytest.approx(2 / 3)
+        assert score.severity_within_1 == pytest.approx(2 / 3)
+        assert score.fix_scope_mae == pytest.approx(1.0)  # only a has a gold fix scope
+        assert score.median_latency_ms == 200.0
+        assert score.mean_cost_usd == pytest.approx(0.002 / 3)
+        assert score.misses == ("b#1",)
+
+    def test_nothing_to_score(self):
+        score = score_triage([claim()])
+        assert score.n == 0
+        assert score.validity_accuracy is None and score.median_latency_ms is None
