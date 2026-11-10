@@ -485,7 +485,16 @@ def _not_stored(
 
 # What propose_changes reports of each operation (get_proposal has the rest).
 _OUTCOME_KEYS = ("seq", "status", "scope", "result_entity_id", "reason", "blockers")
-_DRY_RUN_KEYS = ("seq", "op", "kind", "scope", "auto_apply", "stale", "blockers")
+_DRY_RUN_KEYS = (
+    "seq",
+    "op",
+    "kind",
+    "scope",
+    "auto_apply",
+    "stale",
+    "blockers",
+    "dataset_impact",
+)
 
 
 def _outcomes(view: dict[str, Any], keys: Sequence[str]) -> list[dict[str, Any]]:

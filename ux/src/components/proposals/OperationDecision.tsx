@@ -4,7 +4,13 @@ import type { ChangeProposal, ProposedOperation } from "@/api/services/proposals
 import type { components } from "@/api/types";
 import { DrTripleEditor } from "./DrTripleEditor";
 import { InUseResolver } from "./InUseResolver";
-import { blockersOf, isDrEditable, staleCauseText, type StaleCause } from "./decisionModel";
+import {
+  blockersOf,
+  datasetImpactText,
+  isDrEditable,
+  staleCauseText,
+  type StaleCause,
+} from "./decisionModel";
 import type { TripleSource } from "./proposalModel";
 import type { PickOutcome } from "./tieredModel";
 import type { ProposalActions } from "./useProposalActions";
@@ -119,6 +125,21 @@ export function OperationDecision({
           </FormCallout>
         )}
 
+        {!!operation.dataset_impact?.length && (
+          <FormCallout variant="info" icon="info" data-testid="operation-dataset-impact">
+            Data that yields to the schema follows this change, without blocking it.
+            <ul className="op-decision__impact" aria-label="Data that follows the change">
+              {operation.dataset_impact.map((impact) => (
+                <li
+                  key={impact.dataset_id}
+                  data-testid={`operation-dataset-impact-${impact.identifier}`}
+                >
+                  {datasetImpactText(impact)}
+                </li>
+              ))}
+            </ul>
+          </FormCallout>
+        )}
         {withPicks && picks && (
           <FormCallout variant="info" icon="info" data-testid="operation-picks-callout">
             Your picks make {picks.triple} instead of the plan&apos;s {picks.planTriple}. It applies

@@ -3345,6 +3345,12 @@ selectors:
   - selector: proposal-selection-note
     component: src/components/proposals/DecisionBars.tsx
     description: "Selection bar text: stale and blocked operations Accept selected leaves out, else how it applies"
+  - selector: operation-dataset-impact
+    component: src/components/proposals/OperationDecision.tsx
+    description: "Information callout: what a schema operation does to data of datasets that yield to the schema (#1485)"
+  - selector: operation-dataset-impact-*
+    component: src/components/proposals/OperationDecision.tsx
+    description: "One yielding dataset's impact line, suffixed by the dataset identifier"
   - selector: operation-in-use
     component: src/components/proposals/InUseResolver.tsx
     description: "Decision panel part for a blocked delete: the relationships using the type and how to resolve them"
