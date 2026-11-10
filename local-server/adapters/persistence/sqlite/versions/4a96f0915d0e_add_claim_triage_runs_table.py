@@ -3,9 +3,9 @@
 Leaves out the pre-existing index drift autogenerate reports on
 extraction_results and individual_classes (as earlier migrations do).
 
-Revision ID: 01bcd91945b4
-Revises: aa132e769944
-Create Date: 2026-11-09 20:46:09.083210
+Revision ID: 4a96f0915d0e
+Revises: 036cabe45eb0
+Create Date: 2026-11-09 21:07:43.196034
 
 """
 from alembic import op
@@ -13,8 +13,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '01bcd91945b4'
-down_revision = 'aa132e769944'
+revision = '4a96f0915d0e'
+down_revision = '036cabe45eb0'
 branch_labels = None
 depends_on = None
 
