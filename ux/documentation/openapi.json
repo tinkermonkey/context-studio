@@ -7706,6 +7706,502 @@
         }
       }
     },
+    "/api/taxonomies/{taxonomy_id}/claims": {
+      "get": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "List Claims",
+        "description": "The taxonomy's claims, oldest first.",
+        "operationId": "list_claims_api_taxonomies__taxonomy_id__claims_get",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Maximum number of results",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of results"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of results to skip",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of results to skip"
+          },
+          {
+            "name": "subject_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only claims about this entity",
+              "title": "Subject Id"
+            },
+            "description": "Only claims about this entity"
+          },
+          {
+            "name": "note_ref",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only claims from this note",
+              "title": "Note Ref"
+            },
+            "description": "Only claims from this note"
+          },
+          {
+            "name": "triaged",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only triaged (true) or untriaged (false)",
+              "title": "Triaged"
+            },
+            "description": "Only triaged (true) or untriaged (false)"
+          },
+          {
+            "name": "has_verdict",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only with (true) or without a verdict",
+              "title": "Has Verdict"
+            },
+            "description": "Only with (true) or without a verdict"
+          },
+          {
+            "name": "validity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Validity"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only claims triaged as this",
+              "title": "Validity"
+            },
+            "description": "Only claims triaged as this"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResponse_ClaimResponse_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy or claim not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Submit Claims",
+        "description": "Add claims, or replace those whose key the taxonomy already has. A replaced\nclaim keeps its triage and verdict only if its text is unchanged. Affected\nids that match no entity move to unresolved_refs.",
+        "operationId": "submit_claims_api_taxonomies__taxonomy_id__claims_post",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClaimsSubmitRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClaimResponse"
+                  },
+                  "title": "Response Submit Claims Api Taxonomies  Taxonomy Id  Claims Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy or claim not found"
+          },
+          "422": {
+            "description": "Invalid claims"
+          }
+        }
+      }
+    },
+    "/api/taxonomies/{taxonomy_id}/claims/export": {
+      "get": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Export Claims",
+        "description": "The taxonomy's claims as JSONL: the list route's claims and filters, all of them.",
+        "operationId": "export_claims_api_taxonomies__taxonomy_id__claims_export_get",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          },
+          {
+            "name": "subject_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only claims about this entity",
+              "title": "Subject Id"
+            },
+            "description": "Only claims about this entity"
+          },
+          {
+            "name": "note_ref",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only claims from this note",
+              "title": "Note Ref"
+            },
+            "description": "Only claims from this note"
+          },
+          {
+            "name": "triaged",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only triaged (true) or untriaged (false)",
+              "title": "Triaged"
+            },
+            "description": "Only triaged (true) or untriaged (false)"
+          },
+          {
+            "name": "has_verdict",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only with (true) or without a verdict",
+              "title": "Has Verdict"
+            },
+            "description": "Only with (true) or without a verdict"
+          },
+          {
+            "name": "validity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Validity"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only claims triaged as this",
+              "title": "Validity"
+            },
+            "description": "Only claims triaged as this"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Every matching claim, one ClaimResponse JSON object per line",
+            "content": {
+              "application/x-ndjson": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy or claim not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/claims/{claim_id}": {
+      "get": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Get Claim",
+        "description": "One claim, with its triage and verdict.",
+        "operationId": "get_claim_api_claims__claim_id__get",
+        "parameters": [
+          {
+            "name": "claim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Claim Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy or claim not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/claims/{claim_id}/verdict": {
+      "put": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Set Claim Verdict",
+        "description": "Record a person's verdict on a claim, replacing any earlier one: benchmark gold.\nA verdict given through the API is a person's (adjudicated_by \"user\").",
+        "operationId": "set_claim_verdict_api_claims__claim_id__verdict_put",
+        "parameters": [
+          {
+            "name": "claim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Claim Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClaimVerdictRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy or claim not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Clear Claim Verdict",
+        "description": "Clear a claim's verdict.",
+        "operationId": "clear_claim_verdict_api_claims__claim_id__verdict_delete",
+        "parameters": [
+          {
+            "name": "claim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Claim Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy or claim not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/interchange/bundles": {
       "post": {
         "tags": [
@@ -9603,6 +10099,526 @@
         ],
         "title": "ChatStatusResponse",
         "description": "Whether chat can run with the configured model."
+      },
+      "ClaimInput": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Key",
+            "description": "\"<note_ref>#<n>\""
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text",
+            "description": "The claim, in a sentence or two"
+          },
+          "note_ref": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Note Ref",
+            "description": "The note it came from"
+          },
+          "note_source": {
+            "$ref": "#/components/schemas/NoteSource",
+            "description": "maintainer or reviewer"
+          },
+          "note_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note Text",
+            "description": "The note's full text"
+          },
+          "subject_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Id",
+            "description": "The entity the note was about"
+          },
+          "category_hint": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Hint"
+          },
+          "affected_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Affected Ids",
+            "description": "Entities the claim names; ids that match none move to unresolved_refs"
+          },
+          "unresolved_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unresolved Refs"
+          },
+          "proposed_change": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Change"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "text",
+          "note_ref",
+          "note_source"
+        ],
+        "title": "ClaimInput",
+        "description": "One claim to add, or to replace by key."
+      },
+      "ClaimResponse": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Key",
+            "description": "\"<note_ref>#<n>\""
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text",
+            "description": "The claim, in a sentence or two"
+          },
+          "note_ref": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Note Ref",
+            "description": "The note it came from"
+          },
+          "note_source": {
+            "$ref": "#/components/schemas/NoteSource",
+            "description": "maintainer or reviewer"
+          },
+          "note_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note Text",
+            "description": "The note's full text"
+          },
+          "subject_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Id",
+            "description": "The entity the note was about"
+          },
+          "category_hint": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Hint"
+          },
+          "affected_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Affected Ids",
+            "description": "Entities the claim names; ids that match none move to unresolved_refs"
+          },
+          "unresolved_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unresolved Refs"
+          },
+          "proposed_change": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Change"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "taxonomy_id": {
+            "type": "string",
+            "title": "Taxonomy Id"
+          },
+          "source_run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Run Id"
+          },
+          "triage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClaimTriageSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClaimVerdictSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "text",
+          "note_ref",
+          "note_source",
+          "id",
+          "taxonomy_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ClaimResponse",
+        "description": "A stored claim, with its triage and verdict once given."
+      },
+      "ClaimTriageSchema": {
+        "properties": {
+          "validity": {
+            "$ref": "#/components/schemas/Validity"
+          },
+          "validity_probabilities": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Validity Probabilities"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "category_probabilities": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Category Probabilities"
+          },
+          "severity": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Severity",
+            "description": "0 cosmetic to 3 blocking"
+          },
+          "fix_scope": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fix Scope",
+            "description": "0 wording to 3 roadmap"
+          },
+          "addressed_by_proposal": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Addressed By Proposal",
+            "description": "Probability the pending definition already resolves it"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "calibrated": {
+            "type": "boolean",
+            "title": "Calibrated"
+          },
+          "cost_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Usd"
+          },
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "triaged_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Triaged At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "validity",
+          "model",
+          "calibrated",
+          "triaged_at"
+        ],
+        "title": "ClaimTriageSchema",
+        "description": "A decision model's answers about a claim."
+      },
+      "ClaimVerdictRequest": {
+        "properties": {
+          "validity": {
+            "$ref": "#/components/schemas/Validity"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "severity": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Severity",
+            "description": "0 to 3"
+          },
+          "fix_scope": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fix Scope",
+            "description": "0 to 3"
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "validity"
+        ],
+        "title": "ClaimVerdictRequest",
+        "description": "A person's verdict on a claim."
+      },
+      "ClaimVerdictSchema": {
+        "properties": {
+          "validity": {
+            "$ref": "#/components/schemas/Validity"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "severity": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Severity",
+            "description": "0 to 3"
+          },
+          "fix_scope": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fix Scope",
+            "description": "0 to 3"
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale",
+            "default": ""
+          },
+          "adjudicated_by": {
+            "type": "string",
+            "title": "Adjudicated By"
+          },
+          "adjudicated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Adjudicated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "validity",
+          "adjudicated_by",
+          "adjudicated_at"
+        ],
+        "title": "ClaimVerdictSchema",
+        "description": "A recorded verdict: benchmark gold."
+      },
+      "ClaimsSubmitRequest": {
+        "properties": {
+          "claims": {
+            "items": {
+              "$ref": "#/components/schemas/ClaimInput"
+            },
+            "type": "array",
+            "maxItems": 1000,
+            "minItems": 1,
+            "title": "Claims"
+          }
+        },
+        "type": "object",
+        "required": [
+          "claims"
+        ],
+        "title": "ClaimsSubmitRequest",
+        "description": "Claims to add or replace, matched by key within the taxonomy."
       },
       "ClassCountsResponse": {
         "properties": {
@@ -13044,6 +14060,41 @@
         ],
         "title": "ListResponse[ChangeProposalResponse]"
       },
+      "ListResponse_ClaimResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ClaimResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total number of items"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Limit applied"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Offset applied"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "ListResponse[ClaimResponse]"
+      },
       "ListResponse_ClassResponse_": {
         "properties": {
           "items": {
@@ -13699,6 +14750,15 @@
         ],
         "title": "NodeReference",
         "description": "Reference to an extracted node (individual/class/literal) in individual extraction.\n\nIdentifies a subject or object node with optional mapping to existing ontology.\nNon-empty id means mapped to existing ontology entity; empty/None means new candidate."
+      },
+      "NoteSource": {
+        "type": "string",
+        "enum": [
+          "maintainer",
+          "reviewer"
+        ],
+        "title": "NoteSource",
+        "description": "Whose note a claim came from."
       },
       "OperationErrorResponse": {
         "properties": {
@@ -18029,6 +19089,17 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "Validity": {
+        "type": "string",
+        "enum": [
+          "real_defect",
+          "works_as_designed",
+          "judgment_call",
+          "out_of_scope"
+        ],
+        "title": "Validity",
+        "description": "Whether a claim points at a real problem."
       },
       "VersioningChangeEventResponse": {
         "properties": {
