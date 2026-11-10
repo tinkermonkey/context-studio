@@ -1963,6 +1963,53 @@
         }
       }
     },
+    "/api/properties/{property_id}/attributes": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "List Edge Attributes",
+        "description": "The relationship type's edge attributes: the values its relationships may\ncarry, each with a datatype, allowed values, required and a default.\n\nRaises:\n    HTTPException: 404 if the relationship type is not found",
+        "operationId": "list_edge_attributes_api_properties__property_id__attributes_get",
+        "parameters": [
+          {
+            "name": "property_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Property Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AttributeDefinitionResponse"
+                  },
+                  "title": "Response List Edge Attributes Api Properties  Property Id  Attributes Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/classes/{class_id}/attribute-definitions": {
       "post": {
         "tags": [
@@ -6454,7 +6501,7 @@
           "interchange"
         ],
         "summary": "Export Bundle",
-        "description": "Export one taxonomy as a Context Studio bundle (v0).\n\nLoading the returned bundle back into this workspace changes nothing.\nSee domain/interchange/bundle.py for the format.\n\nRaises:\n    HTTPException: 404 if the taxonomy or dataset does not exist; 409 if the\n        workspace cannot be expressed as a bundle (an entity has no stored identifier)",
+        "description": "Export one taxonomy as a Context Studio bundle (v1).\n\nLoading the returned bundle back into this workspace changes nothing.\nSee domain/interchange/bundle.py for the format.\n\nRaises:\n    HTTPException: 404 if the taxonomy or dataset does not exist; 409 if the\n        workspace cannot be expressed as a bundle (an entity has no stored identifier)",
         "operationId": "export_bundle_api_v1_interchange_bundles__taxonomy_id__get",
         "parameters": [
           {
@@ -8736,7 +8783,7 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": true,
-                "description": "A context-studio-bundle v0 document",
+                "description": "A context-studio-bundle document (v1; v0 still imports)",
                 "title": "Bundle"
               }
             }
@@ -9241,9 +9288,28 @@
             "description": "Unique identifier (UUID)"
           },
           "class_id": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Class Id",
-            "description": "Parent class ID"
+            "description": "Parent class ID (null for an edge attribute)"
+          },
+          "property_definition_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Property Definition Id",
+            "description": "Relationship type an edge attribute is on (null for a class attribute)"
           },
           "identifier": {
             "type": "string",
@@ -9377,7 +9443,6 @@
         "type": "object",
         "required": [
           "id",
-          "class_id",
           "identifier",
           "title",
           "datatype"
@@ -16463,6 +16528,69 @@
             ],
             "title": "Range Class Id",
             "description": "Class the relationship's target must belong to"
+          },
+          "min_per_source": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Per Source",
+            "description": "Fewest relationships of this type a source has (default 0)"
+          },
+          "max_per_source": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Per Source",
+            "description": "Most relationships of this type a source has (null: no limit)"
+          },
+          "max_per_target": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Per Target",
+            "description": "Most relationships of this type a target has (null: no limit)"
+          },
+          "hierarchy": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hierarchy",
+            "description": "Its relationships form no cycles (needs the same domain and range)"
+          },
+          "symmetric": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symmetric",
+            "description": "A relationship one way holds the other way too (same domain and range)"
           }
         },
         "type": "object",
@@ -16549,6 +16677,48 @@
             ],
             "title": "Range Class Id",
             "description": "Class the relationship's target must belong to, if constrained"
+          },
+          "min_per_source": {
+            "type": "integer",
+            "title": "Min Per Source",
+            "description": "Fewest relationships of this type a source has (0: optional)",
+            "default": 0
+          },
+          "max_per_source": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Per Source",
+            "description": "Most relationships of this type a source has (null: no limit)"
+          },
+          "max_per_target": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Per Target",
+            "description": "Most relationships of this type a target has (null: no limit)"
+          },
+          "hierarchy": {
+            "type": "boolean",
+            "title": "Hierarchy",
+            "description": "Its relationships form no cycles (needs the same domain and range)",
+            "default": false
+          },
+          "symmetric": {
+            "type": "boolean",
+            "title": "Symmetric",
+            "description": "A relationship one way holds the other way too (same domain and range)",
+            "default": false
           },
           "derived": {
             "type": "boolean",
@@ -16678,6 +16848,69 @@
             ],
             "title": "Is Relevant",
             "description": "Relevance flag (None=not evaluated, True=relevant, False=irrelevant)"
+          },
+          "min_per_source": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Per Source",
+            "description": "New minimum per source"
+          },
+          "max_per_source": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Per Source",
+            "description": "New maximum per source; null removes the limit"
+          },
+          "max_per_target": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Per Target",
+            "description": "New maximum per target; null removes the limit"
+          },
+          "hierarchy": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hierarchy",
+            "description": "New hierarchy flag"
+          },
+          "symmetric": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symmetric",
+            "description": "New symmetric flag"
           }
         },
         "type": "object",

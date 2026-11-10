@@ -403,16 +403,18 @@ class AttributeDefinitionCreated(DomainEvent):
 
     Attributes:
         attribute_definition_id: ID of the created attribute definition
-        class_id: ID of the parent class
+        class_id: ID of the parent class (None for an edge attribute)
+        property_definition_id: ID of the relationship type of an edge attribute
         identifier: Machine-readable identifier for the attribute
         title: Display name for the attribute
     """
 
     _aggregate_id_field: ClassVar[str] = "attribute_definition_id"
     attribute_definition_id: str = ""
-    class_id: str = ""
+    class_id: str | None = ""
     identifier: str = ""
     title: str = ""
+    property_definition_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -450,7 +452,7 @@ class AttributeDefinitionDeleted(DomainEvent):
 
     _aggregate_id_field: ClassVar[str] = "attribute_definition_id"
     attribute_definition_id: str = ""
-    class_id: str = ""
+    class_id: str | None = ""
     identifier: str = ""
     title: str = ""
     snapshot: dict[str, Any] = field(default_factory=dict)

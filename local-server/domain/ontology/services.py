@@ -30,7 +30,7 @@ from .entities import (
     Relationship,
     Taxonomy,
     same_attributes,
-    validate_relationship_attributes,
+    edge_attribute_values,
 )
 from .events import (
     AttributeDefinitionCreated,
@@ -128,8 +128,20 @@ def _property_event_values(prop_def: PropertyDefinition) -> dict[str, object]:
         "domain_class_id": prop_def.domain_class_id,
         "range_class_id": prop_def.range_class_id,
         "derived": prop_def.derived,
+        **{name: getattr(prop_def, name) for name in STRUCTURE_FIELDS},
         "external_references": _serialize_external_references(prop_def.external_references),
     }
+
+
+# A relationship type's structure (see PropertyDefinition): cardinality, hierarchy, symmetric
+STRUCTURE_FIELDS = ("min_per_source", "max_per_source", "max_per_target", "hierarchy", "symmetric")
+
+
+def _check_structure(prop_def: PropertyDefinition) -> None:
+    """Refuse an ill-formed structure (PropertyDefinition.structure_problems)."""
+    problems = prop_def.structure_problems()
+    if problems:
+        raise ValueError(f"Relationship type {prop_def.identifier!r}: " + "; ".join(problems))
 
 
 def _predicate_event_values(predicate: Predicate) -> dict[str, object]:
@@ -1769,8 +1781,8 @@ class OntologyService:
             property_definition_id: ID of the property definition (relationship type)
             source_run_id: Optional ID of the pipeline run that produced this
                 relationship, for provenance tracking
-            attributes: Values carried on the edge; only names the property
-                definition allows (PropertyDefinition.edge_attribute_names)
+            attributes: Values carried on the edge, checked against the relationship
+                type's attribute definitions (a missing required one takes its default)
 
         Returns:
             The created Relationship
@@ -1793,8 +1805,7 @@ class OntologyService:
                 f"Relationship type {prop_def.identifier!r} is derived: its relationships"
                 " are computed from other data, not created directly"
             )
-        attributes = dict(attributes or {})
-        _check_edge_attributes(prop_def, attributes)
+        attributes = self._edge_attributes(prop_def, dict(attributes or {}))
 
         # Validate source entity exists (try Class first, then Individual)
         source_class = self._repository.get_class(source_id)
@@ -1903,8 +1914,7 @@ class OntologyService:
         prop_def = self._repository.get_property_definition(relationship.property_definition_id)
         if prop_def is None:
             raise EntityNotFoundError("PropertyDefinition", relationship.property_definition_id)
-        attributes = dict(attributes)
-        _check_edge_attributes(prop_def, attributes)
+        attributes = self._edge_attributes(prop_def, dict(attributes))
         old = dict(relationship.attributes)
         if same_attributes(old, attributes):
             return relationship
@@ -2018,7 +2028,16 @@ class OntologyService:
                 f"Relationship type {property_identifier!r} does not exist yet, so it allows"
                 " no attributes"
             )
-        _check_edge_attributes(prop_def, attributes)
+        self._edge_attributes(prop_def, dict(attributes))
+
+    def _edge_attributes(
+        self, prop_def: PropertyDefinition, attributes: dict[str, Any]
+    ) -> dict[str, Any]:
+        """A relationship's attributes, checked against its type's edge attributes."""
+        definitions = self._repository.list_attribute_definitions(
+            property_definition_id=prop_def.id, limit=None
+        )
+        return edge_attribute_values(prop_def.identifier, definitions, attributes)
 
     def get_relationship(self, relationship_id: str) -> Relationship:
         """
@@ -2425,9 +2444,16 @@ class OntologyService:
         derived: bool = False,
         taxonomy_id: str | None = None,
         create_missing_predicate: bool = False,
+        min_per_source: int = 0,
+        max_per_source: int | None = None,
+        max_per_target: int | None = None,
+        hierarchy: bool = False,
+        symmetric: bool = False,
     ) -> PropertyDefinition:
         """
-        Create a new property definition (relationship type).
+        Create a new property definition (relationship type), with its structure
+        (cardinality, hierarchy, symmetric; see PropertyDefinition), which must
+        be well formed.
 
         A derived one (see PropertyDefinition.derived) gets no relationships
         created directly.
@@ -2509,7 +2535,13 @@ class OntologyService:
             last_modified=now,
             source_run_id=source_run_id,
             derived=bool(derived),
+            min_per_source=min_per_source,
+            max_per_source=max_per_source,
+            max_per_target=max_per_target,
+            hierarchy=bool(hierarchy),
+            symmetric=bool(symmetric),
         )
+        _check_structure(prop_def)
         prop_def = self._repository.save_property_definition(prop_def)
         self._sync_vector_index(prop_def.id, prop_def.title, prop_def.description)
 
@@ -2689,10 +2721,13 @@ class OntologyService:
         derived: bool | None = None,
         taxonomy_id: str | None = None,
         create_missing_predicate: bool = False,
+        structure: dict[str, Any] | None = None,
     ) -> PropertyDefinition:
         """
         Update a property definition's identifier, wording, predicate, relevance,
-        domain/range, references or derived flag (None: unchanged).
+        domain/range, references or derived flag (None: unchanged), and the
+        structure fields `structure` names (STRUCTURE_FIELDS; a max of None
+        clears it). The result must be well formed.
 
         The predicate is looked up again (by identifier) when it or the type's
         domain or range changes, in the taxonomy they give (see
@@ -2802,6 +2837,14 @@ class OntologyService:
         if derived is not None:
             prop_def.derived = bool(derived)
 
+        unknown = sorted(set(structure or {}) - set(STRUCTURE_FIELDS))
+        if unknown:
+            raise ValueError(f"Not structure fields of a relationship type: {unknown}")
+        for name, value in (structure or {}).items():
+            setattr(prop_def, name, value)
+        if structure or update_domain_class_id or update_range_class_id:
+            _check_structure(prop_def)
+
         retyped = update_canonical_predicate or update_domain_class_id or update_range_class_id
         if wanted_predicate and retyped:
             current = (
@@ -2879,6 +2922,21 @@ class OntologyService:
             raise EntityInUseError(
                 f"PropertyDefinition '{property_id}' is in use by {len(relationships)}"
                 f" relationship(s){by_dataset}"
+            )
+
+        # Its edge attributes go first, each with its event, so a revert restores them.
+        for attr_def in self._repository.list_attribute_definitions(
+            property_definition_id=property_id, limit=None
+        ):
+            self._repository.delete_attribute_definition(attr_def.id)
+            self._publish_or_warn(
+                AttributeDefinitionDeleted(
+                    attribute_definition_id=attr_def.id,
+                    class_id=None,
+                    identifier=attr_def.identifier,
+                    title=attr_def.title,
+                    snapshot=entity_snapshot(attr_def),
+                )
             )
 
         self._repository.delete_property_definition(property_id)
@@ -3908,7 +3966,7 @@ class OntologyService:
 
     def create_attribute_definition(
         self,
-        class_id: str,
+        class_id: str | None,
         identifier: str,
         title: str,
         datatype: str,
@@ -3919,9 +3977,12 @@ class OntologyService:
         sort_order: int = 0,
         external_references: list[ExternalReference] | None = None,
         source_run_id: str | None = None,
+        property_definition_id: str | None = None,
     ) -> AttributeDefinition:
         """
-        Create a new attribute definition (TBox data property declaration).
+        Create a new attribute definition (TBox data property declaration), on a
+        class or, with property_definition_id instead of class_id, on a
+        relationship type (an edge attribute: a scalar its relationships carry).
 
         Validates that:
         - The class_id references an existing Class
@@ -3951,8 +4012,10 @@ class OntologyService:
                 in the same class
             ValueError: If identifier, title, or datatype is empty
         """
-        if not class_id or not class_id.strip():
-            raise ValueError("Class ID cannot be empty")
+        if bool(class_id) == bool(property_definition_id):
+            raise ValueError(
+                "An attribute definition belongs to exactly one class or one relationship type"
+            )
         if not identifier or not identifier.strip():
             raise ValueError("Identifier cannot be empty")
         if not title or not title.strip():
@@ -3963,24 +4026,36 @@ class OntologyService:
         # Validate cross-field constraint: default_value must be in allowed_values
         validate_default_value_against_allowed_values(default_value, allowed_values)
 
-        # Verify class exists
-        cls = self._repository.get_class(class_id)
-        if cls is None:
-            raise EntityNotFoundError("Class", class_id)
+        if class_id:
+            if self._repository.get_class(class_id) is None:
+                raise EntityNotFoundError("Class", class_id)
+            owner = f"class {class_id}"
+        else:
+            if self._repository.get_property_definition(property_definition_id) is None:  # type: ignore[arg-type]
+                raise EntityNotFoundError("PropertyDefinition", property_definition_id)  # type: ignore[arg-type]
+            if datatype in (DataType.ARRAY.value, DataType.OBJECT.value):
+                raise ValueError(
+                    f"An edge attribute holds a single value, so it can't be {datatype}"
+                )
+            owner = f"relationship type {property_definition_id}"
 
-        # Check for duplicate identifier within this class
-        existing_attrs = self._repository.list_attribute_definitions(class_id=class_id, limit=None)
+        # Check for duplicate identifier within its owner
+        existing_attrs = self._repository.list_attribute_definitions(
+            class_id=class_id or None,
+            property_definition_id=None if class_id else property_definition_id,
+            limit=None,
+        )
         if any(a.identifier == identifier for a in existing_attrs):
             raise DuplicateEntityError(
-                f"AttributeDefinition with identifier '{identifier}' already exists in class "
-                f"{class_id}"
+                f"AttributeDefinition with identifier '{identifier}' already exists in {owner}"
             )
 
         attribute_definition_id = str(uuid4())
         now = datetime.now(timezone.utc)
         attr_def = AttributeDefinition(
             id=attribute_definition_id,
-            class_id=class_id,
+            class_id=class_id or None,
+            property_definition_id=None if class_id else property_definition_id,
             identifier=identifier,
             title=title,
             datatype=DataType(datatype),
@@ -3999,7 +4074,8 @@ class OntologyService:
         failures = self._event_publisher.publish(
             AttributeDefinitionCreated(
                 attribute_definition_id=attribute_definition_id,
-                class_id=class_id,
+                class_id=class_id or None,
+                property_definition_id=None if class_id else property_definition_id,
                 identifier=identifier,
                 title=title,
             )
@@ -4038,12 +4114,14 @@ class OntologyService:
         class_id: str | None = None,
         limit: int | None = 100,
         offset: int = 0,
+        property_definition_id: str | None = None,
     ) -> list[AttributeDefinition]:
         """
         Retrieve attribute definitions with optional filtering and pagination.
 
         Args:
             class_id: Optional class ID to filter by (filter to this class's attributes)
+            property_definition_id: Optional relationship type whose edge attributes to list
             limit: Maximum number of results to return; None means no limit
             offset: Number of results to skip
 
@@ -4051,7 +4129,10 @@ class OntologyService:
             List of AttributeDefinition entities
         """
         return self._repository.list_attribute_definitions(
-            class_id=class_id, limit=limit, offset=offset
+            class_id=class_id,
+            limit=limit,
+            offset=offset,
+            property_definition_id=property_definition_id,
         )
 
     def update_attribute_definition(
@@ -4121,6 +4202,14 @@ class OntologyService:
                 raise ValueError(
                     f"Invalid datatype '{datatype}'. Must be one of: "
                     f"{', '.join(dt.value for dt in DataType)}"
+                )
+            if attr_def.property_definition_id and validated_datatype in (
+                DataType.ARRAY,
+                DataType.OBJECT,
+            ):
+                raise ValueError(
+                    f"An edge attribute holds a single value, so it can't be"
+                    f" {validated_datatype.value}"
                 )
             if validated_datatype != attr_def.datatype:
                 changed_fields.append("datatype")
@@ -4243,20 +4332,3 @@ class OntologyService:
         """
         return self._repository.count_attribute_definitions(class_id=class_id)
 
-
-def _check_edge_attributes(prop_def: PropertyDefinition, attributes: dict[str, Any]) -> None:
-    """
-    Refuse attribute names the property does not allow, and non-scalar values.
-
-    Raises:
-        ValueError: Naming the unknown attributes and the allowed ones
-    """
-    validate_relationship_attributes(attributes)
-    allowed = prop_def.edge_attribute_names()
-    unknown = sorted(set(attributes) - allowed)
-    if unknown:
-        listed = ", ".join(sorted(allowed)) if allowed else "none"
-        raise ValueError(
-            f"Relationship type {prop_def.identifier!r} does not allow attributes {unknown}"
-            f" (allowed: {listed})"
-        )

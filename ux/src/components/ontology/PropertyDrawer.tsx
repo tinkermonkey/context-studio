@@ -14,7 +14,9 @@ import {
   useUpdateProperty,
   useDeleteProperty,
   useCreateProperty,
+  useEdgeAttributes,
 } from "@/api/hooks/ontology/useProperties";
+import { cardinalityLabel, edgeAttributeLabel } from "./relationshipStructure";
 import { useRelationships } from "@/api/hooks/ontology/useRelationships";
 import { useClassesByIds } from "@/api/hooks/ontology/useClasses";
 import { useToasts } from "@/components/ui/Toast";
@@ -66,6 +68,7 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
     { enabled: !!property?.id },
   );
   const propertyRelationships = relationshipsResponse?.items || [];
+  const { data: edgeAttributes = [] } = useEdgeAttributes(property?.id);
   const relationshipTotal = relationshipsResponse?.total ?? propertyRelationships.length;
   const { data: classesResponse } = useClassesByIds(
     propertyRelationships.flatMap((rel) => [rel.source_id, rel.target_id]),
@@ -162,6 +165,9 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
                   { key: "Title", value: property.title },
                   { key: "Predicate", value: property.canonical_predicate || "—" },
                   { key: "Description", value: property.description || "—" },
+                  { key: "Cardinality", value: cardinalityLabel(property) },
+                  { key: "Hierarchy", value: property.hierarchy ? "yes (no cycles)" : "no" },
+                  { key: "Symmetric", value: property.symmetric ? "yes" : "no" },
                   {
                     key: "Created",
                     value: new Date(property.created_at ?? "").toLocaleDateString(),
@@ -169,6 +175,21 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
                 ]}
               />
             </InspectorPanel.Section>
+
+            {edgeAttributes.length > 0 && (
+              <InspectorPanel.Section title="Edge Attributes">
+                <div data-testid="property-edge-attributes">
+                  <KVGrid
+                    rows={[...edgeAttributes]
+                      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+                      .map((attribute) => ({
+                        key: attribute.identifier,
+                        value: edgeAttributeLabel(attribute),
+                      }))}
+                  />
+                </div>
+              </InspectorPanel.Section>
+            )}
 
             <PendingProposalOperations kind="property" entityId={property.id} inInspector />
 

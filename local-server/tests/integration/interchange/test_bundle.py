@@ -171,7 +171,9 @@ def test_bundle_lands_as_taxonomy_schemes_classes_properties_and_individuals(
     prop = repo.get_property_definition_by_identifier("house_activity_is_a_activity")
     assert prop.canonical_predicate == "is_a"
     [house_ref] = [r for r in prop.external_references if r.source == "house"]
-    assert dict(house_ref.metadata) == {"hierarchy": True, "acyclic": True}
+    # #1482: hierarchy is a field of its own; the rest stays the reference metadata.
+    assert prop.hierarchy is True
+    assert dict(house_ref.metadata) == {"acyclic": True}
     activity = repo.get_by_identifier("house_activity")
     individuals = {i.title: i for i in repo.list_individuals(class_id=activity.id, limit=None)}
     [vacuum_ref] = individuals["Vacuuming"].external_references
@@ -609,6 +611,35 @@ def _taxonomy_id(repo, identifier):
     return repo.get_by_identifier(identifier).id
 
 
+def _as_v0(bundle):
+    """
+    A v1 export in v0's shape (#1483), to compare with House's cached v0 file:
+    structure and edge attributes back into `constraints` under House's keys,
+    derived back as its legacy metadata copy, and no predicate catalog.
+    """
+    result = copy.deepcopy(bundle)
+    assert result.pop("version") == 1
+    result["version"] = 0
+    result.pop("predicates")
+    for prop in result["properties"]:
+        cardinality = prop.pop("cardinality")
+        constraints = prop["constraints"]
+        constraints.update(
+            min=cardinality["min_per_source"],
+            max=cardinality["max_per_source"],
+            hierarchy=prop.pop("hierarchy"),
+            symmetric=prop.pop("symmetric"),
+        )
+        if cardinality["max_per_target"] is not None:
+            constraints["max_per_target"] = cardinality["max_per_target"]
+        attributes = prop.pop("attributes", [])
+        if attributes:
+            constraints["edge_properties"] = [a["identifier"] for a in attributes]
+        if prop["derived"]:
+            constraints["derived"] = True
+    return result
+
+
 def _normalized(bundle):
     """A bundle with list order and absent-vs-empty optional class keys made irrelevant."""
     result = copy.deepcopy(bundle)
@@ -654,7 +685,7 @@ def test_house_bundle_round_trip_writes_nothing(importer, service, repo, session
         importer, repo, session_factory, _taxonomy_id(repo, "house")
     )
 
-    assert _normalized(exported) == _normalized(house)
+    assert _normalized(_as_v0(exported)) == _normalized(house)
 
 
 def house_with_kits():
@@ -718,7 +749,7 @@ def test_house_bundle_with_kits_round_trip_writes_nothing(importer, service, rep
         importer, repo, session_factory, _taxonomy_id(repo, "house")
     )
 
-    assert _normalized(exported) == _normalized(house)
+    assert _normalized(_as_v0(exported)) == _normalized(house)
 
 
 def test_reference_identifier_that_differs_from_the_key_is_kept(
@@ -731,7 +762,7 @@ def test_reference_identifier_that_differs_from_the_key_is_kept(
         source="house",
         identifier="house.activity.is-a.activity",
         uri="https://example.test/is-a",
-        metadata=MappingProxyType({"hierarchy": True, "acyclic": True}),
+        metadata=MappingProxyType({"kind": "taxonomic", "acyclic": True}),
     )
     service.update_property_definition(prop.id, external_references=[spec_reference])
 
@@ -739,14 +770,14 @@ def test_reference_identifier_that_differs_from_the_key_is_kept(
         importer, repo, session_factory, _taxonomy_id(repo, "house")
     )
     [spec] = exported["properties"]
-    spec["constraints"] = {"hierarchy": True}
+    spec["constraints"] = {"kind": "taxonomic"}
     load_bundle(importer, exported)
 
     [reference] = repo.get_property_definition_by_identifier(
         "house_activity_is_a_activity"
     ).external_references
     assert (reference.identifier, reference.uri) == (spec_reference.identifier, spec_reference.uri)
-    assert dict(reference.metadata) == {"hierarchy": True}
+    assert dict(reference.metadata) == {"kind": "taxonomic"}
 
 
 @pytest.fixture()
@@ -1084,7 +1115,8 @@ def test_house_derived_flags_lift_into_the_field_and_round_trip(
         importer, repo, session_factory, _taxonomy_id(repo, "house")
     )
     place = by_key(exported["classes"], "identifier", "house_place")
-    assert (place["derived"], place["constraints"]) == (True, {"derived": True})
+    # v1 carries the flag as `derived` alone; the legacy metadata copy stays put.
+    assert (place["derived"], place["constraints"]) == (True, {})
     assert by_key(exported["classes"], "identifier", "house_room")["derived"] is False
     assert exported["properties"][0]["derived"] is True
 
@@ -1172,3 +1204,56 @@ def test_malformed_external_references_are_refused(importer, references, message
 
     with pytest.raises(BundleError, match=message):
         load_bundle(importer, bundle)
+
+
+def test_an_integer_edge_attribute_round_trips_without_a_retype(
+    importer, service, repo, session_factory
+):
+    """#1482 review: v0 infers number, but an integer that holds the values is kept."""
+    load_bundle(importer, _kit_bundle())
+    requires = repo.get_property_definition_by_identifier("house_activity_requires_resource")
+    [quantity] = [
+        a
+        for a in repo.list_attribute_definitions(property_definition_id=requires.id, limit=None)
+        if a.identifier == "quantity"
+    ]
+    service.update_attribute_definition(quantity.id, datatype="integer")
+
+    _assert_round_trip_writes_nothing(
+        importer, repo, session_factory, _taxonomy_id(repo, "house")
+    )
+
+
+def test_a_retype_applies_before_a_new_relationship_that_needs_it(importer, repo):
+    first = _kit_bundle()
+    for rel in first["relationships"]:
+        if "quantity" in (rel.get("attributes") or {}):
+            rel["attributes"]["quantity"] = str(rel["attributes"]["quantity"])
+    load_bundle(importer, first)
+
+    summary = load_bundle(importer, _kit_bundle())  # quantities as numbers again
+
+    assert summary.kind("attribute").updated == 1
+    requires = repo.get_property_definition_by_identifier("house_activity_requires_resource")
+    datatypes = {
+        a.identifier: a.datatype.value
+        for a in repo.list_attribute_definitions(property_definition_id=requires.id, limit=None)
+    }
+    assert datatypes["quantity"] == "number"
+
+
+def test_a_required_default_settles_on_re_import(importer, service, repo, session_factory):
+    load_bundle(importer, _kit_bundle())
+    requires = repo.get_property_definition_by_identifier("house_activity_requires_resource")
+    [unit] = [
+        a
+        for a in repo.list_attribute_definitions(property_definition_id=requires.id, limit=None)
+        if a.identifier == "unit"
+    ]
+    service.update_attribute_definition(unit.id, is_required=True, default_value="each")
+    bundle = _kit_bundle()
+    for rel in bundle["relationships"]:
+        (rel.get("attributes") or {}).pop("unit", None)
+    load_bundle(importer, bundle)
+
+    assert load_bundle(importer, bundle).kind("relationship").updated == 0

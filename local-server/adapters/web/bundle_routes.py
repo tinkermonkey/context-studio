@@ -67,7 +67,7 @@ def _response(service: ProposalService, result: BundleImportResult) -> BundleImp
     },
 )
 async def import_bundle(
-    bundle: dict[str, Any] = Body(..., description="A context-studio-bundle v0 document"),
+    bundle: dict[str, Any] = Body(..., description="A context-studio-bundle document (v1; v0 still imports)"),
     apply: bool = Query(False, description="Also apply every non-breaking operation"),
     dry_run: bool = Query(False, description="Plan and validate only; store nothing"),
     file_name: str | None = Query(

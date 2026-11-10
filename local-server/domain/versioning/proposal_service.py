@@ -48,6 +48,7 @@ from domain.ontology.exceptions import (
     EntityNotFoundError,
     OntologyError,
 )
+from domain.ontology.services import STRUCTURE_FIELDS
 from domain.ontology.snapshots import decode_field, entity_snapshot
 from domain.ontology.value_objects import (
     DataPropertyValue,
@@ -172,8 +173,10 @@ _TEXT_FIELDS = frozenset(
         "default_value",
     }
 )
-_BOOL_FIELDS = frozenset({"is_required", "is_relevant", "derived"})
-_INT_FIELDS = frozenset({"sort_order"})
+_BOOL_FIELDS = frozenset({"is_required", "is_relevant", "derived", "hierarchy", "symmetric"})
+_INT_FIELDS = frozenset({"sort_order", "min_per_source", "max_per_source", "max_per_target"})
+# A relationship type's structure (see PropertyDefinition)
+_STRUCTURE_FIELDS = frozenset(STRUCTURE_FIELDS)
 _TEXT_LIST_FIELDS = frozenset({"allowed_values", "class_ids", "evidence_signals"})
 # An individual's attribute values: identifier -> value (see the module docstring).
 DATA_FIELD = "data_properties"
@@ -282,6 +285,7 @@ OPERATION_FIELDS: dict[OperationKind, OperationFields] = {
                 "range_class_id",
                 "external_references",
                 "derived",
+                *_STRUCTURE_FIELDS,
             }
         ),
         required=frozenset({"identifier", "title"}),
@@ -296,6 +300,7 @@ OPERATION_FIELDS: dict[OperationKind, OperationFields] = {
                 "range_class_id",
                 "external_references",
                 "derived",
+                *_STRUCTURE_FIELDS,
             }
         ),
         clearable=frozenset(
@@ -304,13 +309,18 @@ OPERATION_FIELDS: dict[OperationKind, OperationFields] = {
                 "is_relevant",
                 "domain_class_id",
                 "range_class_id",
+                "max_per_source",
+                "max_per_target",
             }
         ),
     ),
+    # An attribute is on a class (class_id) or a relationship type
+    # (property_definition_id: an edge attribute); a create gives exactly one.
     K.ATTRIBUTE: OperationFields(
         create=frozenset(
             {
                 "class_id",
+                "property_definition_id",
                 "identifier",
                 "title",
                 "datatype",
@@ -322,7 +332,7 @@ OPERATION_FIELDS: dict[OperationKind, OperationFields] = {
                 "external_references",
             }
         ),
-        required=frozenset({"class_id", "identifier", "title", "datatype"}),
+        required=frozenset({"identifier", "title", "datatype"}),
         update=frozenset(
             {
                 "title",
@@ -846,9 +856,19 @@ class ProposalService:
         Whether the operation's target and every existing entity its id fields
         point at belong to this taxonomy alone. "$ref" values are skipped (their
         creates are checked themselves). Property definitions are global: an
-        operation on one is never inside, but a relationship may use one.
+        operation on one, or on its edge attributes, is never inside, but a
+        relationship may use one.
         """
         if operation.kind is K.PROPERTY:
+            return False
+        if operation.kind is K.ATTRIBUTE and (
+            operation.fields.get("property_definition_id")
+            or getattr(
+                self._repo.get_attribute_definition(operation.target_id or ""),
+                "property_definition_id",
+                None,
+            )
+        ):
             return False
         if operation.kind is K.TAXONOMY:
             return operation.op is not OperationType.CREATE and operation.target_id == taxonomy_id
@@ -1176,6 +1196,13 @@ class ProposalService:
             )
             if missing:
                 raise _Invalid("missing_field", f"A {operation.kind.value} create needs {missing}")
+            owners = [n for n in ("class_id", "property_definition_id") if operation.fields.get(n)]
+            if operation.kind is K.ATTRIBUTE and len(owners) != 1:
+                raise _Invalid(
+                    "missing_field" if not owners else "invalid",
+                    "An attribute create needs exactly one owner: class_id (a class attribute)"
+                    " or property_definition_id (an edge attribute of a relationship type)",
+                )
         elif operation.op is OperationType.UPDATE:
             allowed, label = spec.update, "update"
             cleared = sorted(
@@ -1924,8 +1951,10 @@ class ProposalService:
             self._yield_edges(inspector, follows, replacement, swap, run_id)
             result = update()
             if pair is PairMatch.REVERSED and edges:
-                reversed_type = self._repo.get_property_definition(target_id)
-                allowed = reversed_type.edge_attribute_names() if reversed_type else set()
+                definitions = self._repo.list_attribute_definitions(
+                    property_definition_id=target_id, limit=None
+                )
+                allowed = {d.identifier for d in definitions}
                 unknown = sorted({name for e in edges for name in e.attributes} - allowed)
                 if unknown:
                     raise _ApplyFailed(
@@ -2951,6 +2980,7 @@ class ProposalService:
             return svc.create_predicate(**v).id
         if kind is K.ATTRIBUTE:
             v["datatype"] = getattr(v["datatype"], "value", v["datatype"])
+            v.setdefault("class_id", None)  # an edge attribute names its type instead
             return svc.create_attribute_definition(**v, source_run_id=run_id).id
         if kind is K.INDIVIDUAL:
             if DATA_FIELD in v:
@@ -2995,6 +3025,9 @@ class ProposalService:
             if name in v:
                 kwargs[name] = v[name]
                 kwargs[f"update_{name}"] = True
+        structure = {name: v[name] for name in _STRUCTURE_FIELDS if name in v}
+        if structure:
+            kwargs["structure"] = structure
         return self._ontology.update_property_definition(target, **kwargs).id
 
     def _update_individual(self, target: str, v: dict[str, Any]) -> str:

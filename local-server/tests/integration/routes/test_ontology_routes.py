@@ -629,17 +629,12 @@ class TestRelationshipCRUD:
         scheme = ontology_service.create_scheme(taxonomy_id=taxonomy.id, title="Kinds")
         activity = ontology_service.create_class(scheme.id, "Activity")
         resource = ontology_service.create_class(scheme.id, "Resource")
-        ontology_service.create_property_definition(
-            "requires",
-            "requires",
-            external_references=[
-                ExternalReference(
-                    source="house",
-                    identifier="requires",
-                    metadata={"edge_properties": ["quantity", "unit"]},
-                )
-            ],
-        )
+        requires = ontology_service.create_property_definition("requires", "requires")
+        # #1482: the attributes a type allows are its edge attribute definitions.
+        for name, datatype in (("quantity", "number"), ("unit", "string")):
+            ontology_service.create_attribute_definition(
+                None, name, name, datatype, property_definition_id=requires.id
+            )
         payload = {
             "source_id": activity.id,
             "target_id": resource.id,

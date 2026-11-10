@@ -277,7 +277,7 @@ async def export_bundle(
     ontology_repo: OntologyRepository = Depends(get_ontology_repo),
 ) -> dict[str, Any]:
     """
-    Export one taxonomy as a Context Studio bundle (v0).
+    Export one taxonomy as a Context Studio bundle (v1).
 
     Loading the returned bundle back into this workspace changes nothing.
     See domain/interchange/bundle.py for the format.

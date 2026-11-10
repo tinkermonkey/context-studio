@@ -39,9 +39,23 @@ DR_SPEC_REFERENCE = "spec"
 # A predicate's DR-only fields, kept on its DR reference's metadata.
 DR_PREDICATE_KEYS = ("inverse", "category", "archimate_alignment", "semantics")
 # A relationship type's spec attributes, kept on its DR reference's metadata:
-# "cardinality" and "strength" (the schema's properties.<name>.const) and
-# "evidence" (its x-dr-evidence lines; absent when the schema has none).
-DR_ATTRIBUTE_KEYS = ("cardinality", "strength", "evidence")
+# "strength" (the schema's properties.strength.const) and "evidence" (its
+# x-dr-evidence lines; absent when the schema has none). Its cardinality is
+# the type's structure fields instead (see DR_CARDINALITIES).
+DR_ATTRIBUTE_KEYS = ("strength", "evidence")
+# DR's relationship cardinalities as a relationship type's structure fields
+# (see PropertyDefinition). DR has no minimum, so min_per_source is always 0,
+# and each maximum is 1 or none; DR has no hierarchy or symmetric either.
+DR_CARDINALITIES: Mapping[str, Mapping[str, int | None]] = MappingProxyType(
+    {
+        "many-to-many": {"min_per_source": 0, "max_per_source": None, "max_per_target": None},
+        "many-to-one": {"min_per_source": 0, "max_per_source": 1, "max_per_target": None},
+        "one-to-many": {"min_per_source": 0, "max_per_source": None, "max_per_target": 1},
+        "one-to-one": {"min_per_source": 0, "max_per_source": 1, "max_per_target": 1},
+    }
+)
+# The structure fields a DR cardinality sets, with a new type's defaults.
+DR_CARDINALITY_FIELDS: Mapping[str, int | None] = MappingProxyType(DR_CARDINALITIES["many-to-many"])
 # A node attribute's attribute definition keeps the attribute's JSON Schema,
 # less what the definition itself holds, under this key of its DR reference's
 # metadata (the reference's identifier is the attribute's name).
@@ -91,8 +105,6 @@ class RelationshipSchemaRecord:
     def attributes(self) -> dict[str, Any]:
         """The DR attributes as its DR reference's metadata keeps them (see DR_ATTRIBUTE_KEYS)."""
         attributes: dict[str, Any] = {}
-        if self.cardinality is not None:
-            attributes["cardinality"] = self.cardinality
         if self.strength is not None:
             attributes["strength"] = self.strength
         if self.evidence:
@@ -100,9 +112,51 @@ class RelationshipSchemaRecord:
         return attributes
 
     @property
+    def structure(self) -> dict[str, int | None]:
+        """Its cardinality as structure fields (many-to-many when the schema gives none)."""
+        return dr_cardinality_fields(self.cardinality or "many-to-many")
+
+    @property
     def full_identifier(self) -> str:
         """Long-form, always-fully-qualified id: {source}.{predicate}.{destination}."""
         return f"{self.source_spec_node_id}.{self.predicate}.{self.destination_spec_node_id}"
+
+
+def dr_cardinality_fields(cardinality: str) -> dict[str, int | None]:
+    """
+    A DR cardinality as structure fields: many-to-many is (0, None, None),
+    many-to-one max_per_source 1, one-to-many max_per_target 1, one-to-one both.
+
+    Raises:
+        ValueError: If it isn't one of DR's four cardinalities
+    """
+    fields = DR_CARDINALITIES.get(cardinality)
+    if fields is None:
+        raise ValueError(f"{cardinality!r} is not a DR cardinality ({', '.join(DR_CARDINALITIES)})")
+    return dict(fields)
+
+
+def dr_cardinality(structure: PropertyDefinition | Mapping[str, Any]) -> str | None:
+    """
+    The DR cardinality of a relationship type's structure fields (a property
+    definition, or fields where a missing one has its default), or None when
+    DR can't express them: min_per_source other than 0, or a maximum other
+    than None or 1.
+    """
+    if isinstance(structure, PropertyDefinition):
+        values = {name: getattr(structure, name) for name in DR_CARDINALITY_FIELDS}
+    else:
+        values = {name: structure.get(name, d) for name, d in DR_CARDINALITY_FIELDS.items()}
+    for cardinality, fields in DR_CARDINALITIES.items():
+        # type() so that True and False don't pass for 1 and 0
+        if all(
+            values[name] is None
+            if value is None
+            else (type(values[name]) is int and values[name] == value)
+            for name, value in fields.items()
+        ):
+            return cardinality
+    return None
 
 
 def _stripped_relationship_identifier(record: RelationshipSchemaRecord) -> str:
@@ -416,6 +470,25 @@ def swapped_dr_reference(
     ]
 
 
+def _check_cardinality(target: PropertyDefinition | None, fields: dict[str, Any]) -> None:
+    """
+    Refuse structure fields DR's cardinality can't express: the fields' values,
+    else the target's (a create's defaults when there is no target).
+    """
+    values = {
+        name: fields[name] if name in fields else (getattr(target, name) if target else default)
+        for name, default in DR_CARDINALITY_FIELDS.items()
+    }
+    if dr_cardinality(values) is None:
+        given = ", ".join(f"{name} {value!r}" for name, value in values.items())
+        *others, last = DR_CARDINALITIES
+        raise ValueError(
+            f"DR's spec can't express {given}: a DR relationship type's cardinality is"
+            f" {', '.join(others)} or {last} (min_per_source 0; max_per_source and"
+            " max_per_target each null or 1)"
+        )
+
+
 class DrRelationshipRules:
     """
     ProposalApplyRules for the DR spec's relationship types.
@@ -442,8 +515,14 @@ class DrRelationshipRules:
     fields always carry the whole triple: the predicate and both classes, the
     identifier a re-import of the edited spec computes, and the DR external
     reference (whatever the edit gave for those two; an edit's DR reference
-    metadata, its cardinality, strength and evidence, is kept). A title or description
+    metadata, its strength and evidence, is kept). A title or description
     still the default for the old triple follows the new one.
+
+    A DR relationship type's cardinality is its structure fields, so a create,
+    or an update or edit that sets them, is refused unless they are one of
+    DR's four cardinalities (see DR_CARDINALITIES): min_per_source 0, and
+    max_per_source and max_per_target each null or 1. hierarchy and symmetric
+    aren't DR's: they are left alone, and don't export.
     """
 
     def __init__(self, repo: OntologyRepository) -> None:
@@ -479,6 +558,8 @@ class DrRelationshipRules:
         after = current
         if "external_references" in fields:
             after = dr_relationship_id(fields["external_references"] or [])
+        if after is not None and (target is None or set(DR_CARDINALITY_FIELDS) & set(fields)):
+            _check_cardinality(target, fields)
         triple_fields = {"canonical_predicate", "domain_class_id", "range_class_id"} & set(fields)
         if after is None or (after == current and not triple_fields):
             return  # no DR relationship id afterwards, or its triple stays as it is
@@ -509,6 +590,8 @@ class DrRelationshipRules:
         spec_nodes = {class_id: node for node, class_id in classes.items()}
         properties = dr_property_definitions(self._repo)
         new = self._edited(fields, current, spec_nodes)
+        if set(DR_CARDINALITY_FIELDS) & set(fields):
+            _check_cardinality(target, fields)
 
         holder = properties.get(new.id)
         if holder is not None and holder.id != target.id:

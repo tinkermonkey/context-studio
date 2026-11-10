@@ -1,5 +1,6 @@
 """
-Context Studio bundle (v0): plan a bundle import as proposal operations; export one.
+Context Studio bundle (v1; v0 still imports): plan a bundle import as proposal
+operations; export one.
 
 A bundle is one JSON document describing one taxonomy: its summary and vision,
 concept schemes, classes and their attributes, relationship types (properties),
@@ -7,16 +8,22 @@ individuals and relationships. Planning and exporting both work on a dict;
 reading and writing files is left to the scripts.
 
     {
-      "format": "context-studio-bundle", "version": 0, "source": "house",
+      "format": "context-studio-bundle", "version": 1, "source": "house",
       "taxonomy": {"identifier", "title", "description", "vision"},
       "schemes": [{"identifier", "title", "description"}],
+      "predicates": [{"identifier", "title", "description",
+                      "external_references": [...]}],
       "classes": [{"identifier", "scheme", "parent", "title", "description",
                    "derived", "constraints": {}, "external_references": [...],
                    "attributes": [{"identifier", "title", "datatype", "description",
-                                   "required", "allowed_values"}]}],
+                                   "required", "allowed_values", "default"}]}],
       "properties": [{"identifier", "title", "description", "predicate",
-                      "domain", "range", "derived", "constraints": {},
-                      "external_references": [...]}],
+                      "domain", "range", "derived",
+                      "cardinality": {"min_per_source", "max_per_source",
+                                      "max_per_target"},
+                      "hierarchy", "symmetric",
+                      "attributes": [...],      # its edge attributes, as a class's
+                      "constraints": {}, "external_references": [...]}],
       "individuals": [{"id", "classes": [...], "title", "description", "data": {},
                        "external_references": [...]}],
       "relationships": [{"source", "property", "target", "attributes": {}}],
@@ -41,7 +48,30 @@ the source's ExternalReference identifier, then on their UUID: an individual
 created in Context Studio exports its UUID as its `id`. Relationships are
 matched on their (source, property, target) triple; their `attributes` (JSON
 scalars, e.g. a kit's quantity, unit and optional) may use only the names the
-property lists in `constraints.edge_properties`. A create names its new entity
+property lists in `constraints.edge_properties`.
+
+Version 1 (#1483). The taxonomy's predicate catalog is `predicates`; a
+property's structure is `cardinality`, `hierarchy` and `symmetric`, its edge
+attributes are `attributes` (typed, in a class attribute's shape), and
+`derived` is a field on classes and properties; `constraints` keeps only the
+client's leftover reference metadata (the legacy `derived` copy #1465 left
+there is neither exported nor removed). An attribute's `default` is JSON
+typed by its datatype (a number, true or false, else text). An edge attribute
+change that admits values the bundle's new relationships use applies before
+them. A v1 property's `predicate` must be in `predicates` or the catalog.
+Exports are v1.
+
+Version 0 still imports. It has no predicate catalog: planning creates the
+predicates its properties name. It carries a relationship type's structure in
+`constraints` under House's keys (min, max, hierarchy, symmetric,
+max_per_target) and its edge attributes as `constraints.edge_properties`;
+planning reads those into the fields and edge attributes (v0 has no datatype,
+so an edge attribute takes the type of the bundle's relationship values, kept
+when the current one already holds them) and keeps the rest as the reference
+metadata. v0 has no `default`, so a class attribute's default is left as it is.
+
+Predicates. A bundle adds predicates and (v1) updates their title,
+description and other sources' references; it never deletes one. A create names its new entity
 with a ref ("class:house_room"), so later operations point at it as "$class:...".
 
 References. A class, property or individual the plan creates carries an
@@ -49,7 +79,7 @@ ExternalReference(source, identifier or id). A matched property or individual
 that already has the source's reference keeps it, identifier included, and only
 its metadata is set; one without gets a reference only if the bundle carries
 `constraints` or `data` for it. A relationship type that is not the source's is
-matched only if every end it has lies in this taxonomy. What v0 cannot model is
+matched only if every end it has lies in this taxonomy. What a bundle cannot model is
 carried in that reference's metadata, out of the definitions that drive vector
 matching: a class's or property's `constraints` and an individual's `data`. A
 class without `constraints` keeps its metadata (bundles before #1465 had none
@@ -58,8 +88,8 @@ for classes); a property or individual without its key has none.
 Derived. A class or relationship type the client computes from other data (a
 House kit) has `derived: true` (Class.derived, PropertyDefinition.derived). A
 bundle without the key takes it from its `constraints` (House's earlier
-`{"derived": true}`), else leaves the entity's flag as it is. The metadata flag
-is kept in `constraints` too until the bundle's next version (#1483). A bundle
+`{"derived": true}`), else leaves the entity's flag as it is. A v1 export
+leaves that legacy metadata flag out of `constraints`. A bundle
 can't add an individual to a derived class or a relationship of a derived type
 (the client computes those); one that clears a flag clears it before creating
 anything, so it can add members in the same import.
@@ -82,11 +112,12 @@ longer in the bundle are planned as deletes, which are breaking.
 Exporting is the inverse, scoped to one taxonomy: links that leave it (a
 property whose domain or range is another taxonomy's class, a relationship to
 an individual elsewhere) cannot be expressed and are skipped. Individuals'
-data properties have no v0 field, so they do not travel to another workspace.
+data properties have no bundle field, so they do not travel to another workspace.
 """
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field, replace
 from types import MappingProxyType
 from typing import Any, Iterable, TypeVar
@@ -96,8 +127,11 @@ from domain.ontology.entities import (
     Class,
     ConceptScheme,
     Individual,
+    Predicate,
     PropertyDefinition,
     Taxonomy,
+    edge_default,
+    edge_value_problem,
     same_attributes,
     validate_relationship_attributes,
 )
@@ -106,7 +140,10 @@ from domain.ontology.value_objects import ExternalReference
 from domain.versioning.proposals import OperationDraft, OperationKind, OperationType
 
 BUNDLE_FORMAT = "context-studio-bundle"
-BUNDLE_VERSION = 0
+BUNDLE_VERSION = 1
+# Versions an import reads: v0 carries a relationship type's structure and edge
+# attributes in `constraints` (House's keys) and has no predicate catalog.
+_READABLE_VERSIONS = (0, 1)
 _RELATIONSHIP_KEYS = {"source", "property", "target", "attributes"}
 _Keyed = TypeVar("_Keyed", ConceptScheme, Class)
 
@@ -171,11 +208,12 @@ def check_bundle_header(bundle: dict[str, Any]) -> None:
     Check a bundle's format, version, source and taxonomy identifier.
 
     Raises:
-        BundleError: If the bundle is not a v0 bundle or lacks a source or taxonomy identifier
+        BundleError: If the bundle is not a v0 or v1 bundle or lacks a source or taxonomy
+            identifier
     """
-    if bundle.get("format") != BUNDLE_FORMAT or bundle.get("version") != BUNDLE_VERSION:
+    if bundle.get("format") != BUNDLE_FORMAT or bundle.get("version") not in _READABLE_VERSIONS:
         raise BundleError(
-            f"Not a {BUNDLE_FORMAT} v{BUNDLE_VERSION} bundle "
+            f"Not a {BUNDLE_FORMAT} v0 or v1 bundle "
             f"(format={bundle.get('format')!r}, version={bundle.get('version')!r})"
         )
     if not bundle.get("source") or not bundle.get("taxonomy", {}).get("identifier"):
@@ -204,6 +242,57 @@ def _ref(kind: str, key: str) -> str:
     return f"{kind}:{key}"
 
 
+# v0 carries a relationship type's structure in `constraints` under these keys
+# (House's names), and its edge attributes as `constraints.edge_properties`.
+_V0_STRUCTURE = {
+    "min": "min_per_source",
+    "max": "max_per_source",
+    "max_per_target": "max_per_target",
+    "hierarchy": "hierarchy",
+    "symmetric": "symmetric",
+}
+_V0_EDGE_PROPERTIES = "edge_properties"
+
+
+def _split_constraints(
+    constraints: dict[str, Any] | None,
+) -> tuple[dict[str, Any], list[str] | None, dict[str, Any]]:
+    """
+    A v0 property's constraints as its structure fields (only the keys given),
+    its edge attribute names (None when not given), and the rest, which stays
+    the source's reference metadata.
+    """
+    rest = dict(constraints or {})
+    structure = {field: rest.pop(key) for key, field in _V0_STRUCTURE.items() if key in rest}
+    names = rest.pop(_V0_EDGE_PROPERTIES, None)
+    if structure.get("min_per_source") is None and "min_per_source" in structure:
+        structure["min_per_source"] = 0
+    return structure, list(names) if isinstance(names, list) else None, rest
+
+
+def _v1_structure(spec: dict[str, Any], where: str) -> dict[str, Any]:
+    """
+    A v1 property's structure fields: `cardinality` {min_per_source,
+    max_per_source, max_per_target}, `hierarchy` and `symmetric` (only the keys given).
+    """
+    cardinality = spec.get("cardinality") or {}
+    if not isinstance(cardinality, dict):
+        raise BundleError(f"{where}: cardinality must be an object")
+    structure = {
+        name: cardinality[name]
+        for name in ("min_per_source", "max_per_source", "max_per_target")
+        if name in cardinality
+    }
+    if structure.get("min_per_source") is None and "min_per_source" in structure:
+        structure["min_per_source"] = 0
+    for flag in ("hierarchy", "symmetric"):
+        if flag in spec:
+            if not isinstance(spec[flag], bool):
+                raise BundleError(f"{where}: {flag} must be true or false")
+            structure[flag] = spec[flag]
+    return structure
+
+
 def _text(value: Any) -> str:
     return value or ""
 
@@ -218,10 +307,13 @@ class _Planner:
         # A schema-only bundle says nothing about data, so it plans none.
         self._has_data = "individuals" in bundle or "relationships" in bundle
         self._source = bundle["source"]
+        self._v1 = bundle.get("version") == 1
         self.plan = BundlePlan(source=self._source, taxonomy=bundle["taxonomy"])
         # Updates that clear a derived flag, applied before the creates that may add
         # members to that class or relationship type.
         self._early: list[OperationDraft] = []
+        # Relationship type id -> its bundle identifier, for its edge attributes.
+        self._edge_owner: dict[str, str] = {}
         self._creates: list[OperationDraft] = []
         self._updates: list[OperationDraft] = []
         self._deletes: list[OperationDraft] = []
@@ -244,6 +336,7 @@ class _Planner:
         scheme_ids = self._plan_schemes(taxonomy_id, self._bundle.get("schemes", []))
         class_ids = self._plan_classes(taxonomy_id, scheme_ids, self._bundle.get("classes", []))
         taxonomy_class_ids = {cls.id for cls in taxonomy_classes}
+        self._plan_predicates(taxonomy_id)
         property_ids = self._plan_properties(
             class_ids, taxonomy_class_ids, self._bundle.get("properties", [])
         )
@@ -262,6 +355,63 @@ class _Planner:
             self.plan.operations.append(draft)
         self.plan.deletes.sort()
         return self.plan
+
+    # ----------------------------------------------------------- predicates
+
+    def _plan_predicates(self, taxonomy_id: str | None) -> None:
+        """
+        The taxonomy's predicate catalog: v1's `predicates` (created, or their
+        title, description and other sources' references updated), or for v0
+        the predicates its properties name (created when missing). A predicate
+        the bundle doesn't list is kept: a bundle doesn't retire predicates.
+        """
+        counts = self.plan.kind("predicate")
+        if self._v1:
+            specs = list(self._bundle.get("predicates") or [])
+        else:
+            named = dict.fromkeys(
+                str(p["predicate"]) for p in self._bundle.get("properties", []) if p.get("predicate")
+            )
+            specs = [{"identifier": name} for name in named]
+        for spec in specs:
+            identifier = spec.get("identifier")
+            if not isinstance(identifier, str) or not identifier:
+                raise BundleError(f"A predicate needs an identifier: {spec!r}")
+            where = f"Predicate {identifier!r}"
+            listed = _listed(spec, self._source, where)
+            existing = (
+                self._repo.get_predicate_by_identifier(taxonomy_id, identifier)
+                if taxonomy_id
+                else None
+            )
+            if existing is None:
+                self._create(
+                    K.PREDICATE,
+                    _ref("predicate", identifier),
+                    {
+                        "identifier": identifier,
+                        "title": spec.get("title"),
+                        "description": spec.get("description"),
+                        "external_references": [r.to_dict() for r in listed] or None,
+                    },
+                )
+                counts.record("created")
+                continue
+            if not self._v1:
+                counts.record("unchanged")
+                continue
+            changed = _changed(
+                {
+                    "title": (existing.title, spec.get("title") or identifier),
+                    "description": (_text(existing.description), _text(spec.get("description"))),
+                }
+            )
+            references = _with_listed(list(existing.external_references), listed)
+            if references != existing.external_references:
+                changed["external_references"] = [r.to_dict() for r in references]
+            if changed:
+                self._update(K.PREDICATE, existing.id, changed)
+            counts.record("updated" if changed else "unchanged")
 
     def _create(self, kind: OperationKind, ref: str, fields: dict[str, Any]) -> str:
         """Plan a create; returns the "$ref" later operations point at it with."""
@@ -398,7 +548,7 @@ class _Planner:
                 self._plan_attributes(identifier, ids[identifier], {}, spec.get("attributes", []))
                 continue
             references = (
-                self._references(existing, identifier, spec["constraints"])
+                self._references(existing, identifier, spec["constraints"], keep_derived=True)
                 if "constraints" in spec
                 else list(existing.external_references)
             )
@@ -456,8 +606,13 @@ class _Planner:
         class_id: str,
         current: dict[str, AttributeDefinition],
         specs: list[dict[str, Any]],
-        cls: Class | None = None,
+        cls: Class | PropertyDefinition | None = None,
+        owner_field: str = "class_id",
     ) -> None:
+        """
+        A class's attributes, or (owner_field "property_definition_id") a
+        relationship type's edge attributes: creates, updates and deletes.
+        """
         counts = self.plan.kind("attribute")
         wanted_identifiers = {spec["identifier"] for spec in specs}
         for identifier, attribute in current.items():
@@ -469,6 +624,7 @@ class _Planner:
                     "attribute",
                 )
         sort_orders = _sort_orders(current, specs)
+        edge = owner_field == "property_definition_id"
         for spec in specs:
             existing = current.get(spec["identifier"])
             wanted = {
@@ -477,13 +633,17 @@ class _Planner:
                 "datatype": spec["datatype"],
                 "is_required": bool(spec.get("required", False)),
                 "allowed_values": spec.get("allowed_values") or None,
+                "default_value": _default_text(spec, f"{class_key}/{spec['identifier']}"),
                 "sort_order": sort_orders[spec["identifier"]],
             }
+            if not self._v1 and "default" not in spec:
+                # v0 has no `default`: a default set in Context Studio is kept.
+                del wanted["default_value"]
             if existing is None:
                 self._create(
                     K.ATTRIBUTE,
                     _ref("attribute", f"{class_key}/{spec['identifier']}"),
-                    {"class_id": class_id, "identifier": spec["identifier"], **wanted},
+                    {owner_field: class_id, "identifier": spec["identifier"], **wanted},
                 )
                 counts.record("created")
                 continue
@@ -493,12 +653,41 @@ class _Planner:
                 "datatype": str(getattr(existing.datatype, "value", existing.datatype)),
                 "is_required": existing.is_required,
                 "allowed_values": existing.allowed_values or None,
+                "default_value": existing.default_value,
                 "sort_order": existing.sort_order,
             }
+            if "default" in spec and edge_default(existing) == spec["default"]:
+                # Same value, however the stored text spells it ("1.50", 1.5).
+                wanted["default_value"] = existing.default_value
             changed = {name: value for name, value in wanted.items() if have[name] != value}
-            if changed:
+            if changed and edge and self._widens(spec["identifier"], existing, changed):
+                # Before the relationships whose values only the change admits.
+                self._early.append(
+                    OperationDraft(
+                        seq=0, op=T.UPDATE, kind=K.ATTRIBUTE, target_id=existing.id, fields=changed
+                    )
+                )
+            elif changed:
                 self._update(K.ATTRIBUTE, existing.id, changed)
             counts.record("updated" if changed else "unchanged")
+
+    def _widens(
+        self, name: str, existing: AttributeDefinition, changed: dict[str, Any]
+    ) -> bool:
+        """
+        Whether an edge attribute's update changes what it admits (datatype or
+        allowed values) and a value the bundle's relationships give it fails the
+        current definition, so it must apply before those relationships.
+        """
+        if not {"datatype", "allowed_values"} & set(changed):
+            return False
+        property_identifier = self._edge_owner.get(existing.property_definition_id or "")
+        if property_identifier is None:
+            return False
+        return any(
+            edge_value_problem(existing, value)
+            for value in self._edge_values(property_identifier, name)
+        )
 
     # ----------------------------------------------------------- properties
 
@@ -525,6 +714,11 @@ class _Planner:
                     f" {self._source!r} and does not lie within this taxonomy; prefix the"
                     " bundle's identifiers"
                 )
+            if self._v1:
+                structure = _v1_structure(spec, where)
+                edge_names, metadata = None, dict(spec.get("constraints") or {})
+            else:
+                structure, edge_names, metadata = _split_constraints(spec.get("constraints"))
             if existing is None:
                 derived = _derived(spec, spec.get("constraints"), None, where)
                 ids[identifier] = self._create(
@@ -538,19 +732,19 @@ class _Planner:
                         "domain_class_id": domain_id,
                         "range_class_id": range_id,
                         "derived": derived or None,
+                        **structure,
                         "external_references": [
-                            self._reference(identifier, spec.get("constraints")).to_dict(),
+                            self._reference(identifier, metadata).to_dict(),
                             *(r.to_dict() for r in listed),
                         ],
                     },
                 )
                 if derived:
                     self._derived_ids.add(ids[identifier])
+                self._plan_type_attributes(spec, identifier, ids[identifier], {}, edge_names, None)
                 counts.record("created")
                 continue
-            references = _with_listed(
-                self._references(existing, identifier, spec.get("constraints")), listed
-            )
+            references = _with_listed(self._references(existing, identifier, metadata, keep_derived=True), listed)
             derived = _derived(spec, spec.get("constraints"), existing, where)
             if derived:
                 self._derived_ids.add(existing.id)
@@ -562,6 +756,7 @@ class _Planner:
                     "domain_class_id": (existing.domain_class_id, domain_id),
                     "range_class_id": (existing.range_class_id, range_id),
                     "derived": (existing.derived, derived),
+                    **{name: (getattr(existing, name), value) for name, value in structure.items()},
                 }
             )
             if existing.external_references != references:
@@ -571,7 +766,125 @@ class _Planner:
                 self._update(K.PROPERTY, existing.id, changed)
             counts.record("updated" if changed or cleared else "unchanged")
             ids[identifier] = existing.id
+            current = {
+                a.identifier: a
+                for a in self._repo.list_attribute_definitions(
+                    property_definition_id=existing.id, limit=None
+                )
+            }
+            self._plan_type_attributes(spec, identifier, existing.id, current, edge_names, existing)
         return ids
+
+    def _plan_type_attributes(
+        self,
+        spec: dict[str, Any],
+        identifier: str,
+        property_id: str,
+        current: dict[str, AttributeDefinition],
+        edge_names: list[str] | None,
+        prop: PropertyDefinition | None,
+    ) -> None:
+        """A relationship type's edge attributes: v1's `attributes`, or v0's edge_properties."""
+        if not self._v1:
+            self._plan_edge_attributes(identifier, property_id, current, edge_names, prop)
+            return
+        self._edge_owner[property_id] = identifier
+        self._plan_attributes(
+            f"property:{identifier}",
+            property_id,
+            current,
+            list(spec.get("attributes") or []),
+            prop,
+            owner_field="property_definition_id",
+        )
+
+    def _edge_values(self, property_identifier: str, name: str) -> list[Any]:
+        """The values the bundle's relationships of a property give an edge attribute."""
+        return [
+            spec["attributes"][name]
+            for spec in self._bundle.get("relationships") or []
+            if spec.get("property") == property_identifier
+            and isinstance(spec.get("attributes"), dict)
+            and spec["attributes"].get(name) is not None
+        ]
+
+    def _edge_datatype(self, property_identifier: str, name: str) -> str | None:
+        """
+        The datatype the bundle's relationships' values of an edge attribute
+        share (string when they're mixed); None when no relationship gives one.
+        """
+        values = self._edge_values(property_identifier, name)
+        if not values:
+            return None
+        if all(isinstance(v, bool) for v in values):
+            return "boolean"
+        if all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in values):
+            return "number"
+        return "string"
+
+    def _plan_edge_attributes(
+        self,
+        identifier: str,
+        property_id: str,
+        current: dict[str, AttributeDefinition],
+        names: list[str] | None,
+        prop: PropertyDefinition | None,
+    ) -> None:
+        """
+        A v0 property's `constraints.edge_properties` as its edge attributes:
+        a create for each new name, in listed order, a delete for one no longer
+        listed. Not given, they're left alone. v0 has no datatype, so an edge
+        attribute takes the type of the values the bundle's relationships give
+        it (all numbers: number, all booleans: boolean, else string; a new one
+        with no values is a string).
+        """
+        if names is None:
+            return
+        counts = self.plan.kind("attribute")
+        for name, attribute in current.items():
+            if name not in names and prop is not None:
+                self._delete(
+                    K.ATTRIBUTE,
+                    attribute,
+                    f"edge attribute {name!r} of {prop.title!r}",
+                    "attribute",
+                )
+        for order, name in enumerate(names):
+            if name in current:
+                # v0 has no datatype: when the bundle's values don't fit the
+                # current one (an integer or date that holds them is kept), take
+                # the type they share, before any relationship using them applies.
+                values = self._edge_values(identifier, name)
+                datatype = self._edge_datatype(identifier, name)
+                have = getattr(current[name].datatype, "value", current[name].datatype)
+                if (
+                    datatype is not None
+                    and datatype != have
+                    and any(edge_value_problem(current[name], v) for v in values)
+                ):
+                    self._early.append(
+                        OperationDraft(
+                            seq=0,
+                            op=T.UPDATE,
+                            kind=K.ATTRIBUTE,
+                            target_id=current[name].id,
+                            fields={"datatype": datatype},
+                        )
+                    )
+                    counts.record("updated")
+                continue
+            self._create(
+                K.ATTRIBUTE,
+                _ref("attribute", f"property:{identifier}/{name}"),
+                {
+                    "property_definition_id": property_id,
+                    "identifier": name,
+                    "title": name,
+                    "datatype": self._edge_datatype(identifier, name) or "string",
+                    "sort_order": order,
+                },
+            )
+            counts.record("created")
 
     # ---------------------------------------------------------- individuals
 
@@ -686,11 +999,28 @@ class _Planner:
                     },
                 )
                 counts.record("created")
-            elif same_attributes(existing[0].attributes, attributes):
+            elif same_attributes(
+                existing[0].attributes, self._with_defaults(property_id, attributes)
+            ):
                 counts.record("unchanged")
             else:
                 self._update(K.RELATIONSHIP, existing[0].id, {"attributes": attributes})
                 counts.record("updated")
+
+    def _with_defaults(self, property_id: str, attributes: dict[str, Any]) -> dict[str, Any]:
+        """
+        A relationship's attributes as storing them gives them: a missing required
+        edge attribute takes its default (see edge_attribute_values).
+        """
+        values = dict(attributes)
+        for definition in self._repo.list_attribute_definitions(
+            property_definition_id=property_id, limit=None
+        ):
+            if definition.is_required and values.get(definition.identifier) is None:
+                default = edge_default(definition)
+                if default is not None:
+                    values[definition.identifier] = default
+        return values
 
     # -------------------------------------------------------------- deletes
 
@@ -810,7 +1140,11 @@ class _Planner:
         return any(ref.source == self._source for ref in entity.external_references)
 
     def _references(
-        self, entity: Any, identifier: str, metadata: dict[str, Any] | None
+        self,
+        entity: Any,
+        identifier: str,
+        metadata: dict[str, Any] | None,
+        keep_derived: bool = False,
     ) -> list[ExternalReference]:
         """
         The entity's references after the import.
@@ -818,14 +1152,21 @@ class _Planner:
         If the entity already has this source's reference, only that reference's
         metadata is set: its identifier may differ from the bundle key (the DR importer
         keys references by spec id) and is kept. Otherwise a reference is added only
-        when the bundle carries metadata for the entity.
+        when the bundle carries metadata for the entity. A v1 bundle leaves a
+        class's or property's legacy `derived` key (a copy of the first-class
+        flag, #1465) out of `constraints`, so with keep_derived one the metadata
+        already has is kept.
         """
         references = list(entity.external_references)
-        wanted = self._reference(identifier, metadata)
         for position, existing in enumerate(references):
             if existing.source == self._source:
+                legacy = dict(existing.metadata or {})
+                if keep_derived and self._v1 and "derived" in legacy and "derived" not in (metadata or {}):
+                    metadata = {**(metadata or {}), "derived": legacy["derived"]}
+                wanted = self._reference(identifier, metadata)
                 references[position] = replace(existing, metadata=wanted.metadata)
                 return references
+        wanted = self._reference(identifier, metadata)
         return [*references, wanted] if metadata else references
 
     def _taxonomy_classes(self, taxonomy_id: str | None) -> list[Class]:
@@ -901,7 +1242,7 @@ def _depths(classes: list[Class]) -> dict[str, int]:
 
 class BundleExporter:
     """
-    Export one taxonomy as a v0 bundle, the inverse of `plan_bundle`.
+    Export one taxonomy as a v1 bundle, the inverse of `plan_bundle`.
 
     Planning the exported bundle against the same workspace plans nothing.
     Entries are sorted by key so that a bundle kept in a repository diffs cleanly.
@@ -982,12 +1323,23 @@ class BundleExporter:
                 ),
                 key=lambda s: s["identifier"],
             ),
+            "predicates": [_predicate(p, source) for p in self._repo.list_predicates(taxonomy_id)],
             "classes": sorted(
                 (self._class(c, source, scheme_keys, class_keys) for c in classes),
                 key=lambda c: c["identifier"],
             ),
             "properties": sorted(
-                (_property(p, source, class_keys) for p in properties),
+                (
+                    _property(
+                        p,
+                        source,
+                        class_keys,
+                        self._repo.list_attribute_definitions(
+                            property_definition_id=p.id, limit=None
+                        ),
+                    )
+                    for p in properties
+                ),
                 key=lambda p: p["identifier"],
             ),
             "individuals": sorted(
@@ -1013,7 +1365,7 @@ class BundleExporter:
             "title": cls.title,
             "description": cls.description,
             "derived": cls.derived,
-            "constraints": _metadata(cls, source),
+            "constraints": _constraints(cls, source),
         }
         if cls.parent_class_id:
             spec["parent"] = class_keys[cls.parent_class_id]
@@ -1073,7 +1425,15 @@ class BundleExporter:
 
 
 def _edge_properties(bundle: dict[str, Any]) -> dict[str, list[str]]:
-    """Per bundle property identifier, the attribute names its constraints allow."""
+    """
+    Per bundle property identifier, the attribute names its relationships may
+    carry: v1's `attributes`, v0's `constraints.edge_properties`.
+    """
+    if bundle.get("version") == 1:
+        return {
+            prop["identifier"]: [a["identifier"] for a in prop.get("attributes") or []]
+            for prop in bundle.get("properties", [])
+        }
     return {
         prop["identifier"]: (prop.get("constraints") or {}).get("edge_properties") or []
         for prop in bundle.get("properties", [])
@@ -1107,7 +1467,7 @@ def _relationship_attributes(
         listed = ", ".join(allowed) if allowed else "none"
         raise BundleError(
             f"Relationship {spec} carries attributes {unknown} that property"
-            f" {spec.get('property')!r} does not list in constraints.edge_properties"
+            f" {spec.get('property')!r} does not list in its attributes"
             f" (allowed: {listed})"
         )
     return dict(attributes)
@@ -1145,10 +1505,53 @@ def _attribute(attribute: AttributeDefinition) -> dict[str, Any]:
         spec["required"] = True
     if attribute.allowed_values:
         spec["allowed_values"] = list(attribute.allowed_values)
+    if attribute.default_value is not None:
+        # Typed JSON (a number, true or false) where the stored text reads as one.
+        spec["default"] = edge_default(attribute)
     return spec
 
 
-def _property(prop: PropertyDefinition, source: str, class_keys: dict[str, str]) -> dict[str, Any]:
+def _default_text(spec: dict[str, Any], where: str) -> str | None:
+    """
+    A bundle attribute's `default` as Context Studio stores it: text, a number
+    or boolean as its JSON spelling (true, 5, 1.5).
+
+    Raises:
+        BundleError: If the default is a list or object
+    """
+    default = spec.get("default")
+    if default is None or isinstance(default, str):
+        return default
+    if isinstance(default, (bool, int, float)):
+        return json.dumps(default)
+    raise BundleError(f"Attribute {where!r}: default must be text, a number or true/false")
+
+
+def _predicate(predicate: Predicate, source: str) -> dict[str, Any]:
+    spec = {
+        "identifier": predicate.identifier,
+        "title": predicate.title,
+        "description": predicate.description,
+    }
+    return _add_other_references(spec, predicate, source)
+
+
+def _constraints(entity: Any, source: str) -> dict[str, Any]:
+    """
+    A class's or property's v1 constraints: the source's reference metadata, less
+    the legacy `derived` copy (the flag is the entity's `derived`).
+    """
+    constraints = _metadata(entity, source)
+    constraints.pop("derived", None)
+    return constraints
+
+
+def _property(
+    prop: PropertyDefinition,
+    source: str,
+    class_keys: dict[str, str],
+    edge_attributes: list[AttributeDefinition],
+) -> dict[str, Any]:
     spec = {
         "identifier": prop.identifier,
         "title": prop.title,
@@ -1157,8 +1560,17 @@ def _property(prop: PropertyDefinition, source: str, class_keys: dict[str, str])
         "domain": class_keys.get(prop.domain_class_id) if prop.domain_class_id else None,
         "range": class_keys.get(prop.range_class_id) if prop.range_class_id else None,
         "derived": prop.derived,
-        "constraints": _metadata(prop, source),
+        "cardinality": {
+            "min_per_source": prop.min_per_source,
+            "max_per_source": prop.max_per_source,
+            "max_per_target": prop.max_per_target,
+        },
+        "hierarchy": prop.hierarchy,
+        "symmetric": prop.symmetric,
+        "constraints": _constraints(prop, source),
     }
+    if edge_attributes:
+        spec["attributes"] = [_attribute(a) for a in _attribute_order(edge_attributes)]
     return _add_other_references(spec, prop, source)
 
 

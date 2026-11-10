@@ -19,7 +19,9 @@ Everything the DR importer loads is compared, matched by DR id (the
   datatype, required, allowed values, and the rest of their JSON Schema on
   their DR reference;
 - relationship types, by DR relationship id: title, description, predicate,
-  domain and range, and cardinality, strength and evidence on their DR
+  domain and range, cardinality as their structure fields (min_per_source,
+  max_per_source, max_per_target; hierarchy and symmetric aren't DR's, so
+  they're left as they are), and strength and evidence on their DR
   reference. Their identifiers aren't compared: the DR id is their identity.
 
 Moves. A node type DR moved to another layer has a new spec node id, so it
@@ -656,6 +658,7 @@ class _Planner:
                         "canonical_predicate": record.predicate,
                         "domain_class_id": domain,
                         "range_class_id": range_,
+                        **record.structure,
                         "external_references": [reference],
                     },
                     record.full_identifier,
@@ -668,6 +671,7 @@ class _Planner:
                 "canonical_predicate": (prop.canonical_predicate, record.predicate),
                 "domain_class_id": (prop.domain_class_id, domain),
                 "range_class_id": (prop.range_class_id, range_),
+                **{name: (getattr(prop, name), value) for name, value in record.structure.items()},
                 "external_references": (
                     [r.to_dict() for r in prop.external_references],
                     _with_dr_ref(prop, reference),

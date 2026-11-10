@@ -70,12 +70,17 @@ MCP or in the app, exports as one `cs-dr-spec-changes/1` document:
      }]}
 
 `set` holds only the spec values the operation applied: for a create, every
-one it gave; for an update, those that differ from what they replaced (a
-description Context Studio generated for a changed triple is left out, as DR
-writes its own). A key not in `set` stays as the spec has it. `evidence` is
-the x-dr-evidence lines; null for cardinality or strength, or an empty
-evidence list, means the operation removed it. Only applied operations
-export; the rest are listed in `skipped` with why.
+one it gave, and always its cardinality; for an update, those that differ from
+what they replaced (a description Context Studio generated for a changed
+triple is left out, as DR writes its own). A key not in `set` stays as the
+spec has it. `cardinality` is DR's value for the type's structure fields
+(min_per_source, max_per_source, max_per_target; see `DR_CARDINALITIES`): an
+update gives it when it changed those numbers, and structure DR can't express
+is refused (DrRelationshipRules refuses it as it applies); hierarchy and
+symmetric aren't DR's and don't export. `strength` and `evidence` (the
+x-dr-evidence lines) are the type's DR reference metadata: null for strength,
+or an empty evidence list, means the operation removed it. Only applied
+operations export; the rest are listed in `skipped` with why.
 
 The triple comes from the domain and range classes' DR references (a "$ref"
 to a class the proposal created resolves to that class) and the predicate,
@@ -159,9 +164,11 @@ from adapters.interchange.dr_predicates import dr_predicate_metadata
 from adapters.interchange.dr_relationships import (
     DR_ATTRIBUTE_KEYS,
     DR_ATTRIBUTE_SCHEMA,
+    DR_CARDINALITY_FIELDS,
     DR_SOURCE,
     DR_TAXONOMY_IDENTIFIER,
     Triple,
+    dr_cardinality,
     dr_property_definitions,
     dr_relationship_id,
 )
@@ -405,6 +412,7 @@ def _create(
     values: dict[str, Any] = {}
     if fields.get("description") is not None:
         values["description"] = fields["description"]
+    values["cardinality"] = _cardinality(fields, label)
     values.update(_attributes(fields.get("external_references")))
     return _entry(operation, "create", triple, fields.get("identifier"), values)
 
@@ -424,6 +432,10 @@ def _update(
         domain_class_id=prop.domain_class_id if prop else None,
         range_class_id=prop.range_class_id if prop else None,
         identifier=prop.identifier if prop else None,
+        **{
+            name: getattr(prop, name) if prop else default
+            for name, default in DR_CARDINALITY_FIELDS.items()
+        },
     )
 
     def value(name: str) -> Any:
@@ -465,6 +477,12 @@ def _update(
         and not (previous != triple.id and description == triple.default_description)
     ):
         values["description"] = description
+    numbers = [name for name in DR_CARDINALITY_FIELDS if name in applied]
+    if numbers:
+        after = {name: value(name) for name in DR_CARDINALITY_FIELDS}
+        before = {**after, **{name: base[name] for name in numbers if name in base}}
+        if before != after:
+            values["cardinality"] = _cardinality(after, label)
     if "external_references" in applied:
         after = _attributes(applied["external_references"])
         before = _attributes(base["external_references"]) if "external_references" in base else None
@@ -1246,6 +1264,15 @@ def _refuse_if_dr_spec(repo: OntologyRepository, label: str, what: str, *class_i
                 f"{label}: it {what} on DR spec classes without a DR reference "
                 f"(source {DR_SOURCE!r}), so it can't land in DR's spec; give it one"
             )
+
+
+def _cardinality(fields: Mapping[str, Any], label: str) -> str:
+    """DR's cardinality for structure fields (a missing one has its default)."""
+    cardinality = dr_cardinality(fields)
+    if cardinality is None:
+        given = {name: fields.get(name, d) for name, d in DR_CARDINALITY_FIELDS.items()}
+        raise ValueError(f"{label}: its structure {given} is not a DR cardinality")
+    return cardinality
 
 
 def _attributes(external_references: Any) -> dict[str, Any]:

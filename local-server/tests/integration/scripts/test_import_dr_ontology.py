@@ -423,31 +423,65 @@ def _set_spec_attributes(spec_dir, cardinality=None, strength=None, evidence=Non
     path.write_text(json.dumps(data))
 
 
+def _realizes_structure(repo):
+    prop = repo.get_property_definition_by_identifier("goal_realizes_businessservice")
+    return (prop.min_per_source, prop.max_per_source, prop.max_per_target)
+
+
 class TestRelationshipAttributes:
-    """Cardinality, strength and x-dr-evidence ride on the DR reference's metadata (#1397)."""
+    """
+    Strength and x-dr-evidence ride on the DR reference's metadata (#1397); the
+    cardinality is the relationship type's structure fields (#1482).
+    """
 
     def test_import_stores_the_attributes_on_the_dr_reference(
         self, ontology_service, repo, spec_dir
     ):
-        _set_spec_attributes(spec_dir, "many-to-many", "high", ["A goal names the service."])
+        _set_spec_attributes(spec_dir, "many-to-one", "high", ["A goal names the service."])
 
         import_dr_ontology(ontology_service, repo, spec_dir)
 
         assert dict(_realizes_reference(repo).metadata) == {
-            "cardinality": "many-to-many",
             "strength": "high",
             "evidence": ["A goal names the service."],
         }
+        assert _realizes_structure(repo) == (0, 1, None)
 
     def test_a_schema_without_attributes_gets_no_metadata(self, ontology_service, repo, spec_dir):
         import_dr_ontology(ontology_service, repo, spec_dir)
 
         assert _realizes_reference(repo).metadata is None
+        assert _realizes_structure(repo) == (0, None, None)  # many-to-many
+
+    @pytest.mark.parametrize(
+        "cardinality, structure",
+        [
+            ("many-to-many", (0, None, None)),
+            ("many-to-one", (0, 1, None)),
+            ("one-to-many", (0, None, 1)),
+            ("one-to-one", (0, 1, 1)),
+        ],
+    )
+    def test_the_cardinality_fills_the_structure_fields(
+        self, ontology_service, repo, spec_dir, cardinality, structure
+    ):
+        _set_spec_attributes(spec_dir, cardinality)
+
+        import_dr_ontology(ontology_service, repo, spec_dir)
+
+        assert _realizes_structure(repo) == structure
+        assert _realizes_reference(repo).metadata is None  # no cardinality in it
+
+    def test_a_cardinality_dr_does_not_have_raises(self, ontology_service, repo, spec_dir):
+        _set_spec_attributes(spec_dir, "some-to-many")
+
+        with pytest.raises(ValueError, match="cardinality 'some-to-many'"):
+            import_dr_ontology(ontology_service, repo, spec_dir)
 
     def test_reimporting_an_unchanged_spec_saves_no_property_definition(
         self, ontology_service, repo, spec_dir, monkeypatch
     ):
-        _set_spec_attributes(spec_dir, "many-to-many", "medium", ["Evidence."])
+        _set_spec_attributes(spec_dir, "one-to-one", "medium", ["Evidence."])
         import_dr_ontology(ontology_service, repo, spec_dir)
         saves = []
         save = repo.save_property_definition
@@ -476,10 +510,8 @@ class TestRelationshipAttributes:
             (DR_SOURCE, "motivation.goal.realizes.business.businessservice"),
             ("manual", "m-1"),
         ]
-        assert dict(_realizes_reference(repo).metadata) == {
-            "cardinality": "one-to-many",
-            "strength": "high",
-        }
+        assert dict(_realizes_reference(repo).metadata) == {"strength": "high"}
+        assert _realizes_structure(repo) == (0, None, 1)  # one-to-many
 
     def test_malformed_evidence_raises(self, ontology_service, repo, spec_dir):
         _set_spec_attributes(spec_dir, evidence="not a list")

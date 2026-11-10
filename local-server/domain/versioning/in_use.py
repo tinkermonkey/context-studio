@@ -50,6 +50,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Iterable
 
 from domain.ontology.datasets import yielding_dataset_ids
+from domain.ontology.entities import edge_attribute_values
 
 if TYPE_CHECKING:
     from domain.ontology.entities import PropertyDefinition, Relationship
@@ -285,7 +286,9 @@ class InUseInspector:
                 reversed replacement re-creates it (see `reverses`)
         """
         problems: list[str] = []
-        allowed = prop.edge_attribute_names()
+        definitions = self._repo.list_attribute_definitions(
+            property_definition_id=prop.id, limit=None
+        )
         for edge in edges:
             source, target = moved_ends(edge, swap)
             label = f"{source.title} → {target.title}"
@@ -301,9 +304,10 @@ class InUseInspector:
                     f"{self._class_title(prop.range_class_id)}"  # type: ignore[arg-type]
                 )
                 continue
-            unknown = sorted(set(edge.attributes) - allowed)
-            if unknown:
-                problems.append(f"{label}: {prop.identifier} doesn't allow attributes {unknown}")
+            try:
+                edge_attribute_values(prop.identifier, definitions, dict(edge.attributes))
+            except ValueError as exc:
+                problems.append(f"{label}: {exc}")
                 continue
             if self._repo.list_relationships(
                 source_id=source.id, target_id=target.id, property_id=prop.id, limit=1

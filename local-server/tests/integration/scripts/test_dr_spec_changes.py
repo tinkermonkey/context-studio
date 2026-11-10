@@ -1,8 +1,9 @@
 """
 Integration tests (#1397): any decided proposal on DR relationship types exports
-its applied creates, updates and deletes, with the values applied and the DR
-attributes (cardinality, strength, evidence) kept on the DR reference, for DR to
-write into its spec (`cs-dr-spec-changes/1`).
+its applied creates, updates and deletes, with the values applied: the DR
+attributes (strength, evidence) kept on the DR reference, and the cardinality
+from the type's structure fields (#1482), for DR to write into its spec
+(`cs-dr-spec-changes/1`).
 
 Built on the pinned DR spec snapshot (0.8.4), as test_dr_reflection_plan.py is.
 """
@@ -14,6 +15,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 import pytest
 
+from adapters.interchange.dr_relationships import dr_cardinality
+from adapters.interchange.dr_spec import iter_relationship_schemas
 from adapters.interchange.dr_spec_changes import spec_changes_for
 from domain.ontology.value_objects import SourceRevision
 from domain.versioning.proposal_service import OperationDraft
@@ -24,6 +27,7 @@ from domain.versioning.proposals import (
     ResolutionStrategy,
 )
 from scripts.dr_ontology_loader import DR_SOURCE, DR_TAXONOMY_IDENTIFIER
+from tests.integration.pipelines._harness.dr_spec import pinned_dr_spec_dir
 from tests.integration.scripts import test_dr_reflection_plan as plan_tests
 from tests.integration.scripts.test_dr_reflection_plan import (
     DELIVERS,
@@ -67,9 +71,7 @@ def create_new(repo):
             "description": "The response names the operation it answers.",
             "domain_class_id": class_by_dr_id(repo, "api.response").id,
             "range_class_id": class_by_dr_id(repo, "api.operation").id,
-            "external_references": [
-                dr_ref(NEW, cardinality="many-to-many", strength="medium", evidence=EVIDENCE)
-            ],
+            "external_references": [dr_ref(NEW, strength="medium", evidence=EVIDENCE)],
         },
     )
 
@@ -164,7 +166,7 @@ def test_an_update_that_drops_the_evidence_exports_it_empty(parts):
             op="update",
             kind="property",
             target_id=delivers.id,
-            fields={"external_references": [dr_ref(DELIVERS, cardinality="one-to-many")]},
+            fields={"external_references": [dr_ref(DELIVERS)], "max_per_target": 1},
         ),
     )
 
@@ -186,7 +188,8 @@ def test_an_edited_rename_exports_the_new_triple_and_keeps_the_attributes(parts)
     op = proposal.operations[0]
     edit = {
         "canonical_predicate": "uses",
-        "external_references": [dr_ref(DELIVERS, cardinality="one-to-many", strength="high")],
+        "max_per_target": 1,
+        "external_references": [dr_ref(DELIVERS, strength="high")],
     }
 
     proposal = proposals.apply(proposal.id, [op.id], edits={op.id: edit})
@@ -199,8 +202,106 @@ def test_an_edited_rename_exports_the_new_triple_and_keeps_the_attributes(parts)
     assert change["identifier"] == "operation_uses_response"
     # The edit's attributes were applied; the generated default description is not exported.
     assert change["set"] == {"cardinality": "one-to-many", "strength": "high"}
-    ref = next(r for r in prop_by_dr_id(repo, RENAMED).external_references)
-    assert dict(ref.metadata) == {"cardinality": "one-to-many", "strength": "high"}
+    renamed = prop_by_dr_id(repo, RENAMED)
+    assert dict(renamed.external_references[0].metadata) == {"strength": "high"}
+    assert (renamed.max_per_source, renamed.max_per_target) == (None, 1)
+
+
+ONE_TO_ONE = "api.securityscheme.composes.api.oauthflows"  # the pinned spec's one-to-one
+SELF_TYPE = "api.schema.references.api.schema"  # same domain and range
+
+
+def update(target, **fields):
+    return OperationDraft(seq=1, op="update", kind="property", target_id=target.id, fields=fields)
+
+
+def test_the_imported_cardinality_maps_back_to_the_spec_unchanged(parts):
+    """#1482 done-when: an import and export round trip keeps every cardinality."""
+    _, repo, _ = parts
+
+    for record in iter_relationship_schemas(pinned_dr_spec_dir()):
+        prop = prop_by_dr_id(repo, record.full_identifier)
+        assert dr_cardinality(prop) == record.cardinality, record.full_identifier
+        dr_metadata = dict(prop.external_references[0].metadata or {})
+        assert "cardinality" not in dr_metadata
+
+
+def test_a_create_exports_the_cardinality_of_its_structure_fields(parts):
+    _, repo, proposals = parts
+    create = create_new(repo)
+    create.fields["max_per_source"] = 1
+    proposal = apply_all(proposals, propose(repo, proposals, create))
+    assert proposal.operations[0].status is OperationStatus.APPLIED, proposal.operations[0].reason
+
+    (change,) = spec_changes_for(proposal, repo)["changes"]
+
+    assert change["set"]["cardinality"] == "many-to-one"
+    assert (prop_by_dr_id(repo, NEW).max_per_source, prop_by_dr_id(repo, NEW).max_per_target) == (
+        1,
+        None,
+    )
+
+
+def test_an_update_exports_the_cardinality_only_when_the_numbers_changed(parts):
+    _, repo, proposals = parts
+    one_to_one = prop_by_dr_id(repo, ONE_TO_ONE)
+    same = apply_all(
+        proposals,
+        propose(repo, proposals, update(one_to_one, description="Flows.", max_per_source=1)),
+    )
+    (change,) = spec_changes_for(same, repo)["changes"]
+    assert change["set"] == {"description": "Flows."}
+
+    changed = apply_all(
+        proposals, propose(repo, proposals, update(one_to_one, max_per_target=None))
+    )
+    (change,) = spec_changes_for(changed, repo)["changes"]
+    assert change["set"] == {"cardinality": "many-to-one"}
+
+
+def test_hierarchy_and_symmetric_are_left_alone_and_not_exported(parts):
+    _, repo, proposals = parts
+    self_type = prop_by_dr_id(repo, SELF_TYPE)
+    proposal = apply_all(
+        proposals, propose(repo, proposals, update(self_type, hierarchy=True, symmetric=True))
+    )
+    assert proposal.operations[0].status is OperationStatus.APPLIED, proposal.operations[0].reason
+
+    (change,) = spec_changes_for(proposal, repo)["changes"]
+    assert change["set"] == {}
+
+
+@pytest.mark.parametrize(
+    "structure",
+    [{"min_per_source": 2}, {"min_per_source": 1}, {"max_per_target": 3}],
+)
+def test_structure_dr_cannot_express_is_refused_on_a_dr_type(parts, structure):
+    _, repo, proposals = parts
+    delivers = prop_by_dr_id(repo, DELIVERS)
+
+    proposal = apply_all(proposals, propose(repo, proposals, update(delivers, **structure)))
+
+    op = proposal.operations[0]
+    assert op.status is OperationStatus.FAILED
+    assert "DR's spec can't express" in op.reason
+    assert "many-to-many, many-to-one, one-to-many or one-to-one" in op.reason
+    assert dr_cardinality(prop_by_dr_id(repo, DELIVERS)) == "many-to-many"
+
+
+def test_a_create_or_edit_dr_cannot_express_is_refused(parts):
+    _, repo, proposals = parts
+    create = create_new(repo)
+    create.fields["min_per_source"] = 2
+    created = apply_all(proposals, propose(repo, proposals, create))
+    assert created.operations[0].status is OperationStatus.FAILED
+    assert "DR's spec can't express min_per_source 2" in created.operations[0].reason
+
+    delivers = prop_by_dr_id(repo, DELIVERS)
+    proposal = propose(repo, proposals, update(delivers, title="x"))
+    op = proposal.operations[0]
+    edited = proposals.apply(proposal.id, [op.id], edits={op.id: {"max_per_source": 2}})
+    assert edited.operations[0].status is OperationStatus.FAILED
+    assert "DR's spec can't express" in edited.operations[0].reason
 
 
 def test_a_resolved_delete_names_the_replacement(parts):

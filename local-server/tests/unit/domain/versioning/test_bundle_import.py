@@ -129,6 +129,7 @@ class TestPlan:
             == [K.SCHEME]
             + [K.CLASS] * 3
             + [K.ATTRIBUTE, K.CLASS, K.PROPERTY]
+            + [K.ATTRIBUTE] * 2  # #1482: edge_properties become the type's edge attributes
             + [K.INDIVIDUAL] * 3
             + [K.RELATIONSHIP] * 2
         )
@@ -142,6 +143,13 @@ class TestPlan:
         assert by_ref["attribute:house_activity/house_minutes"].fields["class_id"] == (
             "$class:house_activity"
         )
+        quantity = by_ref["attribute:property:house_requires/quantity"].fields
+        assert (quantity["property_definition_id"], quantity["datatype"]) == (
+            "$property:house_requires",
+            "number",
+        )
+        unit = by_ref["attribute:property:house_requires/unit"].fields
+        assert unit["datatype"] == "string"
         kit = by_ref["relationship:hang/house_requires/hooks"].fields
         assert kit == {
             "source_id": "$individual:hang",
@@ -288,8 +296,8 @@ class TestImport:
         assert repo.get_individual(delete.target_id) is not None
 
     def test_a_new_edge_property_and_its_attributes_apply_together(self, importer, repo):
-        """F5: a property gaining edge_properties is additive, so apply=true applies it and
-        the attributes that need it."""
+        """F5: a property gaining edge_properties gains edge attributes (#1482), which is
+        additive, so apply=true applies them and the relationship attributes that need them."""
         plain = bundle()
         plain["properties"][0]["constraints"] = {"max": None}
         plain["relationships"] = [
@@ -306,7 +314,8 @@ class TestImport:
         result = importer.import_bundle(kits, apply=True)
 
         ops = {(o.op, o.kind): o for o in result.proposal.operations}
-        assert ops[(T.UPDATE, K.PROPERTY)].scope is ChangeScope.ADDITIVE
+        assert ops[(T.CREATE, K.ATTRIBUTE)].scope is ChangeScope.ADDITIVE
+        assert (T.UPDATE, K.PROPERTY) not in ops  # the structure keys didn't change
         assert ops[(T.UPDATE, K.RELATIONSHIP)].scope is ChangeScope.ADDITIVE
         assert {o.status for o in result.proposal.operations} == {OperationStatus.APPLIED}
         hooks = repo.list_relationships(
@@ -319,7 +328,7 @@ class TestImport:
         first = importer.import_bundle(bundle(), dry_run=True)
         assert first.dry_run and first.taxonomy_created and first.proposal is None
         assert repo.get_by_identifier("house") is None
-        assert len(first.plan.operations) == 12
+        assert len(first.plan.operations) == 14
 
         loaded(importer)
         changed = bundle()
