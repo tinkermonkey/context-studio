@@ -1,5 +1,5 @@
 """
-Integration test for migration 97ac937598aa (#1482): relationship-type structure
+Integration test for migration 2ad02ed6e4dd (#1482): relationship-type structure
 leaves reference metadata for columns, and edge properties become attribute
 definitions owned by their relationship type.
 
@@ -23,8 +23,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 ALEMBIC_INI = os.path.join(
     os.path.dirname(__file__), "../../adapters/persistence/sqlite/alembic.ini"
 )
-REVISION = "97ac937598aa"
-PREVIOUS_REVISION = "4e84e0aed52f"
+REVISION = "2ad02ed6e4dd"
+PREVIOUS_REVISION = "b03f04db2ea4"
 
 
 def _house(identifier: str, **metadata) -> list[dict]:
