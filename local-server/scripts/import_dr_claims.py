@@ -31,9 +31,24 @@ FIXTURES = Path(__file__).resolve().parents[1] / "tests" / "integration" / "fixt
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--claims", type=Path, default=FIXTURES / "claims.jsonl.xz")
-    parser.add_argument("--gold", type=Path, default=FIXTURES / "bench-gold.jsonl")
-    return parser.parse_args()
+    parser.add_argument(
+        "--claims", type=Path, help="DR's claims.jsonl (default: the committed snapshot)"
+    )
+    parser.add_argument(
+        "--gold",
+        type=Path,
+        help="DR's bench-gold.jsonl (default: the committed snapshot, only with its claims)",
+    )
+    parser.add_argument("--no-gold", action="store_true", help="Import claims only")
+    args = parser.parse_args()
+    if args.claims is None:
+        args.claims = FIXTURES / "claims.jsonl.xz"
+        if args.gold is None:
+            # The snapshots are a pair; gold keys are positions in that split
+            args.gold = FIXTURES / "bench-gold.jsonl"
+    if args.no_gold:
+        args.gold = None
+    return args
 
 
 def main() -> int:
@@ -49,7 +64,7 @@ def main() -> int:
     service = ClaimService(SQLiteClaimRepository(session_factory), repo)
     try:
         result = import_dr_claims(
-            service, repo, read_jsonl(args.claims), read_jsonl(args.gold) if args.gold else ()
+            service, repo, read_jsonl(args.claims), read_jsonl(args.gold) if args.gold else []
         )
     except ValueError as exc:
         print(str(exc), file=sys.stderr)
@@ -67,6 +82,16 @@ def main() -> int:
     print(f"Verdicts from bench gold: {result.verdicts}")
     if result.gold_without_claim:
         print(f"Gold rows with no claim: {', '.join(result.gold_without_claim)}")
+    if result.gold_on_changed_claims:
+        print(
+            "Gold not applied, the claim's text changed in this import: "
+            + ", ".join(result.gold_on_changed_claims)
+        )
+    if result.gold_under_person_verdicts:
+        print(
+            "Gold not applied over a person's verdict: "
+            + ", ".join(result.gold_under_person_verdicts)
+        )
     return 0
 
 

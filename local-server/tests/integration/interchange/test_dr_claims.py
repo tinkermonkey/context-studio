@@ -17,7 +17,7 @@ from adapters.persistence.sqlite.claim_repo import SQLiteClaimRepository
 from adapters.persistence.sqlite.connection import create_local_db_engine, create_session_factory
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
-from domain.versioning.claims import ClaimFilter, ClaimService, Validity
+from domain.versioning.claims import ClaimFilter, ClaimService, ClaimVerdict, Validity
 from scripts.dr_ontology_loader import import_dr_ontology
 from scripts.import_dr_model import build_import_service
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
@@ -118,3 +118,60 @@ def test_without_the_dr_spec_the_import_is_refused(tmp_path):
     with pytest.raises(ValueError, match="import the DR spec first"):
         import_dr_claims(ClaimService(SQLiteClaimRepository(session_factory), repo), repo, CLAIMS)
     engine.dispose()
+
+
+def row(key, text, subject="api.callback", affected=("api.callback",)):
+    return {
+        "id": key,
+        "note_id": key.split("#")[0],
+        "layer": subject.split(".")[0],
+        "subject": subject,
+        "kind": "node",
+        "text": text,
+        "category_hint": "other",
+        "affected_ids": list(affected),
+        "proposed_change": "",
+    }
+
+
+def gold(key):
+    return {"claim_id": key, "validity": "judgment_call", "category": "other", "severity": 1}
+
+
+def test_a_subject_the_spec_lacks_is_kept_as_unresolved(workspace):
+    repo, service, taxonomy_id, _ = workspace
+
+    result = import_dr_claims(
+        service,
+        repo,
+        [row("test:api.nosuch#1", "No such type", "api.nosuch", ["api.nosuch", "api.callback"])],
+        [gold("test:missing#1")],
+    )
+
+    claim = by_key(service, taxonomy_id, "test:api.nosuch#1")
+    assert claim.subject_id is None
+    assert claim.unresolved_refs == ["api.nosuch"]
+    assert claim.affected_ids == [dr_spec_classes(repo)["api.callback"]]
+    assert result.unresolved_subjects == ["api.nosuch"]
+    assert (result.references, result.unresolved_references) == (2, 1)
+    assert result.gold_without_claim == ["test:missing#1"]
+
+
+def test_gold_skips_a_claim_whose_text_changed_or_a_persons_verdict(workspace):
+    repo, service, taxonomy_id, _ = workspace
+    import_dr_claims(service, repo, [row("test:a#1", "First split"), row("test:b#1", "Kept")])
+    judged = by_key(service, taxonomy_id, "test:b#1")
+    service.set_verdict(judged.id, ClaimVerdict(validity="real_defect", adjudicated_by="user"))
+
+    result = import_dr_claims(
+        service,
+        repo,
+        [row("test:a#1", "Re-split: another sentence"), row("test:b#1", "Kept")],
+        [gold("test:a#1"), gold("test:b#1")],
+    )
+
+    assert result.verdicts == 0
+    assert result.gold_on_changed_claims == ["test:a#1"]
+    assert result.gold_under_person_verdicts == ["test:b#1"]
+    assert by_key(service, taxonomy_id, "test:a#1").verdict is None
+    assert by_key(service, taxonomy_id, "test:b#1").verdict.adjudicated_by == "user"

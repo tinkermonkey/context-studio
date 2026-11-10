@@ -100,6 +100,9 @@ class DrClaimsImport:
     unresolved_subjects: list[str] = field(default_factory=list)
     verdicts: int = 0
     gold_without_claim: list[str] = field(default_factory=list)
+    # Gold not applied: the claim at that key now has other text, or a person's verdict
+    gold_on_changed_claims: list[str] = field(default_factory=list)
+    gold_under_person_verdicts: list[str] = field(default_factory=list)
 
 
 def _claim(taxonomy_id: str, row: dict[str, Any], resolver: DrIdResolver) -> Claim:
@@ -149,6 +152,10 @@ def import_dr_claims(
     """
     Store DR's claims on the dr_spec taxonomy and its gold as their verdicts.
 
+    Gold names a claim by key only, and DR's keys are positions in a note's
+    split, so gold is not applied to a claim whose text this import changed
+    (it may now be another sentence), nor over a verdict a person recorded.
+
     Raises:
         ValueError: If the DR spec has not been imported
     """
@@ -157,11 +164,21 @@ def import_dr_claims(
         raise ValueError(f"No '{DR_TAXONOMY_IDENTIFIER}' taxonomy; import the DR spec first")
     resolver = DrIdResolver(repo)
     rows = list(claim_rows)
+    gold = list(gold_rows)
+    gold_keys = tuple(r["claim_id"] for r in gold)
+    before = (
+        {c.key: c.text for c in claims.list_claims(_by_keys(taxonomy.id, gold_keys))}
+        if gold
+        else {}
+    )
     stored = claims.submit(taxonomy.id, [_claim(taxonomy.id, row, resolver) for row in rows])
+    affected = [
+        (dr_id, c) for row, c in zip(rows, stored) for dr_id in row.get("affected_ids") or []
+    ]
     result = DrClaimsImport(
         claims=len(stored),
-        references=sum(len(c.affected_ids) + len(c.unresolved_refs) for c in stored),
-        unresolved_references=sum(len(c.unresolved_refs) for c in stored),
+        references=len(affected),
+        unresolved_references=sum(1 for dr_id, c in affected if dr_id in c.unresolved_refs),
         unresolved=sorted({ref for c in stored for ref in c.unresolved_refs}),
         unresolved_subjects=sorted(
             {
@@ -171,19 +188,23 @@ def import_dr_claims(
             }
         ),
     )
-    gold = list(gold_rows)
-    if gold:
-        by_key = {
-            c.key: c.id
-            for c in claims.list_claims(
-                ClaimFilter(taxonomy_id=taxonomy.id, keys=tuple(r["claim_id"] for r in gold))
-            )
-        }
-        for row in gold:
-            claim_id = by_key.get(row["claim_id"])
-            if claim_id is None:
-                result.gold_without_claim.append(row["claim_id"])
-                continue
-            claims.set_verdict(claim_id, _verdict(row))
+    if not gold:
+        return result
+    current = {c.key: c for c in claims.list_claims(_by_keys(taxonomy.id, gold_keys))}
+    for row in gold:
+        key = row["claim_id"]
+        claim = current.get(key)
+        if claim is None:
+            result.gold_without_claim.append(key)
+        elif key in before and before[key] != claim.text:
+            result.gold_on_changed_claims.append(key)
+        elif claim.verdict is not None and claim.verdict.adjudicated_by != DR_BENCH_GOLD:
+            result.gold_under_person_verdicts.append(key)
+        else:
+            claims.set_verdict(claim.id, _verdict(row))
             result.verdicts += 1
     return result
+
+
+def _by_keys(taxonomy_id: str, keys: tuple[str, ...]) -> ClaimFilter:
+    return ClaimFilter(taxonomy_id=taxonomy_id, keys=keys)
