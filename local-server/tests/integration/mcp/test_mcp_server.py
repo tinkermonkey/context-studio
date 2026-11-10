@@ -48,6 +48,7 @@ HEADERS = {
 UI = "http://localhost:3100"
 READ_TOOLS = [
     "list_taxonomies",
+    "list_datasets",
     "search_entities",
     "get_entity",
     "list_children",

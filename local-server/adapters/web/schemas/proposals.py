@@ -125,6 +125,11 @@ class ChangeProposalCreateRequest(BaseModel):
         ),
     )
     operations: list[ProposedOperationRequest] = Field(..., description="The operations")
+    dataset_id: Optional[str] = Field(
+        None,
+        description="The dataset its individual and relationship operations are in; may be "
+        "omitted while the taxonomy has at most one dataset",
+    )
 
 
 class InUseResolutionRequest(BaseModel):
@@ -554,6 +559,9 @@ class ChangeProposalResponse(BaseModel):
         description="Validated only: nothing was stored or applied, and the ids are not kept",
     )
     operations: list[ProposedOperationResponse]
+    dataset_id: Optional[str] = Field(
+        None, description="The dataset its individual and relationship operations are in"
+    )
     client_metadata: dict[str, Any] = Field(
         default_factory=dict,
         description="What the proposing client keeps on the proposal for itself (e.g. a DR "
@@ -596,6 +604,7 @@ class ChangeProposalResponse(BaseModel):
             source_revision=SourceRevisionSchema.from_domain(proposal.source_revision),
             landed=LandingResponse.from_domain(proposal.landed),
             client_metadata=proposal.client_metadata,
+            dataset_id=proposal.dataset_id,
             operations=[
                 _operation(
                     o,

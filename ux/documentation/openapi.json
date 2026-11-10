@@ -6401,7 +6401,7 @@
           "interchange"
         ],
         "summary": "Export Bundle",
-        "description": "Export one taxonomy as a Context Studio bundle (v0).\n\nLoading the returned bundle back into this workspace changes nothing.\nSee domain/interchange/bundle.py for the format.\n\nRaises:\n    HTTPException: 404 if the taxonomy does not exist; 409 if the workspace\n        cannot be expressed as a bundle (an entity has no stored identifier)",
+        "description": "Export one taxonomy as a Context Studio bundle (v0).\n\nLoading the returned bundle back into this workspace changes nothing.\nSee domain/interchange/bundle.py for the format.\n\nRaises:\n    HTTPException: 404 if the taxonomy or dataset does not exist; 409 if the\n        workspace cannot be expressed as a bundle (an entity has no stored identifier)",
         "operationId": "export_bundle_api_v1_interchange_bundles__taxonomy_id__get",
         "parameters": [
           {
@@ -6430,6 +6430,36 @@
               "title": "Source"
             },
             "description": "Bundle source; defaults to the taxonomy's identifier"
+          },
+          {
+            "name": "dataset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Export the schema plus this dataset's data (identifier or id), and name it in the bundle's `dataset`; without it, every individual of the taxonomy",
+              "title": "Dataset"
+            },
+            "description": "Export the schema plus this dataset's data (identifier or id), and name it in the bundle's `dataset`; without it, every individual of the taxonomy"
+          },
+          {
+            "name": "schema_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Export the schema alone, with no individuals or relationships",
+              "default": false,
+              "title": "Schema Only"
+            },
+            "description": "Export the schema alone, with no individuals or relationships"
           }
         ],
         "responses": {
@@ -8625,6 +8655,25 @@
               "title": "File Name"
             },
             "description": "The file the bundle came from, for the rationale"
+          },
+          {
+            "name": "dataset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 255
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The dataset (identifier or id) to import the data into; defaults to the one the bundle's `dataset` names, else the taxonomy's only dataset",
+              "title": "Dataset"
+            },
+            "description": "The dataset (identifier or id) to import the data into; defaults to the one the bundle's `dataset` names, else the taxonomy's only dataset"
           }
         ],
         "requestBody": {
@@ -10045,6 +10094,18 @@
             "type": "array",
             "title": "Operations",
             "description": "The operations"
+          },
+          "dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Id",
+            "description": "The dataset its individual and relationship operations are in; may be omitted while the taxonomy has at most one dataset"
           }
         },
         "type": "object",
@@ -10215,6 +10276,18 @@
             },
             "type": "array",
             "title": "Operations"
+          },
+          "dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Id",
+            "description": "The dataset its individual and relationship operations are in"
           },
           "client_metadata": {
             "additionalProperties": true,

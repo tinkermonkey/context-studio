@@ -84,7 +84,13 @@ from adapters.web.schemas.pipelines import (
 )
 from adapters.web.schemas.versioning import VersioningChangeEventResponse
 from domain.interchange.services import set_batch_run_context
-from domain.ontology.exceptions import EntityInUseError
+from domain.ontology.datasets import resolve_dataset_id
+from domain.ontology.exceptions import (
+    DatasetMismatchError,
+    DatasetRequiredError,
+    EntityInUseError,
+    EntityNotFoundError,
+)
 from domain.pipelines.apply_selection import RecognitionDecision
 from domain.pipelines.candidate_ids import (
     enumerate_items,
@@ -838,8 +844,7 @@ async def list_configurations(
                 exc_info=exc,
             )
             error_msg = (
-                "Failed to load pipeline configurations. "
-                "Database may be corrupted or unavailable."
+                "Failed to load pipeline configurations. Database may be corrupted or unavailable."
             )
             raise HTTPException(
                 status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -950,6 +955,33 @@ def _run_executor(request: Request) -> BackgroundRunExecutor:
     return executor
 
 
+def _resolve_run_dataset(request: Request, ptype: PipelineType, data: dict[str, Any]) -> None:
+    """
+    Settle an individual-extraction run's target dataset before anything runs
+    (and before any LLM spend): the one named, else the taxonomy's only one.
+
+    Raises:
+        HTTPException: 422 when the taxonomy has several datasets and none is
+            named (the detail lists them), or the named one is another
+            taxonomy's; 404 when it doesn't exist
+    """
+    if ptype is not PipelineType.INDIVIDUAL_EXTRACTION or not data.get("ontology_id"):
+        return
+    repo = request.app.state.ontology_repo
+    if repo.get_taxonomy(str(data["ontology_id"])) is None:
+        return  # the run fails on the unknown taxonomy, as it always has
+    try:
+        data["dataset_id"] = resolve_dataset_id(
+            repo, str(data["ontology_id"]), data.get("dataset_id")
+        )
+    except (DatasetRequiredError, DatasetMismatchError) as exc:
+        raise HTTPException(
+            status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
+    except EntityNotFoundError as exc:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
+
 @router.post(
     "/{pipeline_type}/run",
     response_model=PipelineRunResponse,
@@ -1010,6 +1042,7 @@ async def run_pipeline(
 
     if request_body.run_async:
         input_data = _from_api(request_body.model_dump(exclude={"run_async"}))
+        _resolve_run_dataset(request, ptype, input_data)
         try:
             run = _run_executor(request).submit(
                 ptype,
@@ -1065,6 +1098,7 @@ async def run_pipeline(
 
     # Extract input data from request body (now includes type-specific fields)
     input_data = _from_api(request_body.model_dump(exclude={"run_async"}))
+    _resolve_run_dataset(request, ptype, input_data)
 
     # Persist pipeline run to database only after validation succeeds
     specific_data = build_run_specific_data(ptype, input_data)
@@ -2059,6 +2093,7 @@ async def preview_recognition(
                 triples=triples,
                 confidence_threshold=request_body.confidence_threshold,
                 recognition_threshold=request_body.recognition_threshold,
+                dataset_id=(run.input_summary or {}).get("dataset_id"),
             )
             hits = result.hits
             skipped_count = result.skipped_count
@@ -2333,7 +2368,16 @@ async def enqueue_batch_runs(
                     detail=f"Configuration not found: {config_ref}",
                 )
 
-            specific_data = build_run_specific_data(ptype, run_data.get("specific_data") or {})
+            specific_source = dict(run_data.get("specific_data") or {})
+            run_input = (
+                _from_api(run_data["input_data"])
+                if run_data.get("input_data") is not None
+                else None
+            )
+            for data in (specific_source, run_input):
+                if data is not None:
+                    _resolve_run_dataset(request, ptype, data)
+            specific_data = build_run_specific_data(ptype, specific_source)
             run = pipeline_run_repo.create(
                 batch_run_id=batch_id,
                 pipeline_type=ptype,
@@ -2342,11 +2386,7 @@ async def enqueue_batch_runs(
                 configuration_slug=config_version.config_ref,
                 configuration_version=config_version.version,
                 specific_data=specific_data or None,
-                input_data=(
-                    _from_api(run_data["input_data"])
-                    if run_data.get("input_data") is not None
-                    else None
-                ),
+                input_data=run_input,
             )
             created_run_ids.append(run.id)
 

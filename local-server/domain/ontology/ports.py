@@ -1084,6 +1084,7 @@ class IndividualVectorIndex(Protocol):
         class_ids: Sequence[str],
         top_k: int = 5,
         threshold: float = 0.0,
+        dataset_id: str | None = None,
     ) -> list[IndividualMatch]:
         """
         Find existing individuals similar to the query, scoped to candidate classes.
@@ -1095,6 +1096,9 @@ class IndividualVectorIndex(Protocol):
                 grounded class of the extracted mention. Empty means unscoped.
             top_k: Maximum matches to return, highest score first.
             threshold: Minimum similarity (0.0-1.0) for inclusion.
+            dataset_id: Restrict candidates to one dataset's individuals; datasets
+                share classes, so the class scope alone can't keep them apart.
+                None means every dataset.
 
         Returns:
             IndividualMatch objects sorted by descending score (length <= top_k).

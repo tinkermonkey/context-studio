@@ -1453,6 +1453,8 @@ class TestRunSourceText:
 
     def test_individual_run_detail_returns_input_text(self, client, registries):
         """GET /runs/{id} returns the text an individual extraction ran on."""
+        # The mocked repository knows no taxonomy, so no dataset is resolved.
+        client.app.state.ontology_repo.get_taxonomy.return_value = None
         text = "Ada Lovelace wrote the first program."
         created = self._run(
             client,

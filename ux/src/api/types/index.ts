@@ -3419,8 +3419,8 @@ export interface paths {
      *     See domain/interchange/bundle.py for the format.
      *
      *     Raises:
-     *         HTTPException: 404 if the taxonomy does not exist; 409 if the workspace
-     *             cannot be expressed as a bundle (an entity has no stored identifier)
+     *         HTTPException: 404 if the taxonomy or dataset does not exist; 409 if the
+     *             workspace cannot be expressed as a bundle (an entity has no stored identifier)
      */
     get: operations["export_bundle_api_v1_interchange_bundles__taxonomy_id__get"];
     put?: never;
@@ -4928,6 +4928,11 @@ export interface components {
        * @description The operations
        */
       operations: components["schemas"]["ProposedOperationRequest"][];
+      /**
+       * Dataset Id
+       * @description The dataset its individual and relationship operations are in; may be omitted while the taxonomy has at most one dataset
+       */
+      dataset_id?: string | null;
     };
     /**
      * ChangeProposalLandedRequest
@@ -5003,6 +5008,11 @@ export interface components {
       dry_run: boolean;
       /** Operations */
       operations: components["schemas"]["ProposedOperationResponse"][];
+      /**
+       * Dataset Id
+       * @description The dataset its individual and relationship operations are in
+       */
+      dataset_id?: string | null;
       /**
        * Client Metadata
        * @description What the proposing client keeps on the proposal for itself (e.g. a DR reflection plan's predicate_retirements: [{from, to, note}]); Context Studio acts on none of it
@@ -14459,6 +14469,10 @@ export interface operations {
       query?: {
         /** @description Bundle source; defaults to the taxonomy's identifier */
         source?: string | null;
+        /** @description Export the schema plus this dataset's data (identifier or id), and name it in the bundle's `dataset`; without it, every individual of the taxonomy */
+        dataset?: string | null;
+        /** @description Export the schema alone, with no individuals or relationships */
+        schema_only?: boolean;
       };
       header?: never;
       path: {
@@ -15680,6 +15694,8 @@ export interface operations {
         dry_run?: boolean;
         /** @description The file the bundle came from, for the rationale */
         file_name?: string | null;
+        /** @description The dataset (identifier or id) to import the data into; defaults to the one the bundle's `dataset` names, else the taxonomy's only dataset */
+        dataset?: string | null;
       };
       header?: never;
       path?: never;

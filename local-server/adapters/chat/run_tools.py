@@ -16,6 +16,7 @@ from adapters.chat.proposal_tools import PROPOSAL_KIND
 from adapters.chat.tools import (
     ToolArgumentError,
     ToolBase,
+    dataset_arg,
     dumps,
     error_outcome,
     required_str,
@@ -84,6 +85,11 @@ class RunRefinementTool(ToolBase):
                 "type": "object",
                 "description": "Other pipeline inputs, implementation_id, configuration_ref",
             },
+            "dataset": {
+                "type": "string",
+                "description": "individual_extraction only: the dataset (identifier or id) to"
+                " extract into; needed when the taxonomy has several (see list_datasets)",
+            },
         },
         "required": ["taxonomy_id", "pipeline"],
     }
@@ -125,6 +131,9 @@ class RunRefinementTool(ToolBase):
             # After the options, so a caller can't claim another entry point
             REQUESTED_VIA: self._requested_via.value,
         }
+        if ptype is PipelineType.INDIVIDUAL_EXTRACTION:
+            # Recognition and apply stay inside one dataset (none yet: apply makes `default`).
+            input_data["dataset_id"] = dataset_arg(self._ontology, args, taxonomy_id)
         try:
             run = self._executor.submit(
                 ptype,

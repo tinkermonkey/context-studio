@@ -100,6 +100,7 @@ class CascadeIndividualRecognizer:
         class_ids: Sequence[str],
         taxonomy_id: str | None = None,
         threshold: float | None = None,
+        dataset_id: str | None = None,
     ) -> RecognitionMatch | None:
         """Resolve a mention to an existing individual via the match cascade."""
         mention = label.strip()
@@ -109,7 +110,11 @@ class CascadeIndividualRecognizer:
         effective_threshold = self._threshold if threshold is None else threshold
         embedding = self._embedding_service.embed(mention)
         candidates = self._individual_index.search(
-            embedding, class_ids=list(class_ids), top_k=self._top_k, threshold=0.0
+            embedding,
+            class_ids=list(class_ids),
+            top_k=self._top_k,
+            threshold=0.0,
+            dataset_id=dataset_id,
         )
         if not candidates:
             return None

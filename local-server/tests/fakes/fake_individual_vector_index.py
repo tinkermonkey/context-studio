@@ -21,6 +21,8 @@ class FakeIndividualVectorIndex(IndividualVectorIndex):
         self._vectors = vectors or {}
         # individual_id -> (title, class_ids, description)
         self._individuals: dict[str, tuple[str, list[str], str | None]] = {}
+        # individual_id -> dataset_id (from the repo, or add())
+        self._datasets: dict[str, str | None] = {}
         # Optional OntologyRepository: when given, index_individual resolves
         # class_ids from the live entity (mirroring how the real SQLite-backed
         # index joins against persisted class associations at search time)
@@ -34,14 +36,19 @@ class FakeIndividualVectorIndex(IndividualVectorIndex):
         title: str,
         class_ids: list[str],
         description: str | None = None,
+        dataset_id: str | None = None,
     ) -> None:
         self._individuals[individual_id] = (title, list(class_ids), description)
+        self._datasets[individual_id] = dataset_id
 
     # --- IndividualVectorIndex port ------------------------------------------
     def index_individual(self, individual_id: str, title: str, description: str | None) -> None:
         if self._repo is not None:
             existing_entity = self._repo.get_individual(individual_id)
             class_ids = list(existing_entity.class_ids) if existing_entity else []
+            self._datasets[individual_id] = (
+                existing_entity.dataset_id if existing_entity else None
+            )
         else:
             existing = self._individuals.get(individual_id)
             class_ids = existing[1] if existing else []
@@ -59,11 +66,14 @@ class FakeIndividualVectorIndex(IndividualVectorIndex):
         class_ids: Sequence[str],
         top_k: int = 5,
         threshold: float = 0.0,
+        dataset_id: str | None = None,
     ) -> list[IndividualMatch]:
         wanted = set(class_ids)
         matches: list[IndividualMatch] = []
         for ind_id, (title, cids, description) in self._individuals.items():
             if wanted and not (wanted & set(cids)):
+                continue
+            if dataset_id is not None and self._datasets.get(ind_id) != dataset_id:
                 continue
             score = self._cosine(query_embedding, self._vectors.get(title, []))
             if score < threshold:

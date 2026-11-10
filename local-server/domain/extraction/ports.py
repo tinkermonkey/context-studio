@@ -561,6 +561,7 @@ class IndividualRecognizer(Protocol):
         class_ids: Sequence[str],
         taxonomy_id: str | None = None,
         threshold: float | None = None,
+        dataset_id: str | None = None,
     ) -> RecognitionMatch | None:
         """
         Resolve an extracted mention to an existing individual, or None.
@@ -581,6 +582,9 @@ class IndividualRecognizer(Protocol):
                 implementation's own configured value when omitted, kept
                 independent of any class-grounding similarity threshold used
                 elsewhere in extraction.
+            dataset_id: Match only individuals of this dataset (None: any).
+                Datasets share classes, so "API Gateway" in one platform's
+                dataset must not resolve to another's.
 
         Returns:
             A RecognitionMatch on resolution, or None when no existing
