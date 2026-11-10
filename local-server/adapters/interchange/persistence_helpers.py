@@ -111,6 +111,10 @@ def _derived(entity_dict: Dict[str, Any], existing: Any) -> bool:
     return bool(getattr(existing, "derived", False))
 
 
+# A class's operational definition: formats without it keep the existing class's.
+_CLASS_DEFINITION_FIELDS = ("distinguish_from", "evidence_signals", "standard_reference")
+
+
 def _persist_class(
     entity_dict: Dict[str, Any],
     incoming_entities: Dict[str, Dict[str, Any]],
@@ -123,6 +127,12 @@ def _persist_class(
         concept_scheme = incoming_entities[concept_scheme_id]
         taxonomy_id = concept_scheme.get("taxonomy_id", "")
 
+    existing = ontology_repo.get_class(entity_dict["id"])
+    definition = {
+        name: entity_dict[name] if name in entity_dict else getattr(existing, name)
+        for name in _CLASS_DEFINITION_FIELDS
+        if name in entity_dict or existing is not None
+    }
     class_entity = Class(
         id=entity_dict["id"],
         concept_scheme_id=concept_scheme_id,
@@ -132,7 +142,8 @@ def _persist_class(
         description=entity_dict.get("description"),
         color=entity_dict.get("color"),
         parent_class_id=entity_dict.get("parent_class_id"),
-        derived=_derived(entity_dict, ontology_repo.get_class(entity_dict["id"])),
+        derived=_derived(entity_dict, existing),
+        **definition,
         external_references=[
             ExternalReference(
                 source=ref["source"],

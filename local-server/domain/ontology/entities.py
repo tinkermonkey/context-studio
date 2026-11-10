@@ -21,6 +21,8 @@ from .value_objects import (
     OntologyMapping,
     SourceRevision,
     Status,
+    normalize_distinguish_from,
+    normalize_evidence_signals,
     validate_dataset_identifier,
     validate_default_value_against_allowed_values,
     validate_hex_color,
@@ -160,6 +162,13 @@ class Class:
         definition
         derived: Computed by the client from other data (a House kit, say): its
             individuals are never created directly, and extraction doesn't target it
+        distinguish_from: When to use a sibling class instead, as
+            [{"class_id", "when"}] (DR's x-dr-distinguish); see
+            normalize_distinguish_from
+        evidence_signals: Observable signals that something is an instance
+            (DR's x-dr-evidence)
+        standard_reference: The standard the class follows, e.g. "ArchiMate 3.2
+            section 9.4" (DR's x-dr-standard)
         external_references: List of references to external knowledge bases
         lexical_senses: List of word sense disambiguation entries
         data_properties: List of data property values on this class
@@ -180,6 +189,9 @@ class Class:
     parent_class_id: str | None = None
     structural_property_id: str | None = None
     derived: bool = False
+    distinguish_from: list[dict[str, str]] = field(default_factory=list)
+    evidence_signals: list[str] = field(default_factory=list)
+    standard_reference: str | None = None
     external_references: list[ExternalReference] = field(default_factory=list)
     lexical_senses: list[LexicalSense] = field(default_factory=list)
     data_properties: list[DataPropertyValue] = field(default_factory=list)
@@ -194,6 +206,9 @@ class Class:
         if self.identifier is not None:
             self.identifier = validate_identifier(self.identifier)
         self.color = validate_hex_color(self.color)
+        self.distinguish_from = normalize_distinguish_from(self.distinguish_from)
+        self.evidence_signals = normalize_evidence_signals(self.evidence_signals)
+        self.standard_reference = (self.standard_reference or "").strip() or None
 
     def rename(self, new_title: str) -> None:
         """

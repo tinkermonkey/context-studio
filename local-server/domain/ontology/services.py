@@ -18,6 +18,7 @@ from uuid import uuid4
 
 from domain.ports import EventPublisher, TransactionScope
 
+from .datasets import resolve_dataset_id
 from .entities import (
     AttributeDefinition,
     Class,
@@ -75,7 +76,6 @@ from .ports import (
     OntologyRepository,
     SchemaVectorIndex,
 )
-from .datasets import resolve_dataset_id
 from .snapshots import entity_snapshot
 from .value_objects import (
     ClassCounts,
@@ -86,6 +86,8 @@ from .value_objects import (
     SchemeCounts,
     SourceRevision,
     Status,
+    normalize_distinguish_from,
+    normalize_evidence_signals,
     validate_default_value_against_allowed_values,
     validate_identifier,
 )
@@ -1050,6 +1052,9 @@ class OntologyService:
         source_run_id: str | None = None,
         external_references: list[ExternalReference] | None = None,
         derived: bool = False,
+        distinguish_from: list[dict[str, str]] | None = None,
+        evidence_signals: list[str] | None = None,
+        standard_reference: str | None = None,
     ) -> Class:
         """
         Create a new class within a concept scheme.
@@ -1075,6 +1080,10 @@ class OntologyService:
                 bundle the class was loaded from)
             derived: Whether the client computes its individuals from other data
                 (then none is created directly; see Class.derived)
+            distinguish_from: When to use another class of the taxonomy instead
+                ([{"class_id", "when"}]; see Class.distinguish_from)
+            evidence_signals: Observable signals of an instance
+            standard_reference: The standard the class follows
 
         Returns:
             The created Class with generated embedding
@@ -1083,7 +1092,8 @@ class OntologyService:
             EntityNotFoundError: If scheme or parent class does not exist
             IdentifierConflictError: If the identifier is already in use
             DuplicateEntityError: If a class with this title already exists in this scheme
-            ValueError: If title is empty or identifier/color are invalid
+            ValueError: If title is empty, identifier/color are invalid, or
+                distinguish_from names a class outside the taxonomy
         """
         if not title or not title.strip():
             raise ValueError("Title cannot be empty")
@@ -1092,6 +1102,7 @@ class OntologyService:
         scheme = self._repository.get_concept_scheme(concept_scheme_id)
         if scheme is None:
             raise EntityNotFoundError("ConceptScheme", concept_scheme_id)
+        distinguish_from = self._distinguish_from(distinguish_from, scheme.taxonomy_id)
 
         # Check for duplicate title within this scheme
         existing_classes = self._repository.list_classes(
@@ -1135,6 +1146,9 @@ class OntologyService:
             source_run_id=source_run_id,
             external_references=list(external_references or []),
             derived=bool(derived),
+            distinguish_from=distinguish_from,
+            evidence_signals=normalize_evidence_signals(evidence_signals),
+            standard_reference=standard_reference,
         )
         cls = self._repository.save_class(cls)
         self._sync_vector_index(cls.id, cls.title, cls.description)
@@ -1222,10 +1236,14 @@ class OntologyService:
         color: str | None = None,
         external_references: list[ExternalReference] | None = None,
         derived: bool | None = None,
+        distinguish_from: list[dict[str, str]] | None = None,
+        evidence_signals: list[str] | None = None,
+        standard_reference: str | None = None,
     ) -> Class:
         """
-        Update a class's title, description, color, external references and/or
-        derived flag.
+        Update a class's title, description, color, external references,
+        derived flag and/or operational definition (distinguish_from,
+        evidence_signals, standard_reference).
 
         Identifier is immutable post-create and cannot be updated.
 
@@ -1244,6 +1262,9 @@ class OntologyService:
             external_references: New list of external references, replacing the
                 existing list (optional)
             derived: New derived flag (optional; see Class.derived)
+            distinguish_from: New distinguish_from, replacing it ([] clears it)
+            evidence_signals: New evidence signals, replacing them ([] clears them)
+            standard_reference: New standard reference ("" clears it)
 
         Returns:
             The updated Class
@@ -1251,7 +1272,8 @@ class OntologyService:
         Raises:
             EntityNotFoundError: If the class does not exist
             DuplicateEntityError: If a class with the new title already exists in this scheme
-            ValueError: If the color is invalid
+            ValueError: If the color is invalid, or distinguish_from names the
+                class itself or a class outside its taxonomy
         """
         cls = self._repository.get_class(class_id)
         if cls is None:
@@ -1300,6 +1322,26 @@ class OntologyService:
         if derived_changed:
             cls.derived = bool(derived)
 
+        # The operational definition: each given field replaces the old value
+        definition_changes: dict[str, tuple[object, object]] = {}
+        if distinguish_from is not None:
+            new_distinguish = self._distinguish_from(
+                distinguish_from, cls.taxonomy_id, cls.id, kept=cls.distinguish_from
+            )
+            if new_distinguish != cls.distinguish_from:
+                definition_changes["distinguish_from"] = (cls.distinguish_from, new_distinguish)
+                cls.distinguish_from = new_distinguish
+        if evidence_signals is not None:
+            new_signals = normalize_evidence_signals(evidence_signals)
+            if new_signals != cls.evidence_signals:
+                definition_changes["evidence_signals"] = (cls.evidence_signals, new_signals)
+                cls.evidence_signals = new_signals
+        if standard_reference is not None:
+            new_standard = standard_reference.strip() or None
+            if new_standard != cls.standard_reference:
+                definition_changes["standard_reference"] = (cls.standard_reference, new_standard)
+                cls.standard_reference = new_standard
+
         # Regenerate embedding only if title or description changed
         if title_changed or desc_changed:
             embed_text = f"{cls.title} {cls.description or ''}".strip()
@@ -1307,7 +1349,14 @@ class OntologyService:
             cls.embedding = embedding
 
         # Guard against no-op updates
-        if not (title_changed or desc_changed or color_changed or refs_changed or derived_changed):
+        if not (
+            title_changed
+            or desc_changed
+            or color_changed
+            or refs_changed
+            or derived_changed
+            or definition_changes
+        ):
             return cls
 
         cls.last_modified = datetime.now(timezone.utc)
@@ -1324,7 +1373,7 @@ class OntologyService:
                 ("derived", derived_changed),
             ]
             if was_changed
-        )
+        ) + tuple(definition_changes)
 
         old_values: dict[str, object] = {}
         new_values: dict[str, object] = {}
@@ -1340,6 +1389,9 @@ class OntologyService:
         if derived_changed:
             old_values["derived"] = old_derived
             new_values["derived"] = cls.derived
+        for name, (old, new) in definition_changes.items():
+            old_values[name] = old
+            new_values[name] = new
 
         failures = self._event_publisher.publish(
             ClassUpdated(
@@ -1359,6 +1411,36 @@ class OntologyService:
             )
 
         return cls
+
+    def _distinguish_from(
+        self,
+        items: list[dict[str, str]] | None,
+        taxonomy_id: str,
+        class_id: str | None = None,
+        kept: list[dict[str, str]] | None = None,
+    ) -> list[dict[str, str]]:
+        """
+        A class's distinguish_from, checked: each entry names another class of
+        the same taxonomy. Entries naming a class the current value (`kept`)
+        already names aren't checked again, so a class deleted since doesn't
+        block an edit of the others (and a revert of its delete restores it).
+
+        Raises:
+            ValueError: If an entry is malformed, names the class itself, or newly
+                names a class that doesn't exist in the taxonomy
+        """
+        normalized = normalize_distinguish_from(items)
+        already = {entry["class_id"] for entry in kept or []}
+        for entry in normalized:
+            other_id = entry["class_id"]
+            if other_id in already:
+                continue
+            if other_id == class_id:
+                raise ValueError("distinguish_from can't name the class itself")
+            other = self._repository.get_class(other_id)
+            if other is None or other.taxonomy_id != taxonomy_id:
+                raise ValueError(f"distinguish_from names {other_id}, not a class of this taxonomy")
+        return normalized
 
     def delete_class(self, class_id: str) -> None:
         """
@@ -3074,8 +3156,7 @@ class OntologyService:
                 )
                 if any(ind.title == title for ind in existing):
                     raise DuplicateEntityError(
-                        f"Individual with title '{title}' already exists in class"
-                        f" '{class_id}'"
+                        f"Individual with title '{title}' already exists in class" f" '{class_id}'"
                     )
         else:
             dataset_id = resolve_dataset_id(self._repository, taxonomy_id)
@@ -3542,9 +3623,7 @@ class OntologyService:
         individual_count = relationship_count = 0
         scope = self._transaction_scope.atomic() if self._transaction_scope else nullcontext()
         with scope:
-            for individual in self._repository.list_individuals(
-                limit=None, dataset_id=dataset_id
-            ):
+            for individual in self._repository.list_individuals(limit=None, dataset_id=dataset_id):
                 relationship_count += self._delete_individual(individual)
                 individual_count += 1
             self._repository.delete_dataset(dataset_id)

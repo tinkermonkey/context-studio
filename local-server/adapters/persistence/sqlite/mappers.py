@@ -304,6 +304,9 @@ def map_orm_to_domain(
             parent_class_id=cast(str | None, orm_entity.parent_class_id),
             structural_property_id=cast(str | None, orm_entity.structural_property_id),
             derived=bool(orm_entity.derived),
+            distinguish_from=cast(list[dict[str, str]], orm_entity.distinguish_from) or [],
+            evidence_signals=cast(list[str], orm_entity.evidence_signals) or [],
+            standard_reference=cast(str | None, orm_entity.standard_reference),
             external_references=deserialize_external_references(
                 cast(list[dict[str, Any]], orm_entity.external_references) or []
             ),
@@ -411,6 +414,9 @@ def map_domain_to_orm(
             parent_class_id=entity.parent_class_id,
             structural_property_id=entity.structural_property_id,
             derived=entity.derived,
+            distinguish_from=list(entity.distinguish_from) or None,
+            evidence_signals=list(entity.evidence_signals) or None,
+            standard_reference=entity.standard_reference,
             external_references=serialize_external_references(entity.external_references),
             lexical_senses=serialize_lexical_senses(entity.lexical_senses),
             data_properties=serialize_data_properties(entity.data_properties),

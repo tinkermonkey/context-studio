@@ -5423,6 +5423,21 @@ export interface components {
      */
     ClassCreateRequest: {
       /**
+       * Distinguish From
+       * @description When to use a sibling class instead; [] clears it
+       */
+      distinguish_from?: components["schemas"]["DistinguishFromSchema"][] | null;
+      /**
+       * Evidence Signals
+       * @description Observable signals that something is an instance; [] clears them
+       */
+      evidence_signals?: string[] | null;
+      /**
+       * Standard Reference
+       * @description The standard the class follows; "" clears it
+       */
+      standard_reference?: string | null;
+      /**
        * Title
        * @description Display name for the class
        */
@@ -5520,6 +5535,21 @@ export interface components {
        * @default false
        */
       derived: boolean;
+      /**
+       * Distinguish From
+       * @description When to use a sibling class instead
+       */
+      distinguish_from?: components["schemas"]["DistinguishFromSchema"][];
+      /**
+       * Evidence Signals
+       * @description Observable signals that something is an instance
+       */
+      evidence_signals?: string[];
+      /**
+       * Standard Reference
+       * @description The standard the class follows
+       */
+      standard_reference?: string | null;
       /** External References */
       external_references?: components["schemas"]["ExternalReferenceResponse"][];
       /** Lexical Senses */
@@ -5560,6 +5590,21 @@ export interface components {
      * @description Request to update a class. Identifier is immutable post-create.
      */
     ClassUpdateRequest: {
+      /**
+       * Distinguish From
+       * @description When to use a sibling class instead; [] clears it
+       */
+      distinguish_from?: components["schemas"]["DistinguishFromSchema"][] | null;
+      /**
+       * Evidence Signals
+       * @description Observable signals that something is an instance; [] clears them
+       */
+      evidence_signals?: string[] | null;
+      /**
+       * Standard Reference
+       * @description The standard the class follows; "" clears it
+       */
+      standard_reference?: string | null;
       /**
        * Title
        * @description New title
@@ -6135,6 +6180,22 @@ export interface components {
        * @description Number of external references attached
        */
       external_references: number;
+    };
+    /**
+     * DistinguishFromSchema
+     * @description When to use another class instead of this one.
+     */
+    DistinguishFromSchema: {
+      /**
+       * Class Id
+       * @description The other class, in the same taxonomy
+       */
+      class_id: string;
+      /**
+       * When
+       * @description When to use it instead
+       */
+      when: string;
     };
     /**
      * DrDecisionResponse
