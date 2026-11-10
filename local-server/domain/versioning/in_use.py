@@ -14,6 +14,13 @@ A type whose domain and range are the deleted type's reversed (see
 moved relationship runs from the old target to the old source, and fitting is
 checked that way round.
 
+A relationship belongs to its source individual's dataset. Relationships of
+a dataset that yields to the schema (`Dataset.yields_to_schema`, e.g. Context
+Studio's own sample model in the DR taxonomy) never block: they follow the
+schema change instead (see ProposalService.yield_plan). `blockers` counts the
+others only; a relationship whose source is a class belongs to no dataset and
+always blocks.
+
 Only types that share a taxonomy with the deleted type (the taxonomies of
 their domain and range classes) are offered as replacements, so a generic
 untyped type from elsewhere isn't offered just because it accepts anything. A
@@ -42,6 +49,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Iterable
 
+from domain.ontology.datasets import yielding_dataset_ids
+
 if TYPE_CHECKING:
     from domain.ontology.entities import PropertyDefinition, Relationship
     from domain.ontology.ports import OntologyRepository
@@ -49,12 +58,16 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class EdgeEnd:
-    """One end of a relationship: the entity and the classes it is typed by."""
+    """
+    One end of a relationship: the entity and the classes it is typed by, and
+    its dataset (an individual's; None for a class end).
+    """
 
     id: str
     title: str
     class_ids: tuple[str, ...]
     class_titles: tuple[str, ...]
+    dataset_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -65,6 +78,11 @@ class BlockingEdge:
     source: EdgeEnd
     target: EdgeEnd
     attributes: dict[str, Any]
+
+    @property
+    def dataset_id(self) -> str | None:
+        """The relationship's dataset: its source individual's (None for a class source)."""
+        return self.source.dataset_id
 
 
 @dataclass(frozen=True)
@@ -189,6 +207,24 @@ class InUseInspector:
         self._class_titles: dict[str, str] = {}
         self._types: list[PropertyDefinition] | None = None
         self._class_taxonomies: dict[str, str | None] = {}
+        self._yielding: frozenset[str] | None = None
+
+    def yielding(self) -> frozenset[str]:
+        """The datasets that yield to the schema."""
+        if self._yielding is None:
+            self._yielding = yielding_dataset_ids(self._repo)
+        return self._yielding
+
+    def partition(
+        self, edges: Iterable[BlockingEdge]
+    ) -> tuple[list[BlockingEdge], list[BlockingEdge]]:
+        """Split relationships into (blocking, yielding): the latter in yielding datasets."""
+        yielding = self.yielding()
+        blocking: list[BlockingEdge] = []
+        follows: list[BlockingEdge] = []
+        for edge in edges:
+            (follows if edge.dataset_id in yielding else blocking).append(edge)
+        return blocking, follows
 
     def edges(self, property_id: str) -> list[BlockingEdge]:
         """The relationships that use the type, oldest first."""
@@ -203,6 +239,7 @@ class InUseInspector:
     ) -> DeleteBlockers | None:
         """
         What blocks deleting the type, or None when nothing (left) uses it.
+        Relationships of datasets that yield to the schema never block.
 
         Args:
             property_id: The type being deleted
@@ -212,7 +249,8 @@ class InUseInspector:
                 proposal's relationship deletes, say); they don't block
         """
         gone = set(covered)
-        edges = [e for e in self.edges(property_id) if e.relationship_id not in gone]
+        blocking, _ = self.partition(self.edges(property_id))
+        edges = [e for e in blocking if e.relationship_id not in gone]
         if not edges:
             return None
         skip = {property_id, *excluded}
@@ -341,6 +379,10 @@ class InUseInspector:
             self._class_titles[class_id] = cls.title if cls is not None else class_id
         return self._class_titles[class_id]
 
+    def edge(self, relationship: Relationship) -> BlockingEdge:
+        """A relationship with its ends' classes and datasets."""
+        return self._edge(relationship)
+
     def _edge(self, relationship: Relationship) -> BlockingEdge:
         return BlockingEdge(
             relationship_id=relationship.id,
@@ -352,8 +394,10 @@ class InUseInspector:
     def _end(self, entity_id: str) -> EdgeEnd:
         if entity_id not in self._ends:
             individual = self._repo.get_individual(entity_id)
+            dataset_id = None
             if individual is not None:
                 title, class_ids = individual.title, tuple(individual.class_ids)
+                dataset_id = individual.dataset_id
             else:
                 cls = self._repo.get_class(entity_id)
                 title = cls.title if cls is not None else entity_id
@@ -363,6 +407,7 @@ class InUseInspector:
                 title=title,
                 class_ids=class_ids,
                 class_titles=tuple(self._class_title(c) for c in class_ids),
+                dataset_id=dataset_id,
             )
         return self._ends[entity_id]
 

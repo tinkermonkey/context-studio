@@ -1367,10 +1367,13 @@ class OntologyService:
             )
 
         # Check for individuals referencing this class
-        individuals = self._repository.list_individuals(class_id=class_id, limit=None)
+        individuals = self._repository.count_individuals(class_id=class_id)
         if individuals:
+            by_dataset = self._by_dataset(
+                lambda d: self._repository.count_individuals(class_id=class_id, dataset_id=d)
+            )
             raise OntologyError(
-                f"Cannot delete class {class_id}: it has {len(individuals)}" " individual(s)"
+                f"Cannot delete class {class_id}: it has {individuals} individual(s){by_dataset}"
             )
 
         # Check for property definitions referencing this class as domain/range.
@@ -2522,9 +2525,14 @@ class OntologyService:
         # Check if property is in use
         relationships = self._repository.list_relationships(property_id=property_id, limit=None)
         if relationships:
+            by_dataset = self._by_dataset(
+                lambda d: self._repository.count_relationships(
+                    property_id=property_id, dataset_id=d
+                )
+            )
             raise EntityInUseError(
                 f"PropertyDefinition '{property_id}' is in use by {len(relationships)}"
-                " relationship(s)"
+                f" relationship(s){by_dataset}"
             )
 
         self._repository.delete_property_definition(property_id)
@@ -3187,6 +3195,15 @@ class OntologyService:
         return len(orphaned_relationships)
 
     # Dataset operations
+
+    def _by_dataset(self, count: Any) -> str:
+        """`count(dataset_id)` for each dataset with any, as ": a 12, b 3" (or "")."""
+        parts = []
+        for dataset in self._repository.list_datasets():
+            n = count(dataset.id)
+            if n:
+                parts.append(f"{dataset.identifier} {n}")
+        return f": {', '.join(parts)}" if parts else ""
 
     def list_datasets(self, taxonomy_id: str | None = None) -> list[Dataset]:
         """
