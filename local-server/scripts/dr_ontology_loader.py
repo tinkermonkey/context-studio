@@ -8,8 +8,10 @@ one ConceptScheme per DR layer, one Class per node schema, one
 AttributeDefinition per node attribute (keyed in its class by the attribute's
 DR name; its remaining JSON Schema rides on its DR reference as metadata
 `{"schema"}`), and one PropertyDefinition per relationship schema. A relationship schema's
-cardinality, strength and x-dr-evidence ride on its property definition's DR
-reference as metadata (`{"cardinality", "strength", "evidence"}`; see
+cardinality is its property definition's structure fields (min_per_source,
+max_per_source, max_per_target; see `DR_CARDINALITIES`; many-to-many when the
+schema gives none), and its strength and x-dr-evidence ride on the property
+definition's DR reference as metadata (`{"strength", "evidence"}`; see
 `DR_ATTRIBUTE_KEYS`), so a change proposal can change them and
 `scripts/export_dr_spec_changes.py` can hand them back to DR.
 
@@ -589,6 +591,7 @@ def _upsert_property_definitions(
                     _attributes_reference(record.full_identifier, record.attributes)
                 ],
                 create_missing_predicate=True,
+                **record.structure,
             )
             summary.property_definitions_created += 1
         else:
@@ -608,6 +611,7 @@ def _upsert_property_definitions(
                 update_domain_class_id=True,
                 update_range_class_id=True,
                 create_missing_predicate=True,
+                structure=record.structure,
             )
             summary.property_definitions_updated += 1
             _sync_relationship_reference(repo, prop, record)  # type: ignore[arg-type]

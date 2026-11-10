@@ -9,7 +9,6 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from domain.ontology.value_objects import ExternalReference
 from domain.versioning.proposal_service import OperationDraft
 from domain.versioning.proposals import OperationKind as K
 from domain.versioning.proposals import OperationStatus, ProposalSource
@@ -24,17 +23,11 @@ def test_relationship_attribute_changes_revert_atomically(parts):  # noqa: F811
     kinds = ontology.create_scheme(taxonomy_id=taxonomy.id, title="Kinds")
     activity = ontology.create_class(kinds.id, "Activity")
     resource = ontology.create_class(kinds.id, "Resource")
-    requires = ontology.create_property_definition(
-        "requires",
-        "requires",
-        external_references=[
-            ExternalReference(
-                source="house",
-                identifier="requires",
-                metadata={"edge_properties": ["quantity", "unit", "optional"]},
-            )
-        ],
-    )
+    requires = ontology.create_property_definition("requires", "requires")
+    for name, datatype in (("quantity", "number"), ("unit", "string"), ("optional", "boolean")):
+        ontology.create_attribute_definition(
+            None, name, name, datatype, property_definition_id=requires.id
+        )
     hang = ontology.create_individual(activity.id, "Hang a picture")
     hooks = ontology.create_individual(resource.id, "Picture hooks")
     hammer = ontology.create_individual(resource.id, "Hammer")

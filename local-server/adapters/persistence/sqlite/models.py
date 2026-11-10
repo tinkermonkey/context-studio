@@ -81,6 +81,13 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
             subquery on predicates, defined below the Predicate model)
         ontology_mapping: JSON mapping to external ontologies (for property_definition)
         is_relevant: Tri-state relevance flag (for property_definition)
+        min_per_source: Fewest relationships of the type per source (for property_definition)
+        max_per_source: Most relationships of the type per source, NULL for no limit
+            (for property_definition)
+        max_per_target: Most relationships of the type per target, NULL for no limit
+            (for property_definition)
+        hierarchy: The type's relationships form no cycles (for property_definition)
+        symmetric: The type holds both ways (for property_definition)
     """
 
     __tablename__ = "ontology_entities"
@@ -197,6 +204,39 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
             " no direct creates of its individuals or relationships, not an extraction"
             " target. False for other node types."
         ),
+    )
+    # Relationship-type structure (for property_definition); not enforced on
+    # stored relationships. Other node types keep the defaults.
+    min_per_source = Column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default=text("0"),
+        doc="Fewest relationships of this type per source (for property_definition; 0: optional)",
+    )
+    max_per_source = Column(
+        Integer,
+        nullable=True,
+        doc="Most relationships of this type per source (for property_definition; NULL: no limit)",
+    )
+    max_per_target = Column(
+        Integer,
+        nullable=True,
+        doc="Most relationships of this type per target (for property_definition; NULL: no limit)",
+    )
+    hierarchy = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("0"),
+        doc="Its relationships form no cycles (for property_definition)",
+    )
+    symmetric = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("0"),
+        doc="A relationship one way holds the other way too (for property_definition)",
     )
     # A class's operational definition (DR's x-dr-distinguish, x-dr-evidence and
     # x-dr-standard); null for other node types and for classes without one.
@@ -622,27 +662,32 @@ class PropertyDefinition(Base):  # type: ignore[valid-type,misc]
 
 class AttributeDefinition(Base):  # type: ignore[valid-type,misc]
     """
-    Defines the type-level (TBox) declaration of an attribute on a Class (OWL DatatypeProperty).
+    Defines the type-level (TBox) declaration of an attribute (OWL DatatypeProperty) on a
+    Class, or on a relationship type (an edge attribute, such as a kit's quantity).
 
-    Represents schema metadata about a graph node: "Class X has an attribute named Y of type Z
-    with these constraints", scoped to a single class. Unlike instances with data property values
-    (DataPropertyValue), AttributeDefinitions are schema-level declarations that define the
-    structure and constraints of attributes on class instances.
+    Represents schema metadata: "Class X (or relationship type R) has an attribute named Y of
+    type Z with these constraints", scoped to exactly one owner, a class or a relationship type
+    (the ck_attribute_one_owner check). Unlike instances with data property values
+    (DataPropertyValue) or relationship attributes, AttributeDefinitions are schema-level
+    declarations that define the structure and constraints of those values.
 
     Stored in a dedicated table (not STI) because AttributeDefinition is schema metadata,
     not a graph node.
 
     Attributes:
         id: UUID as string, primary key
-        class_id: ID of the class this attribute is scoped to (required; FK with CASCADE)
-        identifier: Machine-readable identifier for the attribute within its class
+        class_id: ID of the class this attribute is scoped to (FK with CASCADE; NULL for an
+            edge attribute)
+        property_definition_id: ID of the relationship type an edge attribute is on (FK with
+            CASCADE; NULL for a class attribute)
+        identifier: Machine-readable identifier for the attribute, unique within its owner
         title: Display name for the attribute
         datatype: The data type (string, integer, number, date, boolean, array or object)
         description: Optional longer description
         is_required: Whether this attribute must be present on instances
         allowed_values: Enum constraint; a list of allowed string values, or None
         default_value: Optional default value (as string)
-        sort_order: Display order within the class's attribute list
+        sort_order: Display order within the owner's attribute list
         external_references: JSON list of external knowledge base links (e.g., DR provenance)
         created_at: Timestamp of creation (UTC, auto-set)
         last_modified: Timestamp of last modification (UTC, auto-set)
@@ -657,14 +702,21 @@ class AttributeDefinition(Base):  # type: ignore[valid-type,misc]
     class_id = Column(
         String(36),
         ForeignKey("ontology_entities.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
         index=True,
-        doc="Class this attribute is scoped to (required, with cascade delete)",
+        doc="Class this attribute is scoped to (NULL for an edge attribute; cascade delete)",
+    )
+    property_definition_id = Column(
+        String(36),
+        ForeignKey("ontology_entities.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+        doc="Relationship type an edge attribute is on (NULL for a class attribute; cascade)",
     )
     identifier = Column(
         String(255),
         nullable=False,
-        doc="Machine-readable identifier for the attribute within its class",
+        doc="Machine-readable identifier for the attribute, unique within its owner",
     )
     title = Column(String(255), nullable=False, index=True)
     datatype = Column(
@@ -689,7 +741,7 @@ class AttributeDefinition(Base):  # type: ignore[valid-type,misc]
         Integer,
         nullable=False,
         default=0,
-        doc="Display order within the class's attribute list",
+        doc="Display order within the owner's attribute list",
     )
     external_references = Column(
         JSON,
@@ -726,13 +778,21 @@ class AttributeDefinition(Base):  # type: ignore[valid-type,misc]
     )
 
     __table_args__ = (
+        CheckConstraint(
+            "(class_id IS NULL) <> (property_definition_id IS NULL)",
+            name="ck_attribute_one_owner",
+        ),
         UniqueConstraint("class_id", "identifier", name="uk_attribute_class_identifier"),
+        UniqueConstraint(
+            "property_definition_id", "identifier", name="uk_attribute_property_identifier"
+        ),
         Index("idx_class_id_sort_order", "class_id", "sort_order"),
     )
 
     def __repr__(self) -> str:
         return (
             f"<AttributeDefinition(id={self.id}, class_id={self.class_id},"
+            f" property_definition_id={self.property_definition_id},"
             f" identifier={self.identifier})>"
         )
 

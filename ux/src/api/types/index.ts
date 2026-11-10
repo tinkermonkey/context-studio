@@ -736,6 +736,30 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/properties/{property_id}/attributes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Edge Attributes
+     * @description The relationship type's edge attributes: the values its relationships may
+     *     carry, each with a datatype, allowed values, required and a default.
+     *
+     *     Raises:
+     *         HTTPException: 404 if the relationship type is not found
+     */
+    get: operations["list_edge_attributes_api_properties__property_id__attributes_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/classes/{class_id}/attribute-definitions": {
     parameters: {
       query?: never;
@@ -4425,9 +4449,14 @@ export interface components {
       id: string;
       /**
        * Class Id
-       * @description Parent class ID
+       * @description Parent class ID (null for an edge attribute)
        */
-      class_id: string;
+      class_id?: string | null;
+      /**
+       * Property Definition Id
+       * @description Relationship type an edge attribute is on (null for a class attribute)
+       */
+      property_definition_id?: string | null;
       /**
        * Identifier
        * @description Machine-readable identifier
@@ -8554,6 +8583,31 @@ export interface components {
        * @description Class the relationship's target must belong to
        */
       range_class_id?: string | null;
+      /**
+       * Min Per Source
+       * @description Fewest relationships of this type a source has (default 0)
+       */
+      min_per_source?: number | null;
+      /**
+       * Max Per Source
+       * @description Most relationships of this type a source has (null: no limit)
+       */
+      max_per_source?: number | null;
+      /**
+       * Max Per Target
+       * @description Most relationships of this type a target has (null: no limit)
+       */
+      max_per_target?: number | null;
+      /**
+       * Hierarchy
+       * @description Its relationships form no cycles (needs the same domain and range)
+       */
+      hierarchy?: boolean | null;
+      /**
+       * Symmetric
+       * @description A relationship one way holds the other way too (same domain and range)
+       */
+      symmetric?: boolean | null;
     };
     /**
      * PropertyDefinitionResponse
@@ -8600,6 +8654,34 @@ export interface components {
        * @description Class the relationship's target must belong to, if constrained
        */
       range_class_id?: string | null;
+      /**
+       * Min Per Source
+       * @description Fewest relationships of this type a source has (0: optional)
+       * @default 0
+       */
+      min_per_source: number;
+      /**
+       * Max Per Source
+       * @description Most relationships of this type a source has (null: no limit)
+       */
+      max_per_source?: number | null;
+      /**
+       * Max Per Target
+       * @description Most relationships of this type a target has (null: no limit)
+       */
+      max_per_target?: number | null;
+      /**
+       * Hierarchy
+       * @description Its relationships form no cycles (needs the same domain and range)
+       * @default false
+       */
+      hierarchy: boolean;
+      /**
+       * Symmetric
+       * @description A relationship one way holds the other way too (same domain and range)
+       * @default false
+       */
+      symmetric: boolean;
       /**
        * Derived
        * @description The client computes its relationships from other data: none is created directly, and extraction doesn't target it
@@ -8665,6 +8747,31 @@ export interface components {
        * @description Relevance flag (None=not evaluated, True=relevant, False=irrelevant)
        */
       is_relevant?: boolean | null;
+      /**
+       * Min Per Source
+       * @description New minimum per source
+       */
+      min_per_source?: number | null;
+      /**
+       * Max Per Source
+       * @description New maximum per source; null removes the limit
+       */
+      max_per_source?: number | null;
+      /**
+       * Max Per Target
+       * @description New maximum per target; null removes the limit
+       */
+      max_per_target?: number | null;
+      /**
+       * Hierarchy
+       * @description New hierarchy flag
+       */
+      hierarchy?: boolean | null;
+      /**
+       * Symmetric
+       * @description New symmetric flag
+       */
+      symmetric?: boolean | null;
     };
     /**
      * ProposalSource
@@ -11728,6 +11835,37 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_edge_attributes_api_properties__property_id__attributes_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        property_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AttributeDefinitionResponse"][];
+        };
       };
       /** @description Validation Error */
       422: {

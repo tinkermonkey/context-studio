@@ -1,10 +1,16 @@
 """
 Orchestrator for schema node definition refinement pipeline.
 
-Refines the definition of a class or a property definition from its
-neighborhood (for a class: parent, siblings, properties; for a property:
-domain and range classes, sibling properties) and extraction examples. Uses LLM to generate
-up to 3 candidate refined definitions with rationale citing inputs.
+Two modes:
+- one node (input node_id): refines the definition of a class or a property
+  definition from its neighborhood (for a class: parent, siblings, properties;
+  for a property: domain and range classes, sibling properties) and extraction
+  examples. Uses LLM to generate up to 3 candidate refined definitions with
+  rationale citing inputs; the drawer's Suggest Definition applies the one a
+  person picks.
+- scoped (input taxonomy_id and scope): definition enrichment (#1517), each
+  class's operational definition proposed as one change proposal; see
+  enrichment.py.
 """
 
 from __future__ import annotations
@@ -15,6 +21,7 @@ import re
 from dataclasses import dataclass, field, replace
 from typing import Any
 
+from domain.ontology.ports import OntologyRepository
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipelines.orchestration.base import (
@@ -27,6 +34,10 @@ from domain.pipelines.refinement.neighborhood import (
     PropertyNeighborhood,
     SchemaNeighborhoodTraversal,
 )
+from domain.pipelines.requested_via import ensure_may_propose_to
+from domain.versioning.proposal_service import ProposalService
+
+from .enrichment import DefinitionEnrichment
 
 _logger = logging.getLogger(__name__)
 
@@ -61,6 +72,8 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
         config: dict[str, Any] | None = None,
         run_id: str | None = None,
         status_writer: PipelineRunStatusWriter | None = None,
+        ontology_repo: OntologyRepository | None = None,
+        proposal_service: ProposalService | None = None,
     ) -> None:
         """
         Initialize the definition refinement orchestrator.
@@ -69,12 +82,16 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             llm_provider: LLM provider for generating definitions
             traversal: SchemaNeighborhoodTraversal for context assembly
             config: Configuration dict with model, temperature, etc.
+            ontology_repo, proposal_service: For the scoped mode (definition
+                enrichment), which proposes its changes
             run_id: Pipeline run ID for writing RUNNING status
             status_writer: Optional port for writing run status to persistence
         """
         super().__init__(llm_provider, run_id, status_writer)
         self._traversal = traversal
         self._config = config or {}
+        self._repo = ontology_repo
+        self._proposals = proposal_service
 
     async def execute(self, state: PipelineState) -> PipelineState:
         """
@@ -103,6 +120,9 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
                 llm_provider=state.llm_provider,
                 result=state.result,
             )
+
+        if state.input_data.get("taxonomy_id") and not state.input_data.get("node_id"):
+            return await self._enrich(state)
 
         node_id = state.input_data.get("node_id", "")
         current_definition = state.input_data.get("current_definition", "")
@@ -198,6 +218,65 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
             ) from exc
 
         return state
+
+    async def _enrich(self, state: DefinitionRefinementState) -> DefinitionRefinementState:
+        """The scoped mode: definition enrichment of a taxonomy's classes, proposed."""
+        if self._repo is None or self._proposals is None:
+            raise PipelineExecutionError("Definition enrichment needs the ontology and proposals")
+        taxonomy_id = state.input_data["taxonomy_id"]
+        taxonomy = self._repo.get_taxonomy(taxonomy_id)
+        if taxonomy is None:
+            raise PipelineInputError(f"No taxonomy {taxonomy_id}")
+        ensure_may_propose_to(taxonomy, state.input_data)
+        model = state.input_data.get("model") or self._config.get(
+            "model", "google/gemini-3-flash-preview"
+        )
+        temperature = state.input_data.get("temperature")
+        if temperature is None:
+            temperature = self._config.get("temperature", 0.0)
+        max_tokens = self._config.get("max_tokens", 2000)
+
+        async def call_llm(system: str, user: str):
+            return await self._call_llm(
+                system_prompt=system,
+                user_prompt=user,
+                model=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                response_format="json",
+            )
+
+        enrichment = DefinitionEnrichment(
+            self._repo,
+            self._proposals,
+            call_llm,
+            self._report_progress,
+            concurrency=int(self._config.get("concurrency", 4)),
+        )
+        scope = state.input_data.get("scope")
+        classes = enrichment.scope(taxonomy, scope)
+        outcome = await enrichment.run(taxonomy, classes, model, state.run_id)
+        warnings = [{"stage": "enrich", "class": c, "error": e} for c, e in outcome.failed]
+        warnings += [{"stage": "propose", **item} for item in outcome.refused]
+        return replace(
+            state,
+            current_status=PipelineRunStatus.COMPLETED,
+            result={
+                "status": "completed_with_warnings" if warnings else "completed",
+                "taxonomy_id": taxonomy.id,
+                "scope": scope,
+                "classes": outcome.classes,
+                "proposed": outcome.proposed,
+                "unchanged": outcome.unchanged,
+                "proposal_id": outcome.proposal_id,
+                "dropped_distinguish": outcome.dropped_distinguish,
+                "errors": [f"{c}: {e}" for c, e in outcome.failed][:20],
+                "error_count": len(outcome.failed),
+                "refused": outcome.refused,
+            },
+            llm_metadata=outcome.llm_metadata,
+            parse_warnings=[*state.parse_warnings, *warnings],
+        )
 
     async def _generate_candidates(
         self,
