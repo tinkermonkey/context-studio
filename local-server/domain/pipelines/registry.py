@@ -93,14 +93,24 @@ class PipelineTypeRegistry:
         ),
         PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT: PipelineTypeDefinition(
             pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
-            description="Refine schema node definitions using LLM",
+            description=(
+                "Refine schema node definitions using LLM: one node's candidates, or a"
+                " taxonomy's operational definitions proposed (definition enrichment)"
+            ),
             input_contract={
-                "node_id": "str (required) — UUID of the class or property definition to refine",
-                "current_definition": "str (required) — current definition text",
+                "node_id": "str — the class or property definition to refine (one-node mode)",
+                "current_definition": "str — current definition text (one-node mode)",
                 "context": "str (optional) — additional context for refinement",
+                "taxonomy_id": "str — the taxonomy to enrich (scoped mode, without node_id)",
+                "scope": (
+                    "str | list[str] | dict | None — a scheme id or identifier, class ids or"
+                    " identifiers, {concept_scheme_id} or {class_ids}; None for every class"
+                ),
             },
             output_contract={
-                "refined_definition": "str — refined definition text",
+                "candidates": "list[dict] — one-node mode: up to 3 candidate definitions",
+                "proposal_id": "str | None — scoped mode: the change proposal made",
+                "proposed": "int — scoped mode: classes with a proposed update",
             },
         ),
         PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT: PipelineTypeDefinition(
