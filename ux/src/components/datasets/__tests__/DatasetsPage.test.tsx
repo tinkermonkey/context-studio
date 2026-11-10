@@ -165,6 +165,20 @@ describe("DatasetsPage", () => {
       ).not.toBeInTheDocument();
     });
 
+    it("shows a field's error again when it is emptied and left", async () => {
+      serve();
+      const user = userEvent.setup();
+      render(<DatasetsPage onTaxonomyChange={vi.fn()} />);
+      await user.click(screen.getByTestId("dataset-add-button"));
+
+      await user.type(screen.getByTestId("dataset-title-input"), "D");
+      expect(screen.queryByText("Enter a title.")).not.toBeInTheDocument();
+      await user.clear(screen.getByTestId("dataset-title-input"));
+      await user.tab();
+
+      expect(screen.getByText("Enter a title.")).toBeInTheDocument();
+    });
+
     it("creates the dataset in the chosen taxonomy", async () => {
       serve();
       let body: unknown;

@@ -162,6 +162,7 @@ export function CreateDatasetModal({
                 ...(identifierEdited ? {} : { identifier: undefined }),
               }));
             }}
+            onBlur={() => setErrors((prev) => ({ ...prev, title: validate().title }))}
             error={!!errors.title}
             data-testid="dataset-title-input"
           />
@@ -169,19 +170,20 @@ export function CreateDatasetModal({
         <Field
           label={copy.identifierLabel}
           htmlFor="dataset-identifier"
-          hint={copy.identifierHint}
           required
           error={errors.identifier}
         >
           <TextInput
             id="dataset-identifier"
             mono
+            placeholder={copy.identifierPlaceholder}
             value={identifier}
             onChange={(e) => {
               setIdentifier(e.target.value);
               setIdentifierEdited(true);
               setErrors((prev) => ({ ...prev, identifier: undefined }));
             }}
+            onBlur={() => setErrors((prev) => ({ ...prev, identifier: validate().identifier }))}
             error={!!errors.identifier}
             data-testid="dataset-identifier-input"
           />

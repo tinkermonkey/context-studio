@@ -37,7 +37,7 @@ export const datasetsCopy = {
     taxonomyPlaceholder: "Choose a taxonomy",
     titleLabel: "Title",
     identifierLabel: "Identifier",
-    identifierHint: "A lowercase letter, then lowercase letters, digits, - or _",
+    identifierPlaceholder: "e.g. platform-a",
     submit: "Create dataset",
     cancel: "Cancel",
     taxonomyRequired: "Choose a taxonomy.",
