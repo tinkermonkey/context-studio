@@ -28,6 +28,7 @@ from adapters.reference.http_headers import USER_AGENT
 from adapters.reference.proxy import ReferenceProxy
 from adapters.reference.schema_org import SchemaOrgSource
 from adapters.reference.wikidata import WikidataSource
+from adapters.web import reference_routes
 from adapters.web.reference_routes import router as reference_router
 from config import ReferenceProxyConfig
 
@@ -182,6 +183,35 @@ def test_repeated_search_route_makes_no_upstream_requests(make_proxy, upstream):
     assert second == first
     assert requests_after_first == 3
     assert len(upstream.requests) == 3
+
+
+async def test_search_route_does_not_wait_on_a_hanging_upstream(tmp_path, upstream, monkeypatch):
+    """With ConceptNet's upstream hanging, search returns at the cap with the others' results."""
+    monkeypatch.setattr(reference_routes, "SOURCE_QUERY_TIMEOUT_SECONDS", 0.5)
+    hanging = FakeUpstream()
+    hanging.delay_seconds = 2.0
+    config = _proxy_config(tmp_path, upstream.url)
+    config.sources.conceptnet.upstream = hanging.url
+    reference_proxy = ReferenceProxy(config)
+    reference_proxy.start()
+    try:
+        app = FastAPI()
+        app.include_router(reference_router)
+        app.state.reference_sources = list(_sources(reference_proxy))
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            started = time.monotonic()
+            response = await client.post("/api/reference/search", json={"term": "water"})
+            elapsed = time.monotonic() - started
+
+        assert elapsed < 1.5
+        data = response.json()
+        assert data["sources_searched"] == ["DBpedia", "Wikidata"]
+        assert data["sources_failed"] == ["ConceptNet"]
+        assert data["total_results"] == 2
+    finally:
+        reference_proxy.stop()
+        hanging.close()
 
 
 def test_repeated_grounding_run_is_served_from_the_cache(make_proxy, upstream):
