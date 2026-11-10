@@ -247,6 +247,8 @@ def _build_claim_triage(
         decision_models=decision_models,
         claim_service=claim_service,
         proposal_service=services.get("proposal_service"),
+        # DR's predicate meanings for the dr_spec taxonomy's evidence packs
+        predicate_catalog=lambda taxonomy_id: dr_predicate_catalog_for(ontology_repo, taxonomy_id),
         config=services.get("refinement_config", {}),
         run_id=services.get("run_id"),
         status_writer=services.get("status_writer"),

@@ -110,7 +110,8 @@ class ClaimStateRenderer:
             elif (prop := self._repo.get_property_definition(entity_id)) is not None:
                 named.properties.append(prop)
             elif (attribute := self._repo.get_attribute_definition(entity_id)) is not None:
-                named.attributes.append(attribute)
+                if all(a.id != attribute.id for a in named.attributes):
+                    named.attributes.append(attribute)
         named.labels = [self._label(i) for i in affected_ids]
         return named
 

@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from domain.decision.value_objects import ChoiceQuestion, YesNoQuestion
+from domain.decision.value_objects import ChoiceQuestion, ScoreAnswer, YesNoQuestion
 from domain.ontology.entities import (
     AttributeDefinition,
     Class,
@@ -14,6 +14,7 @@ from domain.ontology.entities import (
     Taxonomy,
 )
 from domain.pipelines.claim_triage import ClaimTriageOrchestrator, ClaimTriageState
+from domain.pipelines.claim_triage.orchestrator import _level
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
 from domain.versioning.claims import (
@@ -55,13 +56,15 @@ class RecordingWriter:
 
 
 class FakeProposals:
-    """Open proposals with pending class updates, as list_proposals returns them."""
+    """Open proposals, newest first, each with its operations, as list_proposals returns them."""
 
-    def __init__(self, *operations):
-        self.operations = list(operations)
+    def __init__(self, *operations, older=()):
+        self.proposals = [SimpleNamespace(operations=list(operations))]
+        if older:
+            self.proposals.append(SimpleNamespace(operations=list(older)))
 
     def list_proposals(self, taxonomy_id=None, status=None, limit=50, **_):
-        return [SimpleNamespace(operations=self.operations)]
+        return self.proposals
 
 
 def pending_update(target_id, **fields):
@@ -141,12 +144,13 @@ def claims(repo):
     return service
 
 
-def make(repo, claims, model, proposals=None, writer=None, config=None):
+def make(repo, claims, model, proposals=None, writer=None, config=None, catalog=None):
     return ClaimTriageOrchestrator(
         ontology_repo=repo,
         decision_models=FakeDecisionModels(model),
         claim_service=claims,
         proposal_service=proposals,
+        predicate_catalog=(lambda taxonomy_id: catalog) if catalog else None,
         config=config,
         run_id="run-1",
         status_writer=writer,
@@ -259,6 +263,27 @@ class TestState:
         triage = claims.list_claims(ClaimFilter(taxonomy_id=T, keys=("n-op#2",)))[0].triage
         assert triage.addressed_by_proposal == pytest.approx(0.8)
 
+    def test_the_newest_open_proposal_wins_and_only_definitions_count(self, repo, claims):
+        fake = model()
+        proposals = FakeProposals(
+            pending_update("op", title="Renamed only"),
+            older=[pending_update("op", description="From the older proposal")],
+        )
+        run(make(repo, claims, fake, proposals), ["n-op#2"])
+
+        state, questions = fake.calls[0]
+        assert "description: From the older proposal" in state
+        assert "Renamed only" not in state
+        assert "addressed_by_proposal" in questions
+
+    def test_the_predicate_catalog_gives_edge_meanings(self, repo, claims):
+        fake = model()
+        catalog = {"uses": {"description": "The source calls the target at run time"}}
+        run(make(repo, claims, fake, catalog=catalog), ["n-op#1"])
+
+        state, _ = fake.calls[0]
+        assert "The source calls the target at run time" in state
+
     def test_only_pending_class_updates_count(self, repo, claims):
         fake = model()
         applied = pending_update("op", description="Old")
@@ -280,6 +305,8 @@ class TestScope:
             ({"subject_ids": ["svc"]}, ["n-svc#1"]),
             ({"concept_scheme_id": "api"}, ["n-op#1", "n-op#2"]),
             ({"concept_scheme_id": "api", "subject_ids": ["svc"]}, []),
+            ({"concept_scheme_id": "api", "subject_ids": []}, []),
+            ({"subject_ids": []}, []),
         ],
     )
     def test_scope(self, repo, claims, scope, expected):
@@ -346,9 +373,6 @@ class TestFailures:
 
 
 def test_triage_answers_round_to_the_score_scale():
-    from domain.pipelines.claim_triage.orchestrator import _level
-    from domain.decision.value_objects import ScoreAnswer
-
     meta = {"model": "m", "latency_ms": 1.0}
     assert _level(ScoreAnswer(score=2.6, **meta)) == 3
     assert _level(ScoreAnswer(score=-0.2, **meta)) == 0

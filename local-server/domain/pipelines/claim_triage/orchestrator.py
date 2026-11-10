@@ -13,7 +13,7 @@ from __future__ import annotations
 import asyncio
 import time
 from collections import Counter
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from typing import Any, Optional, cast
 
@@ -38,7 +38,10 @@ from .configurations.default import get_default_config
 from .questions import ADDRESSED_BY_PROPOSAL, triage_questions
 from .state import ClaimStateRenderer
 
+PredicateCatalogLookup = Callable[[str], Optional[Mapping[str, Mapping[str, Any]]]]
 MAX_REPORTED_ERRORS = 20
+# The fields of a class update that change its definition
+DEFINITION_FIELDS = ("description",)
 SCOPE_KEYS = ("keys", "note_ref", "subject_ids", "concept_scheme_id", "untriaged")
 
 
@@ -56,6 +59,7 @@ class ClaimTriageOrchestrator(PipelineOrchestrator):
         decision_models: DecisionModels,
         claim_service: ClaimService,
         proposal_service: Optional[ProposalService] = None,
+        predicate_catalog: Optional[PredicateCatalogLookup] = None,
         config: Optional[dict[str, Any]] = None,
         run_id: Optional[str] = None,
         status_writer: Optional[PipelineRunStatusWriter] = None,
@@ -67,6 +71,9 @@ class ClaimTriageOrchestrator(PipelineOrchestrator):
             claim_service: Where the claims are read and their triage saved
             proposal_service: Open proposals, for the definitions pending per
                 subject; without it no pending definition is shown
+            predicate_catalog: Taxonomy id -> predicate catalog (predicate ->
+                {"description": ...}) for the evidence pack's edge meanings, or
+                None where a taxonomy has none
             config: decision_model, context_policy and categories (see the
                 default configuration)
             run_id, status_writer: Where the run's status and progress go
@@ -76,6 +83,7 @@ class ClaimTriageOrchestrator(PipelineOrchestrator):
         self._decision_models = decision_models
         self._claims = claim_service
         self._proposals = proposal_service
+        self._predicate_catalog = predicate_catalog
         self._config = {**get_default_config(), **(config or {})}
 
     async def execute(self, state: PipelineState) -> PipelineState:
@@ -93,7 +101,8 @@ class ClaimTriageOrchestrator(PipelineOrchestrator):
         categories = self._config.get("categories") or {}
         if not categories:
             raise PipelineInputError("The configuration lists no categories")
-        renderer = ClaimStateRenderer(self._repo, EvidencePackBuilder(self._repo))
+        catalog = self._predicate_catalog(taxonomy_id) if self._predicate_catalog else None
+        renderer = ClaimStateRenderer(self._repo, EvidencePackBuilder(self._repo, catalog))
         pending = self._pending_definitions(taxonomy_id)
         total = len(claims)
         done = 0
@@ -198,7 +207,7 @@ class ClaimTriageOrchestrator(PipelineOrchestrator):
             in_scheme = [
                 c.id for c in self._repo.list_classes(concept_scheme_id=scheme_id, limit=None)
             ]
-            subjects = [s for s in subjects if s in in_scheme] if subjects else in_scheme
+            subjects = in_scheme if subjects is None else [s for s in subjects if s in in_scheme]
         if subjects is None:
             return self._claims.list_claims(base)
         claims: dict[str, Claim] = {}
@@ -209,8 +218,9 @@ class ClaimTriageOrchestrator(PipelineOrchestrator):
 
     def _pending_definitions(self, taxonomy_id: str) -> dict[str, dict[str, object]]:
         """
-        Per class, the fields of the newest pending update to it in an open
-        proposal (newest proposal first, then its last such operation).
+        Per class, the fields of the newest pending update to its definition in
+        an open proposal (newest proposal first, then its last such operation).
+        An update that changes only, say, the title is not a definition.
         """
         if self._proposals is None:
             return {}
@@ -225,6 +235,7 @@ class ClaimTriageOrchestrator(PipelineOrchestrator):
                     and operation.status is OperationStatus.PENDING
                     and operation.target_id
                     and operation.target_id not in pending
+                    and any(name in operation.fields for name in DEFINITION_FIELDS)
                 ):
                     pending[operation.target_id] = dict(operation.fields)
         return pending
