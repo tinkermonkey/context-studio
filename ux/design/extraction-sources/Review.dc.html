@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Review an extraction proposal</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/heimdall/tokens.css">
+<link rel="stylesheet" href="ds/heimdall/components/bundle.css">
+<script src="ds/heimdall/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:var(--font-sans)}
+a{color:rgb(var(--canvas-fg-1));text-decoration:none}
+a:hover{color:#b45309;text-decoration:underline}
+mark{background:rgba(251,191,36,0.32);color:inherit;border-radius:2px;padding:0 1px}
+</style>
+</helmet>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.ShellLayout" app-title="{{appTitle}}" sidebar="{{sidebar}}" topbar="{{topbar}}" style="display: block;">
+<div style="display: flex; flex-direction: column; gap: 16px; max-width: 1320px;">
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.PageHeader" eyebrow="PROPOSAL · house · pipeline · dataset home" title="Extraction: WRF555SDFZ use and care guide" id-chip="4f2c91d0" subtitle="individual_extraction run run_9e12 over source src_7c41 (wrf555sdfz-use-care.pdf, 64 pages). Each operation shows the passage it came from."></x-import>
+
+<section aria-label="Decision progress" style="display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; padding: 14px 16px; border: 1px solid rgba(251,191,36,0.45); border-radius: 8px; background: rgba(251,191,36,0.07);">
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 200px;">
+<span style="font-size: 20px; font-weight: 600; color: rgb(var(--canvas-fg-1));">{{headline}}</span>
+<span style="font-size: 12.5px; color: rgb(var(--canvas-fg-2));">{{decidedLine}}</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="violet">{{nearLabel}}</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="amber">{{lowLabel}}</x-import>
+</div>
+<span style="flex-grow: 1;"></span>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="secondary" size="sm">Reject all awaiting</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="secondary" size="sm">Accept all awaiting</x-import>
+</section>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start;">
+
+<div style="flex: 999 1 560px; min-width: 0; overflow-x: auto;">
+<table class="table">
+<thead class="table__head">
+<tr class="table__row">
+<th class="table__header" style="width: 44px;">#</th>
+<th class="table__header">Operation</th>
+<th class="table__header" style="width: 190px;">Class or predicate</th>
+<th class="table__header" style="width: 60px; text-align: right;">p</th>
+<th class="table__header" style="width: 130px;">Decision</th>
+</tr>
+</thead>
+<tbody class="table__body">
+<sc-for list="{{ops}}" as="op" hint-placeholder-count="10">
+<tr class="table__row table__row--clickable" style="background: {{op.rowBg}};">
+<td class="table__cell" style="font-family: var(--font-mono); font-size: 12px; color: rgb(var(--canvas-fg-3));">{{op.seq}}</td>
+<td class="table__cell">
+<button type="button" on-click="{{op.pick}}" style="all: unset; cursor: pointer; display: flex; flex-direction: column; gap: 2px;">
+<span style="font-size: 13.5px; font-weight: 600; color: rgb(var(--canvas-fg-1));">{{op.label}}</span>
+<span style="font-family: var(--font-mono); font-size: 11.5px; color: rgb(var(--canvas-fg-3));">{{op.kindLine}}</span>
+</button>
+</td>
+<td class="table__cell"><x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" form="id-tag">{{op.typeName}}</x-import></td>
+<td class="table__cell" style="text-align: right; font-family: var(--font-mono); font-size: 12px;">{{op.p}}</td>
+<td class="table__cell"><x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="{{op.tone}}">{{op.status}}</x-import></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+
+<aside aria-label="Operation" style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 14px; padding: 16px; border: 1px solid rgb(var(--canvas-border)); border-radius: 8px;">
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<span style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; color: rgb(var(--canvas-fg-3));">{{sel.eyebrow}}</span>
+<span style="font-size: 17px; font-weight: 600; color: rgb(var(--canvas-fg-1));">{{sel.label}}</span>
+<span style="font-family: var(--font-mono); font-size: 12px; color: rgb(var(--canvas-fg-2));">{{sel.kindLine}}</span>
+</div>
+
+<section aria-label="Source passage" style="display: flex; flex-direction: column; gap: 8px;">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px;">
+<span style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; color: rgb(var(--canvas-fg-3));">SOURCE PASSAGE</span>
+<a href="Provenance.dc.html" style="font-size: 12px;">{{sel.where}}</a>
+</div>
+<blockquote style="margin: 0; padding: 12px 14px; border: 1px solid rgb(var(--canvas-border)); border-radius: 6px; background: rgb(var(--canvas-bg-2)); font-size: 13.5px; line-height: 1.55; color: rgb(var(--canvas-fg-2));">{{sel.before}}<mark>{{sel.quote}}</mark>{{sel.after}}</blockquote>
+<sc-if value="{{sel.hasMore}}" hint-placeholder-val="{{false}}">
+<span style="font-size: 12px; color: rgb(var(--canvas-fg-3));">{{sel.more}}</span>
+</sc-if>
+</section>
+
+<sc-if value="{{sel.isNear}}" hint-placeholder-val="{{false}}">
+<fieldset style="margin: 0; padding: 12px 14px; border: 1px solid rgb(var(--canvas-border)); border-radius: 6px; display: flex; flex-direction: column; gap: 8px;">
+<legend style="padding: 0 4px; font-size: 13px; font-weight: 600; color: rgb(var(--canvas-fg-1));">Already in dataset home?</legend>
+<sc-for list="{{sel.choices}}" as="ch" hint-placeholder-count="2">
+<label style="display: flex; gap: 10px; align-items: flex-start; cursor: pointer;">
+<input type="radio" name="near" checked="{{ch.checked}}" on-change="{{ch.pick}}" style="margin-top: 3px; accent-color: #b45309;">
+<span style="display: flex; flex-direction: column; gap: 1px;">
+<span style="font-size: 13px; font-weight: 600; color: rgb(var(--canvas-fg-1));">{{ch.label}}</span>
+<span style="font-family: var(--font-mono); font-size: 11.5px; color: rgb(var(--canvas-fg-3));">{{ch.detail}}</span>
+</span>
+</label>
+</sc-for>
+<span style="font-size: 12px; color: rgb(var(--canvas-fg-3));">Choosing an existing individual drops this create. Relationships that name it point to the existing one instead, and the passage is added to its provenance.</span>
+</fieldset>
+</sc-if>
+
+<sc-if value="{{sel.isRel}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" form="id-tag">{{sel.src}}</x-import>
+<span style="font-family: var(--font-mono); color: rgb(var(--canvas-fg-2));">{{sel.pred}}</span>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" form="id-tag">{{sel.tgt}}</x-import>
+</div>
+<span style="font-size: 12px; color: rgb(var(--canvas-fg-3));">{{sel.refNote}}</span>
+</sc-if>
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Field" label="Reason" html-for="op-reason" hint="Optional. Kept with the decision as gold.">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.TextInput" id="op-reason" placeholder="Why"></x-import>
+</x-import>
+
+<div style="display: flex; gap: 8px; justify-content: flex-end;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="secondary" size="sm" on-click="{{reject}}">Reject</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="ghost" size="sm">Accept with edit</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="primary" size="sm" on-click="{{accept}}">{{acceptLabel}}</x-import>
+</div>
+</aside>
+
+</div>
+</div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { selected: 1, decisions: { 6: 'accepted', 7: 'accepted' }, near: { 1: 'existing', 5: 'existing' } };
+  }
+  renderVals() {
+    const base = [
+      { seq: 1, label: 'Whirlpool WRF555SDFZ', kind: 'individual', typeName: 'house_resource_appliance', p: '0.94', near: true, where: 'p. 5 · Parts and features', before: 'Thank you for buying a Whirlpool product. Your ', quote: 'WRF555SDFZ French door refrigerator', after: ' comes with the parts and features shown below. Your model may have some or all of these features.', more: 'Also on pp. 1, 54',
+        choices: [{ id: 'existing', label: 'Kitchen refrigerator', detail: 'house_resource_appliance · in home · similarity 0.93 · label differs' }, { id: 'new', label: 'Create new: Whirlpool WRF555SDFZ', detail: 'a second appliance in home' }] },
+      { seq: 2, label: 'EveryDrop Filter 1 (EDR1RXD1)', kind: 'individual', typeName: 'house_resource_supply', p: '0.90', where: 'p. 24 · Water filtration system', before: 'Use only ', quote: 'EveryDrop Filter 1, part number EDR1RXD1', after: '. Other filters may not fit the filter housing and can leak.', more: 'Also on p. 55' },
+      { seq: 3, label: 'Replace the water filter', kind: 'individual', typeName: 'house_activity', p: '0.91', where: 'p. 24 · Water filtration system', before: '', quote: 'Replace the water filter about every 6 months', after: ', or sooner if the filter status light turns red or water flow to the dispenser drops noticeably.' },
+      { seq: 4, label: 'Clean the condenser coils', kind: 'individual', typeName: 'house_activity', p: '0.62', low: true, where: 'p. 32 · Refrigerator care: cleaning', before: 'For best performance, ', quote: 'vacuum the condenser coils', after: ' behind the base grille every few months, more often if you have pets.' },
+      { seq: 5, label: 'Whirlpool', kind: 'individual', typeName: 'house_party_business', p: '0.97', near: true, where: 'p. 1 · Important safety instructions', before: '© 2024 ', quote: 'Whirlpool', after: '. All rights reserved. Used under license in Canada.', more: 'Also on pp. 57, 61',
+        choices: [{ id: 'existing', label: 'Whirlpool Corporation', detail: 'house_party_business · in home · similarity 0.97' }, { id: 'new', label: 'Create new: Whirlpool', detail: 'a second business in home' }] },
+      { seq: 6, label: 'Replace the water filter requires EveryDrop Filter 1', kind: 'relationship', typeName: 'requires', p: '0.88', rel: ['Replace the water filter', 'requires', 'EveryDrop Filter 1 (EDR1RXD1)'], refNote: 'Both ends are new in this proposal (#3, #2). Rejecting either drops this relationship.', where: 'p. 24 · Water filtration system', before: '', quote: 'Replace the water filter about every 6 months', after: '. Use only EveryDrop Filter 1, part number EDR1RXD1.' },
+      { seq: 7, label: 'Replace the water filter for Whirlpool WRF555SDFZ', kind: 'relationship', typeName: 'for', p: '0.86', rel: ['Replace the water filter', 'for', 'Whirlpool WRF555SDFZ'], refNote: 'Points at #1. If #1 is matched to Kitchen refrigerator, this points there instead.', where: 'p. 24 · Water filtration system', before: 'Your refrigerator’s filter status light shows when to ', quote: 'replace the water filter', after: '.' },
+      { seq: 8, label: 'Whirlpool WRF555SDFZ made by Whirlpool', kind: 'relationship', typeName: 'made_by', p: '0.95', rel: ['Whirlpool WRF555SDFZ', 'made_by', 'Whirlpool'], refNote: 'Points at #1 and #5, both near matches.', where: 'p. 1 · Important safety instructions', before: '', quote: 'Whirlpool WRF555SDFZ', after: ' refrigerator use and care guide.' },
+      { seq: 9, label: 'Change the light bulbs', kind: 'individual', typeName: 'house_activity', p: '0.58', low: true, where: 'p. 35 · Changing the light bulbs', before: 'The interior lights are LEDs. ', quote: 'To replace an LED light, call for service', after: ' or order part W10565137.' },
+      { seq: 10, label: 'Kitchen refrigerator serviced by Whirlpool Service', kind: 'relationship', typeName: 'serviced_by', p: '0.71', rel: ['Kitchen refrigerator', 'serviced_by', 'Whirlpool Service'], refNote: 'Source is existing (Kitchen refrigerator); target is new in this proposal (#11).', where: 'p. 47 · Troubleshooting: operation', before: 'If you still need help, ', quote: 'contact Whirlpool Service', after: ' for repairs covered by the warranty.' }
+    ];
+    const dec = this.state.decisions, nr = this.state.near;
+    const ops = base.map((o) => {
+      const d = dec[o.seq];
+      const status = d || 'needs decision';
+      const tone = d === 'accepted' ? 'emerald' : (d === 'rejected' ? 'neutral' : (o.near ? 'violet' : (o.low ? 'amber' : 'neutral')));
+      const kindLine = o.kind === 'individual' ? ('create individual' + (o.near ? ' · near match' : '')) : 'create relationship';
+      return Object.assign({}, o, {
+        status: o.near && !d ? 'near match' : (o.low && !d ? 'low confidence' : status),
+        tone: tone,
+        kindLine: kindLine,
+        rowBg: o.seq === this.state.selected ? 'rgba(251,191,36,0.08)' : 'transparent',
+        pick: () => this.setState({ selected: o.seq })
+      });
+    });
+    const s = ops.find((o) => o.seq === this.state.selected) || ops[0];
+    const choice = nr[s.seq] || 'existing';
+    const sel = Object.assign({}, s, {
+      eyebrow: '#' + s.seq + ' · ' + s.kindLine.toUpperCase(),
+      hasMore: !!s.more,
+      isNear: !!s.near,
+      isRel: s.kind === 'relationship',
+      src: s.rel ? s.rel[0] : '', pred: s.rel ? s.rel[1] : '', tgt: s.rel ? s.rel[2] : '',
+      choices: (s.choices || []).map((c) => ({ label: c.label, detail: c.detail, checked: choice === c.id, pick: () => this.setState({ near: Object.assign({}, nr, { [s.seq]: c.id }) }) }))
+    });
+    const total = 31;
+    const decided = Object.keys(dec).length + 19;
+    const set = (v) => () => {
+      const next = Object.assign({}, dec, { [s.seq]: v });
+      const after = base.find((o) => o.seq > s.seq && !next[o.seq]);
+      this.setState({ decisions: next, selected: after ? after.seq : s.seq });
+    };
+    return {
+      appTitle: { title: 'Context Studio', version: 'v0.2.0 · LOCAL' },
+      sidebar: {
+        activeItemId: 'proposals',
+        defaultExpandedIds: [],
+        sections: [{ title: '', items: [
+          { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+          { id: 'proposals', label: 'Proposals', icon: 'gitBranch', count: 3 },
+          { id: 'schema', label: 'Schema', icon: 'schema' },
+          { id: 'data', label: 'Data', icon: 'data' },
+          { id: 'external-reference', label: 'External Reference', icon: 'link' },
+          { id: 'pipelines', label: 'Pipelines', icon: 'pipeline' },
+          { id: 'graph', label: 'Graph view', icon: 'graph' },
+          { id: 'settings', label: 'Configuration', icon: 'settings' }
+        ] }]
+      },
+      topbar: { breadcrumbs: [{ label: 'workspace' }, { label: 'Proposals' }, { label: '4f2c91d0' }], searchPlaceholder: 'Search' },
+      headline: (total - decided) + ' of ' + total + ' need a decision',
+      decidedLine: decided + ' decided · showing operations 1–10',
+      nearLabel: '2 near matches',
+      lowLabel: '2 low confidence',
+      ops: ops,
+      sel: sel,
+      acceptLabel: s.near ? (choice === 'existing' ? 'Use existing' : 'Accept new') : 'Accept',
+      accept: set('accepted'),
+      reject: set('rejected'),
+      true: true,
+      false: false
+    };
+  }
+}
+</script>
+</body>
+</html>

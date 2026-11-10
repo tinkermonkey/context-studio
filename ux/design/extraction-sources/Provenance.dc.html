@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Provenance on an entity</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/heimdall/tokens.css">
+<link rel="stylesheet" href="ds/heimdall/components/bundle.css">
+<script src="ds/heimdall/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:var(--font-sans)}
+a{color:rgb(var(--canvas-fg-1));text-decoration:none}
+a:hover{color:#b45309;text-decoration:underline}
+</style>
+</helmet>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.ShellLayout" app-title="{{appTitle}}" sidebar="{{sidebar}}" topbar="{{topbar}}" style="display: block;">
+<div style="display: flex; flex-direction: column; gap: 18px; max-width: 1280px;">
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.PageHeader" eyebrow="INDIVIDUAL · house_resource_appliance · dataset home" title="Kitchen refrigerator" id-chip="ind_52a8" subtitle="Whirlpool WRF555SDFZ French door refrigerator in the kitchen. Created by hand on 2026-10-14; matched by two extractions since."></x-import>
+
+<div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start;">
+
+<div style="flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 12px;">
+<div style="display: flex; justify-content: space-between; align-items: baseline;">
+<span style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; color: rgb(var(--canvas-fg-3));">SOURCES · 3 PASSAGES IN 2 SOURCES</span>
+<span style="font-size: 12px; color: rgb(var(--canvas-fg-3));">Written when a proposal applies</span>
+</div>
+<sc-for list="{{passages}}" as="p" hint-placeholder-count="3">
+<article style="display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border: 1px solid rgb(var(--canvas-border)); border-radius: 8px;">
+<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" form="id-tag">{{p.kind}}</x-import>
+<a href="Main.dc.html" style="font-size: 13.5px; font-weight: 600;">{{p.source}}</a>
+<span style="font-family: var(--font-mono); font-size: 11.5px; color: rgb(var(--canvas-fg-3));">{{p.where}}</span>
+<span style="flex-grow: 1;"></span>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="{{p.tone}}">{{p.how}}</x-import>
+</div>
+<blockquote style="margin: 0; padding: 10px 12px; border-radius: 6px; background: rgb(var(--canvas-bg-2)); font-size: 13.5px; line-height: 1.55; color: rgb(var(--canvas-fg-2));">{{p.quote}}</blockquote>
+<span style="font-family: var(--font-mono); font-size: 11.5px; color: rgb(var(--canvas-fg-3));">{{p.via}}</span>
+</article>
+</sc-for>
+</div>
+
+<aside aria-label="Details" style="flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 14px; padding: 16px; border: 1px solid rgb(var(--canvas-border)); border-radius: 8px;">
+<span style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; color: rgb(var(--canvas-fg-3));">DETAILS</span>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.KVGrid" rows="{{kv}}" key-width="{{keyWidth}}"></x-import>
+<span style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; color: rgb(var(--canvas-fg-3));">RELATIONSHIPS FROM SOURCES</span>
+<sc-for list="{{rels}}" as="r" hint-placeholder-count="3">
+<div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; padding: 4px 0; border-top: 1px dashed rgb(var(--canvas-border));">
+<span style="font-family: var(--font-mono); color: rgb(var(--canvas-fg-2));">{{r.pred}}</span>
+<span style="color: rgb(var(--canvas-fg-1)); font-weight: 500;">{{r.other}}</span>
+<span style="flex-grow: 1;"></span>
+<span style="font-family: var(--font-mono); font-size: 11px; color: rgb(var(--canvas-fg-3));">{{r.where}}</span>
+</div>
+</sc-for>
+<p style="margin: 0; font-size: 12px; color: rgb(var(--canvas-fg-3));">Relationships keep their own passages too. Removing a source leaves these rows in place, marked as from a removed source.</p>
+</aside>
+
+</div>
+</div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      appTitle: { title: 'Context Studio', version: 'v0.2.0 · LOCAL' },
+      sidebar: {
+        activeItemId: 'data-individuals',
+        defaultExpandedIds: ['data'],
+        sections: [{ title: '', items: [
+          { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+          { id: 'proposals', label: 'Proposals', icon: 'gitBranch', count: 2 },
+          { id: 'schema', label: 'Schema', icon: 'schema' },
+          { id: 'data', label: 'Data', icon: 'data', children: [
+            { id: 'data-individuals', label: 'Individuals' },
+            { id: 'data-relationships', label: 'Relationships' },
+            { id: 'data-sources', label: 'Sources' }
+          ] },
+          { id: 'external-reference', label: 'External Reference', icon: 'link' },
+          { id: 'pipelines', label: 'Pipelines', icon: 'pipeline' },
+          { id: 'graph', label: 'Graph view', icon: 'graph' },
+          { id: 'settings', label: 'Configuration', icon: 'settings' }
+        ] }]
+      },
+      topbar: { breadcrumbs: [{ label: 'house' }, { label: 'Individuals' }, { label: 'Kitchen refrigerator' }], searchPlaceholder: 'Search' },
+      passages: [
+        { kind: 'pdf', source: 'Whirlpool WRF555SDFZ refrigerator: use and care guide', where: 'p. 5 · chars 8,412–8,447', how: 'matched', tone: 'violet', quote: '“WRF555SDFZ French door refrigerator”', via: 'proposal 4f2c91d0 op #1 · use existing, chosen by user · 2026-11-10' },
+        { kind: 'pdf', source: 'Whirlpool WRF555SDFZ refrigerator: use and care guide', where: 'p. 54 · chars 104,210–104,262', how: 'matched', tone: 'violet', quote: '“Accessories for your WRF555SDFZ refrigerator”', via: 'proposal 4f2c91d0 op #1 · same candidate, second passage' },
+        { kind: 'web', source: 'Refrigerator water filter replacement guide', where: 'section 2 · chars 1,880–1,931', how: 'matched', tone: 'violet', quote: '“French door models such as the WRF555SDFZ use filter 1”', via: 'proposal 91b7e044 op #4 · use existing, chosen by policy (similarity 0.98) · 2026-11-11' }
+      ],
+      kv: [
+        { key: 'class', value: 'house_resource_appliance' },
+        { key: 'dataset', value: 'home' },
+        { key: 'created', value: '2026-10-14 · by hand' },
+        { key: 'sources', value: '2' },
+        { key: 'proposals', value: '4f2c91d0, 91b7e044' }
+      ],
+      keyWidth: 96,
+      rels: [
+        { pred: 'made_by', other: 'Whirlpool Corporation', where: 'p. 1' },
+        { pred: 'located_in', other: 'Kitchen', where: 'by hand' },
+        { pred: 'serviced_by', other: 'Whirlpool Service', where: 'p. 47' },
+        { pred: 'for ←', other: 'Replace the water filter', where: 'p. 24' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
