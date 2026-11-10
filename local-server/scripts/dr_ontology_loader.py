@@ -46,9 +46,9 @@ from types import MappingProxyType
 from typing import Any, Callable, Iterator
 from uuid import uuid4
 
+from adapters.interchange.dr_predicates import dr_predicate_reference
 from adapters.interchange.dr_relationships import (  # noqa: F401 - re-exported for the scripts
     DR_ATTRIBUTE_SCHEMA,
-    DR_PREDICATE_KEYS,
     DR_SOURCE,
     DR_SPEC_REFERENCE,
     DR_TAXONOMY_IDENTIFIER,
@@ -166,14 +166,6 @@ def _store_spec_reference(
         return taxonomy
     taxonomy.external_references = [*others, reference]
     return repo.save_taxonomy(taxonomy)
-
-
-def dr_predicate_reference(predicate_id: str, entry: dict[str, Any]) -> ExternalReference:
-    """A catalog predicate's DR reference, carrying its DR-only fields."""
-    metadata = {key: entry[key] for key in DR_PREDICATE_KEYS if key in entry}
-    return ExternalReference(
-        source=DR_SOURCE, identifier=predicate_id, metadata=MappingProxyType(metadata)
-    )
 
 
 def _upsert_predicates(

@@ -27,6 +27,7 @@ type IndividualClassListRequest = components["schemas"]["IndividualClassListRequ
 type ListIndividuals = components["schemas"]["ListResponse_IndividualResponse_"];
 
 type PropertyDefinitionResponse = components["schemas"]["PropertyDefinitionResponse"];
+type PredicateResponse = components["schemas"]["PredicateResponse"];
 type PropertyDefinitionCreateRequest = components["schemas"]["PropertyDefinitionCreateRequest"];
 type PropertyDefinitionUpdateRequest = components["schemas"]["PropertyDefinitionUpdateRequest"];
 type ListProperties = components["schemas"]["ListResponse_PropertyDefinitionResponse_"];
@@ -263,6 +264,11 @@ class OntologyService extends BaseService {
     return this.get<components["schemas"]["ListResponse_DataPropertyValueResponse_"]>(
       `/api/individuals/${individualId}/inherited-properties`,
     );
+  }
+
+  // Predicates (a taxonomy's catalog of relation verbs)
+  async listPredicatesByIds(ids: string[]): Promise<PredicateResponse[]> {
+    return this.get<PredicateResponse[]>("/api/predicates", { ids });
   }
 
   // Property Definitions

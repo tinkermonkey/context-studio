@@ -11,7 +11,12 @@ from domain.ontology.exceptions import DuplicateEntityError, EntityInUseError
 from domain.ontology.services import OntologyService
 from domain.versioning.exceptions import ProposalValidationError
 from domain.versioning.proposal_service import OperationDraft, ProposalService
-from domain.versioning.proposals import OperationKind, OperationStatus, OperationType, ProposalSource
+from domain.versioning.proposals import (
+    OperationKind,
+    OperationStatus,
+    OperationType,
+    ProposalSource,
+)
 from domain.versioning.revert_service import RevertResult
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
@@ -299,3 +304,123 @@ class TestProposals:
 
         assert applied.status is OperationStatus.FAILED
         assert applied.reason.startswith("invalid_edit: predicate 'part_of' isn't in taxonomy")
+
+
+def apply_all(proposals, proposal):
+    return proposals.apply(proposal.id, [o.id for o in proposal.operations])
+
+
+class TestPredicateProposals:
+    """#1481: predicates are created, changed and retired by proposal."""
+
+    def test_a_proposal_creates_a_predicate_and_uses_it_in_a_later_operation(
+        self, proposals, ontology, house
+    ):
+        drafts = [
+            OperationDraft(
+                1,
+                T.CREATE,
+                K.PREDICATE,
+                ref="next",
+                fields={"identifier": "next_to", "description": "Beside"},
+            ),
+            OperationDraft(
+                2,
+                T.CREATE,
+                K.PROPERTY,
+                fields={
+                    "identifier": "room_next_to_place",
+                    "title": "Room next to place",
+                    "canonical_predicate": "next_to",
+                    "domain_class_id": house["room"],
+                },
+            ),
+        ]
+        proposal = proposals.propose(house["taxonomy"], "Next to", drafts, ProposalSource.MCP)
+        assert [o.scope.value for o in proposal.operations] == ["additive", "additive"]
+
+        applied = apply_all(proposals, proposal).operations
+
+        assert [o.status for o in applied] == [OperationStatus.APPLIED] * 2, applied
+        predicate = ontology.get_predicate(applied[0].result_entity_id)
+        assert (predicate.taxonomy_id, predicate.identifier) == (house["taxonomy"], "next_to")
+        assert ontology.get_property_definition(applied[1].result_entity_id).predicate_id == (
+            predicate.id
+        )
+
+    @pytest.mark.parametrize(
+        "identifier, code",
+        [("part_of", "duplicate"), ("Part Of", "invalid"), (None, "missing_field")],
+    )
+    def test_a_create_needs_a_new_valid_identifier(self, proposals, house, identifier, code):
+        draft = OperationDraft(1, T.CREATE, K.PREDICATE, fields={"identifier": identifier})
+        with pytest.raises(ProposalValidationError) as excinfo:
+            proposals.propose(house["taxonomy"], "Dup", [draft], ProposalSource.MCP)
+        assert excinfo.value.errors[0].code == code
+
+    def test_an_update_changes_wording_and_metadata_not_the_identifier(
+        self, proposals, ontology, house
+    ):
+        refs = [{"source": "documentation_robotics", "identifier": "part_of", "metadata": {}}]
+        draft = OperationDraft(
+            1,
+            T.UPDATE,
+            K.PREDICATE,
+            house["part_of"],
+            fields={"description": "Contained in", "external_references": refs},
+        )
+        proposal = proposals.propose(house["taxonomy"], "Reword", [draft], ProposalSource.MCP)
+        assert apply_all(proposals, proposal).operations[0].status is OperationStatus.APPLIED
+
+        predicate = ontology.get_predicate(house["part_of"])
+        assert (predicate.identifier, predicate.description) == ("part_of", "Contained in")
+        assert predicate.external_references[0].source == "documentation_robotics"
+        bad = OperationDraft(1, T.UPDATE, K.PREDICATE, house["part_of"], fields={"identifier": "x"})
+        with pytest.raises(ProposalValidationError):
+            proposals.propose(house["taxonomy"], "Rename", [bad], ProposalSource.MCP)
+
+    def test_a_delete_in_use_needs_a_replacement(self, proposals, ontology, house):
+        ontology.create_property_definition(
+            "room_part_of_place",
+            "Room part of place",
+            canonical_predicate="part_of",
+            domain_class_id=house["room"],
+        )
+        draft = OperationDraft(1, T.DELETE, K.PREDICATE, house["part_of"])
+        with pytest.raises(ProposalValidationError) as excinfo:
+            proposals.propose(house["taxonomy"], "Retire", [draft], ProposalSource.MCP)
+        assert excinfo.value.errors[0].code == "in_use"
+
+    def test_a_delete_with_a_replacement_moves_the_types_using_it(self, proposals, ontology, house):
+        prop = ontology.create_property_definition(
+            "room_part_of_place",
+            "Room part of place",
+            canonical_predicate="part_of",
+            domain_class_id=house["room"],
+        )
+        within = ontology.create_predicate(house["taxonomy"], "within")
+        draft = OperationDraft(1, T.DELETE, K.PREDICATE, house["part_of"], replacement="within")
+        proposal = proposals.propose(house["taxonomy"], "Retire", [draft], ProposalSource.MCP)
+        operation = proposal.operations[0]
+        assert (operation.scope.value, operation.proposed_replacement_id) == ("breaking", within.id)
+
+        applied = apply_all(proposals, proposal).operations[0]
+
+        assert applied.status is OperationStatus.APPLIED, applied.reason
+        assert ontology._repository.get_predicate(house["part_of"]) is None
+        moved = ontology.get_property_definition(prop.id)
+        assert (moved.predicate_id, moved.canonical_predicate) == (within.id, "within")
+
+    def test_a_replacement_comes_from_the_same_catalog(self, proposals, ontology, house):
+        elsewhere = ontology.create_predicate(house["garden"], "within")
+        draft = OperationDraft(1, T.DELETE, K.PREDICATE, house["part_of"], replacement=elsewhere.id)
+        with pytest.raises(ProposalValidationError) as excinfo:
+            proposals.propose(house["taxonomy"], "Retire", [draft], ProposalSource.MCP)
+        assert excinfo.value.errors[0].code == "replacement_not_found"
+
+    def test_a_predicate_of_another_taxonomy_cant_be_changed_here(self, proposals, ontology, house):
+        elsewhere = ontology.create_predicate(house["garden"], "grows_in")
+        draft = OperationDraft(1, T.UPDATE, K.PREDICATE, elsewhere.id, fields={"title": "x"})
+        with pytest.raises(ProposalValidationError) as excinfo:
+            proposals.propose(house["taxonomy"], "Reword", [draft], ProposalSource.MCP)
+        assert "another taxonomy" in excinfo.value.errors[0].message

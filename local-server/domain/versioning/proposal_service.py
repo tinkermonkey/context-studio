@@ -136,6 +136,8 @@ UNRESOLVABLE = "unresolvable"
 REVERTED_REASON = "proposal reverted"
 
 _REF_PREFIX = "$"
+# Marks a predicate an earlier delete of the proposal retires (see _check_predicate_op)
+_RETIRED = "<retired>"
 
 # A proposal's title is a short summary; its rationale may run to a few pages.
 MAX_TITLE_CHARS = 500
@@ -197,7 +199,11 @@ _DATATYPE_HINTS: dict[DataType, str] = {
 }
 
 # The kinds whose delete may name a replacement, and what to call them.
-_REPLACEABLE: dict[OperationKind, str] = {K.PROPERTY: "relationship type", K.CLASS: "class"}
+_REPLACEABLE: dict[OperationKind, str] = {
+    K.PROPERTY: "relationship type",
+    K.CLASS: "class",
+    K.PREDICATE: "predicate",
+}
 
 # Id fields and the kinds of entity they may point at.
 ID_FIELDS: dict[str, tuple[OperationKind, ...]] = {
@@ -320,6 +326,14 @@ OPERATION_FIELDS: dict[OperationKind, OperationFields] = {
             }
         ),
         clearable=frozenset({"description", "allowed_values", "default_value"}),
+    ),
+    # A predicate is created in the proposal's taxonomy; its identifier never
+    # changes (a rename is a delete with a replacement and a create).
+    K.PREDICATE: OperationFields(
+        create=frozenset({"identifier", "title", "description", "external_references"}),
+        required=frozenset({"identifier"}),
+        update=frozenset({"title", "description", "external_references"}),
+        clearable=frozenset({"description"}),
     ),
     K.INDIVIDUAL: OperationFields(
         create=frozenset({"class_ids", "title", "description", "external_references", DATA_FIELD}),
@@ -551,6 +565,8 @@ class ProposalService:
         touched: dict[tuple[str, str], int] = {}
         deleted: dict[str, int] = {}
         seen_seqs: set[int] = set()
+        # Predicates earlier creates in the proposal add: {identifier: ref or None}
+        planned: dict[str, str | None] = {}
         for draft in sorted(operations, key=lambda d: d.seq):
             try:
                 seq = draft.seq
@@ -561,7 +577,8 @@ class ProposalService:
                 seen_seqs.add(draft.seq)
                 operation = self._validated(draft, refs)
                 self._check_dataset(operation, dataset_id)
-                self._check_predicate(operation, taxonomy_id)
+                self._check_predicate(operation, taxonomy_id, planned)
+                self._check_predicate_op(operation, taxonomy_id, planned, deleted)
                 self._check_conflicts(operation, touched, deleted)
                 built.append(operation)
             except _Invalid as exc:
@@ -847,6 +864,8 @@ class ProposalService:
                 return {entity.taxonomy_id}
             if kind is K.ATTRIBUTE:
                 return self._taxonomies((K.CLASS,), entity.class_id)
+            if kind is K.PREDICATE:
+                return {entity.taxonomy_id}
             if kind is K.INDIVIDUAL:
                 found: set[str] = set()
                 for class_id in entity.class_ids:
@@ -1075,7 +1094,8 @@ class ProposalService:
         if operation.op is not OperationType.DELETE or kind not in _REPLACEABLE:
             raise _Invalid(
                 "invalid",
-                "Only a property (relationship type) or class delete can name a replacement",
+                "Only a property (relationship type), class or predicate delete can name a"
+                " replacement",
             )
         what = _REPLACEABLE[kind]
         if not isinstance(name, str) or not name:
@@ -1098,6 +1118,16 @@ class ProposalService:
             found = self._repo.get_property_definition(
                 name
             ) or self._repo.get_property_definition_by_identifier(name)
+        elif kind is K.PREDICATE:
+            # By id, or by identifier in the retired predicate's taxonomy.
+            retired = self._repo.get_predicate(operation.target_id or "")
+            found = self._repo.get_predicate(name) or (
+                self._repo.get_predicate_by_identifier(retired.taxonomy_id, name)
+                if retired
+                else None
+            )
+            if found is not None and retired is not None and found.taxonomy_id != retired.taxonomy_id:
+                found = None
         else:
             found = self._repo.get_class(name)
             if found is None:
@@ -1162,11 +1192,18 @@ class ProposalService:
             except (TypeError, KeyError, ValueError, AttributeError) as exc:
                 raise _Invalid("invalid", f"{name} is not valid: {exc}") from exc
 
-    def _check_predicate(self, operation: ProposedOperation, taxonomy_id: str | None) -> None:
+    def _check_predicate(
+        self,
+        operation: ProposedOperation,
+        taxonomy_id: str | None,
+        planned: Mapping[str, str | None] | None = None,
+    ) -> None:
         """
         A relationship type's predicate must be in its taxonomy's predicate catalog:
         the taxonomy of its domain class (else its range class), or the proposal's.
         A change of domain or range alone checks the type's current predicate there.
+        A predicate an earlier operation of the proposal creates (in the proposal's
+        taxonomy) counts.
         """
         fields = operation.fields
         if operation.kind is not K.PROPERTY or not (
@@ -1193,12 +1230,67 @@ class ProposalService:
         catalog = self._predicate_taxonomy(operation) or taxonomy_id
         if catalog is None:
             return  # nothing to look in yet: the ontology service decides on apply
+        if catalog == taxonomy_id and identifier in (planned or {}):
+            if (planned or {})[identifier] == _RETIRED:
+                raise _Invalid(
+                    "unknown_predicate",
+                    f"predicate {identifier!r} is deleted earlier in this proposal",
+                )
+            return
         if self._repo.get_predicate_by_identifier(catalog, identifier) is None:
             raise _Invalid(
                 "unknown_predicate",
                 f"predicate {identifier!r} isn't in taxonomy {catalog}'s predicate catalog"
                 " (list its predicates with list_predicates); use one of them",
             )
+
+    def _check_predicate_op(
+        self,
+        operation: ProposedOperation,
+        taxonomy_id: str,
+        planned: dict[str, str | None],
+        deleted: Mapping[str, int],
+    ) -> None:
+        """
+        A predicate operation stays in the proposal's taxonomy. A create's
+        identifier is a verb the catalog doesn't have yet (recorded in
+        `planned`); a delete names a replacement while relationship types still
+        use the predicate (other than ones earlier operations of the proposal
+        delete, by id in `deleted`).
+        """
+        if operation.kind is not K.PREDICATE:
+            return
+        if operation.op is OperationType.CREATE:
+            try:
+                identifier = validate_predicate_identifier(operation.fields.get("identifier"))
+            except ValueError as exc:
+                raise _Invalid("invalid", f"identifier: {exc}") from exc
+            exists = self._repo.get_predicate_by_identifier(taxonomy_id, identifier) is not None
+            if (planned[identifier] != _RETIRED if identifier in planned else exists):
+                raise _Invalid(
+                    "duplicate", f"The taxonomy already has the predicate {identifier!r}"
+                )
+            operation.fields["identifier"] = identifier
+            planned[identifier] = operation.ref
+            return
+        predicate = self._repo.get_predicate(operation.target_id or "")
+        if predicate is not None and predicate.taxonomy_id != taxonomy_id:
+            raise _Invalid(
+                "invalid",
+                f"Predicate {predicate.identifier!r} is in another taxonomy's catalog",
+            )
+        if operation.op is OperationType.DELETE and predicate is not None:
+            planned[predicate.identifier] = _RETIRED
+            users = [
+                p for p in self._ontology.relationship_types_using(predicate.id) if p.id not in deleted
+            ]
+            if users and operation.proposed_replacement_id is None:
+                names = ", ".join(sorted(p.identifier for p in users)[:5])
+                raise _Invalid(
+                    "in_use",
+                    f"Predicate {predicate.identifier!r} is used by {len(users)} relationship"
+                    f" type(s) ({names}): name a replacement predicate to move them to",
+                )
 
     def _predicate_taxonomy(self, operation: ProposedOperation) -> str | None:
         """
@@ -1545,7 +1637,7 @@ class ProposalService:
     def _rules_for(
         self, operation: ProposedOperation, fields: dict[str, Any]
     ) -> ProposalApplyRules | None:
-        """The rules that govern a property operation, if any."""
+        """The rules that govern a property or predicate operation, if any."""
         return next((r for r in self._apply_rules if r.governs(operation, fields)), None)
 
     def _apply_edited(
@@ -2023,7 +2115,7 @@ class ProposalService:
             }
             if operation.op is not OperationType.CREATE:
                 self._check_fresh(operation, forced)
-            if operation.kind is K.PROPERTY and operation.op in (
+            if operation.kind in (K.PROPERTY, K.PREDICATE) and operation.op in (
                 OperationType.CREATE,
                 OperationType.UPDATE,
             ):
@@ -2054,6 +2146,10 @@ class ProposalService:
                     result = self._dispatch(operation, fields, run_id, operation.op)
                 operation.type_change = change
                 return result
+            if operation.op is OperationType.DELETE and operation.kind is K.PREDICATE:
+                with self._atomic():
+                    self._move_predicate_users(operation, refs)
+                    return self._dispatch(operation, fields, run_id, operation.op)
             if operation.op is OperationType.DELETE and operation.kind in (K.CLASS, K.ATTRIBUTE):
                 with self._atomic():
                     plan = self._yield_plan(operation, refs, InUseInspector(self._repo))
@@ -2106,6 +2202,57 @@ class ProposalService:
             operation.scope = scope
             _logger.info(
                 "Proposal %s op seq %s failed: %s", run_id, operation.seq, operation.reason
+            )
+
+    def _move_predicate_users(
+        self, operation: ProposedOperation, refs: dict[str, ProposedOperation]
+    ) -> None:
+        """
+        Before a predicate delete, move the relationship types still using it to
+        its replacement. Each move is a predicate change of that type, so a
+        client's rules for it apply (DR refuses one: its relationship ids embed
+        the predicate, so delete or rename those types first).
+        """
+        target: str = operation.target_id  # type: ignore[assignment]
+        replacement = None
+        if operation.proposed_replacement_id is not None:
+            # A named replacement must exist, even when no type moves to it: the
+            # retirement records it.
+            replacement = self._repo.get_predicate(
+                self._resolved(operation.proposed_replacement_id, refs)
+            )
+            if replacement is None:
+                raise _ApplyFailed(TARGET_MISSING, "its replacement predicate no longer exists")
+        users = self._ontology.relationship_types_using(target)
+        if not users:
+            return
+        if replacement is None:
+            names = ", ".join(sorted(p.identifier for p in users)[:5])
+            raise _ApplyFailed(
+                APPLY_ERROR,
+                f"{len(users)} relationship type(s) still use the predicate ({names});"
+                " name a replacement",
+            )
+        for prop in users:
+            fields = {"canonical_predicate": replacement.identifier}
+            move = ProposedOperation(
+                seq=operation.seq,
+                op=OperationType.UPDATE,
+                kind=K.PROPERTY,
+                target_id=prop.id,
+                fields=fields,
+            )
+            rules = self._rules_for(move, fields)
+            if rules is not None:
+                try:
+                    rules.check(move, fields)
+                except ValueError as exc:
+                    raise _ApplyFailed(
+                        RULE_REFUSED,
+                        f"relationship type {prop.identifier} still uses the predicate: {exc}",
+                    ) from exc
+            self._ontology.update_property_definition(
+                prop.id, canonical_predicate=replacement.identifier, update_canonical_predicate=True
             )
 
     def _resolved(self, value: Any, refs: dict[str, ProposedOperation]) -> Any:
@@ -2667,6 +2814,7 @@ class ProposalService:
             K.ATTRIBUTE: self._repo.get_attribute_definition,
             K.INDIVIDUAL: self._repo.get_individual,
             K.RELATIONSHIP: self._repo.get_relationship,
+            K.PREDICATE: self._repo.get_predicate,
         }[kind]
         if not isinstance(entity_id, str):
             return None
@@ -2704,12 +2852,16 @@ class ProposalService:
                 K.ATTRIBUTE: svc.delete_attribute_definition,
                 K.INDIVIDUAL: svc.delete_individual,
                 K.RELATIONSHIP: svc.delete_relationship,
+                K.PREDICATE: svc.delete_predicate,
             }[kind]
             delete(target)
             return target  # type: ignore[return-value]
 
-        if kind is K.PROPERTY and op is not OperationType.DELETE:
-            # Where to find its predicate when it has neither a domain nor a range.
+        if (kind in (K.PROPERTY, K.PREDICATE) and op is OperationType.CREATE) or (
+            kind is K.PROPERTY and op is OperationType.UPDATE
+        ):
+            # A predicate goes in the proposal's taxonomy's catalog; a relationship
+            # type with neither a domain nor a range finds its predicate there.
             proposal = self._proposals.get(run_id)
             values["taxonomy_id"] = proposal.taxonomy_id if proposal else None
 
@@ -2735,6 +2887,8 @@ class ProposalService:
             return svc.create_class(**v, source_run_id=run_id).id
         if kind is K.PROPERTY:
             return svc.create_property_definition(**v, source_run_id=run_id).id
+        if kind is K.PREDICATE:
+            return svc.create_predicate(**v).id
         if kind is K.ATTRIBUTE:
             v["datatype"] = getattr(v["datatype"], "value", v["datatype"])
             return svc.create_attribute_definition(**v, source_run_id=run_id).id
@@ -2763,6 +2917,8 @@ class ProposalService:
             return self._update_individual(target, v)
         if kind is K.RELATIONSHIP:
             return svc.update_relationship(target, v["attributes"]).id
+        if kind is K.PREDICATE:
+            return svc.update_predicate(target, **{**v, **cleared}).id
         return self._update_property(target, v)
 
     def _update_property(self, target: str, v: dict[str, Any]) -> str:

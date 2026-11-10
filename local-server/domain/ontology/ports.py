@@ -440,6 +440,15 @@ class OntologyRepository(Protocol):
         """
         ...
 
+    def delete_predicate(self, predicate_id: str) -> bool:
+        """
+        Delete a predicate by ID; False if there's none.
+
+        Raises:
+            EntityInUseError: If a relationship type still uses it
+        """
+        ...
+
     # PropertyDefinition operations
     def get_property_definition(self, property_id: str) -> PropertyDefinition | None:
         """

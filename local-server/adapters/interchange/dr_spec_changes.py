@@ -46,6 +46,15 @@ MCP or in the app, exports as one `cs-dr-spec-changes/1` document:
         "schema",                     # create only, when any: its other JSON Schema keywords
         "decided_at", "decided_by"
      }],
+     "predicate_changes": [{          # predicate creates and updates in the dr_spec catalog
+        "seq", "op_id", "op": "create" | "update",
+        "predicate",                  # the predicate's identifier
+        "set": {"description"?, "inverse"?, "category"?, "archimate_alignment"?,
+                "semantics"?},        # a create: all of them (archimate_alignment null
+                                      # when not given); an update: only those it
+                                      # changed, semantics only the changed flags
+        "decided_at", "decided_by"
+     }],
      "skipped": [{"seq", "op_id", "why"}  # an operation not exported
                  | {"seq": null, "op_id": null, "retire_predicate", "why",
                     "relationship_ids"}],  # a retirement types still use
@@ -113,12 +122,13 @@ string with format date: a create sends datatype "string" and `schema`
 format "date" (the importer reads that back as a date); an update to or
 from a date is skipped, as `set` can't carry format.
 
-A DR reflection plan's `predicate_retirements` ([{from, to, note}]), kept on
-its proposal's client metadata, come back as `retire-predicate` records
-(with the note, and the latest applied operation's decision time) once no
-DR relationship type uses the retired predicate, judged against the
-workspace as it is now; a retirement some type still uses is listed in
-`skipped` with those types' DR relationship ids.
+A predicate delete in the dr_spec catalog retires the predicate into the
+replacement it names: an applied one comes back as a `retire-predicate`
+record {from, to} (its rationale as note), as #1440 agreed with DR. It applies
+only once no relationship type uses the predicate (DR's relationship ids
+embed it, so the proposal deletes or renames them first); one not applied
+that DR relationship types still use is listed in `skipped` with their ids. A
+DR reflection plan's `predicate_retirements` arrive as such deletes.
 
 What an update didn't set is read from the workspace as it is now, so export
 and land proposals in the order they were applied: exported after a later
@@ -132,12 +142,12 @@ from collections import Counter
 from typing import Any, Callable, Mapping
 
 from adapters.interchange.dr_decisions import decided_fields
+from adapters.interchange.dr_predicates import dr_predicate_metadata
 from adapters.interchange.dr_relationships import (
     DR_ATTRIBUTE_KEYS,
     DR_ATTRIBUTE_SCHEMA,
     DR_SOURCE,
     DR_TAXONOMY_IDENTIFIER,
-    PREDICATE_RETIREMENTS,
     Triple,
     dr_property_definitions,
     dr_relationship_id,
@@ -160,7 +170,12 @@ from domain.versioning.proposals import (
 )
 
 SPEC_CHANGES_FORMAT = "cs-dr-spec-changes/1"
-_EXPORTED_KINDS = (OperationKind.PROPERTY, OperationKind.CLASS, OperationKind.ATTRIBUTE)
+_EXPORTED_KINDS = (
+    OperationKind.PROPERTY,
+    OperationKind.CLASS,
+    OperationKind.ATTRIBUTE,
+    OperationKind.PREDICATE,
+)
 # The attribute definition fields an attribute change carries in `set`.
 _ATTRIBUTE_FIELDS = ("datatype", "is_required", "allowed_values", "description")
 # DR's JSON Schema writes a date attribute as a string with format date.
@@ -190,7 +205,10 @@ def spec_changes_for(
     changes: list[dict[str, Any]] = []
     node_changes: list[dict[str, Any]] = []
     attribute_changes: list[dict[str, Any]] = []
+    predicate_changes: list[dict[str, Any]] = []
     skipped: list[dict[str, Any]] = []
+    dr_taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    dr_taxonomy_id = dr_taxonomy.id if dr_taxonomy else None
     # "$<ref>" -> the entity the proposal's create of that ref made.
     refs = {o.ref: o.result_entity_id for o in proposal.operations if o.ref}
     # The relationship types and classes this proposal deleted, by id -> the delete.
@@ -198,9 +216,15 @@ def spec_changes_for(
     class_deletes = _applied_deletes(proposal, OperationKind.CLASS)
     layers = _dr_layers(repo)
     for operation in proposal.operations:
+        if operation.kind is OperationKind.PREDICATE and operation.op is OperationType.DELETE:
+            continue  # a retirement: see _retirements
         why = _not_exported(operation)
         change = None
-        if why is None and operation.kind is OperationKind.PROPERTY:
+        if why is None and operation.kind is OperationKind.PREDICATE:
+            found = _predicate_change(operation, repo, dr_taxonomy_id)
+            found_in, change = predicate_changes, found if isinstance(found, dict) else None
+            why = found if isinstance(found, str) else None
+        elif why is None and operation.kind is OperationKind.PROPERTY:
             change, found_in = _change(operation, repo, refs, deletes), changes
             why = None if change else "not a DR relationship type"
         elif why is None:
@@ -227,6 +251,7 @@ def spec_changes_for(
         "changes": changes,
         "node_changes": node_changes,
         "attribute_changes": attribute_changes,
+        "predicate_changes": predicate_changes,
         "skipped": [*skipped, *unretired],
         "records": [
             *dr_change_actions(proposal, repo, decisions),
@@ -527,61 +552,153 @@ def _retirements(
     decisions: Mapping[str, ProposalDecision] | None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """
-    The proposal's predicate retirements (its client metadata's
-    "predicate_retirements", kept from a DR reflection plan) as DR's
-    `retire-predicate` records, and the ones skipped: a retirement holds only
-    once no DR relationship type uses the retired predicate, judged against
-    the workspace as it is now (so after this proposal's deletes and renames).
+    The proposal's DR predicate deletes (each names its replacement) as DR's
+    `retire-predicate` records, and the ones skipped. A retirement holds only
+    once no DR relationship type uses the retired predicate: an applied delete
+    holds (it applies only once none does). One not applied that types still
+    use, judged against the workspace as it is now, is skipped with the ids of
+    those types; one not applied for another reason is skipped with its status.
     """
     records: list[dict[str, Any]] = []
     skipped: list[dict[str, Any]] = []
-    retirements = proposal.client_metadata.get(PREDICATE_RETIREMENTS) or []
-    if not retirements:
+    deletes = [
+        o
+        for o in proposal.operations
+        if o.kind is OperationKind.PREDICATE
+        and o.op is OperationType.DELETE
+        and o.base.get("identifier")
+        and _is_dr_predicate_base(o.base, repo)
+    ]
+    if not deletes:
         return records, skipped
     using: dict[str, list[str]] = {}
     for relationship_id, prop in dr_property_definitions(repo).items():
         if prop.canonical_predicate:
             using.setdefault(prop.canonical_predicate, []).append(relationship_id)
-    applied = [
-        decision.decided_at
-        for o in proposal.operations
-        if o.status is OperationStatus.APPLIED
-        and (decision := (decisions or {}).get(o.id)) is not None
-    ]
-    applied_at = max(applied).isoformat() if applied else None
-    for retirement in retirements:
-        still = sorted(using.get(retirement["from"], []))
-        if still:
+    refs = {o.ref: o.result_entity_id for o in proposal.operations if o.ref}
+    for operation in deletes:
+        retired = operation.base["identifier"]
+        into = _replacement_identifier(operation, repo, refs)
+        if operation.status is not OperationStatus.APPLIED:
+            still = sorted(using.get(retired, []))
+            if not still:
+                skipped.append(
+                    {"seq": operation.seq, "op_id": operation.id, "why": operation.status.value}
+                )
+                continue
+            count = (
+                "a relationship type still uses it"
+                if len(still) == 1
+                else f"{len(still)} relationship types still use it"
+            )
             skipped.append(
                 {
                     "seq": None,
                     "op_id": None,
-                    "retire_predicate": retirement["from"],
-                    "why": (
-                        f"retiring {retirement['from']} into {retirement['to']}: "
-                        + (
-                            "a relationship type still uses it"
-                            if len(still) == 1
-                            else f"{len(still)} relationship types still use it"
-                        )
-                    ),
+                    "retire_predicate": retired,
+                    "why": f"retiring {retired} into {into}: {count}",
                     "relationship_ids": still,
                 }
             )
             continue
+        decision = (decisions or {}).get(operation.id)
         record = {
             "action": "retire-predicate",
             "kind": "cs:retire-predicate",
-            "from": retirement["from"],
-            "to": retirement["to"],
-            "p": 1.0,
+            "from": retired,
+            "to": into,
+            "p": operation.probability if operation.probability is not None else 1.0,
             "proposal_id": proposal.id,
-            "applied_at": applied_at,
+            "operation_id": operation.id,
+            "applied_at": decision.decided_at.isoformat() if decision else None,
         }
-        if retirement.get("note"):
-            record["note"] = retirement["note"]
+        if operation.rationale:
+            record["note"] = operation.rationale
         records.append(record)
     return records, skipped
+
+
+def _is_dr_predicate_base(base: dict[str, Any], repo: OntologyRepository) -> bool:
+    """Whether a deleted predicate (its snapshot) was in the dr_spec taxonomy's catalog."""
+    taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    return taxonomy is not None and base.get("taxonomy_id") == taxonomy.id
+
+
+def _replacement_identifier(
+    operation: ProposedOperation, repo: OntologyRepository, refs: dict[str, str | None]
+) -> str | None:
+    """The identifier of the predicate a predicate delete names as its replacement."""
+    named = operation.proposed_replacement_id
+    if named and named.startswith("$"):
+        named = refs.get(named[1:])
+    predicate = repo.get_predicate(named) if named else None
+    return predicate.identifier if predicate else None
+
+
+# --------------------------------------------------------------- predicates
+
+
+def _predicate_change(
+    operation: ProposedOperation, repo: OntologyRepository, dr_taxonomy_id: str | None
+) -> dict[str, Any] | str:
+    """
+    An applied create or update of a dr_spec predicate as a `predicate_changes`
+    entry, or why it isn't one. A create's `set` holds description, inverse,
+    category, archimate_alignment (null when not given) and all four semantics;
+    an update's holds only the keys it changed (semantics only the changed flags).
+    """
+    label = f"seq {operation.seq}"
+    predicate_id = (
+        operation.result_entity_id
+        if operation.op is OperationType.CREATE
+        else operation.target_id
+    )
+    predicate = repo.get_predicate(predicate_id or "")
+    if predicate is None:
+        raise ValueError(f"{label}: its predicate no longer exists")
+    if predicate.taxonomy_id != dr_taxonomy_id:
+        return "not a DR predicate"
+    fields = operation.fields
+    after = dr_predicate_metadata(fields.get("external_references"))
+    if operation.op is OperationType.CREATE:
+        if after is None:
+            raise ValueError(
+                f"{label}: it creates the DR predicate {predicate.identifier} without a DR"
+                f" reference (source {DR_SOURCE!r}) carrying inverse, category and"
+                " semantics, so it can't land in DR's predicates.json; give it one"
+            )
+        values: dict[str, Any] = {
+            "description": fields.get("description"),
+            "inverse": after.get("inverse"),
+            "category": after.get("category"),
+            "archimate_alignment": after.get("archimate_alignment"),
+            "semantics": after.get("semantics"),
+        }
+    else:
+        values = {}
+        if "description" in fields and fields["description"] != operation.base.get("description"):
+            values["description"] = fields["description"]
+        if after is not None:
+            before = dr_predicate_metadata(operation.base.get("external_references")) or {}
+            for key in ("inverse", "category", "archimate_alignment"):
+                if key in after and after[key] != before.get(key):
+                    values[key] = after[key]
+            semantics = {
+                flag: value
+                for flag, value in (after.get("semantics") or {}).items()
+                if value != (before.get("semantics") or {}).get(flag)
+            }
+            if semantics:
+                values["semantics"] = semantics
+        if not values:
+            return "it changes nothing DR's predicates.json holds"
+    return {
+        "seq": operation.seq,
+        "op_id": operation.id,
+        "op": operation.op.value,
+        "predicate": predicate.identifier,
+        "set": values,
+    }
 
 
 # --------------------------------------------------------------- attributes

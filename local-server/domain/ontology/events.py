@@ -454,3 +454,58 @@ class AttributeDefinitionDeleted(DomainEvent):
     identifier: str = ""
     title: str = ""
     snapshot: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class PredicateCreated(DomainEvent):
+    """
+    Event emitted when a predicate is added to a taxonomy's catalog.
+
+    Attributes:
+        predicate_id: ID of the created predicate
+        taxonomy_id: The taxonomy whose catalog holds it
+        identifier: The relation verb
+    """
+
+    _aggregate_id_field: ClassVar[str] = "predicate_id"
+    predicate_id: str = ""
+    taxonomy_id: str = ""
+    identifier: str = ""
+
+
+@dataclass(frozen=True)
+class PredicateUpdated(DomainEvent):
+    """
+    Event emitted when a predicate's title, description or references change.
+
+    Attributes:
+        predicate_id: ID of the updated predicate
+        changed_fields: Tuple of field names that changed
+        old_values: Dictionary of field names to their previous values
+        new_values: Dictionary of field names to their new values
+    """
+
+    _aggregate_id_field: ClassVar[str] = "predicate_id"
+    predicate_id: str = ""
+    changed_fields: tuple[str, ...] = field(default_factory=tuple)
+    old_values: dict[str, object] = field(default_factory=dict)
+    new_values: dict[str, object] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class PredicateDeleted(DomainEvent):
+    """
+    Event emitted when a predicate leaves its taxonomy's catalog.
+
+    Attributes:
+        predicate_id: ID of the deleted predicate
+        taxonomy_id: The taxonomy whose catalog held it
+        identifier: The relation verb
+        snapshot: Every field of the deleted predicate, so the delete can be reverted
+    """
+
+    _aggregate_id_field: ClassVar[str] = "predicate_id"
+    predicate_id: str = ""
+    taxonomy_id: str = ""
+    identifier: str = ""
+    snapshot: dict[str, Any] = field(default_factory=dict)

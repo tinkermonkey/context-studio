@@ -243,6 +243,29 @@ async def list_taxonomy_predicates(
         raise HTTPException(status_code=status_code, detail=message)
 
 
+@router.get("/predicates", response_model=list[PredicateResponse])
+async def list_predicates_by_ids(
+    ids: list[str] = Query(
+        ...,
+        max_length=MAX_ID_FILTER,
+        description=f"Predicate IDs (repeat the parameter; at most {MAX_ID_FILTER})",
+    ),
+    service: OntologyService = Depends(get_ontology_service),
+) -> list[PredicateResponse]:
+    """The predicates with these IDs, in any taxonomy; unknown IDs are left out."""
+
+    def found() -> list[PredicateResponse]:
+        predicates = []
+        for predicate_id in dict.fromkeys(ids):
+            try:
+                predicates.append(PredicateResponse.model_validate(service.get_predicate(predicate_id)))
+            except EntityNotFoundError:
+                continue
+        return predicates
+
+    return await run_sync_in_executor(found)
+
+
 @router.put("/taxonomies/{taxonomy_id}", response_model=TaxonomyResponse)
 async def update_taxonomy(
     taxonomy_id: str,

@@ -23,7 +23,12 @@ from typing import Any, Callable, Iterable, Mapping
 from domain.ontology.entities import PropertyDefinition
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.value_objects import ExternalReference
-from domain.versioning.proposals import ChangeProposal, OperationStatus, ProposedOperation
+from domain.versioning.proposals import (
+    ChangeProposal,
+    OperationKind,
+    OperationStatus,
+    ProposedOperation,
+)
 
 DR_SOURCE = "documentation_robotics"
 DR_TAXONOMY_IDENTIFIER = "dr_spec"
@@ -445,6 +450,8 @@ class DrRelationshipRules:
         self._repo = repo
 
     def governs(self, operation: ProposedOperation, fields: dict[str, Any]) -> bool:
+        if operation.kind is not OperationKind.PROPERTY:
+            return False
         target = (
             self._repo.get_property_definition(operation.target_id) if operation.target_id else None
         )

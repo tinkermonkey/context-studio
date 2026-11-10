@@ -18,6 +18,7 @@ from domain.ontology.entities import (
     Class,
     ConceptScheme,
     Individual,
+    Predicate,
     PropertyDefinition,
     Relationship,
     Taxonomy,
@@ -40,6 +41,7 @@ _ENTITY_TYPES: dict[str, type] = {
     "relationship": Relationship,
     "property_definition": PropertyDefinition,
     "attribute_definition": AttributeDefinition,
+    "predicate": Predicate,
 }
 
 _EXCLUDED_FIELDS = {"embedding"}

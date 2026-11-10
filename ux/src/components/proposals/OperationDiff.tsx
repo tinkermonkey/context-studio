@@ -198,11 +198,27 @@ export function OperationDiff({ operation: proposed, context }: OperationDiffPro
   const subject = subjectOf(operation, context);
   if (operation.op === "create" || operation.op === "delete") {
     const values = createdValues(operation);
+    // A predicate delete retires it into its replacement, which its types move to.
+    const replacement =
+      operation.kind === "predicate" && operation.op === "delete"
+        ? operation.proposed_replacement_id
+        : undefined;
     return (
       <div className="op-diff" data-testid={testId} data-op={operation.op}>
         <span className={operation.op === "delete" ? "op-diff__removed" : undefined}>
           <span className="op-diff__kind">{operation.kind}</span> {subject}
         </span>
+        {replacement && (
+          <span
+            className="op-diff__after"
+            data-testid={`operation-diff-replacement-${operation.id}`}
+          >
+            <span className="op-diff__to">into</span>{" "}
+            <span className="op-diff__predicate">
+              {context.nameOf(replacement, operation) ?? replacement}
+            </span>
+          </span>
+        )}
         {values && (
           <span className="op-diff__note" data-testid={`operation-diff-data-${operation.id}`}>
             {clipped(values)}

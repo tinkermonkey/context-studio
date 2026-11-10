@@ -426,6 +426,8 @@ export interface NamedEntityIds {
   schemes: string[];
   /** Relationships an update or delete names only by id: their ends come from a lookup. */
   relationships: string[];
+  /** Predicates an update names only by id, and the replacement a predicate delete names. */
+  predicates: string[];
 }
 
 /**
@@ -447,6 +449,7 @@ export function namedEntityIds(
     classes: [],
     schemes: [],
     relationships: [],
+    predicates: [],
   };
   for (const operation of operations) {
     // A delete's base is the whole entity, name included: only a target whose
@@ -462,6 +465,11 @@ export function namedEntityIds(
     if (target && operation.kind === "taxonomy") ids.taxonomies.push(target);
     if (target && operation.kind === "scheme") ids.schemes.push(target);
     if (target && operation.kind === "relationship") ids.relationships.push(target);
+    if (target && operation.kind === "predicate") ids.predicates.push(target);
+    const replacement = operation.proposed_replacement_id;
+    if (operation.kind === "predicate" && replacement && !replacement.startsWith("$")) {
+      ids.predicates.push(replacement);
+    }
     const values = { ...operation.base, ...operation.fields };
     const owner = operation.kind === "attribute" ? text(values.class_id) : undefined;
     const ownerId = owner && resolveRef(owner, refsOf(operation));
@@ -533,6 +541,10 @@ const FIELD_ORDER = [
   "identifier",
   "title",
   "description",
+  "inverse",
+  "category",
+  "archimate_alignment",
+  "semantics",
   "cardinality",
   "strength",
   "evidence",
@@ -611,15 +623,16 @@ export function changeRows(operation: ProposedOperation): ChangeRow[] {
     }
   }
   const references = rows.find((row) => row.field === "external_references");
-  if (operation.kind === "property" && references) {
-    // References read by identifier; a DR type's attributes get rows of their own.
+  const drFields = DR_FIELDS[operation.kind];
+  if (drFields && references) {
+    // References read by identifier; the DR fields on a DR reference get rows of their own.
     references.changed = !sameValue(
-      withoutDrAttributes(references.before),
-      withoutDrAttributes(references.after),
+      withoutDrFields(references.before, drFields),
+      withoutDrFields(references.after, drFields),
     );
-    const before = drAttributes(references.before);
-    const after = drAttributes(references.after);
-    for (const field of DR_ATTRIBUTES) {
+    const before = drMetadata(references.before, drFields);
+    const after = drMetadata(references.after, drFields);
+    for (const field of drFields) {
       if (!(field in before) && !(field in after)) continue;
       rows.push({
         field,
@@ -636,18 +649,31 @@ export function changeRows(operation: ProposedOperation): ChangeRow[] {
 
 /** A DR relationship type's spec attributes, kept on its DR reference's metadata. */
 export const DR_ATTRIBUTES = ["cardinality", "strength", "evidence"] as const;
+/** A DR predicate's catalog fields, kept on its DR reference's metadata (#1481). */
+export const DR_PREDICATE_FIELDS = [
+  "inverse",
+  "category",
+  "archimate_alignment",
+  "semantics",
+] as const;
+
+/** Per kind, the DR fields that get rows of their own. */
+const DR_FIELDS: Record<string, readonly string[]> = {
+  property: DR_ATTRIBUTES,
+  predicate: DR_PREDICATE_FIELDS,
+};
 
 /**
  * References compared by full value (source, identifier, uri, metadata), less
- * the DR attributes, which have rows of their own; key order doesn't count.
+ * the DR fields, which have rows of their own; key order doesn't count.
  */
-function withoutDrAttributes(references: unknown): unknown {
+function withoutDrFields(references: unknown, drFields: readonly string[]): unknown {
   if (!Array.isArray(references)) return references;
   return references.map((r) => {
     if (!r || typeof r !== "object") return r;
     const { source, identifier, uri, metadata } = r as Record<string, unknown>;
     const rest = Object.entries((metadata ?? {}) as Record<string, unknown>)
-      .filter(([key]) => !(DR_ATTRIBUTES as readonly string[]).includes(key))
+      .filter(([key]) => !drFields.includes(key))
       .sort(([a], [b]) => a.localeCompare(b));
     return {
       source,
@@ -658,17 +684,15 @@ function withoutDrAttributes(references: unknown): unknown {
   });
 }
 
-/** The DR attributes on the DR ("documentation_robotics") reference among references. */
-function drAttributes(references: unknown): Record<string, unknown> {
+/** The DR fields on the DR ("documentation_robotics") reference among references. */
+function drMetadata(references: unknown, drFields: readonly string[]): Record<string, unknown> {
   if (!Array.isArray(references)) return {};
   const ref = references.find(
     (r) =>
       r && typeof r === "object" && (r as { source?: unknown }).source === "documentation_robotics",
   ) as { metadata?: Record<string, unknown> | null } | undefined;
   const metadata = ref?.metadata ?? {};
-  return Object.fromEntries(
-    DR_ATTRIBUTES.filter((k) => k in metadata).map((k) => [k, metadata[k]]),
-  );
+  return Object.fromEntries(drFields.filter((k) => k in metadata).map((k) => [k, metadata[k]]));
 }
 
 function isEmpty(value: unknown): boolean {

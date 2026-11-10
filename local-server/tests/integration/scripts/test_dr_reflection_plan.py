@@ -31,6 +31,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker
 
 from adapters.events.in_process import InProcessEventPublisher
+from adapters.interchange.dr_predicates import DrPredicateRules
 from adapters.interchange.dr_relationships import (
     DR_TAXONOMY_IDENTIFIER,
     DrRelationshipRules,
@@ -113,7 +114,7 @@ def parts(spec_db, tmp_path):
         ontology,
         repo,
         RevertService(change_repo=change_repo, ontology_repo=repo),
-        apply_rules=[DrRelationshipRules(repo)],  # as app.py wires it
+        apply_rules=[DrRelationshipRules(repo), DrPredicateRules(repo)],  # as app.py wires it
     )
     yield ontology, repo, proposals
     engine.dispose()

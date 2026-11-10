@@ -233,9 +233,10 @@ class ApprovalPolicyRepository(Protocol):
 
 class ProposalApplyRules(Protocol):
     """
-    Rules that some property definitions are under (e.g. the DR spec's
-    relationship types), whichever proposal changes them: property definitions
-    are global, so the target decides, not the proposal's taxonomy.
+    Rules that some property definitions or predicates are under (e.g. the DR
+    spec's relationship types and predicate catalog), whichever proposal changes
+    them: property definitions are global, so the target decides, not the
+    proposal's taxonomy.
 
     ProposalService checks a reviewer's edit like any proposed update, then
     asks the rules that govern the operation just before it applies (inside
@@ -251,7 +252,7 @@ class ProposalApplyRules(Protocol):
         fields point it at.
 
         Args:
-            operation: A property-definition operation
+            operation: A property-definition or predicate operation
             fields: The fields it is about to apply (proposed or edited)
         """
         ...
@@ -282,7 +283,8 @@ class ProposalApplyRules(Protocol):
         Refuse an unedited create or update the rules forbid as it applies now.
 
         Args:
-            operation: A property-definition create or update, applied as proposed
+            operation: A property-definition or predicate create or update, applied as
+                proposed
             fields: Its fields, with "$ref" values resolved
 
         Raises:

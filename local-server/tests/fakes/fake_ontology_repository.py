@@ -159,6 +159,9 @@ class FakeOntologyRepository:
         self._predicates[predicate.id] = predicate
         return predicate
 
+    def delete_predicate(self, predicate_id: str) -> bool:
+        return self._predicates.pop(predicate_id, None) is not None
+
     # ConceptScheme operations
 
     def get_concept_scheme(self, concept_scheme_id: str) -> ConceptScheme | None:

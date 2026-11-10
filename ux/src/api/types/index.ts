@@ -129,6 +129,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/predicates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Predicates By Ids
+     * @description The predicates with these IDs, in any taxonomy; unknown IDs are left out.
+     */
+    get: operations["list_predicates_by_ids_api_predicates_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/taxonomies/{taxonomy_id}/scheme-counts": {
     parameters: {
       query?: never;
@@ -7942,7 +7962,8 @@ export interface components {
       | "property"
       | "attribute"
       | "individual"
-      | "relationship";
+      | "relationship"
+      | "predicate";
     /**
      * OperationStatus
      * @description Where an operation stands.
@@ -10760,6 +10781,38 @@ export interface operations {
       path: {
         taxonomy_id: string;
       };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PredicateResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_predicates_by_ids_api_predicates_get: {
+    parameters: {
+      query: {
+        /** @description Predicate IDs (repeat the parameter; at most 500) */
+        ids: string[];
+      };
+      header?: never;
+      path?: never;
       cookie?: never;
     };
     requestBody?: never;

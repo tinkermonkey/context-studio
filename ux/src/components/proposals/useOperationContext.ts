@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useAttributeDefinitionsByIds, useClassesByIds } from "@/api/hooks/ontology/useClasses";
 import { useIndividualsByIds } from "@/api/hooks/ontology/useIndividuals";
+import { usePredicatesByIds } from "@/api/hooks/ontology/usePredicates";
 import { usePropertiesByIds } from "@/api/hooks/ontology/useProperties";
 import { useRelationshipsByIds } from "@/api/hooks/ontology/useRelationships";
 import { useSchemesByIds } from "@/api/hooks/ontology/useSchemes";
@@ -94,6 +95,7 @@ export function useOperationContext(
     ...relationships.flatMap((r) => [r.source_id, r.target_id]),
   ]);
   const taxonomies = useTaxonomiesByIds(named.taxonomies);
+  const { data: catalogPredicates } = usePredicatesByIds(named.predicates);
   const schemes = useSchemesByIds(named.schemes);
   const { data: predicates } = usePropertiesByIds([
     ...named.properties,
@@ -118,6 +120,7 @@ export function useOperationContext(
       ...taxonomies.map((t) => [t.id, t.title] as const),
       ...schemes.map((s) => [s.id, s.title || s.identifier] as const),
       ...(classes?.items ?? []).map((c) => [c.id, c.title || c.identifier] as const),
+      ...(catalogPredicates ?? []).map((p) => [p.id, p.identifier] as const),
     ]);
     const unknownLabel = (operation: ProposedOperation) => {
       if (!operation.target_id || propertiesFailed) return "?";
@@ -168,5 +171,6 @@ export function useOperationContext(
     taxonomies,
     schemes,
     predicates,
+    catalogPredicates,
   ]);
 }

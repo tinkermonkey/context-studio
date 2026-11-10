@@ -26,6 +26,9 @@ from domain.ontology.events import (
     IndividualCreated,
     IndividualDeleted,
     IndividualUpdated,
+    PredicateCreated,
+    PredicateDeleted,
+    PredicateUpdated,
     PropertyDefinitionCreated,
     PropertyDefinitionDeleted,
     PropertyDefinitionUpdated,
@@ -88,6 +91,9 @@ class ChangeEventRecorder:
             (AttributeDefinitionCreated, self.on_attribute_definition_created),
             (AttributeDefinitionUpdated, self.on_attribute_definition_updated),
             (AttributeDefinitionDeleted, self.on_attribute_definition_deleted),
+            (PredicateCreated, self.on_predicate_created),
+            (PredicateUpdated, self.on_predicate_updated),
+            (PredicateDeleted, self.on_predicate_deleted),
             (IndividualCreated, self.on_individual_created),
             (IndividualUpdated, self.on_individual_updated),
             (IndividualDeleted, self.on_individual_deleted),
@@ -419,6 +425,43 @@ class ChangeEventRecorder:
             operation=ChangeOperation.DELETE,
             previous_state=event.snapshot,
             change_reason="Attribute definition deleted",
+        )
+
+    # --- Predicate Event Handlers ---
+
+    def on_predicate_created(self, event: PredicateCreated) -> None:
+        """Handle PredicateCreated events."""
+        self._record(
+            entity_id=event.predicate_id,
+            entity_type="predicate",
+            operation=ChangeOperation.CREATE,
+            new_state={
+                "predicate_id": event.predicate_id,
+                "taxonomy_id": event.taxonomy_id,
+                "identifier": event.identifier,
+            },
+            change_reason="Predicate created",
+        )
+
+    def on_predicate_updated(self, event: PredicateUpdated) -> None:
+        """Handle PredicateUpdated events."""
+        self._record(
+            entity_id=event.predicate_id,
+            entity_type="predicate",
+            operation=ChangeOperation.UPDATE,
+            new_state=_json_safe(event.new_values),
+            previous_state=_json_safe(event.old_values),
+            change_reason=f"Predicate updated: {', '.join(event.changed_fields)}",
+        )
+
+    def on_predicate_deleted(self, event: PredicateDeleted) -> None:
+        """Handle PredicateDeleted events."""
+        self._record(
+            entity_id=event.predicate_id,
+            entity_type="predicate",
+            operation=ChangeOperation.DELETE,
+            previous_state=event.snapshot,
+            change_reason="Predicate deleted",
         )
 
     # --- Individual Event Handlers ---

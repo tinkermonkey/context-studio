@@ -1298,6 +1298,30 @@ class SQLiteOntologyRepository:
                 raise
             return map_orm_to_predicate(orm_predicate)
 
+    def delete_predicate(self, predicate_id: str) -> bool:
+        """
+        Delete a predicate by ID.
+
+        Returns:
+            True if deleted, False if not found
+
+        Raises:
+            EntityInUseError: If a relationship type still uses it
+        """
+        with self.session_factory() as session:
+            orm_predicate = session.get(PredicateORM, str(predicate_id))
+            if orm_predicate is None:
+                return False
+            session.delete(orm_predicate)
+            try:
+                session.commit()
+            except IntegrityError as e:
+                session.rollback()
+                raise EntityInUseError(
+                    f"Predicate {predicate_id} is used by a relationship type"
+                ) from e
+            return True
+
     # ==================== PropertyDefinition CRUD ====================
 
     def get_property_definition(
