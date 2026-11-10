@@ -102,6 +102,9 @@ def _handle_graph_error(exc: Exception) -> tuple[int, str]:
 
 @router.post("/build", response_model=KnowledgeGraphResponse)
 async def build_graph(
+    dataset_id: Optional[str] = Query(
+        None, description="Scope to the schema plus this dataset's data (all data when omitted)"
+    ),
     service: GraphAnalysisService = Depends(get_graph_service),
 ) -> KnowledgeGraphResponse:
     """
@@ -121,7 +124,7 @@ async def build_graph(
         HTTPException: 422 if graph construction fails
     """
     try:
-        graph = service.build_graph()
+        graph = service.build_graph(dataset_id)
         graph_dict = asdict(graph)
         graph_dict["timestamp"] = graph_dict.pop("last_built")
         return KnowledgeGraphResponse.model_validate(graph_dict)
@@ -135,6 +138,9 @@ async def build_graph(
 
 @router.get("/view", response_model=GraphViewResponse)
 async def get_graph_view(
+    dataset_id: Optional[str] = Query(
+        None, description="Scope to the schema plus this dataset's data (all data when omitted)"
+    ),
     service: GraphAnalysisService = Depends(get_graph_service),
 ) -> GraphViewResponse:
     """
@@ -154,7 +160,7 @@ async def get_graph_view(
         HTTPException: 422 if a graph error occurs, 500 on unexpected errors
     """
     try:
-        view = await run_sync_in_executor(service.get_graph_view)
+        view = await run_sync_in_executor(service.get_graph_view, dataset_id)
         return GraphViewResponse.model_validate(view)
     except Exception as exc:
         status_code, message = _handle_graph_error(exc)
@@ -167,6 +173,9 @@ async def get_graph_view(
 @router.get("/metrics", response_model=GraphMetricsResponse)
 async def get_metrics(
     algorithm: str = Query("betweenness", description="Centrality algorithm to use"),
+    dataset_id: Optional[str] = Query(
+        None, description="Scope to the schema plus this dataset's data (all data when omitted)"
+    ),
     service: GraphAnalysisService = Depends(get_graph_service),
 ) -> GraphMetricsResponse:
     """
@@ -186,7 +195,7 @@ async def get_metrics(
         occurs
     """
     try:
-        metrics = service.get_metrics(algorithm=algorithm)
+        metrics = service.get_metrics(algorithm=algorithm, dataset_id=dataset_id)
         # Convert communities from sets to sorted lists for JSON serialization
         metrics_dict = asdict(metrics)
         metrics_dict["communities"] = [sorted(list(community)) for community in metrics.communities]
@@ -237,6 +246,9 @@ async def get_degree_distribution(
 async def get_shortest_path(
     source_id: str = Query(..., description="ID of the starting node"),
     target_id: str = Query(..., description="ID of the ending node"),
+    dataset_id: Optional[str] = Query(
+        None, description="Scope to the schema plus this dataset's data (all data when omitted)"
+    ),
     service: GraphAnalysisService = Depends(get_graph_service),
 ) -> PathResultResponse:
     """
@@ -254,7 +266,7 @@ async def get_shortest_path(
         HTTPException: 404 if either node is not found or no path exists, 422 if graph error occurs
     """
     try:
-        path_result = service.find_shortest_path(source_id, target_id)
+        path_result = service.find_shortest_path(source_id, target_id, dataset_id)
         if path_result is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -414,6 +426,9 @@ async def get_neighbors(
 @router.get("/subgraph", response_model=SubgraphDataResponse)
 async def get_subgraph(
     nodes: str = Query(..., description="Comma-separated list of node IDs to extract subgraph for"),
+    dataset_id: Optional[str] = Query(
+        None, description="Scope to the schema plus this dataset's data (all data when omitted)"
+    ),
     service: GraphAnalysisService = Depends(get_graph_service),
 ) -> SubgraphDataResponse:
     """
@@ -444,7 +459,7 @@ async def get_subgraph(
             )
 
         # Use the public service method to extract subgraph with edges
-        subgraph = service.extract_subgraph_with_edges(node_list)
+        subgraph = service.extract_subgraph_with_edges(node_list, dataset_id)
 
         return SubgraphDataResponse(
             nodes=subgraph.node_ids,
@@ -558,8 +573,8 @@ async def execute_sparql(
         HTTPException: 400 if query is invalid, 422 if graph error occurs
     """
     try:
-        results = service.execute_sparql(request.query)
-        triple_count = service.get_triple_count()
+        results = service.execute_sparql(request.query, request.dataset_id)
+        triple_count = service.get_triple_count(request.dataset_id)
         return SPARQLResponse(results=results, triple_count=triple_count)
     except Exception as exc:
         status_code, message = _handle_graph_error(exc)

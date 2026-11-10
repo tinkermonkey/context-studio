@@ -1015,6 +1015,79 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/datasets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Datasets
+     * @description List datasets (named bodies of data over a taxonomy's schema), by title, with their size.
+     *
+     *     Args:
+     *         taxonomy_id: Optional taxonomy ID to filter by
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         The datasets, each with its individual and relationship counts
+     */
+    get: operations["list_datasets_api_datasets_get"];
+    put?: never;
+    /**
+     * Create Dataset
+     * @description Create a dataset over a taxonomy's schema. A direct action, not a proposal.
+     *
+     *     Args:
+     *         request: The taxonomy, identifier and title
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         The created dataset
+     *
+     *     Raises:
+     *         HTTPException: 404 if the taxonomy is not found, 409 if the taxonomy already has a
+     *         dataset with this identifier, 400 if the identifier or title is invalid
+     */
+    post: operations["create_dataset_api_datasets_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/datasets/{dataset_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete Dataset
+     * @description Delete a dataset with its individuals and their relationships. A direct action, not a
+     *     proposal: each individual and relationship removed is recorded as a change event.
+     *
+     *     Args:
+     *         dataset_id: The dataset to delete
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         What was removed
+     *
+     *     Raises:
+     *         HTTPException: 404 if the dataset is not found
+     */
+    delete: operations["delete_dataset_api_datasets__dataset_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/graph/build": {
     parameters: {
       query?: never;
@@ -2473,8 +2546,12 @@ export interface paths {
      * Search References
      * @description Search for references across multiple sources.
      *
-     *     Aggregates results from all available sources (or specified sources).
-     *     Sources that fail or are unavailable are tracked but don't block the response.
+     *     Aggregates results from all sources (or the requested ones), queried at once.
+     *     There is no availability pre-check: each call goes through the reference proxy,
+     *     so a repeated search is a cache hit. A source that raises or doesn't answer
+     *     within SOURCE_QUERY_TIMEOUT_SECONDS is listed as failed and doesn't hold the
+     *     response. The source adapters return no results on network errors, so a source
+     *     that fails fast is listed as searched with no results.
      *
      *     Args:
      *         request: ReferenceSearchRequest with search parameters
@@ -2506,8 +2583,9 @@ export interface paths {
      * Get Reference Relations
      * @description Get relationships for a reference URI across multiple sources.
      *
-     *     Aggregates relationships from all available sources (or specified sources).
-     *     Sources that fail or are unavailable are tracked but don't block the response.
+     *     Aggregates relationships from all sources (or the requested ones), queried at
+     *     once. As with search, there is no availability pre-check; a source that raises or
+     *     doesn't answer within SOURCE_QUERY_TIMEOUT_SECONDS is listed as failed.
      *
      *     Args:
      *         request: ReferenceRelationsRequest with URI to query
@@ -5406,6 +5484,72 @@ export interface components {
       issues?: string[];
     };
     /**
+     * DatasetCreateRequest
+     * @description Request to create a dataset over a taxonomy's schema.
+     */
+    DatasetCreateRequest: {
+      /** Taxonomy Id */
+      taxonomy_id: string;
+      /**
+       * Identifier
+       * @description Slug: a lowercase letter, then lowercase letters, digits, - or _
+       */
+      identifier: string;
+      /** Title */
+      title: string;
+    };
+    /**
+     * DatasetDeletionResponse
+     * @description What deleting a dataset removed.
+     */
+    DatasetDeletionResponse: {
+      /** Dataset Id */
+      dataset_id: string;
+      /** Individual Count */
+      individual_count: number;
+      /** Relationship Count */
+      relationship_count: number;
+    };
+    /**
+     * DatasetResponse
+     * @description A named body of data over one taxonomy's schema, with its size.
+     */
+    DatasetResponse: {
+      /** Id */
+      id: string;
+      /** Taxonomy Id */
+      taxonomy_id: string;
+      /**
+       * Identifier
+       * @description Slug, unique within the taxonomy
+       */
+      identifier: string;
+      /** Title */
+      title: string;
+      /**
+       * Yields To Schema
+       * @description Schema operations never block on its data, which follows them instead (set by the DR model loader; no UI toggle)
+       * @default false
+       */
+      yields_to_schema: boolean;
+      /**
+       * Individual Count
+       * @description Individuals in the dataset
+       * @default 0
+       */
+      individual_count: number;
+      /**
+       * Relationship Count
+       * @description Relationships in the dataset (by their source individual)
+       * @default 0
+       */
+      relationship_count: number;
+      /** Created At */
+      created_at?: string | null;
+      /** Last Modified */
+      last_modified?: string | null;
+    };
+    /**
      * DecisionKind
      * @description What was decided.
      * @enum {string}
@@ -6698,6 +6842,11 @@ export interface components {
        * @description Optional longer description
        */
       description?: string | null;
+      /**
+       * Dataset Id
+       * @description The dataset to create it in; may be omitted while the classes' taxonomy has at most one dataset
+       */
+      dataset_id?: string | null;
     };
     /**
      * IndividualResponse
@@ -6714,6 +6863,11 @@ export interface components {
        * @description Ordered list of parent class IDs
        */
       class_ids: string[];
+      /**
+       * Dataset Id
+       * @description The dataset the individual belongs to
+       */
+      dataset_id?: string | null;
       /**
        * Title
        * @description Display name
@@ -8910,6 +9064,11 @@ export interface components {
        * @description SPARQL SELECT query string (max 10000 characters)
        */
       query: string;
+      /**
+       * Dataset Id
+       * @description Query the schema plus this dataset's data (all data when omitted)
+       */
+      dataset_id?: string | null;
     };
     /**
      * SPARQLResponse
@@ -10107,7 +10266,10 @@ export interface operations {
   };
   get_taxonomy_scheme_counts_api_taxonomies__taxonomy_id__scheme_counts_get: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description Count only this dataset's individuals (all when omitted) */
+        dataset_id?: string | null;
+      };
       header?: never;
       path: {
         taxonomy_id: string;
@@ -10281,7 +10443,10 @@ export interface operations {
   };
   get_scheme_class_counts_api_schemes__scheme_id__class_counts_get: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description Count only this dataset's individuals and relationships */
+        dataset_id?: string | null;
+      };
       header?: never;
       path: {
         scheme_id: string;
@@ -10635,6 +10800,8 @@ export interface operations {
         sort_order?: string;
         /** @description Case-insensitive text search on the source title, target title, or property definition title/identifier */
         q?: string | null;
+        /** @description Optional dataset ID to filter by (the source individual's) */
+        dataset_id?: string | null;
       };
       header?: never;
       path?: never;
@@ -11112,6 +11279,8 @@ export interface operations {
         q?: string | null;
         /** @description Restrict results to these IDs (repeat the parameter; at most 500) */
         ids?: string[] | null;
+        /** @description Optional dataset ID to filter by */
+        dataset_id?: string | null;
       };
       header?: never;
       path?: never;
@@ -11398,9 +11567,108 @@ export interface operations {
       };
     };
   };
-  build_graph_api_graph_build_post: {
+  list_datasets_api_datasets_get: {
+    parameters: {
+      query?: {
+        /** @description Optional taxonomy ID to filter by */
+        taxonomy_id?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DatasetResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_dataset_api_datasets_post: {
     parameters: {
       query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DatasetCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DatasetResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_dataset_api_datasets__dataset_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DatasetDeletionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  build_graph_api_graph_build_post: {
+    parameters: {
+      query?: {
+        /** @description Scope to the schema plus this dataset's data (all data when omitted) */
+        dataset_id?: string | null;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -11416,11 +11684,23 @@ export interface operations {
           "application/json": components["schemas"]["KnowledgeGraphResponse"];
         };
       };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
   };
   get_graph_view_api_graph_view_get: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description Scope to the schema plus this dataset's data (all data when omitted) */
+        dataset_id?: string | null;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -11436,6 +11716,15 @@ export interface operations {
           "application/json": components["schemas"]["GraphViewResponse"];
         };
       };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
   };
   get_metrics_api_graph_metrics_get: {
@@ -11443,6 +11732,8 @@ export interface operations {
       query?: {
         /** @description Centrality algorithm to use */
         algorithm?: string;
+        /** @description Scope to the schema plus this dataset's data (all data when omitted) */
+        dataset_id?: string | null;
       };
       header?: never;
       path?: never;
@@ -11497,6 +11788,8 @@ export interface operations {
         source_id: string;
         /** @description ID of the ending node */
         target_id: string;
+        /** @description Scope to the schema plus this dataset's data (all data when omitted) */
+        dataset_id?: string | null;
       };
       header?: never;
       path?: never;
@@ -11665,6 +11958,8 @@ export interface operations {
       query: {
         /** @description Comma-separated list of node IDs to extract subgraph for */
         nodes: string;
+        /** @description Scope to the schema plus this dataset's data (all data when omitted) */
+        dataset_id?: string | null;
       };
       header?: never;
       path?: never;

@@ -84,9 +84,35 @@ class GraphAnalysisService:
         self._graph_engine = graph_engine
         self._query_engine = query_engine
 
-        # Stale-flag pattern: graphs are not built on construction
+        # Stale-flag pattern: graphs are not built on construction. Each cache
+        # also remembers its scope (a dataset id, or None for all data) and is
+        # rebuilt when asked for another.
         self._graph_stale = True
         self._rdf_stale = True
+        self._graph_scope: str | None = None
+        self._rdf_scope: str | None = None
+
+    def _scoped_data(self, dataset_id: str | None) -> tuple[list[Any], list[Any]]:
+        """
+        Every entity and relationship, or, for a dataset, the schema plus that
+        dataset's individuals and the relationships between what remains.
+        """
+        entities, relationships = self._repository.get_all_entities_and_relationships()
+        if dataset_id is None:
+            return list(entities), list(relationships)
+        dropped = {
+            str(e.id)
+            for e in entities
+            if isinstance(e, Individual) and e.dataset_id != dataset_id
+        }
+        return (
+            [e for e in entities if str(e.id) not in dropped],
+            [
+                r
+                for r in relationships
+                if str(r.source_id) not in dropped and str(r.target_id) not in dropped
+            ],
+        )
 
     @staticmethod
     def _derive_node_type(entity: object) -> str:
@@ -105,7 +131,7 @@ class GraphAnalysisService:
         class_name = entity.__class__.__name__
         return _NODE_TYPE_MAP.get(class_name, class_name.lower())
 
-    def _ensure_graph(self) -> None:
+    def _ensure_graph(self, dataset_id: str | None = None) -> None:
         """
         Build the graph if it is stale.
 
@@ -113,11 +139,11 @@ class GraphAnalysisService:
         to dict format, passes to the graph engine, and clears the stale flag.
         Synthesizes class-membership edges from Individual.class_ids.
         """
-        if not self._graph_stale:
+        if not self._graph_stale and self._graph_scope == dataset_id:
             return
 
-        # Fetch all entities and relationships from the repository
-        entities, relationships = self._repository.get_all_entities_and_relationships()
+        # Fetch the scope's entities and relationships from the repository
+        entities, relationships = self._scoped_data(dataset_id)
 
         # Convert entities to node dicts
         nodes = []
@@ -157,8 +183,9 @@ class GraphAnalysisService:
         # Build the graph
         self._graph_engine.build_from_data(nodes, edges)
         self._graph_stale = False
+        self._graph_scope = dataset_id
 
-    def _ensure_rdf(self) -> None:
+    def _ensure_rdf(self, dataset_id: str | None = None) -> None:
         """
         Load the RDF graph if it is stale.
 
@@ -166,11 +193,11 @@ class GraphAnalysisService:
         converts them to dicts, passes to the query engine, and clears the stale flag.
         Synthesizes class-membership edges from Individual.class_ids.
         """
-        if not self._rdf_stale:
+        if not self._rdf_stale and self._rdf_scope == dataset_id:
             return
 
-        # Fetch all ontology data from the repository
-        entities, relationships = self._repository.get_all_entities_and_relationships()
+        # Fetch the scope's ontology data from the repository
+        entities, relationships = self._scoped_data(dataset_id)
 
         # Fetch property definitions separately
         property_definitions = self._repository.list_property_definitions(limit=None)
@@ -223,8 +250,9 @@ class GraphAnalysisService:
         # Load the RDF graph
         self._query_engine.load_ontology(nodes, edges, prop_defs)
         self._rdf_stale = False
+        self._rdf_scope = dataset_id
 
-    def build_graph(self) -> KnowledgeGraph:
+    def build_graph(self, dataset_id: str | None = None) -> KnowledgeGraph:
         """
         Explicitly build the in-memory graph from current ontology data.
 
@@ -239,7 +267,7 @@ class GraphAnalysisService:
         Raises:
             GraphError: If graph construction fails
         """
-        self._ensure_graph()
+        self._ensure_graph(dataset_id)
         return KnowledgeGraph(
             node_count=self._graph_engine.node_count(),
             edge_count=self._graph_engine.edge_count(),
@@ -247,7 +275,7 @@ class GraphAnalysisService:
             last_built=datetime.now(timezone.utc),
         )
 
-    def get_graph_view(self) -> GraphView:
+    def get_graph_view(self, dataset_id: str | None = None) -> GraphView:
         """
         Build a labelled read model of the ontology graph for visualization.
 
@@ -258,10 +286,13 @@ class GraphAnalysisService:
         membership and class -> parent class. Edges whose endpoints are not
         in the node set are dropped.
 
+        Args:
+            dataset_id: Show the schema plus this dataset's individuals (all when None)
+
         Returns:
             GraphView with taxonomies, layers, nodes and edges
         """
-        entities, relationships = self._repository.get_all_entities_and_relationships()
+        entities, relationships = self._scoped_data(dataset_id)
 
         taxonomies = [e for e in entities if isinstance(e, Taxonomy)]
         schemes = [e for e in entities if isinstance(e, ConceptScheme)]
@@ -412,7 +443,9 @@ class GraphAnalysisService:
             self._graph_engine.out_degree_distribution(),
         )
 
-    def get_metrics(self, algorithm: str = "betweenness") -> GraphMetrics:
+    def get_metrics(
+        self, algorithm: str = "betweenness", dataset_id: str | None = None
+    ) -> GraphMetrics:
         """
         Compute structural metrics for the entire graph.
 
@@ -421,6 +454,7 @@ class GraphAnalysisService:
 
         Args:
             algorithm: Centrality algorithm to use (default: betweenness)
+            dataset_id: Scope to the schema plus this dataset's data (all when None)
 
         Returns:
             GraphMetrics object with computed metrics
@@ -432,7 +466,7 @@ class GraphAnalysisService:
         if algorithm not in _VALID_CENTRALITY_ALGORITHMS:
             raise InvalidAlgorithmError(algorithm, _VALID_CENTRALITY_ALGORITHMS)
 
-        self._ensure_graph()
+        self._ensure_graph(dataset_id)
 
         node_count = self._graph_engine.node_count()
         edge_count = self._graph_engine.edge_count()
@@ -466,13 +500,16 @@ class GraphAnalysisService:
             computed_at=datetime.now(timezone.utc),
         )
 
-    def find_shortest_path(self, source_id: str, target_id: str) -> PathResult | None:
+    def find_shortest_path(
+        self, source_id: str, target_id: str, dataset_id: str | None = None
+    ) -> PathResult | None:
         """
         Find the shortest path between two nodes.
 
         Args:
             source_id: ID of the starting node
             target_id: ID of the ending node
+            dataset_id: Scope to the schema plus this dataset's data (all when None)
 
         Returns:
             PathResult if a path exists, None otherwise
@@ -480,7 +517,7 @@ class GraphAnalysisService:
         Raises:
             NodeNotFoundError: If either node does not exist in the graph
         """
-        self._ensure_graph()
+        self._ensure_graph(dataset_id)
 
         # The graph engine will raise NodeNotFoundError if either node doesn't exist
         path = self._graph_engine.shortest_path(source_id, target_id)
@@ -661,7 +698,9 @@ class GraphAnalysisService:
             last_built=datetime.now(timezone.utc),
         )
 
-    def extract_subgraph_with_edges(self, node_ids: list[str]) -> Subgraph:
+    def extract_subgraph_with_edges(
+        self, node_ids: list[str], dataset_id: str | None = None
+    ) -> Subgraph:
         """
         Extract a subgraph containing the specified nodes and all edges between them.
 
@@ -670,6 +709,7 @@ class GraphAnalysisService:
 
         Args:
             node_ids: List of node IDs to include in the subgraph
+            dataset_id: Scope to the schema plus this dataset's data (all when None)
 
         Returns:
             Subgraph containing node IDs, edges, and counts
@@ -677,7 +717,7 @@ class GraphAnalysisService:
         Raises:
             NodeNotFoundError: If any node in the list does not exist in the graph
         """
-        self._ensure_graph()
+        self._ensure_graph(dataset_id)
 
         if not node_ids:
             raise ValueError("node_ids must contain at least one node ID")
@@ -749,12 +789,13 @@ class GraphAnalysisService:
             extracted_at=datetime.now(timezone.utc),
         )
 
-    def execute_sparql(self, query: str) -> list[dict[str, Any]]:
+    def execute_sparql(self, query: str, dataset_id: str | None = None) -> list[dict[str, Any]]:
         """
         Execute a SPARQL SELECT query against the RDF graph.
 
         Args:
             query: SPARQL query string
+            dataset_id: Scope to the schema plus this dataset's data (all when None)
 
         Returns:
             List of result dictionaries
@@ -762,20 +803,20 @@ class GraphAnalysisService:
         Raises:
             SPARQLValidationError: If the query is invalid or contains disallowed operations
         """
-        self._ensure_rdf()
+        self._ensure_rdf(dataset_id)
         # Validate query at domain level before delegating to adapter
         # This provides defense-in-depth: the adapter also validates in _validate_sparql_keywords
         self._validate_sparql(query)
         return self._query_engine.execute_sparql(query)
 
-    def get_triple_count(self) -> int:
+    def get_triple_count(self, dataset_id: str | None = None) -> int:
         """
         Get the number of RDF triples in the graph.
 
         Returns:
             Number of triples
         """
-        self._ensure_rdf()
+        self._ensure_rdf(dataset_id)
         return self._query_engine.triple_count()
 
     def get_triples(
