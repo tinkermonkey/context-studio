@@ -341,6 +341,11 @@ def main() -> int:
         print("Design charter: taxonomy vision and summary set from DESIGN_CHARTER.md")
     else:
         print("Design charter: none in this spec; existing vision and summary left as they were")
+    if summary.distinguish_unresolved:
+        print(
+            "x-dr-distinguish keys naming no other node type (left out): "
+            + ", ".join(summary.distinguish_unresolved)
+        )
     prune_ok = report_and_prune(
         summary,
         ontology_service,

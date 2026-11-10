@@ -488,6 +488,124 @@ class TestRelationshipAttributes:
             import_dr_ontology(ontology_service, repo, spec_dir)
 
 
+GOAL_SCHEMA = "schemas/nodes/motivation/goal.node.schema.json"
+GOAL_FIELDS = {
+    "x-dr-standard": "ArchiMate 3.2 Goal",
+    "x-dr-evidence": ["a roadmap names the goal"],
+    "x-dr-distinguish": {
+        "motivation.stakeholder": "it names who cares, not what they want",
+        "business.businessservice": "it is something delivered, not an aim",
+    },
+}
+
+
+def _set_node_fields(spec_dir, fields):
+    """Give the goal schema DR fields (x-dr-standard, ...), replacing any it had."""
+    path = spec_dir / GOAL_SCHEMA
+    data = {k: v for k, v in json.loads(path.read_text()).items() if not k.startswith("x-dr-")}
+    path.write_text(json.dumps({**data, **fields}))
+
+
+class TestNodeFields:
+    """x-dr-standard, -evidence and -distinguish become the class's definition (#1515)."""
+
+    def test_import_sets_the_class_definition(self, ontology_service, repo, spec_dir):
+        _set_node_fields(spec_dir, GOAL_FIELDS)
+
+        summary = import_dr_ontology(ontology_service, repo, spec_dir)
+
+        goal = repo.get_by_identifier("motivation_goal")
+        assert goal.standard_reference == "ArchiMate 3.2 Goal"
+        assert goal.evidence_signals == ["a roadmap names the goal"]
+        # Keys resolve to the classes of those node types, in the schema's order,
+        # including one later in the spec than the goal
+        assert goal.distinguish_from == [
+            {
+                "class_id": repo.get_by_identifier("motivation_stakeholder").id,
+                "when": "it names who cares, not what they want",
+            },
+            {
+                "class_id": repo.get_by_identifier("business_businessservice").id,
+                "when": "it is something delivered, not an aim",
+            },
+        ]
+        assert summary.distinguish_unresolved == []
+
+    def test_a_schema_without_them_leaves_the_definition_empty(
+        self, ontology_service, repo, spec_dir
+    ):
+        import_dr_ontology(ontology_service, repo, spec_dir)
+
+        goal = repo.get_by_identifier("motivation_goal")
+        assert (goal.standard_reference, goal.evidence_signals, goal.distinguish_from) == (
+            None,
+            [],
+            [],
+        )
+
+    def test_reimporting_an_unchanged_spec_saves_no_class(
+        self, ontology_service, repo, spec_dir, monkeypatch
+    ):
+        _set_node_fields(spec_dir, GOAL_FIELDS)
+        import_dr_ontology(ontology_service, repo, spec_dir)
+        saves = []
+        save = repo.save_class
+        monkeypatch.setattr(repo, "save_class", lambda cls: saves.append(cls) or save(cls))
+
+        import_dr_ontology(ontology_service, repo, spec_dir)
+
+        assert saves == []
+
+    def test_a_changed_spec_replaces_the_definition(self, ontology_service, repo, spec_dir):
+        _set_node_fields(spec_dir, GOAL_FIELDS)
+        import_dr_ontology(ontology_service, repo, spec_dir)
+
+        _set_node_fields(spec_dir, {"x-dr-evidence": ["an OKR names the goal"]})
+        import_dr_ontology(ontology_service, repo, spec_dir)
+
+        goal = repo.get_by_identifier("motivation_goal")
+        assert goal.evidence_signals == ["an OKR names the goal"]
+        assert (goal.standard_reference, goal.distinguish_from) == (None, [])
+
+    def test_a_distinguish_key_naming_no_other_type_is_left_out_and_reported(
+        self, ontology_service, repo, spec_dir
+    ):
+        _set_node_fields(
+            spec_dir,
+            {
+                "x-dr-distinguish": {
+                    "motivation.nothing": "gone",
+                    "motivation.goal": "itself",
+                    "motivation.stakeholder": "kept",
+                }
+            },
+        )
+
+        summary = import_dr_ontology(ontology_service, repo, spec_dir)
+
+        goal = repo.get_by_identifier("motivation_goal")
+        assert [e["when"] for e in goal.distinguish_from] == ["kept"]
+        assert summary.distinguish_unresolved == [
+            "motivation.goal -> motivation.nothing",
+            "motivation.goal -> motivation.goal",
+        ]
+
+    @pytest.mark.parametrize(
+        "field, value",
+        [
+            ("x-dr-standard", ["not", "a string"]),
+            ("x-dr-evidence", "not a list"),
+            ("x-dr-distinguish", ["motivation.stakeholder"]),
+            ("x-dr-distinguish", {"motivation.stakeholder": "  "}),
+        ],
+    )
+    def test_a_malformed_field_raises(self, ontology_service, repo, spec_dir, field, value):
+        _set_node_fields(spec_dir, {field: value})
+
+        with pytest.raises(ValueError, match=field):
+            import_dr_ontology(ontology_service, repo, spec_dir)
+
+
 CHARTER = """# Documentation Robotics Design Charter
 
 **Status:** Adopted.
