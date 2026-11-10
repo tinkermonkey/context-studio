@@ -106,6 +106,7 @@ def proposed_snapshot(operation: ProposedOperation) -> dict[str, Any]:
         "fields": dict(operation.fields),
         "base": dict(operation.base),
         "rationale": operation.rationale,
+        "notes": operation.notes,
         "evidence": list(operation.evidence),
         "probability": operation.probability,
         "scope": operation.scope.value,

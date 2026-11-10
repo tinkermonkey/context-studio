@@ -646,9 +646,7 @@ class ProposalService:
             if dataset_id is None and dry_run:
                 datasets = self._repo.list_datasets(taxonomy_id=taxonomy_id)
                 if len(datasets) > 1:
-                    raise DatasetRequiredError(
-                        taxonomy_id, sorted(d.identifier for d in datasets)
-                    )
+                    raise DatasetRequiredError(taxonomy_id, sorted(d.identifier for d in datasets))
                 return datasets[0].id if datasets else None
             return resolve_dataset_id(self._repo, taxonomy_id, dataset_id)
         except DatasetRequiredError as exc:
@@ -910,6 +908,8 @@ class ProposalService:
             raise _Invalid("invalid", f"probability must be a number, not {probability!r}")
         if draft.target_id is not None and not isinstance(draft.target_id, str):
             raise _Invalid("invalid", f"target_id must be a string, not {draft.target_id!r}")
+        if draft.notes is not None and not isinstance(draft.notes, str):
+            raise _Invalid("invalid", f"notes must be text, not {draft.notes!r}")
         try:
             op = OperationType(draft.op)
             kind = OperationKind(draft.kind)
@@ -934,6 +934,8 @@ class ProposalService:
                 ref=draft.ref,
                 fields=dict(draft.fields or {}),
                 rationale=draft.rationale,
+                # Notes ride with the operation; they are never an entity field.
+                notes=draft.notes if draft.notes and draft.notes.strip() else None,
                 evidence=list(draft.evidence or []),
                 probability=probability,
             )
@@ -1146,7 +1148,11 @@ class ProposalService:
                 if retired
                 else None
             )
-            if found is not None and retired is not None and found.taxonomy_id != retired.taxonomy_id:
+            if (
+                found is not None
+                and retired is not None
+                and found.taxonomy_id != retired.taxonomy_id
+            ):
                 found = None
         else:
             found = self._repo.get_class(name)
@@ -1293,7 +1299,7 @@ class ProposalService:
             except ValueError as exc:
                 raise _Invalid("invalid", f"identifier: {exc}") from exc
             exists = self._repo.get_predicate_by_identifier(taxonomy_id, identifier) is not None
-            if (planned[identifier] != _RETIRED if identifier in planned else exists):
+            if planned[identifier] != _RETIRED if identifier in planned else exists:
                 raise _Invalid(
                     "duplicate", f"The taxonomy already has the predicate {identifier!r}"
                 )
@@ -1309,7 +1315,9 @@ class ProposalService:
         if operation.op is OperationType.DELETE and predicate is not None:
             planned[predicate.identifier] = _RETIRED
             users = [
-                p for p in self._ontology.relationship_types_using(predicate.id) if p.id not in deleted
+                p
+                for p in self._ontology.relationship_types_using(predicate.id)
+                if p.id not in deleted
             ]
             if users and operation.proposed_replacement_id is None:
                 names = ", ".join(sorted(p.identifier for p in users)[:5])
