@@ -1,7 +1,10 @@
 import { useMemo } from "react";
-import { useAttributeDefinitionsByIds, useClassesByIds } from "@/api/hooks/ontology/useClasses";
+import { useQueries } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/api/config";
+import { useClassesByIds } from "@/api/hooks/ontology/useClasses";
 import { usePropertiesByIds } from "@/api/hooks/ontology/useProperties";
 import { useSchemesByIds } from "@/api/hooks/ontology/useSchemes";
+import { ontologyService } from "@/api/services/ontology";
 import type { EntityKind } from "@/lib/entityPaths";
 
 /** An entity a claim names, with the page it is shown on. */
@@ -23,8 +26,9 @@ export interface ClaimEntity {
  * Resolve the ids a claim names: the taxonomy itself, or one of its classes,
  * property definitions, attribute definitions or concept schemes. Classes and
  * properties are looked up in one request each; ids that are neither are then
- * tried as attributes and schemes. Unresolved (or still loading) ids are absent
- * from the map.
+ * tried as attributes, and only those still unresolved as schemes, so an id is
+ * never looked up as a kind it can't be. Unresolved (or still loading) ids are
+ * absent from the map.
  */
 export function useClaimEntities(
   ids: string[],
@@ -32,17 +36,41 @@ export function useClaimEntities(
 ): Map<string, ClaimEntity> {
   const classes = useClassesByIds(ids);
   const properties = usePropertiesByIds(ids);
+  // Placeholder data is the previous ids' answer (kept while paging): judging new
+  // ids against it would send every one of them on to the slower lookups.
+  const settled =
+    classes.isSuccess &&
+    properties.isSuccess &&
+    !classes.isPlaceholderData &&
+    !properties.isPlaceholderData;
   const leftover = useMemo(() => {
-    if (!classes.isSuccess || !properties.isSuccess) return [];
+    if (!settled) return [];
     const known = new Set([
-      ...classes.data.items.map((c) => c.id),
-      ...properties.data.items.map((p) => p.id),
+      ...(classes.data?.items ?? []).map((c) => c.id),
+      ...(properties.data?.items ?? []).map((p) => p.id),
       taxonomy?.id,
     ]);
-    return ids.filter((id) => !known.has(id));
-  }, [ids, taxonomy?.id, classes.isSuccess, classes.data, properties.isSuccess, properties.data]);
-  const attributes = useAttributeDefinitionsByIds(leftover);
-  const schemes = useSchemesByIds(leftover);
+    return [...new Set(ids)].filter((id) => !known.has(id)).sort();
+  }, [ids, taxonomy?.id, settled, classes.data, properties.data]);
+  const attributeLookups = useQueries({
+    queries: leftover.map((id) => ({
+      queryKey: QUERY_KEYS.attributeDefinition(id),
+      queryFn: () => ontologyService.getAttributeDefinition(id),
+      staleTime: 5 * 60 * 1000,
+      retry: false,
+    })),
+    combine: (results) => ({
+      items: results.flatMap((r) => (r.data ? [r.data] : [])),
+      settled: results.every((r) => !r.isPending),
+    }),
+  });
+  const attributes = attributeLookups.items;
+  const schemeIds = useMemo(() => {
+    if (!attributeLookups.settled) return [];
+    const found = new Set(attributes.map((a) => a.id));
+    return leftover.filter((id) => !found.has(id));
+  }, [leftover, attributeLookups.settled, attributes]);
+  const schemes = useSchemesByIds(schemeIds);
   const { data: attributeClasses } = useClassesByIds(attributes.map((a) => a.class_id));
 
   return useMemo(() => {

@@ -28,6 +28,7 @@ beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
   server.resetHandlers();
   requests.verdicts.length = 0;
+  requests.schemes.length = 0;
   navigate.mockReset();
   toast.mockReset();
 });
@@ -68,6 +69,8 @@ describe("ClaimInspector", () => {
       "href",
       "/app/schema/classes/cls-actor",
     );
+    // Every id resolved as a class, property or attribute: none is tried as a scheme
+    expect(requests.schemes).toEqual([]);
     const property = screen.getByTestId("claim-entity-prop-serves");
     expect(property).toHaveTextContent("actor_serves_service");
     expect(property).toHaveAttribute("href", "/app/schema/classes/cls-actor");

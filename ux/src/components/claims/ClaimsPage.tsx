@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Button,
   Chip,
@@ -178,6 +178,15 @@ export function ClaimsPage({ search, onSearchChange }: ClaimsPageProps) {
   const { data, isLoading, error, refetch } = useClaims(taxonomyId, { ...filters, ...page });
   const claims = useMemo(() => data?.items ?? [], [data]);
   const total = data?.total ?? 0;
+  // A verdict can empty the last page (it leaves a "No verdict" list): step back
+  // to the last page that still has claims.
+  const pastTheEnd = !!data && data.items.length === 0 && page.offset > 0 && total > 0;
+  useEffect(() => {
+    if (pastTheEnd) {
+      const lastPage = Math.floor((total - 1) / page.limit) * page.limit;
+      setPaging({ filterKey, offset: lastPage, limit: page.limit });
+    }
+  }, [pastTheEnd, total, page.limit, filterKey]);
   // The selected claim stays open when a verdict moves it out of the filters or the page.
   const { data: selectedClaim } = useClaim(selected);
   const layoutData = useMemo(

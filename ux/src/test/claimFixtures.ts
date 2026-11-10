@@ -104,10 +104,12 @@ export interface ClaimRequests {
   lists: URLSearchParams[];
   exports: URLSearchParams[];
   verdicts: Array<{ method: string; id: string; body?: unknown }>;
+  /** Ids looked up as concept schemes. */
+  schemes: string[];
 }
 
 export function claimHandlers(claims: Claim[] = [claimOne, claimTwo]) {
-  const requests: ClaimRequests = { lists: [], exports: [], verdicts: [] };
+  const requests: ClaimRequests = { lists: [], exports: [], verdicts: [], schemes: [] };
   const handlers = [
     http.get("*/api/taxonomies", () =>
       HttpResponse.json({ items: claimTaxonomies, total: 2, limit: 500, offset: 0 }),
@@ -163,9 +165,10 @@ export function claimHandlers(claims: Claim[] = [claimOne, claimTwo]) {
           })
         : HttpResponse.json({ detail: "not found" }, { status: 404 }),
     ),
-    http.get("*/api/schemes/:id", () =>
-      HttpResponse.json({ detail: "not found" }, { status: 404 }),
-    ),
+    http.get("*/api/schemes/:id", ({ params }) => {
+      requests.schemes.push(params.id as string);
+      return HttpResponse.json({ detail: "not found" }, { status: 404 });
+    }),
   ];
   return { handlers, requests };
 }
