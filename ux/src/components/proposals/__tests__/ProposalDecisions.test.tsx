@@ -421,8 +421,39 @@ describe("selection and the bulk bar", () => {
     await user.click(screen.getByTestId("operation-check-op-rename"));
     await user.click(screen.getByTestId("operation-check-op-class"));
     await user.click(screen.getByTestId("proposal-selection-reject"));
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toHaveTextContent("Reject 2 selected?");
+    await user.click(within(dialog).getByRole("button", { name: "Reject 2" }));
     await waitFor(() => expect(rejected).toHaveLength(1));
     expect(rejected[0]).toEqual({ operation_ids: ["op-rename", "op-class"], note: null });
+    await waitFor(() =>
+      expect(screen.queryByTestId("proposal-selection-bar")).not.toBeInTheDocument(),
+    );
+  });
+
+  it("stores the Reject selected reason with each checked operation", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByTestId("operation-check-op-rename"));
+    await user.click(screen.getByTestId("operation-check-op-class"));
+    await user.click(screen.getByTestId("proposal-selection-reject"));
+    const dialog = await screen.findByRole("dialog");
+    await user.type(within(dialog).getByRole("textbox", { name: /Reason/ }), "Out of scope");
+    await user.click(within(dialog).getByRole("button", { name: "Reject 2" }));
+    await waitFor(() => expect(rejected).toHaveLength(1));
+    expect(rejected[0]).toEqual({ operation_ids: ["op-rename", "op-class"], note: "Out of scope" });
+  });
+
+  it("leaves the checked operations checked when Reject selected is cancelled", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByTestId("operation-check-op-rename"));
+    await user.click(screen.getByTestId("proposal-selection-reject"));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(rejected).toHaveLength(0);
+    expect(screen.getByTestId("operation-check-op-rename")).toBeChecked();
   });
 });
 

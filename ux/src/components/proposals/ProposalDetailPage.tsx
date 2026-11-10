@@ -134,8 +134,9 @@ export function ProposalDetailPage({
   const predicateCatalog = useMemo(() => drPredicateDescriptions(taxonomy), [taxonomy]);
   const [threshold, setThreshold] = useState(DEFAULT_THRESHOLD);
   const [checkedIds, setChecked] = useState<string[]>([]);
-  const [confirmRejectAll, setConfirmRejectAll] = useState(false);
-  const [rejectAllNote, setRejectAllNote] = useState("");
+  // The operations a confirmed reject covers: all awaiting, or the checked ones.
+  const [rejecting, setRejecting] = useState<{ ids: string[]; checked: boolean } | null>(null);
+  const [rejectNote, setRejectNote] = useState("");
   const [confirmRevert, setConfirmRevert] = useState(false);
   // Undefined until the reviewer picks one: then it follows defaultOperationFilter.
   const [chosenFilter, setFilter] = useState<OperationFilter>();
@@ -419,8 +420,8 @@ export function ProposalDetailPage({
                     size="sm"
                     disabled={actions.busy}
                     onClick={() => {
-                      setRejectAllNote("");
-                      setConfirmRejectAll(true);
+                      setRejectNote("");
+                      setRejecting({ ids: awaitingIds, checked: false });
                     }}
                     data-testid="proposal-reject-all"
                   >
@@ -531,8 +532,9 @@ export function ProposalDetailPage({
           blocked={checkedBlocked}
           busy={actions.busy}
           onClear={() => setChecked([])}
-          onReject={async () => {
-            if (await actions.rejectOperations(checkedList)) setChecked([]);
+          onReject={() => {
+            setRejectNote("");
+            setRejecting({ ids: checkedList, checked: true });
           }}
           onAccept={async () => {
             await actions.acceptFresh(checkedList);
@@ -724,13 +726,19 @@ export function ProposalDetailPage({
       />
 
       <ConfirmDialog
-        isOpen={confirmRejectAll}
-        onClose={() => setConfirmRejectAll(false)}
-        onConfirm={() => {
-          setConfirmRejectAll(false);
-          void actions.rejectOperations(awaitingIds, rejectAllNote);
+        isOpen={rejecting !== null}
+        onClose={() => setRejecting(null)}
+        onConfirm={async () => {
+          if (!rejecting) return;
+          setRejecting(null);
+          const done = await actions.rejectOperations(rejecting.ids, rejectNote);
+          if (done && rejecting.checked) setChecked([]);
         }}
-        title={`Reject all ${awaitingIds.length} awaiting?`}
+        title={
+          rejecting?.checked
+            ? `Reject ${rejecting.ids.length} selected?`
+            : `Reject all ${rejecting?.ids.length ?? 0} awaiting?`
+        }
         message={
           <div className="stack">
             <p>
@@ -740,20 +748,20 @@ export function ProposalDetailPage({
             <Field
               label="Reason"
               hint="optional, stored with each reject"
-              htmlFor="proposal-reject-all-note"
+              htmlFor="proposal-reject-note"
             >
               <TextArea
-                id="proposal-reject-all-note"
+                id="proposal-reject-note"
                 rows={2}
-                value={rejectAllNote}
-                placeholder="Why reject them?"
-                onChange={(e) => setRejectAllNote(e.target.value)}
-                data-testid="proposal-reject-all-note"
+                value={rejectNote}
+                placeholder={rejecting?.ids.length === 1 ? "Why reject it?" : "Why reject them?"}
+                onChange={(e) => setRejectNote(e.target.value)}
+                data-testid="proposal-reject-note"
               />
             </Field>
           </div>
         }
-        confirmLabel={`Reject ${awaitingIds.length}`}
+        confirmLabel={`Reject ${rejecting?.ids.length ?? 0}`}
       />
 
       <ConfirmDialog

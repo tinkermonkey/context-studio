@@ -3638,6 +3638,6 @@ selectors:
   - selector: property-edge-attributes
     component: src/components/ontology/PropertyDrawer.tsx
     description: "Relationship-type drawer: the edge attributes its relationships may carry (identifier, datatype, allowed values, required, default)"
-  - selector: proposal-reject-all-note
+  - selector: proposal-reject-note
     component: src/components/proposals/ProposalDetailPage.tsx
-    description: "Reject all confirm dialog: optional reason stored with every operation it rejects"
+    description: "Reject all / Reject selected confirm dialog: optional reason stored with every operation it rejects"
