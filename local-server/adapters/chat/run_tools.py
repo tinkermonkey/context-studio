@@ -27,6 +27,7 @@ from domain.chat.value_objects import EntityRef, ToolOutcome
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineRun, PipelineType
+from domain.pipelines.requested_via import REQUESTED_VIA, RequestedVia
 
 PIPELINES = [t.value for t in PipelineType]
 
@@ -64,7 +65,8 @@ class RunRefinementTool(ToolBase):
         " for a person to review, and get_run returns that proposal_id when the run"
         " finishes. scope says what to refine (passed to the pipeline as is); options"
         " holds the pipeline's other inputs, plus implementation_id and"
-        " configuration_ref (both default to 'default')."
+        " configuration_ref (both default to 'default'). A taxonomy that mirrors a"
+        " client's source only accepts passes its client starts over MCP."
     )
     input_schema = {
         "type": "object",
@@ -86,9 +88,15 @@ class RunRefinementTool(ToolBase):
         "required": ["taxonomy_id", "pipeline"],
     }
 
-    def __init__(self, executor: BackgroundRunExecutor, ontology: OntologyService) -> None:
+    def __init__(
+        self,
+        executor: BackgroundRunExecutor,
+        ontology: OntologyService,
+        requested_via: RequestedVia,
+    ) -> None:
         self._executor = executor
         self._ontology = ontology
+        self._requested_via = requested_via
 
     def run(self, args: dict[str, Any]) -> ToolOutcome:
         taxonomy_id = required_str(args, "taxonomy_id")
@@ -114,6 +122,8 @@ class RunRefinementTool(ToolBase):
             "scope": args.get("scope"),
             "implementation_id": implementation_id,
             "configuration_ref": configuration_ref,
+            # After the options, so a caller can't claim another entry point
+            REQUESTED_VIA: self._requested_via.value,
         }
         try:
             run = self._executor.submit(
@@ -165,7 +175,15 @@ class GetRunTool(ToolBase):
 
 
 def build_run_tools(
-    executor: BackgroundRunExecutor, runs: PipelineRepository, ontology: OntologyService
+    executor: BackgroundRunExecutor,
+    runs: PipelineRepository,
+    ontology: OntologyService,
+    requested_via: RequestedVia,
 ) -> Sequence[ToolBase]:
-    """The run tools, shared by the chat assistant and the MCP server."""
-    return [RunRefinementTool(executor, ontology), GetRunTool(runs)]
+    """
+    The run tools for one caller: the chat assistant or the MCP server.
+
+    Runs they start record `requested_via`, which decides whether a run may
+    propose changes to a mirrored taxonomy (only its client, over MCP, may).
+    """
+    return [RunRefinementTool(executor, ontology, requested_via), GetRunTool(runs)]

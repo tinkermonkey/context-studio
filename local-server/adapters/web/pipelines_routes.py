@@ -109,6 +109,7 @@ from domain.pipelines.registry import (
     PipelineImplementationRegistry,
     PipelineTypeRegistry,
 )
+from domain.pipelines.requested_via import REQUESTED_VIA, RequestedVia
 from domain.pipelines.stage_prompts import (
     StageDefinition,
     resolve_stage_prompts,
@@ -121,10 +122,19 @@ from utils.logger import get_logger
 router = APIRouter(prefix="/api/pipelines", tags=["pipelines"])
 config_router = APIRouter(prefix="/api/pipeline_configurations", tags=["pipelines"])
 
+
 _logger = get_logger(__name__)
 
 
 # ==================== Helper Functions ====================
+
+
+def _from_api(input_data: dict[str, Any]) -> dict[str, Any]:
+    """
+    Record that a run came through the REST API, over any `requested_via` the
+    caller sent: only the MCP tools may start a run for a mirrored taxonomy's client.
+    """
+    return {**input_data, REQUESTED_VIA: RequestedVia.API.value}
 
 
 def _normalize_provenance(provenance_data: Any) -> list[SourceSpanSchema]:
@@ -1000,7 +1010,7 @@ async def run_pipeline(
         )
 
     if request_body.run_async:
-        input_data = request_body.model_dump(exclude={"run_async"})
+        input_data = _from_api(request_body.model_dump(exclude={"run_async"}))
         try:
             run = _run_executor(request).submit(
                 ptype,
@@ -1055,7 +1065,7 @@ async def run_pipeline(
         raise HTTPException(status_code=status_code, detail=message) from e
 
     # Extract input data from request body (now includes type-specific fields)
-    input_data = request_body.model_dump(exclude={"run_async"})
+    input_data = _from_api(request_body.model_dump(exclude={"run_async"}))
 
     # Persist pipeline run to database only after validation succeeds
     specific_data = build_run_specific_data(ptype, input_data)
@@ -2333,7 +2343,11 @@ async def enqueue_batch_runs(
                 configuration_slug=config_version.config_ref,
                 configuration_version=config_version.version,
                 specific_data=specific_data or None,
-                input_data=run_data.get("input_data"),
+                input_data=(
+                    _from_api(run_data["input_data"])
+                    if run_data.get("input_data") is not None
+                    else None
+                ),
             )
             created_run_ids.append(run.id)
 

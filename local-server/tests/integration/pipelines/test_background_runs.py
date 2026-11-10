@@ -289,6 +289,38 @@ class TestRoutes:
         assert "async" not in done["output_summary"]["input_echo"]
         assert "run_async" not in done["output_summary"]["input_echo"]
 
+    def test_runs_started_through_the_api_record_it(self, client):
+        """A REST caller can't claim to be an MCP client (#1516)."""
+        run = client.post(
+            "/api/pipelines/no_op/run", json={"async": True, "requested_via": "mcp"}
+        ).json()
+        done = wait_for(
+            lambda: (
+                (r := client.get(f"/api/pipelines/runs/{run['id']}").json())["status"]
+                == "completed"
+                and r
+            )
+        )
+        assert done["output_summary"]["input_echo"]["requested_via"] == "api"
+
+        synchronous = client.post("/api/pipelines/no_op/run", json={"requested_via": "mcp"})
+        assert synchronous.json()["output_summary"]["input_echo"]["requested_via"] == "api"
+
+        batch = client.post("/api/pipelines/batches").json()
+        enqueued = client.post(
+            f"/api/pipelines/batches/{batch['id']}/runs",
+            json={"runs": [{"pipeline_type": "no_op", "input_data": {"requested_via": "mcp"}}]},
+        ).json()
+        batch_run_id = enqueued["run_ids"][0]
+        done = wait_for(
+            lambda: (
+                (r := client.get(f"/api/pipelines/runs/{batch_run_id}").json())["status"]
+                == "completed"
+                and r
+            )
+        )
+        assert done["output_summary"]["input_echo"]["requested_via"] == "api"
+
     def test_async_run_with_unknown_configuration_returns_404(self, client):
         response = client.post(
             "/api/pipelines/no_op/run", json={"async": True, "configuration_ref": "nope"}
