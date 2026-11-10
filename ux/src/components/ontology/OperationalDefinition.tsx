@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   Button,
   EntityPicker,
@@ -21,18 +21,23 @@ type DistinguishFrom = components["schemas"]["DistinguishFromSchema"];
 
 /**
  * Titles of the classes a distinguish_from names. A class that no longer
- * exists keeps its entry: `missing` is true for it once the lookup is done.
+ * exists keeps its entry: `missing` is true for it once the lookup for the
+ * current ids is done (not while the previous ids' result stands in).
+ * `known` titles classes the caller already has a name for (a fresh pick).
  */
-function useDistinguishLabels(entries: DistinguishFrom[]) {
-  const { data, isSuccess } = useClassesByIds(entries.map((e) => e.class_id));
+function useDistinguishLabels(entries: DistinguishFrom[], known?: Map<string, string>) {
+  const { data, isSuccess, isPlaceholderData } = useClassesByIds(entries.map((e) => e.class_id));
   const titles = useMemo(
     () => new Map((data?.items ?? []).map((c) => [c.id, c.title || c.identifier])),
     [data],
   );
-  return (classId: string) => ({
-    label: titles.get(classId) ?? classId,
-    missing: isSuccess && !titles.has(classId),
-  });
+  return (classId: string) => {
+    const title = titles.get(classId) ?? known?.get(classId);
+    return {
+      label: title ?? classId,
+      missing: isSuccess && !isPlaceholderData && title === undefined,
+    };
+  };
 }
 
 function DistinguishClass({ label, missing }: { label: string; missing: boolean }) {
@@ -117,6 +122,8 @@ interface CommitInputProps {
   label: string;
   /** Shown when the text is cleared: an entry needs some. */
   requiredMessage: string;
+  /** A save is in flight: the text can't change or commit until it lands. */
+  busy?: boolean;
   "data-testid": string;
 }
 
@@ -126,6 +133,7 @@ function CommitInput({
   onCommit,
   label,
   requiredMessage,
+  busy = false,
   "data-testid": testId,
 }: CommitInputProps) {
   const [draft, setDraft] = useState(value);
@@ -134,6 +142,7 @@ function CommitInput({
   useEffect(() => setDraft(value), [value]);
 
   const commit = () => {
+    if (busy) return;
     const text = draft.trim();
     if (!text) {
       setError(requiredMessage);
@@ -145,6 +154,7 @@ function CommitInput({
     <div className="class-definition__input">
       <TextInput
         value={draft}
+        readOnly={busy}
         aria-label={label}
         error={!!error}
         aria-invalid={!!error}
@@ -180,11 +190,22 @@ function CommitInput({
 export function OperationalDefinitionEditor({ classData }: OperationalDefinitionProps) {
   const { toast } = useToasts();
   const updateMutation = useUpdateClass();
+  // One save at a time: each PUTs a whole list, so the controls wait for the last to land.
+  const busy = updateMutation.isPending;
+  const busyRef = useRef(busy);
+  busyRef.current = busy;
   const [distinguish, setDistinguish] = useState(classData.distinguish_from ?? []);
   const [signals, setSignals] = useState(classData.evidence_signals ?? []);
-  useEffect(() => setDistinguish(classData.distinguish_from ?? []), [classData.distinguish_from]);
-  useEffect(() => setSignals(classData.evidence_signals ?? []), [classData.evidence_signals]);
-  const labelOf = useDistinguishLabels(distinguish);
+  // A refetched class replaces the lists, except mid-save: the save's own refetch follows it.
+  useEffect(() => {
+    if (!busyRef.current) setDistinguish(classData.distinguish_from ?? []);
+  }, [classData.distinguish_from]);
+  useEffect(() => {
+    if (!busyRef.current) setSignals(classData.evidence_signals ?? []);
+  }, [classData.evidence_signals]);
+  // Titles of picked classes, so a new entry is named before its lookup returns.
+  const [pickedTitles, setPickedTitles] = useState(() => new Map<string, string>());
+  const labelOf = useDistinguishLabels(distinguish, pickedTitles);
 
   // The add-a-distinction row.
   const [query, setQuery] = useState("");
@@ -194,7 +215,14 @@ export function OperationalDefinitionEditor({ classData }: OperationalDefinition
   const [whenError, setWhenError] = useState<string>();
   const [newSignal, setNewSignal] = useState("");
   const [signalError, setSignalError] = useState<string>();
-  const ids = { picker: useId(), when: useId(), signal: useId() };
+  const ids = {
+    picker: useId(),
+    pickerError: useId(),
+    when: useId(),
+    whenError: useId(),
+    signal: useId(),
+    signalError: useId(),
+  };
 
   const { data: searchResults } = useClassSearch(
     query,
@@ -216,22 +244,26 @@ export function OperationalDefinitionEditor({ classData }: OperationalDefinition
   };
 
   const saveDistinguish = (next: DistinguishFrom[]) => {
+    if (busy) return;
     const previous = distinguish;
     setDistinguish(next);
     void save({ distinguish_from: next }, () => setDistinguish(previous));
   };
 
   const saveSignals = (next: string[]) => {
+    if (busy) return;
     const previous = signals;
     setSignals(next);
     void save({ evidence_signals: next }, () => setSignals(previous));
   };
 
   const addDistinguish = () => {
+    if (busy) return;
     const text = when.trim();
     if (!picked) setClassError("Pick a class from this domain");
     if (!text) setWhenError("Say when to use that class instead");
     if (!picked || !text) return;
+    setPickedTitles((titles) => new Map(titles).set(picked.id, picked.label));
     saveDistinguish([...distinguish, { class_id: picked.id, when: text }]);
     setPicked(undefined);
     setQuery("");
@@ -239,6 +271,7 @@ export function OperationalDefinitionEditor({ classData }: OperationalDefinition
   };
 
   const addSignal = () => {
+    if (busy) return;
     const text = newSignal.trim();
     if (!text) {
       setSignalError("Type a signal first");
@@ -274,6 +307,7 @@ export function OperationalDefinitionEditor({ classData }: OperationalDefinition
                       variant="ghost"
                       size="sm"
                       aria-label={`Remove ${label}`}
+                      disabled={busy}
                       onClick={() => saveDistinguish(distinguish.filter((_, i) => i !== index))}
                       data-testid={`class-distinguish-remove-${entry.class_id}`}
                     >
@@ -284,6 +318,7 @@ export function OperationalDefinitionEditor({ classData }: OperationalDefinition
                     value={entry.when}
                     label={`When to use ${label} instead`}
                     requiredMessage="Say when to use that class instead"
+                    busy={busy}
                     onCommit={(text) =>
                       saveDistinguish(
                         distinguish.map((e, i) => (i === index ? { ...e, when: text } : e)),
@@ -297,7 +332,12 @@ export function OperationalDefinitionEditor({ classData }: OperationalDefinition
           </ul>
         )}
         <div className="class-definition__add" data-testid="class-distinguish-add-row">
-          <Field label="Class" htmlFor={ids.picker} error={classError}>
+          <Field
+            label="Class"
+            htmlFor={ids.picker}
+            error={classError && <span role="alert">{classError}</span>}
+            errorId={ids.pickerError}
+          >
             <EntityPicker
               inputId={ids.picker}
               query={query}
@@ -320,13 +360,19 @@ export function OperationalDefinitionEditor({ classData }: OperationalDefinition
               data-testid="class-distinguish-picker"
             />
           </Field>
-          <Field label="Use it instead when" htmlFor={ids.when} error={whenError}>
+          <Field
+            label="Use it instead when"
+            htmlFor={ids.when}
+            error={whenError && <span role="alert">{whenError}</span>}
+            errorId={ids.whenError}
+          >
             <TextInput
               id={ids.when}
               value={when}
               placeholder="e.g. it is deployed on its own"
               error={!!whenError}
               aria-invalid={!!whenError}
+              aria-describedby={whenError ? ids.whenError : undefined}
               onChange={(e) => {
                 setWhen(e.target.value);
                 setWhenError(undefined);
@@ -339,6 +385,7 @@ export function OperationalDefinitionEditor({ classData }: OperationalDefinition
             variant="ghost"
             size="sm"
             onClick={addDistinguish}
+            disabled={busy}
             data-testid="class-distinguish-add"
           >
             <Icon name="plus" size={13} /> Add distinction
@@ -362,14 +409,16 @@ export function OperationalDefinitionEditor({ classData }: OperationalDefinition
                   value={signal}
                   label={`Evidence signal ${index + 1}`}
                   requiredMessage="A signal needs text; remove it instead"
+                  busy={busy}
                   onCommit={(text) => saveSignals(signals.map((s, i) => (i === index ? text : s)))}
                   data-testid={`class-evidence-signal-input-${index}`}
                 />
                 <Button
                   variant="ghost"
                   size="sm"
+                  icon
                   aria-label={`Move signal ${index + 1} up`}
-                  disabled={index === 0}
+                  disabled={busy || index === 0}
                   onClick={() => moveSignal(index, -1)}
                   data-testid={`class-evidence-signal-up-${index}`}
                 >
@@ -378,8 +427,9 @@ export function OperationalDefinitionEditor({ classData }: OperationalDefinition
                 <Button
                   variant="ghost"
                   size="sm"
+                  icon
                   aria-label={`Move signal ${index + 1} down`}
-                  disabled={index === signals.length - 1}
+                  disabled={busy || index === signals.length - 1}
                   onClick={() => moveSignal(index, 1)}
                   data-testid={`class-evidence-signal-down-${index}`}
                 >
@@ -388,7 +438,9 @@ export function OperationalDefinitionEditor({ classData }: OperationalDefinition
                 <Button
                   variant="ghost"
                   size="sm"
+                  icon
                   aria-label={`Remove signal ${index + 1}`}
+                  disabled={busy}
                   onClick={() => saveSignals(signals.filter((_, i) => i !== index))}
                   data-testid={`class-evidence-signal-remove-${index}`}
                 >
@@ -399,13 +451,19 @@ export function OperationalDefinitionEditor({ classData }: OperationalDefinition
           </ol>
         )}
         <div className="class-definition__add">
-          <Field label="New signal" htmlFor={ids.signal} error={signalError}>
+          <Field
+            label="New signal"
+            htmlFor={ids.signal}
+            error={signalError && <span role="alert">{signalError}</span>}
+            errorId={ids.signalError}
+          >
             <TextInput
               id={ids.signal}
               value={newSignal}
               placeholder="Something observable that marks an instance"
               error={!!signalError}
               aria-invalid={!!signalError}
+              aria-describedby={signalError ? ids.signalError : undefined}
               onChange={(e) => {
                 setNewSignal(e.target.value);
                 setSignalError(undefined);
@@ -418,6 +476,7 @@ export function OperationalDefinitionEditor({ classData }: OperationalDefinition
             variant="ghost"
             size="sm"
             onClick={addSignal}
+            disabled={busy}
             data-testid="class-evidence-signal-add"
           >
             <Icon name="plus" size={13} /> Add signal

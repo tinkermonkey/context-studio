@@ -112,12 +112,11 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
     }
   };
 
-  // A save refetches the class: keep the mode, refresh the drafts.
-  useEffect(() => {
-    setDomainId(classData?.concept_scheme_id ?? "");
-    setDescriptionDraft(classData?.description ?? "");
-  }, [classData]);
+  // A save refetches the class: keep the mode, and refresh each draft only when its own
+  // value changed, so another field's save doesn't wipe text being typed.
   useEffect(() => setMode("view"), [classData?.id]);
+  useEffect(() => setDomainId(classData?.concept_scheme_id ?? ""), [classData?.concept_scheme_id]);
+  useEffect(() => setDescriptionDraft(classData?.description ?? ""), [classData?.description]);
 
   const handleDelete = async () => {
     if (!classData) return;

@@ -2406,6 +2406,12 @@ selectors:
   - selector: class-drawer-name-field
     component: src/components/ontology/ClassDrawer.tsx
     description: EditableField for the class name in the class inspector drawer (edit mode)
+  - selector: class-drawer-name-field-view
+    component: src/components/ui/EditableField.tsx
+    description: Click-to-edit display of the class name in the class inspector drawer (edit mode)
+  - selector: class-drawer-name-field-input
+    component: src/components/ui/EditableField.tsx
+    description: Text input for the class name; saves on blur or Enter
   - selector: individual-drawer-name-field
     component: src/components/ontology/IndividualDrawer.tsx
     description: EditableField for the individual name in the individual inspector drawer (edit mode)

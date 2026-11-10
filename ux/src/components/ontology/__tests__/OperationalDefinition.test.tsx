@@ -58,24 +58,49 @@ const node = createClass({
 });
 const CLASSES = [component, service, serviceInterface, node];
 
-const server = setupServer(
-  http.get("*/api/classes", ({ request }) => {
-    const url = new URL(request.url);
-    const ids = url.searchParams.getAll("ids");
-    const q = url.searchParams.get("q")?.toLowerCase();
-    const schemeId = url.searchParams.get("concept_scheme_id");
-    return HttpResponse.json(
-      createListClasses(
-        CLASSES.filter(
-          (c) =>
-            (!ids.length || ids.includes(c.id)) &&
-            (!q || c.title.toLowerCase().includes(q)) &&
-            (!schemeId || c.concept_scheme_id === schemeId),
-        ),
+/** GET /api/classes over CLASSES, by its ids, q and concept_scheme_id filters. */
+function listClasses(request: Request) {
+  const url = new URL(request.url);
+  const ids = url.searchParams.getAll("ids");
+  const q = url.searchParams.get("q")?.toLowerCase();
+  const schemeId = url.searchParams.get("concept_scheme_id");
+  return HttpResponse.json(
+    createListClasses(
+      CLASSES.filter(
+        (c) =>
+          (!ids.length || ids.includes(c.id)) &&
+          (!q || c.title.toLowerCase().includes(q)) &&
+          (!schemeId || c.concept_scheme_id === schemeId),
       ),
-    );
-  }),
-);
+    ),
+  );
+}
+
+const server = setupServer(http.get("*/api/classes", ({ request }) => listClasses(request)));
+
+/** A promise the test resolves when it wants a held request to answer. */
+function gate() {
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => (release = resolve));
+  return { held, release };
+}
+
+/** Hold the id lookups that include `classId` until the returned release is called. */
+function holdLookupOf(classId: string) {
+  const { held, release } = gate();
+  server.use(
+    http.get("*/api/classes", async ({ request }) => {
+      if (new URL(request.url).searchParams.getAll("ids").includes(classId)) await held;
+      return listClasses(request);
+    }),
+  );
+  return release;
+}
+
+/** Wait for the editor's last save to land: its controls are enabled again. */
+async function saved() {
+  await waitFor(() => expect(screen.getByTestId("class-evidence-signal-add")).not.toBeDisabled());
+}
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => server.resetHandlers());
@@ -138,6 +163,34 @@ describe("OperationalDefinitionView", () => {
     expect(gone.querySelector(".class-definition__class--missing")).not.toBeNull();
   });
 
+  it("doesn't call a newly named class missing while its lookup loads", async () => {
+    const release = holdLookupOf("class-3");
+    const { rerender } = render(<OperationalDefinitionView classData={defined} />);
+    const gone = screen.getByTestId("class-distinguish-entry-class-gone");
+    await waitFor(() => expect(gone).toHaveTextContent("(class not found)"));
+
+    // A refetch adds class-3: the previous lookup stands in while the new one loads.
+    rerender(
+      <OperationalDefinitionView
+        classData={{
+          ...defined,
+          distinguish_from: [
+            ...defined.distinguish_from!,
+            { class_id: "class-3", when: "it is the access point" },
+          ],
+        }}
+      />,
+    );
+    const added = screen.getByTestId("class-distinguish-entry-class-3");
+    expect(added).toHaveTextContent("class-3");
+    expect(added).not.toHaveTextContent("(class not found)");
+
+    release();
+    await waitFor(() => expect(added).toHaveTextContent("ApplicationInterface"));
+    expect(added).not.toHaveTextContent("(class not found)");
+    expect(gone).toHaveTextContent("(class not found)");
+  });
+
   it("says when the class has no operational definition", () => {
     render(<OperationalDefinitionView classData={component} />);
     expect(screen.getByTestId("class-definition-empty")).toHaveTextContent(
@@ -183,15 +236,21 @@ describe("OperationalDefinitionEditor", () => {
     render(<OperationalDefinitionEditor classData={component} />);
 
     await user.click(screen.getByTestId("class-distinguish-add"));
-    expect(screen.getByText("Pick a class from this domain")).toBeInTheDocument();
-    expect(screen.getByText("Say when to use that class instead")).toBeInTheDocument();
-    expect(screen.getByTestId("class-distinguish-new-when")).toHaveAttribute(
-      "aria-invalid",
-      "true",
+    expect(screen.getAllByRole("alert").map((a) => a.textContent)).toEqual([
+      "Pick a class from this domain",
+      "Say when to use that class instead",
+    ]);
+    const whenInput = screen.getByTestId("class-distinguish-new-when");
+    expect(whenInput).toHaveAttribute("aria-invalid", "true");
+    // The input names its error message.
+    const describedBy = whenInput.getAttribute("aria-describedby")!;
+    expect(document.getElementById(describedBy)).toHaveTextContent(
+      "Say when to use that class instead",
     );
 
     await user.type(screen.getByTestId("class-distinguish-new-when"), "i");
     expect(screen.queryByText("Say when to use that class instead")).not.toBeInTheDocument();
+    expect(whenInput).not.toHaveAttribute("aria-describedby");
     expect(screen.getByText("Pick a class from this domain")).toBeInTheDocument();
 
     await user.type(
@@ -266,6 +325,7 @@ describe("OperationalDefinitionEditor", () => {
     expect(screen.getByTestId("class-evidence-signal-input-0")).toHaveValue(
       "Is deployed on its own",
     );
+    await saved();
 
     await user.click(screen.getByRole("button", { name: "Remove signal 3" }));
     await waitFor(() =>
@@ -273,6 +333,7 @@ describe("OperationalDefinitionEditor", () => {
         evidence_signals: ["Is deployed on its own", "Has its own repository"],
       }),
     );
+    await saved();
 
     await user.click(screen.getByTestId("class-evidence-signal-add"));
     expect(screen.getByText("Type a signal first")).toBeInTheDocument();
@@ -284,6 +345,76 @@ describe("OperationalDefinitionEditor", () => {
       }),
     );
     expect(puts).toHaveLength(3);
+  });
+
+  it("names a new distinction by its pick, never as a missing class", async () => {
+    const user = userEvent.setup();
+    const puts = capturePuts();
+    const release = holdLookupOf("class-3");
+    render(<OperationalDefinitionEditor classData={defined} />);
+    const gone = screen.getByTestId("class-distinguish-entry-class-gone");
+    await waitFor(() => expect(gone).toHaveTextContent("(class not found)"));
+
+    const picker = within(screen.getByTestId("class-distinguish-picker"));
+    await user.type(picker.getByRole("combobox"), "Interface");
+    await user.click(await picker.findByRole("option", { name: "ApplicationInterface" }));
+    await user.type(screen.getByTestId("class-distinguish-new-when"), "it is the access point");
+    await user.click(screen.getByTestId("class-distinguish-add"));
+
+    const added = screen.getByTestId("class-distinguish-entry-class-3");
+    expect(added).toHaveTextContent("ApplicationInterface");
+    expect(added).not.toHaveTextContent("(class not found)");
+    await waitFor(() => expect(puts).toHaveLength(1));
+    await saved();
+    expect(added).not.toHaveTextContent("(class not found)");
+    release();
+  });
+
+  it("blocks a second change while the first save is in flight", async () => {
+    const user = userEvent.setup();
+    const puts: ClassUpdateRequest[] = [];
+    const { held, release } = gate();
+    server.use(
+      http.put("*/api/classes/class-1", async ({ request }) => {
+        const body = (await request.json()) as ClassUpdateRequest;
+        puts.push(body);
+        await held;
+        return HttpResponse.json({ ...defined, ...body });
+      }),
+    );
+    render(<OperationalDefinitionEditor classData={defined} />);
+
+    await user.click(screen.getByRole("button", { name: "Move signal 1 down" }));
+    await waitFor(() => expect(puts).toHaveLength(1));
+
+    // Every control that saves waits for the save in flight.
+    expect(screen.getByRole("button", { name: "Remove signal 2" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Move signal 2 down" })).toBeDisabled();
+    expect(screen.getByTestId("class-evidence-signal-add")).toBeDisabled();
+    expect(screen.getByTestId("class-distinguish-add")).toBeDisabled();
+    expect(screen.getByTestId("class-distinguish-remove-class-2")).toBeDisabled();
+    expect(screen.getByTestId("class-evidence-signal-input-0")).toHaveAttribute("readonly");
+    expect(screen.getByTestId("class-distinguish-when-class-2")).toHaveAttribute("readonly");
+
+    await user.click(screen.getByRole("button", { name: "Remove signal 2" }));
+    await user.type(screen.getByTestId("class-evidence-signal-new"), "Exposes an API{Enter}");
+    expect(puts).toHaveLength(1);
+    expect(
+      within(screen.getByTestId("class-evidence-signals-list")).getAllByRole("listitem"),
+    ).toHaveLength(3);
+
+    release();
+    await saved();
+    expect(puts).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Remove signal 2" })).not.toBeDisabled();
+
+    // Once it lands, the next change saves on top of it.
+    await user.click(screen.getByRole("button", { name: "Remove signal 2" }));
+    await waitFor(() =>
+      expect(puts.at(-1)).toEqual({
+        evidence_signals: ["Is deployed on its own", "Owns a database"],
+      }),
+    );
   });
 
   it("saves the standard reference", async () => {

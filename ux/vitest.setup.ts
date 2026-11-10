@@ -9,7 +9,10 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
   useFocusTrap: () => {},
   useBodyOverflow: () => {},
   Button: React.forwardRef(
-    ({ variant = "primary", size = "md", className = "", children, ...props }: any, ref: any) =>
+    (
+      { variant = "primary", size = "md", icon: _icon, className = "", children, ...props }: any,
+      ref: any,
+    ) =>
       React.createElement(
         "button",
         {
@@ -871,7 +874,10 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       label,
     ),
   Field: React.forwardRef(
-    ({ label, required = false, error, hint, children, className = "", ...props }: any, ref: any) =>
+    (
+      { label, required = false, error, errorId, hint, children, className = "", ...props }: any,
+      ref: any,
+    ) =>
       React.createElement(
         "div",
         {
@@ -891,7 +897,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
             ),
           ),
         children,
-        error && React.createElement("div", { className: "field__error" }, error),
+        error && React.createElement("div", { className: "field__error", id: errorId }, error),
         hint && React.createElement("div", { className: "field__hint" }, hint),
       ),
   ),

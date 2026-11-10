@@ -12,6 +12,13 @@
     gap: var(--space-2);
   }
 
+  /* The drawer's text color is the shell's; the headings need the canvas's in both modes. */
+  .class-definition__group > .form-group-label,
+  .class-definition > .editable-field .form-group-label {
+    color: rgb(var(--canvas-fg-1));
+    font-weight: 500;
+  }
+
   .class-definition__list {
     display: flex;
     flex-direction: column;
@@ -87,11 +94,20 @@
     font-size: 12.5px;
   }
 
-  /* An editable signal: rank, text, move up / down, remove. */
+  /* An editable signal: rank and text on one line, move up / down and remove under it. */
   .class-definition__signal {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-start;
     gap: 4px;
+  }
+
+  .class-definition__signal > .class-definition__input {
+    flex: 1 1 calc(100% - 26px);
+  }
+
+  .class-definition__signal > button:first-of-type {
+    margin-left: auto;
   }
 
   .class-definition__rank {
