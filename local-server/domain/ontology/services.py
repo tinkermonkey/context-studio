@@ -3853,7 +3853,7 @@ class OntologyService:
             class_id: ID of the class this attribute is scoped to (required)
             identifier: Machine-readable identifier for the attribute
             title: Display name for the attribute
-            datatype: The data type (e.g. "string", "integer", "boolean", "array", "object")
+            datatype: The data type ("string", "integer", "number", "date", "boolean", "array" or "object")
             description: Optional longer description
             is_required: Whether this attribute must be present on class instances
             allowed_values: Optional enum constraint (list of allowed string values)

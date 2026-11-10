@@ -111,6 +111,7 @@ class FakeProposalService:
         source_detail=None,
         dry_run=False,
         source_revision=None,
+        dataset_id=None,
     ):
         self.calls.append(("propose", taxonomy_id, title, list(operations), source, rationale))
         self.dry_runs.append(dry_run)
@@ -1098,6 +1099,7 @@ class TestListProposals:
             "kind": "proposal",
             "title": "Clarify classes",
             "taxonomy_id": TAXONOMY,
+            "dataset_id": None,
             "source": "mcp",
             "created_at": "2026-10-28T12:00:00Z",
             "status": "done",

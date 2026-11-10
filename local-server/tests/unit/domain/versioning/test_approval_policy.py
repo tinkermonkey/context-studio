@@ -8,6 +8,7 @@ from domain.interchange.services import get_current_batch_run_id, set_batch_run_
 from domain.ontology.events import ClassCreated, IndividualCreated
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.services import OntologyService
+from domain.versioning.exceptions import ProposalValidationError
 from domain.versioning.approval_policy import (
     ApprovalPolicy,
     ApprovalPolicyService,
@@ -493,8 +494,9 @@ class TestAutoApplyStaysInsideTheTaxonomy:
                 house["taxonomy"], (AutoApplyRule(scope=S.EDITORIAL), AutoApplyRule(op=T.CREATE))
             )
         )
+        # Another taxonomy's individual is in another dataset, so it can't be proposed
+        # here at all (#1487); see test_another_taxonomys_individual_is_refused.
         drafts = [
-            OperationDraft(1, T.UPDATE, K.INDIVIDUAL, other["widget"], fields={"title": "Gadget"}),
             OperationDraft(
                 2,
                 T.CREATE,
@@ -518,7 +520,6 @@ class TestAutoApplyStaysInsideTheTaxonomy:
         proposal = service.propose(house["taxonomy"], "Mixed", drafts, ProposalSource.MCP)
 
         assert statuses(proposal) == {
-            1: PENDING,
             2: PENDING,
             3: PENDING,
             4: PENDING,
@@ -526,8 +527,16 @@ class TestAutoApplyStaysInsideTheTaxonomy:
             6: APPLIED,
             7: APPLIED,
         }
-        assert ontology.get_individual(other["widget"]).title == "Widget"
         assert "Third" not in [t.title for t in ontology.list_taxonomies()]
+
+    def test_another_taxonomys_individual_is_refused(self, service, house, other, ontology):
+        drafts = [
+            OperationDraft(1, T.UPDATE, K.INDIVIDUAL, other["widget"], fields={"title": "Gadget"})
+        ]
+
+        with pytest.raises(ProposalValidationError, match="dataset_mismatch"):
+            service.propose(house["taxonomy"], "Reach", drafts, ProposalSource.MCP)
+        assert ontology.get_individual(other["widget"]).title == "Widget"
 
     def test_property_definitions_are_global(self, service, policies, house, ontology):
         near = ontology.create_property_definition("near", "near")

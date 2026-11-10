@@ -92,8 +92,12 @@ class SqliteIndividualVectorIndex(IndividualVectorIndex):
         class_ids: Sequence[str],
         top_k: int = 5,
         threshold: float = 0.0,
+        dataset_id: str | None = None,
     ) -> list[IndividualMatch]:
-        """Find indexed individuals similar to the query, scoped to candidate classes."""
+        """
+        Find indexed individuals similar to the query, scoped to candidate classes
+        and, when given, to one dataset (datasets share classes).
+        """
         query = np.asarray(query_embedding, dtype=np.float32)
         norm = float(np.linalg.norm(query))
         if norm == 0.0:
@@ -112,6 +116,8 @@ class SqliteIndividualVectorIndex(IndividualVectorIndex):
                 OntologyEntity.node_type == _INDIVIDUAL,
                 OntologyEntity.is_indexed.is_(True),
             )
+            if dataset_id is not None:
+                entity_query = entity_query.filter(OntologyEntity.dataset_id == dataset_id)
             if class_ids:
                 entity_query = (
                     entity_query.join(

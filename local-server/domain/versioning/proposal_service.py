@@ -29,18 +29,25 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import threading
 from contextlib import nullcontext
 from dataclasses import dataclass, replace
 from dataclasses import fields as dataclass_fields
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Sequence
 from uuid import uuid4
 
 from domain.interchange.services import get_current_batch_run_id, set_batch_run_context
 from domain.ontology.entities import Class, PropertyDefinition, validate_relationship_attributes
 from domain.ontology.events import GraphInvalidated
-from domain.ontology.exceptions import EntityNotFoundError, OntologyError
+from domain.ontology.datasets import resolve_dataset_id
+from domain.ontology.exceptions import (
+    DatasetMismatchError,
+    DatasetRequiredError,
+    EntityNotFoundError,
+    OntologyError,
+)
 from domain.ontology.snapshots import decode_field, entity_snapshot
 from domain.ontology.value_objects import (
     DataPropertyValue,
@@ -164,22 +171,28 @@ _INT_FIELDS = frozenset({"sort_order"})
 _TEXT_LIST_FIELDS = frozenset({"allowed_values", "class_ids"})
 # An individual's attribute values: identifier -> value (see the module docstring).
 DATA_FIELD = "data_properties"
+# The operation kinds that act on a dataset's data.
+_DATA_KINDS = frozenset({"individual", "relationship"})
 _JSON_VALUE_TYPES = (str, int, float, bool, list, dict, type(None))
 # The JSON type a value of each attribute datatype must have.
 _DATATYPE_TYPES: dict[DataType, tuple[type, ...]] = {
     DataType.STRING: (str,),
     DataType.INTEGER: (int,),
     DataType.NUMBER: (int, float),
+    DataType.DATE: (str,),
     DataType.BOOLEAN: (bool,),
     DataType.ARRAY: (list,),
     DataType.OBJECT: (dict,),
 }
+# How a date value is written (ISO 8601 calendar date).
+_ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 # The type hint a stored value carries, as the domain's examples write it
 # (xsd for scalars; rdf:JSON, RDF 1.1's JSON literal, for arrays and objects).
 _DATATYPE_HINTS: dict[DataType, str] = {
     DataType.STRING: "xsd:string",
     DataType.INTEGER: "xsd:integer",
     DataType.NUMBER: "xsd:decimal",
+    DataType.DATE: "xsd:date",
     DataType.BOOLEAN: "xsd:boolean",
     DataType.ARRAY: "rdf:JSON",
     DataType.OBJECT: "rdf:JSON",
@@ -362,6 +375,17 @@ def _data_values(snapshot_values: Any) -> dict[str, Any]:
     return {item["property_identifier"]: item["value"] for item in snapshot_values or []}
 
 
+def _is_iso_date(value: str) -> bool:
+    """Whether value is a calendar date written YYYY-MM-DD."""
+    if not _ISO_DATE.fullmatch(value):
+        return False
+    try:
+        date.fromisoformat(value)
+    except ValueError:
+        return False
+    return True
+
+
 def _value_problem(attribute: AttributeDefinition, value: Any) -> str | None:
     """Why a (non-None) value doesn't fit an attribute's datatype or allowed values."""
     datatype = DataType(attribute.datatype)
@@ -370,6 +394,8 @@ def _value_problem(attribute: AttributeDefinition, value: Any) -> str | None:
     )
     if wrong_type:
         return f"is {datatype.value}, so {value!r} doesn't fit"
+    if datatype is DataType.DATE and not _is_iso_date(value):
+        return f"is a date (YYYY-MM-DD), so {value!r} doesn't fit"
     allowed = attribute.allowed_values
     if allowed and not isinstance(value, dict):
         # Allowed values are text: a number or boolean matches its JSON text ("3", "true").
@@ -468,6 +494,7 @@ class ProposalService:
         dry_run: bool = False,
         source_revision: SourceRevision | None = None,
         client_metadata: Mapping[str, Any] | None = None,
+        dataset_id: str | None = None,
     ) -> ChangeProposal:
         """
         Validate and store a proposal; every operation starts pending.
@@ -491,6 +518,9 @@ class ProposalService:
                 taxonomy was last imported at, if it records one
             client_metadata: Kept on the proposal for the proposing client
                 (see ChangeProposal.client_metadata)
+            dataset_id: The dataset its individual and relationship operations
+                are in; may be omitted while the taxonomy has at most one.
+                Every individual an operation references must be in it.
 
         Returns:
             The stored proposal, with any auto-applied outcomes (with dry_run,
@@ -520,6 +550,16 @@ class ProposalService:
                     )
                 )
 
+        if taxonomy is not None and any(
+            str(getattr(d.kind, "value", d.kind)) in _DATA_KINDS for d in operations
+        ):
+            try:
+                dataset_id = self._proposal_dataset(taxonomy_id, dataset_id, dry_run)
+            except _Invalid as exc:
+                errors.append(OperationError(None, exc.code, exc.message))
+        else:
+            dataset_id = None
+
         built: list[ProposedOperation] = []
         refs: dict[str, OperationKind] = {}
         touched: dict[tuple[str, str], int] = {}
@@ -536,6 +576,7 @@ class ProposalService:
                     raise _Invalid("invalid", "seq values must be unique")
                 seen_seqs.add(draft.seq)
                 operation = self._validated(draft, refs)
+                self._check_dataset(operation, dataset_id)
                 self._check_predicate(operation, taxonomy_id, planned)
                 self._check_predicate_op(operation, taxonomy_id, planned, deleted)
                 self._check_conflicts(operation, touched, deleted)
@@ -562,6 +603,7 @@ class ProposalService:
                 operations=built,
                 source_revision=source_revision,
                 client_metadata=dict(client_metadata or {}),
+                dataset_id=dataset_id,
             )
         except ValueError as exc:
             errors.append(OperationError(None, "invalid", str(exc)))
@@ -570,6 +612,68 @@ class ProposalService:
         if dry_run:
             return proposal
         return self._auto_apply(self._proposals.create(proposal))
+
+    def _proposal_dataset(
+        self, taxonomy_id: str, dataset_id: str | None, dry_run: bool
+    ) -> str | None:
+        """
+        The dataset a proposal's data operations are in: the one named (by id or
+        identifier), else the taxonomy's only one (a stored proposal to a taxonomy with none creates
+        `default`; a dry run creates nothing and leaves it None).
+        """
+        if dataset_id is not None and self._repo.get_dataset(dataset_id) is None:
+            # Named by its identifier (as agents do), not its id.
+            named = next(
+                (
+                    d
+                    for d in self._repo.list_datasets(taxonomy_id=taxonomy_id)
+                    if d.identifier == dataset_id
+                ),
+                None,
+            )
+            dataset_id = named.id if named is not None else dataset_id
+        try:
+            if dataset_id is None and dry_run:
+                datasets = self._repo.list_datasets(taxonomy_id=taxonomy_id)
+                if len(datasets) > 1:
+                    raise DatasetRequiredError(
+                        taxonomy_id, sorted(d.identifier for d in datasets)
+                    )
+                return datasets[0].id if datasets else None
+            return resolve_dataset_id(self._repo, taxonomy_id, dataset_id)
+        except DatasetRequiredError as exc:
+            raise _Invalid("dataset_required", str(exc)) from exc
+        except (DatasetMismatchError, EntityNotFoundError) as exc:
+            raise _Invalid("dataset_not_found", str(exc)) from exc
+
+    def _check_dataset(self, operation: ProposedOperation, dataset_id: str | None) -> None:
+        """
+        Every existing individual an individual or relationship operation
+        references must be in the proposal's dataset: relationships never cross
+        datasets, and a proposal acts on one. ("$ref" individuals are created
+        into it.)
+        """
+        if dataset_id is None or operation.kind.value not in _DATA_KINDS:
+            return
+        referenced: list[Any] = []
+        if operation.kind is K.INDIVIDUAL:
+            referenced.append(operation.target_id)
+        else:
+            if operation.target_id:
+                existing = self._repo.get_relationship(operation.target_id)
+                if existing is not None:
+                    referenced += [existing.source_id, existing.target_id]
+            referenced += [operation.fields.get("source_id"), operation.fields.get("target_id")]
+        for entity_id in referenced:
+            if not entity_id or _is_ref(entity_id):
+                continue
+            individual = self._repo.get_individual(str(entity_id))
+            if individual is not None and individual.dataset_id != dataset_id:
+                raise _Invalid(
+                    "dataset_mismatch",
+                    f"Individual '{individual.title}' is in another dataset than the"
+                    " proposal's; an operation can't reach across datasets",
+                )
 
     # --------------------------------------------------------------- auto-apply
 
@@ -1411,7 +1515,15 @@ class ProposalService:
                             operation, resolution, refs, proposal.id, forced, covered
                         )
                     else:
-                        self._apply_one(operation, refs, proposal.id, forced, resolution, covered)
+                        self._apply_one(
+                            operation,
+                            refs,
+                            proposal.id,
+                            forced,
+                            resolution,
+                            covered,
+                            dataset_id=proposal.dataset_id,
+                        )
                     decisions = []
                     if operation.status is OperationStatus.APPLIED:
                         decisions.append(
@@ -1994,6 +2106,7 @@ class ProposalService:
         forced: bool,
         resolution: InUseResolution | None = None,
         covered: Mapping[str, int] | None = None,
+        dataset_id: str | None = None,
     ) -> None:
         def run() -> str:
             fields = {
@@ -2043,7 +2156,12 @@ class ProposalService:
                     if plan:
                         apply_yield(self._ontology, plan, run_id)
                     return self._dispatch(operation, fields, run_id, operation.op)
-            result = self._dispatch(operation, fields, run_id, operation.op)
+            try:
+                # The graph may have moved on since review: check the dataset again.
+                self._check_dataset(operation, dataset_id)
+            except _Invalid as exc:
+                raise _ApplyFailed(exc.code, exc.message) from exc
+            result = self._dispatch(operation, fields, run_id, operation.op, dataset_id)
             if operation.kind is K.PROPERTY and operation.op is OperationType.CREATE:
                 operation.type_change = TypeChange(
                     SchemaChangeAction.CREATE, after=self._type_fields(result)
@@ -2710,6 +2828,7 @@ class ProposalService:
         fields: dict[str, Any],
         run_id: str,
         op: OperationType,
+        dataset_id: str | None = None,
     ) -> str:
         """
         Make the change through OntologyService; returns the entity id made or changed.
@@ -2747,7 +2866,7 @@ class ProposalService:
             values["taxonomy_id"] = proposal.taxonomy_id if proposal else None
 
         if op is OperationType.CREATE:
-            return self._create(kind, values, run_id)
+            return self._create(kind, values, run_id, dataset_id)
 
         if op is OperationType.MOVE:
             if kind is K.SCHEME:
@@ -2756,7 +2875,9 @@ class ProposalService:
 
         return self._update(kind, target, values)  # type: ignore[arg-type]
 
-    def _create(self, kind: OperationKind, v: dict[str, Any], run_id: str) -> str:
+    def _create(
+        self, kind: OperationKind, v: dict[str, Any], run_id: str, dataset_id: str | None = None
+    ) -> str:
         svc = self._ontology
         if kind is K.TAXONOMY:
             return svc.create_taxonomy(**v).id
@@ -2774,7 +2895,7 @@ class ProposalService:
         if kind is K.INDIVIDUAL:
             if DATA_FIELD in v:
                 v[DATA_FIELD] = self._data_for(v["class_ids"], v[DATA_FIELD], [])
-            return svc.create_individual(**v, source_run_id=run_id).id
+            return svc.create_individual(**v, source_run_id=run_id, dataset_id=dataset_id).id
         return svc.create_relationship(**v, source_run_id=run_id).id
 
     def _update(self, kind: OperationKind, target: str, v: dict[str, Any]) -> str:

@@ -24,7 +24,9 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+from domain.ontology.datasets import resolve_dataset_id
 from domain.ontology.exceptions import (
+    DatasetMismatchError,
     DerivedTypeError,
     DuplicateEntityError,
     EntityNotFoundError,
@@ -140,7 +142,10 @@ class IndividualExtractionApplyService:
         result = ApplyResult()
         enumerated = enumerate_triples(run.output_summary)
         check_accepted_ids(accepted_candidate_ids, {cid for cid, _ in enumerated})
-        decisions = self._index_decisions([t for _, t in enumerated], recognition_decisions or [])
+        dataset_id = self._run_dataset(run)
+        decisions = self._index_decisions(
+            [t for _, t in enumerated], recognition_decisions or [], dataset_id
+        )
         selected = set(accepted_candidate_ids) if accepted_candidate_ids is not None else None
         # Mentions already reported in merged_mentions, so each appears once.
         reported_mentions: set[str] = set()
@@ -204,10 +209,11 @@ class IndividualExtractionApplyService:
                 self._cache_individual(individual_key_to_id, subject_label, class_ids, resolved_id)
             if resolved_id is None and subject_id:
                 existing = self._repo.get_individual(subject_id)
-                if existing:
+                # Only an individual of the run's dataset: datasets never share data.
+                if existing and dataset_id in (None, existing.dataset_id):
                     resolved_id = existing.id
             if resolved_id is None:
-                resolved_id = self._find_individual_by_label(subject_label, class_ids)
+                resolved_id = self._find_individual_by_label(subject_label, class_ids, dataset_id)
                 if resolved_id is not None:
                     self._report_merge(
                         result, reported_mentions, subject_label, resolved_id, "existing_title"
@@ -251,6 +257,7 @@ class IndividualExtractionApplyService:
                         taxonomy_id,
                         triple,
                         recognition_threshold,
+                        dataset_id,
                     )
 
                 if match is not None and match.individual_id in created_this_run:
@@ -280,6 +287,7 @@ class IndividualExtractionApplyService:
                             class_ids=valid_class_ids,
                             title=subject_label,
                             source_run_id=run.id,
+                            dataset_id=dataset_id,
                         )
                         resolved_id = new_individual.id
                         result.individuals_created += 1
@@ -291,7 +299,7 @@ class IndividualExtractionApplyService:
                         # failing the triple.
                         try:
                             resolved_id = self._find_individual_by_label(
-                                subject_label, valid_class_ids
+                                subject_label, valid_class_ids, dataset_id
                             )
                         except Exception:
                             _logger.error(
@@ -371,10 +379,26 @@ class IndividualExtractionApplyService:
         result.validate()
         return result
 
-    def _find_individual_by_label(self, subject_label: str, class_ids: list[str]) -> str | None:
+    def _run_dataset(self, run: "PipelineRun") -> str | None:
+        """
+        The dataset the run extracts into: the one stored on the run, else (a run
+        from before datasets) its taxonomy's only dataset.
+        """
+        summary = run.input_summary if isinstance(run.input_summary, dict) else {}
+        if summary.get("dataset_id"):
+            return str(summary["dataset_id"])
+        if summary.get("taxonomy_id"):
+            return resolve_dataset_id(self._repo, str(summary["taxonomy_id"]))
+        return None
+
+    def _find_individual_by_label(
+        self, subject_label: str, class_ids: list[str], dataset_id: str | None = None
+    ) -> str | None:
         """Return the ID of an existing individual with this title within any of the classes."""
         for cid in class_ids:
-            candidates = self._repo.list_individuals(class_id=cid, limit=None)
+            candidates = self._repo.list_individuals(
+                class_id=cid, limit=None, dataset_id=dataset_id
+            )
             for ind in candidates:
                 if ind.title.lower() == subject_label.lower():
                     return ind.id
@@ -387,6 +411,7 @@ class IndividualExtractionApplyService:
         taxonomy_id: str | None,
         triple: dict,
         threshold: float | None = None,
+        dataset_id: str | None = None,
     ) -> "RecognitionMatch | None":
         """
         Recognition stage: resolve an extracted mention to an existing graph node.
@@ -412,6 +437,7 @@ class IndividualExtractionApplyService:
                 class_ids=class_ids,
                 taxonomy_id=taxonomy_id,
                 threshold=threshold,
+                dataset_id=dataset_id,
             )
         except (TypeError, AttributeError, KeyError, IndexError):
             raise
@@ -446,7 +472,10 @@ class IndividualExtractionApplyService:
         return str(subject_label)
 
     def _index_decisions(
-        self, triples: list[dict], decisions: list["RecognitionDecision"]
+        self,
+        triples: list[dict],
+        decisions: list["RecognitionDecision"],
+        dataset_id: str | None = None,
     ) -> dict[str, "RecognitionDecision"]:
         """
         Validate reviewer recognition decisions and index them by mention key.
@@ -478,10 +507,17 @@ class IndividualExtractionApplyService:
                 if not d.individual_id:
                     problems.append(f"merge for '{d.mention_label}' has no individual_id")
                     continue
-                if self._repo.get_individual(d.individual_id) is None:
+                target = self._repo.get_individual(d.individual_id)
+                if target is None:
                     problems.append(
                         f"merge target individual '{d.individual_id}' for "
                         f"'{d.mention_label}' does not exist"
+                    )
+                    continue
+                if dataset_id is not None and target.dataset_id != dataset_id:
+                    problems.append(
+                        f"merge target individual '{d.individual_id}' for "
+                        f"'{d.mention_label}' is in another dataset than the run's"
                     )
                     continue
             elif d.decision != SEPARATE:
@@ -570,9 +606,10 @@ class IndividualExtractionApplyService:
                 property_definition_id=property_definition_id,
                 source_run_id=source_run_id,
             )
-        except (EntityNotFoundError, DerivedTypeError):
+        except (EntityNotFoundError, DerivedTypeError, DatasetMismatchError):
             # The extracted predicate or object refers to an entity that does not exist,
-            # or the relationship type is derived (its client computes those).
+            # the relationship type is derived (its client computes those), or the
+            # object is in another dataset (relationships never cross datasets).
             _logger.warning(
                 "Skipping relationship %s -[%s]-> %s: endpoint or property not found, or"
                 " the relationship type is derived",

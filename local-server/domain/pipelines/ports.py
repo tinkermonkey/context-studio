@@ -109,12 +109,14 @@ class ExtractionPort(Protocol):
         model: str,
         temperature: float,
         stage_prompts: Mapping[str, Any] | None = None,
+        dataset_id: str | None = None,
     ) -> TripleExtractionResult:
         """
         Extract RDF triples from text scoped to a specific ontology.
 
         stage_prompts are a configuration's prompt overrides (stage key ->
-        {"system", "user"}); None uses the default prompts.
+        {"system", "user"}); None uses the default prompts. dataset_id scopes
+        recognition to the dataset the run extracts into.
         """
         ...
 

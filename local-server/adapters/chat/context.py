@@ -66,6 +66,18 @@ class OntologyWorkspaceContext:
             f" relationship types {self._ontology.count_property_definitions()}"
         )
         summary = f"Workspace counts: {counts}."
+        datasets = self._ontology.list_datasets()
+        if len(datasets) > 1:
+            per_dataset = "; ".join(
+                f"{d.identifier} ({d.title}): individuals"
+                f" {self._ontology.count_individuals(dataset_id=d.id)}, relationships"
+                f" {self._ontology.count_relationships(dataset_id=d.id)}"
+                for d in datasets
+            )
+            summary += (
+                f" Datasets (data over a taxonomy's schema; pass `dataset` to tools when a"
+                f" taxonomy has several): {per_dataset}."
+            )
         if taxonomies:
             lines = [
                 (

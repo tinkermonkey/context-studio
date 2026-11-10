@@ -14,9 +14,12 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+from pathlib import Path
+
 import pytest
 
 from adapters.chat.proposal_tools import build_proposal_tools
+from adapters.interchange.dr_spec import _attribute_records
 from adapters.interchange.dr_spec_changes import spec_changes_for
 from domain.versioning.proposal_service import OperationDraft
 from domain.versioning.proposals import OperationStatus, ProposalSource
@@ -228,3 +231,112 @@ def test_a_delete_exports_the_attribute_it_removed(parts):
     assert change["spec_node_id"] == "api.operation"
     assert change["attribute"] == dr_name(target)
     assert change["set"] == {}
+
+
+def test_a_date_create_exports_as_a_string_with_format_date(parts):
+    """#1468: DR's JSON Schema has no date type; a date is a string with format date."""
+    _, repo, proposals = parts
+    operation_class = class_by_dr_id(repo, "api.operation")
+    proposal = apply_all(
+        proposals,
+        propose(
+            repo,
+            proposals,
+            OperationDraft(
+                seq=1,
+                op="create",
+                kind="attribute",
+                fields={
+                    "class_id": operation_class.id,
+                    "identifier": "deprecated_on",
+                    "title": "deprecatedOn",
+                    "datatype": "date",
+                    "external_references": [{"source": DR_SOURCE, "identifier": "deprecatedOn"}],
+                },
+            ),
+        ),
+    )
+
+    (change,) = spec_changes_for(proposal, repo)["attribute_changes"]
+
+    assert change["set"] == {"datatype": "string", "is_required": False}
+    assert change["schema"] == {"format": "date"}
+
+
+def test_an_update_to_a_date_is_skipped(parts):
+    _, repo, proposals = parts
+    target = some_attribute(repo)
+    proposal = apply_all(
+        proposals,
+        propose(
+            repo,
+            proposals,
+            OperationDraft(
+                seq=1, op="update", kind="attribute", target_id=target.id, fields={"datatype": "date"}
+            ),
+        ),
+    )
+
+    document = spec_changes_for(proposal, repo)
+
+    assert document["attribute_changes"] == []
+    assert "format date" in document["skipped"][0]["why"]
+
+
+def test_an_update_from_a_date_is_skipped(parts):
+    """DR would keep format date on a string, so CS and DR would disagree."""
+    _, repo, proposals = parts
+    operation_class = class_by_dr_id(repo, "api.operation")
+    created = apply_all(
+        proposals,
+        propose(
+            repo,
+            proposals,
+            OperationDraft(
+                seq=1,
+                op="create",
+                kind="attribute",
+                fields={
+                    "class_id": operation_class.id,
+                    "identifier": "deprecated_on",
+                    "title": "deprecatedOn",
+                    "datatype": "date",
+                    "external_references": [{"source": DR_SOURCE, "identifier": "deprecatedOn"}],
+                },
+            ),
+        ),
+    )
+    attribute_id = created.operations[0].result_entity_id
+    proposal = apply_all(
+        proposals,
+        propose(
+            repo,
+            proposals,
+            OperationDraft(
+                seq=1,
+                op="update",
+                kind="attribute",
+                target_id=attribute_id,
+                fields={"datatype": "string"},
+            ),
+        ),
+    )
+
+    document = spec_changes_for(proposal, repo)
+
+    assert document["attribute_changes"] == []
+    assert "to or from a date" in document["skipped"][0]["why"]
+
+
+def test_dr_reads_a_string_with_format_date_back_as_a_date():
+    """The export writes a date as DR's string + format date; a re-import reads a date."""
+    (record,) = _attribute_records(
+        Path("node.schema.json"),
+        {"properties": {"dateApproved": {"type": "string", "format": "date"}}},
+    )
+
+    assert (record.datatype, record.schema) == ("date", {})
+    (uri,) = _attribute_records(
+        Path("node.schema.json"), {"properties": {"home": {"type": "string", "format": "uri"}}}
+    )
+    assert (uri.datatype, uri.schema) == ("string", {"format": "uri"})

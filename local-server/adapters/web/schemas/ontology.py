@@ -703,7 +703,7 @@ class AttributeDefinitionCreateRequest(BaseModel):
     title: str = Field(..., description="Display name for the attribute", min_length=1)
     datatype: str = Field(
         ...,
-        description="Data type (e.g. 'string', 'integer', 'boolean', 'array', 'object')",
+        description="Data type ('string', 'integer', 'number', 'date' as YYYY-MM-DD, 'boolean', 'array' or 'object')",
         min_length=1,
     )
     description: Optional[str] = Field(None, description="Optional longer description")
@@ -739,7 +739,7 @@ class AttributeDefinitionUpdateRequest(BaseModel):
     description: Optional[str] = Field(None, description="New description")
     datatype: Optional[str] = Field(
         None,
-        description="New data type (e.g. 'string', 'integer', 'boolean', 'array', 'object')",
+        description="New data type ('string', 'integer', 'number', 'date' as YYYY-MM-DD, 'boolean', 'array' or 'object')",
         min_length=1,
     )
     is_required: Optional[bool] = Field(None, description="Update required flag")
@@ -775,7 +775,9 @@ class AttributeDefinitionResponse(BaseModel):
     class_id: str = Field(..., description="Parent class ID")
     identifier: str = Field(..., description="Machine-readable identifier")
     title: str = Field(..., description="Display name")
-    datatype: str = Field(..., description="Data type (e.g. 'string', 'integer', 'boolean')")
+    datatype: str = Field(
+        ..., description="Data type: string, integer, number, date, boolean, array or object"
+    )
     description: Optional[str] = Field(None, description="Optional description")
     is_required: bool = Field(False, description="Whether this attribute is required")
     allowed_values: Optional[list[str]] = Field(None, description="Optional enum constraint")

@@ -19,8 +19,18 @@ reading and writing files is left to the scripts.
                       "external_references": [...]}],
       "individuals": [{"id", "classes": [...], "title", "description", "data": {},
                        "external_references": [...]}],
-      "relationships": [{"source", "property", "target", "attributes": {}}]
+      "relationships": [{"source", "property", "target", "attributes": {}}],
+      "dataset": {"identifier", "title"}
     }
+
+Datasets (#1487). A taxonomy's data can be split into named datasets over its
+schema. An export of one dataset carries only that dataset's individuals and
+relationships, and says which dataset in the optional top-level `dataset`; an
+export of the schema alone has no `individuals` or `relationships` keys. A plain
+export (neither) is as before: every individual of the taxonomy and no
+`dataset`. Planning against one dataset matches, updates and deletes only that
+dataset's individuals. A bundle with neither `individuals` nor `relationships`
+plans no data at all, so a schema-only bundle never deletes data.
 
 Planning. `plan_bundle` only reads: it compares the bundle with the workspace
 and returns the operations that would make the workspace match, as drafts for
@@ -172,16 +182,22 @@ def check_bundle_header(bundle: dict[str, Any]) -> None:
         raise BundleError("A bundle needs a 'source' and a 'taxonomy.identifier'")
 
 
-def plan_bundle(repo: OntologyRepository, bundle: dict[str, Any]) -> BundlePlan:
+def plan_bundle(
+    repo: OntologyRepository, bundle: dict[str, Any], dataset_id: str | None = None
+) -> BundlePlan:
     """
     Plan the operations that make the workspace match a bundle; writes nothing.
+
+    Args:
+        dataset_id: Match, update and delete only this dataset's individuals
+            (all of the taxonomy's when None)
 
     Raises:
         BundleError: If the bundle is malformed, an identifier already belongs
             to another taxonomy, or a reference inside the bundle does not resolve
     """
     check_bundle_header(bundle)
-    return _Planner(repo, bundle).run()
+    return _Planner(repo, bundle, dataset_id).run()
 
 
 def _ref(kind: str, key: str) -> str:
@@ -193,9 +209,14 @@ def _text(value: Any) -> str:
 
 
 class _Planner:
-    def __init__(self, repo: OntologyRepository, bundle: dict[str, Any]) -> None:
+    def __init__(
+        self, repo: OntologyRepository, bundle: dict[str, Any], dataset_id: str | None = None
+    ) -> None:
         self._repo = repo
         self._bundle = bundle
+        self._dataset_id = dataset_id
+        # A schema-only bundle says nothing about data, so it plans none.
+        self._has_data = "individuals" in bundle or "relationships" in bundle
         self._source = bundle["source"]
         self.plan = BundlePlan(source=self._source, taxonomy=bundle["taxonomy"])
         # Updates that clear a derived flag, applied before the creates that may add
@@ -226,12 +247,14 @@ class _Planner:
         property_ids = self._plan_properties(
             class_ids, taxonomy_class_ids, self._bundle.get("properties", [])
         )
-        individual_ids = self._plan_individuals(
-            taxonomy_id, class_ids, taxonomy_class_ids, self._bundle.get("individuals", [])
-        )
-        self._plan_relationships(
-            individual_ids, property_ids, self._bundle.get("relationships", [])
-        )
+        individual_ids: dict[str, str] = {}
+        if self._has_data:
+            individual_ids = self._plan_individuals(
+                taxonomy_id, class_ids, taxonomy_class_ids, self._bundle.get("individuals", [])
+            )
+            self._plan_relationships(
+                individual_ids, property_ids, self._bundle.get("relationships", [])
+            )
         self._plan_deletes(taxonomy_id, taxonomy_classes, class_ids, property_ids, individual_ids)
         planned = [*self._early, *self._creates, *self._updates, *self._deletes]
         for seq, draft in enumerate(planned, start=1):
@@ -622,6 +645,8 @@ class _Planner:
         individual = self._repo.get_individual(bundle_id)
         if individual is None or not set(individual.class_ids) & taxonomy_class_ids:
             return None
+        if self._dataset_id is not None and individual.dataset_id != self._dataset_id:
+            return None
         return individual
 
     # -------------------------------------------------------- relationships
@@ -683,7 +708,7 @@ class _Planner:
         Attribute deletes were planned with their classes.
         """
         loaded = {*class_ids.values(), *property_ids.values(), *individual_ids.values()}
-        owned_individuals = self._owned_individuals(taxonomy_id)
+        owned_individuals = self._owned_individuals(taxonomy_id) if self._has_data else {}
         titles = {i.id: i.title for i in owned_individuals.values()}
         predicates = {prop_id: identifier for identifier, prop_id in property_ids.items()}
         for individual_id in titles:
@@ -711,7 +736,16 @@ class _Planner:
         ]
         # A relationship type can't be deleted while relationships use it.
         for prop in stale_properties:
-            for rel in self._repo.list_relationships(property_id=prop.id, limit=None):
+            # Only the planned dataset's: other datasets' use of the type blocks its
+            # delete for review instead (a schema-only bundle plans no data at all).
+            using = (
+                self._repo.list_relationships(
+                    property_id=prop.id, limit=None, dataset_id=self._dataset_id
+                )
+                if self._has_data
+                else []
+            )
+            for rel in using:
                 self._delete(
                     K.RELATIONSHIP,
                     rel,
@@ -800,7 +834,9 @@ class _Planner:
     def _owned_individuals(self, taxonomy_id: str | None) -> dict[str, Individual]:
         found: dict[str, Individual] = {}
         for cls in self._taxonomy_classes(taxonomy_id):
-            for individual in self._repo.list_individuals(class_id=cls.id, limit=None):
+            for individual in self._repo.list_individuals(
+                class_id=cls.id, limit=None, dataset_id=self._dataset_id
+            ):
                 for ref in individual.external_references:
                     if ref.source == self._source:
                         found[ref.identifier] = individual
@@ -874,19 +910,31 @@ class BundleExporter:
     def __init__(self, repository: OntologyRepository) -> None:
         self._repo = repository
 
-    def export(self, taxonomy_id: str, source: str | None = None) -> dict[str, Any]:
+    def export(
+        self,
+        taxonomy_id: str,
+        source: str | None = None,
+        dataset_id: str | None = None,
+        schema_only: bool = False,
+    ) -> dict[str, Any]:
         """
-        Export a taxonomy as a bundle dict.
+        Export a taxonomy as a bundle dict: its schema with every individual, one
+        dataset's, or none.
 
         Args:
             taxonomy_id: The taxonomy to export
             source: The bundle source; its ExternalReferences supply individuals'
                 ids, properties' constraints and individuals' data. Defaults to the
                 taxonomy's identifier.
+            dataset_id: Export only this dataset's individuals and relationships,
+                and name the dataset in the bundle's `dataset`
+            schema_only: Export the schema alone: no `individuals` or
+                `relationships` keys
 
         Raises:
             BundleError: If the taxonomy does not exist, or it, one of its schemes or
-                one of its classes has no identifier
+                one of its classes has no identifier, or the dataset is not one of
+                the taxonomy's
         """
         taxonomy = self._repo.get_taxonomy(taxonomy_id)
         if taxonomy is None:
@@ -912,9 +960,12 @@ class BundleExporter:
         scheme_keys = {s.id: keys[s.id] for s in schemes}
         class_keys = {c.id: keys[c.id] for c in classes}
         properties = self._properties(source, class_keys)
-        individuals = self._individuals(classes)
+        dataset = self._repo.get_dataset(dataset_id) if dataset_id is not None else None
+        if dataset_id is not None and (dataset is None or dataset.taxonomy_id != taxonomy_id):
+            raise BundleError(f"No dataset {dataset_id!r} in taxonomy {taxonomy.identifier!r}")
+        individuals = [] if schema_only else self._individuals(classes, dataset_id)
         individual_keys = {i.id: _bundle_id(i, source) for i in individuals}
-        return {
+        bundle = {
             "format": BUNDLE_FORMAT,
             "version": BUNDLE_VERSION,
             "source": source,
@@ -947,6 +998,11 @@ class BundleExporter:
                 individual_keys, {p.id: p.identifier for p in properties}
             ),
         }
+        if schema_only:
+            del bundle["individuals"], bundle["relationships"]
+        elif dataset is not None:
+            bundle["dataset"] = {"identifier": dataset.identifier, "title": dataset.title}
+        return bundle
 
     def _class(
         self, cls: Class, source: str, scheme_keys: dict[str, str], class_keys: dict[str, str]
@@ -985,10 +1041,12 @@ class BundleExporter:
             )
         ]
 
-    def _individuals(self, classes: list[Class]) -> list[Individual]:
+    def _individuals(self, classes: list[Class], dataset_id: str | None = None) -> list[Individual]:
         found: dict[str, Individual] = {}
         for cls in classes:
-            for individual in self._repo.list_individuals(class_id=cls.id, limit=None):
+            for individual in self._repo.list_individuals(
+                class_id=cls.id, limit=None, dataset_id=dataset_id
+            ):
                 found[individual.id] = individual
         return list(found.values())
 
@@ -1036,8 +1094,7 @@ def _relationship_attributes(
     extra = set(spec) - _RELATIONSHIP_KEYS
     if extra:
         raise BundleError(
-            f"Relationship {spec} has unknown keys {sorted(extra)}; edge values go in"
-            " 'attributes'"
+            f"Relationship {spec} has unknown keys {sorted(extra)}; edge values go in 'attributes'"
         )
     attributes = spec.get("attributes") or {}
     try:

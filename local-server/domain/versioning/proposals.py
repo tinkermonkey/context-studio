@@ -551,6 +551,9 @@ class ChangeProposal:
         client_metadata: What the proposing client keeps on the proposal for
             itself (JSON values, e.g. a DR plan's predicate retirements);
             Context Studio stores and returns it, and acts on none of it
+        dataset_id: The dataset its individual and relationship operations are
+            in: every individual they reference belongs to it, and individuals
+            it creates go into it. None when it has no such operations.
     """
 
     id: str
@@ -565,6 +568,7 @@ class ChangeProposal:
     source_revision: SourceRevision | None = None
     landed: Landing | None = None
     client_metadata: dict[str, Any] = field(default_factory=dict)
+    dataset_id: str | None = None
 
     def __post_init__(self) -> None:
         if not self.title or not self.title.strip():

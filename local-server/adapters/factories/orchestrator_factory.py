@@ -434,6 +434,10 @@ def build_run_specific_data(
         ontology_id = input_data.get("ontology_id")
         if ontology_id:
             input_summary["taxonomy_id"] = str(ontology_id)
+        # The dataset the run extracts into (resolved by the route before the run).
+        dataset_id = input_data.get("dataset_id")
+        if dataset_id:
+            input_summary["dataset_id"] = str(dataset_id)
 
         ontology_name = input_data.get("ontology_name")
         if ontology_name:

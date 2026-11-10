@@ -158,6 +158,8 @@ class DataType(str, Enum):
     STRING = "string"
     INTEGER = "integer"
     NUMBER = "number"
+    # A calendar date, written as ISO 8601 text: YYYY-MM-DD
+    DATE = "date"
     BOOLEAN = "boolean"
     ARRAY = "array"
     OBJECT = "object"

@@ -219,6 +219,11 @@ class IndividualExtractionRunRequest(PipelineRunRequest):
 
     text: str = Field(..., min_length=1, description="Source text to extract from")
     ontology_id: str = Field(..., min_length=1, description="Target ontology ID")
+    dataset_id: Optional[str] = Field(
+        None,
+        description="The dataset to extract into: recognition and apply stay inside it. "
+        "May be omitted while the taxonomy has at most one dataset",
+    )
 
 
 class SchemaExtractionRunRequest(PipelineRunRequest):

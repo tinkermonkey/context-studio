@@ -25,6 +25,7 @@ from domain.ontology.entities import (
     AttributeDefinition,
     Class,
     ConceptScheme,
+    Dataset,
     Individual,
     PropertyDefinition,
     Taxonomy,
@@ -234,6 +235,44 @@ def _choice(args: Mapping[str, Any], name: str, choices: Sequence[str], default:
     return str(value)
 
 
+_DATASET_SCHEMA = {
+    "type": "string",
+    "description": "A dataset (identifier or id; see list_datasets). Needed only when the"
+    " taxonomy has several datasets",
+}
+
+
+def _dataset_label(dataset: Dataset) -> str:
+    return f"{dataset.identifier} ({dataset.title})"
+
+
+def dataset_arg(
+    ontology: OntologyService, args: Mapping[str, Any], taxonomy_id: Optional[str]
+) -> Optional[str]:
+    """
+    The dataset a tool call is about: the `dataset` argument (identifier or id),
+    else the taxonomy's only dataset; None when there is none (or no taxonomy).
+
+    Raises:
+        ToolArgumentError: When the argument names no dataset of the taxonomy, or
+            none is given and the taxonomy has several; the message lists them
+    """
+    named = optional_str(args, "dataset")
+    datasets = ontology.list_datasets(taxonomy_id)
+    listed = ", ".join(_dataset_label(d) for d in datasets)
+    if named is not None:
+        matches = [d for d in datasets if named in (d.id, d.identifier)]
+        if len(matches) != 1:
+            raise ToolArgumentError(
+                f"'dataset' {named!r} names no single dataset"
+                + (f"; pass one of: {listed}" if datasets else "; there are no datasets")
+            )
+        return matches[0].id
+    if len(datasets) > 1:
+        raise ToolArgumentError(f"there are several datasets; pass 'dataset', one of: {listed}")
+    return datasets[0].id if datasets else None
+
+
 def _ref_dict(ref: EntityRef) -> dict[str, str]:
     return {"id": ref.id, "kind": ref.kind, "title": ref.title}
 
@@ -327,6 +366,43 @@ class ListTaxonomiesTool(_Tool):
         )
 
 
+class ListDatasetsTool(_Tool):
+    """Datasets: named bodies of data over a taxonomy's schema."""
+
+    name = "list_datasets"
+    description = (
+        "List datasets: named bodies of data (individuals and their relationships) over"
+        " a taxonomy's schema. Several datasets share one schema and nothing else. Each"
+        " has an identifier, title, its taxonomy, and its individual and relationship"
+        " counts. When a taxonomy has several, pass `dataset` to the tools that read or"
+        " propose its data."
+    )
+    input_schema = {
+        "type": "object",
+        "properties": {
+            "taxonomy_id": {"type": "string", "description": "Only this taxonomy's datasets"}
+        },
+    }
+
+    def run(self, args: dict[str, Any]) -> ToolOutcome:
+        datasets = self._ontology.list_datasets(optional_str(args, "taxonomy_id"))
+        items = [
+            {
+                "id": d.id,
+                "identifier": d.identifier,
+                "title": d.title,
+                "taxonomy_id": d.taxonomy_id,
+                "yields_to_schema": d.yields_to_schema,
+                "individuals": self._ontology.count_individuals(dataset_id=d.id),
+                "relationships": self._ontology.count_relationships(dataset_id=d.id),
+            }
+            for d in datasets
+        ]
+        return _outcome(
+            {"datasets": items, "total": len(items)}, None, f"{len(items)} datasets", []
+        )
+
+
 class SearchEntitiesTool(_Tool):
     """Find entities by title text and by meaning."""
 
@@ -347,6 +423,10 @@ class SearchEntitiesTool(_Tool):
                 "description": "Only return these kinds (default: all)",
             },
             "limit": _LIMIT_SCHEMA,
+            "dataset_id": {
+                "type": "string",
+                "description": "Only individuals of this dataset (id; see list_datasets)",
+            },
         },
         "required": ["query"],
     }
@@ -371,13 +451,14 @@ class SearchEntitiesTool(_Tool):
         if not isinstance(kinds, list) or any(k not in ENTITY_KINDS for k in kinds):
             raise ToolArgumentError(f"'kinds' must be a list of {', '.join(ENTITY_KINDS)}")
 
+        dataset_id = optional_str(args, "dataset_id")
         scores: dict[str, float] = {}
         entities: dict[str, Entity] = {}
-        for entity in self._text_matches(query, kinds, limit):
+        for entity in self._text_matches(query, kinds, limit, dataset_id):
             entities[str(entity.id)] = entity
             exact = entity.title.strip().lower() == query.lower()
             scores[str(entity.id)] = 1.0 if exact else 0.9
-        vector_scores = self._vector_matches(query, kinds, limit)
+        vector_scores = self._vector_matches(query, kinds, limit, dataset_id)
         missing = [i for i in vector_scores if i not in entities]
         entities.update(self._resolver.get_many(missing))
         for entity_id, score in vector_scores.items():
@@ -405,12 +486,16 @@ class SearchEntitiesTool(_Tool):
             [ref_of(e) for e in ranked],
         )
 
-    def _text_matches(self, query: str, kinds: Sequence[str], limit: int) -> list[Entity]:
+    def _text_matches(
+        self, query: str, kinds: Sequence[str], limit: int, dataset_id: Optional[str] = None
+    ) -> list[Entity]:
         listers: dict[str, Callable[[], Sequence[Entity]]] = {
             "taxonomy": lambda: self._ontology.list_taxonomies(query=query, limit=limit),
             "scheme": lambda: self._ontology.list_concept_schemes(query=query, limit=limit),
             "class": lambda: self._ontology.list_classes(query=query, limit=limit),
-            "individual": lambda: self._ontology.list_individuals(query=query, limit=limit),
+            "individual": lambda: self._ontology.list_individuals(
+                query=query, limit=limit, dataset_id=dataset_id
+            ),
             "property": lambda: self._ontology.list_property_definitions(query=query, limit=limit),
         }
         matches: list[Entity] = []
@@ -418,7 +503,9 @@ class SearchEntitiesTool(_Tool):
             matches.extend(listers[kind]())
         return matches
 
-    def _vector_matches(self, query: str, kinds: Sequence[str], limit: int) -> dict[str, float]:
+    def _vector_matches(
+        self, query: str, kinds: Sequence[str], limit: int, dataset_id: Optional[str] = None
+    ) -> dict[str, float]:
         if self._embedding is None:
             return {}
         embedding = self._embedding.embed(query)
@@ -435,7 +522,11 @@ class SearchEntitiesTool(_Tool):
                 scores[match.entity_id] = max(scores.get(match.entity_id, 0.0), match.score)
         if self._individual_index is not None and "individual" in kinds:
             for match in self._individual_index.search(
-                embedding, class_ids=[], top_k=limit, threshold=VECTOR_THRESHOLD
+                embedding,
+                class_ids=[],
+                top_k=limit,
+                threshold=VECTOR_THRESHOLD,
+                dataset_id=dataset_id,
             ):
                 scores[match.individual_id] = match.score
         return scores
@@ -525,6 +616,14 @@ class GetEntityTool(_Tool):
             link("parents", [entity.parent_class_id, entity.concept_scheme_id, entity.taxonomy_id])
             counts["subclasses"] = self._ontology.count_classes(parent_class_id=entity.id)
             counts["individuals"] = self._ontology.count_individuals(class_id=entity.id)
+            datasets = self._ontology.list_datasets(entity.taxonomy_id)
+            if len(datasets) > 1:
+                result["individuals_by_dataset"] = {
+                    d.identifier: self._ontology.count_individuals(
+                        class_id=entity.id, dataset_id=d.id
+                    )
+                    for d in datasets
+                }
             counts["attributes"] = self._ontology.count_attribute_definitions(class_id=entity.id)
             result["attribute_definitions"] = [
                 _attribute_summary(attribute)
@@ -534,6 +633,9 @@ class GetEntityTool(_Tool):
             ]
         elif isinstance(entity, Individual):
             link("classes", list(entity.class_ids))
+            if entity.dataset_id:
+                dataset = self._ontology.get_dataset(entity.dataset_id)
+                result["dataset"] = {"id": dataset.id, "identifier": dataset.identifier}
         elif isinstance(entity, PropertyDefinition):
             link("domain", [entity.domain_class_id])
             link("range", [entity.range_class_id])
@@ -613,13 +715,15 @@ class ListChildrenTool(_Tool):
     name = "list_children"
     description = (
         "List what is under an entity: the schemes of a taxonomy, the classes of a"
-        " scheme, or the subclasses and then the individuals of a class. Pages with"
-        " limit and offset; returns the total."
+        " scheme, or the subclasses and then the individuals of a class (of one"
+        " dataset: pass `dataset` when the taxonomy has several). Pages with limit and"
+        " offset; returns the total."
     )
     input_schema = {
         "type": "object",
         "properties": {
             "id": {"type": "string", "description": "Taxonomy, scheme or class id"},
+            "dataset": _DATASET_SCHEMA,
             "limit": _LIMIT_SCHEMA,
             "offset": {"type": "integer", "minimum": 0, "description": "Items to skip"},
         },
@@ -647,8 +751,12 @@ class ListChildrenTool(_Tool):
                 )
             )
         elif isinstance(entity, Class):
+            # A class's individuals are one dataset's (datasets share classes).
+            dataset_id = dataset_arg(self._ontology, args, entity.taxonomy_id)
             subclass_total = self._ontology.count_classes(parent_class_id=entity.id)
-            individual_total = self._ontology.count_individuals(class_id=entity.id)
+            individual_total = self._ontology.count_individuals(
+                class_id=entity.id, dataset_id=dataset_id
+            )
             total = subclass_total + individual_total
             children = []
             if offset < subclass_total:
@@ -661,6 +769,7 @@ class ListChildrenTool(_Tool):
             if remaining > 0:
                 children += self._ontology.list_individuals(
                     class_id=entity.id,
+                    dataset_id=dataset_id,
                     limit=remaining,
                     offset=max(0, offset - subclass_total),
                     sort_by="title",
@@ -985,6 +1094,7 @@ def build_chat_tools(
     resolver = EntityResolver(ontology)
     return [
         ListTaxonomiesTool(ontology, resolver),
+        ListDatasetsTool(ontology, resolver),
         SearchEntitiesTool(ontology, resolver, embedding, schema_index, individual_index),
         GetEntityTool(ontology, resolver),
         ListChildrenTool(ontology, resolver),
