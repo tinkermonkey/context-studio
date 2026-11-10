@@ -20,8 +20,8 @@ import pytest
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
-from adapters.web.dependencies import get_reference_sources
 from adapters.web import reference_routes
+from adapters.web.dependencies import get_reference_sources
 from adapters.web.reference_routes import router
 from tests.fakes.fake_reference_source import FakeReferenceSource
 
@@ -46,7 +46,7 @@ def app_with_sources(app):
     # Create fake reference sources
     source1 = FakeReferenceSource(name="source-1")
     source2 = FakeReferenceSource(name="source-2")
-    source3 = FakeReferenceSource(name="source-3-unavailable")
+    source3 = FakeReferenceSource(name="source-3-down", should_fail=True)
     source3.is_available = lambda: False  # type: ignore[method-assign]
 
     # Inject into app state
@@ -59,6 +59,29 @@ def app_with_sources(app):
 def client_with_sources(app_with_sources):
     """Create test client with reference sources."""
     return TestClient(app_with_sources)
+
+
+def _hanging_source(name: str) -> FakeReferenceSource:
+    """A source whose search and relations calls never answer."""
+    source = FakeReferenceSource(name=name)
+
+    async def never_answers(*args, **kwargs):
+        await asyncio.sleep(5)
+        return []
+
+    source.search_async = never_answers  # type: ignore[method-assign]
+    source.get_relations_async = never_answers  # type: ignore[method-assign]
+    return source
+
+
+def _no_availability_checks(sources: list[FakeReferenceSource]) -> None:
+    """Make any availability check fail the test."""
+
+    async def must_not_be_called() -> bool:
+        raise AssertionError("availability was checked")
+
+    for source in sources:
+        source.is_available_async = must_not_be_called  # type: ignore[method-assign]
 
 
 class TestReferenceStatusEndpoint:
@@ -91,7 +114,7 @@ class TestReferenceStatusEndpoint:
         source_names = [s["name"] for s in data["sources"]]
         assert "source-1" in source_names
         assert "source-2" in source_names
-        assert "source-3-unavailable" in source_names
+        assert "source-3-down" in source_names
 
     def test_reference_status_no_sources_configured(self):
         """Status endpoint returns 500 if no sources configured."""
@@ -109,7 +132,6 @@ class TestReferenceStatusEndpoint:
 
         # Clean up dependency override
         app.dependency_overrides.clear()
-
 
     def test_reference_status_reports_a_slow_source_unavailable(self, app, monkeypatch):
         """A source that doesn't answer in time is unavailable; it doesn't hold the response."""
@@ -174,7 +196,7 @@ class TestReferenceSearchEndpoint:
 
         data = response.json()
         assert "sources_failed" in data
-        assert "source-3-unavailable" in data["sources_failed"]
+        assert "source-3-down" in data["sources_failed"]
 
     def test_reference_search_filters_by_source_names(self, client_with_sources):
         """Search endpoint respects source filter in request."""
@@ -232,6 +254,35 @@ class TestReferenceSearchEndpoint:
         assert "source-1" in data["sources_failed"]
         assert "source-2" in data["sources_searched"]
 
+    def test_reference_search_does_not_check_availability(self, app):
+        """Search goes straight to each source; it never probes the upstream first (#1506)."""
+        sources = [FakeReferenceSource(name="source-1"), FakeReferenceSource(name="source-2")]
+        _no_availability_checks(sources)
+        app.state.reference_sources = sources
+
+        response = TestClient(app).post("/api/reference/search", json={"term": "water"})
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["sources_searched"] == ["source-1", "source-2"]
+        assert data["sources_failed"] == []
+        assert data["total_results"] == 2
+
+    def test_reference_search_does_not_wait_on_a_hanging_source(self, app, monkeypatch):
+        """A source that never answers is listed as failed; the others' results return (#1506)."""
+        monkeypatch.setattr(reference_routes, "SOURCE_QUERY_TIMEOUT_SECONDS", 0.05)
+        app.state.reference_sources = [FakeReferenceSource(name="fast"), _hanging_source("hung")]
+
+        started = time.monotonic()
+        response = TestClient(app).post("/api/reference/search", json={"term": "water"})
+
+        assert time.monotonic() - started < 2
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["sources_searched"] == ["fast"]
+        assert data["sources_failed"] == ["hung"]
+        assert [r["source"] for r in data["results"]] == ["fast"]
+
 
 class TestReferenceRelationsEndpoint:
     """Tests for POST /api/reference/relations endpoint."""
@@ -265,7 +316,7 @@ class TestReferenceRelationsEndpoint:
 
         data = response.json()
         assert "sources_failed" in data
-        assert "source-3-unavailable" in data["sources_failed"]
+        assert "source-3-down" in data["sources_failed"]
 
     def test_reference_relations_filters_by_source_names(self, client_with_sources):
         """Relations endpoint respects source filter in request."""
@@ -319,3 +370,28 @@ class TestReferenceRelationsEndpoint:
         data = response.json()
         assert "source-1" in data["sources_failed"]
         assert "source-2" in data["sources_queried"]
+
+    def test_reference_relations_does_not_check_availability(self, app):
+        """Relations go straight to each source; nothing probes the upstream first (#1506)."""
+        sources = [FakeReferenceSource(name="source-1"), FakeReferenceSource(name="source-2")]
+        _no_availability_checks(sources)
+        app.state.reference_sources = sources
+
+        response = TestClient(app).post("/api/reference/relations", json={"uri": "fake://water"})
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["sources_queried"] == ["source-1", "source-2"]
+
+    def test_reference_relations_do_not_wait_on_a_hanging_source(self, app, monkeypatch):
+        """A source that never answers is listed as failed and doesn't hold the response."""
+        monkeypatch.setattr(reference_routes, "SOURCE_QUERY_TIMEOUT_SECONDS", 0.05)
+        app.state.reference_sources = [FakeReferenceSource(name="fast"), _hanging_source("hung")]
+
+        started = time.monotonic()
+        response = TestClient(app).post("/api/reference/relations", json={"uri": "fake://water"})
+
+        assert time.monotonic() - started < 2
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["sources_queried"] == ["fast"]
+        assert data["sources_failed"] == ["hung"]

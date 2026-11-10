@@ -17,6 +17,8 @@ from unittest.mock import patch
 
 import httpx
 import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 from adapters.reference import proxy as proxy_module
 from adapters.reference.conceptnet import ConceptNetSource
@@ -26,6 +28,7 @@ from adapters.reference.http_headers import USER_AGENT
 from adapters.reference.proxy import ReferenceProxy
 from adapters.reference.schema_org import SchemaOrgSource
 from adapters.reference.wikidata import WikidataSource
+from adapters.web.reference_routes import router as reference_router
 from config import ReferenceProxyConfig
 
 LOOPBACK_HOSTS = {"127.0.0.1", "::1", "localhost"}
@@ -160,6 +163,24 @@ def test_repeated_search_is_served_from_the_cache(make_proxy, upstream):
         second = source.search("water", limit=5)
         assert first and first == second
 
+    assert len(upstream.requests) == 3
+
+
+def test_repeated_search_route_makes_no_upstream_requests(make_proxy, upstream):
+    """The search route's second ask is all cache hits: no availability probes (#1506)."""
+    app = FastAPI()
+    app.include_router(reference_router)
+    app.state.reference_sources = list(_sources(make_proxy()))
+    client = TestClient(app)
+
+    first = client.post("/api/reference/search", json={"term": "water", "limit": 5}).json()
+    requests_after_first = len(upstream.requests)
+    second = client.post("/api/reference/search", json={"term": "water", "limit": 5}).json()
+
+    assert first["sources_searched"] == ["ConceptNet", "DBpedia", "Wikidata"]
+    assert first["total_results"] == 3
+    assert second == first
+    assert requests_after_first == 3
     assert len(upstream.requests) == 3
 
 

@@ -59,6 +59,11 @@ router = APIRouter(prefix="/api/reference", tags=["reference"])
 # whole response for its full request timeout.
 STATUS_CHECK_TIMEOUT_SECONDS = 3.0
 
+# How long search and relations wait on one source before listing it as failed.
+# Each call goes through the reference proxy, which may hold a request for up to
+# MAX_THROTTLE_DELAY_SECONDS (5s) to stay under a rate limit, so this sits above that.
+SOURCE_QUERY_TIMEOUT_SECONDS = 10.0
+
 
 # ==================== Status Endpoint ====================
 
@@ -160,8 +165,12 @@ async def search_references(
     """
     Search for references across multiple sources.
 
-    Aggregates results from all available sources (or specified sources).
-    Sources that fail or are unavailable are tracked but don't block the response.
+    Aggregates results from all sources (or the requested ones), queried at once.
+    There is no availability pre-check: each call goes through the reference proxy,
+    so a repeated search is a cache hit. A source that raises or doesn't answer
+    within SOURCE_QUERY_TIMEOUT_SECONDS is listed as failed and doesn't hold the
+    response. The source adapters return no results on network errors, so a source
+    that fails fast is listed as searched with no results.
 
     Args:
         request: ReferenceSearchRequest with search parameters
@@ -194,12 +203,10 @@ async def search_references(
     ) -> tuple[list[ReferenceResultSchema], str, bool]:
         """Search a single source and return results or error."""
         try:
-            is_available = await source.is_available_async()
-
-            if not is_available:
-                return [], source.source_name, False
-
-            source_results = await source.search_async(request.term, limit=request.limit)
+            source_results = await asyncio.wait_for(
+                source.search_async(request.term, limit=request.limit),
+                timeout=SOURCE_QUERY_TIMEOUT_SECONDS,
+            )
 
             results = [
                 ReferenceResultSchema(
@@ -212,6 +219,12 @@ async def search_references(
                 for result in source_results
             ]
             return results, source.source_name, True
+        except asyncio.TimeoutError:
+            logger.warning(
+                f"{source.source_name} did not answer a search for '{request.term}' within "
+                f"{SOURCE_QUERY_TIMEOUT_SECONDS:g}s; listing it as failed"
+            )
+            return [], source.source_name, False
         except Exception as e:
             logger.error(f"Error searching {source.source_name} for '{request.term}': {e}")
             return [], source.source_name, False
@@ -254,8 +267,9 @@ async def get_reference_relations(
     """
     Get relationships for a reference URI across multiple sources.
 
-    Aggregates relationships from all available sources (or specified sources).
-    Sources that fail or are unavailable are tracked but don't block the response.
+    Aggregates relationships from all sources (or the requested ones), queried at
+    once. As with search, there is no availability pre-check; a source that raises or
+    doesn't answer within SOURCE_QUERY_TIMEOUT_SECONDS is listed as failed.
 
     Args:
         request: ReferenceRelationsRequest with URI to query
@@ -288,12 +302,10 @@ async def get_reference_relations(
     ) -> tuple[list[ReferenceRelationSchema], str, bool]:
         """Get relations from a single source."""
         try:
-            is_available = await source.is_available_async()
-
-            if not is_available:
-                return [], source.source_name, False
-
-            source_relations = await source.get_relations_async(request.uri, limit=request.limit)
+            source_relations = await asyncio.wait_for(
+                source.get_relations_async(request.uri, limit=request.limit),
+                timeout=SOURCE_QUERY_TIMEOUT_SECONDS,
+            )
 
             relations = [
                 ReferenceRelationSchema(
@@ -306,6 +318,12 @@ async def get_reference_relations(
                 for relation in source_relations
             ]
             return relations, source.source_name, True
+        except asyncio.TimeoutError:
+            logger.warning(
+                f"{source.source_name} did not answer a relations query for '{request.uri}' "
+                f"within {SOURCE_QUERY_TIMEOUT_SECONDS:g}s; listing it as failed"
+            )
+            return [], source.source_name, False
         except Exception as e:
             logger.error(
                 f"Error getting relations from {source.source_name} for" f" '{request.uri}': {e}"
