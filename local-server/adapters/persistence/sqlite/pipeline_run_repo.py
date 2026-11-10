@@ -20,6 +20,7 @@ from adapters.persistence.sqlite.models import (
     ClaimTriageRun,
     IndividualExtractionRun,
     NoOpPipelineRun,
+    NotesToClaimsRun,
     PipelineRun,
     SchemaConnectionRefinementRun,
     SchemaDefinitionRefinementRun,
@@ -34,6 +35,7 @@ from domain.pipelines.entities import (
 from domain.pipelines.entities import (
     NoOpPipelineRun as DomainNoOpPipelineRun,
 )
+from domain.pipelines.entities import NotesToClaimsRun as DomainNotesToClaimsRun
 from domain.pipelines.entities import (
     PipelineRun as DomainPipelineRun,
 )
@@ -76,6 +78,7 @@ _PIPELINE_TYPE_TO_ORM = {
     PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT: SchemaConnectionRefinementRun,
     PipelineType.SCHEMA_RELATIONSHIP_REFLECTION: SchemaRelationshipReflectionRun,
     PipelineType.CLAIM_TRIAGE: ClaimTriageRun,
+    PipelineType.NOTES_TO_CLAIMS: NotesToClaimsRun,
 }
 
 
@@ -1000,6 +1003,10 @@ class PipelineRepository:
             )
         elif isinstance(orm_obj, ClaimTriageRun):
             return DomainClaimTriageRun(
+                **common,  # type: ignore[arg-type]
+            )
+        elif isinstance(orm_obj, NotesToClaimsRun):
+            return DomainNotesToClaimsRun(
                 **common,  # type: ignore[arg-type]
             )
         else:

@@ -25,6 +25,10 @@ from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
     IndividualExtractionState,
 )
+from domain.pipelines.notes_to_claims.orchestrator import (
+    NotesToClaimsOrchestrator,
+    NotesToClaimsState,
+)
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 from domain.pipelines.orchestration.noop import (
     NoOpPipelineOrchestrator,
@@ -257,6 +261,26 @@ def _build_claim_triage(
     )
 
 
+def _build_notes_to_claims(
+    llm_provider: LLMProvider, services: dict[str, Any]
+) -> PipelineOrchestrator:
+    ontology_repo = services.get("ontology_repo")
+    claim_service = services.get("claim_service")
+    if not ontology_repo or not claim_service:
+        raise ValueError(
+            "ontology_repo and claim_service are required for NotesToClaimsOrchestrator"
+        )
+    return NotesToClaimsOrchestrator(
+        llm_provider=llm_provider,
+        ontology_repo=ontology_repo,
+        claim_service=claim_service,
+        proposal_service=services.get("proposal_service"),
+        config=services.get("refinement_config", {}),
+        run_id=services.get("run_id"),
+        status_writer=services.get("status_writer"),
+    )
+
+
 _ORCHESTRATOR_BUILDERS: dict[
     Type[PipelineOrchestrator],
     Callable[[LLMProvider, dict[str, Any]], PipelineOrchestrator],
@@ -271,6 +295,7 @@ _ORCHESTRATOR_BUILDERS: dict[
     ConnectionRefinementOrchestrator: _build_connection_refinement,
     RelationshipReflectionOrchestrator: _build_relationship_reflection,
     ClaimTriageOrchestrator: _build_claim_triage,
+    NotesToClaimsOrchestrator: _build_notes_to_claims,
 }
 
 _PIPELINE_TYPE_TO_STATE: dict[PipelineType, Type[PipelineState]] = {
@@ -282,6 +307,7 @@ _PIPELINE_TYPE_TO_STATE: dict[PipelineType, Type[PipelineState]] = {
     PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT: ConnectionRefinementState,
     PipelineType.SCHEMA_RELATIONSHIP_REFLECTION: RelationshipReflectionState,
     PipelineType.CLAIM_TRIAGE: ClaimTriageState,
+    PipelineType.NOTES_TO_CLAIMS: NotesToClaimsState,
 }
 
 

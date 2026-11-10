@@ -168,6 +168,23 @@ def test_delete_for_note(repo):
     assert [c.key for c in repo.list_claims(ClaimFilter(taxonomy_id=TAXONOMY))] == ["n2#1"]
 
 
+def test_delete_for_note_keeps_the_keys_asked_for(repo):
+    repo.upsert(
+        [
+            claim("n1#1", note_ref="n1"),
+            claim("n1#2", note_ref="n1"),
+            claim("n1#3", note_ref="n1"),
+            claim("n2#1", note_ref="n2"),
+        ]
+    )
+
+    assert repo.delete_for_note(TAXONOMY, "n1", keep_keys=("n1#1", "n2#1")) == 2
+    assert [c.key for c in repo.list_claims(ClaimFilter(taxonomy_id=TAXONOMY))] == [
+        "n1#1",
+        "n2#1",
+    ]
+
+
 def test_claims_go_with_their_taxonomy(session_factory, ontology_repo):
     repo = SQLiteClaimRepository(session_factory)
     repo.upsert([claim("note-1#1")])

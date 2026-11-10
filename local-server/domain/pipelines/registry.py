@@ -164,6 +164,34 @@ class PipelineTypeRegistry:
                 "errors": "list[str] — claims the decision model didn't answer",
             },
         ),
+        PipelineType.NOTES_TO_CLAIMS: PipelineTypeDefinition(
+            pipeline_type=PipelineType.NOTES_TO_CLAIMS,
+            description=(
+                "Split maintainer and reviewer notes into atomic claims, each naming the"
+                " entities it affects, and store them as the taxonomy's claims"
+            ),
+            input_contract={
+                "taxonomy_id": "str (required) — taxonomy the notes are about",
+                "scope": (
+                    "dict (required) — {notes: [{ref, subject, text, source?}]} (subject:"
+                    " a Context Studio id or identifier, e.g. a class identifier or"
+                    " '<class identifier>.<attribute identifier>'; a client maps its own"
+                    " ids), {proposal_id} (its operations' notes and its decisions'"
+                    " reasons), or {since: ISO datetime} (decision reasons in the"
+                    " taxonomy's gold); plus force: true to re-split notes split already"
+                ),
+            },
+            output_contract={
+                "notes": "int — notes split",
+                "skipped": (
+                    "int — notes split already (claims from the same text, or a claim"
+                    " with a verdict), left as they are without force"
+                ),
+                "claims": "int — claims stored (added or replaced by key)",
+                "claims_removed": "int — earlier claims of those notes the new split dropped",
+                "errors": "list[str] — notes that could not be split",
+            },
+        ),
     }
 
     @classmethod

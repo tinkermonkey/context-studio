@@ -143,6 +143,23 @@ class TestSubmit:
         assert again.id == first.id
         assert service.count_claims(ClaimFilter(taxonomy_id="t")) == 1
 
+    def test_deleting_a_notes_claims_keeps_the_keys_asked_for(self, service):
+        service.submit("t", [claim("n#1"), claim("n#2"), claim("m#1", note_ref="m")])
+
+        assert service.delete_note_claims("t", "n", keep_keys=["n#1"]) == 1
+        keys = [c.key for c in service.list_claims(ClaimFilter(taxonomy_id="t"))]
+        assert sorted(keys) == ["m#1", "n#1"]
+        with pytest.raises(EntityNotFoundError):
+            service.delete_note_claims("nope", "n")
+
+    def test_in_taxonomy_names_the_ids_a_claim_may_name(self, service):
+        assert service.in_taxonomy("t", {"t", "c1", "a1", "p1", "elsewhere"}) == {
+            "t",
+            "c1",
+            "a1",
+            "p1",
+        }
+
 
 class TestTriageAndVerdict:
     def test_triage_then_verdict_then_clear(self, service):
