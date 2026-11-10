@@ -9,7 +9,10 @@ type DatasetResponse = components["schemas"]["DatasetResponse"];
 export interface DatasetScope {
   /** The taxonomy's datasets, or every dataset when no taxonomy is given. */
   datasets: DatasetResponse[];
-  /** The dataset the URL names, when it is one of `datasets`. */
+  /**
+   * The dataset the URL names, when it is one of `datasets` and its taxonomy
+   * has two or more (with one, the choice is implied and nothing is scoped).
+   */
   selectedDataset?: DatasetResponse;
   /**
    * The dataset to scope queries to. While the datasets load it is the URL's
@@ -28,6 +31,13 @@ export interface DatasetScope {
  * then ignored, and the selector shows only for that taxonomy's datasets.
  * With one dataset the choice is implied, so nothing is selected or shown.
  */
+/** How many datasets each taxonomy has. */
+export function datasetsPerTaxonomy(datasets: DatasetResponse[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const d of datasets) counts.set(d.taxonomy_id, (counts.get(d.taxonomy_id) ?? 0) + 1);
+  return counts;
+}
+
 export function useDatasetScope(taxonomyId?: string): DatasetScope {
   const navigate = useNavigate();
   const { dataset } = useSearch({ strict: false }) as DatasetSearch;
@@ -37,15 +47,18 @@ export function useDatasetScope(taxonomyId?: string): DatasetScope {
     () => (data ?? []).filter((d) => !taxonomyId || d.taxonomy_id === taxonomyId),
     [data, taxonomyId],
   );
-  const selectedDataset = dataset ? datasets.find((d) => d.id === dataset) : undefined;
+  const perTaxonomy = useMemo(() => datasetsPerTaxonomy(data ?? []), [data]);
+  const named = dataset ? datasets.find((d) => d.id === dataset) : undefined;
+  // A taxonomy's only dataset is implied: naming it scopes nothing, so a stale
+  // parameter can never hide data behind a selector that isn't shown.
+  const selectedDataset =
+    named && (perTaxonomy.get(named.taxonomy_id) ?? 0) >= 2 ? named : undefined;
   const selectedDatasetId = data ? selectedDataset?.id : dataset;
 
-  const showSelector = useMemo(() => {
-    const perTaxonomy = new Map<string, number>();
-    for (const d of datasets)
-      perTaxonomy.set(d.taxonomy_id, (perTaxonomy.get(d.taxonomy_id) ?? 0) + 1);
-    return [...perTaxonomy.values()].some((n) => n >= 2);
-  }, [datasets]);
+  const showSelector = useMemo(
+    () => datasets.some((d) => (perTaxonomy.get(d.taxonomy_id) ?? 0) >= 2),
+    [datasets, perTaxonomy],
+  );
 
   const setDataset = useCallback(
     (datasetId: string | undefined) => {

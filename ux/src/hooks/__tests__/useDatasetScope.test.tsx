@@ -75,6 +75,15 @@ describe("useDatasetScope", () => {
     expect(missing.result.current.selectedDatasetId).toBeUndefined();
   });
 
+  it("scopes nothing when the URL names a taxonomy's only dataset", async () => {
+    // A link from elsewhere left it there; no selector would let the user clear it.
+    mockSearch = { dataset: "ds-b1" };
+    const { result } = scope([alphaDefault, alphaSecond, betaDefault]);
+    await waitFor(() => expect(result.current.datasets).toHaveLength(3));
+    expect(result.current.selectedDataset).toBeUndefined();
+    expect(result.current.selectedDatasetId).toBeUndefined();
+  });
+
   it("sets and clears the dataset in the URL, keeping the other parameters", async () => {
     const { result } = scope([alphaDefault, alphaSecond]);
     result.current.setDataset("ds-a1");

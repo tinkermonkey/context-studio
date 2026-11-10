@@ -9,9 +9,11 @@ cache invalidation via a stale-flag pattern triggered by GraphInvalidated events
 
 from __future__ import annotations
 
+import functools
 import re
+import threading
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
 from uuid import uuid4
 
 from .entities import (
@@ -36,6 +38,8 @@ from ..ontology.entities import Class, ConceptScheme, Individual, PropertyDefini
 from ..ontology.events import GraphInvalidated
 
 # Map domain entity class names to node_type strings
+_T = TypeVar("_T")
+
 _NODE_TYPE_MAP = {
     "Taxonomy": "taxonomy",
     "ConceptScheme": "concept_scheme",
@@ -53,6 +57,17 @@ def _predicate_label(prop: PropertyDefinition) -> str:
     ("accesses"), else its title, matching how the entity pages name it.
     """
     return prop.canonical_predicate or prop.title
+
+
+def _serialized(method: Callable[..., _T]) -> Callable[..., _T]:
+    """Run a method under the service's lock (see GraphAnalysisService.__init__)."""
+
+    @functools.wraps(method)
+    def locked(self: "GraphAnalysisService", *args: Any, **kwargs: Any) -> _T:
+        with self._lock:
+            return method(self, *args, **kwargs)
+
+    return locked
 
 
 class GraphAnalysisService:
@@ -91,6 +106,9 @@ class GraphAnalysisService:
         self._rdf_stale = True
         self._graph_scope: str | None = None
         self._rdf_scope: str | None = None
+        # The engines hold one scope at a time and rebuild in place, so building a
+        # scope and reading it must not interleave with another thread's call.
+        self._lock = threading.RLock()
 
     def _scoped_data(self, dataset_id: str | None) -> tuple[list[Any], list[Any]]:
         """
@@ -252,6 +270,7 @@ class GraphAnalysisService:
         self._rdf_stale = False
         self._rdf_scope = dataset_id
 
+    @_serialized
     def build_graph(self, dataset_id: str | None = None) -> KnowledgeGraph:
         """
         Explicitly build the in-memory graph from current ontology data.
@@ -406,6 +425,7 @@ class GraphAnalysisService:
             edges=edges,
         )
 
+    @_serialized
     def get_degree_distribution(self) -> dict[str, int]:
         """
         Get the degree of each node in the graph.
@@ -422,6 +442,7 @@ class GraphAnalysisService:
         self._ensure_graph()
         return self._graph_engine.degree_distribution()
 
+    @_serialized
     def get_degree_distributions(self) -> tuple[dict[str, int], dict[str, int]]:
         """
         Get the in-degree and out-degree of each node in the graph.
@@ -443,6 +464,7 @@ class GraphAnalysisService:
             self._graph_engine.out_degree_distribution(),
         )
 
+    @_serialized
     def get_metrics(
         self, algorithm: str = "betweenness", dataset_id: str | None = None
     ) -> GraphMetrics:
@@ -500,6 +522,7 @@ class GraphAnalysisService:
             computed_at=datetime.now(timezone.utc),
         )
 
+    @_serialized
     def find_shortest_path(
         self, source_id: str, target_id: str, dataset_id: str | None = None
     ) -> PathResult | None:
@@ -539,6 +562,7 @@ class GraphAnalysisService:
             relationships=relationships,
         )
 
+    @_serialized
     def find_all_paths(
         self, source_id: str, target_id: str, max_depth: int = 5
     ) -> list[PathResult]:
@@ -581,6 +605,7 @@ class GraphAnalysisService:
 
         return results
 
+    @_serialized
     def get_centrality(self, algorithm: str) -> dict[str, float]:
         """
         Compute centrality scores for all nodes using the specified algorithm.
@@ -600,6 +625,7 @@ class GraphAnalysisService:
         self._ensure_graph()
         return self._graph_engine.centrality(algorithm)
 
+    @_serialized
     def get_communities(self, algorithm: str) -> list[set[str]]:
         """
         Partition the graph into communities using the specified algorithm.
@@ -620,6 +646,7 @@ class GraphAnalysisService:
         self._ensure_graph()
         return self._graph_engine.communities(algorithm)
 
+    @_serialized
     def get_neighbors(self, node_id: str, direction: str = "both", depth: int = 1) -> set[str]:
         """
         Get all neighbors of a node up to a specified depth with optional directional filtering.
@@ -648,6 +675,7 @@ class GraphAnalysisService:
         # The graph engine will raise NodeNotFoundError if the node doesn't exist
         return self._graph_engine.neighbors(node_id, direction=direction, depth=depth)
 
+    @_serialized
     def check_cycle(self, source_id: str, target_id: str) -> bool:
         """
         Check if adding an edge from source_id to target_id would create a cycle.
@@ -662,6 +690,7 @@ class GraphAnalysisService:
         self._ensure_graph()
         return self._graph_engine.has_cycle(source_id, target_id)
 
+    @_serialized
     def extract_subgraph(self, node_ids: list[str]) -> KnowledgeGraph:
         """
         Extract a subgraph containing the specified nodes and all edges between them.
@@ -698,6 +727,7 @@ class GraphAnalysisService:
             last_built=datetime.now(timezone.utc),
         )
 
+    @_serialized
     def extract_subgraph_with_edges(
         self, node_ids: list[str], dataset_id: str | None = None
     ) -> Subgraph:
@@ -738,6 +768,7 @@ class GraphAnalysisService:
             edge_count=subgraph.edge_count(),
         )
 
+    @_serialized
     def extract_subgraph_by_depth(self, center_node_id: str, depth: int) -> SubgraphResult:
         """
         Extract a subgraph containing a center node and all nodes within a specified depth.
@@ -789,6 +820,7 @@ class GraphAnalysisService:
             extracted_at=datetime.now(timezone.utc),
         )
 
+    @_serialized
     def execute_sparql(self, query: str, dataset_id: str | None = None) -> list[dict[str, Any]]:
         """
         Execute a SPARQL SELECT query against the RDF graph.
@@ -809,6 +841,7 @@ class GraphAnalysisService:
         self._validate_sparql(query)
         return self._query_engine.execute_sparql(query)
 
+    @_serialized
     def get_triple_count(self, dataset_id: str | None = None) -> int:
         """
         Get the number of RDF triples in the graph.
@@ -819,6 +852,7 @@ class GraphAnalysisService:
         self._ensure_rdf(dataset_id)
         return self._query_engine.triple_count()
 
+    @_serialized
     def get_triples(
         self,
         subject: str | None = None,
@@ -839,6 +873,7 @@ class GraphAnalysisService:
         self._ensure_rdf()
         return self._query_engine.get_triples(subject, predicate, object)
 
+    @_serialized
     def on_graph_invalidated(self, event: GraphInvalidated) -> None:
         """
         Handle GraphInvalidated events by marking caches as stale.

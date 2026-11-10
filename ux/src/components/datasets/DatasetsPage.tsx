@@ -19,7 +19,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { useToasts } from "@/components/ui/Toast";
 import { formatDate } from "@/components/entity/EntityPageParts";
-import { useDatasetScope } from "@/hooks/useDatasetScope";
+import { datasetsPerTaxonomy, useDatasetScope } from "@/hooks/useDatasetScope";
 import { CreateDatasetModal } from "./CreateDatasetModal";
 import { DeleteDatasetDialog } from "./DeleteDatasetDialog";
 import { datasetsCopy } from "./copy";
@@ -61,8 +61,15 @@ export function DatasetsPage({ taxonomyId, onTaxonomyChange }: DatasetsPageProps
       )
     : allRows;
 
+  const perTaxonomy = datasetsPerTaxonomy(allRows);
+  // A taxonomy's only dataset is implied: no parameter, so nothing stays scoped.
   const openIndividuals = (dataset: DatasetResponse) =>
-    navigate({ to: "/app/data/individuals", search: { dataset: dataset.id } });
+    navigate({
+      to: "/app/data/individuals",
+      search: {
+        dataset: (perTaxonomy.get(dataset.taxonomy_id) ?? 0) >= 2 ? dataset.id : undefined,
+      },
+    });
 
   const handleDelete = (dataset: DatasetResponse) => {
     setDeleting(null);

@@ -242,7 +242,10 @@ export function IndividualPage({ id }: { id: string }) {
         actions={
           <EntityActions
             entity={{ kind: "individual", id, title: individual.title }}
-            graph={{ focus: id, dataset: individual.dataset_id ?? undefined }}
+            graph={{
+              focus: id,
+              dataset: severalDatasets ? (individual.dataset_id ?? undefined) : undefined,
+            }}
           />
         }
       />
