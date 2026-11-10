@@ -32,6 +32,7 @@ from domain.ontology.entities import (
     Taxonomy,
 )
 from domain.ontology.value_objects import ExternalReference
+from tests.utils.datasets import save_in_dataset
 
 
 @pytest.fixture
@@ -179,7 +180,7 @@ def sample_data(ontology_repo):
             ),
         ],
     )
-    fido = ontology_repo.save_individual(fido)
+    fido = save_in_dataset(ontology_repo, fido)
 
     bella = Individual(
         id=str(uuid.uuid4()),
@@ -187,7 +188,7 @@ def sample_data(ontology_repo):
         title="Bella",
         description="Another dog instance",
     )
-    bella = ontology_repo.save_individual(bella)
+    bella = save_in_dataset(ontology_repo, bella)
 
     # Create relationships
     rel1 = Relationship(

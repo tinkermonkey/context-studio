@@ -237,6 +237,14 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
         doc="ID of the pipeline run that created or last modified this entity",
     )
 
+    dataset_id = Column(
+        String(36),
+        ForeignKey("datasets.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+        doc="Dataset the individual belongs to (for individual; NULL for other node types)",
+    )
+
     # Slug identifier — used by property_definition, taxonomy, concept_scheme, class.
     # Unique across all entities in the workspace; populated for the four kinds above
     # and NULL for individuals.
@@ -286,6 +294,10 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
             "node_type IN ('taxonomy', 'concept_scheme', 'class', 'individual',"
             " 'property_definition')",
             name="check_valid_node_type",
+        ),
+        CheckConstraint(
+            "node_type != 'individual' OR dataset_id IS NOT NULL",
+            name="check_individual_dataset",
         ),
         Index("idx_node_type_title", "node_type", "title"),
     )
@@ -1687,93 +1699,57 @@ class WorkflowRun(Base):  # type: ignore[valid-type,misc]
 
 class Dataset(Base):  # type: ignore[valid-type,misc]
     """
-    Persistence model for datasets (importable database files).
+    A named body of data (individuals and their relationships) over one taxonomy's schema.
 
-    Stores dataset metadata and cached metrics about the dataset's contents.
+    Several datasets can share a taxonomy's schema; each individual belongs to
+    exactly one (`ontology_entities.dataset_id`), and a relationship belongs to
+    its source individual's dataset.
 
     Attributes:
         id: UUID as string, primary key
+        taxonomy_id: The taxonomy whose schema the dataset's data uses
+        identifier: Machine-readable slug, unique within the taxonomy
         title: Display name
-        filename: Original filename
-        description: Optional longer description
-        created_at: Timestamp of creation (UTC, auto-set)
-        last_accessed: Timestamp of last import/activation
-        schema_version: Database schema version string
-        layers_count: Cached count of taxonomies
-        domains_count: Cached count of concept schemes
-        terms_count: Cached count of classes
-        relationships_count: Cached count of relationships
-        individuals_count: Cached count of individuals
-        is_active: Boolean flag for active dataset
-        version: Version number for optimistic concurrency
+        yields_to_schema: Schema operations never block on this dataset's data;
+            its data follows them instead
+        created_at: Timestamp of creation (UTC)
+        last_modified: Timestamp of last modification (UTC)
     """
 
     __tablename__ = "datasets"
 
     id = Column(String(36), primary_key=True, nullable=False)
-    title = Column(String(255), nullable=False, index=True)
-    filename = Column(String(255), nullable=False)
-    description = Column(Text, nullable=True)
+    taxonomy_id = Column(
+        String(36),
+        ForeignKey("ontology_entities.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        doc="Taxonomy whose schema the dataset's data uses",
+    )
+    identifier = Column(String(255), nullable=False, doc="Slug, unique within the taxonomy")
+    title = Column(String(255), nullable=False)
+    yields_to_schema = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("0"),
+        doc="Schema operations never block on this dataset's data",
+    )
     created_at = Column(
         DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
-        doc="Timestamp of creation",
     )
-    last_accessed = Column(
+    last_modified = Column(
         DateTime(timezone=True),
-        nullable=True,
-        doc="Timestamp of last activation/import",
-    )
-    schema_version = Column(
-        String(20),
         nullable=False,
-        default="1.0",
-        doc="Database schema version",
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
     )
-    layers_count = Column(
-        Integer,
-        nullable=False,
-        default=0,
-        doc="Cached count of taxonomies",
-    )
-    domains_count = Column(
-        Integer,
-        nullable=False,
-        default=0,
-        doc="Cached count of concept schemes",
-    )
-    terms_count = Column(
-        Integer,
-        nullable=False,
-        default=0,
-        doc="Cached count of classes",
-    )
-    relationships_count = Column(
-        Integer,
-        nullable=False,
-        default=0,
-        doc="Cached count of relationships",
-    )
-    individuals_count = Column(
-        Integer,
-        nullable=False,
-        default=0,
-        doc="Cached count of individuals",
-    )
-    is_active = Column(
-        Boolean,
-        nullable=False,
-        default=False,
-        index=True,
-        doc="Whether this is the active dataset",
-    )
-    version = Column(
-        Integer,
-        nullable=False,
-        default=1,
-        doc="Version number for optimistic concurrency",
+
+    __table_args__ = (
+        UniqueConstraint("taxonomy_id", "identifier", name="uk_dataset_taxonomy_identifier"),
     )
 
     def __repr__(self) -> str:
-        return f"<Dataset(id={self.id}, title={self.title}, is_active={self.is_active})>"
+        return f"<Dataset(id={self.id}, identifier={self.identifier})>"

@@ -55,7 +55,6 @@ from adapters.persistence.sqlite.chat_repo import SqliteConversationRepository
 
 # Import adapters
 from adapters.persistence.sqlite.connection import DatabaseManager
-from adapters.persistence.sqlite.dataset_repo import SQLiteDatasetRepository
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
 from adapters.persistence.sqlite.extraction_run_repo import (
     SQLiteExtractionRunRepository,
@@ -401,6 +400,7 @@ async def lifespan(app: FastAPI):
             event_publisher=event_publisher,
             schema_index=schema_vector_index,
             individual_index=individual_vector_index,
+            transaction_scope=SqliteTransactionScope(shared_session_factory),
         )
         logger.info("OntologyService created and wired with adapters")
 
@@ -629,13 +629,9 @@ async def lifespan(app: FastAPI):
         )
         logger.info("SystemMetricsCollector created")
 
-        dataset_repo = SQLiteDatasetRepository(local_session_factory)
-        logger.info("SQLiteDatasetRepository created")
-
         admin_service = AdminService(
             metrics_collector=metrics_collector,
             config_store=config_store,
-            dataset_repository=dataset_repo,
         )
         logger.info(
             "AdminService created and wired with metrics, config store, and dataset" " repository"

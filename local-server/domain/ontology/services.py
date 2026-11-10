@@ -10,17 +10,19 @@ for event distribution.
 from __future__ import annotations
 
 import logging
+from contextlib import nullcontext
 from dataclasses import replace
 from datetime import datetime, timezone
 from typing import Any, Literal
 from uuid import uuid4
 
-from domain.ports import EventPublisher
+from domain.ports import EventPublisher, TransactionScope
 
 from .entities import (
     AttributeDefinition,
     Class,
     ConceptScheme,
+    Dataset,
     Individual,
     PropertyDefinition,
     Relationship,
@@ -55,6 +57,7 @@ from .events import (
 )
 from .exceptions import (
     CircularReferenceError,
+    DatasetMismatchError,
     DerivedTypeError,
     DuplicateEntityError,
     EntityInUseError,
@@ -68,10 +71,12 @@ from .ports import (
     OntologyRepository,
     SchemaVectorIndex,
 )
+from .datasets import resolve_dataset_id
 from .snapshots import entity_snapshot
 from .value_objects import (
     ClassCounts,
     DataPropertyValue,
+    DatasetDeletion,
     DataType,
     ExternalReference,
     SchemeCounts,
@@ -150,6 +155,7 @@ class OntologyService:
         event_publisher: EventPublisher,
         schema_index: SchemaVectorIndex | None = None,
         individual_index: IndividualVectorIndex | None = None,
+        transaction_scope: TransactionScope | None = None,
     ) -> None:
         """
         Initialize the service with port dependencies.
@@ -163,12 +169,15 @@ class OntologyService:
             individual_index: Optional vector index kept in sync on write so
                 individuals are recognizable across documents (#1142). No-op
                 when not provided.
+            transaction_scope: Optional; makes a dataset delete atomic (all of its
+                individuals, relationships and change events go, or none)
         """
         self._repository = repository
         self._embedding_service = embedding_service
         self._event_publisher = event_publisher
         self._schema_index = schema_index
         self._individual_index = individual_index
+        self._transaction_scope = transaction_scope
 
     def _sync_vector_index(self, entity_id: str, title: str, description: str | None) -> None:
         """
@@ -796,12 +805,15 @@ class OntologyService:
 
         return scheme
 
-    def get_scheme_counts(self, taxonomy_id: str) -> list[SchemeCounts]:
+    def get_scheme_counts(
+        self, taxonomy_id: str, dataset_id: str | None = None
+    ) -> list[SchemeCounts]:
         """
         Count the classes, individuals and property definitions of each scheme in a taxonomy.
 
         Args:
             taxonomy_id: The ID of the taxonomy
+            dataset_id: Optional dataset whose individuals to count (all if None)
 
         Returns:
             One SchemeCounts per concept scheme in the taxonomy
@@ -810,14 +822,17 @@ class OntologyService:
             EntityNotFoundError: If the taxonomy does not exist
         """
         self.get_taxonomy(taxonomy_id)
-        return self._repository.count_by_scheme(taxonomy_id)
+        return self._repository.count_by_scheme(taxonomy_id, dataset_id=dataset_id)
 
-    def get_class_counts(self, concept_scheme_id: str) -> list[ClassCounts]:
+    def get_class_counts(
+        self, concept_scheme_id: str, dataset_id: str | None = None
+    ) -> list[ClassCounts]:
         """
         Count the individuals, domain property definitions and outgoing relationships per class.
 
         Args:
             concept_scheme_id: The ID of the concept scheme
+            dataset_id: Optional dataset whose individuals and relationships to count
 
         Returns:
             One ClassCounts per class in the scheme
@@ -826,7 +841,7 @@ class OntologyService:
             EntityNotFoundError: If the scheme does not exist
         """
         self.get_concept_scheme(concept_scheme_id)
-        return self._repository.count_by_class(concept_scheme_id)
+        return self._repository.count_by_class(concept_scheme_id, dataset_id=dataset_id)
 
     def get_concept_scheme(self, concept_scheme_id: str) -> ConceptScheme:
         """
@@ -1927,6 +1942,7 @@ class OntologyService:
         sort_by: str | None = None,
         sort_order: Literal["asc", "desc"] = "asc",
         query: str | None = None,
+        dataset_id: str | None = None,
     ) -> list[Relationship]:
         """
         Retrieve relationships with optional filtering, pagination, sorting, and text search.
@@ -1941,6 +1957,7 @@ class OntologyService:
             sort_order: Sort direction (asc or desc)
             query: Case-insensitive text matched against the source title, target title,
                 or property definition title/identifier
+            dataset_id: Optional dataset to filter by (the source individual's)
 
         Returns:
             List of Relationship entities
@@ -1954,6 +1971,7 @@ class OntologyService:
             sort_by=sort_by,
             sort_order=sort_order,
             query=query,
+            dataset_id=dataset_id,
         )
 
     def count_relationships(
@@ -1962,6 +1980,7 @@ class OntologyService:
         target_id: str | None = None,
         property_id: str | None = None,
         query: str | None = None,
+        dataset_id: str | None = None,
     ) -> int:
         """
         Count relationships, optionally filtered by source, target, property, or text.
@@ -1972,12 +1991,17 @@ class OntologyService:
             property_id: Optional property definition ID to filter by (relationship type)
             query: Case-insensitive text matched against the source title, target title,
                 or property definition title/identifier
+            dataset_id: Optional dataset to filter by (the source individual's)
 
         Returns:
             Total count of relationships
         """
         return self._repository.count_relationships(
-            source_id=source_id, target_id=target_id, property_id=property_id, query=query
+            source_id=source_id,
+            target_id=target_id,
+            property_id=property_id,
+            query=query,
+            dataset_id=dataset_id,
         )
 
     def delete_relationship(self, relationship_id: str) -> None:
@@ -2549,6 +2573,8 @@ class OntologyService:
             EntityNotFoundError: If the concept scheme or target taxonomy does not exist
             DuplicateEntityError: If the title already exists in the target taxonomy
             ValueError: If the title is empty or color is invalid
+            DatasetMismatchError: If it moves to another taxonomy while its classes
+                have individuals (the repository refuses it)
         """
         scheme = self._repository.get_concept_scheme(concept_scheme_id)
         if scheme is None:
@@ -2703,13 +2729,14 @@ class OntologyService:
         source_run_id: str | None = None,
         external_references: list[ExternalReference] | None = None,
         data_properties: list[DataPropertyValue] | None = None,
+        dataset_id: str | None = None,
     ) -> Individual:
         """
         Create a new individual instance of one or more classes.
 
         Validates that:
-        - All classes exist
-        - The title is unique within each class
+        - All classes exist, in the dataset's taxonomy
+        - The title is unique within each class, in the dataset
         - At least one class is provided
 
         Args:
@@ -2722,13 +2749,18 @@ class OntologyService:
                 sources (e.g. an importer's idempotency key)
             data_properties: Optional attribute values (not checked against
                 the classes' attribute definitions here; callers validate)
+            dataset_id: The dataset to create it in; may be omitted while the
+                classes' taxonomy has at most one (see resolve_dataset_id)
 
         Returns:
             The created Individual
 
         Raises:
-            EntityNotFoundError: If any class does not exist
-            DuplicateEntityError: If an individual with this title already exists in any class
+            EntityNotFoundError: If any class, or the named dataset, does not exist
+            DuplicateEntityError: If an individual with this title already exists in any
+                class, in the dataset
+            DatasetRequiredError: If none is named and the taxonomy has several datasets
+            DatasetMismatchError: If a class is outside the dataset's taxonomy
             ValueError: If title is empty, whitespace, or no classes provided
         """
         if not title or not title.strip():
@@ -2752,13 +2784,29 @@ class OntologyService:
             _check_not_derived(cls)
             parent_classes.append(cls)
 
-        # Check for duplicate title within each class
-        for class_id in class_ids_list:
-            existing = self._repository.list_individuals(class_id=class_id, limit=None)
-            if any(ind.title == title for ind in existing):
-                raise DuplicateEntityError(
-                    f"Individual with title '{title}' already exists in class" f" '{class_id}'"
+        taxonomy_id = parent_classes[0].taxonomy_id
+        outside = [c.title for c in parent_classes if c.taxonomy_id != taxonomy_id]
+        if outside:
+            raise DatasetMismatchError(
+                f"Classes {outside} are in another taxonomy than '{parent_classes[0].title}';"
+                " an individual's classes must all be in its dataset's taxonomy"
+            )
+        # A taxonomy without datasets has no individuals to clash with: its
+        # `default` is made only once nothing else can refuse the create.
+        if dataset_id is not None or self._repository.list_datasets(taxonomy_id=taxonomy_id):
+            dataset_id = resolve_dataset_id(self._repository, taxonomy_id, dataset_id)
+            # Check for duplicate title within each class, in the dataset
+            for class_id in class_ids_list:
+                existing = self._repository.list_individuals(
+                    class_id=class_id, limit=None, dataset_id=dataset_id
                 )
+                if any(ind.title == title for ind in existing):
+                    raise DuplicateEntityError(
+                        f"Individual with title '{title}' already exists in class"
+                        f" '{class_id}'"
+                    )
+        else:
+            dataset_id = resolve_dataset_id(self._repository, taxonomy_id)
 
         individual_id = str(uuid4())
         now = datetime.now(timezone.utc)
@@ -2772,6 +2820,7 @@ class OntologyService:
             source_run_id=source_run_id,
             external_references=list(external_references or []),
             data_properties=list(data_properties or []),
+            dataset_id=dataset_id,
         )
         individual = self._repository.save_individual(individual)
         self._sync_individual_index(individual_id, title, description)
@@ -2785,6 +2834,7 @@ class OntologyService:
                 class_ids=class_ids_list,
                 external_references=_serialize_external_references(individual.external_references),
                 data_properties=_serialize_data_properties(individual.data_properties),
+                dataset_id=dataset_id,
             )
         )
         if failures:
@@ -2841,6 +2891,7 @@ class OntologyService:
         sort_order: Literal["asc", "desc"] = "asc",
         query: str | None = None,
         ids: list[str] | None = None,
+        dataset_id: str | None = None,
     ) -> list[Individual]:
         """
         Retrieve individuals with optional filtering, sorting, text search and pagination.
@@ -2853,6 +2904,7 @@ class OntologyService:
             sort_order: Sort direction (asc or desc)
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of individual IDs to restrict results to
+            dataset_id: Optional dataset to filter by
 
         Returns:
             List of individuals matching the filter
@@ -2865,6 +2917,7 @@ class OntologyService:
             sort_order=sort_order,
             query=query,
             ids=ids,
+            dataset_id=dataset_id,
         )
 
     def count_individuals(
@@ -2872,19 +2925,23 @@ class OntologyService:
         class_id: str | None = None,
         query: str | None = None,
         ids: list[str] | None = None,
+        dataset_id: str | None = None,
     ) -> int:
         """
-        Count individuals, optionally filtered by class, text search or ids.
+        Count individuals, optionally filtered by class, text search, ids or dataset.
 
         Args:
             class_id: Optional class ID to filter by
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of individual IDs to restrict the count to
+            dataset_id: Optional dataset to filter by
 
         Returns:
             The count of individuals
         """
-        return self._repository.count_individuals(class_id=class_id, query=query, ids=ids)
+        return self._repository.count_individuals(
+            class_id=class_id, query=query, ids=ids, dataset_id=dataset_id
+        )
 
     def update_individual(
         self,
@@ -2950,7 +3007,9 @@ class OntologyService:
             if title_changed:
                 # Check uniqueness within each parent class
                 for class_id in individual.class_ids:
-                    existing = self._repository.list_individuals(class_id=class_id, limit=None)
+                    existing = self._repository.list_individuals(
+                        class_id=class_id, limit=None, dataset_id=individual.dataset_id
+                    )
                     if any(ind.title == title and ind.id != individual_id for ind in existing):
                         raise DuplicateEntityError(
                             f"Individual with title '{title}' already exists in class"
@@ -3059,7 +3118,11 @@ class OntologyService:
         individual = self._repository.get_individual(individual_id)
         if individual is None:
             raise EntityNotFoundError("Individual", individual_id)
+        self._delete_individual(individual)
 
+    def _delete_individual(self, individual: Individual) -> int:
+        """Delete an individual and its relationships, recording each; return the edge count."""
+        individual_id = individual.id
         # Find and delete all relationships where this individual is source or target
         orphaned_relationships = self._repository.list_relationships(
             source_id=individual_id, limit=None
@@ -3121,6 +3184,94 @@ class OntologyService:
                     "Graph invalidation event may not be recorded in audit trail.",
                     handler_names,
                 )
+        return len(orphaned_relationships)
+
+    # Dataset operations
+
+    def list_datasets(self, taxonomy_id: str | None = None) -> list[Dataset]:
+        """
+        List datasets, optionally those of one taxonomy, by title.
+
+        Args:
+            taxonomy_id: Optional taxonomy to filter by
+
+        Returns:
+            List of datasets
+        """
+        return self._repository.list_datasets(taxonomy_id=taxonomy_id)
+
+    def get_dataset(self, dataset_id: str) -> Dataset:
+        """
+        Retrieve a dataset by ID.
+
+        Raises:
+            EntityNotFoundError: If the dataset does not exist
+        """
+        dataset = self._repository.get_dataset(dataset_id)
+        if dataset is None:
+            raise EntityNotFoundError("Dataset", dataset_id)
+        return dataset
+
+    def create_dataset(self, taxonomy_id: str, identifier: str, title: str) -> Dataset:
+        """
+        Create a dataset over a taxonomy's schema. A direct action, not a proposal.
+
+        Args:
+            taxonomy_id: The taxonomy whose schema the dataset's data uses
+            identifier: Slug, unique within the taxonomy
+            title: Display name
+
+        Returns:
+            The created Dataset
+
+        Raises:
+            EntityNotFoundError: If the taxonomy does not exist
+            DuplicateEntityError: If the taxonomy already has a dataset with this identifier
+            ValueError: If the identifier or title is invalid
+        """
+        self.get_taxonomy(taxonomy_id)
+        now = datetime.now(timezone.utc)
+        return self._repository.save_dataset(
+            Dataset(
+                id=str(uuid4()),
+                taxonomy_id=taxonomy_id,
+                identifier=identifier,
+                title=title,
+                created_at=now,
+                last_modified=now,
+            )
+        )
+
+    def delete_dataset(self, dataset_id: str) -> DatasetDeletion:
+        """
+        Delete a dataset with its individuals and their relationships. A direct
+        action, not a proposal: each individual and relationship it removes is
+        recorded like any delete, but the dataset itself can't be restored.
+
+        Args:
+            dataset_id: The dataset to delete
+
+        Returns:
+            What was removed
+
+        Raises:
+            EntityNotFoundError: If the dataset does not exist
+        """
+        self.get_dataset(dataset_id)
+        individual_count = relationship_count = 0
+        scope = self._transaction_scope.atomic() if self._transaction_scope else nullcontext()
+        with scope:
+            for individual in self._repository.list_individuals(
+                limit=None, dataset_id=dataset_id
+            ):
+                relationship_count += self._delete_individual(individual)
+                individual_count += 1
+            self._repository.delete_dataset(dataset_id)
+        return DatasetDeletion(
+            dataset_id=dataset_id,
+            individual_count=individual_count,
+            relationship_count=relationship_count,
+        )
 
     def add_class_to_individual(self, individual_id: str, class_id: str) -> Individual:
         """
@@ -3159,8 +3310,11 @@ class OntologyService:
         if class_id in individual.class_ids:
             raise ValueError(f"Class {class_id} is already a parent of this individual")
 
-        # Check for duplicate title within the target class before modifying the individual
-        existing = self._repository.list_individuals(class_id=class_id, limit=None)
+        # Check for duplicate title within the target class, in the individual's
+        # dataset, before modifying the individual
+        existing = self._repository.list_individuals(
+            class_id=class_id, limit=None, dataset_id=individual.dataset_id
+        )
         if any(ind.title == individual.title for ind in existing):
             raise DuplicateEntityError(
                 f"Individual with title '{individual.title}' already exists in class"

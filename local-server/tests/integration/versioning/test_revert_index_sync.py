@@ -67,6 +67,7 @@ from domain.pipelines.individual_extraction.apply_service import (
 from domain.versioning.revert_service import RevertService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.utils.parent_rows import create_batch_row
+from tests.utils.datasets import save_in_dataset
 
 TAXONOMY_ID = "tx-idx"
 SCHEME_ID = "cs-idx"
@@ -321,8 +322,7 @@ def test_delete_then_revert_restores_individual_exactly_with_its_relationships(
     ontology_repo.save_property_definition(
         PropertyDefinition(id=PROP_ID, identifier="partners_with", title="partners with")
     )
-    ontology_repo.save_individual(
-        Individual(
+    save_in_dataset(ontology_repo, Individual(
             id="ind-acme",
             class_ids=[CLASS_ID, OTHER_CLASS_ID],
             title="Acme Corp",
