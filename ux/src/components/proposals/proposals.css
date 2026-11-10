@@ -587,6 +587,12 @@
     margin-left: auto;
   }
 
+  .op-decision__impact {
+    margin: 4px 0 0;
+    padding-left: 18px;
+    list-style: disc;
+  }
+
   .op-decision__actions {
     display: flex;
     flex-wrap: wrap;

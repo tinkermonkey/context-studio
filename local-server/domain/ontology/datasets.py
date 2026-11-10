@@ -22,6 +22,18 @@ from domain.ontology.ports import OntologyRepository
 DEFAULT_DATASET_IDENTIFIER = "default"
 
 
+def yielding_dataset_ids(
+    repo: OntologyRepository, taxonomy_id: str | None = None
+) -> frozenset[str]:
+    """
+    The datasets that yield to the schema (optionally of one taxonomy): schema
+    operations never block on their data, which follows the schema instead.
+    """
+    return frozenset(
+        d.id for d in repo.list_datasets(taxonomy_id=taxonomy_id) if d.yields_to_schema
+    )
+
+
 def resolve_dataset_id(
     repo: OntologyRepository, taxonomy_id: str, dataset_id: str | None = None
 ) -> str:

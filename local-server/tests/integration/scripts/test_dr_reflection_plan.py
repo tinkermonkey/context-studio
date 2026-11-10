@@ -365,7 +365,8 @@ def test_deleting_an_in_use_relationship_type_fails_and_changes_nothing(parts):
     assert op.status is OperationStatus.FAILED
     assert (
         op.reason
-        == f"error: PropertyDefinition '{delivers.id}' is in use by {IN_USE} relationship(s)"
+        == f"error: PropertyDefinition '{delivers.id}' is in use by {IN_USE} relationship(s):"
+        f" default {IN_USE}"
     )
     assert repo.get_property_definition(delivers.id) is not None
     assert all(repo.get_relationship(r) is not None for r in rel_ids)

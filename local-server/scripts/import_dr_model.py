@@ -24,8 +24,12 @@ A relationship counts as the model's only if its triple appears in a committed
 version of relationships.yaml, so the viewer dir must be a git checkout.
 Relationships users drew between DR individuals are never touched.
 
+The model loads into a named dataset of the taxonomy, `context-studio` unless
+`--dataset` names another; it is created if missing and flagged as yielding to
+the schema, so spec proposals never block on it (#1485).
+
 Usage (from local-server/, venv active):
-    python scripts/import_dr_model.py [--viewer-dir PATH] [--prune]
+    python scripts/import_dr_model.py [--viewer-dir PATH] [--dataset ID] [--prune]
 """
 
 import argparse
@@ -57,11 +61,14 @@ from domain.ontology.events import (
 from domain.ontology.ports import EmbeddingService, OntologyRepository
 from domain.ontology.services import OntologyService
 from scripts.dr_model_loader import (
+    DR_MODEL_DATASET,
     ModelImportSummary,
     find_prunable_relationships,
     import_dr_model,
+    model_dataset,
     prune_relationships,
 )
+from scripts.dr_ontology_loader import DR_TAXONOMY_IDENTIFIER
 
 # local-server/scripts/../.. == the context-studio repo root, which holds
 # documentation-robotics/model/.
@@ -101,8 +108,13 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=DEFAULT_VIEWER_DIR,
         help=(
-            "Directory containing documentation-robotics/model/ " f"(default: {DEFAULT_VIEWER_DIR})"
+            f"Directory containing documentation-robotics/model/ (default: {DEFAULT_VIEWER_DIR})"
         ),
+    )
+    parser.add_argument(
+        "--dataset",
+        default=DR_MODEL_DATASET,
+        help=f"Identifier of the dataset to load into (default: {DR_MODEL_DATASET})",
     )
     parser.add_argument(
         "--prune",
@@ -149,7 +161,11 @@ def print_summary(summary: ModelImportSummary) -> None:
 
 
 def report_and_prune(
-    service: OntologyService, repo: OntologyRepository, viewer_dir: Path, prune: bool
+    service: OntologyService,
+    repo: OntologyRepository,
+    viewer_dir: Path,
+    prune: bool,
+    dataset_id: str | None = None,
 ) -> bool:
     """
     List relationships the model no longer has; delete them when `prune` is set.
@@ -157,7 +173,7 @@ def report_and_prune(
     Returns False when the model's history cannot be read, so nothing could be checked.
     """
     try:
-        prunable = find_prunable_relationships(repo, viewer_dir)
+        prunable = find_prunable_relationships(repo, viewer_dir, dataset_id)
     except ValueError as exc:
         print(f"Prune check failed: {exc}", file=sys.stderr)
         return False
@@ -196,15 +212,16 @@ def main() -> int:
     print(f"Importing DR model from {viewer_dir} ...")
     try:
         summary = import_dr_model(
-            ontology_service, cast(OntologyRepository, ontology_repo), viewer_dir
+            ontology_service, cast(OntologyRepository, ontology_repo), viewer_dir, args.dataset
         )
     except (FileNotFoundError, ValueError) as exc:
         print(f"Import failed: {exc}", file=sys.stderr)
         return 1
     print_summary(summary)
-    prune_check_ok = report_and_prune(
-        ontology_service, cast(OntologyRepository, ontology_repo), viewer_dir, args.prune
-    )
+    repo = cast(OntologyRepository, ontology_repo)
+    taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    dataset = model_dataset(ontology_service, repo, taxonomy.id, args.dataset)  # type: ignore[union-attr]
+    prune_check_ok = report_and_prune(ontology_service, repo, viewer_dir, args.prune, dataset.id)
 
     print("Reindexing individual and schema vector indexes ...")
     individuals_indexed = SqliteIndividualVectorIndex(
