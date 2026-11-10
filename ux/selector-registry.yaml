@@ -2910,6 +2910,119 @@ selectors:
     component: src/components/proposals/ProposalsListPage.tsx
     description: "Needs-decision \"N of M\" label (failed operations included) and decided ProgressBar in a list row, by proposal id"
 
+  # Claims (/app/claims): a taxonomy's triaged claims and their verdicts (#1524)
+  - selector: claims-page
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Root of the claims page"
+  - selector: claims-export-button
+    component: src/components/claims/ClaimsPage.tsx
+    description: "PageHeader action: downloads the claims matching the filters as JSONL; disabled without a taxonomy"
+  - selector: claims-filters
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Filter row: taxonomy, triage validity, triage and verdict filters, subject picker, count"
+  - selector: claims-taxonomy-filter
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Taxonomy FilterDropdown trigger (the claims API is per taxonomy)"
+  - selector: claims-validity-filter
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Triage validity FilterDropdown trigger (any, or one validity the triage chose)"
+  - selector: claims-triage-filter
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Triage SegmentedControl (radiogroup \"Triage\"): all, triaged, untriaged"
+  - selector: claims-verdict-filter
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Verdict SegmentedControl (radiogroup \"Verdict\"): all, with verdict, no verdict"
+  - selector: claims-subject-filter
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Subject class picker (EntitySearchPicker); only claims about the picked class"
+  - selector: claims-count
+    component: src/components/claims/ClaimsPage.tsx
+    description: "\"N claims\" total matching the filters"
+  - selector: claims-pick-taxonomy
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Prompt shown until a taxonomy is chosen"
+  - selector: claims-table
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Wrapper of the claims table and its pager; a row click opens the claim in the inspector"
+  - selector: claims-empty
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Empty-state text when no claim matches the filters"
+  - selector: claim-row-*
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Claim text and key cell in a table row, by claim id"
+  - selector: claim-triage-cell-*
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Triage validity chip and its probability in a table row, by claim id"
+  - selector: claim-verdict-cell-*
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Verdict validity chip in a table row, by claim id (absent without a verdict)"
+  - selector: claim-inspector
+    component: src/components/claims/ClaimInspector.tsx
+    description: "Root of the selected claim's inspector (in the split-2 inspector column)"
+  - selector: claim-inspector-close
+    component: src/components/claims/ClaimInspector.tsx
+    description: "Closes the inspector (clears the selection)"
+  - selector: claim-text
+    component: src/components/claims/ClaimInspector.tsx
+    description: "The claim's full text"
+  - selector: claim-proposed-change
+    component: src/components/claims/ClaimInspector.tsx
+    description: "The change the note proposed, when it has one"
+  - selector: claim-note
+    component: src/components/claims/ClaimInspector.tsx
+    description: "The source note's full text"
+  - selector: claim-entities
+    component: src/components/claims/ClaimInspector.tsx
+    description: "Entities section: subject, affected entities and unresolved references"
+  - selector: claim-subject-link-*
+    component: src/components/claims/ClaimInspector.tsx
+    description: "The claim's subject: a link to its entity page once resolved, by entity id"
+  - selector: claim-entity-*
+    component: src/components/claims/ClaimInspector.tsx
+    description: "An affected entity: a link to its page (attributes and properties link to their class), by entity id; plain mono text while unresolved"
+  - selector: claim-unresolved-refs
+    component: src/components/claims/ClaimInspector.tsx
+    description: "List of references that matched no entity, as plain mono text"
+  - selector: claim-triage
+    component: src/components/claims/ClaimInspector.tsx
+    description: "The decision model's triage: validity, probabilities, scores, model and cost"
+  - selector: claim-triage-validity-*
+    component: src/components/claims/ClaimInspector.tsx
+    description: "A validity's probability row (ProgressBar) in the triage, by validity; the chosen one is marked"
+  - selector: claim-triage-category-*
+    component: src/components/claims/ClaimInspector.tsx
+    description: "A category's probability row in the triage, by category (top four)"
+  - selector: claim-untriaged
+    component: src/components/claims/ClaimInspector.tsx
+    description: "Note shown instead of the triage when the claim is not triaged"
+  - selector: claim-verdict-form
+    component: src/components/claims/ClaimVerdictForm.tsx
+    description: "Verdict form (form \"Verdict\"): validity, category, severity, fix scope, rationale"
+  - selector: claim-verdict-recorded
+    component: src/components/claims/ClaimVerdictForm.tsx
+    description: "The recorded verdict: validity chip, who adjudicated and when"
+  - selector: claim-verdict-validity
+    component: src/components/claims/ClaimVerdictForm.tsx
+    description: "Validity Select (required; error clears on change)"
+  - selector: claim-verdict-category
+    component: src/components/claims/ClaimVerdictForm.tsx
+    description: "Category Select: none, DR's categories, and the triage's or verdict's own"
+  - selector: claim-verdict-severity
+    component: src/components/claims/ClaimVerdictForm.tsx
+    description: "Severity Select: not set, or 0 cosmetic to 3 blocking"
+  - selector: claim-verdict-fix-scope
+    component: src/components/claims/ClaimVerdictForm.tsx
+    description: "Fix scope Select: not set, or 0 wording to 3 roadmap"
+  - selector: claim-verdict-rationale
+    component: src/components/claims/ClaimVerdictForm.tsx
+    description: "Rationale TextArea"
+  - selector: claim-verdict-submit
+    component: src/components/claims/ClaimVerdictForm.tsx
+    description: "Saves the verdict (PUT /api/claims/{id}/verdict)"
+  - selector: claim-verdict-clear
+    component: src/components/claims/ClaimVerdictForm.tsx
+    description: "Clears the recorded verdict (DELETE /api/claims/{id}/verdict); shown only with one"
+
   # Review queue: proposal detail (/app/proposals/$proposalId)
   - selector: proposal-page
     component: src/components/proposals/ProposalDetailPage.tsx

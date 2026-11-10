@@ -73,6 +73,10 @@ export const QUERY_KEYS = {
   // Under the proposal's key, so invalidating the proposals refreshes who decided what.
   changeProposalDecisions: (id: string) => ["change-proposals", id, "decisions"] as const,
   approvalPolicy: (taxonomyId: string) => ["approval-policy", taxonomyId] as const,
+  // Claims (/api/taxonomies/{id}/claims, /api/claims/{id}): the root refreshes lists and claims.
+  claimsRoot: ["claims"] as const,
+  claims: (taxonomyId: string, params?: object) => ["claims", "list", taxonomyId, params] as const,
+  claim: (id: string) => ["claims", "by-id", id] as const,
   // Reference
   referenceSearch: (q?: string) => ["reference-search", q] as const,
   referenceStatus: ["reference-status"] as const,

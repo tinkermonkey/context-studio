@@ -293,6 +293,7 @@ function AppShell() {
                 icon: "gitBranch",
                 count: openTotal || undefined,
               },
+              { id: "claims", label: "Claims", icon: "check" },
               {
                 id: "schema",
                 label: "Schema",
