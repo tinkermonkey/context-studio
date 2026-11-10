@@ -1,7 +1,7 @@
 """
 Reading a Documentation Robotics (DR) spec checkout: the manifest, design
 charter, layer descriptions, predicate catalog, node schemas (with their
-attributes) and relationship schemas, and the spec's revision.
+attributes and DR fields) and relationship schemas, and the spec's revision.
 
 Shared by the DR importer (`scripts/dr_ontology_loader.py`) and the drift
 planner (`dr_drift.py`), so both read the spec the same way.
@@ -52,13 +52,23 @@ class AttributeSchemaRecord:
 
 @dataclass(frozen=True)
 class NodeSchemaRecord:
-    """One `schemas/nodes/**/*.node.schema.json` file."""
+    """
+    One `schemas/nodes/**/*.node.schema.json` file.
+
+    Its DR fields are the class's operational definition (#1513): `standard`
+    (x-dr-standard), `evidence` (x-dr-evidence) and `distinguish`
+    (x-dr-distinguish: other node id -> when to use that type instead, in the
+    schema's order).
+    """
 
     spec_node_id: str
     layer_id: str
     title: str
     description: str | None
     attributes: tuple[AttributeSchemaRecord, ...] = ()
+    standard: str | None = None
+    evidence: tuple[str, ...] = ()
+    distinguish: tuple[tuple[str, str], ...] = ()
 
 
 def _load_json(path: Path) -> Any:
@@ -184,9 +194,30 @@ def iter_node_schemas(spec_dir: Path) -> Iterator[NodeSchemaRecord]:
                 title=data["title"],
                 description=data.get("description"),
                 attributes=_attribute_records(path, props.get("attributes") or {}),
+                **_node_fields(path, data),
             )
         except KeyError as exc:
             raise ValueError(f"Node schema {path} is missing required key {exc}") from exc
+
+
+def _node_fields(path: Path, data: dict[str, Any]) -> dict[str, Any]:
+    """A node schema's DR fields (x-dr-standard, -evidence, -distinguish), checked."""
+    standard = data.get("x-dr-standard")
+    evidence = data.get("x-dr-evidence", [])
+    distinguish = data.get("x-dr-distinguish", {})
+    if standard is not None and not isinstance(standard, str):
+        raise ValueError(f"Node schema {path}: x-dr-standard is not a string")
+    if not isinstance(evidence, list) or not all(isinstance(e, str) for e in evidence):
+        raise ValueError(f"Node schema {path}: x-dr-evidence is not a string list")
+    if not isinstance(distinguish, dict) or not all(
+        isinstance(text, str) for text in distinguish.values()
+    ):
+        raise ValueError(f"Node schema {path}: x-dr-distinguish is not a map of node id to text")
+    return {
+        "standard": standard or None,
+        "evidence": tuple(evidence),
+        "distinguish": tuple(distinguish.items()),
+    }
 
 
 def _attribute_records(path: Path, attributes: dict[str, Any]) -> tuple[AttributeSchemaRecord, ...]:

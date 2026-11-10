@@ -11,7 +11,10 @@ Everything the DR importer loads is compared, matched by DR id (the
   spec dropped a delete (after the relationship-type deletes);
 - schemes, by layer: title, and description when the layer file has one; a new
   layer is a create;
-- classes, by spec node id: title, description, scheme, DR reference;
+- classes, by spec node id: title, description, scheme, DR reference, and
+  their operational definition (#1513) from x-dr-standard, x-dr-evidence and
+  x-dr-distinguish (whose keys name types new in the spec only once those
+  types' creates have applied);
 - attributes, by DR attribute name within their class: title, description,
   datatype, required, allowed values, and the rest of their JSON Schema on
   their DR reference;
@@ -110,6 +113,51 @@ def _property_title(record: RelationshipSchemaRecord) -> str:
 def _type_name(spec_node_id: str) -> str:
     """'application.capability' -> 'capability'."""
     return spec_node_id.partition(".")[2]
+
+
+def _match(
+    node: NodeSchemaRecord,
+    by_id: dict[str, Class],
+    gone: dict[str, list[tuple[str, Class]]],
+    moved: set[str],
+) -> tuple[Class | None, str | None]:
+    """
+    The class a node type is now, and its old DR id when it moved: the class
+    with its DR id, else the one class of the same type name that left the
+    spec (and no other node took). Adds that old id to `moved`.
+    """
+    cls = by_id.get(node.spec_node_id)
+    if cls is not None:
+        return cls, None
+    candidates = gone.get(_type_name(node.spec_node_id), [])
+    if len(candidates) == 1 and candidates[0][0] not in moved:
+        old_id, cls = candidates[0]
+        moved.add(old_id)
+        return cls, old_id
+    return None, None
+
+
+def _definition(
+    node: NodeSchemaRecord, class_ids: dict[str, str], own_id: str | None = None
+) -> dict[str, Any]:
+    """
+    A node schema's DR fields as its class's operational definition (#1513),
+    x-dr-distinguish keys resolved to existing classes (others left out).
+    """
+    return {
+        "standard_reference": node.standard,
+        "evidence_signals": list(node.evidence),
+        "distinguish_from": [
+            {"class_id": class_ids[key], "when": when}
+            for key, when in node.distinguish
+            if key in class_ids and class_ids[key] != own_id
+        ],
+    }
+
+
+def _as_distinguish(entries: list[dict[str, str]], dr_ids: dict[str, str]) -> dict[str, str]:
+    """A class's distinguish_from as x-dr-distinguish: DR node id (else class id) -> when."""
+    return {dr_ids.get(e["class_id"], e["class_id"]): e["when"] for e in entries}
 
 
 class DrDriftPlanner:
@@ -395,6 +443,21 @@ class _Planner:
                 by_id[ref.identifier] = cls
             else:
                 gone.setdefault(_type_name(ref.identifier), []).append((ref.identifier, cls))
+        # The class each node type is now, matched as the loop below matches them,
+        # so x-dr-distinguish can name any of them (a type new in this spec has no
+        # class yet; the next re-import names it, once its create has applied).
+        existing: dict[str, str] = {}
+        matched: set[str] = set()
+        for node in nodes:
+            found, _ = _match(node, by_id, gone, matched)
+            if found is not None:
+                existing[node.spec_node_id] = found.id
+        dr_ids = {
+            cls.id: ref.identifier
+            for cls in self._taxonomy_classes()
+            if (ref := _dr_ref(cls)) is not None
+        }
+
         class_ids: dict[str, str] = {}
         moved: set[str] = set()
         for node in nodes:
@@ -404,13 +467,7 @@ class _Planner:
                     f"Node schema {node.spec_node_id} is in layer {node.layer_id!r}, which"
                     " the manifest doesn't list"
                 )
-            cls = by_id.get(node.spec_node_id)
-            old_id = None
-            if cls is None:
-                candidates = gone.get(_type_name(node.spec_node_id), [])
-                if len(candidates) == 1 and candidates[0][0] not in moved:
-                    old_id, cls = candidates[0]
-                    moved.add(old_id)
+            cls, old_id = _match(node, by_id, gone, moved)
             if cls is None:
                 identifier = slugify_spec_node_id(node.spec_node_id)
                 if self._repo.get_by_identifier(identifier) is not None:
@@ -427,13 +484,18 @@ class _Planner:
                         "description": node.description,
                         "identifier": identifier,
                         "external_references": [_reference(node.spec_node_id)],
+                        **_definition(node, existing),
                     },
                     node.spec_node_id,
                 )
                 continue
+            definition = _definition(node, existing, cls.id)
             pairs: dict[str, tuple[Any, Any]] = {
                 "title": (cls.title, node.title),
                 "description": (_text(cls.description), _text(node.description)),
+                "standard_reference": (cls.standard_reference, definition["standard_reference"]),
+                "evidence_signals": (cls.evidence_signals, definition["evidence_signals"]),
+                "distinguish_from": (cls.distinguish_from, definition["distinguish_from"]),
             }
             if old_id is not None:
                 pairs["external_references"] = (
@@ -443,7 +505,13 @@ class _Planner:
             move = None
             if cls.concept_scheme_id != scheme_id:
                 move = {"concept_scheme_id": scheme_id, "parent_class_id": None}
-            compare = {}
+            # distinguish shows in DR's terms, as x-dr-distinguish
+            compare = {
+                "distinguish_from": (
+                    _as_distinguish(cls.distinguish_from, dr_ids),
+                    _as_distinguish(definition["distinguish_from"], dr_ids),
+                )
+            }
             if old_id is not None:
                 compare["external_references"] = (old_id, node.spec_node_id)
             change = "move" if old_id is not None or move else "update"

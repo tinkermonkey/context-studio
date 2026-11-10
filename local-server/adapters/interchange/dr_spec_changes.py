@@ -31,7 +31,7 @@ MCP or in the app, exports as one `cs-dr-spec-changes/1` document:
         "previous_spec_node_id",      # move only: the id before it
         "layer_id",                   # spec_node_id's layer
         "identifier",                 # Context Studio's identifier for the class
-        "set": {"title"?, "description"?},
+        "set": {"title"?, "description"?, "standard"?, "evidence"?, "distinguish"?},
         "replacement_spec_node_id",   # delete only: the class the delete names as its
                                       # replacement (followed through the proposal's other deletes)
         "note",                       # delete only, when that chain is a cycle
@@ -110,6 +110,19 @@ a `rename-type` record, so `dr upgrade` moves model elements of the old type
 to the new one. Until DR's spec with a move is re-imported, the moved class
 keeps its old DR id; the importer refuses a spec with a moved node type,
 as it can't follow one yet.
+
+A node type's `standard`, `evidence` and `distinguish` are its x-dr-standard
+(a string), x-dr-evidence (a list of strings) and x-dr-distinguish (other node
+id -> when to use that type instead): its class's operational definition
+(standard_reference, evidence_signals, distinguish_from; #1513), with each
+distinguish_from class written as its DR node id. A create gives those it
+has; an update gives those it changed: null for standard or distinguish, or
+an empty evidence list, removes it. `distinguish` is always the whole map. Its
+keys must name DR node types once the proposal is applied, never the type
+itself; a key naming a type by the id a move of this proposal replaced (the
+class keeps it until re-import) goes out under the new id. The export refuses
+a key naming the type itself, a class that no longer exists, or no DR node
+type (one the proposal deleted is gone), as DR refuses them on landing.
 
 An attribute's `set` holds the attribute definition's datatype (the JSON
 Schema type), is_required (whether the node's required list names it),
@@ -241,6 +254,7 @@ def spec_changes_for(
         else:
             change.update(decided_fields((decisions or {}).get(operation.id)))
             found_in.append(change)  # type: ignore[union-attr]
+    _check_distinguish(node_changes, repo)
     retirements, unretired = _retirements(proposal, repo, decisions)
     return {
         "format": SPEC_CHANGES_FORMAT,
@@ -649,9 +663,7 @@ def _predicate_change(
     """
     label = f"seq {operation.seq}"
     predicate_id = (
-        operation.result_entity_id
-        if operation.op is OperationType.CREATE
-        else operation.target_id
+        operation.result_entity_id if operation.op is OperationType.CREATE else operation.target_id
     )
     predicate = repo.get_predicate(predicate_id or "")
     if predicate is None:
@@ -887,7 +899,7 @@ def _node_change(
     """
     label = f"seq {operation.seq}"
     if operation.op is OperationType.CREATE:
-        return _node_create(operation, refs, layers, label)
+        return _node_create(operation, repo, refs, layers, label)
     if operation.op is OperationType.MOVE:
         return _node_move(operation, repo, refs, layers, label)
     if operation.op is OperationType.UPDATE:
@@ -897,6 +909,7 @@ def _node_change(
 
 def _node_create(
     operation: ProposedOperation,
+    repo: OntologyRepository,
     refs: dict[str, str | None],
     layers: dict[str, str | None],
     label: str,
@@ -918,6 +931,8 @@ def _node_create(
         )
     _check_node_id(node_id, layer, label)
     values = {key: fields[key] for key in ("title", "description") if fields.get(key) is not None}
+    node_fields = _node_fields(fields, repo, label)
+    values.update((key, value) for key, value in node_fields.items() if value)
     return _node_entry(operation, "create", node_id, fields.get("identifier"), values)
 
 
@@ -952,6 +967,13 @@ def _node_update(
         for key in ("title", "description")
         if key in fields and fields[key] != base.get(key)
     }
+    changed = {
+        name: fields[name]
+        for name in _NODE_FIELDS
+        if name in fields and (fields[name] or None) != (base.get(name) or None)
+    }
+    for key, value in _node_fields(changed, repo, label).items():
+        values[key] = value or ([] if key == "evidence" else None)
     if not values:
         return "it changes nothing DR's spec holds for a node type"
     return _node_entry(operation, "update", node_id, cls.identifier, values)
@@ -1024,6 +1046,106 @@ def _node_delete(
             )
         entry["replacement_spec_node_id"] = replacement_id
     return entry
+
+
+# A class's operational definition field -> its node type's DR field in `set`.
+_NODE_FIELDS = {
+    "standard_reference": "standard",
+    "evidence_signals": "evidence",
+    "distinguish_from": "distinguish",
+}
+
+
+def _node_fields(fields: Mapping[str, Any], repo: OntologyRepository, label: str) -> dict[str, Any]:
+    """
+    The DR node fields (standard, evidence, distinguish) for the operational
+    definition fields given, distinguish_from's classes as their DR node ids.
+
+    Raises:
+        ValueError: If distinguish_from names a class that no longer exists or
+            that is not a DR node type
+    """
+    values: dict[str, Any] = {}
+    for name, key in _NODE_FIELDS.items():
+        if name not in fields:
+            continue
+        value = fields[name]
+        if name == "distinguish_from":
+            value = {_dr_node_id(e["class_id"], repo, label): e["when"] for e in value or []}
+        values[key] = value
+    return values
+
+
+def _dr_node_id(class_id: str, repo: OntologyRepository, label: str) -> str:
+    cls = repo.get_class(class_id)
+    node_id = dr_relationship_id(cls.external_references) if cls else None
+    if node_id is None:
+        raise ValueError(
+            f"{label}: its distinguish names {class_id}, which is not a DR node type"
+            f" ({'no such class' if cls is None else 'it has no DR reference'}), so DR"
+            " refuses it; name an existing node type"
+        )
+    return node_id
+
+
+def _check_distinguish(node_changes: list[dict[str, Any]], repo: OntologyRepository) -> None:
+    """
+    Check the distinguish maps the node changes set, and write each key under
+    the id its type has once the proposal's moves are applied: every key must
+    name a DR node type then (a class the proposal deleted is gone), and none
+    the type itself.
+
+    Raises:
+        ValueError: Naming the change and the key, when one is refused
+    """
+    moved = {
+        change["previous_spec_node_id"]: change["spec_node_id"]
+        for change in node_changes
+        if change["op"] == "move"
+    }
+    deleted = {change["spec_node_id"] for change in node_changes if change["op"] == "delete"}
+
+    def final(node_id: str) -> str:
+        seen = set()
+        while node_id in moved and node_id not in seen:
+            seen.add(node_id)
+            node_id = moved[node_id]
+        return node_id
+
+    known = {final(node_id) for node_id in _dr_node_ids(repo)} - deleted
+    for change in node_changes:
+        distinguish = change["set"].get("distinguish")
+        if not distinguish:
+            continue
+        label = f"seq {change['seq']}"
+        own = final(change["spec_node_id"])
+        written = {}
+        for key, text in distinguish.items():
+            node_id = final(key)
+            if node_id == own:
+                raise ValueError(
+                    f"{label}: its distinguish names {key}, the node type itself, which DR refuses"
+                )
+            if node_id not in known:
+                raise ValueError(
+                    f"{label}: its distinguish names {key}, which is not a DR node type once "
+                    "this proposal is applied, so DR refuses it; name an existing node type"
+                )
+            written[node_id] = text
+        change["set"]["distinguish"] = written
+
+
+def _dr_node_ids(repo: OntologyRepository) -> set[str]:
+    """The DR ids of the dr_spec taxonomy's classes, as the workspace has them now."""
+    taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    if taxonomy is None:
+        return set()
+    return {
+        node_id
+        for scheme in repo.list_concept_schemes(taxonomy_id=taxonomy.id, limit=None)
+        for cls in repo.list_classes(concept_scheme_id=scheme.id, limit=None)
+        if (node_id := dr_relationship_id(cls.external_references))
+    }
 
 
 def _node_entry(
