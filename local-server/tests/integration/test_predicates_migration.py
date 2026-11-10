@@ -1,11 +1,12 @@
 """
-Integration test for migration a042b463a6f2 (#1480): predicates become a per-taxonomy
+Integration test for migration 582c3af91abb (#1480): predicates become a per-taxonomy
 catalog table, relationship types point at one, and canonical_predicate stops being
 a column.
 
 Seeds a small database at the previous revision with a DR taxonomy carrying its
 catalog on the spec reference, a type with a domain class, a type known only
-through its edges, and a type with no taxonomy at all.
+through its edges, a type whose predicate isn't a valid verb, and a type with no
+taxonomy at all.
 """
 
 import json
@@ -21,8 +22,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 ALEMBIC_INI = os.path.join(
     os.path.dirname(__file__), "../../adapters/persistence/sqlite/alembic.ini"
 )
-REVISION = "a042b463a6f2"
-PREVIOUS_REVISION = "7512875103f3"
+REVISION = "582c3af91abb"
+PREVIOUS_REVISION = "fc64b1c76476"
 
 DR_CATALOG = {
     "navigates-to": {
@@ -117,6 +118,15 @@ def _seed(db: str) -> None:
             " created_at, attributes)"
             " VALUES ('rel-1', 'demo-protein', 'demo-gene', 'type-encoded', '2026-01-01', '{}')"
         )
+        # A predicate that isn't a valid verb (e.g. from an OWL label) is made one
+        _entity(
+            conn,
+            "type-odd",
+            "property_definition",
+            identifier="page_part_of_view",
+            canonical_predicate="Part Of (whole)",
+            domain_class_id="dr-page",
+        )
         # A type no taxonomy reaches
         _entity(conn, "type-orphan", "property_definition", identifier="orphan_type")
 
@@ -139,7 +149,9 @@ def test_upgrade_builds_the_catalogs_and_downgrade_restores_them(tmp_path, capsy
     upgrade(config, REVISION)
 
     assert "canonical_predicate" not in _columns(db)
-    assert "orphan_type" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "orphan_type" in out
+    assert "'Part Of (whole)' becomes 'part_of_whole'" in out
     predicates = {
         (taxonomy_id, identifier): (description, json.loads(refs))
         for taxonomy_id, identifier, description, refs in _rows(
@@ -150,6 +162,7 @@ def test_upgrade_builds_the_catalogs_and_downgrade_restores_them(tmp_path, capsy
         ("dr", "navigates-to"),
         ("dr", "accesses"),
         ("dr", "shows"),
+        ("dr", "part_of_whole"),
         ("demo", "encoded_by"),
     }
     description, refs = predicates[("dr", "navigates-to")]
@@ -182,6 +195,7 @@ def test_upgrade_builds_the_catalogs_and_downgrade_restores_them(tmp_path, capsy
     assert linked == {
         "type-nav": "dr:navigates-to",
         "type-extra": "dr:shows",
+        "type-odd": "dr:part_of_whole",
         "type-encoded": "demo:encoded_by",
         "type-orphan": None,
     }
@@ -200,6 +214,7 @@ def test_upgrade_builds_the_catalogs_and_downgrade_restores_them(tmp_path, capsy
     ) == {
         "type-nav": "navigates-to",
         "type-extra": "shows",
+        "type-odd": "part_of_whole",
         "type-encoded": "encoded_by",
         "type-orphan": None,
     }
@@ -207,4 +222,4 @@ def test_upgrade_builds_the_catalogs_and_downgrade_restores_them(tmp_path, capsy
     assert json.loads(dr_refs) == DR_REFS
 
     upgrade(config, REVISION)
-    assert len(_rows(db, "SELECT id FROM predicates")) == 4
+    assert len(_rows(db, "SELECT id FROM predicates")) == 5

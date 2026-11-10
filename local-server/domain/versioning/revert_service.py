@@ -13,6 +13,8 @@ from contextlib import nullcontext
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
+from domain.ontology.datasets import resolve_dataset_id
+from domain.ontology.entities import Individual
 from domain.ontology.events import GraphInvalidated
 from domain.ontology.snapshots import entity_field_names, entity_from_snapshot, entity_snapshot
 from domain.ontology.value_objects import DataPropertyValue, DataType, ExternalReference
@@ -288,9 +290,15 @@ class RevertService:
                     problems.append(f"{label}: no snapshot of the deleted entity")
                     continue
                 try:
-                    entity_from_snapshot(entity_type, snapshot, event.entity_id)
+                    entity = entity_from_snapshot(entity_type, snapshot, event.entity_id)
                 except ValueError as exc:
                     problems.append(f"{label}: {exc}")
+                    continue
+                dataset_id = getattr(entity, "dataset_id", None)
+                if dataset_id is not None and self._ontology_repo.get_dataset(dataset_id) is None:
+                    problems.append(
+                        f"{label}: its dataset {dataset_id} was deleted, so it can't be restored"
+                    )
         problems.extend(self._identifier_problems(pending))
         if problems:
             raise RevertRefusedError(
@@ -795,11 +803,25 @@ class RevertService:
             entity = entity_from_snapshot(entity_type, snapshot, entity_id)
             if entity_type == "class":
                 entity = self._with_scheme_taxonomy(entity)
+            elif entity_type == "individual" and entity.dataset_id is None:
+                entity = self._with_default_dataset(entity)
             save(entity)
             return True
         except Exception as exc:
             _logger.error(f"Failed to recreate {entity_type} {entity_id}: {exc}", exc_info=exc)
             raise
+
+    def _with_default_dataset(self, individual: Individual) -> Individual:
+        """
+        Give an individual from a snapshot taken before datasets existed the
+        dataset its taxonomy uses by default.
+        """
+        first_class = self._ontology_repo.get_class(individual.class_ids[0])
+        if first_class is not None:  # else saving it refuses the missing class
+            individual.dataset_id = resolve_dataset_id(
+                self._ontology_repo, first_class.taxonomy_id
+            )
+        return individual
 
     def _restore_entity_state(self, entity, state: dict) -> None:
         """Restore an entity's fields from a previous state dict."""

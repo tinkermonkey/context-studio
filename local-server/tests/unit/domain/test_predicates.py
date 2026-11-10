@@ -263,3 +263,39 @@ class TestProposals:
         assert ontology.get_property_definition(applied.result_entity_id).predicate_id == (
             house["part_of"]
         )
+
+    def test_a_new_domain_in_another_taxonomy_needs_the_predicate_there(
+        self, proposals, ontology, house
+    ):
+        prop = ontology.create_property_definition(
+            "room_part_of_place",
+            "Room part of place",
+            canonical_predicate="part_of",
+            domain_class_id=house["room"],
+        )
+        with pytest.raises(ProposalValidationError) as excinfo:
+            propose(proposals, house, {"domain_class_id": house["bed"]}, T.UPDATE, prop.id)
+        assert excinfo.value.errors[0].code == "unknown_predicate"
+
+        garden_part_of = ontology.create_predicate(house["garden"], "part_of")
+        proposal = propose(proposals, house, {"domain_class_id": house["bed"]}, T.UPDATE, prop.id)
+        applied = proposals.apply(proposal.id, [proposal.operations[0].id]).operations[0]
+        assert applied.status is OperationStatus.APPLIED, applied.reason
+        assert ontology.get_property_definition(prop.id).predicate_id == garden_part_of.id
+
+    def test_a_reviewer_edit_moving_the_domain_is_checked_too(self, proposals, ontology, house):
+        prop = ontology.create_property_definition(
+            "room_part_of_place",
+            "Room part of place",
+            canonical_predicate="part_of",
+            domain_class_id=house["room"],
+        )
+        proposal = propose(proposals, house, {"title": "Room within place"}, T.UPDATE, prop.id)
+        op_id = proposal.operations[0].id
+
+        applied = proposals.apply(
+            proposal.id, [op_id], edits={op_id: {"domain_class_id": house["bed"]}}
+        ).operations[0]
+
+        assert applied.status is OperationStatus.FAILED
+        assert applied.reason.startswith("invalid_edit: predicate 'part_of' isn't in taxonomy")

@@ -64,3 +64,24 @@ class DerivedTypeError(OntologyError):
     """
 
     pass
+
+
+class DatasetRequiredError(OntologyError):
+    """Raised when a taxonomy has several datasets and a write names none of them."""
+
+    def __init__(self, taxonomy_id: str, identifiers: list[str]):
+        self.taxonomy_id = taxonomy_id
+        self.identifiers = identifiers
+        super().__init__(
+            f"Taxonomy {taxonomy_id} has several datasets; name one of:"
+            f" {', '.join(identifiers)}"
+        )
+
+
+class DatasetMismatchError(OntologyError):
+    """
+    Raised when a write would cross datasets: an individual with a class outside
+    its dataset's taxonomy, or a relationship between individuals of two datasets.
+    """
+
+    pass

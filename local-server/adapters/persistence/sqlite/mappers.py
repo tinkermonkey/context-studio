@@ -424,6 +424,7 @@ def map_domain_to_orm(
         return OntologyEntity(
             **common_args,
             node_type=NodeType.INDIVIDUAL,
+            dataset_id=entity.dataset_id,
             data_properties=serialize_data_properties(entity.data_properties),
             external_references=serialize_external_references(entity.external_references),
             source_run_id=entity.source_run_id,

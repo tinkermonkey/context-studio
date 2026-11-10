@@ -57,6 +57,7 @@ from adapters.persistence.sqlite.individual_vector_index import (
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.recognition.individual_recognizer import CascadeIndividualRecognizer
+from domain.ontology.datasets import resolve_dataset_id
 from domain.ontology.entities import Class, ConceptScheme, Individual, Taxonomy
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.individual_extraction.configurations.open_v1 import (
@@ -163,7 +164,12 @@ def _recognize_scenario_triples(triples: list[dict], embedding) -> list[dict]:
                 else:
                     new_id = str(uuid4())
                     repo.save_individual(
-                        Individual(id=new_id, class_ids=[placeholder_class.id], title=label)
+                        Individual(
+                            id=new_id,
+                            class_ids=[placeholder_class.id],
+                            title=label,
+                            dataset_id=resolve_dataset_id(repo, placeholder_class.taxonomy_id),
+                        )
                     )
                     index.index_individual(new_id, label, None)
                     resolved[key] = (new_id, label)

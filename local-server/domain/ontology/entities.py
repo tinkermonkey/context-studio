@@ -21,6 +21,7 @@ from .value_objects import (
     OntologyMapping,
     SourceRevision,
     Status,
+    validate_dataset_identifier,
     validate_default_value_against_allowed_values,
     validate_hex_color,
     validate_identifier,
@@ -231,6 +232,41 @@ class Class:
 
 
 @dataclass
+class Dataset:
+    """
+    A named body of data over one taxonomy's schema.
+
+    A dataset owns individuals; a relationship belongs to its source
+    individual's dataset. Several datasets can share a taxonomy's schema
+    (schemes, classes, relationship types, attributes) and nothing else.
+
+    Attributes:
+        id: Unique identifier (UUID as string)
+        taxonomy_id: The taxonomy whose schema the dataset's data uses
+        identifier: Slug, unique within the taxonomy
+        title: Display name
+        yields_to_schema: Schema operations never block on this dataset's data;
+            its data follows them instead
+        created_at: Timestamp of creation
+        last_modified: Timestamp of last modification
+    """
+
+    id: str
+    taxonomy_id: str
+    identifier: str
+    title: str
+    yields_to_schema: bool = False
+    created_at: datetime | None = None
+    last_modified: datetime | None = None
+
+    def __post_init__(self) -> None:
+        """Validate dataset invariants."""
+        if not self.title or not self.title.strip():
+            raise ValueError("Dataset title cannot be empty")
+        self.identifier = validate_dataset_identifier(self.identifier)
+
+
+@dataclass
 class Individual:
     """
     An individual is an instance of one or more classes with specific data property values.
@@ -249,6 +285,9 @@ class Individual:
         created_at: Timestamp of creation
         last_modified: Timestamp of last modification
         version: Version number for optimistic concurrency control
+        dataset_id: The dataset the individual belongs to. Every stored individual
+            has one; None only before a write resolves it (see
+            domain.ontology.datasets.resolve_dataset_id).
     """
 
     id: str
@@ -262,6 +301,7 @@ class Individual:
     version: int = 1
     status: Status = Status.DRAFT
     source_run_id: str | None = None
+    dataset_id: str | None = None
 
     def __post_init__(self) -> None:
         """Validate individual invariants."""

@@ -32,6 +32,7 @@ from tests.integration.chat.conftest import (
     SERVICE_CLASS_ID,
     TAXONOMY_ID,
 )
+from tests.utils.datasets import save_in_dataset
 
 
 @pytest.fixture
@@ -434,8 +435,7 @@ class TestGraphTools:
 async def test_long_results_are_truncated_to_valid_json(dr_workspace, tools):
     # Long titles make a 50-item result far larger than the cap
     for i in range(50):
-        dr_workspace.repository.save_individual(
-            Individual(
+        save_in_dataset(dr_workspace.repository, Individual(
                 id=f"ind-{i:03d}", class_ids=[OPERATION_ID], title=f"Endpoint {i} " + "x" * 120
             )
         )

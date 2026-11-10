@@ -1,8 +1,8 @@
 """predicates catalog per taxonomy
 
-Revision ID: a042b463a6f2
-Revises: 7512875103f3
-Create Date: 2026-11-09 19:32:05.446886
+Revision ID: 582c3af91abb
+Revises: fc64b1c76476
+Create Date: 2026-11-09 20:47:16.886709
 
 Predicates become first-class (#1480): each taxonomy holds a catalog in the new
 ``predicates`` table, and a relationship type (property_definition) points at
@@ -20,7 +20,9 @@ a. The DR taxonomy's catalog, held on its documentation_robotics/spec reference
    now the source of truth.
 b. Every relationship type gets a predicate in its taxonomy: the taxonomy of its
    domain class, else its range class, else the source of a relationship that
-   uses it. The identifier is its canonical_predicate, else its own identifier.
+   uses it. The identifier is its canonical_predicate, else its own identifier,
+   made a valid predicate verb (lowercase letters, digits, "_" and "-", starting
+   with a letter) when it isn't one; a changed one is printed.
    A type with no taxonomy keeps a NULL predicate_id (and is printed).
 
 The batch rebuild requires ``PRAGMA foreign_keys`` OFF (env.py turns it off):
@@ -28,6 +30,7 @@ with it ON, dropping ontology_entities would run every child table's FK action.
 """
 
 import json
+import re
 import uuid
 from collections import Counter
 from datetime import datetime, timezone
@@ -37,8 +40,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "a042b463a6f2"
-down_revision = "7512875103f3"
+revision = "582c3af91abb"
+down_revision = "fc64b1c76476"
 branch_labels = None
 depends_on = None
 
@@ -89,6 +92,17 @@ def _dr_spec_reference(refs: list[dict[str, Any]]) -> dict[str, Any] | None:
     return None
 
 
+_INVALID_PREDICATE_CHARS = re.compile(r"[^a-z0-9_-]+")
+
+
+def _predicate_identifier(value: str) -> str:
+    """A valid predicate identifier (^[a-z][a-z0-9_-]{0,254}$) made from value."""
+    cleaned = _INVALID_PREDICATE_CHARS.sub("_", value.strip().lower()).strip("_-")
+    if not cleaned or not cleaned[0].isalpha():
+        cleaned = f"p_{cleaned}"
+    return cleaned[:255]
+
+
 def _insert_predicate(
     conn: Any,
     taxonomy_id: str,
@@ -131,7 +145,8 @@ def _move_dr_catalogs(conn: Any) -> dict[tuple[str, str], str]:
         catalog = metadata.get("predicates")
         if not isinstance(catalog, dict):
             continue
-        for identifier, entry in catalog.items():
+        for raw_identifier, entry in catalog.items():
+            identifier = _predicate_identifier(raw_identifier)
             entry = entry if isinstance(entry, dict) else {}
             dr_metadata = {k: entry[k] for k in DR_PREDICATE_METADATA if k in entry}
             created[(taxonomy_id, identifier)] = _insert_predicate(
@@ -194,7 +209,10 @@ def _link_relationship_types(conn: Any, catalog: dict[tuple[str, str], str]) -> 
         if taxonomy_id is None:
             print(f"Relationship type {identifier!r} has no taxonomy; left without a predicate")
             continue
-        predicate = canonical or identifier
+        raw = canonical or identifier
+        predicate = _predicate_identifier(raw)
+        if predicate != raw:
+            print(f"Relationship type {identifier!r}: predicate {raw!r} becomes {predicate!r}")
         key = (taxonomy_id, predicate)
         if key not in catalog:
             catalog[key] = _insert_predicate(conn, taxonomy_id, predicate)

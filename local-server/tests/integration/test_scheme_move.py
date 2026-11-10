@@ -19,6 +19,7 @@ from sqlalchemy.orm import sessionmaker
 
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
+from domain.ontology.exceptions import DatasetMismatchError
 from domain.ontology.services import OntologyService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
@@ -55,7 +56,7 @@ def service(opened):
 
 @pytest.fixture()
 def house(service):
-    """A House taxonomy with a Places scheme holding two classes and one individual."""
+    """A House taxonomy with a Places scheme holding two classes (no individuals)."""
     house = service.create_taxonomy(title="House")
     garden = service.create_taxonomy(title="Garden")
     places = service.create_scheme(taxonomy_id=house.id, title="Places")
@@ -63,7 +64,6 @@ def house(service):
     kitchen = service.create_class(
         concept_scheme_id=places.id, title="Kitchen", parent_class_id=room.id
     )
-    service.create_individual(title="Main kitchen", class_ids=[kitchen.id])
     return house, garden, places, [room, kitchen]
 
 
@@ -80,13 +80,13 @@ def test_move_is_stored_with_the_schemes_classes(service, opened, house):
 
 
 def test_counts_follow_the_moved_scheme(service, opened, house):
-    """Scheme counts for the new taxonomy include the moved classes and individuals."""
+    """Scheme counts for the new taxonomy include the moved classes."""
     house_tax, garden, places, _ = house
 
     service.update_concept_scheme(places.id, taxonomy_id=garden.id)
 
     [counts] = opened.count_by_scheme(garden.id)
-    assert (counts.scheme_id, counts.class_count, counts.individual_count) == (places.id, 2, 1)
+    assert (counts.scheme_id, counts.class_count) == (places.id, 2)
     assert opened.count_by_scheme(house_tax.id) == []
 
 
@@ -115,3 +115,14 @@ def test_classes_of_other_schemes_stay_put(service, opened, house):
 
     assert opened.get_class(cooking.id).taxonomy_id == house_tax.id
     assert opened.get_concept_scheme(activities.id).taxonomy_id == house_tax.id
+
+
+def test_a_scheme_whose_classes_have_individuals_cannot_move(service, opened, house):
+    """Its individuals belong to datasets of its taxonomy (#1484), so it stays put."""
+    house_tax, garden, places, classes = house
+    service.create_individual(title="Main kitchen", class_ids=[classes[1].id])
+
+    with pytest.raises(DatasetMismatchError):
+        service.update_concept_scheme(places.id, taxonomy_id=garden.id)
+
+    assert opened.get_concept_scheme(places.id).taxonomy_id == house_tax.id

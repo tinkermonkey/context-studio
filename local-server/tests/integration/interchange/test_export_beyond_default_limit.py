@@ -29,6 +29,7 @@ from domain.ontology.entities import (
     Relationship,
     Taxonomy,
 )
+from tests.utils.datasets import save_in_dataset
 
 INDIVIDUAL_COUNT = 130
 CLASS_COUNT = 110
@@ -71,8 +72,7 @@ def large_ontology(ontology_repo):
         for i in range(CLASS_COUNT)
     ]
     individuals = [
-        ontology_repo.save_individual(
-            Individual(id=str(uuid.uuid4()), class_ids=[classes[0].id], title=f"Ind {i:03d}")
+        save_in_dataset(ontology_repo, Individual(id=str(uuid.uuid4()), class_ids=[classes[0].id], title=f"Ind {i:03d}")
         )
         for i in range(INDIVIDUAL_COUNT)
     ]

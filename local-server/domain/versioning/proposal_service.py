@@ -32,12 +32,13 @@ import logging
 import threading
 from contextlib import nullcontext
 from dataclasses import dataclass, replace
+from dataclasses import fields as dataclass_fields
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Mapping, Sequence
 from uuid import uuid4
 
 from domain.interchange.services import get_current_batch_run_id, set_batch_run_context
-from domain.ontology.entities import Class, validate_relationship_attributes
+from domain.ontology.entities import Class, PropertyDefinition, validate_relationship_attributes
 from domain.ontology.events import GraphInvalidated
 from domain.ontology.exceptions import EntityNotFoundError, OntologyError
 from domain.ontology.snapshots import decode_field, entity_snapshot
@@ -62,6 +63,14 @@ from domain.versioning.gold import (
     by_operation,
     decision_of,
     proposed_snapshot,
+)
+from domain.versioning.yielding import (
+    DatasetImpact,
+    YieldPlan,
+    apply_yield,
+    plan_attribute_delete,
+    plan_class_delete,
+    plan_type_delete,
 )
 from domain.versioning.in_use import (
     ChainLink,
@@ -1053,10 +1062,24 @@ class ProposalService:
         """
         A relationship type's predicate must be in its taxonomy's predicate catalog:
         the taxonomy of its domain class (else its range class), or the proposal's.
+        A change of domain or range alone checks the type's current predicate there.
         """
-        if operation.kind is not K.PROPERTY or "canonical_predicate" not in operation.fields:
+        fields = operation.fields
+        if operation.kind is not K.PROPERTY or not (
+            {"canonical_predicate", "domain_class_id", "range_class_id"} & fields.keys()
+        ):
             return
-        value = operation.fields["canonical_predicate"]
+        if "canonical_predicate" in fields:
+            value = fields["canonical_predicate"]
+        else:
+            # A new domain or range can move the type to another taxonomy's catalog,
+            # which must have its current predicate too.
+            current = (
+                self._repo.get_property_definition(operation.target_id)
+                if operation.op is not OperationType.CREATE and operation.target_id
+                else None
+            )
+            value = current.canonical_predicate if current else None
         if not isinstance(value, str):
             return  # a non-text value is already refused, and null can't be set
         try:
@@ -1118,8 +1141,7 @@ class ProposalService:
                 elif not any(self._load(kind, item) is not None for kind in kinds):
                     raise _Invalid(
                         "endpoint_not_found",
-                        f"{name} {item} is not an existing "
-                        f"{' or '.join(k.value for k in kinds)}",
+                        f"{name} {item} is not an existing {' or '.join(k.value for k in kinds)}",
                     )
 
     def _check_class_move(self, operation: ProposedOperation, cls: Any) -> None:
@@ -1436,6 +1458,8 @@ class ProposalService:
                 except ValueError as exc:
                     raise _ApplyFailed(INVALID_EDIT, str(exc)) from exc
                 fields = self._checked_edit(operation, fields)
+            # After the client's rules, whose reasons are the more specific.
+            self._checked_edit_predicate(operation, fields)
             target_id: str = operation.target_id  # type: ignore[assignment]
             before = entity_snapshot(self._load(K.PROPERTY, target_id))
             result = self._update_type(
@@ -1476,6 +1500,7 @@ class ProposalService:
             self._check_fresh(operation, forced)
             target_id: str = operation.target_id  # type: ignore[assignment]
             before = self._type_fields(target_id)
+            unused = self._delete_change(before, operation, refs)
             with self._atomic():
                 inspector = InUseInspector(self._repo)
                 edges = inspector.edges(target_id)
@@ -1483,16 +1508,22 @@ class ProposalService:
                     (e.relationship_id for e in edges), covered, needs_resolution=False
                 )
                 taxonomies = self._taxonomies_of(edges)
+                edges, follows = inspector.partition(edges)
                 resolved, replacement, swap = self._resolve_edges(
                     target_id, resolution, inspector, edges, run_id
                 )
+                if replacement is not None:
+                    # A move: the change record names its replacement, so follow it.
+                    self._yield_edges(inspector, follows, replacement, swap, run_id)
+                else:
+                    self._yield_type_delete(unused, inspector, follows, run_id)
                 self._ontology.delete_property_definition(target_id)
             # Committed: invalidate again, so no graph rebuilt mid-transaction stays cached.
             for taxonomy_id in sorted(taxonomies):
                 self._invalidate_graph(taxonomy_id)
-            # Nothing used the type after all: it applied as proposed.
+            # Nothing (but yielding data) used the type after all: it applied as proposed.
             if not resolved:
-                operation.type_change = self._delete_change(before, operation, refs)
+                operation.type_change = unused
                 return target_id
             operation.resolution = _recorded(resolution, resolved, replacement, swap)
             operation.type_change = TypeChange(
@@ -1608,17 +1639,25 @@ class ProposalService:
                     covered,
                     needs_resolution=pair is PairMatch.DIFFERENT and resolution is None,
                 )
+            taxonomies = self._taxonomies_of(edges)
+            follows: list[Any] = []
+            if pair is PairMatch.DIFFERENT:
+                # Only relationships of datasets that don't yield need a resolution.
+                edges, follows = inspector.partition(edges)
             if pair is PairMatch.DIFFERENT and edges and resolution is None:
                 raise _ApplyFailed(
                     APPLY_ERROR,
                     f"{len(edges)} relationship(s) use the type, so a retarget needs a "
                     "resolution: move them to another type or delete them",
                 )
-            taxonomies = self._taxonomies_of(edges)
             if resolution is not None:
                 resolved, replacement, swap = self._resolve_edges(
                     target_id, resolution, inspector, edges, run_id
                 )
+            # Yielding relationships follow the type's change record: to the
+            # resolution's replacement when it moves them, else dropped (DR's
+            # record of a retarget deletes the old triple).
+            self._yield_edges(inspector, follows, replacement, swap, run_id)
             result = update()
             if pair is PairMatch.REVERSED and edges:
                 reversed_type = self._repo.get_property_definition(target_id)
@@ -1651,6 +1690,123 @@ class ProposalService:
                 replacement=self._type_fields(replacement.id) if replacement else None,
             )
         return result
+
+    def _yield_type_delete(
+        self,
+        change: TypeChange,
+        inspector: InUseInspector,
+        follows: list[Any],
+        run_id: str,
+    ) -> None:
+        """Move or drop yielding relationships of a deleted type, per its change record."""
+        if not follows:
+            return
+        replacement = (
+            self._repo.get_property_definition(change.replacement["id"])
+            if change.replacement
+            else None
+        )
+        self._yield_edges(inspector, follows, replacement, change.swap, run_id)
+
+    def _yield_edges(
+        self,
+        inspector: InUseInspector,
+        follows: list[Any],
+        replacement: Any,
+        swap: bool,
+        run_id: str,
+    ) -> None:
+        """Move yielding relationships to the replacement where they fit; drop the rest."""
+        if follows:
+            plan = plan_type_delete(inspector, follows, replacement, swap)
+            apply_yield(self._ontology, plan, run_id)
+
+    def _yield_plan(
+        self,
+        operation: ProposedOperation,
+        refs: dict[str, ProposedOperation],
+        inspector: InUseInspector,
+    ) -> YieldPlan | None:
+        """
+        What an awaiting schema operation, as proposed, does to yielding datasets'
+        data (see domain.versioning.yielding); None when it touches none.
+        """
+        target_id = operation.target_id
+        if not target_id or operation.op not in (OperationType.DELETE, OperationType.UPDATE):
+            return None
+        yielding = inspector.yielding()
+        if not yielding:
+            return None
+        kind = operation.kind
+        if kind is K.PROPERTY and self._load(K.PROPERTY, target_id) is not None:
+            _, follows = inspector.partition(inspector.edges(target_id))
+            if not follows:
+                return None
+            if operation.op is OperationType.UPDATE:
+                return YieldPlan(drops=follows) if self._retargets(operation) else None
+            change = self._delete_change(self._type_fields(target_id), operation, refs)
+            if change.replacement:
+                replacement = self._repo.get_property_definition(change.replacement["id"])
+                return plan_type_delete(inspector, follows, replacement, change.swap)
+            replacement, swap = self._pending_replacement(operation, refs, target_id)
+            return plan_type_delete(inspector, follows, replacement, swap)
+        if operation.op is not OperationType.DELETE:
+            return None
+        if kind is K.CLASS:
+            return plan_class_delete(self._repo, inspector, yielding, target_id)
+        if kind is K.ATTRIBUTE:
+            attribute = self._repo.get_attribute_definition(target_id)
+            if attribute is not None:
+                return plan_attribute_delete(self._repo, inspector, yielding, attribute)
+        return None
+
+    def _pending_replacement(
+        self, operation: ProposedOperation, refs: dict[str, ProposedOperation], deleted_id: str
+    ) -> tuple[PropertyDefinition | None, bool]:
+        """
+        A delete's replacement that a create of the same proposal makes, as it
+        will be once created (it applies first), when it links the same pair of
+        classes or the reverse; else (None, False).
+        """
+        named = operation.proposed_replacement_id
+        create = refs.get(named[1:]) if named and _is_ref(named) else None
+        if create is None or create.status is OperationStatus.REJECTED:
+            return None, False
+        deleted = self._repo.get_property_definition(deleted_id)
+        names = {f.name for f in dataclass_fields(PropertyDefinition)}
+        values = {
+            name: decode_field(name, value)
+            for name, value in create.fields.items()
+            if name in names and name != "id"
+        }
+        try:
+            pending = PropertyDefinition(id=f"${create.ref}", **values)
+        except (TypeError, ValueError):
+            return None, False
+        pair = compare_pair(
+            (deleted.domain_class_id, deleted.range_class_id) if deleted else (None, None),
+            (pending.domain_class_id, pending.range_class_id),
+        )
+        if pair is PairMatch.DIFFERENT:
+            return None, False
+        return pending, pair is PairMatch.REVERSED
+
+    def dataset_impacts(self, proposal: ChangeProposal) -> dict[str, list[DatasetImpact]]:
+        """
+        For each awaiting schema operation that touches data of datasets that
+        yield to the schema: what it will do to that data, per dataset. Review
+        shows it as information only; it never blocks the operation.
+        """
+        inspector = InUseInspector(self._repo)
+        if not inspector.yielding():
+            return {}
+        refs = {o.ref: o for o in proposal.operations if o.ref}
+        impacts: dict[str, list[DatasetImpact]] = {}
+        for operation in proposal.pending:
+            plan = self._yield_plan(operation, refs, inspector)
+            if plan:
+                impacts[operation.id] = plan.impacts(self._repo)
+        return impacts
 
     def _type_fields(self, property_id: str) -> dict[str, Any]:
         """A type's id and TYPE_KEY_FIELDS, as snapshot JSON."""
@@ -1724,12 +1880,19 @@ class ProposalService:
             self._check_field_names(as_update)
             self._check_values(as_update)
             self._check_id_fields(as_update, {})
-            self._check_predicate(as_update, None)
         except _Invalid as exc:
             raise _ApplyFailed(INVALID_EDIT, exc.message) from exc
         except (TypeError, ValueError) as exc:
             raise _ApplyFailed(INVALID_EDIT, str(exc)) from exc
         return as_update.fields
+
+    def _checked_edit_predicate(self, operation: ProposedOperation, fields: dict[str, Any]) -> None:
+        """An edit's predicate (or new domain or range) must fit a catalog, as on propose."""
+        as_update = replace(operation, op=OperationType.UPDATE, fields=dict(fields))
+        try:
+            self._check_predicate(as_update, None)
+        except _Invalid as exc:
+            raise _ApplyFailed(INVALID_EDIT, exc.message) from exc
 
     def _apply_one(
         self,
@@ -1770,9 +1933,20 @@ class ProposalService:
                 using = self._repo.list_relationships(property_id=operation.target_id, limit=None)
                 _check_uncovered((r.id for r in using), covered, needs_resolution=True)
                 before = self._type_fields(operation.target_id)  # type: ignore[arg-type]
-                result = self._dispatch(operation, fields, run_id, operation.op)
-                operation.type_change = self._delete_change(before, operation, refs)
+                change = self._delete_change(before, operation, refs)
+                with self._atomic():
+                    inspector = InUseInspector(self._repo)
+                    _, follows = inspector.partition(inspector.edges(operation.target_id))
+                    self._yield_type_delete(change, inspector, follows, run_id)
+                    result = self._dispatch(operation, fields, run_id, operation.op)
+                operation.type_change = change
                 return result
+            if operation.op is OperationType.DELETE and operation.kind in (K.CLASS, K.ATTRIBUTE):
+                with self._atomic():
+                    plan = self._yield_plan(operation, refs, InUseInspector(self._repo))
+                    if plan:
+                        apply_yield(self._ontology, plan, run_id)
+                    return self._dispatch(operation, fields, run_id, operation.op)
             result = self._dispatch(operation, fields, run_id, operation.op)
             if operation.kind is K.PROPERTY and operation.op is OperationType.CREATE:
                 operation.type_change = TypeChange(

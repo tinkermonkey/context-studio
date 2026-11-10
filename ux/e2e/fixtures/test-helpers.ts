@@ -12,7 +12,6 @@ export {
   createPropertyDefinition,
   createRelationship,
   createIndividual,
-  createDataset,
   getIndividualsByClass,
   clearTestData,
   type Taxonomy,
@@ -21,6 +20,4 @@ export {
   type PropertyDefinition,
   type Relationship,
   type Individual,
-  type Dataset,
-  type DatasetMetrics,
 } from "./factories";

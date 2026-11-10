@@ -2496,8 +2496,12 @@ export interface paths {
      * Search References
      * @description Search for references across multiple sources.
      *
-     *     Aggregates results from all available sources (or specified sources).
-     *     Sources that fail or are unavailable are tracked but don't block the response.
+     *     Aggregates results from all sources (or the requested ones), queried at once.
+     *     There is no availability pre-check: each call goes through the reference proxy,
+     *     so a repeated search is a cache hit. A source that raises or doesn't answer
+     *     within SOURCE_QUERY_TIMEOUT_SECONDS is listed as failed and doesn't hold the
+     *     response. The source adapters return no results on network errors, so a source
+     *     that fails fast is listed as searched with no results.
      *
      *     Args:
      *         request: ReferenceSearchRequest with search parameters
@@ -2529,8 +2533,9 @@ export interface paths {
      * Get Reference Relations
      * @description Get relationships for a reference URI across multiple sources.
      *
-     *     Aggregates relationships from all available sources (or specified sources).
-     *     Sources that fail or are unavailable are tracked but don't block the response.
+     *     Aggregates relationships from all sources (or the requested ones), queried at
+     *     once. As with search, there is no availability pre-check; a source that raises or
+     *     doesn't answer within SOURCE_QUERY_TIMEOUT_SECONDS is listed as failed.
      *
      *     Args:
      *         request: ReferenceRelationsRequest with URI to query
@@ -3192,129 +3197,6 @@ export interface paths {
     get: operations["get_task_api_v1_admin_tasks__task_id__get"];
     put?: never;
     post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/admin/datasets": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Datasets
-     * @description List all datasets.
-     *
-     *     Returns:
-     *         List of all datasets
-     */
-    get: operations["list_datasets_api_v1_admin_datasets_get"];
-    put?: never;
-    /**
-     * Create Dataset
-     * @description Create a new dataset.
-     *
-     *     Args:
-     *         request: DatasetCreateRequest with title, filename, optional description
-     *         service: AdminService from dependency injection
-     *
-     *     Returns:
-     *         Created DatasetResponse
-     *
-     *     Raises:
-     *         HTTPException: 400 if title is empty
-     */
-    post: operations["create_dataset_api_v1_admin_datasets_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/admin/datasets/{dataset_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Dataset
-     * @description Get a dataset by ID.
-     *
-     *     Args:
-     *         dataset_id: The dataset ID
-     *         service: AdminService from dependency injection
-     *
-     *     Returns:
-     *         DatasetResponse
-     *
-     *     Raises:
-     *         HTTPException: 404 if not found
-     */
-    get: operations["get_dataset_api_v1_admin_datasets__dataset_id__get"];
-    /**
-     * Update Dataset
-     * @description Update a dataset's metadata.
-     *
-     *     Args:
-     *         dataset_id: The dataset ID
-     *         request: DatasetUpdateRequest with optional fields to update
-     *         service: AdminService from dependency injection
-     *
-     *     Returns:
-     *         Updated DatasetResponse
-     *
-     *     Raises:
-     *         HTTPException: 400 if invalid, 404 if not found
-     */
-    put: operations["update_dataset_api_v1_admin_datasets__dataset_id__put"];
-    post?: never;
-    /**
-     * Delete Dataset
-     * @description Delete a dataset.
-     *
-     *     Args:
-     *         dataset_id: The dataset ID
-     *         service: AdminService from dependency injection
-     *
-     *     Raises:
-     *         HTTPException: 404 if not found, 409 if it is the active dataset
-     */
-    delete: operations["delete_dataset_api_v1_admin_datasets__dataset_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/admin/datasets/{dataset_id}/activate": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Activate Dataset
-     * @description Activate a dataset as the current workspace.
-     *
-     *     Args:
-     *         dataset_id: The dataset ID to activate
-     *         service: AdminService from dependency injection
-     *
-     *     Returns:
-     *         Updated DatasetResponse with is_active=true
-     *
-     *     Raises:
-     *         HTTPException: 404 if not found
-     */
-    post: operations["activate_dataset_api_v1_admin_datasets__dataset_id__activate_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -4622,6 +4504,11 @@ export interface components {
       attributes?: {
         [key: string]: unknown;
       };
+      /**
+       * Dataset Id
+       * @description The relationship's dataset: its source individual's
+       */
+      dataset_id?: string | null;
     };
     /** Body_import_ontology_api_v1_interchange_import_post */
     Body_import_ontology_api_v1_interchange_import_post: {
@@ -5552,125 +5439,46 @@ export interface components {
       issues?: string[];
     };
     /**
-     * DatasetCreateRequest
-     * @description Request to create a new dataset.
+     * DatasetImpactResponse
+     * @description What a schema operation will do to the data of a dataset that yields to the
+     *     schema. Information only: such data never blocks the operation.
      */
-    DatasetCreateRequest: {
-      /**
-       * Title
-       * @description Display name
-       */
+    DatasetImpactResponse: {
+      /** Dataset Id */
+      dataset_id: string;
+      /** Identifier */
+      identifier: string;
+      /** Title */
       title: string;
       /**
-       * Filename
-       * @description Original filename
+       * Relationships Moved
+       * @description Moved to the delete's replacement type
+       * @default 0
        */
-      filename: string;
+      relationships_moved: number;
       /**
-       * Description
-       * @description Optional description
+       * Relationships Dropped
+       * @default 0
        */
-      description?: string | null;
-    };
-    /**
-     * DatasetMetricsResponse
-     * @description Response containing dataset metrics.
-     */
-    DatasetMetricsResponse: {
+      relationships_dropped: number;
       /**
-       * Layers Count
-       * @description Number of taxonomies
+       * Individuals Untyped
+       * @description Lose the deleted class, keep others
+       * @default 0
        */
-      layers_count: number;
+      individuals_untyped: number;
       /**
-       * Domains Count
-       * @description Number of concept schemes
+       * Individuals Dropped
+       * @description The deleted class was their only one
+       * @default 0
        */
-      domains_count: number;
+      individuals_dropped: number;
       /**
-       * Terms Count
-       * @description Number of classes
+       * Values Dropped
+       * @description Values of the deleted attribute
+       * @default 0
        */
-      terms_count: number;
-      /**
-       * Relationships Count
-       * @description Number of relationships
-       */
-      relationships_count: number;
-      /**
-       * Individuals Count
-       * @description Number of individuals
-       */
-      individuals_count: number;
-    };
-    /**
-     * DatasetResponse
-     * @description Response containing dataset data.
-     */
-    DatasetResponse: {
-      /**
-       * Id
-       * @description Unique identifier
-       */
-      id: string;
-      /**
-       * Title
-       * @description Display name
-       */
-      title: string;
-      /**
-       * Filename
-       * @description Original filename
-       */
-      filename: string;
-      /**
-       * Description
-       * @description Optional description
-       */
-      description?: string | null;
-      /**
-       * Created At
-       * @description Creation timestamp
-       */
-      created_at?: string | null;
-      /**
-       * Last Accessed
-       * @description Last access timestamp
-       */
-      last_accessed?: string | null;
-      /**
-       * Schema Version
-       * @description Database schema version
-       */
-      schema_version: string;
-      /** @description Dataset metrics */
-      metrics: components["schemas"]["DatasetMetricsResponse"];
-      /**
-       * Is Active
-       * @description Whether this is the active dataset
-       */
-      is_active: boolean;
-      /**
-       * Version
-       * @description Version number
-       */
-      version: number;
-    };
-    /**
-     * DatasetUpdateRequest
-     * @description Request to update a dataset.
-     */
-    DatasetUpdateRequest: {
-      /**
-       * Title
-       * @description New title
-       */
-      title?: string | null;
-      /**
-       * Description
-       * @description New description
-       */
-      description?: string | null;
+      values_dropped: number;
     };
     /**
      * DecisionKind
@@ -5991,6 +5799,11 @@ export interface components {
       class_ids?: string[];
       /** Class Titles */
       class_titles?: string[];
+      /**
+       * Dataset Id
+       * @description An individual end's dataset (null for a class end)
+       */
+      dataset_id?: string | null;
     };
     /**
      * EnqueueBatchRunsRequest
@@ -8405,6 +8218,11 @@ export interface components {
        * @default false
        */
       stale: boolean;
+      /**
+       * Dataset Impact
+       * @description A pending or failed schema operation (relationship-type delete or retarget, class or attribute delete): what it will do to the data of each dataset that yields to the schema. Information only; that data never blocks it
+       */
+      dataset_impact?: components["schemas"]["DatasetImpactResponse"][];
       /** @description A pending or failed relationship-type update that keeps its pair (a rename or reverse) while relationships use the type: those relationships and the types they all fit. Applying it as proposed needs nothing, but an edit that retargets the type needs a resolution of them. Null otherwise */
       type_usage?: components["schemas"]["DeleteBlockersResponse"] | null;
       /** @description A pending or failed relationship-type delete, or update that retargets the type, whose type relationships still use: applying it as proposed fails; it needs a resolution. Null otherwise. The proposed replacement, when it fits, is listed first */
@@ -13877,185 +13695,6 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["BackgroundTaskResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_datasets_api_v1_admin_datasets_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DatasetResponse"][];
-        };
-      };
-    };
-  };
-  create_dataset_api_v1_admin_datasets_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["DatasetCreateRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DatasetResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_dataset_api_v1_admin_datasets__dataset_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DatasetResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_dataset_api_v1_admin_datasets__dataset_id__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["DatasetUpdateRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DatasetResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_dataset_api_v1_admin_datasets__dataset_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  activate_dataset_api_v1_admin_datasets__dataset_id__activate_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DatasetResponse"];
         };
       };
       /** @description Validation Error */

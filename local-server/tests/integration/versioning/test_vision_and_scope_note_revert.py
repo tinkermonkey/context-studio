@@ -176,7 +176,7 @@ def test_reverting_a_run_moves_the_scheme_and_its_classes_back(
     garden = ontology_service.create_taxonomy(title="Garden")
     scheme = ontology_service.create_scheme(taxonomy_id=house.id, title="Places")
     room = ontology_service.create_class(concept_scheme_id=scheme.id, title="Room")
-    ontology_service.create_individual(title="Main kitchen", class_ids=[room.id])
+    # No individuals: a scheme whose classes have some can't move taxonomy (#1484).
     run = _new_run(pipeline_repo)
 
     _in_run(
@@ -190,5 +190,5 @@ def test_reverting_a_run_moves_the_scheme_and_its_classes_back(
     assert ontology_repo.get_concept_scheme(scheme.id).taxonomy_id == house.id
     assert ontology_repo.get_class(room.id).taxonomy_id == house.id
     [counts] = ontology_repo.count_by_scheme(house.id)
-    assert (counts.class_count, counts.individual_count) == (1, 1)
+    assert counts.class_count == 1
     assert ontology_repo.count_by_scheme(garden.id) == []

@@ -50,6 +50,7 @@ from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.fakes.fake_nlp_processor import FakeNLPProcessor
 from tests.fakes.fake_reference_source import FakeReferenceSource
+from tests.utils.datasets import save_in_dataset
 
 
 @pytest.fixture
@@ -407,7 +408,7 @@ class TestConceptObjectTypingFullPipeline:
             class_ids=[str(quality_class.id)],
             title="readability",
         )
-        ontology_repo.save_individual(existing_readability)
+        save_in_dataset(ontology_repo, existing_readability)
         individual_index.index_individual(existing_readability.id, existing_readability.title, None)
 
         # Pattern individual in pass-1
