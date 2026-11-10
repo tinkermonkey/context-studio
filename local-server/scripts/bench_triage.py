@@ -17,6 +17,8 @@ import argparse
 import asyncio
 import os
 import sys
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -39,6 +41,16 @@ from domain.versioning.claims import Claim, ClaimFilter, ClaimService, TriageSco
 BENCH_RUN_ID = "bench"
 
 
+@dataclass
+class BenchResult:
+    """A bench run: the score, the claims it covers, and what it couldn't triage."""
+
+    score: TriageScore
+    scored: list[Claim]
+    judged: int
+    errors: list[str] = field(default_factory=list)
+
+
 def run_bench(
     repo: OntologyRepository,
     claims: ClaimService,
@@ -46,10 +58,13 @@ def run_bench(
     decision_models: Optional[DecisionModels] = None,
     proposals: Any = None,
     config: Optional[dict[str, Any]] = None,
-) -> tuple[TriageScore, list[Claim]]:
+) -> BenchResult:
     """
-    Triage the taxonomy's judged claims (unless decision_models is None, which
-    scores the triage they already have) and score it against their verdicts.
+    Triage the taxonomy's judged claims and score this run's triage against
+    their verdicts; with decision_models None, score the triage they already have.
+
+    A claim the model failed on in this run is reported, not scored on an
+    earlier run's answers.
 
     Args:
         proposals: Open proposals (anything with list_proposals), for the
@@ -57,23 +72,31 @@ def run_bench(
         config: Overrides of the pipeline's default configuration
     """
     judged = claims.list_claims(ClaimFilter(taxonomy_id=taxonomy_id, has_verdict=True))
-    if decision_models is not None and judged:
-        orchestrator = ClaimTriageOrchestrator(
-            ontology_repo=repo,
-            decision_models=decision_models,
-            claim_service=claims,
-            proposal_service=proposals,
-            predicate_catalog=lambda t: dr_predicate_catalog_for(repo, t),
-            config={**get_default_config(), **(config or {})},
-        )
-        state = ClaimTriageState(
-            run_id=BENCH_RUN_ID,
-            pipeline_type=PipelineType.CLAIM_TRIAGE,
-            input_data={"taxonomy_id": taxonomy_id, "scope": {"keys": [c.key for c in judged]}},
-        )
-        asyncio.run(orchestrator.execute(state))
-        judged = claims.list_claims(ClaimFilter(taxonomy_id=taxonomy_id, has_verdict=True))
-    return score_triage(judged), judged
+    if decision_models is None or not judged:
+        return BenchResult(score_triage(judged), judged, len(judged))
+    orchestrator = ClaimTriageOrchestrator(
+        ontology_repo=repo,
+        decision_models=decision_models,
+        claim_service=claims,
+        proposal_service=proposals,
+        predicate_catalog=lambda t: dr_predicate_catalog_for(repo, t),
+        config={**get_default_config(), **(config or {})},
+    )
+    state = ClaimTriageState(
+        run_id=BENCH_RUN_ID,
+        pipeline_type=PipelineType.CLAIM_TRIAGE,
+        input_data={"taxonomy_id": taxonomy_id, "scope": {"keys": [c.key for c in judged]}},
+    )
+    started = datetime.now(timezone.utc)
+    result = asyncio.run(orchestrator.execute(state)).result
+    triaged_now = [
+        c
+        for c in claims.list_claims(ClaimFilter(taxonomy_id=taxonomy_id, has_verdict=True))
+        if c.triage is not None and c.triage.triaged_at >= started
+    ]
+    return BenchResult(
+        score_triage(triaged_now), triaged_now, len(judged), list(result.get("errors") or [])
+    )
 
 
 def _pct(value: Optional[float]) -> str:
@@ -84,10 +107,11 @@ def _num(value: Optional[float], digits: int = 2) -> str:
     return "n/a" if value is None else f"{value:.{digits}f}"
 
 
-def render(score: TriageScore, judged: list[Claim], label: str) -> str:
+def render(bench: BenchResult, label: str) -> str:
     """The benchmark table and per-claim detail, in triage-bench.ts's layout."""
+    score = bench.score
     lines = [
-        f"Benchmark: {score.n} adjudicated claims",
+        f"Benchmark: {bench.judged} adjudicated claims, {score.n} scored",
         "",
         "| model | n | validity acc | mean p(gold validity) | category acc | severity MAE"
         " | severity within 1 | fix-scope MAE | median latency | cost / claim |",
@@ -100,7 +124,7 @@ def render(score: TriageScore, judged: list[Claim], label: str) -> str:
         "",
         "Per-claim detail:",
     ]
-    for claim in judged:
+    for claim in bench.scored:
         triage, verdict = claim.triage, claim.verdict
         if triage is None or verdict is None:
             continue
@@ -155,7 +179,7 @@ def main() -> int:
         for k, v in (("decision_model", args.model), ("context_policy", args.policy))
         if v is not None
     }
-    score, judged = run_bench(
+    bench = run_bench(
         repo,
         claims,
         taxonomy.id,
@@ -163,11 +187,13 @@ def main() -> int:
         SQLiteChangeProposalRepository(session_factory),
         config,
     )
-    if not score.n:
+    for error in bench.errors:
+        print(f"Not triaged: {error}", file=sys.stderr)
+    if not bench.score.n:
         print("No claim has both a verdict and a triage", file=sys.stderr)
         return 2
     label = args.model or (models.get().name if models else "saved triage")
-    print(render(score, judged, label))
+    print(render(bench, label))
     return 0
 
 

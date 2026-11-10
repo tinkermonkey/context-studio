@@ -344,8 +344,11 @@ class TriageScore:
         n: Claims with both a triage and a verdict
         validity_accuracy: Share whose triage validity matches the verdict
         mean_p_gold_validity: Mean probability the triage gave the verdict's validity
+            (0 when the model gave no probability for it; DR's bench falls back to
+            the answer's confidence, which a triage doesn't keep)
         category_accuracy: Share whose category matches (verdicts with a category)
-        severity_mae, severity_within_1: Severity error (verdicts with a severity)
+        severity_mae, severity_within_1: Severity error (verdicts with a severity),
+            on the saved 0-3 level where DR scores the expected (fractional) level
         fix_scope_mae: Fix-scope error (verdicts with a fix scope)
         median_latency_ms, mean_cost_usd: Per claim
         misses: Keys whose triage validity differs from the verdict

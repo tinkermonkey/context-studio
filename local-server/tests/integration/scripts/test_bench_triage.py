@@ -61,19 +61,21 @@ def test_the_judged_claims_are_triaged_and_scored(world):
         "clef", choices={"validity": "real_defect", "category": "other"}, scores={"severity": 1}
     )
 
-    score, judged = run_bench(repo, claims, T, Models(model))
+    bench = run_bench(repo, claims, T, Models(model))
+    score, judged = bench.score, bench.scored
 
     assert len(model.calls) == 2  # only the claims with a verdict
     assert [c.key for c in judged] == ["room#1", "room#2"]
     assert {c.triage.run_id for c in judged} == {BENCH_RUN_ID}
-    assert score.n == 2
+    assert (bench.judged, score.n, bench.errors) == (2, 2, [])
     assert score.validity_accuracy == pytest.approx(0.5)
     assert score.misses == ("room#2",)
     assert score.severity_mae == 0
     untriaged = claims.list_claims(ClaimFilter(taxonomy_id=T, triaged=False))
     assert [c.key for c in untriaged] == ["room#3"]
 
-    table = render(score, judged, "clef")
+    table = render(bench, "clef")
+    assert "Benchmark: 2 adjudicated claims, 2 scored" in table
     assert "| clef | 2 | 50% |" in table
     assert "MISS room#2" in table and "ok   room#1" in table
 
@@ -82,6 +84,27 @@ def test_score_only_uses_the_saved_triage(world):
     repo, claims = world
     run_bench(repo, claims, T, Models(FakeDecisionModel("clef")))
 
-    score, _ = run_bench(repo, claims, T)
+    bench = run_bench(repo, claims, T)
 
-    assert score.n == 2
+    assert bench.score.n == 2
+
+
+def test_a_claim_that_fails_is_reported_not_scored_on_old_answers(world, monkeypatch):
+    repo, claims = world
+    run_bench(repo, claims, T, Models(FakeDecisionModel("clef")))
+    flash = FakeDecisionModel("clef-flash")
+    real = flash.decide
+
+    def flaky(state, questions):
+        if "Room claim 2" in state:
+            raise RuntimeError("timed out")
+        return real(state, questions)
+
+    monkeypatch.setattr(flash, "decide", flaky)
+
+    bench = run_bench(repo, claims, T, Models(flash))
+
+    assert bench.judged == 2
+    assert [c.key for c in bench.scored] == ["room#1"]
+    assert {c.triage.model for c in bench.scored} == {"clef-flash"}
+    assert bench.errors == ["room#2: timed out"]
