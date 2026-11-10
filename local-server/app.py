@@ -23,6 +23,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import OperationalError
 
+from adapters.chat.claim_tools import build_claim_tools
 from adapters.chat.context import ConfigChatSettings, OntologyWorkspaceContext
 from adapters.chat.proposal_tools import (
     DrSpecDriftTool,
@@ -52,6 +53,7 @@ from adapters.persistence.sqlite.approval_policy_repo import SQLiteApprovalPolic
 from adapters.persistence.sqlite.batch_repo import BatchRepository
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.chat_repo import SqliteConversationRepository
+from adapters.persistence.sqlite.claim_repo import SQLiteClaimRepository
 
 # Import adapters
 from adapters.persistence.sqlite.connection import DatabaseManager
@@ -94,6 +96,7 @@ from adapters.telemetry.log_bridge import OTLPLogHandler
 from adapters.web.admin_routes import router as admin_router
 from adapters.web.bundle_routes import router as bundle_router
 from adapters.web.chat_routes import router as chat_router
+from adapters.web.claims_routes import router as claims_router
 from adapters.web.decision_routes import router as decision_router
 from adapters.web.drift_routes import router as drift_router
 from adapters.web.extraction_examples import load_extraction_examples
@@ -186,6 +189,7 @@ from domain.pipelines.schema_relationship_reflection import (
 )
 from domain.versioning.approval_policy import ApprovalPolicyService
 from domain.versioning.bundle_import import BundleImportService
+from domain.versioning.claims import ClaimService
 from domain.versioning.drift import DriftImportService
 from domain.versioning.events import SyncCompleted
 from domain.versioning.ports import SyncTarget
@@ -610,6 +614,9 @@ async def lifespan(app: FastAPI):
             approval_policy_repo, cast(OntologyRepository, ontology_repo)
         )
         logger.info("ProposalService and ApprovalPolicyService created")
+        claim_service = ClaimService(
+            SQLiteClaimRepository(shared_session_factory), cast(OntologyRepository, ontology_repo)
+        )
 
         # Interchange service for import run tracking
         import_run_service = ImportRunService()
@@ -796,6 +803,7 @@ async def lifespan(app: FastAPI):
             DrDriftPlanner(cast(OntologyRepository, ontology_repo)),
         )
         app.state.approval_policy_service = approval_policy_service
+        app.state.claim_service = claim_service
         app.state.admin_service = admin_service
         app.state.load_demo_dataset = load_demo_dataset
         app.state.db_manager = db_manager
@@ -905,6 +913,7 @@ async def lifespan(app: FastAPI):
                         MarkProposalLandedTool(proposal_service, ProposalSource.MCP),
                         DrSpecDriftTool(app.state.drift_import_service),
                         *run_tools,
+                        *build_claim_tools(claim_service),
                     ],
                 )
                 logger.info("MCP server available at /mcp (bearer token required)")
@@ -977,6 +986,7 @@ app.include_router(admin_router)
 app.include_router(interchange_router)
 app.include_router(chat_router)
 app.include_router(proposals_router)
+app.include_router(claims_router)
 app.include_router(bundle_router)
 app.include_router(drift_router)
 app.include_router(decision_router)
