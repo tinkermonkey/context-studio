@@ -48,7 +48,12 @@ from domain.ontology.exceptions import (
     OntologyError,
 )
 from domain.ontology.snapshots import decode_field, entity_snapshot
-from domain.ontology.value_objects import DataPropertyValue, DataType, SourceRevision
+from domain.ontology.value_objects import (
+    DataPropertyValue,
+    DataType,
+    SourceRevision,
+    validate_predicate_identifier,
+)
 from domain.versioning.approval_policy import auto_apply_ids
 from domain.versioning.exceptions import (
     ChangeProposalNotFoundError,
@@ -275,7 +280,6 @@ OPERATION_FIELDS: dict[OperationKind, OperationFields] = {
         clearable=frozenset(
             {
                 "description",
-                "canonical_predicate",
                 "is_relevant",
                 "domain_class_id",
                 "range_class_id",
@@ -539,6 +543,7 @@ class ProposalService:
                 seen_seqs.add(draft.seq)
                 operation = self._validated(draft, refs)
                 self._check_dataset(operation, dataset_id)
+                self._check_predicate(operation, taxonomy_id)
                 self._check_conflicts(operation, touched, deleted)
                 built.append(operation)
             except _Invalid as exc:
@@ -1139,6 +1144,63 @@ class ProposalService:
             except (TypeError, KeyError, ValueError, AttributeError) as exc:
                 raise _Invalid("invalid", f"{name} is not valid: {exc}") from exc
 
+    def _check_predicate(self, operation: ProposedOperation, taxonomy_id: str | None) -> None:
+        """
+        A relationship type's predicate must be in its taxonomy's predicate catalog:
+        the taxonomy of its domain class (else its range class), or the proposal's.
+        A change of domain or range alone checks the type's current predicate there.
+        """
+        fields = operation.fields
+        if operation.kind is not K.PROPERTY or not (
+            {"canonical_predicate", "domain_class_id", "range_class_id"} & fields.keys()
+        ):
+            return
+        if "canonical_predicate" in fields:
+            value = fields["canonical_predicate"]
+        else:
+            # A new domain or range can move the type to another taxonomy's catalog,
+            # which must have its current predicate too.
+            current = (
+                self._repo.get_property_definition(operation.target_id)
+                if operation.op is not OperationType.CREATE and operation.target_id
+                else None
+            )
+            value = current.canonical_predicate if current else None
+        if not isinstance(value, str):
+            return  # a non-text value is already refused, and null can't be set
+        try:
+            identifier = validate_predicate_identifier(value)
+        except ValueError as exc:
+            raise _Invalid("invalid", f"canonical_predicate: {exc}") from exc
+        catalog = self._predicate_taxonomy(operation) or taxonomy_id
+        if catalog is None:
+            return  # nothing to look in yet: the ontology service decides on apply
+        if self._repo.get_predicate_by_identifier(catalog, identifier) is None:
+            raise _Invalid(
+                "unknown_predicate",
+                f"predicate {identifier!r} isn't in taxonomy {catalog}'s predicate catalog"
+                " (list its predicates with list_predicates); use one of them",
+            )
+
+    def _predicate_taxonomy(self, operation: ProposedOperation) -> str | None:
+        """
+        The taxonomy of a relationship type's domain class, else its range class,
+        as the operation leaves them (a class the proposal creates gives none).
+        """
+        fields = operation.fields
+        current = None
+        if operation.op is not OperationType.CREATE and operation.target_id:
+            current = self._repo.get_property_definition(operation.target_id)
+        for name in ("domain_class_id", "range_class_id"):
+            class_id = fields[name] if name in fields else getattr(current, name, None)
+            cls = self._repo.get_class(class_id) if isinstance(class_id, str) else None
+            if cls is not None and cls.taxonomy_id:
+                return cls.taxonomy_id
+        if current is not None and current.predicate_id:
+            predicate = self._repo.get_predicate(current.predicate_id)
+            return predicate.taxonomy_id if predicate else None
+        return None
+
     def _check_id_fields(
         self, operation: ProposedOperation, refs: dict[str, OperationKind]
     ) -> None:
@@ -1490,6 +1552,8 @@ class ProposalService:
                 except ValueError as exc:
                     raise _ApplyFailed(INVALID_EDIT, str(exc)) from exc
                 fields = self._checked_edit(operation, fields)
+            # After the client's rules, whose reasons are the more specific.
+            self._checked_edit_predicate(operation, fields)
             target_id: str = operation.target_id  # type: ignore[assignment]
             before = entity_snapshot(self._load(K.PROPERTY, target_id))
             result = self._update_type(
@@ -1915,6 +1979,14 @@ class ProposalService:
         except (TypeError, ValueError) as exc:
             raise _ApplyFailed(INVALID_EDIT, str(exc)) from exc
         return as_update.fields
+
+    def _checked_edit_predicate(self, operation: ProposedOperation, fields: dict[str, Any]) -> None:
+        """An edit's predicate (or new domain or range) must fit a catalog, as on propose."""
+        as_update = replace(operation, op=OperationType.UPDATE, fields=dict(fields))
+        try:
+            self._check_predicate(as_update, None)
+        except _Invalid as exc:
+            raise _ApplyFailed(INVALID_EDIT, exc.message) from exc
 
     def _apply_one(
         self,
@@ -2618,6 +2690,11 @@ class ProposalService:
             delete(target)
             return target  # type: ignore[return-value]
 
+        if kind is K.PROPERTY and op is not OperationType.DELETE:
+            # Where to find its predicate when it has neither a domain nor a range.
+            proposal = self._proposals.get(run_id)
+            values["taxonomy_id"] = proposal.taxonomy_id if proposal else None
+
         if op is OperationType.CREATE:
             return self._create(kind, values, run_id, dataset_id)
 
@@ -2672,7 +2749,7 @@ class ProposalService:
 
     def _update_property(self, target: str, v: dict[str, Any]) -> str:
         kwargs: dict[str, Any] = {}
-        for name in ("identifier", "title", "external_references", "derived"):
+        for name in ("identifier", "title", "external_references", "derived", "taxonomy_id"):
             if name in v:
                 kwargs[name] = v[name]
         if "description" in v:

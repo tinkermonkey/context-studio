@@ -25,6 +25,8 @@ from adapters.persistence.sqlite.mappers import (
     deserialize_external_references,
     map_domain_to_orm,
     map_orm_to_domain,
+    map_orm_to_predicate,
+    map_predicate_to_orm,
     map_relationship_domain_to_orm,
     map_relationship_orm_to_domain,
     serialize_external_references,
@@ -40,6 +42,9 @@ from adapters.persistence.sqlite.models import (
     OntologyEntity,
 )
 from adapters.persistence.sqlite.models import (
+    Predicate as PredicateORM,
+)
+from adapters.persistence.sqlite.models import (
     PropertyDefinition as PropertyDefinitionORM,
 )
 from adapters.persistence.sqlite.models import (
@@ -51,6 +56,7 @@ from domain.ontology.entities import (
     ConceptScheme,
     Dataset,
     Individual,
+    Predicate,
     PropertyDefinition,
     Relationship,
     Taxonomy,
@@ -151,6 +157,7 @@ def _extract_constraint_name_from_integrity_error(error: IntegrityError) -> str 
     - "UNIQUE constraint failed: ontology_entities.identifier"
     - "UNIQUE constraint failed: relationships.uk_relationship_triple"
     - "UNIQUE constraint failed: attribute_definitions.uk_attribute_class_identifier"
+    - "UNIQUE constraint failed: predicates.taxonomy_id, predicates.identifier"
     - "NOT NULL constraint failed: ..."
     - "FOREIGN KEY constraint failed"
 
@@ -166,6 +173,10 @@ def _extract_constraint_name_from_integrity_error(error: IntegrityError) -> str 
             return "uk_relationship_triple"
         if "uk_attribute_class_identifier" in error_str:
             return "uk_attribute_class_identifier"
+        if "uk_predicate_taxonomy_identifier" in error_str or (
+            "predicates.taxonomy_id" in error_str and "predicates.identifier" in error_str
+        ):
+            return "uk_predicate_taxonomy_identifier"
         if "datasets.taxonomy_id" in error_str:
             # SQLite names the columns, not the constraint, for a multi-column UNIQUE.
             return "uk_dataset_taxonomy_identifier"
@@ -368,13 +379,17 @@ class SQLiteOntologyRepository:
 
     def delete_taxonomy(self, taxonomy_id: str) -> bool:
         """
-        Delete a taxonomy and all its children (cascade).
+        Delete a taxonomy and all its children (cascade), its predicate catalog included.
 
         Args:
             taxonomy_id: UUID of the taxonomy
 
         Returns:
             True if deleted, False if not found
+
+        Raises:
+            EntityInUseError: If relationship types still use the taxonomy's
+                predicates (ontology_entities.predicate_id is ON DELETE RESTRICT)
         """
         with self.session_factory() as session:
             orm_entity = (
@@ -390,7 +405,13 @@ class SQLiteOntologyRepository:
                 return False
 
             session.delete(orm_entity)
-            session.commit()
+            try:
+                session.commit()
+            except IntegrityError as exc:
+                session.rollback()
+                raise EntityInUseError(
+                    f"Taxonomy '{taxonomy_id}' has predicates that relationship types still use"
+                ) from exc
             return True
 
     # ==================== ConceptScheme CRUD ====================
@@ -1151,6 +1172,132 @@ class SQLiteOntologyRepository:
             session.commit()
             return True
 
+    # ==================== Predicate CRUD ====================
+
+    def list_predicates(self, taxonomy_id: str) -> list[Predicate]:
+        """
+        Retrieve a taxonomy's predicate catalog.
+
+        Args:
+            taxonomy_id: The taxonomy whose predicates to list
+
+        Returns:
+            The taxonomy's predicates, by identifier
+        """
+        with self.session_factory() as session:
+            rows = (
+                session.query(PredicateORM)
+                .filter(PredicateORM.taxonomy_id == str(taxonomy_id))
+                .order_by(PredicateORM.identifier)
+                .all()
+            )
+            return [map_orm_to_predicate(row) for row in rows]
+
+    def get_predicate(self, predicate_id: str) -> Optional[Predicate]:
+        """
+        Retrieve a predicate by ID.
+
+        Args:
+            predicate_id: UUID of the predicate
+
+        Returns:
+            Predicate entity if found, None otherwise
+        """
+        with self.session_factory() as session:
+            row = session.get(PredicateORM, str(predicate_id))
+            return map_orm_to_predicate(row) if row is not None else None
+
+    def get_predicate_by_identifier(self, taxonomy_id: str, identifier: str) -> Optional[Predicate]:
+        """
+        Retrieve a taxonomy's predicate by its identifier.
+
+        Args:
+            taxonomy_id: The taxonomy whose catalog to look in
+            identifier: The predicate identifier (e.g. "part_of")
+
+        Returns:
+            Predicate entity if found, None otherwise
+        """
+        with self.session_factory() as session:
+            row = (
+                session.query(PredicateORM)
+                .filter(
+                    PredicateORM.taxonomy_id == str(taxonomy_id),
+                    PredicateORM.identifier == identifier,
+                )
+                .first()
+            )
+            return map_orm_to_predicate(row) if row is not None else None
+
+    def save_predicate(self, predicate: Predicate) -> Predicate:
+        """
+        Create or update a predicate.
+
+        Updates bump the version and last_modified. The taxonomy is fixed at create.
+
+        Args:
+            predicate: Predicate entity to save
+
+        Returns:
+            Saved Predicate entity (with timestamps set)
+
+        Raises:
+            DuplicateEntityError: If the taxonomy already has another predicate
+                with the identifier
+        """
+        duplicate_message = (
+            f"Predicate '{predicate.identifier}' already exists in taxonomy"
+            f" {predicate.taxonomy_id}"
+        )
+        with self.session_factory() as session:
+            orm_predicate = session.get(PredicateORM, str(predicate.id))
+            taxonomy_id = (
+                str(orm_predicate.taxonomy_id)
+                if orm_predicate is not None
+                else str(predicate.taxonomy_id)
+            )
+            clash = (
+                session.query(PredicateORM.id)
+                .filter(
+                    PredicateORM.taxonomy_id == taxonomy_id,
+                    PredicateORM.identifier == predicate.identifier,
+                    PredicateORM.id != str(predicate.id),
+                )
+                .first()
+            )
+            if clash is not None:
+                raise DuplicateEntityError(duplicate_message)
+
+            now = datetime.now(timezone.utc)
+            if orm_predicate is None:
+                orm_predicate = map_predicate_to_orm(predicate)
+                orm_predicate.created_at = predicate.created_at or now  # type: ignore[assignment]
+                orm_predicate.last_modified = now  # type: ignore[assignment]
+                orm_predicate.version = 1  # type: ignore[assignment]
+                session.add(orm_predicate)
+            else:
+                orm_predicate.identifier = predicate.identifier  # type: ignore[assignment]
+                orm_predicate.title = predicate.title  # type: ignore[assignment]
+                orm_predicate.description = predicate.description  # type: ignore[assignment]
+                orm_predicate.external_references = (  # type: ignore[assignment]
+                    serialize_external_references(predicate.external_references)
+                )
+                orm_predicate.status = predicate.status.value  # type: ignore[assignment]
+                orm_predicate.last_modified = now  # type: ignore[assignment]
+                orm_predicate.version = orm_predicate.version + 1  # type: ignore[assignment]
+
+            try:
+                session.commit()
+            except IntegrityError as e:
+                session.rollback()
+                if (
+                    _extract_constraint_name_from_integrity_error(e)
+                    == "uk_predicate_taxonomy_identifier"
+                ):
+                    raise DuplicateEntityError(duplicate_message) from e
+                raise
+            return map_orm_to_predicate(orm_predicate)
+
     # ==================== PropertyDefinition CRUD ====================
 
     def get_property_definition(
@@ -1197,6 +1344,7 @@ class SQLiteOntologyRepository:
         query: Optional[str] = None,
         ids: Optional[list[str]] = None,
         domain_class_id: Optional[str] = None,
+        taxonomy_id: Optional[str] = None,
     ) -> list[PropertyDefinition]:
         """
         Retrieve property definitions with optional filtering, pagination, sorting, and text search.
@@ -1210,12 +1358,15 @@ class SQLiteOntologyRepository:
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of property definition IDs to restrict results to
             domain_class_id: Optional class ID the property's domain must equal
+            taxonomy_id: Optional taxonomy the property's predicate must belong to
 
         Returns:
             Sequence of PropertyDefinition entities
         """
         with self.session_factory() as session:
-            q = self._property_definition_query(session, is_relevant, query, ids, domain_class_id)
+            q = self._property_definition_query(
+                session, is_relevant, query, ids, domain_class_id, taxonomy_id
+            )
             q = _apply_entity_sort(q, sort_by, sort_order)
 
             if limit is not None:
@@ -1230,6 +1381,7 @@ class SQLiteOntologyRepository:
         query: Optional[str],
         ids: Optional[list[str]],
         domain_class_id: Optional[str],
+        taxonomy_id: Optional[str] = None,
     ) -> Any:
         """Base query for property definitions with the list/count filters applied."""
         q = session.query(OntologyEntity).filter(
@@ -1243,6 +1395,10 @@ class SQLiteOntologyRepository:
             q = q.filter(OntologyEntity.id.in_(set(ids)))
         if domain_class_id is not None:
             q = q.filter(OntologyEntity.domain_class_id == domain_class_id)
+        if taxonomy_id is not None:
+            q = q.join(PredicateORM, PredicateORM.id == OntologyEntity.predicate_id).filter(
+                PredicateORM.taxonomy_id == str(taxonomy_id)
+            )
         return q
 
     def count_property_definitions(
@@ -1251,6 +1407,7 @@ class SQLiteOntologyRepository:
         query: Optional[str] = None,
         ids: Optional[list[str]] = None,
         domain_class_id: Optional[str] = None,
+        taxonomy_id: Optional[str] = None,
     ) -> int:
         """
         Count property definitions, optionally filtered by relevance, text search, ids or domain.
@@ -1260,12 +1417,15 @@ class SQLiteOntologyRepository:
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of property definition IDs to restrict the count to
             domain_class_id: Optional class ID the property's domain must equal
+            taxonomy_id: Optional taxonomy the property's predicate must belong to
 
         Returns:
             Total count of property definitions
         """
         with self.session_factory() as session:
-            q = self._property_definition_query(session, is_relevant, query, ids, domain_class_id)
+            q = self._property_definition_query(
+                session, is_relevant, query, ids, domain_class_id, taxonomy_id
+            )
             return int(q.count())
 
     def count_by_scheme(
@@ -1614,9 +1774,7 @@ class SQLiteOntologyRepository:
                 mapped_orm = map_domain_to_orm(prop)
                 orm_entity.title = prop.title  # type: ignore[assignment]
                 orm_entity.description = prop.description  # type: ignore[assignment]
-                orm_entity.canonical_predicate = (
-                    prop.canonical_predicate  # type: ignore[assignment]
-                )
+                orm_entity.predicate_id = prop.predicate_id  # type: ignore[assignment]
                 orm_entity.identifier = prop.identifier  # type: ignore[assignment]
                 orm_entity.ontology_mapping = (
                     mapped_orm.ontology_mapping
@@ -1672,6 +1830,8 @@ class SQLiteOntologyRepository:
                     raise IdentifierConflictError(prop.identifier) from e
                 raise e
 
+            # canonical_predicate is read through predicate_id; reload it
+            session.refresh(orm_entity, ["canonical_predicate"])
             return cast(PropertyDefinition, map_orm_to_domain(orm_entity))
 
     def delete_property_definition(self, property_id: str) -> bool:

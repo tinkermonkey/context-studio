@@ -104,6 +104,7 @@ def graph(ontology):
     room = ontology.create_class(vocab.id, "Room", description="A room")
     kitchen_cls = ontology.create_class(vocab.id, "Kitchen", parent_class_id=room.id)
     place = ontology.create_class(other.id, "Place")
+    ontology.create_predicate(taxonomy.id, "near-to")
     near = ontology.create_property_definition(
         "near", "near", domain_class_id=room.id, range_class_id=room.id
     )

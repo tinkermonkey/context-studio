@@ -776,14 +776,25 @@ class TestPropertyDefinitionCRUD:
         assert body["title"] == "Updated Property Title"
         assert body["description"] == "Updated description"
 
-    def test_canonical_predicate_round_trips_through_create_get_update(self, client):
-        """canonical_predicate is accepted on create, returned on get, and editable."""
+    def test_canonical_predicate_round_trips_through_create_get_update(
+        self, client, ontology_service
+    ):
+        """
+        canonical_predicate is accepted on create, returned on get, and editable. The
+        relationship-type form is one of CS's own editors: a predicate its taxonomy's
+        catalog lacks is added to it (#1480), and a type's predicate can't be cleared.
+        """
+        canon = ontology_service.create_taxonomy(title="Canon")
+        scheme = ontology_service.create_scheme(taxonomy_id=canon.id, title="Canon scheme")
+        page = ontology_service.create_class(scheme.id, "Page")
+        taxonomy, page = {"id": canon.id}, {"id": page.id}
         create_response = client.post(
             "/api/properties",
             json={
                 "identifier": "canon_prop",
                 "title": "Canon Test Property",
                 "canonical_predicate": "navigates-to",
+                "domain_class_id": page["id"],
             },
         )
         assert create_response.status_code == status.HTTP_201_CREATED
@@ -801,19 +812,20 @@ class TestPropertyDefinitionCRUD:
         )
         assert update_response.status_code == status.HTTP_200_OK
         assert update_response.json()["canonical_predicate"] == "flows-to"
+        catalog = client.get(f"/api/taxonomies/{taxonomy['id']}/predicates").json()
+        assert [p["identifier"] for p in catalog] == ["flows-to", "navigates-to"]
+        assert update_response.json()["predicate_id"] == catalog[0]["id"]
 
         # Omitting the field on a subsequent update leaves it unchanged (the
-        # model_fields_set flag pattern), while an explicit null clears it.
+        # model_fields_set flag pattern), while an explicit null is refused.
         untouched = client.put(
             f"/api/properties/{property_id}",
             json={"title": "Canon Test Property v2"},
         )
         assert untouched.json()["canonical_predicate"] == "flows-to"
-        cleared = client.put(
-            f"/api/properties/{property_id}",
-            json={"canonical_predicate": None},
-        )
-        assert cleared.json()["canonical_predicate"] is None
+        cleared = client.put(f"/api/properties/{property_id}", json={"canonical_predicate": None})
+        assert cleared.status_code == status.HTTP_400_BAD_REQUEST
+        assert "can't be cleared" in cleared.json()["detail"]
 
     def test_delete_property_definition_returns_204(self, client):
         """DELETE /api/properties/{id} returns 204."""

@@ -54,6 +54,7 @@ READ_TOOLS = [
     "list_children",
     "list_relationships",
     "list_relationship_types",
+    "list_predicates",
     "get_neighbors",
     "find_path",
 ]

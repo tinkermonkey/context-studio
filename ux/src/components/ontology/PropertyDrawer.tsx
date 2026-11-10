@@ -160,7 +160,7 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
                 rows={[
                   { key: "Identifier", value: property.identifier },
                   { key: "Title", value: property.title },
-                  { key: "Canonical Predicate", value: property.canonical_predicate || "—" },
+                  { key: "Predicate", value: property.canonical_predicate || "—" },
                   { key: "Description", value: property.description || "—" },
                   {
                     key: "Created",
@@ -214,7 +214,7 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
                 />
 
                 <EditableField
-                  label="Canonical predicate"
+                  label="Predicate"
                   value={property.canonical_predicate ?? ""}
                   onSave={async (v) => {
                     await updateMutation.mutateAsync({
@@ -222,6 +222,11 @@ export function PropertyDrawer({ property }: PropertyDrawerProps) {
                       data: { canonical_predicate: v.trim() || null },
                     });
                   }}
+                  validate={(v) =>
+                    !v.trim() && property.canonical_predicate
+                      ? "A relationship type's predicate can't be cleared"
+                      : undefined
+                  }
                   placeholder="e.g. navigates-to"
                   mono
                   data-testid="property-drawer-canonical-predicate-field"

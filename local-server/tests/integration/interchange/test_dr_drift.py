@@ -237,9 +237,6 @@ def test_hand_edits_are_reported_proposed_and_cleared_once_applied(world, spec):
     )
     new_rel = _add_relationship(spec, "business.product", "serves", "business.businessactor")
     _delete_node(spec, "api.license")
-    (spec / "dist" / "base.json").write_text(
-        json.dumps({"predicates": {"serves": {"inverse": "served-by", "category": "dependency"}}})
-    )
 
     dry = world.drift.reimport(str(spec))
 
@@ -252,7 +249,6 @@ def test_hand_edits_are_reported_proposed_and_cleared_once_applied(world, spec):
         ("property", "business.product.composes.business.contract", "update"),
         ("property", new_rel, "create"),
         ("class", "api.license", "delete"),
-        ("taxonomy", DR_TAXONOMY_IDENTIFIER, "update"),
     } <= _changes(dry.plan)
     contact = next(e for e in dry.plan.entries if e.source_id == "api.contact")
     assert contact.fields["description"]["source"] == "Who to contact about the API."
@@ -268,12 +264,39 @@ def test_hand_edits_are_reported_proposed_and_cleared_once_applied(world, spec):
 
     assert world.drift.reimport(str(spec)).plan.entries == []
     assert _class(world.repo, "api.license") is None
-    assert dr_predicate_catalog(world.repo)["serves"]["inverse"] == "served-by"
     product = _class(world.repo, "business.product")
     attributes = {
         a.title: a for a in world.repo.list_attribute_definitions(class_id=product.id, limit=None)
     }
     assert attributes["launched"].datatype.value == "boolean"
+
+
+def test_predicate_catalog_drift_is_reported_without_operations(world, spec):
+    """#1480: predicates are reported only; proposing them comes with #1481."""
+    known = sorted(dr_predicate_catalog(world.repo))
+    catalog = {name: {"inverse": None, "category": None, "description": None} for name in known}
+    catalog["serves"] = {**catalog.get("serves", {}), "inverse": "served-by", "category": "x"}
+    catalog["guards"] = {"inverse": "guarded-by", "category": "security", "description": "G"}
+    (spec / "dist" / "base.json").write_text(json.dumps({"predicates": catalog}))
+
+    before = world.repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER).source_revision
+
+    plan = world.drift.reimport(str(spec)).plan
+
+    predicates = {(e.source_id, e.change) for e in plan.entries if e.kind == "predicate"}
+    assert ("guards", "create") in predicates and ("serves", "update") in predicates
+    assert plan.operations == []
+    real = world.drift.reimport(str(spec), dry_run=False)
+    assert real.proposal is None
+    # The taxonomy doesn't match the spec yet, so the spec's revision isn't recorded.
+    assert world.repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER).source_revision == before
+
+
+def test_a_relationship_type_on_a_new_predicate_stops_the_drift(world, spec):
+    _add_relationship(spec, "business.product", "guards", "business.businessactor")
+
+    with pytest.raises(DriftError, match="guards"):
+        world.drift.reimport(str(spec))
 
 
 def test_a_move_dr_landed_moves_the_class_and_its_relationship_types(world, spec):

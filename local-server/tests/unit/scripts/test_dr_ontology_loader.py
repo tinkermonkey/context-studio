@@ -355,7 +355,7 @@ def _write_base(spec_dir, data):
     (spec_dir / "dist" / "base.json").write_text(json.dumps(data))
 
 
-def test_read_predicate_catalog_keeps_inverse_category_and_description(tmp_path):
+def test_read_predicate_catalog_keeps_the_dr_fields_and_description(tmp_path):
     entry = {
         "predicate": "owns",
         "inverse": "owned-by",
@@ -371,6 +371,8 @@ def test_read_predicate_catalog_keeps_inverse_category_and_description(tmp_path)
             "inverse": "owned-by",
             "category": "business",
             "description": "Element has authority over another",
+            "archimate_alignment": "Assignment",
+            "semantics": {"directionality": "bidirectional"},
         }
     }
 

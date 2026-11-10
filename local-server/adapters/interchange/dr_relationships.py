@@ -27,9 +27,12 @@ from domain.versioning.proposals import ChangeProposal, OperationStatus, Propose
 
 DR_SOURCE = "documentation_robotics"
 DR_TAXONOMY_IDENTIFIER = "dr_spec"
-# The dr_spec taxonomy's DR reference; its metadata holds the spec's predicate
-# catalog ({"spec_version", "predicates": {id: {inverse, category, description}}}).
+# The dr_spec taxonomy's DR reference; its metadata holds the spec version. The
+# spec's predicate catalog is the taxonomy's predicates: each one's DR metadata
+# (DR_PREDICATE_KEYS) rides on its own DR reference.
 DR_SPEC_REFERENCE = "spec"
+# A predicate's DR-only fields, kept on its DR reference's metadata.
+DR_PREDICATE_KEYS = ("inverse", "category", "archimate_alignment", "semantics")
 # A relationship type's spec attributes, kept on its DR reference's metadata:
 # "cardinality" and "strength" (the schema's properties.<name>.const) and
 # "evidence" (its x-dr-evidence lines; absent when the schema has none).
@@ -333,17 +336,29 @@ def dr_spec_classes(repo: OntologyRepository) -> dict[str, str]:
 
 def dr_predicate_catalog(repo: OntologyRepository) -> dict[str, dict[str, Any]] | None:
     """
-    The DR predicate catalog the last spec import stored on the dr_spec
-    taxonomy, by predicate id; None if no import stored one (an older import,
-    or a spec without dist/base.json).
+    The dr_spec taxonomy's predicate catalog, by predicate id: each predicate's
+    description and the DR metadata on its DR reference (inverse, category,
+    archimate_alignment, semantics). None if it has no predicates.
     """
     taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
-    for ref in getattr(taxonomy, "external_references", None) or []:
-        if ref.source == DR_SOURCE and ref.identifier == DR_SPEC_REFERENCE and ref.metadata:
-            predicates = ref.metadata.get("predicates")
-            if isinstance(predicates, dict) and predicates:
-                return dict(predicates)
-    return None
+    if taxonomy is None:
+        return None
+    catalog = {
+        predicate.identifier: {
+            **_dr_reference_metadata(predicate.external_references),
+            "description": predicate.description,
+        }
+        for predicate in repo.list_predicates(taxonomy.id)
+    }
+    return catalog or None
+
+
+def _dr_reference_metadata(references: list[ExternalReference]) -> dict[str, Any]:
+    """The metadata of the DR reference among references; empty when there's none."""
+    for ref in references:
+        if ref.source == DR_SOURCE:
+            return dict(ref.metadata or {})
+    return {}
 
 
 def is_dr_taxonomy(repo: OntologyRepository, taxonomy_id: str) -> bool:
@@ -415,10 +430,10 @@ class DrRelationshipRules:
     (the classes of DR's source and destination spec nodes), plus title or
     description. Fields the edit leaves out keep the target's current values.
     The edit is refused, with the reason, unless both classes are imported DR
-    spec classes, the predicate is in the spec's predicate catalog (stored on
-    the dr_spec taxonomy at import; see `dr_predicate_catalog`), no other
-    relationship type has the triple, and no other operation of the proposal
-    (pending, failed, or edited in the same apply) produces it. The applied
+    spec classes, no other relationship type has the triple, and no other operation of the proposal
+    (pending, failed, or edited in the same apply) produces it; the
+    predicate must be in the dr_spec taxonomy's predicate catalog, which the
+    ontology service checks when the edit applies. The applied
     fields always carry the whole triple: the predicate and both classes, the
     identifier a re-import of the edited spec computes, and the DR external
     reference (whatever the edit gave for those two; an edit's DR reference
@@ -483,19 +498,11 @@ class DrRelationshipRules:
         if target is None:
             raise ValueError(f"No property definition {operation.target_id}")
         current = self._triple_of(target)
-        catalog = dr_predicate_catalog(self._repo)
-        if catalog is None:
-            raise ValueError(
-                "the DR spec was imported without its predicate catalog; re-import the "
-                "DR spec to load it"
-            )
         classes = dr_spec_classes(self._repo)
         spec_nodes = {class_id: node for node, class_id in classes.items()}
         properties = dr_property_definitions(self._repo)
         new = self._edited(fields, current, spec_nodes)
 
-        if new.predicate not in catalog:
-            raise ValueError(f"predicate '{new.predicate}' is not in the DR predicate catalog")
         holder = properties.get(new.id)
         if holder is not None and holder.id != target.id:
             raise ValueError(f"{new.id} already exists")
