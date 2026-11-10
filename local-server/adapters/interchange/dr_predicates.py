@@ -87,9 +87,11 @@ def dr_predicate_metadata(references: Any) -> dict[str, Any] | None:
 
 def dr_predicate_problems(metadata: Mapping[str, Any], creating: bool) -> list[str]:
     """
-    How a DR predicate's metadata breaks DR's catalog schema. A create must give
-    inverse, category and all four semantics; an update may give some of them
-    (semantics may be partial: DR merges the flags).
+    How a DR predicate's metadata breaks DR's catalog schema. With `creating`
+    (a create, or an update that sets the DR reference: Context Studio keeps
+    the whole entry, and the export sends only what changed) inverse, category
+    and all four semantics are required; otherwise only the given fields are
+    checked.
     """
     problems: list[str] = []
     unknown = sorted(set(metadata) - set(DR_PREDICATE_KEYS))
@@ -98,7 +100,7 @@ def dr_predicate_problems(metadata: Mapping[str, Any], creating: bool) -> list[s
     if creating:
         missing = [key for key in ("inverse", "category", "semantics") if key not in metadata]
         if missing:
-            problems.append(f"a new DR predicate needs {', '.join(missing)}")
+            problems.append(f"a DR predicate needs {', '.join(missing)}")
     inverse = metadata.get("inverse", "")
     if "inverse" in metadata and (not isinstance(inverse, str) or not inverse.strip()):
         problems.append("inverse must be a predicate name")
@@ -141,8 +143,10 @@ def _semantics_problems(semantics: Any, creating: bool) -> list[str]:
 class DrPredicateRules:
     """
     ProposalApplyRules for DR predicates: a predicate create or update whose
-    references carry a DR reference is checked against DR's catalog schema as
-    it applies. A create also needs a description, as DR's catalog does.
+    references carry a DR reference, or an update of a predicate that has one,
+    is checked against DR's catalog schema as it applies. The DR reference it
+    sets holds the whole entry (inverse, category, semantics; archimate_alignment
+    optional), and its description, which DR's catalog requires, can't be empty.
     """
 
     def __init__(self, repo: OntologyRepository) -> None:
@@ -154,7 +158,10 @@ class DrPredicateRules:
             OperationType.UPDATE,
         ):
             return False
-        return dr_predicate_metadata(fields.get("external_references")) is not None
+        if dr_predicate_metadata(fields.get("external_references")) is not None:
+            return True
+        target = self._repo.get_predicate(operation.target_id) if operation.target_id else None
+        return target is not None and dr_predicate_metadata(target.external_references) is not None
 
     def prepare(
         self,
@@ -167,9 +174,14 @@ class DrPredicateRules:
 
     def check(self, operation: ProposedOperation, fields: dict[str, Any]) -> None:
         creating = operation.op is OperationType.CREATE
-        metadata = dr_predicate_metadata(fields.get("external_references")) or {}
-        problems = dr_predicate_problems(metadata, creating)
-        if creating and not (fields.get("description") or "").strip():
-            problems.insert(0, "a new DR predicate needs a description")
+        problems: list[str] = []
+        if "external_references" in fields or creating:
+            metadata = dr_predicate_metadata(fields.get("external_references"))
+            if metadata is None:
+                problems.append("a DR predicate keeps its DR reference")
+            else:
+                problems += dr_predicate_problems(metadata, creating=True)
+        if (creating or "description" in fields) and not (fields.get("description") or "").strip():
+            problems.insert(0, "a DR predicate needs a description")
         if problems:
             raise ValueError("; ".join(problems))

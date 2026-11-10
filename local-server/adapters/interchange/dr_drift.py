@@ -11,9 +11,7 @@ Everything the DR importer loads is compared, matched by DR id (the
   spec dropped a delete (after the relationship-type deletes);
 - schemes, by layer: title, and description when the layer file has one; a new
   layer is a create;
-- classes, by spec node id: title, description, scheme, and their DR
-  reference with standard, evidence and distinguish (x-dr-standard,
-  x-dr-evidence, x-dr-distinguish) as its metadata;
+- classes, by spec node id: title, description, scheme, DR reference;
 - attributes, by DR attribute name within their class: title, description,
   datatype, required, allowed values, and the rest of their JSON Schema on
   their DR reference;
@@ -428,30 +426,26 @@ class _Planner:
                         "title": node.title,
                         "description": node.description,
                         "identifier": identifier,
-                        "external_references": [_reference(node.spec_node_id, node.metadata)],
+                        "external_references": [_reference(node.spec_node_id)],
                     },
                     node.spec_node_id,
                 )
                 continue
-            reference = _reference(node.spec_node_id, node.metadata)
-            current = _dr_ref(cls)
             pairs: dict[str, tuple[Any, Any]] = {
                 "title": (cls.title, node.title),
                 "description": (_text(cls.description), _text(node.description)),
-                "external_references": (
-                    [r.to_dict() for r in cls.external_references],
-                    _with_dr_ref(cls, reference),
-                ),
             }
+            if old_id is not None:
+                pairs["external_references"] = (
+                    [r.to_dict() for r in cls.external_references],
+                    _with_dr_ref(cls, _reference(node.spec_node_id)),
+                )
             move = None
             if cls.concept_scheme_id != scheme_id:
                 move = {"concept_scheme_id": scheme_id, "parent_class_id": None}
-            compare = {
-                "external_references": (
-                    (current.identifier, _json(current.metadata)) if current else None,
-                    (node.spec_node_id, reference["metadata"]),
-                )
-            }
+            compare = {}
+            if old_id is not None:
+                compare["external_references"] = (old_id, node.spec_node_id)
             change = "move" if old_id is not None or move else "update"
             self._changed(K.CLASS, cls, node.spec_node_id, pairs, compare, move, change)
             class_ids[node.spec_node_id] = cls.id

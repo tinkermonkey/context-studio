@@ -284,28 +284,6 @@ describe("changeRows", () => {
     ]);
   });
 
-  it("puts a DR node type's distinguish right after its description (#1481)", () => {
-    const ref = (metadata: Record<string, unknown>) => [
-      { source: "documentation_robotics", identifier: "api.operation", uri: null, metadata },
-    ];
-    const update = createProposedOperation({
-      op: "update",
-      kind: "class",
-      fields: {
-        description: "An API operation.",
-        external_references: ref({ distinguish: { "api.endpoint": "use that for URLs" } }),
-      },
-      base: { description: "An operation.", external_references: ref({ standard: "OpenAPI" }) },
-    });
-
-    expect(changeRows(update).map((row) => row.field)).toEqual([
-      "description",
-      "distinguish",
-      "standard",
-      "external_references",
-    ]);
-  });
-
   it("names a predicate update's target and a predicate delete's replacement", () => {
     const update = createProposedOperation({
       op: "update",

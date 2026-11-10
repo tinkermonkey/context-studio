@@ -394,62 +394,9 @@ def test_a_move_made_in_context_studio_and_landed_only_swaps_the_dr_ids(world, s
     entry = next(e for e in plan.entries if e.kind == "class")
     assert entry.change == "move"
     assert "concept_scheme_id" not in entry.fields
-    assert entry.fields["external_references"] == {
-        "taxonomy": ("business.product", None),
-        "source": (new_id, None),
-    }
+    assert entry.fields["external_references"] == {"taxonomy": "business.product", "source": new_id}
     _apply_all(world, world.drift.reimport(str(spec), dry_run=False).proposal)
     assert world.drift.reimport(str(spec)).plan.entries == []
-
-
-def _set_node_fields(spec, node_id, **fields):
-    """Give a node schema DR fields (x-dr-standard, ...); None drops one."""
-
-    def change(data):
-        for key, value in fields.items():
-            if value is None:
-                data.pop(f"x-dr-{key}", None)
-            else:
-                data[f"x-dr-{key}"] = value
-
-    _edit_node(spec, node_id, change)
-
-
-def test_node_fields_in_the_spec_are_proposed_on_the_class_dr_reference(world, spec):
-    """#1481: x-dr-standard, x-dr-evidence and x-dr-distinguish drift like the DR reference."""
-    _set_node_fields(
-        spec,
-        "api.contact",
-        standard="OpenAPI 3.1 Contact Object",
-        evidence=["an info.contact block"],
-        distinguish={"api.license": "the block names the API's license"},
-    )
-
-    plan = world.drift.reimport(str(spec)).plan
-
-    assert _changes(plan) == {("class", "api.contact", "update")}
-    (entry,) = plan.entries
-    assert entry.fields["external_references"]["source"] == (
-        "api.contact",
-        {
-            "standard": "OpenAPI 3.1 Contact Object",
-            "evidence": ["an info.contact block"],
-            "distinguish": {"api.license": "the block names the API's license"},
-        },
-    )
-    _apply_all(world, world.drift.reimport(str(spec), dry_run=False).proposal)
-    assert world.drift.reimport(str(spec)).plan.entries == []
-
-    _set_node_fields(spec, "api.contact", standard=None)
-
-    (entry,) = world.drift.reimport(str(spec)).plan.entries
-    assert entry.fields["external_references"]["source"] == (
-        "api.contact",
-        {
-            "evidence": ["an info.contact block"],
-            "distinguish": {"api.license": "the block names the API's license"},
-        },
-    )
 
 
 def test_a_new_run_supersedes_the_open_proposal_of_an_earlier_one(world, spec):

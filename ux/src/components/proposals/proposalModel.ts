@@ -541,13 +541,10 @@ const FIELD_ORDER = [
   "identifier",
   "title",
   "description",
-  // A DR node type's distinguish sits by its description: DR lands both as given.
-  "distinguish",
   "inverse",
   "category",
   "archimate_alignment",
   "semantics",
-  "standard",
   "cardinality",
   "strength",
   "evidence",
@@ -659,14 +656,11 @@ export const DR_PREDICATE_FIELDS = [
   "archimate_alignment",
   "semantics",
 ] as const;
-/** A DR node type's x-dr fields, kept on its class's DR reference's metadata (#1481). */
-export const DR_NODE_FIELDS = ["distinguish", "standard", "evidence"] as const;
 
 /** Per kind, the DR fields that get rows of their own. */
 const DR_FIELDS: Record<string, readonly string[]> = {
   property: DR_ATTRIBUTES,
   predicate: DR_PREDICATE_FIELDS,
-  class: DR_NODE_FIELDS,
 };
 
 /**

@@ -55,7 +55,7 @@ def test_a_create_breaking_drs_catalog_schema_is_refused(metadata, problem):
     assert any(problem in p for p in dr_predicate_problems(metadata, creating=True))
 
 
-def test_an_update_may_give_some_fields_and_partial_semantics():
+def test_without_creating_only_the_given_fields_are_checked():
     assert dr_predicate_problems({"semantics": {"transitivity": True}}, creating=False) == []
     assert dr_predicate_problems({"category": "ux"}, creating=False) == []
 

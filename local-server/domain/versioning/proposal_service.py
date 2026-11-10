@@ -129,6 +129,8 @@ UNRESOLVABLE = "unresolvable"
 REVERTED_REASON = "proposal reverted"
 
 _REF_PREFIX = "$"
+# Marks a predicate an earlier delete of the proposal retires (see _check_predicate_op)
+_RETIRED = "<retired>"
 
 # A proposal's title is a short summary; its rationale may run to a few pages.
 MAX_TITLE_CHARS = 500
@@ -1125,6 +1127,11 @@ class ProposalService:
         if catalog is None:
             return  # nothing to look in yet: the ontology service decides on apply
         if catalog == taxonomy_id and identifier in (planned or {}):
+            if (planned or {})[identifier] == _RETIRED:
+                raise _Invalid(
+                    "unknown_predicate",
+                    f"predicate {identifier!r} is deleted earlier in this proposal",
+                )
             return
         if self._repo.get_predicate_by_identifier(catalog, identifier) is None:
             raise _Invalid(
@@ -1154,9 +1161,8 @@ class ProposalService:
                 identifier = validate_predicate_identifier(operation.fields.get("identifier"))
             except ValueError as exc:
                 raise _Invalid("invalid", f"identifier: {exc}") from exc
-            if identifier in planned or self._repo.get_predicate_by_identifier(
-                taxonomy_id, identifier
-            ):
+            exists = self._repo.get_predicate_by_identifier(taxonomy_id, identifier) is not None
+            if (planned[identifier] != _RETIRED if identifier in planned else exists):
                 raise _Invalid(
                     "duplicate", f"The taxonomy already has the predicate {identifier!r}"
                 )
@@ -1170,6 +1176,7 @@ class ProposalService:
                 f"Predicate {predicate.identifier!r} is in another taxonomy's catalog",
             )
         if operation.op is OperationType.DELETE and predicate is not None:
+            planned[predicate.identifier] = _RETIRED
             users = [
                 p for p in self._ontology.relationship_types_using(predicate.id) if p.id not in deleted
             ]
@@ -2089,21 +2096,25 @@ class ProposalService:
         the predicate, so delete or rename those types first).
         """
         target: str = operation.target_id  # type: ignore[assignment]
+        replacement = None
+        if operation.proposed_replacement_id is not None:
+            # A named replacement must exist, even when no type moves to it: the
+            # retirement records it.
+            replacement = self._repo.get_predicate(
+                self._resolved(operation.proposed_replacement_id, refs)
+            )
+            if replacement is None:
+                raise _ApplyFailed(TARGET_MISSING, "its replacement predicate no longer exists")
         users = self._ontology.relationship_types_using(target)
         if not users:
             return
-        if operation.proposed_replacement_id is None:
+        if replacement is None:
             names = ", ".join(sorted(p.identifier for p in users)[:5])
             raise _ApplyFailed(
                 APPLY_ERROR,
                 f"{len(users)} relationship type(s) still use the predicate ({names});"
                 " name a replacement",
             )
-        replacement = self._repo.get_predicate(
-            self._resolved(operation.proposed_replacement_id, refs)
-        )
-        if replacement is None:
-            raise _ApplyFailed(TARGET_MISSING, "its replacement predicate no longer exists")
         for prop in users:
             fields = {"canonical_predicate": replacement.identifier}
             move = ProposedOperation(
@@ -2727,7 +2738,7 @@ class ProposalService:
             delete(target)
             return target  # type: ignore[return-value]
 
-        if kind in (K.PROPERTY, K.PREDICATE) and op is OperationType.CREATE or (
+        if (kind in (K.PROPERTY, K.PREDICATE) and op is OperationType.CREATE) or (
             kind is K.PROPERTY and op is OperationType.UPDATE
         ):
             # A predicate goes in the proposal's taxonomy's catalog; a relationship

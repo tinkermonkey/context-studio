@@ -1,7 +1,7 @@
 """
 Reading a Documentation Robotics (DR) spec checkout: the manifest, design
 charter, layer descriptions, predicate catalog, node schemas (with their
-attributes and DR fields) and relationship schemas, and the spec's revision.
+attributes) and relationship schemas, and the spec's revision.
 
 Shared by the DR importer (`scripts/dr_ontology_loader.py`) and the drift
 planner (`dr_drift.py`), so both read the spec the same way.
@@ -50,31 +50,15 @@ class AttributeSchemaRecord:
         return {DR_ATTRIBUTE_SCHEMA: self.schema}
 
 
-# A node schema's DR fields, as its class's DR reference metadata keys -> the schema keys.
-DR_NODE_FIELDS = {
-    "standard": "x-dr-standard",
-    "evidence": "x-dr-evidence",
-    "distinguish": "x-dr-distinguish",
-}
-
-
 @dataclass(frozen=True)
 class NodeSchemaRecord:
-    """
-    One `schemas/nodes/**/*.node.schema.json` file.
-
-    `metadata` is its class's DR reference's metadata: the DR fields the
-    schema gives, by DR_NODE_FIELDS key: standard (x-dr-standard, a string),
-    evidence (x-dr-evidence, a list of strings) and distinguish
-    (x-dr-distinguish, other node id -> when to use that type instead).
-    """
+    """One `schemas/nodes/**/*.node.schema.json` file."""
 
     spec_node_id: str
     layer_id: str
     title: str
     description: str | None
     attributes: tuple[AttributeSchemaRecord, ...] = ()
-    metadata: dict[str, Any] = field(default_factory=dict, hash=False)
 
 
 def _load_json(path: Path) -> Any:
@@ -200,27 +184,9 @@ def iter_node_schemas(spec_dir: Path) -> Iterator[NodeSchemaRecord]:
                 title=data["title"],
                 description=data.get("description"),
                 attributes=_attribute_records(path, props.get("attributes") or {}),
-                metadata=_node_fields(path, data),
             )
         except KeyError as exc:
             raise ValueError(f"Node schema {path} is missing required key {exc}") from exc
-
-
-def _node_fields(path: Path, data: dict[str, Any]) -> dict[str, Any]:
-    """A node schema's DR fields (see DR_NODE_FIELDS), those it gives, checked."""
-    found = {key: data[name] for key, name in DR_NODE_FIELDS.items() if name in data}
-    standard = found.get("standard", "")
-    evidence = found.get("evidence", [])
-    distinguish = found.get("distinguish", {})
-    if not isinstance(standard, str):
-        raise ValueError(f"Node schema {path}: x-dr-standard is not a string")
-    if not isinstance(evidence, list) or not all(isinstance(e, str) for e in evidence):
-        raise ValueError(f"Node schema {path}: x-dr-evidence is not a string list")
-    if not isinstance(distinguish, dict) or not all(
-        isinstance(text, str) for text in distinguish.values()
-    ):
-        raise ValueError(f"Node schema {path}: x-dr-distinguish is not a map of node id to text")
-    return found
 
 
 def _attribute_records(path: Path, attributes: dict[str, Any]) -> tuple[AttributeSchemaRecord, ...]:

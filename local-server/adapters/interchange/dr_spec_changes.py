@@ -31,7 +31,7 @@ MCP or in the app, exports as one `cs-dr-spec-changes/1` document:
         "previous_spec_node_id",      # move only: the id before it
         "layer_id",                   # spec_node_id's layer
         "identifier",                 # Context Studio's identifier for the class
-        "set": {"title"?, "description"?, "standard"?, "evidence"?, "distinguish"?},
+        "set": {"title"?, "description"?},
         "replacement_spec_node_id",   # delete only: the class the delete names as its
                                       # replacement (followed through the proposal's other deletes)
         "note",                       # delete only, when that chain is a cycle
@@ -111,20 +111,6 @@ to the new one. Until DR's spec with a move is re-imported, the moved class
 keeps its old DR id; the importer refuses a spec with a moved node type,
 as it can't follow one yet.
 
-A node type's `standard`, `evidence` and `distinguish` are its
-x-dr-standard (a string), x-dr-evidence (a list of strings) and
-x-dr-distinguish (other node id -> when to use that type instead), held on
-its class's DR reference as metadata (see the importer). A create gives
-those it has; an update gives those its DR reference changed: null for
-standard or distinguish, or an empty evidence list, removes it.
-`distinguish` is always the whole map. Its keys must name DR node types once
-the proposal is applied, never the type itself; a key naming a type by the id
-a move of this proposal replaced (the class keeps it until re-import) goes
-out under the new id. The export refuses a key naming the type itself, or
-no DR node type (one the proposal deleted is gone), as DR refuses them on
-landing. DR renames the keys of other node types' maps itself when it lands
-a move, and warns about keys naming a type it deleted.
-
 An attribute's `set` holds the attribute definition's datatype (the JSON
 Schema type), is_required (whether the node's required list names it),
 allowed_values (its enum) and description. A create gives all it set, and
@@ -163,7 +149,6 @@ from adapters.interchange.dr_relationships import (
     dr_property_definitions,
     dr_relationship_id,
 )
-from adapters.interchange.dr_spec import DR_NODE_FIELDS
 from domain.ontology.ports import OntologyRepository
 from domain.versioning.change_records import (
     SchemaChangeAction,
@@ -250,7 +235,6 @@ def spec_changes_for(
         else:
             change.update(decided_fields((decisions or {}).get(operation.id)))
             found_in.append(change)  # type: ignore[union-attr]
-    _check_distinguish(node_changes, repo)
     retirements, unretired = _retirements(proposal, repo, decisions)
     return {
         "format": SPEC_CHANGES_FORMAT,
@@ -921,8 +905,6 @@ def _node_create(
         )
     _check_node_id(node_id, layer, label)
     values = {key: fields[key] for key in ("title", "description") if fields.get(key) is not None}
-    node_fields = _node_fields(fields.get("external_references"))
-    values.update((key, value) for key, value in node_fields.items() if value)
     return _node_entry(operation, "create", node_id, fields.get("identifier"), values)
 
 
@@ -957,12 +939,6 @@ def _node_update(
         for key in ("title", "description")
         if key in fields and fields[key] != base.get(key)
     }
-    if "external_references" in fields:
-        after = _node_fields(fields["external_references"])
-        before = _node_fields(base.get("external_references"))
-        for key in DR_NODE_FIELDS:
-            if (after.get(key) or None) != (before.get(key) or None):
-                values[key] = after.get(key) or ([] if key == "evidence" else None)
     if not values:
         return "it changes nothing DR's spec holds for a node type"
     return _node_entry(operation, "update", node_id, cls.identifier, values)
@@ -1035,73 +1011,6 @@ def _node_delete(
             )
         entry["replacement_spec_node_id"] = replacement_id
     return entry
-
-
-def _node_fields(references: Any) -> dict[str, Any]:
-    """The DR node fields (standard, evidence, distinguish) on a DR reference among references."""
-    metadata = _dr_metadata(references)
-    return {key: metadata[key] for key in DR_NODE_FIELDS if key in metadata}
-
-
-def _check_distinguish(node_changes: list[dict[str, Any]], repo: OntologyRepository) -> None:
-    """
-    Check the distinguish maps the node changes set, and write each key under
-    the id its type has once the proposal's moves are applied: every key must
-    name a DR node type then (a class the proposal deleted is gone), and none
-    the type itself.
-
-    Raises:
-        ValueError: Naming the change and the key, when one is refused
-    """
-    moved = {
-        change["previous_spec_node_id"]: change["spec_node_id"]
-        for change in node_changes
-        if change["op"] == "move"
-    }
-
-    def final(node_id: str) -> str:
-        seen = set()
-        while node_id in moved and node_id not in seen:
-            seen.add(node_id)
-            node_id = moved[node_id]
-        return node_id
-
-    known = {final(node_id) for node_id in _dr_node_ids(repo)}
-    for change in node_changes:
-        distinguish = change["set"].get("distinguish")
-        if distinguish is None:
-            continue
-        label = f"seq {change['seq']}"
-        if not isinstance(distinguish, dict):
-            raise ValueError(f"{label}: its distinguish is not a map of DR node id to text")
-        own = final(change["spec_node_id"])
-        written = {}
-        for key, text in distinguish.items():
-            node_id = final(key)
-            if node_id == own:
-                raise ValueError(
-                    f"{label}: its distinguish names {key}, the node type itself, which DR refuses"
-                )
-            if node_id not in known:
-                raise ValueError(
-                    f"{label}: its distinguish names {key}, which is not a DR node type once "
-                    "this proposal is applied, so DR refuses it; name an existing node type"
-                )
-            written[node_id] = text
-        change["set"]["distinguish"] = written
-
-
-def _dr_node_ids(repo: OntologyRepository) -> set[str]:
-    """The DR ids of the dr_spec taxonomy's classes, as the workspace has them now."""
-    taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
-    if taxonomy is None:
-        return set()
-    return {
-        node_id
-        for scheme in repo.list_concept_schemes(taxonomy_id=taxonomy.id, limit=None)
-        for cls in repo.list_classes(concept_scheme_id=scheme.id, limit=None)
-        if (node_id := dr_relationship_id(cls.external_references))
-    }
 
 
 def _node_entry(
