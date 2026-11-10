@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
-import { http, HttpResponse } from "msw";
+import { http, HttpResponse, type JsonBodyType } from "msw";
 import { setupServer } from "msw/node";
 import { ontologyService } from "../ontology";
 import {
@@ -32,6 +32,7 @@ import {
   createPublishDiffStats,
   createDataPropertyValue,
   createListDataPropertyValues,
+  createDataset,
 } from "./fixtures/ontology.fixtures";
 
 // Initialize MSW server for all tests
@@ -1595,5 +1596,93 @@ describe("OntologyService - Relationships", () => {
         status: 404,
       });
     });
+  });
+});
+
+describe("OntologyService - Datasets", () => {
+  it("lists every dataset, or one taxonomy's", async () => {
+    const taxonomyParams: Array<string | null> = [];
+    const datasets = [createDataset({ id: "ds-1" })];
+    server.use(
+      http.get("*/api/datasets", ({ request }) => {
+        taxonomyParams.push(new URL(request.url).searchParams.get("taxonomy_id"));
+        return HttpResponse.json(datasets);
+      }),
+    );
+
+    expect(await ontologyService.listDatasets()).toEqual(datasets);
+    await ontologyService.listDatasets("tax-1");
+
+    expect(taxonomyParams).toEqual([null, "tax-1"]);
+  });
+
+  it("creates a dataset", async () => {
+    let body: unknown;
+    const created = createDataset({ id: "ds-9", identifier: "draft", title: "Draft" });
+    server.use(
+      http.post("*/api/datasets", async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json(created, { status: 201 });
+      }),
+    );
+
+    const request = { taxonomy_id: "tax-1", identifier: "draft", title: "Draft" };
+    expect(await ontologyService.createDataset(request)).toEqual(created);
+    expect(body).toEqual(request);
+  });
+
+  it("throws ApiError 409 for a duplicate identifier", async () => {
+    server.use(
+      http.post("*/api/datasets", () =>
+        HttpResponse.json({ detail: "already exists" }, { status: 409 }),
+      ),
+    );
+    await expect(
+      ontologyService.createDataset({ taxonomy_id: "tax-1", identifier: "x", title: "X" }),
+    ).rejects.toMatchObject({ status: 409, detail: "already exists" });
+  });
+
+  it("deletes a dataset and reports what it removed", async () => {
+    server.use(
+      http.delete("*/api/datasets/:id", ({ params }) =>
+        HttpResponse.json({ dataset_id: params.id, individual_count: 3, relationship_count: 2 }),
+      ),
+    );
+    expect(await ontologyService.deleteDataset("ds-1")).toEqual({
+      dataset_id: "ds-1",
+      individual_count: 3,
+      relationship_count: 2,
+    });
+  });
+
+  it("scopes scheme, class, individual and relationship queries to a dataset", async () => {
+    const seen: Record<string, string | null> = {};
+    const capture =
+      (name: string, payload: JsonBodyType) =>
+      ({ request }: { request: Request }) => {
+        seen[name] = new URL(request.url).searchParams.get("dataset_id");
+        return HttpResponse.json(payload);
+      };
+    server.use(
+      http.get("*/api/taxonomies/:id/scheme-counts", capture("schemeCounts", [])),
+      http.get("*/api/schemes/:id/class-counts", capture("classCounts", [])),
+      http.get("*/api/individuals", capture("individuals", createListIndividuals([]))),
+      http.get("*/api/relationships", capture("relationships", createListRelationships([]))),
+    );
+
+    await ontologyService.getSchemeCounts("tax-1", "ds-2");
+    await ontologyService.getClassCounts("scheme-1", "ds-2");
+    await ontologyService.listIndividuals({ dataset_id: "ds-2" });
+    await ontologyService.listRelationships({ dataset_id: "ds-2" });
+
+    expect(seen).toEqual({
+      schemeCounts: "ds-2",
+      classCounts: "ds-2",
+      individuals: "ds-2",
+      relationships: "ds-2",
+    });
+
+    await ontologyService.getSchemeCounts("tax-1");
+    expect(seen.schemeCounts).toBeNull();
   });
 });

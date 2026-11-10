@@ -22,6 +22,8 @@ export interface GraphSearchParams {
   focus?: string;
   /** Layer (concept scheme) ids to show on load. */
   layers?: string[];
+  /** Show the schema plus this dataset's data (the app-wide `dataset` parameter). */
+  dataset?: string;
 }
 
 export type NodeKindFilter = "all" | "class" | "individual";

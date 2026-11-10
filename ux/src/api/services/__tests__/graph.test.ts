@@ -267,4 +267,79 @@ describe("GraphService", () => {
       });
     });
   });
+
+  describe("datasets", () => {
+    it("scopes the view, build, metrics, path and subgraph to a dataset", async () => {
+      const seen: Record<string, string | null> = {};
+      const record = (name: string) => (request: Request) => {
+        seen[name] = new URL(request.url).searchParams.get("dataset_id");
+      };
+      server.use(
+        http.get("*/api/graph/view", ({ request }) => {
+          record("view")(request);
+          return HttpResponse.json(createGraphView());
+        }),
+        http.post("*/api/graph/build", ({ request }) => {
+          record("build")(request);
+          return HttpResponse.json(createKnowledgeGraph());
+        }),
+        http.get("*/api/graph/metrics", ({ request }) => {
+          record("metrics")(request);
+          return HttpResponse.json(createGraphMetrics());
+        }),
+        http.get("*/api/graph/paths/shortest", ({ request }) => {
+          record("path")(request);
+          return HttpResponse.json(createPathResult());
+        }),
+        http.get("*/api/graph/subgraph", ({ request }) => {
+          record("subgraph")(request);
+          return HttpResponse.json(createSubgraphData());
+        }),
+      );
+
+      await graphService.getGraphView("ds-2");
+      await graphService.buildGraph("ds-2");
+      await graphService.getMetrics(undefined, "ds-2");
+      await graphService.getShortestPath("a", "b", "ds-2");
+      await graphService.getSubgraph(["a"], "ds-2");
+
+      expect(seen).toEqual({
+        view: "ds-2",
+        build: "ds-2",
+        metrics: "ds-2",
+        path: "ds-2",
+        subgraph: "ds-2",
+      });
+    });
+
+    it("sends no dataset when none is given", async () => {
+      let datasetParam: string | null = "unset";
+      server.use(
+        http.get("*/api/graph/view", ({ request }) => {
+          datasetParam = new URL(request.url).searchParams.get("dataset_id");
+          return HttpResponse.json(createGraphView());
+        }),
+      );
+      await graphService.getGraphView();
+      expect(datasetParam).toBeNull();
+    });
+
+    it("puts the dataset in the SPARQL request body", async () => {
+      const bodies: unknown[] = [];
+      server.use(
+        http.post("*/api/graph/sparql", async ({ request }) => {
+          bodies.push(await request.json());
+          return HttpResponse.json(createSPARQLResponse());
+        }),
+      );
+
+      await graphService.sparqlQuery("SELECT * WHERE { ?s ?p ?o }", "ds-2");
+      await graphService.sparqlQuery("SELECT * WHERE { ?s ?p ?o }");
+
+      expect(bodies).toEqual([
+        { query: "SELECT * WHERE { ?s ?p ?o }", dataset_id: "ds-2" },
+        { query: "SELECT * WHERE { ?s ?p ?o }" },
+      ]);
+    });
+  });
 });

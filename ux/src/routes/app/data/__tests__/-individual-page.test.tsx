@@ -4,7 +4,8 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
-import { entityPageHandlers, relationship } from "@/test/entityPageHandlers";
+import { dataset, entityPageHandlers, relationship } from "@/test/entityPageHandlers";
+import { createDataset } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { useBreadcrumbStore } from "@/stores/breadcrumbs";
 import { useNavigatorStore } from "@/stores/navigator";
 import { IndividualPage } from "../individuals_.$id";
@@ -148,5 +149,32 @@ describe("IndividualPage", () => {
   it("shows not found for an unknown individual", async () => {
     render(<IndividualPage id="missing" />);
     expect(await screen.findByText("Individual not found")).toBeInTheDocument();
+  });
+
+  it("names the individual's dataset once its taxonomy has two", async () => {
+    server.use(
+      http.get("*/api/datasets", () =>
+        HttpResponse.json([
+          dataset,
+          createDataset({
+            id: "ds-2",
+            taxonomy_id: "tax-1",
+            identifier: "sample",
+            title: "Sample",
+          }),
+        ]),
+      ),
+    );
+    render(<IndividualPage id="ind-1" />);
+
+    expect(await screen.findByTestId("individual-dataset")).toHaveTextContent("Default · default");
+  });
+
+  it("leaves the dataset implied while its taxonomy has one", async () => {
+    render(<IndividualPage id="ind-1" />);
+
+    expect(await screen.findByRole("heading", { name: "LLM Provider Router" })).toBeInTheDocument();
+    await screen.findByTestId("entity-identity");
+    expect(screen.queryByTestId("individual-dataset")).not.toBeInTheDocument();
   });
 });

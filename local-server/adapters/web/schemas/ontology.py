@@ -147,6 +147,51 @@ class SchemeCountsResponse(BaseModel):
     )
 
 
+class DatasetResponse(BaseModel):
+    """A named body of data over one taxonomy's schema, with its size."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    taxonomy_id: str
+    identifier: str = Field(..., description="Slug, unique within the taxonomy")
+    title: str
+    yields_to_schema: bool = Field(
+        False,
+        description="Schema operations never block on its data, which follows them instead "
+        "(set by the DR model loader; no UI toggle)",
+    )
+    individual_count: int = Field(0, description="Individuals in the dataset")
+    relationship_count: int = Field(
+        0, description="Relationships in the dataset (by their source individual)"
+    )
+    created_at: Optional[datetime] = None
+    last_modified: Optional[datetime] = None
+
+
+class DatasetCreateRequest(BaseModel):
+    """Request to create a dataset over a taxonomy's schema."""
+
+    taxonomy_id: str
+    identifier: str = Field(
+        ...,
+        min_length=2,
+        max_length=64,
+        description="Slug: a lowercase letter, then lowercase letters, digits, - or _",
+    )
+    title: str = Field(..., min_length=1, max_length=255)
+
+
+class DatasetDeletionResponse(BaseModel):
+    """What deleting a dataset removed."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    dataset_id: str
+    individual_count: int
+    relationship_count: int
+
+
 class ClassCountsResponse(BaseModel):
     """Content counts for one class."""
 
@@ -557,6 +602,11 @@ class IndividualCreateRequest(BaseModel):
     )
     title: str = Field(..., description="Display name for the individual", min_length=1)
     description: Optional[str] = Field(None, description="Optional longer description")
+    dataset_id: Optional[str] = Field(
+        None,
+        description="The dataset to create it in; may be omitted while the classes' taxonomy "
+        "has at most one dataset",
+    )
 
     @field_validator("class_ids", mode="before")
     @classmethod
@@ -587,6 +637,7 @@ class IndividualResponse(BaseModel):
 
     id: str = Field(..., description="Unique identifier")
     class_ids: list[str] = Field(..., description="Ordered list of parent class IDs")
+    dataset_id: Optional[str] = Field(None, description="The dataset the individual belongs to")
     title: str = Field(..., description="Display name")
     description: Optional[str] = Field(None, description="Optional description")
     data_properties: list[DataPropertyValueResponse] = Field(default_factory=list)

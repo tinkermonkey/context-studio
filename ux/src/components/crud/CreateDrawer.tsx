@@ -18,6 +18,7 @@ import { PREDICATE_CHOICES_LIMIT, SMALL_SET_LIMIT } from "@/api/config";
 import { useCreateProperty, useProperties } from "@/api/hooks/ontology/useProperties";
 import { useCreateIndividual } from "@/api/hooks/ontology/useIndividuals";
 import { useCreateRelationship } from "@/api/hooks/ontology/useRelationships";
+import { useDatasetScope } from "@/hooks/useDatasetScope";
 
 export type EntityType =
   | "taxonomy"
@@ -279,6 +280,19 @@ export function CreateDrawer({
   const classes = classesData?.items ?? [];
   const properties = propertiesData?.items ?? [];
   // Individual class options: the selected classes first, then search matches.
+  // An individual goes into the selected dataset (the `dataset` URL parameter).
+  // With none selected and several in the class's taxonomy, the form asks.
+  const classTaxonomyId = isIndividual ? selectedClassesData?.items[0]?.taxonomy_id : undefined;
+  const datasetScope = useDatasetScope(classTaxonomyId);
+  const [datasetChoice, setDatasetChoice] = useState("");
+  const [datasetError, setDatasetError] = useState<string | undefined>();
+  const needsDatasetChoice =
+    isIndividual &&
+    !!classTaxonomyId &&
+    !datasetScope.selectedDatasetId &&
+    datasetScope.showSelector;
+  const individualDatasetId =
+    datasetScope.selectedDatasetId ?? (needsDatasetChoice ? datasetChoice || undefined : undefined);
   const individualClassOptions = [
     ...(selectedClassesData?.items ?? []),
     ...(classSearch?.items ?? []).filter((c) => !values.classIds.includes(c.id)),
@@ -299,6 +313,8 @@ export function CreateDrawer({
       setSourceQuery("");
       setTargetQuery("");
       setClassQuery("");
+      setDatasetChoice("");
+      setDatasetError(undefined);
       // Focus title after render
       const timer = setTimeout(() => titleRef.current?.focus(), 50);
       return () => clearTimeout(timer);
@@ -321,6 +337,8 @@ export function CreateDrawer({
 
     const requiredFields = config.requiredFields;
     const incomplete = requiredFields.filter((f) => !isFieldFilled(values, f));
+    const datasetMissing = entityType === "individual" && needsDatasetChoice && !datasetChoice;
+    if (datasetMissing) setDatasetError("dataset is required");
     if (entityType === "relationship") {
       const relIncomplete = !relValue.source?.id || !relValue.target?.id || !relValue.predicate;
       if (relIncomplete) return;
@@ -345,6 +363,7 @@ export function CreateDrawer({
       }, 0);
       return;
     }
+    if (datasetMissing) return;
 
     setIsSubmitting(true);
     try {
@@ -394,6 +413,7 @@ export function CreateDrawer({
             class_ids: values.classIds,
             title: values.title,
             description: values.description || null,
+            ...(individualDatasetId ? { dataset_id: individualDatasetId } : {}),
           });
           break;
         case "relationship":
@@ -446,6 +466,9 @@ export function CreateDrawer({
     createProperty,
     createIndividual,
     createRelationship,
+    needsDatasetChoice,
+    datasetChoice,
+    individualDatasetId,
     onSuccess,
     onClose,
   ]);
@@ -688,6 +711,35 @@ export function CreateDrawer({
               classQuery={classQuery}
               setClassQuery={setClassQuery}
             />
+          )}
+
+          {entityType === "individual" && needsDatasetChoice && (
+            <Field
+              label="Dataset"
+              htmlFor="create-drawer-dataset"
+              required
+              error={datasetError}
+              data-testid="individual-dataset-field"
+            >
+              <Select
+                id="create-drawer-dataset"
+                value={datasetChoice}
+                onChange={(value) => {
+                  setDatasetChoice(value);
+                  setDatasetError(undefined);
+                }}
+                placeholder="Choose a dataset"
+                error={!!datasetError}
+                ariaLabel="Dataset"
+                data-testid="individual-dataset-select"
+              >
+                {datasetScope.datasets.map((d) => (
+                  <Select.Item key={d.id} value={d.id}>
+                    {d.title} · {d.identifier}
+                  </Select.Item>
+                ))}
+              </Select>
+            </Field>
           )}
 
           {entityType === "relationship" && (

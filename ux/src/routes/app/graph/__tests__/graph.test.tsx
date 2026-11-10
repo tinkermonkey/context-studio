@@ -16,6 +16,17 @@ vi.mock("@/components/ui/Toast", () => ({
   useToasts: () => ({ toast: mockToast }),
 }));
 
+// The dataset scope (the `dataset` URL parameter and the workspace's datasets), set per test.
+const datasetScope = vi.hoisted(() => ({
+  current: {
+    datasets: [] as Array<{ id: string; taxonomy_id: string; title: string; identifier: string }>,
+    selectedDatasetId: undefined as string | undefined,
+    showSelector: false,
+    setDataset: () => {},
+  },
+}));
+vi.mock("@/hooks/useDatasetScope", () => ({ useDatasetScope: () => datasetScope.current }));
+
 // The real canvas needs layout measurement; render nodes as plain buttons instead.
 vi.mock("@/components/graph/GraphCanvas", () => ({
   GraphCanvasComponent: ({
@@ -58,10 +69,10 @@ function mockView(state: Partial<ReturnType<typeof graphHooks.useGraphView>>) {
   } as unknown as ReturnType<typeof graphHooks.useGraphView>);
 }
 
-function renderPage() {
+function renderPage(props: { datasetId?: string } = {}) {
   return render(
     <QueryClientProvider client={queryClient}>
-      <GraphPage />
+      <GraphPage {...props} />
     </QueryClientProvider>,
   );
 }
@@ -74,6 +85,12 @@ const canvasNodeLabels = () =>
 describe("Graph Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    datasetScope.current = {
+      datasets: [],
+      selectedDatasetId: undefined,
+      showSelector: false,
+      setDataset: () => {},
+    };
     vi.mocked(graphHooks.useBuildGraph).mockReturnValue({
       mutate: mockMutate,
       isPending: false,
@@ -192,5 +209,67 @@ describe("Graph Page", () => {
     renderPage();
     await user.click(screen.getByTestId("build-graph-button"));
     expect(mockMutate).toHaveBeenCalled();
+  });
+
+  describe("datasets", () => {
+    const datasets = [
+      { id: "ds-1", taxonomy_id: "tax-1", title: "Context Studio", identifier: "context-studio" },
+      { id: "ds-2", taxonomy_id: "tax-1", title: "Sample", identifier: "sample" },
+    ];
+
+    it("shows no dataset selector while each taxonomy has one dataset", () => {
+      mockView({ data: createGraphView() });
+      renderPage();
+      expect(screen.queryByTestId("graph-dataset-select")).not.toBeInTheDocument();
+    });
+
+    it("offers the selector in the header once a taxonomy has two datasets", () => {
+      datasetScope.current = { ...datasetScope.current, datasets, showSelector: true };
+      mockView({ data: createGraphView() });
+      renderPage();
+
+      const select = screen.getByTestId("graph-dataset-select");
+      expect(select).toHaveClass("dataset-select");
+      expect(within(select).getByRole("button", { name: "Dataset" })).toHaveAttribute(
+        "aria-haspopup",
+        "listbox",
+      );
+    });
+
+    it("loads, rebuilds and measures the graph of the chosen dataset", async () => {
+      const user = userEvent.setup();
+      mockView({ data: createGraphView() });
+      renderPage({ datasetId: "ds-2" });
+
+      expect(graphHooks.useGraphView).toHaveBeenCalledWith("ds-2");
+      expect(graphHooks.useBuildGraph).toHaveBeenCalledWith("ds-2");
+
+      await user.click(screen.getByRole("tab", { name: "Metrics" }));
+      expect(graphHooks.useGraphMetrics).toHaveBeenCalledWith(undefined, "ds-2");
+    });
+
+    it("runs SPARQL over the chosen dataset", async () => {
+      const user = userEvent.setup();
+      vi.mocked(graphHooks.useSparqlQuery).mockReturnValue({
+        mutate: vi.fn(),
+        isPending: false,
+        isSuccess: false,
+        error: null,
+        data: undefined,
+      } as unknown as ReturnType<typeof graphHooks.useSparqlQuery>);
+      mockView({ data: createGraphView() });
+      renderPage({ datasetId: "ds-2" });
+
+      await user.click(screen.getByRole("tab", { name: "SPARQL Query" }));
+
+      expect(screen.getByTestId("sparql-editor")).toBeInTheDocument();
+      expect(graphHooks.useSparqlQuery).toHaveBeenCalledWith("ds-2");
+    });
+
+    it("shows all data when no dataset is chosen", () => {
+      mockView({ data: createGraphView() });
+      renderPage();
+      expect(graphHooks.useGraphView).toHaveBeenCalledWith(undefined);
+    });
   });
 });

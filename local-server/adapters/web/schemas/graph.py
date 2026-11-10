@@ -44,6 +44,10 @@ class SPARQLRequest(BaseModel):
         max_length=10000,
         description="SPARQL SELECT query string (max 10000 characters)",
     )
+    dataset_id: Optional[str] = Field(
+        None,
+        description="Query the schema plus this dataset's data (all data when omitted)",
+    )
 
 
 # ==================== Response Schemas ====================

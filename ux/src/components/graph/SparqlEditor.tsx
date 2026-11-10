@@ -15,9 +15,14 @@ WHERE {
 }
 LIMIT 10`;
 
-export function SparqlEditor() {
+interface SparqlEditorProps {
+  /** Query the schema plus this dataset's data; all data when omitted. */
+  datasetId?: string;
+}
+
+export function SparqlEditor({ datasetId }: SparqlEditorProps = {}) {
   const [query, setQuery] = useState("");
-  const { mutate, data, isPending, error, isSuccess } = useSparqlQuery();
+  const { mutate, data, isPending, error, isSuccess } = useSparqlQuery(datasetId);
 
   const handleRunQuery = () => {
     if (query.trim()) {

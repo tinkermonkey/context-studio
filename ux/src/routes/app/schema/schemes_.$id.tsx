@@ -23,6 +23,7 @@ import {
   TableEmpty,
 } from "@/components/entity/EntityPageParts";
 import { usePageBreadcrumbs } from "@/hooks/usePageBreadcrumbs";
+import { useDatasetScope } from "@/hooks/useDatasetScope";
 import { entityPath } from "@/lib/entityPaths";
 
 interface ClassRow {
@@ -66,9 +67,11 @@ export function SchemePage({ id }: { id: string }) {
     limit: SMALL_SET_LIMIT,
     sort_by: "title",
   });
-  const { data: classCounts } = useClassCounts(id);
+  // Individual counts cover the chosen dataset (the `dataset` URL parameter), or all data.
+  const { selectedDataset, selectedDatasetId } = useDatasetScope(scheme?.taxonomy_id);
+  const { data: classCounts } = useClassCounts(id, selectedDatasetId);
   // Distinct individuals for the scheme (an individual can have several of its classes).
-  const { data: schemeCounts } = useSchemeCounts(scheme?.taxonomy_id);
+  const { data: schemeCounts } = useSchemeCounts(scheme?.taxonomy_id, selectedDatasetId);
 
   const countsByClass = useMemo(
     () => new Map((classCounts ?? []).map((c) => [c.class_id, c])),
@@ -158,7 +161,11 @@ export function SchemePage({ id }: { id: string }) {
           label="INDIVIDUALS"
           value={formatCount(ownCounts?.individual_count)}
           color="emerald"
-          meta="typed by these classes"
+          meta={
+            selectedDataset
+              ? `typed by these classes · ${selectedDataset.title}`
+              : "typed by these classes"
+          }
         />
         <StatTile
           label="RELATIONSHIP TYPES"

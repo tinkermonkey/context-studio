@@ -60,6 +60,17 @@ export interface HierarchyTreeProps {
   compact?: boolean;
   /** Hide the count on every row (e.g. while the tree shows filter matches). */
   hideCounts?: boolean;
+  /**
+   * Data mode: show this dataset's individuals and counts under its taxonomy
+   * (other taxonomies show all their data).
+   */
+  dataset?: HierarchyDataset;
+}
+
+/** A dataset and the taxonomy it belongs to. */
+export interface HierarchyDataset {
+  id: string;
+  taxonomyId: string;
 }
 
 function countLabel(n: number, singular: string, plural: string): string {
@@ -91,6 +102,13 @@ interface ClassRowContext {
   expandedIds: ReadonlySet<string>;
   onSelectClass: (classId: string) => void;
   onSelectIndividual: (individualId: string) => void;
+  /** The dataset to show for a taxonomy's classes, if one is chosen. */
+  datasetFor: (taxonomyId: string) => string | undefined;
+}
+
+/** `{ dataset_id }` for a list request, or nothing. */
+function datasetParam(datasetId: string | undefined) {
+  return datasetId ? { dataset_id: datasetId } : {};
 }
 
 function IndividualRow({
@@ -120,8 +138,9 @@ function IndividualRow({
 /** An opened class's individuals, a page at a time, keeping the selected one visible. */
 function LazyClassIndividuals({ cls, ctx }: { cls: ClassResponse; ctx: ClassRowContext }) {
   const [limit, setLimit] = useState(INDIVIDUALS_FIRST_PAGE);
+  const scope = datasetParam(ctx.datasetFor(cls.taxonomy_id));
   const { data } = useIndividuals(
-    { class_id: cls.id, limit, sort_by: "title" },
+    { class_id: cls.id, limit, sort_by: "title", ...scope },
     { keepPrevious: true },
   );
   const items = data?.items ?? [];
@@ -129,7 +148,7 @@ function LazyClassIndividuals({ cls, ctx }: { cls: ClassResponse; ctx: ClassRowC
   // The selected individual may sit past the loaded page: fetch just it (the
   // class filter returns nothing when it belongs to another class).
   const { data: pinned } = useIndividuals(
-    { class_id: cls.id, ids: ctx.selectedId ? [ctx.selectedId] : [], limit: 1 },
+    { class_id: cls.id, ids: ctx.selectedId ? [ctx.selectedId] : [], limit: 1, ...scope },
     { enabled: !!ctx.selectedId && !!data && !selectedInPage },
   );
   const pinnedItem = selectedInPage ? undefined : pinned?.items[0];
@@ -205,13 +224,24 @@ function ClassRows({ classes, ctx, individualCounts, individualsByClass }: Class
 }
 
 /** An expanded scheme's classes, fetched for that scheme only (bounded, by title). */
-function LazySchemeClasses({ schemeId, ctx }: { schemeId: string; ctx: ClassRowContext }) {
+function LazySchemeClasses({
+  schemeId,
+  taxonomyId,
+  ctx,
+}: {
+  schemeId: string;
+  taxonomyId: string;
+  ctx: ClassRowContext;
+}) {
   const { data } = useClasses({
     concept_scheme_id: schemeId,
     limit: SMALL_SET_LIMIT,
     sort_by: "title",
   });
-  const { data: counts } = useClassCounts(ctx.mode === "data" ? schemeId : undefined);
+  const { data: counts } = useClassCounts(
+    ctx.mode === "data" ? schemeId : undefined,
+    ctx.datasetFor(taxonomyId),
+  );
   const individualCounts = useMemo(
     () => new Map((counts ?? []).map((c) => [c.class_id, c.individual_count])),
     [counts],
@@ -234,6 +264,7 @@ export function HierarchyTree({
   onExpandedChange,
   compact = false,
   hideCounts = false,
+  dataset,
 }: HierarchyTreeProps) {
   const dataMode = mode === "data";
   const sortedTaxonomies = useMemo(
@@ -254,7 +285,12 @@ export function HierarchyTree({
   const schemeIds = useMemo(() => (schemes ?? []).map((s) => s.id), [schemes]);
   const lazyClassCounts = useClassCountsByScheme(lazy && !dataMode && !hideCounts ? schemeIds : []);
   const taxonomyIds = useMemo(() => sortedTaxonomies.map((t) => t.id), [sortedTaxonomies]);
-  const schemeCounts = useSchemeCountsForTaxonomies(dataMode && !hideCounts ? taxonomyIds : []);
+  const datasetFor = (taxonomyId: string) =>
+    dataset && dataset.taxonomyId === taxonomyId ? dataset.id : undefined;
+  const schemeCounts = useSchemeCountsForTaxonomies(
+    dataMode && !hideCounts ? taxonomyIds : [],
+    datasetFor,
+  );
   const classesByScheme = useMemo(() => {
     const map = new Map<string, ClassResponse[]>();
     (classes ?? []).forEach((cls) => {
@@ -334,6 +370,7 @@ export function HierarchyTree({
       else onSelectNode?.("class", classId);
     },
     onSelectIndividual: (individualId) => onSelectNode?.("individual", individualId),
+    datasetFor,
   };
 
   if (error) {
@@ -444,7 +481,11 @@ export function HierarchyTree({
                     />
                     {schemeOpen &&
                       (lazy ? (
-                        <LazySchemeClasses schemeId={scheme.id} ctx={ctx} />
+                        <LazySchemeClasses
+                          schemeId={scheme.id}
+                          taxonomyId={scheme.taxonomy_id}
+                          ctx={ctx}
+                        />
                       ) : (
                         <ClassRows
                           classes={classesByScheme.get(scheme.id) ?? []}

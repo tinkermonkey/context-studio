@@ -13,6 +13,7 @@ import { useListPaging } from "@/hooks/useListPaging";
 import { individualsCopy } from "./individuals/-copy";
 import { DATA_LIST_MODE_LINKS, EntityNavigator } from "@/components/entity/EntityNavigator";
 import { EntityPageLayout } from "@/components/entity/EntityPageParts";
+import { useDatasetScope } from "@/hooks/useDatasetScope";
 import type { components } from "@/api/types";
 
 type IndividualResponse = components["schemas"]["IndividualResponse"];
@@ -37,8 +38,11 @@ export function IndividualsPage() {
     }
   }, [createForClass, navigate]);
   const paging = useListPaging();
+  // The dataset chosen in the Navigator (the `dataset` URL parameter), or all data.
+  const { selectedDatasetId } = useDatasetScope();
+  const datasetScope = selectedDatasetId ? { dataset_id: selectedDatasetId } : {};
   // Unfiltered total for "showing X of Y" (a limit=1 request).
-  const { data: unfilteredCount } = useIndividuals({ limit: 1 });
+  const { data: unfilteredCount } = useIndividuals({ limit: 1, ...datasetScope });
   const allCount = unfilteredCount?.total;
 
   const {
@@ -46,7 +50,7 @@ export function IndividualsPage() {
     isLoading,
     error,
     refetch,
-  } = useIndividuals(paging.params, { keepPrevious: true });
+  } = useIndividuals({ ...paging.params, ...datasetScope }, { keepPrevious: true });
 
   const total = listResponse?.total;
   const { clampToTotal } = paging;
