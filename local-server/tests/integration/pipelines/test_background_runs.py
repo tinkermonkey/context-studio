@@ -426,6 +426,24 @@ class TestBatchCancelAndResume:
         assert resumed.failure_reason is None
         assert repo.get(bare.id).status == PipelineRunStatus.FAILED
 
+    def test_a_resumed_mcp_run_records_the_api_as_its_caller(
+        self, client, executor, session_factory
+    ):
+        """Resuming over REST can't replay an MCP client's right to propose (#1516)."""
+        repo = PipelineRepository(session_factory)
+        run = executor.submit(
+            PipelineType.NO_OP, "default", "default", {"items": 0, "requested_via": "mcp"}
+        )
+        repo.update_failure_info(run.id, "boom")
+
+        response = client.post(f"/api/pipelines/batches/{run.batch_run_id}/resume")
+
+        assert response.json()["resumed_count"] == 1
+        # The executor isn't started, so the run waits with its input
+        claimed, input_data = repo.claim_next_pending()
+        assert claimed.id == run.id
+        assert input_data == {"items": 0, "requested_via": "api"}
+
 
 class TestStoredInput:
     def test_extraction_text_is_stored_once_and_restored_for_the_worker(

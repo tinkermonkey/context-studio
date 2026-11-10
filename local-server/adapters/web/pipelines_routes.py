@@ -122,7 +122,6 @@ from utils.logger import get_logger
 router = APIRouter(prefix="/api/pipelines", tags=["pipelines"])
 config_router = APIRouter(prefix="/api/pipeline_configurations", tags=["pipelines"])
 
-
 _logger = get_logger(__name__)
 
 
@@ -2479,7 +2478,10 @@ def resume_batch_runs(batch_id: str, request: Request) -> dict[str, Any]:
         # Only runs with a stored input are re-queued: no worker could execute the rest
         executor = getattr(request.app.state, "run_executor", None)
         requeue = executor.requeue if executor is not None else pipeline_run_repo.requeue
-        resumed_count = sum(1 for run in runs if requeue(run.id))
+        # A resumed run is this caller's, not whoever started it: it can't replay
+        # an MCP client's right to propose changes to a mirrored taxonomy
+        resumed_by = {REQUESTED_VIA: RequestedVia.API.value}
+        resumed_count = sum(1 for run in runs if requeue(run.id, resumed_by))
 
         # Recompute batch status based on child runs
         if resumed_count > 0:

@@ -13,6 +13,7 @@ Architecture:
 """
 
 import logging
+from collections.abc import Sequence
 from contextlib import AsyncExitStack, asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -30,7 +31,7 @@ from adapters.chat.proposal_tools import (
     build_proposal_tools,
 )
 from adapters.chat.run_tools import build_run_tools
-from adapters.chat.tools import build_chat_tools
+from adapters.chat.tools import ToolBase, build_chat_tools
 from adapters.clustering.sklearn_clusterer import SklearnClusterer
 
 # Import admin adapters and services
@@ -862,7 +863,7 @@ async def lifespan(app: FastAPI):
             workers=settings.pipelines.background_workers,
         )
 
-        def run_tools_for(requested_via: RequestedVia) -> list:
+        def run_tools_for(requested_via: RequestedVia) -> Sequence[ToolBase]:
             """The run tools for one caller; its runs record where they came from."""
             return build_run_tools(
                 app.state.run_executor, pipeline_run_repo, ontology_service, requested_via
