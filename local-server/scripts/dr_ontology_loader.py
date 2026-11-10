@@ -109,6 +109,9 @@ class ImportSummary:
     stale: list[str] = field(default_factory=list)
     # The stale classes, property definitions and attribute definitions, for pruning.
     stale_entities: list[SpecEntity] = field(default_factory=list)
+    # x-dr-distinguish keys naming no node type of the spec, or the type itself
+    # ("<node id> -> <key>"); DR refuses them on landing, so a valid spec has none.
+    distinguish_unresolved: list[str] = field(default_factory=list)
 
 
 def _upsert_taxonomy(
@@ -372,7 +375,38 @@ def _upsert_classes(
             summary.classes_updated += 1
         _sync_external_reference(repo.save_class, cls, node.spec_node_id)
         class_id_by_spec_node_id[node.spec_node_id] = cls.id  # type: ignore[union-attr]
+    # Once every class exists, so x-dr-distinguish can name any node type
+    for node in nodes:
+        _sync_class_definition(service, node, class_id_by_spec_node_id, summary)
     return class_id_by_spec_node_id
+
+
+def _sync_class_definition(
+    service: OntologyService,
+    node: NodeSchemaRecord,
+    class_id_by_spec_node_id: dict[str, str],
+    summary: ImportSummary,
+) -> None:
+    """
+    Give a class its node schema's DR fields as its operational definition
+    (#1513): x-dr-standard, x-dr-evidence and x-dr-distinguish, its keys
+    resolved to the classes of those node types. A field the schema lacks is
+    cleared; an unchanged definition saves nothing.
+    """
+    class_id = class_id_by_spec_node_id[node.spec_node_id]
+    distinguish = []
+    for key, when in node.distinguish:
+        other_id = class_id_by_spec_node_id.get(key)
+        if other_id is None or other_id == class_id:
+            summary.distinguish_unresolved.append(f"{node.spec_node_id} -> {key}")
+            continue
+        distinguish.append({"class_id": other_id, "when": when})
+    service.update_class(
+        class_id,
+        distinguish_from=distinguish,
+        evidence_signals=list(node.evidence),
+        standard_reference=node.standard or "",
+    )
 
 
 def _upsert_attributes(

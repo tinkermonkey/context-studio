@@ -414,3 +414,236 @@ def test_a_class_delete_fails_while_relationship_types_still_use_it(parts):
     assert applied.operations[0].status is OperationStatus.FAILED
     assert repo.get_class(goal.id) is not None
     assert spec_changes_for(applied, repo)["node_changes"] == []
+
+
+# ----------------------------- node fields (#1515: the class's definition, DR's x-dr-*)
+
+STANDARD = "OpenAPI 3.1 Operation Object"
+EVIDENCE = ["a paths.<path>.<method> entry"]
+
+
+def define(parts, spec_node_id, **definition):
+    """Give an imported class an operational definition directly (the baseline)."""
+    ontology, repo, _ = parts
+    return ontology.update_class(class_by_dr_id(repo, spec_node_id).id, **definition)
+
+
+def distinguish(repo, **whens):
+    """distinguish_from naming DR node types (keyword: node id with _ for .)."""
+    return [
+        {"class_id": class_by_dr_id(repo, node_id.replace("__", ".")).id, "when": when}
+        for node_id, when in whens.items()
+    ]
+
+
+def update_definition(repo, seq, spec_node_id, **fields):
+    return OperationDraft(
+        seq=seq,
+        op="update",
+        kind="class",
+        target_id=class_by_dr_id(repo, spec_node_id).id,
+        fields=fields,
+    )
+
+
+def test_a_create_exports_the_node_fields_it_gives(parts):
+    _, repo, proposals = parts
+    draft = create(
+        repo,
+        1,
+        "api",
+        "webhook",
+        description="A callback the API calls.",
+        standard_reference="OpenAPI 3.1 webhooks",
+        evidence_signals=["a webhooks.<name> entry"],
+        distinguish_from=distinguish(repo, api__callback="the API calls it outside any operation"),
+    )
+    proposal = apply_all(proposals, propose(repo, proposals, draft))
+
+    (change,) = spec_changes_for(proposal, repo)["node_changes"]
+
+    assert change["set"] == {
+        "title": "Webhook",
+        "description": "A callback the API calls.",
+        "standard": "OpenAPI 3.1 webhooks",
+        "evidence": ["a webhooks.<name> entry"],
+        "distinguish": {"api.callback": "the API calls it outside any operation"},
+    }
+
+
+def test_an_update_exports_only_the_node_fields_it_changed(parts):
+    _, repo, proposals = parts
+    define(
+        parts,
+        "api.operation",
+        standard_reference=STANDARD,
+        evidence_signals=EVIDENCE,
+        distinguish_from=distinguish(repo, api__pathitem="it groups every method on one path"),
+    )
+    changed = distinguish(
+        repo,
+        api__pathitem="it groups every method on one path",
+        api__callback="the API calls it back",
+    )
+    proposal = apply_all(
+        proposals,
+        propose(
+            repo,
+            proposals,
+            update_definition(
+                repo,
+                1,
+                "api.operation",
+                standard_reference="OpenAPI 3.2 Operation Object",
+                evidence_signals=EVIDENCE,  # unchanged
+                distinguish_from=changed,
+            ),
+        ),
+    )
+
+    (change,) = spec_changes_for(proposal, repo)["node_changes"]
+
+    assert change["op"] == "update"
+    assert change["spec_node_id"] == "api.operation"
+    assert change["set"] == {
+        "standard": "OpenAPI 3.2 Operation Object",
+        "distinguish": {
+            "api.pathitem": "it groups every method on one path",
+            "api.callback": "the API calls it back",
+        },
+    }
+
+
+def test_an_update_that_clears_node_fields_exports_null_and_an_empty_list(parts):
+    _, repo, proposals = parts
+    define(
+        parts,
+        "api.operation",
+        standard_reference=STANDARD,
+        evidence_signals=EVIDENCE,
+        distinguish_from=distinguish(repo, api__pathitem="a path"),
+    )
+    cleared = dict(standard_reference=None, evidence_signals=None, distinguish_from=None)
+    proposal = apply_all(
+        proposals,
+        propose(repo, proposals, update_definition(repo, 1, "api.operation", **cleared)),
+    )
+
+    (change,) = spec_changes_for(proposal, repo)["node_changes"]
+
+    assert change["set"] == {"standard": None, "evidence": [], "distinguish": None}
+
+
+def test_an_update_that_leaves_the_node_fields_as_they_were_is_skipped(parts):
+    _, repo, proposals = parts
+    define(parts, "api.operation", standard_reference=STANDARD)
+    proposal = apply_all(
+        proposals,
+        propose(
+            repo,
+            proposals,
+            update_definition(repo, 1, "api.operation", standard_reference=STANDARD),
+        ),
+    )
+
+    document = spec_changes_for(proposal, repo)
+
+    assert document["node_changes"] == []
+    assert document["skipped"][0]["why"] == "it changes nothing DR's spec holds for a node type"
+
+
+def test_a_distinguish_key_follows_a_move_of_the_proposal(parts):
+    """A key naming a moved type goes out under its new id, as DR lands it."""
+    _, repo, proposals = parts
+    goal = class_by_dr_id(repo, "motivation.goal")
+    proposal = apply_all(
+        proposals,
+        propose(
+            repo,
+            proposals,
+            update_definition(
+                repo, 1, "api.operation", distinguish_from=[{"class_id": goal.id, "when": "a goal"}]
+            ),
+            OperationDraft(
+                seq=2,
+                op="move",
+                kind="class",
+                target_id=goal.id,
+                fields={
+                    "concept_scheme_id": scheme_of(repo, "business").id,
+                    "parent_class_id": None,
+                },
+            ),
+        ),
+    )
+
+    first, _ = spec_changes_for(proposal, repo)["node_changes"]
+
+    assert first["set"] == {"distinguish": {"business.goal": "a goal"}}
+
+
+def test_a_distinguish_naming_a_class_the_proposal_deleted_is_refused(parts):
+    _, repo, proposals = parts
+    spare = unused_class(parts, "business")
+    proposal = apply_all(
+        proposals,
+        propose(
+            repo,
+            proposals,
+            update_definition(
+                repo,
+                1,
+                "api.operation",
+                distinguish_from=[{"class_id": spare.id, "when": "spare"}],
+            ),
+            OperationDraft(seq=2, op="delete", kind="class", target_id=spare.id),
+        ),
+    )
+
+    with pytest.raises(ValueError, match="seq 1: its distinguish names .*, which is not a DR node"):
+        spec_changes_for(proposal, repo)
+
+
+def test_a_distinguish_naming_a_class_outside_the_dr_spec_is_refused(parts):
+    ontology, repo, proposals = parts
+    stray = ontology.create_class(concept_scheme_id=scheme_of(repo, "api").id, title="Stray")
+    proposal = apply_all(
+        proposals,
+        propose(
+            repo,
+            proposals,
+            update_definition(
+                repo,
+                1,
+                "api.operation",
+                distinguish_from=[{"class_id": stray.id, "when": "stray"}],
+            ),
+        ),
+    )
+
+    with pytest.raises(ValueError, match="it has no DR reference"):
+        spec_changes_for(proposal, repo)
+
+
+def test_the_export_sends_the_fields_as_the_class_holds_them(parts):
+    _, repo, proposals = parts
+    proposal = apply_all(
+        proposals,
+        propose(
+            repo,
+            proposals,
+            update_definition(
+                repo,
+                1,
+                "api.operation",
+                standard_reference=" OpenAPI ",
+                evidence_signals=["an entry ", "  "],
+            ),
+        ),
+    )
+
+    (change,) = spec_changes_for(proposal, repo)["node_changes"]
+
+    assert change["set"] == {"standard": "OpenAPI", "evidence": ["an entry"]}
+    stored = class_by_dr_id(repo, "api.operation")
+    assert (stored.standard_reference, stored.evidence_signals) == ("OpenAPI", ["an entry"])
