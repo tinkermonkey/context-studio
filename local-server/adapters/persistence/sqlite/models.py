@@ -1358,6 +1358,33 @@ class SchemaRelationshipReflectionRun(PipelineRun):
         return f"<SchemaRelationshipReflectionRun(id={self.id}, status={self.status})>"
 
 
+class ClaimTriageRun(PipelineRun):
+    """
+    Claim triage runs (decision-model questions per claim, saved on the claims).
+
+    Uses joined-table inheritance from PipelineRun with discriminator
+    run_type='claim_triage'.
+
+    Per-type fields: (none)
+    """
+
+    __tablename__ = "claim_triage_runs"
+
+    id = Column(
+        String(36),
+        ForeignKey("pipeline_runs.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+
+    __mapper_args__: Dict[str, Any] = {
+        "polymorphic_identity": "claim_triage",
+    }
+
+    def __repr__(self) -> str:
+        return f"<ClaimTriageRun(id={self.id}, status={self.status})>"
+
+
 class ChangeProposalRun(BatchRun):
     """
     A change proposal: ontology changes proposed by an agent, pipeline, bundle
