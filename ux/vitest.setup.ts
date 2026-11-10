@@ -474,9 +474,13 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       ref: any,
     ) => {
       if (!isOpen) return null;
+      // Like the real Modal, only a click on the backdrop itself closes it.
+      const handleBackdropClick = (e: React.MouseEvent) => {
+        if (e.target === e.currentTarget) onClose();
+      };
       return React.createElement(
         "div",
-        { className: "modal-backdrop", onClick: onClose, ...props, ref },
+        { className: "modal-backdrop", onClick: handleBackdropClick, ...props, ref },
         React.createElement(
           "div",
           { className: "modal", role: "dialog", "aria-modal": "true" },
@@ -875,7 +879,17 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
     ),
   Field: React.forwardRef(
     (
-      { label, required = false, error, errorId, hint, children, className = "", ...props }: any,
+      {
+        label,
+        htmlFor,
+        required = false,
+        error,
+        errorId,
+        hint,
+        children,
+        className = "",
+        ...props
+      }: any,
       ref: any,
     ) =>
       React.createElement(
@@ -887,8 +901,8 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
         },
         label &&
           React.createElement(
-            "div",
-            { className: "field__label" },
+            "label",
+            { className: "field__label", htmlFor },
             React.createElement(
               "span",
               {},

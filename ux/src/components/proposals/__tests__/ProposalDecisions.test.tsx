@@ -482,6 +482,25 @@ describe("accept all and the results", () => {
       note: null,
     });
   });
+
+  it("stores the Reject all reason with every rejected operation", async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByTestId("proposal-reject-all"));
+    const dialog = await screen.findByRole("dialog");
+    await user.type(
+      within(dialog).getByRole("textbox", { name: /Reason/ }),
+      "  superseded by the next export  ",
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Reject 3" }));
+    await waitFor(() => expect(rejected).toHaveLength(1));
+    expect(rejected[0]).toEqual({
+      operation_ids: ["op-rename", "op-delete", "op-class"],
+      note: "superseded by the next export",
+    });
+  });
+
+
 });
 
 describe("revert", () => {

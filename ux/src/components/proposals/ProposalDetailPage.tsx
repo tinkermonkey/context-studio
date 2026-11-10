@@ -3,11 +3,13 @@ import {
   Button,
   Chip,
   ConfirmDialog,
+  Field,
   Icon,
   PageHeader,
   ProgressBar,
   SegmentedControl,
   Table,
+  TextArea,
 } from "@tinkermonkey/heimdall-ui";
 import { useChangeProposal, useProposalDecisions } from "@/api/hooks/proposals";
 import { useTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
@@ -133,6 +135,7 @@ export function ProposalDetailPage({
   const [threshold, setThreshold] = useState(DEFAULT_THRESHOLD);
   const [checkedIds, setChecked] = useState<string[]>([]);
   const [confirmRejectAll, setConfirmRejectAll] = useState(false);
+  const [rejectAllNote, setRejectAllNote] = useState("");
   const [confirmRevert, setConfirmRevert] = useState(false);
   // Undefined until the reviewer picks one: then it follows defaultOperationFilter.
   const [chosenFilter, setFilter] = useState<OperationFilter>();
@@ -415,7 +418,10 @@ export function ProposalDetailPage({
                     variant="secondary"
                     size="sm"
                     disabled={actions.busy}
-                    onClick={() => setConfirmRejectAll(true)}
+                    onClick={() => {
+                      setRejectAllNote("");
+                      setConfirmRejectAll(true);
+                    }}
                     data-testid="proposal-reject-all"
                   >
                     Reject all awaiting
@@ -722,10 +728,31 @@ export function ProposalDetailPage({
         onClose={() => setConfirmRejectAll(false)}
         onConfirm={() => {
           setConfirmRejectAll(false);
-          void actions.rejectOperations(awaitingIds);
+          void actions.rejectOperations(awaitingIds, rejectAllNote);
         }}
         title={`Reject all ${awaitingIds.length} awaiting?`}
-        message="A rejected operation can't be applied later. Operations already applied stay applied."
+        message={
+          <div className="stack">
+            <p>
+              A rejected operation can&apos;t be applied later. Operations already applied stay
+              applied.
+            </p>
+            <Field
+              label="Reason"
+              hint="optional, stored with each reject"
+              htmlFor="proposal-reject-all-note"
+            >
+              <TextArea
+                id="proposal-reject-all-note"
+                rows={2}
+                value={rejectAllNote}
+                placeholder="Why reject them?"
+                onChange={(e) => setRejectAllNote(e.target.value)}
+                data-testid="proposal-reject-all-note"
+              />
+            </Field>
+          </div>
+        }
         confirmLabel={`Reject ${awaitingIds.length}`}
       />
 
