@@ -1,5 +1,5 @@
 """
-Integration test for migration f9652286acd2 (#1513): a class's operational
+Integration test for migration 025e43bda199 (#1513): a class's operational
 definition columns on ontology_entities, against a real file-based SQLite
 database migrated with Alembic.
 """
@@ -11,8 +11,8 @@ from alembic.command import downgrade, upgrade
 from alembic.config import Config
 
 ALEMBIC_INI = str(Path(__file__).parent / "../../adapters/persistence/sqlite/alembic.ini")
-REVISION = "f9652286acd2"
-PREVIOUS_REVISION = "4e84e0aed52f"
+REVISION = "025e43bda199"
+PREVIOUS_REVISION = "b03f04db2ea4"
 COLUMNS = {"distinguish_from", "evidence_signals", "standard_reference"}
 
 

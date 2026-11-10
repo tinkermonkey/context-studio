@@ -271,6 +271,7 @@ async def create_proposal(
             ref=o.ref,
             fields=o.fields,
             rationale=o.rationale,
+            notes=o.notes,
             evidence=o.evidence,
             probability=o.probability,
             claimed_scope=o.scope,

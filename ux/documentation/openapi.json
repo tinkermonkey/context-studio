@@ -13294,7 +13294,7 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Proposed",
-            "description": "The operation as proposed: seq, op, kind, target_id, ref, fields, base, rationale, evidence, probability, scope, proposed_replacement_id"
+            "description": "The operation as proposed: seq, op, kind, target_id, ref, fields, base, rationale, notes, evidence, probability, scope, proposed_replacement_id"
           },
           "applied_fields": {
             "anyOf": [
@@ -16763,6 +16763,18 @@
             "title": "Rationale",
             "description": "Why this change"
           },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Free-text notes kept with the operation (e.g. a maintainer's notes); never applied to the entity. Blank notes are stored as null"
+          },
           "evidence": {
             "items": {
               "additionalProperties": true,
@@ -16878,6 +16890,18 @@
               }
             ],
             "title": "Rationale"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "Free-text notes kept with the operation; never applied to the entity"
           },
           "evidence": {
             "items": {

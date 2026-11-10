@@ -905,6 +905,8 @@ class ProposalService:
             raise _Invalid("invalid", f"probability must be a number, not {probability!r}")
         if draft.target_id is not None and not isinstance(draft.target_id, str):
             raise _Invalid("invalid", f"target_id must be a string, not {draft.target_id!r}")
+        if draft.notes is not None and not isinstance(draft.notes, str):
+            raise _Invalid("invalid", f"notes must be text, not {draft.notes!r}")
         try:
             op = OperationType(draft.op)
             kind = OperationKind(draft.kind)
@@ -929,6 +931,8 @@ class ProposalService:
                 ref=draft.ref,
                 fields=dict(draft.fields or {}),
                 rationale=draft.rationale,
+                # Notes ride with the operation; they are never an entity field.
+                notes=draft.notes if draft.notes and draft.notes.strip() else None,
                 evidence=list(draft.evidence or []),
                 probability=probability,
             )
