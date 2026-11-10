@@ -2473,8 +2473,12 @@ export interface paths {
      * Search References
      * @description Search for references across multiple sources.
      *
-     *     Aggregates results from all available sources (or specified sources).
-     *     Sources that fail or are unavailable are tracked but don't block the response.
+     *     Aggregates results from all sources (or the requested ones), queried at once.
+     *     There is no availability pre-check: each call goes through the reference proxy,
+     *     so a repeated search is a cache hit. A source that raises or doesn't answer
+     *     within SOURCE_QUERY_TIMEOUT_SECONDS is listed as failed and doesn't hold the
+     *     response. The source adapters return no results on network errors, so a source
+     *     that fails fast is listed as searched with no results.
      *
      *     Args:
      *         request: ReferenceSearchRequest with search parameters
@@ -2506,8 +2510,9 @@ export interface paths {
      * Get Reference Relations
      * @description Get relationships for a reference URI across multiple sources.
      *
-     *     Aggregates relationships from all available sources (or specified sources).
-     *     Sources that fail or are unavailable are tracked but don't block the response.
+     *     Aggregates relationships from all sources (or the requested ones), queried at
+     *     once. As with search, there is no availability pre-check; a source that raises or
+     *     doesn't answer within SOURCE_QUERY_TIMEOUT_SECONDS is listed as failed.
      *
      *     Args:
      *         request: ReferenceRelationsRequest with URI to query
@@ -4476,6 +4481,11 @@ export interface components {
       attributes?: {
         [key: string]: unknown;
       };
+      /**
+       * Dataset Id
+       * @description The relationship's dataset: its source individual's
+       */
+      dataset_id?: string | null;
     };
     /** Body_import_ontology_api_v1_interchange_import_post */
     Body_import_ontology_api_v1_interchange_import_post: {
@@ -5406,6 +5416,48 @@ export interface components {
       issues?: string[];
     };
     /**
+     * DatasetImpactResponse
+     * @description What a schema operation will do to the data of a dataset that yields to the
+     *     schema. Information only: such data never blocks the operation.
+     */
+    DatasetImpactResponse: {
+      /** Dataset Id */
+      dataset_id: string;
+      /** Identifier */
+      identifier: string;
+      /** Title */
+      title: string;
+      /**
+       * Relationships Moved
+       * @description Moved to the delete's replacement type
+       * @default 0
+       */
+      relationships_moved: number;
+      /**
+       * Relationships Dropped
+       * @default 0
+       */
+      relationships_dropped: number;
+      /**
+       * Individuals Untyped
+       * @description Lose the deleted class, keep others
+       * @default 0
+       */
+      individuals_untyped: number;
+      /**
+       * Individuals Dropped
+       * @description The deleted class was their only one
+       * @default 0
+       */
+      individuals_dropped: number;
+      /**
+       * Values Dropped
+       * @description Values of the deleted attribute
+       * @default 0
+       */
+      values_dropped: number;
+    };
+    /**
      * DecisionKind
      * @description What was decided.
      * @enum {string}
@@ -5724,6 +5776,11 @@ export interface components {
       class_ids?: string[];
       /** Class Titles */
       class_titles?: string[];
+      /**
+       * Dataset Id
+       * @description An individual end's dataset (null for a class end)
+       */
+      dataset_id?: string | null;
     };
     /**
      * EnqueueBatchRunsRequest
@@ -8081,6 +8138,11 @@ export interface components {
        * @default false
        */
       stale: boolean;
+      /**
+       * Dataset Impact
+       * @description A pending or failed schema operation (relationship-type delete or retarget, class or attribute delete): what it will do to the data of each dataset that yields to the schema. Information only; that data never blocks it
+       */
+      dataset_impact?: components["schemas"]["DatasetImpactResponse"][];
       /** @description A pending or failed relationship-type update that keeps its pair (a rename or reverse) while relationships use the type: those relationships and the types they all fit. Applying it as proposed needs nothing, but an edit that retargets the type needs a resolution of them. Null otherwise */
       type_usage?: components["schemas"]["DeleteBlockersResponse"] | null;
       /** @description A pending or failed relationship-type delete, or update that retargets the type, whose type relationships still use: applying it as proposed fails; it needs a resolution. Null otherwise. The proposed replacement, when it fits, is listed first */

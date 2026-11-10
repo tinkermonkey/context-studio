@@ -23,6 +23,11 @@ updates individuals in place. A relationship is identified by its
 (source, target, property definition) triple, so a re-run leaves existing ones
 untouched. All writes go through `OntologyService`.
 
+The model loads into one named dataset of the taxonomy (`context-studio` by
+default, see #1485), created if missing, and the loader flags it as yielding
+to the schema: spec proposals never block on the sample model, which follows
+them instead. Only that dataset's individuals are matched, updated or pruned.
+
 The import only adds. When the model drops or re-points a relationship (DR's
 `dr upgrade` rewrites retired types; DR walks rename and retarget them), the
 old row stays behind. `find_prunable_relationships` finds those rows and
@@ -43,7 +48,7 @@ from typing import Any
 
 import yaml
 
-from domain.ontology.entities import Class, Individual
+from domain.ontology.entities import Class, Dataset, Individual
 from domain.ontology.exceptions import DuplicateEntityError
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
@@ -55,6 +60,8 @@ from scripts.dr_ontology_loader import (
     slugify_spec_node_id,
 )
 
+# The dataset Context Studio's own DR model loads into (#1485).
+DR_MODEL_DATASET = "context-studio"
 _REQUIRED_ELEMENT_FIELDS = ("path", "spec_node_id", "layer_id", "name")
 _REQUIRED_RELATIONSHIP_FIELDS = ("source", "target", "predicate")
 # relationships.yaml relative to the viewer dir, in the `<rev>:./<path>` form `show` accepts.
@@ -150,6 +157,7 @@ def _upsert_individuals(
     taxonomy_id: str,
     elements: list[dict[str, Any]],
     summary: ModelImportSummary,
+    dataset_id: str,
 ) -> tuple[dict[str, str], dict[str, str]]:
     """
     Create or update one Individual per element.
@@ -157,7 +165,7 @@ def _upsert_individuals(
     Returns (individual id by element path, spec_node_id by element path) for
     every element that was imported.
     """
-    all_individuals = repo.list_individuals(class_id=None, limit=None)
+    all_individuals = repo.list_individuals(class_id=None, limit=None, dataset_id=dataset_id)
     individual_by_path: dict[str, Individual] = {}
     for individual in all_individuals:
         for identifier in _dr_identifiers(individual):
@@ -212,6 +220,7 @@ def _upsert_individuals(
                     title=title,
                     description=description,
                     external_references=[path_reference],
+                    dataset_id=dataset_id,
                 )
                 counts.individuals_created += 1
             else:
@@ -302,14 +311,39 @@ def _upsert_relationships(
         counts.relationships_created += 1
 
 
+def model_dataset(
+    service: OntologyService,
+    repo: OntologyRepository,
+    taxonomy_id: str,
+    identifier: str = DR_MODEL_DATASET,
+) -> Dataset:
+    """
+    The dataset the model loads into, created if missing, flagged as yielding
+    to the schema (there is no other way to set the flag).
+    """
+    existing = next(
+        (d for d in repo.list_datasets(taxonomy_id=taxonomy_id) if d.identifier == identifier),
+        None,
+    )
+    dataset = existing or service.create_dataset(
+        taxonomy_id, identifier, identifier.replace("-", " ").title()
+    )
+    if not dataset.yields_to_schema:
+        dataset.yields_to_schema = True
+        dataset = repo.save_dataset(dataset)
+    return dataset
+
+
 def import_dr_model(
     ontology_service: OntologyService,
     ontology_repo: OntologyRepository,
     viewer_dir: Path,
+    dataset_identifier: str = DR_MODEL_DATASET,
 ) -> ModelImportSummary:
     """
     Idempotently import the DR model under `{viewer_dir}/documentation-robotics/model/`
-    as individuals and relationships in the `dr_spec` taxonomy.
+    as individuals and relationships in the `dr_spec` taxonomy, in the named
+    dataset (see `model_dataset`).
 
     Raises:
         ValueError: If the `dr_spec` taxonomy has not been imported yet.
@@ -330,8 +364,9 @@ def import_dr_model(
         if element.get("path") and element.get("layer_id")
     }
 
+    dataset = model_dataset(ontology_service, ontology_repo, taxonomy.id, dataset_identifier)
     individual_id_by_path, spec_node_id_by_path = _upsert_individuals(
-        ontology_service, ontology_repo, taxonomy.id, elements, summary
+        ontology_service, ontology_repo, taxonomy.id, elements, summary, dataset.id
     )
     _upsert_relationships(
         ontology_service,
@@ -388,7 +423,7 @@ def committed_model_triples(viewer_dir: Path) -> set[Triple]:
 
 
 def find_prunable_relationships(
-    repo: OntologyRepository, viewer_dir: Path
+    repo: OntologyRepository, viewer_dir: Path, dataset_id: str | None = None
 ) -> list[PrunableRelationship]:
     """
     Relationships the DR model put in the database that the model no longer has.
@@ -400,6 +435,8 @@ def find_prunable_relationships(
         relationships.yaml (`committed_model_triples`);
       - that triple is not in the current relationships.yaml.
 
+    Only the given dataset's relationships are considered (all when None).
+
     Raises:
         ValueError: If the model's history cannot be read.
     """
@@ -409,7 +446,7 @@ def find_prunable_relationships(
 
     path_by_individual_id = {
         individual.id: min(paths)
-        for individual in repo.list_individuals(class_id=None, limit=None)
+        for individual in repo.list_individuals(class_id=None, limit=None, dataset_id=dataset_id)
         if (paths := _dr_identifiers(individual))
     }
     predicate_by_property_id = {
@@ -419,7 +456,7 @@ def find_prunable_relationships(
     }
 
     prunable = []
-    for relationship in repo.list_relationships(limit=None):
+    for relationship in repo.list_relationships(limit=None, dataset_id=dataset_id):
         source = path_by_individual_id.get(relationship.source_id)
         predicate = predicate_by_property_id.get(relationship.property_definition_id)
         target = path_by_individual_id.get(relationship.target_id)
