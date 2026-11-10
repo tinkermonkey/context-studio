@@ -96,6 +96,7 @@ def _proposal(id="p1", taxonomy_id="t1", source=ProposalSource.MCP, created_at=N
                 target_id="class-room",
                 fields={"description": "A room on a floor."},
                 base={"description": "A room."},
+                notes="Maintainer: floors matter here.",
                 scope=ChangeScope.EDITORIAL,
             ),
         ],
@@ -118,6 +119,8 @@ def test_round_trip_keeps_every_field_in_seq_order(repo):
     assert credenza.probability == 0.8 and credenza.ref == "credenza"
     assert stored.operations[2].base == {"description": "A room."}
     assert stored.operations[2].scope is ChangeScope.EDITORIAL
+    assert stored.operations[2].notes == "Maintainer: floors matter here."
+    assert credenza.notes is None
 
 
 def test_get_unknown_is_none(repo):

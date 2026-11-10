@@ -57,6 +57,11 @@ class ProposedOperationRequest(BaseModel):
         "for a move, the new parent, scheme or taxonomy",
     )
     rationale: Optional[str] = Field(None, description="Why this change")
+    notes: Optional[str] = Field(
+        None,
+        description="Free-text notes kept with the operation (e.g. a maintainer's notes); "
+        "never applied to the entity. Blank notes are stored as null",
+    )
     evidence: list[dict[str, Any]] = Field(
         default_factory=list, description='Supporting {"quote", "url", "entity_id"} items'
     )
@@ -463,6 +468,9 @@ class ProposedOperationResponse(BaseModel):
         description="The touched fields' values when proposed (a delete: the whole entity)",
     )
     rationale: Optional[str] = None
+    notes: Optional[str] = Field(
+        None, description="Free-text notes kept with the operation; never applied to the entity"
+    )
     evidence: list[dict[str, Any]] = Field(default_factory=list)
     probability: Optional[float] = None
     scope: ChangeScope
@@ -785,7 +793,7 @@ class GoldDecisionResponse(BaseModel):
     proposed: dict[str, Any] = Field(
         ...,
         description="The operation as proposed: seq, op, kind, target_id, ref, fields, base, "
-        "rationale, evidence, probability, scope, proposed_replacement_id",
+        "rationale, notes, evidence, probability, scope, proposed_replacement_id",
     )
     applied_fields: Optional[dict[str, Any]] = Field(
         None, description="The fields finally applied (the edit, if edited); null when rejected"

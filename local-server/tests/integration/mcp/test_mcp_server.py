@@ -658,6 +658,47 @@ async def test_get_and_list_proposals_through_mcp(dr_workspace, proposals):
     assert missing["isError"] is True
 
 
+async def test_operation_notes_are_stored_and_returned_through_mcp(dr_workspace, proposals):
+    write_tools = build_proposal_tools(proposals.service, ProposalSource.MCP)
+    notes = "Maintainer: an operation is one endpoint and one method."
+    arguments = {
+        "taxonomy_id": TAXONOMY_ID,
+        "title": "Define Operation",
+        "operations": [
+            {
+                **update_operation(1, OPERATION_ID, description="One endpoint and method"),
+                "notes": notes,
+            },
+            {
+                "seq": 2,
+                "op": "create",
+                "kind": "individual",
+                "fields": {"class_ids": [SERVICE_CLASS_ID], "title": "Billing"},
+                "notes": "  ",
+            },
+        ],
+    }
+    async with mcp_client(dr_workspace, write_tools) as client:
+        proposed = await result_of(client, "tools/call", call_params("propose_changes", arguments))
+        proposal_id = tool_payload(proposed)[0]["id"]
+        got = await result_of(
+            client, "tools/call", call_params("get_proposal", {"id": proposal_id})
+        )
+        refused = await result_of(
+            client,
+            "tools/call",
+            call_params(
+                "propose_changes",
+                {**arguments, "operations": [{**arguments["operations"][0], "notes": 3}]},
+            ),
+        )
+
+    assert [o.get("notes") for o in tool_payload(got)[0]["operations"]] == [notes, None]
+    assert [o.notes for o in proposals.service.get(proposal_id).operations] == [notes, None]
+    assert refused["isError"] is True
+    assert "is not of type 'string'" in refused["content"][0]["text"]
+
+
 async def test_a_client_drafts_against_a_revision_and_marks_the_decided_proposal_landed(
     dr_workspace, proposals
 ):
