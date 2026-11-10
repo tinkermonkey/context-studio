@@ -18,6 +18,7 @@ from domain.pipelines.schema_node_definition_refinement.orchestrator import (
     DefinitionRefinementOrchestrator,
     DefinitionRefinementState,
 )
+from domain.versioning.exceptions import OperationError, ProposalValidationError
 from domain.versioning.proposal_service import ProposalService
 from domain.versioning.proposals import OperationKind, OperationType, ProposalSource
 from domain.versioning.revert_service import RevertResult
@@ -57,6 +58,32 @@ class ScriptedLLM:
             finish_reason="stop",
             model=model,
         )
+
+
+class RefusingProposals:
+    """Refuses the operations for the given class ids once, then proposes."""
+
+    def __init__(self, proposals, refuse):
+        self.proposals = proposals
+        self.refuse = set(refuse)
+        self.attempts = []
+
+    def propose(self, operations, **kwargs):
+        self.attempts.append([o.target_id for o in operations])
+        refused = [o for o in operations if o.target_id in self.refuse]
+        if refused:
+            raise ProposalValidationError(
+                [
+                    OperationError(seq=o.seq, code="target_not_found", message="gone")
+                    for o in refused
+                ]
+            )
+        return self.proposals.propose(operations=operations, **kwargs)
+
+
+class FailingProposals:
+    def propose(self, **kwargs):
+        raise RuntimeError("database is locked")
 
 
 class RecordingWriter:
@@ -216,6 +243,112 @@ class TestEnrichment:
         assert state.result["status"] == "completed_with_warnings"
         assert state.result["errors"] == ["api_endpoint: the answer is not JSON"]
         assert state.result["proposed"] == 1
+
+    def test_an_answer_adds_to_the_operational_definition_but_never_clears_it(
+        self, ontology, repo, proposals, dr
+    ):
+        ontology.update_class(
+            dr["operation"].id,
+            distinguish_from=[{"class_id": dr["endpoint"].id, "when": "old"}],
+            evidence_signals=["an operationId"],
+            standard_reference="OpenAPI 3.0",
+        )
+        service = ontology.create_class(dr["api"].id, "Webhook", identifier="api_webhook")
+        answer = {
+            "definition": "An operation.",
+            "distinguish_from": [{"type": "api_webhook", "when": "the server calls out"}],
+            "standard_reference": None,
+            "evidence_signals": [],
+        }
+
+        state = run(
+            make(repo, proposals, ScriptedLLM({"api_operation": answer})),
+            dr["taxonomy"].id,
+            ["api_operation"],
+        )
+
+        (operation,) = proposals.get(state.result["proposal_id"]).operations
+        assert operation.fields == {
+            "distinguish_from": [
+                {"class_id": dr["endpoint"].id, "when": "old"},
+                {"class_id": service.id, "when": "the server calls out"},
+            ]
+        }
+
+    def test_a_reworded_distinction_replaces_the_one_for_the_same_class(
+        self, ontology, repo, proposals, dr
+    ):
+        ontology.update_class(
+            dr["operation"].id, distinguish_from=[{"class_id": dr["endpoint"].id, "when": "old"}]
+        )
+        answer = {
+            "definition": "An operation.",
+            "distinguish_from": [{"type": "api_endpoint", "when": "new"}],
+        }
+
+        state = run(
+            make(repo, proposals, ScriptedLLM({"api_operation": answer})),
+            dr["taxonomy"].id,
+            ["api_operation"],
+        )
+
+        (operation,) = proposals.get(state.result["proposal_id"]).operations
+        assert operation.fields == {
+            "distinguish_from": [{"class_id": dr["endpoint"].id, "when": "new"}]
+        }
+
+    def test_the_prompt_lists_current_fields_and_relationships(self, ontology, repo, proposals, dr):
+        ontology.update_class(dr["operation"].id, evidence_signals=["an operationId"])
+        ontology.create_property_definition(
+            "operation_on",
+            "operation on",
+            canonical_predicate="on",
+            domain_class_id=dr["operation"].id,
+            range_class_id=dr["endpoint"].id,
+            taxonomy_id=dr["taxonomy"].id,
+            create_missing_predicate=True,
+        )
+        llm = ScriptedLLM({"api_operation": OPERATION_ANSWER})
+
+        run(make(repo, proposals, llm), dr["taxonomy"].id, ["api_operation"])
+
+        user = llm.calls[0][2]
+        assert "Current evidence_signals: an operationId" in user
+        assert "Current distinguish_from: (none)" in user
+        assert "(1 outgoing, 0 incoming)" in user
+        assert "  api_operation --[on]--> api_endpoint" in user
+
+    def test_refused_operations_are_dropped_and_the_rest_proposed(self, repo, proposals, dr):
+        answers = {
+            "api_operation": OPERATION_ANSWER,
+            "api_endpoint": {"definition": "The path a client addresses."},
+        }
+        refusing = RefusingProposals(proposals, refuse=[dr["operation"].id])
+
+        state = run(make(repo, refusing, ScriptedLLM(answers)), dr["taxonomy"].id, "api")
+
+        assert len(refusing.attempts) == 2
+        assert refusing.attempts[1] == [dr["endpoint"].id]
+        (operation,) = proposals.get(state.result["proposal_id"]).operations
+        assert operation.seq == 1 and operation.target_id == dr["endpoint"].id
+        assert state.result["refused"] == [
+            {"class": "api_operation", "error": "target_not_found: gone"}
+        ]
+        assert state.result["proposed"] == 1
+
+    def test_a_failed_proposal_keeps_what_the_llm_calls_cost(self, repo, proposals, dr):
+        llm = ScriptedLLM({"api_operation": OPERATION_ANSWER})
+        with pytest.raises(PipelineExecutionError, match="database is locked") as raised:
+            run(make(repo, FailingProposals(), llm), dr["taxonomy"].id, ["api_operation"])
+        assert raised.value.llm_metadata["tokens_in"] == 100
+
+    def test_an_unparseable_answer_is_a_request_not_a_failed_one(self, repo, proposals, dr):
+        llm = ScriptedLLM({"api_operation": RuntimeError("down"), "api_endpoint": "not json"})
+        with pytest.raises(PipelineExecutionError) as raised:
+            run(make(repo, proposals, llm), dr["taxonomy"].id, "api")
+        metadata = raised.value.llm_metadata
+        assert (metadata["requests"], metadata["failed_requests"]) == (2, 1)
+        assert metadata["tokens_in"] == 100
 
     def test_no_answers_at_all_fails_the_run(self, repo, proposals, dr):
         llm = ScriptedLLM(

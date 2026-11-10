@@ -175,21 +175,26 @@ class DefinitionEnrichment:
                     concept_scheme_id=cls.concept_scheme_id, limit=None
                 )
         responses: list[LLMResponse] = []
+        unanswered = 0
         limit = asyncio.Semaphore(self._concurrency)
         done = 0
         total = len(classes)
         self._report_progress(0, total)
 
         async def enrich(cls: Class) -> _Enrichment:
-            nonlocal done
+            nonlocal done, unanswered
             async with limit:
                 try:
                     system = self._system_prompt(
                         taxonomy, cls, siblings_by_scheme[cls.concept_scheme_id]
                     )
-                    response = await self._call_llm(
-                        system, _user_prompt(cls, properties, self._repo)
-                    )
+                    try:
+                        response = await self._call_llm(
+                            system, _user_prompt(cls, properties, self._repo)
+                        )
+                    except Exception:
+                        unanswered += 1
+                        raise
                     responses.append(response)
                     return _enrichment(
                         cls, response.content, siblings_by_scheme[cls.concept_scheme_id]
@@ -208,14 +213,20 @@ class DefinitionEnrichment:
                 failed.append((_label(cls), str(outcome) or type(outcome).__name__))
             else:
                 enriched.append(outcome)
-        llm_metadata = _llm_metadata(model, responses, len(failed), started)
+        llm_metadata = _llm_metadata(model, responses, unanswered, started)
         if total and not enriched:
             raise PipelineExecutionError(
                 f"The LLM answered none of {total} classes: {failed[0][0]}: {failed[0][1]}",
                 llm_metadata=llm_metadata,
             )
         changing = [e for e in enriched if e.fields]
-        proposal_id, refused = self._propose(taxonomy, changing, model, run_id, failed)
+        try:
+            proposal_id, refused = self._propose(taxonomy, changing, model, run_id, failed)
+        except Exception as exc:
+            # Keep what the LLM calls cost even though nothing was proposed
+            raise PipelineExecutionError(
+                f"Proposing the enrichment failed: {exc}", llm_metadata=llm_metadata
+            ) from exc
         return EnrichmentOutcome(
             proposal_id=proposal_id,
             classes=total,
@@ -312,12 +323,38 @@ def _user_prompt(
     attributes = repo.list_attribute_definitions(class_id=cls.id, limit=None)
     outgoing = [p for p in properties if p.domain_class_id == cls.id]
     incoming = [p for p in properties if p.range_class_id == cls.id and p.domain_class_id != cls.id]
+    labels = {cls.id: _label(cls)}
+
+    def name(class_id: str | None) -> str:
+        if not class_id:
+            return "?"
+        if class_id not in labels:
+            other = repo.get_class(class_id)
+            labels[class_id] = _label(other) if other else class_id
+        return labels[class_id]
+
+    def edge(p: PropertyDefinition) -> str:
+        predicate = p.canonical_predicate or p.identifier
+        return f"  {name(p.domain_class_id)} --[{predicate}]--> {name(p.range_class_id)}"
+
+    distinguish = "; ".join(f"{name(e['class_id'])}: {e['when']}" for e in cls.distinguish_from)
+    current = [
+        f"Current distinguish_from: {distinguish or '(none)'}",
+        f"Current evidence_signals: {'; '.join(cls.evidence_signals) or '(none)'}",
+        f"Current standard_reference: {cls.standard_reference or '(none)'}",
+        "External references: "
+        + ("; ".join(f"{r.source}: {r.identifier}" for r in cls.external_references) or "(none)"),
+    ]
+    edges = [edge(p) for p in outgoing[:40]] + [edge(p) for p in incoming[:40]]
+    if len(outgoing) > 40 or len(incoming) > 40:
+        edges.append("  ... (truncated)")
     return "\n".join(
         [
             f"Define this class: {_label(cls)}",
             "",
             f"Title: {cls.title}",
             f"Current definition: {cls.description or '(none)'}",
+            *current,
             "Attributes: "
             + (
                 "; ".join(
@@ -327,7 +364,7 @@ def _user_prompt(
             ),
             f"Relationships in which it participates ({len(outgoing)} outgoing,"
             f" {len(incoming)} incoming):",
-            *(f"  {p.identifier}" for p in [*outgoing, *incoming][:80]),
+            *edges,
         ]
     )
 
@@ -367,14 +404,17 @@ def _enrichment(cls: Class, content: str, siblings: list[Class]) -> _Enrichment:
     standard = str(standard).strip() or None if standard else None
     definition = str(answer.get("definition") or "").strip()
 
+    # The answer adds or rewords; it never clears what the class already has
     fields: dict[str, Any] = {}
     if definition and definition != (cls.description or ""):
         fields["description"] = definition
-    if distinguish != cls.distinguish_from:
-        fields["distinguish_from"] = distinguish
+    if distinguish:
+        merged = _merge_distinguish(cls.distinguish_from, distinguish)
+        if merged != cls.distinguish_from:
+            fields["distinguish_from"] = merged
     if evidence and evidence != cls.evidence_signals:
         fields["evidence_signals"] = evidence
-    if standard != cls.standard_reference:
+    if standard and standard != cls.standard_reference:
         fields["standard_reference"] = standard
     notes = str(answer.get("notes") or "").strip() or None
     confidence = answer.get("confidence")
@@ -383,6 +423,19 @@ def _enrichment(cls: Class, content: str, siblings: list[Class]) -> _Enrichment:
     else:
         confidence = min(1.0, max(0.0, float(confidence)))
     return _Enrichment(cls, fields, notes, confidence, dropped)
+
+
+def _merge_distinguish(
+    current: list[dict[str, str]], answered: list[dict[str, str]]
+) -> list[dict[str, str]]:
+    """
+    The class's distinguish_from with the answer's entries: an entry for a class
+    it already names rewords it in place, a new one is added, and the entries
+    the answer doesn't name (another scheme's classes among them) stay.
+    """
+    new_when = {e["class_id"]: e["when"] for e in answered}
+    kept = [{**e, "when": new_when.pop(e["class_id"], e["when"])} for e in current]
+    return [*kept, *({"class_id": c, "when": w} for c, w in new_when.items())]
 
 
 def _label(cls: Class) -> str:
