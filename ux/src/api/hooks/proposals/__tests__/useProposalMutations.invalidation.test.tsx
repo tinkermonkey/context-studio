@@ -28,7 +28,7 @@ const ONTOLOGY_QUERIES: QueryKey[] = [
   QUERY_KEYS.individual("ind-1", "relationships"),
   QUERY_KEYS.relationships({ source_id: "ind-1" }),
   QUERY_KEYS.properties,
-  QUERY_KEYS.graphView,
+  QUERY_KEYS.graphView(),
   QUERY_KEYS.changes({ limit: 10 }),
 ];
 const UNRELATED_QUERIES: QueryKey[] = [QUERY_KEYS.pipelineRuns(), QUERY_KEYS.health];

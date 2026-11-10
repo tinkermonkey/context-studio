@@ -6,8 +6,13 @@ import { COPY } from "@/routes/app/graph/-copy";
 
 type GraphMetricsResponse = components["schemas"]["GraphMetricsResponse"];
 
-export function MetricsPanel() {
-  const { data, isLoading, error, refetch } = useGraphMetrics();
+interface MetricsPanelProps {
+  /** Measure the schema plus this dataset's data; all data when omitted. */
+  datasetId?: string;
+}
+
+export function MetricsPanel({ datasetId }: MetricsPanelProps = {}) {
+  const { data, isLoading, error, refetch } = useGraphMetrics(undefined, datasetId);
 
   const renderLoadingState = () => (
     <div className="panel-body">

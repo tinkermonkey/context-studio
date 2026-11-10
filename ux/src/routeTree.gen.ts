@@ -30,6 +30,7 @@ import { Route as AppProposalsProposalIdRouteImport } from './routes/app/proposa
 import { Route as AppPipelinesRunsRouteImport } from './routes/app/pipelines/runs'
 import { Route as AppPipelinesReviewRouteImport } from './routes/app/pipelines/review'
 import { Route as AppDataIndividualsRouteImport } from './routes/app/data/individuals'
+import { Route as AppDataDatasetsRouteImport } from './routes/app/data/datasets'
 import { Route as AppSchemaSchemesIndexRouteImport } from './routes/app/schema/schemes.index'
 import { Route as AppSchemaTaxonomiesIdRouteImport } from './routes/app/schema/taxonomies_.$id'
 import { Route as AppSchemaSchemesIdRouteImport } from './routes/app/schema/schemes_.$id'
@@ -144,6 +145,11 @@ const AppDataIndividualsRoute = AppDataIndividualsRouteImport.update({
   path: '/data/individuals',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDataDatasetsRoute = AppDataDatasetsRouteImport.update({
+  id: '/data/datasets',
+  path: '/data/datasets',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSchemaSchemesIndexRoute = AppSchemaSchemesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -197,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/app/settings': typeof AppSettingsRoute
   '/app/versioning': typeof AppVersioningRoute
   '/app/': typeof AppIndexRoute
+  '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
   '/app/pipelines/review': typeof AppPipelinesReviewRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
@@ -227,6 +234,7 @@ export interface FileRoutesByTo {
   '/app/settings': typeof AppSettingsRoute
   '/app/versioning': typeof AppVersioningRoute
   '/app': typeof AppIndexRoute
+  '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
   '/app/pipelines/review': typeof AppPipelinesReviewRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
@@ -258,6 +266,7 @@ export interface FileRoutesById {
   '/app/settings': typeof AppSettingsRoute
   '/app/versioning': typeof AppVersioningRoute
   '/app/': typeof AppIndexRoute
+  '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
   '/app/pipelines/review': typeof AppPipelinesReviewRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
@@ -291,6 +300,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/versioning'
     | '/app/'
+    | '/app/data/datasets'
     | '/app/data/individuals'
     | '/app/pipelines/review'
     | '/app/pipelines/runs'
@@ -321,6 +331,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/versioning'
     | '/app'
+    | '/app/data/datasets'
     | '/app/data/individuals'
     | '/app/pipelines/review'
     | '/app/pipelines/runs'
@@ -351,6 +362,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/versioning'
     | '/app/'
+    | '/app/data/datasets'
     | '/app/data/individuals'
     | '/app/pipelines/review'
     | '/app/pipelines/runs'
@@ -529,6 +541,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDataIndividualsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/data/datasets': {
+      id: '/app/data/datasets'
+      path: '/data/datasets'
+      fullPath: '/app/data/datasets'
+      preLoaderRoute: typeof AppDataDatasetsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/schema/schemes/': {
       id: '/app/schema/schemes/'
       path: '/'
@@ -605,6 +624,7 @@ interface AppRouteChildren {
   AppSettingsRoute: typeof AppSettingsRoute
   AppVersioningRoute: typeof AppVersioningRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppDataDatasetsRoute: typeof AppDataDatasetsRoute
   AppDataIndividualsRoute: typeof AppDataIndividualsRoute
   AppPipelinesReviewRoute: typeof AppPipelinesReviewRoute
   AppPipelinesRunsRoute: typeof AppPipelinesRunsRoute
@@ -633,6 +653,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSettingsRoute: AppSettingsRoute,
   AppVersioningRoute: AppVersioningRoute,
   AppIndexRoute: AppIndexRoute,
+  AppDataDatasetsRoute: AppDataDatasetsRoute,
   AppDataIndividualsRoute: AppDataIndividualsRoute,
   AppPipelinesReviewRoute: AppPipelinesReviewRoute,
   AppPipelinesRunsRoute: AppPipelinesRunsRoute,

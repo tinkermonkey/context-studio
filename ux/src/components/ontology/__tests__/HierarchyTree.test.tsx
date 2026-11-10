@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { describe, it, expect, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { render } from "@/test/test-utils";
 import { HierarchyTree } from "../HierarchyTree";
+import { ontologyService } from "@/api/services/ontology";
 import type { components } from "@/api/types";
 
 type TaxonomyResponse = components["schemas"]["TaxonomyResponse"];
@@ -350,6 +351,49 @@ describe("HierarchyTree", () => {
     it("renders an empty message when props are undefined", () => {
       render(<HierarchyTree />);
       expect(screen.getByText("No structure yet")).toBeInTheDocument();
+    });
+  });
+
+  describe("datasets", () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    it("counts the chosen dataset under its taxonomy and all data elsewhere", async () => {
+      const getSchemeCounts = vi.spyOn(ontologyService, "getSchemeCounts").mockResolvedValue([
+        {
+          scheme_id: "scheme-1",
+          class_count: 2,
+          individual_count: 3,
+          property_definition_count: 0,
+        },
+      ]);
+      // The seeded-open scheme loads its classes and their counts.
+      vi.spyOn(ontologyService, "listClasses").mockResolvedValue({
+        items: [],
+        total: 0,
+        limit: 500,
+        offset: 0,
+      });
+      const getClassCounts = vi.spyOn(ontologyService, "getClassCounts").mockResolvedValue([]);
+      render(
+        <HierarchyTree
+          taxonomies={taxonomies}
+          schemes={schemes}
+          mode="data"
+          dataset={{ id: "ds-1", taxonomyId: "tax-1" }}
+        />,
+      );
+
+      await waitFor(() => expect(getSchemeCounts).toHaveBeenCalledTimes(2));
+      expect(getSchemeCounts).toHaveBeenCalledWith("tax-1", "ds-1");
+      expect(getSchemeCounts).toHaveBeenCalledWith("tax-2", undefined);
+      await waitFor(() => expect(getClassCounts).toHaveBeenCalledWith("scheme-1", "ds-1"));
+      expect(await screen.findAllByText("3 individuals")).not.toHaveLength(0);
+    });
+
+    it("asks for no dataset in Schema mode", () => {
+      const getSchemeCounts = vi.spyOn(ontologyService, "getSchemeCounts");
+      renderTree({ dataset: { id: "ds-1", taxonomyId: "tax-1" } });
+      expect(getSchemeCounts).not.toHaveBeenCalled();
     });
   });
 });

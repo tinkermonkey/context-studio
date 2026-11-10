@@ -69,6 +69,7 @@ export function useCreateRelationship() {
     mutationFn: (data: RelationshipCreateRequest) => ontologyService.createRelationship(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.relationshipsRoot });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.datasetsRoot });
       // Class drawers and property drawers show relationship counts / "used by".
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classesRoot });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });
@@ -83,6 +84,7 @@ export function useDeleteRelationship() {
     mutationFn: (id: string) => ontologyService.deleteRelationship(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.relationshipsRoot });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.datasetsRoot });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classesRoot });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });
     },

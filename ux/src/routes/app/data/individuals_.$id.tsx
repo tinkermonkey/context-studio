@@ -24,6 +24,7 @@ import {
   predicateLabel,
 } from "@/components/entity/EntityPageParts";
 import { usePageBreadcrumbs } from "@/hooks/usePageBreadcrumbs";
+import { useDatasetScope } from "@/hooks/useDatasetScope";
 import { entityPath } from "@/lib/entityPaths";
 import type { components } from "@/api/types";
 
@@ -132,6 +133,9 @@ export function IndividualPage({ id }: { id: string }) {
   const primaryClass = ownClasses[0];
   const { data: scheme } = useScheme(primaryClass?.concept_scheme_id ?? "");
   const { data: taxonomy } = useTaxonomy(primaryClass?.taxonomy_id ?? "");
+  // The individual's dataset, named when its taxonomy has more than one.
+  const { datasets, showSelector: severalDatasets } = useDatasetScope(primaryClass?.taxonomy_id);
+  const ownDataset = datasets.find((d) => d.id === individual?.dataset_id);
 
   usePageBreadcrumbs(
     entityPath("individual", id),
@@ -238,7 +242,10 @@ export function IndividualPage({ id }: { id: string }) {
         actions={
           <EntityActions
             entity={{ kind: "individual", id, title: individual.title }}
-            graph={{ focus: id }}
+            graph={{
+              focus: id,
+              dataset: severalDatasets ? (individual.dataset_id ?? undefined) : undefined,
+            }}
           />
         }
       />
@@ -282,6 +289,18 @@ export function IndividualPage({ id }: { id: string }) {
                   "—"
                 ),
               },
+              ...(severalDatasets && ownDataset
+                ? [
+                    {
+                      key: "dataset",
+                      value: (
+                        <span data-testid="individual-dataset">
+                          {ownDataset.title} <span className="mono">· {ownDataset.identifier}</span>
+                        </span>
+                      ),
+                    },
+                  ]
+                : []),
               { key: "status", value: individual.status },
               { key: "version", value: String(individual.version) },
               { key: "created", value: formatDate(individual.created_at) },
