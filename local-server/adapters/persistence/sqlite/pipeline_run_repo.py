@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from adapters.persistence.sqlite.models import (
     BatchRun,
     ChangeEvent,
+    ClaimTriageRun,
     IndividualExtractionRun,
     NoOpPipelineRun,
     PipelineRun,
@@ -26,6 +27,7 @@ from adapters.persistence.sqlite.models import (
     SchemaGroundingRun,
     SchemaRelationshipReflectionRun,
 )
+from domain.pipelines.entities import ClaimTriageRun as DomainClaimTriageRun
 from domain.pipelines.entities import (
     IndividualExtractionRun as DomainIndividualExtractionRun,
 )
@@ -73,6 +75,7 @@ _PIPELINE_TYPE_TO_ORM = {
     PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT: SchemaDefinitionRefinementRun,
     PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT: SchemaConnectionRefinementRun,
     PipelineType.SCHEMA_RELATIONSHIP_REFLECTION: SchemaRelationshipReflectionRun,
+    PipelineType.CLAIM_TRIAGE: ClaimTriageRun,
 }
 
 
@@ -993,6 +996,10 @@ class PipelineRepository:
             )
         elif isinstance(orm_obj, SchemaRelationshipReflectionRun):
             return DomainSchemaRelationshipReflectionRun(
+                **common,  # type: ignore[arg-type]
+            )
+        elif isinstance(orm_obj, ClaimTriageRun):
+            return DomainClaimTriageRun(
                 **common,  # type: ignore[arg-type]
             )
         else:

@@ -52,6 +52,7 @@ class PipelineType(str, Enum):
     SCHEMA_NODE_DEFINITION_REFINEMENT = "schema_node_definition_refinement"
     SCHEMA_NODE_CONNECTION_REFINEMENT = "schema_node_connection_refinement"
     SCHEMA_RELATIONSHIP_REFLECTION = "schema_relationship_reflection"
+    CLAIM_TRIAGE = "claim_triage"
 
 
 @dataclass(frozen=True)
@@ -416,3 +417,15 @@ class SchemaRelationshipReflectionRun(PipelineRun):
     pipeline_type: PipelineType = field(
         default=PipelineType.SCHEMA_RELATIONSHIP_REFLECTION, init=False
     )
+
+
+@dataclass(frozen=True)
+class ClaimTriageRun(PipelineRun):
+    """
+    Domain entity for claim triage runs: decision-model questions on each
+    claim in scope, saved on the claims (no proposal).
+
+    Per-type fields: (none)
+    """
+
+    pipeline_type: PipelineType = field(default=PipelineType.CLAIM_TRIAGE, init=False)

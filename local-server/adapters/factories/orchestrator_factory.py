@@ -13,6 +13,10 @@ from adapters.interchange.dr_relationships import (
     dr_general_predicates_for,
     dr_predicate_catalog_for,
 )
+from domain.pipelines.claim_triage.orchestrator import (
+    ClaimTriageOrchestrator,
+    ClaimTriageState,
+)
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.individual_extraction.open_orchestrator import (
     OpenIndividualExtractionOrchestrator,
@@ -227,6 +231,30 @@ def _build_relationship_reflection(
     )
 
 
+def _build_claim_triage(
+    llm_provider: LLMProvider, services: dict[str, Any]
+) -> PipelineOrchestrator:
+    ontology_repo = services.get("ontology_repo")
+    decision_models = services.get("decision_models")
+    claim_service = services.get("claim_service")
+    if not ontology_repo or not decision_models or not claim_service:
+        raise ValueError(
+            "ontology_repo, decision_models and claim_service are required for "
+            "ClaimTriageOrchestrator"
+        )
+    return ClaimTriageOrchestrator(
+        ontology_repo=ontology_repo,
+        decision_models=decision_models,
+        claim_service=claim_service,
+        proposal_service=services.get("proposal_service"),
+        # DR's predicate meanings for the dr_spec taxonomy's evidence packs
+        predicate_catalog=lambda taxonomy_id: dr_predicate_catalog_for(ontology_repo, taxonomy_id),
+        config=services.get("refinement_config", {}),
+        run_id=services.get("run_id"),
+        status_writer=services.get("status_writer"),
+    )
+
+
 _ORCHESTRATOR_BUILDERS: dict[
     Type[PipelineOrchestrator],
     Callable[[LLMProvider, dict[str, Any]], PipelineOrchestrator],
@@ -240,6 +268,7 @@ _ORCHESTRATOR_BUILDERS: dict[
     DefinitionRefinementOrchestrator: _build_definition_refinement,
     ConnectionRefinementOrchestrator: _build_connection_refinement,
     RelationshipReflectionOrchestrator: _build_relationship_reflection,
+    ClaimTriageOrchestrator: _build_claim_triage,
 }
 
 _PIPELINE_TYPE_TO_STATE: dict[PipelineType, Type[PipelineState]] = {
@@ -250,6 +279,7 @@ _PIPELINE_TYPE_TO_STATE: dict[PipelineType, Type[PipelineState]] = {
     PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT: DefinitionRefinementState,
     PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT: ConnectionRefinementState,
     PipelineType.SCHEMA_RELATIONSHIP_REFLECTION: RelationshipReflectionState,
+    PipelineType.CLAIM_TRIAGE: ClaimTriageState,
 }
 
 
@@ -292,6 +322,7 @@ def build_orchestrator_services(
         "ontology_repo": getattr(app_state, "ontology_repo", None),
         "decision_models": getattr(app_state, "decision_models", None),
         "proposal_service": getattr(app_state, "proposal_service", None),
+        "claim_service": getattr(app_state, "claim_service", None),
         "extraction_repo": getattr(app_state, "extraction_repo", None),
         "grounding_adapter": getattr(app_state, "grounding_adapter", None),
         "scorer": getattr(app_state, "grounding_scorer", None),
