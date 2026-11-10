@@ -2,7 +2,13 @@
 
 import pytest
 
-from domain.ontology.entities import AttributeDefinition, Class, PropertyDefinition, Taxonomy
+from domain.ontology.entities import (
+    AttributeDefinition,
+    Class,
+    ConceptScheme,
+    PropertyDefinition,
+    Taxonomy,
+)
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.versioning.claims import (
     Claim,
@@ -85,8 +91,42 @@ class TestSubmit:
     def test_unknown_taxonomy_or_subject_is_refused(self, service):
         with pytest.raises(EntityNotFoundError):
             service.submit("nope", [claim(taxonomy_id="nope")])
-        with pytest.raises(EntityNotFoundError, match="missing"):
+        with pytest.raises(ValueError, match="n#1: subject missing"):
             service.submit("t", [claim(subject_id="missing")])
+
+    def test_only_ids_in_the_taxonomy_resolve(self, service, ontology):
+        ontology.save_taxonomy(Taxonomy(id="t2", title="House", identifier="house"))
+        ontology.save_concept_scheme(ConceptScheme(id="s1", taxonomy_id="t", title="API"))
+        ontology.save_concept_scheme(ConceptScheme(id="s2", taxonomy_id="t2", title="Rooms"))
+        ontology.save_class(Class(id="c2", taxonomy_id="t2", concept_scheme_id="s2", title="Room"))
+        ontology.save_property_definition(
+            PropertyDefinition(id="p2", identifier="in", title="in", domain_class_id="c2")
+        )
+        ontology.save_attribute_definition(
+            AttributeDefinition(
+                id="a2", class_id="c2", identifier="area", title="Area", datatype="string"
+            )
+        )
+
+        stored = service.submit(
+            "t", [claim(affected_ids=["t", "s1", "c1", "t2", "s2", "c2", "p2", "a2"])]
+        )[0]
+
+        assert stored.affected_ids == ["t", "s1", "c1"]
+        assert stored.unresolved_refs == ["t2", "s2", "c2", "p2", "a2"]
+        with pytest.raises(ValueError, match="subject c2 is not in this taxonomy"):
+            service.submit("t", [claim(subject_id="c2")])
+
+    def test_ids_are_not_repeated(self, service):
+        stored = service.submit(
+            "t", [claim(affected_ids=["c1", "c1", "x.y"], unresolved_refs=["x.y"])]
+        )[0]
+
+        assert stored.affected_ids == ["c1"]
+        assert stored.unresolved_refs == ["x.y"]
+
+    def test_keys_and_note_refs_are_trimmed(self):
+        assert (claim(key=" n#1 ").key, claim(note_ref=" n ").note_ref) == ("n#1", "n")
 
     def test_repeated_keys_or_another_taxonomy_are_refused(self, service, ontology):
         ontology.save_taxonomy(Taxonomy(id="t2", title="House", identifier="house"))

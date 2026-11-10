@@ -133,7 +133,8 @@ def test_errors(client):
     assert repeated.status_code == 422
     assert "n1#1" in repeated.json()["detail"]
     unknown_subject = client.post(f"/api/taxonomies/{T}/claims", json=body("n1#1", subject_id="x"))
-    assert unknown_subject.status_code == 404
+    assert unknown_subject.status_code == 422
+    assert "n1#1" in unknown_subject.json()["detail"]
     bad_score = client.post(f"/api/taxonomies/{T}/claims", json=body("n1#1")).json()[0]["id"]
     assert (
         client.put(
@@ -141,3 +142,21 @@ def test_errors(client):
         ).status_code
         == 422
     )
+
+
+def test_an_export_submitted_again_changes_nothing(client):
+    stored = client.post(f"/api/taxonomies/{T}/claims", json=body("n1#1", "n1#2")).json()
+    client.put(f"/api/claims/{stored[0]['id']}/verdict", json={"validity": "real_defect"})
+    exported = [
+        json.loads(line)
+        for line in client.get(f"/api/taxonomies/{T}/claims/export").text.splitlines()
+    ]
+
+    again = client.post(f"/api/taxonomies/{T}/claims", json={"claims": exported})
+
+    assert again.status_code == 200, again.text
+    content = ("id", "key", "text", "note_ref", "note_source", "affected_ids", "created_at")
+    assert [{k: c[k] for k in content} for c in again.json()] == [
+        {k: c[k] for k in content} for c in exported
+    ]
+    assert again.json()[0]["verdict"]["validity"] == "real_defect"

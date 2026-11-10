@@ -21,6 +21,7 @@ from adapters.web.schemas.claims import ClaimResponse, ClaimsSubmitRequest, Clai
 from adapters.web.schemas.ontology import ListResponse
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.versioning.claims import ClaimFilter, ClaimService, Validity
+from domain.versioning.gold import DECIDED_BY_USER
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
@@ -28,8 +29,6 @@ logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api", tags=["claims"])
 
-# A verdict given through the API is a person's.
-VERDICT_BY_USER = "user"
 
 _NOT_FOUND = {404: {"description": "Taxonomy or claim not found"}}
 
@@ -171,10 +170,13 @@ async def set_claim_verdict(
     request: ClaimVerdictRequest,
     service: ClaimService = Depends(get_claim_service),
 ) -> ClaimResponse:
-    """Record a person's verdict on a claim, replacing any earlier one: benchmark gold."""
+    """
+    Record a person's verdict on a claim, replacing any earlier one: benchmark gold.
+    A verdict given through the API is a person's (adjudicated_by "user").
+    """
     try:
         claim = await run_sync_in_executor(
-            service.set_verdict, claim_id, request.to_domain(VERDICT_BY_USER)
+            service.set_verdict, claim_id, request.to_domain(DECIDED_BY_USER)
         )
         return ClaimResponse.from_domain(claim)
     except Exception as exc:

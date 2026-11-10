@@ -63,12 +63,16 @@ class FakeClaimRepository:
         return len(self.list_claims(filters))
 
     def save_triage(self, claim_id: str, triage: ClaimTriage) -> None:
-        if claim_id in self.claims:
-            self.claims[claim_id] = replace(self.claims[claim_id], triage=triage)
+        self._set(claim_id, triage=triage)
 
     def set_verdict(self, claim_id: str, verdict: Optional[ClaimVerdict]) -> None:
+        self._set(claim_id, verdict=verdict)
+
+    def _set(self, claim_id: str, **values) -> None:
         if claim_id in self.claims:
-            self.claims[claim_id] = replace(self.claims[claim_id], verdict=verdict)
+            self.claims[claim_id] = replace(
+                self.claims[claim_id], updated_at=datetime.now(timezone.utc), **values
+            )
 
     def _by_key(self, taxonomy_id: str, key: str) -> Optional[Claim]:
         return next(

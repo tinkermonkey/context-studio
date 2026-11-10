@@ -168,6 +168,8 @@ class Claim:
 
     def __post_init__(self) -> None:
         self.note_source = NoteSource(self.note_source)
+        self.key = str(self.key or "").strip()
+        self.note_ref = str(self.note_ref or "").strip()
         for name in ("key", "text", "note_ref"):
             if not str(getattr(self, name) or "").strip():
                 raise ValueError(f"A claim's {name} is required")
@@ -208,13 +210,14 @@ class ClaimService:
         """
         Add or replace claims, matched by key within the taxonomy.
 
-        An `affected_ids` entry that names no entity moves to `unresolved_refs`.
-        A replaced claim keeps its id and creation time; it keeps its triage and
-        verdict only if its text is unchanged.
+        An `affected_ids` entry that names nothing in the taxonomy moves to
+        `unresolved_refs`. A replaced claim keeps its id and creation time; it
+        keeps its triage and verdict only if its text is unchanged.
 
         Raises:
-            EntityNotFoundError: If the taxonomy or a subject_id doesn't exist
-            ValueError: If a claim names another taxonomy, or two share a key
+            EntityNotFoundError: If the taxonomy doesn't exist
+            ValueError: If a claim names another taxonomy or a subject outside
+                this one, or two claims share a key
         """
         self._require_taxonomy(taxonomy_id)
         keys = [c.key for c in claims]
@@ -224,20 +227,25 @@ class ClaimService:
         for claim in claims:
             if claim.taxonomy_id != taxonomy_id:
                 raise ValueError(f"Claim {claim.key} names another taxonomy")
-        subjects = {c.subject_id for c in claims if c.subject_id}
-        missing_subjects = sorted(subjects - self._existing(subjects))
-        if missing_subjects:
-            raise EntityNotFoundError("Entity", missing_subjects[0])
-        affected = {i for c in claims for i in c.affected_ids}
-        existing = self._existing(affected)
+        known = self._in_taxonomy(
+            taxonomy_id,
+            {c.subject_id for c in claims if c.subject_id}
+            | {i for c in claims for i in c.affected_ids},
+        )
+        for claim in claims:
+            if claim.subject_id and claim.subject_id not in known:
+                raise ValueError(
+                    f"Claim {claim.key}: subject {claim.subject_id} is not in this taxonomy"
+                )
         resolved = [
             replace(
                 c,
-                affected_ids=[i for i in c.affected_ids if i in existing],
-                unresolved_refs=[
-                    *c.unresolved_refs,
-                    *(i for i in c.affected_ids if i not in existing),
-                ],
+                affected_ids=list(dict.fromkeys(i for i in c.affected_ids if i in known)),
+                unresolved_refs=list(
+                    dict.fromkeys(
+                        [*c.unresolved_refs, *(i for i in c.affected_ids if i not in known)]
+                    )
+                ),
             )
             for c in claims
         ]
@@ -296,14 +304,31 @@ class ClaimService:
         if self._repo.get_taxonomy(taxonomy_id) is None:
             raise EntityNotFoundError("Taxonomy", taxonomy_id)
 
-    def _existing(self, ids: set[str]) -> set[str]:
-        """The ids that name an ontology entity, property or attribute definition."""
-        if not ids:
-            return set()
-        found = set(self._repo.get_entity_titles(sorted(ids)))
-        for entity_id in ids - found:
-            if self._repo.get_property_definition(entity_id) or self._repo.get_attribute_definition(
-                entity_id
-            ):
-                found.add(entity_id)
-        return found
+    def _in_taxonomy(self, taxonomy_id: str, ids: set[str]) -> set[str]:
+        """
+        The ids that name the taxonomy itself, or one of its schemes, classes,
+        attribute definitions, or property definitions (a property definition
+        belongs to the taxonomy of a class it joins; one joining none is shared).
+        """
+        repo = self._repo
+
+        def class_in(class_id: Optional[str]) -> bool:
+            cls = repo.get_class(class_id) if class_id else None
+            return cls is not None and cls.taxonomy_id == taxonomy_id
+
+        def belongs(entity_id: str) -> bool:
+            if entity_id == taxonomy_id or class_in(entity_id):
+                return True
+            scheme = repo.get_concept_scheme(entity_id)
+            if scheme is not None:
+                return scheme.taxonomy_id == taxonomy_id
+            attribute = repo.get_attribute_definition(entity_id)
+            if attribute is not None:
+                return class_in(attribute.class_id)
+            prop = repo.get_property_definition(entity_id)
+            if prop is not None:
+                joined = [c for c in (prop.domain_class_id, prop.range_class_id) if c]
+                return not joined or any(class_in(c) for c in joined)
+            return False
+
+        return {entity_id for entity_id in ids if belongs(entity_id)}
