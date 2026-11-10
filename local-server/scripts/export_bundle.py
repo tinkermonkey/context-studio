@@ -1,5 +1,5 @@
 """
-Export a workspace taxonomy as a Context Studio bundle (v0).
+Export a workspace taxonomy as a Context Studio bundle (v1).
 
 The inverse of scripts/import_bundle.py (see domain/interchange/bundle.py for
 the format): loading the exported bundle back into the same workspace changes
