@@ -1,5 +1,5 @@
 """
-Import a Context Studio bundle (v0) into the workspace as a change proposal.
+Import a Context Studio bundle (v1, or v0) into the workspace as a change proposal.
 
 A bundle describes another project's ontology (see domain/interchange/bundle.py
 for the format). The bundle is planned against the workspace and the plan
