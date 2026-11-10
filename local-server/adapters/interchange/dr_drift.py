@@ -5,8 +5,11 @@ proposal operations (`domain.versioning.drift`).
 Everything the DR importer loads is compared, matched by DR id (the
 `documentation_robotics` external reference), never by identifier:
 
-- the taxonomy: its vision and summary (when the spec has a design charter)
-  and the predicate catalog on its DR reference (its predicates only);
+- the taxonomy: its vision and summary (when the spec has a design charter);
+- predicates, by id: description, inverse, category, archimate_alignment and
+  semantics. These are reported only, with no operations, until predicate
+  proposals exist (#1481); a relationship type on a predicate the taxonomy
+  doesn't have stops the drift with an error;
 - schemes, by layer: title, and description when the layer file has one; a new
   layer is a create;
 - classes, by spec node id: title, description, scheme, DR reference;
@@ -44,10 +47,10 @@ from typing import Any
 
 from adapters.interchange.dr_relationships import (
     DR_SOURCE,
-    DR_SPEC_REFERENCE,
     DR_TAXONOMY_IDENTIFIER,
     RelationshipSchemaRecord,
     assign_relationship_identifiers,
+    dr_predicate_catalog,
     dr_property_definitions,
 )
 from adapters.interchange.dr_spec import (
@@ -97,23 +100,6 @@ def _with_dr_ref(entity: Any, reference: dict[str, Any]) -> list[dict[str, Any]]
     """The entity's references with its DR reference replaced (others kept, in order)."""
     others = [r.to_dict() for r in entity.external_references if r.source != DR_SOURCE]
     return [*others, reference]
-
-
-def _catalog_change(
-    stored: dict[str, Any], spec: dict[str, Any]
-) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
-    """
-    How two differing predicate catalogs differ, by predicate id, as the drift
-    report shows it: the taxonomy side lists what only it has, the source side
-    what only it has and what changed.
-    """
-    return (
-        {"removed": sorted(stored.keys() - spec.keys())},
-        {
-            "added": sorted(spec.keys() - stored.keys()),
-            "changed": sorted(p for p in stored.keys() & spec.keys() if stored[p] != spec[p]),
-        },
-    )
 
 
 def _property_title(record: RelationshipSchemaRecord) -> str:
@@ -274,31 +260,45 @@ class _Planner:
             pairs["vision"] = (_text(taxonomy.vision), vision)
             if summary is not None:
                 pairs["description"] = (_text(taxonomy.description), summary)
-        compare: dict[str, tuple[Any, Any]] = {}
+        self._plan_predicates()
+        self._changed(K.TAXONOMY, taxonomy, DR_TAXONOMY_IDENTIFIER, pairs)
+
+    def _plan_predicates(self) -> None:
+        """
+        Report how the spec's predicate catalog differs from the taxonomy's
+        predicates, one entry per predicate. They're reported only: proposing
+        predicate changes comes with predicate proposals (#1481).
+        """
         catalog = read_predicate_catalog(self._spec_dir)
-        if catalog is not None:
-            current = next(
-                (
-                    r
-                    for r in taxonomy.external_references
-                    if r.source == DR_SOURCE and r.identifier == DR_SPEC_REFERENCE
-                ),
-                None,
-            )
-            stored = _json((current.metadata or {}).get("predicates")) if current else None
-            if stored != _json(catalog):
-                others = [
-                    r.to_dict()
-                    for r in taxonomy.external_references
-                    if not (r.source == DR_SOURCE and r.identifier == DR_SPEC_REFERENCE)
-                ]
-                metadata = {"spec_version": self._spec_version, "predicates": catalog}
-                pairs["external_references"] = (
-                    [r.to_dict() for r in taxonomy.external_references],
-                    [*others, _reference(DR_SPEC_REFERENCE, metadata)],
+        if catalog is None:
+            return
+        stored = {p.identifier: p for p in self._repo.list_predicates(self._taxonomy.id)}
+        known = dr_predicate_catalog(self._repo) or {}
+        for predicate_id in sorted(catalog.keys() | stored.keys()):
+            spec, current = catalog.get(predicate_id), known.get(predicate_id)
+            if current is None:
+                change, fields = "create", {}
+            elif spec is None:
+                change, fields = "delete", {}
+            else:
+                change = "update"
+                fields = {
+                    name: {"taxonomy": current.get(name), "source": spec.get(name)}
+                    for name in sorted(spec.keys() | current.keys())
+                    if current.get(name) != spec.get(name)
+                }
+                if not fields:
+                    continue
+            existing = stored.get(predicate_id)
+            self._plan.entries.append(
+                DriftEntry(
+                    kind="predicate",
+                    source_id=predicate_id,
+                    change=change,
+                    entity_id=existing.id if existing else None,
+                    fields=fields,
                 )
-                compare["external_references"] = _catalog_change(stored or {}, _json(catalog))
-        self._changed(K.TAXONOMY, taxonomy, DR_TAXONOMY_IDENTIFIER, pairs, compare)
+            )
 
     # -------------------------------------------------------------- schemes
 
@@ -524,6 +524,14 @@ class _Planner:
             },
             only=[r.full_identifier for r in records if r.full_identifier not in matched],
         )
+        predicates = {p.identifier for p in self._repo.list_predicates(self._taxonomy.id)}
+        new_predicates = sorted({r.predicate for r in records} - predicates)
+        if new_predicates:
+            raise DriftError(
+                f"The spec's relationship types use predicates the taxonomy doesn't have yet"
+                f" ({', '.join(new_predicates)}). Proposing new predicates comes with"
+                " predicate proposals (#1481)."
+            )
         for record in records:
             domain = class_ids.get(record.source_spec_node_id)
             range_ = class_ids.get(record.destination_spec_node_id)

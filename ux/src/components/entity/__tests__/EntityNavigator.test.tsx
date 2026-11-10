@@ -4,14 +4,17 @@ import { http, HttpResponse } from "msw";
 import userEvent from "@testing-library/user-event";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
-import { entityPageHandlers } from "@/test/entityPageHandlers";
+import { dataset, entityPageHandlers } from "@/test/entityPageHandlers";
+import { createDataset } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { useNavigatorStore } from "@/stores/navigator";
 import { EntityNavigator, SCHEMA_LIST_MODE_LINKS } from "../EntityNavigator";
 
 const mockNavigate = vi.hoisted(() => vi.fn());
+// The URL's search params (the `dataset` parameter), set per test.
+let mockSearch: { dataset?: string } = {};
 vi.mock("@tanstack/react-router", async () => {
   const actual = await vi.importActual("@tanstack/react-router");
-  return { ...actual, useNavigate: () => mockNavigate };
+  return { ...actual, useNavigate: () => mockNavigate, useSearch: () => mockSearch };
 });
 
 const server = setupServer(...entityPageHandlers);
@@ -20,6 +23,7 @@ beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
   server.resetHandlers();
   mockNavigate.mockClear();
+  mockSearch = {};
   useNavigatorStore.setState({ expandedIds: new Set(), mode: "schema" });
 });
 afterAll(() => server.close());
@@ -266,5 +270,107 @@ describe("EntityNavigator — Data mode", () => {
     expect(screen.getByTestId("hierarchy-node-class-1")).toHaveAttribute("aria-expanded", "true");
     expect(screen.queryByTestId("hierarchy-node-ind-2")).not.toBeInTheDocument();
     expect(screen.queryByText(/individuals?$/)).not.toBeInTheDocument();
+  });
+
+  describe("datasets", () => {
+    const second = createDataset({
+      id: "ds-2",
+      taxonomy_id: "tax-1",
+      identifier: "second",
+      title: "Second",
+    });
+    const twoDatasets = () =>
+      server.use(http.get("*/api/datasets", () => HttpResponse.json([dataset, second])));
+
+    it("shows no dataset selector when the taxonomy has one dataset", async () => {
+      render(<EntityNavigator defaultMode="data" expandIds={["tax-1"]} />);
+
+      expect(await screen.findByTestId("hierarchy-node-scheme-1")).toBeInTheDocument();
+      expect(screen.queryByTestId("navigator-dataset-select")).not.toBeInTheDocument();
+    });
+
+    it("offers a dataset selector in Data mode once a taxonomy has two datasets", async () => {
+      twoDatasets();
+      const { unmount } = render(<EntityNavigator defaultMode="data" />);
+
+      const select = await screen.findByTestId("navigator-dataset-select");
+      expect(select).toHaveClass("dataset-select");
+      expect(select).toHaveAccessibleName("Dataset");
+      expect(within(select).getByRole("option", { name: "Second · second" })).toBeInTheDocument();
+      unmount();
+
+      render(<EntityNavigator defaultMode="schema" />);
+      await screen.findByTestId("hierarchy-node-tax-1");
+      expect(screen.queryByTestId("navigator-dataset-select")).not.toBeInTheDocument();
+    });
+
+    it("choosing a dataset puts it in the URL", async () => {
+      twoDatasets();
+      const user = userEvent.setup();
+      render(<EntityNavigator defaultMode="data" />);
+
+      const select = await screen.findByTestId("navigator-dataset-select");
+      await user.selectOptions(select, "ds-2");
+
+      expect(mockNavigate).toHaveBeenCalledWith(
+        expect.objectContaining({ to: ".", replace: true }),
+      );
+      const { search } = mockNavigate.mock.calls[0][0];
+      expect(search({ focus: "x" })).toEqual({ focus: "x", dataset: "ds-2" });
+    });
+
+    it("counts and lists only the chosen dataset's individuals", async () => {
+      twoDatasets();
+      mockSearch = { dataset: "ds-2" };
+      const requested: URL[] = [];
+      server.use(
+        http.get("*/api/taxonomies/:id/scheme-counts", ({ request }) => {
+          requested.push(new URL(request.url));
+          return HttpResponse.json([
+            {
+              scheme_id: "scheme-1",
+              class_count: 2,
+              individual_count: 7,
+              property_definition_count: 1,
+            },
+          ]);
+        }),
+        http.get("*/api/schemes/:id/class-counts", ({ request }) => {
+          requested.push(new URL(request.url));
+          return HttpResponse.json([]);
+        }),
+        http.get("*/api/individuals", ({ request }) => {
+          requested.push(new URL(request.url));
+          return HttpResponse.json({ items: [], total: 0, limit: 10, offset: 0 });
+        }),
+      );
+      render(<EntityNavigator defaultMode="data" expandIds={["tax-1", "scheme-1", "class-1"]} />);
+
+      expect(await screen.findAllByText("7 individuals")).toHaveLength(2);
+      await waitFor(() => {
+        const paths = requested.map((u) => u.pathname);
+        expect(paths).toContain("/api/schemes/scheme-1/class-counts");
+        expect(paths).toContain("/api/individuals");
+      });
+      for (const url of requested) {
+        expect(url.searchParams.get("dataset_id")).toBe("ds-2");
+      }
+    });
+
+    it("ignores a dataset the workspace does not have", async () => {
+      mockSearch = { dataset: "ds-gone" };
+      const requested: URL[] = [];
+      server.use(
+        http.get("*/api/taxonomies/:id/scheme-counts", ({ request }) => {
+          requested.push(new URL(request.url));
+          return HttpResponse.json([]);
+        }),
+      );
+      render(<EntityNavigator defaultMode="data" />);
+
+      await waitFor(() =>
+        expect(requested.some((u) => !u.searchParams.has("dataset_id"))).toBe(true),
+      );
+    });
   });
 });

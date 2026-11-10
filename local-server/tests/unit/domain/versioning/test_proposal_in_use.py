@@ -103,6 +103,8 @@ def graph(ontology):
     businessevent_triggers_businessprocess has range BusinessProcess, so it doesn't fit.
     """
     taxonomy = ontology.create_taxonomy(title="DR", identifier="dr_spec")
+    for predicate in ("starts", "serves", *(f"p{i}" for i in range(7))):
+        ontology.create_predicate(taxonomy.id, predicate)
     business = ontology.create_scheme(taxonomy_id=taxonomy.id, title="Business")
     event = ontology.create_class(business.id, "BusinessEvent")
     sync_event = ontology.create_class(business.id, "SyncEvent", parent_class_id=event.id)

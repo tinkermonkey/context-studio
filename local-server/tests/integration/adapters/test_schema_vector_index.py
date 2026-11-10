@@ -20,6 +20,7 @@ import adapters.persistence.sqlite.schema_vector_index as svi_module
 from tests.utils.datasets import SEED_DATASET_ID, add_seed_dataset  # noqa: E402
 from adapters.persistence.sqlite.mappers import _serialize_embedding
 from adapters.persistence.sqlite.models import Base, OntologyEntity
+from adapters.persistence.sqlite.models import Predicate as PredicateORM
 from adapters.persistence.sqlite.models import Relationship as RelationshipORM
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 
@@ -521,13 +522,23 @@ def test_class_and_property_without_canonical_predicate_expose_none(index):
 
 
 def test_property_definition_match_exposes_canonical_predicate():
-    # The bare predicate comes from the first-class canonical_predicate column,
-    # independent of the title shape.
+    # The bare predicate is the identifier of the type's Predicate (read through
+    # predicate_id), independent of the title shape.
     with tempfile.TemporaryDirectory() as tmpdir:
         engine = create_engine(f"sqlite:///{Path(tmpdir) / 'test.db'}")
         Base.metadata.create_all(engine)
         factory = sessionmaker(bind=engine)
         with factory() as session:
+            session.add(
+                OntologyEntity(id="tax-p", node_type="taxonomy", title="T", identifier="tax_p")
+            )
+            session.add(
+                PredicateORM(
+                    id="pred-p", taxonomy_id="tax-p", identifier="connects-to", title="connects-to"
+                )
+            )
+            # Flush ontology rows before predicates: commit the predicate first
+            session.commit()
             session.add(
                 OntologyEntity(
                     id=PROP_P,
@@ -535,7 +546,7 @@ def test_property_definition_match_exposes_canonical_predicate():
                     title="app.service connects-to app.database",
                     description="links one service to another",
                     identifier="app_service_connects_to_app_database",
-                    canonical_predicate="connects-to",
+                    predicate_id="pred-p",
                 )
             )
             session.commit()

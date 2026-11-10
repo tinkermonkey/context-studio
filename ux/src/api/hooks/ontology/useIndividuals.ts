@@ -20,13 +20,19 @@ export function useIndividuals(params?: IndividualListParams, options?: ListQuer
 
 /**
  * Individuals that belong to any of `classIds` (one request per class, each
- * capped at `limit`), merged and de-duplicated in request order.
+ * capped at `limit`), merged and de-duplicated in request order; only those in
+ * `datasetId` when it is given.
  */
-export function useIndividualsInClasses(classIds: string[], limit: number) {
+export function useIndividualsInClasses(classIds: string[], limit: number, datasetId?: string) {
   const ids = [...new Set(classIds)];
   const results = useQueries({
     queries: ids.map((classId) => {
-      const params: IndividualListParams = { class_id: classId, limit, sort_by: "title" };
+      const params: IndividualListParams = {
+        class_id: classId,
+        limit,
+        sort_by: "title",
+        ...(datasetId ? { dataset_id: datasetId } : {}),
+      };
       return {
         queryKey: QUERY_KEYS.individuals(params),
         queryFn: () => ontologyService.listIndividuals(params),
@@ -70,6 +76,8 @@ export function useCreateIndividual() {
     mutationFn: (data: IndividualCreateRequest) => ontologyService.createIndividual(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individualsRoot });
+      // Dataset sizes and the datasets the first individual of a taxonomy creates.
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.datasetsRoot });
       // Class drawers show per-class individual counts.
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classesRoot });
     },
@@ -95,6 +103,7 @@ export function useDeleteIndividual() {
     mutationFn: (id: string) => ontologyService.deleteIndividual(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.individualsRoot });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.datasetsRoot });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.classesRoot });
     },
   });

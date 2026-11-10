@@ -6,6 +6,7 @@ This module defines all ORM models for the Ontology Management bounded context:
 individuals
 - Relationship: Typed, directed edges between entities
 - PropertyDefinition: Registry of defined object property types
+- Predicate: A taxonomy's catalog of relation verbs, used by relationship types
 
 Models are the source of truth for Alembic migrations via autogenerate.
 
@@ -35,9 +36,10 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    select,
     text,
 )
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import column_property, declarative_base
 
 Base = declarative_base()  # type: ignore[valid-type]
 
@@ -74,6 +76,9 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
         embedding: Binary blob of embedding vector (for class, optional)
         is_indexed: Whether this entity is included in semantic indexes
         identifier: Machine-readable identifier (unique, for property_definition only)
+        predicate_id: The Predicate the relationship type uses (for property_definition)
+        canonical_predicate: Read-only identifier of that predicate (a correlated
+            subquery on predicates, defined below the Predicate model)
         ontology_mapping: JSON mapping to external ontologies (for property_definition)
         is_relevant: Tri-state relevance flag (for property_definition)
     """
@@ -167,13 +172,19 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
         index=True,
         doc="Target/range Class for this relationship type (for property_definition, rdfs:range)",
     )
-    canonical_predicate = Column(
-        String(255),
+    # predicates.taxonomy_id points back here; use_alter marks the known cycle so
+    # metadata DROP can sort the tables (SQLite still renders the FK inline). It
+    # also means one flush inserts ontology_entities rows before predicates, so a
+    # predicate must be flushed before the relationship type that uses it.
+    predicate_id = Column(
+        String(36),
+        ForeignKey("predicates.id", ondelete="RESTRICT", use_alter=True),
         nullable=True,
+        index=True,
         doc=(
-            "Bare canonical relation verb, e.g. 'navigates-to' (for "
-            "property_definition; the form predicate grounding clamps to). NULL "
-            "for other node types and property definitions with none supplied."
+            "Predicate in its taxonomy's catalog this relationship type uses (for"
+            " property_definition). NULL for other node types and types imported"
+            " without one. A predicate still in use can't be deleted."
         ),
     )
     derived = Column(
@@ -304,6 +315,98 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
 
     def __repr__(self) -> str:
         return f"<OntologyEntity(id={self.id}, type={self.node_type}, title={self.title})>"
+
+
+class Predicate(Base):  # type: ignore[valid-type,misc]
+    """
+    A relation verb in a taxonomy's predicate catalog (e.g. "part_of", "navigates-to").
+
+    Every relationship type (property_definition) of the taxonomy points at one
+    through ontology_entities.predicate_id. Each taxonomy holds its own catalog, so
+    the identifier is unique per taxonomy, not workspace-wide. Deleting the taxonomy
+    deletes its catalog; a predicate a relationship type still uses can't be deleted.
+
+    Attributes:
+        id: UUID as string, primary key
+        taxonomy_id: The taxonomy whose catalog holds it (FK with CASCADE)
+        identifier: The verb, unique within the taxonomy
+        title: Display name
+        description: What the relation means (optional)
+        external_references: JSON list of client metadata, e.g. DR's inverse,
+            category, archimate_alignment and semantics
+        status: Publication status (draft or published, default draft)
+        version: Version number for optimistic concurrency control
+        created_at: Timestamp of creation (UTC, auto-set)
+        last_modified: Timestamp of last modification (UTC, auto-set)
+    """
+
+    __tablename__ = "predicates"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    taxonomy_id = Column(
+        String(36),
+        ForeignKey("ontology_entities.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        doc="Taxonomy whose catalog holds the predicate (required, with cascade delete)",
+    )
+    identifier = Column(
+        String(255),
+        nullable=False,
+        doc="The relation verb, unique within its taxonomy",
+    )
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    external_references = Column(
+        JSON,
+        nullable=False,
+        default=list,
+        doc="JSON list of {source, identifier, uri, metadata}",
+    )
+    status = Column(
+        String(20),
+        nullable=False,
+        default="draft",
+        doc="Publication status: draft or published",
+    )
+    version = Column(Integer, nullable=False, default=1, doc="For optimistic locking")
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        doc="UTC timestamp of creation",
+    )
+    last_modified = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        doc="UTC timestamp of last modification",
+    )
+
+    __table_args__ = (
+        UniqueConstraint("taxonomy_id", "identifier", name="uk_predicate_taxonomy_identifier"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<Predicate(id={self.id}, taxonomy_id={self.taxonomy_id},"
+            f" identifier={self.identifier})>"
+        )
+
+
+# Read-only: a relationship type's predicate identifier, read through predicate_id.
+# Not a table column, so autogenerate ignores it; writes go through predicate_id.
+OntologyEntity.canonical_predicate = column_property(
+    select(Predicate.identifier)
+    .where(Predicate.id == OntologyEntity.predicate_id)
+    .correlate_except(Predicate)
+    .scalar_subquery(),
+    doc=(
+        "Identifier of the predicate this relationship type uses, e.g. 'navigates-to'"
+        " (the form predicate grounding clamps to); NULL without one."
+    ),
+)
 
 
 class IndividualClass(Base):  # type: ignore[valid-type,misc]

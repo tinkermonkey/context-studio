@@ -10,6 +10,7 @@ import type { components } from "@/api/types";
 import {
   createClass,
   createConceptScheme,
+  createDataset,
   createIndividual,
   createPropertyDefinition,
   createRelationship,
@@ -52,6 +53,7 @@ export const router = createIndividual({
   title: "LLM Provider Router",
   description: "Routes completion requests",
   class_ids: ["class-1"],
+  dataset_id: "ds-1",
   data_properties: [
     { property_identifier: "language", value: "python", datatype: "string" },
     { property_identifier: "ports", value: [80, 443], datatype: "rdf:JSON" },
@@ -63,6 +65,7 @@ export const api = createIndividual({
   title: "Pipeline API",
   description: "Pipeline service",
   class_ids: ["class-2"],
+  dataset_id: "ds-1",
 });
 export const realizes = createPropertyDefinition({
   id: "prop-1",
@@ -110,7 +113,18 @@ function byIds<T extends { id: string }>(items: T[], url: URL): T[] {
   return ids.length ? items.filter((item) => ids.includes(item.id)) : items;
 }
 
+/** The taxonomy's only dataset, so no selector shows unless a test adds one. */
+export const dataset = createDataset({
+  id: "ds-1",
+  taxonomy_id: "tax-1",
+  identifier: "default",
+  title: "Default",
+  individual_count: 2,
+  relationship_count: 1,
+});
+
 export const entityPageHandlers = [
+  http.get("*/api/datasets", () => HttpResponse.json([dataset])),
   // No open proposals; tests of the pending-changes callout use proposalHandlers.
   http.get("*/api/proposals", () => list([])),
   http.get("*/api/taxonomies/:id/scheme-counts", () =>

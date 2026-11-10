@@ -23,6 +23,8 @@ import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useToasts } from "@/components/ui/Toast";
 import { TabBar, Button, PageHeader, SplitPane } from "@tinkermonkey/heimdall-ui";
+import { DatasetSelect } from "@/components/datasets/DatasetSelect";
+import { useDatasetScope } from "@/hooks/useDatasetScope";
 import { COPY } from "./-copy";
 import "@/design-system/graph.css";
 
@@ -38,12 +40,15 @@ export const Route = createFileRoute("/app/graph/")({
 
 function GraphRoute() {
   const { focus, layers } = Route.useSearch();
-  // Remount on a new deep link so the initial focus/layers apply again.
+  // The graph is the schema plus the chosen dataset's data (all data when none).
+  const { selectedDatasetId } = useDatasetScope();
+  // Remount on a new deep link or dataset so the initial focus/layers apply again.
   return (
     <GraphPage
-      key={`${focus ?? ""}|${layers?.join(",") ?? ""}`}
+      key={`${focus ?? ""}|${layers?.join(",") ?? ""}|${selectedDatasetId ?? ""}`}
       initialFocusId={focus}
       initialLayerIds={layers}
+      datasetId={selectedDatasetId}
     />
   );
 }
@@ -56,11 +61,13 @@ const GRAPH_MAX_WIDTH_PX = 4000;
 interface GraphPageProps {
   initialFocusId?: string;
   initialLayerIds?: string[];
+  /** Show the schema plus this dataset's data; all data when omitted. */
+  datasetId?: string;
 }
 
-export function GraphPage({ initialFocusId, initialLayerIds }: GraphPageProps = {}) {
-  const graphView = useGraphView();
-  const buildGraph = useBuildGraph();
+export function GraphPage({ initialFocusId, initialLayerIds, datasetId }: GraphPageProps = {}) {
+  const graphView = useGraphView(datasetId);
+  const buildGraph = useBuildGraph(datasetId);
   const { toast } = useToasts();
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>(initialFocusId);
@@ -148,14 +155,14 @@ export function GraphPage({ initialFocusId, initialLayerIds }: GraphPageProps = 
         onSelectTab={setActiveTab}
       />
       {activeTab === "metrics" ? (
-        <MetricsPanel />
+        <MetricsPanel datasetId={datasetId} />
       ) : activeTab === "path" ? (
         <div className="flex-1 overflow-y-auto p-3.5 text-[13px]">
-          <PathFinder onNodeSelect={selectNode} />
+          <PathFinder onNodeSelect={selectNode} datasetId={datasetId} />
         </div>
       ) : activeTab === "sparql" ? (
         <div className="flex-1 overflow-y-auto p-3.5 text-[13px]">
-          <SparqlEditor />
+          <SparqlEditor datasetId={datasetId} />
         </div>
       ) : (
         <GraphNodeInspector
@@ -178,16 +185,19 @@ export function GraphPage({ initialFocusId, initialLayerIds }: GraphPageProps = 
         idChip="/graph"
         subtitle={COPY.PAGE_DESCRIPTION}
         actions={
-          <Button
-            variant="secondary"
-            onClick={handleRebuild}
-            disabled={buildGraph.isPending}
-            aria-busy={buildGraph.isPending}
-            data-testid="build-graph-button"
-          >
-            <RotateCw size={16} className={buildGraph.isPending ? "animate-spin" : undefined} />
-            {buildGraph.isPending ? COPY.BUILDING_GRAPH_BUTTON : COPY.BUILD_GRAPH_BUTTON}
-          </Button>
+          <>
+            <DatasetSelect data-testid="graph-dataset-select" />
+            <Button
+              variant="secondary"
+              onClick={handleRebuild}
+              disabled={buildGraph.isPending}
+              aria-busy={buildGraph.isPending}
+              data-testid="build-graph-button"
+            >
+              <RotateCw size={16} className={buildGraph.isPending ? "animate-spin" : undefined} />
+              {buildGraph.isPending ? COPY.BUILDING_GRAPH_BUTTON : COPY.BUILD_GRAPH_BUTTON}
+            </Button>
+          </>
         }
       />
 

@@ -11,6 +11,7 @@ from .entities import (
     Class,
     ConceptScheme,
     Individual,
+    Predicate,
     PropertyDefinition,
     Relationship,
     Taxonomy,
@@ -57,6 +58,7 @@ __all__ = [
     # Entities
     "Taxonomy",
     "ConceptScheme",
+    "Predicate",
     "Class",
     "Individual",
     "Relationship",

@@ -12,40 +12,43 @@ export type GraphViewTaxonomy = components["schemas"]["GraphViewTaxonomyResponse
 /** The graph view only changes when the ontology changes; filter changes must not refetch it. */
 const GRAPH_VIEW_STALE_TIME_MS = 5 * 60 * 1000;
 
-export function useBuildGraph() {
+/** Rebuild the graph: the schema plus `datasetId`'s data, or all data. */
+export function useBuildGraph(datasetId?: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => graphService.buildGraph(),
+    mutationFn: () => graphService.buildGraph(datasetId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.graph });
     },
   });
 }
 
-export function useGraphView() {
+/** The graph view: the schema plus `datasetId`'s data, or all data (cached per dataset). */
+export function useGraphView(datasetId?: string) {
   return useQuery({
-    queryKey: QUERY_KEYS.graphView,
-    queryFn: () => graphService.getGraphView(),
+    queryKey: QUERY_KEYS.graphView(datasetId),
+    queryFn: () => graphService.getGraphView(datasetId),
     staleTime: GRAPH_VIEW_STALE_TIME_MS,
   });
 }
 
-export function useGraphMetrics(algorithm?: string) {
+export function useGraphMetrics(algorithm?: string, datasetId?: string) {
   return useQuery({
-    queryKey: QUERY_KEYS.graphMetrics,
-    queryFn: () => graphService.getMetrics(algorithm),
+    queryKey: QUERY_KEYS.graphMetrics(datasetId),
+    queryFn: () => graphService.getMetrics(algorithm, datasetId),
   });
 }
 
-export function useShortestPath() {
+export function useShortestPath(datasetId?: string) {
   return useMutation({
     mutationFn: (args: { sourceId: string; targetId: string }) =>
-      graphService.getShortestPath(args.sourceId, args.targetId),
+      graphService.getShortestPath(args.sourceId, args.targetId, datasetId),
   });
 }
 
-export function useSparqlQuery() {
+/** Run a SPARQL query over the schema plus `datasetId`'s data, or all data. */
+export function useSparqlQuery(datasetId?: string) {
   return useMutation({
-    mutationFn: (query: string) => graphService.sparqlQuery(query),
+    mutationFn: (query: string) => graphService.sparqlQuery(query, datasetId),
   });
 }

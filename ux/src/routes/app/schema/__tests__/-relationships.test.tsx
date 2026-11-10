@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
@@ -13,9 +13,30 @@ import {
   createPropertyDefinition,
   createListTaxonomies,
   createListSchemes,
+  createDataset,
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { serverSideList, pageRequests } from "@/test/serverSideList";
 import { RelationshipsPage } from "../relationships";
+
+// The URL's search params (the `dataset` parameter), set per test.
+let mockSearch: { dataset?: string } = {};
+vi.mock("@tanstack/react-router", async () => {
+  const actual = await vi.importActual("@tanstack/react-router");
+  return { ...actual, useNavigate: () => vi.fn(), useSearch: () => mockSearch };
+});
+
+const firstDataset = createDataset({
+  id: "ds-1",
+  taxonomy_id: "tax-1",
+  title: "Default",
+  identifier: "default",
+});
+const secondDataset = createDataset({
+  id: "ds-2",
+  taxonomy_id: "tax-1",
+  title: "Sample",
+  identifier: "sample",
+});
 
 // The Predicate column renders the property *identifier* wrapped in mono
 // arrows: `— {identifier} →`. The three segments are separate text nodes
@@ -29,6 +50,7 @@ function predicateMatcher(identifier: string) {
 const server = setupServer(
   http.get("*/api/taxonomies", () => HttpResponse.json(createListTaxonomies([]))),
   http.get("*/api/schemes", () => HttpResponse.json(createListSchemes([]))),
+  http.get("*/api/datasets", () => HttpResponse.json([firstDataset])),
 );
 
 beforeAll(() => {
@@ -37,6 +59,7 @@ beforeAll(() => {
 
 afterEach(() => {
   server.resetHandlers();
+  mockSearch = {};
 });
 
 afterAll(() => {
@@ -377,6 +400,72 @@ describe("Relationships Schema Page", () => {
         ),
       ).toBe(true);
       expect(screen.getByTestId("list-pager-range")).toHaveTextContent("1–50 of 595");
+    });
+  });
+
+  // ========================================================================
+  // Datasets
+  // ========================================================================
+  describe("datasets", () => {
+    const edges = [
+      createRelationship({ id: "rel-a", property_definition_id: "prop-a" }),
+      createRelationship({ id: "rel-b", property_definition_id: "prop-b" }),
+    ];
+    const datasetOf: Record<string, string> = { "rel-a": "ds-1", "rel-b": "ds-2" };
+    function serveEdges(requests: URLSearchParams[]) {
+      server.use(
+        serverSideList("/api/relationships", edges, requests, {
+          filters: { dataset_id: (item, value) => datasetOf[item.id] === value },
+        }),
+        http.get("*/api/classes", () => HttpResponse.json(createListClasses([]))),
+        http.get("*/api/properties", () =>
+          HttpResponse.json(
+            createListProperties([
+              createPropertyDefinition({ id: "prop-a", identifier: "alpha_edge" }),
+              createPropertyDefinition({ id: "prop-b", identifier: "beta_edge" }),
+            ]),
+          ),
+        ),
+      );
+    }
+
+    it("shows no dataset selector while each taxonomy has one dataset", async () => {
+      serveEdges([]);
+      render(<RelationshipsPage />);
+
+      expect(await screen.findByText(predicateMatcher("alpha_edge"))).toBeInTheDocument();
+      expect(screen.queryByTestId("relationships-dataset-select")).not.toBeInTheDocument();
+    });
+
+    it("offers the selector in the filter bar once a taxonomy has two datasets", async () => {
+      server.use(
+        http.get("*/api/datasets", () => HttpResponse.json([firstDataset, secondDataset])),
+      );
+      serveEdges([]);
+      render(<RelationshipsPage />);
+
+      const select = await screen.findByTestId("relationships-dataset-select");
+      expect(screen.getByTestId("schema-filter-bar")).toContainElement(select);
+      expect(select).toHaveAccessibleName("Dataset");
+      expect(select).toHaveValue("all");
+    });
+
+    it("lists only the chosen dataset's relationships", async () => {
+      mockSearch = { dataset: "ds-1" };
+      server.use(
+        http.get("*/api/datasets", () => HttpResponse.json([firstDataset, secondDataset])),
+      );
+      const requests: URLSearchParams[] = [];
+      serveEdges(requests);
+      render(<RelationshipsPage />);
+
+      expect(await screen.findByText(predicateMatcher("alpha_edge"))).toBeInTheDocument();
+      expect(screen.queryByText(predicateMatcher("beta_edge"))).not.toBeInTheDocument();
+      expect(await screen.findByTestId("relationships-dataset-select")).toHaveValue("ds-1");
+      const scoped = requests.filter((r) => r.get("dataset_id") === "ds-1");
+      // The page and the dataset's own total.
+      expect(scoped.some((r) => r.get("limit") === "1")).toBe(true);
+      expect(scoped.some((r) => r.get("limit") !== "1")).toBe(true);
     });
   });
 });

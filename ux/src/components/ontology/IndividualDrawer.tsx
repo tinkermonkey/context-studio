@@ -130,7 +130,11 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
   const individualClassIdList = individual?.class_ids ?? [];
   // Up to RELATED_LIMIT other individuals sharing a class (fetch one extra to
   // allow for this individual itself).
-  const sameClassIndividuals = useIndividualsInClasses(individualClassIdList, RELATED_LIMIT + 1);
+  const sameClassIndividuals = useIndividualsInClasses(
+    individualClassIdList,
+    RELATED_LIMIT + 1,
+    individual?.dataset_id ?? undefined,
+  );
   // Relationships of this individual's classes, newest first.
   const { items: relevantRelationships, total: relevantRelationshipTotal } =
     useRelationshipsTouching(individualClassIdList, RELATIONSHIPS_SHOWN);
@@ -333,6 +337,7 @@ export function IndividualDrawer({ individualId, onSelectIndividual }: Individua
         title: `Copy of ${individual.title}`,
         class_ids: individual.class_ids,
         description: individual.description ?? undefined,
+        dataset_id: individual.dataset_id,
       });
       toast("success", "Individual duplicated");
     } catch (error) {

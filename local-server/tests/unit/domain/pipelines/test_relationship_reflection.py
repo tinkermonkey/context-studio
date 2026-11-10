@@ -113,6 +113,7 @@ def house(ontology):
             canonical_predicate=predicate,
             domain_class_id=ids[source],
             range_class_id=ids[target],
+            create_missing_predicate=True,
         ).id
     return ids
 
@@ -229,6 +230,7 @@ class TestSortingQuestions:
             canonical_predicate="located_in",
             domain_class_id=stranger.id,
             range_class_id=house["place"],
+            create_missing_predicate=True,
         )
         catalog = catalog_of(repo, house)
         sq = sorting_questions(repo.get_property_definition(house["task_located_in"]), catalog)

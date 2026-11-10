@@ -1913,12 +1913,18 @@ class TestUpdatePropertyIdentifier:
             title="api.operation aggregates api.response",
             canonical_predicate="aggregates",
             update_canonical_predicate=True,
+            create_missing_predicate=True,
         )
 
         assert updated.identifier == "operation_aggregates_response"
         assert service.get_relationship(rel.id).property_definition_id == prop.id
         event = service._event_publisher.get_events_of_type(PropertyDefinitionUpdated)[0]
-        assert set(event.changed_fields) == {"identifier", "title", "canonical_predicate"}
+        assert set(event.changed_fields) == {
+            "identifier",
+            "title",
+            "canonical_predicate",
+            "predicate_id",
+        }
         assert event.old_values["identifier"] == "operation_delivers_response"
         assert event.new_values["identifier"] == "operation_aggregates_response"
 

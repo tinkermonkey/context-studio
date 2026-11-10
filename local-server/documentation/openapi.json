@@ -284,6 +284,53 @@
         }
       }
     },
+    "/api/taxonomies/{taxonomy_id}/predicates": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "List Taxonomy Predicates",
+        "description": "The taxonomy's predicate catalog: the relation verbs its relationship types use.\n\nRaises:\n    HTTPException: 404 if the taxonomy is not found",
+        "operationId": "list_taxonomy_predicates_api_taxonomies__taxonomy_id__predicates_get",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PredicateResponse"
+                  },
+                  "title": "Response List Taxonomy Predicates Api Taxonomies  Taxonomy Id  Predicates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/taxonomies/{taxonomy_id}/scheme-counts": {
       "get": {
         "tags": [
@@ -301,6 +348,24 @@
               "type": "string",
               "title": "Taxonomy Id"
             }
+          },
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Count only this dataset's individuals (all when omitted)",
+              "title": "Dataset Id"
+            },
+            "description": "Count only this dataset's individuals (all when omitted)"
           }
         ],
         "responses": {
@@ -626,6 +691,24 @@
               "type": "string",
               "title": "Scheme Id"
             }
+          },
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Count only this dataset's individuals and relationships",
+              "title": "Dataset Id"
+            },
+            "description": "Count only this dataset's individuals and relationships"
           }
         ],
         "responses": {
@@ -1368,6 +1451,24 @@
               "title": "Q"
             },
             "description": "Case-insensitive text search on the source title, target title, or property definition title/identifier"
+          },
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional dataset ID to filter by (the source individual's)",
+              "title": "Dataset Id"
+            },
+            "description": "Optional dataset ID to filter by (the source individual's)"
           }
         ],
         "responses": {
@@ -2224,6 +2325,24 @@
               "title": "Ids"
             },
             "description": "Restrict results to these IDs (repeat the parameter; at most 500)"
+          },
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional dataset ID to filter by",
+              "title": "Dataset Id"
+            },
+            "description": "Optional dataset ID to filter by"
           }
         ],
         "responses": {
@@ -2570,6 +2689,145 @@
         }
       }
     },
+    "/api/datasets": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "List Datasets",
+        "description": "List datasets (named bodies of data over a taxonomy's schema), by title, with their size.\n\nArgs:\n    taxonomy_id: Optional taxonomy ID to filter by\n    service: OntologyService from dependency injection\n\nReturns:\n    The datasets, each with its individual and relationship counts",
+        "operationId": "list_datasets_api_datasets_get",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional taxonomy ID to filter by",
+              "title": "Taxonomy Id"
+            },
+            "description": "Optional taxonomy ID to filter by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DatasetResponse"
+                  },
+                  "title": "Response List Datasets Api Datasets Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Create Dataset",
+        "description": "Create a dataset over a taxonomy's schema. A direct action, not a proposal.\n\nArgs:\n    request: The taxonomy, identifier and title\n    service: OntologyService from dependency injection\n\nReturns:\n    The created dataset\n\nRaises:\n    HTTPException: 404 if the taxonomy is not found, 409 if the taxonomy already has a\n    dataset with this identifier, 400 if the identifier or title is invalid",
+        "operationId": "create_dataset_api_datasets_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatasetCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/datasets/{dataset_id}": {
+      "delete": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Delete Dataset",
+        "description": "Delete a dataset with its individuals and their relationships. A direct action, not a\nproposal: each individual and relationship removed is recorded as a change event.\n\nArgs:\n    dataset_id: The dataset to delete\n    service: OntologyService from dependency injection\n\nReturns:\n    What was removed\n\nRaises:\n    HTTPException: 404 if the dataset is not found",
+        "operationId": "delete_dataset_api_datasets__dataset_id__delete",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetDeletionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/graph/build": {
       "post": {
         "tags": [
@@ -2578,6 +2836,26 @@
         "summary": "Build Graph",
         "description": "Explicitly build the in-memory graph from current ontology data.\n\nThis endpoint allows clients to trigger graph construction on demand. Graph building\nnormally happens lazily on first query, but this endpoint enables explicit control\nover graph refresh timing and validates that the graph can be built without errors.\n\nArgs:\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    KnowledgeGraphResponse containing node count, edge count, and build timestamp\n\nRaises:\n    HTTPException: 422 if graph construction fails",
         "operationId": "build_graph_api_graph_build_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Scope to the schema plus this dataset's data (all data when omitted)",
+              "title": "Dataset Id"
+            },
+            "description": "Scope to the schema plus this dataset's data (all data when omitted)"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -2585,6 +2863,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/KnowledgeGraphResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -2600,6 +2888,26 @@
         "summary": "Get Graph View",
         "description": "Get a labelled read model of the ontology graph for visualization.\n\nReturns every taxonomy, every concept scheme (rendered as a layer), all classes and\nindividuals with their layer, and typed edges (relationship, schema, instance_of,\nsubclass_of) with predicate labels.\n\nArgs:\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    GraphViewResponse with taxonomies, layers, nodes and edges\n\nRaises:\n    HTTPException: 422 if a graph error occurs, 500 on unexpected errors",
         "operationId": "get_graph_view_api_graph_view_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Scope to the schema plus this dataset's data (all data when omitted)",
+              "title": "Dataset Id"
+            },
+            "description": "Scope to the schema plus this dataset's data (all data when omitted)"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -2607,6 +2915,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GraphViewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -2634,6 +2952,24 @@
               "title": "Algorithm"
             },
             "description": "Centrality algorithm to use"
+          },
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Scope to the schema plus this dataset's data (all data when omitted)",
+              "title": "Dataset Id"
+            },
+            "description": "Scope to the schema plus this dataset's data (all data when omitted)"
           }
         ],
         "responses": {
@@ -2712,6 +3048,24 @@
               "title": "Target Id"
             },
             "description": "ID of the ending node"
+          },
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Scope to the schema plus this dataset's data (all data when omitted)",
+              "title": "Dataset Id"
+            },
+            "description": "Scope to the schema plus this dataset's data (all data when omitted)"
           }
         ],
         "responses": {
@@ -2997,6 +3351,24 @@
               "title": "Nodes"
             },
             "description": "Comma-separated list of node IDs to extract subgraph for"
+          },
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Scope to the schema plus this dataset's data (all data when omitted)",
+              "title": "Dataset Id"
+            },
+            "description": "Scope to the schema plus this dataset's data (all data when omitted)"
           }
         ],
         "responses": {
@@ -11406,6 +11778,59 @@
         "title": "DatabaseHealthResponse",
         "description": "Response containing database health status details."
       },
+      "DatasetCreateRequest": {
+        "properties": {
+          "taxonomy_id": {
+            "type": "string",
+            "title": "Taxonomy Id"
+          },
+          "identifier": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 2,
+            "title": "Identifier",
+            "description": "Slug: a lowercase letter, then lowercase letters, digits, - or _"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "taxonomy_id",
+          "identifier",
+          "title"
+        ],
+        "title": "DatasetCreateRequest",
+        "description": "Request to create a dataset over a taxonomy's schema."
+      },
+      "DatasetDeletionResponse": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          },
+          "individual_count": {
+            "type": "integer",
+            "title": "Individual Count"
+          },
+          "relationship_count": {
+            "type": "integer",
+            "title": "Relationship Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "individual_count",
+          "relationship_count"
+        ],
+        "title": "DatasetDeletionResponse",
+        "description": "What deleting a dataset removed."
+      },
       "DatasetImpactResponse": {
         "properties": {
           "dataset_id": {
@@ -11458,6 +11883,78 @@
         ],
         "title": "DatasetImpactResponse",
         "description": "What a schema operation will do to the data of a dataset that yields to the\nschema. Information only: such data never blocks the operation."
+      },
+      "DatasetResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "taxonomy_id": {
+            "type": "string",
+            "title": "Taxonomy Id"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier",
+            "description": "Slug, unique within the taxonomy"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "yields_to_schema": {
+            "type": "boolean",
+            "title": "Yields To Schema",
+            "description": "Schema operations never block on its data, which follows them instead (set by the DR model loader; no UI toggle)",
+            "default": false
+          },
+          "individual_count": {
+            "type": "integer",
+            "title": "Individual Count",
+            "description": "Individuals in the dataset",
+            "default": 0
+          },
+          "relationship_count": {
+            "type": "integer",
+            "title": "Relationship Count",
+            "description": "Relationships in the dataset (by their source individual)",
+            "default": 0
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "last_modified": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Modified"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "taxonomy_id",
+          "identifier",
+          "title"
+        ],
+        "title": "DatasetResponse",
+        "description": "A named body of data over one taxonomy's schema, with its size."
       },
       "DecisionKind": {
         "type": "string",
@@ -13682,6 +14179,18 @@
             ],
             "title": "Description",
             "description": "Optional longer description"
+          },
+          "dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Id",
+            "description": "The dataset to create it in; may be omitted while the classes' taxonomy has at most one dataset"
           }
         },
         "type": "object",
@@ -13706,6 +14215,18 @@
             "type": "array",
             "title": "Class Ids",
             "description": "Ordered list of parent class IDs"
+          },
+          "dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Id",
+            "description": "The dataset the individual belongs to"
           },
           "title": {
             "type": "string",
@@ -15534,6 +16055,91 @@
         "title": "PredicateReference",
         "description": "Reference to a property/predicate in individual extraction.\n\nIdentifies a relationship type with optional mapping to existing property definition.\nNon-empty property_definition_id means mapped; empty/None means new candidate."
       },
+      "PredicateResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier"
+          },
+          "taxonomy_id": {
+            "type": "string",
+            "title": "Taxonomy Id",
+            "description": "The taxonomy whose catalog holds it"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier",
+            "description": "The relation verb (e.g. 'part_of'), unique in the taxonomy"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Display name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "What the relation means"
+          },
+          "external_references": {
+            "items": {
+              "$ref": "#/components/schemas/ExternalReferenceResponse"
+            },
+            "type": "array",
+            "title": "External References",
+            "description": "Client metadata; DR's inverse, category, archimate_alignment and semantics ride in its documentation_robotics reference"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp"
+          },
+          "last_modified": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Modified",
+            "description": "Last modification timestamp"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Version number",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "taxonomy_id",
+          "identifier",
+          "title"
+        ],
+        "title": "PredicateResponse",
+        "description": "A predicate in a taxonomy's predicate catalog."
+      },
       "PropertyDefinitionCreateRequest": {
         "properties": {
           "identifier": {
@@ -15570,7 +16176,7 @@
               }
             ],
             "title": "Canonical Predicate",
-            "description": "Bare canonical relation verb this property represents (e.g. 'navigates-to') \u2014 the form extraction clamps predicates to"
+            "description": "The predicate (relation verb, e.g. 'navigates-to') this relationship type uses, from its taxonomy's predicate catalog (the taxonomy of its domain class, else its range class); added to the catalog when it's missing"
           },
           "domain_class_id": {
             "anyOf": [
@@ -15644,7 +16250,19 @@
               }
             ],
             "title": "Canonical Predicate",
-            "description": "Bare canonical relation verb this property represents (e.g. 'navigates-to'), or null if not set"
+            "description": "Identifier of the predicate this relationship type uses (e.g. 'navigates-to'), or null if it has none"
+          },
+          "predicate_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicate Id",
+            "description": "ID of that predicate in its taxonomy's predicate catalog"
           },
           "domain_class_id": {
             "anyOf": [
@@ -15785,7 +16403,7 @@
               }
             ],
             "title": "Canonical Predicate",
-            "description": "New bare canonical relation verb, or null to clear it. Only applied when the field is present in the request body."
+            "description": "New predicate (relation verb) from the taxonomy's catalog, added when it's missing. Only applied when the field is present in the request body; a type's predicate can't be cleared."
           },
           "is_relevant": {
             "anyOf": [
@@ -17468,6 +18086,18 @@
             "maxLength": 10000,
             "title": "Query",
             "description": "SPARQL SELECT query string (max 10000 characters)"
+          },
+          "dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Id",
+            "description": "Query the schema plus this dataset's data (all data when omitted)"
           }
         },
         "type": "object",

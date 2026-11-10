@@ -225,11 +225,16 @@ class SchemaExtractionApplyService:
                 _already_present(candidate_id)
                 continue
             try:
+                # Its predicate is its identifier, added to the taxonomy's catalog
+                # when the catalog lacks it (extraction is one of CS's own editors).
                 new_prop = self._ontology_service.create_property_definition(
                     identifier=identifier,
                     title=label,
                     description=candidate.get("proposed_definition"),
                     source_run_id=run.id,
+                    canonical_predicate=identifier,
+                    taxonomy_id=taxonomy_id,
+                    create_missing_predicate=True,
                 )
             except DuplicateEntityError:
                 # A property with this title exists under a different identifier;

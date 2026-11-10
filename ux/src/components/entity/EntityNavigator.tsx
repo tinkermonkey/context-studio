@@ -14,6 +14,8 @@ import { SMALL_SET_LIMIT } from "@/api/config";
 import { useDebounce } from "@/hooks/useDebounce";
 import { entityPath } from "@/lib/entityPaths";
 import { useNavigatorStore } from "@/stores/navigator";
+import { useDatasetScope } from "@/hooks/useDatasetScope";
+import { DatasetSelect } from "@/components/datasets/DatasetSelect";
 import type { components } from "@/api/types";
 
 type TaxonomyResponse = components["schemas"]["TaxonomyResponse"];
@@ -138,6 +140,11 @@ export function EntityNavigator({
   const expandedIds = useNavigatorStore((s) => s.expandedIds);
   const setExpanded = useNavigatorStore((s) => s.setExpanded);
   const expand = useNavigatorStore((s) => s.expand);
+  // Data mode shows one dataset's individuals and counts when one is chosen.
+  const { datasets, selectedDataset, selectedDatasetId, showSelector } = useDatasetScope();
+  const hierarchyDataset = selectedDataset
+    ? { id: selectedDataset.id, taxonomyId: selectedDataset.taxonomy_id }
+    : undefined;
 
   const {
     data: taxonomiesResponse,
@@ -152,10 +159,29 @@ export function EntityNavigator({
     enabled: filtering,
     keepPrevious: true,
   });
-  const { data: individualMatches, isFetching: individualsFetching } = useIndividuals(matchParams, {
-    enabled: filtering && dataMode,
-    keepPrevious: true,
-  });
+  const { data: searchedIndividuals, isFetching: individualsFetching } = useIndividuals(
+    matchParams,
+    {
+      enabled: filtering && dataMode,
+      keepPrevious: true,
+    },
+  );
+  // As in the tree: the chosen dataset scopes its own taxonomy only, so drop that
+  // taxonomy's matches from other datasets and keep every other taxonomy's.
+  const individualMatches = useMemo(() => {
+    if (!searchedIndividuals || !selectedDataset) return searchedIndividuals;
+    const taxonomyOf = new Map(datasets.map((d) => [d.id, d.taxonomy_id]));
+    const items = searchedIndividuals.items.filter(
+      (i) =>
+        i.dataset_id === selectedDatasetId ||
+        taxonomyOf.get(i.dataset_id ?? "") !== selectedDataset.taxonomy_id,
+    );
+    return {
+      ...searchedIndividuals,
+      items,
+      total: searchedIndividuals.total - (searchedIndividuals.items.length - items.length),
+    };
+  }, [searchedIndividuals, selectedDataset, selectedDatasetId, datasets]);
   // The classes the matching individuals belong to (they may not match themselves).
   const { data: individualClasses } = useClassesByIds(
     filtering && dataMode ? (individualMatches?.items ?? []).flatMap((i) => i.class_ids) : [],
@@ -258,6 +284,11 @@ export function EntityNavigator({
             data-testid="navigator-filter"
           />
         </div>
+        {dataMode && showSelector && (
+          <div className="entity-navigator__dataset">
+            <DatasetSelect data-testid="navigator-dataset-select" />
+          </div>
+        )}
         {dataMode && !filtering && (
           <p className="entity-note entity-navigator__note">Counts show individuals.</p>
         )}
@@ -299,6 +330,7 @@ export function EntityNavigator({
               expandedIds={expandedIds}
               onExpandedChange={setExpanded}
               onSelectNode={openNode}
+              dataset={hierarchyDataset}
               compact
             />
           )}

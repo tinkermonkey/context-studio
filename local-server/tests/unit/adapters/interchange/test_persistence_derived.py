@@ -78,3 +78,30 @@ def test_new_members_of_derived_types_are_refused():
     assert all("derived" in w for w in warnings)
     assert repo.get_individual("ind-new") is None
     assert repo.get_relationship("rel-new") is None
+
+
+def test_a_reimport_keeps_a_types_predicate():
+    """#1480: OWL/SKOS/GraphML carry no predicate, so a re-import leaves it alone."""
+    repo, scheme, kit, tool, _, _ = house()
+    service = OntologyService(repo, FakeEmbeddingService(), FakeEventPublisher())
+    holds = service.create_property_definition(
+        "house_kit_holds_tool",
+        "holds",
+        canonical_predicate="holds",
+        domain_class_id=kit.id,
+        range_class_id=tool.id,
+        create_missing_predicate=True,
+    )
+    incoming = {
+        holds.id: {
+            "type": "property_definition",
+            "id": holds.id,
+            "identifier": "house_kit_holds_tool",
+            "title": "holds",
+        }
+    }
+
+    persist_incoming_entities(incoming, {}, repo, [])
+
+    kept = repo.get_property_definition(holds.id)
+    assert (kept.predicate_id, kept.canonical_predicate) == (holds.predicate_id, "holds")
