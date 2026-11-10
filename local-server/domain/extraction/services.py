@@ -514,6 +514,7 @@ class ExtractionService:
         model: str,
         temperature: float,
         stage_prompts: Mapping[str, Any] | None = None,
+        dataset_id: str | None = None,
     ) -> TripleExtractionResult:
         """
         Extract RDF triples from text, scoped to a specific ontology.
@@ -593,7 +594,7 @@ class ExtractionService:
                         tokens_used,
                         extraction_warnings,
                     ) = self._extract_triples_nlp_grounded(
-                        text, ontology, ontology_id, model, temperature, prompts
+                        text, ontology, ontology_id, model, temperature, prompts, dataset_id
                     )
                 else:
                     (
@@ -601,7 +602,7 @@ class ExtractionService:
                         tokens_used,
                         extraction_warnings,
                     ) = self._extract_triples_two_pass(
-                        text, ontology, ontology_id, model, temperature, prompts
+                        text, ontology, ontology_id, model, temperature, prompts, dataset_id
                     )
                 triples_extracted = len(extracted_triples)
                 triples_committed = triples_extracted
@@ -822,6 +823,7 @@ class ExtractionService:
         model: str,
         temperature: float,
         prompts: Mapping[str, StagePrompt] | None = None,
+        dataset_id: str | None = None,
     ) -> tuple[list[dict], int, list[str]]:
         """
         Run the two-pass individual-then-relationship extraction (design doc §7).
@@ -876,7 +878,7 @@ class ExtractionService:
             relationship_triples, individual_triples, ontology
         )
         combined = self._post_process_triples(
-            individual_triples + all_relationship_triples, ontology
+            individual_triples + all_relationship_triples, ontology, dataset_id
         )
         all_warnings = parse_warnings + typing_warnings + rel_warnings
         return combined, tokens_used, all_warnings
@@ -917,9 +919,11 @@ class ExtractionService:
         ]
         return relationship_triples, tokens, rel_warnings
 
-    def _post_process_triples(self, triples: list[dict], ontology) -> list[dict]:
-        """Recognition step, shared by both modes."""
-        return self._recognize_individuals(triples, ontology)
+    def _post_process_triples(
+        self, triples: list[dict], ontology, dataset_id: str | None = None
+    ) -> list[dict]:
+        """Recognition step, shared by both modes, inside the run's dataset."""
+        return self._recognize_individuals(triples, ontology, dataset_id)
 
     def _type_concept_objects(
         self,
@@ -1155,6 +1159,7 @@ class ExtractionService:
         model: str,
         temperature: float,
         prompts: Mapping[str, StagePrompt] | None = None,
+        dataset_id: str | None = None,
     ) -> tuple[list[dict], int, list[str]]:
         """
         NLP-grounded extraction: spaCy leading edge + retrieval + LLM confirmation (#1141).
@@ -1197,7 +1202,7 @@ class ExtractionService:
             relationship_triples, individual_triples, ontology
         )
         combined = self._post_process_triples(
-            individual_triples + all_relationship_triples, ontology
+            individual_triples + all_relationship_triples, ontology, dataset_id
         )
         all_warnings = nlp_typing_warnings + typing_warnings + rel_warnings
         return combined, tokens_used, all_warnings
@@ -1432,7 +1437,9 @@ class ExtractionService:
             ),
         }
 
-    def _recognize_individuals(self, triples: list[dict], ontology) -> list[dict]:
+    def _recognize_individuals(
+        self, triples: list[dict], ontology, dataset_id: str | None = None
+    ) -> list[dict]:
         """
         Recognition step — resolve extracted individuals to existing graph nodes (#1142).
 
@@ -1479,7 +1486,7 @@ class ExtractionService:
 
         resolution: dict[str, tuple[str, str]] = {}
         for key, (mention, class_id) in mention_class.items():
-            resolved = self._resolve_mention(mention, class_id)
+            resolved = self._resolve_mention(mention, class_id, dataset_id)
             if resolved is not None:
                 resolution[key] = resolved
         if not resolution:
@@ -1495,7 +1502,9 @@ class ExtractionService:
                     node["id"], node["label"] = resolved[0], resolved[1]
         return triples
 
-    def _resolve_mention(self, mention: str, class_id: str | None) -> tuple[str, str] | None:
+    def _resolve_mention(
+        self, mention: str, class_id: str | None, dataset_id: str | None = None
+    ) -> tuple[str, str] | None:
         """
         Resolve one extracted mention to an existing individual, or None (new node).
 
@@ -1509,8 +1518,9 @@ class ExtractionService:
             return None
         class_ids = [class_id] if class_id else []
         embedding = self._embedding_service.embed(mention)
+        # Datasets share classes: only the run's dataset's individuals match.
         candidates = self._individual_index.search(
-            embedding, class_ids=class_ids, top_k=5, threshold=0.0
+            embedding, class_ids=class_ids, top_k=5, threshold=0.0, dataset_id=dataset_id
         )
         if not candidates:
             return None
@@ -2285,6 +2295,7 @@ class ExtractionService:
         triples: list[dict],
         confidence_threshold: float = 0.5,
         recognition_threshold: float = 0.90,
+        dataset_id: str | None = None,
     ) -> RecognitionPreviewResult:
         """
         Preview which extracted individuals would match existing graph nodes.
@@ -2354,6 +2365,7 @@ class ExtractionService:
                 class_ids=class_ids,
                 taxonomy_id=None,
                 threshold=recognition_threshold,
+                dataset_id=dataset_id,
             )
 
             if match is not None:

@@ -171,6 +171,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 model=model,
                 temperature=temperature,
                 stage_prompts=self._stage_prompts,
+                dataset_id=state.input_data.get("dataset_id"),
             )
 
             # Populate result state

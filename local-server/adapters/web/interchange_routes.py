@@ -266,6 +266,14 @@ async def export_bundle(
     source: Optional[str] = Query(
         None, description="Bundle source; defaults to the taxonomy's identifier"
     ),
+    dataset: Optional[str] = Query(
+        None,
+        description="Export the schema plus this dataset's data (identifier or id), and name it "
+        "in the bundle's `dataset`; without it, every individual of the taxonomy",
+    ),
+    schema_only: bool = Query(
+        False, description="Export the schema alone, with no individuals or relationships"
+    ),
     ontology_repo: OntologyRepository = Depends(get_ontology_repo),
 ) -> dict[str, Any]:
     """
@@ -275,8 +283,8 @@ async def export_bundle(
     See domain/interchange/bundle.py for the format.
 
     Raises:
-        HTTPException: 404 if the taxonomy does not exist; 409 if the workspace
-            cannot be expressed as a bundle (an entity has no stored identifier)
+        HTTPException: 404 if the taxonomy or dataset does not exist; 409 if the
+            workspace cannot be expressed as a bundle (an entity has no stored identifier)
     """
     # A blank ?source= means no source: fall back to the taxonomy identifier.
     bundle_source = (source or "").strip() or None
@@ -284,7 +292,25 @@ async def export_bundle(
     def export() -> Optional[dict[str, Any]]:
         if ontology_repo.get_taxonomy(taxonomy_id) is None:
             return None
-        return BundleExporter(ontology_repo).export(taxonomy_id, bundle_source)
+        dataset_id = None
+        if dataset:
+            found = next(
+                (
+                    d
+                    for d in ontology_repo.list_datasets(taxonomy_id)
+                    if dataset in (d.id, d.identifier)
+                ),
+                None,
+            )
+            if found is None:
+                raise HTTPException(
+                    status_code=http_status.HTTP_404_NOT_FOUND,
+                    detail=f"No dataset {dataset!r} in taxonomy {taxonomy_id}",
+                )
+            dataset_id = found.id
+        return BundleExporter(ontology_repo).export(
+            taxonomy_id, bundle_source, dataset_id=dataset_id, schema_only=schema_only
+        )
 
     try:
         bundle = await run_sync_in_executor(export)
@@ -352,8 +378,7 @@ async def import_ontology(
                             or "resolution_chosen" not in res
                         ):
                             raise ValueError(
-                                "Missing required fields: match_kind, entity_id,"
-                                " resolution_chosen"
+                                "Missing required fields: match_kind, entity_id, resolution_chosen"
                             )
 
                         # Validate that the resolution type is supported

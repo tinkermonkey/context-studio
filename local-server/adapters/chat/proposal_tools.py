@@ -335,6 +335,12 @@ class ProposeChangesTool(_ProposalTool):
         "type": "object",
         "properties": {
             "taxonomy_id": {"type": "string", "description": "The taxonomy the changes are about"},
+            "dataset": {
+                "type": "string",
+                "description": "The dataset (identifier or id) its individual and relationship"
+                " operations are in. Needed only when the taxonomy has several datasets"
+                " (see list_datasets); every individual they reference must be in it",
+            },
             "title": {"type": "string", "description": "A short summary of the proposal"},
             "rationale": {"type": "string", "description": "Why these changes, as a whole"},
             "operations": {
@@ -383,6 +389,7 @@ class ProposeChangesTool(_ProposalTool):
                 rationale=rationale,
                 dry_run=dry_run,
                 source_revision=revision,
+                dataset_id=optional_str(args, "dataset"),
             )
         except ProposalValidationError as exc:
             return _not_stored(exc.errors, drafts)
@@ -522,6 +529,7 @@ def _stored(proposal: ChangeProposal, view: Optional[dict[str, Any]]) -> ToolOut
         "kind": PROPOSAL_KIND,
         "title": proposal.title,
         "taxonomy_id": proposal.taxonomy_id,
+        "dataset_id": proposal.dataset_id,
         "status": proposal.status.value,
         "counts": counts,
         "operations": operations,
@@ -560,6 +568,7 @@ def _dry_run(view: dict[str, Any]) -> ToolOutcome:
         "id": None,
         "title": view["title"],
         "taxonomy_id": view["taxonomy_id"],
+        "dataset_id": view.get("dataset_id"),
         "operations": operations,
         "next": " ".join(notes),
     }
@@ -718,6 +727,7 @@ def _proposal_summary(proposal: ChangeProposal) -> dict[str, Any]:
         "kind": PROPOSAL_KIND,
         "title": proposal.title,
         "taxonomy_id": proposal.taxonomy_id,
+        "dataset_id": proposal.dataset_id,
         "source": proposal.source.value,
         "created_at": _timestamp(proposal.created_at),
         "status": proposal.status.value,

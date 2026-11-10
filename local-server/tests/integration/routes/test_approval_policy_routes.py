@@ -275,8 +275,9 @@ class TestAutoApply:
                 ],
             },
         )
-        assert response.status_code == 201
-        assert [o["status"] for o in response.json()["operations"]] == ["pending"] * 3
+        # Another taxonomy's individual is in another dataset: refused outright (#1487).
+        assert response.status_code == 422
+        assert "dataset_mismatch" in response.text
         assert ontology.get_individual(widget.id).title == "Widget"
 
     def test_a_stored_policy_that_does_not_parse_still_stores_the_proposal(

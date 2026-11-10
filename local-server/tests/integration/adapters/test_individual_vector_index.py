@@ -129,6 +129,20 @@ class TestMechanics:
         matches = idx.search(self._VECTORS["k8s"], class_ids=[CLASS_SW], top_k=5, threshold=0.5)
         assert all(m.individual_id != KUBERNETES for m in matches)
 
+    def test_dataset_scoping_excludes_other_datasets_individuals(self, factory):
+        """#1487: datasets share classes, so the class scope alone can't keep them apart."""
+        idx = self._index(factory)
+
+        same = idx.search(
+            self._VECTORS["k8s"], class_ids=[CLASS_SW], threshold=0.5, dataset_id=SEED_DATASET_ID
+        )
+        other = idx.search(
+            self._VECTORS["k8s"], class_ids=[CLASS_SW], threshold=0.5, dataset_id="elsewhere"
+        )
+
+        assert [m.individual_id for m in same][:1] == [KUBERNETES]
+        assert other == []
+
 
 class TestRealEmbeddingRecognition:
     """The load-bearing hypothesis: specific mention -> existing specific individual."""

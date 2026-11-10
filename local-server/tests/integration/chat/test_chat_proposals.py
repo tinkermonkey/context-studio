@@ -36,6 +36,7 @@ LINK = re.compile(r"\[([^\]]+)\]\(entity:([a-z]+)/([^)\s]+)\)")
 
 CHAT_TOOLS = [
     "list_taxonomies",
+    "list_datasets",
     "search_entities",
     "get_entity",
     "list_children",

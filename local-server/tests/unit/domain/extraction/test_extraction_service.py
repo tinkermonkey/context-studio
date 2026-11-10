@@ -2241,7 +2241,9 @@ class TestPreviewRecognition:
 
         original_recognize = recognizer.recognize
 
-        def tracking_recognize(label, context, class_ids, taxonomy_id=None, threshold=None):
+        def tracking_recognize(
+            label, context, class_ids, taxonomy_id=None, threshold=None, dataset_id=None
+        ):
             received_class_ids.append(class_ids)
             return original_recognize(label, context, class_ids, taxonomy_id, threshold)
 
@@ -2297,7 +2299,9 @@ class TestPreviewRecognition:
         received_thresholds = []
         original_recognize = recognizer.recognize
 
-        def tracking_recognize(label, context, class_ids, taxonomy_id=None, threshold=None):
+        def tracking_recognize(
+            label, context, class_ids, taxonomy_id=None, threshold=None, dataset_id=None
+        ):
             received_thresholds.append(threshold)
             return original_recognize(label, context, class_ids, taxonomy_id, threshold)
 

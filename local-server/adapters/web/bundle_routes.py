@@ -73,6 +73,12 @@ async def import_bundle(
     file_name: str | None = Query(
         None, max_length=255, description="The file the bundle came from, for the rationale"
     ),
+    dataset: str | None = Query(
+        None,
+        max_length=255,
+        description="The dataset (identifier or id) to import the data into; defaults to the "
+        "one the bundle's `dataset` names, else the taxonomy's only dataset",
+    ),
     importer: BundleImportService = Depends(get_bundle_import_service),
     proposals: ProposalService = Depends(get_proposal_service),
 ) -> BundleImportResponse:
@@ -84,6 +90,7 @@ async def import_bundle(
             apply=apply,
             dry_run=dry_run,
             file_name=file_name,
+            dataset=dataset,
         )
         return await run_sync_in_executor(_response, proposals, result)
     except (IntegrityError, IdentifierConflictError, DuplicateEntityError) as exc:

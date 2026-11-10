@@ -1088,3 +1088,72 @@ class TestRecognitionContextProvenanceShapes:
     ):
         context = self._apply_with_provenance(svc_with_recognizer, recognizer, [])
         assert context == "Alice"
+
+
+# ---------------------------------------------------------------------------
+# Datasets (#1487): a run extracts into one dataset, and stays inside it
+# ---------------------------------------------------------------------------
+
+
+class TestDatasets:
+    @pytest.fixture()
+    def datasets(self, ontology_service):
+        alpha = ontology_service.create_dataset(TAXONOMY_ID, "alpha", "Platform Alpha")
+        beta = ontology_service.create_dataset(TAXONOMY_ID, "beta", "Platform Beta")
+        return alpha, beta
+
+    @staticmethod
+    def _run_into(dataset, triples, run_id):
+        run = _make_run(triples, run_id=run_id)
+        run.input_summary = {"taxonomy_id": TAXONOMY_ID, "dataset_id": dataset.id}
+        return run
+
+    def test_the_same_label_in_two_datasets_stays_two_individuals(self, svc, repo, datasets):
+        alpha, beta = datasets
+
+        svc.apply(self._run_into(alpha, [_make_triple("API Gateway")], "run-a"))
+        svc.apply(self._run_into(beta, [_make_triple("API Gateway")], "run-b"))
+
+        gateways = repo.list_individuals(limit=None, query="API Gateway")
+        assert sorted(g.dataset_id for g in gateways) == sorted([alpha.id, beta.id])
+
+    def test_recognition_is_asked_inside_the_runs_dataset(
+        self, svc_with_recognizer, recognizer, datasets
+    ):
+        alpha, _ = datasets
+
+        svc_with_recognizer.apply(self._run_into(alpha, [_make_triple("API Gateway")], "run-a"))
+
+        assert recognizer.calls[0]["dataset_id"] == alpha.id
+
+    def test_an_explicit_subject_in_another_dataset_is_not_reused(
+        self, svc, ontology_service, repo, datasets
+    ):
+        alpha, beta = datasets
+        other = ontology_service.create_individual(CLASS_ID, "Gateway", dataset_id=beta.id)
+        triple = _make_triple("Gateway")
+        triple["subject"]["id"] = other.id
+
+        svc.apply(self._run_into(alpha, [triple], "run-a"))
+
+        assert repo.count_individuals(dataset_id=alpha.id) == 1
+        assert repo.count_individuals(dataset_id=beta.id) == 1
+
+    def test_a_merge_into_another_datasets_individual_is_refused(
+        self, svc, ontology_service, datasets
+    ):
+        from domain.pipelines.apply_selection import RecognitionDecision
+        from domain.pipelines.exceptions import ApplySelectionError
+
+        alpha, beta = datasets
+        other = ontology_service.create_individual(CLASS_ID, "Gateway", dataset_id=beta.id)
+
+        with pytest.raises(ApplySelectionError, match="another dataset"):
+            svc.apply(
+                self._run_into(alpha, [_make_triple("Gateway")], "run-a"),
+                recognition_decisions=[
+                    RecognitionDecision(
+                        mention_label="Gateway", decision="merge", individual_id=other.id
+                    )
+                ],
+            )

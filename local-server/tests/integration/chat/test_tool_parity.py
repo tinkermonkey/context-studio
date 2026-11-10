@@ -131,7 +131,7 @@ async def test_get_proposal_matches_rest(client, proposal_tools, proposals):
     for key, value in rest.items():
         assert tool[key] == value, key
     # The tool adds only its own keys, and none inside an operation
-    assert set(tool) - set(rest) <= {"kind", "counts", "offset"}
+    assert set(tool) - set(rest) <= {"kind", "counts", "offset", "dataset_id"}
     for tool_op, rest_op in zip(tool["operations"], rest["operations"], strict=True):
         assert set(tool_op) == set(rest_op)
     # What #1413 found missing is all there

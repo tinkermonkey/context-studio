@@ -49,6 +49,7 @@ def ref_ids(outcome):
 def test_read_tools_with_schemas(tools):
     assert list(tools) == [
         "list_taxonomies",
+        "list_datasets",
         "search_entities",
         "get_entity",
         "list_children",

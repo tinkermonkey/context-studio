@@ -1399,6 +1399,11 @@ class ChangeProposalRun(BatchRun):
     source_revision = Column(JSON(none_as_null=True), nullable=True)
     landed = Column(JSON(none_as_null=True), nullable=True)
     client_metadata = Column(JSON, nullable=False, default=dict, server_default="{}")
+    dataset_id = Column(
+        String(36),
+        nullable=True,
+        doc="The dataset its individual and relationship operations are in (None: no data ops)",
+    )
 
     __mapper_args__: Dict[str, Any] = {
         "polymorphic_identity": "proposal",
