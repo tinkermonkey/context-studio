@@ -13,6 +13,7 @@ Architecture:
 """
 
 import logging
+from collections.abc import Sequence
 from contextlib import AsyncExitStack, asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -30,7 +31,7 @@ from adapters.chat.proposal_tools import (
     build_proposal_tools,
 )
 from adapters.chat.run_tools import build_run_tools
-from adapters.chat.tools import build_chat_tools
+from adapters.chat.tools import ToolBase, build_chat_tools
 from adapters.clustering.sklearn_clusterer import SklearnClusterer
 
 # Import admin adapters and services
@@ -156,6 +157,7 @@ from domain.pipelines.registry import (
     PipelineImplementationRegistry,
     PipelineTypeRegistry,
 )
+from domain.pipelines.requested_via import RequestedVia
 from domain.pipelines.schema_extraction.apply_service import (
     SchemaExtractionApplyService,
 )
@@ -856,7 +858,12 @@ async def lifespan(app: FastAPI):
             app_state=app.state,
             workers=settings.pipelines.background_workers,
         )
-        run_tools = build_run_tools(app.state.run_executor, pipeline_run_repo, ontology_service)
+
+        def run_tools_for(requested_via: RequestedVia) -> Sequence[ToolBase]:
+            """The run tools for one caller; its runs record where they came from."""
+            return build_run_tools(
+                app.state.run_executor, pipeline_run_repo, ontology_service, requested_via
+            )
 
         # Read-only tools over the ontology and graph services, and the proposal
         # tools (propose changes; a person reviews them), shared by the chat
@@ -873,7 +880,7 @@ async def lifespan(app: FastAPI):
             tools=[
                 *read_tools,
                 *build_proposal_tools(proposal_service, ProposalSource.CHAT),
-                *run_tools,
+                *run_tools_for(RequestedVia.CHAT),
             ],
             repository=SqliteConversationRepository(operations_session_factory),
             settings=ConfigChatSettings(config_manager),
@@ -900,7 +907,7 @@ async def lifespan(app: FastAPI):
                         *build_proposal_tools(proposal_service, ProposalSource.MCP),
                         MarkProposalLandedTool(proposal_service, ProposalSource.MCP),
                         DrSpecDriftTool(app.state.drift_import_service),
-                        *run_tools,
+                        *run_tools_for(RequestedVia.MCP),
                     ],
                 )
                 logger.info("MCP server available at /mcp (bearer token required)")

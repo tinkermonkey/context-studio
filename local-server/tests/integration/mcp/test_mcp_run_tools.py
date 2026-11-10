@@ -13,6 +13,7 @@ import pytest
 
 from adapters.chat.run_tools import build_run_tools
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
+from domain.pipelines.requested_via import RequestedVia
 from tests.integration.chat.conftest import OPERATION_ID, TAXONOMY_ID
 from tests.integration.mcp.test_mcp_server import mcp_client, result_of
 from tests.integration.pipelines.test_background_runs import make_executor
@@ -25,7 +26,7 @@ def run_setup(dr_workspace):
     executor = make_executor(dr_workspace.session_factory)
     runs = PipelineRepository(dr_workspace.session_factory)
     executor.start()
-    yield executor, runs, build_run_tools(executor, runs, dr_workspace.ontology)
+    yield executor, runs, build_run_tools(executor, runs, dr_workspace.ontology, RequestedVia.MCP)
     executor.stop()
 
 
@@ -127,3 +128,21 @@ async def test_run_tools_report_bad_arguments_as_errors(dr_workspace, run_setup)
         result, text = await call(client, "get_run", {"run_id": "no-such-run"})
         assert result["isError"] is True
         assert "No pipeline run found" in text
+
+
+@pytest.mark.parametrize("requested_via", [RequestedVia.MCP, RequestedVia.CHAT])
+def test_run_refinement_records_who_asked_over_any_option(dr_workspace, requested_via):
+    """A caller can't claim another entry point through options (#1516)."""
+    runs = PipelineRepository(dr_workspace.session_factory)
+    executor = make_executor(dr_workspace.session_factory)
+    tools = build_run_tools(executor, runs, dr_workspace.ontology, requested_via)
+    run_refinement = next(t for t in tools if t.spec.name == "run_refinement")
+
+    outcome = run_refinement.run(
+        {"taxonomy_id": TAXONOMY_ID, "pipeline": "no_op", "options": {"requested_via": "mcp-x"}}
+    )
+
+    # The executor isn't started, so the run is still pending with its input
+    run, input_data = runs.claim_next_pending()
+    assert run.id == json.loads(outcome.content)["run_id"]
+    assert input_data["requested_via"] == requested_via.value

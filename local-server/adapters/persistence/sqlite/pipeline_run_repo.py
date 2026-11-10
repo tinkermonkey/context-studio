@@ -813,10 +813,14 @@ class PipelineRepository:
 
         return self._write("cancel a pending pipeline run", cancel)
 
-    def requeue(self, run_id: str) -> bool:
+    def requeue(self, run_id: str, input_updates: dict[str, Any]) -> bool:
         """
         Set a CANCELLED, FAILED or INTERRUPTED run that carries an input back to
         PENDING, clearing its progress, failure reason, start time and proposal.
+
+        Args:
+            run_id: The run
+            input_updates: Values to set in its stored input, such as who re-queued it
 
         Returns:
             True if the run was re-queued; False if it is in another state or has
@@ -840,6 +844,7 @@ class PipelineRepository:
             )
             if not orm_obj:
                 return False
+            orm_obj.input_data = {**orm_obj.input_data, **input_updates}  # type: ignore[assignment]
             orm_obj.status = PipelineRunStatus.PENDING.value  # type: ignore[assignment]
             orm_obj.failure_reason = None  # type: ignore[assignment]
             orm_obj.started_at = None  # type: ignore[assignment]
