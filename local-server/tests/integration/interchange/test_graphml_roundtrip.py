@@ -33,6 +33,7 @@ from domain.ontology.entities import (
     Taxonomy,
 )
 from domain.ontology.value_objects import ExternalReference
+from tests.utils.datasets import save_in_dataset
 
 
 @pytest.fixture
@@ -171,7 +172,7 @@ def sample_data(ontology_repo):
             ),
         ],
     )
-    fido = ontology_repo.save_individual(fido)
+    fido = save_in_dataset(ontology_repo, fido)
 
     # Create a relationship
     rel = Relationship(

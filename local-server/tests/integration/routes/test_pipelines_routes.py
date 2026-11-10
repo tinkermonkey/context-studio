@@ -45,6 +45,7 @@ from domain.pipelines.schema_node_grounding.scoring import (
     ScoredCandidate,
 )
 from tests.utils.parent_rows import create_batch_row
+from tests.utils.datasets import save_in_dataset
 
 # Constant for mocking the orchestrator creation function
 ORCHESTRATOR_PATCH_PATH = "adapters.web.pipelines_routes.create_orchestrator"
@@ -1773,7 +1774,7 @@ class TestRevertEndpoint:
         )
         self._record_create(change_repo, schema_run, "cls-1", "class")
         individual_run = self._new_run(pipeline_run_repo)
-        ontology_repo.save_individual(Individual(id="ind-1", class_ids=["cls-1"], title="API"))
+        save_in_dataset(ontology_repo, Individual(id="ind-1", class_ids=["cls-1"], title="API"))
         self._record_create(change_repo, individual_run, "ind-1", "individual")
         events_before = change_repo.get_changes(limit=None).total
 
@@ -1832,7 +1833,7 @@ class TestRevertEndpoint:
             )
         )
         self._record_create(change_repo, run, "prop-1", "property_definition")
-        ontology_repo.save_individual(Individual(id="ind-1", class_ids=["cls-1"], title="API"))
+        save_in_dataset(ontology_repo, Individual(id="ind-1", class_ids=["cls-1"], title="API"))
         self._record_create(change_repo, run, "ind-1", "individual")
         ontology_repo.save_relationship(
             Relationship(

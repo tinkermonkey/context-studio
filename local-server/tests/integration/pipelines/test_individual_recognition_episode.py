@@ -23,6 +23,7 @@ import pytest
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from tests.integration.pipelines._harness.metrics import recognition_metrics
+from tests.utils.datasets import save_in_dataset
 
 _EPISODES = Path(__file__).parent.parent / "fixtures" / "pipelines" / "individual_recognition"
 
@@ -117,8 +118,7 @@ def _run_episode(service, repo, index, episode):
                 cls = by_alias.get(entity["class_ref"].strip().lower())
                 assert cls is not None, f"class_ref {entity['class_ref']} not in DR ontology"
                 node_id = str(uuid4())
-                repo.save_individual(
-                    Individual(id=node_id, class_ids=[str(cls.id)], title=mention["surface"])
+                save_in_dataset(repo, Individual(id=node_id, class_ids=[str(cls.id)], title=mention["surface"])
                 )
                 index.index_individual(node_id, mention["surface"], None)
                 title = mention["surface"]

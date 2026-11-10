@@ -435,6 +435,7 @@ class ChangeEventRecorder:
                 "class_ids": event.class_ids,
                 "external_references": event.external_references,
                 "data_properties": event.data_properties,
+                "dataset_id": event.dataset_id,
             },
             change_reason="Individual created",
         )

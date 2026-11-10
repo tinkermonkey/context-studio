@@ -29,6 +29,7 @@ from domain.ontology.entities import (
     Relationship,
     Taxonomy,
 )
+from tests.utils.datasets import save_in_dataset
 
 TAX_ID = "00000000-0000-0000-0000-000000000001"
 LAYER_A = "00000000-0000-0000-0000-00000000000a"
@@ -99,10 +100,9 @@ def populated_repository(repository):
             range_class_id=CLS_OPERATION,
         )
     )
-    repository.save_individual(
-        Individual(id=IND_A, class_ids=[CLS_OPERATION, CLS_SERVICE], title="POST /orders")
+    save_in_dataset(repository, Individual(id=IND_A, class_ids=[CLS_OPERATION, CLS_SERVICE], title="POST /orders")
     )
-    repository.save_individual(Individual(id=IND_B, class_ids=[CLS_SERVICE], title="Checkout"))
+    save_in_dataset(repository, Individual(id=IND_B, class_ids=[CLS_SERVICE], title="Checkout"))
     repository.save_relationship(
         Relationship(id=REL_ID, source_id=IND_B, target_id=IND_A, property_definition_id=PROP_ID)
     )
