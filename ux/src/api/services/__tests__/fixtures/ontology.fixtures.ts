@@ -294,3 +294,24 @@ export function createListDataPropertyValues(
     offset: 0,
   };
 }
+
+// ============================================================================
+// Dataset Fixtures
+// ============================================================================
+
+export function createDataset(
+  overrides?: Partial<components["schemas"]["DatasetResponse"]>,
+): components["schemas"]["DatasetResponse"] {
+  return {
+    id: "ds-123",
+    taxonomy_id: "tax-123",
+    identifier: "default",
+    title: "Default",
+    yields_to_schema: false,
+    individual_count: 0,
+    relationship_count: 0,
+    created_at: new Date().toISOString(),
+    last_modified: new Date().toISOString(),
+    ...overrides,
+  };
+}

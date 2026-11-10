@@ -4,7 +4,11 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
-import { entityPageHandlers, taxonomy } from "@/test/entityPageHandlers";
+import { dataset, entityPageHandlers, router, taxonomy } from "@/test/entityPageHandlers";
+import {
+  createDataset,
+  createIndividual,
+} from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { ASK_ABOUT_EVENT } from "@/components/entity/EntityPageParts";
 import { ToastViewport, useToasts } from "@/components/ui/Toast";
 import { useBreadcrumbStore } from "@/stores/breadcrumbs";
@@ -14,6 +18,13 @@ import { SchemePage } from "../schemes_.$id";
 import { ClassPage } from "../classes_.$id";
 
 const server = setupServer(...entityPageHandlers);
+
+// The URL's search params (the `dataset` parameter), set per test.
+let mockSearch: { dataset?: string } = {};
+vi.mock("@tanstack/react-router", async () => {
+  const actual = await vi.importActual("@tanstack/react-router");
+  return { ...actual, useNavigate: () => vi.fn(), useSearch: () => mockSearch };
+});
 
 /** The page plus the toast viewport, which outlives the page when `showPage` turns false. */
 function TaxonomyPageWithToasts({ id, showPage = true }: { id: string; showPage?: boolean }) {
@@ -37,6 +48,7 @@ function readBlob(blob: Blob): Promise<string> {
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
   server.resetHandlers();
+  mockSearch = {};
   useNavigatorStore.setState({ expandedIds: new Set(), mode: "schema" });
 });
 afterAll(() => server.close());
@@ -423,5 +435,80 @@ describe("ClassPage", () => {
   it("shows not found for an unknown class", async () => {
     render(<ClassPage id="missing" />);
     expect(await screen.findByText("Class not found")).toBeInTheDocument();
+  });
+});
+
+describe("Datasets on entity pages", () => {
+  const sample = createDataset({
+    id: "ds-2",
+    taxonomy_id: "tax-1",
+    identifier: "sample",
+    title: "Sample",
+  });
+  const sampleRouter = createIndividual({
+    id: "ind-9",
+    title: "Sample Router",
+    class_ids: ["class-1"],
+    dataset_id: "ds-2",
+  });
+
+  function twoDatasets() {
+    const requests: URL[] = [];
+    server.use(
+      http.get("*/api/datasets", () => HttpResponse.json([dataset, sample])),
+      http.get("*/api/individuals", ({ request }) => {
+        const url = new URL(request.url);
+        requests.push(url);
+        const datasetId = url.searchParams.get("dataset_id");
+        const items = datasetId === "ds-2" ? [sampleRouter] : [router, sampleRouter];
+        return HttpResponse.json({ items, total: items.length, limit: 500, offset: 0 });
+      }),
+      http.get("*/api/taxonomies/:id/scheme-counts", ({ request }) => {
+        const url = new URL(request.url);
+        requests.push(url);
+        const scoped = url.searchParams.get("dataset_id") === "ds-2";
+        return HttpResponse.json([
+          {
+            scheme_id: "scheme-1",
+            class_count: 2,
+            individual_count: scoped ? 4 : 9,
+            property_definition_count: 1,
+          },
+        ]);
+      }),
+    );
+    return requests;
+  }
+
+  it("the class page lists only the chosen dataset's individuals", async () => {
+    mockSearch = { dataset: "ds-2" };
+    const requests = twoDatasets();
+    render(<ClassPage id="class-1" />);
+
+    expect(await screen.findByTestId("class-individual-link-ind-9")).toBeInTheDocument();
+    expect(screen.queryByTestId("class-individual-link-ind-1")).not.toBeInTheDocument();
+    const classIndividuals = requests.filter((u) => u.searchParams.get("class_id") === "class-1");
+    expect(classIndividuals.length).toBeGreaterThan(0);
+    expect(classIndividuals.every((u) => u.searchParams.get("dataset_id") === "ds-2")).toBe(true);
+  });
+
+  it("the class page shows every dataset's individuals when none is chosen", async () => {
+    twoDatasets();
+    render(<ClassPage id="class-1" />);
+
+    expect(await screen.findByTestId("class-individual-link-ind-1")).toBeInTheDocument();
+    expect(screen.getByTestId("class-individual-link-ind-9")).toBeInTheDocument();
+  });
+
+  it("the taxonomy page counts the chosen dataset's individuals", async () => {
+    mockSearch = { dataset: "ds-2" };
+    const requests = twoDatasets();
+    render(<TaxonomyPage id="tax-1" />);
+
+    const stats = await screen.findByTestId("entity-stats");
+    expect(await within(stats).findByText("4")).toBeInTheDocument();
+    expect(within(stats).queryByText("9")).not.toBeInTheDocument();
+    const counts = requests.filter((u) => u.pathname.endsWith("/scheme-counts"));
+    expect(counts.some((u) => u.searchParams.get("dataset_id") === "ds-2")).toBe(true);
   });
 });

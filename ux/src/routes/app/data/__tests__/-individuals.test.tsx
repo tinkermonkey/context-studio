@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
@@ -11,14 +11,36 @@ import {
   createClass,
   createListTaxonomies,
   createListSchemes,
+  createDataset,
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { serverSideList, pageRequests } from "@/test/serverSideList";
 import { IndividualsPage } from "../individuals";
+
+// The URL's search params (the `dataset` parameter), set per test.
+let mockSearch: { dataset?: string } = {};
+vi.mock("@tanstack/react-router", async () => {
+  const actual = await vi.importActual("@tanstack/react-router");
+  return { ...actual, useNavigate: () => vi.fn(), useSearch: () => mockSearch };
+});
+
+const firstDataset = createDataset({
+  id: "ds-1",
+  taxonomy_id: "tax-1",
+  title: "Default",
+  identifier: "default",
+});
+const secondDataset = createDataset({
+  id: "ds-2",
+  taxonomy_id: "tax-1",
+  title: "Sample",
+  identifier: "sample",
+});
 
 const server = setupServer(
   // The Navigator beside the page lists the hierarchy; it is empty here.
   http.get("*/api/taxonomies", () => HttpResponse.json(createListTaxonomies([]))),
   http.get("*/api/schemes", () => HttpResponse.json(createListSchemes([]))),
+  http.get("*/api/datasets", () => HttpResponse.json([firstDataset])),
 );
 
 // The Navigator has its own empty state, so empty-state assertions look inside the surface.
@@ -30,6 +52,7 @@ beforeAll(() => {
 
 afterEach(() => {
   server.resetHandlers();
+  mockSearch = {};
 });
 
 afterAll(() => {
@@ -518,6 +541,64 @@ describe("Individuals Data Page", () => {
       });
 
       expect(screen.getByTestId("individuals-page")).toBeInTheDocument();
+    });
+  });
+
+  // ========================================================================
+  // Datasets
+  // ========================================================================
+  describe("datasets", () => {
+    const people = [
+      createIndividual({ id: "ind-a", title: "Ada", class_ids: [], dataset_id: "ds-1" }),
+      createIndividual({ id: "ind-b", title: "Bea", class_ids: [], dataset_id: "ds-2" }),
+    ];
+    function serveIndividuals(requests: URLSearchParams[]) {
+      server.use(
+        serverSideList("/api/individuals", people, requests, {
+          filters: { dataset_id: (item, value) => item.dataset_id === value },
+        }),
+        http.get("*/api/classes", () => HttpResponse.json(createListClasses([]))),
+      );
+    }
+
+    it("shows no dataset selector while the taxonomy has one dataset", async () => {
+      serveIndividuals([]);
+      render(<IndividualsPage />);
+
+      expect(await screen.findByTestId("individual-name-ind-a")).toBeInTheDocument();
+      expect(screen.queryByTestId("navigator-dataset-select")).not.toBeInTheDocument();
+    });
+
+    it("offers the selector beside the list once the taxonomy has two datasets", async () => {
+      server.use(
+        http.get("*/api/datasets", () => HttpResponse.json([firstDataset, secondDataset])),
+      );
+      serveIndividuals([]);
+      render(<IndividualsPage />);
+
+      const select = await screen.findByTestId("navigator-dataset-select");
+      expect(select).toHaveValue("all");
+      // All data until one is chosen.
+      expect(await screen.findByTestId("individual-name-ind-a")).toBeInTheDocument();
+      expect(screen.getByTestId("individual-name-ind-b")).toBeInTheDocument();
+    });
+
+    it("lists and counts only the chosen dataset's individuals", async () => {
+      mockSearch = { dataset: "ds-2" };
+      server.use(
+        http.get("*/api/datasets", () => HttpResponse.json([firstDataset, secondDataset])),
+      );
+      const requests: URLSearchParams[] = [];
+      serveIndividuals(requests);
+      render(<IndividualsPage />);
+
+      expect(await screen.findByTestId("individual-name-ind-b")).toBeInTheDocument();
+      expect(screen.queryByTestId("individual-name-ind-a")).not.toBeInTheDocument();
+      expect(await screen.findByTestId("navigator-dataset-select")).toHaveValue("ds-2");
+      // The page and the "of N" count are both scoped.
+      expect(requests.length).toBeGreaterThan(0);
+      expect(requests.every((r) => r.get("dataset_id") === "ds-2")).toBe(true);
+      expect(requests.some((r) => r.get("limit") === "1")).toBe(true);
     });
   });
 });
