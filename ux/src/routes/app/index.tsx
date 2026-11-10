@@ -18,6 +18,8 @@ import { useHealth, useStatsTrends } from "@/api/hooks/admin";
 import { useTaxonomies, useSchemes, useClasses, useIndividuals } from "@/api/hooks/ontology";
 import { useChanges } from "@/api/hooks/versioning";
 import { SMALL_SET_LIMIT } from "@/api/config";
+import { DatasetSelect } from "@/components/datasets/DatasetSelect";
+import { useDatasetScope } from "@/hooks/useDatasetScope";
 
 export const Route = createFileRoute("/app/")({
   component: Dashboard,
@@ -100,7 +102,11 @@ export function Dashboard() {
     error: classesError,
     refetch: refetchClasses,
   } = useClasses({ limit: 1 });
-  const { data: individuals, isLoading: individualsLoading } = useIndividuals({ limit: 1 });
+  // The Individuals tile counts the chosen dataset, or all data.
+  const { selectedDataset, selectedDatasetId } = useDatasetScope();
+  const { data: individuals, isLoading: individualsLoading } = useIndividuals(
+    selectedDatasetId ? { limit: 1, dataset_id: selectedDatasetId } : { limit: 1 },
+  );
   const {
     data: changesData,
     isLoading: changesLoading,
@@ -164,6 +170,7 @@ export function Dashboard() {
         subtitle="Curate knowledge graphs for retrieval-augmented generation and agents. Taxonomies group concept schemes; concept schemes hold classes; classes hold individuals."
         actions={
           <>
+            <DatasetSelect data-testid="dashboard-dataset-select" />
             <Button variant="ghost" onClick={() => window.location.reload()}>
               <Icon name="reload" size={13} /> Refresh
             </Button>
@@ -207,7 +214,8 @@ export function Dashboard() {
           value={individualsLoading ? "—" : String(individualCount)}
           color="emerald"
           icon="data"
-          sparkData={meaningfulSparkData(trends?.individuals)}
+          meta={selectedDataset?.title}
+          sparkData={selectedDatasetId ? undefined : meaningfulSparkData(trends?.individuals)}
         />
       </StatGrid>
 

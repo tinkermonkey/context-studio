@@ -78,6 +78,8 @@ def graph(ontology):
     vocab = ontology.create_scheme(taxonomy_id=taxonomy.id, title="Vocabulary")
     room = ontology.create_class(vocab.id, "Room", description="A room")
     den = ontology.create_individual(room.id, "Den")
+    for predicate in ("near", "close_to", "adjacent"):
+        ontology.create_predicate(taxonomy.id, predicate)
     return {"taxonomy": taxonomy.id, "vocab": vocab.id, "room": room.id, "den": den.id}
 
 

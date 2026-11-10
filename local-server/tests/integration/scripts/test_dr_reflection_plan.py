@@ -693,7 +693,7 @@ def test_an_edit_keeping_the_triple_carries_it_whole(parts):
     [
         (
             {"source": "api.response", "predicate": "frobnicates"},
-            "invalid_edit: predicate 'frobnicates' is not in the DR predicate catalog",
+            "invalid_edit: predicate 'frobnicates' isn't in taxonomy",
         ),
         (
             {"source": "api.components", "predicate": "aggregates"},
@@ -713,22 +713,27 @@ def test_an_edit_the_dr_spec_refuses_fails_only_that_operation(parts, edit, reas
 
     by_seq = {o.seq: o for o in result.operations}
     assert by_seq[14].status is OperationStatus.FAILED
-    assert by_seq[14].reason == reason
+    assert by_seq[14].reason.startswith(reason)
     assert by_seq[14].applied_fields is None
     assert snap(repo.get_property_definition(ops[14].target_id)) == before
     assert by_seq[13].status is OperationStatus.APPLIED
 
 
-def test_the_import_stores_the_predicate_catalog_on_the_taxonomy(parts):
+def test_the_import_loads_the_predicate_catalog_as_the_taxonomys_predicates(parts):
     _, repo, _ = parts
     catalog = dr_predicate_catalog(repo)
+    taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
 
     assert len(catalog) == 70
-    assert catalog["owns"] == {
+    owns = repo.get_predicate_by_identifier(taxonomy.id, "owns")
+    assert owns.description == "Element has responsibility or authority over another element"
+    (reference,) = owns.external_references
+    assert (reference.source, reference.identifier) == (DR_SOURCE, "owns")
+    assert {k: reference.metadata[k] for k in ("inverse", "category")} == {
         "inverse": "owned-by",
         "category": "business",
-        "description": "Element has responsibility or authority over another element",
     }
+    assert "predicates" not in taxonomy.external_references[0].metadata
     used = {p.canonical_predicate for p in repo.list_property_definitions(limit=None)}
     assert "owns" not in used  # in the catalog, used by no relationship type
 
@@ -759,27 +764,6 @@ def test_an_edit_to_a_catalog_predicate_no_type_uses_applies(parts):
     assert decision["fields"]["predicate"] == "owns"
 
 
-def test_an_edit_without_a_stored_catalog_is_refused_clearly(parts):
-    """An import from before the catalog was stored (or of a spec without one)."""
-    _, repo, proposals = parts
-    taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
-    taxonomy.external_references = []
-    repo.save_taxonomy(taxonomy)
-    proposal = import_reflection_plan(plan_for(14), proposals, repo)
-    op = proposal.operations[0]
-
-    result = proposals.apply(
-        proposal.id, [op.id], edits={op.id: edit_triple(repo, predicate="uses")}
-    ).operations[0]
-
-    assert result.status is OperationStatus.FAILED
-    assert result.reason == (
-        "invalid_edit: the DR spec was imported without its predicate catalog; re-import "
-        "the DR spec to load it"
-    )
-    assert prop_by_dr_id(repo, "api.operation.delivers.api.response") is not None
-
-
 def house_proposal(ontology, proposals, *drafts):
     """A proposal on another taxonomy: property definitions are global."""
     house = ontology.create_taxonomy(title="House", identifier="house")
@@ -803,9 +787,7 @@ def test_dr_rules_govern_a_dr_type_whatever_the_proposals_taxonomy(parts):
     ).operations[0]
 
     assert result.status is OperationStatus.FAILED
-    assert (
-        result.reason == "invalid_edit: predicate 'frobnicates' is not in the DR predicate catalog"
-    )
+    assert result.reason.startswith("invalid_edit: predicate 'frobnicates' isn't in taxonomy")
     assert repo.get_property_definition(delivers.id).canonical_predicate == "delivers"
 
 
@@ -1036,7 +1018,7 @@ def test_a_failed_edit_exports_as_failed_without_fields(parts):
     [decision] = decisions_for(proposals.get(proposal.id))
 
     assert decision["status"] == "failed" and "fields" not in decision
-    assert decision["reason"] == "invalid_edit: predicate 'nope' is not in the DR predicate catalog"
+    assert decision["reason"].startswith("invalid_edit: predicate 'nope' isn't in taxonomy")
 
 
 # ------------------------------------------------- DR applies, CS re-imports

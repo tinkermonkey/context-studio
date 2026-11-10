@@ -14,6 +14,7 @@ export const ROUTE_LABELS: Record<string, string[]> = {
   "/app/schema/properties": ["Schema", "Properties"],
   "/app/schema/relationships": ["Schema", "Relationships"],
   "/app/data/individuals": ["Data", "Individuals"],
+  "/app/data/datasets": ["Data", "Datasets"],
   "/app/graph": ["Graph view"],
   "/app/reference/sources": ["External Reference", "Sources"],
   "/app/reference/workflows": ["External Reference", "Grounding Workflows"],
@@ -94,6 +95,12 @@ export const NAV_ACTIONS = [
     label: "Individuals",
     description: "Data → Individuals",
     to: "/app/data/individuals",
+  },
+  {
+    id: "nav-datasets",
+    label: "Datasets",
+    description: "Data → Datasets",
+    to: "/app/data/datasets",
   },
   {
     id: "nav-reference-sources",

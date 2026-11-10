@@ -688,6 +688,76 @@ selectors:
     component: components/ontology/IndividualDrawer.tsx
     description: Close button in individual detail drawer
 
+  # Datasets Page (Data → Datasets)
+  - selector: datasets-page
+    component: components/datasets/DatasetsPage.tsx
+    description: Datasets page container
+  - selector: dataset-add-button
+    component: components/datasets/DatasetsPage.tsx
+    description: Header button that opens the new dataset modal
+  - selector: datasets-filter-bar
+    component: components/datasets/DatasetsPage.tsx
+    description: Filter bar with title/identifier search and the taxonomy filter
+  - selector: dataset-taxonomy-filter
+    component: components/datasets/DatasetsPage.tsx
+    description: Taxonomy filter (the taxonomy URL parameter); shown when there are several taxonomies
+  - selector: datasets-table
+    component: components/datasets/DatasetsPage.tsx
+    description: Datasets table wrapper (rows open the dataset's individuals)
+  - selector: dataset-row-*
+    component: components/datasets/DatasetsPage.tsx
+    description: Dataset title cell in a table row, with dynamic dataset ID suffix
+  - selector: dataset-row-delete-*
+    component: components/datasets/DatasetsPage.tsx
+    description: Delete button for a dataset row, with dynamic dataset ID suffix
+  - selector: dataset-create-modal
+    component: components/datasets/CreateDatasetModal.tsx
+    description: Modal for creating a dataset
+  - selector: dataset-taxonomy-select
+    component: components/datasets/CreateDatasetModal.tsx
+    description: Taxonomy select in the new dataset modal
+  - selector: dataset-title-input
+    component: components/datasets/CreateDatasetModal.tsx
+    description: Title input in the new dataset modal
+  - selector: dataset-identifier-input
+    component: components/datasets/CreateDatasetModal.tsx
+    description: Identifier (slug) input in the new dataset modal
+  - selector: dataset-submit-button
+    component: components/datasets/CreateDatasetModal.tsx
+    description: Create button in the new dataset modal
+  - selector: dataset-create-error
+    component: components/datasets/CreateDatasetModal.tsx
+    description: Server error shown when creating a dataset fails
+  - selector: dataset-delete-summary
+    component: components/datasets/DeleteDatasetDialog.tsx
+    description: Delete confirmation message naming the individuals and relationships removed
+
+  # Dataset selector (the dataset URL parameter; shown when a taxonomy has two or more datasets)
+  - selector: dataset-select
+    component: components/datasets/DatasetSelect.tsx
+    description: Dataset selector (default test id)
+  - selector: navigator-dataset-select
+    component: components/entity/EntityNavigator.tsx
+    description: Dataset selector in the Navigator's Data mode
+  - selector: relationships-dataset-select
+    component: routes/app/schema/relationships.tsx
+    description: Dataset selector in the relationships filter bar
+  - selector: graph-dataset-select
+    component: routes/app/graph/index.tsx
+    description: Dataset selector in the graph page header
+  - selector: dashboard-dataset-select
+    component: routes/app/index.tsx
+    description: Dataset selector in the dashboard header
+  - selector: individual-dataset-field
+    component: components/crud/CreateDrawer.tsx
+    description: Dataset field in the individual create form (no dataset selected, several in the taxonomy)
+  - selector: individual-dataset-select
+    component: components/crud/CreateDrawer.tsx
+    description: Dataset select in the individual create form
+  - selector: individual-dataset
+    component: routes/app/data/individuals_.$id.tsx
+    description: The individual's dataset in the identity card (taxonomy with several datasets)
+
   # Hierarchy Tree
   - selector: hierarchy-node-*
     component: components/ontology/HierarchyTree.tsx

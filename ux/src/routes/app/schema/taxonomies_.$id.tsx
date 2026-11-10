@@ -32,6 +32,7 @@ import {
   TableEmpty,
 } from "@/components/entity/EntityPageParts";
 import { usePageBreadcrumbs } from "@/hooks/usePageBreadcrumbs";
+import { useDatasetScope } from "@/hooks/useDatasetScope";
 import { entityPath } from "@/lib/entityPaths";
 import { taxonomiesCopy } from "./taxonomies/-copy";
 
@@ -84,7 +85,9 @@ export function TaxonomyPage({ id }: { id: string }) {
   const navigate = useNavigate();
   const { data: taxonomy, error, refetch } = useTaxonomy(id);
   const { data: schemesResponse } = useSchemes(id, { limit: SMALL_SET_LIMIT, sort_by: "title" });
-  const { data: counts } = useSchemeCounts(id);
+  // Individual counts cover the chosen dataset (the `dataset` URL parameter), or all data.
+  const { selectedDataset, selectedDatasetId } = useDatasetScope(id);
+  const { data: counts } = useSchemeCounts(id, selectedDatasetId);
   const updateTaxonomy = useUpdateTaxonomy();
   const exportBundle = useExportBundle();
   const [driftOpen, setDriftOpen] = useState(false);
@@ -197,6 +200,7 @@ export function TaxonomyPage({ id }: { id: string }) {
           label="INDIVIDUALS"
           value={formatCount(sum((c) => c.individual_count))}
           color="emerald"
+          meta={selectedDataset?.title}
         />
       </StatGrid>
 

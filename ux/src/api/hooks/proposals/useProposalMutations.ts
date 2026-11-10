@@ -17,6 +17,7 @@ function invalidateOntology(queryClient: QueryClient) {
     QUERY_KEYS.classesRoot,
     QUERY_KEYS.individualsRoot,
     QUERY_KEYS.relationshipsRoot,
+    QUERY_KEYS.datasetsRoot,
     QUERY_KEYS.properties,
     QUERY_KEYS.graph,
     QUERY_KEYS.changesRoot,

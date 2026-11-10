@@ -1612,6 +1612,30 @@ body.dark-canvas .diff-added {
   padding: 8px 14px;
 }
 
+/* The dataset selector: wide enough for "title · identifier"; full width in the Navigator. */
+.dataset-select {
+  min-width: 200px;
+}
+
+/* Datasets page: title, identifier and flags on one line. */
+.dataset-title-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dataset-title-cell__title {
+  font-weight: 500;
+}
+
+.entity-navigator__dataset {
+  padding: 6px 12px 0;
+}
+
+.entity-navigator__dataset .dataset-select {
+  width: 100%;
+}
+
 /* One column of pills that truncate their label instead of overflowing the column. */
 .entity-navigator__tree .hierarchy-row {
   grid-template-columns: minmax(0, 1fr);

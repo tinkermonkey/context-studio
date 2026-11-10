@@ -38,3 +38,5 @@ export {
 export { useRelationships, useCreateRelationship, useDeleteRelationship } from "./useRelationships";
 
 export { useEntityTypeQuery } from "./useEntityTypeQuery";
+
+export { useDatasets, useCreateDataset, useDeleteDataset } from "./useDatasets";

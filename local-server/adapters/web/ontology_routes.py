@@ -37,12 +37,16 @@ from adapters.web.schemas.ontology import (
     ConceptSchemeResponse,
     ConceptSchemeUpdateRequest,
     DataPropertyValueResponse,
+    DatasetCreateRequest,
+    DatasetDeletionResponse,
+    DatasetResponse,
     IndividualClassListRequest,
     IndividualClassRequest,
     IndividualCreateRequest,
     IndividualResponse,
     IndividualUpdateRequest,
     ListResponse,
+    PredicateResponse,
     PropertyDefinitionCreateRequest,
     PropertyDefinitionResponse,
     PropertyDefinitionUpdateRequest,
@@ -55,7 +59,7 @@ from adapters.web.schemas.ontology import (
     TaxonomyResponse,
     TaxonomyUpdateRequest,
 )
-from domain.ontology.entities import Taxonomy
+from domain.ontology.entities import Dataset, Taxonomy
 from domain.ontology.exceptions import (
     CircularReferenceError,
     DuplicateEntityError,
@@ -220,6 +224,25 @@ async def get_taxonomy(
         raise HTTPException(status_code=status_code, detail=message)
 
 
+@router.get("/taxonomies/{taxonomy_id}/predicates", response_model=list[PredicateResponse])
+async def list_taxonomy_predicates(
+    taxonomy_id: str,
+    service: OntologyService = Depends(get_ontology_service),
+) -> list[PredicateResponse]:
+    """
+    The taxonomy's predicate catalog: the relation verbs its relationship types use.
+
+    Raises:
+        HTTPException: 404 if the taxonomy is not found
+    """
+    try:
+        predicates = await run_sync_in_executor(service.list_predicates, taxonomy_id)
+        return [PredicateResponse.model_validate(p) for p in predicates]
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
 @router.put("/taxonomies/{taxonomy_id}", response_model=TaxonomyResponse)
 async def update_taxonomy(
     taxonomy_id: str,
@@ -287,6 +310,9 @@ async def delete_taxonomy(
 @router.get("/taxonomies/{taxonomy_id}/scheme-counts", response_model=list[SchemeCountsResponse])
 async def get_taxonomy_scheme_counts(
     taxonomy_id: str,
+    dataset_id: Optional[str] = Query(
+        None, description="Count only this dataset's individuals (all when omitted)"
+    ),
     service: OntologyService = Depends(get_ontology_service),
 ) -> list[SchemeCountsResponse]:
     """
@@ -303,7 +329,7 @@ async def get_taxonomy_scheme_counts(
         HTTPException: 404 if the taxonomy is not found
     """
     try:
-        counts = await run_sync_in_executor(service.get_scheme_counts, taxonomy_id)
+        counts = await run_sync_in_executor(service.get_scheme_counts, taxonomy_id, dataset_id)
         return [SchemeCountsResponse.model_validate(c) for c in counts]
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
@@ -464,6 +490,9 @@ async def list_concept_schemes(
 @router.get("/schemes/{scheme_id}/class-counts", response_model=list[ClassCountsResponse])
 async def get_scheme_class_counts(
     scheme_id: str,
+    dataset_id: Optional[str] = Query(
+        None, description="Count only this dataset's individuals and relationships"
+    ),
     service: OntologyService = Depends(get_ontology_service),
 ) -> list[ClassCountsResponse]:
     """
@@ -480,7 +509,7 @@ async def get_scheme_class_counts(
         HTTPException: 404 if the scheme is not found
     """
     try:
-        counts = await run_sync_in_executor(service.get_class_counts, scheme_id)
+        counts = await run_sync_in_executor(service.get_class_counts, scheme_id, dataset_id)
         return [ClassCountsResponse.model_validate(c) for c in counts]
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
@@ -866,6 +895,9 @@ async def list_relationships(
             "or property definition title/identifier"
         ),
     ),
+    dataset_id: Optional[str] = Query(
+        None, description="Optional dataset ID to filter by (the source individual's)"
+    ),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[RelationshipResponse]:
     """
@@ -896,6 +928,7 @@ async def list_relationships(
             sort_by=sort_by,
             sort_order=sort_order,
             query=q,
+            dataset_id=dataset_id,
         )
         total = await run_sync_in_executor(
             service.count_relationships,
@@ -903,6 +936,7 @@ async def list_relationships(
             target_id=target_id,
             property_id=property_id,
             query=q,
+            dataset_id=dataset_id,
         )
         return ListResponse(
             items=[RelationshipResponse.model_validate(r) for r in relationships],
@@ -996,6 +1030,7 @@ async def create_property_definition(
             canonical_predicate=request.canonical_predicate,
             domain_class_id=request.domain_class_id,
             range_class_id=request.range_class_id,
+            create_missing_predicate=True,
         )
         return PropertyDefinitionResponse.model_validate(prop_def)
     except Exception as exc:
@@ -1135,6 +1170,7 @@ async def update_property_definition(
             update_canonical_predicate="canonical_predicate" in request.model_fields_set,
             is_relevant=request.is_relevant,
             update_is_relevant="is_relevant" in request.model_fields_set,
+            create_missing_predicate=True,
         )
         return PropertyDefinitionResponse.model_validate(prop_def)
     except Exception as exc:
@@ -1385,6 +1421,7 @@ async def create_individual(
             request.class_ids,
             request.title,
             request.description,
+            dataset_id=request.dataset_id,
         )
         return IndividualResponse.model_validate(individual)
     except Exception as exc:
@@ -1413,6 +1450,7 @@ async def list_individuals(
         max_length=MAX_ID_FILTER,
         description=f"Restrict results to these IDs (repeat the parameter; at most {MAX_ID_FILTER})",
     ),
+    dataset_id: Optional[str] = Query(None, description="Optional dataset ID to filter by"),
     service: OntologyService = Depends(get_ontology_service),
 ) -> ListResponse[IndividualResponse]:
     """
@@ -1441,9 +1479,14 @@ async def list_individuals(
             sort_order=sort_order,
             query=q,
             ids=ids,
+            dataset_id=dataset_id,
         )
         total = await run_sync_in_executor(
-            service.count_individuals, class_id=class_id, query=q, ids=ids
+            service.count_individuals,
+            class_id=class_id,
+            query=q,
+            ids=ids,
+            dataset_id=dataset_id,
         )
         return ListResponse(
             items=[IndividualResponse.model_validate(i) for i in individuals],
@@ -1679,6 +1722,107 @@ async def get_individual_inherited_properties(
             limit=1000,
             offset=0,
         )
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+# ==================== Dataset Endpoints ====================
+
+
+def _dataset_response(service: OntologyService, dataset: Dataset) -> DatasetResponse:
+    return DatasetResponse(
+        id=dataset.id,
+        taxonomy_id=dataset.taxonomy_id,
+        identifier=dataset.identifier,
+        title=dataset.title,
+        yields_to_schema=dataset.yields_to_schema,
+        individual_count=service.count_individuals(dataset_id=dataset.id),
+        relationship_count=service.count_relationships(dataset_id=dataset.id),
+        created_at=dataset.created_at,
+        last_modified=dataset.last_modified,
+    )
+
+
+@router.get("/datasets", response_model=list[DatasetResponse])
+async def list_datasets(
+    taxonomy_id: Optional[str] = Query(None, description="Optional taxonomy ID to filter by"),
+    service: OntologyService = Depends(get_ontology_service),
+) -> list[DatasetResponse]:
+    """
+    List datasets (named bodies of data over a taxonomy's schema), by title, with their size.
+
+    Args:
+        taxonomy_id: Optional taxonomy ID to filter by
+        service: OntologyService from dependency injection
+
+    Returns:
+        The datasets, each with its individual and relationship counts
+    """
+
+    def run() -> list[DatasetResponse]:
+        return [_dataset_response(service, d) for d in service.list_datasets(taxonomy_id)]
+
+    try:
+        return await run_sync_in_executor(run)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.post("/datasets", response_model=DatasetResponse, status_code=status.HTTP_201_CREATED)
+async def create_dataset(
+    request: DatasetCreateRequest,
+    service: OntologyService = Depends(get_ontology_service),
+) -> DatasetResponse:
+    """
+    Create a dataset over a taxonomy's schema. A direct action, not a proposal.
+
+    Args:
+        request: The taxonomy, identifier and title
+        service: OntologyService from dependency injection
+
+    Returns:
+        The created dataset
+
+    Raises:
+        HTTPException: 404 if the taxonomy is not found, 409 if the taxonomy already has a
+        dataset with this identifier, 400 if the identifier or title is invalid
+    """
+
+    def run() -> DatasetResponse:
+        dataset = service.create_dataset(request.taxonomy_id, request.identifier, request.title)
+        return _dataset_response(service, dataset)
+
+    try:
+        return await run_sync_in_executor(run)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.delete("/datasets/{dataset_id}", response_model=DatasetDeletionResponse)
+async def delete_dataset(
+    dataset_id: str,
+    service: OntologyService = Depends(get_ontology_service),
+) -> DatasetDeletionResponse:
+    """
+    Delete a dataset with its individuals and their relationships. A direct action, not a
+    proposal: each individual and relationship removed is recorded as a change event.
+
+    Args:
+        dataset_id: The dataset to delete
+        service: OntologyService from dependency injection
+
+    Returns:
+        What was removed
+
+    Raises:
+        HTTPException: 404 if the dataset is not found
+    """
+    try:
+        deletion = await run_sync_in_executor(service.delete_dataset, dataset_id)
+        return DatasetDeletionResponse.model_validate(deletion)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

@@ -218,14 +218,19 @@ def _persist_property_definition(
     entity_dict: Dict[str, Any],
     ontology_repo,
 ) -> None:
-    """Persist a PropertyDefinition entity."""
+    """
+    Persist a PropertyDefinition entity. These formats carry no predicate, so a
+    type already in the workspace keeps the one it has.
+    """
+    existing = ontology_repo.get_property_definition(entity_dict["id"])
     prop = PropertyDefinition(
         id=entity_dict["id"],
         identifier=entity_dict.get("identifier", ""),
         title=entity_dict["title"],
         description=entity_dict.get("description"),
         is_relevant=entity_dict.get("is_relevant"),
-        derived=_derived(entity_dict, ontology_repo.get_property_definition(entity_dict["id"])),
+        derived=_derived(entity_dict, existing),
+        predicate_id=existing.predicate_id if existing else None,
     )
     ontology_repo.save_property_definition(prop)
 

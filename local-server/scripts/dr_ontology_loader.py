@@ -15,9 +15,10 @@ reference as metadata (`{"cardinality", "strength", "evidence"}`; see
 
 The spec's design charter (`spec/DESIGN_CHARTER.md`) becomes the taxonomy's
 vision, and its "In one paragraph" section the taxonomy's summary
-(description). Its predicate catalog (`spec/dist/base.json`) is kept on the
-taxonomy's DR external reference, for reviewers' edits to check predicates
-against (see `adapters.interchange.dr_relationships.dr_predicate_catalog`).
+(description). Its predicate catalog (`spec/dist/base.json`) becomes the
+taxonomy's predicates: each one's description, and its inverse, category,
+archimate_alignment and semantics on its DR reference's metadata (see
+`adapters.interchange.dr_relationships.dr_predicate_catalog`).
 Each layer file's description (`spec/layers/*.layer.json`) becomes its
 scheme's scope note. Entities from an earlier import that the spec
 no longer defines are reported as stale; they are deleted only on request
@@ -47,6 +48,7 @@ from uuid import uuid4
 
 from adapters.interchange.dr_relationships import (  # noqa: F401 - re-exported for the scripts
     DR_ATTRIBUTE_SCHEMA,
+    DR_PREDICATE_KEYS,
     DR_SOURCE,
     DR_SPEC_REFERENCE,
     DR_TAXONOMY_IDENTIFIER,
@@ -139,27 +141,21 @@ def _upsert_taxonomy(
             vision=vision,
         )
         summary.taxonomies_updated += 1
+    taxonomy = _store_spec_reference(repo, taxonomy, spec_version)  # type: ignore[arg-type]
     catalog = read_predicate_catalog(spec_dir)
     if catalog is not None:
-        taxonomy = _store_predicate_catalog(repo, taxonomy, spec_version, catalog)
+        _upsert_predicates(service, repo, taxonomy, catalog)
     return taxonomy  # type: ignore[return-value]
 
 
-def _store_predicate_catalog(
-    repo: OntologyRepository,
-    taxonomy: Taxonomy,
-    spec_version: str,
-    catalog: dict[str, dict[str, Any]],
+def _store_spec_reference(
+    repo: OntologyRepository, taxonomy: Taxonomy, spec_version: str
 ) -> Taxonomy:
-    """
-    Keep the predicate catalog on the taxonomy's DR reference (see
-    `dr_predicate_catalog`), replacing the one an earlier import stored. A spec
-    without a catalog leaves the stored one as it is.
-    """
+    """Keep the spec version on the taxonomy's DR reference."""
     reference = ExternalReference(
         source=DR_SOURCE,
         identifier=DR_SPEC_REFERENCE,
-        metadata=MappingProxyType({"spec_version": spec_version, "predicates": catalog}),
+        metadata=MappingProxyType({"spec_version": spec_version}),
     )
     others = [
         ref
@@ -170,6 +166,44 @@ def _store_predicate_catalog(
         return taxonomy
     taxonomy.external_references = [*others, reference]
     return repo.save_taxonomy(taxonomy)
+
+
+def dr_predicate_reference(predicate_id: str, entry: dict[str, Any]) -> ExternalReference:
+    """A catalog predicate's DR reference, carrying its DR-only fields."""
+    metadata = {key: entry[key] for key in DR_PREDICATE_KEYS if key in entry}
+    return ExternalReference(
+        source=DR_SOURCE, identifier=predicate_id, metadata=MappingProxyType(metadata)
+    )
+
+
+def _upsert_predicates(
+    service: OntologyService,
+    repo: OntologyRepository,
+    taxonomy: Taxonomy,
+    catalog: dict[str, dict[str, Any]],
+) -> None:
+    """
+    Load the spec's predicate catalog into the taxonomy's predicates: each one's
+    description, and its DR-only fields on its DR reference. A spec without a
+    catalog leaves the predicates as they are.
+    """
+    for predicate_id, entry in catalog.items():
+        reference = dr_predicate_reference(predicate_id, entry)
+        existing = repo.get_predicate_by_identifier(taxonomy.id, predicate_id)
+        if existing is None:
+            service.create_predicate(
+                taxonomy.id,
+                predicate_id,
+                description=entry.get("description"),
+                external_references=[reference],
+            )
+        else:
+            others = [ref for ref in existing.external_references if ref.source != DR_SOURCE]
+            service.update_predicate(
+                existing.id,
+                description=entry.get("description") or "",
+                external_references=[*others, reference],
+            )
 
 
 def _upsert_concept_schemes(
@@ -528,6 +562,7 @@ def _upsert_property_definitions(
                 external_references=[
                     _attributes_reference(record.full_identifier, record.attributes)
                 ],
+                create_missing_predicate=True,
             )
             summary.property_definitions_created += 1
         else:
@@ -546,6 +581,7 @@ def _upsert_property_definitions(
                 range_class_id=range_class_id,
                 update_domain_class_id=True,
                 update_range_class_id=True,
+                create_missing_predicate=True,
             )
             summary.property_definitions_updated += 1
             _sync_relationship_reference(repo, prop, record)  # type: ignore[arg-type]

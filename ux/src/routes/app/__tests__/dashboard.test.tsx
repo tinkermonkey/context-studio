@@ -20,6 +20,9 @@ const HEALTH = {
  * Dashboard hooks call: taxonomies, schemes, classes, individuals, admin health,
  * admin stats trends, and versioning changes.
  */
+// The URL's search params (the `dataset` parameter), set per test.
+let mockSearch: { dataset?: string } = {};
+
 function baseHandlers(overrides: ReturnType<typeof http.get>[] = []) {
   // MSW v2 resolves with the FIRST matching handler, so overrides must precede
   // the defaults to take effect.
@@ -34,6 +37,7 @@ function baseHandlers(overrides: ReturnType<typeof http.get>[] = []) {
     http.get("*/api/classes", () => HttpResponse.json({ items: [], total: 0, offset: 0 })),
     http.get("*/api/individuals", () => HttpResponse.json({ items: [], total: 0, offset: 0 })),
     http.get("*/api/v1/versioning/changes", () => HttpResponse.json({ events: [], total: 0 })),
+    http.get("*/api/datasets", () => HttpResponse.json([])),
   ];
 }
 
@@ -43,6 +47,8 @@ vi.mock("@tanstack/react-router", async () => {
   return {
     ...actual,
     Link: ({ children, to }: any) => <a href={to}>{children}</a>,
+    useNavigate: () => vi.fn(),
+    useSearch: () => mockSearch,
   };
 });
 
@@ -54,6 +60,7 @@ beforeAll(() => {
 
 afterEach(() => {
   server.resetHandlers();
+  mockSearch = {};
 });
 
 afterAll(() => {
@@ -289,6 +296,51 @@ describe("Dashboard", () => {
       const statGrid = within(container.querySelector(".stat-grid") as HTMLElement);
       expect(statGrid.getByText("Taxonomies")).toBeInTheDocument();
       expect(statGrid.getByText("1")).toBeInTheDocument();
+    });
+  });
+
+  describe("datasets", () => {
+    const taxonomyList = http.get("*/api/taxonomies", () =>
+      HttpResponse.json({
+        items: [{ id: "tax-1", title: "Biology", description: "Life sciences" }],
+        total: 1,
+        offset: 0,
+      }),
+    );
+    const twoDatasets = http.get("*/api/datasets", () =>
+      HttpResponse.json([
+        { id: "ds-1", taxonomy_id: "tax-1", identifier: "default", title: "Default" },
+        { id: "ds-2", taxonomy_id: "tax-1", identifier: "sample", title: "Sample" },
+      ]),
+    );
+    // 5 individuals in all, 2 in "Sample".
+    const individuals = http.get("*/api/individuals", ({ request }) => {
+      const datasetId = new URL(request.url).searchParams.get("dataset_id");
+      return HttpResponse.json({ items: [], total: datasetId === "ds-2" ? 2 : 5, offset: 0 });
+    });
+
+    it("shows no dataset selector while each taxonomy has one dataset", async () => {
+      server.use(...baseHandlers([taxonomyList, individuals]));
+      const { container } = render(<Dashboard />);
+
+      await waitFor(() =>
+        expect(
+          within(container.querySelector(".stat-grid") as HTMLElement).getByText("5"),
+        ).toBeInTheDocument(),
+      );
+      expect(screen.queryByTestId("dashboard-dataset-select")).not.toBeInTheDocument();
+    });
+
+    it("counts the chosen dataset's individuals", async () => {
+      mockSearch = { dataset: "ds-2" };
+      server.use(...baseHandlers([taxonomyList, twoDatasets, individuals]));
+      const { container } = render(<Dashboard />);
+
+      const select = await screen.findByTestId("dashboard-dataset-select");
+      expect(select).toHaveValue("ds-2");
+      const statGrid = within(container.querySelector(".stat-grid") as HTMLElement);
+      await waitFor(() => expect(statGrid.getByText("2")).toBeInTheDocument());
+      expect(statGrid.queryByText("5")).not.toBeInTheDocument();
     });
   });
 });

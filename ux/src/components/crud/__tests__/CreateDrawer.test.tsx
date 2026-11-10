@@ -34,7 +34,10 @@ vi.mock("@/api/hooks/ontology/useClasses", () => ({
   useClasses: () => ({
     data: { items: [{ id: "cls-1", title: "Neuron" }] },
   }),
-  useClassesByIds: () => ({ data: { items: [] } }),
+  // Selected classes resolve to a class of taxonomy "tax-1".
+  useClassesByIds: (ids: string[]) => ({
+    data: { items: ids.map((id) => ({ id, title: "Neuron", taxonomy_id: "tax-1" })) },
+  }),
 }));
 
 vi.mock("@/api/hooks/ontology/useProperties", () => ({
@@ -53,6 +56,17 @@ vi.mock("@/api/hooks/ontology/useIndividuals", () => ({
 vi.mock("@/api/hooks/ontology/useRelationships", () => ({
   useCreateRelationship: () => ({ mutateAsync: mockCreateRelationship }),
 }));
+
+// The dataset scope (the `dataset` URL parameter and the taxonomy's datasets), set per test.
+const datasetScope = vi.hoisted(() => ({
+  current: {
+    datasets: [] as Array<{ id: string; title: string; identifier: string }>,
+    selectedDatasetId: undefined as string | undefined,
+    showSelector: false,
+    setDataset: () => {},
+  },
+}));
+vi.mock("@/hooks/useDatasetScope", () => ({ useDatasetScope: () => datasetScope.current }));
 
 // SuggestField has pipeline hooks — mock them to prevent test noise
 vi.mock("@/api/hooks/pipeline/usePipelineMutations", () => ({
@@ -465,6 +479,93 @@ describe("CreateDrawer", () => {
     it("pre-fills taxonomyId from initialTaxonomyId", () => {
       renderDrawer({ entityType: "scheme", initialTaxonomyId: "tax-1" });
       expect(screen.getByTestId("create-drawer-create-btn")).toBeDisabled();
+    });
+  });
+
+  describe("individual datasets", () => {
+    const datasets = [
+      { id: "ds-1", title: "Context Studio", identifier: "context-studio" },
+      { id: "ds-2", title: "Sample", identifier: "sample" },
+    ];
+
+    beforeEach(() => {
+      mockCreateIndividual.mockReset();
+      mockCreateIndividual.mockResolvedValue({ id: "ind-new", title: "Router" });
+      datasetScope.current = {
+        datasets: [],
+        selectedDatasetId: undefined,
+        showSelector: false,
+        setDataset: () => {},
+      };
+    });
+
+    const renderIndividual = () =>
+      renderDrawer({ entityType: "individual", initialValues: { classIds: ["cls-1"] } });
+
+    it("creates the individual in the selected dataset", async () => {
+      datasetScope.current = {
+        ...datasetScope.current,
+        datasets,
+        selectedDatasetId: "ds-2",
+        showSelector: true,
+      };
+      const user = userEvent.setup();
+      renderIndividual();
+
+      expect(screen.queryByTestId("individual-dataset-select")).not.toBeInTheDocument();
+      await user.type(screen.getByTestId("create-drawer-title-input"), "Router");
+      await user.click(screen.getByTestId("create-drawer-create-btn"));
+
+      await waitFor(() =>
+        expect(mockCreateIndividual).toHaveBeenCalledWith({
+          class_ids: ["cls-1"],
+          title: "Router",
+          description: null,
+          dataset_id: "ds-2",
+        }),
+      );
+    });
+
+    it("needs no dataset when the taxonomy has one", async () => {
+      const user = userEvent.setup();
+      renderIndividual();
+
+      expect(screen.queryByTestId("individual-dataset-select")).not.toBeInTheDocument();
+      await user.type(screen.getByTestId("create-drawer-title-input"), "Router");
+      await user.click(screen.getByTestId("create-drawer-create-btn"));
+
+      await waitFor(() =>
+        expect(mockCreateIndividual).toHaveBeenCalledWith({
+          class_ids: ["cls-1"],
+          title: "Router",
+          description: null,
+        }),
+      );
+    });
+
+    it("asks for a dataset when the taxonomy has several and none is selected", async () => {
+      datasetScope.current = { ...datasetScope.current, datasets, showSelector: true };
+      const user = userEvent.setup();
+      renderIndividual();
+
+      const select = screen.getByTestId("individual-dataset-select");
+      expect(select).toHaveAccessibleName("Dataset");
+      await user.type(screen.getByTestId("create-drawer-title-input"), "Router");
+      await user.click(screen.getByTestId("create-drawer-create-btn"));
+
+      expect(await screen.findByText("dataset is required")).toBeInTheDocument();
+      expect(select).toHaveClass("select--error");
+      expect(mockCreateIndividual).not.toHaveBeenCalled();
+
+      await user.selectOptions(select, "ds-1");
+      expect(screen.queryByText("dataset is required")).not.toBeInTheDocument();
+      await user.click(screen.getByTestId("create-drawer-create-btn"));
+
+      await waitFor(() =>
+        expect(mockCreateIndividual).toHaveBeenCalledWith(
+          expect.objectContaining({ dataset_id: "ds-1" }),
+        ),
+      );
     });
   });
 });

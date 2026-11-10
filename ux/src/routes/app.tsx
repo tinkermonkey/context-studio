@@ -4,6 +4,7 @@ import {
   Outlet,
   useNavigate,
   redirect,
+  retainSearchParams,
   useRouterState,
 } from "@tanstack/react-router";
 import { ShellLayout, Icon, Chip, Badge } from "@tinkermonkey/heimdall-ui";
@@ -23,6 +24,7 @@ import { useEntityCounts } from "@/api/hooks/ontology/useEntityCounts";
 import { useQueryClient } from "@tanstack/react-query";
 import { useChangeProposals } from "@/api/hooks/proposals";
 import { QUERY_KEYS } from "@/api/config";
+import { parseDatasetParam, type DatasetSearch } from "@/lib/datasetSearch";
 import {
   DATA_AREA_CRUMB,
   NAV_ACTIONS,
@@ -33,6 +35,12 @@ import {
 } from "./-app-navigation";
 
 export const Route = createFileRoute("/app")({
+  // The chosen dataset applies to every page under /app and stays in the URL
+  // as the user moves between them (clear it by setting `dataset: undefined`).
+  validateSearch: (search: Record<string, unknown>): DatasetSearch => ({
+    dataset: parseDatasetParam(search.dataset),
+  }),
+  search: { middlewares: [retainSearchParams<DatasetSearch>(["dataset"])] },
   beforeLoad: () => {
     const workspacePath = getWorkspacePath();
     if (!workspacePath) {

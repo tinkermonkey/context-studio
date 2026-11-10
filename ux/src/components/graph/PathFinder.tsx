@@ -11,6 +11,8 @@ type ClassResponse = components["schemas"]["ClassResponse"];
 
 interface PathFinderProps {
   onNodeSelect: (nodeId: string) => void;
+  /** Search the schema plus this dataset's data; all data when omitted. */
+  datasetId?: string;
 }
 
 interface NodeTypeaheadProps {
@@ -147,13 +149,13 @@ function NodeTypeahead({
   );
 }
 
-export function PathFinder({ onNodeSelect }: PathFinderProps) {
+export function PathFinder({ onNodeSelect, datasetId }: PathFinderProps) {
   const [selectedSource, setSelectedSource] = useState<ClassResponse | null>(null);
   const [selectedTarget, setSelectedTarget] = useState<ClassResponse | null>(null);
   const sourceId = selectedSource?.id ?? "";
   const targetId = selectedTarget?.id ?? "";
 
-  const { data: pathResult, isPending: isLoading, error, mutate } = useShortestPath();
+  const { data: pathResult, isPending: isLoading, error, mutate } = useShortestPath(datasetId);
 
   const handleFindPath = () => {
     if (sourceId && targetId) {

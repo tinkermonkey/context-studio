@@ -43,8 +43,10 @@ export const QUERY_KEYS = {
   // Content counts live under the classes root: class, individual and
   // relationship mutations already invalidate it.
   contentCountsRoot: ["classes", "counts"] as const,
-  schemeCounts: (taxonomyId: string) => ["classes", "counts", "by-scheme", taxonomyId] as const,
-  classCounts: (schemeId: string) => ["classes", "counts", "by-class", schemeId] as const,
+  schemeCounts: (taxonomyId: string, datasetId?: string) =>
+    ["classes", "counts", "by-scheme", taxonomyId, datasetId ?? null] as const,
+  classCounts: (schemeId: string, datasetId?: string) =>
+    ["classes", "counts", "by-class", schemeId, datasetId ?? null] as const,
   individualsRoot: ["individuals"] as const,
   individuals: (params?: object) => ["individuals", params] as const,
   individual: (id: string, resource?: string) =>
@@ -55,11 +57,15 @@ export const QUERY_KEYS = {
   relationships: (params?: object) => ["relationships", params] as const,
   // Under the relationships root, so relationship and proposal mutations refresh it.
   relationship: (id: string) => ["relationships", "by-id", id] as const,
+  // Datasets: named bodies of data over one taxonomy's schema.
+  datasetsRoot: ["datasets"] as const,
+  datasets: (taxonomyId?: string) => ["datasets", taxonomyId ?? null] as const,
   // Graph
   graph: ["graph"] as const,
-  graphMetrics: ["graph", "metrics"] as const,
-  graphView: ["graph", "view"] as const,
-  graphPath: (sourceId: string, targetId: string) => ["graph", "path", sourceId, targetId] as const,
+  graphMetrics: (datasetId?: string) => ["graph", "metrics", datasetId ?? null] as const,
+  graphView: (datasetId?: string) => ["graph", "view", datasetId ?? null] as const,
+  graphPath: (sourceId: string, targetId: string, datasetId?: string) =>
+    ["graph", "path", sourceId, targetId, datasetId ?? null] as const,
   // Extraction
   extraction: ["extraction"] as const,
   // Versioning
