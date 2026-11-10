@@ -178,6 +178,8 @@ def _build_definition_refinement(
         config=services.get("refinement_config", {}),
         run_id=services.get("run_id"),
         status_writer=services.get("status_writer"),
+        ontology_repo=ontology_repo,
+        proposal_service=services.get("proposal_service"),
     )
 
 
