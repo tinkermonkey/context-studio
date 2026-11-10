@@ -742,6 +742,9 @@ class TestPruneStale:
         self, ontology_service, recorded_service, repo, proposals, spec_dir, session_factory
     ):
         import_dr_ontology(ontology_service, repo, spec_dir)
+        taxonomy_id = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER).id
+        if repo.get_predicate_by_identifier(taxonomy_id, "serves") is None:
+            ontology_service.create_predicate(taxonomy_id, "serves")
         goal = repo.get_by_identifier("motivation_goal")
         stakeholder = repo.get_by_identifier("motivation_stakeholder")
         change_repo = SQLiteChangeRepository(session_factory)

@@ -14,6 +14,7 @@ from domain.ontology.entities import (
     ConceptScheme,
     Dataset,
     Individual,
+    Predicate,
     PropertyDefinition,
     Relationship,
     Taxonomy,
@@ -53,6 +54,7 @@ class FakeOntologyRepository:
         self._property_definitions: dict[str, PropertyDefinition] = {}
         self._individuals: dict[str, Individual] = {}
         self._attribute_definitions: dict[str, AttributeDefinition] = {}
+        self._predicates: dict[str, Predicate] = {}
         self._datasets: dict[str, Dataset] = {}
 
     # Lookup operations
@@ -121,8 +123,41 @@ class FakeOntologyRepository:
     def delete_taxonomy(self, taxonomy_id: str) -> bool:
         if taxonomy_id in self._taxonomies:
             self._taxonomies.pop(taxonomy_id)
+            for predicate_id in [
+                p.id for p in self._predicates.values() if p.taxonomy_id == taxonomy_id
+            ]:
+                self._predicates.pop(predicate_id)
             return True
         return False
+
+    # Predicate operations
+
+    def list_predicates(self, taxonomy_id: str) -> list[Predicate]:
+        return sorted(
+            (p for p in self._predicates.values() if p.taxonomy_id == taxonomy_id),
+            key=lambda p: p.identifier,
+        )
+
+    def get_predicate(self, predicate_id: str) -> Predicate | None:
+        return self._predicates.get(predicate_id)
+
+    def get_predicate_by_identifier(self, taxonomy_id: str, identifier: str) -> Predicate | None:
+        for predicate in self._predicates.values():
+            if predicate.taxonomy_id == taxonomy_id and predicate.identifier == identifier:
+                return predicate
+        return None
+
+    def save_predicate(self, predicate: Predicate) -> Predicate:
+        existing = self.get_predicate_by_identifier(predicate.taxonomy_id, predicate.identifier)
+        if existing is not None and existing.id != predicate.id:
+            raise DuplicateEntityError(
+                f"Predicate '{predicate.identifier}' already exists in taxonomy"
+                f" {predicate.taxonomy_id}"
+            )
+        if predicate.id in self._predicates:
+            predicate.version = self._predicates[predicate.id].version + 1
+        self._predicates[predicate.id] = predicate
+        return predicate
 
     # ConceptScheme operations
 
@@ -389,12 +424,20 @@ class FakeOntologyRepository:
         query: str | None = None,
         ids: list[str] | None = None,
         domain_class_id: str | None = None,
+        taxonomy_id: str | None = None,
     ) -> list[PropertyDefinition]:
         results = list(self._property_definitions.values())
         if is_relevant is not None:
             results = [p for p in results if p.is_relevant == is_relevant]
         if domain_class_id is not None:
             results = [p for p in results if p.domain_class_id == domain_class_id]
+        if taxonomy_id is not None:
+            results = [
+                p
+                for p in results
+                if p.predicate_id in self._predicates
+                and self._predicates[p.predicate_id].taxonomy_id == taxonomy_id
+            ]
 
         results = [p for p in results if _text_matches(p, query)]
         if ids is not None:
@@ -412,6 +455,11 @@ class FakeOntologyRepository:
         return results[offset:end]
 
     def save_property_definition(self, prop: PropertyDefinition) -> PropertyDefinition:
+        # Like the SQLite adapter, canonical_predicate reads through predicate_id.
+        # Without a predicate_id it's left as given, for tests that set it directly.
+        if prop.predicate_id is not None:
+            predicate = self._predicates.get(prop.predicate_id)
+            prop.canonical_predicate = predicate.identifier if predicate else None
         self._property_definitions[prop.id] = prop
         return prop
 
@@ -427,6 +475,7 @@ class FakeOntologyRepository:
         query: str | None = None,
         ids: list[str] | None = None,
         domain_class_id: str | None = None,
+        taxonomy_id: str | None = None,
     ) -> int:
         return len(
             self.list_property_definitions(
@@ -435,6 +484,7 @@ class FakeOntologyRepository:
                 query=query,
                 ids=ids,
                 domain_class_id=domain_class_id,
+                taxonomy_id=taxonomy_id,
             )
         )
 
@@ -520,9 +570,7 @@ class FakeOntologyRepository:
         for attr in self._attribute_definitions.values():
             links.append(("attribute_definition", attr.id, attr.class_id))
         found = {
-            EntityReference(ref, dep, kind)
-            for kind, dep, ref in links
-            if ref in ids and ref != dep
+            EntityReference(ref, dep, kind) for kind, dep, ref in links if ref in ids and ref != dep
         }
         return sorted(found, key=lambda r: (r.referenced_id, r.dependent_kind, r.dependent_id))
 

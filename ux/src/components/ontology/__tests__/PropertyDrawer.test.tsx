@@ -95,6 +95,44 @@ describe("PropertyDrawer - canonical_predicate", () => {
   });
 });
 
+describe("PropertyDrawer - predicate can't be cleared", () => {
+  it("shows an error instead of saving an empty predicate, and clears it on typing", async () => {
+    const user = userEvent.setup();
+    let putCalled = false;
+
+    setupDefaultHandlers();
+    server.use(
+      http.put("*/api/properties/prop-001", () => {
+        putCalled = true;
+        return HttpResponse.json(createPropertyDefinition({ id: "prop-001" }));
+      }),
+    );
+
+    render(
+      <PropertyDrawer
+        property={createPropertyDefinition({ id: "prop-001", canonical_predicate: "navigates-to" })}
+      />,
+    );
+
+    await enterEditMode(user);
+
+    await user.click(screen.getByTestId("property-drawer-canonical-predicate-field-view"));
+    const input = screen.getByTestId("property-drawer-canonical-predicate-field-input");
+    await user.clear(input);
+    await user.tab();
+
+    expect(
+      await screen.findByText("A relationship type's predicate can't be cleared"),
+    ).toBeInTheDocument();
+    expect(putCalled).toBe(false);
+
+    await user.type(screen.getByTestId("property-drawer-canonical-predicate-field-input"), "u");
+    expect(
+      screen.queryByText("A relationship type's predicate can't be cleared"),
+    ).not.toBeInTheDocument();
+  });
+});
+
 describe("PropertyDrawer - definition Suggest", () => {
   it("refines the property's own definition", async () => {
     const user = userEvent.setup();

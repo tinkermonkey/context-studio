@@ -284,6 +284,53 @@
         }
       }
     },
+    "/api/taxonomies/{taxonomy_id}/predicates": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "List Taxonomy Predicates",
+        "description": "The taxonomy's predicate catalog: the relation verbs its relationship types use.\n\nRaises:\n    HTTPException: 404 if the taxonomy is not found",
+        "operationId": "list_taxonomy_predicates_api_taxonomies__taxonomy_id__predicates_get",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PredicateResponse"
+                  },
+                  "title": "Response List Taxonomy Predicates Api Taxonomies  Taxonomy Id  Predicates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/taxonomies/{taxonomy_id}/scheme-counts": {
       "get": {
         "tags": [
@@ -16008,6 +16055,91 @@
         "title": "PredicateReference",
         "description": "Reference to a property/predicate in individual extraction.\n\nIdentifies a relationship type with optional mapping to existing property definition.\nNon-empty property_definition_id means mapped; empty/None means new candidate."
       },
+      "PredicateResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier"
+          },
+          "taxonomy_id": {
+            "type": "string",
+            "title": "Taxonomy Id",
+            "description": "The taxonomy whose catalog holds it"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier",
+            "description": "The relation verb (e.g. 'part_of'), unique in the taxonomy"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Display name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "What the relation means"
+          },
+          "external_references": {
+            "items": {
+              "$ref": "#/components/schemas/ExternalReferenceResponse"
+            },
+            "type": "array",
+            "title": "External References",
+            "description": "Client metadata; DR's inverse, category, archimate_alignment and semantics ride in its documentation_robotics reference"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp"
+          },
+          "last_modified": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Modified",
+            "description": "Last modification timestamp"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Version number",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "taxonomy_id",
+          "identifier",
+          "title"
+        ],
+        "title": "PredicateResponse",
+        "description": "A predicate in a taxonomy's predicate catalog."
+      },
       "PropertyDefinitionCreateRequest": {
         "properties": {
           "identifier": {
@@ -16044,7 +16176,7 @@
               }
             ],
             "title": "Canonical Predicate",
-            "description": "Bare canonical relation verb this property represents (e.g. 'navigates-to') \u2014 the form extraction clamps predicates to"
+            "description": "The predicate (relation verb, e.g. 'navigates-to') this relationship type uses, from its taxonomy's predicate catalog (the taxonomy of its domain class, else its range class); added to the catalog when it's missing"
           },
           "domain_class_id": {
             "anyOf": [
@@ -16118,7 +16250,19 @@
               }
             ],
             "title": "Canonical Predicate",
-            "description": "Bare canonical relation verb this property represents (e.g. 'navigates-to'), or null if not set"
+            "description": "Identifier of the predicate this relationship type uses (e.g. 'navigates-to'), or null if it has none"
+          },
+          "predicate_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicate Id",
+            "description": "ID of that predicate in its taxonomy's predicate catalog"
           },
           "domain_class_id": {
             "anyOf": [
@@ -16259,7 +16403,7 @@
               }
             ],
             "title": "Canonical Predicate",
-            "description": "New bare canonical relation verb, or null to clear it. Only applied when the field is present in the request body."
+            "description": "New predicate (relation verb) from the taxonomy's catalog, added when it's missing. Only applied when the field is present in the request body; a type's predicate can't be cleared."
           },
           "is_relevant": {
             "anyOf": [
