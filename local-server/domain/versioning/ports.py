@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any, Mapping, Optional, Protocol, Sequence
 
 from domain.versioning.approval_policy import ApprovalPolicy
+from domain.versioning.claims import Claim, ClaimFilter, ClaimTriage, ClaimVerdict
 from domain.versioning.entities import ChangeEvent
 from domain.versioning.gold import DecisionFilter, ProposalDecision
 from domain.versioning.proposals import (
@@ -176,6 +177,45 @@ class ChangeProposalRepository(Protocol):
 
     def set_status(self, proposal_id: str, status: ProposalStatus) -> None:
         """Persist the proposal's status."""
+        ...
+
+
+class ClaimRepository(Protocol):
+    """Port for a taxonomy's claims (see domain/versioning/claims.py)."""
+
+    def upsert(self, claims: Sequence[Claim]) -> list[Claim]:
+        """
+        Add claims, or replace the ones whose (taxonomy_id, key) already exists.
+
+        A replaced claim keeps its id and created_at, and keeps its triage and
+        verdict only if its text is unchanged. Returns the stored claims, in order.
+        """
+        ...
+
+    def delete_for_note(self, taxonomy_id: str, note_ref: str) -> int:
+        """Delete a note's claims; returns how many."""
+        ...
+
+    def get(self, claim_id: str) -> Optional[Claim]:
+        """A claim by id, or None."""
+        ...
+
+    def list_claims(
+        self, filters: ClaimFilter, limit: Optional[int] = None, offset: int = 0
+    ) -> list[Claim]:
+        """Matching claims, oldest first (then by key)."""
+        ...
+
+    def count_claims(self, filters: ClaimFilter) -> int:
+        """How many claims match."""
+        ...
+
+    def save_triage(self, claim_id: str, triage: ClaimTriage) -> None:
+        """Set a claim's triage, replacing any earlier one."""
+        ...
+
+    def set_verdict(self, claim_id: str, verdict: Optional[ClaimVerdict]) -> None:
+        """Set or clear a claim's verdict."""
         ...
 
 
