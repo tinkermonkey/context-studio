@@ -1461,6 +1461,33 @@ class SchemaRelationshipReflectionRun(PipelineRun):
         return f"<SchemaRelationshipReflectionRun(id={self.id}, status={self.status})>"
 
 
+class ClaimTriageRun(PipelineRun):
+    """
+    Claim triage runs (decision-model questions per claim, saved on the claims).
+
+    Uses joined-table inheritance from PipelineRun with discriminator
+    run_type='claim_triage'.
+
+    Per-type fields: (none)
+    """
+
+    __tablename__ = "claim_triage_runs"
+
+    id = Column(
+        String(36),
+        ForeignKey("pipeline_runs.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+
+    __mapper_args__: Dict[str, Any] = {
+        "polymorphic_identity": "claim_triage",
+    }
+
+    def __repr__(self) -> str:
+        return f"<ClaimTriageRun(id={self.id}, status={self.status})>"
+
+
 class ChangeProposalRun(BatchRun):
     """
     A change proposal: ontology changes proposed by an agent, pipeline, bundle
@@ -1638,6 +1665,59 @@ class ProposalDecisionRecord(Base):  # type: ignore[valid-type,misc]
 
     def __repr__(self) -> str:
         return f"<ProposalDecisionRecord(operation={self.operation_id}, decision={self.decision})>"
+
+
+class ClaimRecord(Base):  # type: ignore[valid-type,misc]
+    """
+    One atomic claim about a taxonomy, split from a reviewer's or maintainer's note.
+
+    Attributes:
+        id: UUID as string, primary key
+        taxonomy_id: The taxonomy it is about (deleted with it)
+        key: Unique within the taxonomy: "<note_ref>#<n>"
+        note_ref, note_source, note_text: The note it came from
+        subject_id: The entity the note was about, if any
+        text: The claim
+        category_hint: The splitter's category guess
+        affected_ids: JSON list of the entity ids it names
+        unresolved_refs: JSON list of names that matched no entity
+        proposed_change: The change the note suggests, if any
+        source_run_id: The run that split it, if any
+        triage: JSON of the decision model's answers (ClaimTriage), or null
+        verdict: JSON of a person's verdict (ClaimVerdict), or null
+        created_at, updated_at: Timestamps (UTC)
+    """
+
+    __tablename__ = "claims"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    taxonomy_id = Column(
+        String(36),
+        ForeignKey("ontology_entities.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    key = Column(String(255), nullable=False)
+    note_ref = Column(String(255), nullable=False, index=True)
+    note_source = Column(String(20), nullable=False)
+    note_text = Column(Text, nullable=True)
+    subject_id = Column(String(36), nullable=True, index=True)
+    text = Column(Text, nullable=False)
+    category_hint = Column(String(100), nullable=True)
+    affected_ids = Column(JSON, nullable=False, default=list)
+    unresolved_refs = Column(JSON, nullable=False, default=list)
+    proposed_change = Column(Text, nullable=True)
+    source_run_id = Column(String(36), nullable=True)
+    # none_as_null: an untriaged claim stores SQL NULL, not JSON 'null', so it filters
+    triage = Column(JSON(none_as_null=True), nullable=True)
+    verdict = Column(JSON(none_as_null=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False)
+    updated_at = Column(DateTime(timezone=True), nullable=False)
+
+    __table_args__ = (UniqueConstraint("taxonomy_id", "key", name="uq_claim_taxonomy_key"),)
+
+    def __repr__(self) -> str:
+        return f"<ClaimRecord(taxonomy={self.taxonomy_id}, key={self.key})>"
 
 
 class ApprovalPolicyRecord(Base):  # type: ignore[valid-type,misc]

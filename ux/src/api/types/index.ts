@@ -3861,6 +3861,97 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/taxonomies/{taxonomy_id}/claims": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Claims
+     * @description The taxonomy's claims, oldest first.
+     */
+    get: operations["list_claims_api_taxonomies__taxonomy_id__claims_get"];
+    put?: never;
+    /**
+     * Submit Claims
+     * @description Add claims, or replace those whose key the taxonomy already has. A replaced
+     *     claim keeps its triage and verdict only if its text is unchanged. Affected
+     *     ids that match no entity move to unresolved_refs.
+     */
+    post: operations["submit_claims_api_taxonomies__taxonomy_id__claims_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/taxonomies/{taxonomy_id}/claims/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Claims
+     * @description The taxonomy's claims as JSONL: the list route's claims and filters, all of them.
+     */
+    get: operations["export_claims_api_taxonomies__taxonomy_id__claims_export_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/claims/{claim_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Claim
+     * @description One claim, with its triage and verdict.
+     */
+    get: operations["get_claim_api_claims__claim_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/claims/{claim_id}/verdict": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Set Claim Verdict
+     * @description Record a person's verdict on a claim, replacing any earlier one: benchmark gold.
+     *     A verdict given through the API is a person's (adjudicated_by "user").
+     */
+    put: operations["set_claim_verdict_api_claims__claim_id__verdict_put"];
+    post?: never;
+    /**
+     * Clear Claim Verdict
+     * @description Clear a claim's verdict.
+     */
+    delete: operations["clear_claim_verdict_api_claims__claim_id__verdict_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/interchange/bundles": {
     parameters: {
       query?: never;
@@ -4980,6 +5071,222 @@ export interface components {
        * @description Known model ids of the configured chat providers; OpenRouter ids also work
        */
       available_models?: string[];
+    };
+    /**
+     * ClaimInput
+     * @description One claim to add, or to replace by key.
+     */
+    ClaimInput: {
+      /**
+       * Key
+       * @description "<note_ref>#<n>"
+       */
+      key: string;
+      /**
+       * Text
+       * @description The claim, in a sentence or two
+       */
+      text: string;
+      /**
+       * Note Ref
+       * @description The note it came from
+       */
+      note_ref: string;
+      /** @description maintainer or reviewer */
+      note_source: components["schemas"]["NoteSource"];
+      /**
+       * Note Text
+       * @description The note's full text
+       */
+      note_text?: string | null;
+      /**
+       * Subject Id
+       * @description The entity the note was about
+       */
+      subject_id?: string | null;
+      /** Category Hint */
+      category_hint?: string | null;
+      /**
+       * Affected Ids
+       * @description Entities the claim names; ids that match none move to unresolved_refs
+       */
+      affected_ids?: string[];
+      /** Unresolved Refs */
+      unresolved_refs?: string[];
+      /** Proposed Change */
+      proposed_change?: string | null;
+    };
+    /**
+     * ClaimResponse
+     * @description A stored claim, with its triage and verdict once given.
+     */
+    ClaimResponse: {
+      /**
+       * Key
+       * @description "<note_ref>#<n>"
+       */
+      key: string;
+      /**
+       * Text
+       * @description The claim, in a sentence or two
+       */
+      text: string;
+      /**
+       * Note Ref
+       * @description The note it came from
+       */
+      note_ref: string;
+      /** @description maintainer or reviewer */
+      note_source: components["schemas"]["NoteSource"];
+      /**
+       * Note Text
+       * @description The note's full text
+       */
+      note_text?: string | null;
+      /**
+       * Subject Id
+       * @description The entity the note was about
+       */
+      subject_id?: string | null;
+      /** Category Hint */
+      category_hint?: string | null;
+      /**
+       * Affected Ids
+       * @description Entities the claim names; ids that match none move to unresolved_refs
+       */
+      affected_ids?: string[];
+      /** Unresolved Refs */
+      unresolved_refs?: string[];
+      /** Proposed Change */
+      proposed_change?: string | null;
+      /** Id */
+      id: string;
+      /** Taxonomy Id */
+      taxonomy_id: string;
+      /** Source Run Id */
+      source_run_id?: string | null;
+      triage?: components["schemas"]["ClaimTriageSchema"] | null;
+      verdict?: components["schemas"]["ClaimVerdictSchema"] | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * ClaimTriageSchema
+     * @description A decision model's answers about a claim.
+     */
+    ClaimTriageSchema: {
+      validity: components["schemas"]["Validity"];
+      /** Validity Probabilities */
+      validity_probabilities?: {
+        [key: string]: number;
+      };
+      /** Category */
+      category?: string | null;
+      /** Category Probabilities */
+      category_probabilities?: {
+        [key: string]: number;
+      };
+      /**
+       * Severity
+       * @description 0 cosmetic to 3 blocking
+       */
+      severity?: number | null;
+      /**
+       * Fix Scope
+       * @description 0 wording to 3 roadmap
+       */
+      fix_scope?: number | null;
+      /**
+       * Addressed By Proposal
+       * @description Probability the pending definition already resolves it
+       */
+      addressed_by_proposal?: number | null;
+      /** Model */
+      model: string;
+      /** Calibrated */
+      calibrated: boolean;
+      /** Cost Usd */
+      cost_usd?: number | null;
+      /** Latency Ms */
+      latency_ms?: number | null;
+      /** Run Id */
+      run_id?: string | null;
+      /**
+       * Triaged At
+       * Format: date-time
+       */
+      triaged_at: string;
+    };
+    /**
+     * ClaimVerdictRequest
+     * @description A person's verdict on a claim.
+     */
+    ClaimVerdictRequest: {
+      validity: components["schemas"]["Validity"];
+      /** Category */
+      category?: string | null;
+      /**
+       * Severity
+       * @description 0 to 3
+       */
+      severity?: number | null;
+      /**
+       * Fix Scope
+       * @description 0 to 3
+       */
+      fix_scope?: number | null;
+      /**
+       * Rationale
+       * @default
+       */
+      rationale: string;
+    };
+    /**
+     * ClaimVerdictSchema
+     * @description A recorded verdict: benchmark gold.
+     */
+    ClaimVerdictSchema: {
+      validity: components["schemas"]["Validity"];
+      /** Category */
+      category?: string | null;
+      /**
+       * Severity
+       * @description 0 to 3
+       */
+      severity?: number | null;
+      /**
+       * Fix Scope
+       * @description 0 to 3
+       */
+      fix_scope?: number | null;
+      /**
+       * Rationale
+       * @default
+       */
+      rationale: string;
+      /** Adjudicated By */
+      adjudicated_by: string;
+      /**
+       * Adjudicated At
+       * Format: date-time
+       */
+      adjudicated_at: string;
+    };
+    /**
+     * ClaimsSubmitRequest
+     * @description Claims to add or replace, matched by key within the taxonomy.
+     */
+    ClaimsSubmitRequest: {
+      /** Claims */
+      claims: components["schemas"]["ClaimInput"][];
     };
     /**
      * ClassCountsResponse
@@ -7002,6 +7309,29 @@ export interface components {
        */
       offset: number;
     };
+    /** ListResponse[ClaimResponse] */
+    ListResponse_ClaimResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["ClaimResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
     /** ListResponse[ClassResponse] */
     ListResponse_ClassResponse_: {
       /**
@@ -7414,6 +7744,12 @@ export interface components {
        */
       datatype?: string | null;
     };
+    /**
+     * NoteSource
+     * @description Whose note a claim came from.
+     * @enum {string}
+     */
+    NoteSource: "maintainer" | "reviewer";
     /**
      * OperationErrorResponse
      * @description Why one proposed operation is invalid.
@@ -9975,6 +10311,12 @@ export interface components {
       /** Context */
       ctx?: Record<string, never>;
     };
+    /**
+     * Validity
+     * @description Whether a claim points at a real problem.
+     * @enum {string}
+     */
+    Validity: "real_defect" | "works_as_designed" | "judgment_call" | "out_of_scope";
     /**
      * VersioningChangeEventResponse
      * @description Response representing a versioning change event
@@ -14762,6 +15104,266 @@ export interface operations {
         };
       };
       /** @description Taxonomy not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_claims_api_taxonomies__taxonomy_id__claims_get: {
+    parameters: {
+      query?: {
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Number of results to skip */
+        offset?: number;
+        /** @description Only claims about this entity */
+        subject_id?: string | null;
+        /** @description Only claims from this note */
+        note_ref?: string | null;
+        /** @description Only triaged (true) or untriaged (false) */
+        triaged?: boolean | null;
+        /** @description Only with (true) or without a verdict */
+        has_verdict?: boolean | null;
+        /** @description Only claims triaged as this */
+        validity?: components["schemas"]["Validity"] | null;
+      };
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse_ClaimResponse_"];
+        };
+      };
+      /** @description Taxonomy or claim not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  submit_claims_api_taxonomies__taxonomy_id__claims_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ClaimsSubmitRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ClaimResponse"][];
+        };
+      };
+      /** @description Taxonomy or claim not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Invalid claims */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  export_claims_api_taxonomies__taxonomy_id__claims_export_get: {
+    parameters: {
+      query?: {
+        /** @description Only claims about this entity */
+        subject_id?: string | null;
+        /** @description Only claims from this note */
+        note_ref?: string | null;
+        /** @description Only triaged (true) or untriaged (false) */
+        triaged?: boolean | null;
+        /** @description Only with (true) or without a verdict */
+        has_verdict?: boolean | null;
+        /** @description Only claims triaged as this */
+        validity?: components["schemas"]["Validity"] | null;
+      };
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Every matching claim, one ClaimResponse JSON object per line */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/x-ndjson": string;
+        };
+      };
+      /** @description Taxonomy or claim not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_claim_api_claims__claim_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        claim_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ClaimResponse"];
+        };
+      };
+      /** @description Taxonomy or claim not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  set_claim_verdict_api_claims__claim_id__verdict_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        claim_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ClaimVerdictRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ClaimResponse"];
+        };
+      };
+      /** @description Taxonomy or claim not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  clear_claim_verdict_api_claims__claim_id__verdict_delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        claim_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ClaimResponse"];
+        };
+      };
+      /** @description Taxonomy or claim not found */
       404: {
         headers: {
           [name: string]: unknown;
