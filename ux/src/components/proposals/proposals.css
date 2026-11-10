@@ -296,12 +296,18 @@
     color: rgb(var(--canvas-fg-2));
   }
 
-  .op-inspector__rationale {
+  .op-inspector__rationale,
+  .op-inspector__notes {
     margin: 0;
     overflow-wrap: anywhere;
     font-size: 12.5px;
     line-height: 1.55;
     color: rgb(var(--canvas-fg-2));
+  }
+
+  /* A maintainer's notes keep their line breaks. */
+  .op-inspector__notes {
+    white-space: pre-wrap;
   }
 
   .op-inspector__chips {
@@ -398,6 +404,11 @@
     margin: 0;
     padding-left: 16px;
     list-style: disc;
+  }
+
+  /* An ordered list value (a class's evidence signals): numbered. */
+  .op-change__lines--ordered {
+    list-style: decimal;
   }
 
   .op-change__unchanged {

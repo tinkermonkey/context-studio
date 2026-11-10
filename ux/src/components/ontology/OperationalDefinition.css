@@ -1,0 +1,145 @@
+@layer app {
+  /* ============= Class drawer: operational definition ============= */
+  .class-definition {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .class-definition__group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  /* The drawer's text color is the shell's; the headings need the canvas's in both modes. */
+  .class-definition__group > .form-group-label,
+  .class-definition > .editable-field .form-group-label {
+    color: rgb(var(--canvas-fg-1));
+    font-weight: 500;
+  }
+
+  .class-definition__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Read-only signals keep their numbers. */
+  .class-definition__list--ordered {
+    padding-left: 18px;
+    list-style: decimal;
+  }
+
+  .class-definition__entry {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: rgb(var(--canvas-fg-1));
+    overflow-wrap: anywhere;
+  }
+
+  .class-definition__entry .class-definition__class::after {
+    content: ": ";
+    font-weight: 400;
+  }
+
+  .class-definition__class {
+    font-weight: 500;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  /* A class that no longer exists: its id, flagged. */
+  .class-definition__class--missing {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .class-definition__hint {
+    font-family: var(--font-sans);
+    font-size: 11.5px;
+    color: rgb(var(--status-rose));
+  }
+
+  .class-definition__when {
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .class-definition__none {
+    margin: 0;
+    font-size: 12.5px;
+    color: rgb(var(--canvas-fg-2));
+    overflow-wrap: anywhere;
+  }
+
+  /* An editable distinction: class and remove, then its "when" text. */
+  .class-definition__row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: 8px 10px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: var(--radius-md);
+    background: rgb(var(--canvas-card));
+  }
+
+  .class-definition__row-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    font-size: 12.5px;
+  }
+
+  /* An editable signal: rank and text on one line, move up / down and remove under it. */
+  .class-definition__signal {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .class-definition__signal > .class-definition__input {
+    flex: 1 1 calc(100% - 26px);
+  }
+
+  .class-definition__signal > button:first-of-type {
+    margin-left: auto;
+  }
+
+  .class-definition__rank {
+    flex-shrink: 0;
+    width: 22px;
+    padding-top: 7px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-3));
+    text-align: right;
+  }
+
+  .class-definition__input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .class-definition__error {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: rgb(var(--status-rose));
+  }
+
+  .class-definition__add {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
+  .class-definition__add > .field {
+    width: 100%;
+    margin-bottom: 0;
+  }
+}

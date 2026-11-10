@@ -8,6 +8,7 @@ import {
   Chip,
 } from "@tinkermonkey/heimdall-ui";
 import { RelationshipSuggester, GroundingSection } from "./suggesters";
+import { OperationalDefinitionEditor, OperationalDefinitionView } from "./OperationalDefinition";
 import { SuggestField } from "@/components/ontology/suggesters/SuggestField";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { InlineInspector } from "@/components/ui/InlineInspector";
@@ -111,11 +112,11 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
     }
   };
 
-  useEffect(() => {
-    setDomainId(classData?.concept_scheme_id ?? "");
-    setMode("view");
-    setDescriptionDraft(classData?.description ?? "");
-  }, [classData]);
+  // A save refetches the class: keep the mode, and refresh each draft only when its own
+  // value changed, so another field's save doesn't wipe text being typed.
+  useEffect(() => setMode("view"), [classData?.id]);
+  useEffect(() => setDomainId(classData?.concept_scheme_id ?? ""), [classData?.concept_scheme_id]);
+  useEffect(() => setDescriptionDraft(classData?.description ?? ""), [classData?.description]);
 
   const handleDelete = async () => {
     if (!classData) return;
@@ -215,6 +216,9 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
                   { key: "Description", value: classData.description || "—" },
                 ]}
               />
+            </InspectorPanel.Section>
+            <InspectorPanel.Section title="Operational definition">
+              <OperationalDefinitionView classData={classData} />
             </InspectorPanel.Section>
             <InspectorPanel.Section title="Metrics">
               <KVGrid
@@ -401,6 +405,10 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
                   )}
                 </div>
               </div>
+            </InspectorPanel.Section>
+
+            <InspectorPanel.Section title="Operational definition">
+              <OperationalDefinitionEditor classData={classData} />
             </InspectorPanel.Section>
 
             <InspectorPanel.Section title="Metrics">

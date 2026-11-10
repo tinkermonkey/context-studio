@@ -541,6 +541,63 @@ selectors:
   - selector: class-delete-confirm
     component: components/ontology/ClassDrawer.tsx
     description: Confirmation dialog for class deletion
+  - selector: class-definition-view
+    component: src/components/ontology/OperationalDefinition.tsx
+    description: "Class drawer view mode: the class's operational definition (distinguish from, evidence signals, standard reference)"
+  - selector: class-definition-empty
+    component: src/components/ontology/OperationalDefinition.tsx
+    description: "Class drawer view mode: note shown when the class has no operational definition"
+  - selector: class-definition-editor
+    component: src/components/ontology/OperationalDefinition.tsx
+    description: "Class drawer edit mode: operational-definition editor; each change saves the class"
+  - selector: class-distinguish-list
+    component: src/components/ontology/OperationalDefinition.tsx
+    description: "List of the class's distinguish_from entries (view and edit mode)"
+  - selector: class-distinguish-entry-*
+    component: src/components/ontology/OperationalDefinition.tsx
+    description: "One distinguish_from entry, by the other class's id: its label (or id with \"class not found\") and when to use it instead"
+  - selector: class-distinguish-remove-*
+    component: src/components/ontology/OperationalDefinition.tsx
+    description: "Remove button for a distinguish_from entry, by class id"
+  - selector: class-distinguish-when-*
+    component: src/components/ontology/OperationalDefinition.tsx
+    description: "Editable \"when\" text of a distinguish_from entry, by class id; saves on blur or Enter"
+  - selector: class-distinguish-add-row
+    component: src/components/ontology/OperationalDefinition.tsx
+    description: "Row for adding a distinguish_from entry: sibling class picker, when text, add button"
+  - selector: class-distinguish-picker
+    component: src/components/ontology/OperationalDefinition.tsx
+    description: "EntityPicker searching sibling classes (same concept scheme) for a new distinguish_from entry"
+  - selector: class-distinguish-new-when
+    component: src/components/ontology/OperationalDefinition.tsx
+    description: "Text input: when to use the picked class instead"
+  - selector: class-distinguish-add
+    component: src/components/ontology/OperationalDefinition.tsx
+    description: "Button that adds the picked class and when text to distinguish_from"
+  - selector: class-evidence-signals-list
+    component: src/components/ontology/OperationalDefinition.tsx
+    description: "Ordered list of the class's evidence signals (view and edit mode)"
+  - selector: class-evidence-signal-*
+    component: src/components/ontology/OperationalDefinition.tsx
+    description: "One evidence signal row by position, and its -input-, -up-, -down- and -remove- controls by position"
+  - selector: class-evidence-signal-new
+    component: src/components/ontology/OperationalDefinition.tsx
+    description: "Text input for a new evidence signal (Enter adds it)"
+  - selector: class-evidence-signal-add
+    component: src/components/ontology/OperationalDefinition.tsx
+    description: "Button that appends the new evidence signal"
+  - selector: class-standard-reference
+    component: src/components/ontology/OperationalDefinition.tsx
+    description: "Class drawer view mode: the class's standard reference text"
+  - selector: class-drawer-standard-reference-field
+    component: src/components/ontology/OperationalDefinition.tsx
+    description: "EditableField for the class's standard reference (edit mode)"
+  - selector: class-drawer-standard-reference-field-view
+    component: src/components/ui/EditableField.tsx
+    description: "Click-to-edit display of the class's standard reference"
+  - selector: class-drawer-standard-reference-field-input
+    component: src/components/ui/EditableField.tsx
+    description: "Text input for the class's standard reference; saves on blur or Enter (\"\" clears it)"
   - selector: taxonomy-delete-confirm
     component: src/components/ontology/TaxonomyDrawer.tsx
     description: Message body of the taxonomy delete confirmation dialog
@@ -2349,6 +2406,12 @@ selectors:
   - selector: class-drawer-name-field
     component: src/components/ontology/ClassDrawer.tsx
     description: EditableField for the class name in the class inspector drawer (edit mode)
+  - selector: class-drawer-name-field-view
+    component: src/components/ui/EditableField.tsx
+    description: Click-to-edit display of the class name in the class inspector drawer (edit mode)
+  - selector: class-drawer-name-field-input
+    component: src/components/ui/EditableField.tsx
+    description: Text input for the class name; saves on blur or Enter
   - selector: individual-drawer-name-field
     component: src/components/ontology/IndividualDrawer.tsx
     description: EditableField for the individual name in the individual inspector drawer (edit mode)
@@ -3175,6 +3238,12 @@ selectors:
   - selector: operation-evidence
     component: src/components/proposals/OperationInspector.tsx
     description: "Evidence quotes with claim id, entity id or url captions"
+  - selector: operation-notes
+    component: src/components/proposals/OperationInspector.tsx
+    description: "The operation's maintainer notes (Notes section), shown only when the operation has notes"
+  - selector: operation-change-lines-*
+    component: src/components/proposals/OperationInspector.tsx
+    description: "A list value in the Change table, by field: distinguish_from as \"Class: when\" lines, evidence_signals numbered"
 
   # Review queue: decisions (#1361)
   - selector: proposal-actions

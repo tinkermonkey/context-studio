@@ -9,7 +9,10 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
   useFocusTrap: () => {},
   useBodyOverflow: () => {},
   Button: React.forwardRef(
-    ({ variant = "primary", size = "md", className = "", children, ...props }: any, ref: any) =>
+    (
+      { variant = "primary", size = "md", icon: _icon, className = "", children, ...props }: any,
+      ref: any,
+    ) =>
       React.createElement(
         "button",
         {
@@ -99,6 +102,42 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
     ...props
   }: any) =>
     React.createElement("div", { "data-testid": testId ?? "relationship-builder", ...props }),
+  // A combobox input plus its results as options; picking one calls onSelect.
+  EntityPicker: ({
+    query,
+    onQueryChange,
+    results = [],
+    onSelect,
+    onClear: _onClear,
+    inputId,
+    placeholder,
+    placement: _placement,
+    disabled,
+    ...props
+  }: any) =>
+    React.createElement(
+      "div",
+      { className: "entity-picker", ...props },
+      React.createElement("input", {
+        id: inputId,
+        role: "combobox",
+        value: query,
+        placeholder,
+        disabled,
+        onChange: (e: any) => onQueryChange(e.target.value),
+      }),
+      React.createElement(
+        "div",
+        { role: "listbox" },
+        results.map((r: any) =>
+          React.createElement(
+            "div",
+            { key: r.id, role: "option", "aria-selected": false, onClick: () => onSelect(r) },
+            r.label,
+          ),
+        ),
+      ),
+    ),
   Toast: ({ isOpen, onClose, title, subtitle, _variant, duration = 4000, ...props }: any) => {
     React.useEffect(() => {
       if (isOpen && duration) {
@@ -835,7 +874,10 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
       label,
     ),
   Field: React.forwardRef(
-    ({ label, required = false, error, hint, children, className = "", ...props }: any, ref: any) =>
+    (
+      { label, required = false, error, errorId, hint, children, className = "", ...props }: any,
+      ref: any,
+    ) =>
       React.createElement(
         "div",
         {
@@ -855,7 +897,7 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
             ),
           ),
         children,
-        error && React.createElement("div", { className: "field__error" }, error),
+        error && React.createElement("div", { className: "field__error", id: errorId }, error),
         hint && React.createElement("div", { className: "field__hint" }, hint),
       ),
   ),

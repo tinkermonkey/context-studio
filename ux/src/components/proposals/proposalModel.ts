@@ -276,6 +276,15 @@ export function referencedClassIds(operation: ProposedOperation, refs?: RefMap):
     }
   }
   if (operation.kind === "class" && operation.target_id) ids.push(operation.target_id);
+  // The classes a class's distinguish_from names, before and after.
+  if (operation.kind === "class") {
+    for (const values of [operation.fields ?? {}, operation.base ?? {}]) {
+      for (const entry of distinguishEntries(values.distinguish_from)) {
+        const id = resolveRef(entry.class_id, refs);
+        if (!id.startsWith("$")) ids.push(id);
+      }
+    }
+  }
   const check = operation.replacement_check;
   for (const end of [check?.deleted_domain, check?.deleted_range, check?.domain, check?.range]) {
     const id = end?.id && resolveRef(end.id, refs);
@@ -541,6 +550,9 @@ const FIELD_ORDER = [
   "identifier",
   "title",
   "description",
+  "distinguish_from",
+  "evidence_signals",
+  "standard_reference",
   "inverse",
   "category",
   "archimate_alignment",
@@ -558,9 +570,52 @@ function fieldRank(field: string): number {
 /** Rows for an individual's attribute values are this plus the attribute identifier. */
 export const DATA_FIELD_PREFIX = "data_properties.";
 
+/** A class's operational-definition fields (#1513) under the names a reviewer reads them by. */
+const FIELD_LABELS: Record<string, string> = {
+  distinguish_from: "distinguish from",
+  evidence_signals: "evidence signals",
+  standard_reference: "standard reference",
+};
+
 /** A row's field as shown: an attribute value's row by its attribute identifier. */
 export function fieldLabel(field: string): string {
+  if (field in FIELD_LABELS) return FIELD_LABELS[field];
   return field.startsWith(DATA_FIELD_PREFIX) ? field.slice(DATA_FIELD_PREFIX.length) : field;
+}
+
+/** One entry of a class's distinguish_from: use the other class when … */
+export interface DistinguishEntry {
+  class_id: string;
+  when: string;
+}
+
+/** A distinguish_from value's well-formed entries; anything else is skipped. */
+export function distinguishEntries(value: unknown): DistinguishEntry[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(
+    (e): e is DistinguishEntry =>
+      !!e &&
+      typeof e === "object" &&
+      typeof (e as DistinguishEntry).class_id === "string" &&
+      typeof (e as DistinguishEntry).when === "string",
+  );
+}
+
+/**
+ * A list field's value as lines, or undefined for any other field: a
+ * distinguish_from as "ClassLabel: when" (`classLabel` names the class),
+ * evidence signals one per line.
+ */
+export function fieldLines(
+  field: string,
+  value: unknown,
+  classLabel: (classId: string) => string,
+): string[] | undefined {
+  if (field === "distinguish_from") {
+    return distinguishEntries(value).map((e) => `${classLabel(e.class_id)}: ${e.when}`);
+  }
+  if (field === "evidence_signals" && Array.isArray(value)) return value.map(formatValue);
+  return undefined;
 }
 
 /**
