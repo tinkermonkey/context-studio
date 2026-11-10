@@ -30,7 +30,7 @@ import threading
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from domain.interchange.bundle import BundleError, BundlePlan, plan_bundle
+from domain.interchange.bundle import BundleError, BundlePlan, check_bundle_header, plan_bundle
 from domain.versioning.gold import DECIDED_BY_BUNDLE
 from domain.versioning.proposals import (
     ChangeProposal,
@@ -114,6 +114,7 @@ class BundleImportService:
             BundleError: If the bundle is malformed or conflicts with the workspace
             ProposalValidationError: If the plan does not validate; nothing is stored
         """
+        check_bundle_header(bundle)
         named = dataset or (bundle.get("dataset") or {}).get("identifier")
         with self._lock:
             dataset_id = self._dataset_id(bundle, named, create=not dry_run)
