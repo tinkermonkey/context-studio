@@ -44,6 +44,7 @@ from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.events.change_recorder import ChangeEventRecorder
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.interchange.dr_drift import DrDriftPlanner
+from adapters.interchange.dr_predicates import DrPredicateRules
 from adapters.interchange.dr_relationships import DR_TAXONOMY_IDENTIFIER, DrRelationshipRules
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.connection import DatabaseManager
@@ -161,7 +162,7 @@ def reimport(
         ontology_service,
         repo,
         RevertService(SQLiteChangeRepository(session_factory), repo),
-        apply_rules=[DrRelationshipRules(repo)],
+        apply_rules=[DrRelationshipRules(repo), DrPredicateRules(repo)],
     )
     service = DriftImportService(proposals, ontology_service, DrDriftPlanner(repo))
     try:

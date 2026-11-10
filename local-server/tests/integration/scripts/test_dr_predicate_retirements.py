@@ -1,8 +1,9 @@
 """
-Integration tests (#1440): a DR reflection plan's `predicate_retirements` stay
-on its proposal (client metadata), and `cs-dr-spec-changes/1` sends each back
-as a `retire-predicate` record once no DR relationship type uses the retired
-predicate, else lists it as skipped with the types still using it.
+Integration tests (#1440, #1481): a DR reflection plan's `predicate_retirements`
+become predicate deletes naming the replacement, after the plan's operations,
+and `cs-dr-spec-changes/1` sends an applied one back as a `retire-predicate`
+record (it applies once no DR relationship type uses the predicate), else lists
+it as skipped with the types still using it.
 
 Built on the pinned DR spec snapshot (0.8.4), whose only `enforces` type is
 security.securityconstraints enforces security.securitypolicy.
@@ -33,20 +34,26 @@ def retiring(*operations, retirements=(RETIREMENT,)):
     return plan
 
 
-def test_the_retirements_stay_on_the_proposal(parts):
+def test_the_retirements_become_predicate_deletes_after_the_plan(parts):
     _, repo, proposals = parts
 
     proposal = import_reflection_plan(retiring(operation(1, "delete", ENFORCES)), proposals, repo)
 
-    assert proposals._get(proposal.id).client_metadata == {"predicate_retirements": [RETIREMENT]}
+    plan_op, retire = proposal.operations
+    assert (retire.kind.value, retire.op.value, retire.seq) == ("predicate", "delete", 2)
+    assert retire.base["identifier"] == "enforces"
+    governs = repo.get_predicate(retire.proposed_replacement_id)
+    assert governs.identifier == "governs"
+    assert retire.rationale == "enforcing a policy is governing"
+    assert proposals._get(proposal.id).client_metadata == {}
 
 
-def test_a_plan_without_retirements_keeps_no_metadata(parts):
+def test_a_plan_without_retirements_has_no_predicate_operations(parts):
     _, repo, proposals = parts
 
     proposal = import_reflection_plan(plan_with(operation(1, "delete", ENFORCES)), proposals, repo)
 
-    assert proposals._get(proposal.id).client_metadata == {}
+    assert [o.kind.value for o in proposal.operations] == ["property"]
 
 
 def test_a_retirement_is_exported_once_no_type_uses_the_predicate(parts):
@@ -57,7 +64,8 @@ def test_a_retirement_is_exported_once_no_type_uses_the_predicate(parts):
 
     document = spec_changes_for(proposal, repo, recorded)
 
-    (decision,) = recorded.values()
+    retire = proposal.operations[1]
+    assert retire.status.value == "applied", retire.reason
     assert document["skipped"] == []
     assert document["records"][-1] == {
         "action": "retire-predicate",
@@ -66,15 +74,24 @@ def test_a_retirement_is_exported_once_no_type_uses_the_predicate(parts):
         "to": "governs",
         "p": 1.0,
         "proposal_id": proposal.id,
-        "applied_at": decision.decided_at.isoformat(),
+        "operation_id": retire.id,
+        "applied_at": recorded[retire.id].decided_at.isoformat(),
         "note": "enforcing a policy is governing",
     }
+    taxonomy = repo.get_by_identifier("dr_spec")
+    assert repo.get_predicate_by_identifier(taxonomy.id, "enforces") is None
 
 
 def test_a_retirement_is_skipped_while_a_type_still_uses_the_predicate(parts):
     _, repo, proposals = parts
     proposal = import_reflection_plan(retiring(operation(1, "delete", ENFORCES)), proposals, repo)
-    proposal = proposals.reject(proposal.id, [proposal.operations[0].id], "keep enforces")
+    plan_op, retire = proposal.operations
+    proposal = proposals.reject(proposal.id, [plan_op.id], "keep enforces")
+    proposal = proposals.apply(proposal.id, [retire.id])
+    retire = proposal.operations[1]
+    # DR's relationship ids embed the predicate: its types can't just move.
+    assert retire.status.value == "failed"
+    assert retire.reason.startswith(f"refused: relationship type ")
 
     document = spec_changes_for(proposal, repo)
 
@@ -93,7 +110,7 @@ def test_a_retirement_is_skipped_while_a_type_still_uses_the_predicate(parts):
     [
         ({"from": "enforces", "to": "enforces"}, "retires enforces into itself"),
         ({"from": "nonesuch", "to": "governs"}, "nonesuch is not in the spec's predicate catalog"),
-        ({"from": "enforces", "to": "nonesuch"}, "nonesuch is neither in the spec's predicate"),
+        ({"from": "enforces", "to": "nonesuch"}, "nonesuch is not in the spec's predicate catalog"),
         ({"from": "enforces"}, "not an object with from and to predicates"),
     ],
 )

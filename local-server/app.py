@@ -45,6 +45,7 @@ from adapters.events.in_process import InProcessEventPublisher
 from adapters.graph.networkx_engine import NetworkXGraphEngine
 from adapters.graph.rdflib_engine import RDFLibQueryEngine
 from adapters.interchange.dr_drift import DrDriftPlanner
+from adapters.interchange.dr_predicates import DrPredicateRules
 from adapters.interchange.dr_relationships import DrRelationshipRules
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.mcp.server import McpEndpoint, is_loopback_host, start_mcp_server
@@ -134,6 +135,9 @@ from domain.ontology.events import (
     IndividualCreated,
     IndividualDeleted,
     IndividualUpdated,
+    PredicateCreated,
+    PredicateDeleted,
+    PredicateUpdated,
     PropertyDefinitionCreated,
     PropertyDefinitionDeleted,
     PropertyDefinitionUpdated,
@@ -615,7 +619,10 @@ async def lifespan(app: FastAPI):
             ontology_repo=cast(OntologyRepository, ontology_repo),
             revert_service=revert_service,
             approval_policies=approval_policy_repo,
-            apply_rules=[DrRelationshipRules(cast(OntologyRepository, ontology_repo))],
+            apply_rules=[
+                DrRelationshipRules(cast(OntologyRepository, ontology_repo)),
+                DrPredicateRules(cast(OntologyRepository, ontology_repo)),
+            ],
             transaction_scope=SqliteTransactionScope(shared_session_factory),
             event_publisher=event_publisher,
         )
@@ -786,6 +793,9 @@ async def lifespan(app: FastAPI):
         event_publisher.subscribe(
             AttributeDefinitionUpdated, change_recorder.on_attribute_definition_updated
         )
+        event_publisher.subscribe(PredicateCreated, change_recorder.on_predicate_created)
+        event_publisher.subscribe(PredicateUpdated, change_recorder.on_predicate_updated)
+        event_publisher.subscribe(PredicateDeleted, change_recorder.on_predicate_deleted)
         logger.info(
             "Event subscription: AttributeDefinitionCreated/Updated/Deleted ->"
             " ChangeEventRecorder.on_attribute_definition_*"

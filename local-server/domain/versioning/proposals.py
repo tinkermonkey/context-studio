@@ -69,6 +69,8 @@ class OperationKind(str, Enum):
     ATTRIBUTE = "attribute"
     INDIVIDUAL = "individual"
     RELATIONSHIP = "relationship"
+    # A predicate in the proposal's taxonomy's catalog
+    PREDICATE = "predicate"
 
 
 class ResolutionStrategy(str, Enum):
@@ -476,10 +478,12 @@ class ProposedOperation:
             raise ValueError("probability must be between 0 and 1")
         if self.proposed_replacement_id is not None and (
             self.op is not OperationType.DELETE
-            or self.kind not in (OperationKind.PROPERTY, OperationKind.CLASS)
+            or self.kind
+            not in (OperationKind.PROPERTY, OperationKind.CLASS, OperationKind.PREDICATE)
         ):
             raise ValueError(
-                "Only a property (relationship type) or class delete can name a replacement"
+                "Only a property (relationship type), class or predicate delete can name a"
+                " replacement"
             )
 
     @property

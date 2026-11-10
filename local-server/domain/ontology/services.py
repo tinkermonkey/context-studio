@@ -43,6 +43,9 @@ from .events import (
     IndividualCreated,
     IndividualDeleted,
     IndividualUpdated,
+    PredicateCreated,
+    PredicateDeleted,
+    PredicateUpdated,
     PropertyDefinitionCreated,
     PropertyDefinitionDeleted,
     PropertyDefinitionUpdated,
@@ -124,6 +127,15 @@ def _property_event_values(prop_def: PropertyDefinition) -> dict[str, object]:
         "range_class_id": prop_def.range_class_id,
         "derived": prop_def.derived,
         "external_references": _serialize_external_references(prop_def.external_references),
+    }
+
+
+def _predicate_event_values(predicate: Predicate) -> dict[str, object]:
+    """The updatable fields of a predicate, as an event payload records them."""
+    return {
+        "title": predicate.title,
+        "description": predicate.description,
+        "external_references": _serialize_external_references(predicate.external_references),
     }
 
 
@@ -2165,7 +2177,15 @@ class OntologyService:
             raise DuplicateEntityError(
                 f"Taxonomy {taxonomy_id} already has the predicate {predicate.identifier!r}"
             )
-        return self._repository.save_predicate(predicate)
+        predicate = self._repository.save_predicate(predicate)
+        self._publish_or_warn(
+            PredicateCreated(
+                predicate_id=predicate.id,
+                taxonomy_id=taxonomy_id,
+                identifier=predicate.identifier,
+            )
+        )
+        return predicate
 
     def update_predicate(
         self,
@@ -2182,17 +2202,71 @@ class OntologyService:
             EntityNotFoundError: If there's no such predicate
         """
         predicate = self.get_predicate(predicate_id)
-        changed = False
-        if title is not None and title.strip() and title != predicate.title:
-            predicate.title, changed = title, True
-        if description is not None and (description or None) != predicate.description:
-            predicate.description, changed = description or None, True
-        if external_references is not None and external_references != predicate.external_references:
-            predicate.external_references, changed = list(external_references), True
+        before = _predicate_event_values(predicate)
+        if title is not None and title.strip():
+            predicate.title = title
+        if description is not None:
+            predicate.description = description or None
+        if external_references is not None:
+            predicate.external_references = list(external_references)
+        after = _predicate_event_values(predicate)
+        changed = tuple(name for name in before if before[name] != after[name])
         if not changed:
             return predicate
         predicate.last_modified = datetime.now(timezone.utc)
-        return self._repository.save_predicate(predicate)
+        predicate = self._repository.save_predicate(predicate)
+        self._publish_or_warn(
+            PredicateUpdated(
+                predicate_id=predicate.id,
+                changed_fields=changed,
+                old_values={name: before[name] for name in changed},
+                new_values={name: after[name] for name in changed},
+            )
+        )
+        return predicate
+
+    def delete_predicate(self, predicate_id: str) -> None:
+        """
+        Remove a predicate from its taxonomy's catalog.
+
+        Raises:
+            EntityNotFoundError: If there's no such predicate
+            EntityInUseError: If a relationship type still uses it (move them to
+                another predicate first)
+        """
+        predicate = self.get_predicate(predicate_id)
+        users = [
+            p.identifier
+            for p in self._repository.list_property_definitions(
+                taxonomy_id=predicate.taxonomy_id, limit=None
+            )
+            if p.predicate_id == predicate_id
+        ]
+        if users:
+            raise EntityInUseError(
+                f"Predicate {predicate.identifier!r} is used by {len(users)} relationship"
+                f" type(s): {', '.join(sorted(users)[:5])}"
+            )
+        self._repository.delete_predicate(predicate_id)
+        self._publish_or_warn(
+            PredicateDeleted(
+                predicate_id=predicate_id,
+                taxonomy_id=predicate.taxonomy_id,
+                identifier=predicate.identifier,
+                snapshot=entity_snapshot(predicate),
+            )
+        )
+
+    def relationship_types_using(self, predicate_id: str) -> list[PropertyDefinition]:
+        """The relationship types whose predicate this is."""
+        predicate = self.get_predicate(predicate_id)
+        return [
+            p
+            for p in self._repository.list_property_definitions(
+                taxonomy_id=predicate.taxonomy_id, limit=None
+            )
+            if p.predicate_id == predicate_id
+        ]
 
     def _type_taxonomy(
         self,

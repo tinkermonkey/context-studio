@@ -815,6 +815,8 @@ class TestPropertyDefinitionCRUD:
         catalog = client.get(f"/api/taxonomies/{taxonomy['id']}/predicates").json()
         assert [p["identifier"] for p in catalog] == ["flows-to", "navigates-to"]
         assert update_response.json()["predicate_id"] == catalog[0]["id"]
+        by_ids = client.get("/api/predicates", params={"ids": [catalog[0]["id"], "missing"]})
+        assert [p["identifier"] for p in by_ids.json()] == ["flows-to"]
 
         # Omitting the field on a subsequent update leaves it unchanged (the
         # model_fields_set flag pattern), while an explicit null is refused.

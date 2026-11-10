@@ -331,6 +331,59 @@
         }
       }
     },
+    "/api/predicates": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "List Predicates By Ids",
+        "description": "The predicates with these IDs, in any taxonomy; unknown IDs are left out.",
+        "operationId": "list_predicates_by_ids_api_predicates_get",
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 500,
+              "description": "Predicate IDs (repeat the parameter; at most 500)",
+              "title": "Ids"
+            },
+            "description": "Predicate IDs (repeat the parameter; at most 500)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PredicateResponse"
+                  },
+                  "title": "Response List Predicates By Ids Api Predicates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/taxonomies/{taxonomy_id}/scheme-counts": {
       "get": {
         "tags": [
@@ -15323,7 +15376,8 @@
           "property",
           "attribute",
           "individual",
-          "relationship"
+          "relationship",
+          "predicate"
         ],
         "title": "OperationKind",
         "description": "The kind of ontology entity an operation targets."

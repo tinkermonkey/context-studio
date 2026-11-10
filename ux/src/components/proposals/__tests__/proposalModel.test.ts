@@ -258,6 +258,73 @@ describe("changeRows", () => {
     expect(changeRows(createOperation).every((row) => row.before === undefined)).toBe(true);
   });
 
+  it("gives a DR predicate's catalog fields rows of their own (#1481)", () => {
+    const ref = (metadata: Record<string, unknown>) => [
+      { source: "documentation_robotics", identifier: "guards", uri: null, metadata },
+    ];
+    const update = createProposedOperation({
+      op: "update",
+      kind: "predicate",
+      target_id: "pred-1",
+      fields: {
+        external_references: ref({
+          inverse: "guarded-by",
+          category: "security",
+          semantics: { directionality: "unidirectional", transitivity: true },
+        }),
+      },
+      base: { external_references: ref({ inverse: "guarded-by", category: "ux" }) },
+    });
+
+    expect(changeRows(update).map(({ field, changed }) => [field, changed])).toEqual([
+      ["inverse", false],
+      ["category", true],
+      ["semantics", true],
+      ["external_references", false],
+    ]);
+  });
+
+  it("puts a DR node type's distinguish right after its description (#1481)", () => {
+    const ref = (metadata: Record<string, unknown>) => [
+      { source: "documentation_robotics", identifier: "api.operation", uri: null, metadata },
+    ];
+    const update = createProposedOperation({
+      op: "update",
+      kind: "class",
+      fields: {
+        description: "An API operation.",
+        external_references: ref({ distinguish: { "api.endpoint": "use that for URLs" } }),
+      },
+      base: { description: "An operation.", external_references: ref({ standard: "OpenAPI" }) },
+    });
+
+    expect(changeRows(update).map((row) => row.field)).toEqual([
+      "description",
+      "distinguish",
+      "standard",
+      "external_references",
+    ]);
+  });
+
+  it("names a predicate update's target and a predicate delete's replacement", () => {
+    const update = createProposedOperation({
+      op: "update",
+      kind: "predicate",
+      target_id: "pred-1",
+      fields: { description: "x" },
+      base: { description: "y" },
+    });
+    const retire = createProposedOperation({
+      op: "delete",
+      kind: "predicate",
+      target_id: "pred-2",
+      base: { identifier: "renders" },
+      proposed_replacement_id: "pred-3",
+    });
+
+    expect(namedEntityIds([update, retire]).predicates).toEqual(["pred-1", "pred-3"]);
+  });
+
   it("gives a DR type's attributes rows of their own, from its DR reference", () => {
     const ref = (metadata: Record<string, unknown> | null) => [
       { source: "documentation_robotics", identifier: "a.b.uses.c.d", uri: null, metadata },

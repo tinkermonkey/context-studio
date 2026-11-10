@@ -414,3 +414,182 @@ def test_a_class_delete_fails_while_relationship_types_still_use_it(parts):
     assert applied.operations[0].status is OperationStatus.FAILED
     assert repo.get_class(goal.id) is not None
     assert spec_changes_for(applied, repo)["node_changes"] == []
+
+
+# ------------------------------------------- node fields (#1481, DR's x-dr-*)
+
+STANDARD = "OpenAPI 3.1 Operation Object"
+EVIDENCE = ["a paths.<path>.<method> entry"]
+DISTINGUISH = {"api.pathitem": "the entry groups every method on one path"}
+
+
+def with_fields(spec_node_id, **metadata):
+    """A DR reference whose metadata holds node fields (standard, evidence, distinguish)."""
+    return {**dr_ref(spec_node_id), "metadata": metadata or None}
+
+
+def give_fields(repo, spec_node_id, **metadata):
+    """Store node fields on an imported class's DR reference, as the importer does."""
+    cls = class_by_dr_id(repo, spec_node_id)
+    cls.external_references = [ExternalReference.from_dict(with_fields(spec_node_id, **metadata))]
+    return repo.save_class(cls)
+
+
+def update_fields(repo, seq, spec_node_id, **metadata):
+    return OperationDraft(
+        seq=seq,
+        op="update",
+        kind="class",
+        target_id=class_by_dr_id(repo, spec_node_id).id,
+        fields={"external_references": [with_fields(spec_node_id, **metadata)]},
+    )
+
+
+def test_a_create_exports_the_node_fields_it_gives(parts):
+    _, repo, proposals = parts
+    draft = create(repo, 1, "api", "webhook", description="A callback the API calls.")
+    draft.fields["external_references"] = [
+        with_fields(
+            "api.webhook",
+            standard="OpenAPI 3.1 webhooks",
+            evidence=["a webhooks.<name> entry"],
+            distinguish={"api.callback": "the API calls it outside any operation"},
+        )
+    ]
+    proposal = apply_all(proposals, propose(repo, proposals, draft))
+
+    (change,) = spec_changes_for(proposal, repo)["node_changes"]
+
+    assert change["set"] == {
+        "title": "Webhook",
+        "description": "A callback the API calls.",
+        "standard": "OpenAPI 3.1 webhooks",
+        "evidence": ["a webhooks.<name> entry"],
+        "distinguish": {"api.callback": "the API calls it outside any operation"},
+    }
+
+
+def test_an_update_exports_only_the_node_fields_it_changed(parts):
+    _, repo, proposals = parts
+    give_fields(
+        repo, "api.operation", standard=STANDARD, evidence=EVIDENCE, distinguish=DISTINGUISH
+    )
+    changed = {**DISTINGUISH, "api.callback": "the API calls it back"}
+    proposal = apply_all(
+        proposals,
+        propose(
+            repo,
+            proposals,
+            update_fields(
+                repo,
+                1,
+                "api.operation",
+                standard="OpenAPI 3.2 Operation Object",
+                evidence=EVIDENCE,  # unchanged
+                distinguish=changed,
+            ),
+        ),
+    )
+
+    (change,) = spec_changes_for(proposal, repo)["node_changes"]
+
+    assert change["op"] == "update"
+    assert change["spec_node_id"] == "api.operation"
+    assert change["set"] == {"standard": "OpenAPI 3.2 Operation Object", "distinguish": changed}
+
+
+def test_an_update_that_removes_node_fields_exports_null_and_an_empty_list(parts):
+    _, repo, proposals = parts
+    give_fields(
+        repo, "api.operation", standard=STANDARD, evidence=EVIDENCE, distinguish=DISTINGUISH
+    )
+    proposal = apply_all(
+        proposals, propose(repo, proposals, update_fields(repo, 1, "api.operation"))
+    )
+
+    (change,) = spec_changes_for(proposal, repo)["node_changes"]
+
+    assert change["set"] == {"standard": None, "evidence": [], "distinguish": None}
+
+
+def test_an_update_that_leaves_the_node_fields_as_they_were_is_skipped(parts):
+    _, repo, proposals = parts
+    give_fields(repo, "api.operation", standard=STANDARD)
+    proposal = apply_all(
+        proposals,
+        propose(repo, proposals, update_fields(repo, 1, "api.operation", standard=STANDARD)),
+    )
+
+    document = spec_changes_for(proposal, repo)
+
+    assert document["node_changes"] == []
+    assert document["skipped"][0]["why"] == "it changes nothing DR's spec holds for a node type"
+
+
+@pytest.mark.parametrize(
+    "key, why",
+    [
+        ("api.nothing", "names api.nothing, which is not a DR node type"),
+        ("api.operation", "names api.operation, the node type itself"),
+    ],
+)
+def test_a_distinguish_key_that_is_no_other_node_type_is_refused(parts, key, why):
+    _, repo, proposals = parts
+    proposal = apply_all(
+        proposals,
+        propose(
+            repo,
+            proposals,
+            update_fields(repo, 1, "api.operation", distinguish={key: "never"}),
+        ),
+    )
+
+    with pytest.raises(ValueError, match=f"seq 1: its distinguish {why}"):
+        spec_changes_for(proposal, repo)
+
+
+def test_a_distinguish_key_follows_a_move_of_the_proposal(parts):
+    """A key naming a moved type by its old id goes out under its new id, as DR lands it."""
+    _, repo, proposals = parts
+    goal = class_by_dr_id(repo, "motivation.goal")
+    proposal = apply_all(
+        proposals,
+        propose(
+            repo,
+            proposals,
+            update_fields(repo, 1, "api.operation", distinguish={"motivation.goal": "a goal"}),
+            OperationDraft(
+                seq=2,
+                op="move",
+                kind="class",
+                target_id=goal.id,
+                fields={
+                    "concept_scheme_id": scheme_of(repo, "business").id,
+                    "parent_class_id": None,
+                },
+            ),
+            update_fields(repo, 3, "api.response", distinguish={"business.goal": "a goal"}),
+        ),
+    )
+
+    first, _, third = spec_changes_for(proposal, repo)["node_changes"]
+
+    assert first["set"] == {"distinguish": {"business.goal": "a goal"}}
+    assert third["set"] == {"distinguish": {"business.goal": "a goal"}}
+
+
+def test_a_distinguish_key_naming_a_type_the_proposal_deleted_is_refused(parts):
+    _, repo, proposals = parts
+    spare = unused_class(parts, "business")
+    proposal = apply_all(
+        proposals,
+        propose(
+            repo,
+            proposals,
+            OperationDraft(seq=1, op="delete", kind="class", target_id=spare.id),
+            update_fields(repo, 2, "api.operation", distinguish={"business.spare": "spare"}),
+        ),
+    )
+
+    with pytest.raises(ValueError, match="seq 2: its distinguish names business.spare, which is"):
+        spec_changes_for(proposal, repo)

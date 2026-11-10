@@ -261,10 +261,12 @@ OPERATION_SCHEMA: dict[str, Any] = {
         "replacement": {
             "type": "string",
             "description": (
-                "Property or class delete only: the relationship type or class that replaces"
-                ' the deleted one, by id, identifier or "$<ref>" of an earlier create of the'
-                " same kind. Name it whenever another type expresses the deleted one; review"
-                " flags a relationship type replacement that links a different pair of classes"
+                "Property, class or predicate delete only: the relationship type, class or"
+                ' predicate that replaces the deleted one, by id, identifier or "$<ref>" of an'
+                " earlier create of the same kind. Name it whenever another type expresses the"
+                " deleted one; review flags a relationship type replacement that links a"
+                " different pair of classes. A predicate delete needs one while relationship"
+                " types still use the predicate: they move to it"
             ),
         },
     },
@@ -314,7 +316,13 @@ class ProposeChangesTool(_ProposalTool):
         " data attribute of a class; relationship links two classes or individuals."
         " A property's canonical_predicate must be one of its taxonomy's predicates"
         " (list_predicates; the taxonomy of its domain class, else its range class,"
-        " else the proposal's), and can't be cleared.\n"
+        " else the proposal's) or one a predicate create earlier in the proposal adds,"
+        " and can't be cleared. Kind predicate is a relation verb in the proposal's"
+        " taxonomy's catalog: its identifier (e.g. part_of, navigates-to) never changes;"
+        " to rename one, create the new one and delete the old with it as replacement."
+        " A DR predicate keeps inverse, category, archimate_alignment and semantics"
+        " ({directionality, transitivity, symmetry, reflexivity}) in its"
+        " documentation_robotics reference's metadata.\n"
         "Fields per kind (* required on create):\n"
         f"{_field_guide()}\n"
         "A relationship update sets only its attributes; to change its ends, delete it"

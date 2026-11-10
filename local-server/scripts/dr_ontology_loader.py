@@ -4,10 +4,13 @@ DR spec -> Context Studio ontology transform.
 Translates the Documentation Robotics (DR) spec's node/relationship JSON
 schemas (`documentation_robotics/spec/schemas/{nodes,relationships}/`) into
 Context Studio's ontology domain model: one Taxonomy for the spec as a whole,
-one ConceptScheme per DR layer, one Class per node schema, one
-AttributeDefinition per node attribute (keyed in its class by the attribute's
-DR name; its remaining JSON Schema rides on its DR reference as metadata
-`{"schema"}`), and one PropertyDefinition per relationship schema. A relationship schema's
+one ConceptScheme per DR layer, one Class per node schema (its
+x-dr-standard, x-dr-evidence and x-dr-distinguish ride on its DR reference as
+metadata `{"standard", "evidence", "distinguish"}`, each only when the schema
+gives it; see `DR_NODE_FIELDS`), one AttributeDefinition per node attribute
+(keyed in its class by the attribute's DR name; its remaining JSON Schema
+rides on its DR reference as metadata `{"schema"}`), and one
+PropertyDefinition per relationship schema. A relationship schema's
 cardinality, strength and x-dr-evidence ride on its property definition's DR
 reference as metadata (`{"cardinality", "strength", "evidence"}`; see
 `DR_ATTRIBUTE_KEYS`), so a change proposal can change them and
@@ -43,12 +46,12 @@ from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, Callable, Iterator
+from typing import Any, Iterator
 from uuid import uuid4
 
+from adapters.interchange.dr_predicates import dr_predicate_reference
 from adapters.interchange.dr_relationships import (  # noqa: F401 - re-exported for the scripts
     DR_ATTRIBUTE_SCHEMA,
-    DR_PREDICATE_KEYS,
     DR_SOURCE,
     DR_SPEC_REFERENCE,
     DR_TAXONOMY_IDENTIFIER,
@@ -168,14 +171,6 @@ def _store_spec_reference(
     return repo.save_taxonomy(taxonomy)
 
 
-def dr_predicate_reference(predicate_id: str, entry: dict[str, Any]) -> ExternalReference:
-    """A catalog predicate's DR reference, carrying its DR-only fields."""
-    metadata = {key: entry[key] for key in DR_PREDICATE_KEYS if key in entry}
-    return ExternalReference(
-        source=DR_SOURCE, identifier=predicate_id, metadata=MappingProxyType(metadata)
-    )
-
-
 def _upsert_predicates(
     service: OntologyService,
     repo: OntologyRepository,
@@ -287,16 +282,35 @@ def _sync_relationship_reference(
     repo.save_property_definition(prop)
 
 
-def _sync_external_reference(save_fn: Callable[[Any], Any], entity: Any, identifier: str) -> None:
-    """Attach a DR-spec ExternalReference to `entity` if not already present (idempotent)."""
-    already_present = any(
-        ref.source == DR_SOURCE and ref.identifier == identifier
-        for ref in entity.external_references
+def _sync_class_reference(repo: OntologyRepository, cls: Class, node: NodeSchemaRecord) -> None:
+    """
+    Give a class its DR reference, with the node schema's DR fields (standard,
+    evidence, distinguish) as metadata: added if missing, its metadata
+    replaced if it differs (a re-import of an unchanged spec saves nothing).
+    Other references stay.
+    """
+    current = next(
+        (
+            ref
+            for ref in cls.external_references
+            if ref.source == DR_SOURCE and ref.identifier == node.spec_node_id
+        ),
+        None,
     )
-    if already_present:
+    if current is not None and dict(current.metadata or {}) == node.metadata:
         return
-    entity.external_references.append(ExternalReference(source=DR_SOURCE, identifier=identifier))
-    save_fn(entity)
+    reference = ExternalReference(
+        source=DR_SOURCE,
+        identifier=node.spec_node_id,
+        uri=current.uri if current else None,
+        metadata=MappingProxyType(node.metadata) if node.metadata else None,
+    )
+    cls.external_references = (
+        [reference if ref is current else ref for ref in cls.external_references]
+        if current
+        else [*cls.external_references, reference]
+    )
+    repo.save_class(cls)
 
 
 def _refuse_moved_node_types(
@@ -376,7 +390,7 @@ def _upsert_classes(
         else:
             cls = service.update_class(existing.id, title=node.title, description=node.description)
             summary.classes_updated += 1
-        _sync_external_reference(repo.save_class, cls, node.spec_node_id)
+        _sync_class_reference(repo, cls, node)  # type: ignore[arg-type]
         class_id_by_spec_node_id[node.spec_node_id] = cls.id  # type: ignore[union-attr]
     return class_id_by_spec_node_id
 

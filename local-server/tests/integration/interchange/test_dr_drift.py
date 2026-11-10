@@ -19,11 +19,13 @@ from sqlalchemy.orm import sessionmaker
 from adapters.chat.proposal_tools import DrSpecDriftTool
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.interchange.dr_drift import DrDriftPlanner
+from adapters.interchange.dr_predicates import DrPredicateRules
 from adapters.interchange.dr_relationships import (
     DR_SOURCE,
     DR_TAXONOMY_IDENTIFIER,
     DrRelationshipRules,
     dr_predicate_catalog,
+    dr_property_definitions,
 )
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.connection import create_local_db_engine
@@ -80,7 +82,7 @@ def world(spec_db, tmp_path):
         ontology,
         repo,
         RevertService(change_repo=change_repo, ontology_repo=repo),
-        apply_rules=[DrRelationshipRules(repo)],  # as app.py wires it
+        apply_rules=[DrRelationshipRules(repo), DrPredicateRules(repo)],  # as app.py wires it
     )
     drift = DriftImportService(proposals, ontology, DrDriftPlanner(repo))
 
@@ -200,6 +202,10 @@ def _class(repo, node_id):
     return None
 
 
+def _property(repo, relationship_id):
+    return dr_property_definitions(repo).get(relationship_id)
+
+
 def _apply_all(world, proposal):
     applied = world.proposals.apply(proposal.id, [o.id for o in proposal.operations])
     failed = {
@@ -271,28 +277,84 @@ def test_hand_edits_are_reported_proposed_and_cleared_once_applied(world, spec):
     assert attributes["launched"].datatype.value == "boolean"
 
 
-def test_predicate_catalog_drift_is_reported_without_operations(world, spec):
-    """#1480: predicates are reported only; proposing them comes with #1481."""
-    known = sorted(dr_predicate_catalog(world.repo))
-    catalog = {name: {"inverse": None, "category": None, "description": None} for name in known}
-    catalog["serves"] = {**catalog.get("serves", {}), "inverse": "served-by", "category": "x"}
-    catalog["guards"] = {"inverse": "guarded-by", "category": "security", "description": "G"}
+def _write_catalog(spec, catalog):
     (spec / "dist" / "base.json").write_text(json.dumps({"predicates": catalog}))
 
-    before = world.repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER).source_revision
 
-    plan = world.drift.reimport(str(spec)).plan
+SEMANTICS = {
+    "directionality": "unidirectional",
+    "transitivity": False,
+    "symmetry": False,
+    "reflexivity": False,
+}
 
-    predicates = {(e.source_id, e.change) for e in plan.entries if e.kind == "predicate"}
-    assert ("guards", "create") in predicates and ("serves", "update") in predicates
-    assert plan.operations == []
+
+def _synced_catalog(world, spec, *extra):
+    """Give the spec a full catalog of the taxonomy's predicates (plus extra), synced in."""
+    names = {*dr_predicate_catalog(world.repo), *extra}
+    catalog = {
+        name: {
+            "inverse": f"{name}-by",
+            "category": "structural",
+            "description": f"{name} relation",
+            "semantics": SEMANTICS,
+        }
+        for name in names
+    }
+    _write_catalog(spec, catalog)
+    _apply_all(world, world.drift.reimport(str(spec), dry_run=False).proposal)
+    assert world.drift.reimport(str(spec)).plan.entries == []
+    return catalog
+
+
+def test_predicate_catalog_drift_is_proposed_and_cleared_once_applied(world, spec):
+    """#1481: a new predicate is a create, a changed DR field an update."""
+    catalog = _synced_catalog(world, spec)
+    serves = next(iter(sorted(catalog)))
+    catalog[serves] = {**catalog[serves], "category": "behavioral"}
+    catalog["guards"] = {
+        "inverse": "guarded-by",
+        "category": "security",
+        "description": "Protects another element",
+        "semantics": SEMANTICS,
+    }
+    _write_catalog(spec, catalog)
+    _add_relationship(spec, "business.product", "guards", "business.businessactor")
+    new_rel = "business.product.guards.business.businessactor"
+
+    dry = world.drift.reimport(str(spec))
+
+    predicates = {(e.source_id, e.change) for e in dry.plan.entries if e.kind == "predicate"}
+    assert predicates == {("guards", "create"), (serves, "update")}
+    kinds = [o.kind.value for o in dry.plan.operations]
+    assert kinds.index("predicate") < kinds.index("property")
     real = world.drift.reimport(str(spec), dry_run=False)
-    assert real.proposal is None
-    # The taxonomy doesn't match the spec yet, so the spec's revision isn't recorded.
-    assert world.repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER).source_revision == before
+    _apply_all(world, real.proposal)
+
+    taxonomy = world.repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    guards = world.repo.get_predicate_by_identifier(taxonomy.id, "guards")
+    assert guards.description == "Protects another element"
+    assert dr_predicate_catalog(world.repo)[serves]["category"] == "behavioral"
+    assert _property(world.repo, new_rel).canonical_predicate == "guards"
+    assert world.drift.reimport(str(spec)).plan.entries == []
 
 
-def test_a_relationship_type_on_a_new_predicate_stops_the_drift(world, spec):
+def test_a_predicate_the_spec_drops_is_deleted_after_its_types(world, spec):
+    catalog = _synced_catalog(world, spec, "obsolete")
+    taxonomy = world.repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    unused = "obsolete"
+    assert world.repo.get_predicate_by_identifier(taxonomy.id, unused) is not None
+    del catalog[unused]
+    _write_catalog(spec, catalog)
+
+    real = world.drift.reimport(str(spec), dry_run=False)
+    _apply_all(world, real.proposal)
+
+    assert world.repo.get_predicate_by_identifier(taxonomy.id, unused) is None
+
+
+def test_a_relationship_type_on_a_predicate_the_catalog_lacks_stops_the_drift(world, spec):
+    _synced_catalog(world, spec)
     _add_relationship(spec, "business.product", "guards", "business.businessactor")
 
     with pytest.raises(DriftError, match="guards"):
@@ -332,9 +394,62 @@ def test_a_move_made_in_context_studio_and_landed_only_swaps_the_dr_ids(world, s
     entry = next(e for e in plan.entries if e.kind == "class")
     assert entry.change == "move"
     assert "concept_scheme_id" not in entry.fields
-    assert entry.fields["external_references"] == {"taxonomy": "business.product", "source": new_id}
+    assert entry.fields["external_references"] == {
+        "taxonomy": ("business.product", None),
+        "source": (new_id, None),
+    }
     _apply_all(world, world.drift.reimport(str(spec), dry_run=False).proposal)
     assert world.drift.reimport(str(spec)).plan.entries == []
+
+
+def _set_node_fields(spec, node_id, **fields):
+    """Give a node schema DR fields (x-dr-standard, ...); None drops one."""
+
+    def change(data):
+        for key, value in fields.items():
+            if value is None:
+                data.pop(f"x-dr-{key}", None)
+            else:
+                data[f"x-dr-{key}"] = value
+
+    _edit_node(spec, node_id, change)
+
+
+def test_node_fields_in_the_spec_are_proposed_on_the_class_dr_reference(world, spec):
+    """#1481: x-dr-standard, x-dr-evidence and x-dr-distinguish drift like the DR reference."""
+    _set_node_fields(
+        spec,
+        "api.contact",
+        standard="OpenAPI 3.1 Contact Object",
+        evidence=["an info.contact block"],
+        distinguish={"api.license": "the block names the API's license"},
+    )
+
+    plan = world.drift.reimport(str(spec)).plan
+
+    assert _changes(plan) == {("class", "api.contact", "update")}
+    (entry,) = plan.entries
+    assert entry.fields["external_references"]["source"] == (
+        "api.contact",
+        {
+            "standard": "OpenAPI 3.1 Contact Object",
+            "evidence": ["an info.contact block"],
+            "distinguish": {"api.license": "the block names the API's license"},
+        },
+    )
+    _apply_all(world, world.drift.reimport(str(spec), dry_run=False).proposal)
+    assert world.drift.reimport(str(spec)).plan.entries == []
+
+    _set_node_fields(spec, "api.contact", standard=None)
+
+    (entry,) = world.drift.reimport(str(spec)).plan.entries
+    assert entry.fields["external_references"]["source"] == (
+        "api.contact",
+        {
+            "evidence": ["an info.contact block"],
+            "distinguish": {"api.license": "the block names the API's license"},
+        },
+    )
 
 
 def test_a_new_run_supersedes_the_open_proposal_of_an_earlier_one(world, spec):

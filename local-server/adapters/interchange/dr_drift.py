@@ -6,13 +6,14 @@ Everything the DR importer loads is compared, matched by DR id (the
 `documentation_robotics` external reference), never by identifier:
 
 - the taxonomy: its vision and summary (when the spec has a design charter);
-- predicates, by id: description, inverse, category, archimate_alignment and
-  semantics. These are reported only, with no operations, until predicate
-  proposals exist (#1481); a relationship type on a predicate the taxonomy
-  doesn't have stops the drift with an error;
+- predicates, by id: description, and inverse, category, archimate_alignment
+  and semantics on their DR reference; a new predicate is a create, one the
+  spec dropped a delete (after the relationship-type deletes);
 - schemes, by layer: title, and description when the layer file has one; a new
   layer is a create;
-- classes, by spec node id: title, description, scheme, DR reference;
+- classes, by spec node id: title, description, scheme, and their DR
+  reference with standard, evidence and distinguish (x-dr-standard,
+  x-dr-evidence, x-dr-distinguish) as its metadata;
 - attributes, by DR attribute name within their class: title, description,
   datatype, required, allowed values, and the rest of their JSON Schema on
   their DR reference;
@@ -45,6 +46,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from adapters.interchange.dr_predicates import dr_predicate_reference
 from adapters.interchange.dr_relationships import (
     DR_SOURCE,
     DR_TAXONOMY_IDENTIFIER,
@@ -159,6 +161,7 @@ class _Planner:
         # Deletes by kind; relationship types go first, classes last.
         self._deletes: dict[OperationKind, list[OperationDraft]] = {
             K.PROPERTY: [],
+            K.PREDICATE: [],
             K.ATTRIBUTE: [],
             K.CLASS: [],
         }
@@ -260,45 +263,81 @@ class _Planner:
             pairs["vision"] = (_text(taxonomy.vision), vision)
             if summary is not None:
                 pairs["description"] = (_text(taxonomy.description), summary)
-        self._plan_predicates()
+        self._predicates = self._plan_predicates()
         self._changed(K.TAXONOMY, taxonomy, DR_TAXONOMY_IDENTIFIER, pairs)
 
-    def _plan_predicates(self) -> None:
+    def _plan_predicates(self) -> set[str]:
         """
-        Report how the spec's predicate catalog differs from the taxonomy's
-        predicates, one entry per predicate. They're reported only: proposing
-        predicate changes comes with predicate proposals (#1481).
+        Plan the predicate changes that make the taxonomy's catalog match the
+        spec's: a create for a new predicate, an update of a description or DR
+        field, a delete for one the spec dropped (after the relationship-type
+        deletes, so its types go first). Returns the predicates there will be.
         """
+        stored = {p.identifier: p for p in self._repo.list_predicates(self._taxonomy.id)}
         catalog = read_predicate_catalog(self._spec_dir)
         if catalog is None:
-            return
-        stored = {p.identifier: p for p in self._repo.list_predicates(self._taxonomy.id)}
+            return set(stored)
         known = dr_predicate_catalog(self._repo) or {}
         for predicate_id in sorted(catalog.keys() | stored.keys()):
-            spec, current = catalog.get(predicate_id), known.get(predicate_id)
-            if current is None:
-                change, fields = "create", {}
-            elif spec is None:
-                change, fields = "delete", {}
-            else:
-                change = "update"
-                fields = {
-                    name: {"taxonomy": current.get(name), "source": spec.get(name)}
-                    for name in sorted(spec.keys() | current.keys())
-                    if current.get(name) != spec.get(name)
-                }
-                if not fields:
-                    continue
-            existing = stored.get(predicate_id)
+            spec, current, existing = (
+                catalog.get(predicate_id),
+                known.get(predicate_id),
+                stored.get(predicate_id),
+            )
+            if spec is None:
+                self._deletes[K.PREDICATE].append(
+                    OperationDraft(seq=0, op=T.DELETE, kind=K.PREDICATE, target_id=existing.id)
+                )
+                self._plan.entries.append(
+                    DriftEntry(
+                        kind="predicate",
+                        source_id=predicate_id,
+                        change="delete",
+                        entity_id=existing.id,
+                    )
+                )
+                continue
+            reference = dr_predicate_reference(predicate_id, spec).to_dict()
+            if existing is None:
+                self._create(
+                    K.PREDICATE,
+                    f"predicate:{predicate_id}",
+                    {
+                        "identifier": predicate_id,
+                        "description": spec.get("description"),
+                        "external_references": [reference],
+                    },
+                    predicate_id,
+                )
+                continue
+            current = current or {}
+            shown = {
+                name: {"taxonomy": current.get(name), "source": spec.get(name)}
+                for name in sorted(spec.keys() | current.keys())
+                if current.get(name) != spec.get(name)
+            }
+            if not shown:
+                continue
+            fields: dict[str, Any] = {}
+            if "description" in shown:
+                fields["description"] = spec.get("description")
+            if set(shown) - {"description"}:
+                fields["external_references"] = _with_dr_ref(existing, reference)
+            self._ops.append(
+                OperationDraft(
+                    seq=0, op=T.UPDATE, kind=K.PREDICATE, target_id=existing.id, fields=fields
+                )
+            )
             self._plan.entries.append(
                 DriftEntry(
                     kind="predicate",
                     source_id=predicate_id,
-                    change=change,
-                    entity_id=existing.id if existing else None,
-                    fields=fields,
+                    change="update",
+                    entity_id=existing.id,
+                    fields=shown,
                 )
             )
+        return set(catalog)
 
     # -------------------------------------------------------------- schemes
 
@@ -389,26 +428,30 @@ class _Planner:
                         "title": node.title,
                         "description": node.description,
                         "identifier": identifier,
-                        "external_references": [_reference(node.spec_node_id)],
+                        "external_references": [_reference(node.spec_node_id, node.metadata)],
                     },
                     node.spec_node_id,
                 )
                 continue
+            reference = _reference(node.spec_node_id, node.metadata)
+            current = _dr_ref(cls)
             pairs: dict[str, tuple[Any, Any]] = {
                 "title": (cls.title, node.title),
                 "description": (_text(cls.description), _text(node.description)),
-            }
-            if old_id is not None:
-                pairs["external_references"] = (
+                "external_references": (
                     [r.to_dict() for r in cls.external_references],
-                    _with_dr_ref(cls, _reference(node.spec_node_id)),
-                )
+                    _with_dr_ref(cls, reference),
+                ),
+            }
             move = None
             if cls.concept_scheme_id != scheme_id:
                 move = {"concept_scheme_id": scheme_id, "parent_class_id": None}
-            compare = {}
-            if old_id is not None:
-                compare["external_references"] = (old_id, node.spec_node_id)
+            compare = {
+                "external_references": (
+                    (current.identifier, _json(current.metadata)) if current else None,
+                    (node.spec_node_id, reference["metadata"]),
+                )
+            }
             change = "move" if old_id is not None or move else "update"
             self._changed(K.CLASS, cls, node.spec_node_id, pairs, compare, move, change)
             class_ids[node.spec_node_id] = cls.id
@@ -524,13 +567,11 @@ class _Planner:
             },
             only=[r.full_identifier for r in records if r.full_identifier not in matched],
         )
-        predicates = {p.identifier for p in self._repo.list_predicates(self._taxonomy.id)}
-        new_predicates = sorted({r.predicate for r in records} - predicates)
-        if new_predicates:
+        undefined = sorted({r.predicate for r in records} - self._predicates)
+        if undefined:
             raise DriftError(
-                f"The spec's relationship types use predicates the taxonomy doesn't have yet"
-                f" ({', '.join(new_predicates)}). Proposing new predicates comes with"
-                " predicate proposals (#1481)."
+                f"The spec's relationship types use predicates its catalog doesn't define"
+                f" ({', '.join(undefined)})"
             )
         for record in records:
             domain = class_ids.get(record.source_spec_node_id)

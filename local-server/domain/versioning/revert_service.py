@@ -443,6 +443,7 @@ class RevertService:
             "relationship": self._ontology_repo.get_relationship,
             "property_definition": self._ontology_repo.get_property_definition,
             "attribute_definition": self._ontology_repo.get_attribute_definition,
+            "predicate": self._ontology_repo.get_predicate,
         }.get(entity_type)
         return getter is not None and getter(entity_id) is not None
 
@@ -691,6 +692,10 @@ class RevertService:
             if self._ontology_repo.get_attribute_definition(entity_id):
                 self._ontology_repo.delete_attribute_definition(entity_id)
                 return True
+        elif entity_type == "predicate":
+            if self._ontology_repo.get_predicate(entity_id):
+                self._ontology_repo.delete_predicate(entity_id)
+                return True
         else:
             raise ValueError(f"Unknown entity type for create revert: {entity_type}")
         return False
@@ -759,6 +764,12 @@ class RevertService:
                 self._restore_entity_state(attr, previous_state)
                 self._ontology_repo.save_attribute_definition(attr)
                 return True
+        elif entity_type == "predicate":
+            predicate = self._ontology_repo.get_predicate(entity_id)
+            if predicate:
+                self._restore_entity_state(predicate, previous_state)
+                self._ontology_repo.save_predicate(predicate)
+                return True
         else:
             raise ValueError(f"Unknown entity type for update revert: {entity_type}")
         return False
@@ -795,6 +806,7 @@ class RevertService:
             "relationship": self._ontology_repo.save_relationship,
             "property_definition": self._ontology_repo.save_property_definition,
             "attribute_definition": self._ontology_repo.save_attribute_definition,
+            "predicate": self._ontology_repo.save_predicate,
         }
         save = savers.get(entity_type)
         if save is None:

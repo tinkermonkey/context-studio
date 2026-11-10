@@ -52,6 +52,7 @@ export const QUERY_KEYS = {
   individual: (id: string, resource?: string) =>
     resource ? (["individuals", id, resource] as const) : (["individuals", id] as const),
   properties: ["properties"] as const,
+  predicates: ["predicates"] as const,
   property: (id: string) => ["properties", id] as const,
   relationshipsRoot: ["relationships"] as const,
   relationships: (params?: object) => ["relationships", params] as const,
