@@ -899,17 +899,11 @@ class TestRelationshipAttributes:
 
     @pytest.fixture()
     def kit(self, ontology, graph):
-        requires = ontology.create_property_definition(
-            "requires",
-            "requires",
-            external_references=[
-                ExternalReference(
-                    source="house",
-                    identifier="requires",
-                    metadata={"edge_properties": ["quantity", "unit", "optional"]},
-                )
-            ],
-        )
+        requires = ontology.create_property_definition("requires", "requires")
+        for name, datatype in (("quantity", "number"), ("unit", "string"), ("optional", "boolean")):
+            ontology.create_attribute_definition(
+                None, name, name, datatype, property_definition_id=requires.id
+            )
         hall = ontology.create_individual(graph["room"], "Hall")
         rel = ontology.create_relationship(
             graph["den"], hall.id, requires.id, attributes={"quantity": 2}

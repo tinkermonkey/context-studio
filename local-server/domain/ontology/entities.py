@@ -9,6 +9,8 @@ through their methods.
 
 from __future__ import annotations
 
+import json
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
@@ -392,8 +394,8 @@ class Relationship:
         property_definition_id: ID of the property definition that defines this relationship type
         created_at: Timestamp of creation (auto-generated on instantiation)
         attributes: Values carried on the edge itself (a kit's quantity, unit,
-            optional), keyed by name; JSON scalars only. The property definition
-            says which names are allowed (PropertyDefinition.edge_attribute_names).
+            optional), keyed by name; JSON scalars only. The relationship type's
+            attribute definitions say which names are allowed and their datatypes.
 
     Raises:
         ValueError: If source_id equals target_id, or an attribute is not a
@@ -426,6 +428,91 @@ def same_attribute_value(a: Any, b: Any) -> bool:
 def same_attributes(a: dict[str, Any], b: dict[str, Any]) -> bool:
     """Whether two attribute maps have the same names, each with the same typed value."""
     return a.keys() == b.keys() and all(same_attribute_value(a[k], b[k]) for k in a)
+
+
+# The JSON types an edge attribute's value may have, by datatype (edge values are
+# scalars, so array and object attributes take none).
+_EDGE_VALUE_TYPES: dict[str, tuple[type, ...]] = {
+    "string": (str,),
+    "integer": (int,),
+    "number": (int, float),
+    "boolean": (bool,),
+    "date": (str,),
+}
+_ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
+
+
+def edge_value_problem(definition: "AttributeDefinition", value: Any) -> str | None:
+    """Why a non-null edge value doesn't fit its attribute definition."""
+    datatype = getattr(definition.datatype, "value", definition.datatype)
+    types = _EDGE_VALUE_TYPES.get(datatype, ())
+    if not isinstance(value, types) or (datatype in ("integer", "number") and isinstance(value, bool)):
+        return f"is {datatype}, so {value!r} doesn't fit"
+    if datatype == "date" and not _ISO_DATE.fullmatch(value):
+        return f"is a date (YYYY-MM-DD), so {value!r} doesn't fit"
+    allowed = definition.allowed_values
+    text = value if isinstance(value, str) else json.dumps(value)
+    if allowed and text not in allowed:
+        return f"allows only {allowed}, not {value!r}"
+    return None
+
+
+def edge_default(definition: "AttributeDefinition") -> Any:
+    """An edge attribute's default value, read as its datatype (None when it has none)."""
+    default = definition.default_value
+    if default is None:
+        return None
+    datatype = getattr(definition.datatype, "value", definition.datatype)
+    if datatype in ("integer", "number", "boolean"):
+        try:
+            return json.loads(default)
+        except ValueError:
+            return default
+    return default
+
+
+def edge_attribute_values(
+    type_identifier: str,
+    definitions: list["AttributeDefinition"],
+    attributes: dict[str, Any],
+) -> dict[str, Any]:
+    """
+    A relationship's attributes checked against its type's attribute
+    definitions: only defined names, each value of its datatype and among its
+    allowed values. A required attribute that's missing takes its default, or is
+    refused without one. Returns the attributes to store (defaults filled in).
+
+    Raises:
+        ValueError: Naming each problem
+    """
+    validate_relationship_attributes(attributes)
+    by_name = {d.identifier: d for d in definitions}
+    unknown = sorted(set(attributes) - set(by_name))
+    if unknown:
+        listed = ", ".join(sorted(by_name)) or "none"
+        raise ValueError(
+            f"Relationship type {type_identifier!r} does not allow attributes {unknown}"
+            f" (allowed: {listed})"
+        )
+    values = dict(attributes)
+    problems = []
+    for name, definition in by_name.items():
+        value = values.get(name)
+        if value is None and definition.is_required:
+            default = edge_default(definition)
+            if default is None:
+                problems.append(f"{name!r} is required")
+                continue
+            values[name] = value = default
+        if value is not None:
+            problem = edge_value_problem(definition, value)
+            if problem:
+                problems.append(f"{name!r} {problem}")
+    if problems:
+        raise ValueError(
+            f"Relationship type {type_identifier!r}: attribute " + "; ".join(problems)
+        )
+    return values
 
 
 def validate_relationship_attributes(attributes: Any) -> None:
@@ -512,6 +599,13 @@ class PropertyDefinition:
             never created directly, and extraction doesn't target it
         external_references: List of references to external knowledge bases
         is_relevant: Optional relevance flag (None=not evaluated, True=relevant, False=irrelevant)
+        min_per_source: Fewest relationships of this type a source has (0: optional)
+        max_per_source: Most relationships of this type a source has (None: no limit)
+        max_per_target: Most relationships of this type a target has (None: no limit).
+            DR's cardinality: many-to-many (0, None, None), many-to-one
+            max_per_source 1, one-to-many max_per_target 1, one-to-one both
+        hierarchy: Its relationships form no cycles (a tree when max_per_source is 1)
+        symmetric: A relationship one way holds the other way too
         lexical_senses: Word-sense disambiguation entries. A property whose
             label has more than one distinct meaning across the corpus
             (e.g. "service" or "clock") carries one LexicalSense per sense.
@@ -539,21 +633,42 @@ class PropertyDefinition:
     status: Status = Status.DRAFT
     source_run_id: str | None = None
     predicate_id: str | None = None
+    min_per_source: int = 0
+    max_per_source: int | None = None
+    max_per_target: int | None = None
+    hierarchy: bool = False
+    symmetric: bool = False
 
-    def edge_attribute_names(self) -> frozenset[str]:
+    def structure_problems(self) -> list[str]:
         """
-        The attribute names its relationships may carry.
-
-        By the bundle convention (v0), a source lists them as `edge_properties` in
-        the metadata of its reference on the property (a bundle property's
-        `constraints`). The union over every reference; empty when none lists any.
+        How its structure is ill-formed: a negative minimum, a maximum below one
+        or below the minimum, or a `symmetric` or `hierarchy` type whose domain
+        and range differ. (Not checked against stored relationships.)
         """
-        names: set[str] = set()
-        for reference in self.external_references:
-            listed = reference.metadata.get("edge_properties") if reference.metadata else None
-            listed = listed or []
-            names.update(name for name in listed if isinstance(name, str))
-        return frozenset(names)
+        problems: list[str] = []
+        if isinstance(self.min_per_source, bool) or not isinstance(self.min_per_source, int):
+            problems.append("min_per_source must be a whole number")
+        elif self.min_per_source < 0:
+            problems.append("min_per_source can't be negative")
+        for name in ("max_per_source", "max_per_target"):
+            value = getattr(self, name)
+            if value is None:
+                continue
+            if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+                problems.append(f"{name} must be a whole number of at least 1, or null")
+        if (
+            not problems
+            and self.max_per_source is not None
+            and self.min_per_source > self.max_per_source
+        ):
+            problems.append(
+                f"min_per_source ({self.min_per_source}) is above max_per_source"
+                f" ({self.max_per_source})"
+            )
+        for flag in ("symmetric", "hierarchy"):
+            if getattr(self, flag) and self.domain_class_id != self.range_class_id:
+                problems.append(f"a {flag} relationship type needs the same domain and range")
+        return problems
 
     def rename(self, new_title: str) -> None:
         """
@@ -574,16 +689,18 @@ class PropertyDefinition:
 @dataclass
 class AttributeDefinition:
     """
-    Defines the type-level (TBox) declaration of an attribute on a Class (OWL DatatypeProperty).
+    Defines the type-level (TBox) declaration of an attribute (OWL DatatypeProperty)
+    on a Class, or on a relationship type (an edge attribute such as a kit's quantity).
 
     AttributeDefinition is the complement to DataPropertyValue (instance/ABox level).
     It declares "Class X has an attribute named Y of type Z with these constraints",
-    scoped to a single class (class_id is required, not global).
+    scoped to exactly one owner: a class (class_id) or a relationship type
+    (property_definition_id), whose relationships' attributes are checked against it.
 
     Attributes:
         id: Unique identifier (UUID as string)
-        class_id: ID of the class this attribute is scoped to (required; no global registry)
-        identifier: Machine-readable identifier for the attribute within its class
+        class_id: ID of the class this attribute is scoped to (None for an edge attribute)
+        identifier: Machine-readable identifier for the attribute within its owner
         title: Display name for the attribute
         datatype: The data type (one of: string, integer, number, date, boolean, array, object)
         description: Optional longer description
@@ -596,10 +713,12 @@ class AttributeDefinition:
         last_modified: Timestamp of last modification
         version: Version number for optimistic concurrency control
         status: Publication status (draft or published)
+        property_definition_id: ID of the relationship type an edge attribute is on
+            (None for a class attribute)
     """
 
     id: str
-    class_id: str
+    class_id: str | None
     identifier: str
     title: str
     datatype: DataType
@@ -614,9 +733,14 @@ class AttributeDefinition:
     version: int = 1
     status: Status = Status.DRAFT
     source_run_id: str | None = None
+    property_definition_id: str | None = None
 
     def __post_init__(self) -> None:
         self.identifier = validate_identifier(self.identifier)
+        if (self.class_id is None) == (self.property_definition_id is None):
+            raise ValueError(
+                "An attribute definition belongs to exactly one class or one relationship type"
+            )
         if isinstance(self.datatype, str):
             try:
                 self.datatype = DataType(self.datatype)

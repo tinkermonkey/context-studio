@@ -68,7 +68,7 @@ from domain.ontology.exceptions import (
     IdentifierConflictError,
     OntologyError,
 )
-from domain.ontology.services import OntologyService
+from domain.ontology.services import STRUCTURE_FIELDS, OntologyService
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
@@ -1054,6 +1054,11 @@ async def create_property_definition(
             domain_class_id=request.domain_class_id,
             range_class_id=request.range_class_id,
             create_missing_predicate=True,
+            min_per_source=request.min_per_source or 0,
+            max_per_source=request.max_per_source,
+            max_per_target=request.max_per_target,
+            hierarchy=bool(request.hierarchy),
+            symmetric=bool(request.symmetric),
         )
         return PropertyDefinitionResponse.model_validate(prop_def)
     except Exception as exc:
@@ -1194,8 +1199,39 @@ async def update_property_definition(
             is_relevant=request.is_relevant,
             update_is_relevant="is_relevant" in request.model_fields_set,
             create_missing_predicate=True,
+            structure={
+                name: getattr(request, name)
+                for name in STRUCTURE_FIELDS
+                if name in request.model_fields_set
+                and (getattr(request, name) is not None or name.startswith("max_"))
+            },
         )
         return PropertyDefinitionResponse.model_validate(prop_def)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get(
+    "/properties/{property_id}/attributes", response_model=list[AttributeDefinitionResponse]
+)
+async def list_edge_attributes(
+    property_id: str,
+    service: OntologyService = Depends(get_ontology_service),
+) -> list[AttributeDefinitionResponse]:
+    """
+    The relationship type's edge attributes: the values its relationships may
+    carry, each with a datatype, allowed values, required and a default.
+
+    Raises:
+        HTTPException: 404 if the relationship type is not found
+    """
+    try:
+        await run_sync_in_executor(service.get_property_definition, property_id)
+        attributes = await run_sync_in_executor(
+            service.list_attribute_definitions, property_definition_id=property_id, limit=None
+        )
+        return [AttributeDefinitionResponse.model_validate(a) for a in attributes]
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

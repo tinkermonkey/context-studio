@@ -16,7 +16,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterator
 
-from adapters.interchange.dr_relationships import DR_ATTRIBUTE_SCHEMA, RelationshipSchemaRecord
+from adapters.interchange.dr_relationships import (
+    DR_ATTRIBUTE_SCHEMA,
+    DR_CARDINALITIES,
+    RelationshipSchemaRecord,
+)
 from domain.ontology.value_objects import DataType, SourceRevision
 
 CHARTER_FILE = "DESIGN_CHARTER.md"
@@ -258,6 +262,12 @@ def iter_relationship_schemas(spec_dir: Path) -> Iterator[RelationshipSchemaReco
             evidence = data.get("x-dr-evidence") or []
             if not isinstance(evidence, list) or not all(isinstance(e, str) for e in evidence):
                 raise ValueError(f"Relationship schema {path}: x-dr-evidence is not a string list")
+            cardinality = (props.get("cardinality") or {}).get("const")
+            if cardinality is not None and cardinality not in DR_CARDINALITIES:
+                raise ValueError(
+                    f"Relationship schema {path}: cardinality {cardinality!r} is not one of"
+                    f" {', '.join(DR_CARDINALITIES)}"
+                )
             yield RelationshipSchemaRecord(
                 source_spec_node_id=props["source_spec_node_id"]["const"],
                 source_layer=props["source_layer"]["const"],
@@ -266,7 +276,7 @@ def iter_relationship_schemas(spec_dir: Path) -> Iterator[RelationshipSchemaReco
                 predicate=props["predicate"]["const"],
                 title=data["title"],
                 description=data.get("description"),
-                cardinality=(props.get("cardinality") or {}).get("const"),
+                cardinality=cardinality,
                 strength=(props.get("strength") or {}).get("const"),
                 evidence=tuple(evidence),
             )

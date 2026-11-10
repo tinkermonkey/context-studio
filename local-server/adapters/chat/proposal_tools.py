@@ -327,11 +327,18 @@ class ProposeChangesTool(_ProposalTool):
         f"{_field_guide()}\n"
         "A relationship update sets only its attributes; to change its ends, delete it"
         " and create another. A DR relationship type (a property with a"
-        " documentation_robotics external reference) keeps its spec cardinality,"
-        " strength and evidence lines in that reference's metadata:"
-        ' {"cardinality", "strength", "evidence": [...]}. Give them on a create; to'
+        " documentation_robotics external reference) keeps its spec strength and"
+        " evidence lines in that reference's metadata:"
+        ' {"strength", "evidence": [...]}. Give them on a create; to'
         " change them, update external_references, which replaces the whole list, so"
-        " send every reference and every metadata key. An individual's data_properties"
+        " send every reference and every metadata key. A relationship type's structure"
+        " is its own fields: min_per_source, max_per_source and max_per_target (null:"
+        " no limit; DR's cardinality maps to them: many-to-one is max_per_source 1,"
+        " one-to-many max_per_target 1, one-to-one both), hierarchy (no cycles) and"
+        " symmetric (both need the same domain and range). Its edge attributes (values"
+        " its relationships carry, such as a quantity) are attribute operations with"
+        " property_definition_id instead of class_id; a relationship's attributes must"
+        " fit them (datatype, allowed values, required). An individual's data_properties"
         " map attribute identifiers (of its classes, inherited ones included) to values"
         " of the attribute's datatype (a number is an integer or decimal, a date is"
         ' "YYYY-MM-DD" text); on an update, only those given change and null'

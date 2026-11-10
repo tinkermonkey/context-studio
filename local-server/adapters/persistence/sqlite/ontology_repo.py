@@ -157,6 +157,8 @@ def _extract_constraint_name_from_integrity_error(error: IntegrityError) -> str 
     - "UNIQUE constraint failed: ontology_entities.identifier"
     - "UNIQUE constraint failed: relationships.uk_relationship_triple"
     - "UNIQUE constraint failed: attribute_definitions.uk_attribute_class_identifier"
+    - "UNIQUE constraint failed: attribute_definitions.property_definition_id,
+      attribute_definitions.identifier"
     - "UNIQUE constraint failed: predicates.taxonomy_id, predicates.identifier"
     - "NOT NULL constraint failed: ..."
     - "FOREIGN KEY constraint failed"
@@ -171,8 +173,16 @@ def _extract_constraint_name_from_integrity_error(error: IntegrityError) -> str 
     if "unique constraint" in error_str:
         if "uk_relationship_triple" in error_str:
             return "uk_relationship_triple"
-        if "uk_attribute_class_identifier" in error_str:
+        if "uk_attribute_class_identifier" in error_str or (
+            "attribute_definitions.class_id" in error_str
+            and "attribute_definitions.identifier" in error_str
+        ):
             return "uk_attribute_class_identifier"
+        if "uk_attribute_property_identifier" in error_str or (
+            "attribute_definitions.property_definition_id" in error_str
+            and "attribute_definitions.identifier" in error_str
+        ):
+            return "uk_attribute_property_identifier"
         if "uk_predicate_taxonomy_identifier" in error_str or (
             "predicates.taxonomy_id" in error_str and "predicates.identifier" in error_str
         ):
@@ -1619,10 +1629,14 @@ class SQLiteOntologyRepository:
                     found.update(
                         EntityReference(ref, dep, "property_definition") for dep, ref in rows
                     )
-                rows = session.query(
-                    AttributeDefinitionORM.id, AttributeDefinitionORM.class_id
-                ).filter(AttributeDefinitionORM.class_id.in_(chunk))
-                found.update(EntityReference(ref, dep, "attribute_definition") for dep, ref in rows)
+                for column in ("class_id", "property_definition_id"):
+                    ref_col = getattr(AttributeDefinitionORM, column)
+                    rows = session.query(AttributeDefinitionORM.id, ref_col).filter(
+                        ref_col.in_(chunk)
+                    )
+                    found.update(
+                        EntityReference(ref, dep, "attribute_definition") for dep, ref in rows
+                    )
         return sorted(found, key=lambda r: (r.referenced_id, r.dependent_kind, r.dependent_id))
 
     def count_property_definitions_referencing_class(self, class_id: str) -> int:
@@ -1806,6 +1820,11 @@ class SQLiteOntologyRepository:
                 orm_entity.domain_class_id = prop.domain_class_id  # type: ignore[assignment]
                 orm_entity.range_class_id = prop.range_class_id  # type: ignore[assignment]
                 orm_entity.derived = prop.derived  # type: ignore[assignment]
+                orm_entity.min_per_source = prop.min_per_source  # type: ignore[assignment]
+                orm_entity.max_per_source = prop.max_per_source  # type: ignore[assignment]
+                orm_entity.max_per_target = prop.max_per_target  # type: ignore[assignment]
+                orm_entity.hierarchy = prop.hierarchy  # type: ignore[assignment]
+                orm_entity.symmetric = prop.symmetric  # type: ignore[assignment]
                 orm_entity.external_references = (
                     mapped_orm.external_references
                 )  # type: ignore[assignment]
@@ -2259,14 +2278,16 @@ class SQLiteOntologyRepository:
         class_id: Optional[str] = None,
         limit: Optional[int] = 100,
         offset: int = 0,
+        property_definition_id: Optional[str] = None,
     ) -> list[AttributeDefinition]:
         """
-        List attribute definitions, optionally filtered by class and ordered by sort_order.
+        List attribute definitions, optionally filtered by owner and ordered by sort_order.
 
         Args:
             class_id: Optional class ID to filter by
             limit: Maximum number of results to return; None means no limit
             offset: Number of results to skip
+            property_definition_id: Optional relationship type whose edge attributes to list
 
         Returns:
             Sequence of AttributeDefinition entities, ordered by sort_order
@@ -2275,7 +2296,11 @@ class SQLiteOntologyRepository:
             query = session.query(AttributeDefinitionORM)
 
             if class_id is not None:
-                query = query.filter(AttributeDefinitionORM.class_id == class_id)
+                query = query.filter(AttributeDefinitionORM.class_id == str(class_id))
+            if property_definition_id is not None:
+                query = query.filter(
+                    AttributeDefinitionORM.property_definition_id == str(property_definition_id)
+                )
 
             query = query.order_by(AttributeDefinitionORM.sort_order)
 
@@ -2289,7 +2314,8 @@ class SQLiteOntologyRepository:
         """
         Create or update an attribute definition.
 
-        Validates that the parent class exists and enforces unique (class_id, identifier).
+        Validates that its owner (a class, or a relationship type for an edge
+        attribute) exists and enforces a unique identifier per owner.
 
         Args:
             attr_def: AttributeDefinition entity to save
@@ -2298,8 +2324,8 @@ class SQLiteOntologyRepository:
             Saved AttributeDefinition entity
 
         Raises:
-            ValueError: If title is empty or parent class doesn't exist
-            DuplicateEntityError: If (class_id, identifier) pair is not unique
+            ValueError: If title is empty or the owner doesn't exist
+            DuplicateEntityError: If the owner already has an attribute with the identifier
         """
         if not attr_def.title or not attr_def.title.strip():
             raise ValueError("AttributeDefinition title cannot be empty")
@@ -2307,27 +2333,38 @@ class SQLiteOntologyRepository:
         if not attr_def.identifier or not attr_def.identifier.strip():
             raise ValueError("AttributeDefinition identifier cannot be empty")
 
-        with self.session_factory() as session:
-            # Verify parent class exists
-            parent_class = self.get_class(attr_def.class_id, session)
-            if parent_class is None:
-                raise ValueError(f"Parent class {attr_def.class_id} does not exist")
+        if attr_def.class_id is not None:
+            owner_column, owner_id = AttributeDefinitionORM.class_id, attr_def.class_id
+            owner_label = "class_id"
+        else:
+            owner_column = AttributeDefinitionORM.property_definition_id
+            owner_id = cast(str, attr_def.property_definition_id)
+            owner_label = "property_definition_id"
+        duplicate_message = (
+            f"AttributeDefinition with ({owner_label}, identifier) = "
+            f"({owner_id}, {attr_def.identifier}) already exists"
+        )
 
-            # Check uniqueness of (class_id, identifier) for other attribute definitions
+        with self.session_factory() as session:
+            # Verify the owner exists
+            if attr_def.class_id is not None:
+                if self.get_class(attr_def.class_id, session) is None:
+                    raise ValueError(f"Parent class {attr_def.class_id} does not exist")
+            elif self.get_property_definition(owner_id, session) is None:
+                raise ValueError(f"Relationship type {owner_id} does not exist")
+
+            # Check uniqueness of (owner, identifier) for other attribute definitions
             existing = (
                 session.query(AttributeDefinitionORM)
                 .filter(
-                    AttributeDefinitionORM.class_id == attr_def.class_id,
+                    owner_column == str(owner_id),
                     AttributeDefinitionORM.identifier == attr_def.identifier,
                     AttributeDefinitionORM.id != attr_def.id,
                 )
                 .first()
             )
             if existing is not None:
-                raise DuplicateEntityError(
-                    f"AttributeDefinition with (class_id, identifier) = "
-                    f"({attr_def.class_id}, {attr_def.identifier}) already exists"
-                )
+                raise DuplicateEntityError(duplicate_message)
 
             orm_attr = (
                 session.query(AttributeDefinitionORM)
@@ -2345,6 +2382,7 @@ class SQLiteOntologyRepository:
             else:
                 # Update existing
                 orm_attr.class_id = attr_def.class_id  # type: ignore[assignment]
+                orm_attr.property_definition_id = attr_def.property_definition_id  # type: ignore
                 orm_attr.identifier = attr_def.identifier  # type: ignore[assignment]
                 orm_attr.title = attr_def.title  # type: ignore[assignment]
                 orm_attr.datatype = attr_def.datatype  # type: ignore[assignment]
@@ -2369,11 +2407,11 @@ class SQLiteOntologyRepository:
                     f"Database integrity error when saving attribute definition {attr_def.id}: {e}"
                 )
                 constraint_name = _extract_constraint_name_from_integrity_error(e)
-                if constraint_name == "uk_attribute_class_identifier":
-                    raise DuplicateEntityError(
-                        f"AttributeDefinition with (class_id, identifier) = "
-                        f"({attr_def.class_id}, {attr_def.identifier}) already exists"
-                    ) from e
+                if constraint_name in (
+                    "uk_attribute_class_identifier",
+                    "uk_attribute_property_identifier",
+                ):
+                    raise DuplicateEntityError(duplicate_message) from e
                 raise e
 
             return self._map_attribute_definition_orm_to_domain(orm_attr)
@@ -2404,19 +2442,20 @@ class SQLiteOntologyRepository:
 
     def count_attribute_definitions(self, class_id: Optional[str] = None) -> int:
         """
-        Count attribute definitions, optionally filtered by class.
+        Count attribute definitions, optionally those of one class.
 
         Args:
             class_id: Optional class ID to filter by
 
         Returns:
-            Total count of attribute definitions
+            Total count of attribute definitions (class and edge attributes when
+            class_id is None)
         """
         with self.session_factory() as session:
             query = session.query(AttributeDefinitionORM)
 
             if class_id is not None:
-                query = query.filter(AttributeDefinitionORM.class_id == class_id)
+                query = query.filter(AttributeDefinitionORM.class_id == str(class_id))
 
             return query.count()
 
@@ -2546,7 +2585,8 @@ class SQLiteOntologyRepository:
         """
         return AttributeDefinition(
             id=cast(str, orm_attr.id),
-            class_id=cast(str, orm_attr.class_id),
+            class_id=cast(str | None, orm_attr.class_id),
+            property_definition_id=cast(str | None, orm_attr.property_definition_id),
             identifier=cast(str, orm_attr.identifier),
             title=cast(str, orm_attr.title),
             datatype=DataType(cast(str, orm_attr.datatype)),
@@ -2580,6 +2620,7 @@ class SQLiteOntologyRepository:
         return AttributeDefinitionORM(
             id=attr_def.id,
             class_id=attr_def.class_id,
+            property_definition_id=attr_def.property_definition_id,
             identifier=attr_def.identifier,
             title=attr_def.title,
             datatype=attr_def.datatype,
@@ -2984,19 +3025,23 @@ class SQLiteOntologyRepository:
         class_id: Optional[str] = None,
         limit: Optional[int] = 100,
         offset: int = 0,
+        property_definition_id: Optional[str] = None,
     ) -> list[AttributeDefinition]:
         """
-        List attribute definitions, optionally filtered by class (async version).
+        List attribute definitions, optionally filtered by owner (async version).
 
         Args:
             class_id: Optional class ID to filter by
             limit: Maximum number of results to return; None means no limit
             offset: Number of results to skip
+            property_definition_id: Optional relationship type whose edge attributes to list
 
         Returns:
             Sequence of AttributeDefinition entities
         """
-        return await run_sync_in_executor(self.list_attribute_definitions, class_id, limit, offset)
+        return await run_sync_in_executor(
+            self.list_attribute_definitions, class_id, limit, offset, property_definition_id
+        )
 
     async def save_attribute_definition_async(
         self, attr_def: AttributeDefinition

@@ -400,6 +400,7 @@ class ChangeEventRecorder:
             new_state={
                 "attribute_definition_id": event.attribute_definition_id,
                 "class_id": event.class_id,
+                "property_definition_id": event.property_definition_id,
                 "identifier": event.identifier,
                 "title": event.title,
             },

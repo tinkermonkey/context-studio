@@ -40,6 +40,15 @@ export function usePropertiesByIds(ids: Array<string | null | undefined>) {
   });
 }
 
+/** A relationship type's edge attributes; skipped without an id. */
+export function useEdgeAttributes(propertyId: string | undefined) {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.property(propertyId ?? ""), "attributes"],
+    queryFn: () => ontologyService.listEdgeAttributes(propertyId!),
+    enabled: !!propertyId,
+  });
+}
+
 export function useProperty(id: string) {
   return useQuery({
     queryKey: QUERY_KEYS.property(id),

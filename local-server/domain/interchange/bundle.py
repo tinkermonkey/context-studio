@@ -41,7 +41,16 @@ the source's ExternalReference identifier, then on their UUID: an individual
 created in Context Studio exports its UUID as its `id`. Relationships are
 matched on their (source, property, target) triple; their `attributes` (JSON
 scalars, e.g. a kit's quantity, unit and optional) may use only the names the
-property lists in `constraints.edge_properties`. A create names its new entity
+property lists in `constraints.edge_properties`.
+
+Structure (#1482). A relationship type's structure and edge attributes are
+fields of their own (PropertyDefinition.min_per_source and so on; attribute
+definitions owned by the type). v0 still carries them in `constraints` under
+House's keys: min, max, hierarchy, symmetric (max_per_target when set) and
+edge_properties (its edge attributes' identifiers). Planning reads those keys
+into the fields and edge attributes (a new edge attribute is a string: v0 has
+no datatype) and keeps the rest as the reference metadata; exporting writes
+them back, so a v0 bundle round trip plans nothing. A create names its new entity
 with a ref ("class:house_room"), so later operations point at it as "$class:...".
 
 References. A class, property or individual the plan creates carries an
@@ -98,6 +107,8 @@ from domain.ontology.entities import (
     Individual,
     PropertyDefinition,
     Taxonomy,
+    edge_default,
+    edge_value_problem,
     same_attributes,
     validate_relationship_attributes,
 )
@@ -202,6 +213,34 @@ def plan_bundle(
 
 def _ref(kind: str, key: str) -> str:
     return f"{kind}:{key}"
+
+
+# v0 carries a relationship type's structure in `constraints` under these keys
+# (House's names), and its edge attributes as `constraints.edge_properties`.
+_V0_STRUCTURE = {
+    "min": "min_per_source",
+    "max": "max_per_source",
+    "max_per_target": "max_per_target",
+    "hierarchy": "hierarchy",
+    "symmetric": "symmetric",
+}
+_V0_EDGE_PROPERTIES = "edge_properties"
+
+
+def _split_constraints(
+    constraints: dict[str, Any] | None,
+) -> tuple[dict[str, Any], list[str] | None, dict[str, Any]]:
+    """
+    A v0 property's constraints as its structure fields (only the keys given),
+    its edge attribute names (None when not given), and the rest, which stays
+    the source's reference metadata.
+    """
+    rest = dict(constraints or {})
+    structure = {field: rest.pop(key) for key, field in _V0_STRUCTURE.items() if key in rest}
+    names = rest.pop(_V0_EDGE_PROPERTIES, None)
+    if structure.get("min_per_source") is None and "min_per_source" in structure:
+        structure["min_per_source"] = 0
+    return structure, list(names) if isinstance(names, list) else None, rest
 
 
 def _text(value: Any) -> str:
@@ -525,6 +564,7 @@ class _Planner:
                     f" {self._source!r} and does not lie within this taxonomy; prefix the"
                     " bundle's identifiers"
                 )
+            structure, edge_names, metadata = _split_constraints(spec.get("constraints"))
             if existing is None:
                 derived = _derived(spec, spec.get("constraints"), None, where)
                 ids[identifier] = self._create(
@@ -538,19 +578,19 @@ class _Planner:
                         "domain_class_id": domain_id,
                         "range_class_id": range_id,
                         "derived": derived or None,
+                        **structure,
                         "external_references": [
-                            self._reference(identifier, spec.get("constraints")).to_dict(),
+                            self._reference(identifier, metadata).to_dict(),
                             *(r.to_dict() for r in listed),
                         ],
                     },
                 )
                 if derived:
                     self._derived_ids.add(ids[identifier])
+                self._plan_edge_attributes(identifier, ids[identifier], {}, edge_names, None)
                 counts.record("created")
                 continue
-            references = _with_listed(
-                self._references(existing, identifier, spec.get("constraints")), listed
-            )
+            references = _with_listed(self._references(existing, identifier, metadata), listed)
             derived = _derived(spec, spec.get("constraints"), existing, where)
             if derived:
                 self._derived_ids.add(existing.id)
@@ -562,6 +602,7 @@ class _Planner:
                     "domain_class_id": (existing.domain_class_id, domain_id),
                     "range_class_id": (existing.range_class_id, range_id),
                     "derived": (existing.derived, derived),
+                    **{name: (getattr(existing, name), value) for name, value in structure.items()},
                 }
             )
             if existing.external_references != references:
@@ -571,7 +612,102 @@ class _Planner:
                 self._update(K.PROPERTY, existing.id, changed)
             counts.record("updated" if changed or cleared else "unchanged")
             ids[identifier] = existing.id
+            current = {
+                a.identifier: a
+                for a in self._repo.list_attribute_definitions(
+                    property_definition_id=existing.id, limit=None
+                )
+            }
+            self._plan_edge_attributes(identifier, existing.id, current, edge_names, existing)
         return ids
+
+    def _edge_values(self, property_identifier: str, name: str) -> list[Any]:
+        """The values the bundle's relationships of a property give an edge attribute."""
+        return [
+            spec["attributes"][name]
+            for spec in self._bundle.get("relationships") or []
+            if spec.get("property") == property_identifier
+            and isinstance(spec.get("attributes"), dict)
+            and spec["attributes"].get(name) is not None
+        ]
+
+    def _edge_datatype(self, property_identifier: str, name: str) -> str | None:
+        """
+        The datatype the bundle's relationships' values of an edge attribute
+        share (string when they're mixed); None when no relationship gives one.
+        """
+        values = self._edge_values(property_identifier, name)
+        if not values:
+            return None
+        if all(isinstance(v, bool) for v in values):
+            return "boolean"
+        if all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in values):
+            return "number"
+        return "string"
+
+    def _plan_edge_attributes(
+        self,
+        identifier: str,
+        property_id: str,
+        current: dict[str, AttributeDefinition],
+        names: list[str] | None,
+        prop: PropertyDefinition | None,
+    ) -> None:
+        """
+        A v0 property's `constraints.edge_properties` as its edge attributes:
+        a create for each new name, in listed order, a delete for one no longer
+        listed. Not given, they're left alone. v0 has no datatype, so an edge
+        attribute takes the type of the values the bundle's relationships give
+        it (all numbers: number, all booleans: boolean, else string; a new one
+        with no values is a string).
+        """
+        if names is None:
+            return
+        counts = self.plan.kind("attribute")
+        for name, attribute in current.items():
+            if name not in names and prop is not None:
+                self._delete(
+                    K.ATTRIBUTE,
+                    attribute,
+                    f"edge attribute {name!r} of {prop.title!r}",
+                    "attribute",
+                )
+        for order, name in enumerate(names):
+            if name in current:
+                # v0 has no datatype: when the bundle's values don't fit the
+                # current one (an integer or date that holds them is kept), take
+                # the type they share, before any relationship using them applies.
+                values = self._edge_values(identifier, name)
+                datatype = self._edge_datatype(identifier, name)
+                have = getattr(current[name].datatype, "value", current[name].datatype)
+                if (
+                    datatype is not None
+                    and datatype != have
+                    and any(edge_value_problem(current[name], v) for v in values)
+                ):
+                    self._early.append(
+                        OperationDraft(
+                            seq=0,
+                            op=T.UPDATE,
+                            kind=K.ATTRIBUTE,
+                            target_id=current[name].id,
+                            fields={"datatype": datatype},
+                        )
+                    )
+                    counts.record("updated")
+                continue
+            self._create(
+                K.ATTRIBUTE,
+                _ref("attribute", f"property:{identifier}/{name}"),
+                {
+                    "property_definition_id": property_id,
+                    "identifier": name,
+                    "title": name,
+                    "datatype": self._edge_datatype(identifier, name) or "string",
+                    "sort_order": order,
+                },
+            )
+            counts.record("created")
 
     # ---------------------------------------------------------- individuals
 
@@ -686,11 +822,28 @@ class _Planner:
                     },
                 )
                 counts.record("created")
-            elif same_attributes(existing[0].attributes, attributes):
+            elif same_attributes(
+                existing[0].attributes, self._with_defaults(property_id, attributes)
+            ):
                 counts.record("unchanged")
             else:
                 self._update(K.RELATIONSHIP, existing[0].id, {"attributes": attributes})
                 counts.record("updated")
+
+    def _with_defaults(self, property_id: str, attributes: dict[str, Any]) -> dict[str, Any]:
+        """
+        A relationship's attributes as storing them gives them: a missing required
+        edge attribute takes its default (see edge_attribute_values).
+        """
+        values = dict(attributes)
+        for definition in self._repo.list_attribute_definitions(
+            property_definition_id=property_id, limit=None
+        ):
+            if definition.is_required and values.get(definition.identifier) is None:
+                default = edge_default(definition)
+                if default is not None:
+                    values[definition.identifier] = default
+        return values
 
     # -------------------------------------------------------------- deletes
 
@@ -987,7 +1140,17 @@ class BundleExporter:
                 key=lambda c: c["identifier"],
             ),
             "properties": sorted(
-                (_property(p, source, class_keys) for p in properties),
+                (
+                    _property(
+                        p,
+                        source,
+                        class_keys,
+                        self._repo.list_attribute_definitions(
+                            property_definition_id=p.id, limit=None
+                        ),
+                    )
+                    for p in properties
+                ),
                 key=lambda p: p["identifier"],
             ),
             "individuals": sorted(
@@ -1148,7 +1311,31 @@ def _attribute(attribute: AttributeDefinition) -> dict[str, Any]:
     return spec
 
 
-def _property(prop: PropertyDefinition, source: str, class_keys: dict[str, str]) -> dict[str, Any]:
+def _constraints(
+    prop: PropertyDefinition, source: str, edge_attributes: list[AttributeDefinition]
+) -> dict[str, Any]:
+    """
+    A property's v0 constraints: the source's reference metadata, its structure
+    under House's keys (max_per_target only when set) and its edge attributes'
+    identifiers as edge_properties (when it has any).
+    """
+    constraints = _metadata(prop, source)
+    for key, name in _V0_STRUCTURE.items():
+        value = getattr(prop, name)
+        if key != "max_per_target" or value is not None:
+            constraints[key] = value
+    if edge_attributes:
+        ordered = sorted(edge_attributes, key=lambda a: (a.sort_order, a.identifier))
+        constraints[_V0_EDGE_PROPERTIES] = [a.identifier for a in ordered]
+    return constraints
+
+
+def _property(
+    prop: PropertyDefinition,
+    source: str,
+    class_keys: dict[str, str],
+    edge_attributes: list[AttributeDefinition],
+) -> dict[str, Any]:
     spec = {
         "identifier": prop.identifier,
         "title": prop.title,
@@ -1157,7 +1344,7 @@ def _property(prop: PropertyDefinition, source: str, class_keys: dict[str, str])
         "domain": class_keys.get(prop.domain_class_id) if prop.domain_class_id else None,
         "range": class_keys.get(prop.range_class_id) if prop.range_class_id else None,
         "derived": prop.derived,
-        "constraints": _metadata(prop, source),
+        "constraints": _constraints(prop, source, edge_attributes),
     }
     return _add_other_references(spec, prop, source)
 

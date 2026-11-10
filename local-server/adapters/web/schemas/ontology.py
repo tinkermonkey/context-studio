@@ -522,6 +522,22 @@ class PropertyDefinitionCreateRequest(BaseModel):
     range_class_id: Optional[str] = Field(
         None, description="Class the relationship's target must belong to"
     )
+    min_per_source: Optional[int] = Field(
+        None, ge=0, description="Fewest relationships of this type a source has (default 0)"
+    )
+    max_per_source: Optional[int] = Field(
+        None, ge=1, description="Most relationships of this type a source has (null: no limit)"
+    )
+    max_per_target: Optional[int] = Field(
+        None, ge=1, description="Most relationships of this type a target has (null: no limit)"
+    )
+    hierarchy: Optional[bool] = Field(
+        None, description="Its relationships form no cycles (needs the same domain and range)"
+    )
+    symmetric: Optional[bool] = Field(
+        None,
+        description="A relationship one way holds the other way too (same domain and range)",
+    )
 
 
 class PropertyDefinitionUpdateRequest(BaseModel):
@@ -541,6 +557,15 @@ class PropertyDefinitionUpdateRequest(BaseModel):
         None,
         description="Relevance flag (None=not evaluated, True=relevant, False=irrelevant)",
     )
+    min_per_source: Optional[int] = Field(None, ge=0, description="New minimum per source")
+    max_per_source: Optional[int] = Field(
+        None, ge=1, description="New maximum per source; null removes the limit"
+    )
+    max_per_target: Optional[int] = Field(
+        None, ge=1, description="New maximum per target; null removes the limit"
+    )
+    hierarchy: Optional[bool] = Field(None, description="New hierarchy flag")
+    symmetric: Optional[bool] = Field(None, description="New symmetric flag")
 
 
 class PredicateResponse(BaseModel):
@@ -591,6 +616,22 @@ class PropertyDefinitionResponse(BaseModel):
     )
     range_class_id: Optional[str] = Field(
         None, description="Class the relationship's target must belong to, if constrained"
+    )
+    min_per_source: int = Field(
+        0, description="Fewest relationships of this type a source has (0: optional)"
+    )
+    max_per_source: Optional[int] = Field(
+        None, description="Most relationships of this type a source has (null: no limit)"
+    )
+    max_per_target: Optional[int] = Field(
+        None, description="Most relationships of this type a target has (null: no limit)"
+    )
+    hierarchy: bool = Field(
+        False, description="Its relationships form no cycles (needs the same domain and range)"
+    )
+    symmetric: bool = Field(
+        False,
+        description="A relationship one way holds the other way too (same domain and range)",
     )
     derived: bool = Field(
         default=False,
@@ -772,7 +813,10 @@ class AttributeDefinitionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str = Field(..., description="Unique identifier (UUID)")
-    class_id: str = Field(..., description="Parent class ID")
+    class_id: Optional[str] = Field(None, description="Parent class ID (null for an edge attribute)")
+    property_definition_id: Optional[str] = Field(
+        None, description="Relationship type an edge attribute is on (null for a class attribute)"
+    )
     identifier: str = Field(..., description="Machine-readable identifier")
     title: str = Field(..., description="Display name")
     datatype: str = Field(

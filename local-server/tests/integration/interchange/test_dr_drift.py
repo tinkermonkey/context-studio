@@ -277,6 +277,42 @@ def test_hand_edits_are_reported_proposed_and_cleared_once_applied(world, spec):
     assert attributes["launched"].datatype.value == "boolean"
 
 
+def test_a_changed_cardinality_plans_an_update_of_the_structure_fields(world, spec):
+    """#1482: the cardinality is compared as the structure fields, not reference metadata."""
+    rel_id = "business.product.composes.business.contract"
+    prop = _property(world.repo, rel_id)
+    assert (prop.min_per_source, prop.max_per_source, prop.max_per_target) == (0, None, None)
+    _set_relationship(spec, rel_id, "cardinality", "one-to-one")
+
+    dry = world.drift.reimport(str(spec))
+
+    (entry,) = dry.plan.entries
+    assert (entry.kind, entry.source_id, entry.change) == ("property", rel_id, "update")
+    assert entry.fields == {
+        "max_per_source": {"taxonomy": None, "source": 1},
+        "max_per_target": {"taxonomy": None, "source": 1},
+    }
+    (operation,) = dry.plan.operations
+    assert operation.fields == {"max_per_source": 1, "max_per_target": 1}
+
+    _apply_all(world, world.drift.reimport(str(spec), dry_run=False).proposal)
+
+    prop = _property(world.repo, rel_id)
+    assert (prop.min_per_source, prop.max_per_source, prop.max_per_target) == (0, 1, 1)
+    assert "cardinality" not in dict(prop.external_references[0].metadata or {})
+    assert world.drift.reimport(str(spec)).plan.entries == []
+
+
+def test_a_new_relationship_type_is_created_with_its_cardinality(world, spec):
+    new_rel = _add_relationship(spec, "business.product", "serves", "business.businessactor")
+
+    _apply_all(world, world.drift.reimport(str(spec), dry_run=False).proposal)
+
+    prop = _property(world.repo, new_rel)
+    assert (prop.min_per_source, prop.max_per_source, prop.max_per_target) == (0, None, 1)
+    assert world.drift.reimport(str(spec)).plan.entries == []
+
+
 def _write_catalog(spec, catalog):
     (spec / "dist" / "base.json").write_text(json.dumps({"predicates": catalog}))
 

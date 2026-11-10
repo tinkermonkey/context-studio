@@ -342,6 +342,11 @@ def map_orm_to_domain(
             domain_class_id=cast(str | None, orm_entity.domain_class_id),
             range_class_id=cast(str | None, orm_entity.range_class_id),
             derived=bool(orm_entity.derived),
+            min_per_source=int(cast(int | None, orm_entity.min_per_source) or 0),
+            max_per_source=cast(int | None, orm_entity.max_per_source),
+            max_per_target=cast(int | None, orm_entity.max_per_target),
+            hierarchy=bool(orm_entity.hierarchy),
+            symmetric=bool(orm_entity.symmetric),
             external_references=deserialize_external_references(
                 cast(list[dict[str, Any]], orm_entity.external_references) or []
             ),
@@ -440,6 +445,11 @@ def map_domain_to_orm(
             domain_class_id=entity.domain_class_id,
             range_class_id=entity.range_class_id,
             derived=entity.derived,
+            min_per_source=entity.min_per_source,
+            max_per_source=entity.max_per_source,
+            max_per_target=entity.max_per_target,
+            hierarchy=entity.hierarchy,
+            symmetric=entity.symmetric,
             external_references=serialize_external_references(entity.external_references),
             is_relevant=entity.is_relevant,
             lexical_senses=serialize_lexical_senses(entity.lexical_senses),
