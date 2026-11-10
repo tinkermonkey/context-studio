@@ -3,11 +3,13 @@ import {
   Button,
   Chip,
   ConfirmDialog,
+  Field,
   Icon,
   PageHeader,
   ProgressBar,
   SegmentedControl,
   Table,
+  TextArea,
 } from "@tinkermonkey/heimdall-ui";
 import { useChangeProposal, useProposalDecisions } from "@/api/hooks/proposals";
 import { useTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
@@ -132,7 +134,9 @@ export function ProposalDetailPage({
   const predicateCatalog = useMemo(() => drPredicateDescriptions(taxonomy), [taxonomy]);
   const [threshold, setThreshold] = useState(DEFAULT_THRESHOLD);
   const [checkedIds, setChecked] = useState<string[]>([]);
-  const [confirmRejectAll, setConfirmRejectAll] = useState(false);
+  // The operations a confirmed reject covers: all awaiting, or the checked ones.
+  const [rejecting, setRejecting] = useState<{ ids: string[]; checked: boolean } | null>(null);
+  const [rejectNote, setRejectNote] = useState("");
   const [confirmRevert, setConfirmRevert] = useState(false);
   // Undefined until the reviewer picks one: then it follows defaultOperationFilter.
   const [chosenFilter, setFilter] = useState<OperationFilter>();
@@ -415,7 +419,10 @@ export function ProposalDetailPage({
                     variant="secondary"
                     size="sm"
                     disabled={actions.busy}
-                    onClick={() => setConfirmRejectAll(true)}
+                    onClick={() => {
+                      setRejectNote("");
+                      setRejecting({ ids: awaitingIds, checked: false });
+                    }}
                     data-testid="proposal-reject-all"
                   >
                     Reject all awaiting
@@ -525,8 +532,9 @@ export function ProposalDetailPage({
           blocked={checkedBlocked}
           busy={actions.busy}
           onClear={() => setChecked([])}
-          onReject={async () => {
-            if (await actions.rejectOperations(checkedList)) setChecked([]);
+          onReject={() => {
+            setRejectNote("");
+            setRejecting({ ids: checkedList, checked: true });
           }}
           onAccept={async () => {
             await actions.acceptFresh(checkedList);
@@ -718,15 +726,42 @@ export function ProposalDetailPage({
       />
 
       <ConfirmDialog
-        isOpen={confirmRejectAll}
-        onClose={() => setConfirmRejectAll(false)}
-        onConfirm={() => {
-          setConfirmRejectAll(false);
-          void actions.rejectOperations(awaitingIds);
+        isOpen={rejecting !== null}
+        onClose={() => setRejecting(null)}
+        onConfirm={async () => {
+          if (!rejecting) return;
+          setRejecting(null);
+          const done = await actions.rejectOperations(rejecting.ids, rejectNote);
+          if (done && rejecting.checked) setChecked([]);
         }}
-        title={`Reject all ${awaitingIds.length} awaiting?`}
-        message="A rejected operation can't be applied later. Operations already applied stay applied."
-        confirmLabel={`Reject ${awaitingIds.length}`}
+        title={
+          rejecting?.checked
+            ? `Reject ${rejecting.ids.length} selected?`
+            : `Reject all ${rejecting?.ids.length ?? 0} awaiting?`
+        }
+        message={
+          <div className="stack">
+            <p>
+              A rejected operation can&apos;t be applied later. Operations already applied stay
+              applied.
+            </p>
+            <Field
+              label="Reason"
+              hint="optional, stored with each reject"
+              htmlFor="proposal-reject-note"
+            >
+              <TextArea
+                id="proposal-reject-note"
+                rows={2}
+                value={rejectNote}
+                placeholder={rejecting?.ids.length === 1 ? "Why reject it?" : "Why reject them?"}
+                onChange={(e) => setRejectNote(e.target.value)}
+                data-testid="proposal-reject-note"
+              />
+            </Field>
+          </div>
+        }
+        confirmLabel={`Reject ${rejecting?.ids.length ?? 0}`}
       />
 
       <ConfirmDialog

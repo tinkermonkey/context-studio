@@ -129,6 +129,9 @@ describe("after a decision under Needs decision", () => {
     await userEvent.click(await screen.findByTestId("operation-check-op-rename"));
     await userEvent.click(screen.getByTestId("operation-check-op-delete"));
     await userEvent.click(screen.getByTestId("proposal-selection-reject"));
+    await userEvent.click(
+      within(await screen.findByRole("dialog")).getByRole("button", { name: "Reject 2" }),
+    );
 
     await waitFor(() => expect(selected()).toBe("op-class"));
     await inspected("op-class");
