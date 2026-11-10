@@ -48,6 +48,7 @@ from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
 from domain.versioning.approval_policy import ApprovalPolicyService
 from domain.versioning.bundle_import import BundleImportService
+from domain.versioning.claims import ClaimService
 from domain.versioning.drift import DriftImportService
 from domain.versioning.proposal_service import ProposalService
 from domain.versioning.services import VersioningService
@@ -390,3 +391,16 @@ async def get_mcp_connection(request: Request) -> McpConnection:
             detail="MCP connection details are only available to local clients.",
         )
     return connection
+
+
+async def get_claim_service(request: Request) -> ClaimService:
+    """
+    Extract the ClaimService from app state.
+
+    Raises:
+        RuntimeError: If service is not initialized in app.state
+    """
+    service = getattr(request.app.state, "claim_service", None)
+    if service is None:
+        raise RuntimeError("ClaimService not initialized in app.state")
+    return service

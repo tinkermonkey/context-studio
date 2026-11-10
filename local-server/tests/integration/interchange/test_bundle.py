@@ -520,6 +520,8 @@ def test_hand_made_class_is_matched_without_writes(importer, service, repo, sess
         description=BUNDLE["taxonomy"]["description"],
         vision=BUNDLE["taxonomy"]["vision"],
     )
+    for predicate in {p["predicate"] for p in BUNDLE["properties"]}:
+        service.create_predicate(taxonomy.id, predicate)
     scheme = service.create_scheme(
         taxonomy_id=taxonomy.id, title="Kinds", identifier="house_kinds", description="Node kinds."
     )
@@ -777,6 +779,7 @@ def authored(service):
         canonical_predicate="grows_in",
         domain_class_id=plant.id,
         range_class_id=bed.id,
+        create_missing_predicate=True,
     )
     north = service.create_individual([raised.id], title="North bed")
     tomato = service.create_individual([plant.id], title="Tomato", description="Cherry.")

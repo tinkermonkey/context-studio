@@ -105,7 +105,8 @@ def _git(directory: Path, *args: str) -> str | None:
 def read_predicate_catalog(spec_dir: Path) -> dict[str, dict[str, Any]] | None:
     """
     The spec's predicate catalog from spec/dist/base.json, by predicate id: each
-    predicate's inverse, category and description. None when the spec has no
+    predicate's inverse, category and description, plus its archimate_alignment
+    and semantics when the spec gives them. None when the spec has no
     dist/base.json (older specs).
     """
     path = spec_dir / "dist" / "base.json"
@@ -120,6 +121,7 @@ def read_predicate_catalog(spec_dir: Path) -> dict[str, dict[str, Any]] | None:
                 "inverse": entry.get("inverse"),
                 "category": entry.get("category"),
                 "description": entry.get("description"),
+                **{key: entry[key] for key in ("archimate_alignment", "semantics") if key in entry},
             }
             for predicate_id, entry in sorted(predicates.items())
         }

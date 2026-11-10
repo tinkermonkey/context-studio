@@ -1,0 +1,233 @@
+@layer app {
+  /* ============= Claims list ============= */
+  .claims-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .claims-filters__controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .claims-filters__subject {
+    width: 240px;
+  }
+
+  .claims-count {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .claim-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  /* Long claims clamp to three lines; the inspector shows the whole text. */
+  .claim-cell__text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+    font-size: 13px;
+    line-height: 1.45;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .claim-cell__key,
+  .claim-cell__p,
+  .claim-cell__score,
+  .claim-cell__subject {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-3));
+    overflow-wrap: anywhere;
+  }
+
+  /* One line: a long identifier ends in an ellipsis; the title shows it whole. */
+  .claim-cell__subject {
+    display: block;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .claim-cell__score {
+    white-space: nowrap;
+  }
+
+  .claim-cell__triage {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  /* ============= Claim inspector ============= */
+  /* Passes the inspector column's height down, so only the panel body scrolls. */
+  .claim-inspector {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .claim-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .claim-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .claim-text {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: rgb(var(--canvas-fg-1));
+    overflow-wrap: anywhere;
+  }
+
+  /* Inside an entity link, the label takes the link's color. */
+  .entity-link .claim-ref {
+    color: inherit;
+  }
+
+  .claim-note {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: rgb(var(--canvas-fg-2));
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .claim-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .claim-ref {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-1));
+    overflow-wrap: anywhere;
+  }
+
+  .claim-entities {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .claim-entities__subject {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: baseline;
+  }
+
+  .claim-entity {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: baseline;
+  }
+
+  .claim-ref__kind {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .claim-probabilities {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .claim-probability {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 90px 36px;
+    gap: 8px;
+    align-items: center;
+    padding: 4px 6px;
+    border-radius: 4px;
+  }
+
+  .claim-probability--chosen {
+    background: rgb(var(--status-amber) / 0.08);
+  }
+
+  /* Heimdall's ProgressBar track is a shell token (dark navy on the light
+     canvas, where an empty bar reads as full); use a canvas tone. */
+  .claim-probability .progress-bar {
+    background-color: rgb(var(--canvas-border));
+  }
+
+  .claim-probability__name {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-1));
+    overflow-wrap: anywhere;
+  }
+
+  .claim-probability__p {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    text-align: right;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  /* ============= Verdict form ============= */
+  .claim-verdict {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .claim-verdict__recorded {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .claim-verdict__scores {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .claim-verdict__actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+}

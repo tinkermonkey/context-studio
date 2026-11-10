@@ -106,6 +106,29 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/taxonomies/{taxonomy_id}/predicates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Taxonomy Predicates
+     * @description The taxonomy's predicate catalog: the relation verbs its relationship types use.
+     *
+     *     Raises:
+     *         HTTPException: 404 if the taxonomy is not found
+     */
+    get: operations["list_taxonomy_predicates_api_taxonomies__taxonomy_id__predicates_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/taxonomies/{taxonomy_id}/scheme-counts": {
     parameters: {
       query?: never;
@@ -1010,6 +1033,79 @@ export interface paths {
     put?: never;
     post?: never;
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/datasets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Datasets
+     * @description List datasets (named bodies of data over a taxonomy's schema), by title, with their size.
+     *
+     *     Args:
+     *         taxonomy_id: Optional taxonomy ID to filter by
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         The datasets, each with its individual and relationship counts
+     */
+    get: operations["list_datasets_api_datasets_get"];
+    put?: never;
+    /**
+     * Create Dataset
+     * @description Create a dataset over a taxonomy's schema. A direct action, not a proposal.
+     *
+     *     Args:
+     *         request: The taxonomy, identifier and title
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         The created dataset
+     *
+     *     Raises:
+     *         HTTPException: 404 if the taxonomy is not found, 409 if the taxonomy already has a
+     *         dataset with this identifier, 400 if the identifier or title is invalid
+     */
+    post: operations["create_dataset_api_datasets_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/datasets/{dataset_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete Dataset
+     * @description Delete a dataset with its individuals and their relationships. A direct action, not a
+     *     proposal: each individual and relationship removed is recorded as a change event.
+     *
+     *     Args:
+     *         dataset_id: The dataset to delete
+     *         service: OntologyService from dependency injection
+     *
+     *     Returns:
+     *         What was removed
+     *
+     *     Raises:
+     *         HTTPException: 404 if the dataset is not found
+     */
+    delete: operations["delete_dataset_api_datasets__dataset_id__delete"];
     options?: never;
     head?: never;
     patch?: never;
@@ -2473,8 +2569,12 @@ export interface paths {
      * Search References
      * @description Search for references across multiple sources.
      *
-     *     Aggregates results from all available sources (or specified sources).
-     *     Sources that fail or are unavailable are tracked but don't block the response.
+     *     Aggregates results from all sources (or the requested ones), queried at once.
+     *     There is no availability pre-check: each call goes through the reference proxy,
+     *     so a repeated search is a cache hit. A source that raises or doesn't answer
+     *     within SOURCE_QUERY_TIMEOUT_SECONDS is listed as failed and doesn't hold the
+     *     response. The source adapters return no results on network errors, so a source
+     *     that fails fast is listed as searched with no results.
      *
      *     Args:
      *         request: ReferenceSearchRequest with search parameters
@@ -2506,8 +2606,9 @@ export interface paths {
      * Get Reference Relations
      * @description Get relationships for a reference URI across multiple sources.
      *
-     *     Aggregates relationships from all available sources (or specified sources).
-     *     Sources that fail or are unavailable are tracked but don't block the response.
+     *     Aggregates relationships from all sources (or the requested ones), queried at
+     *     once. As with search, there is no availability pre-check; a source that raises or
+     *     doesn't answer within SOURCE_QUERY_TIMEOUT_SECONDS is listed as failed.
      *
      *     Args:
      *         request: ReferenceRelationsRequest with URI to query
@@ -3175,129 +3276,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v1/admin/datasets": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Datasets
-     * @description List all datasets.
-     *
-     *     Returns:
-     *         List of all datasets
-     */
-    get: operations["list_datasets_api_v1_admin_datasets_get"];
-    put?: never;
-    /**
-     * Create Dataset
-     * @description Create a new dataset.
-     *
-     *     Args:
-     *         request: DatasetCreateRequest with title, filename, optional description
-     *         service: AdminService from dependency injection
-     *
-     *     Returns:
-     *         Created DatasetResponse
-     *
-     *     Raises:
-     *         HTTPException: 400 if title is empty
-     */
-    post: operations["create_dataset_api_v1_admin_datasets_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/admin/datasets/{dataset_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Dataset
-     * @description Get a dataset by ID.
-     *
-     *     Args:
-     *         dataset_id: The dataset ID
-     *         service: AdminService from dependency injection
-     *
-     *     Returns:
-     *         DatasetResponse
-     *
-     *     Raises:
-     *         HTTPException: 404 if not found
-     */
-    get: operations["get_dataset_api_v1_admin_datasets__dataset_id__get"];
-    /**
-     * Update Dataset
-     * @description Update a dataset's metadata.
-     *
-     *     Args:
-     *         dataset_id: The dataset ID
-     *         request: DatasetUpdateRequest with optional fields to update
-     *         service: AdminService from dependency injection
-     *
-     *     Returns:
-     *         Updated DatasetResponse
-     *
-     *     Raises:
-     *         HTTPException: 400 if invalid, 404 if not found
-     */
-    put: operations["update_dataset_api_v1_admin_datasets__dataset_id__put"];
-    post?: never;
-    /**
-     * Delete Dataset
-     * @description Delete a dataset.
-     *
-     *     Args:
-     *         dataset_id: The dataset ID
-     *         service: AdminService from dependency injection
-     *
-     *     Raises:
-     *         HTTPException: 404 if not found, 409 if it is the active dataset
-     */
-    delete: operations["delete_dataset_api_v1_admin_datasets__dataset_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/admin/datasets/{dataset_id}/activate": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Activate Dataset
-     * @description Activate a dataset as the current workspace.
-     *
-     *     Args:
-     *         dataset_id: The dataset ID to activate
-     *         service: AdminService from dependency injection
-     *
-     *     Returns:
-     *         Updated DatasetResponse with is_active=true
-     *
-     *     Raises:
-     *         HTTPException: 404 if not found
-     */
-    post: operations["activate_dataset_api_v1_admin_datasets__dataset_id__activate_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/v1/admin/stats/trends": {
     parameters: {
       query?: never;
@@ -3956,6 +3934,97 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/taxonomies/{taxonomy_id}/claims": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Claims
+     * @description The taxonomy's claims, oldest first.
+     */
+    get: operations["list_claims_api_taxonomies__taxonomy_id__claims_get"];
+    put?: never;
+    /**
+     * Submit Claims
+     * @description Add claims, or replace those whose key the taxonomy already has. A replaced
+     *     claim keeps its triage and verdict only if its text is unchanged. Affected
+     *     ids that match no entity move to unresolved_refs.
+     */
+    post: operations["submit_claims_api_taxonomies__taxonomy_id__claims_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/taxonomies/{taxonomy_id}/claims/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Claims
+     * @description The taxonomy's claims as JSONL: the list route's claims and filters, all of them.
+     */
+    get: operations["export_claims_api_taxonomies__taxonomy_id__claims_export_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/claims/{claim_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Claim
+     * @description One claim, with its triage and verdict.
+     */
+    get: operations["get_claim_api_claims__claim_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/claims/{claim_id}/verdict": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Set Claim Verdict
+     * @description Record a person's verdict on a claim, replacing any earlier one: benchmark gold.
+     *     A verdict given through the API is a person's (adjudicated_by "user").
+     */
+    put: operations["set_claim_verdict_api_claims__claim_id__verdict_put"];
+    post?: never;
+    /**
+     * Clear Claim Verdict
+     * @description Clear a claim's verdict.
+     */
+    delete: operations["clear_claim_verdict_api_claims__claim_id__verdict_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/interchange/bundles": {
     parameters: {
       query?: never;
@@ -4599,6 +4668,11 @@ export interface components {
       attributes?: {
         [key: string]: unknown;
       };
+      /**
+       * Dataset Id
+       * @description The relationship's dataset: its source individual's
+       */
+      dataset_id?: string | null;
     };
     /** Body_import_ontology_api_v1_interchange_import_post */
     Body_import_ontology_api_v1_interchange_import_post: {
@@ -5072,6 +5146,222 @@ export interface components {
       available_models?: string[];
     };
     /**
+     * ClaimInput
+     * @description One claim to add, or to replace by key.
+     */
+    ClaimInput: {
+      /**
+       * Key
+       * @description "<note_ref>#<n>"
+       */
+      key: string;
+      /**
+       * Text
+       * @description The claim, in a sentence or two
+       */
+      text: string;
+      /**
+       * Note Ref
+       * @description The note it came from
+       */
+      note_ref: string;
+      /** @description maintainer or reviewer */
+      note_source: components["schemas"]["NoteSource"];
+      /**
+       * Note Text
+       * @description The note's full text
+       */
+      note_text?: string | null;
+      /**
+       * Subject Id
+       * @description The entity the note was about
+       */
+      subject_id?: string | null;
+      /** Category Hint */
+      category_hint?: string | null;
+      /**
+       * Affected Ids
+       * @description Entities the claim names; ids that match none move to unresolved_refs
+       */
+      affected_ids?: string[];
+      /** Unresolved Refs */
+      unresolved_refs?: string[];
+      /** Proposed Change */
+      proposed_change?: string | null;
+    };
+    /**
+     * ClaimResponse
+     * @description A stored claim, with its triage and verdict once given.
+     */
+    ClaimResponse: {
+      /**
+       * Key
+       * @description "<note_ref>#<n>"
+       */
+      key: string;
+      /**
+       * Text
+       * @description The claim, in a sentence or two
+       */
+      text: string;
+      /**
+       * Note Ref
+       * @description The note it came from
+       */
+      note_ref: string;
+      /** @description maintainer or reviewer */
+      note_source: components["schemas"]["NoteSource"];
+      /**
+       * Note Text
+       * @description The note's full text
+       */
+      note_text?: string | null;
+      /**
+       * Subject Id
+       * @description The entity the note was about
+       */
+      subject_id?: string | null;
+      /** Category Hint */
+      category_hint?: string | null;
+      /**
+       * Affected Ids
+       * @description Entities the claim names; ids that match none move to unresolved_refs
+       */
+      affected_ids?: string[];
+      /** Unresolved Refs */
+      unresolved_refs?: string[];
+      /** Proposed Change */
+      proposed_change?: string | null;
+      /** Id */
+      id: string;
+      /** Taxonomy Id */
+      taxonomy_id: string;
+      /** Source Run Id */
+      source_run_id?: string | null;
+      triage?: components["schemas"]["ClaimTriageSchema"] | null;
+      verdict?: components["schemas"]["ClaimVerdictSchema"] | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * ClaimTriageSchema
+     * @description A decision model's answers about a claim.
+     */
+    ClaimTriageSchema: {
+      validity: components["schemas"]["Validity"];
+      /** Validity Probabilities */
+      validity_probabilities?: {
+        [key: string]: number;
+      };
+      /** Category */
+      category?: string | null;
+      /** Category Probabilities */
+      category_probabilities?: {
+        [key: string]: number;
+      };
+      /**
+       * Severity
+       * @description 0 cosmetic to 3 blocking
+       */
+      severity?: number | null;
+      /**
+       * Fix Scope
+       * @description 0 wording to 3 roadmap
+       */
+      fix_scope?: number | null;
+      /**
+       * Addressed By Proposal
+       * @description Probability the pending definition already resolves it
+       */
+      addressed_by_proposal?: number | null;
+      /** Model */
+      model: string;
+      /** Calibrated */
+      calibrated: boolean;
+      /** Cost Usd */
+      cost_usd?: number | null;
+      /** Latency Ms */
+      latency_ms?: number | null;
+      /** Run Id */
+      run_id?: string | null;
+      /**
+       * Triaged At
+       * Format: date-time
+       */
+      triaged_at: string;
+    };
+    /**
+     * ClaimVerdictRequest
+     * @description A person's verdict on a claim.
+     */
+    ClaimVerdictRequest: {
+      validity: components["schemas"]["Validity"];
+      /** Category */
+      category?: string | null;
+      /**
+       * Severity
+       * @description 0 to 3
+       */
+      severity?: number | null;
+      /**
+       * Fix Scope
+       * @description 0 to 3
+       */
+      fix_scope?: number | null;
+      /**
+       * Rationale
+       * @default
+       */
+      rationale: string;
+    };
+    /**
+     * ClaimVerdictSchema
+     * @description A recorded verdict: benchmark gold.
+     */
+    ClaimVerdictSchema: {
+      validity: components["schemas"]["Validity"];
+      /** Category */
+      category?: string | null;
+      /**
+       * Severity
+       * @description 0 to 3
+       */
+      severity?: number | null;
+      /**
+       * Fix Scope
+       * @description 0 to 3
+       */
+      fix_scope?: number | null;
+      /**
+       * Rationale
+       * @default
+       */
+      rationale: string;
+      /** Adjudicated By */
+      adjudicated_by: string;
+      /**
+       * Adjudicated At
+       * Format: date-time
+       */
+      adjudicated_at: string;
+    };
+    /**
+     * ClaimsSubmitRequest
+     * @description Claims to add or replace, matched by key within the taxonomy.
+     */
+    ClaimsSubmitRequest: {
+      /** Claims */
+      claims: components["schemas"]["ClaimInput"][];
+    };
+    /**
      * ClassCountsResponse
      * @description Content counts for one class.
      */
@@ -5530,124 +5820,111 @@ export interface components {
     };
     /**
      * DatasetCreateRequest
-     * @description Request to create a new dataset.
+     * @description Request to create a dataset over a taxonomy's schema.
      */
     DatasetCreateRequest: {
+      /** Taxonomy Id */
+      taxonomy_id: string;
       /**
-       * Title
-       * @description Display name
+       * Identifier
+       * @description Slug: a lowercase letter, then lowercase letters, digits, - or _
        */
+      identifier: string;
+      /** Title */
       title: string;
-      /**
-       * Filename
-       * @description Original filename
-       */
-      filename: string;
-      /**
-       * Description
-       * @description Optional description
-       */
-      description?: string | null;
     };
     /**
-     * DatasetMetricsResponse
-     * @description Response containing dataset metrics.
+     * DatasetDeletionResponse
+     * @description What deleting a dataset removed.
      */
-    DatasetMetricsResponse: {
+    DatasetDeletionResponse: {
+      /** Dataset Id */
+      dataset_id: string;
+      /** Individual Count */
+      individual_count: number;
+      /** Relationship Count */
+      relationship_count: number;
+    };
+    /**
+     * DatasetImpactResponse
+     * @description What a schema operation will do to the data of a dataset that yields to the
+     *     schema. Information only: such data never blocks the operation.
+     */
+    DatasetImpactResponse: {
+      /** Dataset Id */
+      dataset_id: string;
+      /** Identifier */
+      identifier: string;
+      /** Title */
+      title: string;
       /**
-       * Layers Count
-       * @description Number of taxonomies
+       * Relationships Moved
+       * @description Moved to the delete's replacement type
+       * @default 0
        */
-      layers_count: number;
+      relationships_moved: number;
       /**
-       * Domains Count
-       * @description Number of concept schemes
+       * Relationships Dropped
+       * @default 0
        */
-      domains_count: number;
+      relationships_dropped: number;
       /**
-       * Terms Count
-       * @description Number of classes
+       * Individuals Untyped
+       * @description Lose the deleted class, keep others
+       * @default 0
        */
-      terms_count: number;
+      individuals_untyped: number;
       /**
-       * Relationships Count
-       * @description Number of relationships
+       * Individuals Dropped
+       * @description The deleted class was their only one
+       * @default 0
        */
-      relationships_count: number;
+      individuals_dropped: number;
       /**
-       * Individuals Count
-       * @description Number of individuals
+       * Values Dropped
+       * @description Values of the deleted attribute
+       * @default 0
        */
-      individuals_count: number;
+      values_dropped: number;
     };
     /**
      * DatasetResponse
-     * @description Response containing dataset data.
+     * @description A named body of data over one taxonomy's schema, with its size.
      */
     DatasetResponse: {
-      /**
-       * Id
-       * @description Unique identifier
-       */
+      /** Id */
       id: string;
+      /** Taxonomy Id */
+      taxonomy_id: string;
       /**
-       * Title
-       * @description Display name
+       * Identifier
+       * @description Slug, unique within the taxonomy
        */
+      identifier: string;
+      /** Title */
       title: string;
       /**
-       * Filename
-       * @description Original filename
+       * Yields To Schema
+       * @description Schema operations never block on its data, which follows them instead (set by the DR model loader; no UI toggle)
+       * @default false
        */
-      filename: string;
+      yields_to_schema: boolean;
       /**
-       * Description
-       * @description Optional description
+       * Individual Count
+       * @description Individuals in the dataset
+       * @default 0
        */
-      description?: string | null;
+      individual_count: number;
       /**
-       * Created At
-       * @description Creation timestamp
+       * Relationship Count
+       * @description Relationships in the dataset (by their source individual)
+       * @default 0
        */
+      relationship_count: number;
+      /** Created At */
       created_at?: string | null;
-      /**
-       * Last Accessed
-       * @description Last access timestamp
-       */
-      last_accessed?: string | null;
-      /**
-       * Schema Version
-       * @description Database schema version
-       */
-      schema_version: string;
-      /** @description Dataset metrics */
-      metrics: components["schemas"]["DatasetMetricsResponse"];
-      /**
-       * Is Active
-       * @description Whether this is the active dataset
-       */
-      is_active: boolean;
-      /**
-       * Version
-       * @description Version number
-       */
-      version: number;
-    };
-    /**
-     * DatasetUpdateRequest
-     * @description Request to update a dataset.
-     */
-    DatasetUpdateRequest: {
-      /**
-       * Title
-       * @description New title
-       */
-      title?: string | null;
-      /**
-       * Description
-       * @description New description
-       */
-      description?: string | null;
+      /** Last Modified */
+      last_modified?: string | null;
     };
     /**
      * DecisionKind
@@ -5968,6 +6245,11 @@ export interface components {
       class_ids?: string[];
       /** Class Titles */
       class_titles?: string[];
+      /**
+       * Dataset Id
+       * @description An individual end's dataset (null for a class end)
+       */
+      dataset_id?: string | null;
     };
     /**
      * EnqueueBatchRunsRequest
@@ -6942,6 +7224,11 @@ export interface components {
        * @description Optional longer description
        */
       description?: string | null;
+      /**
+       * Dataset Id
+       * @description The dataset to create it in; may be omitted while the classes' taxonomy has at most one dataset
+       */
+      dataset_id?: string | null;
     };
     /**
      * IndividualResponse
@@ -6958,6 +7245,11 @@ export interface components {
        * @description Ordered list of parent class IDs
        */
       class_ids: string[];
+      /**
+       * Dataset Id
+       * @description The dataset the individual belongs to
+       */
+      dataset_id?: string | null;
       /**
        * Title
        * @description Display name
@@ -7150,6 +7442,29 @@ export interface components {
        * @description List of items
        */
       items: components["schemas"]["ChangeProposalResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
+    /** ListResponse[ClaimResponse] */
+    ListResponse_ClaimResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["ClaimResponse"][];
       /**
        * Total
        * @description Total number of items
@@ -7578,6 +7893,12 @@ export interface components {
        */
       datatype?: string | null;
     };
+    /**
+     * NoteSource
+     * @description Whose note a claim came from.
+     * @enum {string}
+     */
+    NoteSource: "maintainer" | "reviewer";
     /**
      * OperationErrorResponse
      * @description Why one proposed operation is invalid.
@@ -8055,6 +8376,58 @@ export interface components {
       property_definition_id?: string | null;
     };
     /**
+     * PredicateResponse
+     * @description A predicate in a taxonomy's predicate catalog.
+     */
+    PredicateResponse: {
+      /**
+       * Id
+       * @description Unique identifier
+       */
+      id: string;
+      /**
+       * Taxonomy Id
+       * @description The taxonomy whose catalog holds it
+       */
+      taxonomy_id: string;
+      /**
+       * Identifier
+       * @description The relation verb (e.g. 'part_of'), unique in the taxonomy
+       */
+      identifier: string;
+      /**
+       * Title
+       * @description Display name
+       */
+      title: string;
+      /**
+       * Description
+       * @description What the relation means
+       */
+      description?: string | null;
+      /**
+       * External References
+       * @description Client metadata; DR's inverse, category, archimate_alignment and semantics ride in its documentation_robotics reference
+       */
+      external_references?: components["schemas"]["ExternalReferenceResponse"][];
+      /**
+       * Created At
+       * @description Creation timestamp
+       */
+      created_at?: string | null;
+      /**
+       * Last Modified
+       * @description Last modification timestamp
+       */
+      last_modified?: string | null;
+      /**
+       * Version
+       * @description Version number
+       * @default 1
+       */
+      version: number;
+    };
+    /**
      * PropertyDefinitionCreateRequest
      * @description Request to create a new property definition.
      */
@@ -8076,7 +8449,7 @@ export interface components {
       description?: string | null;
       /**
        * Canonical Predicate
-       * @description Bare canonical relation verb this property represents (e.g. 'navigates-to') — the form extraction clamps predicates to
+       * @description The predicate (relation verb, e.g. 'navigates-to') this relationship type uses, from its taxonomy's predicate catalog (the taxonomy of its domain class, else its range class); added to the catalog when it's missing
        */
       canonical_predicate?: string | null;
       /**
@@ -8117,9 +8490,14 @@ export interface components {
       description?: string | null;
       /**
        * Canonical Predicate
-       * @description Bare canonical relation verb this property represents (e.g. 'navigates-to'), or null if not set
+       * @description Identifier of the predicate this relationship type uses (e.g. 'navigates-to'), or null if it has none
        */
       canonical_predicate?: string | null;
+      /**
+       * Predicate Id
+       * @description ID of that predicate in its taxonomy's predicate catalog
+       */
+      predicate_id?: string | null;
       /**
        * Domain Class Id
        * @description Class the relationship's source must belong to, if constrained
@@ -8187,7 +8565,7 @@ export interface components {
       description?: string | null;
       /**
        * Canonical Predicate
-       * @description New bare canonical relation verb, or null to clear it. Only applied when the field is present in the request body.
+       * @description New predicate (relation verb) from the taxonomy's catalog, added when it's missing. Only applied when the field is present in the request body; a type's predicate can't be cleared.
        */
       canonical_predicate?: string | null;
       /**
@@ -8325,6 +8703,11 @@ export interface components {
        * @default false
        */
       stale: boolean;
+      /**
+       * Dataset Impact
+       * @description A pending or failed schema operation (relationship-type delete or retarget, class or attribute delete): what it will do to the data of each dataset that yields to the schema. Information only; that data never blocks it
+       */
+      dataset_impact?: components["schemas"]["DatasetImpactResponse"][];
       /** @description A pending or failed relationship-type update that keeps its pair (a rename or reverse) while relationships use the type: those relationships and the types they all fit. Applying it as proposed needs nothing, but an edit that retargets the type needs a resolution of them. Null otherwise */
       type_usage?: components["schemas"]["DeleteBlockersResponse"] | null;
       /** @description A pending or failed relationship-type delete, or update that retargets the type, whose type relationships still use: applying it as proposed fails; it needs a resolution. Null otherwise. The proposed replacement, when it fits, is listed first */
@@ -9154,6 +9537,11 @@ export interface components {
        * @description SPARQL SELECT query string (max 10000 characters)
        */
       query: string;
+      /**
+       * Dataset Id
+       * @description Query the schema plus this dataset's data (all data when omitted)
+       */
+      dataset_id?: string | null;
     };
     /**
      * SPARQLResponse
@@ -10078,6 +10466,12 @@ export interface components {
       ctx?: Record<string, never>;
     };
     /**
+     * Validity
+     * @description Whether a claim points at a real problem.
+     * @enum {string}
+     */
+    Validity: "real_defect" | "works_as_designed" | "judgment_call" | "out_of_scope";
+    /**
      * VersioningChangeEventResponse
      * @description Response representing a versioning change event
      */
@@ -10349,9 +10743,43 @@ export interface operations {
       };
     };
   };
-  get_taxonomy_scheme_counts_api_taxonomies__taxonomy_id__scheme_counts_get: {
+  list_taxonomy_predicates_api_taxonomies__taxonomy_id__predicates_get: {
     parameters: {
       query?: never;
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PredicateResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_taxonomy_scheme_counts_api_taxonomies__taxonomy_id__scheme_counts_get: {
+    parameters: {
+      query?: {
+        /** @description Count only this dataset's individuals (all when omitted) */
+        dataset_id?: string | null;
+      };
       header?: never;
       path: {
         taxonomy_id: string;
@@ -10525,7 +10953,10 @@ export interface operations {
   };
   get_scheme_class_counts_api_schemes__scheme_id__class_counts_get: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description Count only this dataset's individuals and relationships */
+        dataset_id?: string | null;
+      };
       header?: never;
       path: {
         scheme_id: string;
@@ -10879,6 +11310,8 @@ export interface operations {
         sort_order?: string;
         /** @description Case-insensitive text search on the source title, target title, or property definition title/identifier */
         q?: string | null;
+        /** @description Optional dataset ID to filter by (the source individual's) */
+        dataset_id?: string | null;
       };
       header?: never;
       path?: never;
@@ -11356,6 +11789,8 @@ export interface operations {
         q?: string | null;
         /** @description Restrict results to these IDs (repeat the parameter; at most 500) */
         ids?: string[] | null;
+        /** @description Optional dataset ID to filter by */
+        dataset_id?: string | null;
       };
       header?: never;
       path?: never;
@@ -11642,9 +12077,108 @@ export interface operations {
       };
     };
   };
-  build_graph_api_graph_build_post: {
+  list_datasets_api_datasets_get: {
+    parameters: {
+      query?: {
+        /** @description Optional taxonomy ID to filter by */
+        taxonomy_id?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DatasetResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_dataset_api_datasets_post: {
     parameters: {
       query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DatasetCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DatasetResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_dataset_api_datasets__dataset_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DatasetDeletionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  build_graph_api_graph_build_post: {
+    parameters: {
+      query?: {
+        /** @description Scope to the schema plus this dataset's data (all data when omitted) */
+        dataset_id?: string | null;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -11660,11 +12194,23 @@ export interface operations {
           "application/json": components["schemas"]["KnowledgeGraphResponse"];
         };
       };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
   };
   get_graph_view_api_graph_view_get: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description Scope to the schema plus this dataset's data (all data when omitted) */
+        dataset_id?: string | null;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -11680,6 +12226,15 @@ export interface operations {
           "application/json": components["schemas"]["GraphViewResponse"];
         };
       };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
   };
   get_metrics_api_graph_metrics_get: {
@@ -11687,6 +12242,8 @@ export interface operations {
       query?: {
         /** @description Centrality algorithm to use */
         algorithm?: string;
+        /** @description Scope to the schema plus this dataset's data (all data when omitted) */
+        dataset_id?: string | null;
       };
       header?: never;
       path?: never;
@@ -11741,6 +12298,8 @@ export interface operations {
         source_id: string;
         /** @description ID of the ending node */
         target_id: string;
+        /** @description Scope to the schema plus this dataset's data (all data when omitted) */
+        dataset_id?: string | null;
       };
       header?: never;
       path?: never;
@@ -11909,6 +12468,8 @@ export interface operations {
       query: {
         /** @description Comma-separated list of node IDs to extract subgraph for */
         nodes: string;
+        /** @description Scope to the schema plus this dataset's data (all data when omitted) */
+        dataset_id?: string | null;
       };
       header?: never;
       path?: never;
@@ -13779,185 +14340,6 @@ export interface operations {
       };
     };
   };
-  list_datasets_api_v1_admin_datasets_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DatasetResponse"][];
-        };
-      };
-    };
-  };
-  create_dataset_api_v1_admin_datasets_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["DatasetCreateRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DatasetResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_dataset_api_v1_admin_datasets__dataset_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DatasetResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_dataset_api_v1_admin_datasets__dataset_id__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["DatasetUpdateRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DatasetResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_dataset_api_v1_admin_datasets__dataset_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  activate_dataset_api_v1_admin_datasets__dataset_id__activate_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        dataset_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DatasetResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
   get_stats_trends_api_v1_admin_stats_trends_get: {
     parameters: {
       query?: {
@@ -15012,6 +15394,266 @@ export interface operations {
         };
       };
       /** @description Taxonomy not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_claims_api_taxonomies__taxonomy_id__claims_get: {
+    parameters: {
+      query?: {
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Number of results to skip */
+        offset?: number;
+        /** @description Only claims about this entity */
+        subject_id?: string | null;
+        /** @description Only claims from this note */
+        note_ref?: string | null;
+        /** @description Only triaged (true) or untriaged (false) */
+        triaged?: boolean | null;
+        /** @description Only with (true) or without a verdict */
+        has_verdict?: boolean | null;
+        /** @description Only claims triaged as this */
+        validity?: components["schemas"]["Validity"] | null;
+      };
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse_ClaimResponse_"];
+        };
+      };
+      /** @description Taxonomy or claim not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  submit_claims_api_taxonomies__taxonomy_id__claims_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ClaimsSubmitRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ClaimResponse"][];
+        };
+      };
+      /** @description Taxonomy or claim not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Invalid claims */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  export_claims_api_taxonomies__taxonomy_id__claims_export_get: {
+    parameters: {
+      query?: {
+        /** @description Only claims about this entity */
+        subject_id?: string | null;
+        /** @description Only claims from this note */
+        note_ref?: string | null;
+        /** @description Only triaged (true) or untriaged (false) */
+        triaged?: boolean | null;
+        /** @description Only with (true) or without a verdict */
+        has_verdict?: boolean | null;
+        /** @description Only claims triaged as this */
+        validity?: components["schemas"]["Validity"] | null;
+      };
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Every matching claim, one ClaimResponse JSON object per line */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/x-ndjson": string;
+        };
+      };
+      /** @description Taxonomy or claim not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_claim_api_claims__claim_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        claim_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ClaimResponse"];
+        };
+      };
+      /** @description Taxonomy or claim not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  set_claim_verdict_api_claims__claim_id__verdict_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        claim_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ClaimVerdictRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ClaimResponse"];
+        };
+      };
+      /** @description Taxonomy or claim not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  clear_claim_verdict_api_claims__claim_id__verdict_delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        claim_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ClaimResponse"];
+        };
+      };
+      /** @description Taxonomy or claim not found */
       404: {
         headers: {
           [name: string]: unknown;

@@ -6,6 +6,8 @@ outcome's entity refs must be exactly what the result shows.
 
 import json
 
+from types import MappingProxyType
+
 import pytest
 
 from adapters.chat.tools import (
@@ -18,6 +20,7 @@ from adapters.persistence.sqlite.individual_vector_index import SqliteIndividual
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from domain.chat.value_objects import EntityRef
 from domain.ontology.entities import Individual
+from domain.ontology.value_objects import ExternalReference
 from tests.integration.chat.conftest import (
     ADMIN_HEALTH_ID,
     API_SCHEME_ID,
@@ -29,6 +32,7 @@ from tests.integration.chat.conftest import (
     SERVICE_CLASS_ID,
     TAXONOMY_ID,
 )
+from tests.utils.datasets import save_in_dataset
 
 
 @pytest.fixture
@@ -53,6 +57,7 @@ def test_read_tools_with_schemas(tools):
         "list_children",
         "list_relationships",
         "list_relationship_types",
+        "list_predicates",
         "get_neighbors",
         "find_path",
     ]
@@ -371,6 +376,43 @@ class TestRelationships:
 
         assert outcome.is_error and "missing" in result["error"]
 
+    async def test_list_predicates_gives_the_catalog_with_its_metadata(self, tools, dr_workspace):
+        """#1480: a taxonomy's predicates, and a type's predicate on its listing."""
+        ontology = dr_workspace.ontology
+        ontology.create_predicate(
+            TAXONOMY_ID,
+            "serves",
+            description="Provides functionality to another element",
+            external_references=[
+                ExternalReference(
+                    source="documentation_robotics",
+                    identifier="serves",
+                    metadata=MappingProxyType({"inverse": "served-by", "category": "behavioral"}),
+                )
+            ],
+        )
+        ontology.create_property_definition(
+            "operation_serves_operation",
+            "serves",
+            canonical_predicate="serves",
+            domain_class_id=OPERATION_ID,
+            range_class_id=OPERATION_ID,
+        )
+
+        outcome, result = await call(tools, "list_predicates", taxonomy_id=TAXONOMY_ID)
+        _, types = await call(tools, "list_relationship_types", query="serves")
+
+        assert not outcome.is_error
+        serves = next(p for p in result["items"] if p["identifier"] == "serves")
+        assert serves["description"] == "Provides functionality to another element"
+        assert serves["external_references"][0]["metadata"] == {
+            "inverse": "served-by",
+            "category": "behavioral",
+        }
+        assert types["items"][0]["predicate"] == "serves"
+        missing, _ = await call(tools, "list_predicates", taxonomy_id="missing")
+        assert missing.is_error
+
 
 class TestGraphTools:
     async def test_neighbors(self, tools):
@@ -393,8 +435,7 @@ class TestGraphTools:
 async def test_long_results_are_truncated_to_valid_json(dr_workspace, tools):
     # Long titles make a 50-item result far larger than the cap
     for i in range(50):
-        dr_workspace.repository.save_individual(
-            Individual(
+        save_in_dataset(dr_workspace.repository, Individual(
                 id=f"ind-{i:03d}", class_ids=[OPERATION_ID], title=f"Endpoint {i} " + "x" * 120
             )
         )

@@ -35,6 +35,7 @@ from domain.ontology.value_objects import (
     SearchCriteria,
     Status,
 )
+from tests.utils.datasets import save_in_dataset
 
 
 @pytest.fixture
@@ -416,7 +417,7 @@ class TestIndividualCRUD:
             title="Fido",
             description="A specific dog",
         )
-        saved = repo.save_individual(individual)
+        saved = save_in_dataset(repo, individual)
 
         assert saved.id == "ind-1"
         assert saved.class_ids == [sample_class.id]
@@ -445,7 +446,7 @@ class TestIndividualCRUD:
             title="PostgreSQL",
             description="A SQL database and a database product",
         )
-        saved = repo.save_individual(individual)
+        saved = save_in_dataset(repo, individual)
 
         assert saved.id == "ind-1"
         assert saved.class_ids == [sample_class.id, class2.id]
@@ -454,12 +455,16 @@ class TestIndividualCRUD:
         assert retrieved is not None
         assert retrieved.class_ids == [sample_class.id, class2.id]
 
-    def test_save_individual_nonexistent_class(self, repo):
+    def test_save_individual_nonexistent_class(self, repo, sample_class):
         """Test that saving with nonexistent class raises ValueError."""
+        dataset_id = save_in_dataset(
+            repo, Individual(id="ind-0", class_ids=[sample_class.id], title="Seed")
+        ).dataset_id
         individual = Individual(
             id="ind-1",
             class_ids=["nonexistent"],
             title="Test Individual",
+            dataset_id=dataset_id,
         )
         with pytest.raises(ValueError, match="does not exist"):
             repo.save_individual(individual)
@@ -486,13 +491,12 @@ class TestIndividualCRUD:
         repo.save_class(class2)
 
         # Create individual with single class
-        repo.save_individual(Individual(id="ind-1", class_ids=[sample_class.id], title="I1"))
+        save_in_dataset(repo, Individual(id="ind-1", class_ids=[sample_class.id], title="I1"))
         # Create individual with multiple classes including sample_class
-        repo.save_individual(
-            Individual(id="ind-2", class_ids=[sample_class.id, class2.id], title="I2")
+        save_in_dataset(repo, Individual(id="ind-2", class_ids=[sample_class.id, class2.id], title="I2")
         )
         # Create individual with only class2
-        repo.save_individual(Individual(id="ind-3", class_ids=[class2.id], title="I3"))
+        save_in_dataset(repo, Individual(id="ind-3", class_ids=[class2.id], title="I3"))
 
         # Filter by sample_class should return ind-1 and ind-2
         individuals = repo.list_individuals(sample_class.id)
@@ -507,7 +511,7 @@ class TestIndividualCRUD:
     def test_delete_individual(self, repo, sample_class):
         """Test deleting an individual."""
         individual = Individual(id="ind-1", class_ids=[sample_class.id], title="Test")
-        repo.save_individual(individual)
+        save_in_dataset(repo, individual)
 
         deleted = repo.delete_individual("ind-1")
         assert deleted is True
@@ -525,11 +529,11 @@ class TestIndividualCRUD:
         repo.save_class(class2)
 
         individual = Individual(id="ind-1", class_ids=[sample_class.id], title="Test")
-        repo.save_individual(individual)
+        save_in_dataset(repo, individual)
 
         # Update class membership
         individual.add_parent_class(class2.id)
-        repo.save_individual(individual)
+        save_in_dataset(repo, individual)
 
         retrieved = repo.get_individual("ind-1")
         assert retrieved.class_ids == [sample_class.id, class2.id]
@@ -558,7 +562,7 @@ class TestIndividualCRUD:
             class_ids=[class2.id, sample_class.id, class3.id],
             title="OrderTest",
         )
-        repo.save_individual(individual)
+        save_in_dataset(repo, individual)
 
         retrieved = repo.get_individual("ind-1")
         assert retrieved.class_ids == [class2.id, sample_class.id, class3.id]
@@ -790,8 +794,8 @@ class TestGetEntityTitles:
     """Tests for the batch title read."""
 
     def test_returns_titles_for_classes_and_individuals(self, repo, sample_class):
-        repo.save_individual(Individual(id="ind-t1", class_ids=[sample_class.id], title="Fido"))
-        repo.save_individual(Individual(id="ind-t2", class_ids=[sample_class.id], title="Rex"))
+        save_in_dataset(repo, Individual(id="ind-t1", class_ids=[sample_class.id], title="Fido"))
+        save_in_dataset(repo, Individual(id="ind-t2", class_ids=[sample_class.id], title="Rex"))
 
         titles = repo.get_entity_titles([sample_class.id, "ind-t1", "ind-t2", "missing"])
 
@@ -801,7 +805,7 @@ class TestGetEntityTitles:
         assert repo.get_entity_titles([]) == {}
 
     def test_uses_a_single_query(self, repo, db_engine, sample_class):
-        repo.save_individual(Individual(id="ind-t3", class_ids=[sample_class.id], title="Spot"))
+        save_in_dataset(repo, Individual(id="ind-t3", class_ids=[sample_class.id], title="Spot"))
         statements: list[str] = []
 
         def _count(conn, cursor, statement, *args):
@@ -889,12 +893,12 @@ class TestStatusPersistence:
             title="Test Individual",
             class_ids=[sample_class.id],
         )
-        saved = repo.save_individual(individual)
+        saved = save_in_dataset(repo, individual)
         assert saved.status == Status.DRAFT
 
         # Update status to published
         saved.status = Status.PUBLISHED
-        updated = repo.save_individual(saved)
+        updated = save_in_dataset(repo, saved)
         assert updated.status == Status.PUBLISHED
 
         # Retrieve from DB to confirm persistence
@@ -955,8 +959,7 @@ def test_new_entities_keep_a_given_created_at(
                 created_at=ORIGINAL_CREATED_AT,
             )
         ),
-        "individual": repo.save_individual(
-            Individual(
+        "individual": save_in_dataset(repo, Individual(
                 id="ind-2", class_ids=[sample_class.id], title="I2", created_at=ORIGINAL_CREATED_AT
             )
         ),

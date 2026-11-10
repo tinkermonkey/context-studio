@@ -7,6 +7,7 @@
 export const ROUTE_LABELS: Record<string, string[]> = {
   "/app": ["Dashboard"],
   "/app/proposals": ["Proposals"],
+  "/app/claims": ["Claims"],
   "/app/schema/taxonomies": ["Schema", "Taxonomies"],
   "/app/schema/schemes": ["Schema", "Concept Schemes"],
   "/app/schema/classes": ["Schema", "Classes"],
@@ -27,6 +28,7 @@ export const ROUTE_LABELS: Record<string, string[]> = {
 
 export const ROUTE_TO_SIDEBAR_ID: Array<{ prefix: string; id: string }> = [
   { prefix: "/app/proposals", id: "proposals" },
+  { prefix: "/app/claims", id: "claims" },
   { prefix: "/app/schema/taxonomies", id: "schema-taxonomies" },
   { prefix: "/app/schema/schemes", id: "schema-schemes" },
   { prefix: "/app/schema/classes", id: "schema-classes" },
@@ -51,6 +53,12 @@ export const NAV_ACTIONS = [
     label: "Proposals",
     description: "Review proposed changes",
     to: "/app/proposals",
+  },
+  {
+    id: "nav-claims",
+    label: "Claims",
+    description: "Triage notes' claims and record verdicts",
+    to: "/app/claims",
   },
   {
     id: "nav-taxonomies",
@@ -129,6 +137,7 @@ export const NAV_ACTIONS = [
 export const SIDEBAR_PATH_MAP: Record<string, string> = {
   dashboard: "/app",
   proposals: "/app/proposals",
+  claims: "/app/claims",
   schema: "/app/schema/taxonomies",
   "schema-taxonomies": "/app/schema/taxonomies",
   "schema-schemes": "/app/schema/schemes",

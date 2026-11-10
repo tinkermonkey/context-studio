@@ -15,9 +15,11 @@ from dataclasses import dataclass
 from typing import Literal, Protocol, Sequence
 
 from .entities import (
+    Predicate,
     AttributeDefinition,
     Class,
     ConceptScheme,
+    Dataset,
     Individual,
     PropertyDefinition,
     Relationship,
@@ -344,6 +346,7 @@ class OntologyRepository(Protocol):
         sort_by: str | None = None,
         sort_order: Literal["asc", "desc"] = "asc",
         query: str | None = None,
+        dataset_id: str | None = None,
     ) -> list[Relationship]:
         """
         Retrieve relationships with optional filtering, pagination, sorting, and text search.
@@ -358,6 +361,8 @@ class OntologyRepository(Protocol):
             sort_order: Sort direction (asc or desc)
             query: Case-insensitive text matched against the source title, target title,
                 or property definition title/identifier
+            dataset_id: Optional dataset to filter by (a relationship belongs to its
+                source individual's dataset)
 
         Returns:
             List of Relationship entities
@@ -394,9 +399,10 @@ class OntologyRepository(Protocol):
         target_id: str | None = None,
         property_id: str | None = None,
         query: str | None = None,
+        dataset_id: str | None = None,
     ) -> int:
         """
-        Count relationships, optionally filtered by source, target, property, or text.
+        Count relationships, optionally filtered by source, target, property, text or dataset.
 
         Args:
             source_id: Optional source entity ID to filter by
@@ -404,9 +410,33 @@ class OntologyRepository(Protocol):
             property_id: Optional property definition ID to filter by (relationship type)
             query: Case-insensitive text matched against the source title, target title,
                 or property definition title/identifier
+            dataset_id: Optional dataset to filter by (the source individual's)
 
         Returns:
             Total count of relationships
+        """
+        ...
+
+    # Predicate operations (a taxonomy's predicate catalog)
+    def list_predicates(self, taxonomy_id: str) -> list[Predicate]:
+        """The taxonomy's predicates, by identifier."""
+        ...
+
+    def get_predicate(self, predicate_id: str) -> Predicate | None:
+        """A predicate by ID; None if there's none."""
+        ...
+
+    def get_predicate_by_identifier(self, taxonomy_id: str, identifier: str) -> Predicate | None:
+        """The taxonomy's predicate with this identifier; None if it has none."""
+        ...
+
+    def save_predicate(self, predicate: Predicate) -> Predicate:
+        """
+        Persist a predicate (create or update).
+
+        Raises:
+            DuplicateEntityError: If the taxonomy already has another predicate
+                with the identifier
         """
         ...
 
@@ -445,6 +475,7 @@ class OntologyRepository(Protocol):
         query: str | None = None,
         ids: list[str] | None = None,
         domain_class_id: str | None = None,
+        taxonomy_id: str | None = None,
     ) -> list[PropertyDefinition]:
         """
         Retrieve property definitions with optional filtering, pagination, sorting, and text search.
@@ -458,6 +489,7 @@ class OntologyRepository(Protocol):
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of property definition IDs to restrict results to
             domain_class_id: Optional class ID the property's domain must equal
+            taxonomy_id: Optional taxonomy its predicate must belong to
 
         Returns:
             List of PropertyDefinition entities
@@ -494,6 +526,7 @@ class OntologyRepository(Protocol):
         query: str | None = None,
         ids: list[str] | None = None,
         domain_class_id: str | None = None,
+        taxonomy_id: str | None = None,
     ) -> int:
         """
         Count property definitions, optionally filtered by relevance, text search or ids.
@@ -503,6 +536,7 @@ class OntologyRepository(Protocol):
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of property definition IDs to restrict the count to
             domain_class_id: Optional class ID the property's domain must equal
+            taxonomy_id: Optional taxonomy its predicate must belong to
 
         Returns:
             Total count of property definitions
@@ -539,24 +573,31 @@ class OntologyRepository(Protocol):
         """
         ...
 
-    def count_by_scheme(self, taxonomy_id: str) -> list[SchemeCounts]:
+    def count_by_scheme(
+        self, taxonomy_id: str, dataset_id: str | None = None
+    ) -> list[SchemeCounts]:
         """
         Count each concept scheme's classes, individuals and property definitions.
 
         Args:
             taxonomy_id: The taxonomy whose schemes to count
+            dataset_id: Optional dataset whose individuals to count (all if None)
 
         Returns:
             One SchemeCounts per scheme in the taxonomy (zeros included)
         """
         ...
 
-    def count_by_class(self, concept_scheme_id: str) -> list[ClassCounts]:
+    def count_by_class(
+        self, concept_scheme_id: str, dataset_id: str | None = None
+    ) -> list[ClassCounts]:
         """
         Count each class's individuals, domain property definitions and outgoing relationships.
 
         Args:
             concept_scheme_id: The concept scheme whose classes to count
+            dataset_id: Optional dataset whose individuals and relationships to count
+                (all if None)
 
         Returns:
             One ClassCounts per class in the scheme (zeros included)
@@ -586,6 +627,7 @@ class OntologyRepository(Protocol):
         sort_order: Literal["asc", "desc"] = "asc",
         query: str | None = None,
         ids: list[str] | None = None,
+        dataset_id: str | None = None,
     ) -> list[Individual]:
         """
         Retrieve individuals, optionally filtered by class, text search or ids.
@@ -598,6 +640,7 @@ class OntologyRepository(Protocol):
             sort_order: Sort direction (asc or desc)
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of individual IDs to restrict results to
+            dataset_id: Optional dataset to filter by
 
         Returns:
             List of Individual entities
@@ -609,14 +652,16 @@ class OntologyRepository(Protocol):
         class_id: str | None = None,
         query: str | None = None,
         ids: list[str] | None = None,
+        dataset_id: str | None = None,
     ) -> int:
         """
-        Count individuals, optionally filtered by class, text search or ids.
+        Count individuals, optionally filtered by class, text search, ids or dataset.
 
         Args:
             class_id: Optional class ID to filter by
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of individual IDs to restrict the count to
+            dataset_id: Optional dataset to filter by
 
         Returns:
             Total count of individuals
@@ -626,6 +671,9 @@ class OntologyRepository(Protocol):
     def save_individual(self, individual: Individual) -> Individual:
         """
         Persist an individual (create or update).
+
+        A new individual must carry a dataset_id whose taxonomy holds all its
+        classes; an update keeps the stored dataset_id.
 
         Args:
             individual: The Individual entity to save
@@ -644,6 +692,58 @@ class OntologyRepository(Protocol):
 
         Returns:
             True if the individual was deleted, False if it did not exist
+        """
+        ...
+
+    # Dataset operations
+    def get_dataset(self, dataset_id: str) -> Dataset | None:
+        """
+        Retrieve a dataset by ID.
+
+        Args:
+            dataset_id: The ID of the dataset
+
+        Returns:
+            The Dataset if found, None otherwise
+        """
+        ...
+
+    def list_datasets(self, taxonomy_id: str | None = None) -> list[Dataset]:
+        """
+        List datasets, optionally those of one taxonomy, by title.
+
+        Args:
+            taxonomy_id: Optional taxonomy to filter by
+
+        Returns:
+            List of Dataset entities
+        """
+        ...
+
+    def save_dataset(self, dataset: Dataset) -> Dataset:
+        """
+        Persist a dataset (create or update).
+
+        Args:
+            dataset: The Dataset entity to save
+
+        Returns:
+            The persisted Dataset entity
+
+        Raises:
+            DuplicateEntityError: If the taxonomy already has a dataset with this identifier
+        """
+        ...
+
+    def delete_dataset(self, dataset_id: str) -> bool:
+        """
+        Delete a dataset by ID (callers delete its individuals first).
+
+        Args:
+            dataset_id: The ID of the dataset to delete
+
+        Returns:
+            True if the dataset was deleted, False if it did not exist
         """
         ...
 

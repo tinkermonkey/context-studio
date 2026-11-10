@@ -57,6 +57,7 @@ from domain.versioning.revert_service import RevertService
 from domain.versioning.services import VersioningService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.utils.parent_rows import create_batch_row
+from tests.utils.datasets import save_in_dataset
 
 TAXONOMY_ID = "tx-sel"
 SCHEME_ID = "cs-sel"
@@ -94,7 +95,7 @@ def ontology_repo(session_factory):
             title="Organization",
         )
     )
-    repo.save_individual(Individual(id=EXISTING_ID, class_ids=[CLASS_ID], title="Acme Corp"))
+    save_in_dataset(repo, Individual(id=EXISTING_ID, class_ids=[CLASS_ID], title="Acme Corp"))
     return repo
 
 
@@ -343,8 +344,7 @@ class TestIndividualSelectionApply:
     def test_relationship_between_existing_individuals_is_reverted(
         self, client, pipeline_repo, ontology_repo
     ):
-        ontology_repo.save_individual(
-            Individual(id="ind-globex", class_ids=[CLASS_ID], title="Globex")
+        save_in_dataset(ontology_repo, Individual(id="ind-globex", class_ids=[CLASS_ID], title="Globex")
         )
         ontology_repo.save_property_definition(
             PropertyDefinition(id="prop-partner", identifier="partners_with", title="partners with")

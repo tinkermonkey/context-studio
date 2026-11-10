@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from adapters.persistence.sqlite.models import (
     BatchRun,
     ChangeEvent,
+    ClaimTriageRun,
     IndividualExtractionRun,
     NoOpPipelineRun,
     PipelineRun,
@@ -26,6 +27,7 @@ from adapters.persistence.sqlite.models import (
     SchemaGroundingRun,
     SchemaRelationshipReflectionRun,
 )
+from domain.pipelines.entities import ClaimTriageRun as DomainClaimTriageRun
 from domain.pipelines.entities import (
     IndividualExtractionRun as DomainIndividualExtractionRun,
 )
@@ -73,6 +75,7 @@ _PIPELINE_TYPE_TO_ORM = {
     PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT: SchemaDefinitionRefinementRun,
     PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT: SchemaConnectionRefinementRun,
     PipelineType.SCHEMA_RELATIONSHIP_REFLECTION: SchemaRelationshipReflectionRun,
+    PipelineType.CLAIM_TRIAGE: ClaimTriageRun,
 }
 
 
@@ -813,10 +816,14 @@ class PipelineRepository:
 
         return self._write("cancel a pending pipeline run", cancel)
 
-    def requeue(self, run_id: str) -> bool:
+    def requeue(self, run_id: str, input_updates: dict[str, Any]) -> bool:
         """
         Set a CANCELLED, FAILED or INTERRUPTED run that carries an input back to
         PENDING, clearing its progress, failure reason, start time and proposal.
+
+        Args:
+            run_id: The run
+            input_updates: Values to set in its stored input, such as who re-queued it
 
         Returns:
             True if the run was re-queued; False if it is in another state or has
@@ -840,6 +847,7 @@ class PipelineRepository:
             )
             if not orm_obj:
                 return False
+            orm_obj.input_data = {**orm_obj.input_data, **input_updates}  # type: ignore[assignment]
             orm_obj.status = PipelineRunStatus.PENDING.value  # type: ignore[assignment]
             orm_obj.failure_reason = None  # type: ignore[assignment]
             orm_obj.started_at = None  # type: ignore[assignment]
@@ -988,6 +996,10 @@ class PipelineRepository:
             )
         elif isinstance(orm_obj, SchemaRelationshipReflectionRun):
             return DomainSchemaRelationshipReflectionRun(
+                **common,  # type: ignore[arg-type]
+            )
+        elif isinstance(orm_obj, ClaimTriageRun):
+            return DomainClaimTriageRun(
                 **common,  # type: ignore[arg-type]
             )
         else:

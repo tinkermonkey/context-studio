@@ -25,6 +25,8 @@ from adapters.persistence.sqlite.mappers import (
     deserialize_external_references,
     map_domain_to_orm,
     map_orm_to_domain,
+    map_orm_to_predicate,
+    map_predicate_to_orm,
     map_relationship_domain_to_orm,
     map_relationship_orm_to_domain,
     serialize_external_references,
@@ -33,8 +35,14 @@ from adapters.persistence.sqlite.models import (
     AttributeDefinition as AttributeDefinitionORM,
 )
 from adapters.persistence.sqlite.models import (
+    Dataset as DatasetORM,
+)
+from adapters.persistence.sqlite.models import (
     IndividualClass,
     OntologyEntity,
+)
+from adapters.persistence.sqlite.models import (
+    Predicate as PredicateORM,
 )
 from adapters.persistence.sqlite.models import (
     PropertyDefinition as PropertyDefinitionORM,
@@ -46,12 +54,15 @@ from domain.ontology.entities import (
     AttributeDefinition,
     Class,
     ConceptScheme,
+    Dataset,
     Individual,
+    Predicate,
     PropertyDefinition,
     Relationship,
     Taxonomy,
 )
 from domain.ontology.exceptions import (
+    DatasetMismatchError,
     DuplicateEntityError,
     EntityInUseError,
     IdentifierConflictError,
@@ -108,6 +119,11 @@ def _text_match(query: str) -> Any:
     )
 
 
+def _dataset_member_ids(session: Session, dataset_id: str) -> Any:
+    """Subquery of the ids of a dataset's individuals."""
+    return session.query(OntologyEntity.id).filter(OntologyEntity.dataset_id == dataset_id)
+
+
 def _apply_entity_sort(q: Any, sort_by: Optional[str], sort_order: str) -> Any:
     """
     Order an ontology entity query by title, created_at or last_modified (default created_at).
@@ -141,6 +157,7 @@ def _extract_constraint_name_from_integrity_error(error: IntegrityError) -> str 
     - "UNIQUE constraint failed: ontology_entities.identifier"
     - "UNIQUE constraint failed: relationships.uk_relationship_triple"
     - "UNIQUE constraint failed: attribute_definitions.uk_attribute_class_identifier"
+    - "UNIQUE constraint failed: predicates.taxonomy_id, predicates.identifier"
     - "NOT NULL constraint failed: ..."
     - "FOREIGN KEY constraint failed"
 
@@ -156,9 +173,28 @@ def _extract_constraint_name_from_integrity_error(error: IntegrityError) -> str 
             return "uk_relationship_triple"
         if "uk_attribute_class_identifier" in error_str:
             return "uk_attribute_class_identifier"
+        if "uk_predicate_taxonomy_identifier" in error_str or (
+            "predicates.taxonomy_id" in error_str and "predicates.identifier" in error_str
+        ):
+            return "uk_predicate_taxonomy_identifier"
+        if "datasets.taxonomy_id" in error_str:
+            # SQLite names the columns, not the constraint, for a multi-column UNIQUE.
+            return "uk_dataset_taxonomy_identifier"
         if "identifier" in error_str:
             return "identifier"
     return None
+
+
+def _dataset_from_orm(orm_dataset: DatasetORM) -> Dataset:
+    return Dataset(
+        id=cast(str, orm_dataset.id),
+        taxonomy_id=cast(str, orm_dataset.taxonomy_id),
+        identifier=cast(str, orm_dataset.identifier),
+        title=cast(str, orm_dataset.title),
+        yields_to_schema=bool(orm_dataset.yields_to_schema),
+        created_at=cast(datetime | None, orm_dataset.created_at),
+        last_modified=cast(datetime | None, orm_dataset.last_modified),
+    )
 
 
 class SQLiteOntologyRepository:
@@ -343,13 +379,17 @@ class SQLiteOntologyRepository:
 
     def delete_taxonomy(self, taxonomy_id: str) -> bool:
         """
-        Delete a taxonomy and all its children (cascade).
+        Delete a taxonomy and all its children (cascade), its predicate catalog included.
 
         Args:
             taxonomy_id: UUID of the taxonomy
 
         Returns:
             True if deleted, False if not found
+
+        Raises:
+            EntityInUseError: If relationship types still use the taxonomy's
+                predicates (ontology_entities.predicate_id is ON DELETE RESTRICT)
         """
         with self.session_factory() as session:
             orm_entity = (
@@ -365,7 +405,13 @@ class SQLiteOntologyRepository:
                 return False
 
             session.delete(orm_entity)
-            session.commit()
+            try:
+                session.commit()
+            except IntegrityError as exc:
+                session.rollback()
+                raise EntityInUseError(
+                    f"Taxonomy '{taxonomy_id}' has predicates that relationship types still use"
+                ) from exc
             return True
 
     # ==================== ConceptScheme CRUD ====================
@@ -520,6 +566,13 @@ class SQLiteOntologyRepository:
             else:
                 # Update existing — identifier is immutable post-create
                 if orm_entity.taxonomy_id != scheme.taxonomy_id:
+                    if self._scheme_has_individuals(session, scheme.id):
+                        # They live in datasets of the old taxonomy's schema.
+                        raise DatasetMismatchError(
+                            f"Scheme '{scheme.title}' has classes with individuals, which"
+                            " belong to datasets of its taxonomy, so it can't move to"
+                            " another taxonomy"
+                        )
                     # A move: the scheme's classes belong to its taxonomy too
                     session.query(OntologyEntity).filter(
                         OntologyEntity.node_type == NodeType.CLASS,
@@ -535,6 +588,19 @@ class SQLiteOntologyRepository:
 
             session.commit()
             return cast(ConceptScheme, map_orm_to_domain(orm_entity))
+
+    @staticmethod
+    def _scheme_has_individuals(session: Session, concept_scheme_id: str) -> bool:
+        class_ids = session.query(OntologyEntity.id).filter(
+            OntologyEntity.node_type == NodeType.CLASS,
+            OntologyEntity.concept_scheme_id == concept_scheme_id,
+        )
+        return (
+            session.query(IndividualClass.individual_id)
+            .filter(IndividualClass.class_id.in_(class_ids))
+            .first()
+            is not None
+        )
 
     def delete_concept_scheme(self, concept_scheme_id: str) -> bool:
         """
@@ -888,9 +954,12 @@ class SQLiteOntologyRepository:
         class_id: Optional[str] = None,
         query: Optional[str] = None,
         ids: Optional[list[str]] = None,
+        dataset_id: Optional[str] = None,
     ) -> Any:
         """Build the filtered individual query shared by list_individuals and count_individuals."""
         q = session.query(OntologyEntity).filter(OntologyEntity.node_type == NodeType.INDIVIDUAL)
+        if dataset_id is not None:
+            q = q.filter(OntologyEntity.dataset_id == dataset_id)
         if class_id is not None:
             # Individuals that have this class as a parent
             subquery = (
@@ -914,9 +983,10 @@ class SQLiteOntologyRepository:
         sort_order: Literal["asc", "desc"] = "asc",
         query: Optional[str] = None,
         ids: Optional[list[str]] = None,
+        dataset_id: Optional[str] = None,
     ) -> list[Individual]:
         """
-        List individuals, optionally filtered by class, text or ids.
+        List individuals, optionally filtered by class, text, ids or dataset.
 
         Args:
             class_id: Optional class ID to filter by (rdf:type) - matches any parent class
@@ -926,12 +996,13 @@ class SQLiteOntologyRepository:
             sort_order: Sort direction (asc or desc)
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of individual IDs to restrict results to
+            dataset_id: Optional dataset to filter by
 
         Returns:
             Sequence of Individual entities
         """
         with self.session_factory() as session:
-            q = self._individual_query(session, class_id, query, ids)
+            q = self._individual_query(session, class_id, query, ids, dataset_id)
             q = _apply_entity_sort(q, sort_by, sort_order).offset(offset)
             if limit is not None:
                 q = q.limit(limit)
@@ -950,20 +1021,24 @@ class SQLiteOntologyRepository:
         class_id: Optional[str] = None,
         query: Optional[str] = None,
         ids: Optional[list[str]] = None,
+        dataset_id: Optional[str] = None,
     ) -> int:
         """
-        Count individuals, optionally filtered by class, text or ids.
+        Count individuals, optionally filtered by class, text, ids or dataset.
 
         Args:
             class_id: Optional class ID to filter by (rdf:type) - matches any parent class
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of individual IDs to restrict the count to
+            dataset_id: Optional dataset to filter by
 
         Returns:
             Number of matching Individual entities
         """
         with self.session_factory() as session:
-            return int(self._individual_query(session, class_id, query, ids).count())
+            return int(
+                self._individual_query(session, class_id, query, ids, dataset_id).count()
+            )
 
     def save_individual(self, individual: Individual) -> Individual:
         """
@@ -975,8 +1050,12 @@ class SQLiteOntologyRepository:
         Returns:
             Saved Individual entity
 
+        A new individual is stored in its dataset_id; an update keeps the stored one.
+
         Raises:
-            ValueError: If title is empty, no parent classes, or a parent class doesn't exist
+            ValueError: If title is empty, no parent classes, a parent class doesn't exist,
+                or a new individual has no dataset_id or names one that doesn't exist
+            DatasetMismatchError: If a parent class is outside the dataset's taxonomy
         """
         if not individual.title or not individual.title.strip():
             raise ValueError("Individual title cannot be empty")
@@ -984,12 +1063,6 @@ class SQLiteOntologyRepository:
             raise ValueError("Individual must have at least one parent class")
 
         with self.session_factory() as session:
-            # Verify all parent classes exist
-            for class_id in individual.class_ids:
-                parent_class = self.get_class(class_id, session)
-                if parent_class is None:
-                    raise ValueError(f"Parent class {class_id} does not exist")
-
             orm_entity = (
                 session.query(OntologyEntity)
                 .filter(
@@ -998,6 +1071,25 @@ class SQLiteOntologyRepository:
                 )
                 .first()
             )
+            dataset_id = (
+                individual.dataset_id if orm_entity is None else cast(str, orm_entity.dataset_id)
+            )
+            if dataset_id is None:
+                raise ValueError(f"Individual {individual.id} has no dataset")
+            dataset = session.get(DatasetORM, dataset_id)
+            if dataset is None:
+                raise ValueError(f"Dataset {dataset_id} does not exist")
+
+            # Verify all parent classes exist, in the dataset's taxonomy
+            for class_id in individual.class_ids:
+                parent_class = self.get_class(class_id, session)
+                if parent_class is None:
+                    raise ValueError(f"Parent class {class_id} does not exist")
+                if parent_class.taxonomy_id != dataset.taxonomy_id:
+                    raise DatasetMismatchError(
+                        f"Class '{parent_class.title}' is not in the taxonomy of dataset"
+                        f" '{dataset.identifier}'"
+                    )
 
             if orm_entity is None:
                 # Create new
@@ -1080,6 +1172,132 @@ class SQLiteOntologyRepository:
             session.commit()
             return True
 
+    # ==================== Predicate CRUD ====================
+
+    def list_predicates(self, taxonomy_id: str) -> list[Predicate]:
+        """
+        Retrieve a taxonomy's predicate catalog.
+
+        Args:
+            taxonomy_id: The taxonomy whose predicates to list
+
+        Returns:
+            The taxonomy's predicates, by identifier
+        """
+        with self.session_factory() as session:
+            rows = (
+                session.query(PredicateORM)
+                .filter(PredicateORM.taxonomy_id == str(taxonomy_id))
+                .order_by(PredicateORM.identifier)
+                .all()
+            )
+            return [map_orm_to_predicate(row) for row in rows]
+
+    def get_predicate(self, predicate_id: str) -> Optional[Predicate]:
+        """
+        Retrieve a predicate by ID.
+
+        Args:
+            predicate_id: UUID of the predicate
+
+        Returns:
+            Predicate entity if found, None otherwise
+        """
+        with self.session_factory() as session:
+            row = session.get(PredicateORM, str(predicate_id))
+            return map_orm_to_predicate(row) if row is not None else None
+
+    def get_predicate_by_identifier(self, taxonomy_id: str, identifier: str) -> Optional[Predicate]:
+        """
+        Retrieve a taxonomy's predicate by its identifier.
+
+        Args:
+            taxonomy_id: The taxonomy whose catalog to look in
+            identifier: The predicate identifier (e.g. "part_of")
+
+        Returns:
+            Predicate entity if found, None otherwise
+        """
+        with self.session_factory() as session:
+            row = (
+                session.query(PredicateORM)
+                .filter(
+                    PredicateORM.taxonomy_id == str(taxonomy_id),
+                    PredicateORM.identifier == identifier,
+                )
+                .first()
+            )
+            return map_orm_to_predicate(row) if row is not None else None
+
+    def save_predicate(self, predicate: Predicate) -> Predicate:
+        """
+        Create or update a predicate.
+
+        Updates bump the version and last_modified. The taxonomy is fixed at create.
+
+        Args:
+            predicate: Predicate entity to save
+
+        Returns:
+            Saved Predicate entity (with timestamps set)
+
+        Raises:
+            DuplicateEntityError: If the taxonomy already has another predicate
+                with the identifier
+        """
+        duplicate_message = (
+            f"Predicate '{predicate.identifier}' already exists in taxonomy"
+            f" {predicate.taxonomy_id}"
+        )
+        with self.session_factory() as session:
+            orm_predicate = session.get(PredicateORM, str(predicate.id))
+            taxonomy_id = (
+                str(orm_predicate.taxonomy_id)
+                if orm_predicate is not None
+                else str(predicate.taxonomy_id)
+            )
+            clash = (
+                session.query(PredicateORM.id)
+                .filter(
+                    PredicateORM.taxonomy_id == taxonomy_id,
+                    PredicateORM.identifier == predicate.identifier,
+                    PredicateORM.id != str(predicate.id),
+                )
+                .first()
+            )
+            if clash is not None:
+                raise DuplicateEntityError(duplicate_message)
+
+            now = datetime.now(timezone.utc)
+            if orm_predicate is None:
+                orm_predicate = map_predicate_to_orm(predicate)
+                orm_predicate.created_at = predicate.created_at or now  # type: ignore[assignment]
+                orm_predicate.last_modified = now  # type: ignore[assignment]
+                orm_predicate.version = 1  # type: ignore[assignment]
+                session.add(orm_predicate)
+            else:
+                orm_predicate.identifier = predicate.identifier  # type: ignore[assignment]
+                orm_predicate.title = predicate.title  # type: ignore[assignment]
+                orm_predicate.description = predicate.description  # type: ignore[assignment]
+                orm_predicate.external_references = (  # type: ignore[assignment]
+                    serialize_external_references(predicate.external_references)
+                )
+                orm_predicate.status = predicate.status.value  # type: ignore[assignment]
+                orm_predicate.last_modified = now  # type: ignore[assignment]
+                orm_predicate.version = orm_predicate.version + 1  # type: ignore[assignment]
+
+            try:
+                session.commit()
+            except IntegrityError as e:
+                session.rollback()
+                if (
+                    _extract_constraint_name_from_integrity_error(e)
+                    == "uk_predicate_taxonomy_identifier"
+                ):
+                    raise DuplicateEntityError(duplicate_message) from e
+                raise
+            return map_orm_to_predicate(orm_predicate)
+
     # ==================== PropertyDefinition CRUD ====================
 
     def get_property_definition(
@@ -1126,6 +1344,7 @@ class SQLiteOntologyRepository:
         query: Optional[str] = None,
         ids: Optional[list[str]] = None,
         domain_class_id: Optional[str] = None,
+        taxonomy_id: Optional[str] = None,
     ) -> list[PropertyDefinition]:
         """
         Retrieve property definitions with optional filtering, pagination, sorting, and text search.
@@ -1139,12 +1358,15 @@ class SQLiteOntologyRepository:
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of property definition IDs to restrict results to
             domain_class_id: Optional class ID the property's domain must equal
+            taxonomy_id: Optional taxonomy the property's predicate must belong to
 
         Returns:
             Sequence of PropertyDefinition entities
         """
         with self.session_factory() as session:
-            q = self._property_definition_query(session, is_relevant, query, ids, domain_class_id)
+            q = self._property_definition_query(
+                session, is_relevant, query, ids, domain_class_id, taxonomy_id
+            )
             q = _apply_entity_sort(q, sort_by, sort_order)
 
             if limit is not None:
@@ -1159,6 +1381,7 @@ class SQLiteOntologyRepository:
         query: Optional[str],
         ids: Optional[list[str]],
         domain_class_id: Optional[str],
+        taxonomy_id: Optional[str] = None,
     ) -> Any:
         """Base query for property definitions with the list/count filters applied."""
         q = session.query(OntologyEntity).filter(
@@ -1172,6 +1395,10 @@ class SQLiteOntologyRepository:
             q = q.filter(OntologyEntity.id.in_(set(ids)))
         if domain_class_id is not None:
             q = q.filter(OntologyEntity.domain_class_id == domain_class_id)
+        if taxonomy_id is not None:
+            q = q.join(PredicateORM, PredicateORM.id == OntologyEntity.predicate_id).filter(
+                PredicateORM.taxonomy_id == str(taxonomy_id)
+            )
         return q
 
     def count_property_definitions(
@@ -1180,6 +1407,7 @@ class SQLiteOntologyRepository:
         query: Optional[str] = None,
         ids: Optional[list[str]] = None,
         domain_class_id: Optional[str] = None,
+        taxonomy_id: Optional[str] = None,
     ) -> int:
         """
         Count property definitions, optionally filtered by relevance, text search, ids or domain.
@@ -1189,15 +1417,20 @@ class SQLiteOntologyRepository:
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of property definition IDs to restrict the count to
             domain_class_id: Optional class ID the property's domain must equal
+            taxonomy_id: Optional taxonomy the property's predicate must belong to
 
         Returns:
             Total count of property definitions
         """
         with self.session_factory() as session:
-            q = self._property_definition_query(session, is_relevant, query, ids, domain_class_id)
+            q = self._property_definition_query(
+                session, is_relevant, query, ids, domain_class_id, taxonomy_id
+            )
             return int(q.count())
 
-    def count_by_scheme(self, taxonomy_id: str) -> list[SchemeCounts]:
+    def count_by_scheme(
+        self, taxonomy_id: str, dataset_id: Optional[str] = None
+    ) -> list[SchemeCounts]:
         """
         Count each concept scheme's classes, individuals and property definitions.
 
@@ -1205,6 +1438,7 @@ class SQLiteOntologyRepository:
 
         Args:
             taxonomy_id: The taxonomy whose schemes to count
+            dataset_id: Optional dataset whose individuals to count (all if None)
 
         Returns:
             One SchemeCounts per scheme in the taxonomy (zeros included), by title
@@ -1229,15 +1463,18 @@ class SQLiteOntologyRepository:
                 .group_by(cls.concept_scheme_id)
                 .all()
             )
-            individual_counts = dict(
+            individual_query = (
                 session.query(
                     cls.concept_scheme_id, func.count(func.distinct(IndividualClass.individual_id))
                 )
                 .join(IndividualClass, IndividualClass.class_id == cls.id)
                 .filter(*in_taxonomy)
-                .group_by(cls.concept_scheme_id)
-                .all()
             )
+            if dataset_id is not None:
+                individual_query = individual_query.filter(
+                    IndividualClass.individual_id.in_(_dataset_member_ids(session, dataset_id))
+                )
+            individual_counts = dict(individual_query.group_by(cls.concept_scheme_id).all())
             property_counts = dict(
                 session.query(cls.concept_scheme_id, func.count(prop.id))
                 .join(prop, prop.domain_class_id == cls.id)
@@ -1255,7 +1492,9 @@ class SQLiteOntologyRepository:
             for scheme_id in scheme_ids
         ]
 
-    def count_by_class(self, concept_scheme_id: str) -> list[ClassCounts]:
+    def count_by_class(
+        self, concept_scheme_id: str, dataset_id: Optional[str] = None
+    ) -> list[ClassCounts]:
         """
         Count each class's individuals, domain property definitions and outgoing relationships.
 
@@ -1263,6 +1502,8 @@ class SQLiteOntologyRepository:
 
         Args:
             concept_scheme_id: The concept scheme whose classes to count
+            dataset_id: Optional dataset whose individuals and relationships to count
+                (all if None)
 
         Returns:
             One ClassCounts per class in the scheme (zeros included), by title
@@ -1274,10 +1515,15 @@ class SQLiteOntologyRepository:
             class_ids = [
                 row[0] for row in session.query(cls.id).filter(*in_scheme).order_by(cls.title)
             ]
+            in_dataset = (
+                ()
+                if dataset_id is None
+                else (IndividualClass.individual_id.in_(_dataset_member_ids(session, dataset_id)),)
+            )
             individual_counts = dict(
                 session.query(cls.id, func.count(IndividualClass.individual_id))
                 .join(IndividualClass, IndividualClass.class_id == cls.id)
-                .filter(*in_scheme)
+                .filter(*in_scheme, *in_dataset)
                 .group_by(cls.id)
                 .all()
             )
@@ -1285,7 +1531,7 @@ class SQLiteOntologyRepository:
                 session.query(cls.id, func.count(RelationshipORM.id))
                 .join(IndividualClass, IndividualClass.class_id == cls.id)
                 .join(RelationshipORM, RelationshipORM.source_id == IndividualClass.individual_id)
-                .filter(*in_scheme)
+                .filter(*in_scheme, *in_dataset)
                 .group_by(cls.id)
                 .all()
             )
@@ -1528,9 +1774,7 @@ class SQLiteOntologyRepository:
                 mapped_orm = map_domain_to_orm(prop)
                 orm_entity.title = prop.title  # type: ignore[assignment]
                 orm_entity.description = prop.description  # type: ignore[assignment]
-                orm_entity.canonical_predicate = (
-                    prop.canonical_predicate  # type: ignore[assignment]
-                )
+                orm_entity.predicate_id = prop.predicate_id  # type: ignore[assignment]
                 orm_entity.identifier = prop.identifier  # type: ignore[assignment]
                 orm_entity.ontology_mapping = (
                     mapped_orm.ontology_mapping
@@ -1586,6 +1830,8 @@ class SQLiteOntologyRepository:
                     raise IdentifierConflictError(prop.identifier) from e
                 raise e
 
+            # canonical_predicate is read through predicate_id; reload it
+            session.refresh(orm_entity, ["canonical_predicate"])
             return cast(PropertyDefinition, map_orm_to_domain(orm_entity))
 
     def delete_property_definition(self, property_id: str) -> bool:
@@ -1665,6 +1911,7 @@ class SQLiteOntologyRepository:
         sort_by: Optional[str] = None,
         sort_order: Literal["asc", "desc"] = "asc",
         query: Optional[str] = None,
+        dataset_id: Optional[str] = None,
     ) -> list[Relationship]:
         """
         List relationships with optional filtering, pagination, sorting, and text search.
@@ -1679,12 +1926,15 @@ class SQLiteOntologyRepository:
             sort_order: Sort direction (asc or desc)
             query: Case-insensitive text matched against the source title, target title,
                 or property definition title/identifier
+            dataset_id: Optional dataset to filter by (the source individual's)
 
         Returns:
             Sequence of Relationship entities
         """
         with self.session_factory() as session:
-            q = self._relationship_query(session, source_id, target_id, property_id, query)
+            q = self._relationship_query(
+                session, source_id, target_id, property_id, query, dataset_id
+            )
 
             # Only created_at is sortable; id keeps offset pagination stable.
             if sort_order.lower() == "desc":
@@ -1704,9 +1954,16 @@ class SQLiteOntologyRepository:
         target_id: Optional[str] = None,
         property_id: Optional[str] = None,
         query: Optional[str] = None,
+        dataset_id: Optional[str] = None,
     ) -> Any:
         """Build the filtered relationship query shared by list and count."""
         q = session.query(RelationshipORM)
+        if dataset_id is not None:
+            # A relationship belongs to its source individual's dataset.
+            in_dataset = session.query(OntologyEntity.id).filter(
+                OntologyEntity.dataset_id == dataset_id
+            )
+            q = q.filter(RelationshipORM.source_id.in_(in_dataset))
         if source_id is not None:
             q = q.filter(RelationshipORM.source_id == source_id)
         if target_id is not None:
@@ -1731,9 +1988,10 @@ class SQLiteOntologyRepository:
         target_id: Optional[str] = None,
         property_id: Optional[str] = None,
         query: Optional[str] = None,
+        dataset_id: Optional[str] = None,
     ) -> int:
         """
-        Count relationships, optionally filtered by source, target, property, or text.
+        Count relationships, optionally filtered by source, target, property, text or dataset.
 
         Args:
             source_id: Optional source entity ID to filter by
@@ -1741,12 +1999,15 @@ class SQLiteOntologyRepository:
             property_id: Optional property definition ID to filter by (relationship type)
             query: Case-insensitive text matched against the source title, target title,
                 or property definition title/identifier
+            dataset_id: Optional dataset to filter by (the source individual's)
 
         Returns:
             Total count of relationships
         """
         with self.session_factory() as session:
-            q = self._relationship_query(session, source_id, target_id, property_id, query)
+            q = self._relationship_query(
+                session, source_id, target_id, property_id, query, dataset_id
+            )
             return int(q.count())
 
     def save_relationship(self, rel: Relationship) -> Relationship:
@@ -1766,6 +2027,7 @@ class SQLiteOntologyRepository:
                        or if source == target
             DuplicateEntityError: If a relationship with this (source_id, target_id,
                                  property_definition_id) triple already exists
+            DatasetMismatchError: If source and target are individuals of different datasets
         """
         if rel.source_id == rel.target_id:
             raise ValueError("A relationship cannot have the same source and target")
@@ -1784,6 +2046,15 @@ class SQLiteOntologyRepository:
             )
             if target is None:
                 raise ValueError(f"Target entity {rel.target_id} does not exist")
+            if (
+                source.dataset_id is not None
+                and target.dataset_id is not None
+                and source.dataset_id != target.dataset_id
+            ):
+                raise DatasetMismatchError(
+                    f"'{source.title}' and '{target.title}' are in different datasets;"
+                    " a relationship cannot cross datasets"
+                )
 
             # Verify property definition exists (same session)
             prop_def = self.get_property_definition(rel.property_definition_id, session)
@@ -1846,6 +2117,94 @@ class SQLiteOntologyRepository:
             return True
 
     # ==================== AttributeDefinition CRUD ====================
+
+    def get_dataset(self, dataset_id: str) -> Optional[Dataset]:
+        """
+        Retrieve a dataset by ID.
+
+        Args:
+            dataset_id: UUID of the dataset
+
+        Returns:
+            Dataset entity if found, None otherwise
+        """
+        with self.session_factory() as session:
+            orm_dataset = session.get(DatasetORM, dataset_id)
+            return None if orm_dataset is None else _dataset_from_orm(orm_dataset)
+
+    def list_datasets(self, taxonomy_id: Optional[str] = None) -> list[Dataset]:
+        """
+        List datasets, optionally those of one taxonomy, by title.
+
+        Args:
+            taxonomy_id: Optional taxonomy to filter by
+
+        Returns:
+            List of Dataset entities
+        """
+        with self.session_factory() as session:
+            q = session.query(DatasetORM)
+            if taxonomy_id is not None:
+                q = q.filter(DatasetORM.taxonomy_id == taxonomy_id)
+            return [_dataset_from_orm(d) for d in q.order_by(DatasetORM.title, DatasetORM.id)]
+
+    def save_dataset(self, dataset: Dataset) -> Dataset:
+        """
+        Create or update a dataset.
+
+        Args:
+            dataset: Dataset entity to save
+
+        Returns:
+            Saved Dataset entity
+
+        Raises:
+            DuplicateEntityError: If the taxonomy already has a dataset with this identifier
+        """
+        now = datetime.now(timezone.utc)
+        with self.session_factory() as session:
+            orm_dataset = session.get(DatasetORM, dataset.id)
+            if orm_dataset is None:
+                orm_dataset = DatasetORM(
+                    id=dataset.id,
+                    taxonomy_id=dataset.taxonomy_id,
+                    created_at=dataset.created_at or now,
+                )
+                session.add(orm_dataset)
+            orm_dataset.identifier = dataset.identifier  # type: ignore[assignment]
+            orm_dataset.title = dataset.title  # type: ignore[assignment]
+            orm_dataset.yields_to_schema = dataset.yields_to_schema  # type: ignore[assignment]
+            orm_dataset.last_modified = now  # type: ignore[assignment]
+            try:
+                session.commit()
+            except IntegrityError as e:
+                session.rollback()
+                if _extract_constraint_name_from_integrity_error(e) == (
+                    "uk_dataset_taxonomy_identifier"
+                ):
+                    raise DuplicateEntityError(
+                        f"The taxonomy already has a dataset '{dataset.identifier}'"
+                    ) from e
+                raise
+            return _dataset_from_orm(orm_dataset)
+
+    def delete_dataset(self, dataset_id: str) -> bool:
+        """
+        Delete a dataset (its individuals cascade; callers delete them first).
+
+        Args:
+            dataset_id: UUID of the dataset
+
+        Returns:
+            True if deleted, False if not found
+        """
+        with self.session_factory() as session:
+            orm_dataset = session.get(DatasetORM, dataset_id)
+            if orm_dataset is None:
+                return False
+            session.delete(orm_dataset)
+            session.commit()
+            return True
 
     def get_attribute_definition(
         self, attribute_definition_id: str
@@ -2107,6 +2466,7 @@ class SQLiteOntologyRepository:
             external_references=deserialize_external_references(
                 cast(list[dict[str, Any]], orm_entity.external_references) or []
             ),
+            dataset_id=cast(str | None, orm_entity.dataset_id),
         )
 
     def _would_create_cycle(

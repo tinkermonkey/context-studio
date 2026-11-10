@@ -284,6 +284,53 @@
         }
       }
     },
+    "/api/taxonomies/{taxonomy_id}/predicates": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "List Taxonomy Predicates",
+        "description": "The taxonomy's predicate catalog: the relation verbs its relationship types use.\n\nRaises:\n    HTTPException: 404 if the taxonomy is not found",
+        "operationId": "list_taxonomy_predicates_api_taxonomies__taxonomy_id__predicates_get",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PredicateResponse"
+                  },
+                  "title": "Response List Taxonomy Predicates Api Taxonomies  Taxonomy Id  Predicates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/taxonomies/{taxonomy_id}/scheme-counts": {
       "get": {
         "tags": [
@@ -301,6 +348,24 @@
               "type": "string",
               "title": "Taxonomy Id"
             }
+          },
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Count only this dataset's individuals (all when omitted)",
+              "title": "Dataset Id"
+            },
+            "description": "Count only this dataset's individuals (all when omitted)"
           }
         ],
         "responses": {
@@ -626,6 +691,24 @@
               "type": "string",
               "title": "Scheme Id"
             }
+          },
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Count only this dataset's individuals and relationships",
+              "title": "Dataset Id"
+            },
+            "description": "Count only this dataset's individuals and relationships"
           }
         ],
         "responses": {
@@ -1368,6 +1451,24 @@
               "title": "Q"
             },
             "description": "Case-insensitive text search on the source title, target title, or property definition title/identifier"
+          },
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional dataset ID to filter by (the source individual's)",
+              "title": "Dataset Id"
+            },
+            "description": "Optional dataset ID to filter by (the source individual's)"
           }
         ],
         "responses": {
@@ -2224,6 +2325,24 @@
               "title": "Ids"
             },
             "description": "Restrict results to these IDs (repeat the parameter; at most 500)"
+          },
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional dataset ID to filter by",
+              "title": "Dataset Id"
+            },
+            "description": "Optional dataset ID to filter by"
           }
         ],
         "responses": {
@@ -2570,6 +2689,145 @@
         }
       }
     },
+    "/api/datasets": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "List Datasets",
+        "description": "List datasets (named bodies of data over a taxonomy's schema), by title, with their size.\n\nArgs:\n    taxonomy_id: Optional taxonomy ID to filter by\n    service: OntologyService from dependency injection\n\nReturns:\n    The datasets, each with its individual and relationship counts",
+        "operationId": "list_datasets_api_datasets_get",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional taxonomy ID to filter by",
+              "title": "Taxonomy Id"
+            },
+            "description": "Optional taxonomy ID to filter by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DatasetResponse"
+                  },
+                  "title": "Response List Datasets Api Datasets Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Create Dataset",
+        "description": "Create a dataset over a taxonomy's schema. A direct action, not a proposal.\n\nArgs:\n    request: The taxonomy, identifier and title\n    service: OntologyService from dependency injection\n\nReturns:\n    The created dataset\n\nRaises:\n    HTTPException: 404 if the taxonomy is not found, 409 if the taxonomy already has a\n    dataset with this identifier, 400 if the identifier or title is invalid",
+        "operationId": "create_dataset_api_datasets_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatasetCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/datasets/{dataset_id}": {
+      "delete": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Delete Dataset",
+        "description": "Delete a dataset with its individuals and their relationships. A direct action, not a\nproposal: each individual and relationship removed is recorded as a change event.\n\nArgs:\n    dataset_id: The dataset to delete\n    service: OntologyService from dependency injection\n\nReturns:\n    What was removed\n\nRaises:\n    HTTPException: 404 if the dataset is not found",
+        "operationId": "delete_dataset_api_datasets__dataset_id__delete",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Dataset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetDeletionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/graph/build": {
       "post": {
         "tags": [
@@ -2578,6 +2836,26 @@
         "summary": "Build Graph",
         "description": "Explicitly build the in-memory graph from current ontology data.\n\nThis endpoint allows clients to trigger graph construction on demand. Graph building\nnormally happens lazily on first query, but this endpoint enables explicit control\nover graph refresh timing and validates that the graph can be built without errors.\n\nArgs:\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    KnowledgeGraphResponse containing node count, edge count, and build timestamp\n\nRaises:\n    HTTPException: 422 if graph construction fails",
         "operationId": "build_graph_api_graph_build_post",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Scope to the schema plus this dataset's data (all data when omitted)",
+              "title": "Dataset Id"
+            },
+            "description": "Scope to the schema plus this dataset's data (all data when omitted)"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -2585,6 +2863,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/KnowledgeGraphResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -2600,6 +2888,26 @@
         "summary": "Get Graph View",
         "description": "Get a labelled read model of the ontology graph for visualization.\n\nReturns every taxonomy, every concept scheme (rendered as a layer), all classes and\nindividuals with their layer, and typed edges (relationship, schema, instance_of,\nsubclass_of) with predicate labels.\n\nArgs:\n    service: GraphAnalysisService from dependency injection\n\nReturns:\n    GraphViewResponse with taxonomies, layers, nodes and edges\n\nRaises:\n    HTTPException: 422 if a graph error occurs, 500 on unexpected errors",
         "operationId": "get_graph_view_api_graph_view_get",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Scope to the schema plus this dataset's data (all data when omitted)",
+              "title": "Dataset Id"
+            },
+            "description": "Scope to the schema plus this dataset's data (all data when omitted)"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -2607,6 +2915,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GraphViewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -2634,6 +2952,24 @@
               "title": "Algorithm"
             },
             "description": "Centrality algorithm to use"
+          },
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Scope to the schema plus this dataset's data (all data when omitted)",
+              "title": "Dataset Id"
+            },
+            "description": "Scope to the schema plus this dataset's data (all data when omitted)"
           }
         ],
         "responses": {
@@ -2712,6 +3048,24 @@
               "title": "Target Id"
             },
             "description": "ID of the ending node"
+          },
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Scope to the schema plus this dataset's data (all data when omitted)",
+              "title": "Dataset Id"
+            },
+            "description": "Scope to the schema plus this dataset's data (all data when omitted)"
           }
         ],
         "responses": {
@@ -2997,6 +3351,24 @@
               "title": "Nodes"
             },
             "description": "Comma-separated list of node IDs to extract subgraph for"
+          },
+          {
+            "name": "dataset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Scope to the schema plus this dataset's data (all data when omitted)",
+              "title": "Dataset Id"
+            },
+            "description": "Scope to the schema plus this dataset's data (all data when omitted)"
           }
         ],
         "responses": {
@@ -5026,7 +5398,7 @@
           "reference"
         ],
         "summary": "Search References",
-        "description": "Search for references across multiple sources.\n\nAggregates results from all available sources (or specified sources).\nSources that fail or are unavailable are tracked but don't block the response.\n\nArgs:\n    request: ReferenceSearchRequest with search parameters\n    sources: List of reference sources from dependency injection\n\nReturns:\n    ReferenceSearchResponseSchema with aggregated results from all sources\n\nRaises:\n    HTTPException: 400 if search term is invalid, 500 if no sources configured",
+        "description": "Search for references across multiple sources.\n\nAggregates results from all sources (or the requested ones), queried at once.\nThere is no availability pre-check: each call goes through the reference proxy,\nso a repeated search is a cache hit. A source that raises or doesn't answer\nwithin SOURCE_QUERY_TIMEOUT_SECONDS is listed as failed and doesn't hold the\nresponse. The source adapters return no results on network errors, so a source\nthat fails fast is listed as searched with no results.\n\nArgs:\n    request: ReferenceSearchRequest with search parameters\n    sources: List of reference sources from dependency injection\n\nReturns:\n    ReferenceSearchResponseSchema with aggregated results from all sources\n\nRaises:\n    HTTPException: 400 if search term is invalid, 500 if no sources configured",
         "operationId": "search_references_api_reference_search_post",
         "requestBody": {
           "content": {
@@ -5068,7 +5440,7 @@
           "reference"
         ],
         "summary": "Get Reference Relations",
-        "description": "Get relationships for a reference URI across multiple sources.\n\nAggregates relationships from all available sources (or specified sources).\nSources that fail or are unavailable are tracked but don't block the response.\n\nArgs:\n    request: ReferenceRelationsRequest with URI to query\n    sources: List of reference sources from dependency injection\n\nReturns:\n    ReferenceRelationsResponseSchema with aggregated relationships\n\nRaises:\n    HTTPException: 400 if URI is invalid, 500 if no sources configured",
+        "description": "Get relationships for a reference URI across multiple sources.\n\nAggregates relationships from all sources (or the requested ones), queried at\nonce. As with search, there is no availability pre-check; a source that raises or\ndoesn't answer within SOURCE_QUERY_TIMEOUT_SECONDS is listed as failed.\n\nArgs:\n    request: ReferenceRelationsRequest with URI to query\n    sources: List of reference sources from dependency injection\n\nReturns:\n    ReferenceRelationsResponseSchema with aggregated relationships\n\nRaises:\n    HTTPException: 400 if URI is invalid, 500 if no sources configured",
         "operationId": "get_reference_relations_api_reference_relations_post",
         "requestBody": {
           "content": {
@@ -5854,243 +6226,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BackgroundTaskResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/admin/datasets": {
-      "get": {
-        "tags": [
-          "admin"
-        ],
-        "summary": "List Datasets",
-        "description": "List all datasets.\n\nReturns:\n    List of all datasets",
-        "operationId": "list_datasets_api_v1_admin_datasets_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/DatasetResponse"
-                  },
-                  "type": "array",
-                  "title": "Response List Datasets Api V1 Admin Datasets Get"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "admin"
-        ],
-        "summary": "Create Dataset",
-        "description": "Create a new dataset.\n\nArgs:\n    request: DatasetCreateRequest with title, filename, optional description\n    service: AdminService from dependency injection\n\nReturns:\n    Created DatasetResponse\n\nRaises:\n    HTTPException: 400 if title is empty",
-        "operationId": "create_dataset_api_v1_admin_datasets_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DatasetCreateRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DatasetResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/admin/datasets/{dataset_id}": {
-      "get": {
-        "tags": [
-          "admin"
-        ],
-        "summary": "Get Dataset",
-        "description": "Get a dataset by ID.\n\nArgs:\n    dataset_id: The dataset ID\n    service: AdminService from dependency injection\n\nReturns:\n    DatasetResponse\n\nRaises:\n    HTTPException: 404 if not found",
-        "operationId": "get_dataset_api_v1_admin_datasets__dataset_id__get",
-        "parameters": [
-          {
-            "name": "dataset_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Dataset Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DatasetResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "admin"
-        ],
-        "summary": "Update Dataset",
-        "description": "Update a dataset's metadata.\n\nArgs:\n    dataset_id: The dataset ID\n    request: DatasetUpdateRequest with optional fields to update\n    service: AdminService from dependency injection\n\nReturns:\n    Updated DatasetResponse\n\nRaises:\n    HTTPException: 400 if invalid, 404 if not found",
-        "operationId": "update_dataset_api_v1_admin_datasets__dataset_id__put",
-        "parameters": [
-          {
-            "name": "dataset_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Dataset Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DatasetUpdateRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DatasetResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "admin"
-        ],
-        "summary": "Delete Dataset",
-        "description": "Delete a dataset.\n\nArgs:\n    dataset_id: The dataset ID\n    service: AdminService from dependency injection\n\nRaises:\n    HTTPException: 404 if not found, 409 if it is the active dataset",
-        "operationId": "delete_dataset_api_v1_admin_datasets__dataset_id__delete",
-        "parameters": [
-          {
-            "name": "dataset_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Dataset Id"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/admin/datasets/{dataset_id}/activate": {
-      "post": {
-        "tags": [
-          "admin"
-        ],
-        "summary": "Activate Dataset",
-        "description": "Activate a dataset as the current workspace.\n\nArgs:\n    dataset_id: The dataset ID to activate\n    service: AdminService from dependency injection\n\nReturns:\n    Updated DatasetResponse with is_active=true\n\nRaises:\n    HTTPException: 404 if not found",
-        "operationId": "activate_dataset_api_v1_admin_datasets__dataset_id__activate_post",
-        "parameters": [
-          {
-            "name": "dataset_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Dataset Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DatasetResponse"
                 }
               }
             }
@@ -7943,6 +8078,502 @@
         }
       }
     },
+    "/api/taxonomies/{taxonomy_id}/claims": {
+      "get": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "List Claims",
+        "description": "The taxonomy's claims, oldest first.",
+        "operationId": "list_claims_api_taxonomies__taxonomy_id__claims_get",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Maximum number of results",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of results"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of results to skip",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of results to skip"
+          },
+          {
+            "name": "subject_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only claims about this entity",
+              "title": "Subject Id"
+            },
+            "description": "Only claims about this entity"
+          },
+          {
+            "name": "note_ref",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only claims from this note",
+              "title": "Note Ref"
+            },
+            "description": "Only claims from this note"
+          },
+          {
+            "name": "triaged",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only triaged (true) or untriaged (false)",
+              "title": "Triaged"
+            },
+            "description": "Only triaged (true) or untriaged (false)"
+          },
+          {
+            "name": "has_verdict",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only with (true) or without a verdict",
+              "title": "Has Verdict"
+            },
+            "description": "Only with (true) or without a verdict"
+          },
+          {
+            "name": "validity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Validity"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only claims triaged as this",
+              "title": "Validity"
+            },
+            "description": "Only claims triaged as this"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResponse_ClaimResponse_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy or claim not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Submit Claims",
+        "description": "Add claims, or replace those whose key the taxonomy already has. A replaced\nclaim keeps its triage and verdict only if its text is unchanged. Affected\nids that match no entity move to unresolved_refs.",
+        "operationId": "submit_claims_api_taxonomies__taxonomy_id__claims_post",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClaimsSubmitRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClaimResponse"
+                  },
+                  "title": "Response Submit Claims Api Taxonomies  Taxonomy Id  Claims Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy or claim not found"
+          },
+          "422": {
+            "description": "Invalid claims"
+          }
+        }
+      }
+    },
+    "/api/taxonomies/{taxonomy_id}/claims/export": {
+      "get": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Export Claims",
+        "description": "The taxonomy's claims as JSONL: the list route's claims and filters, all of them.",
+        "operationId": "export_claims_api_taxonomies__taxonomy_id__claims_export_get",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Taxonomy Id"
+            }
+          },
+          {
+            "name": "subject_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only claims about this entity",
+              "title": "Subject Id"
+            },
+            "description": "Only claims about this entity"
+          },
+          {
+            "name": "note_ref",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only claims from this note",
+              "title": "Note Ref"
+            },
+            "description": "Only claims from this note"
+          },
+          {
+            "name": "triaged",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only triaged (true) or untriaged (false)",
+              "title": "Triaged"
+            },
+            "description": "Only triaged (true) or untriaged (false)"
+          },
+          {
+            "name": "has_verdict",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only with (true) or without a verdict",
+              "title": "Has Verdict"
+            },
+            "description": "Only with (true) or without a verdict"
+          },
+          {
+            "name": "validity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Validity"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only claims triaged as this",
+              "title": "Validity"
+            },
+            "description": "Only claims triaged as this"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Every matching claim, one ClaimResponse JSON object per line",
+            "content": {
+              "application/x-ndjson": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy or claim not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/claims/{claim_id}": {
+      "get": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Get Claim",
+        "description": "One claim, with its triage and verdict.",
+        "operationId": "get_claim_api_claims__claim_id__get",
+        "parameters": [
+          {
+            "name": "claim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Claim Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy or claim not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/claims/{claim_id}/verdict": {
+      "put": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Set Claim Verdict",
+        "description": "Record a person's verdict on a claim, replacing any earlier one: benchmark gold.\nA verdict given through the API is a person's (adjudicated_by \"user\").",
+        "operationId": "set_claim_verdict_api_claims__claim_id__verdict_put",
+        "parameters": [
+          {
+            "name": "claim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Claim Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClaimVerdictRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy or claim not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "claims"
+        ],
+        "summary": "Clear Claim Verdict",
+        "description": "Clear a claim's verdict.",
+        "operationId": "clear_claim_verdict_api_claims__claim_id__verdict_delete",
+        "parameters": [
+          {
+            "name": "claim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Claim Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy or claim not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/interchange/bundles": {
       "post": {
         "tags": [
@@ -9004,6 +9635,18 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Attributes"
+          },
+          "dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Id",
+            "description": "The relationship's dataset: its source individual's"
           }
         },
         "type": "object",
@@ -9829,6 +10472,526 @@
         "title": "ChatStatusResponse",
         "description": "Whether chat can run with the configured model."
       },
+      "ClaimInput": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Key",
+            "description": "\"<note_ref>#<n>\""
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text",
+            "description": "The claim, in a sentence or two"
+          },
+          "note_ref": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Note Ref",
+            "description": "The note it came from"
+          },
+          "note_source": {
+            "$ref": "#/components/schemas/NoteSource",
+            "description": "maintainer or reviewer"
+          },
+          "note_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note Text",
+            "description": "The note's full text"
+          },
+          "subject_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Id",
+            "description": "The entity the note was about"
+          },
+          "category_hint": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Hint"
+          },
+          "affected_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Affected Ids",
+            "description": "Entities the claim names; ids that match none move to unresolved_refs"
+          },
+          "unresolved_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unresolved Refs"
+          },
+          "proposed_change": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Change"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "text",
+          "note_ref",
+          "note_source"
+        ],
+        "title": "ClaimInput",
+        "description": "One claim to add, or to replace by key."
+      },
+      "ClaimResponse": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Key",
+            "description": "\"<note_ref>#<n>\""
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Text",
+            "description": "The claim, in a sentence or two"
+          },
+          "note_ref": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Note Ref",
+            "description": "The note it came from"
+          },
+          "note_source": {
+            "$ref": "#/components/schemas/NoteSource",
+            "description": "maintainer or reviewer"
+          },
+          "note_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note Text",
+            "description": "The note's full text"
+          },
+          "subject_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Id",
+            "description": "The entity the note was about"
+          },
+          "category_hint": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Hint"
+          },
+          "affected_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Affected Ids",
+            "description": "Entities the claim names; ids that match none move to unresolved_refs"
+          },
+          "unresolved_refs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unresolved Refs"
+          },
+          "proposed_change": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Change"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "taxonomy_id": {
+            "type": "string",
+            "title": "Taxonomy Id"
+          },
+          "source_run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Run Id"
+          },
+          "triage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClaimTriageSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClaimVerdictSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "text",
+          "note_ref",
+          "note_source",
+          "id",
+          "taxonomy_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ClaimResponse",
+        "description": "A stored claim, with its triage and verdict once given."
+      },
+      "ClaimTriageSchema": {
+        "properties": {
+          "validity": {
+            "$ref": "#/components/schemas/Validity"
+          },
+          "validity_probabilities": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Validity Probabilities"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "category_probabilities": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Category Probabilities"
+          },
+          "severity": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Severity",
+            "description": "0 cosmetic to 3 blocking"
+          },
+          "fix_scope": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fix Scope",
+            "description": "0 wording to 3 roadmap"
+          },
+          "addressed_by_proposal": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Addressed By Proposal",
+            "description": "Probability the pending definition already resolves it"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "calibrated": {
+            "type": "boolean",
+            "title": "Calibrated"
+          },
+          "cost_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Usd"
+          },
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "triaged_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Triaged At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "validity",
+          "model",
+          "calibrated",
+          "triaged_at"
+        ],
+        "title": "ClaimTriageSchema",
+        "description": "A decision model's answers about a claim."
+      },
+      "ClaimVerdictRequest": {
+        "properties": {
+          "validity": {
+            "$ref": "#/components/schemas/Validity"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "severity": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Severity",
+            "description": "0 to 3"
+          },
+          "fix_scope": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fix Scope",
+            "description": "0 to 3"
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "validity"
+        ],
+        "title": "ClaimVerdictRequest",
+        "description": "A person's verdict on a claim."
+      },
+      "ClaimVerdictSchema": {
+        "properties": {
+          "validity": {
+            "$ref": "#/components/schemas/Validity"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "severity": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Severity",
+            "description": "0 to 3"
+          },
+          "fix_scope": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 3.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fix Scope",
+            "description": "0 to 3"
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale",
+            "default": ""
+          },
+          "adjudicated_by": {
+            "type": "string",
+            "title": "Adjudicated By"
+          },
+          "adjudicated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Adjudicated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "validity",
+          "adjudicated_by",
+          "adjudicated_at"
+        ],
+        "title": "ClaimVerdictSchema",
+        "description": "A recorded verdict: benchmark gold."
+      },
+      "ClaimsSubmitRequest": {
+        "properties": {
+          "claims": {
+            "items": {
+              "$ref": "#/components/schemas/ClaimInput"
+            },
+            "type": "array",
+            "maxItems": 1000,
+            "minItems": 1,
+            "title": "Claims"
+          }
+        },
+        "type": "object",
+        "required": [
+          "claims"
+        ],
+        "title": "ClaimsSubmitRequest",
+        "description": "Claims to add or replace, matched by key within the taxonomy."
+      },
       "ClassCountsResponse": {
         "properties": {
           "class_id": {
@@ -10617,105 +11780,146 @@
       },
       "DatasetCreateRequest": {
         "properties": {
+          "taxonomy_id": {
+            "type": "string",
+            "title": "Taxonomy Id"
+          },
+          "identifier": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 2,
+            "title": "Identifier",
+            "description": "Slug: a lowercase letter, then lowercase letters, digits, - or _"
+          },
           "title": {
             "type": "string",
+            "maxLength": 255,
             "minLength": 1,
-            "title": "Title",
-            "description": "Display name"
-          },
-          "filename": {
-            "type": "string",
-            "title": "Filename",
-            "description": "Original filename"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description",
-            "description": "Optional description"
+            "title": "Title"
           }
         },
         "type": "object",
         "required": [
-          "title",
-          "filename"
+          "taxonomy_id",
+          "identifier",
+          "title"
         ],
         "title": "DatasetCreateRequest",
-        "description": "Request to create a new dataset."
+        "description": "Request to create a dataset over a taxonomy's schema."
       },
-      "DatasetMetricsResponse": {
+      "DatasetDeletionResponse": {
         "properties": {
-          "layers_count": {
-            "type": "integer",
-            "title": "Layers Count",
-            "description": "Number of taxonomies"
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
           },
-          "domains_count": {
+          "individual_count": {
             "type": "integer",
-            "title": "Domains Count",
-            "description": "Number of concept schemes"
+            "title": "Individual Count"
           },
-          "terms_count": {
+          "relationship_count": {
             "type": "integer",
-            "title": "Terms Count",
-            "description": "Number of classes"
-          },
-          "relationships_count": {
-            "type": "integer",
-            "title": "Relationships Count",
-            "description": "Number of relationships"
-          },
-          "individuals_count": {
-            "type": "integer",
-            "title": "Individuals Count",
-            "description": "Number of individuals"
+            "title": "Relationship Count"
           }
         },
         "type": "object",
         "required": [
-          "layers_count",
-          "domains_count",
-          "terms_count",
-          "relationships_count",
-          "individuals_count"
+          "dataset_id",
+          "individual_count",
+          "relationship_count"
         ],
-        "title": "DatasetMetricsResponse",
-        "description": "Response containing dataset metrics."
+        "title": "DatasetDeletionResponse",
+        "description": "What deleting a dataset removed."
+      },
+      "DatasetImpactResponse": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "relationships_moved": {
+            "type": "integer",
+            "title": "Relationships Moved",
+            "description": "Moved to the delete's replacement type",
+            "default": 0
+          },
+          "relationships_dropped": {
+            "type": "integer",
+            "title": "Relationships Dropped",
+            "default": 0
+          },
+          "individuals_untyped": {
+            "type": "integer",
+            "title": "Individuals Untyped",
+            "description": "Lose the deleted class, keep others",
+            "default": 0
+          },
+          "individuals_dropped": {
+            "type": "integer",
+            "title": "Individuals Dropped",
+            "description": "The deleted class was their only one",
+            "default": 0
+          },
+          "values_dropped": {
+            "type": "integer",
+            "title": "Values Dropped",
+            "description": "Values of the deleted attribute",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "identifier",
+          "title"
+        ],
+        "title": "DatasetImpactResponse",
+        "description": "What a schema operation will do to the data of a dataset that yields to the\nschema. Information only: such data never blocks the operation."
       },
       "DatasetResponse": {
         "properties": {
           "id": {
             "type": "string",
-            "title": "Id",
-            "description": "Unique identifier"
+            "title": "Id"
+          },
+          "taxonomy_id": {
+            "type": "string",
+            "title": "Taxonomy Id"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier",
+            "description": "Slug, unique within the taxonomy"
           },
           "title": {
             "type": "string",
-            "title": "Title",
-            "description": "Display name"
+            "title": "Title"
           },
-          "filename": {
-            "type": "string",
-            "title": "Filename",
-            "description": "Original filename"
+          "yields_to_schema": {
+            "type": "boolean",
+            "title": "Yields To Schema",
+            "description": "Schema operations never block on its data, which follows them instead (set by the DR model loader; no UI toggle)",
+            "default": false
           },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description",
-            "description": "Optional description"
+          "individual_count": {
+            "type": "integer",
+            "title": "Individual Count",
+            "description": "Individuals in the dataset",
+            "default": 0
+          },
+          "relationship_count": {
+            "type": "integer",
+            "title": "Relationship Count",
+            "description": "Relationships in the dataset (by their source individual)",
+            "default": 0
           },
           "created_at": {
             "anyOf": [
@@ -10727,10 +11931,9 @@
                 "type": "null"
               }
             ],
-            "title": "Created At",
-            "description": "Creation timestamp"
+            "title": "Created At"
           },
-          "last_accessed": {
+          "last_modified": {
             "anyOf": [
               {
                 "type": "string",
@@ -10740,73 +11943,18 @@
                 "type": "null"
               }
             ],
-            "title": "Last Accessed",
-            "description": "Last access timestamp"
-          },
-          "schema_version": {
-            "type": "string",
-            "title": "Schema Version",
-            "description": "Database schema version"
-          },
-          "metrics": {
-            "$ref": "#/components/schemas/DatasetMetricsResponse",
-            "description": "Dataset metrics"
-          },
-          "is_active": {
-            "type": "boolean",
-            "title": "Is Active",
-            "description": "Whether this is the active dataset"
-          },
-          "version": {
-            "type": "integer",
-            "title": "Version",
-            "description": "Version number"
+            "title": "Last Modified"
           }
         },
         "type": "object",
         "required": [
           "id",
-          "title",
-          "filename",
-          "schema_version",
-          "metrics",
-          "is_active",
-          "version"
+          "taxonomy_id",
+          "identifier",
+          "title"
         ],
         "title": "DatasetResponse",
-        "description": "Response containing dataset data."
-      },
-      "DatasetUpdateRequest": {
-        "properties": {
-          "title": {
-            "anyOf": [
-              {
-                "type": "string",
-                "minLength": 1
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title",
-            "description": "New title"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description",
-            "description": "New description"
-          }
-        },
-        "type": "object",
-        "title": "DatasetUpdateRequest",
-        "description": "Request to update a dataset."
+        "description": "A named body of data over one taxonomy's schema, with its size."
       },
       "DecisionKind": {
         "type": "string",
@@ -11332,6 +12480,18 @@
             },
             "type": "array",
             "title": "Class Titles"
+          },
+          "dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Id",
+            "description": "An individual end's dataset (null for a class end)"
           }
         },
         "type": "object",
@@ -13019,6 +14179,18 @@
             ],
             "title": "Description",
             "description": "Optional longer description"
+          },
+          "dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Id",
+            "description": "The dataset to create it in; may be omitted while the classes' taxonomy has at most one dataset"
           }
         },
         "type": "object",
@@ -13043,6 +14215,18 @@
             "type": "array",
             "title": "Class Ids",
             "description": "Ordered list of parent class IDs"
+          },
+          "dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Id",
+            "description": "The dataset the individual belongs to"
           },
           "title": {
             "type": "string",
@@ -13396,6 +14580,41 @@
           "offset"
         ],
         "title": "ListResponse[ChangeProposalResponse]"
+      },
+      "ListResponse_ClaimResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ClaimResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total number of items"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Limit applied"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Offset applied"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "ListResponse[ClaimResponse]"
       },
       "ListResponse_ClassResponse_": {
         "properties": {
@@ -14052,6 +15271,15 @@
         ],
         "title": "NodeReference",
         "description": "Reference to an extracted node (individual/class/literal) in individual extraction.\n\nIdentifies a subject or object node with optional mapping to existing ontology.\nNon-empty id means mapped to existing ontology entity; empty/None means new candidate."
+      },
+      "NoteSource": {
+        "type": "string",
+        "enum": [
+          "maintainer",
+          "reviewer"
+        ],
+        "title": "NoteSource",
+        "description": "Whose note a claim came from."
       },
       "OperationErrorResponse": {
         "properties": {
@@ -14827,6 +16055,91 @@
         "title": "PredicateReference",
         "description": "Reference to a property/predicate in individual extraction.\n\nIdentifies a relationship type with optional mapping to existing property definition.\nNon-empty property_definition_id means mapped; empty/None means new candidate."
       },
+      "PredicateResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier"
+          },
+          "taxonomy_id": {
+            "type": "string",
+            "title": "Taxonomy Id",
+            "description": "The taxonomy whose catalog holds it"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier",
+            "description": "The relation verb (e.g. 'part_of'), unique in the taxonomy"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Display name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "What the relation means"
+          },
+          "external_references": {
+            "items": {
+              "$ref": "#/components/schemas/ExternalReferenceResponse"
+            },
+            "type": "array",
+            "title": "External References",
+            "description": "Client metadata; DR's inverse, category, archimate_alignment and semantics ride in its documentation_robotics reference"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "Creation timestamp"
+          },
+          "last_modified": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Modified",
+            "description": "Last modification timestamp"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "Version number",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "taxonomy_id",
+          "identifier",
+          "title"
+        ],
+        "title": "PredicateResponse",
+        "description": "A predicate in a taxonomy's predicate catalog."
+      },
       "PropertyDefinitionCreateRequest": {
         "properties": {
           "identifier": {
@@ -14863,7 +16176,7 @@
               }
             ],
             "title": "Canonical Predicate",
-            "description": "Bare canonical relation verb this property represents (e.g. 'navigates-to') \u2014 the form extraction clamps predicates to"
+            "description": "The predicate (relation verb, e.g. 'navigates-to') this relationship type uses, from its taxonomy's predicate catalog (the taxonomy of its domain class, else its range class); added to the catalog when it's missing"
           },
           "domain_class_id": {
             "anyOf": [
@@ -14937,7 +16250,19 @@
               }
             ],
             "title": "Canonical Predicate",
-            "description": "Bare canonical relation verb this property represents (e.g. 'navigates-to'), or null if not set"
+            "description": "Identifier of the predicate this relationship type uses (e.g. 'navigates-to'), or null if it has none"
+          },
+          "predicate_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Predicate Id",
+            "description": "ID of that predicate in its taxonomy's predicate catalog"
           },
           "domain_class_id": {
             "anyOf": [
@@ -15078,7 +16403,7 @@
               }
             ],
             "title": "Canonical Predicate",
-            "description": "New bare canonical relation verb, or null to clear it. Only applied when the field is present in the request body."
+            "description": "New predicate (relation verb) from the taxonomy's catalog, added when it's missing. Only applied when the field is present in the request body; a type's predicate can't be cleared."
           },
           "is_relevant": {
             "anyOf": [
@@ -15370,6 +16695,14 @@
             "title": "Stale",
             "description": "Pending or failed, and its target is gone or a field it touches changed since proposed; applying it needs force_stale",
             "default": false
+          },
+          "dataset_impact": {
+            "items": {
+              "$ref": "#/components/schemas/DatasetImpactResponse"
+            },
+            "type": "array",
+            "title": "Dataset Impact",
+            "description": "A pending or failed schema operation (relationship-type delete or retarget, class or attribute delete): what it will do to the data of each dataset that yields to the schema. Information only; that data never blocks it"
           },
           "type_usage": {
             "anyOf": [
@@ -16753,6 +18086,18 @@
             "maxLength": 10000,
             "title": "Query",
             "description": "SPARQL SELECT query string (max 10000 characters)"
+          },
+          "dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Id",
+            "description": "Query the schema plus this dataset's data (all data when omitted)"
           }
         },
         "type": "object",
@@ -18374,6 +19719,17 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "Validity": {
+        "type": "string",
+        "enum": [
+          "real_defect",
+          "works_as_designed",
+          "judgment_call",
+          "out_of_scope"
+        ],
+        "title": "Validity",
+        "description": "Whether a claim points at a real problem."
       },
       "VersioningChangeEventResponse": {
         "properties": {

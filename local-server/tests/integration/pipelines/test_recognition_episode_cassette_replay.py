@@ -46,6 +46,7 @@ from tests.integration.pipelines._harness.metrics import (
     recognition_metrics,
 )
 from tests.integration.pipelines.conftest import _find_dr_spec_dir
+from tests.utils.datasets import save_in_dataset
 
 _EPISODES = Path(__file__).parent.parent / "fixtures" / "pipelines" / "individual_recognition"
 
@@ -242,8 +243,7 @@ class TestCassetteHashGraphStateIndependence:
         # earlier document in the same episode.
         by_alias, _ = service._class_index(taxonomy)
         cls = by_alias["technology.systemsoftware"]
-        repo.save_individual(
-            Individual(id=str(uuid4()), class_ids=[str(cls.id)], title="Kubernetes")
+        save_in_dataset(repo, Individual(id=str(uuid4()), class_ids=[str(cls.id)], title="Kubernetes")
         )
 
         system_after, user_after = service._build_individual_extraction_prompt(text, taxonomy)

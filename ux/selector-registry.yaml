@@ -688,37 +688,75 @@ selectors:
     component: components/ontology/IndividualDrawer.tsx
     description: Close button in individual detail drawer
 
-  # Datasets Page
+  # Datasets Page (Data → Datasets)
   - selector: datasets-page
-    component: routes/app/data/datasets.tsx
-    description: Main datasets page container
+    component: components/datasets/DatasetsPage.tsx
+    description: Datasets page container
   - selector: dataset-add-button
-    component: routes/app/data/datasets.tsx
-    description: Button to open create dataset modal
-  - selector: dataset-create-modal
-    component: routes/app/data/datasets.tsx
-    description: Modal for creating new dataset
-  - selector: dataset-title-input
-    component: routes/app/data/datasets.tsx
-    description: Title input field in dataset form
-  - selector: dataset-filename-input
-    component: routes/app/data/datasets.tsx
-    description: Filename input field in dataset form
-  - selector: dataset-description-input
-    component: routes/app/data/datasets.tsx
-    description: Description textarea in dataset form
-  - selector: dataset-submit-button
-    component: routes/app/data/datasets.tsx
-    description: Submit button for dataset form
-  - selector: dataset-name-*
-    component: routes/app/data/datasets.tsx
-    description: Clickable dataset name cell in table with dynamic ID suffix
+    component: components/datasets/DatasetsPage.tsx
+    description: Header button that opens the new dataset modal
+  - selector: datasets-filter-bar
+    component: components/datasets/DatasetsPage.tsx
+    description: Filter bar with title/identifier search and the taxonomy filter
+  - selector: dataset-taxonomy-filter
+    component: components/datasets/DatasetsPage.tsx
+    description: Taxonomy filter (the taxonomy URL parameter); shown when there are several taxonomies
+  - selector: datasets-table
+    component: components/datasets/DatasetsPage.tsx
+    description: Datasets table wrapper (rows open the dataset's individuals)
+  - selector: dataset-row-*
+    component: components/datasets/DatasetsPage.tsx
+    description: Dataset title cell in a table row, with dynamic dataset ID suffix
   - selector: dataset-row-delete-*
-    component: routes/app/data/datasets.tsx
-    description: Delete button for dataset row with dynamic ID suffix
-  - selector: empty-state-new-dataset
-    component: routes/app/data/datasets.tsx
-    description: Primary CTA button to create new dataset in empty state
+    component: components/datasets/DatasetsPage.tsx
+    description: Delete button for a dataset row, with dynamic dataset ID suffix
+  - selector: dataset-create-modal
+    component: components/datasets/CreateDatasetModal.tsx
+    description: Modal for creating a dataset
+  - selector: dataset-taxonomy-select
+    component: components/datasets/CreateDatasetModal.tsx
+    description: Taxonomy select in the new dataset modal
+  - selector: dataset-title-input
+    component: components/datasets/CreateDatasetModal.tsx
+    description: Title input in the new dataset modal
+  - selector: dataset-identifier-input
+    component: components/datasets/CreateDatasetModal.tsx
+    description: Identifier (slug) input in the new dataset modal
+  - selector: dataset-submit-button
+    component: components/datasets/CreateDatasetModal.tsx
+    description: Create button in the new dataset modal
+  - selector: dataset-create-error
+    component: components/datasets/CreateDatasetModal.tsx
+    description: Server error shown when creating a dataset fails
+  - selector: dataset-delete-summary
+    component: components/datasets/DeleteDatasetDialog.tsx
+    description: Delete confirmation message naming the individuals and relationships removed
+
+  # Dataset selector (the dataset URL parameter; shown when a taxonomy has two or more datasets)
+  - selector: dataset-select
+    component: components/datasets/DatasetSelect.tsx
+    description: Dataset selector (default test id)
+  - selector: navigator-dataset-select
+    component: components/entity/EntityNavigator.tsx
+    description: Dataset selector in the Navigator's Data mode
+  - selector: relationships-dataset-select
+    component: routes/app/schema/relationships.tsx
+    description: Dataset selector in the relationships filter bar
+  - selector: graph-dataset-select
+    component: routes/app/graph/index.tsx
+    description: Dataset selector in the graph page header
+  - selector: dashboard-dataset-select
+    component: routes/app/index.tsx
+    description: Dataset selector in the dashboard header
+  - selector: individual-dataset-field
+    component: components/crud/CreateDrawer.tsx
+    description: Dataset field in the individual create form (no dataset selected, several in the taxonomy)
+  - selector: individual-dataset-select
+    component: components/crud/CreateDrawer.tsx
+    description: Dataset select in the individual create form
+  - selector: individual-dataset
+    component: routes/app/data/individuals_.$id.tsx
+    description: The individual's dataset in the identity card (taxonomy with several datasets)
 
   # Hierarchy Tree
   - selector: hierarchy-node-*
@@ -2942,6 +2980,119 @@ selectors:
     component: src/components/proposals/ProposalsListPage.tsx
     description: "Needs-decision \"N of M\" label (failed operations included) and decided ProgressBar in a list row, by proposal id"
 
+  # Claims (/app/claims): a taxonomy's triaged claims and their verdicts (#1524)
+  - selector: claims-page
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Root of the claims page"
+  - selector: claims-export-button
+    component: src/components/claims/ClaimsPage.tsx
+    description: "PageHeader action: downloads the claims matching the filters as JSONL; disabled without a taxonomy"
+  - selector: claims-filters
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Filter row: taxonomy, triage validity, triage and verdict filters, subject picker, count"
+  - selector: claims-taxonomy-filter
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Taxonomy FilterDropdown trigger (the claims API is per taxonomy)"
+  - selector: claims-validity-filter
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Triage validity FilterDropdown trigger (any, or one validity the triage chose)"
+  - selector: claims-triage-filter
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Triage SegmentedControl (radiogroup \"Triage\"): all, triaged, untriaged"
+  - selector: claims-verdict-filter
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Verdict SegmentedControl (radiogroup \"Verdict\"): all, with verdict, no verdict"
+  - selector: claims-subject-filter
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Subject class picker (EntitySearchPicker); only claims about the picked class"
+  - selector: claims-count
+    component: src/components/claims/ClaimsPage.tsx
+    description: "\"N claims\" total matching the filters"
+  - selector: claims-pick-taxonomy
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Prompt shown until a taxonomy is chosen"
+  - selector: claims-table
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Wrapper of the claims table and its pager; a row click opens the claim in the inspector"
+  - selector: claims-empty
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Empty-state text when no claim matches the filters"
+  - selector: claim-row-*
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Claim text and key cell in a table row, by claim id"
+  - selector: claim-triage-cell-*
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Triage validity chip and its probability in a table row, by claim id"
+  - selector: claim-verdict-cell-*
+    component: src/components/claims/ClaimsPage.tsx
+    description: "Verdict validity chip in a table row, by claim id (absent without a verdict)"
+  - selector: claim-inspector
+    component: src/components/claims/ClaimInspector.tsx
+    description: "Root of the selected claim's inspector (in the split-2 inspector column)"
+  - selector: claim-inspector-close
+    component: src/components/claims/ClaimInspector.tsx
+    description: "Closes the inspector (clears the selection)"
+  - selector: claim-text
+    component: src/components/claims/ClaimInspector.tsx
+    description: "The claim's full text"
+  - selector: claim-proposed-change
+    component: src/components/claims/ClaimInspector.tsx
+    description: "The change the note proposed, when it has one"
+  - selector: claim-note
+    component: src/components/claims/ClaimInspector.tsx
+    description: "The source note's full text"
+  - selector: claim-entities
+    component: src/components/claims/ClaimInspector.tsx
+    description: "Entities section: subject, affected entities and unresolved references"
+  - selector: claim-subject-link-*
+    component: src/components/claims/ClaimInspector.tsx
+    description: "The claim's subject: a link to its entity page once resolved, by entity id"
+  - selector: claim-entity-*
+    component: src/components/claims/ClaimInspector.tsx
+    description: "An affected entity: a link to its page (attributes and properties link to their class), by entity id; plain mono text while unresolved"
+  - selector: claim-unresolved-refs
+    component: src/components/claims/ClaimInspector.tsx
+    description: "List of references that matched no entity, as plain mono text"
+  - selector: claim-triage
+    component: src/components/claims/ClaimInspector.tsx
+    description: "The decision model's triage: validity, probabilities, scores, model and cost"
+  - selector: claim-triage-validity-*
+    component: src/components/claims/ClaimInspector.tsx
+    description: "A validity's probability row (ProgressBar) in the triage, by validity; the chosen one is marked"
+  - selector: claim-triage-category-*
+    component: src/components/claims/ClaimInspector.tsx
+    description: "A category's probability row in the triage, by category (top four)"
+  - selector: claim-untriaged
+    component: src/components/claims/ClaimInspector.tsx
+    description: "Note shown instead of the triage when the claim is not triaged"
+  - selector: claim-verdict-form
+    component: src/components/claims/ClaimVerdictForm.tsx
+    description: "Verdict form (form \"Verdict\"): validity, category, severity, fix scope, rationale"
+  - selector: claim-verdict-recorded
+    component: src/components/claims/ClaimVerdictForm.tsx
+    description: "The recorded verdict: validity chip, who adjudicated and when"
+  - selector: claim-verdict-validity
+    component: src/components/claims/ClaimVerdictForm.tsx
+    description: "Validity Select (required; error clears on change)"
+  - selector: claim-verdict-category
+    component: src/components/claims/ClaimVerdictForm.tsx
+    description: "Category Select: none, DR's categories, and the triage's or verdict's own"
+  - selector: claim-verdict-severity
+    component: src/components/claims/ClaimVerdictForm.tsx
+    description: "Severity Select: not set, or 0 cosmetic to 3 blocking"
+  - selector: claim-verdict-fix-scope
+    component: src/components/claims/ClaimVerdictForm.tsx
+    description: "Fix scope Select: not set, or 0 wording to 3 roadmap"
+  - selector: claim-verdict-rationale
+    component: src/components/claims/ClaimVerdictForm.tsx
+    description: "Rationale TextArea"
+  - selector: claim-verdict-submit
+    component: src/components/claims/ClaimVerdictForm.tsx
+    description: "Saves the verdict (PUT /api/claims/{id}/verdict)"
+  - selector: claim-verdict-clear
+    component: src/components/claims/ClaimVerdictForm.tsx
+    description: "Clears the recorded verdict (DELETE /api/claims/{id}/verdict); shown only with one"
+
   # Review queue: proposal detail (/app/proposals/$proposalId)
   - selector: proposal-page
     component: src/components/proposals/ProposalDetailPage.tsx
@@ -3307,6 +3458,12 @@ selectors:
   - selector: proposal-selection-note
     component: src/components/proposals/DecisionBars.tsx
     description: "Selection bar text: stale and blocked operations Accept selected leaves out, else how it applies"
+  - selector: operation-dataset-impact
+    component: src/components/proposals/OperationDecision.tsx
+    description: "Information callout: what a schema operation does to data of datasets that yield to the schema (#1485)"
+  - selector: operation-dataset-impact-*
+    component: src/components/proposals/OperationDecision.tsx
+    description: "One yielding dataset's impact line, suffixed by the dataset identifier"
   - selector: operation-in-use
     component: src/components/proposals/InUseResolver.tsx
     description: "Decision panel part for a blocked delete: the relationships using the type and how to resolve them"

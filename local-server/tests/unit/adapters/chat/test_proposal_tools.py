@@ -137,6 +137,9 @@ class FakeProposalService:
     def in_use(self, proposal, with_usage=True):
         return self.blockers, {}
 
+    def dataset_impacts(self, proposal):
+        return {}
+
     def auto_apply_operation_ids(self, proposal):
         return self.auto
 

@@ -6,6 +6,7 @@ This module defines all ORM models for the Ontology Management bounded context:
 individuals
 - Relationship: Typed, directed edges between entities
 - PropertyDefinition: Registry of defined object property types
+- Predicate: A taxonomy's catalog of relation verbs, used by relationship types
 
 Models are the source of truth for Alembic migrations via autogenerate.
 
@@ -35,9 +36,10 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    select,
     text,
 )
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import column_property, declarative_base
 
 Base = declarative_base()  # type: ignore[valid-type]
 
@@ -74,6 +76,9 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
         embedding: Binary blob of embedding vector (for class, optional)
         is_indexed: Whether this entity is included in semantic indexes
         identifier: Machine-readable identifier (unique, for property_definition only)
+        predicate_id: The Predicate the relationship type uses (for property_definition)
+        canonical_predicate: Read-only identifier of that predicate (a correlated
+            subquery on predicates, defined below the Predicate model)
         ontology_mapping: JSON mapping to external ontologies (for property_definition)
         is_relevant: Tri-state relevance flag (for property_definition)
     """
@@ -167,13 +172,19 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
         index=True,
         doc="Target/range Class for this relationship type (for property_definition, rdfs:range)",
     )
-    canonical_predicate = Column(
-        String(255),
+    # predicates.taxonomy_id points back here; use_alter marks the known cycle so
+    # metadata DROP can sort the tables (SQLite still renders the FK inline). It
+    # also means one flush inserts ontology_entities rows before predicates, so a
+    # predicate must be flushed before the relationship type that uses it.
+    predicate_id = Column(
+        String(36),
+        ForeignKey("predicates.id", ondelete="RESTRICT", use_alter=True),
         nullable=True,
+        index=True,
         doc=(
-            "Bare canonical relation verb, e.g. 'navigates-to' (for "
-            "property_definition; the form predicate grounding clamps to). NULL "
-            "for other node types and property definitions with none supplied."
+            "Predicate in its taxonomy's catalog this relationship type uses (for"
+            " property_definition). NULL for other node types and types imported"
+            " without one. A predicate still in use can't be deleted."
         ),
     )
     derived = Column(
@@ -237,6 +248,14 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
         doc="ID of the pipeline run that created or last modified this entity",
     )
 
+    dataset_id = Column(
+        String(36),
+        ForeignKey("datasets.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+        doc="Dataset the individual belongs to (for individual; NULL for other node types)",
+    )
+
     # Slug identifier — used by property_definition, taxonomy, concept_scheme, class.
     # Unique across all entities in the workspace; populated for the four kinds above
     # and NULL for individuals.
@@ -287,11 +306,107 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
             " 'property_definition')",
             name="check_valid_node_type",
         ),
+        CheckConstraint(
+            "node_type != 'individual' OR dataset_id IS NOT NULL",
+            name="check_individual_dataset",
+        ),
         Index("idx_node_type_title", "node_type", "title"),
     )
 
     def __repr__(self) -> str:
         return f"<OntologyEntity(id={self.id}, type={self.node_type}, title={self.title})>"
+
+
+class Predicate(Base):  # type: ignore[valid-type,misc]
+    """
+    A relation verb in a taxonomy's predicate catalog (e.g. "part_of", "navigates-to").
+
+    Every relationship type (property_definition) of the taxonomy points at one
+    through ontology_entities.predicate_id. Each taxonomy holds its own catalog, so
+    the identifier is unique per taxonomy, not workspace-wide. Deleting the taxonomy
+    deletes its catalog; a predicate a relationship type still uses can't be deleted.
+
+    Attributes:
+        id: UUID as string, primary key
+        taxonomy_id: The taxonomy whose catalog holds it (FK with CASCADE)
+        identifier: The verb, unique within the taxonomy
+        title: Display name
+        description: What the relation means (optional)
+        external_references: JSON list of client metadata, e.g. DR's inverse,
+            category, archimate_alignment and semantics
+        status: Publication status (draft or published, default draft)
+        version: Version number for optimistic concurrency control
+        created_at: Timestamp of creation (UTC, auto-set)
+        last_modified: Timestamp of last modification (UTC, auto-set)
+    """
+
+    __tablename__ = "predicates"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    taxonomy_id = Column(
+        String(36),
+        ForeignKey("ontology_entities.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        doc="Taxonomy whose catalog holds the predicate (required, with cascade delete)",
+    )
+    identifier = Column(
+        String(255),
+        nullable=False,
+        doc="The relation verb, unique within its taxonomy",
+    )
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    external_references = Column(
+        JSON,
+        nullable=False,
+        default=list,
+        doc="JSON list of {source, identifier, uri, metadata}",
+    )
+    status = Column(
+        String(20),
+        nullable=False,
+        default="draft",
+        doc="Publication status: draft or published",
+    )
+    version = Column(Integer, nullable=False, default=1, doc="For optimistic locking")
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        doc="UTC timestamp of creation",
+    )
+    last_modified = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        doc="UTC timestamp of last modification",
+    )
+
+    __table_args__ = (
+        UniqueConstraint("taxonomy_id", "identifier", name="uk_predicate_taxonomy_identifier"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<Predicate(id={self.id}, taxonomy_id={self.taxonomy_id},"
+            f" identifier={self.identifier})>"
+        )
+
+
+# Read-only: a relationship type's predicate identifier, read through predicate_id.
+# Not a table column, so autogenerate ignores it; writes go through predicate_id.
+OntologyEntity.canonical_predicate = column_property(
+    select(Predicate.identifier)
+    .where(Predicate.id == OntologyEntity.predicate_id)
+    .correlate_except(Predicate)
+    .scalar_subquery(),
+    doc=(
+        "Identifier of the predicate this relationship type uses, e.g. 'navigates-to'"
+        " (the form predicate grounding clamps to); NULL without one."
+    ),
+)
 
 
 class IndividualClass(Base):  # type: ignore[valid-type,misc]
@@ -1346,6 +1461,33 @@ class SchemaRelationshipReflectionRun(PipelineRun):
         return f"<SchemaRelationshipReflectionRun(id={self.id}, status={self.status})>"
 
 
+class ClaimTriageRun(PipelineRun):
+    """
+    Claim triage runs (decision-model questions per claim, saved on the claims).
+
+    Uses joined-table inheritance from PipelineRun with discriminator
+    run_type='claim_triage'.
+
+    Per-type fields: (none)
+    """
+
+    __tablename__ = "claim_triage_runs"
+
+    id = Column(
+        String(36),
+        ForeignKey("pipeline_runs.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+
+    __mapper_args__: Dict[str, Any] = {
+        "polymorphic_identity": "claim_triage",
+    }
+
+    def __repr__(self) -> str:
+        return f"<ClaimTriageRun(id={self.id}, status={self.status})>"
+
+
 class ChangeProposalRun(BatchRun):
     """
     A change proposal: ontology changes proposed by an agent, pipeline, bundle
@@ -1525,6 +1667,59 @@ class ProposalDecisionRecord(Base):  # type: ignore[valid-type,misc]
         return f"<ProposalDecisionRecord(operation={self.operation_id}, decision={self.decision})>"
 
 
+class ClaimRecord(Base):  # type: ignore[valid-type,misc]
+    """
+    One atomic claim about a taxonomy, split from a reviewer's or maintainer's note.
+
+    Attributes:
+        id: UUID as string, primary key
+        taxonomy_id: The taxonomy it is about (deleted with it)
+        key: Unique within the taxonomy: "<note_ref>#<n>"
+        note_ref, note_source, note_text: The note it came from
+        subject_id: The entity the note was about, if any
+        text: The claim
+        category_hint: The splitter's category guess
+        affected_ids: JSON list of the entity ids it names
+        unresolved_refs: JSON list of names that matched no entity
+        proposed_change: The change the note suggests, if any
+        source_run_id: The run that split it, if any
+        triage: JSON of the decision model's answers (ClaimTriage), or null
+        verdict: JSON of a person's verdict (ClaimVerdict), or null
+        created_at, updated_at: Timestamps (UTC)
+    """
+
+    __tablename__ = "claims"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    taxonomy_id = Column(
+        String(36),
+        ForeignKey("ontology_entities.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    key = Column(String(255), nullable=False)
+    note_ref = Column(String(255), nullable=False, index=True)
+    note_source = Column(String(20), nullable=False)
+    note_text = Column(Text, nullable=True)
+    subject_id = Column(String(36), nullable=True, index=True)
+    text = Column(Text, nullable=False)
+    category_hint = Column(String(100), nullable=True)
+    affected_ids = Column(JSON, nullable=False, default=list)
+    unresolved_refs = Column(JSON, nullable=False, default=list)
+    proposed_change = Column(Text, nullable=True)
+    source_run_id = Column(String(36), nullable=True)
+    # none_as_null: an untriaged claim stores SQL NULL, not JSON 'null', so it filters
+    triage = Column(JSON(none_as_null=True), nullable=True)
+    verdict = Column(JSON(none_as_null=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False)
+    updated_at = Column(DateTime(timezone=True), nullable=False)
+
+    __table_args__ = (UniqueConstraint("taxonomy_id", "key", name="uq_claim_taxonomy_key"),)
+
+    def __repr__(self) -> str:
+        return f"<ClaimRecord(taxonomy={self.taxonomy_id}, key={self.key})>"
+
+
 class ApprovalPolicyRecord(Base):  # type: ignore[valid-type,misc]
     """
     A taxonomy's approval policy: which proposed operations may apply on their own.
@@ -1687,93 +1882,57 @@ class WorkflowRun(Base):  # type: ignore[valid-type,misc]
 
 class Dataset(Base):  # type: ignore[valid-type,misc]
     """
-    Persistence model for datasets (importable database files).
+    A named body of data (individuals and their relationships) over one taxonomy's schema.
 
-    Stores dataset metadata and cached metrics about the dataset's contents.
+    Several datasets can share a taxonomy's schema; each individual belongs to
+    exactly one (`ontology_entities.dataset_id`), and a relationship belongs to
+    its source individual's dataset.
 
     Attributes:
         id: UUID as string, primary key
+        taxonomy_id: The taxonomy whose schema the dataset's data uses
+        identifier: Machine-readable slug, unique within the taxonomy
         title: Display name
-        filename: Original filename
-        description: Optional longer description
-        created_at: Timestamp of creation (UTC, auto-set)
-        last_accessed: Timestamp of last import/activation
-        schema_version: Database schema version string
-        layers_count: Cached count of taxonomies
-        domains_count: Cached count of concept schemes
-        terms_count: Cached count of classes
-        relationships_count: Cached count of relationships
-        individuals_count: Cached count of individuals
-        is_active: Boolean flag for active dataset
-        version: Version number for optimistic concurrency
+        yields_to_schema: Schema operations never block on this dataset's data;
+            its data follows them instead
+        created_at: Timestamp of creation (UTC)
+        last_modified: Timestamp of last modification (UTC)
     """
 
     __tablename__ = "datasets"
 
     id = Column(String(36), primary_key=True, nullable=False)
-    title = Column(String(255), nullable=False, index=True)
-    filename = Column(String(255), nullable=False)
-    description = Column(Text, nullable=True)
+    taxonomy_id = Column(
+        String(36),
+        ForeignKey("ontology_entities.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        doc="Taxonomy whose schema the dataset's data uses",
+    )
+    identifier = Column(String(255), nullable=False, doc="Slug, unique within the taxonomy")
+    title = Column(String(255), nullable=False)
+    yields_to_schema = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("0"),
+        doc="Schema operations never block on this dataset's data",
+    )
     created_at = Column(
         DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
-        doc="Timestamp of creation",
     )
-    last_accessed = Column(
+    last_modified = Column(
         DateTime(timezone=True),
-        nullable=True,
-        doc="Timestamp of last activation/import",
-    )
-    schema_version = Column(
-        String(20),
         nullable=False,
-        default="1.0",
-        doc="Database schema version",
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
     )
-    layers_count = Column(
-        Integer,
-        nullable=False,
-        default=0,
-        doc="Cached count of taxonomies",
-    )
-    domains_count = Column(
-        Integer,
-        nullable=False,
-        default=0,
-        doc="Cached count of concept schemes",
-    )
-    terms_count = Column(
-        Integer,
-        nullable=False,
-        default=0,
-        doc="Cached count of classes",
-    )
-    relationships_count = Column(
-        Integer,
-        nullable=False,
-        default=0,
-        doc="Cached count of relationships",
-    )
-    individuals_count = Column(
-        Integer,
-        nullable=False,
-        default=0,
-        doc="Cached count of individuals",
-    )
-    is_active = Column(
-        Boolean,
-        nullable=False,
-        default=False,
-        index=True,
-        doc="Whether this is the active dataset",
-    )
-    version = Column(
-        Integer,
-        nullable=False,
-        default=1,
-        doc="Version number for optimistic concurrency",
+
+    __table_args__ = (
+        UniqueConstraint("taxonomy_id", "identifier", name="uk_dataset_taxonomy_identifier"),
     )
 
     def __repr__(self) -> str:
-        return f"<Dataset(id={self.id}, title={self.title}, is_active={self.is_active})>"
+        return f"<Dataset(id={self.id}, identifier={self.identifier})>"

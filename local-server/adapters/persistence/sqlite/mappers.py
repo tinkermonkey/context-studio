@@ -17,6 +17,9 @@ from adapters.persistence.sqlite.models import (
     OntologyEntity,
 )
 from adapters.persistence.sqlite.models import (
+    Predicate as PredicateORM,
+)
+from adapters.persistence.sqlite.models import (
     PropertyDefinition as PropertyDefinitionORM,
 )
 from adapters.persistence.sqlite.models import (
@@ -26,6 +29,7 @@ from domain.ontology.entities import (
     Class,
     ConceptScheme,
     Individual,
+    Predicate,
     PropertyDefinition,
     Relationship,
     Taxonomy,
@@ -326,6 +330,7 @@ def map_orm_to_domain(
             id=entity_id,
             title=entity_title,
             description=entity_description,
+            predicate_id=cast(str | None, orm_entity.predicate_id),
             canonical_predicate=cast(str | None, orm_entity.canonical_predicate),
             created_at=entity_created_at,
             last_modified=entity_last_modified,
@@ -419,6 +424,7 @@ def map_domain_to_orm(
         return OntologyEntity(
             **common_args,
             node_type=NodeType.INDIVIDUAL,
+            dataset_id=entity.dataset_id,
             data_properties=serialize_data_properties(entity.data_properties),
             external_references=serialize_external_references(entity.external_references),
             source_run_id=entity.source_run_id,
@@ -429,7 +435,7 @@ def map_domain_to_orm(
             **common_args,
             node_type=NodeType.PROPERTY_DEFINITION,
             identifier=entity.identifier,
-            canonical_predicate=entity.canonical_predicate,
+            predicate_id=entity.predicate_id,
             ontology_mapping=serialize_ontology_mapping(entity.ontology_mapping),
             domain_class_id=entity.domain_class_id,
             range_class_id=entity.range_class_id,
@@ -442,6 +448,56 @@ def map_domain_to_orm(
 
     else:
         raise TypeError(f"Unknown entity type: {type(entity).__name__}")
+
+
+def map_orm_to_predicate(orm_predicate: PredicateORM) -> Predicate:
+    """
+    Convert a Predicate ORM model to a domain Predicate entity.
+
+    Args:
+        orm_predicate: SQLAlchemy Predicate ORM model
+
+    Returns:
+        Domain Predicate entity
+    """
+    return Predicate(
+        id=cast(str, orm_predicate.id),
+        taxonomy_id=cast(str, orm_predicate.taxonomy_id),
+        identifier=cast(str, orm_predicate.identifier),
+        title=cast(str, orm_predicate.title),
+        description=cast(str | None, orm_predicate.description),
+        external_references=deserialize_external_references(
+            cast(list[dict[str, Any]], orm_predicate.external_references) or []
+        ),
+        created_at=cast(datetime | None, orm_predicate.created_at),
+        last_modified=cast(datetime | None, orm_predicate.last_modified),
+        version=cast(int, orm_predicate.version),
+        status=Status(cast(str, orm_predicate.status)),
+    )
+
+
+def map_predicate_to_orm(predicate: Predicate) -> PredicateORM:
+    """
+    Convert a domain Predicate entity to a Predicate ORM model.
+
+    Args:
+        predicate: Domain Predicate entity
+
+    Returns:
+        SQLAlchemy Predicate ORM model
+    """
+    return PredicateORM(
+        id=predicate.id,
+        taxonomy_id=predicate.taxonomy_id,
+        identifier=predicate.identifier,
+        title=predicate.title,
+        description=predicate.description,
+        external_references=serialize_external_references(predicate.external_references),
+        created_at=predicate.created_at,
+        last_modified=predicate.last_modified,
+        version=predicate.version,
+        status=predicate.status.value,
+    )
 
 
 def map_relationship_orm_to_domain(orm_rel: RelationshipORM) -> Relationship:

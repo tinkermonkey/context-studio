@@ -42,6 +42,7 @@ import {
   TableEmpty,
 } from "@/components/entity/EntityPageParts";
 import { usePageBreadcrumbs } from "@/hooks/usePageBreadcrumbs";
+import { useDatasetScope } from "@/hooks/useDatasetScope";
 import { entityPath } from "@/lib/entityPaths";
 import type { components } from "@/api/types";
 
@@ -230,9 +231,16 @@ export function ClassPage({ id }: { id: string }) {
   const { data: scheme } = useScheme(cls?.concept_scheme_id ?? "");
   const { data: taxonomy } = useTaxonomy(cls?.taxonomy_id ?? "");
   const { data: schemesResponse } = useSchemes(undefined, { limit: SMALL_SET_LIMIT });
-  const { data: classCounts } = useClassCounts(cls?.concept_scheme_id);
+  // The class's individuals in the chosen dataset (the `dataset` URL parameter), or all data.
+  const { selectedDataset, selectedDatasetId } = useDatasetScope(cls?.taxonomy_id);
+  const { data: classCounts } = useClassCounts(cls?.concept_scheme_id, selectedDatasetId);
   const { data: individualsResponse } = useIndividuals(
-    { class_id: id, limit: allIndividuals ? SMALL_SET_LIMIT : PREVIEW_ROWS, sort_by: "title" },
+    {
+      class_id: id,
+      limit: allIndividuals ? SMALL_SET_LIMIT : PREVIEW_ROWS,
+      sort_by: "title",
+      ...(selectedDatasetId ? { dataset_id: selectedDatasetId } : {}),
+    },
     { keepPrevious: true },
   );
   const { data: propertiesResponse } = useProperties(
@@ -347,6 +355,7 @@ export function ClassPage({ id }: { id: string }) {
           label="INDIVIDUALS"
           value={formatCount(individualsResponse?.total)}
           color="emerald"
+          meta={selectedDataset?.title}
         />
         <StatTile
           label="RELATIONSHIP TYPES"

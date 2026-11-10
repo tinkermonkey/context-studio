@@ -10,6 +10,7 @@ import re
 from typing import Any, Dict, List
 
 from domain.interchange.value_objects import ResolutionKind
+from domain.ontology.datasets import resolve_dataset_id
 from domain.ontology.entities import (
     Class,
     ConceptScheme,
@@ -192,8 +193,12 @@ def _persist_individual(
                 " client computes those, so none is created directly"
             )
 
+    first_class = ontology_repo.get_class(class_ids[0])
+    if first_class is None:
+        raise ValueError(f"Individual {entity_dict['id']}: class {class_ids[0]} does not exist")
     individual = Individual(
         id=entity_dict["id"],
+        dataset_id=resolve_dataset_id(ontology_repo, first_class.taxonomy_id),
         title=entity_dict["title"],
         description=entity_dict.get("description"),
         class_ids=class_ids,
@@ -213,14 +218,19 @@ def _persist_property_definition(
     entity_dict: Dict[str, Any],
     ontology_repo,
 ) -> None:
-    """Persist a PropertyDefinition entity."""
+    """
+    Persist a PropertyDefinition entity. These formats carry no predicate, so a
+    type already in the workspace keeps the one it has.
+    """
+    existing = ontology_repo.get_property_definition(entity_dict["id"])
     prop = PropertyDefinition(
         id=entity_dict["id"],
         identifier=entity_dict.get("identifier", ""),
         title=entity_dict["title"],
         description=entity_dict.get("description"),
         is_relevant=entity_dict.get("is_relevant"),
-        derived=_derived(entity_dict, ontology_repo.get_property_definition(entity_dict["id"])),
+        derived=_derived(entity_dict, existing),
+        predicate_id=existing.predicate_id if existing else None,
     )
     ontology_repo.save_property_definition(prop)
 

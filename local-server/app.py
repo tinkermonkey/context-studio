@@ -13,6 +13,7 @@ Architecture:
 """
 
 import logging
+from collections.abc import Sequence
 from contextlib import AsyncExitStack, asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -23,6 +24,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import OperationalError
 
+from adapters.chat.claim_tools import build_claim_tools
 from adapters.chat.context import ConfigChatSettings, OntologyWorkspaceContext
 from adapters.chat.proposal_tools import (
     DrSpecDriftTool,
@@ -30,7 +32,7 @@ from adapters.chat.proposal_tools import (
     build_proposal_tools,
 )
 from adapters.chat.run_tools import build_run_tools
-from adapters.chat.tools import build_chat_tools
+from adapters.chat.tools import ToolBase, build_chat_tools
 from adapters.clustering.sklearn_clusterer import SklearnClusterer
 
 # Import admin adapters and services
@@ -52,10 +54,10 @@ from adapters.persistence.sqlite.approval_policy_repo import SQLiteApprovalPolic
 from adapters.persistence.sqlite.batch_repo import BatchRepository
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.chat_repo import SqliteConversationRepository
+from adapters.persistence.sqlite.claim_repo import SQLiteClaimRepository
 
 # Import adapters
 from adapters.persistence.sqlite.connection import DatabaseManager
-from adapters.persistence.sqlite.dataset_repo import SQLiteDatasetRepository
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
 from adapters.persistence.sqlite.extraction_run_repo import (
     SQLiteExtractionRunRepository,
@@ -94,6 +96,7 @@ from adapters.telemetry.log_bridge import OTLPLogHandler
 from adapters.web.admin_routes import router as admin_router
 from adapters.web.bundle_routes import router as bundle_router
 from adapters.web.chat_routes import router as chat_router
+from adapters.web.claims_routes import router as claims_router
 from adapters.web.decision_routes import router as decision_router
 from adapters.web.drift_routes import router as drift_router
 from adapters.web.extraction_examples import load_extraction_examples
@@ -148,6 +151,7 @@ from domain.ontology.events import (
 # Import domain services
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
+from domain.pipelines.claim_triage import register_claim_triage
 from domain.pipelines.individual_extraction import register_individual_extraction
 from domain.pipelines.individual_extraction.apply_service import (
     IndividualExtractionApplyService,
@@ -157,6 +161,7 @@ from domain.pipelines.registry import (
     PipelineImplementationRegistry,
     PipelineTypeRegistry,
 )
+from domain.pipelines.requested_via import RequestedVia
 from domain.pipelines.schema_extraction.apply_service import (
     SchemaExtractionApplyService,
 )
@@ -186,6 +191,7 @@ from domain.pipelines.schema_relationship_reflection import (
 )
 from domain.versioning.approval_policy import ApprovalPolicyService
 from domain.versioning.bundle_import import BundleImportService
+from domain.versioning.claims import ClaimService
 from domain.versioning.drift import DriftImportService
 from domain.versioning.events import SyncCompleted
 from domain.versioning.ports import SyncTarget
@@ -401,6 +407,7 @@ async def lifespan(app: FastAPI):
             event_publisher=event_publisher,
             schema_index=schema_vector_index,
             individual_index=individual_vector_index,
+            transaction_scope=SqliteTransactionScope(shared_session_factory),
         )
         logger.info("OntologyService created and wired with adapters")
 
@@ -486,6 +493,12 @@ async def lifespan(app: FastAPI):
             config_registry=config_registry,
         )
         logger.info("Schema relationship reflection pipeline registered")
+
+        register_claim_triage(
+            impl_registry=implementation_registry,
+            config_registry=config_registry,
+        )
+        logger.info("Claim triage pipeline registered")
 
         # Load user-created pipeline configurations from DB into the in-memory registry
         try:
@@ -610,6 +623,9 @@ async def lifespan(app: FastAPI):
             approval_policy_repo, cast(OntologyRepository, ontology_repo)
         )
         logger.info("ProposalService and ApprovalPolicyService created")
+        claim_service = ClaimService(
+            SQLiteClaimRepository(shared_session_factory), cast(OntologyRepository, ontology_repo)
+        )
 
         # Interchange service for import run tracking
         import_run_service = ImportRunService()
@@ -629,13 +645,9 @@ async def lifespan(app: FastAPI):
         )
         logger.info("SystemMetricsCollector created")
 
-        dataset_repo = SQLiteDatasetRepository(local_session_factory)
-        logger.info("SQLiteDatasetRepository created")
-
         admin_service = AdminService(
             metrics_collector=metrics_collector,
             config_store=config_store,
-            dataset_repository=dataset_repo,
         )
         logger.info(
             "AdminService created and wired with metrics, config store, and dataset" " repository"
@@ -796,6 +808,7 @@ async def lifespan(app: FastAPI):
             DrDriftPlanner(cast(OntologyRepository, ontology_repo)),
         )
         app.state.approval_policy_service = approval_policy_service
+        app.state.claim_service = claim_service
         app.state.admin_service = admin_service
         app.state.load_demo_dataset = load_demo_dataset
         app.state.db_manager = db_manager
@@ -860,7 +873,12 @@ async def lifespan(app: FastAPI):
             app_state=app.state,
             workers=settings.pipelines.background_workers,
         )
-        run_tools = build_run_tools(app.state.run_executor, pipeline_run_repo, ontology_service)
+
+        def run_tools_for(requested_via: RequestedVia) -> Sequence[ToolBase]:
+            """The run tools for one caller; its runs record where they came from."""
+            return build_run_tools(
+                app.state.run_executor, pipeline_run_repo, ontology_service, requested_via
+            )
 
         # Read-only tools over the ontology and graph services, and the proposal
         # tools (propose changes; a person reviews them), shared by the chat
@@ -877,7 +895,7 @@ async def lifespan(app: FastAPI):
             tools=[
                 *read_tools,
                 *build_proposal_tools(proposal_service, ProposalSource.CHAT),
-                *run_tools,
+                *run_tools_for(RequestedVia.CHAT),
             ],
             repository=SqliteConversationRepository(operations_session_factory),
             settings=ConfigChatSettings(config_manager),
@@ -904,7 +922,8 @@ async def lifespan(app: FastAPI):
                         *build_proposal_tools(proposal_service, ProposalSource.MCP),
                         MarkProposalLandedTool(proposal_service, ProposalSource.MCP),
                         DrSpecDriftTool(app.state.drift_import_service),
-                        *run_tools,
+                        *run_tools_for(RequestedVia.MCP),
+                        *build_claim_tools(claim_service),
                     ],
                 )
                 logger.info("MCP server available at /mcp (bearer token required)")
@@ -977,6 +996,7 @@ app.include_router(admin_router)
 app.include_router(interchange_router)
 app.include_router(chat_router)
 app.include_router(proposals_router)
+app.include_router(claims_router)
 app.include_router(bundle_router)
 app.include_router(drift_router)
 app.include_router(decision_router)

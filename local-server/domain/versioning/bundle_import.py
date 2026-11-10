@@ -125,6 +125,10 @@ class BundleImportService:
                 ).id
             try:
                 if created_taxonomy_id is not None:
+                    # A new taxonomy starts with the predicates its bundle's
+                    # relationship types use, as it starts with the taxonomy.
+                    for predicate in _bundle_predicates(bundle):
+                        self._ontology.create_predicate(created_taxonomy_id, predicate)
                     plan = plan_bundle(self._repo, bundle)
                 proposal = self._propose(plan, file_name) if plan.operations else None
             except Exception:
@@ -162,6 +166,16 @@ class BundleImportService:
             source_detail=bundle_source_detail(plan.source),
             dry_run=dry_run,
         )
+
+
+def _bundle_predicates(bundle: dict[str, Any]) -> list[str]:
+    """The distinct predicates the bundle's properties use, in first-use order."""
+    seen: dict[str, None] = {}
+    for prop in bundle.get("properties") or []:
+        predicate = prop.get("predicate") if isinstance(prop, dict) else None
+        if isinstance(predicate, str) and predicate.strip():
+            seen.setdefault(predicate.strip(), None)
+    return list(seen)
 
 
 def supersede_earlier_imports(

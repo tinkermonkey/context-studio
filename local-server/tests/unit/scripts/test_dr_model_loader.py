@@ -18,7 +18,7 @@ import yaml
 from domain.ontology.events import IndividualCreated, IndividualUpdated
 from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import ExternalReference
-from scripts.dr_model_loader import import_dr_model
+from scripts.dr_model_loader import import_dr_model, model_dataset
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
@@ -112,6 +112,7 @@ def ontology(service, repo):
             canonical_predicate=predicate,
             domain_class_id=class_ids[source],
             range_class_id=class_ids[target],
+            create_missing_predicate=True,
             external_references=[
                 ExternalReference(source=DR, identifier=f"{source}.{predicate}.{target}")
             ],
@@ -270,10 +271,12 @@ class TestImportIdempotency:
     ):
         # E.g. a hand-created individual that already has an unrelated reference.
         other_ref = ExternalReference(source="wikidata", identifier="Q1")
+        taxonomy_id = repo.get_by_identifier("dr_spec").id
         orphan = service.create_individual(
             ontology["motivation.stakeholder"],
             title="Knowledge Manager",
             external_references=[other_ref],
+            dataset_id=model_dataset(service, repo, taxonomy_id).id,
         )
         events.clear()
         _write_model(tmp_path, [STAKEHOLDER], [])
@@ -297,3 +300,33 @@ class TestImportIdempotency:
 
         rerun = import_dr_model(service, repo, tmp_path)
         assert rerun.layers["motivation"].individuals_unchanged == 1
+
+
+class TestModelDataset:
+    def test_the_model_loads_into_a_yielding_context_studio_dataset(
+        self, service, repo, ontology, tmp_path
+    ):
+        _write_model(tmp_path, [STAKEHOLDER], [])
+
+        import_dr_model(service, repo, tmp_path)
+
+        taxonomy_id = repo.get_by_identifier("dr_spec").id
+        [dataset] = repo.list_datasets(taxonomy_id=taxonomy_id)
+        assert (dataset.identifier, dataset.yields_to_schema) == ("context-studio", True)
+        [individual] = repo.list_individuals(limit=None)
+        assert individual.dataset_id == dataset.id
+
+    def test_another_dataset_neither_shares_nor_blocks_the_model(
+        self, service, repo, ontology, tmp_path
+    ):
+        taxonomy_id = repo.get_by_identifier("dr_spec").id
+        platform = service.create_dataset(taxonomy_id, "platform-a", "Platform A")
+        service.create_individual(
+            ontology["motivation.stakeholder"], title="Knowledge Manager", dataset_id=platform.id
+        )
+        _write_model(tmp_path, [STAKEHOLDER], [])
+
+        summary = import_dr_model(service, repo, tmp_path)
+
+        assert summary.layers["motivation"].individuals_created == 1
+        assert repo.count_individuals(dataset_id=platform.id) == 1

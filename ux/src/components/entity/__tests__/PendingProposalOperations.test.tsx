@@ -20,7 +20,7 @@ import { PendingProposalOperations } from "../PendingProposalOperations";
 const navigate = vi.fn();
 vi.mock("@tanstack/react-router", async () => {
   const actual = await vi.importActual("@tanstack/react-router");
-  return { ...actual, useNavigate: () => navigate };
+  return { ...actual, useNavigate: () => navigate, useSearch: () => ({}) };
 });
 
 const OPEN = { status: "open", limit: 500 };

@@ -30,6 +30,7 @@ from domain.ontology.entities import (
     Taxonomy,
 )
 from domain.ontology.value_objects import ExternalReference
+from tests.utils.datasets import save_in_dataset
 
 
 @pytest.fixture
@@ -99,7 +100,7 @@ def ontology_repo(session_factory):
         created_at=datetime.now(timezone.utc),
         last_modified=datetime.now(timezone.utc),
     )
-    repo.save_individual(individual)
+    save_in_dataset(repo, individual)
 
     return repo
 

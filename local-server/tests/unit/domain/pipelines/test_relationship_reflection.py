@@ -113,6 +113,7 @@ def house(ontology):
             canonical_predicate=predicate,
             domain_class_id=ids[source],
             range_class_id=ids[target],
+            create_missing_predicate=True,
         ).id
     return ids
 
@@ -229,6 +230,7 @@ class TestSortingQuestions:
             canonical_predicate="located_in",
             domain_class_id=stranger.id,
             range_class_id=house["place"],
+            create_missing_predicate=True,
         )
         catalog = catalog_of(repo, house)
         sq = sorting_questions(repo.get_property_definition(house["task_located_in"]), catalog)
@@ -627,11 +629,14 @@ def proposals(ontology, repo):
     return ProposalService(FakeChangeProposalRepository(), ontology, repo, StubRevertService())
 
 
-def run(orchestrator, taxonomy_id, scope=None):
+def run(orchestrator, taxonomy_id, scope=None, requested_via=None):
+    input_data = {"taxonomy_id": taxonomy_id, "scope": scope}
+    if requested_via:
+        input_data["requested_via"] = requested_via
     state = RelationshipReflectionState(
         run_id="run-1",
         pipeline_type=PipelineType.SCHEMA_RELATIONSHIP_REFLECTION,
-        input_data={"taxonomy_id": taxonomy_id, "scope": scope},
+        input_data=input_data,
     )
     return asyncio.run(orchestrator.execute(state))
 
@@ -741,15 +746,26 @@ class TestOrchestrator:
         with pytest.raises(PipelineInputError, match="taxonomy_id"):
             run(orchestrator, "")
 
-    def test_a_mirrored_taxonomy_is_refused(self, repo, house, proposals):
+    @pytest.mark.parametrize("requested_via", [None, "chat", "api"])
+    def test_a_mirrored_taxonomy_is_refused_unless_its_client_asks(
+        self, repo, house, proposals, requested_via
+    ):
         # Its client drives proposals; Context Studio runs no reflection of its own on it.
         taxonomy = repo.get_taxonomy(house["taxonomy"])
         taxonomy.mirrored = True
         repo.save_taxonomy(taxonomy)
         orchestrator = make(repo, proposals, ScriptedModel())
         with pytest.raises(PipelineInputError, match="mirrors an external source"):
-            run(orchestrator, house["taxonomy"])
+            run(orchestrator, house["taxonomy"], requested_via=requested_via)
         assert proposals.list_proposals() == []
+
+    def test_a_mirrored_taxonomy_runs_when_its_client_asks_over_mcp(self, repo, house, proposals):
+        taxonomy = repo.get_taxonomy(house["taxonomy"])
+        taxonomy.mirrored = True
+        repo.save_taxonomy(taxonomy)
+        orchestrator = make(repo, proposals, ScriptedModel())
+        state = run(orchestrator, house["taxonomy"], requested_via="mcp")
+        assert state.result["relationship_types"] >= 1
 
     def test_scope_by_scheme_id_or_dict(self, repo, house, proposals):
         orchestrator = make(repo, proposals, ScriptedModel())

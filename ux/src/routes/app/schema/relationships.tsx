@@ -13,6 +13,8 @@ import { usePropertiesByIds } from "@/api/hooks/ontology/useProperties";
 import { useListPaging } from "@/hooks/useListPaging";
 import { relationshipsCopy } from "./relationships/-copy";
 import { useSchemaTabs } from "./-useSchemaTabs";
+import { useDatasetScope } from "@/hooks/useDatasetScope";
+import { DatasetSelect } from "@/components/datasets/DatasetSelect";
 import type { components } from "@/api/types";
 
 type RelationshipResponse = components["schemas"]["RelationshipResponse"];
@@ -22,6 +24,13 @@ export function RelationshipsPage() {
   const { toast } = useToasts();
   const paging = useListPaging();
   const { tabs: schemaTabs, onSelectTab: handleTabNavigate, counts } = useSchemaTabs();
+  // A chosen dataset shows only its relationships (each belongs to its source individual's dataset).
+  const { selectedDatasetId } = useDatasetScope();
+  const datasetScope = selectedDatasetId ? { dataset_id: selectedDatasetId } : {};
+  const { data: datasetCount } = useRelationships(
+    { limit: 1, ...datasetScope },
+    { enabled: !!selectedDatasetId },
+  );
 
   const {
     data: listResponse,
@@ -30,7 +39,7 @@ export function RelationshipsPage() {
     refetch,
   } = useRelationships(
     // Relationships only sort by created_at (newest first); no column sort is offered.
-    { ...paging.params, sort_by: "created_at" },
+    { ...paging.params, ...datasetScope, sort_by: "created_at" },
     { keepPrevious: true },
   );
 
@@ -204,8 +213,12 @@ export function RelationshipsPage() {
             onSearchChange={paging.setSearch}
             searchPlaceholder="Search by source, predicate, or target…"
             showingCount={total ?? 0}
-            totalCount={counts.relationships ?? total ?? 0}
-          />
+            totalCount={
+              (selectedDatasetId ? datasetCount?.total : counts.relationships) ?? total ?? 0
+            }
+          >
+            <DatasetSelect data-testid="relationships-dataset-select" />
+          </FilterBar>
 
           <EntitySurface
             ref={surfaceRef}

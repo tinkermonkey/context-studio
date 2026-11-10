@@ -51,13 +51,25 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
   ),
   Select: (() => {
     const S: any = React.forwardRef(
-      ({ error = false, className = "", onChange, children, ...props }: any, ref: any) =>
+      (
+        {
+          error = false,
+          className = "",
+          onChange,
+          children,
+          ariaLabel,
+          placement: _p,
+          ...props
+        }: any,
+        ref: any,
+      ) =>
         React.createElement(
           "select",
           {
             ref,
             className: ["select", error && "select--error", className].filter(Boolean).join(" "),
             onChange: onChange ? (e: any) => onChange(e.target.value) : undefined,
+            "aria-label": ariaLabel,
             ...props,
           },
           children,
@@ -65,6 +77,8 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
     );
     S.Item = ({ value, children, description: _d }: any) =>
       React.createElement("option", { value }, children);
+    S.SectionTitle = ({ children }: any) =>
+      React.createElement("option", { disabled: true, value: "" }, children);
     S.CheckboxItem = ({ value, children, description: _d }: any) =>
       React.createElement("option", { value }, children);
     return S;

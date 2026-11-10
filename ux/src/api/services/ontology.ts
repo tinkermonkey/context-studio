@@ -35,6 +35,10 @@ type RelationshipResponse = components["schemas"]["RelationshipResponse"];
 type RelationshipCreateRequest = components["schemas"]["RelationshipCreateRequest"];
 type ListRelationships = components["schemas"]["ListResponse_RelationshipResponse_"];
 
+type DatasetResponse = components["schemas"]["DatasetResponse"];
+type DatasetCreateRequest = components["schemas"]["DatasetCreateRequest"];
+type DatasetDeletionResponse = components["schemas"]["DatasetDeletionResponse"];
+
 type SchemeCountsResponse = components["schemas"]["SchemeCountsResponse"];
 type ClassCountsResponse = components["schemas"]["ClassCountsResponse"];
 
@@ -60,6 +64,8 @@ export interface ClassListParams extends ListPageParams, IdsFilterParams {
 
 export interface IndividualListParams extends ListPageParams, IdsFilterParams {
   class_id?: string;
+  /** Only individuals in this dataset. */
+  dataset_id?: string;
 }
 
 export interface PropertyListParams extends ListPageParams, IdsFilterParams {
@@ -71,11 +77,34 @@ export interface RelationshipListParams extends Omit<ListPageParams, "sort_by"> 
   source_id?: string;
   target_id?: string;
   property_id?: string;
+  /** Only relationships in this dataset (by their source individual). */
+  dataset_id?: string;
   /** Relationships only sort by creation time. */
   sort_by?: "created_at";
 }
 
+/** The `dataset_id` query param, or none. */
+function datasetParams(datasetId?: string): Record<string, unknown> | undefined {
+  return datasetId ? { dataset_id: datasetId } : undefined;
+}
+
 class OntologyService extends BaseService {
+  // Datasets
+  async listDatasets(taxonomyId?: string): Promise<DatasetResponse[]> {
+    return this.get<DatasetResponse[]>(
+      "/api/datasets",
+      taxonomyId ? { taxonomy_id: taxonomyId } : undefined,
+    );
+  }
+
+  async createDataset(data: DatasetCreateRequest): Promise<DatasetResponse> {
+    return this.post<DatasetResponse>("/api/datasets", data);
+  }
+
+  async deleteDataset(id: string): Promise<DatasetDeletionResponse> {
+    return this.delete<DatasetDeletionResponse>(`/api/datasets/${id}`);
+  }
+
   // Taxonomies
   async listTaxonomies(params?: ListPageParams): Promise<ListTaxonomies> {
     return this.get<ListTaxonomies>("/api/taxonomies", params as Record<string, unknown>);
@@ -110,8 +139,11 @@ class OntologyService extends BaseService {
   }
 
   /** Class, individual and property-definition counts for each scheme in a taxonomy. */
-  async getSchemeCounts(taxonomyId: string): Promise<SchemeCountsResponse[]> {
-    return this.get<SchemeCountsResponse[]>(`/api/taxonomies/${taxonomyId}/scheme-counts`);
+  async getSchemeCounts(taxonomyId: string, datasetId?: string): Promise<SchemeCountsResponse[]> {
+    return this.get<SchemeCountsResponse[]>(
+      `/api/taxonomies/${taxonomyId}/scheme-counts`,
+      datasetParams(datasetId),
+    );
   }
 
   // Concept Schemes
@@ -140,8 +172,11 @@ class OntologyService extends BaseService {
   }
 
   /** Individual, property-definition and relationship counts for each class in a scheme. */
-  async getClassCounts(schemeId: string): Promise<ClassCountsResponse[]> {
-    return this.get<ClassCountsResponse[]>(`/api/schemes/${schemeId}/class-counts`);
+  async getClassCounts(schemeId: string, datasetId?: string): Promise<ClassCountsResponse[]> {
+    return this.get<ClassCountsResponse[]>(
+      `/api/schemes/${schemeId}/class-counts`,
+      datasetParams(datasetId),
+    );
   }
 
   // Classes

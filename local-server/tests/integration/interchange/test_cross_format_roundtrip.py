@@ -32,6 +32,7 @@ from domain.ontology.entities import (
     Taxonomy,
 )
 from domain.ontology.value_objects import ExternalReference
+from tests.utils.datasets import save_in_dataset
 
 
 def _generate_valid_identifier(fallback_id: str) -> str:
@@ -173,7 +174,7 @@ def persist_incoming_entities(
                 created_at=datetime.now(timezone.utc),
                 last_modified=datetime.now(timezone.utc),
             )
-            repo.save_individual(ind)
+            save_in_dataset(repo, ind)
 
     # Save property definitions
     for entity_id, entity_dict in incoming_entities.items():
@@ -397,7 +398,7 @@ def representative_graph(ontology_repo):
         created_at=datetime.now(timezone.utc),
         last_modified=datetime.now(timezone.utc),
     )
-    fido = ontology_repo.save_individual(fido)
+    fido = save_in_dataset(ontology_repo, fido)
 
     whiskers = Individual(
         id=str(uuid.uuid4()),
@@ -407,7 +408,7 @@ def representative_graph(ontology_repo):
         created_at=datetime.now(timezone.utc),
         last_modified=datetime.now(timezone.utc),
     )
-    whiskers = ontology_repo.save_individual(whiskers)
+    whiskers = save_in_dataset(ontology_repo, whiskers)
 
     # Relationships
     rel1 = Relationship(

@@ -12,12 +12,15 @@ from domain.ontology.entities import (
     AttributeDefinition,
     Class,
     ConceptScheme,
+    Dataset,
     Individual,
+    Predicate,
     PropertyDefinition,
     Relationship,
     Taxonomy,
 )
-from domain.ontology.exceptions import DuplicateEntityError
+from domain.ontology.datasets import resolve_dataset_id
+from domain.ontology.exceptions import DatasetMismatchError, DuplicateEntityError
 from domain.ontology.ports import EntityReference
 from domain.ontology.value_objects import ClassCounts, SchemeCounts, SearchCriteria
 
@@ -51,6 +54,8 @@ class FakeOntologyRepository:
         self._property_definitions: dict[str, PropertyDefinition] = {}
         self._individuals: dict[str, Individual] = {}
         self._attribute_definitions: dict[str, AttributeDefinition] = {}
+        self._predicates: dict[str, Predicate] = {}
+        self._datasets: dict[str, Dataset] = {}
 
     # Lookup operations
 
@@ -118,8 +123,41 @@ class FakeOntologyRepository:
     def delete_taxonomy(self, taxonomy_id: str) -> bool:
         if taxonomy_id in self._taxonomies:
             self._taxonomies.pop(taxonomy_id)
+            for predicate_id in [
+                p.id for p in self._predicates.values() if p.taxonomy_id == taxonomy_id
+            ]:
+                self._predicates.pop(predicate_id)
             return True
         return False
+
+    # Predicate operations
+
+    def list_predicates(self, taxonomy_id: str) -> list[Predicate]:
+        return sorted(
+            (p for p in self._predicates.values() if p.taxonomy_id == taxonomy_id),
+            key=lambda p: p.identifier,
+        )
+
+    def get_predicate(self, predicate_id: str) -> Predicate | None:
+        return self._predicates.get(predicate_id)
+
+    def get_predicate_by_identifier(self, taxonomy_id: str, identifier: str) -> Predicate | None:
+        for predicate in self._predicates.values():
+            if predicate.taxonomy_id == taxonomy_id and predicate.identifier == identifier:
+                return predicate
+        return None
+
+    def save_predicate(self, predicate: Predicate) -> Predicate:
+        existing = self.get_predicate_by_identifier(predicate.taxonomy_id, predicate.identifier)
+        if existing is not None and existing.id != predicate.id:
+            raise DuplicateEntityError(
+                f"Predicate '{predicate.identifier}' already exists in taxonomy"
+                f" {predicate.taxonomy_id}"
+            )
+        if predicate.id in self._predicates:
+            predicate.version = self._predicates[predicate.id].version + 1
+        self._predicates[predicate.id] = predicate
+        return predicate
 
     # ConceptScheme operations
 
@@ -293,8 +331,11 @@ class FakeOntologyRepository:
         sort_by: str | None = None,
         sort_order: str = "asc",
         query: str | None = None,
+        dataset_id: str | None = None,
     ) -> list[Relationship]:
         results = list(self._relationships.values())
+        if dataset_id is not None:
+            results = [r for r in results if self._dataset_of(r.source_id) == dataset_id]
         if source_id is not None:
             results = [r for r in results if r.source_id == source_id]
         if target_id is not None:
@@ -313,7 +354,15 @@ class FakeOntologyRepository:
         end = None if limit is None else offset + limit
         return results[offset:end]
 
+    def _dataset_of(self, entity_id: str) -> str | None:
+        individual = self._individuals.get(entity_id)
+        return individual.dataset_id if individual is not None else None
+
     def save_relationship(self, relationship: Relationship) -> Relationship:
+        source = self._dataset_of(relationship.source_id)
+        target = self._dataset_of(relationship.target_id)
+        if source is not None and target is not None and source != target:
+            raise DatasetMismatchError("a relationship cannot cross datasets")
         self._relationships[relationship.id] = relationship
         return relationship
 
@@ -341,6 +390,7 @@ class FakeOntologyRepository:
         target_id: str | None = None,
         property_id: str | None = None,
         query: str | None = None,
+        dataset_id: str | None = None,
     ) -> int:
         return len(
             self.list_relationships(
@@ -349,6 +399,7 @@ class FakeOntologyRepository:
                 property_id=property_id,
                 limit=None,
                 query=query,
+                dataset_id=dataset_id,
             )
         )
 
@@ -373,12 +424,20 @@ class FakeOntologyRepository:
         query: str | None = None,
         ids: list[str] | None = None,
         domain_class_id: str | None = None,
+        taxonomy_id: str | None = None,
     ) -> list[PropertyDefinition]:
         results = list(self._property_definitions.values())
         if is_relevant is not None:
             results = [p for p in results if p.is_relevant == is_relevant]
         if domain_class_id is not None:
             results = [p for p in results if p.domain_class_id == domain_class_id]
+        if taxonomy_id is not None:
+            results = [
+                p
+                for p in results
+                if p.predicate_id in self._predicates
+                and self._predicates[p.predicate_id].taxonomy_id == taxonomy_id
+            ]
 
         results = [p for p in results if _text_matches(p, query)]
         if ids is not None:
@@ -396,6 +455,11 @@ class FakeOntologyRepository:
         return results[offset:end]
 
     def save_property_definition(self, prop: PropertyDefinition) -> PropertyDefinition:
+        # Like the SQLite adapter, canonical_predicate reads through predicate_id.
+        # Without a predicate_id it's left as given, for tests that set it directly.
+        if prop.predicate_id is not None:
+            predicate = self._predicates.get(prop.predicate_id)
+            prop.canonical_predicate = predicate.identifier if predicate else None
         self._property_definitions[prop.id] = prop
         return prop
 
@@ -411,6 +475,7 @@ class FakeOntologyRepository:
         query: str | None = None,
         ids: list[str] | None = None,
         domain_class_id: str | None = None,
+        taxonomy_id: str | None = None,
     ) -> int:
         return len(
             self.list_property_definitions(
@@ -419,10 +484,18 @@ class FakeOntologyRepository:
                 query=query,
                 ids=ids,
                 domain_class_id=domain_class_id,
+                taxonomy_id=taxonomy_id,
             )
         )
 
-    def count_by_scheme(self, taxonomy_id: str) -> list[SchemeCounts]:
+    def _in_dataset(self, dataset_id: str | None) -> list[Individual]:
+        return [
+            i
+            for i in self._individuals.values()
+            if dataset_id is None or i.dataset_id == dataset_id
+        ]
+
+    def count_by_scheme(self, taxonomy_id: str, dataset_id: str | None = None) -> list[SchemeCounts]:
         schemes = sorted(
             (s for s in self._schemes.values() if s.taxonomy_id == taxonomy_id),
             key=lambda s: s.title,
@@ -435,7 +508,7 @@ class FakeOntologyRepository:
                     scheme_id=scheme.id,
                     class_count=len(class_ids),
                     individual_count=sum(
-                        1 for i in self._individuals.values() if class_ids & set(i.class_ids)
+                        1 for i in self._in_dataset(dataset_id) if class_ids & set(i.class_ids)
                     ),
                     property_definition_count=sum(
                         1
@@ -446,14 +519,16 @@ class FakeOntologyRepository:
             )
         return counts
 
-    def count_by_class(self, concept_scheme_id: str) -> list[ClassCounts]:
+    def count_by_class(
+        self, concept_scheme_id: str, dataset_id: str | None = None
+    ) -> list[ClassCounts]:
         classes = sorted(
             (c for c in self._classes.values() if c.concept_scheme_id == concept_scheme_id),
             key=lambda c: c.title,
         )
         counts = []
         for cls in classes:
-            member_ids = {i.id for i in self._individuals.values() if cls.id in i.class_ids}
+            member_ids = {i.id for i in self._in_dataset(dataset_id) if cls.id in i.class_ids}
             counts.append(
                 ClassCounts(
                     class_id=cls.id,
@@ -495,9 +570,7 @@ class FakeOntologyRepository:
         for attr in self._attribute_definitions.values():
             links.append(("attribute_definition", attr.id, attr.class_id))
         found = {
-            EntityReference(ref, dep, kind)
-            for kind, dep, ref in links
-            if ref in ids and ref != dep
+            EntityReference(ref, dep, kind) for kind, dep, ref in links if ref in ids and ref != dep
         }
         return sorted(found, key=lambda r: (r.referenced_id, r.dependent_kind, r.dependent_id))
 
@@ -526,6 +599,7 @@ class FakeOntologyRepository:
         sort_order: str = "asc",
         query: str | None = None,
         ids: list[str] | None = None,
+        dataset_id: str | None = None,
     ) -> list[Individual]:
         """Retrieve all individuals, optionally filtered by class ID.
 
@@ -537,7 +611,7 @@ class FakeOntologyRepository:
         Returns:
             List of individuals matching the filter
         """
-        results = list(self._individuals.values())
+        results = self._in_dataset(dataset_id)
         if class_id is not None:
             results = [ind for ind in results if class_id in ind.class_ids]
         results = [ind for ind in results if _text_matches(ind, query)]
@@ -552,9 +626,14 @@ class FakeOntologyRepository:
         class_id: str | None = None,
         query: str | None = None,
         ids: list[str] | None = None,
+        dataset_id: str | None = None,
     ) -> int:
-        """Count individuals, optionally filtered by class ID, text or ids."""
-        return len(self.list_individuals(class_id=class_id, limit=None, query=query, ids=ids))
+        """Count individuals, optionally filtered by class ID, text, ids or dataset."""
+        return len(
+            self.list_individuals(
+                class_id=class_id, limit=None, query=query, ids=ids, dataset_id=dataset_id
+            )
+        )
 
     def save_individual(self, individual: Individual) -> Individual:
         """Save an individual (insert or update).
@@ -571,14 +650,33 @@ class FakeOntologyRepository:
             DuplicateEntityError: If an individual with this title already exists in any of the
             classes
         """
-        # Check for duplicate title within each of the individual's classes
-        # (excluding the individual being updated)
+        stored = self._individuals.get(individual.id)
+        if stored is not None:
+            # An update keeps the stored dataset, like the SQLite adapter.
+            individual.dataset_id = stored.dataset_id
+        elif individual.dataset_id is None:
+            # Unlike the SQLite adapter, which refuses, the fake fills in the
+            # taxonomy's default dataset so unit tests needn't make one.
+            first_class = self._classes.get(individual.class_ids[0])
+            if first_class is not None:
+                individual.dataset_id = resolve_dataset_id(self, first_class.taxonomy_id)
+        dataset = self._datasets.get(individual.dataset_id or "")
+        if dataset is not None:
+            for class_id in individual.class_ids:
+                cls = self._classes.get(class_id)
+                if cls is not None and cls.taxonomy_id != dataset.taxonomy_id:
+                    raise DatasetMismatchError(
+                        f"Class {class_id} is not in the taxonomy of dataset {dataset.identifier}"
+                    )
+        # Check for duplicate title within each of the individual's classes, in its
+        # dataset (excluding the individual being updated)
         for class_id in individual.class_ids:
             for existing in self._individuals.values():
                 if (
                     class_id in existing.class_ids
                     and existing.title == individual.title
                     and existing.id != individual.id
+                    and existing.dataset_id == individual.dataset_id
                 ):
                     raise DuplicateEntityError(
                         f"Individual with title '{individual.title}' already exists in"
@@ -600,6 +698,39 @@ class FakeOntologyRepository:
             self._individuals.pop(individual_id)
             return True
         return False
+
+    # Dataset operations
+
+    def get_dataset(self, dataset_id: str) -> Dataset | None:
+        return self._datasets.get(dataset_id)
+
+    def list_datasets(self, taxonomy_id: str | None = None) -> list[Dataset]:
+        return sorted(
+            (d for d in self._datasets.values() if taxonomy_id in (None, d.taxonomy_id)),
+            key=lambda d: (d.title, d.id),
+        )
+
+    def save_dataset(self, dataset: Dataset) -> Dataset:
+        for existing in self._datasets.values():
+            if (
+                existing.id != dataset.id
+                and existing.taxonomy_id == dataset.taxonomy_id
+                and existing.identifier == dataset.identifier
+            ):
+                raise DuplicateEntityError(
+                    f"The taxonomy already has a dataset '{dataset.identifier}'"
+                )
+        self._datasets[dataset.id] = dataset
+        return dataset
+
+    def delete_dataset(self, dataset_id: str) -> bool:
+        if self._datasets.pop(dataset_id, None) is None:
+            return False
+        for individual_id in [
+            i.id for i in self._individuals.values() if i.dataset_id == dataset_id
+        ]:
+            self._individuals.pop(individual_id)
+        return True
 
     # AttributeDefinition operations
 

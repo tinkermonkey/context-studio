@@ -21,6 +21,26 @@ _IDENTIFIER_PATTERN = re.compile(r"^[a-z][a-z0-9_]{1,63}$")
 _HEX_COLOR_PATTERN = re.compile(r"^#[0-9a-f]{6}$")
 
 
+_PREDICATE_PATTERN = re.compile(r"^[a-z][a-z0-9_-]{0,254}$")
+
+
+def validate_predicate_identifier(identifier: str) -> str:
+    """
+    Validate a predicate identifier: a bare relation verb such as "part_of" or
+    "navigates-to" (lowercase letters, digits, "_" and "-", starting with a letter).
+
+    Raises:
+        ValueError: If it's empty or doesn't fit that shape
+    """
+    candidate = str(identifier or "").strip()
+    if not _PREDICATE_PATTERN.match(candidate):
+        raise ValueError(
+            f"Predicate {identifier!r} must start with a lowercase letter and contain only"
+            " lowercase letters, digits, '_' and '-'"
+        )
+    return candidate
+
+
 def validate_identifier(identifier: str) -> str:
     """
     Validate and normalize a slug-style identifier.
@@ -41,6 +61,31 @@ def validate_identifier(identifier: str) -> str:
         raise ValueError(
             "Identifier must start with a lowercase letter and contain only "
             "lowercase letters, digits, and underscores (2-64 chars)"
+        )
+    return candidate
+
+
+_DATASET_IDENTIFIER_PATTERN = re.compile(r"^[a-z][a-z0-9_-]{1,63}$")
+
+
+def validate_dataset_identifier(identifier: str) -> str:
+    """
+    Validate and normalize a dataset identifier: a slug that may also use hyphens.
+
+    Args:
+        identifier: Candidate identifier string
+
+    Returns:
+        The validated identifier (stripped, lowercased)
+
+    Raises:
+        ValueError: If the identifier is empty or does not match the pattern
+    """
+    candidate = str(identifier or "").strip().lower()
+    if not _DATASET_IDENTIFIER_PATTERN.match(candidate):
+        raise ValueError(
+            "Dataset identifier must start with a lowercase letter and contain only"
+            " lowercase letters, digits, hyphens and underscores (2-64 chars)"
         )
     return candidate
 
@@ -312,4 +357,20 @@ class ClassCounts:
     class_id: str
     individual_count: int
     property_definition_count: int
+    relationship_count: int
+
+
+@dataclass(frozen=True)
+class DatasetDeletion:
+    """
+    What deleting a dataset removed.
+
+    Attributes:
+        dataset_id: The deleted dataset
+        individual_count: Individuals deleted with it
+        relationship_count: Relationships deleted with its individuals
+    """
+
+    dataset_id: str
+    individual_count: int
     relationship_count: int

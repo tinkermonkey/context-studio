@@ -311,7 +311,10 @@ class ProposeChangesTool(_ProposalTool):
         " (eligible to auto-apply: the approval policy would apply it at once and no"
         " blockers stop it; applying can still fail), then propose for real.\n"
         "Kind property is a relationship type (property definition); attribute is a"
-        " data attribute of a class; relationship links two classes or individuals.\n"
+        " data attribute of a class; relationship links two classes or individuals."
+        " A property's canonical_predicate must be one of its taxonomy's predicates"
+        " (list_predicates; the taxonomy of its domain class, else its range class,"
+        " else the proposal's), and can't be cleared.\n"
         "Fields per kind (* required on create):\n"
         f"{_field_guide()}\n"
         "A relationship update sets only its attributes; to change its ends, delete it"
@@ -486,7 +489,16 @@ def _not_stored(
 
 # What propose_changes reports of each operation (get_proposal has the rest).
 _OUTCOME_KEYS = ("seq", "status", "scope", "result_entity_id", "reason", "blockers")
-_DRY_RUN_KEYS = ("seq", "op", "kind", "scope", "auto_apply", "stale", "blockers")
+_DRY_RUN_KEYS = (
+    "seq",
+    "op",
+    "kind",
+    "scope",
+    "auto_apply",
+    "stale",
+    "blockers",
+    "dataset_impact",
+)
 
 
 def _outcomes(view: dict[str, Any], keys: Sequence[str]) -> list[dict[str, Any]]:

@@ -81,27 +81,6 @@ export interface Individual {
   is_deleted?: boolean;
 }
 
-export interface DatasetMetrics {
-  layers_count: number;
-  domains_count: number;
-  terms_count: number;
-  relationships_count: number;
-  individuals_count: number;
-}
-
-export interface Dataset {
-  id: string;
-  title: string;
-  filename: string;
-  description?: string;
-  created_at: string;
-  last_accessed: string;
-  schema_version: string;
-  metrics: DatasetMetrics;
-  is_active: boolean;
-  version: number;
-}
-
 /**
  * Create a test taxonomy
  */
@@ -275,34 +254,6 @@ export async function createIndividual(
       title,
       description,
       class_ids,
-    },
-  });
-
-  return response;
-}
-
-/**
- * Create a test dataset
- */
-export async function createDataset(
-  page: Page,
-  overrides?: {
-    title?: string;
-    filename?: string;
-    description?: string;
-  },
-): Promise<Dataset> {
-  const timestamp = getRunTimestamp();
-  const title = overrides?.title || `test-dataset-${timestamp}`;
-  const filename = overrides?.filename || `test-dataset-${timestamp}.db`;
-  const description = overrides?.description || `Test dataset created at ${timestamp}`;
-
-  const response = await apiRequest<Dataset>(page, "/api/v1/admin/datasets", {
-    method: "POST",
-    body: {
-      title,
-      filename,
-      description,
     },
   });
 
