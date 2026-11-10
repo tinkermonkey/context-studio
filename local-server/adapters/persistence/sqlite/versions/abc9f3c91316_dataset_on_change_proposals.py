@@ -1,8 +1,8 @@
 """dataset on change proposals
 
-Revision ID: 39b95996e5ec
-Revises: 036cabe45eb0
-Create Date: 2026-11-09 21:19:48.230338
+Revision ID: abc9f3c91316
+Revises: 4a96f0915d0e
+Create Date: 2026-11-09 21:28:53.823889
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '39b95996e5ec'
-down_revision = '036cabe45eb0'
+revision = 'abc9f3c91316'
+down_revision = '4a96f0915d0e'
 branch_labels = None
 depends_on = None
 
