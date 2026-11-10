@@ -332,3 +332,70 @@ class ClaimService:
             return False
 
         return {entity_id for entity_id in ids if belongs(entity_id)}
+
+
+@dataclass(frozen=True)
+class TriageScore:
+    """
+    How a decision model's triage compares with people's verdicts, with the
+    metrics of DR's triage-bench.ts.
+
+    Attributes:
+        n: Claims with both a triage and a verdict
+        validity_accuracy: Share whose triage validity matches the verdict
+        mean_p_gold_validity: Mean probability the triage gave the verdict's validity
+        category_accuracy: Share whose category matches (verdicts with a category)
+        severity_mae, severity_within_1: Severity error (verdicts with a severity)
+        fix_scope_mae: Fix-scope error (verdicts with a fix scope)
+        median_latency_ms, mean_cost_usd: Per claim
+        misses: Keys whose triage validity differs from the verdict
+    """
+
+    n: int
+    validity_accuracy: Optional[float]
+    mean_p_gold_validity: Optional[float]
+    category_accuracy: Optional[float]
+    severity_mae: Optional[float]
+    severity_within_1: Optional[float]
+    fix_scope_mae: Optional[float]
+    median_latency_ms: Optional[float]
+    mean_cost_usd: Optional[float]
+    misses: tuple[str, ...] = ()
+
+
+def _mean(values: Sequence[float]) -> Optional[float]:
+    return sum(values) / len(values) if values else None
+
+
+def score_triage(claims: Sequence[Claim]) -> TriageScore:
+    """Score the triage of the claims that have both a triage and a verdict."""
+    rows = [(c, c.triage, c.verdict) for c in claims if c.triage and c.verdict]
+    triages = [t for _, t, _ in rows]
+    verdicts = [v for _, _, v in rows]
+    pairs = list(zip(triages, verdicts))
+    categorised = [(t, v) for t, v in pairs if v.category is not None]
+    severities = [
+        abs(t.severity - v.severity)
+        for t, v in pairs
+        if t.severity is not None and v.severity is not None
+    ]
+    fix_scopes = [
+        abs(t.fix_scope - v.fix_scope)
+        for t, v in pairs
+        if t.fix_scope is not None and v.fix_scope is not None
+    ]
+    latencies = sorted(t.latency_ms for t in triages if t.latency_ms is not None)
+    return TriageScore(
+        n=len(rows),
+        validity_accuracy=_mean([float(t.validity == v.validity) for t, v in pairs]),
+        mean_p_gold_validity=_mean(
+            [t.validity_probabilities.get(v.validity.value, 0.0) for t, v in pairs]
+        ),
+        category_accuracy=_mean([float(t.category == v.category) for t, v in categorised]),
+        severity_mae=_mean([float(e) for e in severities]),
+        severity_within_1=_mean([float(e <= 1) for e in severities]),
+        fix_scope_mae=_mean([float(e) for e in fix_scopes]),
+        median_latency_ms=latencies[len(latencies) // 2] if latencies else None,
+        mean_cost_usd=_mean([t.cost_usd or 0.0 for t in triages]),
+        misses=tuple(c.key for c, t, v in rows if t.validity != v.validity),
+    )
