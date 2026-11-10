@@ -190,7 +190,8 @@ def iter_node_schemas(spec_dir: Path) -> Iterator[NodeSchemaRecord]:
 def _attribute_records(path: Path, attributes: dict[str, Any]) -> tuple[AttributeSchemaRecord, ...]:
     """
     A node schema's attributes, in schema order. The datatype is the JSON
-    Schema type, or a const's type; an untyped attribute is a string.
+    Schema type, or a const's type; an untyped attribute is a string, and a
+    string with format date is a date.
     """
     properties = attributes.get("properties") or {}
     required = set(attributes.get("required") or [])
@@ -203,6 +204,9 @@ def _attribute_records(path: Path, attributes: dict[str, Any]) -> tuple[Attribut
         if json_type is None and isinstance(const, str):
             json_type = "string"
         datatype = json_type or DataType.STRING.value
+        is_date = json_type == "string" and schema.get("format") == "date"
+        if is_date:
+            datatype = DataType.DATE.value
         try:
             DataType(datatype)
         except ValueError as exc:
@@ -213,7 +217,13 @@ def _attribute_records(path: Path, attributes: dict[str, Any]) -> tuple[Attribut
         enum = schema.get("enum")
         strings = isinstance(enum, list) and all(isinstance(v, str) for v in enum)
         allowed = tuple(enum) if strings else (const,) if isinstance(const, str) else None
-        held = {"type", "description", "enum" if strings else "", "const" if allowed else ""}
+        held = {
+            "type",
+            "description",
+            "enum" if strings else "",
+            "const" if allowed else "",
+            "format" if is_date else "",
+        }
         rest = {key: value for key, value in schema.items() if key not in held}
         if "type" not in schema and not isinstance(const, str):
             rest["type"] = None

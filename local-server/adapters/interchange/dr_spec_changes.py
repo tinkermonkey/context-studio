@@ -110,7 +110,8 @@ allowed_values (its enum) and description. A create gives all it set, and
 allowed_values null when it removed them; one that changed none of them (a
 title, default value or order) is skipped. A date attribute is a JSON Schema
 string with format date: a create sends datatype "string" and `schema`
-format "date"; an update to a date is skipped, as `set` can't carry format.
+format "date" (the importer reads that back as a date); an update to or
+from a date is skipped, as `set` can't carry format.
 
 A DR reflection plan's `predicate_retirements` ([{from, to, note}]), kept on
 its proposal's client metadata, come back as `retire-predicate` records
@@ -690,10 +691,10 @@ def _updated_attribute(fields: dict[str, Any], base: dict[str, Any]) -> dict[str
         for name in _ATTRIBUTE_FIELDS
         if name in fields and fields[name] != base.get(name)
     }
-    if values.get("datatype") == DataType.DATE.value:
+    if "datatype" in values and DataType.DATE.value in (values["datatype"], base.get("datatype")):
         return (
-            "it changes an attribute to a date, which DR's spec holds as a string with "
-            "format date, a JSON Schema keyword an update can't send; change it in DR"
+            "it changes an attribute to or from a date, which DR's spec holds as a string "
+            "with format date, a JSON Schema keyword an update can't send; change it in DR"
         )
     return values or "it changes nothing DR's spec holds for an attribute"
 
