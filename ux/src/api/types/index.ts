@@ -6678,7 +6678,7 @@ export interface components {
       decided_by: string;
       /**
        * Proposed
-       * @description The operation as proposed: seq, op, kind, target_id, ref, fields, base, rationale, evidence, probability, scope, proposed_replacement_id
+       * @description The operation as proposed: seq, op, kind, target_id, ref, fields, base, rationale, notes, evidence, probability, scope, proposed_replacement_id
        */
       proposed: {
         [key: string]: unknown;
@@ -8715,6 +8715,11 @@ export interface components {
        */
       rationale?: string | null;
       /**
+       * Notes
+       * @description Free-text notes kept with the operation (e.g. a maintainer's notes); never applied to the entity. Blank notes are stored as null
+       */
+      notes?: string | null;
+      /**
        * Evidence
        * @description Supporting {"quote", "url", "entity_id"} items
        */
@@ -8762,6 +8767,11 @@ export interface components {
       };
       /** Rationale */
       rationale?: string | null;
+      /**
+       * Notes
+       * @description Free-text notes kept with the operation; never applied to the entity
+       */
+      notes?: string | null;
       /** Evidence */
       evidence?: {
         [key: string]: unknown;

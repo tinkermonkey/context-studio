@@ -1567,6 +1567,7 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
         fields: JSON of the fields set (all for a create, changed ones otherwise)
         base: JSON of the touched fields' values when proposed (whole entity for a delete)
         rationale: Why this change
+        notes: Free-text notes the proposer keeps with the change; never applied
         evidence: JSON list of {quote, url, entity_id}
         probability: Proposer's confidence, 0 to 1
         scope: editorial, additive or breaking
@@ -1603,6 +1604,7 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
     fields = Column(JSON, nullable=False, default=dict)
     base = Column(JSON, nullable=False, default=dict)
     rationale = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
     evidence = Column(JSON, nullable=False, default=list)
     probability = Column(Float, nullable=True)
     scope = Column(String(10), nullable=False)

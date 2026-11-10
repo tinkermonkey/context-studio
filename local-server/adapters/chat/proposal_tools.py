@@ -251,6 +251,13 @@ OPERATION_SCHEMA: dict[str, Any] = {
             ),
         },
         "rationale": {"type": "string", "description": "Why this change"},
+        "notes": {
+            "type": "string",
+            "description": (
+                "Free-text notes to keep with this change (e.g. a maintainer's notes); never"
+                " applied to the entity"
+            ),
+        },
         "evidence": _EVIDENCE_SCHEMA,
         "probability": {
             "type": "number",
@@ -450,7 +457,7 @@ def _drafts(raw: Sequence[Any]) -> tuple[list[OperationDraft], list[OperationErr
             continue
         bad_text = [
             k
-            for k in ("ref", "rationale", "replacement")
+            for k in ("ref", "rationale", "notes", "replacement")
             if item.get(k) is not None and not isinstance(item.get(k), str)
         ]
         if bad_text:
@@ -465,6 +472,7 @@ def _drafts(raw: Sequence[Any]) -> tuple[list[OperationDraft], list[OperationErr
                 ref=item.get("ref"),
                 fields=item.get("fields") or {},
                 rationale=item.get("rationale"),
+                notes=item.get("notes"),
                 evidence=item.get("evidence") or [],
                 probability=item.get("probability"),
                 replacement=item.get("replacement"),
@@ -668,7 +676,7 @@ class GetProposalTool(_ProposalTool):
         " deletes name each other and none survives). A pending relationship-type delete"
         " still in use has blockers (see propose_changes). Each operation also has its"
         " base (the touched values when proposed; a delete's whole entity), rationale,"
-        " evidence and probability, and once decided applied_fields (a reviewer's edit),"
+        " notes, evidence and probability, and once decided applied_fields (a reviewer's edit),"
         " resolution (what happened to a delete's relationships) and reason. Empty"
         " values are left out. A large proposal leaves out base and evidence, keeps"
         " fields, and pages its operations: pass the offset its truncated note gives."
