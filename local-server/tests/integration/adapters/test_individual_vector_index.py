@@ -22,6 +22,7 @@ from sqlalchemy.orm import sessionmaker
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
+from tests.utils.datasets import SEED_DATASET_ID, add_seed_dataset  # noqa: E402
 from adapters.persistence.sqlite.individual_vector_index import (
     SqliteIndividualVectorIndex,
 )
@@ -37,6 +38,7 @@ POSTGRES = "aaaaaaaa-0000-0000-0000-000000000003"
 def _seed(factory, individuals):
     """individuals: list of (id, title, [class_ids])."""
     with factory() as session:
+        add_seed_dataset(session)
         session.add_all(
             [
                 OntologyEntity(id=CLASS_SW, node_type="class", title="System Software"),
@@ -44,7 +46,9 @@ def _seed(factory, individuals):
             ]
         )
         for ind_id, title, class_ids in individuals:
-            session.add(OntologyEntity(id=ind_id, node_type="individual", title=title))
+            session.add(
+                OntologyEntity(id=ind_id, node_type="individual", title=title, dataset_id=SEED_DATASET_ID)
+            )
         # No ORM relationship links these tables, so flush the entities before
         # their memberships to satisfy the foreign keys.
         session.flush()

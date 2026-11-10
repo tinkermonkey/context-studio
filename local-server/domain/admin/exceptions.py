@@ -30,18 +30,6 @@ class InvalidStateTransitionError(AdminError):
     pass
 
 
-class DatasetNotFoundError(AdminError):
-    """Raised when a dataset is not found."""
-
-    pass
-
-
-class ActiveDatasetError(AdminError):
-    """Raised when attempting to delete or modify the active dataset."""
-
-    pass
-
-
 class DemoDatasetNotFoundError(AdminError):
     """Raised when a requested demo dataset name is not registered."""
 

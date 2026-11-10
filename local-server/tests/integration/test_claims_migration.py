@@ -1,5 +1,5 @@
 """
-Integration test for migration f23c6661d381 (#1518): the claims table, against a
+Integration test for migration aa132e769944 (#1518): the claims table, against a
 real file-based SQLite database migrated with Alembic.
 """
 
@@ -10,8 +10,8 @@ from alembic.command import downgrade, upgrade
 from alembic.config import Config
 
 ALEMBIC_INI = str(Path(__file__).parent / "../../adapters/persistence/sqlite/alembic.ini")
-REVISION = "f23c6661d381"
-PREVIOUS_REVISION = "7512875103f3"
+REVISION = "aa132e769944"
+PREVIOUS_REVISION = "a61cfa4aa3d7"
 
 
 def _config(db_path: str) -> Config:

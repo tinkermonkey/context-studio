@@ -289,6 +289,38 @@ class TestRoutes:
         assert "async" not in done["output_summary"]["input_echo"]
         assert "run_async" not in done["output_summary"]["input_echo"]
 
+    def test_runs_started_through_the_api_record_it(self, client):
+        """A REST caller can't claim to be an MCP client (#1516)."""
+        run = client.post(
+            "/api/pipelines/no_op/run", json={"async": True, "requested_via": "mcp"}
+        ).json()
+        done = wait_for(
+            lambda: (
+                (r := client.get(f"/api/pipelines/runs/{run['id']}").json())["status"]
+                == "completed"
+                and r
+            )
+        )
+        assert done["output_summary"]["input_echo"]["requested_via"] == "api"
+
+        synchronous = client.post("/api/pipelines/no_op/run", json={"requested_via": "mcp"})
+        assert synchronous.json()["output_summary"]["input_echo"]["requested_via"] == "api"
+
+        batch = client.post("/api/pipelines/batches").json()
+        enqueued = client.post(
+            f"/api/pipelines/batches/{batch['id']}/runs",
+            json={"runs": [{"pipeline_type": "no_op", "input_data": {"requested_via": "mcp"}}]},
+        ).json()
+        batch_run_id = enqueued["run_ids"][0]
+        done = wait_for(
+            lambda: (
+                (r := client.get(f"/api/pipelines/runs/{batch_run_id}").json())["status"]
+                == "completed"
+                and r
+            )
+        )
+        assert done["output_summary"]["input_echo"]["requested_via"] == "api"
+
     def test_async_run_with_unknown_configuration_returns_404(self, client):
         response = client.post(
             "/api/pipelines/no_op/run", json={"async": True, "configuration_ref": "nope"}
@@ -393,6 +425,24 @@ class TestBatchCancelAndResume:
         assert (resumed.items_done, resumed.items_total, resumed.proposal_id) == (None, None, None)
         assert resumed.failure_reason is None
         assert repo.get(bare.id).status == PipelineRunStatus.FAILED
+
+    def test_a_resumed_mcp_run_records_the_api_as_its_caller(
+        self, client, executor, session_factory
+    ):
+        """Resuming over REST can't replay an MCP client's right to propose (#1516)."""
+        repo = PipelineRepository(session_factory)
+        run = executor.submit(
+            PipelineType.NO_OP, "default", "default", {"items": 0, "requested_via": "mcp"}
+        )
+        repo.update_failure_info(run.id, "boom")
+
+        response = client.post(f"/api/pipelines/batches/{run.batch_run_id}/resume")
+
+        assert response.json()["resumed_count"] == 1
+        # The executor isn't started, so the run waits with its input
+        claimed, input_data = repo.claim_next_pending()
+        assert claimed.id == run.id
+        assert input_data == {"items": 0, "requested_via": "api"}
 
 
 class TestStoredInput:

@@ -42,9 +42,6 @@ from adapters.web.schemas.admin import (
     ComponentStatusResponse,
     ConfigSectionUpdateRequest,
     DatabaseHealthResponse,
-    DatasetCreateRequest,
-    DatasetResponse,
-    DatasetUpdateRequest,
     DemoDatasetDescriptorResponse,
     DemoDatasetLoadResponse,
     McpConnectionResponse,
@@ -54,10 +51,8 @@ from adapters.web.schemas.admin import (
 )
 from domain.admin.demo_dataset_service import LoadDemoDataset
 from domain.admin.exceptions import (
-    ActiveDatasetError,
     AdminError,
     ConfigurationError,
-    DatasetNotFoundError,
     DemoDatasetAlreadyLoadedError,
     DemoDatasetMalformedError,
     DemoDatasetNotFoundError,
@@ -82,10 +77,7 @@ def _handle_admin_error(exc: Exception) -> tuple[int, str]:
     Returns:
         Tuple of (status_code, error_message)
     """
-    if isinstance(exc, DatasetNotFoundError):
-        logger.warning(f"Dataset not found: {exc}")
-        return (status.HTTP_404_NOT_FOUND, str(exc))
-    elif isinstance(exc, DemoDatasetNotFoundError):
+    if isinstance(exc, DemoDatasetNotFoundError):
         logger.warning(f"Demo dataset not found: {exc}")
         return (status.HTTP_404_NOT_FOUND, str(exc))
     elif isinstance(exc, DemoDatasetAlreadyLoadedError):
@@ -94,9 +86,6 @@ def _handle_admin_error(exc: Exception) -> tuple[int, str]:
     elif isinstance(exc, DemoDatasetMalformedError):
         logger.warning(f"Demo dataset malformed: {exc}")
         return (status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc))
-    elif isinstance(exc, ActiveDatasetError):
-        logger.warning(f"Active dataset error: {exc}")
-        return (status.HTTP_409_CONFLICT, str(exc))
     elif isinstance(exc, ConfigurationError):
         logger.warning(f"Configuration error: {exc}")
         return (status.HTTP_400_BAD_REQUEST, str(exc))
@@ -400,162 +389,6 @@ async def get_task(
     try:
         task = await run_sync_in_executor(service.get_task, task_id)
         return BackgroundTaskResponse.model_validate(task)
-    except Exception as exc:
-        status_code, message = _handle_admin_error(exc)
-        raise HTTPException(status_code=status_code, detail=message)
-
-
-@router.post("/datasets", response_model=DatasetResponse, status_code=status.HTTP_201_CREATED)
-async def create_dataset(
-    request: DatasetCreateRequest,
-    service: AdminService = Depends(get_admin_service),
-) -> DatasetResponse:
-    """
-    Create a new dataset.
-
-    Args:
-        request: DatasetCreateRequest with title, filename, optional description
-        service: AdminService from dependency injection
-
-    Returns:
-        Created DatasetResponse
-
-    Raises:
-        HTTPException: 400 if title is empty
-    """
-    try:
-        dataset = await run_sync_in_executor(
-            service.create_dataset,
-            request.title,
-            request.filename,
-            request.description,
-        )
-        return DatasetResponse.model_validate(dataset)
-    except Exception as exc:
-        status_code, message = _handle_admin_error(exc)
-        raise HTTPException(status_code=status_code, detail=message)
-
-
-@router.get("/datasets", response_model=list[DatasetResponse])
-async def list_datasets(
-    service: AdminService = Depends(get_admin_service),
-) -> list[DatasetResponse]:
-    """
-    List all datasets.
-
-    Returns:
-        List of all datasets
-    """
-    try:
-        datasets = await run_sync_in_executor(service.list_datasets)
-        return [DatasetResponse.model_validate(d) for d in datasets]
-    except Exception as exc:
-        status_code, message = _handle_admin_error(exc)
-        raise HTTPException(status_code=status_code, detail=message)
-
-
-@router.get("/datasets/{dataset_id}", response_model=DatasetResponse)
-async def get_dataset(
-    dataset_id: str,
-    service: AdminService = Depends(get_admin_service),
-) -> DatasetResponse:
-    """
-    Get a dataset by ID.
-
-    Args:
-        dataset_id: The dataset ID
-        service: AdminService from dependency injection
-
-    Returns:
-        DatasetResponse
-
-    Raises:
-        HTTPException: 404 if not found
-    """
-    try:
-        dataset = await run_sync_in_executor(service.get_dataset, dataset_id)
-        return DatasetResponse.model_validate(dataset)
-    except Exception as exc:
-        status_code, message = _handle_admin_error(exc)
-        raise HTTPException(status_code=status_code, detail=message)
-
-
-@router.put("/datasets/{dataset_id}", response_model=DatasetResponse)
-async def update_dataset(
-    dataset_id: str,
-    request: DatasetUpdateRequest,
-    service: AdminService = Depends(get_admin_service),
-) -> DatasetResponse:
-    """
-    Update a dataset's metadata.
-
-    Args:
-        dataset_id: The dataset ID
-        request: DatasetUpdateRequest with optional fields to update
-        service: AdminService from dependency injection
-
-    Returns:
-        Updated DatasetResponse
-
-    Raises:
-        HTTPException: 400 if invalid, 404 if not found
-    """
-    try:
-        dataset = await run_sync_in_executor(
-            service.update_dataset,
-            dataset_id,
-            request.title,
-            request.description,
-        )
-        return DatasetResponse.model_validate(dataset)
-    except Exception as exc:
-        status_code, message = _handle_admin_error(exc)
-        raise HTTPException(status_code=status_code, detail=message)
-
-
-@router.delete("/datasets/{dataset_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_dataset(
-    dataset_id: str,
-    service: AdminService = Depends(get_admin_service),
-) -> None:
-    """
-    Delete a dataset.
-
-    Args:
-        dataset_id: The dataset ID
-        service: AdminService from dependency injection
-
-    Raises:
-        HTTPException: 404 if not found, 409 if it is the active dataset
-    """
-    try:
-        await run_sync_in_executor(service.delete_dataset, dataset_id)
-    except Exception as exc:
-        status_code, message = _handle_admin_error(exc)
-        raise HTTPException(status_code=status_code, detail=message)
-
-
-@router.post("/datasets/{dataset_id}/activate", response_model=DatasetResponse)
-async def activate_dataset(
-    dataset_id: str,
-    service: AdminService = Depends(get_admin_service),
-) -> DatasetResponse:
-    """
-    Activate a dataset as the current workspace.
-
-    Args:
-        dataset_id: The dataset ID to activate
-        service: AdminService from dependency injection
-
-    Returns:
-        Updated DatasetResponse with is_active=true
-
-    Raises:
-        HTTPException: 404 if not found
-    """
-    try:
-        dataset = await run_sync_in_executor(service.activate_dataset, dataset_id)
-        return DatasetResponse.model_validate(dataset)
     except Exception as exc:
         status_code, message = _handle_admin_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

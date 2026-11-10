@@ -43,6 +43,7 @@ from domain.versioning.revert_service import RevertService
 from tests.fakes.fake_approval_policy_repository import FakeApprovalPolicyRepository
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
+from tests.utils.datasets import save_in_dataset
 
 TAXONOMY_ID = "a0000000-0000-4000-8000-000000000001"
 API_SCHEME_ID = "a0000000-0000-4000-8000-000000000002"
@@ -129,8 +130,7 @@ def dr_workspace():
             (LIST_CLASSES_ID, "List Classes", OPERATION_ID),
             (HEALTH_MONITORING_ID, "Health Monitoring", SERVICE_CLASS_ID),
         ):
-            repository.save_individual(
-                Individual(id=individual_id, class_ids=[class_id], title=title)
+            save_in_dataset(repository, Individual(id=individual_id, class_ids=[class_id], title=title)
             )
         repository.save_relationship(
             Relationship(

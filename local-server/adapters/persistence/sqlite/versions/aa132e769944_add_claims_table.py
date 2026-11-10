@@ -3,9 +3,9 @@
 Leaves out the pre-existing index drift autogenerate reports on
 extraction_results and individual_classes (as earlier migrations do).
 
-Revision ID: f23c6661d381
-Revises: 7512875103f3
-Create Date: 2026-11-09 19:53:00.985464
+Revision ID: aa132e769944
+Revises: a61cfa4aa3d7
+Create Date: 2026-11-09 20:06:26.200380
 
 """
 from alembic import op
@@ -13,8 +13,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'f23c6661d381'
-down_revision = '7512875103f3'
+revision = 'aa132e769944'
+down_revision = 'a61cfa4aa3d7'
 branch_labels = None
 depends_on = None
 
@@ -35,8 +35,8 @@ def upgrade() -> None:
     sa.Column('unresolved_refs', sa.JSON(), nullable=False),
     sa.Column('proposed_change', sa.Text(), nullable=True),
     sa.Column('source_run_id', sa.String(length=36), nullable=True),
-    sa.Column('triage', sa.JSON(), nullable=True),
-    sa.Column('verdict', sa.JSON(), nullable=True),
+    sa.Column('triage', sa.JSON(none_as_null=True), nullable=True),
+    sa.Column('verdict', sa.JSON(none_as_null=True), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
     sa.ForeignKeyConstraint(['taxonomy_id'], ['ontology_entities.id'], ondelete='CASCADE'),

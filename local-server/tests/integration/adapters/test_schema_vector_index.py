@@ -17,6 +17,7 @@ from sqlalchemy.orm import sessionmaker
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 import adapters.persistence.sqlite.schema_vector_index as svi_module
+from tests.utils.datasets import SEED_DATASET_ID, add_seed_dataset  # noqa: E402
 from adapters.persistence.sqlite.mappers import _serialize_embedding
 from adapters.persistence.sqlite.models import Base, OntologyEntity
 from adapters.persistence.sqlite.models import Relationship as RelationshipORM
@@ -295,10 +296,12 @@ def test_individual_kind_matches_by_title():
         Base.metadata.create_all(engine)
         factory = sessionmaker(bind=engine)
         with factory() as session:
+            add_seed_dataset(session)
             session.add(
                 OntologyEntity(
                     id=IND_FIDO,
                     node_type="individual",
+                    dataset_id=SEED_DATASET_ID,
                     title="Fido",
                     description="A friendly dog",
                 )
@@ -334,6 +337,7 @@ def test_individual_excluded_when_kind_not_requested():
         Base.metadata.create_all(engine)
         factory = sessionmaker(bind=engine)
         with factory() as session:
+            add_seed_dataset(session)
             session.add_all(
                 [
                     OntologyEntity(
@@ -345,6 +349,7 @@ def test_individual_excluded_when_kind_not_requested():
                     OntologyEntity(
                         id=IND_FIDO,
                         node_type="individual",
+                        dataset_id=SEED_DATASET_ID,
                         title="Microservice",
                         description="An independently deployable service",
                     ),

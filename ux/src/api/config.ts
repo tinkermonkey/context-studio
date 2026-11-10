@@ -26,8 +26,6 @@ export const QUERY_KEYS = {
   mcpConnection: ["mcp-connection"] as const,
   backgroundTasks: ["background-tasks"] as const,
   statsTrends: (days?: number) => ["stats-trends", days] as const,
-  datasets: () => ["datasets"] as const,
-  dataset: (id: string) => ["datasets", id] as const,
   demoDatasets: ["demo-datasets"] as const,
   // Ontology
   // Root prefixes for invalidation — a 1-element key partial-matches every
