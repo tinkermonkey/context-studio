@@ -36,11 +36,13 @@ class FakeClaimRepository:
             stored.append(saved)
         return stored
 
-    def delete_for_note(self, taxonomy_id: str, note_ref: str) -> int:
+    def delete_for_note(
+        self, taxonomy_id: str, note_ref: str, keep_keys: Sequence[str] = ()
+    ) -> int:
         doomed = [
             c.id
             for c in self.claims.values()
-            if c.taxonomy_id == taxonomy_id and c.note_ref == note_ref
+            if c.taxonomy_id == taxonomy_id and c.note_ref == note_ref and c.key not in keep_keys
         ]
         for claim_id in doomed:
             del self.claims[claim_id]

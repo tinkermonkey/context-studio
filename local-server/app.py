@@ -160,6 +160,7 @@ from domain.pipelines.individual_extraction import register_individual_extractio
 from domain.pipelines.individual_extraction.apply_service import (
     IndividualExtractionApplyService,
 )
+from domain.pipelines.notes_to_claims import register_notes_to_claims
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -503,6 +504,12 @@ async def lifespan(app: FastAPI):
             config_registry=config_registry,
         )
         logger.info("Claim triage pipeline registered")
+
+        register_notes_to_claims(
+            impl_registry=implementation_registry,
+            config_registry=config_registry,
+        )
+        logger.info("Notes-to-claims pipeline registered")
 
         # Load user-created pipeline configurations from DB into the in-memory registry
         try:

@@ -125,13 +125,16 @@ class SQLiteClaimRepository:
             }
             return [_to_domain(rows[i]) for i in ids]
 
-    def delete_for_note(self, taxonomy_id: str, note_ref: str) -> int:
+    def delete_for_note(
+        self, taxonomy_id: str, note_ref: str, keep_keys: Sequence[str] = ()
+    ) -> int:
         with self._session_factory() as session:
-            deleted = (
-                session.query(ClaimRecord)
-                .filter_by(taxonomy_id=str(taxonomy_id), note_ref=note_ref)
-                .delete(synchronize_session=False)
+            query = session.query(ClaimRecord).filter_by(
+                taxonomy_id=str(taxonomy_id), note_ref=note_ref
             )
+            if keep_keys:
+                query = query.filter(ClaimRecord.key.notin_(list(keep_keys)))
+            deleted = query.delete(synchronize_session=False)
             session.commit()
             return int(deleted)
 

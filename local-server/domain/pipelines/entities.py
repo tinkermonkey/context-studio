@@ -53,6 +53,7 @@ class PipelineType(str, Enum):
     SCHEMA_NODE_CONNECTION_REFINEMENT = "schema_node_connection_refinement"
     SCHEMA_RELATIONSHIP_REFLECTION = "schema_relationship_reflection"
     CLAIM_TRIAGE = "claim_triage"
+    NOTES_TO_CLAIMS = "notes_to_claims"
 
 
 @dataclass(frozen=True)
@@ -429,3 +430,15 @@ class ClaimTriageRun(PipelineRun):
     """
 
     pipeline_type: PipelineType = field(default=PipelineType.CLAIM_TRIAGE, init=False)
+
+
+@dataclass(frozen=True)
+class NotesToClaimsRun(PipelineRun):
+    """
+    Domain entity for notes-to-claims runs: maintainer and reviewer notes split
+    into atomic claims, stored as claims (no proposal).
+
+    Per-type fields: (none)
+    """
+
+    pipeline_type: PipelineType = field(default=PipelineType.NOTES_TO_CLAIMS, init=False)

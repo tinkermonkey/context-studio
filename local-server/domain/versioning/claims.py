@@ -251,6 +251,34 @@ class ClaimService:
         ]
         return self._claims.upsert(resolved)
 
+    def delete_note_claims(
+        self, taxonomy_id: str, note_ref: str, keep_keys: Sequence[str] = ()
+    ) -> int:
+        """
+        Delete a note's claims, except those whose keys are in keep_keys.
+
+        A re-split submits its claims first and then deletes the keys it no
+        longer produced, so a claim it keeps (same key, same text) keeps its
+        triage and verdict.
+
+        Returns:
+            How many claims were deleted
+
+        Raises:
+            EntityNotFoundError: If the taxonomy doesn't exist
+        """
+        self._require_taxonomy(taxonomy_id)
+        return self._claims.delete_for_note(taxonomy_id, note_ref, keep_keys)
+
+    def in_taxonomy(self, taxonomy_id: str, ids: set[str]) -> set[str]:
+        """
+        The ids a claim of this taxonomy may name: the taxonomy itself, or one
+        of its schemes, classes, attribute definitions, or property definitions
+        (a property definition belongs to the taxonomy of a class it joins; one
+        joining none is shared).
+        """
+        return self._in_taxonomy(taxonomy_id, ids)
+
     def get(self, claim_id: str) -> Claim:
         """
         Raises:

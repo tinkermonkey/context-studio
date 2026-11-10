@@ -192,8 +192,10 @@ class ClaimRepository(Protocol):
         """
         ...
 
-    def delete_for_note(self, taxonomy_id: str, note_ref: str) -> int:
-        """Delete a note's claims; returns how many."""
+    def delete_for_note(
+        self, taxonomy_id: str, note_ref: str, keep_keys: Sequence[str] = ()
+    ) -> int:
+        """Delete a note's claims, except those with keep_keys; returns how many."""
         ...
 
     def get(self, claim_id: str) -> Optional[Claim]:

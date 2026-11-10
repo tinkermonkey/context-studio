@@ -1497,6 +1497,33 @@ class ClaimTriageRun(PipelineRun):
         return f"<ClaimTriageRun(id={self.id}, status={self.status})>"
 
 
+class NotesToClaimsRun(PipelineRun):
+    """
+    Notes-to-claims runs (notes split into atomic claims, stored as claims).
+
+    Uses joined-table inheritance from PipelineRun with discriminator
+    run_type='notes_to_claims'.
+
+    Per-type fields: (none)
+    """
+
+    __tablename__ = "notes_to_claims_runs"
+
+    id = Column(
+        String(36),
+        ForeignKey("pipeline_runs.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+
+    __mapper_args__: Dict[str, Any] = {
+        "polymorphic_identity": "notes_to_claims",
+    }
+
+    def __repr__(self) -> str:
+        return f"<NotesToClaimsRun(id={self.id}, status={self.status})>"
+
+
 class ChangeProposalRun(BatchRun):
     """
     A change proposal: ontology changes proposed by an agent, pipeline, bundle
