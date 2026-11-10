@@ -17,6 +17,7 @@ import { Route as AppVersioningRouteImport } from './routes/app/versioning'
 import { Route as AppSettingsRouteImport } from './routes/app/settings'
 import { Route as AppProposalsRouteImport } from './routes/app/proposals'
 import { Route as AppContactSheetRouteImport } from './routes/app/contact-sheet'
+import { Route as AppClaimsRouteImport } from './routes/app/claims'
 import { Route as AppPipelinesIndexRouteImport } from './routes/app/pipelines/index'
 import { Route as AppGraphIndexRouteImport } from './routes/app/graph/index'
 import { Route as AppSchemaTaxonomiesRouteImport } from './routes/app/schema/taxonomies'
@@ -78,6 +79,11 @@ const AppProposalsRoute = AppProposalsRouteImport.update({
 const AppContactSheetRoute = AppContactSheetRouteImport.update({
   id: '/contact-sheet',
   path: '/contact-sheet',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppClaimsRoute = AppClaimsRouteImport.update({
+  id: '/claims',
+  path: '/claims',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPipelinesIndexRoute = AppPipelinesIndexRouteImport.update({
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/welcome': typeof WelcomeRoute
+  '/app/claims': typeof AppClaimsRoute
   '/app/contact-sheet': typeof AppContactSheetRoute
   '/app/proposals': typeof AppProposalsRoute
   '/app/settings': typeof AppSettingsRoute
@@ -229,6 +236,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/welcome': typeof WelcomeRoute
+  '/app/claims': typeof AppClaimsRoute
   '/app/contact-sheet': typeof AppContactSheetRoute
   '/app/proposals': typeof AppProposalsRoute
   '/app/settings': typeof AppSettingsRoute
@@ -261,6 +269,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/welcome': typeof WelcomeRoute
+  '/app/claims': typeof AppClaimsRoute
   '/app/contact-sheet': typeof AppContactSheetRoute
   '/app/proposals': typeof AppProposalsRoute
   '/app/settings': typeof AppSettingsRoute
@@ -295,6 +304,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/welcome'
+    | '/app/claims'
     | '/app/contact-sheet'
     | '/app/proposals'
     | '/app/settings'
@@ -326,6 +336,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/welcome'
+    | '/app/claims'
     | '/app/contact-sheet'
     | '/app/proposals'
     | '/app/settings'
@@ -357,6 +368,7 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/welcome'
+    | '/app/claims'
     | '/app/contact-sheet'
     | '/app/proposals'
     | '/app/settings'
@@ -448,6 +460,13 @@ declare module '@tanstack/react-router' {
       path: '/contact-sheet'
       fullPath: '/app/contact-sheet'
       preLoaderRoute: typeof AppContactSheetRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/claims': {
+      id: '/app/claims'
+      path: '/claims'
+      fullPath: '/app/claims'
+      preLoaderRoute: typeof AppClaimsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/pipelines/': {
@@ -619,6 +638,7 @@ const AppSchemaSchemesRouteWithChildren =
   AppSchemaSchemesRoute._addFileChildren(AppSchemaSchemesRouteChildren)
 
 interface AppRouteChildren {
+  AppClaimsRoute: typeof AppClaimsRoute
   AppContactSheetRoute: typeof AppContactSheetRoute
   AppProposalsRoute: typeof AppProposalsRoute
   AppSettingsRoute: typeof AppSettingsRoute
@@ -648,6 +668,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppClaimsRoute: AppClaimsRoute,
   AppContactSheetRoute: AppContactSheetRoute,
   AppProposalsRoute: AppProposalsRoute,
   AppSettingsRoute: AppSettingsRoute,

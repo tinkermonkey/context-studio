@@ -5,7 +5,12 @@
  * revoked in the same tick.
  */
 export function downloadJson(filename: string, data: unknown): void {
-  const blob = new Blob([JSON.stringify(data, null, 2) + "\n"], { type: "application/json" });
+  downloadText(filename, JSON.stringify(data, null, 2) + "\n", "application/json");
+}
+
+/** Save `text` as a file of this MIME type through the browser's download (see downloadJson). */
+export function downloadText(filename: string, text: string, type: string): void {
+  const blob = new Blob([text], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;

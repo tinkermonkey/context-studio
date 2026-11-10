@@ -136,6 +136,15 @@ describe("app navigation — proposals", () => {
   });
 });
 
+describe("app navigation — claims", () => {
+  it("maps the claims page to its sidebar item, breadcrumb and palette action", () => {
+    expect(SIDEBAR_PATH_MAP["claims"]).toBe("/app/claims");
+    expect(getActiveItemId("/app/claims")).toBe("claims");
+    expect(getBreadcrumbLabels("/app/claims")).toEqual(["Claims"]);
+    expect(NAV_ACTIONS.find((a) => a.id === "nav-claims")).toMatchObject({ to: "/app/claims" });
+  });
+});
+
 describe("app navigation — datasets", () => {
   it("labels the Datasets page and keeps Data selected in the sidebar", () => {
     expect(getBreadcrumbLabels("/app/data/datasets")).toEqual(["Data", "Datasets"]);
