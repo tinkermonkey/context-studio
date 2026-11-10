@@ -5026,7 +5026,7 @@
           "reference"
         ],
         "summary": "Search References",
-        "description": "Search for references across multiple sources.\n\nAggregates results from all available sources (or specified sources).\nSources that fail or are unavailable are tracked but don't block the response.\n\nArgs:\n    request: ReferenceSearchRequest with search parameters\n    sources: List of reference sources from dependency injection\n\nReturns:\n    ReferenceSearchResponseSchema with aggregated results from all sources\n\nRaises:\n    HTTPException: 400 if search term is invalid, 500 if no sources configured",
+        "description": "Search for references across multiple sources.\n\nAggregates results from all sources (or the requested ones), queried at once.\nThere is no availability pre-check: each call goes through the reference proxy,\nso a repeated search is a cache hit. A source that raises or doesn't answer\nwithin SOURCE_QUERY_TIMEOUT_SECONDS is listed as failed and doesn't hold the\nresponse. The source adapters return no results on network errors, so a source\nthat fails fast is listed as searched with no results.\n\nArgs:\n    request: ReferenceSearchRequest with search parameters\n    sources: List of reference sources from dependency injection\n\nReturns:\n    ReferenceSearchResponseSchema with aggregated results from all sources\n\nRaises:\n    HTTPException: 400 if search term is invalid, 500 if no sources configured",
         "operationId": "search_references_api_reference_search_post",
         "requestBody": {
           "content": {
@@ -5068,7 +5068,7 @@
           "reference"
         ],
         "summary": "Get Reference Relations",
-        "description": "Get relationships for a reference URI across multiple sources.\n\nAggregates relationships from all available sources (or specified sources).\nSources that fail or are unavailable are tracked but don't block the response.\n\nArgs:\n    request: ReferenceRelationsRequest with URI to query\n    sources: List of reference sources from dependency injection\n\nReturns:\n    ReferenceRelationsResponseSchema with aggregated relationships\n\nRaises:\n    HTTPException: 400 if URI is invalid, 500 if no sources configured",
+        "description": "Get relationships for a reference URI across multiple sources.\n\nAggregates relationships from all sources (or the requested ones), queried at\nonce. As with search, there is no availability pre-check; a source that raises or\ndoesn't answer within SOURCE_QUERY_TIMEOUT_SECONDS is listed as failed.\n\nArgs:\n    request: ReferenceRelationsRequest with URI to query\n    sources: List of reference sources from dependency injection\n\nReturns:\n    ReferenceRelationsResponseSchema with aggregated relationships\n\nRaises:\n    HTTPException: 400 if URI is invalid, 500 if no sources configured",
         "operationId": "get_reference_relations_api_reference_relations_post",
         "requestBody": {
           "content": {
@@ -8767,6 +8767,18 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Attributes"
+          },
+          "dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Id",
+            "description": "The relationship's dataset: its source individual's"
           }
         },
         "type": "object",
@@ -10378,6 +10390,59 @@
         "title": "DatabaseHealthResponse",
         "description": "Response containing database health status details."
       },
+      "DatasetImpactResponse": {
+        "properties": {
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          },
+          "identifier": {
+            "type": "string",
+            "title": "Identifier"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "relationships_moved": {
+            "type": "integer",
+            "title": "Relationships Moved",
+            "description": "Moved to the delete's replacement type",
+            "default": 0
+          },
+          "relationships_dropped": {
+            "type": "integer",
+            "title": "Relationships Dropped",
+            "default": 0
+          },
+          "individuals_untyped": {
+            "type": "integer",
+            "title": "Individuals Untyped",
+            "description": "Lose the deleted class, keep others",
+            "default": 0
+          },
+          "individuals_dropped": {
+            "type": "integer",
+            "title": "Individuals Dropped",
+            "description": "The deleted class was their only one",
+            "default": 0
+          },
+          "values_dropped": {
+            "type": "integer",
+            "title": "Values Dropped",
+            "description": "Values of the deleted attribute",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_id",
+          "identifier",
+          "title"
+        ],
+        "title": "DatasetImpactResponse",
+        "description": "What a schema operation will do to the data of a dataset that yields to the\nschema. Information only: such data never blocks the operation."
+      },
       "DecisionKind": {
         "type": "string",
         "enum": [
@@ -10902,6 +10967,18 @@
             },
             "type": "array",
             "title": "Class Titles"
+          },
+          "dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Id",
+            "description": "An individual end's dataset (null for a class end)"
           }
         },
         "type": "object",
@@ -14940,6 +15017,14 @@
             "title": "Stale",
             "description": "Pending or failed, and its target is gone or a field it touches changed since proposed; applying it needs force_stale",
             "default": false
+          },
+          "dataset_impact": {
+            "items": {
+              "$ref": "#/components/schemas/DatasetImpactResponse"
+            },
+            "type": "array",
+            "title": "Dataset Impact",
+            "description": "A pending or failed schema operation (relationship-type delete or retarget, class or attribute delete): what it will do to the data of each dataset that yields to the schema. Information only; that data never blocks it"
           },
           "type_usage": {
             "anyOf": [
