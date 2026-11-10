@@ -135,6 +135,25 @@ class PipelineTypeRegistry:
                 "reflections": "list[dict] — ranked answers per relationship type",
             },
         ),
+        PipelineType.CLAIM_TRIAGE: PipelineTypeDefinition(
+            pipeline_type=PipelineType.CLAIM_TRIAGE,
+            description=(
+                "Ask a decision model about each claim (validity, category, severity, fix"
+                " scope, whether a pending definition addresses it) and save the answers"
+            ),
+            input_contract={
+                "taxonomy_id": "str (required) — taxonomy whose claims to triage",
+                "scope": (
+                    "dict | None — {keys: [...]}, {note_ref}, {subject_ids: [...]},"
+                    " {concept_scheme_id}, {untriaged: true}; None means untriaged claims"
+                ),
+            },
+            output_contract={
+                "claims": "int — claims triaged",
+                "validity": "dict — triaged claims per validity",
+                "errors": "list[str] — claims the decision model didn't answer",
+            },
+        ),
     }
 
     @classmethod

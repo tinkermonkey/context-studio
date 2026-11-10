@@ -151,6 +151,7 @@ from domain.ontology.events import (
 # Import domain services
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
+from domain.pipelines.claim_triage import register_claim_triage
 from domain.pipelines.individual_extraction import register_individual_extraction
 from domain.pipelines.individual_extraction.apply_service import (
     IndividualExtractionApplyService,
@@ -492,6 +493,12 @@ async def lifespan(app: FastAPI):
             config_registry=config_registry,
         )
         logger.info("Schema relationship reflection pipeline registered")
+
+        register_claim_triage(
+            impl_registry=implementation_registry,
+            config_registry=config_registry,
+        )
+        logger.info("Claim triage pipeline registered")
 
         # Load user-created pipeline configurations from DB into the in-memory registry
         try:
