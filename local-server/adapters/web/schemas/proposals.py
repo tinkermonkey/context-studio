@@ -18,6 +18,7 @@ from domain.pipelines.schema_relationship_reflection.drafts import (
 from domain.versioning.approval_policy import ApprovalPolicy
 from domain.versioning.gold import DecisionKind, ProposalDecision
 from domain.versioning.in_use import DeleteBlockers, PairMatch, ReplacementCheck
+from domain.versioning.yielding import DatasetImpact
 from domain.versioning.proposals import (
     ChangeProposal,
     ChangeScope,
@@ -205,6 +206,9 @@ class EdgeEndResponse(BaseModel):
         default_factory=list, description="An individual's classes, or a class end itself"
     )
     class_titles: list[str] = Field(default_factory=list)
+    dataset_id: Optional[str] = Field(
+        None, description="An individual end's dataset (null for a class end)"
+    )
 
 
 class BlockingEdgeResponse(BaseModel):
@@ -216,6 +220,27 @@ class BlockingEdgeResponse(BaseModel):
     source: EdgeEndResponse
     target: EdgeEndResponse
     attributes: dict[str, Any] = Field(default_factory=dict)
+    dataset_id: Optional[str] = Field(
+        None, description="The relationship's dataset: its source individual's"
+    )
+
+
+class DatasetImpactResponse(BaseModel):
+    """
+    What a schema operation will do to the data of a dataset that yields to the
+    schema. Information only: such data never blocks the operation.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    dataset_id: str
+    identifier: str
+    title: str
+    relationships_moved: int = Field(0, description="Moved to the delete's replacement type")
+    relationships_dropped: int = 0
+    individuals_untyped: int = Field(0, description="Lose the deleted class, keep others")
+    individuals_dropped: int = Field(0, description="The deleted class was their only one")
+    values_dropped: int = Field(0, description="Values of the deleted attribute")
 
 
 class ReplacementTypeResponse(BaseModel):
@@ -379,8 +404,7 @@ class ReflectionResponse(BaseModel):
 
     plan_kind: str = Field(
         ...,
-        description="remove-duplicate, rename-predicate, reverse, retarget, compound or "
-        "conflict",
+        description="remove-duplicate, rename-predicate, reverse, retarget, compound or conflict",
     )
     p: Optional[float] = Field(None, description="The minimum probability of the change")
     current: Optional[ReflectionTripleResponse] = Field(
@@ -458,6 +482,12 @@ class ProposedOperationResponse(BaseModel):
         description="Pending or failed, and its target is gone or a field it touches "
         "changed since proposed; applying it needs force_stale",
     )
+    dataset_impact: list[DatasetImpactResponse] = Field(
+        default_factory=list,
+        description="A pending or failed schema operation (relationship-type delete or "
+        "retarget, class or attribute delete): what it will do to the data of each dataset "
+        "that yields to the schema. Information only; that data never blocks it",
+    )
     type_usage: Optional[DeleteBlockersResponse] = Field(
         None,
         description="A pending or failed relationship-type update that keeps its pair (a "
@@ -516,7 +546,7 @@ class ChangeProposalResponse(BaseModel):
     landed: Optional[LandingResponse] = Field(
         None,
         description=(
-            "Set once the client landed the decided proposal in its source; null while" " unlanded"
+            "Set once the client landed the decided proposal in its source; null while unlanded"
         ),
     )
     dry_run: bool = Field(
@@ -540,6 +570,7 @@ class ChangeProposalResponse(BaseModel):
         replacement_checks: Optional[dict[str, ReplacementCheck]] = None,
         auto_apply_ids: Optional[Collection[str]] = None,
         type_usage: Optional[dict[str, DeleteBlockers]] = None,
+        dataset_impacts: Optional[dict[str, list[DatasetImpact]]] = None,
     ) -> "ChangeProposalResponse":
         """
         Build the response, flagging the operations in stale_ids, with their blockers.
@@ -549,6 +580,7 @@ class ChangeProposalResponse(BaseModel):
                 ProposalService.auto_apply_operation_ids); given, the response
                 is a dry run and each operation says whether it would auto-apply
             type_usage: See ProposalService.type_usage
+            dataset_impacts: See ProposalService.dataset_impacts
         """
         blockers = blockers or {}
         checks = replacement_checks or {}
@@ -571,6 +603,7 @@ class ChangeProposalResponse(BaseModel):
                     blockers.get(o.id),
                     checks.get(o.id),
                     (type_usage or {}).get(o.id),
+                    (dataset_impacts or {}).get(o.id, []),
                 )
                 for o in proposal.operations
             ],
@@ -589,6 +622,7 @@ def _operation(
     blockers: Optional[DeleteBlockers],
     check: Optional[ReplacementCheck],
     usage: Optional[DeleteBlockers] = None,
+    impacts: Collection[DatasetImpact] = (),
 ) -> ProposedOperationResponse:
     response = ProposedOperationResponse.model_validate(operation)
     response.stale = stale
@@ -598,6 +632,7 @@ def _operation(
         response.replacement_check = ReplacementCheckResponse.model_validate(check)
     if usage is not None:
         response.type_usage = DeleteBlockersResponse.model_validate(usage)
+    response.dataset_impact = [DatasetImpactResponse.model_validate(i) for i in impacts]
     response.reflection = _reflection(operation)
     return response
 

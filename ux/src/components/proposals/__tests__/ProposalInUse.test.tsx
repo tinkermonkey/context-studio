@@ -402,3 +402,38 @@ describe("revert after a resolved delete", () => {
     );
   });
 });
+
+describe("data that yields to the schema", () => {
+  it("shows what the change does to it, as information beside the blockers", async () => {
+    Object.assign(blocked(), {
+      dataset_impact: [
+        {
+          dataset_id: "ds-cs",
+          identifier: "context-studio",
+          title: "Context Studio",
+          relationships_moved: 12,
+          relationships_dropped: 3,
+          individuals_untyped: 0,
+          individuals_dropped: 0,
+          values_dropped: 0,
+        },
+      ],
+    });
+    renderPage("op-delete");
+
+    const impact = await screen.findByTestId("operation-dataset-impact");
+    expect(impact).toHaveTextContent("follows this change, without blocking it");
+    expect(within(impact).getByTestId("operation-dataset-impact-context-studio")).toHaveTextContent(
+      "context-studio: 12 relationships will move, 3 relationships will be dropped",
+    );
+    // It never replaces the blockers of the other data.
+    expect(screen.getByTestId("operation-in-use")).toBeInTheDocument();
+  });
+
+  it("shows nothing when no yielding data is touched", async () => {
+    renderPage("op-delete");
+
+    await screen.findByTestId("operation-in-use");
+    expect(screen.queryByTestId("operation-dataset-impact")).not.toBeInTheDocument();
+  });
+});

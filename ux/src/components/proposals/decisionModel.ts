@@ -20,6 +20,29 @@ export type BlockingEdge = components["schemas"]["BlockingEdgeResponse"];
 export type ReplacementType = components["schemas"]["ReplacementTypeResponse"];
 export type Resolution = components["schemas"]["InUseResolutionRequest"];
 export type Resolutions = Record<string, Resolution>;
+export type DatasetImpact = components["schemas"]["DatasetImpactResponse"];
+
+// ==================== Data that yields to the schema ====================
+
+function counted(n: number, noun: string, verb: string): string | null {
+  if (!n) return null;
+  return `${n} ${noun}${n === 1 ? "" : "s"} will ${verb}`;
+}
+
+/**
+ * What a schema operation does to a dataset that yields to the schema, e.g.
+ * "context-studio: 12 relationships will move, 3 relationships will be dropped".
+ */
+export function datasetImpactText(impact: DatasetImpact): string {
+  const parts = [
+    counted(impact.relationships_moved ?? 0, "relationship", "move"),
+    counted(impact.relationships_dropped ?? 0, "relationship", "be dropped"),
+    counted(impact.individuals_untyped ?? 0, "individual", "lose the class"),
+    counted(impact.individuals_dropped ?? 0, "individual", "be dropped"),
+    counted(impact.values_dropped ?? 0, "value", "be dropped"),
+  ].filter(Boolean);
+  return `${impact.identifier}: ${parts.join(", ")}`;
+}
 
 // ==================== Who can decide ====================
 

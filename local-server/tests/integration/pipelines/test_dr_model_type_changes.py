@@ -319,8 +319,16 @@ def test_the_export_carries_the_records_as_drs_change_actions(parts):
     ]
 
 
+def _model_blocks(repo):
+    """Make the model's dataset an ordinary one, which blocks schema operations."""
+    for dataset in repo.list_datasets():
+        dataset.yields_to_schema = False
+        repo.save_dataset(dataset)
+
+
 def test_an_in_use_retarget_waits_for_a_resolution(parts):
     repo = parts.repo
+    _model_blocks(repo)
     retargeted = prop_by_dr_id(repo, RETARGETED)
     before = edges(repo, retargeted)
     proposal = propose_edits(parts, "Retarget", retargeted)
@@ -358,3 +366,57 @@ def test_a_retarget_that_moved_its_relationships_exports_like_a_moved_delete(par
         ("delete", "cs:retarget", RETARGETED, REVERSED_TWIN, True),
         ("create", "cs:retarget", AFTER_RETARGET, AFTER_RETARGET, False),
     ]
+
+
+def test_the_sample_model_yields_to_a_retarget_and_a_revert_restores_it(parts):
+    """#1485: the model's dataset yields, so the retarget needs no resolution."""
+    repo = parts.repo
+    retargeted = prop_by_dr_id(repo, RETARGETED)
+    before = edges(repo, retargeted)
+    proposal = propose_edits(parts, "Retarget", retargeted)
+    (op,) = proposal.operations
+    edit = {"range_class_id": class_by_dr_id(repo, "application.applicationfunction").id}
+
+    (applied,) = parts.proposals.apply(proposal.id, [op.id], edits={op.id: edit}).operations
+
+    assert applied.status is OperationStatus.APPLIED, applied.reason
+    assert applied.resolution is None
+    assert edges(repo, retargeted) == set()
+
+    parts.proposals.revert(proposal.id)
+
+    assert edges(repo, retargeted) == before
+
+
+def test_the_sample_model_follows_a_delete_to_its_replacement(parts):
+    """#1485: review shows the sample's impact; its relationships move, swapped, and come back."""
+    repo = parts.repo
+    deleted, twin = prop_by_dr_id(repo, RETARGETED), prop_by_dr_id(repo, REVERSED_TWIN)
+    moved = edges(repo, deleted)
+    taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    proposal = parts.proposals.propose(
+        taxonomy.id,
+        "Retire the event triggers",
+        [
+            OperationDraft(
+                seq=1, op="delete", kind="property", target_id=deleted.id, replacement=twin.id
+            )
+        ],
+        ProposalSource.MCP,
+    )
+    (op,) = proposal.operations
+
+    assert parts.proposals.in_use_blockers(proposal) == {}
+    [impact] = parts.proposals.dataset_impacts(proposal)[op.id]
+    assert (impact.identifier, impact.relationships_moved) == ("context-studio", len(moved))
+
+    (applied,) = parts.proposals.apply(proposal.id, [op.id]).operations
+
+    assert applied.status is OperationStatus.APPLIED, applied.reason
+    assert applied.resolution is None
+    assert repo.get_property_definition(deleted.id) is None
+    assert {(t, s) for _, s, t, *_ in moved} <= {(s, t) for _, s, t, *_ in edges(repo, twin)}
+
+    parts.proposals.revert(proposal.id)
+
+    assert edges(repo, prop_by_dr_id(repo, RETARGETED)) == moved
