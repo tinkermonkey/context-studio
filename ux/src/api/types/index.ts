@@ -106,6 +106,29 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/taxonomies/{taxonomy_id}/predicates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Taxonomy Predicates
+     * @description The taxonomy's predicate catalog: the relation verbs its relationship types use.
+     *
+     *     Raises:
+     *         HTTPException: 404 if the taxonomy is not found
+     */
+    get: operations["list_taxonomy_predicates_api_taxonomies__taxonomy_id__predicates_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/taxonomies/{taxonomy_id}/scheme-counts": {
     parameters: {
       query?: never;
@@ -8055,6 +8078,58 @@ export interface components {
       property_definition_id?: string | null;
     };
     /**
+     * PredicateResponse
+     * @description A predicate in a taxonomy's predicate catalog.
+     */
+    PredicateResponse: {
+      /**
+       * Id
+       * @description Unique identifier
+       */
+      id: string;
+      /**
+       * Taxonomy Id
+       * @description The taxonomy whose catalog holds it
+       */
+      taxonomy_id: string;
+      /**
+       * Identifier
+       * @description The relation verb (e.g. 'part_of'), unique in the taxonomy
+       */
+      identifier: string;
+      /**
+       * Title
+       * @description Display name
+       */
+      title: string;
+      /**
+       * Description
+       * @description What the relation means
+       */
+      description?: string | null;
+      /**
+       * External References
+       * @description Client metadata; DR's inverse, category, archimate_alignment and semantics ride in its documentation_robotics reference
+       */
+      external_references?: components["schemas"]["ExternalReferenceResponse"][];
+      /**
+       * Created At
+       * @description Creation timestamp
+       */
+      created_at?: string | null;
+      /**
+       * Last Modified
+       * @description Last modification timestamp
+       */
+      last_modified?: string | null;
+      /**
+       * Version
+       * @description Version number
+       * @default 1
+       */
+      version: number;
+    };
+    /**
      * PropertyDefinitionCreateRequest
      * @description Request to create a new property definition.
      */
@@ -8076,7 +8151,7 @@ export interface components {
       description?: string | null;
       /**
        * Canonical Predicate
-       * @description Bare canonical relation verb this property represents (e.g. 'navigates-to') — the form extraction clamps predicates to
+       * @description The predicate (relation verb, e.g. 'navigates-to') this relationship type uses, from its taxonomy's predicate catalog (the taxonomy of its domain class, else its range class); added to the catalog when it's missing
        */
       canonical_predicate?: string | null;
       /**
@@ -8117,9 +8192,14 @@ export interface components {
       description?: string | null;
       /**
        * Canonical Predicate
-       * @description Bare canonical relation verb this property represents (e.g. 'navigates-to'), or null if not set
+       * @description Identifier of the predicate this relationship type uses (e.g. 'navigates-to'), or null if it has none
        */
       canonical_predicate?: string | null;
+      /**
+       * Predicate Id
+       * @description ID of that predicate in its taxonomy's predicate catalog
+       */
+      predicate_id?: string | null;
       /**
        * Domain Class Id
        * @description Class the relationship's source must belong to, if constrained
@@ -8187,7 +8267,7 @@ export interface components {
       description?: string | null;
       /**
        * Canonical Predicate
-       * @description New bare canonical relation verb, or null to clear it. Only applied when the field is present in the request body.
+       * @description New predicate (relation verb) from the taxonomy's catalog, added when it's missing. Only applied when the field is present in the request body; a type's predicate can't be cleared.
        */
       canonical_predicate?: string | null;
       /**
@@ -10337,6 +10417,37 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_taxonomy_predicates_api_taxonomies__taxonomy_id__predicates_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        taxonomy_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PredicateResponse"][];
+        };
       };
       /** @description Validation Error */
       422: {

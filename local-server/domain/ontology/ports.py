@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from typing import Literal, Protocol, Sequence
 
 from .entities import (
+    Predicate,
     AttributeDefinition,
     Class,
     ConceptScheme,
@@ -410,6 +411,29 @@ class OntologyRepository(Protocol):
         """
         ...
 
+    # Predicate operations (a taxonomy's predicate catalog)
+    def list_predicates(self, taxonomy_id: str) -> list[Predicate]:
+        """The taxonomy's predicates, by identifier."""
+        ...
+
+    def get_predicate(self, predicate_id: str) -> Predicate | None:
+        """A predicate by ID; None if there's none."""
+        ...
+
+    def get_predicate_by_identifier(self, taxonomy_id: str, identifier: str) -> Predicate | None:
+        """The taxonomy's predicate with this identifier; None if it has none."""
+        ...
+
+    def save_predicate(self, predicate: Predicate) -> Predicate:
+        """
+        Persist a predicate (create or update).
+
+        Raises:
+            DuplicateEntityError: If the taxonomy already has another predicate
+                with the identifier
+        """
+        ...
+
     # PropertyDefinition operations
     def get_property_definition(self, property_id: str) -> PropertyDefinition | None:
         """
@@ -445,6 +469,7 @@ class OntologyRepository(Protocol):
         query: str | None = None,
         ids: list[str] | None = None,
         domain_class_id: str | None = None,
+        taxonomy_id: str | None = None,
     ) -> list[PropertyDefinition]:
         """
         Retrieve property definitions with optional filtering, pagination, sorting, and text search.
@@ -458,6 +483,7 @@ class OntologyRepository(Protocol):
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of property definition IDs to restrict results to
             domain_class_id: Optional class ID the property's domain must equal
+            taxonomy_id: Optional taxonomy its predicate must belong to
 
         Returns:
             List of PropertyDefinition entities
@@ -494,6 +520,7 @@ class OntologyRepository(Protocol):
         query: str | None = None,
         ids: list[str] | None = None,
         domain_class_id: str | None = None,
+        taxonomy_id: str | None = None,
     ) -> int:
         """
         Count property definitions, optionally filtered by relevance, text search or ids.
@@ -503,6 +530,7 @@ class OntologyRepository(Protocol):
             query: Case-insensitive "title or identifier contains" text filter
             ids: Optional list of property definition IDs to restrict the count to
             domain_class_id: Optional class ID the property's domain must equal
+            taxonomy_id: Optional taxonomy its predicate must belong to
 
         Returns:
             Total count of property definitions

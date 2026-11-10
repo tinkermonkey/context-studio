@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 from contextlib import nullcontext
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from domain.ontology.events import GraphInvalidated
 from domain.ontology.snapshots import entity_field_names, entity_from_snapshot, entity_snapshot
@@ -735,7 +735,14 @@ class RevertService:
         elif entity_type == "property_definition":
             prop = self._ontology_repo.get_property_definition(entity_id)
             if prop:
+                current_predicate = prop.predicate_id
                 self._restore_entity_state(prop, previous_state)
+                if "predicate_id" not in previous_state and "canonical_predicate" in previous_state:
+                    # Recorded before predicates had ids: find it by identifier in
+                    # the taxonomy of the type's current predicate.
+                    prop.predicate_id = self._predicate_named(
+                        previous_state["canonical_predicate"], current_predicate
+                    )
                 self._ontology_repo.save_property_definition(prop)
                 return True
         elif entity_type == "attribute_definition":
@@ -747,6 +754,14 @@ class RevertService:
         else:
             raise ValueError(f"Unknown entity type for update revert: {entity_type}")
         return False
+
+    def _predicate_named(self, identifier: Any, beside: str | None) -> str | None:
+        """The id of the predicate `identifier` in the taxonomy of predicate `beside`."""
+        current = self._ontology_repo.get_predicate(beside) if beside else None
+        if current is None or not isinstance(identifier, str):
+            return beside
+        found = self._ontology_repo.get_predicate_by_identifier(current.taxonomy_id, identifier)
+        return found.id if found else beside
 
     def _inverse_delete(self, entity_id: str, entity_type: str, snapshot: dict) -> bool:
         """

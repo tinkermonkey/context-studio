@@ -24,6 +24,7 @@ from .value_objects import (
     validate_default_value_against_allowed_values,
     validate_hex_color,
     validate_identifier,
+    validate_predicate_identifier,
 )
 
 
@@ -408,6 +409,45 @@ def validate_relationship_attributes(attributes: Any) -> None:
 
 
 @dataclass
+class Predicate:
+    """
+    A relation verb in a taxonomy's predicate catalog (e.g. "part_of" or
+    "navigates-to"). Every relationship type of the taxonomy uses one.
+
+    A taxonomy holds its own catalog, so two taxonomies may both have "part_of".
+    The identifier never changes: a rename is a delete with a replacement,
+    because clients (DR) embed the predicate in their relationship ids.
+
+    Attributes:
+        id: Unique identifier (UUID as string)
+        taxonomy_id: The taxonomy whose catalog holds it
+        identifier: The verb, unique within the taxonomy
+        title: Display name (the identifier when none is given)
+        description: What the relation means
+        external_references: Client metadata (DR's inverse, category,
+            archimate_alignment and semantics ride in its documentation_robotics
+            reference's metadata)
+        status, version, created_at, last_modified: As on other entities
+    """
+
+    id: str
+    taxonomy_id: str
+    identifier: str
+    title: str = ""
+    description: str | None = None
+    external_references: list[ExternalReference] = field(default_factory=list)
+    created_at: datetime | None = None
+    last_modified: datetime | None = None
+    version: int = 1
+    status: Status = Status.DRAFT
+
+    def __post_init__(self) -> None:
+        self.identifier = validate_predicate_identifier(self.identifier)
+        if not self.title or not self.title.strip():
+            self.title = self.identifier
+
+
+@dataclass
 class PropertyDefinition:
     """
     Defines the type and metadata for a property (relationship type).
@@ -417,12 +457,12 @@ class PropertyDefinition:
         identifier: Machine-readable identifier for the property
         title: Display name for the property
         description: Optional longer description
-        canonical_predicate: The bare canonical relation verb this property
-            represents (e.g. "navigates-to") — the form extraction clamps
-            predicates to, distinct from the display title and the machine
-            identifier. Set by whatever authors the property (the DR importer
-            from its spec predicate; the app from user input). None when not
-            supplied.
+        predicate_id: The Predicate (in its taxonomy's catalog) this type uses;
+            None for a type imported without one (OWL, SKOS, GraphML)
+        canonical_predicate: The identifier of that predicate (e.g.
+            "navigates-to"), read-only: the repository fills it from predicate_id.
+            It's the form extraction clamps predicates to, distinct from the
+            display title and the machine identifier.
         ontology_mapping: Optional mapping to an external ontology standard
         domain_class_id: Optional ID of the Class this property's source/subject
             must belong to (rdfs:domain)
@@ -458,6 +498,7 @@ class PropertyDefinition:
     version: int = 1
     status: Status = Status.DRAFT
     source_run_id: str | None = None
+    predicate_id: str | None = None
 
     def edge_attribute_names(self) -> frozenset[str]:
         """

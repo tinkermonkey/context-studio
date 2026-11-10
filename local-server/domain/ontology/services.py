@@ -22,6 +22,7 @@ from .entities import (
     Class,
     ConceptScheme,
     Individual,
+    Predicate,
     PropertyDefinition,
     Relationship,
     Taxonomy,
@@ -112,6 +113,7 @@ def _property_event_values(prop_def: PropertyDefinition) -> dict[str, object]:
         "title": prop_def.title,
         "description": prop_def.description,
         "canonical_predicate": prop_def.canonical_predicate,
+        "predicate_id": prop_def.predicate_id,
         "is_relevant": prop_def.is_relevant,
         "domain_class_id": prop_def.domain_class_id,
         "range_class_id": prop_def.range_class_id,
@@ -610,6 +612,13 @@ class OntologyService:
         if schemes:
             raise OntologyError(
                 f"Cannot delete taxonomy {taxonomy_id}: it has {len(schemes)} concept" " scheme(s)"
+            )
+
+        in_use = self._repository.count_property_definitions(taxonomy_id=taxonomy_id)
+        if in_use:
+            raise EntityInUseError(
+                f"Cannot delete taxonomy {taxonomy_id}: {in_use} relationship type(s) use"
+                " its predicates"
             )
 
         self._repository.delete_taxonomy(taxonomy_id)
@@ -2071,6 +2080,141 @@ class OntologyService:
 
     # PropertyDefinition operations
 
+    # ------------------------------------------------------------ predicates
+
+    def list_predicates(self, taxonomy_id: str) -> list[Predicate]:
+        """
+        The taxonomy's predicate catalog, by identifier.
+
+        Raises:
+            EntityNotFoundError: If the taxonomy does not exist
+        """
+        if self._repository.get_taxonomy(taxonomy_id) is None:
+            raise EntityNotFoundError("Taxonomy", taxonomy_id)
+        return self._repository.list_predicates(taxonomy_id)
+
+    def get_predicate(self, predicate_id: str) -> Predicate:
+        """
+        A predicate by ID.
+
+        Raises:
+            EntityNotFoundError: If there's none
+        """
+        predicate = self._repository.get_predicate(predicate_id)
+        if predicate is None:
+            raise EntityNotFoundError("Predicate", predicate_id)
+        return predicate
+
+    def create_predicate(
+        self,
+        taxonomy_id: str,
+        identifier: str,
+        title: str | None = None,
+        description: str | None = None,
+        external_references: list[ExternalReference] | None = None,
+    ) -> Predicate:
+        """
+        Add a predicate to the taxonomy's catalog.
+
+        Raises:
+            EntityNotFoundError: If the taxonomy does not exist
+            DuplicateEntityError: If the taxonomy already has the predicate
+            ValueError: If the identifier isn't a predicate verb
+        """
+        if self._repository.get_taxonomy(taxonomy_id) is None:
+            raise EntityNotFoundError("Taxonomy", taxonomy_id)
+        now = datetime.now(timezone.utc)
+        predicate = Predicate(
+            id=str(uuid4()),
+            taxonomy_id=taxonomy_id,
+            identifier=identifier,
+            title=title or "",
+            description=description,
+            external_references=list(external_references or []),
+            created_at=now,
+            last_modified=now,
+        )
+        if self._repository.get_predicate_by_identifier(taxonomy_id, predicate.identifier):
+            raise DuplicateEntityError(
+                f"Taxonomy {taxonomy_id} already has the predicate {predicate.identifier!r}"
+            )
+        return self._repository.save_predicate(predicate)
+
+    def update_predicate(
+        self,
+        predicate_id: str,
+        title: str | None = None,
+        description: str | None = None,
+        external_references: list[ExternalReference] | None = None,
+    ) -> Predicate:
+        """
+        Change a predicate's title, description or references (None: unchanged).
+        Its identifier never changes.
+
+        Raises:
+            EntityNotFoundError: If there's no such predicate
+        """
+        predicate = self.get_predicate(predicate_id)
+        changed = False
+        if title is not None and title.strip() and title != predicate.title:
+            predicate.title, changed = title, True
+        if description is not None and (description or None) != predicate.description:
+            predicate.description, changed = description or None, True
+        if external_references is not None and external_references != predicate.external_references:
+            predicate.external_references, changed = list(external_references), True
+        if not changed:
+            return predicate
+        predicate.last_modified = datetime.now(timezone.utc)
+        return self._repository.save_predicate(predicate)
+
+    def _type_taxonomy(
+        self,
+        domain_class_id: str | None,
+        range_class_id: str | None,
+        current: Predicate | None,
+        fallback: str | None,
+    ) -> str | None:
+        """
+        The taxonomy whose catalog a relationship type's predicate comes from: its
+        domain class's, else its range class's, else its current predicate's, else
+        the fallback (the proposal's or pipeline's taxonomy).
+        """
+        for class_id in (domain_class_id, range_class_id):
+            cls = self._repository.get_class(class_id) if class_id else None
+            if cls is not None and cls.taxonomy_id:
+                return cls.taxonomy_id
+        if current is not None:
+            return current.taxonomy_id
+        return fallback
+
+    def _resolve_predicate(
+        self, identifier: str, taxonomy_id: str | None, create_missing: bool
+    ) -> Predicate:
+        """
+        The taxonomy's predicate with this identifier. Context Studio's own
+        editors (create_missing) add one that's missing; anyone else must use a
+        predicate the catalog already has.
+
+        Raises:
+            ValueError: If there's no taxonomy to look in, or the identifier isn't
+                a predicate verb
+            ValueError: Also if the catalog lacks it and create_missing is off
+        """
+        if taxonomy_id is None:
+            raise ValueError(
+                f"The predicate {identifier!r} needs a taxonomy: give the relationship type"
+                " a domain or range class"
+            )
+        found = self._repository.get_predicate_by_identifier(taxonomy_id, identifier.strip())
+        if found is not None:
+            return found
+        if not create_missing:
+            raise ValueError(
+                f"predicate {identifier.strip()!r} isn't in taxonomy {taxonomy_id}'s predicate"
+                " catalog; add it first"
+            )
+        return self.create_predicate(taxonomy_id, identifier)
+
     def _property_definition_with_title(
         self, title: str, exclude_id: str | None = None
     ) -> PropertyDefinition | None:
@@ -2096,6 +2240,8 @@ class OntologyService:
         external_references: list[ExternalReference] | None = None,
         source_run_id: str | None = None,
         derived: bool = False,
+        taxonomy_id: str | None = None,
+        create_missing_predicate: bool = False,
     ) -> PropertyDefinition:
         """
         Create a new property definition (relationship type).
@@ -2122,6 +2268,11 @@ class OntologyService:
             external_references: Optional list of references to external knowledge bases
             source_run_id: Optional ID of the pipeline run that produced this
                 property definition, for provenance tracking
+            taxonomy_id: The taxonomy to find the predicate in when the type has
+                neither a domain nor a range class
+            create_missing_predicate: Add the predicate to the taxonomy's catalog
+                when it's missing (Context Studio's own editors); otherwise a
+                predicate the catalog lacks is refused
 
         Returns:
             The created PropertyDefinition
@@ -2130,7 +2281,8 @@ class OntologyService:
             DuplicateEntityError: If a property with this identifier or title already exists
             EntityNotFoundError: If domain_class_id or range_class_id does not reference
                 an existing Class
-            ValueError: If identifier or title is empty
+            ValueError: If identifier or title is empty, or the predicate isn't in the
+                taxonomy's catalog (and create_missing_predicate is off)
         """
         if not identifier or not identifier.strip():
             raise ValueError("Identifier cannot be empty")
@@ -2151,6 +2303,13 @@ class OntologyService:
         if range_class_id is not None and self._repository.get_class(range_class_id) is None:
             raise EntityNotFoundError("Class", range_class_id)
 
+        predicate = None
+        if canonical_predicate:
+            taxonomy = self._type_taxonomy(domain_class_id, range_class_id, None, taxonomy_id)
+            predicate = self._resolve_predicate(
+                canonical_predicate, taxonomy, create_missing_predicate
+            )
+
         property_id = str(uuid4())
         now = datetime.now(timezone.utc)
         prop_def = PropertyDefinition(
@@ -2158,7 +2317,8 @@ class OntologyService:
             identifier=identifier,
             title=title,
             description=description,
-            canonical_predicate=canonical_predicate,
+            canonical_predicate=predicate.identifier if predicate else None,
+            predicate_id=predicate.id if predicate else None,
             domain_class_id=domain_class_id,
             range_class_id=range_class_id,
             external_references=external_references or [],
@@ -2344,10 +2504,17 @@ class OntologyService:
         external_references: list[ExternalReference] | None = None,
         identifier: str | None = None,
         derived: bool | None = None,
+        taxonomy_id: str | None = None,
+        create_missing_predicate: bool = False,
     ) -> PropertyDefinition:
         """
         Update a property definition's identifier, wording, predicate, relevance,
         domain/range, references or derived flag (None: unchanged).
+
+        The predicate is looked up again (by identifier) when it or the type's
+        domain or range changes, in the taxonomy they give (see
+        create_property_definition, whose taxonomy_id and
+        create_missing_predicate it shares). A type's predicate can't be cleared.
 
         Relationships typed by the property keep pointing at it whatever changes,
         so a rename, reversal or retarget of an in-use relationship type keeps its
@@ -2427,8 +2594,11 @@ class OntologyService:
         if desc_changed:
             prop_def.description = description
 
+        wanted_predicate = prop_def.canonical_predicate
         if update_canonical_predicate:
-            prop_def.canonical_predicate = canonical_predicate
+            if not canonical_predicate and prop_def.predicate_id is not None:
+                raise ValueError("A relationship type's predicate can't be cleared")
+            wanted_predicate = canonical_predicate or None
 
         if update_is_relevant:
             prop_def.is_relevant = is_relevant
@@ -2448,6 +2618,26 @@ class OntologyService:
 
         if derived is not None:
             prop_def.derived = bool(derived)
+
+        retyped = update_canonical_predicate or update_domain_class_id or update_range_class_id
+        if wanted_predicate and retyped:
+            current = (
+                self._repository.get_predicate(prop_def.predicate_id)
+                if prop_def.predicate_id
+                else None
+            )
+            taxonomy = self._type_taxonomy(
+                prop_def.domain_class_id, prop_def.range_class_id, current, taxonomy_id
+            )
+            if current is None or (current.identifier, current.taxonomy_id) != (
+                wanted_predicate,
+                taxonomy,
+            ):
+                predicate = self._resolve_predicate(
+                    wanted_predicate, taxonomy, create_missing_predicate
+                )
+                prop_def.predicate_id = predicate.id
+                prop_def.canonical_predicate = predicate.identifier
 
         after = _property_event_values(prop_def)
         changed_fields = tuple(name for name in before if before[name] != after[name])

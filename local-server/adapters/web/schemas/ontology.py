@@ -466,8 +466,9 @@ class PropertyDefinitionCreateRequest(BaseModel):
     canonical_predicate: Optional[str] = Field(
         None,
         description=(
-            "Bare canonical relation verb this property represents (e.g. "
-            "'navigates-to') — the form extraction clamps predicates to"
+            "The predicate (relation verb, e.g. 'navigates-to') this relationship type"
+            " uses, from its taxonomy's predicate catalog (the taxonomy of its domain"
+            " class, else its range class); added to the catalog when it's missing"
         ),
     )
     domain_class_id: Optional[str] = Field(
@@ -486,14 +487,39 @@ class PropertyDefinitionUpdateRequest(BaseModel):
     canonical_predicate: Optional[str] = Field(
         None,
         description=(
-            "New bare canonical relation verb, or null to clear it. Only applied "
-            "when the field is present in the request body."
+            "New predicate (relation verb) from the taxonomy's catalog, added when it's"
+            " missing. Only applied when the field is present in the request body; a"
+            " type's predicate can't be cleared."
         ),
     )
     is_relevant: Optional[bool] = Field(
         None,
         description="Relevance flag (None=not evaluated, True=relevant, False=irrelevant)",
     )
+
+
+class PredicateResponse(BaseModel):
+    """A predicate in a taxonomy's predicate catalog."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str = Field(..., description="Unique identifier")
+    taxonomy_id: str = Field(..., description="The taxonomy whose catalog holds it")
+    identifier: str = Field(
+        ..., description="The relation verb (e.g. 'part_of'), unique in the taxonomy"
+    )
+    title: str = Field(..., description="Display name")
+    description: Optional[str] = Field(None, description="What the relation means")
+    external_references: list[ExternalReferenceResponse] = Field(
+        default_factory=list,
+        description=(
+            "Client metadata; DR's inverse, category, archimate_alignment and semantics"
+            " ride in its documentation_robotics reference"
+        ),
+    )
+    created_at: Optional[datetime] = Field(None, description="Creation timestamp")
+    last_modified: Optional[datetime] = Field(None, description="Last modification timestamp")
+    version: int = Field(default=1, description="Version number")
 
 
 class PropertyDefinitionResponse(BaseModel):
@@ -508,9 +534,12 @@ class PropertyDefinitionResponse(BaseModel):
     canonical_predicate: Optional[str] = Field(
         None,
         description=(
-            "Bare canonical relation verb this property represents (e.g. "
-            "'navigates-to'), or null if not set"
+            "Identifier of the predicate this relationship type uses (e.g. "
+            "'navigates-to'), or null if it has none"
         ),
+    )
+    predicate_id: Optional[str] = Field(
+        None, description="ID of that predicate in its taxonomy's predicate catalog"
     )
     domain_class_id: Optional[str] = Field(
         None, description="Class the relationship's source must belong to, if constrained"

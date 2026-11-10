@@ -21,6 +21,26 @@ _IDENTIFIER_PATTERN = re.compile(r"^[a-z][a-z0-9_]{1,63}$")
 _HEX_COLOR_PATTERN = re.compile(r"^#[0-9a-f]{6}$")
 
 
+_PREDICATE_PATTERN = re.compile(r"^[a-z][a-z0-9_-]{0,254}$")
+
+
+def validate_predicate_identifier(identifier: str) -> str:
+    """
+    Validate a predicate identifier: a bare relation verb such as "part_of" or
+    "navigates-to" (lowercase letters, digits, "_" and "-", starting with a letter).
+
+    Raises:
+        ValueError: If it's empty or doesn't fit that shape
+    """
+    candidate = str(identifier or "").strip()
+    if not _PREDICATE_PATTERN.match(candidate):
+        raise ValueError(
+            f"Predicate {identifier!r} must start with a lowercase letter and contain only"
+            " lowercase letters, digits, '_' and '-'"
+        )
+    return candidate
+
+
 def validate_identifier(identifier: str) -> str:
     """
     Validate and normalize a slug-style identifier.

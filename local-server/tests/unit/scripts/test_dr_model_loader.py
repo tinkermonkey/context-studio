@@ -112,6 +112,7 @@ def ontology(service, repo):
             canonical_predicate=predicate,
             domain_class_id=class_ids[source],
             range_class_id=class_ids[target],
+            create_missing_predicate=True,
             external_references=[
                 ExternalReference(source=DR, identifier=f"{source}.{predicate}.{target}")
             ],

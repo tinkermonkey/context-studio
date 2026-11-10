@@ -40,7 +40,8 @@ class DriftEntry:
     One entity that differs between the taxonomy and its source.
 
     Attributes:
-        kind: taxonomy, scheme, class, property or attribute
+        kind: taxonomy, scheme, class, property, attribute or predicate (a
+            predicate is reported only: no operation removes its drift yet)
         source_id: The entity's id in the source (a DR id; an attribute's is
             "<node id>#<attribute name>")
         change: create (only in the source), update, move (it changed scheme in
@@ -144,7 +145,7 @@ class DriftImportService:
             if dry_run:
                 return DriftResult(plan, proposal, True)
             supersede_earlier_imports(self._proposals, plan.taxonomy_id, plan.source, proposal)
-            if proposal is None:
+            if proposal is None and not plan.entries:
                 self._ontology.set_taxonomy_source_revision(plan.taxonomy_id, plan.source_revision)
             return DriftResult(plan, proposal, False)
 

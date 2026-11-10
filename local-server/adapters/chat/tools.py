@@ -755,8 +755,8 @@ class ListRelationshipTypesTool(_Tool):
 
     name = "list_relationship_types"
     description = (
-        "List relationship types (property definitions) with their domain and range"
-        " classes, by title, optionally only those of one taxonomy (its domain or range"
+        "List relationship types (property definitions) with their predicate and their"
+        " domain and range classes, by title, optionally only those of one taxonomy (its domain or range"
         " is one of the taxonomy's classes, so a type linking two taxonomies is listed"
         " under both; the taxonomy's bundle carries only types wholly inside it) or"
         " whose title or identifier contains a text. Page with offset: total says how"
@@ -798,7 +798,11 @@ class ListRelationshipTypesTool(_Tool):
         for prop in properties:
             ref = ref_of(prop)
             refs.append(ref)
-            item: dict[str, Any] = {**_ref_dict(ref), "identifier": prop.identifier}
+            item: dict[str, Any] = {
+                **_ref_dict(ref),
+                "identifier": prop.identifier,
+                "predicate": prop.canonical_predicate,
+            }
             ends = (("domain", prop.domain_class_id), ("range", prop.range_class_id))
             for field, class_id in ends:
                 if class_id and class_id in found:
@@ -829,6 +833,44 @@ class ListRelationshipTypesTool(_Tool):
             )
             if p.domain_class_id in class_ids or p.range_class_id in class_ids
         ]
+
+
+class ListPredicatesTool(_Tool):
+    """A taxonomy's predicate catalog."""
+
+    name = "list_predicates"
+    description = (
+        "List a taxonomy's predicates: the relation verbs (e.g. part_of, navigates-to)"
+        " its relationship types use, each with its description and client metadata"
+        " (a DR predicate's inverse, category, archimate_alignment and semantics, in"
+        " its documentation_robotics reference). A relationship type's"
+        " canonical_predicate in a proposal must be one of them."
+    )
+    input_schema = {
+        "type": "object",
+        "properties": {"taxonomy_id": {"type": "string", "description": "The taxonomy"}},
+        "required": ["taxonomy_id"],
+    }
+
+    def run(self, args: dict[str, Any]) -> ToolOutcome:
+        taxonomy = self._ontology.get_taxonomy(required_str(args, "taxonomy_id"))
+        predicates = self._ontology.list_predicates(taxonomy.id)
+        items = [
+            {
+                "id": p.id,
+                "identifier": p.identifier,
+                "title": p.title,
+                "description": p.description,
+                "external_references": [r.to_dict() for r in p.external_references],
+            }
+            for p in predicates
+        ]
+        return _outcome(
+            {"taxonomy_id": taxonomy.id, "items": items, "total": len(items)},
+            "items",
+            f"{len(items)} predicates of {taxonomy.title}",
+            [],
+        )
 
 
 class GetNeighborsTool(_Tool):
@@ -948,6 +990,7 @@ def build_chat_tools(
         ListChildrenTool(ontology, resolver),
         ListRelationshipsTool(ontology, resolver),
         ListRelationshipTypesTool(ontology, resolver),
+        ListPredicatesTool(ontology, resolver),
         GetNeighborsTool(ontology, resolver, graph),
         FindPathTool(ontology, resolver, graph),
     ]

@@ -43,6 +43,7 @@ from adapters.web.schemas.ontology import (
     IndividualResponse,
     IndividualUpdateRequest,
     ListResponse,
+    PredicateResponse,
     PropertyDefinitionCreateRequest,
     PropertyDefinitionResponse,
     PropertyDefinitionUpdateRequest,
@@ -215,6 +216,25 @@ async def get_taxonomy(
     try:
         taxonomy = await run_sync_in_executor(service.get_taxonomy, taxonomy_id)
         return TaxonomyResponse.model_validate(taxonomy)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/taxonomies/{taxonomy_id}/predicates", response_model=list[PredicateResponse])
+async def list_taxonomy_predicates(
+    taxonomy_id: str,
+    service: OntologyService = Depends(get_ontology_service),
+) -> list[PredicateResponse]:
+    """
+    The taxonomy's predicate catalog: the relation verbs its relationship types use.
+
+    Raises:
+        HTTPException: 404 if the taxonomy is not found
+    """
+    try:
+        predicates = await run_sync_in_executor(service.list_predicates, taxonomy_id)
+        return [PredicateResponse.model_validate(p) for p in predicates]
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)
@@ -996,6 +1016,7 @@ async def create_property_definition(
             canonical_predicate=request.canonical_predicate,
             domain_class_id=request.domain_class_id,
             range_class_id=request.range_class_id,
+            create_missing_predicate=True,
         )
         return PropertyDefinitionResponse.model_validate(prop_def)
     except Exception as exc:
@@ -1135,6 +1156,7 @@ async def update_property_definition(
             update_canonical_predicate="canonical_predicate" in request.model_fields_set,
             is_relevant=request.is_relevant,
             update_is_relevant="is_relevant" in request.model_fields_set,
+            create_missing_predicate=True,
         )
         return PropertyDefinitionResponse.model_validate(prop_def)
     except Exception as exc:
