@@ -5,21 +5,27 @@ A note's ref is stable, so a re-run replaces its claims rather than adding new
 ones (a claim's key is "<note ref>#<n>"):
 
 - a client's note keeps the ref the client gave it (DR sends its note ids,
-  "node:<spec node id>" or "rel:<spec node id>");
+  "node:<spec node id>" or "rel:<spec node id>"); its subject is a Context
+  Studio id or identifier (a client maps its own ids, e.g. DR's spec node id
+  "api.callback" to the class identifier "api_callback");
 - a maintainer's note on a proposal operation is "op:<operation id>";
 - a reviewer's decision reason is "decision:<decision id>".
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
-from dataclasses import dataclass
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from domain.pipelines.exceptions import PipelineInputError
 from domain.versioning.claims import NoteSource
 from domain.versioning.gold import ProposalDecision
-from domain.versioning.proposals import ChangeProposal, OperationKind, ProposedOperation
+from domain.versioning.proposals import (
+    ChangeProposal,
+    OperationKind,
+    OperationType,
+)
 
 OPERATION_NOTE_PREFIX = "op:"
 DECISION_NOTE_PREFIX = "decision:"
@@ -30,6 +36,15 @@ SUBJECT_KINDS = (
     OperationKind.PROPERTY,
     OperationKind.ATTRIBUTE,
 )
+# A create has no target yet: its note is about the owner its fields name, the
+# first of these that names an existing entity (not a "$<ref>" of another create)
+OWNER_FIELDS = {
+    OperationKind.ATTRIBUTE: ("class_id",),
+    OperationKind.CLASS: ("parent_class_id", "concept_scheme_id"),
+    OperationKind.PROPERTY: ("domain_class_id",),
+}
+# The proposed fields shown with a note, as DR's typeContext shows a proposal's
+PROPOSED_FIELDS = ("description", "distinguish_from", "standard_reference")
 
 
 @dataclass(frozen=True)
@@ -41,21 +56,28 @@ class Note:
         ref: Stable within the taxonomy; the claims' keys are "<ref>#<n>"
         text: The note
         source: A maintainer's or a reviewer's note
-        subject: What the note is about, as an id or identifier (None: the taxonomy)
-        proposed_definition: The definition proposed alongside the note, if any
+        subject: What the note is about, as a Context Studio id or identifier
+            (None: the taxonomy)
+        proposed: The definition fields proposed alongside the note (description,
+            distinguish_from, standard_reference), if any
+        proposed_new: What a create proposed alongside the note makes, e.g.
+            "class api_webhook" (its subject is then the new entity's owner)
     """
 
     ref: str
     text: str
     source: NoteSource
     subject: Optional[str] = None
-    proposed_definition: Optional[str] = None
+    proposed: Mapping[str, Any] = field(default_factory=dict)
+    proposed_new: Optional[str] = None
 
 
 def client_notes(value: Any) -> list[Note]:
     """
-    Notes a client sent: [{ref, subject, text, source?}], source "maintainer"
-    (the default) or "reviewer".
+    Notes a client sent: [{ref, subject, text, source?}]. subject is a Context
+    Studio id or identifier (of a class, relationship type, attribute as
+    "<class identifier>.<attribute identifier>", scheme or the taxonomy);
+    source is "maintainer" (the default) or "reviewer".
 
     Raises:
         PipelineInputError: If a note is malformed or two share a ref
@@ -91,12 +113,14 @@ def proposal_notes(proposal: ChangeProposal, decisions: Sequence[ProposalDecisio
     then the reviewers' reasons on its decisions, oldest first.
     """
     notes = [
-        Note(
-            ref=f"{OPERATION_NOTE_PREFIX}{operation.id}",
-            text=operation.notes or "",
-            source=NoteSource.MAINTAINER,
-            subject=_operation_subject(operation),
-            proposed_definition=_definition(operation.kind, operation.fields),
+        _note(
+            f"{OPERATION_NOTE_PREFIX}{operation.id}",
+            operation.notes or "",
+            NoteSource.MAINTAINER,
+            operation.kind,
+            operation.op,
+            operation.target_id or operation.result_entity_id,
+            operation.fields,
         )
         for operation in proposal.operations
         if operation.notes
@@ -106,36 +130,48 @@ def proposal_notes(proposal: ChangeProposal, decisions: Sequence[ProposalDecisio
 
 def decision_notes(decisions: Iterable[ProposalDecision]) -> list[Note]:
     """The reviewers' reasons on decisions, as notes about each decision's subject."""
-    notes = []
-    for decision in decisions:
-        if not decision.reason:
-            continue
-        subject = None
-        if decision.kind in SUBJECT_KINDS:
-            subject = decision.result_entity_id or decision.proposed.get("target_id")
-        notes.append(
-            Note(
-                ref=f"{DECISION_NOTE_PREFIX}{decision.id}",
-                text=decision.reason,
-                source=NoteSource.REVIEWER,
-                subject=subject,
-                proposed_definition=_definition(
-                    decision.kind, decision.proposed.get("fields") or {}
-                ),
-            )
+    return [
+        _note(
+            f"{DECISION_NOTE_PREFIX}{decision.id}",
+            decision.reason,
+            NoteSource.REVIEWER,
+            decision.kind,
+            decision.op,
+            decision.result_entity_id or decision.proposed.get("target_id"),
+            decision.proposed.get("fields") or {},
         )
-    return notes
+        for decision in decisions
+        if decision.reason
+    ]
 
 
-def _operation_subject(operation: ProposedOperation) -> Optional[str]:
-    if operation.kind not in SUBJECT_KINDS:
-        return None
-    return operation.target_id or operation.result_entity_id
+def _note(
+    ref: str,
+    text: str,
+    source: NoteSource,
+    kind: OperationKind,
+    op: OperationType,
+    target: Optional[str],
+    fields: Mapping[str, Any],
+) -> Note:
+    """A note on an operation: about its target, else the owner a create names."""
+    subject = None
+    if kind in SUBJECT_KINDS:
+        subject = target or _owner(kind, fields)
+    proposed_new = None
+    if op is OperationType.CREATE and not target:
+        name = fields.get("identifier") or fields.get("title")
+        proposed_new = f"{kind.value} {name}" if name else kind.value
+    proposed = {}
+    if kind in (OperationKind.CLASS, OperationKind.PROPERTY):
+        proposed = {name: fields[name] for name in PROPOSED_FIELDS if fields.get(name)}
+    return Note(ref, text, source, subject, proposed, proposed_new)
 
 
-def _definition(kind: OperationKind, fields: dict[str, Any]) -> Optional[str]:
-    """The description an operation proposes for a class or relationship type, if any."""
-    if kind not in (OperationKind.CLASS, OperationKind.PROPERTY):
-        return None
-    description = fields.get("description")
-    return description if isinstance(description, str) and description.strip() else None
+def _owner(kind: OperationKind, fields: Mapping[str, Any]) -> Optional[str]:
+    """The existing entity a create's fields put it under, if any."""
+    for name in OWNER_FIELDS.get(kind, ()):
+        value = fields.get(name)
+        if isinstance(value, str) and value and not value.startswith("$"):
+            return value
+    return None

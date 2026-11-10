@@ -18,6 +18,7 @@ from domain.pipelines.notes_to_claims import NotesToClaimsOrchestrator, NotesToC
 from domain.pipelines.notes_to_claims.prompt import parse_split
 from domain.pipelines.requested_via import REQUESTED_VIA, RequestedVia
 from domain.versioning.claims import (
+    Claim,
     ClaimFilter,
     ClaimService,
     ClaimVerdict,
@@ -105,6 +106,10 @@ def repo():
                 title=ident.replace("_", " ").title(),
                 identifier=ident,
                 description=desc,
+                distinguish_from=(
+                    [{"class_id": "srv", "when": "it names a host"}] if cid == "cb" else []
+                ),
+                standard_reference="OpenAPI 3.1" if cid == "cb" else None,
             )
         )
     repo.save_property_definition(
@@ -243,6 +248,8 @@ class TestSplit:
         assert "Context (for resolving names only):\nCurrent schema:" in user
         assert "api_callback (Api Callback): A callback on an operation" in user
         assert "  - expression (required): string — The runtime expression" in user
+        assert "Distinctions: use api_server when it names a host" in user
+        assert "Standard reference: OpenAPI 3.1" in user
         assert "Sibling classes in api: api_server, api_pathitem" in user
         # Outgoing and incoming relationship types, by identifier
         assert "callback_uses_server: api_callback --[uses]--> api_server" in user
@@ -284,7 +291,8 @@ class TestSplit:
 
         assert len(llm.calls) == 1
         assert sorted(stored(claims)) == ["b#1"]
-        assert (state.result["notes"], state.result["notes_skipped"]) == (1, 1)
+        assert (state.result["notes"], state.result["empty_notes"]) == (1, 1)
+        assert state.result["skipped"] == 0
 
     def test_a_category_outside_the_configuration_is_dropped(self):
         reply = '{"claims": [{"text": " t ", "category": "x", "affected_ids": [1, "a", " "]}]}'
@@ -307,8 +315,72 @@ class TestSplit:
 
 
 class TestRerun:
-    def test_a_rerun_keeps_verdicts_of_unchanged_claims_and_drops_vanished_keys(self, repo, claims):
-        notes = {"notes": [{"ref": "n", "subject": "cb", "text": "note one"}]}
+    def test_a_note_split_from_the_same_text_is_skipped(self, repo, claims):
+        notes = {"notes": [{"ref": "n", "text": "note"}]}
+        llm = FakeNoteSplitter({"note": [split("One."), split("Two.")]})
+        run(make(repo, claims, llm), notes)
+        before = {k: (c.id, c.text) for k, c in stored(claims).items()}
+
+        state = run(make(repo, claims, llm), notes)
+
+        assert len(llm.calls) == 1
+        assert {k: (c.id, c.text) for k, c in stored(claims).items()} == before
+        assert (state.result["notes"], state.result["skipped"]) == (0, 1)
+
+    def test_a_note_with_new_text_is_split_again(self, repo, claims):
+        run(
+            make(repo, claims, FakeNoteSplitter({"old": [split("One."), split("Two.")]})),
+            {"notes": [{"ref": "n", "text": "old note"}]},
+        )
+
+        state = run(
+            make(repo, claims, FakeNoteSplitter({"new": [split("One again.")]})),
+            {"notes": [{"ref": "n", "text": "new note"}]},
+        )
+
+        got = stored(claims)
+        assert sorted(got) == ["n#1"] and got["n#1"].note_text == "new note"
+        assert (state.result["skipped"], state.result["claims_removed"]) == (0, 1)
+
+    def test_imported_claims_with_verdicts_are_not_resplit(self, repo, claims):
+        """DR's imported claims carry no note text, but their bench-gold verdicts stay."""
+        claims.submit(
+            T,
+            [
+                Claim(
+                    taxonomy_id=T,
+                    key=f"node:api.callback#{n}",
+                    text=f"DR wording {n}.",
+                    note_ref="node:api.callback",
+                    note_source=NoteSource.MAINTAINER,
+                )
+                for n in (1, 2, 3)
+            ],
+        )
+        gold = ClaimVerdict(validity="real_defect", adjudicated_by="dr-bench-gold")
+        claims.set_verdict(stored(claims)["node:api.callback#2"].id, gold)
+        llm = FakeNoteSplitter({"note": [split("Other wording 1."), split("Other wording 2.")]})
+        notes = {"notes": [{"ref": "node:api.callback", "text": "the note"}]}
+
+        state = run(make(repo, claims, llm), notes)
+
+        got = stored(claims)
+        assert llm.calls == [] and state.result["skipped"] == 1
+        assert sorted(got) == [f"node:api.callback#{n}" for n in (1, 2, 3)]
+        assert got["node:api.callback#2"].verdict == gold
+
+        forced = run(make(repo, claims, llm), {**notes, "force": True})
+
+        assert forced.result["notes"] == 1 and forced.result["claims_removed"] == 1
+        assert [c.text for c in stored(claims).values()] == [
+            "Other wording 1.",
+            "Other wording 2.",
+        ]
+
+    def test_a_forced_rerun_keeps_verdicts_of_unchanged_claims_and_drops_vanished_keys(
+        self, repo, claims
+    ):
+        notes = {"notes": [{"ref": "n", "subject": "cb", "text": "note one"}], "force": True}
         first = FakeNoteSplitter(
             {"note one": [split("Same claim."), split("Old wording."), split("Gone later.")]}
         )
@@ -327,8 +399,8 @@ class TestRerun:
         assert got["n#2"].verdict is None and got["n#2"].text == "New wording."
         assert (state.result["claims"], state.result["claims_removed"]) == (2, 1)
 
-    def test_a_rerun_with_the_same_split_changes_nothing(self, repo, claims):
-        notes = {"notes": [{"ref": "n", "text": "note"}]}
+    def test_a_forced_rerun_with_the_same_split_changes_nothing(self, repo, claims):
+        notes = {"notes": [{"ref": "n", "text": "note"}], "force": True}
         llm = FakeNoteSplitter({"note": [split("One."), split("Two.")]})
         run(make(repo, claims, llm), notes)
         before = {k: (c.id, c.text) for k, c in stored(claims).items()}
@@ -339,7 +411,7 @@ class TestRerun:
         assert state.result["claims_removed"] == 0
 
     def test_an_empty_split_removes_the_notes_claims(self, repo, claims):
-        notes = {"notes": [{"ref": "n", "text": "note"}]}
+        notes = {"notes": [{"ref": "n", "text": "note"}], "force": True}
         run(make(repo, claims, FakeNoteSplitter({"note": [split("One.")]})), notes)
 
         state = run(make(repo, claims, FakeNoteSplitter({"note": []})), notes)
@@ -354,7 +426,7 @@ class TestRerun:
         )
         run(
             make(repo, claims, FakeNoteSplitter({"a": []})),
-            {"notes": [{"ref": "a", "text": "a"}]},
+            {"notes": [{"ref": "a", "text": "a"}], "force": True},
         )
         assert sorted(stored(claims)) == ["b#1"]
 
@@ -365,7 +437,7 @@ class TestFailures:
         run(make(repo, claims, FakeNoteSplitter({"a": [split("A1.")], "b": [split("B1.")]})), notes)
 
         llm = FakeNoteSplitter({"note a": "garbage", "note b": [split("B2.")]})
-        state = run(make(repo, claims, llm), notes)
+        state = run(make(repo, claims, llm), {**notes, "force": True})
 
         got = stored(claims)
         assert sorted(got) == ["a#1", "b#1"]
@@ -375,12 +447,25 @@ class TestFailures:
         assert state.result["errors"][0].startswith("a: the reply is not JSON")
         assert state.parse_warnings[0]["note"] == "a"
         assert state.llm_metadata["failed_requests"] == 1
+        # The unusable reply's tokens count too
+        assert (state.llm_metadata["requests"], state.llm_metadata["tokens_in"]) == (2, 200)
 
-    def test_a_run_where_every_note_fails_fails_with_its_cost(self, repo, claims):
-        llm = FakeNoteSplitter({"note": RuntimeError("provider down")})
-        with pytest.raises(PipelineExecutionError, match="provider down") as raised:
+    @pytest.mark.parametrize(
+        "reply, message, tokens",
+        [
+            ("garbage", "not JSON", (100, 50)),
+            (RuntimeError("provider down"), "provider down", (0, 0)),
+        ],
+    )
+    def test_a_run_where_every_note_fails_fails_with_its_cost(
+        self, repo, claims, reply, message, tokens
+    ):
+        llm = FakeNoteSplitter({"note": reply})
+        with pytest.raises(PipelineExecutionError, match=message) as raised:
             run(make(repo, claims, llm), {"notes": [{"ref": "n", "text": "note"}]})
-        assert raised.value.llm_metadata["failed_requests"] == 1
+        spent = raised.value.llm_metadata
+        assert (spent["requests"], spent["failed_requests"]) == (1, 1)
+        assert (spent["tokens_in"], spent["tokens_out"]) == tokens
 
 
 class TestScope:
@@ -397,6 +482,7 @@ class TestScope:
             {"notes": [{"ref": "n"}]},
             {"notes": [{"ref": "n", "text": "x", "source": "nobody"}]},
             {"notes": [{"ref": "n", "text": "x"}, {"ref": "n", "text": "y"}]},
+            {"notes": [], "force": "yes"},
         ],
     )
     def test_a_bad_scope_is_refused(self, repo, claims, scope):
@@ -428,7 +514,11 @@ class TestScope:
                     op=OperationType.UPDATE,
                     kind=OperationKind.CLASS,
                     target_id="cb",
-                    fields={"description": "A callback, keyed by its name"},
+                    fields={
+                        "description": "A callback, keyed by its name",
+                        "distinguish_from": [{"class_id": "pi", "when": "it is a path"}],
+                        "standard_reference": "OpenAPI 3.1 Callback Object",
+                    },
                     notes="The map-key name has no attribute.",
                 ),
                 ProposedOperation(
@@ -438,6 +528,27 @@ class TestScope:
                     kind=OperationKind.CLASS,
                     target_id="srv",
                     fields={"title": "Server"},
+                ),
+                ProposedOperation(
+                    id="op-3",
+                    seq=3,
+                    op=OperationType.CREATE,
+                    kind=OperationKind.ATTRIBUTE,
+                    fields={"class_id": "cb", "identifier": "callback_name", "title": "Name"},
+                    notes="Callbacks need a name attribute.",
+                ),
+                ProposedOperation(
+                    id="op-4",
+                    seq=4,
+                    op=OperationType.CREATE,
+                    kind=OperationKind.CLASS,
+                    ref="hook",
+                    fields={
+                        "parent_class_id": "$base",
+                        "concept_scheme_id": "api",
+                        "title": "Webhook",
+                    },
+                    notes="Webhooks are a separate type.",
                 ),
             ],
         )
@@ -468,12 +579,14 @@ class TestScope:
             {
                 "map-key": [split("api_callback has no name attribute.", "api_callback")],
                 "titled": [split("api_server's title is wrong.", "api_server")],
+                "name attribute": [split("api_callback needs a name.", "api_callback")],
+                "Webhooks": [split("Webhooks are separate.")],
             }
         )
         state = run(make(repo, claims, llm, proposals=proposals), {"proposal_id": "prop-1"})
 
         got = stored(claims)
-        assert sorted(got) == ["decision:d-1#1", "op:op-1#1"]
+        assert sorted(got) == ["decision:d-1#1", "op:op-1#1", "op:op-3#1", "op:op-4#1"]
         op_claim, reason_claim = got["op:op-1#1"], got["decision:d-1#1"]
         assert (op_claim.note_source, op_claim.subject_id) == (NoteSource.MAINTAINER, "cb")
         assert op_claim.note_ref == "op:op-1"
@@ -482,7 +595,20 @@ class TestScope:
         assert proposals.filters[0].proposal_id == "prop-1"
         op_call = next(c for c in llm.calls if "map-key" in c["user"])
         assert "Proposed definition: A callback, keyed by its name" in op_call["user"]
-        assert state.result["notes"] == 2
+        assert "Proposed distinctions: use api_pathitem when it is a path" in op_call["user"]
+        assert "Proposed standard reference: OpenAPI 3.1 Callback Object" in op_call["user"]
+        assert state.result["notes"] == 4
+        # A create is about the owner its fields name: the attribute's class, and
+        # the class's scheme when its parent is another create's $ref
+        assert got["op:op-3#1"].subject_id == "cb"
+        attribute_call = next(c for c in llm.calls if "name attribute" in c["user"])
+        assert attribute_call["user"].startswith("Note about the class api_callback")
+        assert "Proposed new attribute callback_name" in attribute_call["user"]
+        assert got["op:op-4#1"].subject_id == "api"
+        assert got["op:op-4#1"].unresolved_refs == []
+        class_call = next(c for c in llm.calls if "Webhooks" in c["user"])
+        assert class_call["user"].startswith("Note about the scheme api:")
+        assert "Proposed new class Webhook" in class_call["user"]
 
     @pytest.mark.parametrize(
         "proposals, message",

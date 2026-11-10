@@ -13,8 +13,8 @@ identifier>".
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Optional, Union
+from collections.abc import Callable, Mapping
+from typing import Any, Optional, Union
 
 from domain.ontology.entities import (
     AttributeDefinition,
@@ -82,10 +82,41 @@ class NoteContextRenderer:
             return self._scheme_context(subject)
         return self._taxonomy_context(taxonomy)
 
+    def proposed(self, fields: Mapping[str, Any], proposed_new: Optional[str] = None) -> str:
+        """
+        What was proposed alongside a note, as DR's typeContext shows a node's
+        proposal: the new entity a create makes, and the proposed definition,
+        distinctions and standard reference. Empty when nothing was.
+        """
+        lines = []
+        if proposed_new:
+            lines.append(f"Proposed new {proposed_new}")
+        if fields.get("description"):
+            lines.append(f"Proposed definition: {fields['description']}")
+        if fields.get("distinguish_from"):
+            lines.append(f"Proposed distinctions: {self._distinctions(fields['distinguish_from'])}")
+        if fields.get("standard_reference"):
+            lines.append(f"Proposed standard reference: {fields['standard_reference']}")
+        return "\n".join(lines)
+
+    def _distinctions(self, entries: Any) -> str:
+        """distinguish_from as "use <class> when <condition>; ...", classes by name."""
+        rendered = []
+        for entry in entries if isinstance(entries, list) else []:
+            if isinstance(entry, Mapping) and entry.get("class_id"):
+                cls = self._repo.get_class(str(entry["class_id"]))
+                name = entity_name(cls) if cls else str(entry["class_id"])
+                rendered.append(f"use {name} when {entry.get('when') or '(no condition)'}")
+        return "; ".join(rendered)
+
     def _class_context(self, cls: Class) -> str:
         repo = self._repo
         neighborhood = self._traversal.get_class_neighborhood(cls.id)
         parts = [f"Current schema:\n{self._describe_class(cls)}"]
+        if cls.distinguish_from:
+            parts.append(f"Distinctions: {self._distinctions(cls.distinguish_from)}")
+        if cls.standard_reference:
+            parts.append(f"Standard reference: {cls.standard_reference}")
         if neighborhood.parent_class:
             parts.append(f"Parent class: {self._brief(neighborhood.parent_class)}")
         if neighborhood.child_classes:

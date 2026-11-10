@@ -7,9 +7,12 @@ prompt), resolves the entities each claim names, and stores the claims with
 keys "<note ref>#<n>" (DR's claim ids). It changes nothing in the taxonomy and
 makes no proposal.
 
-A re-run is idempotent: it submits the new split first, so a claim whose key
-and text are unchanged keeps its triage and verdict (verdicts are benchmark
-gold), and only then deletes that note's claims whose keys the new split no
+Like split-notes.ts, a note that was split already is skipped unless the scope
+says `force: true`: a note whose claims were split from the same text, or any
+of whose claims has a verdict (verdicts are benchmark gold, e.g. DR's imported
+bench gold, which a new wording would clear). A forced re-split submits the new
+split first, so a claim whose key and text are unchanged keeps its triage and
+verdict, and only then deletes that note's claims whose keys the new split no
 longer produced. A note whose split fails keeps its claims.
 """
 
@@ -29,7 +32,7 @@ from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineSt
 from domain.pipelines.ports import LLMProvider, LLMResponse, PipelineRunStatusWriter
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
 from domain.pipelines.requested_via import ensure_may_propose_to
-from domain.versioning.claims import Claim, ClaimService
+from domain.versioning.claims import Claim, ClaimFilter, ClaimService
 from domain.versioning.exceptions import ChangeProposalNotFoundError
 from domain.versioning.gold import DecisionFilter
 from domain.versioning.proposal_service import ProposalService
@@ -41,6 +44,7 @@ from .prompt import parse_split, system_prompt, user_prompt
 
 MAX_REPORTED_ERRORS = 20
 SCOPE_FORMS = ("notes", "proposal_id", "since")
+FORCE = "force"
 
 
 @dataclass
@@ -55,6 +59,14 @@ class _Split:
     claims: list[Claim]
     removed: int
     response: LLMResponse
+
+
+class _SplitFailed(PipelineExecutionError):
+    """A note's split failed after the LLM answered; its tokens still count."""
+
+    def __init__(self, message: str, response: LLMResponse) -> None:
+        super().__init__(message)
+        self.response = response
 
 
 class NotesToClaimsOrchestrator(PipelineOrchestrator):
@@ -101,8 +113,11 @@ class NotesToClaimsOrchestrator(PipelineOrchestrator):
         categories = self._config.get("categories") or {}
         if not categories:
             raise PipelineInputError("The configuration lists no categories")
-        in_scope = self._notes(taxonomy_id, state.input_data.get("scope"))
-        notes = [note for note in in_scope if note.text.strip()]
+        scope = state.input_data.get("scope")
+        in_scope = self._notes(taxonomy_id, scope)
+        written = [note for note in in_scope if note.text.strip()]
+        force = scope.get(FORCE) is True
+        notes = [n for n in written if force or not self._split_already(taxonomy_id, n)]
         renderer = NoteContextRenderer(self._repo, SchemaNeighborhoodTraversal(self._repo))
         resolver = EntityRefResolver(
             self._repo, lambda ids: self._claims.in_taxonomy(taxonomy_id, ids)
@@ -126,15 +141,20 @@ class NotesToClaimsOrchestrator(PipelineOrchestrator):
 
         outcomes = await asyncio.gather(*(split(n) for n in notes), return_exceptions=True)
         splits: list[_Split] = []
+        responses: list[LLMResponse] = []
         failed: list[tuple[str, str]] = []  # (note ref, error)
         for note, outcome in zip(notes, outcomes):
             if isinstance(outcome, asyncio.CancelledError):
                 raise outcome
             if isinstance(outcome, BaseException):
                 failed.append((note.ref, str(outcome) or type(outcome).__name__))
+                if isinstance(outcome, _SplitFailed):
+                    responses.append(outcome.response)
             else:
                 splits.append(outcome)
-        llm_metadata = self._llm_metadata(splits, len(failed), started)
+                responses.append(outcome.response)
+        llm_metadata = self._llm_metadata(responses, len(splits) + len(failed), started)
+        llm_metadata["failed_requests"] = len(failed)
         if total and not splits:
             raise PipelineExecutionError(
                 f"No note could be split, {failed[0][0]}: {failed[0][1]}",
@@ -145,9 +165,11 @@ class NotesToClaimsOrchestrator(PipelineOrchestrator):
         result = {
             "status": "completed_with_warnings" if failed else "completed",
             "taxonomy_id": taxonomy_id,
-            "scope": state.input_data.get("scope"),
+            "scope": scope,
             "notes": len(splits),
-            "notes_skipped": len(in_scope) - total,
+            "empty_notes": len(in_scope) - len(written),
+            # Split already (same text, or a claim with a verdict); force re-splits them
+            "skipped": len(written) - total,
             "claims": len(claims),
             "claims_removed": sum(s.removed for s in splits),
             "unresolved_refs": sum(len(c.unresolved_refs) for c in claims),
@@ -165,6 +187,14 @@ class NotesToClaimsOrchestrator(PipelineOrchestrator):
             parse_warnings=[*state.parse_warnings, *warnings],
         )
 
+    def _split_already(self, taxonomy_id: str, note: Note) -> bool:
+        """
+        Whether the note has claims split from this same text, or claims of
+        which one has a verdict (a re-split could reword it and clear it).
+        """
+        stored = self._claims.list_claims(ClaimFilter(taxonomy_id=taxonomy_id, note_ref=note.ref))
+        return any(c.note_text == note.text or c.verdict is not None for c in stored)
+
     async def _split(
         self,
         note: Note,
@@ -178,8 +208,9 @@ class NotesToClaimsOrchestrator(PipelineOrchestrator):
         subject_id = resolver.resolve(note.subject) if note.subject else None
         subject = renderer.subject(subject_id)
         context = renderer.render(subject, taxonomy)
-        if note.proposed_definition:
-            context += f"\nProposed definition: {note.proposed_definition}"
+        proposed = renderer.proposed(note.proposed, note.proposed_new)
+        if proposed:
+            context += f"\n{proposed}"
         response = await self._call_llm(
             system_prompt=system,
             user_prompt=user_prompt(renderer.heading(subject, taxonomy), note.text, context),
@@ -189,10 +220,23 @@ class NotesToClaimsOrchestrator(PipelineOrchestrator):
             response_format="json",
         )
         try:
-            split = parse_split(response.content, categories)
-        except ValueError as exc:
+            return self._store(note, taxonomy, subject_id, response, categories, resolver, run_id)
+        except Exception as exc:
             cut = " (cut off at max_tokens)" if response.finish_reason == "length" else ""
-            raise PipelineExecutionError(f"{exc}{cut}") from exc
+            raise _SplitFailed(f"{exc}{cut}", response) from exc
+
+    def _store(
+        self,
+        note: Note,
+        taxonomy: Taxonomy,
+        subject_id: Optional[str],
+        response: LLMResponse,
+        categories: dict[str, str],
+        resolver: EntityRefResolver,
+        run_id: Optional[str],
+    ) -> _Split:
+        """Parse the split, resolve what each claim names, and store the claims."""
+        split = parse_split(response.content, categories)
         # An unresolved subject is kept first among each claim's unresolved refs
         unresolved_subject = [note.subject] if note.subject and subject_id is None else []
         claims = []
@@ -230,17 +274,21 @@ class NotesToClaimsOrchestrator(PipelineOrchestrator):
         The notes in scope: {notes: [{ref, subject, text, source?}]} from the
         client, {proposal_id} (its operations' notes and its decisions'
         reasons), or {since} (decision reasons in the taxonomy's gold since
-        then).
+        then); each optionally with force: true.
         """
-        if not isinstance(scope, dict) or len(set(scope) & set(SCOPE_FORMS)) != 1:
+        forms = set(scope) & set(SCOPE_FORMS) if isinstance(scope, dict) else set()
+        if len(forms) != 1:
             raise PipelineInputError(
                 "scope must be one of {notes: [{ref, subject, text}]}, {proposal_id} or {since}"
             )
-        if set(scope) - set(SCOPE_FORMS):
+        extra = set(scope) - set(SCOPE_FORMS) - {FORCE}
+        if extra:
             raise PipelineInputError(
-                f"scope takes only one of {', '.join(SCOPE_FORMS)}, not"
-                f" {', '.join(sorted(set(scope) - set(SCOPE_FORMS)))}"
+                f"scope takes one of {', '.join(SCOPE_FORMS)} and {FORCE}, not"
+                f" {', '.join(sorted(extra))}"
             )
+        if not isinstance(scope.get(FORCE, False), bool):
+            raise PipelineInputError("scope force must be true or false")
         if "notes" in scope:
             return client_notes(scope["notes"])
         if self._proposals is None:
@@ -264,13 +312,16 @@ class NotesToClaimsOrchestrator(PipelineOrchestrator):
             )
         )
 
-    def _llm_metadata(self, splits: list[_Split], failures: int, started: float) -> dict[str, Any]:
-        """Tokens and latency of the run's LLM calls (the provider reports no cost)."""
-        responses = [s.response for s in splits]
+    def _llm_metadata(
+        self, responses: list[LLMResponse], requests: int, started: float
+    ) -> dict[str, Any]:
+        """
+        Tokens and latency of the run's LLM calls, those whose reply couldn't
+        be used included (the provider reports no cost).
+        """
         return {
             "model": self._config["model"],
-            "requests": len(responses) + failures,
-            "failed_requests": failures,
+            "requests": requests,
             "tokens_in": sum(r.tokens_in for r in responses),
             "tokens_out": sum(r.tokens_out for r in responses),
             "latency_ms_total": round(sum(r.duration_ms for r in responses), 1),

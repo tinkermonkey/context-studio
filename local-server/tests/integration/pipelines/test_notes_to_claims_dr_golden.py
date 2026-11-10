@@ -16,8 +16,14 @@ from pathlib import Path
 
 import pytest
 
-from adapters.interchange.dr_claims import DrIdResolver, read_jsonl
+from adapters.interchange.dr_claims import (
+    DR_BENCH_GOLD,
+    DrIdResolver,
+    import_dr_claims,
+    read_jsonl,
+)
 from adapters.interchange.dr_relationships import DR_TAXONOMY_IDENTIFIER
+from adapters.interchange.dr_spec import slugify_spec_node_id
 from adapters.persistence.sqlite.claim_repo import SQLiteClaimRepository
 from adapters.persistence.sqlite.connection import create_local_db_engine, create_session_factory
 from adapters.persistence.sqlite.models import Base
@@ -130,6 +136,21 @@ def dr_split_in_context_studio_names(repo, claims):
     return by_note
 
 
+def split_notes(repo, claims, llm, taxonomy_id, notes):
+    """Run the pipeline on client notes, as DR asks for it over MCP; returns the result."""
+    state = NotesToClaimsState(
+        run_id="run-golden",
+        pipeline_type=PipelineType.NOTES_TO_CLAIMS,
+        input_data={
+            "taxonomy_id": taxonomy_id,
+            "scope": {"notes": notes},
+            REQUESTED_VIA: RequestedVia.MCP.value,
+        },
+    )
+    orchestrator = NotesToClaimsOrchestrator(llm, repo, claims, run_id="run-golden")
+    return asyncio.run(orchestrator.execute(state)).result
+
+
 def test_dr_notes_split_into_dr_claims_with_resolved_entities(dr):
     repo, claims = dr
     note_ids = {note_id for note_id, _, _ in DR_NOTES}
@@ -138,24 +159,21 @@ def test_dr_notes_split_into_dr_claims_with_resolved_entities(dr):
     texts = {note_id: text for note_id, _, text in DR_NOTES}
     llm = FakeNoteSplitter({texts[note_id][:60]: rows for note_id, rows in split.items()})
     taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    # The client's side: the {notes} contract takes a Context Studio id or
+    # identifier as subject, so DR sends its spec node id as the class identifier
+    # the DR loader gives it ("api.callback" -> "api_callback")
     notes = [
-        {"ref": note_id, "subject": subject.replace(".", "_"), "text": text}
+        {"ref": note_id, "subject": slugify_spec_node_id(subject), "text": text}
         for note_id, subject, text in DR_NOTES
     ]
-    state = NotesToClaimsState(
-        run_id="run-golden",
-        pipeline_type=PipelineType.NOTES_TO_CLAIMS,
-        input_data={
-            "taxonomy_id": taxonomy.id,
-            "scope": {"notes": notes},
-            REQUESTED_VIA: RequestedVia.MCP.value,
-        },
-    )
-    orchestrator = NotesToClaimsOrchestrator(llm, repo, claims, run_id="run-golden")
 
-    result = asyncio.run(orchestrator.execute(state)).result
+    result = split_notes(repo, claims, llm, taxonomy.id, notes)
 
-    stored = {c.key: c for c in claims.list_claims(ClaimFilter(taxonomy_id=taxonomy.id))}
+    stored = {
+        c.key: c
+        for c in claims.list_claims(ClaimFilter(taxonomy_id=taxonomy.id))
+        if c.note_ref in note_ids
+    }
     assert sorted(stored) == sorted(c["id"] for c in dr_claims) == sorted(EXPECTED)
     callback = repo.get_by_identifier("api_callback")
     resolver = DrIdResolver(repo)
@@ -180,3 +198,31 @@ def test_dr_notes_split_into_dr_claims_with_resolved_entities(dr):
     assert prompt.startswith("Note about the class api_callback (scheme api):")
     assert "  - expression" in prompt
     assert "callback_uses_server: api_callback --[uses]--> api_server" in prompt
+
+
+def test_a_split_run_leaves_imported_dr_bench_gold_alone(dr):
+    """DR's imported claims carry bench-gold verdicts; splitting their note again skips it."""
+    repo, claims = dr
+    import_dr_claims(
+        claims,
+        repo,
+        read_jsonl(FIXTURES / "claims.jsonl.xz"),
+        read_jsonl(FIXTURES / "bench-gold.jsonl"),
+    )
+    taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    note_ref = "node:security.accesscondition"
+    by_note = ClaimFilter(taxonomy_id=taxonomy.id, note_ref=note_ref)
+    before = {c.key: (c.text, c.verdict) for c in claims.list_claims(by_note)}
+    assert before[f"{note_ref}#1"][1].adjudicated_by == DR_BENCH_GOLD
+    llm = FakeNoteSplitter({})  # fails the test if the note is split
+
+    result = split_notes(
+        repo,
+        claims,
+        llm,
+        taxonomy.id,
+        [{"ref": note_ref, "subject": "security_accesscondition", "text": "A reworded note."}],
+    )
+
+    assert (result["notes"], result["skipped"], llm.calls) == (0, 1, [])
+    assert {c.key: (c.text, c.verdict) for c in claims.list_claims(by_note)} == before

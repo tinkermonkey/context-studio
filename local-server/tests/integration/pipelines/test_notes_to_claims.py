@@ -86,13 +86,14 @@ def wait_for_end(runs, run_id, timeout=30.0):
     raise AssertionError("run did not finish")
 
 
-def split_in_background(world, llm):
+def split_in_background(world, llm, **scope):
     executor = make_executor(world, llm)
+    notes = [{"ref": "n1", "subject": "room", "text": NOTE}]
     run = executor.submit(
         PipelineType.NOTES_TO_CLAIMS,
         "default",
         "default",
-        {"taxonomy_id": T, "scope": {"notes": [{"ref": "n1", "subject": "room", "text": NOTE}]}},
+        {"taxonomy_id": T, "scope": {"notes": notes, **scope}},
     )
     executor.start()
     try:
@@ -138,12 +139,17 @@ def test_a_background_run_stores_each_notes_claims_and_a_rerun_keeps_verdicts(wo
         stored[0].id, ClaimVerdict(validity="real_defect", adjudicated_by="user")
     )
 
-    again = split_in_background(
-        world,
-        FakeNoteSplitter(
-            {"floor area": [claim_split("room.floor_area has no unit.", "room.floor_area")]}
-        ),
+    resplit = FakeNoteSplitter(
+        {"floor area": [claim_split("room.floor_area has no unit.", "room.floor_area")]}
     )
+    skipped = split_in_background(world, resplit)
+
+    # Split already: left as it is
+    assert skipped.status == PipelineRunStatus.COMPLETED, skipped.failure_reason
+    assert (skipped.output_summary["skipped"], resplit.calls) == (1, [])
+    assert len(world.claims.list_claims(ClaimFilter(taxonomy_id=T))) == 2
+
+    again = split_in_background(world, resplit, force=True)
 
     assert again.status == PipelineRunStatus.COMPLETED, again.failure_reason
     assert again.output_summary["claims_removed"] == 1
