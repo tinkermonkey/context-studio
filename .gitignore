@@ -58,6 +58,10 @@ __pycache__/
 *.db-wal
 *.db.pre*
 
+# Local backups of workspace databases and config (may hold secrets)
+*.bak-*
+*.stale-*
+
 # Test outputs
 ux/test_output.txt
 ux/test_results.txt
