@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Start an extraction</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/heimdall/tokens.css">
+<link rel="stylesheet" href="ds/heimdall/components/bundle.css">
+<script src="ds/heimdall/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:var(--font-sans)}
+a{color:rgb(var(--canvas-fg-1));text-decoration:none}
+a:hover{color:#b45309;text-decoration:underline}
+</style>
+</helmet>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.ShellLayout" app-title="{{appTitle}}" sidebar="{{sidebar}}" topbar="{{topbar}}" style="display: block;">
+<div style="display: flex; flex-direction: column; gap: 18px; max-width: 1280px;">
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.PageHeader" eyebrow="SOURCE · pdf · house" title="Whirlpool WRF555SDFZ refrigerator: use and care guide" id-chip="src_7c41" subtitle="wrf555sdfz-use-care.pdf · 64 pages · 118k characters · added 2h ago to dataset home"></x-import>
+
+<div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start;">
+
+<div style="flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 16px;">
+
+<sc-if value="{{isConfigure}}" hint-placeholder-val="{{true}}">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Panel" title="Extract" subtitle="Candidates land as one proposal in the review queue. Nothing changes the dataset until it is applied there.">
+<div style="display: flex; flex-direction: column; gap: 18px;">
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Field" label="Dataset" hint="The proposal, and every individual it creates, belongs to this dataset. Near matches are looked for here.">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.SegmentedControl" value="{{dataset}}" on-change="{{setDataset}}" options="{{datasetOptions}}" aria-label="Dataset"></x-import>
+</x-import>
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Field" label="Individual extraction" hint="Individuals and relationships, typed by house's class definitions and charter summary.">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.SegmentedControl" value="{{config}}" on-change="{{setConfig}}" options="{{configOptions}}" aria-label="Configuration"></x-import>
+</x-import>
+
+<label style="display: flex; gap: 10px; align-items: flex-start; cursor: pointer;">
+<input type="checkbox" checked="{{schemaOn}}" on-change="{{toggleSchema}}" style="margin-top: 3px; accent-color: #b45309;">
+<span style="display: flex; flex-direction: column; gap: 2px;">
+<span style="font-size: 13.5px; font-weight: 600; color: rgb(var(--canvas-fg-1));">Also suggest schema changes</span>
+<span style="font-size: 12.5px; color: rgb(var(--canvas-fg-3));">Runs schema extraction too. New classes and predicates go in a separate proposal, since schema changes follow the taxonomy's approval policy.</span>
+</span>
+</label>
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Field" label="Pages" html-for="extract-pages" hint="Optional. Skip safety, warranty and index pages to save time and cost." style="max-width: 320px;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.TextInput" id="extract-pages" mono="{{true}}" placeholder="all" value="{{pages}}" on-change="{{typePages}}"></x-import>
+</x-import>
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.FormCallout" variant="info" icon="sparkle">{{estimate}}</x-import>
+
+<div style="display: flex; gap: 8px; justify-content: flex-end;">
+<a href="Main.dc.html" style="display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500;">Cancel</a>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="primary" size="sm" on-click="{{start}}">Start extraction</x-import>
+</div>
+</div>
+</x-import>
+</sc-if>
+
+<sc-if value="{{isRunning}}" hint-placeholder-val="{{false}}">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Panel" title="Extracting" subtitle="You can leave this page. The run carries on, and the source's row shows its progress.">
+<div style="display: flex; flex-direction: column; gap: 14px;">
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;">
+<span style="font-size: 20px; font-weight: 600; color: rgb(var(--canvas-fg-1));">{{progressHeadline}}</span>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="secondary" size="sm" on-click="{{cancel}}">Cancel run</x-import>
+</div>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.ProgressBar" percent="{{percent}}" color="amber" height="{{barHeight}}" label="{{percentLabel}}"></x-import>
+<span style="font-family: var(--font-mono); font-size: 12px; color: rgb(var(--canvas-fg-3));">{{tally}}</span>
+</div>
+</x-import>
+</sc-if>
+
+<sc-if value="{{isDone}}" hint-placeholder-val="{{false}}">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Panel" title="Proposal ready" subtitle="Extraction: WRF555SDFZ use and care guide · dataset home">
+<div style="display: flex; flex-direction: column; gap: 14px;">
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.StatTile" label="Operations" value="31" color="amber"></x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.StatTile" label="New individuals" value="14" color="emerald"></x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.StatTile" label="Relationships" value="12" color="cyan"></x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.StatTile" label="Near matches" value="5" color="violet"></x-import>
+</div>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.FormCallout" variant="warn" icon="alert">Chunks 14 and 15 (warranty, index) gave no candidates. Two quotes could not be placed exactly in the text; their operations show the quote without a highlight.</x-import>
+<div style="display: flex; gap: 8px; justify-content: flex-end;">
+<a href="Main.dc.html" style="display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500;">Back to sources</a>
+<a href="Review.dc.html" style="display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; background: #b45309; color: #ffffff;">Review proposal</a>
+</div>
+</div>
+</x-import>
+</sc-if>
+
+</div>
+
+<aside aria-label="Chunks" style="flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border: 1px solid rgb(var(--canvas-border)); border-radius: 8px;">
+<div style="display: flex; justify-content: space-between; align-items: baseline;">
+<span style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; color: rgb(var(--canvas-fg-3));">CHUNKS · BY SECTION</span>
+<span style="font-family: var(--font-mono); font-size: 11.5px; color: rgb(var(--canvas-fg-3));">{{chunkCount}}</span>
+</div>
+<sc-for list="{{chunks}}" as="c" hint-placeholder-count="8">
+<div style="display: flex; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px dashed rgb(var(--canvas-border));">
+<span style="width: 22px; font-family: var(--font-mono); font-size: 11.5px; color: rgb(var(--canvas-fg-3)); text-align: right;">{{c.n}}</span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px;">
+<span style="font-size: 13px; color: rgb(var(--canvas-fg-1)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{c.title}}</span>
+<span style="font-family: var(--font-mono); font-size: 11px; color: rgb(var(--canvas-fg-3));">{{c.pages}}</span>
+</span>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="{{c.tone}}">{{c.state}}</x-import>
+</div>
+</sc-for>
+<p style="margin: 4px 0 0; font-size: 12px; color: rgb(var(--canvas-fg-3));">Split at headings, about 8k characters each, never mid-sentence. Candidates found in several chunks merge into one operation with every passage as evidence.</p>
+</aside>
+
+</div>
+</div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"startAt":{"editor":"enum","options":["configure","running","done"],"default":"configure"},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const s = props.startAt || 'configure';
+    this.state = { stage: s, done: s === 'done' ? 13 : (s === 'running' ? 6 : 0), dataset: 'home', config: 'extraction-default', schemaOn: false, pages: '' };
+  }
+  componentWillUnmount() { if (this.timer) clearInterval(this.timer); }
+  run() {
+    if (this.timer) clearInterval(this.timer);
+    this.timer = setInterval(() => {
+      const d = this.state.done + 1;
+      if (d >= 15) { clearInterval(this.timer); this.timer = null; this.setState({ done: 15, stage: 'done' }); }
+      else this.setState({ done: d });
+    }, 450);
+  }
+  renderVals() {
+    const sections = [
+      ['Important safety instructions', 'pp. 1–4'], ['Parts and features', 'pp. 5–8'], ['Installation: unpack and level', 'pp. 9–13'], ['Connect the water supply', 'pp. 14–17'], ['Refrigerator use: controls', 'pp. 18–22'], ['Water filtration system', 'pp. 23–26'], ['Ice maker and storage bin', 'pp. 27–30'], ['Refrigerator care: cleaning', 'pp. 31–34'], ['Changing the light bulbs', 'pp. 35–37'], ['Vacation and moving care', 'pp. 38–40'], ['Troubleshooting: operation', 'pp. 41–47'], ['Troubleshooting: water and ice', 'pp. 48–53'], ['Accessories and part numbers', 'pp. 54–56'], ['Warranty', 'pp. 57–61'], ['Index', 'pp. 62–64']
+    ];
+    const st = this.state.stage, done = this.state.done;
+    const counts = [0, 6, 3, 4, 2, 5, 4, 3, 2, 1, 4, 3, 5, 0, 0];
+    const chunks = sections.map((s, i) => {
+      let state = 'waiting', tone = 'neutral';
+      if (st === 'done' || i < done) { state = counts[i] + ' found'; tone = counts[i] ? 'emerald' : 'neutral'; }
+      else if (st === 'running' && i === done) { state = 'reading'; tone = 'amber'; }
+      if (st === 'configure') { state = 'queued'; tone = 'neutral'; }
+      return { n: i + 1, title: s[0], pages: s[1], state: state, tone: tone };
+    });
+    const found = counts.slice(0, Math.min(done, 15)).reduce((a, b) => a + b, 0);
+    const percent = Math.round((done / 15) * 100);
+    return {
+      appTitle: { title: 'Context Studio', version: 'v0.2.0 · LOCAL' },
+      sidebar: {
+        activeItemId: 'data-sources',
+        defaultExpandedIds: ['data'],
+        sections: [{ title: '', items: [
+          { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+          { id: 'proposals', label: 'Proposals', icon: 'gitBranch', count: 3 },
+          { id: 'schema', label: 'Schema', icon: 'schema' },
+          { id: 'data', label: 'Data', icon: 'data', children: [
+            { id: 'data-individuals', label: 'Individuals' },
+            { id: 'data-relationships', label: 'Relationships' },
+            { id: 'data-sources', label: 'Sources' }
+          ] },
+          { id: 'external-reference', label: 'External Reference', icon: 'link' },
+          { id: 'pipelines', label: 'Pipelines', icon: 'pipeline' },
+          { id: 'graph', label: 'Graph view', icon: 'graph' },
+          { id: 'settings', label: 'Configuration', icon: 'settings' }
+        ] }]
+      },
+      topbar: { breadcrumbs: [{ label: 'house' }, { label: 'Sources' }, { label: 'WRF555SDFZ use and care guide' }], searchPlaceholder: 'Search' },
+      isConfigure: st === 'configure',
+      isRunning: st === 'running',
+      isDone: st === 'done',
+      dataset: this.state.dataset,
+      datasetOptions: [{ value: 'home', label: 'home' }, { value: 'cabin', label: 'cabin' }],
+      setDataset: (v) => this.setState({ dataset: v }),
+      config: this.state.config,
+      configOptions: [
+        { value: 'extraction-default', label: 'extraction-default' },
+        { value: 'extraction-openrouter-default', label: 'openrouter' },
+        { value: 'extraction-open-v1', label: 'open_v1' }
+      ],
+      setConfig: (v) => this.setState({ config: v }),
+      schemaOn: this.state.schemaOn,
+      toggleSchema: () => this.setState({ schemaOn: !this.state.schemaOn }),
+      pages: this.state.pages,
+      typePages: (e) => this.setState({ pages: e.target.value }),
+      estimate: this.state.schemaOn
+        ? '15 chunks. Two runs, two proposals: individuals for dataset home, and schema suggestions for house. Rough estimate: $0.70 and 6–8 minutes.'
+        : '15 chunks, one run, one proposal for dataset home. Rough estimate: $0.40 and 3–5 minutes.',
+      start: () => { this.setState({ stage: 'running', done: 0 }); this.run(); },
+      cancel: () => { if (this.timer) clearInterval(this.timer); this.timer = null; this.setState({ stage: 'configure', done: 0 }); },
+      progressHeadline: 'Chunk ' + Math.min(done + 1, 15) + ' of 15',
+      percent: percent,
+      percentLabel: percent + '%',
+      tally: found + ' candidates so far · run run_9e12 · individual_extraction · ' + this.state.config,
+      barHeight: 6,
+      chunks: chunks,
+      chunkCount: '15 chunks · 64 pages',
+      true: true,
+      false: false
+    };
+  }
+}
+</script>
+</body>
+</html>

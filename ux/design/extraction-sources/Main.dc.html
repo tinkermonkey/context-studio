@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sources</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/heimdall/tokens.css">
+<link rel="stylesheet" href="ds/heimdall/components/bundle.css">
+<script src="ds/heimdall/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:var(--font-sans)}
+a{color:rgb(var(--canvas-fg-1));text-decoration:none}
+a:hover{color:#b45309;text-decoration:underline}
+</style>
+</helmet>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.ShellLayout" app-title="{{appTitle}}" sidebar="{{sidebar}}" topbar="{{topbar}}" style="display: block;">
+<div style="display: flex; flex-direction: column; gap: 18px; max-width: 1280px;">
+
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.PageHeader" eyebrow="DATA · house · dataset home" title="Sources" id-chip="/app/data/sources" subtitle="Manuals, web pages and notes to extract from. A source keeps its text with page and character offsets, so every extracted candidate points back to the passage it came from."></x-import>
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.SegmentedControl" value="{{dataset}}" on-change="{{setDataset}}" options="{{datasetOptions}}" aria-label="Dataset"></x-import>
+<span style="font-family: var(--font-mono); font-size: 12px; color: rgb(var(--canvas-fg-3));">{{countLabel}}</span>
+</div>
+
+<section aria-label="Add a source" style="display: flex; flex-direction: column; gap: 14px; padding: 16px; border: 1px solid rgb(var(--canvas-border)); border-radius: 8px; background: rgb(var(--canvas-bg-2));">
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;">
+<span style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; color: rgb(var(--canvas-fg-3));">ADD A SOURCE</span>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.SegmentedControl" value="{{mode}}" on-change="{{setMode}}" options="{{modeOptions}}" aria-label="Source type"></x-import>
+</div>
+
+<sc-if value="{{isFile}}" hint-placeholder-val="{{true}}">
+<label for="source-file" style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 26px 16px; border: 1px dashed rgb(var(--canvas-border-strong)); border-radius: 8px; background: rgb(var(--canvas-bg)); cursor: pointer; text-align: center;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Icon" name="doc" size="{{iconSize}}"></x-import>
+<span style="font-size: 14px; font-weight: 600; color: rgb(var(--canvas-fg-1));">Drop a file here, or choose one</span>
+<span style="font-size: 12.5px; color: rgb(var(--canvas-fg-3));">PDF, Markdown, HTML or plain text, up to 50 MB. Scanned PDFs without a text layer are refused for now.</span>
+<input id="source-file" type="file" accept=".pdf,.md,.markdown,.html,.htm,.txt" style="position: absolute; width: 1px; height: 1px; opacity: 0;">
+</label>
+</sc-if>
+
+<sc-if value="{{isUrl}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Field" label="Web page" html-for="source-url" hint="Fetched once and kept. The page's main text is extracted; menus and footers are dropped." style="flex: 999 1 420px;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.TextInput" id="source-url" mono="{{true}}" placeholder="https://" value="{{url}}" on-change="{{typeUrl}}"></x-import>
+</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="primary" size="sm" on-click="{{fetchUrl}}">Fetch page</x-import>
+</div>
+</sc-if>
+
+<sc-if value="{{isText}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Field" label="Title" html-for="source-title">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.TextInput" id="source-title" placeholder="Water heater service notes"></x-import>
+</x-import>
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Field" label="Text" html-for="source-text" hint="Kept as a source like any file, so its candidates point back to it.">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.TextArea" id="source-text" rows="{{rows4}}" placeholder="Paste text"></x-import>
+</x-import>
+<div><x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Button" variant="primary" size="sm">Add source</x-import></div>
+</div>
+</sc-if>
+</section>
+
+<table class="table">
+<thead class="table__head">
+<tr class="table__row">
+<th class="table__header">Source</th>
+<th class="table__header" style="width: 90px;">Kind</th>
+<th class="table__header" style="width: 120px;">Status</th>
+<th class="table__header" style="width: 300px;">Last extraction</th>
+<th class="table__header" style="width: 110px; text-align: right;">Added</th>
+<th class="table__header" style="width: 110px;"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);">Actions</span></th>
+</tr>
+</thead>
+<tbody class="table__body">
+<sc-for list="{{rows}}" as="row" hint-placeholder-count="5">
+<tr class="table__row">
+<td class="table__cell">
+<div style="display: flex; flex-direction: column; gap: 3px;">
+<span style="font-weight: 600; font-size: 13.5px; color: rgb(var(--canvas-fg-1));">{{row.title}}</span>
+<span style="font-family: var(--font-mono); font-size: 11.5px; color: rgb(var(--canvas-fg-3));">{{row.detail}}</span>
+</div>
+</td>
+<td class="table__cell"><x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" form="id-tag">{{row.kind}}</x-import></td>
+<td class="table__cell">
+<div style="display: flex; flex-direction: column; gap: 3px;">
+<x-import component-from-global-scope="HeimdallDesignSystem_7d0eb4.Chip" variant="{{row.statusTone}}">{{row.status}}</x-import>
+<span style="font-size: 11.5px; color: rgb(var(--canvas-fg-3));">{{row.statusNote}}</span>
+</div>
+</td>
+<td class="table__cell">
+<sc-if value="{{row.hasRun}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 3px;">
+<a href="Review.dc.html" style="font-size: 13px; font-weight: 600;">{{row.proposal}}</a>
+<span style="font-family: var(--font-mono); font-size: 11.5px; color: rgb(var(--canvas-fg-3));">{{row.runDetail}}</span>
+</div>
+</sc-if>
+<sc-if value="{{row.noRun}}" hint-placeholder-val="{{false}}">
+<span style="font-size: 12.5px; color: rgb(var(--canvas-fg-3));">Not extracted yet</span>
+</sc-if>
+</td>
+<td class="table__cell" style="text-align: right; font-family: var(--font-mono); font-size: 12px; color: rgb(var(--canvas-fg-3));">{{row.age}}</td>
+<td class="table__cell" style="text-align: right;">
+<sc-if value="{{row.canExtract}}" hint-placeholder-val="{{true}}">
+<a href="Extract.dc.html" style="display: inline-flex; align-items: center; padding: 5px 10px; border: 1px solid rgb(var(--canvas-border-strong)); border-radius: 6px; font-size: 12.5px; font-weight: 500; white-space: nowrap; text-decoration: none;">{{row.extractLabel}}</a>
+</sc-if>
+</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+
+<p style="margin: 0; font-size: 12.5px; color: rgb(var(--canvas-fg-3));">Extracting a source again makes a new proposal and supersedes its open one. Removing a source keeps the entities already applied from it; their provenance still names it.</p>
+
+</div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { mode: 'file', dataset: 'home', url: '', fetched: [] };
+  }
+  renderVals() {
+    const base = [
+      { title: 'Whirlpool WRF555SDFZ refrigerator: use and care guide', detail: 'wrf555sdfz-use-care.pdf · 64 pages · 118k chars', kind: 'pdf', status: 'ready', statusTone: 'emerald', statusNote: '', hasRun: true, noRun: false, proposal: 'Extraction: WRF555SDFZ use and care guide', runDetail: '31 ops · 12 need a decision · 2h', age: '2h', canExtract: true, extractLabel: 'Extract again', ds: 'home' },
+      { title: 'Bosch SHPM88Z75N dishwasher: operating instructions', detail: 'shpm88z75n-manual.pdf · 48 pages · 91k chars', kind: 'pdf', status: 'ready', statusTone: 'emerald', statusNote: '', hasRun: false, noRun: true, age: '1d', canExtract: true, extractLabel: 'Extract', ds: 'home' },
+      { title: 'How to replace a furnace filter', detail: 'energystar.gov/products/heating_cooling · fetched 2026-11-09', kind: 'web', status: 'ready', statusTone: 'emerald', statusNote: '', hasRun: true, noRun: false, proposal: 'Extraction: How to replace a furnace filter', runDetail: '9 ops · done · applied 9', age: '1d', canExtract: true, extractLabel: 'Extract again', ds: 'home' },
+      { title: 'Water heater service notes', detail: 'pasted text · 2.4k chars', kind: 'text', status: 'ready', statusTone: 'emerald', statusNote: '', hasRun: false, noRun: true, age: '3d', canExtract: true, extractLabel: 'Extract', ds: 'cabin' },
+      { title: 'Rheem XE50M06ST45U1 installation guide', detail: 'rheem-xe50-install.pdf · 36 pages', kind: 'pdf', status: 'failed', statusTone: 'rose', statusNote: 'No text layer (scanned)', hasRun: false, noRun: true, age: '3d', canExtract: false, ds: 'cabin' }
+    ];
+    const fetched = this.state.fetched.map((u) => ({ title: u, detail: u + ' · fetching', kind: 'web', status: 'fetching', statusTone: 'cyan', statusNote: 'Reading the page', hasRun: false, noRun: true, age: 'now', canExtract: false, ds: this.state.dataset === 'all' ? 'home' : this.state.dataset }));
+    const all = fetched.concat(base);
+    const d = this.state.dataset;
+    const rows = all.filter((r) => d === 'all' || r.ds === d);
+    const m = this.state.mode;
+    return {
+      appTitle: { title: 'Context Studio', version: 'v0.2.0 · LOCAL' },
+      sidebar: {
+        activeItemId: 'data-sources',
+        defaultExpandedIds: ['data'],
+        sections: [{ title: '', items: [
+          { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+          { id: 'proposals', label: 'Proposals', icon: 'gitBranch', count: 3 },
+          { id: 'schema', label: 'Schema', icon: 'schema' },
+          { id: 'data', label: 'Data', icon: 'data', children: [
+            { id: 'data-individuals', label: 'Individuals' },
+            { id: 'data-relationships', label: 'Relationships' },
+            { id: 'data-sources', label: 'Sources' }
+          ] },
+          { id: 'external-reference', label: 'External Reference', icon: 'link' },
+          { id: 'pipelines', label: 'Pipelines', icon: 'pipeline' },
+          { id: 'graph', label: 'Graph view', icon: 'graph' },
+          { id: 'settings', label: 'Configuration', icon: 'settings' }
+        ] }]
+      },
+      topbar: { breadcrumbs: [{ label: 'house' }, { label: 'Data' }, { label: 'Sources' }], searchPlaceholder: 'Search' },
+      dataset: d,
+      datasetOptions: [
+        { value: 'home', label: 'home' },
+        { value: 'cabin', label: 'cabin' },
+        { value: 'all', label: 'All datasets' }
+      ],
+      setDataset: (v) => this.setState({ dataset: v }),
+      mode: m,
+      modeOptions: [
+        { value: 'file', label: 'File' },
+        { value: 'url', label: 'Web page' },
+        { value: 'text', label: 'Text' }
+      ],
+      setMode: (v) => this.setState({ mode: v }),
+      isFile: m === 'file',
+      isUrl: m === 'url',
+      isText: m === 'text',
+      url: this.state.url,
+      typeUrl: (e) => this.setState({ url: e.target.value }),
+      fetchUrl: () => {
+        const u = (this.state.url || '').trim() || 'https://www.lg.com/us/support/help-library/washer-cleaning';
+        this.setState({ fetched: [u].concat(this.state.fetched), url: '' });
+      },
+      rows: rows,
+      countLabel: rows.length + ' sources',
+      iconSize: 22,
+      rows4: 4,
+      true: true,
+      false: false
+    };
+  }
+}
+</script>
+</body>
+</html>

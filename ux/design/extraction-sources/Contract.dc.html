@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>One contract</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/heimdall/tokens.css">
+<link rel="stylesheet" href="ds/heimdall/components/bundle.css">
+<script src="ds/heimdall/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:var(--font-sans)}
+</style>
+</helmet>
+<div style="box-sizing: border-box; min-height: 1140px; padding: 40px 48px 48px; background: rgb(var(--canvas-bg)); color: rgb(var(--canvas-fg-1)); display: flex; flex-direction: column; gap: 24px;">
+
+<header style="display: flex; flex-direction: column; gap: 6px; max-width: 980px;">
+<span style="font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; color: rgb(var(--canvas-fg-3));">CONTRACT · #1449 · #1450 · #1451</span>
+<h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.02em;">One contract for the UI, REST and MCP</h1>
+<p style="margin: 0; font-size: 14px; line-height: 1.55; color: rgb(var(--canvas-fg-2));">The UI calls the REST routes; MCP tools wrap the same services. A client in its own Claude Code session can add a source, extract it and follow the run, but decisions are made in Context Studio's review queue.</p>
+</header>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px;">
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="3">
+<section style="display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid rgb(var(--canvas-border)); border-radius: 8px;">
+<div style="display: flex; gap: 10px; align-items: baseline;">
+<span style="font-family: var(--font-mono); font-size: 12px; color: #b45309; font-weight: 600;">{{s.n}}</span>
+<h2 style="margin: 0; font-size: 16px; font-weight: 600;">{{s.title}}</h2>
+</div>
+<p style="margin: 0; font-size: 13px; line-height: 1.5; color: rgb(var(--canvas-fg-2));">{{s.what}}</p>
+<span style="font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.08em; color: rgb(var(--canvas-fg-3));">REST</span>
+<pre style="margin: 0; padding: 10px 12px; border-radius: 6px; background: rgb(var(--canvas-bg-2)); font-family: var(--font-mono); font-size: 11.5px; line-height: 1.55; white-space: pre-wrap; color: rgb(var(--canvas-fg-1));">{{s.rest}}</pre>
+<span style="font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.08em; color: rgb(var(--canvas-fg-3));">MCP</span>
+<pre style="margin: 0; padding: 10px 12px; border-radius: 6px; background: rgb(var(--canvas-bg-2)); font-family: var(--font-mono); font-size: 11.5px; line-height: 1.55; white-space: pre-wrap; color: rgb(var(--canvas-fg-1));">{{s.mcp}}</pre>
+<p style="margin: 0; font-size: 12px; line-height: 1.5; color: rgb(var(--canvas-fg-3));">{{s.note}}</p>
+</section>
+</sc-for>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;">
+<section style="display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 1px solid rgb(var(--canvas-border)); border-radius: 8px;">
+<h2 style="margin: 0; font-size: 16px; font-weight: 600;">Evidence and provenance</h2>
+<p style="margin: 0; font-size: 13px; line-height: 1.5; color: rgb(var(--canvas-fg-2));">An operation's evidence gains the source and its location. When the proposal applies, each passage becomes an entity source row, so provenance outlives the run.</p>
+<pre style="margin: 0; padding: 10px 12px; border-radius: 6px; background: rgb(var(--canvas-bg-2)); font-family: var(--font-mono); font-size: 11.5px; line-height: 1.55; white-space: pre-wrap;">{{evidence}}</pre>
+</section>
+<section style="display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 1px solid rgb(var(--canvas-border)); border-radius: 8px;">
+<h2 style="margin: 0; font-size: 16px; font-weight: 600;">Client round trip (#1451)</h2>
+<p style="margin: 0; font-size: 13px; line-height: 1.5; color: rgb(var(--canvas-fg-2));">Today these run only as scripts. Two MCP tools let DR and House do the whole loop from their own sessions.</p>
+<pre style="margin: 0; padding: 10px 12px; border-radius: 6px; background: rgb(var(--canvas-bg-2)); font-family: var(--font-mono); font-size: 11.5px; line-height: 1.55; white-space: pre-wrap;">{{roundTrip}}</pre>
+</section>
+</div>
+
+<section style="display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border: 1px solid rgba(251,191,36,0.45); border-radius: 8px; background: rgba(251,191,36,0.07);">
+<h2 style="margin: 0; font-size: 14px; font-weight: 600;">Out of scope for the first build</h2>
+<p style="margin: 0; font-size: 13px; line-height: 1.5; color: rgb(var(--canvas-fg-2));">Scanned PDFs (OCR), Word documents, whole folders and repositories, crawling more than one page, and re-fetching a page when it changes. The paste-text review page stays as the tuning bench, with its direct apply.</p>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1140}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      steps: [
+        {
+          n: '1', title: 'Add a source',
+          what: 'Store the original, extract its text once, keep page boundaries and character offsets.',
+          rest: 'POST /api/sources\n  multipart file, or {url}, or {title, text}\n  + taxonomy_id, dataset\n→ Source {id, kind, title, status,\n    origin, content_type, pages, chars}\n\nGET /api/sources?taxonomy_id&dataset\nGET /api/sources/{id}\nGET /api/sources/{id}/text?page=\nDELETE /api/sources/{id}',
+          mcp: 'add_source(taxonomy_id, dataset?,\n  url? | text? | path?, title?)\nlist_sources(taxonomy_id, dataset?)',
+          note: 'A path must sit under a folder listed in config.json sources.allowed_roots; anything else is refused. Status: fetching, ready, failed (too_large, unsupported_type, no_text, fetch_failed).'
+        },
+        {
+          n: '2', title: 'Extract it',
+          what: 'One background run per source. Chunks are its items, so progress and cancel work as they do for other runs.',
+          rest: 'POST /api/sources/{id}/extract\n  {dataset, configuration_ref?,\n   pages?, schema?: bool}\n→ 202 {runs: [run_id, ...]}\n\nGET  /api/pipelines/runs/{id}\n  items_done / items_total = chunks\nPOST /api/pipelines/runs/{id}/cancel',
+          mcp: 'extract_source(source_id, dataset?,\n  configuration?, pages?, schema?)\n→ run\nget_run(run_id)\n→ status, items, proposal_id',
+          note: 'Individual extraction gains chunking and a source_id input. schema: true adds a schema extraction run with its own proposal.'
+        },
+        {
+          n: '3', title: 'Adjudicate',
+          what: 'Each run ends in one proposal (source pipeline, scoped to the dataset). It goes through the same review queue and approval policy as every other proposal.',
+          rest: 'GET /api/proposals/{id}\n  ops: create individual ($ref)\n       create relationship ($ref ends)\n  each with evidence[], probability,\n  alternatives[] for near matches\n\nPOST /api/proposals/{id}/apply\n  chosen_alternatives: {op: existing}',
+          mcp: 'get_proposal(id)\nlist_proposals(taxonomy_id,\n  status?, source?: "pipeline")',
+          note: 'A near match is an alternative {kind: existing, entity_id, similarity}. Choosing it drops the create and repoints relationships that named it.'
+        }
+      ],
+      evidence: 'operation.evidence[]\n  {source_id, page, start, end, quote}\n\nentity_sources (local.db)\n  entity_id      class | individual | relationship\n  source_id      sources.id (kept if removed)\n  proposal_id    op_seq\n  page, start, end, quote\n  created_at',
+      roundTrip: 'submit_reflection_plan(taxonomy_id, plan)\n  plan: dr-reflection-plan/1\n→ proposal (same as import_dr_reflection_plan.py)\n\nget_spec_changes(proposal_id)\n→ cs-dr-spec-changes/1\n  (same as export_dr_spec_changes.py)\n\nget_decisions(proposal_id)\n→ the decisions REST already serves'
+    };
+  }
+}
+</script>
+</body>
+</html>
