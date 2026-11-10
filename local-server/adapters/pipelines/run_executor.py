@@ -216,15 +216,19 @@ class BackgroundRunExecutor:
             self._refresh_batch(run.batch_run_id, finished=True)
         return cancelled_pending
 
-    def requeue(self, run_id: str) -> bool:
+    def requeue(self, run_id: str, input_updates: dict[str, Any]) -> bool:
         """
         Put a cancelled, failed or interrupted run back in the queue, progress reset.
+
+        Args:
+            run_id: The run
+            input_updates: Values to set in its stored input, such as who re-queued it
 
         Returns:
             True if the run was re-queued; False if it is in another state or has
             no stored input to execute
         """
-        requeued = self._runs.requeue(run_id)
+        requeued = self._runs.requeue(run_id, input_updates)
         if requeued:
             self.wake()
         return requeued

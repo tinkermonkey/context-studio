@@ -195,17 +195,15 @@ def test_background_run_proposes_a_dr_rename_that_applies(world):
     props = by_dr_id(world.repo)
     renamed, kept = props[RENAMED], props[KEPT]
     taxonomy = world.repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
-    # The import marks the DR taxonomy mirrored, which refuses reflection runs;
-    # this test is about the pipeline itself, so it lifts the flag.
-    taxonomy.mirrored = False
-    world.repo.save_taxonomy(taxonomy)
+    # The import marks the DR taxonomy mirrored: only its client, over MCP, may run this
+    assert taxonomy.mirrored
     model = RenamingModel(rename="api_operation delivers api_response")
     executor = make_executor(world, model)
     run = executor.submit(
         PipelineType.SCHEMA_RELATIONSHIP_REFLECTION,
         "default",
         "default",
-        {"taxonomy_id": taxonomy.id, "scope": [renamed.id, kept.id]},
+        {"taxonomy_id": taxonomy.id, "scope": [renamed.id, kept.id], "requested_via": "mcp"},
     )
     executor.start()
     try:
