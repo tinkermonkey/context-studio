@@ -6501,7 +6501,7 @@
           "interchange"
         ],
         "summary": "Export Bundle",
-        "description": "Export one taxonomy as a Context Studio bundle (v0).\n\nLoading the returned bundle back into this workspace changes nothing.\nSee domain/interchange/bundle.py for the format.\n\nRaises:\n    HTTPException: 404 if the taxonomy or dataset does not exist; 409 if the\n        workspace cannot be expressed as a bundle (an entity has no stored identifier)",
+        "description": "Export one taxonomy as a Context Studio bundle (v1).\n\nLoading the returned bundle back into this workspace changes nothing.\nSee domain/interchange/bundle.py for the format.\n\nRaises:\n    HTTPException: 404 if the taxonomy or dataset does not exist; 409 if the\n        workspace cannot be expressed as a bundle (an entity has no stored identifier)",
         "operationId": "export_bundle_api_v1_interchange_bundles__taxonomy_id__get",
         "parameters": [
           {
@@ -8783,7 +8783,7 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": true,
-                "description": "A context-studio-bundle v0 document",
+                "description": "A context-studio-bundle document (v1; v0 still imports)",
                 "title": "Bundle"
               }
             }

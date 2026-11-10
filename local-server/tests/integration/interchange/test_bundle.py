@@ -611,6 +611,35 @@ def _taxonomy_id(repo, identifier):
     return repo.get_by_identifier(identifier).id
 
 
+def _as_v0(bundle):
+    """
+    A v1 export in v0's shape (#1483), to compare with House's cached v0 file:
+    structure and edge attributes back into `constraints` under House's keys,
+    derived back as its legacy metadata copy, and no predicate catalog.
+    """
+    result = copy.deepcopy(bundle)
+    assert result.pop("version") == 1
+    result["version"] = 0
+    result.pop("predicates")
+    for prop in result["properties"]:
+        cardinality = prop.pop("cardinality")
+        constraints = prop["constraints"]
+        constraints.update(
+            min=cardinality["min_per_source"],
+            max=cardinality["max_per_source"],
+            hierarchy=prop.pop("hierarchy"),
+            symmetric=prop.pop("symmetric"),
+        )
+        if cardinality["max_per_target"] is not None:
+            constraints["max_per_target"] = cardinality["max_per_target"]
+        attributes = prop.pop("attributes", [])
+        if attributes:
+            constraints["edge_properties"] = [a["identifier"] for a in attributes]
+        if prop["derived"]:
+            constraints["derived"] = True
+    return result
+
+
 def _normalized(bundle):
     """A bundle with list order and absent-vs-empty optional class keys made irrelevant."""
     result = copy.deepcopy(bundle)
@@ -656,7 +685,7 @@ def test_house_bundle_round_trip_writes_nothing(importer, service, repo, session
         importer, repo, session_factory, _taxonomy_id(repo, "house")
     )
 
-    assert _normalized(exported) == _normalized(house)
+    assert _normalized(_as_v0(exported)) == _normalized(house)
 
 
 def house_with_kits():
@@ -720,7 +749,7 @@ def test_house_bundle_with_kits_round_trip_writes_nothing(importer, service, rep
         importer, repo, session_factory, _taxonomy_id(repo, "house")
     )
 
-    assert _normalized(exported) == _normalized(house)
+    assert _normalized(_as_v0(exported)) == _normalized(house)
 
 
 def test_reference_identifier_that_differs_from_the_key_is_kept(
@@ -1086,7 +1115,8 @@ def test_house_derived_flags_lift_into_the_field_and_round_trip(
         importer, repo, session_factory, _taxonomy_id(repo, "house")
     )
     place = by_key(exported["classes"], "identifier", "house_place")
-    assert (place["derived"], place["constraints"]) == (True, {"derived": True})
+    # v1 carries the flag as `derived` alone; the legacy metadata copy stays put.
+    assert (place["derived"], place["constraints"]) == (True, {})
     assert by_key(exported["classes"], "identifier", "house_room")["derived"] is False
     assert exported["properties"][0]["derived"] is True
 
