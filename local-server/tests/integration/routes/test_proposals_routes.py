@@ -195,6 +195,40 @@ class TestPropose:
         assert response.json()["detail"][0]["loc"][:3] == ["body", "operations", 0]
 
 
+class TestNotes:
+    """Per-operation notes (#1514): stored, read back, kept in gold, never applied."""
+
+    def test_notes_round_trip_and_never_reach_the_entity(self, client, graph, ontology):
+        noted = {**_describe_room(graph, seq=1), "notes": "Maintainer: rooms have walls."}
+        blank = {**_create_kit(seq=2, graph=graph), "notes": "   "}
+        proposal = _propose(client, graph, noted, blank)
+        assert [o.get("notes") for o in proposal["operations"]] == [
+            "Maintainer: rooms have walls.",
+            None,
+        ]
+        got = client.get(f"/api/proposals/{proposal['id']}").json()
+        assert got["operations"][0]["notes"] == "Maintainer: rooms have walls."
+
+        response = client.post(
+            f"/api/proposals/{proposal['id']}/apply",
+            json={"operation_ids": _op_ids(proposal, 1)},
+        )
+        assert response.status_code == 200, response.text
+        room = ontology.get_class(graph["room"])
+        assert room.description == "Any room"
+        assert "Maintainer" not in repr(room)
+
+        [decision] = client.get(f"/api/taxonomies/{graph['taxonomy']}/gold").json()["items"]
+        assert decision["proposed"]["notes"] == "Maintainer: rooms have walls."
+        assert "notes" not in decision["applied_fields"]
+
+    def test_notes_must_be_text(self, client, graph):
+        response = client.post(
+            "/api/proposals", json=_body(graph, {**_describe_room(graph), "notes": ["a"]})
+        )
+        assert response.status_code == 422
+
+
 class TestRead:
     def test_get_and_list_with_filters(self, client, graph, ontology):
         first = _propose(client, graph, _describe_room(graph), source="mcp")

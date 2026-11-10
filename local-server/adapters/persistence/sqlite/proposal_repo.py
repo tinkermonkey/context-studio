@@ -443,6 +443,7 @@ def _operation_to_orm(proposal_id: str, operation: ProposedOperation) -> Proposa
         fields=dict(operation.fields),
         base=dict(operation.base),
         rationale=operation.rationale,
+        notes=operation.notes,
         evidence=list(operation.evidence),
         probability=operation.probability,
         scope=operation.scope.value,
@@ -475,6 +476,7 @@ def _operation_to_domain(row: ProposalOperation) -> ProposedOperation:
         fields=dict(row.fields or {}),
         base=dict(row.base or {}),
         rationale=row.rationale,  # type: ignore[arg-type]
+        notes=row.notes,  # type: ignore[arg-type]
         evidence=list(row.evidence or []),
         probability=row.probability,  # type: ignore[arg-type]
         scope=ChangeScope(row.scope),

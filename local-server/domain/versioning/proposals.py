@@ -378,6 +378,7 @@ class OperationDraft:
     ref: str | None = None
     fields: dict[str, Any] = field(default_factory=dict)
     rationale: str | None = None
+    notes: str | None = None
     evidence: list[dict[str, Any]] = field(default_factory=list)
     probability: float | None = None
     claimed_scope: ChangeScope | str | None = None
@@ -403,6 +404,8 @@ class ProposedOperation:
             delete, the whole entity); compared at apply time to detect that
             the target changed since
         rationale: Why this change
+        notes: Free-text notes the proposer keeps with the change (e.g. a
+            maintainer's notes); never applied to the entity. None when empty
         evidence: Supporting quotes or links ({"quote", "url", "entity_id"})
         probability: The proposer's confidence, 0 to 1
         scope: How much the change can break (see classify_scope)
@@ -435,6 +438,7 @@ class ProposedOperation:
     fields: dict[str, Any] = field(default_factory=dict)
     base: dict[str, Any] = field(default_factory=dict)
     rationale: str | None = None
+    notes: str | None = None
     evidence: list[dict[str, Any]] = field(default_factory=list)
     probability: float | None = None
     scope: ChangeScope = ChangeScope.BREAKING

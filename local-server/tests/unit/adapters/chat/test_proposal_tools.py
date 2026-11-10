@@ -209,6 +209,7 @@ def test_propose_schema_defines_every_operation_field():
         "ref",
         "fields",
         "rationale",
+        "notes",
         "evidence",
         "probability",
         "replacement",
@@ -250,6 +251,7 @@ class TestProposeChanges:
                 update_op(
                     1,
                     rationale="Vaguer than the vision allows",
+                    notes="Maintainer: say what it is",
                     evidence=[{"quote": "An element is a named fact"}],
                     probability=0.8,
                 ),
@@ -274,6 +276,8 @@ class TestProposeChanges:
         assert (first.seq, first.op, first.kind, first.target_id) == (1, "update", "class", "cls-1")
         assert first.fields == {"description": "Description 1"}
         assert first.rationale == "Vaguer than the vision allows"
+        assert first.notes == "Maintainer: say what it is"
+        assert second.notes is None
         assert first.evidence == [{"quote": "An element is a named fact"}]
         assert first.probability == 0.8
         assert (second.ref, second.target_id) == ("kit", None)
@@ -416,6 +420,7 @@ class TestProposeChanges:
                 "not an object",
                 {"seq": True, "op": "update", "kind": "class"},
                 update_op(4, ref={"name": "x"}),
+                update_op(5, notes=["not", "text"]),
             ],
         )
 
@@ -427,7 +432,8 @@ class TestProposeChanges:
             "operations[2] needs an integer seq",
         ]
         assert result["operations"] == [
-            {"seq": 4, "status": "invalid", "code": "invalid", "message": "ref must be text"}
+            {"seq": 4, "status": "invalid", "code": "invalid", "message": "ref must be text"},
+            {"seq": 5, "status": "invalid", "code": "invalid", "message": "notes must be text"},
         ]
         assert result["unchecked_seqs"] == [1]
         assert "valid_seqs" not in result
@@ -750,6 +756,7 @@ class TestRestParityFields:
             OperationStatus.APPLIED,
             base={"description": "Old"},
             rationale="Vaguer than the vision allows",
+            notes="Maintainer: keep it short",
             evidence=[{"quote": "An element is a named fact"}],
             probability=0.8,
             applied_fields={"description": "Edited"},
@@ -765,6 +772,7 @@ class TestRestParityFields:
         (operation,) = result["operations"]
         assert operation["base"] == {"description": "Old"}
         assert operation["rationale"] == "Vaguer than the vision allows"
+        assert operation["notes"] == "Maintainer: keep it short"
         assert operation["evidence"] == [{"quote": "An element is a named fact"}]
         assert operation["probability"] == 0.8
         assert operation["applied_fields"] == {"description": "Edited"}
