@@ -9,6 +9,7 @@ import {
   SCOPE_VARIANT,
   changeRows,
   fieldLabel,
+  fieldLines,
   formatProbability,
   formatValue,
   planKind,
@@ -205,6 +206,23 @@ export function OperationInspector({
         </ul>
       );
     }
+    // A distinguish_from reads "ClassLabel: when" per entry; evidence signals in their order.
+    const lines = fieldLines(field, v, (id) => context.endLabel(id, operation));
+    if (lines && lines.length > 0) {
+      const List = field === "evidence_signals" ? "ol" : "ul";
+      return (
+        <List
+          className={
+            List === "ol" ? "op-change__lines op-change__lines--ordered" : "op-change__lines"
+          }
+          data-testid={`operation-change-lines-${field}`}
+        >
+          {lines.map((line, i) => (
+            <li key={i}>{line}</li>
+          ))}
+        </List>
+      );
+    }
     const text =
       CLASS_ID_FIELDS.has(field) && typeof v === "string"
         ? context.endLabel(v, operation)
@@ -241,6 +259,14 @@ export function OperationInspector({
             </div>
           </div>
         </InspectorPanel.Section>
+
+        {operation.notes && (
+          <InspectorPanel.Section title="Notes">
+            <p className="op-inspector__notes" data-testid="operation-notes">
+              {operation.notes}
+            </p>
+          </InspectorPanel.Section>
+        )}
 
         {operation.reflection && operation.reflection.questions.length > 0 && (
           <ReflectionAnswers

@@ -99,6 +99,42 @@ vi.mock("@tinkermonkey/heimdall-ui", () => ({
     ...props
   }: any) =>
     React.createElement("div", { "data-testid": testId ?? "relationship-builder", ...props }),
+  // A combobox input plus its results as options; picking one calls onSelect.
+  EntityPicker: ({
+    query,
+    onQueryChange,
+    results = [],
+    onSelect,
+    onClear: _onClear,
+    inputId,
+    placeholder,
+    placement: _placement,
+    disabled,
+    ...props
+  }: any) =>
+    React.createElement(
+      "div",
+      { className: "entity-picker", ...props },
+      React.createElement("input", {
+        id: inputId,
+        role: "combobox",
+        value: query,
+        placeholder,
+        disabled,
+        onChange: (e: any) => onQueryChange(e.target.value),
+      }),
+      React.createElement(
+        "div",
+        { role: "listbox" },
+        results.map((r: any) =>
+          React.createElement(
+            "div",
+            { key: r.id, role: "option", "aria-selected": false, onClick: () => onSelect(r) },
+            r.label,
+          ),
+        ),
+      ),
+    ),
   Toast: ({ isOpen, onClose, title, subtitle, _variant, duration = 4000, ...props }: any) => {
     React.useEffect(() => {
       if (isOpen && duration) {

@@ -5,6 +5,7 @@ import {
   changeRows,
   dataValues,
   fieldLabel,
+  fieldLines,
   formatValue,
   operationSubject,
   propertyTriples,
@@ -60,9 +61,12 @@ function fieldText(
   operation: ProposedOperation,
   context: OperationContext,
 ): string {
-  const text =
-    CLASS_ID_FIELDS.has(field) && typeof value === "string"
-      ? context.endLabel(value, operation)
+  const label = (id: string) => context.endLabel(id, operation);
+  const lines = fieldLines(field, value, label);
+  const text = lines
+    ? lines.join("; ") || "—"
+    : CLASS_ID_FIELDS.has(field) && typeof value === "string"
+      ? label(value)
       : formatValue(value);
   return clipped(text);
 }

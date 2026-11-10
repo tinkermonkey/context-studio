@@ -8,6 +8,7 @@ import {
   Chip,
 } from "@tinkermonkey/heimdall-ui";
 import { RelationshipSuggester, GroundingSection } from "./suggesters";
+import { OperationalDefinitionEditor, OperationalDefinitionView } from "./OperationalDefinition";
 import { SuggestField } from "@/components/ontology/suggesters/SuggestField";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { InlineInspector } from "@/components/ui/InlineInspector";
@@ -111,11 +112,12 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
     }
   };
 
+  // A save refetches the class: keep the mode, refresh the drafts.
   useEffect(() => {
     setDomainId(classData?.concept_scheme_id ?? "");
-    setMode("view");
     setDescriptionDraft(classData?.description ?? "");
   }, [classData]);
+  useEffect(() => setMode("view"), [classData?.id]);
 
   const handleDelete = async () => {
     if (!classData) return;
@@ -215,6 +217,9 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
                   { key: "Description", value: classData.description || "—" },
                 ]}
               />
+            </InspectorPanel.Section>
+            <InspectorPanel.Section title="Operational definition">
+              <OperationalDefinitionView classData={classData} />
             </InspectorPanel.Section>
             <InspectorPanel.Section title="Metrics">
               <KVGrid
@@ -401,6 +406,10 @@ export function ClassDrawer({ classData }: ClassDrawerProps) {
                   )}
                 </div>
               </div>
+            </InspectorPanel.Section>
+
+            <InspectorPanel.Section title="Operational definition">
+              <OperationalDefinitionEditor classData={classData} />
             </InspectorPanel.Section>
 
             <InspectorPanel.Section title="Metrics">
