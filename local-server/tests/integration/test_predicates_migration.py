@@ -1,5 +1,5 @@
 """
-Integration test for migration 582c3af91abb (#1480): predicates become a per-taxonomy
+Integration test for migration 37f2a2e39452 (#1480): predicates become a per-taxonomy
 catalog table, relationship types point at one, and canonical_predicate stops being
 a column.
 
@@ -22,8 +22,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 ALEMBIC_INI = os.path.join(
     os.path.dirname(__file__), "../../adapters/persistence/sqlite/alembic.ini"
 )
-REVISION = "582c3af91abb"
-PREVIOUS_REVISION = "fc64b1c76476"
+REVISION = "37f2a2e39452"
+PREVIOUS_REVISION = "4a96f0915d0e"
 
 DR_CATALOG = {
     "navigates-to": {

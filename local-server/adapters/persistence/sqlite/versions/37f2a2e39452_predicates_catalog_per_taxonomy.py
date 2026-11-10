@@ -1,8 +1,8 @@
 """predicates catalog per taxonomy
 
-Revision ID: 582c3af91abb
-Revises: fc64b1c76476
-Create Date: 2026-11-09 20:47:16.886709
+Revision ID: 37f2a2e39452
+Revises: 4a96f0915d0e
+Create Date: 2026-11-09 21:28:35.958203
 
 Predicates become first-class (#1480): each taxonomy holds a catalog in the new
 ``predicates`` table, and a relationship type (property_definition) points at
@@ -40,8 +40,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "582c3af91abb"
-down_revision = "fc64b1c76476"
+revision = "37f2a2e39452"
+down_revision = "4a96f0915d0e"
 branch_labels = None
 depends_on = None
 
