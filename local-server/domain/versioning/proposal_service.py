@@ -153,10 +153,15 @@ K = OperationKind
 # taxonomy_id follows its scheme's. Staleness ignores them.
 _DERIVED_FIELDS: dict[OperationKind, frozenset[str]] = {K.CLASS: frozenset({"taxonomy_id"})}
 
+# A class's operational definition (see Class): wording, set and cleared like
+# its description.
+CLASS_DEFINITION_FIELDS = frozenset({"distinguish_from", "evidence_signals", "standard_reference"})
+
 # The JSON type each settable field must have (None is checked separately).
 _TEXT_FIELDS = frozenset(
     {
         "title",
+        "standard_reference",
         "description",
         "color",
         "identifier",
@@ -168,7 +173,7 @@ _TEXT_FIELDS = frozenset(
 )
 _BOOL_FIELDS = frozenset({"is_required", "is_relevant", "derived"})
 _INT_FIELDS = frozenset({"sort_order"})
-_TEXT_LIST_FIELDS = frozenset({"allowed_values", "class_ids"})
+_TEXT_LIST_FIELDS = frozenset({"allowed_values", "class_ids", "evidence_signals"})
 # An individual's attribute values: identifier -> value (see the module docstring).
 DATA_FIELD = "data_properties"
 # The operation kinds that act on a dataset's data.
@@ -255,11 +260,15 @@ OPERATION_FIELDS: dict[OperationKind, OperationFields] = {
                 "identifier",
                 "external_references",
                 "derived",
+                *CLASS_DEFINITION_FIELDS,
             }
         ),
         required=frozenset({"concept_scheme_id", "title"}),
-        update=frozenset({"title", "description", "color", "external_references", "derived"}),
-        clearable=frozenset({"description", "color"}),
+        update=frozenset(
+            {"title", "description", "color", "external_references", "derived"}
+            | CLASS_DEFINITION_FIELDS
+        ),
+        clearable=frozenset({"description", "color"} | CLASS_DEFINITION_FIELDS),
     ),
     K.PROPERTY: OperationFields(
         create=frozenset(
@@ -422,6 +431,13 @@ def _has_field_type(name: str, value: Any) -> bool:
         return isinstance(value, int) and not isinstance(value, bool)
     if name == "external_references":
         return isinstance(value, list) and all(isinstance(item, dict) for item in value)
+    if name == "distinguish_from":
+        return isinstance(value, list) and all(
+            isinstance(item, dict)
+            and isinstance(item.get("class_id"), str)
+            and isinstance(item.get("when"), str)
+            for item in value
+        )
     if name == DATA_FIELD:
         return isinstance(value, dict) and all(
             isinstance(key, str) and key and isinstance(item, _JSON_VALUE_TYPES)
@@ -636,9 +652,7 @@ class ProposalService:
             if dataset_id is None and dry_run:
                 datasets = self._repo.list_datasets(taxonomy_id=taxonomy_id)
                 if len(datasets) > 1:
-                    raise DatasetRequiredError(
-                        taxonomy_id, sorted(d.identifier for d in datasets)
-                    )
+                    raise DatasetRequiredError(taxonomy_id, sorted(d.identifier for d in datasets))
                 return datasets[0].id if datasets else None
             return resolve_dataset_id(self._repo, taxonomy_id, dataset_id)
         except DatasetRequiredError as exc:
@@ -1126,7 +1140,11 @@ class ProposalService:
                 if retired
                 else None
             )
-            if found is not None and retired is not None and found.taxonomy_id != retired.taxonomy_id:
+            if (
+                found is not None
+                and retired is not None
+                and found.taxonomy_id != retired.taxonomy_id
+            ):
                 found = None
         else:
             found = self._repo.get_class(name)
@@ -1266,7 +1284,7 @@ class ProposalService:
             except ValueError as exc:
                 raise _Invalid("invalid", f"identifier: {exc}") from exc
             exists = self._repo.get_predicate_by_identifier(taxonomy_id, identifier) is not None
-            if (planned[identifier] != _RETIRED if identifier in planned else exists):
+            if planned[identifier] != _RETIRED if identifier in planned else exists:
                 raise _Invalid(
                     "duplicate", f"The taxonomy already has the predicate {identifier!r}"
                 )
@@ -1282,7 +1300,9 @@ class ProposalService:
         if operation.op is OperationType.DELETE and predicate is not None:
             planned[predicate.identifier] = _RETIRED
             users = [
-                p for p in self._ontology.relationship_types_using(predicate.id) if p.id not in deleted
+                p
+                for p in self._ontology.relationship_types_using(predicate.id)
+                if p.id not in deleted
             ]
             if users and operation.proposed_replacement_id is None:
                 names = ", ".join(sorted(p.identifier for p in users)[:5])
@@ -2906,6 +2926,9 @@ class ProposalService:
         if kind is K.SCHEME:
             return svc.update_concept_scheme(target, **{**v, **cleared}).id
         if kind is K.CLASS:
+            for name in ("distinguish_from", "evidence_signals"):
+                if name in cleared:
+                    cleared[name] = []  # type: ignore[assignment]
             return svc.update_class(target, **{**v, **cleared}).id
         if kind is K.ATTRIBUTE:
             if "allowed_values" in cleared:

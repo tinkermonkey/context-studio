@@ -105,7 +105,19 @@ class OperationStatus(str, Enum):
 
 
 # Fields whose change is wording or presentation only.
-EDITORIAL_FIELDS = frozenset({"title", "description", "vision", "color", "sort_order"})
+EDITORIAL_FIELDS = frozenset(
+    {
+        "title",
+        "description",
+        "vision",
+        "color",
+        "sort_order",
+        # A class's operational definition: it explains the class, changes nothing in it
+        "distinguish_from",
+        "evidence_signals",
+        "standard_reference",
+    }
+)
 # List fields where a superset of the current value only adds.
 ADDITIVE_LIST_FIELDS = frozenset(
     {"allowed_values", "class_ids", "external_references", "lexical_senses"}

@@ -11153,6 +11153,48 @@
       },
       "ClassCreateRequest": {
         "properties": {
+          "distinguish_from": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DistinguishFromSchema"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distinguish From",
+            "description": "When to use a sibling class instead; [] clears it"
+          },
+          "evidence_signals": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Signals",
+            "description": "Observable signals that something is an instance; [] clears them"
+          },
+          "standard_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Standard Reference",
+            "description": "The standard the class follows; \"\" clears it"
+          },
           "title": {
             "type": "string",
             "minLength": 1,
@@ -11328,6 +11370,34 @@
             "description": "The client computes its individuals from other data: none is created directly, and extraction doesn't target it",
             "default": false
           },
+          "distinguish_from": {
+            "items": {
+              "$ref": "#/components/schemas/DistinguishFromSchema"
+            },
+            "type": "array",
+            "title": "Distinguish From",
+            "description": "When to use a sibling class instead"
+          },
+          "evidence_signals": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Signals",
+            "description": "Observable signals that something is an instance"
+          },
+          "standard_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Standard Reference",
+            "description": "The standard the class follows"
+          },
           "external_references": {
             "items": {
               "$ref": "#/components/schemas/ExternalReferenceResponse"
@@ -11420,6 +11490,48 @@
       },
       "ClassUpdateRequest": {
         "properties": {
+          "distinguish_from": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DistinguishFromSchema"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distinguish From",
+            "description": "When to use a sibling class instead; [] clears it"
+          },
+          "evidence_signals": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Signals",
+            "description": "Observable signals that something is an instance; [] clears them"
+          },
+          "standard_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Standard Reference",
+            "description": "The standard the class follows; \"\" clears it"
+          },
           "title": {
             "anyOf": [
               {
@@ -12343,6 +12455,29 @@
         ],
         "title": "DemoDatasetLoadResponse",
         "description": "Counts of entities persisted by a demo dataset load."
+      },
+      "DistinguishFromSchema": {
+        "properties": {
+          "class_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Class Id",
+            "description": "The other class, in the same taxonomy"
+          },
+          "when": {
+            "type": "string",
+            "minLength": 1,
+            "title": "When",
+            "description": "When to use it instead"
+          }
+        },
+        "type": "object",
+        "required": [
+          "class_id",
+          "when"
+        ],
+        "title": "DistinguishFromSchema",
+        "description": "When to use another class instead of this one."
       },
       "DrDecisionResponse": {
         "properties": {
