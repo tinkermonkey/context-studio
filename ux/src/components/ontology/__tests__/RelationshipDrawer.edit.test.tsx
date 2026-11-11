@@ -40,6 +40,7 @@ const needs = createPropertyDefinition({ id: "prop-needs", identifier: "needs" }
 const server = setupServer(
   http.get("*/api/properties", () => HttpResponse.json(createListProperties([requires, needs]))),
   http.get("*/api/classes", () => HttpResponse.json({ items: [], total: 0, limit: 50, offset: 0 })),
+  http.get("*/api/relationships/:id/sources", () => HttpResponse.json([])),
 );
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));

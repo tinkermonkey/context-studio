@@ -1,0 +1,67 @@
+@layer app {
+  /* Provenance: the source passages behind an individual or relationship. */
+  .entity-sources {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .entity-sources__summary {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .entity-sources__list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .entity-source {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 14px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 8px;
+  }
+
+  .entity-source__head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    align-items: center;
+  }
+
+  .entity-source__title {
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .entity-source__where,
+  .entity-source__via {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .entity-source__quote {
+    margin: 0;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: rgb(var(--canvas-bg-2));
+    font-size: 13px;
+    line-height: 1.55;
+    color: rgb(var(--canvas-fg-2));
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+}

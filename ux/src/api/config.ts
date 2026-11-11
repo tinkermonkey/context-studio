@@ -58,6 +58,13 @@ export const QUERY_KEYS = {
   relationships: (params?: object) => ["relationships", params] as const,
   // Under the relationships root, so relationship and proposal mutations refresh it.
   relationship: (id: string) => ["relationships", "by-id", id] as const,
+  // Provenance: under each entity's root, so proposal applies and reverts refresh it.
+  individualSources: (id: string) => ["individuals", id, "sources"] as const,
+  relationshipSources: (id: string) => ["relationships", "by-id", id, "sources"] as const,
+  // Sources (/api/sources): files, web pages and text extracted from.
+  sourcesRoot: ["sources"] as const,
+  source: (id: string) => ["sources", id] as const,
+  sourceText: (id: string, page?: number | null) => ["sources", id, "text", page ?? null] as const,
   // Datasets: named bodies of data over one taxonomy's schema.
   datasetsRoot: ["datasets"] as const,
   datasets: (taxonomyId?: string) => ["datasets", taxonomyId ?? null] as const,

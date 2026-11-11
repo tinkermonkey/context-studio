@@ -40,3 +40,5 @@ export { useRelationships, useCreateRelationship, useDeleteRelationship } from "
 export { useEntityTypeQuery } from "./useEntityTypeQuery";
 
 export { useDatasets, useCreateDataset, useDeleteDataset } from "./useDatasets";
+
+export { useEntitySources, type ProvenanceKind } from "./useEntitySources";

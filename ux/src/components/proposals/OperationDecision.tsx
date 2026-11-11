@@ -12,6 +12,13 @@ import {
   type StaleCause,
 } from "./decisionModel";
 import type { TripleSource } from "./proposalModel";
+import { NearMatchChoice } from "./SourcePassage";
+import {
+  chosenAlternative,
+  defaultNearMatchChoice,
+  isNearMatch,
+  type NearMatchChoice as NearMatchChoiceValue,
+} from "./sourceModel";
 import type { PickOutcome } from "./tieredModel";
 import type { ProposalActions } from "./useProposalActions";
 import "./proposals.css";
@@ -87,13 +94,21 @@ export function OperationDecision({
   // rename or reverse it need no resolution, so a blocked delete then applies as an edit.
   const picksRetarget = withPicks && picks?.pair === "different" && !!usage?.edges.length;
   const resolver = picksChanged ? (picksRetarget ? usage : undefined) : blockers;
+  // A near match: use an existing individual (sent as its chosen alternative) or create new.
+  const nearMatch = isNearMatch(operation);
+  const [nearChoice, setNearChoice] = useState<NearMatchChoiceValue>(() =>
+    defaultNearMatchChoice(operation),
+  );
+  const existing = nearMatch ? chosenAlternative(nearChoice) : undefined;
   const pickOptions =
     withPicks && picks?.fields && picks.chosenAlternative
       ? {
           edits: { [operation.id]: picks.fields },
           chosenAlternatives: { [operation.id]: picks.chosenAlternative },
         }
-      : {};
+      : existing
+        ? { chosenAlternatives: { [operation.id]: existing } }
+        : {};
   const acceptLabel = editFailed
     ? "Apply as proposed"
     : picksChanged
@@ -104,7 +119,11 @@ export function OperationDecision({
           ? "Apply again"
           : operation.reflection
             ? "Accept plan"
-            : "Accept";
+            : nearMatch
+              ? existing
+                ? "Use existing"
+                : "Accept new"
+              : "Accept";
   const acceptOperation = () => actions.accept([operation.id], pickOptions);
 
   return (
@@ -176,6 +195,16 @@ export function OperationDecision({
           />
         ) : (
           <>
+            {nearMatch && (
+              <NearMatchChoice
+                operation={operation}
+                taxonomyId={proposal.taxonomy_id}
+                datasetId={proposal.dataset_id}
+                choice={nearChoice}
+                onChoose={setNearChoice}
+                disabled={actions.busy}
+              />
+            )}
             {resolver && (
               <InUseResolver
                 key={picksRetarget ? "retarget-edit" : "as-proposed"}

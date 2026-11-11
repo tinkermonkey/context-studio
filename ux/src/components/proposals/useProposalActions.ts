@@ -21,6 +21,7 @@ import {
   splitStale,
   type Resolutions,
 } from "./decisionModel";
+import { nearMatchHeldIds, nearMatchHeldNote } from "./sourceModel";
 import { keptNote } from "./tieredModel";
 
 export type Edits = Record<string, Record<string, unknown>>;
@@ -73,6 +74,8 @@ export function bulkSummary(
   blocked: number,
   stale: number,
   after: ChangeProposal | undefined,
+  /** Near matches (and what waits on them) left for the reviewer's choice. */
+  nearMatches: ProposedOperation[] = [],
 ): ["success" | "info", string, string | undefined] {
   const sentIds = new Set(sent);
   const outcomes = (after?.operations ?? []).filter((o) => sentIds.has(o.id));
@@ -88,6 +91,7 @@ export function bulkSummary(
     blocked > 0 &&
       `${blocked} still ${blocked === 1 ? "needs" : "need"} a decision (in use: choose move or drop in the inspector).`,
     stale > 0 && `${plural(stale, "stale operation")} left for Apply anyway.`,
+    nearMatchHeldNote(nearMatches),
   ].filter(Boolean);
   return [failed > 0 || sent.length === 0 ? "info" : "success", title, left.join(" ") || undefined];
 }
@@ -240,7 +244,8 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
   /** Apply a failed operation again from the results: with its last edit or resolution. */
   const retry = (opId: string, { asProposed = false } = {}) => {
     const edit = asProposed ? undefined : lastEdits[opId];
-    const alternative = edit ? lastAlternatives[opId] : undefined;
+    // With an edit (a reflection's picks) or alone (a near match's existing individual).
+    const alternative = asProposed ? undefined : lastAlternatives[opId];
     const resolution = asProposed ? undefined : lastResolutions[opId];
     return accept([opId], {
       edits: edit ? { [opId]: edit } : undefined,
@@ -258,14 +263,20 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
    */
   const acceptFresh = async (operationIds: string[]) => {
     if (!proposal || inFlight.current) return;
-    const { unblocked, blocked } = splitBlocked(proposal.operations, operationIds);
+    // A near match accepted without a choice would create a new individual: never in bulk.
+    const held = nearMatchHeldIds(proposal.operations);
+    const chosen = operationIds.filter((opId) => !held.has(opId));
+    const nearMatches = proposal.operations.filter(
+      (o) => held.has(o.id) && operationIds.includes(o.id),
+    );
+    const { unblocked, blocked } = splitBlocked(proposal.operations, chosen);
     const { fresh, stale } = splitStale(proposal.operations, unblocked);
     let outcome: ApplyOutcome = {};
     if (fresh.length > 0) {
       outcome = await send(fresh, []);
       if (outcome.error || outcome.cancelled) return; // send says why
     }
-    toast(...bulkSummary(fresh, blocked.length, stale.length, outcome.proposal));
+    toast(...bulkSummary(fresh, blocked.length, stale.length, outcome.proposal, nearMatches));
   };
 
   const confirmForce = async () => {

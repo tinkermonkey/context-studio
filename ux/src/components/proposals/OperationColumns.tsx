@@ -9,6 +9,7 @@ import {
   resolutionChip,
 } from "./decisionModel";
 import { OperationDiff } from "./OperationDiff";
+import { isNearMatch } from "./sourceModel";
 import {
   OP_VARIANT,
   formatProbability,
@@ -199,6 +200,20 @@ function OperationStatus({
         >
           stale
         </Chip>
+      )}
+      {operation.matched ? (
+        <Chip variant="neutral" data-testid={`operation-near-match-${operation.id}`}>
+          used existing
+        </Chip>
+      ) : (
+        isNearMatch(operation) && (
+          <Chip
+            variant={flagVariant(operation, "violet")}
+            data-testid={`operation-near-match-${operation.id}`}
+          >
+            near match
+          </Chip>
+        )
       )}
       {blockers && (
         <Chip variant="amber" data-testid={`operation-blocked-${operation.id}`}>

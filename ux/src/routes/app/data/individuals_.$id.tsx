@@ -10,6 +10,7 @@ import { usePropertiesByIds } from "@/api/hooks/ontology/useProperties";
 import { SMALL_SET_LIMIT } from "@/api/config";
 import { EntityNavigator } from "@/components/entity/EntityNavigator";
 import { EntityLink } from "@/components/entity/EntityLink";
+import { EntitySources } from "@/components/entity/EntitySources";
 import { RelationshipAttributes } from "@/components/ontology/RelationshipAttributes";
 import {
   EntityActions,
@@ -348,6 +349,10 @@ export function IndividualPage({ id }: { id: string }) {
             data={dataProperties}
             emptyState={<span className="entity-note">No property values.</span>}
           />
+        </Panel>
+
+        <Panel title="Sources" data-testid="individual-sources-panel">
+          <EntitySources kind="individual" id={id} />
         </Panel>
 
         <Panel title="Provenance" data-testid="individual-provenance-panel">
