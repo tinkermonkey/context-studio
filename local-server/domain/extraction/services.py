@@ -45,13 +45,13 @@ from .entities import (
 )
 from .events import ExtractionCompleted
 from .exceptions import ExtractionError
-from .prompts import DERIVE_RELATIONSHIPS, IDENTIFY_INDIVIDUALS, INDIVIDUAL_EXTRACTION_STAGES
 from .ports import (
     ExtractionRepository,
     ExtractionRunRepository,
     NLPProcessor,
     ReferenceSource,
 )
+from .prompts import DERIVE_RELATIONSHIPS, IDENTIFY_INDIVIDUALS, INDIVIDUAL_EXTRACTION_STAGES
 from .span_resolution import resolve_span
 from .value_objects import ExtractionLayerResult, LayerInput, LayerOutput, SourceSpan
 
@@ -189,6 +189,19 @@ def class_reference_aliases(cls) -> list[str]:
 def _normalize_predicate_label(label: str) -> str:
     """Lowercase a predicate label and fold underscores/hyphens to spaces for matching."""
     return label.strip().lower().replace("_", " ").replace("-", " ")
+
+
+def is_typing_triple(triple: Mapping[str, Any]) -> bool:
+    """
+    Whether a triple is an ``is_a``/rdf:type assertion: its predicate label
+    normalizes to a typing predicate ("is_a", "type", "instance of", ...) or its
+    object is a class. Whatever ``property_definition_id`` the model put on it
+    (the prompt's example shows one, so models send "is_a") doesn't matter.
+    """
+    predicate = triple.get("predicate") or {}
+    obj = triple.get("object") or {}
+    predicate_label = _normalize_predicate_label(str(predicate.get("label") or ""))
+    return predicate_label in _TYPE_PREDICATE_LABELS or obj.get("kind") == "class"
 
 
 class ExtractionService:
@@ -984,8 +997,8 @@ class ExtractionService:
         pass_1_individual_labels = self._pass_1_individual_labels(individual_triples)
 
         try:
-            prop_index = self._property_definition_index()
-            _, by_id = self._class_index(ontology)
+            by_alias, by_id = self._class_index(ontology)
+            prop_index = self._property_definition_index(str(taxonomy_id), by_id)
         except Exception as exc:
             error_type = type(exc).__name__
             error_msg = (
@@ -1000,12 +1013,21 @@ class ExtractionService:
 
         synthetic_triples: list[dict] = []
         concept_object_labels_typed: set[str] = set()
+        classes_of = self._typed_class_ids(individual_triples, by_alias)
 
         for triple in relationship_triples:
             predicate_label = str(triple.get("predicate", {}).get("label", "")).strip()
             normalized_label = _normalize_predicate_label(predicate_label)
 
-            prop_def = prop_index.get(normalized_label)
+            prop_def = None
+            candidates = prop_index.get(normalized_label)
+            if candidates:
+                prop_def = self._pick_property_definition(
+                    candidates,
+                    self._node_class_ids(triple.get("subject", {}), classes_of),
+                    self._node_class_ids(triple.get("object", {}), classes_of),
+                    by_id,
+                )
             if prop_def:
                 triple["predicate"]["property_definition_id"] = str(prop_def.id)
             else:
@@ -1065,41 +1087,105 @@ class ExtractionService:
                     labels.add(label.lower())
         return labels
 
-    def _property_definition_index(self) -> dict[str, Any]:
-        """
-        Build a normalized_predicate_label -> PropertyDefinition index.
+    def _typed_class_ids(
+        self, individual_triples: list[dict], by_alias: dict
+    ) -> dict[str, list[str]]:
+        """Each pass-1 individual's label (lowercased) -> ids of the classes it was typed with."""
+        classes_of: dict[str, list[str]] = {}
+        for triple in individual_triples:
+            if not self._is_typing_triple(triple):
+                continue
+            label = str(triple.get("subject", {}).get("label", "")).strip().lower()
+            cls = by_alias.get(str(triple.get("object", {}).get("label", "")).strip().lower())
+            if label and cls is not None:
+                class_ids = classes_of.setdefault(label, [])
+                if str(cls.id) not in class_ids:
+                    class_ids.append(str(cls.id))
+        return classes_of
 
-        Follows the local-index pattern: built within the method from
-        list_property_definitions, not cached. When multiple PropertyDefinitions
-        normalize to the same label (e.g., "relates_to" and "relates-to" both
-        become "relates to"), the first one encountered is kept and a warning
-        is logged about the collision.
+    @staticmethod
+    def _node_class_ids(node: dict, classes_of: dict[str, list[str]]) -> list[str]:
+        """A triple end's classes: those it carries, else those its label was typed with."""
+        carried = [str(c) for c in node.get("class_ids") or [] if c]
+        return carried or classes_of.get(str(node.get("label", "")).strip().lower(), [])
+
+    def _taxonomy_property_definitions(
+        self, taxonomy_id: str, class_ids: Mapping[str, Any]
+    ) -> list[Any]:
         """
-        index: dict[str, Any] = {}
-        for prop_def in self._ontology_repo.list_property_definitions(limit=None):
+        The taxonomy's relationship types: those whose predicate is in its
+        catalog, or whose domain or range class is one of its classes
+        (`class_ids`), and those tied to no taxonomy at all (no predicate,
+        domain or range). Another taxonomy's type is never one of them.
+        """
+        in_catalog = {
+            str(prop.id)
+            for prop in self._ontology_repo.list_property_definitions(
+                taxonomy_id=taxonomy_id, limit=None
+            )
+        }
+        return [
+            prop
+            for prop in self._ontology_repo.list_property_definitions(limit=None)
+            if str(prop.id) in in_catalog
+            or str(prop.domain_class_id) in class_ids
+            or str(prop.range_class_id) in class_ids
+            or not (prop.predicate_id or prop.domain_class_id or prop.range_class_id)
+        ]
+
+    def _property_definition_index(self, taxonomy_id: str, by_id: dict) -> dict[str, list[Any]]:
+        """
+        Build a normalized_predicate_label -> [PropertyDefinition] index of the
+        taxonomy's relationship types (`by_id`: its classes by id).
+
+        Only the run's taxonomy is indexed: another taxonomy's type sharing a
+        predicate name must never be stamped on this run's triples. Several types
+        of one taxonomy may share a predicate (one per domain/range pair);
+        `_pick_property_definition` chooses among them per triple. Built within
+        the method, not cached.
+        """
+        index: dict[str, list[Any]] = {}
+        for prop_def in self._taxonomy_property_definitions(taxonomy_id, by_id):
             if prop_def.derived:
                 continue  # computed by its client, never an extraction target
             predicate = (prop_def.canonical_predicate or prop_def.title or "").strip()
-            if not predicate:
-                continue
-            normalized = _normalize_predicate_label(predicate)
-            if normalized in index:
-                existing = index[normalized]
-                _logger.warning(
-                    "PropertyDefinition collision: both '%s' (id=%s) and '%s' (id=%s) "
-                    "normalize to '%s'. Keeping the first definition (id=%s); "
-                    "triples matching the second will be stamped with the wrong "
-                    "property_definition_id.",
-                    existing.canonical_predicate or existing.title or "",
-                    existing.id,
-                    predicate,
-                    prop_def.id,
-                    normalized,
-                    existing.id,
-                )
-            else:
-                index[normalized] = prop_def
+            if predicate:
+                index.setdefault(_normalize_predicate_label(predicate), []).append(prop_def)
         return index
+
+    def _pick_property_definition(
+        self,
+        candidates: list[Any],
+        subject_class_ids: list[str],
+        object_class_ids: list[str],
+        by_id: dict,
+    ) -> Any:
+        """
+        The relationship type a triple's predicate names, among the taxonomy's
+        types sharing that predicate: the first whose domain and range both fit
+        the subject's and object's classes, else the first whose domain or range
+        fits, else the first. An end fits when the type leaves it open or names
+        one of the classes (or an ancestor of one); unknown classes fit nothing.
+        """
+
+        def fits(end_class_id: Any, class_ids: list[str]) -> bool:
+            if not class_ids:
+                return False
+            if not end_class_id:
+                return True
+            return any(
+                str(end_class_id) in self._class_ancestor_ids(by_id[cid], by_id)
+                for cid in class_ids
+                if cid in by_id
+            )
+
+        return max(
+            candidates,
+            key=lambda prop: (
+                fits(prop.domain_class_id, subject_class_ids)
+                + fits(prop.range_class_id, object_class_ids)
+            ),
+        )
 
     def _is_concept_object(
         self,
@@ -1591,10 +1677,8 @@ class ExtractionService:
         return (top.individual_id, top.title), []
 
     def _is_typing_triple(self, triple: dict) -> bool:
-        """Return True when a triple is an ``is_a``/rdf:type assertion (object is a class)."""
-        predicate_label = _normalize_predicate_label(triple.get("predicate", {}).get("label", ""))
-        object_kind = triple.get("object", {}).get("kind", "")
-        return predicate_label in _TYPE_PREDICATE_LABELS or object_kind == "class"
+        """Return True when a triple is an ``is_a``/rdf:type assertion (see `is_typing_triple`)."""
+        return is_typing_triple(triple)
 
     def _identified_individuals(self, triples: list[dict]) -> list[tuple[str, str]]:
         """
@@ -1638,7 +1722,8 @@ class ExtractionService:
 
         vocabulary: list[str] = []
         seen: set[str] = set()
-        for prop in self._ontology_repo.list_property_definitions(limit=None):
+        _, by_id = self._class_index(ontology)
+        for prop in self._taxonomy_property_definitions(str(ontology.id), by_id):
             if prop.derived:
                 continue  # computed by its client, never an extraction target
             predicate = (prop.canonical_predicate or prop.title or "").strip()
@@ -1950,11 +2035,8 @@ class ExtractionService:
             return triples
 
         for triple in triples:
-            predicate = triple.get("predicate", {})
             obj = triple.get("object", {})
-            predicate_label = _normalize_predicate_label(predicate.get("label", ""))
-            is_typing = predicate_label in _TYPE_PREDICATE_LABELS or obj.get("kind") == "class"
-            if not is_typing:
+            if not is_typing_triple(triple):
                 continue
 
             canonical = alias_to_canonical.get(str(obj.get("label", "")).strip().lower())

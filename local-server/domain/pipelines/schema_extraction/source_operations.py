@@ -8,7 +8,7 @@ type already has, is skipped.
 
 - A new class is a class create in the taxonomy's first concept scheme (a
   reviewer can edit it before applying), with its proposed definition as its
-  description.
+  description and an identifier slugified from its title (`class_identifier`).
 - A new property is a relationship-type create whose predicate is its
   identifier, preceded by a predicate create when the taxonomy's catalog
   lacks it; its domain and range are the classes its proposed domain and range
@@ -25,6 +25,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from domain.ontology.ports import OntologyRepository
+from domain.ontology.value_objects import validate_identifier
 from domain.pipelines.schema_extraction.apply_service import (
     class_title_index,
     class_title_key,
@@ -41,6 +42,7 @@ from domain.versioning.proposal_service import OperationDraft
 from domain.versioning.proposals import OperationKind, OperationType
 
 MAX_PASSAGES = 10
+MAX_IDENTIFIER_CHARS = 64
 
 
 def plan_schema_operations(
@@ -69,6 +71,8 @@ def plan_schema_operations(
     classes: dict[str, str] = {
         key: cls.id for key, cls in class_title_index(taxonomy_classes(repo, taxonomy_id)).items()
     }
+    # Identifiers the plan's class creates take
+    identifiers: set[str] = set()
 
     def add(
         draft_fields: dict[str, Any],
@@ -109,7 +113,13 @@ def plan_schema_operations(
             plan.skip(label, "no_scheme")
             continue
         ref = f"c{len(plan.operations) + 1}"
-        fields: dict[str, Any] = {"concept_scheme_id": schemes[0].id, "title": label}
+        identifier = class_identifier(label, repo, identifiers)
+        identifiers.add(identifier)
+        fields: dict[str, Any] = {
+            "concept_scheme_id": schemes[0].id,
+            "title": label,
+            "identifier": identifier,
+        }
         if candidate.get("proposed_definition"):
             fields["description"] = str(candidate["proposed_definition"])
         add(fields, OperationKind.CLASS, ref, candidate, label)
@@ -155,6 +165,27 @@ def plan_schema_operations(
         ref = f"r{len(plan.operations) + 1}"
         add(fields, OperationKind.PROPERTY, ref, candidate, label, frozenset(needs))
     return plan
+
+
+def class_identifier(title: str, repo: OntologyRepository, taken: set[str]) -> str:
+    """
+    A new class's identifier: its title slugified ("Heating System" ->
+    "heating_system"), prefixed "class_" when that isn't a valid identifier
+    (a lowercase letter first, 2-64 characters), and suffixed "_2", "_3", ...
+    while an existing taxonomy, scheme or class, or another create (`taken`),
+    has it. Identifiers are global.
+    """
+    base = slugify(title)[:MAX_IDENTIFIER_CHARS]
+    try:
+        validate_identifier(base)
+    except ValueError:
+        base = f"class_{base}".rstrip("_")[:MAX_IDENTIFIER_CHARS]
+    identifier, n = base, 1
+    while identifier in taken or repo.get_by_identifier(identifier) is not None:
+        n += 1
+        suffix = f"_{n}"
+        identifier = base[: MAX_IDENTIFIER_CHARS - len(suffix)] + suffix
+    return identifier
 
 
 def _evidence(

@@ -2,7 +2,8 @@
 An individual-extraction run's merged triples on a source as proposal
 operations (#1552).
 
-Individuals come from typing triples (an individual ``is_a`` a class): one
+Individuals come from typing triples (an individual ``is_a`` a class, as the
+extraction service decides: `is_typing_triple`): one
 create per mention (label, ignoring case), in every class it was typed with.
 A mention recognized as an existing individual (its triple carries the id, or
 an individual of one of its classes in the dataset has its title) gets no
@@ -30,7 +31,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-from domain.extraction.services import class_reference_aliases
+from domain.extraction.services import class_reference_aliases, is_typing_triple
 from domain.ontology.entities import Class
 from domain.ontology.ports import OntologyRepository
 from domain.pipelines.candidate_ids import mention_key
@@ -98,7 +99,7 @@ def plan_individual_operations(
     individuals: dict[str, _Individual] = {}
     for triple in triples:
         subject = triple.get("subject") or {}
-        if subject.get("kind") != "individual" or not _is_typing(triple):
+        if subject.get("kind") != "individual" or not is_typing_triple(triple):
             continue
         label = str(subject.get("label") or "").strip()
         if not label:
@@ -178,13 +179,6 @@ def plan_individual_operations(
             )
         )
     return plan
-
-
-def _is_typing(triple: dict[str, Any]) -> bool:
-    """An individual ``is_a`` a class: the object is a class and no relationship type is named."""
-    obj = triple.get("object") or {}
-    predicate = triple.get("predicate") or {}
-    return obj.get("kind") == "class" and not predicate.get("property_definition_id")
 
 
 def _class_aliases(repo: OntologyRepository, taxonomy_id: str) -> dict[str, Class]:
@@ -274,7 +268,7 @@ def _relationship(
         str(part or "").strip()
         for part in (subject.get("label"), predicate.get("label"), obj.get("label"))
     )
-    if _is_typing(triple):
+    if is_typing_triple(triple):
         return None
     if obj.get("kind") == "literal":
         plan.skip(label, "literal")

@@ -405,6 +405,16 @@ class TestFindAllSpans:
         # Verify each slice matches (case-folded)
         for span in spans:
             assert source_text[span.start:span.end].casefold() == term.casefold()
+        # Each quote is the source's own text, so an exact comparison highlights it
+        assert [span.quote for span in spans] == ["REST API", "rest api"]
+
+    def test_find_all_spans_quotes_the_source_text_not_the_term(self):
+        term = "Heating System"
+        source_text = "Service the heating  system\nyearly."
+
+        [span] = find_all_spans(term, source_text)
+
+        assert span.quote == source_text[span.start : span.end] == "heating  system"
 
     def test_find_all_spans_overlapping_matches(self):
         """Overlapping matches are all returned."""

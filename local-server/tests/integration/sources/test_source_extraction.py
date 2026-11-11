@@ -10,8 +10,10 @@ Re-extracting supersedes the earlier proposal. The source's last_extraction
 follows the runs.
 """
 
+import json
 import time
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 from fastapi import FastAPI
@@ -33,10 +35,12 @@ from adapters.pipelines.run_executor import BackgroundRunExecutor
 from adapters.sources.file_store import LocalSourceFileStore
 from adapters.sources.readers import source_readers
 from adapters.web.sources_routes import router
+from domain.extraction.services import ExtractionService
 from domain.extraction.sources import SourceService
 from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.individual_extraction.bootstrap import register_individual_extraction
+from domain.pipelines.ports import LLMResponse
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -163,13 +167,17 @@ def house(parts):
 
 
 @pytest.fixture()
-def app(tmp_path, factory, parts, house):
+def extraction(house):
+    return FakeExtraction(house)
+
+
+@pytest.fixture()
+def app(tmp_path, factory, parts, house, extraction):
     implementations = PipelineImplementationRegistry()
     configurations = PipelineConfigurationRegistry()
     register_individual_extraction(implementations, configurations)
     register_schema_extraction(implementations, configurations)
     runs = PipelineRepository(factory)
-    extraction = FakeExtraction(house)
     executor = BackgroundRunExecutor(
         runs=runs,
         batches=BatchRepository(factory),
@@ -428,6 +436,9 @@ class TestExtractionToProposal:
         assert done.status is PipelineRunStatus.COMPLETED
         assert done.proposal_id is None
         assert any("Nothing to propose" in w for w in done.output_summary["warnings"])
+        reason = "The run found no candidates in the text."
+        assert done.output_summary["no_proposal_reason"] == reason
+        assert done.output_summary["skipped_by_reason"] == {}
         last = client.get(f"/api/sources/{source['id']}").json()["last_extraction"]
         assert last["runs"][0]["proposal_id"] is None
         assert last["runs"][0]["operations"] is None
@@ -446,9 +457,104 @@ class TestExtractionToProposal:
         [microservice] = [o for o in proposal.operations if o.fields.get("title") == "Microservice"]
         assert microservice.kind.value == "class"
         assert microservice.fields["concept_scheme_id"] == house["scheme"]
+        assert microservice.fields["identifier"] == "microservice"
         assert microservice.evidence and {e["page"] for e in microservice.evidence} == {2}
+        text = client.get(f"/api/sources/{source['id']}/text").json()["text"]
+        assert all(text[e["start"] : e["end"]] == e["quote"] for e in microservice.evidence)
+        assert (schema_run.items_done, schema_run.items_total) == (1, 1)
         last = client.get(f"/api/sources/{source['id']}").json()["last_extraction"]
         assert [r["pipeline"] for r in last["runs"]] == [
             "individual_extraction",
             "schema_extraction",
         ]
+
+
+class TwoPassLLM:
+    """
+    Answers the extraction service's two passes as real models do (#1450): pass 1
+    types each individual with an is_a triple whose property_definition_id is
+    "is_a", copied from the prompt's example; pass 2 names the relationship.
+    """
+
+    IDENTIFIED = {
+        "triples": [
+            {
+                "subject": {"kind": "individual", "id": "", "label": "WRF555SDFZ", "class_id": ""},
+                "predicate": {"property_definition_id": "is_a", "label": "is_a"},
+                "object": {"kind": "class", "id": "", "label": "house_appliance"},
+                "confidence": 0.95,
+                "provenance": {"text_offset_start": 0, "text_offset_end": 0, "raw": "WRF555SDFZ"},
+            },
+            {
+                "subject": {"kind": "individual", "id": "", "label": "Acme", "class_id": ""},
+                "predicate": {"property_definition_id": "is_a", "label": "is_a"},
+                "object": {"kind": "class", "id": "", "label": "Business"},
+                "confidence": 0.9,
+                "provenance": {"text_offset_start": 0, "text_offset_end": 0, "raw": "Acme"},
+            },
+        ]
+    }
+    RELATED = {
+        "triples": [
+            {
+                "subject": {"kind": "individual", "id": "", "label": "WRF555SDFZ"},
+                "predicate": {"property_definition_id": "made_by", "label": "made_by"},
+                "object": {"kind": "individual", "id": "", "label": "Acme"},
+                "confidence": 0.85,
+                "provenance": {
+                    "text_offset_start": 0,
+                    "text_offset_end": 0,
+                    "raw": "WRF555SDFZ is made by Acme",
+                },
+            }
+        ]
+    }
+
+    def complete(self, system_prompt, user_prompt, model, **_):
+        identifying = "identify the individuals" in system_prompt
+        content = json.dumps(self.IDENTIFIED if identifying else self.RELATED)
+        return LLMResponse(content, 10, 20, duration_ms=5, finish_reason="stop", model=model)
+
+
+class TestTwoPassExtractionToProposal:
+    """The real orchestrator and extraction service, with a fake LLM, on a source."""
+
+    @pytest.fixture()
+    def extraction(self, parts):
+        return ExtractionService(
+            ontology_repo=parts.repo,
+            embedding_service=FakeEmbeddingService(),
+            llm=TwoPassLLM(),
+            nlp=Mock(),
+            reference_sources=[],
+            event_publisher=InProcessEventPublisher(),
+            extraction_repo=Mock(),
+            extraction_run_repo=Mock(),
+        )
+
+    def test_typed_individuals_and_their_relationship_are_proposed(self, client, app, parts, house):
+        source = add_pdf(client, house)
+        [run] = extract(client, source["id"]).json()["runs"]
+        app.state.executor.start()
+        done = wait_for(lambda: finished(app, run["run_id"]))
+
+        assert done.status is PipelineRunStatus.COMPLETED, done.failure_reason
+        assert done.output_summary["no_proposal_reason"] is None
+        assert done.output_summary["skipped_by_reason"] == {}
+        proposal = parts.proposals.get(done.proposal_id)
+        model, acme, made_by = proposal.operations
+        assert (model.kind.value, model.ref, model.fields["title"]) == (
+            "individual",
+            "i1",
+            "WRF555SDFZ",
+        )
+        assert (acme.kind.value, acme.ref, acme.fields["title"]) == ("individual", "i2", "Acme")
+        assert made_by.kind.value == "relationship"
+        assert made_by.fields == {
+            "source_id": "$i1",
+            "target_id": "$i2",
+            "property_definition_id": house["made_by"],
+        }
+        text = client.get(f"/api/sources/{source['id']}/text").json()["text"]
+        [link_evidence] = made_by.evidence
+        assert text[link_evidence["start"] : link_evidence["end"]] == "WRF555SDFZ is made by Acme"

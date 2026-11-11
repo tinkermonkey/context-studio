@@ -99,7 +99,9 @@ def find_all_spans(
         source_text: The source document to search within.
 
     Returns:
-        A list of SourceSpan objects, each representing one occurrence.
+        A list of SourceSpan objects, each representing one occurrence; its quote
+        is the source text at [start, end) (e.g. "heating system" for the term
+        "Heating System"), never the term.
         Empty list if term is empty, source_text is empty, or no matches found.
     """
     if not term or not source_text:
@@ -110,14 +112,14 @@ def find_all_spans(
     # Stage 1: Exact substring matches
     exact_matches = _find_all_exact_matches(term, source_text)
     for start, end in exact_matches:
-        spans.append(SourceSpan(quote=term, start=start, end=end))
+        spans.append(SourceSpan(quote=source_text[start:end], start=start, end=end))
 
     # Stage 2: Normalized matches (always run to catch case-variant occurrences)
     normalized_matches = _find_all_normalized_matches(term, source_text)
     for start, end in normalized_matches:
         # Avoid duplicates from stage 1 (exact match will also be found in normalized)
         if not any(s.start == start and s.end == end for s in spans):
-            spans.append(SourceSpan(quote=term, start=start, end=end))
+            spans.append(SourceSpan(quote=source_text[start:end], start=start, end=end))
 
     return spans
 

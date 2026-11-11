@@ -480,7 +480,8 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         Stage 2: Identify candidate concepts per chunk; merge and deduplicate results.
 
         Calls LLM once per chunk; deduplicates case-insensitively across chunks.
-        Falls back to regex extraction on JSON parse failure.
+        Falls back to regex extraction on JSON parse failure. Progress is
+        reported per chunk (items_done of items_total chunks).
         """
         if not state.text_chunks:
             return replace(
@@ -492,8 +493,10 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
 
         seen: set[str] = set()
         all_candidates: list[str] = []
+        total = len(state.text_chunks)
+        self._report_progress(0, total)
 
-        for chunk in state.text_chunks:
+        for done, chunk in enumerate(state.text_chunks, start=1):
             user_prompt = render(prompt.user, {"chunk": chunk})
 
             # No response_format="json" here: providers map it to JSON-object mode,
@@ -526,6 +529,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                 if key not in seen:
                     seen.add(key)
                     all_candidates.append(candidate)
+            self._report_progress(done, total)
 
         return replace(
             state,

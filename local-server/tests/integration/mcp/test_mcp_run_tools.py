@@ -105,6 +105,36 @@ async def test_get_run_links_the_proposal_the_run_produced(dr_workspace, run_set
         assert "11111111-2222-3333-4444-555555555555" in links
 
 
+async def test_get_run_says_why_a_finished_run_proposed_nothing(dr_workspace, run_setup):
+    _, runs, tools = run_setup
+    async with mcp_client(dr_workspace, write_tools=tools) as client:
+        _, text = await call(
+            client, "run_refinement", {"taxonomy_id": TAXONOMY_ID, "pipeline": "no_op"}
+        )
+        run_id = json.loads(text)["run_id"]
+        finished = await wait_for_run(client, run_id, lambda r: r["status"] == "completed")
+        assert (finished["no_proposal_reason"], finished["skipped_by_reason"]) == (None, {})
+        reason = "None of the 3 candidates made an operation (missing_class 3)."
+        runs.update_summaries(
+            run_id=run_id,
+            output_summary={
+                "proposal_id": None,
+                "no_proposal_reason": reason,
+                "skipped_by_reason": {"missing_class": 3},
+            },
+        )
+
+        result, text = await call(client, "get_run", {"run_id": run_id})
+
+        payload = json.loads(text)
+        assert payload["proposal_id"] is None
+        assert payload["no_proposal_reason"] == reason
+        assert payload["skipped_by_reason"] == {"missing_class": 3}
+        tools_list = await result_of(client, "tools/list", {})
+        [get_run_tool] = [t for t in tools_list["tools"] if t["name"] == "get_run"]
+        assert "no_proposal_reason" in get_run_tool["description"]
+
+
 async def test_run_tools_report_bad_arguments_as_errors(dr_workspace, run_setup):
     _, _, tools = run_setup
     async with mcp_client(dr_workspace, write_tools=tools) as client:
