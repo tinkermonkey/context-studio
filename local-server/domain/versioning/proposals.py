@@ -80,6 +80,13 @@ class ResolutionStrategy(str, Enum):
     DELETE = "delete"
 
 
+class AlternativeKind(str, Enum):
+    """What an alternative to an operation offers instead of it."""
+
+    # An individual already in the dataset that the create may be (a near match)
+    EXISTING = "existing"
+
+
 class ChangeScope(str, Enum):
     """How much a change can break, in increasing order."""
 
@@ -381,6 +388,8 @@ class OperationDraft:
     delete removes: its id, its identifier, or "$<ref>" of an earlier property
     create; it is stored, resolved, as `proposed_replacement_id`. `base` and
     `status` are not submitted: the service captures and tracks them.
+    `alternatives` are an individual create's near matches (see
+    ProposedOperation).
     """
 
     seq: int
@@ -395,6 +404,7 @@ class OperationDraft:
     probability: float | None = None
     claimed_scope: ChangeScope | str | None = None
     replacement: str | None = None
+    alternatives: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -418,7 +428,9 @@ class ProposedOperation:
         rationale: Why this change
         notes: Free-text notes the proposer keeps with the change (e.g. a
             maintainer's notes); never applied to the entity. None when empty
-        evidence: Supporting quotes or links ({"quote", "url", "entity_id"})
+        evidence: Supporting quotes or links ({"quote", "url", "entity_id"}),
+            or passages in a source ({"source_id", "page", "start", "end",
+            "quote"}; see `domain.versioning.provenance`)
         probability: The proposer's confidence, 0 to 1
         scope: How much the change can break (see classify_scope)
         status: Pending, applied, rejected or failed
@@ -439,6 +451,11 @@ class ProposedOperation:
             the taxonomy (e.g. DR) what to migrate the deleted type's elements to
         type_change: Set when an applied property operation created or deleted
             the type, or changed its pair or keys: what it did (see TypeChange)
+        alternatives: An individual create only: individuals already in the
+            proposal's dataset it may be (near matches), each {"kind":
+            "existing", "entity_id", "similarity"}. Applying it with one of them
+            chosen creates nothing: the operation resolves to that individual,
+            so "$ref" uses of it point there (see `matched`)
         id: Unique id
     """
 
@@ -461,9 +478,14 @@ class ProposedOperation:
     resolution: InUseResolution | None = None
     proposed_replacement_id: str | None = None
     type_change: TypeChange | None = None
+    alternatives: list[dict[str, Any]] = field(default_factory=list)
     id: str = field(default_factory=lambda: str(uuid4()))
 
     def __post_init__(self) -> None:
+        if self.alternatives and (
+            self.op is not OperationType.CREATE or self.kind is not OperationKind.INDIVIDUAL
+        ):
+            raise ValueError("Only an individual create can carry alternatives")
         if self.op is OperationType.CREATE:
             if self.target_id is not None:
                 raise ValueError("A create has no target_id; name it with ref instead")
@@ -509,6 +531,31 @@ class ProposedOperation:
         not; it can be applied again (e.g. forced past a stale target) or rejected.
         """
         return self.status in (OperationStatus.APPLIED, OperationStatus.REJECTED)
+
+    def alternative(self, entity_id: Any) -> dict[str, Any] | None:
+        """The "existing" alternative naming this entity, if the operation has one."""
+        return next(
+            (
+                a
+                for a in self.alternatives
+                if a.get("kind") == AlternativeKind.EXISTING.value
+                and a.get("entity_id") == entity_id
+            ),
+            None,
+        )
+
+    @property
+    def matched(self) -> bool:
+        """
+        Applied as one of its "existing" alternatives: it created nothing, and
+        result_entity_id is that existing individual. (A created entity's id is
+        new, so it never equals an alternative's.)
+        """
+        return (
+            self.status is OperationStatus.APPLIED
+            and self.result_entity_id is not None
+            and self.alternative(self.result_entity_id) is not None
+        )
 
 
 @dataclass(frozen=True)

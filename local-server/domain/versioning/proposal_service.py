@@ -94,6 +94,7 @@ from domain.versioning.in_use import (
 )
 from domain.versioning.proposals import (
     TYPE_KEY_FIELDS,
+    AlternativeKind,
     ChangeProposal,
     ChangeScope,
     InUseResolution,
@@ -111,6 +112,7 @@ from domain.versioning.proposals import (
     TypeChange,
     classify_scope,
 )
+from domain.versioning.provenance import EntitySource, entity_sources, evidence_problem
 
 if TYPE_CHECKING:
     from domain.ontology.entities import AttributeDefinition
@@ -120,6 +122,7 @@ if TYPE_CHECKING:
     from domain.versioning.ports import (
         ApprovalPolicyRepository,
         ChangeProposalRepository,
+        EntitySourceRepository,
         ProposalApplyRules,
     )
     from domain.versioning.revert_service import RevertResult, RevertService
@@ -132,6 +135,7 @@ TARGET_MISSING = "target_missing"
 UNRESOLVED_REF = "unresolved_ref"
 APPLY_ERROR = "error"
 INVALID_EDIT = "invalid_edit"
+INVALID_EVIDENCE = "invalid_evidence"
 RULE_REFUSED = "refused"
 UNRESOLVABLE = "unresolvable"
 
@@ -182,6 +186,10 @@ _TEXT_LIST_FIELDS = frozenset({"allowed_values", "class_ids", "evidence_signals"
 DATA_FIELD = "data_properties"
 # The operation kinds that act on a dataset's data.
 _DATA_KINDS = frozenset({"individual", "relationship"})
+# The kinds whose applied operations record their source passages (provenance).
+_PROVENANCE_KINDS = frozenset({K.INDIVIDUAL, K.RELATIONSHIP, K.CLASS})
+# An alternative's keys; similarity is optional.
+_ALTERNATIVE_KEYS = frozenset({"kind", "entity_id", "similarity"})
 _JSON_VALUE_TYPES = (str, int, float, bool, list, dict, type(None))
 # The JSON type a value of each attribute datatype must have.
 _DATATYPE_TYPES: dict[DataType, tuple[type, ...]] = {
@@ -390,6 +398,64 @@ def _is_ref(value: Any) -> bool:
     return isinstance(value, str) and value.startswith(_REF_PREFIX) and len(value) > 1
 
 
+def _alternatives(raw: Any) -> list[dict[str, Any]]:
+    """
+    An operation's near matches, checked for shape: a list of {"kind":
+    "existing", "entity_id": text, "similarity": a number from 0 to 1, or
+    omitted}, each entity named once.
+
+    Raises:
+        ValueError: If one isn't
+    """
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        raise ValueError("alternatives must be a list")
+    found: list[dict[str, Any]] = []
+    for item in raw:
+        if not isinstance(item, dict) or not set(item) <= _ALTERNATIVE_KEYS:
+            raise ValueError(
+                'each alternative must be {"kind": "existing", "entity_id", "similarity"},'
+                f" not {item!r}"
+            )
+        if item.get("kind") != AlternativeKind.EXISTING.value:
+            raise ValueError(f'an alternative\'s kind must be "existing", not {item.get("kind")!r}')
+        entity_id = item.get("entity_id")
+        if not isinstance(entity_id, str) or not entity_id:
+            raise ValueError(f"an alternative needs an entity_id, not {entity_id!r}")
+        similarity = item.get("similarity")
+        if similarity is not None and (
+            isinstance(similarity, bool)
+            or not isinstance(similarity, (int, float))
+            or not 0.0 <= similarity <= 1.0
+        ):
+            raise ValueError(f"an alternative's similarity must be 0 to 1, not {similarity!r}")
+        if any(a["entity_id"] == entity_id for a in found):
+            raise ValueError(f"alternative {entity_id} is listed twice")
+        found.append(
+            {
+                "kind": AlternativeKind.EXISTING.value,
+                "entity_id": entity_id,
+                "similarity": similarity,
+            }
+        )
+    return found
+
+
+def _raising(error: Exception) -> Callable[[], str]:
+    """An operation's apply that fails with this error before changing anything."""
+
+    def run() -> str:
+        raise error
+
+    return run
+
+
+def _is_existing(alternative: Mapping[str, Any]) -> bool:
+    """Whether a chosen alternative picks an existing individual (a near match)."""
+    return alternative.get("kind") == AlternativeKind.EXISTING.value
+
+
 def _data_values(snapshot_values: Any) -> dict[str, Any]:
     """An individual's snapshot data_properties as identifier -> value."""
     return {item["property_identifier"]: item["value"] for item in snapshot_values or []}
@@ -476,6 +542,7 @@ class ProposalService:
         apply_rules: Sequence[ProposalApplyRules] = (),
         transaction_scope: TransactionScope | None = None,
         event_publisher: EventPublisher | None = None,
+        entity_sources: EntitySourceRepository | None = None,
     ) -> None:
         """
         Args:
@@ -494,6 +561,9 @@ class ProposalService:
                 touched once its transaction commits (the steps' own
                 invalidations run before the commit, so a rebuild could cache
                 the old graph)
+            entity_sources: Where applied operations record their source
+                passages (see `domain.versioning.provenance`); without it none
+                are recorded
         """
         self._proposals = proposals
         self._ontology = ontology_service
@@ -503,6 +573,7 @@ class ProposalService:
         self._apply_rules = tuple(apply_rules)
         self._transaction_scope = transaction_scope
         self._event_publisher = event_publisher
+        self._sources = entity_sources
         # One lock per proposal: a desktop app runs one process, so two requests
         # deciding on the same proposal are serialized here.
         self._locks: dict[str, threading.Lock] = {}
@@ -604,6 +675,7 @@ class ProposalService:
                 seen_seqs.add(draft.seq)
                 operation = self._validated(draft, refs)
                 self._check_dataset(operation, dataset_id)
+                self._check_alternatives(operation, taxonomy_id, dataset_id)
                 self._check_predicate(operation, taxonomy_id, planned)
                 self._check_predicate_op(operation, taxonomy_id, planned, deleted)
                 self._check_conflicts(operation, touched, deleted)
@@ -698,6 +770,30 @@ class ProposalService:
                     "dataset_mismatch",
                     f"Individual '{individual.title}' is in another dataset than the"
                     " proposal's; an operation can't reach across datasets",
+                )
+
+    def _check_alternatives(
+        self, operation: ProposedOperation, taxonomy_id: str, dataset_id: str | None
+    ) -> None:
+        """
+        Each near match of an individual create is an existing individual of
+        the proposal's taxonomy, in its dataset (when it has one yet: a dry run
+        on a taxonomy without datasets has none).
+        """
+        for alternative in operation.alternatives:
+            entity_id = alternative["entity_id"]
+            individual = self._repo.get_individual(entity_id)
+            if individual is None:
+                raise _Invalid("alternative_not_found", f"No individual {entity_id}")
+            if taxonomy_id not in self._taxonomies((K.INDIVIDUAL,), entity_id):
+                raise _Invalid(
+                    "alternative_not_found",
+                    f"Individual '{individual.title}' is not in the proposal's taxonomy",
+                )
+            if dataset_id is not None and individual.dataset_id != dataset_id:
+                raise _Invalid(
+                    "dataset_mismatch",
+                    f"Individual '{individual.title}' is in another dataset than the proposal's",
                 )
 
     # --------------------------------------------------------------- auto-apply
@@ -936,13 +1032,9 @@ class ProposalService:
             if not isinstance(draft.evidence or [], list):
                 raise ValueError("evidence must be a list")
             for item in draft.evidence or []:
-                if not isinstance(item, dict) or not all(
-                    isinstance(k, str) and isinstance(v, str) for k, v in item.items()
-                ):
-                    raise ValueError(
-                        'each evidence item must be an object of text values ("quote",'
-                        f' "url", "entity_id"), not {item!r}'
-                    )
+                problem = evidence_problem(item)
+                if problem is not None:
+                    raise ValueError(problem)
             operation = ProposedOperation(
                 seq=draft.seq,
                 op=op,
@@ -955,6 +1047,7 @@ class ProposalService:
                 notes=draft.notes if draft.notes and draft.notes.strip() else None,
                 evidence=list(draft.evidence or []),
                 probability=probability,
+                alternatives=_alternatives(draft.alternatives),
             )
         except (TypeError, ValueError) as exc:
             raise _Invalid("invalid", str(exc)) from exc
@@ -1498,7 +1591,8 @@ class ProposalService:
         Pending and failed operations can be applied (a failed one again, e.g.
         with force_stale after a target_changed). Each records its own outcome:
         applied with the entity it made or changed, or failed with a reason
-        (target_changed, target_missing, unresolved_ref, invalid_edit, refused,
+        (target_changed, target_missing, unresolved_ref, invalid_edit,
+        invalid_evidence: a source passage that can't be stored, refused,
         error). Operations already applied stay applied when a later one fails.
         Property-definition creates and updates are also checked by the rules
         that govern them, if any (refused).
@@ -1551,7 +1645,16 @@ class ProposalService:
                 or an agent source
             chosen_alternatives: Operation id -> the alternative the reviewer
                 chose over the proposal's pick, recorded in its decision when
-                it applies
+                it applies. For an individual create, {"kind": "existing",
+                "entity_id"} naming one of its near matches applies it as that
+                individual: nothing is created, and later operations' "$ref"
+                to it point at the existing individual (any other alternative
+                needs the edit that applies it)
+
+        An applied individual, relationship or class operation whose evidence
+        locates passages in a source records each as an EntitySource of the
+        entity it made or changed, or of the existing individual a near match
+        chose (see `domain.versioning.provenance`); revert removes them.
 
         Returns:
             The proposal with updated outcomes
@@ -1565,8 +1668,9 @@ class ProposalService:
                 update or delete, it is empty, or it points at a "$ref"), or a
                 resolution is (its operation isn't being applied, isn't a
                 property delete or update), or a chosen alternative is (its
-                operation isn't being applied with an edit, or it is empty);
-                nothing is applied
+                operation isn't being applied, it is empty, it is an
+                "existing" one the operation doesn't list, or another kind
+                without an edit); nothing is applied
         """
         with self._lock(proposal_id):
             proposal = self._get(proposal_id)
@@ -1591,7 +1695,22 @@ class ProposalService:
                     resolution = resolutions.get(operation.id)
                     # Per operation: relationship deletes applied earlier in this call are gone.
                     covered = self._covered(proposal)
-                    if operation.id in edits:
+                    alternative = alternatives.get(operation.id)
+                    # Built before anything is written, so a passage that can't be
+                    # stored fails the operation instead of failing after its change.
+                    try:
+                        passages = self._passages(proposal.id, operation)
+                        invalid = None
+                    except ValueError as exc:
+                        passages, invalid = [], _ApplyFailed(INVALID_EVIDENCE, str(exc))
+                    if invalid is not None:
+                        self._record_outcome(operation, proposal.id, _raising(invalid))
+                    elif alternative is not None and _is_existing(alternative):
+                        match = operation.alternative(alternative.get("entity_id"))
+                        # Gold keeps the near match as proposed, similarity and all.
+                        alternatives[operation.id] = dict(match or alternative)
+                        self._apply_match(operation, alternative["entity_id"], proposal)
+                    elif operation.id in edits:
                         others = {i: e for i, e in edits.items() if i != operation.id}
                         edit = edits[operation.id]
                         self._apply_edited(
@@ -1623,7 +1742,18 @@ class ProposalService:
                                 chosen_alternative=alternatives.get(operation.id),
                             )
                         )
-                    self._proposals.save_operations(proposal.id, [operation], decisions)
+                    sources = []
+                    if operation.status is OperationStatus.APPLIED and operation.result_entity_id:
+                        sources = [
+                            replace(p, entity_id=operation.result_entity_id) for p in passages
+                        ]
+                    if sources and self._sources is not None:
+                        # The outcome and the provenance it records commit together.
+                        with self._atomic():
+                            self._proposals.save_operations(proposal.id, [operation], decisions)
+                            self._sources.add(sources)
+                    else:
+                        self._proposals.save_operations(proposal.id, [operation], decisions)
             finally:
                 set_batch_run_context(previous_run)
 
@@ -1665,13 +1795,28 @@ class ProposalService:
         edits: dict[str, dict[str, Any]],
         alternatives: dict[str, dict[str, Any]],
     ) -> None:
-        """Each chosen alternative is non-empty, for an operation being applied with an edit."""
-        misplaced = sorted(set(alternatives) - {o.id for o in chosen})
+        """
+        Each chosen alternative is non-empty, for an operation being applied:
+        an "existing" one names one of the operation's near matches; any other
+        comes with the edit that applies it.
+        """
+        by_id = {o.id: o for o in chosen}
+        misplaced = sorted(set(alternatives) - set(by_id))
         if misplaced:
             raise ValueError(f"Chosen alternatives for operations not being applied: {misplaced}")
         for operation_id, alternative in alternatives.items():
             if not isinstance(alternative, dict) or not alternative:
                 raise ValueError(f"The chosen alternative for {operation_id} is empty")
+            if _is_existing(alternative):
+                operation = by_id[operation_id]
+                if operation.alternative(alternative.get("entity_id")) is None:
+                    raise ValueError(
+                        f"seq {operation.seq} has no near match"
+                        f" {alternative.get('entity_id')!r} to choose"
+                    )
+                if operation_id in edits:
+                    raise ValueError(f"seq {operation.seq}: a near match takes no edit")
+                continue
             if operation_id not in edits:
                 raise ValueError(
                     f"The chosen alternative for {operation_id} needs the edit that applies it"
@@ -1772,6 +1917,71 @@ class ProposalService:
             return result
 
         self._record_outcome(operation, proposal.id, run)
+
+    def _apply_match(
+        self, operation: ProposedOperation, entity_id: str, proposal: ChangeProposal
+    ) -> None:
+        """
+        Apply an individual create as the existing individual a reviewer chose
+        among its near matches: nothing is created, and the operation's result
+        (what "$ref" to it resolves to) is that individual, which must still
+        exist in the proposal's dataset.
+        """
+
+        def run() -> str:
+            individual = self._repo.get_individual(entity_id)
+            if individual is None:
+                raise _ApplyFailed(TARGET_MISSING, f"individual {entity_id}")
+            if proposal.dataset_id is not None and individual.dataset_id != proposal.dataset_id:
+                raise _ApplyFailed(
+                    "dataset_mismatch",
+                    f"individual '{individual.title}' is no longer in the proposal's dataset",
+                )
+            # A dataset belongs to one taxonomy and its individuals' classes stay in
+            # it, so the dataset check covers taxonomy membership.
+            return individual.id
+
+        self._record_outcome(operation, proposal.id, run)
+
+    @staticmethod
+    def _passages(proposal_id: str, operation: ProposedOperation) -> list[EntitySource]:
+        """
+        The provenance the operation records if it applies: its source passages,
+        for the entity it makes or changes (an individual, relationship or
+        class) or the existing individual it matches; none for a delete. Built
+        before it applies, so entity_id is left blank until then.
+
+        Raises:
+            ValueError: If a passage can't be stored (e.g. evidence stored
+                before offsets were bounded)
+        """
+        if operation.op is OperationType.DELETE or operation.kind not in _PROVENANCE_KINDS:
+            return []
+        return entity_sources(
+            operation.evidence,
+            "",
+            operation.kind.value,
+            proposal_id,
+            operation.seq,
+            datetime.now(timezone.utc),
+        )
+
+    def sources_of(self, entity_id: str) -> list[EntitySource]:
+        """The source passages behind an entity, oldest first (none without a repository)."""
+        return self._sources.list_for_entity(entity_id) if self._sources is not None else []
+
+    def alternative_titles(self, proposal: ChangeProposal) -> dict[str, str]:
+        """The current title of each individual the proposal's near matches name, by id."""
+        titles: dict[str, str] = {}
+        for operation in proposal.operations:
+            for alternative in operation.alternatives:
+                entity_id = alternative["entity_id"]
+                if entity_id in titles:
+                    continue
+                individual = self._repo.get_individual(entity_id)
+                if individual is not None:
+                    titles[entity_id] = individual.title
+        return titles
 
     def _apply_resolved(
         self,
@@ -2422,7 +2632,11 @@ class ProposalService:
         reverted"), since a reverted proposal takes no more decisions; nobody
         judged them, so they record no decision. Applied and rejected operations
         keep their recorded outcomes; the applied ones' decisions are marked
-        superseded by reverted_by (a rejection still stands).
+        superseded by reverted_by (a rejection still stands). The source
+        passages its operations recorded (provenance) are removed. A create
+        applied as a near match created nothing, so nothing of it is undone;
+        relationships pointed at that individual are undone with their own
+        operations.
 
         A proposal its client has landed on a mirrored taxonomy can't be
         reverted here: the source already holds it, so the client proposes the
@@ -2453,6 +2667,8 @@ class ProposalService:
                 self._proposals.supersede_decisions(
                     proposal.id, datetime.now(timezone.utc), reverted_by
                 )
+                if self._sources is not None:
+                    self._sources.delete_for_proposal(proposal.id)
                 self._proposals.set_status(proposal.id, ProposalStatus.REVERTED)
 
             return self._revert.revert_with_summary(proposal.id, on_reverted=close_proposal)

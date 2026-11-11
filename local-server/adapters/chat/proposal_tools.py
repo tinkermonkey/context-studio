@@ -60,6 +60,7 @@ from domain.versioning.proposals import (
     ProposalSource,
     ProposalStatus,
 )
+from domain.versioning.provenance import MAX_OFFSET
 
 _logger = logging.getLogger(__name__)
 
@@ -214,14 +215,56 @@ def _field_guide() -> str:
 
 _EVIDENCE_SCHEMA = {
     "type": "array",
-    "description": "Supporting quotes or links",
+    "description": (
+        "Supporting quotes or links, or passages in a source (source_id with start and end);"
+        " an applied individual, relationship or class operation records each source passage"
+        " as the entity's provenance"
+    ),
     "items": {
         "type": "object",
         "properties": {
             "quote": {"type": "string", "description": "A quote from a source"},
             "url": {"type": "string", "description": "Where it comes from"},
             "entity_id": {"type": "string", "description": "A workspace entity it rests on"},
+            "source_id": {"type": "string", "description": "A source the passage is in"},
+            "page": {
+                "type": ["integer", "null"],
+                "minimum": 0,
+                "maximum": MAX_OFFSET,
+                "description": "The passage's page in the source, if it has pages",
+            },
+            "start": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": MAX_OFFSET,
+                "description": "The passage's start offset in the source's text",
+            },
+            "end": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": MAX_OFFSET,
+                "description": "The passage's end offset (exclusive, not before start)",
+            },
         },
+    },
+}
+
+_ALTERNATIVES_SCHEMA = {
+    "type": "array",
+    "description": (
+        "Individual create only: individuals already in the dataset this one may be (near"
+        " matches). A reviewer may choose one instead of creating it; operations that use"
+        ' its "$<ref>" then point at the existing individual'
+    ),
+    "items": {
+        "type": "object",
+        "properties": {
+            "kind": {"type": "string", "enum": ["existing"]},
+            "entity_id": {"type": "string", "description": "The existing individual"},
+            "similarity": {"type": "number", "minimum": 0, "maximum": 1},
+        },
+        "required": ["kind", "entity_id"],
+        "additionalProperties": False,
     },
 }
 
@@ -263,6 +306,7 @@ OPERATION_SCHEMA: dict[str, Any] = {
             ),
         },
         "evidence": _EVIDENCE_SCHEMA,
+        "alternatives": _ALTERNATIVES_SCHEMA,
         "probability": {
             "type": "number",
             "minimum": 0,
@@ -487,6 +531,7 @@ def _drafts(raw: Sequence[Any]) -> tuple[list[OperationDraft], list[OperationErr
                 evidence=item.get("evidence") or [],
                 probability=item.get("probability"),
                 replacement=item.get("replacement"),
+                alternatives=item.get("alternatives") or [],
             )
         )
     return drafts, errors
@@ -687,7 +732,10 @@ class GetProposalTool(_ProposalTool):
         " deletes name each other and none survives). A pending relationship-type delete"
         " still in use has blockers (see propose_changes). Each operation also has its"
         " base (the touched values when proposed; a delete's whole entity), rationale,"
-        " notes, evidence and probability, and once decided applied_fields (a reviewer's edit),"
+        " notes, evidence (source passages carry source_id, page, start and end) and"
+        " probability; an individual create may list alternatives (near matches: existing"
+        " individuals with title and similarity), and matched is true once it was applied as"
+        " one of them; once decided, applied_fields (a reviewer's edit),"
         " resolution (what happened to a delete's relationships) and reason. Empty"
         " values are left out. A large proposal leaves out base and evidence, keeps"
         " fields, and pages its operations: pass the offset its truncated note gives."

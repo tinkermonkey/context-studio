@@ -77,6 +77,7 @@ from adapters.persistence.sqlite.pipeline_config_repo import (
     load_user_configurations,
 )
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
+from adapters.persistence.sqlite.entity_source_repo import SQLiteEntitySourceRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
 from adapters.persistence.sqlite.transaction import SharedSessionFactory, SqliteTransactionScope
@@ -633,6 +634,7 @@ async def lifespan(app: FastAPI):
             ],
             transaction_scope=SqliteTransactionScope(shared_session_factory),
             event_publisher=event_publisher,
+            entity_sources=SQLiteEntitySourceRepository(shared_session_factory),
         )
         approval_policy_service = ApprovalPolicyService(
             approval_policy_repo, cast(OntologyRepository, ontology_repo)
@@ -907,6 +909,7 @@ async def lifespan(app: FastAPI):
             embedding=embedding_service,
             schema_index=schema_vector_index,
             individual_index=individual_vector_index,
+            sources_of=proposal_service.sources_of,
         )
         app.state.chat_service = ChatService(
             model=llm_router,

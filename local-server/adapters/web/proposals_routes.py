@@ -276,6 +276,7 @@ async def create_proposal(
             probability=o.probability,
             claimed_scope=o.scope,
             replacement=o.replacement,
+            alternatives=[a.model_dump() for a in o.alternatives],
         )
         for o in request.operations
     ]
@@ -371,6 +372,9 @@ async def apply_proposal(
     chosen_alternatives records, in each applied operation's decision, the
     alternative the reviewer chose over the proposal's pick (gold's
     chosen_alternative), e.g. a reflection's answers when accepted with an edit.
+    For an individual create with near matches, {"kind": "existing",
+    "entity_id"} applies it as that existing individual: nothing is created,
+    and relationships that name it by "$ref" point at the existing one.
     """
 
     def run() -> ChangeProposalResponse:

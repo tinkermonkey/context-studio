@@ -33,6 +33,7 @@ from domain.ontology.entities import (
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.ports import EmbeddingService, IndividualVectorIndex, SchemaVectorIndex
 from domain.ontology.services import OntologyService
+from domain.versioning.provenance import EntitySource
 from utils.async_executor import run_sync_in_executor
 
 MAX_RESULT_CHARS = 4000
@@ -550,6 +551,19 @@ def _entity_fields(entity: Any) -> dict[str, Any]:
     return fields
 
 
+def _source_summary(source: EntitySource) -> dict[str, Any]:
+    """A source passage as get_entity lists it on an individual or relationship."""
+    return {
+        "source_id": source.source_id,
+        "page": source.page,
+        "start": source.start,
+        "end": source.end,
+        "quote": source.quote,
+        "proposal_id": source.proposal_id,
+        "op_seq": source.op_seq,
+    }
+
+
 def _attribute_summary(attribute: AttributeDefinition) -> dict[str, Any]:
     """An attribute definition as get_entity lists it on its class."""
     return {
@@ -580,7 +594,10 @@ class GetEntityTool(_Tool):
         " statement: what it is for, what its classes and relationships model, and how"
         " changes are judged. A relationship"
         " (kind relationship) has its source, target and type; an attribute definition"
-        " (kind attribute) has its class, datatype and constraints. Lists longer than"
+        " (kind attribute) has its class, datatype and constraints. An individual or"
+        " relationship lists its sources: the source passages it was extracted from"
+        " ({source_id, page, start, end, quote, proposal_id, op_seq}), written when a"
+        " proposal applied. Lists longer than"
         f" {MAX_ENTITY_LIST_ITEMS} are cut, with <name>_total giving the full count."
     )
     input_schema = {
@@ -593,6 +610,24 @@ class GetEntityTool(_Tool):
         },
         "required": ["id"],
     }
+
+    def __init__(
+        self,
+        ontology: OntologyService,
+        resolver: EntityResolver,
+        sources_of: Optional[Callable[[str], list[EntitySource]]] = None,
+    ) -> None:
+        super().__init__(ontology, resolver)
+        self._sources_of = sources_of
+
+    def _add_sources(self, result: dict[str, Any], entity_id: str) -> None:
+        """An individual's or relationship's source passages, capped like other lists."""
+        if self._sources_of is None:
+            return
+        sources = [_source_summary(s) for s in self._sources_of(entity_id)]
+        result["sources"] = sources[:MAX_ENTITY_LIST_ITEMS]
+        if len(sources) > MAX_ENTITY_LIST_ITEMS:
+            result["sources_total"] = len(sources)
 
     def run(self, args: dict[str, Any]) -> ToolOutcome:
         entity_id = required_str(args, "id")
@@ -636,6 +671,7 @@ class GetEntityTool(_Tool):
             if entity.dataset_id:
                 dataset = self._ontology.get_dataset(entity.dataset_id)
                 result["dataset"] = {"id": dataset.id, "identifier": dataset.identifier}
+            self._add_sources(result, entity.id)
         elif isinstance(entity, PropertyDefinition):
             link("domain", [entity.domain_class_id])
             link("range", [entity.range_class_id])
@@ -675,6 +711,7 @@ class GetEntityTool(_Tool):
         link("source", [relationship.source_id])
         link("type", [relationship.property_definition_id])
         link("target", [relationship.target_id])
+        self._add_sources(result, relationship.id)
         titles = [result[k][0]["title"] if result[k] else "?" for k in ("source", "type", "target")]
         return _outcome(result, None, "{} {} {} (relationship)".format(*titles), related)
 
@@ -1084,19 +1121,22 @@ def build_chat_tools(
     embedding: Optional[EmbeddingService] = None,
     schema_index: Optional[SchemaVectorIndex] = None,
     individual_index: Optional[IndividualVectorIndex] = None,
+    sources_of: Optional[Callable[[str], list[EntitySource]]] = None,
 ) -> list[ToolBase]:
     """
     The read-only tools, in the order offered to the model.
 
     The same list serves the in-app chat and the MCP server, so both can do the
     same things; the proposal tools (`adapters.chat.proposal_tools`) follow them.
+    sources_of reads an entity's source passages for get_entity (see
+    ProposalService.sources_of); without it get_entity lists none.
     """
     resolver = EntityResolver(ontology)
     return [
         ListTaxonomiesTool(ontology, resolver),
         ListDatasetsTool(ontology, resolver),
         SearchEntitiesTool(ontology, resolver, embedding, schema_index, individual_index),
-        GetEntityTool(ontology, resolver),
+        GetEntityTool(ontology, resolver, sources_of),
         ListChildrenTool(ontology, resolver),
         ListRelationshipsTool(ontology, resolver),
         ListRelationshipTypesTool(ontology, resolver),

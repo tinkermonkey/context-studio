@@ -65,6 +65,7 @@ def proposal_response(
         service.auto_apply_operation_ids(proposal) if dry_run else None,
         usage,
         service.dataset_impacts(proposal) if with_usage else None,
+        service.alternative_titles(proposal),
     )
 
 
