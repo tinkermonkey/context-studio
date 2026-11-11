@@ -135,6 +135,7 @@ TARGET_MISSING = "target_missing"
 UNRESOLVED_REF = "unresolved_ref"
 APPLY_ERROR = "error"
 INVALID_EDIT = "invalid_edit"
+INVALID_EVIDENCE = "invalid_evidence"
 RULE_REFUSED = "refused"
 UNRESOLVABLE = "unresolvable"
 
@@ -439,6 +440,15 @@ def _alternatives(raw: Any) -> list[dict[str, Any]]:
             }
         )
     return found
+
+
+def _raising(error: Exception) -> Callable[[], str]:
+    """An operation's apply that fails with this error before changing anything."""
+
+    def run() -> str:
+        raise error
+
+    return run
 
 
 def _is_existing(alternative: Mapping[str, Any]) -> bool:
@@ -1581,7 +1591,8 @@ class ProposalService:
         Pending and failed operations can be applied (a failed one again, e.g.
         with force_stale after a target_changed). Each records its own outcome:
         applied with the entity it made or changed, or failed with a reason
-        (target_changed, target_missing, unresolved_ref, invalid_edit, refused,
+        (target_changed, target_missing, unresolved_ref, invalid_edit,
+        invalid_evidence: a source passage that can't be stored, refused,
         error). Operations already applied stay applied when a later one fails.
         Property-definition creates and updates are also checked by the rules
         that govern them, if any (refused).
@@ -1685,7 +1696,16 @@ class ProposalService:
                     # Per operation: relationship deletes applied earlier in this call are gone.
                     covered = self._covered(proposal)
                     alternative = alternatives.get(operation.id)
-                    if alternative is not None and _is_existing(alternative):
+                    # Built before anything is written, so a passage that can't be
+                    # stored fails the operation instead of failing after its change.
+                    try:
+                        passages = self._passages(proposal.id, operation)
+                        invalid = None
+                    except ValueError as exc:
+                        passages, invalid = [], _ApplyFailed(INVALID_EVIDENCE, str(exc))
+                    if invalid is not None:
+                        self._record_outcome(operation, proposal.id, _raising(invalid))
+                    elif alternative is not None and _is_existing(alternative):
                         match = operation.alternative(alternative.get("entity_id"))
                         # Gold keeps the near match as proposed, similarity and all.
                         alternatives[operation.id] = dict(match or alternative)
@@ -1722,7 +1742,11 @@ class ProposalService:
                                 chosen_alternative=alternatives.get(operation.id),
                             )
                         )
-                    sources = self._sources_of_applied(proposal.id, operation)
+                    sources = []
+                    if operation.status is OperationStatus.APPLIED and operation.result_entity_id:
+                        sources = [
+                            replace(p, entity_id=operation.result_entity_id) for p in passages
+                        ]
                     if sources and self._sources is not None:
                         # The outcome and the provenance it records commit together.
                         with self._atomic():
@@ -1913,27 +1937,29 @@ class ProposalService:
                     "dataset_mismatch",
                     f"individual '{individual.title}' is no longer in the proposal's dataset",
                 )
+            # A dataset belongs to one taxonomy and its individuals' classes stay in
+            # it, so the dataset check covers taxonomy membership.
             return individual.id
 
         self._record_outcome(operation, proposal.id, run)
 
     @staticmethod
-    def _sources_of_applied(proposal_id: str, operation: ProposedOperation) -> list[EntitySource]:
+    def _passages(proposal_id: str, operation: ProposedOperation) -> list[EntitySource]:
         """
-        The provenance an applied operation records: its source passages, for
-        the entity it made or changed (an individual, relationship or class),
-        or the existing individual it matched. None for a delete or a failure.
+        The provenance the operation records if it applies: its source passages,
+        for the entity it makes or changes (an individual, relationship or
+        class) or the existing individual it matches; none for a delete. Built
+        before it applies, so entity_id is left blank until then.
+
+        Raises:
+            ValueError: If a passage can't be stored (e.g. evidence stored
+                before offsets were bounded)
         """
-        if (
-            operation.status is not OperationStatus.APPLIED
-            or operation.op is OperationType.DELETE
-            or operation.kind not in _PROVENANCE_KINDS
-            or operation.result_entity_id is None
-        ):
+        if operation.op is OperationType.DELETE or operation.kind not in _PROVENANCE_KINDS:
             return []
         return entity_sources(
             operation.evidence,
-            operation.result_entity_id,
+            "",
             operation.kind.value,
             proposal_id,
             operation.seq,

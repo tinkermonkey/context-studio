@@ -8988,7 +8988,7 @@ export interface components {
       notes?: string | null;
       /**
        * Evidence
-       * @description Supporting {"quote", "url", "entity_id"} items (text values), or passages in a source: {"source_id", "page", "start", "end", "quote"}, where start and end are character offsets into the source's text (non-negative integers, end exclusive and not before start) and page is a non-negative integer or null. An applied individual, relationship or class operation records each source passage as the entity's provenance
+       * @description Supporting {"quote", "url", "entity_id"} items (text values), or passages in a source: {"source_id", "page", "start", "end", "quote"}, where start and end are character offsets into the source's text (integers from 0 to 2147483647, end exclusive and not before start) and page is such an integer or null. An applied individual, relationship or class operation records each source passage as the entity's provenance
        */
       evidence?: {
         [key: string]: unknown;
@@ -9046,7 +9046,7 @@ export interface components {
       notes?: string | null;
       /**
        * Evidence
-       * @description Supporting {"quote", "url", "entity_id"} items (text values), or passages in a source: {"source_id", "page", "start", "end", "quote"}, where start and end are character offsets into the source's text (non-negative integers, end exclusive and not before start) and page is a non-negative integer or null. An applied individual, relationship or class operation records each source passage as the entity's provenance
+       * @description Supporting {"quote", "url", "entity_id"} items (text values), or passages in a source: {"source_id", "page", "start", "end", "quote"}, where start and end are character offsets into the source's text (integers from 0 to 2147483647, end exclusive and not before start) and page is such an integer or null. An applied individual, relationship or class operation records each source passage as the entity's provenance
        */
       evidence?: {
         [key: string]: unknown;

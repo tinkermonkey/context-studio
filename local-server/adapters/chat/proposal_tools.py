@@ -60,6 +60,7 @@ from domain.versioning.proposals import (
     ProposalSource,
     ProposalStatus,
 )
+from domain.versioning.provenance import MAX_OFFSET
 
 _logger = logging.getLogger(__name__)
 
@@ -225,16 +226,19 @@ _EVIDENCE_SCHEMA = {
             "page": {
                 "type": ["integer", "null"],
                 "minimum": 0,
+                "maximum": MAX_OFFSET,
                 "description": "The passage's page in the source, if it has pages",
             },
             "start": {
                 "type": "integer",
                 "minimum": 0,
+                "maximum": MAX_OFFSET,
                 "description": "The passage's start offset in the source's text",
             },
             "end": {
                 "type": "integer",
                 "minimum": 0,
+                "maximum": MAX_OFFSET,
                 "description": "The passage's end offset (exclusive, not before start)",
             },
         },

@@ -4,10 +4,12 @@ alternatives on individual creates ("use existing" at apply), and the
 provenance rows applied operations record and revert removes.
 """
 
+from dataclasses import replace
 from datetime import datetime, timezone
 
 import pytest
 
+from domain.ontology.exceptions import DatasetMismatchError
 from domain.versioning.approval_policy import ApprovalPolicy, AutoApplyRule, auto_apply_ids
 from domain.versioning.exceptions import ProposalValidationError
 from domain.versioning.proposal_service import OperationDraft, ProposalService
@@ -17,7 +19,12 @@ from domain.versioning.proposals import (
     ProposalSource,
     ProposedOperation,
 )
-from domain.versioning.provenance import EntitySource, entity_sources, evidence_problem
+from domain.versioning.provenance import (
+    MAX_OFFSET,
+    EntitySource,
+    entity_sources,
+    evidence_problem,
+)
 from tests.fakes.fake_entity_source_repository import FakeEntitySourceRepository
 from tests.unit.domain.versioning.test_proposal_service import (  # noqa: F401 - fixtures
     K,
@@ -105,10 +112,10 @@ class TestEvidenceProblem:
             ("a quote", "must be an object"),
             ({"quote": 3}, "must be text"),
             ({"start": 1, "end": 2}, 'needs a "source_id"'),
-            (passage(start=-1), "non-negative integer"),
-            (passage(start=True), "non-negative integer"),
-            (passage(end=1.5), "non-negative integer"),
-            (passage(page="5"), "non-negative integer"),
+            (passage(start=-1), "from 0 to"),
+            (passage(start=True), "from 0 to"),
+            (passage(end=1.5), "from 0 to"),
+            (passage(page="5"), "from 0 to"),
             (passage(start=9, end=3), "before its start"),
             ({"source_id": SOURCE, "start": 1}, "needs end"),
             (passage(source_id="  "), "must not be empty"),
@@ -362,6 +369,53 @@ class TestUseExisting:
 
         assert applied.operations[0].status is OperationStatus.FAILED
         assert applied.operations[0].reason.startswith("target_missing")
+
+    def test_a_match_cant_leave_the_taxonomy_while_in_its_dataset(self, graph, ontology, repo):
+        """Why apply re-checks only the dataset: it pins the individual's taxonomy."""
+        garden = ontology.create_taxonomy(title="Garden")
+        shed = ontology.create_class(ontology.create_scheme(garden.id, title="Places").id, "Shed")
+
+        with pytest.raises(DatasetMismatchError):
+            repo.save_individual(replace(repo.get_individual(graph["den"]), class_ids=[shed.id]))
+
+
+class TestUnstorablePassages:
+    @pytest.mark.parametrize("key", ["page", "start", "end"])
+    def test_an_offset_past_the_bound_is_refused(self, key):
+        item = {**passage(start=0, end=10), key: MAX_OFFSET + 1}
+
+        assert "from 0 to 2147483647" in evidence_problem(item)
+
+    def test_the_bound_itself_is_accepted(self):
+        assert evidence_problem(passage(MAX_OFFSET, MAX_OFFSET, MAX_OFFSET)) is None
+
+    def test_an_entity_source_refuses_an_offset_past_the_bound(self):
+        with pytest.raises(ValueError, match="from 0 to"):
+            EntitySource("e", "individual", SOURCE, "p", 1, 0, 10**20, datetime.now(timezone.utc))
+
+    def test_propose_refuses_a_huge_offset_and_stores_nothing(self, service, graph, proposals):
+        with pytest.raises(ProposalValidationError, match="invalid"):
+            propose(service, graph, create_den_like(graph, [passage(0, 10**20)]))
+
+        assert proposals.list_proposals() == []
+
+    def test_a_stored_huge_offset_fails_the_operation_before_it_creates_anything(
+        self, service, graph, proposals, ontology, sources
+    ):
+        """Evidence stored before offsets were bounded can't create an entity it can't source."""
+        proposal = propose(service, graph, create_den_like(graph, [passage()]))
+        stored = proposals._proposals[proposal.id].operations[0]
+        stored.evidence = [passage(0, 10**20)]
+        before = ontology.count_individuals(class_id=graph["room"])
+
+        for _ in range(2):
+            applied = service.apply(proposal.id, [stored.id])
+
+            [operation] = applied.operations
+            assert operation.status is OperationStatus.FAILED
+            assert operation.reason.startswith("invalid_evidence")
+            assert ontology.count_individuals(class_id=graph["room"]) == before
+        assert sources.rows == []
 
 
 class TestProvenance:

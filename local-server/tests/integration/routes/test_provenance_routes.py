@@ -164,6 +164,18 @@ def test_a_malformed_passage_is_refused_with_its_seq(client, house):
     assert error["seq"] == 1 and "before its start" in error["message"]
 
 
+@pytest.mark.parametrize("key", ["page", "start", "end"])
+def test_an_offset_too_large_to_store_is_refused(client, house, key):
+    response = client.post(
+        "/api/proposals", json=body(house, evidence=[{**PASSAGE, "end": 10**12, key: 10**20}])
+    )
+
+    assert response.status_code == 422
+    [error] = response.json()["detail"]["errors"]
+    assert (error["seq"], error["code"]) == (1, "invalid")
+    assert client.get("/api/proposals").json()["total"] == 0
+
+
 def test_a_malformed_alternative_is_refused(client, house):
     response = client.post(
         "/api/proposals",

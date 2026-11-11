@@ -20,11 +20,12 @@ from adapters.events.in_process import InProcessEventPublisher
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.connection import create_local_db_engine
 from adapters.persistence.sqlite.entity_source_repo import SQLiteEntitySourceRepository
-from adapters.persistence.sqlite.models import Base
+from adapters.persistence.sqlite.models import Base, ProposalOperation
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from adapters.persistence.sqlite.transaction import SharedSessionFactory, SqliteTransactionScope
 from domain.ontology.services import OntologyService
+from domain.versioning.exceptions import ProposalValidationError
 from domain.versioning.proposal_service import OperationDraft, ProposalService
 from domain.versioning.proposals import OperationKind as K
 from domain.versioning.proposals import OperationStatus, ProposalSource, ProposalStatus
@@ -272,3 +273,52 @@ def test_provenance_of_other_proposals_survives_a_revert(parts, house):
     service.revert(reverted.id)
 
     assert {s.proposal_id for s in service.sources_of(house["fridge"])} == {kept.id}
+
+
+def test_a_huge_offset_is_refused_at_propose_and_nothing_is_created(parts, house):
+    ontology, _, service = parts
+    individuals_before = ontology.count_individuals()
+
+    with pytest.raises(ProposalValidationError) as caught:
+        service.propose(
+            house["taxonomy"],
+            "Extracted",
+            [
+                OperationDraft(
+                    1,
+                    T.CREATE,
+                    K.INDIVIDUAL,
+                    fields={"class_ids": [house["appliance"]], "title": "Fridge"},
+                    evidence=[passage(0, 10**20, 1, "Fridge")],
+                )
+            ],
+            ProposalSource.PIPELINE,
+        )
+
+    [error] = caught.value.errors
+    assert (error.seq, error.code) == (1, "invalid")
+    assert service.list_proposals(taxonomy_id=house["taxonomy"]) == []
+    assert ontology.count_individuals() == individuals_before
+
+
+def test_a_stored_huge_offset_fails_apply_before_creating_and_retries_create_nothing(
+    parts, house, factory
+):
+    """Evidence stored before offsets were bounded: the operation fails, nothing is created."""
+    ontology, _, service = parts
+    proposal = extraction(service, house)
+    first = proposal.operations[0]
+    with factory() as session:
+        row = session.get(ProposalOperation, first.id)
+        row.evidence = [passage(0, 10**20, 5, "WRF555SDFZ")]
+        session.commit()
+    individuals_before = ontology.count_individuals()
+
+    for _ in range(2):
+        applied = service.apply(proposal.id, [first.id])
+
+        operation = applied.operations[0]
+        assert operation.status is OperationStatus.FAILED
+        assert operation.reason.startswith("invalid_evidence")
+        assert ontology.count_individuals() == individuals_before
+    assert service.sources_of(house["fridge"]) == []

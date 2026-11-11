@@ -23,6 +23,8 @@ from uuid import uuid4
 SOURCE_ID = "source_id"
 # The integer keys of a source passage: its page and character offsets.
 OFFSET_KEYS = ("page", "start", "end")
+# The largest page or offset a passage may have (fits a 32-bit integer column).
+MAX_OFFSET = 2**31 - 1
 
 
 @dataclass(frozen=True)
@@ -58,12 +60,15 @@ class EntitySource:
     def __post_init__(self) -> None:
         if self.created_at.tzinfo is None:
             raise ValueError("created_at must be timezone-aware")
+        offsets = [self.start, self.end] + ([self.page] if self.page is not None else [])
+        if not all(_is_offset(value) for value in offsets):
+            raise ValueError(f"page, start and end must be integers from 0 to {MAX_OFFSET}")
         if self.end < self.start:
             raise ValueError("end must not be before start")
 
 
 def _is_offset(value: Any) -> bool:
-    return isinstance(value, int) and not isinstance(value, bool) and value >= 0
+    return isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= MAX_OFFSET
 
 
 def evidence_problem(item: Any) -> str | None:
@@ -72,8 +77,8 @@ def evidence_problem(item: Any) -> str | None:
 
     An item is an object of text values ("quote", "url", "entity_id", ...). A
     source passage also has "source_id" (non-empty text) and "start" and "end"
-    (non-negative integers, end not before start), and may have "page" (a
-    non-negative integer or null); only a source passage has those integers.
+    (integers from 0 to MAX_OFFSET, end not before start), and may have "page"
+    (such an integer, or null); only a source passage has those integers.
     """
     if not isinstance(item, Mapping) or not all(isinstance(k, str) for k in item):
         return f"each evidence item must be an object, not {item!r}"
@@ -85,7 +90,7 @@ def evidence_problem(item: Any) -> str | None:
             if key == "page" and value is None:
                 continue
             if not _is_offset(value):
-                return f'evidence "{key}" must be a non-negative integer, not {value!r}'
+                return f'evidence "{key}" must be an integer from 0 to {MAX_OFFSET}, not {value!r}'
         elif not isinstance(value, str):
             return (
                 'each evidence value must be text ("quote", "url", "entity_id"; a source'
