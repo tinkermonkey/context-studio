@@ -11,7 +11,7 @@ from alembic.config import Config
 
 ALEMBIC_INI = str(Path(__file__).parent / "../../../adapters/persistence/sqlite/alembic.ini")
 REVISION = "3d7b38dca806"
-PREVIOUS_REVISION = "b2cd90812677"
+PREVIOUS_REVISION = "8c6c75d20b70"
 
 
 def _config(db_path: str) -> Config:

@@ -4,7 +4,7 @@ Leaves out the pre-existing index drift autogenerate reports on
 extraction_results and individual_classes (as earlier migrations do).
 
 Revision ID: 3d7b38dca806
-Revises: b2cd90812677
+Revises: 8c6c75d20b70
 Create Date: 2026-11-11 09:38:06.391812
 
 """
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '3d7b38dca806'
-down_revision = 'b2cd90812677'
+down_revision = '8c6c75d20b70'
 branch_labels = None
 depends_on = None
 
