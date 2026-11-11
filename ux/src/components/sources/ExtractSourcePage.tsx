@@ -64,6 +64,13 @@ export interface ExtractSourcePageProps {
 interface ConfigureFormProps {
   source: Source;
   datasets: DatasetResponse[];
+  /**
+   * The taxonomy mirrors a client's spec: only that client proposes schema
+   * changes to it (over MCP), so schema suggestions aren't offered here.
+   * Undefined until the taxonomy loads (or when it fails to): the option
+   * stays off until it is known.
+   */
+  mirrored: boolean | undefined;
   onRunsStarted: (runs: ExtractionRunRef[]) => void;
   onBack: () => void;
   onPagesChange: (pages: number[]) => void;
@@ -73,6 +80,7 @@ interface ConfigureFormProps {
 function ConfigureForm({
   source,
   datasets,
+  mirrored,
   onRunsStarted,
   onBack,
   onPagesChange,
@@ -85,6 +93,9 @@ function ConfigureForm({
   const [pages, setPages] = useState("");
   const [pagesError, setPagesError] = useState<string>();
   const [startError, setStartError] = useState<string>();
+  // A mirrored taxonomy's schema is its client's to change; offer it only once known not to be.
+  const schemaOffered = mirrored === false;
+  const suggestSchema = schema && schemaOffered;
 
   const configRef = configChoice ?? configurations[0]?.config_ref ?? SERVER_DEFAULT;
   const config = configurations.find((c) => c.config_ref === configRef);
@@ -92,7 +103,7 @@ function ConfigureForm({
   const chars = "pages" in parsed ? charsInPages(source, parsed.pages) : source.chars;
   const chunks = chunkRange(chars);
   const price = configurationPrice(config);
-  const runs = schema ? 2 : 1;
+  const runs = suggestSchema ? 2 : 1;
   const cost = price
     ? formatRange(
         formatUsd(estimateCost(chars, chunks.min, runs, price)),
@@ -116,7 +127,7 @@ function ConfigureForm({
           dataset,
           ...(configRef ? { configuration_ref: configRef } : {}),
           ...(spec ? { pages: spec } : {}),
-          schema,
+          schema: suggestSchema,
         },
       },
       {
@@ -137,7 +148,10 @@ function ConfigureForm({
         <Field label={copy.datasetLabel} hint={copy.datasetHint}>
           <SegmentedControl
             value={dataset}
-            onChange={(v) => setDataset(String(v))}
+            onChange={(v) => {
+              setDataset(String(v));
+              setStartError(undefined);
+            }}
             options={datasets.map((d) => ({ value: d.id, label: d.identifier }))}
             aria-label={copy.datasetLabel}
             data-testid="extract-dataset"
@@ -148,7 +162,10 @@ function ConfigureForm({
           <Select
             id="extract-config"
             value={configRef}
-            onChange={setConfigChoice}
+            onChange={(v) => {
+              setConfigChoice(v);
+              setStartError(undefined);
+            }}
             placeholder={copy.configPlaceholder}
             ariaLabel={copy.configLabel}
             data-testid="extract-config"
@@ -161,19 +178,33 @@ function ConfigureForm({
           </Select>
         </Field>
 
-        <label className="extract-check" htmlFor="extract-schema">
+        <label
+          className={schemaOffered ? "extract-check" : "extract-check extract-check--disabled"}
+          htmlFor="extract-schema"
+        >
           <input
             id="extract-schema"
             type="checkbox"
-            checked={schema}
-            onChange={(e) => setSchema(e.target.checked)}
+            checked={suggestSchema}
+            disabled={!schemaOffered}
+            onChange={(e) => {
+              setSchema(e.target.checked);
+              setStartError(undefined);
+            }}
+            aria-labelledby="extract-schema-label"
             aria-describedby="extract-schema-hint"
             data-testid="extract-schema-toggle"
           />
           <span className="extract-check__text">
-            <span className="extract-check__label">{copy.schemaLabel}</span>
-            <span id="extract-schema-hint" className="sources-note">
-              {copy.schemaHint}
+            <span id="extract-schema-label" className="extract-check__label">
+              {copy.schemaLabel}
+            </span>
+            <span
+              id="extract-schema-hint"
+              className="sources-note"
+              data-testid="extract-schema-hint"
+            >
+              {mirrored ? copy.schemaMirroredHint : copy.schemaHint}
             </span>
           </span>
         </label>
@@ -196,6 +227,7 @@ function ConfigureForm({
                 const next = e.target.value;
                 setPages(next);
                 setPagesError(undefined);
+                setStartError(undefined);
                 // Like the estimate, a range that doesn't parse counts every page.
                 const result = parsePages(next, source.pages);
                 onPagesChange("pages" in result ? result.pages : []);
@@ -209,7 +241,7 @@ function ConfigureForm({
         )}
 
         <FormCallout variant="info" icon="zap" data-testid="extract-estimate">
-          {copy.estimate(formatRange(chunks.min, chunks.max), schema, datasetLabel, cost)}
+          {copy.estimate(formatRange(chunks.min, chunks.max), suggestSchema, datasetLabel, cost)}
         </FormCallout>
 
         {startError && (
@@ -333,6 +365,7 @@ export function ExtractSourcePage({
             <ConfigureForm
               source={source}
               datasets={taxonomyDatasets}
+              mirrored={taxonomy?.mirrored}
               onRunsStarted={onRunsStarted}
               onBack={onBack}
               onPagesChange={setSelectedPages}

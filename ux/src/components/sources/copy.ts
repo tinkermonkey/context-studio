@@ -20,6 +20,9 @@ export const sourcesCopy = {
     modeLabel: "Source type",
     modes: { file: "File", url: "Web page", text: "Text" },
     datasetLabel: "Add to dataset",
+    defaultDatasetBefore: "This taxonomy has no dataset yet. The source goes into a new dataset, ",
+    defaultDatasetName: "default",
+    defaultDatasetAfter: ", made when you add it.",
     dropTitle: "Drop a file here, or choose one",
     dropHint:
       "PDF, Markdown, HTML or plain text, up to 50 MB. Scanned PDFs without a text layer are refused for now.",
@@ -59,6 +62,9 @@ export const sourcesCopy = {
     runStarting: "starting",
     followRun: "Extracting…",
     noCandidates: "No candidates found",
+    nothingProposed: "Nothing proposed",
+    noProposal: "No proposal",
+    foundCount: (n: number) => (n === 1 ? "1 found" : `${n} found`),
     interrupted: "Stopped when the app closed",
     runEnded: (status: string) => `Run ${status.toLowerCase()}`,
     openSchemaProposal: "Open schema proposal",
@@ -95,6 +101,8 @@ export const sourcesCopy = {
     schemaLabel: "Also suggest schema changes",
     schemaHint:
       "Runs schema extraction too. New classes and predicates go in a separate proposal, since schema changes follow the taxonomy's approval policy.",
+    schemaMirroredHint:
+      "Not available here: this taxonomy mirrors a client's spec, so only that client proposes schema changes, over MCP.",
     pagesLabel: "Pages",
     pagesHint: "Optional. Skip safety, warranty and index pages to save time and cost.",
     pagesPlaceholder: "e.g. 1-12, 15",
@@ -126,7 +134,16 @@ export const sourcesCopy = {
     newIndividuals: "New individuals",
     relationships: "Relationships",
     nearMatches: "Near matches",
-    noProposal: "The run finished without a proposal: no candidates were found.",
+    schemaDoneTitle: "Schema proposal ready",
+    noCandidatesTitle: "No candidates found",
+    noCandidatesMessage: "The run read every chunk and found nothing to propose.",
+    nothingProposedTitle: "Nothing proposed",
+    /** `found` is 0 when the run didn't count its candidates (an unchunked run). */
+    nothingProposedMessage: (found: number) =>
+      found > 0
+        ? `The chunks found ${found === 1 ? "1 candidate" : `${found} candidates`}, but none could be proposed.`
+        : "Candidates were found, but none could be proposed.",
+    skippedLabel: "Not proposed",
     backToSources: "Back to sources",
     reviewProposal: "Review proposal",
     reviewSchemaProposal: "Review schema proposal",

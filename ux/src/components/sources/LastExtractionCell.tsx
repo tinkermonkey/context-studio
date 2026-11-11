@@ -1,10 +1,15 @@
 import { Button } from "@tinkermonkey/heimdall-ui";
 import { hasRunStatus } from "@/api/hooks/pipeline/runStatus";
-import { isRunActive } from "@/api/hooks/sources/useExtractionRun";
+import { isRunActive, useExtractionRun } from "@/api/hooks/sources/useExtractionRun";
 import type { LastExtraction, LastExtractionRun } from "@/api/services/sources";
 import { formatAge } from "@/components/proposals/proposalModel";
 import { sourcesCopy } from "./copy";
-import { extractionRunIds, type ExtractionRunIds } from "./sourceModel";
+import {
+  extractionRunIds,
+  noProposalSummary,
+  skippedText,
+  type ExtractionRunIds,
+} from "./sourceModel";
 
 const copy = sourcesCopy.table;
 
@@ -20,11 +25,58 @@ function progressText(run: LastExtractionRun): string {
   return total > 0 ? copy.runProgress(run.items_done ?? 0, total) : copy.runStarting;
 }
 
-/** Why a finished run made no proposal: no candidates, or how it stopped. */
+/** How a run that stopped before finishing ended: interrupted, failed or cancelled. */
 function endedText(run: LastExtractionRun): string {
-  if (hasRunStatus(run.status, "completed")) return copy.noCandidates;
   if (run.status.toLowerCase() === "interrupted") return copy.interrupted;
   return copy.runEnded(run.status);
+}
+
+/**
+ * A completed run that made no proposal, read in full for why: nothing found,
+ * or candidates found that none could be proposed (and why not).
+ */
+function NoProposalLink({
+  sourceId,
+  runId,
+  onFollow,
+}: {
+  sourceId: string;
+  runId: string;
+  onFollow: () => void;
+}) {
+  const { data: run } = useExtractionRun(runId);
+  const summary = run ? noProposalSummary(run) : undefined;
+  const label = !summary
+    ? copy.noProposal
+    : summary.candidatesFound
+      ? copy.nothingProposed
+      : copy.noCandidates;
+  const why =
+    summary?.reason ??
+    [
+      summary && summary.found > 0 ? copy.foundCount(summary.found) : "",
+      skippedText(summary?.skipped ?? []),
+    ]
+      .filter(Boolean)
+      .join("; ");
+  return (
+    <>
+      <Button
+        variant="link"
+        size="sm"
+        className="sources-link"
+        onClick={onFollow}
+        data-testid={`source-follow-run-${sourceId}`}
+      >
+        {label}
+      </Button>
+      {why && (
+        <span className="sources-note" data-testid={`source-no-proposal-reason-${sourceId}`}>
+          {why}
+        </span>
+      )}
+    </>
+  );
 }
 
 /**
@@ -87,6 +139,8 @@ export function LastExtractionCell({
         >
           {copy.openProposal}
         </Button>
+      ) : hasRunStatus(main.status, "completed") ? (
+        <NoProposalLink sourceId={sourceId} runId={main.run_id} onFollow={follow} />
       ) : (
         <Button
           variant="link"

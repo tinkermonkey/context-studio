@@ -241,6 +241,7 @@ export function SourcesPage({ taxonomyId: taxonomyParam, onTaxonomyChange }: Sou
           taxonomyId={taxonomyId}
           datasetId={addDatasetId}
           datasets={datasets}
+          createsDefaultDataset={!!allDatasets && datasets.length === 0}
         />
       )}
 

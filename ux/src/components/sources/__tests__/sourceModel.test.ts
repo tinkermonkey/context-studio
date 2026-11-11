@@ -13,11 +13,14 @@ import {
   formatCount,
   formatRange,
   formatUsd,
+  noProposalSummary,
   pageRangeLabel,
   pagesSpec,
   parsePages,
   proposalCounts,
   runChunks,
+  skippedText,
+  skipReasonLabel,
   sourceDetail,
   statusNote,
 } from "../sourceModel";
@@ -173,6 +176,89 @@ describe("sourceModel", () => {
     expect(extractionRunIds([{ run_id: "i", pipeline: "individual_extraction" }])).toEqual({
       run: "i",
       schemaRun: undefined,
+    });
+  });
+
+  describe("noProposalSummary", () => {
+    const chunk = (triples: number, index = 0) => ({ index, start: 0, end: 1, triples });
+
+    it("counts skipped candidates and refused operations by reason, most first", () => {
+      const summary = noProposalSummary(
+        createRun({
+          status: "completed",
+          output_summary: {
+            metadata: { chunks: [chunk(4), chunk(3, 1)] },
+            skipped_candidates: [
+              { label: "a", reason: "missing_class" },
+              { label: "b", reason: "exists" },
+              { label: "c", reason: "exists" },
+              { label: "d" },
+            ],
+            refused_operations: [{ label: "e", error: "Title taken" }],
+          },
+        }),
+      );
+      expect(summary).toEqual({
+        found: 7,
+        reason: undefined,
+        candidatesFound: true,
+        skipped: [
+          { reason: "exists", count: 2 },
+          { reason: "missing_class", count: 1 },
+          { reason: "invalid", count: 1 },
+          { reason: "refused", count: 1 },
+        ],
+      });
+      expect(skippedText(summary.skipped)).toBe(
+        "2 already exist, 1 no matching class, 1 refused as invalid, 1 refused",
+      );
+    });
+
+    it.each([
+      ["exists", "already exist"],
+      ["missing_class", "no matching class"],
+      ["unresolved_predicate", "unknown relationship type"],
+      ["unresolved_endpoint", "an end wasn't proposed"],
+      ["literal", "values, not entities"],
+      ["derived_type", "derived relationship type"],
+      ["self_loop", "points at itself"],
+      ["invalid", "refused as invalid"],
+      ["no_scheme", "no concept scheme"],
+      // An unknown code reads as words.
+      ["some_new_reason", "some new reason"],
+    ])("words the skip reason %s as %s", (code, words) => {
+      expect(skipReasonLabel(code)).toBe(words);
+    });
+
+    it("prefers the server's reason, as it is, and its counts by reason", () => {
+      const sentence =
+        "None of the 3 candidates made an operation (missing_class 2, unresolved_endpoint 1).";
+      const summary = noProposalSummary(
+        createRun({
+          output_summary: {
+            no_proposal_reason: sentence,
+            skipped_by_reason: { exists: 2, some_new_reason: 5, ignored: "x" },
+            skipped_candidates: [{ label: "a", reason: "invalid" }],
+          },
+        }),
+      );
+      expect(summary.reason).toBe(sentence);
+      expect(summary.skipped).toEqual([
+        { reason: "some_new_reason", count: 5 },
+        { reason: "exists", count: 2 },
+      ]);
+      expect(skippedText(summary.skipped)).toBe("5 some new reason, 2 already exist");
+      // No chunks counted, but skipped candidates mean some were found.
+      expect(summary.found).toBe(0);
+      expect(summary.candidatesFound).toBe(true);
+    });
+
+    it("finds nothing when no chunk found a candidate and none were skipped", () => {
+      const summary = noProposalSummary(
+        createRun({ output_summary: { metadata: { chunks: [chunk(0)] } } }),
+      );
+      expect(summary).toEqual({ found: 0, reason: undefined, skipped: [], candidatesFound: false });
+      expect(noProposalSummary(undefined).candidatesFound).toBe(false);
     });
   });
 });

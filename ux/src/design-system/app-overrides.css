@@ -90,6 +90,14 @@ body.dark-canvas .form-callout--error .form-callout__icon {
   min-width: 0;
 }
 
+/* Heimdall's ProgressBar track is the shell-surface navy on both canvases,
+   so on the light canvas an empty bar reads as full. Every progress bar in
+   the app sits on the canvas: give the track the canvas border tone, light on
+   the light canvas and a lifted navy on the dark one. */
+.progress-bar {
+  background-color: rgb(var(--canvas-border));
+}
+
 /* Heimdall .hierarchy-row pins the pill column at 220px, but the pill
    contains the kind tag, label, and meta count and frequently exceeds
    that — the overflow visually collides with the description column.

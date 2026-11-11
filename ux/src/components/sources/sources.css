@@ -143,6 +143,11 @@
     opacity: 0;
   }
 
+  .add-source__dataset-name {
+    font-family: var(--font-mono);
+    color: rgb(var(--canvas-fg-1));
+  }
+
   .add-source__row {
     display: flex;
     flex-wrap: wrap;
@@ -203,6 +208,14 @@
     accent-color: rgb(var(--accent-primary));
   }
 
+  .extract-check--disabled {
+    cursor: not-allowed;
+  }
+
+  .extract-check--disabled .extract-check__label {
+    color: rgb(var(--canvas-fg-3));
+  }
+
   .extract-check__text {
     display: flex;
     flex-direction: column;
@@ -223,6 +236,18 @@
 
   .extract-run__headline {
     font-size: 20px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .extract-run__skipped {
+    margin: 0;
+    font-size: 13px;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  .extract-run__skipped-label {
+    margin-right: 6px;
     font-weight: 600;
     color: rgb(var(--canvas-fg-1));
   }

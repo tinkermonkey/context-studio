@@ -262,3 +262,87 @@ export function extractionRunIds(
     schemaRun: runs.find((r) => r.pipeline === "schema_extraction")?.run_id,
   };
 }
+
+// ==================== A run that made no proposal ====================
+
+/** Why a candidate became no operation, as a reviewer reads it. */
+const SKIP_REASON_LABEL: Record<string, string> = {
+  exists: "already exist",
+  missing_class: "no matching class",
+  unresolved_predicate: "unknown relationship type",
+  unresolved_endpoint: "an end wasn't proposed",
+  literal: "values, not entities",
+  derived_type: "derived relationship type",
+  self_loop: "points at itself",
+  invalid: "refused as invalid",
+  no_scheme: "no concept scheme",
+  // Operations the proposal service refused (refused_operations), when the run lists them.
+  refused: "refused",
+};
+
+/** A skip reason's label: a known one's words, else the code with spaces. */
+export function skipReasonLabel(reason: string): string {
+  return SKIP_REASON_LABEL[reason] ?? reason.replace(/_/g, " ");
+}
+
+/** What a finished run that made no proposal says about why. */
+export interface NoProposalSummary {
+  /** Candidates its chunks found; 0 for an unchunked run. */
+  found: number;
+  /** The server's reason (output_summary.no_proposal_reason), when it gives one. */
+  reason?: string;
+  /** Candidates not proposed, by reason, most first. */
+  skipped: Array<{ reason: string; count: number }>;
+  /** True when candidates were found but none could be proposed. */
+  candidatesFound: boolean;
+}
+
+/** A {reason: count} object's positive counts. */
+function reportedCounts(value: unknown): Map<string, number> {
+  const counts = new Map<string, number>();
+  if (!value || typeof value !== "object" || Array.isArray(value)) return counts;
+  for (const [reason, n] of Object.entries(value)) {
+    if (typeof n === "number" && n > 0) counts.set(reason, n);
+  }
+  return counts;
+}
+
+/** A [{reason}] list counted by reason. */
+function listedCounts(value: unknown): Map<string, number> {
+  const counts = new Map<string, number>();
+  if (!Array.isArray(value)) return counts;
+  for (const item of value) {
+    const reason = (item as { reason?: unknown } | null)?.reason;
+    const key = typeof reason === "string" && reason ? reason : "invalid";
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return counts;
+}
+
+/**
+ * Why a completed run made no proposal: the server's reason and skipped
+ * candidates by reason when it reports them (`no_proposal_reason`,
+ * `skipped_by_reason`); otherwise what its chunks and `skipped_candidates` show.
+ */
+export function noProposalSummary(run?: PipelineRun): NoProposalSummary {
+  const output = (run?.output_summary ?? {}) as Record<string, unknown>;
+  const found = runChunks(run).reduce((sum, c) => sum + (c.triples ?? 0), 0);
+  const reported = reportedCounts(output.skipped_by_reason);
+  const counts = reported.size > 0 ? reported : listedCounts(output.skipped_candidates);
+  const refused = Array.isArray(output.refused_operations) ? output.refused_operations.length : 0;
+  if (refused > 0 && !counts.has("refused")) counts.set("refused", refused);
+  const skipped = [...counts.entries()]
+    .map(([reason, count]) => ({ reason, count }))
+    .sort((a, b) => b.count - a.count);
+  // A sentence, shown as the server words it.
+  const reason =
+    typeof output.no_proposal_reason === "string" && output.no_proposal_reason.trim()
+      ? output.no_proposal_reason.trim()
+      : undefined;
+  return { found, reason, skipped, candidatesFound: found > 0 || skipped.length > 0 };
+}
+
+/** "12 already exist, 8 no matching class", or "" when nothing was skipped. */
+export function skippedText(skipped: NoProposalSummary["skipped"]): string {
+  return skipped.map((s) => `${s.count} ${skipReasonLabel(s.reason)}`).join(", ");
+}

@@ -12,7 +12,15 @@ import { hasRunStatus } from "@/api/hooks/pipeline/runStatus";
 import { ApiError } from "@/api/client/interceptors";
 import { isRunActive } from "@/api/hooks/sources/useExtractionRun";
 import { sourcesCopy } from "./copy";
-import { emptyChunksWarning, proposalCounts, runChunks, type ChipTone } from "./sourceModel";
+import {
+  emptyChunksWarning,
+  noProposalSummary,
+  proposalCounts,
+  runChunks,
+  skippedText,
+  type ChipTone,
+  type NoProposalSummary,
+} from "./sourceModel";
 import type { components } from "@/api/types";
 
 type PipelineRun = components["schemas"]["PipelineRunResponse"];
@@ -131,6 +139,33 @@ function RunningPanel({
   );
 }
 
+/** Why a completed run proposed nothing: none found, or found but none could be proposed. */
+function NoProposalNote({ summary }: { summary: NoProposalSummary }) {
+  const message =
+    summary.reason ??
+    (summary.candidatesFound
+      ? copy.nothingProposedMessage(summary.found)
+      : copy.noCandidatesMessage);
+  const skipped = skippedText(summary.skipped);
+  return (
+    <>
+      <FormCallout
+        variant={summary.candidatesFound ? "warn" : "info"}
+        icon={summary.candidatesFound ? "alert" : "info"}
+        data-testid="extract-no-proposal"
+      >
+        {message}
+      </FormCallout>
+      {skipped && (
+        <p className="extract-run__skipped" data-testid="extract-skipped">
+          <span className="extract-run__skipped-label">{copy.skippedLabel}</span>
+          {skipped}
+        </p>
+      )}
+    </>
+  );
+}
+
 function DonePanel({
   run,
   schemaRun,
@@ -146,10 +181,20 @@ function DonePanel({
   // The dataset chosen for this extraction, not necessarily the source's.
   const extractionDataset = proposal?.dataset_id ?? datasetId;
   const counts = proposal ? proposalCounts(proposal) : undefined;
-  const warning = emptyChunksWarning(runChunks(run));
+  const empty = run.proposal_id ? undefined : noProposalSummary(run);
+  // When no chunk found anything the panel says so; naming every chunk would repeat it.
+  const warning = empty && !empty.candidatesFound ? "" : emptyChunksWarning(runChunks(run));
+  // Titled for the whole extraction: a schema proposal alone is still a result.
+  const title = !empty
+    ? copy.doneTitle
+    : schemaRun?.proposal_id
+      ? copy.schemaDoneTitle
+      : empty.candidatesFound
+        ? copy.nothingProposedTitle
+        : copy.noCandidatesTitle;
   return (
     <Panel
-      title={copy.doneTitle}
+      title={title}
       subtitle={copy.doneSubtitle(
         sourceTitle,
         extractionDataset ? datasetName(extractionDataset) : undefined,
@@ -157,7 +202,9 @@ function DonePanel({
       data-testid="extract-done-panel"
     >
       <div className="extract-run">
-        {run.proposal_id ? (
+        {empty ? (
+          <NoProposalNote summary={empty} />
+        ) : (
           <StatGrid columns={4}>
             <StatTile
               label={copy.operations}
@@ -184,10 +231,6 @@ function DonePanel({
               data-testid="extract-count-near-matches"
             />
           </StatGrid>
-        ) : (
-          <FormCallout variant="info" icon="info" data-testid="extract-no-proposal">
-            {copy.noProposal}
-          </FormCallout>
         )}
         {warning && (
           <FormCallout variant="warn" icon="alert" role="note" data-testid="extract-empty-chunks">
