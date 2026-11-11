@@ -142,6 +142,7 @@ def _capped(
     note: Callable[[int], str],
     total: Optional[int] = None,
     offset: int = 0,
+    whole_texts: str = "the review page shows them whole",
 ) -> tuple[str, list[Any]]:
     """
     Serialize a result within MAX_PROPOSAL_CHARS; returns the content and the
@@ -158,6 +159,7 @@ def _capped(
         total: How many entries there are in all, when the list is one page
             of them (default: the list's length)
         offset: Where the list starts among them, for a page
+        whole_texts: Where the cut texts can be read whole, for the clip note
     """
     total = len(payload[list_key]) + offset if total is None else total
 
@@ -176,8 +178,7 @@ def _capped(
     if len(content) > MAX_PROPOSAL_CHARS:
         clipped = _clipped(payload)
         clipped["clipped"] = (
-            f"texts longer than {CLIPPED_TEXT_CHARS} characters are cut; the review page"
-            " shows them whole"
+            f"texts longer than {CLIPPED_TEXT_CHARS} characters are cut; {whole_texts}"
         )
         content, fitted = fit(clipped)
     return content, list(fitted[list_key])
@@ -977,7 +978,12 @@ class DrSpecDriftTool(ToolBase):
 
         # Entries stay even when empty: "no drift" is the answer.
         payload["entries"] = [_drift_entry(entry) for entry in matching[offset:]]
-        content, _ = _capped(payload, "entries", note, len(matching), offset)
+        whole = (
+            "the review page shows them whole"
+            if stored
+            else "the REST drift route returns them whole"
+        )
+        content, _ = _capped(payload, "entries", note, len(matching), offset, whole)
         summary = f"{len(plan.entries)} entities differ" + (
             f"; proposed as {proposal.title}" if stored else ""
         )  # type: ignore[union-attr]

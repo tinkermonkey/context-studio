@@ -48,8 +48,8 @@ class DriftEntry:
             the source; it may differ otherwise too) or delete (only in the taxonomy)
         entity_id: The taxonomy's entity (None for a create)
         fields: Each differing field's value in the taxonomy and in the source:
-            {name: {"taxonomy": ..., "source": ...}}. A create lists what it
-            would set (taxonomy None); a delete lists nothing.
+            {name: {"taxonomy": ..., "source": ...}}. A create lists the values it
+            would set (taxonomy None; unset ones left out); a delete lists nothing.
     """
 
     kind: str

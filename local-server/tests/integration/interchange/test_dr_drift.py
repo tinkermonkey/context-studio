@@ -618,6 +618,7 @@ async def test_mcp_tool_groups_filters_and_pages_the_drift(world, spec, monkeypa
     (create,) = [e for e in report["entries"] if e["change"] == "create"]
     # A create shows what it would set; the taxonomy side is null, not dropped
     assert create["fields"] and all(v["taxonomy"] is None for v in create["fields"].values())
+    assert all(v["source"] not in (None, [], {}) for v in create["fields"].values())
 
     narrowed = json.loads(
         (await tool.execute({"spec_dir": str(spec), "kind": "property"})).content
@@ -631,7 +632,8 @@ async def test_mcp_tool_groups_filters_and_pages_the_drift(world, spec, monkeypa
         (await tool.execute({"spec_dir": str(spec), "change": "update"})).content
     )
     assert len(first["entries"]) == 1
-    assert "pass offset 1" in first["truncated"] and "review page" not in first["truncated"]
+    assert "pass offset 1" in first["truncated"]
+    assert "review page" not in first["truncated"] + first.get("clipped", "")
     second = json.loads(
         (await tool.execute({"spec_dir": str(spec), "change": "update", "offset": 1})).content
     )

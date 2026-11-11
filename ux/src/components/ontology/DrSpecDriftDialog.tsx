@@ -44,8 +44,11 @@ const columns: Column<DriftEntry & { key: string }>[] = [
     key: "fields",
     label: "Differs in",
     width: "200px",
-    render: (value) => (
-      <span className="drift-dialog__fields">{Object.keys(value ?? {}).join(", ") || "—"}</span>
+    // A create lists what it would set, not what differs.
+    render: (value, row) => (
+      <span className="drift-dialog__fields">
+        {(row.change !== "create" && Object.keys(value ?? {}).join(", ")) || "—"}
+      </span>
     ),
   },
 ];

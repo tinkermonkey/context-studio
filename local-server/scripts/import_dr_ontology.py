@@ -184,7 +184,8 @@ def describe_drift(result: DriftResult) -> list[str]:
         f"Drift: {len(result.plan.entries)} entities differ",
     ]
     for entry in result.plan.entries:
-        fields = f" ({', '.join(sorted(entry.fields))})" if entry.fields else ""
+        differs = entry.fields if entry.change != "create" else {}
+        fields = f" ({', '.join(sorted(differs))})" if differs else ""
         lines.append(f"  {entry.change:6s} {entry.kind:9s} {entry.source_id}{fields}")
     if result.proposal is None:
         lines.append("No drift: nothing to propose.")
