@@ -13,3 +13,12 @@ export function usePredicatesByIds(ids: Array<string | null | undefined>) {
     ...listQueryOptions({ enabled: unique.length > 0, keepPrevious: true }),
   });
 }
+
+/** A taxonomy's predicate catalog; skipped without a taxonomy id. */
+export function useTaxonomyPredicates(taxonomyId: string | null | undefined) {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.predicates, "taxonomy", taxonomyId],
+    queryFn: () => ontologyService.listTaxonomyPredicates(taxonomyId!),
+    ...listQueryOptions({ enabled: !!taxonomyId }),
+  });
+}

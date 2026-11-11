@@ -576,7 +576,6 @@ export function nextSelection(
 
 export const DR_SOURCE = "documentation_robotics";
 export const DR_TAXONOMY_IDENTIFIER = "dr_spec";
-const DR_SPEC_REFERENCE = "spec";
 
 /** A DR relationship's triple by spec node ids: business.businessrole performs business.businessprocess. */
 export interface DrTriple {
@@ -590,14 +589,13 @@ export interface DrSpec {
   /** Spec node id (e.g. "business.businessrole") -> class id. */
   classIdByNode: Map<string, string>;
   nodeByClassId: Map<string, string>;
-  /** The predicate catalog; undefined when the import stored none (no edit can apply then). */
+  /** dr_spec's predicate catalog; undefined when it has none (no edit can apply then). */
   predicates?: Set<string>;
 }
 
 interface ExternalRef {
   source: string;
   identifier: string;
-  metadata?: Record<string, unknown> | null;
 }
 
 /** The DR id among external references (spec node id of a class, relationship id of a property). */
@@ -609,32 +607,23 @@ export function drIdentifier(refs: unknown): string | undefined {
   return ref?.identifier;
 }
 
-/** dr_spec's predicate catalog, kept on its DR "spec" reference at import. */
-export function drPredicateCatalog(taxonomy?: {
-  external_references?: ExternalRef[] | null;
-}): Set<string> | undefined {
-  const spec = (taxonomy?.external_references ?? []).find(
-    (r) => r.source === DR_SOURCE && r.identifier === DR_SPEC_REFERENCE,
-  );
-  const predicates = spec?.metadata?.predicates;
-  return predicates && typeof predicates === "object" && Object.keys(predicates).length > 0
-    ? new Set(Object.keys(predicates))
+/** A predicate of a taxonomy's catalog, as the predicates API returns it. */
+export interface CatalogPredicate {
+  identifier: string;
+  description?: string | null;
+}
+
+/** A taxonomy's predicate verbs; undefined until loaded, or when its catalog is empty. */
+export function predicateCatalog(predicates?: CatalogPredicate[]): Set<string> | undefined {
+  return predicates && predicates.length > 0
+    ? new Set(predicates.map((p) => p.identifier))
     : undefined;
 }
 
-/** dr_spec's predicate definitions from its catalog, by predicate; empty without one. */
-export function drPredicateDescriptions(taxonomy?: {
-  external_references?: ExternalRef[] | null;
-}): Map<string, string> {
-  const spec = (taxonomy?.external_references ?? []).find(
-    (r) => r.source === DR_SOURCE && r.identifier === DR_SPEC_REFERENCE,
-  );
-  const predicates = spec?.metadata?.predicates;
-  if (!predicates || typeof predicates !== "object") return new Map();
+/** A taxonomy's predicate definitions, by predicate; empty until loaded. */
+export function predicateDescriptions(predicates?: CatalogPredicate[]): Map<string, string> {
   return new Map(
-    Object.entries(predicates as Record<string, { description?: unknown } | null>)
-      .filter(([, entry]) => typeof entry?.description === "string" && entry.description)
-      .map(([name, entry]) => [name, entry!.description as string]),
+    (predicates ?? []).flatMap((p) => (p.description ? [[p.identifier, p.description]] : [])),
   );
 }
 

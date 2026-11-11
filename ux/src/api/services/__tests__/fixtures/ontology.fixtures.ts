@@ -198,6 +198,24 @@ export function createPropertyDefinition(
   };
 }
 
+export function createPredicate(
+  overrides?: Partial<components["schemas"]["PredicateResponse"]>,
+): components["schemas"]["PredicateResponse"] {
+  const identifier = overrides?.identifier ?? "test_predicate";
+  return {
+    id: `pred-${identifier}`,
+    taxonomy_id: "tax-123",
+    identifier,
+    title: identifier,
+    description: null,
+    external_references: [],
+    created_at: new Date().toISOString(),
+    last_modified: new Date().toISOString(),
+    version: 1,
+    ...overrides,
+  };
+}
+
 export function createListProperties(
   items?: components["schemas"]["PropertyDefinitionResponse"][],
 ): components["schemas"]["ListResponse_PropertyDefinitionResponse_"] {

@@ -63,6 +63,8 @@ export function useCreateProperty() {
     mutationFn: (data: PropertyDefinitionCreateRequest) => ontologyService.createProperty(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });
+      // A new predicate verb joins its taxonomy's catalog.
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.predicates });
       // Scheme and class pages count property definitions by domain class.
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.contentCountsRoot });
     },
@@ -77,6 +79,8 @@ export function useUpdateProperty() {
     onSuccess: (_result, { id }) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.properties });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.property(id) });
+      // A new predicate verb joins its taxonomy's catalog.
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.predicates });
       // Scheme and class pages count property definitions by domain class.
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.contentCountsRoot });
     },

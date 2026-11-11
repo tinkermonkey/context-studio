@@ -268,6 +268,10 @@ class OntologyService extends BaseService {
   }
 
   // Predicates (a taxonomy's catalog of relation verbs)
+  async listTaxonomyPredicates(taxonomyId: string): Promise<PredicateResponse[]> {
+    return this.get<PredicateResponse[]>(`/api/taxonomies/${taxonomyId}/predicates`);
+  }
+
   async listPredicatesByIds(ids: string[]): Promise<PredicateResponse[]> {
     return this.get<PredicateResponse[]>("/api/predicates", { ids });
   }

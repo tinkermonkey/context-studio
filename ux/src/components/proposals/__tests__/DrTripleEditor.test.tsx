@@ -17,23 +17,18 @@ import {
 import {
   createClass,
   createConceptScheme,
+  createPredicate,
   createPropertyDefinition,
   createTaxonomy,
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { DrTripleEditor } from "../DrTripleEditor";
 
 const DR = "documentation_robotics";
-const taxonomy = createTaxonomy({
-  id: "tax-dr",
-  identifier: "dr_spec",
-  external_references: [
-    {
-      source: DR,
-      identifier: "spec",
-      metadata: { predicates: { performs: {}, triggers: {}, "assigned-to": {}, serves: {} } },
-    },
-  ],
-});
+const taxonomy = createTaxonomy({ id: "tax-dr", identifier: "dr_spec" });
+// dr_spec's predicate catalog, as GET /api/taxonomies/tax-dr/predicates serves it.
+const predicates = ["performs", "triggers", "assigned-to", "serves"].map((identifier) =>
+  createPredicate({ identifier, taxonomy_id: "tax-dr" }),
+);
 const drClass = (id: string, node: string) =>
   createClass({
     id,
@@ -88,6 +83,7 @@ const server = setupServer(
     list([createConceptScheme({ id: "scheme-b", taxonomy_id: "tax-dr" })]),
   ),
   http.get("*/api/classes", () => list(classes)),
+  http.get("*/api/taxonomies/:id/predicates", () => HttpResponse.json(predicates)),
   http.get("*/api/properties", ({ request }) => {
     const domain = new URL(request.url).searchParams.get("domain_class_id");
     return list([existing].filter((p) => p.domain_class_id === domain));
@@ -256,18 +252,54 @@ describe("what blocks an edit", () => {
     await waitFor(() => expect(screen.getByTestId("operation-edit-apply")).toBeEnabled());
   });
 
+  it("refuses a predicate that isn't in dr_spec's predicates", async () => {
+    let asked: string | undefined;
+    server.use(
+      http.get("*/api/taxonomies/:id/predicates", ({ params }) => {
+        asked = String(params.id);
+        return HttpResponse.json(predicates);
+      }),
+    );
+    renderEditor();
+    const predicate = await screen.findByTestId("operation-edit-predicate");
+    await waitFor(() => expect(predicate).toHaveValue("performs"));
+    expect(asked).toBe("tax-dr");
+
+    await retype(predicate, "befriends");
+    expect(screen.getByText("befriends is not in the predicate catalog")).toBeInTheDocument();
+    expect(predicate).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByTestId("operation-edit-apply")).toBeDisabled();
+
+    await retype(predicate, "serves");
+    expect(screen.queryByText(/not in the predicate catalog/)).not.toBeInTheDocument();
+  });
+
+  it("can still delete as proposed when the predicates fail to load", async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get("*/api/taxonomies/:id/predicates", () =>
+        HttpResponse.json({ detail: "boom" }, { status: 500 }),
+      ),
+    );
+    renderEditor(remove);
+
+    expect(
+      await screen.findByText(
+        "Couldn't load the dr_spec classes and predicates to check the edit.",
+      ),
+    ).toBeInTheDocument();
+    expect(await screen.findByTestId("operation-edit-no-catalog")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Apply replacement" })).toBeDisabled();
+
+    await user.click(screen.getByRole("radio", { name: "Delete as proposed" }));
+    expect(screen.queryByTestId("operation-edit-no-catalog")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Accept delete" })).toBeEnabled();
+  });
+
   it("can't edit without the predicate catalog, but can still delete as proposed", async () => {
     const user = userEvent.setup();
-    render(
-      <DrTripleEditor
-        operation={remove}
-        proposal={proposal}
-        taxonomy={{ ...taxonomy, external_references: [] }}
-        current={current}
-        onApply={vi.fn().mockResolvedValue({})}
-        onCancel={vi.fn()}
-      />,
-    );
+    server.use(http.get("*/api/taxonomies/:id/predicates", () => HttpResponse.json([])));
+    renderEditor(remove);
     await screen.findByTestId("operation-edit-source");
 
     expect(await screen.findByTestId("operation-edit-no-catalog")).toHaveTextContent(

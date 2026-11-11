@@ -10,8 +10,8 @@ import {
   checkDrTriple,
   decisionPreview,
   drEditFields,
-  drPredicateCatalog,
-  drPredicateDescriptions,
+  predicateCatalog,
+  predicateDescriptions,
   drSpecOf,
   drTriplesOf,
   hasProbabilities,
@@ -125,15 +125,11 @@ const spec = drSpecOf(
     { id: "c-event", external_references: dr("business.businessevent") },
     { id: "c-other", external_references: [] },
   ],
-  drPredicateCatalog({
-    external_references: [
-      {
-        source: "documentation_robotics",
-        identifier: "spec",
-        metadata: { predicates: { performs: {}, triggers: {}, "assigned-to": {} } },
-      },
-    ],
-  }),
+  predicateCatalog([
+    { identifier: "performs" },
+    { identifier: "triggers" },
+    { identifier: "assigned-to" },
+  ]),
 );
 
 const update = op({
@@ -159,8 +155,9 @@ describe("drSpecOf and the predicate catalog", () => {
     expect([...(spec.predicates ?? [])].sort()).toEqual(["assigned-to", "performs", "triggers"]);
   });
 
-  it("has no catalog when the import stored none", () => {
-    expect(drPredicateCatalog({ external_references: [] })).toBeUndefined();
+  it("has no catalog until the predicates load, or when the taxonomy has none", () => {
+    expect(predicateCatalog(undefined)).toBeUndefined();
+    expect(predicateCatalog([])).toBeUndefined();
   });
 
   it("gives an update's current and proposed triples by spec node", () => {
@@ -520,20 +517,16 @@ describe("nextSelection", () => {
   });
 });
 
-describe("drPredicateDescriptions", () => {
-  it("reads each predicate's description from dr_spec's catalog", () => {
-    const taxonomy = {
-      external_references: [
-        {
-          source: "documentation_robotics",
-          identifier: "spec",
-          metadata: { predicates: { holds: { description: "Keeps it." }, uses: {} } },
-        },
-      ],
-    };
-    expect([...drPredicateDescriptions(taxonomy)]).toEqual([["holds", "Keeps it."]]);
+describe("predicateDescriptions", () => {
+  it("reads each predicate's description from the taxonomy's predicates", () => {
+    const predicates = [
+      { identifier: "holds", description: "Keeps it." },
+      { identifier: "uses", description: null },
+      { identifier: "serves" },
+    ];
+    expect([...predicateDescriptions(predicates)]).toEqual([["holds", "Keeps it."]]);
   });
-  it("is empty without a catalog", () => {
-    expect(drPredicateDescriptions(undefined).size).toBe(0);
+  it("is empty until the predicates load", () => {
+    expect(predicateDescriptions(undefined).size).toBe(0);
   });
 });
