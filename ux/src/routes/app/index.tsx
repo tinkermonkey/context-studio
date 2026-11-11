@@ -151,7 +151,9 @@ export function Dashboard() {
         })
       : [];
 
-  const isDaemonHealthy = health?.status === "healthy";
+  // Degraded still serves the workspace (often just the embedding model not loaded yet).
+  const daemonState =
+    health?.status === "healthy" || health?.status === "degraded" ? health.status : "unavailable";
 
   return (
     <div>
@@ -159,8 +161,16 @@ export function Dashboard() {
       <div className="cs-page-meta">
         <Chip variant="amber">workspace · local</Chip>
         <span className="cs-page-meta__sep">·</span>
-        <span className={isDaemonHealthy ? "cs-page-meta__health" : undefined}>
-          {isDaemonHealthy ? "graph daemon healthy" : "graph daemon unavailable"}
+        <span
+          className={
+            daemonState === "unavailable"
+              ? undefined
+              : `cs-page-meta__health cs-page-meta__health--${daemonState}`
+          }
+          title={daemonState === "degraded" ? health?.issues?.join("\n") : undefined}
+          data-testid="dashboard-daemon-status"
+        >
+          graph daemon {daemonState}
         </span>
       </div>
 

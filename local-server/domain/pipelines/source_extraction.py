@@ -270,7 +270,8 @@ class SourceExtractionService:
             return None
         last = max(last for _, last in parse_page_range(pages))
         if last > source.pages:
-            raise ValueError(f"The source has {source.pages} pages, not {last}")
+            noun = "page" if source.pages == 1 else "pages"
+            raise ValueError(f"The source has {source.pages} {noun}, not {last}")
         if not chunk_text(source.text, page_starts=source.page_starts, pages=pages):
             raise ValueError(f"Pages {pages} hold no text")
         return normalized_pages(pages)

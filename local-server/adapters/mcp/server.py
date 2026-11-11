@@ -115,6 +115,9 @@ def build_mcp_server(
         tool = by_name.get(name)
         if tool is None:
             return _error_result(f"Unknown tool: {name}")
+        unknown = _unknown_arguments(tool.spec.input_schema, arguments or {})
+        if unknown:
+            return _error_result(unknown)
         outcome = await tool.execute(arguments or {})
         text = outcome.content
         if not outcome.is_error:
@@ -152,6 +155,24 @@ def build_mcp_server(
         return [ReadResourceContents(content=taxonomy.vision, mime_type="text/markdown")]
 
     return server
+
+
+def _unknown_arguments(schema: Any, arguments: dict[str, Any]) -> Optional[str]:
+    """
+    Name the arguments a tool doesn't take, or None when all are known.
+
+    A misspelled argument would otherwise be dropped and its default used (for
+    extract_source, `configuration_ref` for `configuration` runs the default
+    model). A schema that allows extra properties accepts anything.
+    """
+    properties = schema.get("properties") if isinstance(schema, dict) else None
+    if not isinstance(properties, dict) or schema.get("additionalProperties"):
+        return None
+    unknown = sorted(set(arguments) - set(properties))
+    if not unknown:
+        return None
+    known = ", ".join(sorted(properties)) or "none"
+    return f"Unknown argument(s): {', '.join(unknown)}. This tool takes: {known}"
 
 
 def _error_result(message: str) -> types.CallToolResult:

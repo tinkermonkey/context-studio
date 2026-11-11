@@ -25,12 +25,13 @@ export interface AskAboutDetail {
   title: string;
 }
 
-/** YYYY-MM-DD for an ISO timestamp, or an em dash when missing/invalid. */
+/** The local calendar date (YYYY-MM-DD) of an ISO timestamp, or an em dash when missing/invalid. */
 export function formatDate(value: string | null | undefined): string {
   if (!value) return "—";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
-  return date.toISOString().slice(0, 10);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
 /** A property definition's predicate for display: its canonical verb, else its title. */

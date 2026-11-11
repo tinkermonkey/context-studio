@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from email.message import Message
 
 import httpx
 
+from adapters.reference.http_headers import USER_AGENT
 from domain.extraction.exceptions import SourceFailedError
 from domain.extraction.sources import FetchedPage, SourceFailure, check_url
-
-USER_AGENT = "ContextStudio/1.0 (+source fetch)"
 
 
 class HttpPageFetcher:
@@ -20,10 +20,22 @@ class HttpPageFetcher:
         timeout_seconds: float = 30.0,
         max_redirects: int = 5,
         transport: httpx.BaseTransport | None = None,
+        proxied: Mapping[str, str] | None = None,
     ) -> None:
+        """
+        Args:
+            proxied: A site's base URL -> where to send its pages instead: the
+                reference proxy's URL for that site (Wikipedia), which caches and
+                rate limits them. A site sent to itself (proxy off) goes direct.
+        """
         self._timeout = timeout_seconds
         self._max_redirects = max_redirects
         self._transport = transport  # tests pass an httpx.MockTransport
+        self._proxied = {
+            site.rstrip("/"): via.rstrip("/")
+            for site, via in (proxied or {}).items()
+            if site.rstrip("/") != via.rstrip("/")
+        }
 
     def fetch(self, url: str, max_bytes: int) -> FetchedPage:
         try:
@@ -34,7 +46,7 @@ class HttpPageFetcher:
                 headers={"User-Agent": USER_AGENT},
                 transport=self._transport,
             ) as client:
-                with client.stream("GET", check_url(url)) as response:
+                with client.stream("GET", self._route(check_url(url))) as response:
                     if response.status_code >= 400:
                         raise _fetch_failed(f"The server answered HTTP {response.status_code}")
                     declared = response.headers.get("content-length")
@@ -48,7 +60,7 @@ class HttpPageFetcher:
                     return FetchedPage(
                         data=bytes(body),
                         content_type=response.headers.get("content-type"),
-                        url=str(response.url),
+                        url=self._unroute(str(response.url)),
                         file_name=_disposition_file_name(
                             response.headers.get("content-disposition")
                         ),
@@ -60,6 +72,26 @@ class HttpPageFetcher:
             raise _fetch_failed(f"Could not fetch the page ({exc})") from exc
         except ValueError as exc:  # check_url: not an http or https URL
             raise _fetch_failed(str(exc)) from exc
+
+
+    def _route(self, url: str) -> str:
+        """The URL to request: through the proxy when its site is proxied."""
+        for site, via in self._proxied.items():
+            if _on_site(url, site):
+                return via + url[len(site) :]
+        return url
+
+    def _unroute(self, url: str) -> str:
+        """A fetched page's URL as its site's own, not the proxy's."""
+        for site, via in self._proxied.items():
+            if _on_site(url, via):
+                return site + url[len(via) :]
+        return url
+
+
+def _on_site(url: str, base: str) -> bool:
+    """Whether a URL is the base URL or below it (scheme and host compared as written)."""
+    return url == base or url.startswith(base + "/") or url.startswith(base + "?")
 
 
 def _disposition_file_name(header: str | None) -> str | None:

@@ -104,7 +104,10 @@ export function SourcesPage({ taxonomyId: taxonomyParam, onTaxonomyChange }: Sou
       key: "title",
       label: copy.table.source,
       render: (_, row) => (
-        <span className="sources-cell-stack" data-testid={`source-row-${row.id}`}>
+        <span
+          className="sources-cell-stack sources-cell-stack--source"
+          data-testid={`source-row-${row.id}`}
+        >
           <span className="sources-title">{row.title}</span>
           <span className="sources-mono-muted">{sourceDetail(row)}</span>
         </span>

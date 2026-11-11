@@ -43,6 +43,13 @@
     min-width: 0;
   }
 
+  /* A source's title and origin: long URLs wrap instead of widening the table,
+     and the column keeps room for a readable title. */
+  .sources-cell-stack--source {
+    min-width: 200px;
+    overflow-wrap: anywhere;
+  }
+
   /* A link button inside a table cell: no padding, left-aligned, wraps. */
   .sources-link {
     height: auto;

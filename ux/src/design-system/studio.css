@@ -1413,6 +1413,11 @@ body.dark-canvas .diff-added {
   box-shadow: 0 0 0 3px rgb(var(--status-emerald) / 0.18);
 }
 
+.cs-page-meta__health--degraded::before {
+  background: rgb(var(--status-amber));
+  box-shadow: 0 0 0 3px rgb(var(--status-amber) / 0.18);
+}
+
 /* Space-between flex row — used for section headers with title + subtitle/action */
 .cs-between {
   display: flex;

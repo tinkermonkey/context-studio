@@ -195,7 +195,7 @@ describe("other kinds named by id", () => {
     renderPage("op-attr-new");
     const row = await screen.findByTestId("operation-change-row-class_id");
     await waitFor(() => expect(row).not.toHaveTextContent("class-2"));
-    expect(row).toHaveTextContent("application_service");
+    expect(row).toHaveTextContent("ApplicationService");
   });
 
   it("names an individual update by its title", async () => {

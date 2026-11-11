@@ -657,7 +657,14 @@ async def lifespan(app: FastAPI):
             sources=SQLiteSourceRepository(local_session_factory),
             ontology_repo=cast(OntologyRepository, ontology_repo),
             readers=source_readers(),
-            fetcher=HttpPageFetcher(),
+            # Wikipedia pages go through the reference proxy (cached, rate limited)
+            fetcher=HttpPageFetcher(
+                proxied={
+                    reference_proxy.upstream_url("wikipedia"): reference_proxy.base_url(
+                        "wikipedia"
+                    )
+                }
+            ),
             files=LocalSourceFileStore(sources_dir),
             max_bytes=settings.sources.max_bytes,
         )

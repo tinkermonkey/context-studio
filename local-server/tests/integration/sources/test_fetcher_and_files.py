@@ -3,6 +3,7 @@
 import httpx
 import pytest
 
+from adapters.reference.http_headers import USER_AGENT
 from adapters.sources.fetcher import HttpPageFetcher
 from adapters.sources.file_store import LocalSourceFileStore
 from domain.extraction.exceptions import SourceFailedError
@@ -23,6 +24,59 @@ def test_fetches_one_page_following_redirects():
     assert page.data == b"<p>hi</p>"
     assert page.content_type == "text/html"
     assert page.url == "https://example.org/new"
+
+
+def test_the_fetch_names_itself_with_a_contact_url():
+    """Wikimedia answers HTTP 403 to agents without one."""
+    seen = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request.headers["user-agent"])
+        return httpx.Response(200, content=b"hi", headers={"content-type": "text/plain"})
+
+    fetcher_for(handler).fetch("https://example.org/x", 1000)
+    assert seen == [USER_AGENT]
+    assert "https://" in USER_AGENT
+
+
+PROXY = "http://127.0.0.1:5555/wikipedia"
+
+
+def test_a_proxied_site_is_fetched_through_the_proxy_under_its_own_url():
+    requested = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requested.append(str(request.url))
+        return httpx.Response(200, content=b"<p>ribosome</p>", headers={"content-type": "text/html"})
+
+    fetcher = HttpPageFetcher(
+        transport=httpx.MockTransport(handler),
+        proxied={"https://en.wikipedia.org": PROXY},
+    )
+    page = fetcher.fetch("https://en.wikipedia.org/wiki/Ribosome?oldid=1", 1000)
+    other = fetcher.fetch("https://en.wikipedia.org.example.com/wiki/Ribosome", 1000)
+
+    assert requested == [
+        f"{PROXY}/wiki/Ribosome?oldid=1",
+        "https://en.wikipedia.org.example.com/wiki/Ribosome",
+    ]
+    assert page.url == "https://en.wikipedia.org/wiki/Ribosome?oldid=1"
+    assert other.url == "https://en.wikipedia.org.example.com/wiki/Ribosome"
+
+
+def test_with_the_proxy_off_a_site_is_fetched_directly():
+    requested = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requested.append(str(request.url))
+        return httpx.Response(200, content=b"hi", headers={"content-type": "text/plain"})
+
+    # The proxy hands out the site's own URL when it isn't running
+    HttpPageFetcher(
+        transport=httpx.MockTransport(handler),
+        proxied={"https://en.wikipedia.org": "https://en.wikipedia.org"},
+    ).fetch("https://en.wikipedia.org/wiki/Ribosome", 1000)
+    assert requested == ["https://en.wikipedia.org/wiki/Ribosome"]
 
 
 def test_an_error_status_fails_the_fetch():
