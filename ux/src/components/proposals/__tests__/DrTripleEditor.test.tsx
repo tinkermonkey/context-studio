@@ -274,6 +274,28 @@ describe("what blocks an edit", () => {
     expect(screen.queryByText(/not in the predicate catalog/)).not.toBeInTheDocument();
   });
 
+  it("can still delete as proposed when the predicates fail to load", async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get("*/api/taxonomies/:id/predicates", () =>
+        HttpResponse.json({ detail: "boom" }, { status: 500 }),
+      ),
+    );
+    renderEditor(remove);
+
+    expect(
+      await screen.findByText(
+        "Couldn't load the dr_spec classes and predicates to check the edit.",
+      ),
+    ).toBeInTheDocument();
+    expect(await screen.findByTestId("operation-edit-no-catalog")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Apply replacement" })).toBeDisabled();
+
+    await user.click(screen.getByRole("radio", { name: "Delete as proposed" }));
+    expect(screen.queryByTestId("operation-edit-no-catalog")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Accept delete" })).toBeEnabled();
+  });
+
   it("can't edit without the predicate catalog, but can still delete as proposed", async () => {
     const user = userEvent.setup();
     server.use(http.get("*/api/taxonomies/:id/predicates", () => HttpResponse.json([])));

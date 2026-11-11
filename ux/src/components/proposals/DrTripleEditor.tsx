@@ -93,9 +93,13 @@ export function DrTripleEditor({
   const isDelete = operation.op === "delete";
   const { classes, isError: classesFailed } = useTaxonomyClasses(taxonomy.id);
   const { data: predicates, isError: predicatesFailed } = useTaxonomyPredicates(taxonomy.id);
+  // Once the classes load and the predicates answer: a failed catalog request
+  // leaves no catalog, which blocks edits but not applying as proposed.
+  const predicatesAnswered = predicates !== undefined || predicatesFailed;
   const spec = useMemo(
-    () => (classes && predicates ? drSpecOf(classes, predicateCatalog(predicates)) : undefined),
-    [classes, predicates],
+    () =>
+      classes && predicatesAnswered ? drSpecOf(classes, predicateCatalog(predicates)) : undefined,
+    [classes, predicates, predicatesAnswered],
   );
   const triples = useMemo(
     () => (spec ? drTriplesOf(operation, spec, current) : {}),
