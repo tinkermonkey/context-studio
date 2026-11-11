@@ -1002,6 +1002,65 @@ class TestRecognition:
         assert triples[1]["object"]["label"] == "Kubernetes"
         assert triples[1]["object"]["id"] == "kube-id"
 
+    # --- near misses (#1552): reported, never change the decision -------------
+
+    def test_close_but_below_threshold_is_a_near_match(self):
+        service = self._service(self._index_with_kubernetes())
+        # ~0.85 cos to Kubernetes: under the 0.90 bar, inside the 0.10 band
+        service._embedding_service = _RecogEmbedding(
+            {**self._VEC, "Kube Engine": [0.85, 0.5268, 0.0]}
+        )
+        triples = [self._typing_triple("Kube Engine")]
+        service._recognize_individuals(triples, _Ontology())
+        assert triples[0]["subject"]["id"] is None
+        assert triples[0]["near_matches"] == [
+            {"entity_id": "kube-id", "label": "Kubernetes", "similarity": 0.85}
+        ]
+
+    def test_far_below_threshold_has_no_near_matches(self):
+        service = self._service(self._index_with_kubernetes())
+        triples = [self._typing_triple("Container Orchestrator")]
+        service._recognize_individuals(triples, _Ontology())
+        assert "near_matches" not in triples[0]
+
+    def test_ambiguous_candidates_are_near_matches(self):
+        idx = self._index_with_kubernetes()
+        idx.add("swarm-id", "Docker Swarm", [self.CLASS_SW])
+        service = self._service(idx)
+        triples = [self._typing_triple("K8s")]
+        service._recognize_individuals(triples, _Ontology())
+        assert triples[0]["subject"]["id"] is None  # still refused
+        assert [m["entity_id"] for m in triples[0]["near_matches"]] == ["kube-id", "swarm-id"]
+
+    def test_short_mention_under_the_acronym_bar_is_a_near_match(self):
+        service = self._service(self._index_with_kubernetes())
+        service._embedding_service = _RecogEmbedding({**self._VEC, "xyz": self._VEC["borderline"]})
+        t = self._typing_triple("xyz")
+        service._recognize_individuals([t], _Ontology())
+        assert t["subject"]["id"] is None
+        assert [m["entity_id"] for m in t["near_matches"]] == ["kube-id"]
+
+    def test_resolved_mention_has_no_near_matches(self):
+        service = self._service(self._index_with_kubernetes())
+        triples = [self._typing_triple("K8s")]
+        service._recognize_individuals(triples, _Ontology())
+        assert triples[0]["subject"]["id"] == "kube-id"
+        assert "near_matches" not in triples[0]
+
+    def test_near_matches_ride_only_on_typing_triples(self):
+        idx = self._index_with_kubernetes()
+        idx.add("swarm-id", "Docker Swarm", [self.CLASS_SW])
+        service = self._service(idx)
+        relation = {
+            "subject": {"kind": "individual", "id": None, "label": "K8s"},
+            "predicate": {"label": "runs"},
+            "object": {"kind": "individual", "id": None, "label": "Nextflow"},
+        }
+        triples = [self._typing_triple("K8s"), relation]
+        service._recognize_individuals(triples, _Ontology())
+        assert "near_matches" in triples[0]
+        assert "near_matches" not in triples[1]
+
 
 class _RecogEmbedding:
     def __init__(self, vectors):

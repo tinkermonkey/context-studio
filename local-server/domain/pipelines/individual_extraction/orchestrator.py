@@ -5,20 +5,25 @@ Wraps Wave A's ExtractionService.extract_triples() as a PipelineOrchestrator,
 maintaining backward compatibility with existing extraction logic while
 integrating with the new pipeline framework.
 
-This is a single-node orchestrator (minimal refactoring) that delegates to
-the existing extraction service rather than reimplementing extraction logic.
+Pasted text is extracted in one call, as before. A source (input with
+``source_id``, ``page_starts``, ``headings`` or ``pages``) is extracted chunk
+by chunk: the chunks are the run's items, and the triples found in each are
+merged over the whole source (see chunk_merge.py).
 """
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import logging
 from dataclasses import dataclass, field, replace
 from typing import Any
 
+from domain.extraction.chunking import Chunk, Heading, chunk_text
 from domain.extraction.prompts import INDIVIDUAL_EXTRACTION_STAGES
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
+from domain.pipelines.individual_extraction.chunk_merge import merge_chunk_triples
 from domain.pipelines.orchestration.base import (
     PipelineOrchestrator,
     PipelineState,
@@ -26,6 +31,9 @@ from domain.pipelines.orchestration.base import (
 from domain.pipelines.ports import ExtractionPort, LLMProvider, PipelineRunStatusWriter
 
 _logger = logging.getLogger(__name__)
+
+# Input keys that mark the text as a source to extract chunk by chunk
+_SOURCE_KEYS = ("source_id", "page_starts", "headings", "pages")
 
 
 @dataclass
@@ -55,11 +63,12 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
     that maintains Wave A's extraction logic while integrating with the new
     pipeline framework.
 
-    Single-node execution:
-    - Validate inputs (text, ontology_id)
-    - Call ExtractionService.extract_triples()
-    - Populate PipelineRun.output_summary and llm_metadata
-    - Return extracted triples with confidence and provenance
+    Execution:
+    - Validate inputs (text, ontology_id, model, and a source's chunking inputs)
+    - Pasted text: call ExtractionService.extract_triples() once
+    - A source: call it once per chunk, reporting progress per chunk and
+      stopping at the next chunk when the run is cancelled, then merge
+    - Populate PipelineRun.output_summary with triples, warnings and metadata
     """
 
     # The LLM stages and their default prompts (owned by the extraction
@@ -99,12 +108,16 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 - ontology_id: Target ontology identifier
                 - model: LLM model name
                 - temperature: Sampling temperature (0.0–2.0)
+                - dataset_id: Optional dataset recognition is scoped to
+                - source_id, page_starts, headings, pages: Optional; any of
+                  them extracts the text chunk by chunk (see the registry's
+                  input contract)
 
         Returns:
             Updated IndividualExtractionState with extracted triples and metadata
 
         Raises:
-            PipelineInputError: If required input fields are missing
+            PipelineInputError: If required input fields are missing or invalid
             PipelineExecutionError: If extraction fails
         """
         self._write_running_status()
@@ -152,6 +165,23 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             )
             raise exc
 
+        is_source = any(state.input_data.get(key) is not None for key in _SOURCE_KEYS)
+        page_starts: list[int] = []
+        chunks: list[Chunk] = []
+        if is_source:
+            page_starts = _page_starts(state.input_data.get("page_starts"))
+            try:
+                chunks = chunk_text(
+                    text,
+                    page_starts=page_starts,
+                    headings=_headings(state.input_data.get("headings")),
+                    pages=_pages(state.input_data.get("pages")),
+                )
+            except ValueError as error:
+                raise PipelineInputError(str(error)) from error
+            if not chunks:
+                raise PipelineInputError("The selected pages hold no text")
+
         # Update state with input data
         state = replace(
             state,
@@ -164,26 +194,31 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         )
 
         try:
-            # Call extraction service
-            result = self._extraction_service.extract_triples(
-                text=text,
-                ontology_id=ontology_id,
-                model=model,
-                temperature=temperature,
-                stage_prompts=self._stage_prompts,
-                dataset_id=state.input_data.get("dataset_id"),
-            )
+            if is_source:
+                triples, warnings, metadata = await self._extract_by_chunk(
+                    state, chunks, page_starts
+                )
+            else:
+                result = self._extraction_service.extract_triples(
+                    text=text,
+                    ontology_id=ontology_id,
+                    model=model,
+                    temperature=temperature,
+                    stage_prompts=self._stage_prompts,
+                    dataset_id=state.input_data.get("dataset_id"),
+                )
+                triples, warnings, metadata = result.triples, result.warnings, result.metadata
 
             # Populate result state
             state = replace(
                 state,
-                extracted_triples=result.triples,
-                warnings=result.warnings,
-                metadata=result.metadata,
+                extracted_triples=triples,
+                warnings=warnings,
+                metadata=metadata,
                 result={
-                    "triples": result.triples,
-                    "warnings": result.warnings,
-                    "metadata": result.metadata,
+                    "triples": triples,
+                    "warnings": warnings,
+                    "metadata": metadata,
                 },
                 current_status=PipelineRunStatus.COMPLETED,
             )
@@ -206,3 +241,103 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             ) from exc
 
         return state
+
+    async def _extract_by_chunk(
+        self, state: IndividualExtractionState, chunks: list[Chunk], page_starts: list[int]
+    ) -> tuple[list[dict[str, Any]], list[str], dict[str, Any]]:
+        """
+        Extract each chunk in turn, then merge the triples over the whole text.
+
+        Progress is reported per chunk. Each chunk starts at an await, so a
+        cancelled run stops before its next chunk.
+
+        Returns:
+            (merged triples, warnings, metadata)
+        """
+        total = len(chunks)
+        self._report_progress(0, total)
+        chunk_triples: list[tuple[Chunk, list[dict[str, Any]]]] = []
+        warnings: list[str] = []
+        chunk_summaries: list[dict[str, Any]] = []
+        tokens_used = 0
+        duration_ms = 0
+        for done, chunk in enumerate(chunks, start=1):
+            await asyncio.sleep(0)  # a cancelled run stops here
+            result = self._extraction_service.extract_triples(
+                text=state.source_text[chunk.start : chunk.end],
+                ontology_id=state.ontology_id,
+                model=state.model,
+                temperature=state.temperature,
+                stage_prompts=self._stage_prompts,
+                dataset_id=state.input_data.get("dataset_id"),
+            )
+            chunk_triples.append((chunk, result.triples))
+            warnings.extend(f"Chunk {done} of {total}: {warning}" for warning in result.warnings)
+            tokens_used += int(result.metadata.get("tokens_used") or 0)
+            duration_ms += int(result.metadata.get("duration_ms") or 0)
+            chunk_summaries.append(
+                {
+                    "index": chunk.index,
+                    "start": chunk.start,
+                    "end": chunk.end,
+                    "page_first": chunk.page_first,
+                    "page_last": chunk.page_last,
+                    "heading": chunk.heading,
+                    "triples": len(result.triples),
+                }
+            )
+            self._report_progress(done, total)
+
+        metadata = {
+            "model": state.model,
+            "tokens_used": tokens_used,
+            "duration_ms": duration_ms,
+            "source_id": state.input_data.get("source_id"),
+            "pages": state.input_data.get("pages"),
+            "chunks": chunk_summaries,
+        }
+        return merge_chunk_triples(chunk_triples, page_starts), warnings, metadata
+
+
+def _page_starts(value: Any) -> list[int]:
+    """Validate ``page_starts``: offsets at which each page starts."""
+    if value is None:
+        return []
+    if not isinstance(value, list) or not all(
+        isinstance(start, int) and not isinstance(start, bool) and start >= 0 for start in value
+    ):
+        raise PipelineInputError("page_starts must be a list of non-negative character offsets")
+    return value
+
+
+def _headings(value: Any) -> list[Heading]:
+    """Validate ``headings``: ``[{start, title, level?}]``."""
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        raise PipelineInputError("headings must be a list of {start, title, level}")
+    headings: list[Heading] = []
+    for item in value:
+        start = item.get("start") if isinstance(item, dict) else None
+        if not isinstance(start, int) or isinstance(start, bool) or start < 0:
+            raise PipelineInputError("each heading needs a non-negative start offset")
+        level = item.get("level")
+        headings.append(
+            Heading(
+                start=start,
+                title=str(item.get("title") or ""),
+                level=level if isinstance(level, int) else 1,
+            )
+        )
+    return headings
+
+
+def _pages(value: Any) -> str | None:
+    """Validate ``pages``: a page selection such as "12-30"."""
+    if value is None:
+        return None
+    if isinstance(value, int) and not isinstance(value, bool):
+        return str(value)
+    if not isinstance(value, str):
+        raise PipelineInputError('pages must be a page range such as "12-30"')
+    return value
