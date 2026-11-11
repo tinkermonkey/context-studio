@@ -28,6 +28,10 @@
   "pipelines": {
     "background_workers": 1
   },
+  "sources": {
+    "max_bytes": 52428800,
+    "allowed_roots": []
+  },
   "telemetry": {
     "enabled": true,
     "service_name": "context-studio-backend",

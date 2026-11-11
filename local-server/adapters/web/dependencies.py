@@ -42,6 +42,7 @@ from domain.chat.services import ChatService
 from domain.decision.ports import DecisionModels
 from domain.extraction.ports import ReferenceSource
 from domain.extraction.services import ExtractionService
+from domain.extraction.sources import SourceService
 from domain.graph.services import GraphAnalysisService
 from domain.interchange.ports import BatchRunRepository
 from domain.ontology.ports import OntologyRepository
@@ -403,4 +404,17 @@ async def get_claim_service(request: Request) -> ClaimService:
     service = getattr(request.app.state, "claim_service", None)
     if service is None:
         raise RuntimeError("ClaimService not initialized in app.state")
+    return service
+
+
+async def get_source_service(request: Request) -> SourceService:
+    """
+    Extract the SourceService from app state.
+
+    Raises:
+        RuntimeError: If service is not initialized in app.state
+    """
+    service = getattr(request.app.state, "source_service", None)
+    if service is None:
+        raise RuntimeError("SourceService not initialized in app.state")
     return service

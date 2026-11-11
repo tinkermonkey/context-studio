@@ -4122,6 +4122,78 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/sources": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Sources
+     * @description A taxonomy's sources, newest first, without removed ones.
+     */
+    get: operations["list_sources_api_sources_get"];
+    put?: never;
+    /**
+     * Add Source
+     * @description Add a source: a multipart file (PDF, Markdown, HTML or plain text), or JSON
+     *     with a `url` to fetch or a `title` and pasted `text`. A file or text is read
+     *     at once: `ready`, or `failed` saying why (too_large, unsupported_type,
+     *     no_text). A URL comes back `fetching` and is fetched in the background.
+     */
+    post: operations["add_source_api_sources_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/sources/{source_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Source
+     * @description One source, removed or not, without its text.
+     */
+    get: operations["get_source_api_sources__source_id__get"];
+    put?: never;
+    post?: never;
+    /**
+     * Remove Source
+     * @description Remove a source: it leaves the list and its original file is deleted. Its
+     *     record stays, so entities applied from it keep their provenance.
+     */
+    delete: operations["remove_source_api_sources__source_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/sources/{source_id}/text": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Source Text
+     * @description A source's text, one page or all of it, with its offsets in the whole text.
+     */
+    get: operations["get_source_text_api_sources__source_id__text_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/interchange/bundles": {
     parameters: {
       query?: never;
@@ -7991,6 +8063,29 @@ export interface components {
        */
       offset: number;
     };
+    /** ListResponse[SourceResponse] */
+    ListResponse_SourceResponse_: {
+      /**
+       * Items
+       * @description List of items
+       */
+      items: components["schemas"]["SourceResponse"][];
+      /**
+       * Total
+       * @description Total number of items
+       */
+      total: number;
+      /**
+       * Limit
+       * @description Limit applied
+       */
+      limit: number;
+      /**
+       * Offset
+       * @description Offset applied
+       */
+      offset: number;
+    };
     /** ListResponse[TaxonomyResponse] */
     ListResponse_TaxonomyResponse_: {
       /**
@@ -10237,6 +10332,90 @@ export interface components {
       llm_providers_available?: string[];
     };
     /**
+     * SourceFailure
+     * @description Why a source failed.
+     * @enum {string}
+     */
+    SourceFailure: "too_large" | "unsupported_type" | "no_text" | "fetch_failed";
+    /**
+     * SourceHeadingSchema
+     * @description A heading in a source's text.
+     */
+    SourceHeadingSchema: {
+      /**
+       * Start
+       * @description Character offset in the source text
+       */
+      start: number;
+      /** Title */
+      title: string;
+      /**
+       * Level
+       * @description 1 for a top-level heading
+       */
+      level: number;
+    };
+    /**
+     * SourceKind
+     * @description What a source is: an uploaded file's format, a fetched web page, or text.
+     * @enum {string}
+     */
+    SourceKind: "pdf" | "markdown" | "html" | "text" | "web";
+    /**
+     * SourceResponse
+     * @description A source without its text (GET /api/sources/{id}/text returns that).
+     */
+    SourceResponse: {
+      /** Id */
+      id: string;
+      /** Taxonomy Id */
+      taxonomy_id: string;
+      /** Dataset Id */
+      dataset_id: string;
+      kind: components["schemas"]["SourceKind"];
+      /** Title */
+      title: string;
+      /**
+       * Origin
+       * @description The URL or file name; null for pasted text
+       */
+      origin?: string | null;
+      /** Content Type */
+      content_type?: string | null;
+      /** Bytes */
+      bytes: number;
+      /** Pages */
+      pages: number;
+      /** Chars */
+      chars: number;
+      /**
+       * Page Starts
+       * @description Character offset where each page starts; page 1 starts at 0
+       */
+      page_starts: number[];
+      /** Headings */
+      headings: components["schemas"]["SourceHeadingSchema"][];
+      status: components["schemas"]["SourceStatus"];
+      failure?: components["schemas"]["SourceFailure"] | null;
+      /** Failure Detail */
+      failure_detail?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /**
+       * Removed At
+       * @description Set once removed; a removed source still answers for provenance
+       */
+      removed_at?: string | null;
+    };
+    /**
      * SourceRevisionSchema
      * @description A revision of a mirrored taxonomy's external source (a client's spec).
      */
@@ -10277,6 +10456,36 @@ export interface components {
        * @description Zero-indexed character position where the span ends (exclusive), or None if unresolved
        */
       end?: number | null;
+    };
+    /**
+     * SourceStatus
+     * @description Where a source is: being fetched, readable, or not.
+     * @enum {string}
+     */
+    SourceStatus: "fetching" | "ready" | "failed";
+    /**
+     * SourceTextResponse
+     * @description A source's text: one page, or all of it.
+     */
+    SourceTextResponse: {
+      /** Source Id */
+      source_id: string;
+      /**
+       * Page
+       * @description The page (from 1); null for all the text
+       */
+      page?: number | null;
+      /** Pages */
+      pages: number;
+      /**
+       * Start
+       * @description Offset of `text` in the source's whole text
+       */
+      start: number;
+      /** End */
+      end: number;
+      /** Text */
+      text: string;
     };
     /**
      * StagePromptPayload
@@ -16185,6 +16394,253 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+    };
+  };
+  list_sources_api_sources_get: {
+    parameters: {
+      query: {
+        /** @description The taxonomy */
+        taxonomy_id: string;
+        /** @description Only this dataset's sources (identifier or id) */
+        dataset?: string | null;
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Number of results to skip */
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse_SourceResponse_"];
+        };
+      };
+      /** @description Taxonomy, dataset or source not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  add_source_api_sources_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": {
+          /**
+           * File
+           * Format: binary
+           */
+          file: string;
+          /** Taxonomy Id */
+          taxonomy_id: string;
+          /**
+           * Dataset
+           * @description The dataset (identifier or id); defaults to the taxonomy's only dataset
+           */
+          dataset?: string | null;
+          /**
+           * Title
+           * @description Defaults to the file's own
+           */
+          title?: string | null;
+        };
+        "application/json": {
+          /** Taxonomy Id */
+          taxonomy_id: string;
+          /**
+           * Dataset
+           * @description The dataset (identifier or id); defaults to the taxonomy's only dataset
+           */
+          dataset?: string | null;
+          /**
+           * Url
+           * @description An http or https page; one page, no crawling
+           */
+          url?: string | null;
+          /**
+           * Title
+           * @description Required with `text`
+           */
+          title?: string | null;
+          /**
+           * Text
+           * @description Pasted text
+           */
+          text?: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SourceResponse"];
+        };
+      };
+      /** @description Taxonomy, dataset or source not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Neither a file, a URL nor text; or the dataset must be named */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  get_source_api_sources__source_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        source_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SourceResponse"];
+        };
+      };
+      /** @description Taxonomy, dataset or source not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  remove_source_api_sources__source_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        source_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SourceResponse"];
+        };
+      };
+      /** @description Taxonomy, dataset or source not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_source_text_api_sources__source_id__text_get: {
+    parameters: {
+      query?: {
+        /** @description A page (from 1); all the text without */
+        page?: number | null;
+      };
+      header?: never;
+      path: {
+        source_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SourceTextResponse"];
+        };
+      };
+      /** @description Taxonomy, dataset or source not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The source is fetching or failed, so it has no text */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The source has no such page */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
