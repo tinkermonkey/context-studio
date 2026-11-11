@@ -70,9 +70,11 @@ The server only starts when `server.host` is a loopback address. It also refuses
 
 ### CORS and the REST API
 
-`server.cors_origins` defaults to the UI origin (`server.ui_base_url`, `http://localhost:3100`), not `*`. If you open the UI at another origin, such as `http://127.0.0.1:3100`, add that origin to `server.cors_origins` in `config.json`.
+Only the app's own UI may call the back end from a browser. The allowed origins are the origin of `server.ui_base_url` (`http://localhost:3100` by default) plus each entry in `server.cors_origins`. A `*` entry is ignored, with a warning at startup. If you open the UI at another origin, such as `http://127.0.0.1:3100`, or package it as a desktop app (Tauri uses `tauri://localhost`, or `http://tauri.localhost` on Windows), add that origin to `server.cors_origins` in `config.json`.
 
-**Residual risk:** the REST API (`/api/...`) is still unauthenticated. Anything that can reach the back end's port can read and change the workspace, including other processes on the same machine. CORS limits what other web pages can do in a browser; it is not authentication. Keep `server.host` on a loopback address. The Vite dev server (`npm run dev`) listens on every network interface and proxies `/api` to the back end on `127.0.0.1`. So while it runs, other machines on your network can reach the REST API through port 3100, and the back end sees them as local; that includes `GET /api/v1/admin/mcp` and the MCP token.
+CORS approval alone does not stop another page from sending a request it cannot read the answer to, so the back end also refuses (403) every request whose `Origin` header is neither an allowed origin nor the back end's own. Requests without an `Origin` header, such as `curl` and MCP clients, are not affected. While `server.host` is a loopback address, it also refuses requests whose `Host` header is not `localhost`, `127.x.x.x` or `::1`, which blocks DNS-rebinding pages.
+
+**Residual risk:** the REST API (`/api/...`) is still unauthenticated. Anything that can reach the back end's port can read and change the workspace, including other processes on the same machine. The origin and host checks limit what web pages can do in a browser; they are not authentication. Keep `server.host` on a loopback address. The Vite dev server (`npm run dev`) listens on every network interface and proxies `/api` to the back end on `127.0.0.1`. So while it runs, other machines on your network can reach the REST API through port 3100, and the back end sees them as local; that includes `GET /api/v1/admin/mcp` and the MCP token.
 
 ## Status
 

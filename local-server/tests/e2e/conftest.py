@@ -141,5 +141,6 @@ def e2e_client(e2e_app):
 
     The TestClient context manager handles app startup/shutdown.
     """
-    with TestClient(e2e_app) as client:
+    # A loopback Host, as the request guard refuses any other (DNS rebinding)
+    with TestClient(e2e_app, base_url="http://127.0.0.1:8000") as client:
         yield client

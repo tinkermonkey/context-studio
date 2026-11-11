@@ -127,7 +127,10 @@ class ServerConfig(BaseModel):
     # Left out of config.json while defaulted, so it keeps following ui_base_url.
     cors_origins: List[str] = Field(
         default_factory=lambda data: default_cors_origins(data.get("ui_base_url")),
-        description="CORS allowed origins; defaults to the UI origin (ui_base_url)",
+        description=(
+            "Browser origins allowed to call the API (with ui_base_url's origin);"
+            " defaults to the UI origin. '*' is ignored"
+        ),
     )
 
     def ui_origins(self) -> frozenset[str]:

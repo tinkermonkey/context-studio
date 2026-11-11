@@ -372,8 +372,8 @@ async def get_mcp_connection(request: Request) -> McpConnection:
     - to a loopback client, under a loopback Host header (refusing
       DNS-rebinding pages that resolve their own name to 127.0.0.1),
     - with no Origin header (same-origin and CLI callers) or an Origin that is
-      the app's own UI. CORS alone is not relied on: with cors_origins ["*"]
-      and credentials allowed, Starlette echoes any origin back.
+      the app's own UI. This repeats the app-wide RequestGuard checks on
+      purpose, so the token never depends on middleware wiring alone.
 
     Raises:
         HTTPException 403: If the MCP server is not running or the caller is not local
