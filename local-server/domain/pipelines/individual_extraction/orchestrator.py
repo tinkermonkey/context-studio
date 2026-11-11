@@ -8,7 +8,10 @@ integrating with the new pipeline framework.
 Pasted text is extracted in one call, as before. A source (input with
 ``source_id``, ``page_starts``, ``headings`` or ``pages``) is extracted chunk
 by chunk: the chunks are the run's items, and the triples found in each are
-merged over the whole source (see chunk_merge.py).
+merged over the whole source (see chunk_merge.py). A run on a source
+(``source_id``) ends in one change proposal of the merged triples when a
+proposer is wired (see domain/pipelines/source_proposals.py); the run's
+``proposal_id`` names it.
 """
 
 from __future__ import annotations
@@ -17,7 +20,7 @@ import asyncio
 import hashlib
 import logging
 from dataclasses import dataclass, field, replace
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from domain.extraction.chunking import Chunk, Heading, chunk_text
 from domain.extraction.prompts import INDIVIDUAL_EXTRACTION_STAGES
@@ -29,6 +32,9 @@ from domain.pipelines.orchestration.base import (
     PipelineState,
 )
 from domain.pipelines.ports import ExtractionPort, LLMProvider, PipelineRunStatusWriter
+
+if TYPE_CHECKING:
+    from domain.pipelines.source_proposals import SourceProposer
 
 _logger = logging.getLogger(__name__)
 
@@ -82,6 +88,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         run_id: str | None = None,
         status_writer: PipelineRunStatusWriter | None = None,
         config: dict[str, Any] | None = None,
+        proposer: "SourceProposer | None" = None,
     ) -> None:
         """
         Initialize the orchestrator.
@@ -93,10 +100,13 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             status_writer: Optional port for writing run status to persistence
             config: The run's configuration; its ``stage_prompts`` override the
                 default stage prompts
+            proposer: Proposes a run on a source as one change proposal; without
+                one, a source run proposes nothing
         """
         super().__init__(llm_provider, run_id, status_writer)
         self._extraction_service = extraction_service
         self._stage_prompts = (config or {}).get("stage_prompts")
+        self._proposer = proposer
 
     async def execute(self, state: PipelineState) -> PipelineState:
         """
@@ -194,10 +204,22 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         )
 
         try:
+            proposal: dict[str, Any] = {}
             if is_source:
                 triples, warnings, metadata = await self._extract_by_chunk(
                     state, chunks, page_starts
                 )
+                if self._proposer is not None and state.input_data.get("source_id"):
+                    try:
+                        outcome = self._proposer.propose_individuals(
+                            state.run_id, state.input_data, triples
+                        )
+                    except Exception as exc:
+                        raise PipelineExecutionError(
+                            f"Proposing the extracted candidates failed: {exc}"
+                        ) from exc
+                    warnings = [*warnings, *outcome.warnings]
+                    proposal = outcome.to_json()
             else:
                 result = self._extraction_service.extract_triples(
                     text=text,
@@ -219,6 +241,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                     "triples": triples,
                     "warnings": warnings,
                     "metadata": metadata,
+                    **proposal,
                 },
                 current_status=PipelineRunStatus.COMPLETED,
             )

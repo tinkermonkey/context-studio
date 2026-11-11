@@ -442,3 +442,33 @@ class NotesToClaimsRun(PipelineRun):
     """
 
     pipeline_type: PipelineType = field(default=PipelineType.NOTES_TO_CLAIMS, init=False)
+
+
+@dataclass(frozen=True)
+class SourceRun:
+    """
+    An extraction run on a source, as the source's last extraction shows it
+    (the run's light columns only, never its text or output).
+
+    Attributes:
+        run_id: The run
+        pipeline_type: individual_extraction or schema_extraction
+        status: Where it stands
+        source_id: The source it reads
+        extraction_id: The extract call that started it (runs started together share it)
+        dataset_id: The dataset the call extracts into
+        created_at: When it was submitted
+        items_done, items_total: Its progress (chunks), when it reports any
+        proposal_id: The proposal it produced, once it has
+    """
+
+    run_id: str
+    pipeline_type: PipelineType
+    status: PipelineRunStatus
+    source_id: str
+    extraction_id: str | None
+    dataset_id: str | None
+    created_at: datetime
+    items_done: int | None = None
+    items_total: int | None = None
+    proposal_id: str | None = None

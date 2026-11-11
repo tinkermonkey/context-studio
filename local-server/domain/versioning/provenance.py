@@ -3,7 +3,7 @@ Provenance: the source passages behind applied entities.
 
 An operation's evidence may locate a passage in a source: {source_id, page,
 start, end, quote}, start and end being character offsets into the source's
-text (end exclusive), page its page (when it has pages). When the operation
+text (end exclusive), page its page, numbered from 1 (when it has pages). When the operation
 applies, each such passage becomes an EntitySource row for the entity it
 created or changed (or the existing individual a near match resolved to), so
 provenance outlives the extraction run. Reverting the proposal removes the
@@ -40,7 +40,7 @@ class EntitySource:
         op_seq: That operation's seq
         start, end: Character offsets of the passage in the source's text (end exclusive)
         created_at: When it was written (timezone-aware)
-        page: The page the passage is on, if the source has pages
+        page: The page the passage is on (from 1), if the source has pages
         quote: The passage's text
         id: Unique id
     """
@@ -63,6 +63,8 @@ class EntitySource:
         offsets = [self.start, self.end] + ([self.page] if self.page is not None else [])
         if not all(_is_offset(value) for value in offsets):
             raise ValueError(f"page, start and end must be integers from 0 to {MAX_OFFSET}")
+        if self.page is not None and self.page < 1:
+            raise ValueError("page counts from 1")
         if self.end < self.start:
             raise ValueError("end must not be before start")
 
@@ -78,7 +80,8 @@ def evidence_problem(item: Any) -> str | None:
     An item is an object of text values ("quote", "url", "entity_id", ...). A
     source passage also has "source_id" (non-empty text) and "start" and "end"
     (integers from 0 to MAX_OFFSET, end not before start), and may have "page"
-    (such an integer, or null); only a source passage has those integers.
+    (such an integer from 1, as pages count from 1, or null); only a source
+    passage has those integers.
     """
     if not isinstance(item, Mapping) or not all(isinstance(k, str) for k in item):
         return f"each evidence item must be an object, not {item!r}"
@@ -91,6 +94,8 @@ def evidence_problem(item: Any) -> str | None:
                 continue
             if not _is_offset(value):
                 return f'evidence "{key}" must be an integer from 0 to {MAX_OFFSET}, not {value!r}'
+            if key == "page" and value < 1:
+                return f'evidence "page" counts from 1, not {value!r}'
         elif not isinstance(value, str):
             return (
                 'each evidence value must be text ("quote", "url", "entity_id"; a source'

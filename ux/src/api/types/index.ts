@@ -4131,7 +4131,7 @@ export interface paths {
     };
     /**
      * List Sources
-     * @description A taxonomy's sources, newest first, without removed ones.
+     * @description A taxonomy's sources, newest first, without removed ones, each with its last extraction.
      */
     get: operations["list_sources_api_sources_get"];
     put?: never;
@@ -4158,7 +4158,7 @@ export interface paths {
     };
     /**
      * Get Source
-     * @description One source, removed or not, without its text.
+     * @description One source, removed or not, without its text, with its last extraction.
      */
     get: operations["get_source_api_sources__source_id__get"];
     put?: never;
@@ -4188,6 +4188,31 @@ export interface paths {
     get: operations["get_source_text_api_sources__source_id__text_get"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/sources/{source_id}/extract": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Extract Source
+     * @description Extract a ready source into proposals, in the background: an
+     *     individual-extraction run that reads it chunk by chunk (the chunks are the
+     *     run's items) and ends in one proposal for review in the dataset; with
+     *     `schema`, a schema-extraction run over the same text too, with its own
+     *     proposal. Follow the runs with GET /api/pipelines/runs/{id}, or the
+     *     source's `last_extraction`.
+     */
+    post: operations["extract_source_api_sources__source_id__extract_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -7744,6 +7769,58 @@ export interface components {
       landed_at: string;
     };
     /**
+     * LastExtractionRunSchema
+     * @description One run of a source's last extraction.
+     */
+    LastExtractionRunSchema: {
+      /** Run Id */
+      run_id: string;
+      /**
+       * Pipeline
+       * @enum {string}
+       */
+      pipeline: "individual_extraction" | "schema_extraction";
+      status: components["schemas"]["PipelineRunStatus"];
+      /**
+       * Items Done
+       * @description Chunks done; null until reported
+       */
+      items_done?: number | null;
+      /**
+       * Items Total
+       * @description Chunks in all; null until known
+       */
+      items_total?: number | null;
+      /**
+       * Proposal Id
+       * @description The proposal the run produced
+       */
+      proposal_id?: string | null;
+      /**
+       * Operations
+       * @description How many operations that proposal has
+       */
+      operations?: number | null;
+    };
+    /**
+     * LastExtractionSchema
+     * @description The runs a source's most recent extract call started.
+     */
+    LastExtractionSchema: {
+      /**
+       * Started At
+       * Format: date-time
+       */
+      started_at: string;
+      /** Dataset Id */
+      dataset_id?: string | null;
+      /**
+       * Runs
+       * @description Individual extraction first, then schema extraction when asked for
+       */
+      runs: components["schemas"]["LastExtractionRunSchema"][];
+    };
+    /**
      * LexicalSenseResponse
      * @description Response containing lexical sense data.
      */
@@ -8697,6 +8774,12 @@ export interface components {
        */
       proposal_id?: string | null;
     };
+    /**
+     * PipelineRunStatus
+     * @description Status of a pipeline run.
+     * @enum {string}
+     */
+    PipelineRunStatus: "pending" | "running" | "completed" | "failed" | "cancelled" | "interrupted";
     /**
      * PipelineTypeResponse
      * @description Response containing pipeline type metadata.
@@ -10332,6 +10415,54 @@ export interface components {
       llm_providers_available?: string[];
     };
     /**
+     * SourceExtractRequest
+     * @description Extract a source into proposals.
+     */
+    SourceExtractRequest: {
+      /**
+       * Dataset
+       * @description The dataset (identifier or id)
+       */
+      dataset: string;
+      /**
+       * Configuration Ref
+       * @description An individual-extraction configuration; extraction-default when omitted
+       */
+      configuration_ref?: string | null;
+      /**
+       * Pages
+       * @description Pages to extract, such as "12-30" or "1-3, 7"
+       */
+      pages?: string | null;
+      /**
+       * Schema
+       * @description Also run schema extraction, proposing classes and relationship types
+       * @default false
+       */
+      schema: boolean;
+    };
+    /**
+     * SourceExtractResponse
+     * @description The runs an extract call started, individual extraction first.
+     */
+    SourceExtractResponse: {
+      /** Runs */
+      runs: components["schemas"]["SourceExtractRun"][];
+    };
+    /**
+     * SourceExtractRun
+     * @description A run an extract call started.
+     */
+    SourceExtractRun: {
+      /** Run Id */
+      run_id: string;
+      /**
+       * Pipeline
+       * @enum {string}
+       */
+      pipeline: "individual_extraction" | "schema_extraction";
+    };
+    /**
      * SourceFailure
      * @description Why a source failed.
      * @enum {string}
@@ -10414,6 +10545,8 @@ export interface components {
        * @description Set once removed; a removed source still answers for provenance
        */
       removed_at?: string | null;
+      /** @description The runs of the most recent extract call, with their progress and proposals; null when never extracted */
+      last_extraction?: components["schemas"]["LastExtractionSchema"] | null;
     };
     /**
      * SourceRevisionSchema
@@ -16637,6 +16770,60 @@ export interface operations {
       };
       /** @description The source has no such page */
       422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  extract_source_api_sources__source_id__extract_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        source_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SourceExtractRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SourceExtractResponse"];
+        };
+      };
+      /** @description Source, dataset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The source is fetching, failed or removed; or schema extraction was asked of a taxonomy whose client proposes its schema changes */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description A bad page range, or a configuration that can't extract a source */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Background pipeline runs are not available */
+      503: {
         headers: {
           [name: string]: unknown;
         };

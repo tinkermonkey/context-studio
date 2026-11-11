@@ -160,7 +160,7 @@ def _canonical_class_ref(cls) -> str:
     return getattr(cls, "identifier", "") or ""
 
 
-def _class_reference_aliases(cls) -> list[str]:
+def class_reference_aliases(cls) -> list[str]:
     """
     Every identifying string by which a typing triple may legitimately name a class.
 
@@ -1674,7 +1674,7 @@ class ExtractionService:
                 by_id[str(cls.id)] = cls
                 if cls.derived:
                     continue  # kept for ancestry, never a type an extraction resolves to
-                for alias in _class_reference_aliases(cls):
+                for alias in class_reference_aliases(cls):
                     by_alias.setdefault(alias.strip().lower(), cls)
         return by_alias, by_id
 
@@ -1911,7 +1911,7 @@ class ExtractionService:
         ``is_a`` typing triple (predicate normalizes to "is a"/"type"/"subclass
         of", or object.kind is "class") whose object.label resolves —
         case-insensitively — to one of a class's identifying forms
-        (`_class_reference_aliases`: any external reference id, the class's own
+        (`class_reference_aliases`: any external reference id, the class's own
         identifier, or its title), the label is rewritten to that alias's
         canonical casing and its kind set to "class". Matching every identifying
         form — not just the first external reference — is what lets the same step
@@ -1943,7 +1943,7 @@ class ExtractionService:
             for cls in self._ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None):
                 if cls.derived:
                     continue  # computed by its client, never an extraction target
-                for alias in _class_reference_aliases(cls):
+                for alias in class_reference_aliases(cls):
                     alias_to_canonical.setdefault(alias.strip().lower(), alias)
 
         if not alias_to_canonical:

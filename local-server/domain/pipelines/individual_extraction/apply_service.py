@@ -75,6 +75,40 @@ def _provenance_quote(provenance: object) -> str:
     return " ... ".join(quotes)
 
 
+def find_individual_by_label(
+    repo: "OntologyRepository",
+    label: str,
+    class_ids: list[str],
+    dataset_id: str | None = None,
+) -> str | None:
+    """
+    The id of an existing individual titled ``label`` (ignoring case) in any of
+    the classes, within the dataset when one is given; else None. Titles are
+    unique per class, so an extracted mention with an existing title is that
+    individual.
+    """
+    for class_id in class_ids:
+        for individual in repo.list_individuals(
+            class_id=class_id, limit=None, dataset_id=dataset_id
+        ):
+            if individual.title.lower() == label.lower():
+                return individual.id
+    return None
+
+
+def typed_classes(repo: "OntologyRepository", class_ids: list[str]) -> "list[Class]":
+    """
+    The classes an extracted individual may be created in: those of ``class_ids``
+    that exist and are not derived (a derived class's individuals are computed
+    by its client, never extracted).
+    """
+    return [
+        cls
+        for class_id in class_ids
+        if (cls := repo.get_class(class_id)) is not None and not cls.derived
+    ]
+
+
 class IndividualExtractionApplyService:
     """
     Materializes individual extraction pipeline output into ontology entities.
@@ -395,14 +429,7 @@ class IndividualExtractionApplyService:
         self, subject_label: str, class_ids: list[str], dataset_id: str | None = None
     ) -> str | None:
         """Return the ID of an existing individual with this title within any of the classes."""
-        for cid in class_ids:
-            candidates = self._repo.list_individuals(
-                class_id=cid, limit=None, dataset_id=dataset_id
-            )
-            for ind in candidates:
-                if ind.title.lower() == subject_label.lower():
-                    return ind.id
-        return None
+        return find_individual_by_label(self._repo, subject_label, class_ids, dataset_id)
 
     def _recognize_individual(
         self,

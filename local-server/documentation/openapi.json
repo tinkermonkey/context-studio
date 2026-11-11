@@ -8950,7 +8950,7 @@
           "sources"
         ],
         "summary": "List Sources",
-        "description": "A taxonomy's sources, newest first, without removed ones.",
+        "description": "A taxonomy's sources, newest first, without removed ones, each with its last extraction.",
         "operationId": "list_sources_api_sources_get",
         "parameters": [
           {
@@ -9043,7 +9043,7 @@
           "sources"
         ],
         "summary": "Get Source",
-        "description": "One source, removed or not, without its text.",
+        "description": "One source, removed or not, without its text, with its last extraction.",
         "operationId": "get_source_api_sources__source_id__get",
         "parameters": [
           {
@@ -9184,6 +9184,61 @@
           },
           "422": {
             "description": "The source has no such page"
+          }
+        }
+      }
+    },
+    "/api/sources/{source_id}/extract": {
+      "post": {
+        "tags": [
+          "sources"
+        ],
+        "summary": "Extract Source",
+        "description": "Extract a ready source into proposals, in the background: an\nindividual-extraction run that reads it chunk by chunk (the chunks are the\nrun's items) and ends in one proposal for review in the dataset; with\n`schema`, a schema-extraction run over the same text too, with its own\nproposal. Follow the runs with GET /api/pipelines/runs/{id}, or the\nsource's `last_extraction`.",
+        "operationId": "extract_source_api_sources__source_id__extract_post",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceExtractRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceExtractResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Source, dataset not found"
+          },
+          "409": {
+            "description": "The source is fetching, failed or removed; or schema extraction was asked of a taxonomy whose client proposes its schema changes"
+          },
+          "422": {
+            "description": "A bad page range, or a configuration that can't extract a source"
+          },
+          "503": {
+            "description": "Background pipeline runs are not available"
           }
         }
       }
@@ -15464,6 +15519,116 @@
         "title": "LandingResponse",
         "description": "Where and when a decided proposal landed in its taxonomy's source."
       },
+      "LastExtractionRunSchema": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "pipeline": {
+            "type": "string",
+            "enum": [
+              "individual_extraction",
+              "schema_extraction"
+            ],
+            "title": "Pipeline"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PipelineRunStatus"
+          },
+          "items_done": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Items Done",
+            "description": "Chunks done; null until reported"
+          },
+          "items_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Items Total",
+            "description": "Chunks in all; null until known"
+          },
+          "proposal_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposal Id",
+            "description": "The proposal the run produced"
+          },
+          "operations": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operations",
+            "description": "How many operations that proposal has"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "pipeline",
+          "status"
+        ],
+        "title": "LastExtractionRunSchema",
+        "description": "One run of a source's last extraction."
+      },
+      "LastExtractionSchema": {
+        "properties": {
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Id"
+          },
+          "runs": {
+            "items": {
+              "$ref": "#/components/schemas/LastExtractionRunSchema"
+            },
+            "type": "array",
+            "title": "Runs",
+            "description": "Individual extraction first, then schema extraction when asked for"
+          }
+        },
+        "type": "object",
+        "required": [
+          "started_at",
+          "runs"
+        ],
+        "title": "LastExtractionSchema",
+        "description": "The runs a source's most recent extract call started."
+      },
       "LexicalSenseResponse": {
         "properties": {
           "label": {
@@ -17002,6 +17167,19 @@
         ],
         "title": "PipelineRunResponse",
         "description": "Response containing a PipelineRun."
+      },
+      "PipelineRunStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "running",
+          "completed",
+          "failed",
+          "cancelled",
+          "interrupted"
+        ],
+        "title": "PipelineRunStatus",
+        "description": "Status of a pipeline run."
       },
       "PipelineTypeResponse": {
         "properties": {
@@ -19865,6 +20043,95 @@
         "title": "ServiceMetricsResponse",
         "description": "Response containing service-level metrics."
       },
+      "SourceExtractRequest": {
+        "properties": {
+          "dataset": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Dataset",
+            "description": "The dataset (identifier or id)"
+          },
+          "configuration_ref": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Configuration Ref",
+            "description": "An individual-extraction configuration; extraction-default when omitted"
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pages",
+            "description": "Pages to extract, such as \"12-30\" or \"1-3, 7\""
+          },
+          "schema": {
+            "type": "boolean",
+            "title": "Schema",
+            "description": "Also run schema extraction, proposing classes and relationship types",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset"
+        ],
+        "title": "SourceExtractRequest",
+        "description": "Extract a source into proposals."
+      },
+      "SourceExtractResponse": {
+        "properties": {
+          "runs": {
+            "items": {
+              "$ref": "#/components/schemas/SourceExtractRun"
+            },
+            "type": "array",
+            "title": "Runs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "runs"
+        ],
+        "title": "SourceExtractResponse",
+        "description": "The runs an extract call started, individual extraction first."
+      },
+      "SourceExtractRun": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "pipeline": {
+            "type": "string",
+            "enum": [
+              "individual_extraction",
+              "schema_extraction"
+            ],
+            "title": "Pipeline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "pipeline"
+        ],
+        "title": "SourceExtractRun",
+        "description": "A run an extract call started."
+      },
       "SourceFailure": {
         "type": "string",
         "enum": [
@@ -20031,6 +20298,17 @@
             ],
             "title": "Removed At",
             "description": "Set once removed; a removed source still answers for provenance"
+          },
+          "last_extraction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LastExtractionSchema"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The runs of the most recent extract call, with their progress and proposals; null when never extracted"
           }
         },
         "type": "object",

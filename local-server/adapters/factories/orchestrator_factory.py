@@ -56,6 +56,7 @@ from domain.pipelines.schema_node_grounding.orchestrator import (
     SchemaGroundingOrchestrator,
     SchemaGroundingState,
 )
+from domain.pipelines.source_proposals import SourceProposer
 from domain.pipelines.schema_relationship_reflection.orchestrator import (
     RelationshipReflectionOrchestrator,
     RelationshipReflectionState,
@@ -73,6 +74,15 @@ def _build_noop(llm_provider: LLMProvider, services: dict[str, Any]) -> Pipeline
     )
 
 
+def _source_proposer(services: dict[str, Any]) -> SourceProposer | None:
+    """Proposes an extraction run on a source; None without the proposal service."""
+    proposal_service = services.get("proposal_service")
+    ontology_repo = services.get("ontology_repo")
+    if proposal_service is None or ontology_repo is None:
+        return None
+    return SourceProposer(proposal_service, ontology_repo)
+
+
 def _build_individual_extraction(
     llm_provider: LLMProvider, services: dict[str, Any]
 ) -> PipelineOrchestrator:
@@ -85,6 +95,7 @@ def _build_individual_extraction(
         run_id=services.get("run_id"),
         status_writer=services.get("status_writer"),
         config=services.get("config"),
+        proposer=_source_proposer(services),
     )
 
 
@@ -97,6 +108,7 @@ def _build_schema_extraction(
         run_id=services.get("run_id"),
         status_writer=services.get("status_writer"),
         config=services.get("config"),
+        proposer=_source_proposer(services),
     )
 
 
@@ -429,6 +441,20 @@ def create_pipeline_state(
     )
 
 
+def _source_summary(input_data: dict[str, Any]) -> dict[str, Any]:
+    """
+    What an extraction run records in its input_summary about where it reads
+    from: the dataset it extracts into and, for a run on a source, the source
+    and the extract call that started it (so the source's latest extraction
+    is found while its runs execute).
+    """
+    return {
+        key: str(input_data[key])
+        for key in ("dataset_id", "source_id", "extraction_id")
+        if input_data.get(key)
+    }
+
+
 def build_run_specific_data(
     pipeline_type: PipelineType,
     input_data: dict[str, Any],
@@ -458,14 +484,10 @@ def build_run_specific_data(
 
         # Store input_summary with taxonomy_id for apply operations
         # ontology_id is the field name in the request, we store it as taxonomy_id
-        input_summary: dict[str, Any] = {}
+        input_summary: dict[str, Any] = _source_summary(input_data)
         ontology_id = input_data.get("ontology_id")
         if ontology_id:
             input_summary["taxonomy_id"] = str(ontology_id)
-        # The dataset the run extracts into (resolved by the route before the run).
-        dataset_id = input_data.get("dataset_id")
-        if dataset_id:
-            input_summary["dataset_id"] = str(dataset_id)
 
         ontology_name = input_data.get("ontology_name")
         if ontology_name:
@@ -480,7 +502,7 @@ def build_run_specific_data(
 
         return specific
     elif pipeline_type == PipelineType.SCHEMA_EXTRACTION:
-        schema_input_summary: dict[str, Any] = {}
+        schema_input_summary: dict[str, Any] = _source_summary(input_data)
 
         # Store the taxonomy for apply; the scheme new classes go to is chosen at apply
         scope = input_data.get("scope")

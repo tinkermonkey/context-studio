@@ -12,7 +12,14 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Literal, Mapping, Protocol
 
-from .entities import Batch, BatchStatus, PipelineRun, PipelineRunStatus, PipelineType
+from .entities import (
+    Batch,
+    BatchStatus,
+    PipelineRun,
+    PipelineRunStatus,
+    PipelineType,
+    SourceRun,
+)
 
 # ============================================================================
 # LLM provider value types and port
@@ -496,4 +503,26 @@ class PipelineRunStatusWriter(Protocol):
 
     def update_progress(self, run_id: str, items_done: int, items_total: int | None) -> bool:
         """Record how many work items the run has finished, out of how many."""
+        ...
+
+
+class PipelineRunSubmitter(Protocol):
+    """Port for queueing a pipeline run to execute in the background."""
+
+    def submit(
+        self,
+        pipeline_type: PipelineType,
+        implementation_id: str,
+        configuration_ref: str,
+        input_data: dict[str, Any],
+    ) -> PipelineRun:
+        """Store a PENDING run with its input for a worker to execute; return it."""
+        ...
+
+
+class SourceRunReader(Protocol):
+    """Port for finding the extraction runs on sources."""
+
+    def list_source_runs(self, source_ids: list[str]) -> list[SourceRun]:
+        """Every extraction run on these sources (light columns only), in no particular order."""
         ...
