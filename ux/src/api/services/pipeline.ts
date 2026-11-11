@@ -129,6 +129,11 @@ class PipelineService extends BaseService {
     return this.get<PipelineRunResponse>(`/api/pipelines/runs/${runId}`);
   }
 
+  /** Cancel a pending or background run; poll it until its status is `cancelled`. */
+  async cancelRun(runId: string): Promise<PipelineRunResponse> {
+    return this.post<PipelineRunResponse>(`/api/pipelines/runs/${runId}/cancel`, undefined);
+  }
+
   /** The library of example paragraphs for trying extraction. */
   async listExtractionExamples(): Promise<ExtractionExample[]> {
     return this.get<ExtractionExample[]>("/api/pipelines/extraction-examples");

@@ -63,6 +63,8 @@ export const QUERY_KEYS = {
   relationshipSources: (id: string) => ["relationships", "by-id", id, "sources"] as const,
   // Sources (/api/sources): files, web pages and text extracted from.
   sourcesRoot: ["sources"] as const,
+  // A taxonomy's list (Data › Sources); "list" keeps it apart from a source's id.
+  sources: (params?: object) => ["sources", "list", params] as const,
   source: (id: string) => ["sources", id] as const,
   sourceText: (id: string, page?: number | null) => ["sources", id, "text", page ?? null] as const,
   // Datasets: named bodies of data over one taxonomy's schema.

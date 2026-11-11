@@ -314,7 +314,16 @@ function AppShell() {
                   { id: "schema-relationships", label: "Relationships", count: relationshipCount },
                 ],
               },
-              { id: "data", label: "Data", icon: "data" },
+              {
+                id: "data",
+                label: "Data",
+                icon: "data",
+                children: [
+                  { id: "data-individuals", label: "Individuals" },
+                  { id: "data-datasets", label: "Datasets" },
+                  { id: "data-sources", label: "Sources" },
+                ],
+              },
               { id: "external-reference", label: "External Reference", icon: "link" },
               {
                 id: "pipelines",
@@ -331,7 +340,7 @@ function AppShell() {
             ],
           },
         ],
-        defaultExpandedIds: ["schema"],
+        defaultExpandedIds: ["schema", "data"],
         activeItemId,
         collapsed: sidebarCollapsed,
         onCollapse: setSidebarCollapsed,

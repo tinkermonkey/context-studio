@@ -14,6 +14,7 @@ import {
   type RelationshipEnd,
   type SourcePassage,
 } from "./sourceModel";
+import { SourcesPageLink } from "@/components/sources/SourcesPageLink";
 import { usePassageSource } from "./usePassageSource";
 import "./proposals.css";
 
@@ -31,8 +32,9 @@ export function SourcePassageSection({ passages }: { passages: SourcePassage[] }
   const location =
     [pageLabel(first.page), source?.section].filter(Boolean).join(" · ") || charsLabel(first);
   const also = alsoOnLabel(passages);
-  // The source's title as text: its page arrives with the Sources page (#1554).
   const title = source?.title ?? `Source ${first.sourceId.slice(0, 8)}`;
+  // A listed source links to its taxonomy's Sources page; a removed one isn't listed there.
+  const linkTaxonomy = source && !source.removed ? source.taxonomyId : undefined;
   return (
     <InspectorPanel.Section title="Source passage">
       <div className="op-inspector__stack op-passage" data-testid="operation-source-passage">
@@ -40,9 +42,19 @@ export function SourcePassageSection({ passages }: { passages: SourcePassage[] }
           <span className="op-passage__location" data-testid="operation-source-passage-location">
             {location}
           </span>
-          <span className="op-passage__source" data-testid="operation-source-title">
-            {title}
-          </span>
+          {linkTaxonomy ? (
+            <SourcesPageLink
+              taxonomyId={linkTaxonomy}
+              className="entity-link op-passage__source"
+              data-testid="operation-source-title"
+            >
+              {title}
+            </SourcesPageLink>
+          ) : (
+            <span className="op-passage__source" data-testid="operation-source-title">
+              {title}
+            </span>
+          )}
         </div>
         <blockquote
           className="op-passage__text"

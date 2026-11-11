@@ -1,0 +1,302 @@
+@layer app {
+  /* Sources page and the extract flow (Data › Sources). */
+  .sources-page {
+    gap: 18px;
+    max-width: 1280px;
+  }
+
+  .sources-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .sources-muted,
+  .sources-note {
+    font-size: 12.5px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .sources-note {
+    font-size: 11.5px;
+  }
+
+  .sources-mono-muted {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .sources-title {
+    font-weight: 600;
+    font-size: 13.5px;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .sources-cell-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  /* A link button inside a table cell: no padding, left-aligned, wraps. */
+  .sources-link {
+    height: auto;
+    padding: 0;
+    text-align: left;
+    white-space: normal;
+    font-weight: 600;
+  }
+
+  .sources-link--secondary {
+    font-weight: 500;
+    font-size: 12px;
+  }
+
+  .sources-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .sources-filters,
+  .add-source__head,
+  .extract-run__head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sources-filters__controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .sources-footnote {
+    margin: 0;
+    font-size: 12.5px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  /* Add a source */
+  .add-source {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 8px;
+    background: rgb(var(--canvas-bg-2));
+  }
+
+  .add-source__drop {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 26px 16px;
+    border: 1px dashed rgb(var(--canvas-border-strong));
+    border-radius: 8px;
+    background: rgb(var(--canvas-bg));
+    color: rgb(var(--canvas-fg-2));
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .add-source__drop:focus-within,
+  .add-source__drop--over {
+    border-color: rgb(var(--accent-primary));
+    outline: 2px solid rgb(var(--accent-primary) / 0.35);
+    outline-offset: 1px;
+  }
+
+  .add-source__drop[aria-busy="true"] {
+    cursor: progress;
+  }
+
+  .add-source__drop-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .add-source__drop-hint {
+    font-size: 12.5px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  /* Visually hidden but focusable, so the drop zone works from the keyboard. */
+  .add-source__file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
+  .add-source__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+  }
+
+  .add-source__grow {
+    flex: 999 1 420px;
+  }
+
+  .add-source__stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Extract page: the form or run on the left, the chunks on the right. */
+  .extract-layout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    align-items: flex-start;
+  }
+
+  .extract-layout__main {
+    flex: 999 1 640px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .extract-form,
+  .extract-run {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .extract-run {
+    gap: 14px;
+  }
+
+  .extract-form__pages {
+    max-width: 520px;
+  }
+
+  .extract-check {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    cursor: pointer;
+  }
+
+  .extract-check input {
+    margin-top: 3px;
+    accent-color: rgb(var(--accent-primary));
+  }
+
+  .extract-check__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .extract-check__label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .extract-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .extract-run__headline {
+    font-size: 20px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .extract-run__schema {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .extract-run__schema-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  /* Chunks aside */
+  .chunk-list {
+    flex: 1 1 360px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 8px;
+  }
+
+  .chunk-list__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .chunk-list__rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-height: 560px;
+    overflow-y: auto;
+  }
+
+  .chunk-list__row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 6px 0;
+    border-top: 1px dashed rgb(var(--canvas-border));
+  }
+
+  .chunk-list__n {
+    width: 22px;
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-3));
+    text-align: right;
+  }
+
+  .chunk-list__text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .chunk-list__title {
+    font-size: 13px;
+    color: rgb(var(--canvas-fg-1));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

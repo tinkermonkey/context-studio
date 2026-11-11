@@ -1,8 +1,12 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
 import { sourcesService } from "@/api/services/sources";
+import { SOURCES_POLL_MS } from "./useSources";
 
-/** A source without its text; a removed one too (with removed_at set). */
+/**
+ * A source without its text; a removed one too (with removed_at set). While
+ * a web page is still being fetched it re-reads itself until ready or failed.
+ */
 export function useSource(id: string | undefined) {
   return useQuery({
     queryKey: QUERY_KEYS.source(id ?? ""),
@@ -10,6 +14,7 @@ export function useSource(id: string | undefined) {
     enabled: !!id,
     // A missing source is an answer, not a blip: callers fall back to the evidence.
     retry: false,
+    refetchInterval: (query) => (query.state.data?.status === "fetching" ? SOURCES_POLL_MS : false),
   });
 }
 

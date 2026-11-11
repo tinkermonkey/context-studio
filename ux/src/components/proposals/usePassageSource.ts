@@ -16,6 +16,7 @@ export function usePassageSource(passage: SourcePassage | undefined): PassageSou
   if (!passage || !source) return undefined;
   return {
     title: source.title,
+    taxonomyId: source.taxonomy_id,
     section: sectionAt(passage.start, source.headings ?? []),
     text: readable && text ? { text: text.text, start: text.start } : undefined,
     removed: !!source.removed_at,

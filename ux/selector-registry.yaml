@@ -3651,7 +3651,7 @@ selectors:
     description: "Source passage: the passage's page and section (p. 5 · Parts and features), else its character offsets"
   - selector: operation-source-title
     component: src/components/proposals/SourcePassage.tsx
-    description: "Source passage: the source's title (text; a link once the Sources page lands, #1554)"
+    description: "Source passage: the source's title, a link to its taxonomy's Sources page (text for a removed or unknown source)"
   - selector: operation-ends-callout
     component: src/components/proposals/OperationDecision.tsx
     description: "Decision: a relationship create whose end is an undecided (or rejected) create in the proposal; Accept is disabled"
@@ -3702,7 +3702,7 @@ selectors:
     description: "Entity provenance: one passage by its id (source, page, quote, proposal and op)"
   - selector: entity-source-title-*
     component: src/components/entity/EntitySources.tsx
-    description: "Entity provenance: the passage's source title (text until the Sources page lands, #1554), by passage id"
+    description: "Entity provenance: the passage's source title, a link to its taxonomy's Sources page (text for a removed or unknown source), by passage id"
   - selector: entity-source-proposal-*
     component: src/components/entity/EntitySources.tsx
     description: "Entity provenance: link to the proposal that applied the passage, by passage id"
@@ -3712,3 +3712,179 @@ selectors:
   - selector: relationship-sources-section
     component: src/components/ontology/RelationshipDrawer.tsx
     description: "Relationship drawer: Sources section listing the passages it was applied from"
+
+  # ── Sources page and the extract flow (#1554) ──
+  - selector: add-source-panel
+    component: src/components/sources/AddSourcePanel.tsx
+    description: 'Sources page: the "Add a source" section (file, web page or text)'
+  - selector: add-source-mode
+    component: src/components/sources/AddSourcePanel.tsx
+    description: 'Add a source: File / Web page / Text segmented control'
+  - selector: add-source-dataset
+    component: src/components/sources/AddSourcePanel.tsx
+    description: 'Add a source: dataset choice, shown when all datasets are listed and the taxonomy has several'
+  - selector: add-source-dropzone
+    component: src/components/sources/AddSourcePanel.tsx
+    description: 'Add a source: file drop zone (a label for the hidden file input)'
+  - selector: add-source-file-input
+    component: src/components/sources/AddSourcePanel.tsx
+    description: 'Add a source: visually hidden file input; choosing a file uploads it'
+  - selector: add-source-url-input
+    component: src/components/sources/AddSourcePanel.tsx
+    description: 'Add a source: web page URL input'
+  - selector: add-source-fetch-button
+    component: src/components/sources/AddSourcePanel.tsx
+    description: 'Add a source: "Fetch page" button'
+  - selector: add-source-title-input
+    component: src/components/sources/AddSourcePanel.tsx
+    description: 'Add a source: pasted text''s title input'
+  - selector: add-source-text-input
+    component: src/components/sources/AddSourcePanel.tsx
+    description: 'Add a source: pasted text area'
+  - selector: add-source-submit
+    component: src/components/sources/AddSourcePanel.tsx
+    description: 'Add a source: "Add source" button for pasted text'
+  - selector: extract-chunk-list
+    component: src/components/sources/ChunkList.tsx
+    description: 'Extract page: chunks aside (estimated count, then per-chunk progress and results)'
+  - selector: extract-chunk-count
+    component: src/components/sources/ChunkList.tsx
+    description: 'Extract page: chunk count in the chunks aside header'
+  - selector: extract-schema-run
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Extract page: schema extraction run''s status line, with its proposal link when done'
+  - selector: extract-review-schema-proposal
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Extract page: "Review schema proposal" button'
+  - selector: extract-running-panel
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Extract page: "Extracting" panel while the run is pending or running'
+  - selector: extract-progress-headline
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Extract page: "Chunk N of M" headline (aria-live)'
+  - selector: extract-cancel-run
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Extract page: "Cancel run" button'
+  - selector: extract-progress-bar
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Extract page: chunk progress bar (role=progressbar)'
+  - selector: extract-run-tally
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Extract page: run id, pipeline and configuration under the progress bar'
+  - selector: extract-done-panel
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Extract page: "Proposal ready" panel after the run completes'
+  - selector: extract-count-operations
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Proposal ready: operations count tile'
+  - selector: extract-count-individuals
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Proposal ready: new individuals count tile'
+  - selector: extract-count-relationships
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Proposal ready: relationships count tile'
+  - selector: extract-count-near-matches
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Proposal ready: near matches count tile (creates with alternatives)'
+  - selector: extract-no-proposal
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Proposal ready: note shown when the run finished without a proposal'
+  - selector: extract-empty-chunks
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Proposal ready: warning naming chunks that gave no candidates'
+  - selector: extract-back
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Extract page: "Back to sources" button after a run ends'
+  - selector: extract-review-proposal
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Extract page: "Review proposal" button, opens /app/proposals/{id}'
+  - selector: extract-stopped-panel
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Extract page: panel for a failed or cancelled run'
+  - selector: extract-stopped-reason
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Extract page: why the run failed, or that it was cancelled'
+  - selector: extract-retry
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Extract page: "Extract again" button after a failed or cancelled run'
+  - selector: extract-configure-panel
+    component: src/components/sources/ExtractSourcePage.tsx
+    description: 'Extract page: configure panel (dataset, configuration, schema, pages, estimate)'
+  - selector: extract-dataset
+    component: src/components/sources/ExtractSourcePage.tsx
+    description: 'Extract page: dataset segmented control'
+  - selector: extract-config
+    component: src/components/sources/ExtractSourcePage.tsx
+    description: 'Extract page: individual extraction configuration select'
+  - selector: extract-schema-toggle
+    component: src/components/sources/ExtractSourcePage.tsx
+    description: 'Extract page: "Also suggest schema changes" checkbox'
+  - selector: extract-pages
+    component: src/components/sources/ExtractSourcePage.tsx
+    description: 'Extract page: optional page range input (multi-page sources only)'
+  - selector: extract-estimate
+    component: src/components/sources/ExtractSourcePage.tsx
+    description: 'Extract page: chunk count and rough cost estimate callout'
+  - selector: extract-start-error
+    component: src/components/sources/ExtractSourcePage.tsx
+    description: 'Extract page: why the extraction could not start'
+  - selector: extract-cancel
+    component: src/components/sources/ExtractSourcePage.tsx
+    description: 'Extract page: "Cancel" button, back to the Sources page without starting'
+  - selector: extract-start
+    component: src/components/sources/ExtractSourcePage.tsx
+    description: 'Extract page: "Start extraction" button'
+  - selector: extract-source-page
+    component: src/components/sources/ExtractSourcePage.tsx
+    description: 'Extract page (/app/data/sources/{id}/extract) root'
+  - selector: extract-not-ready
+    component: src/components/sources/ExtractSourcePage.tsx
+    description: 'Extract page: warning for a source that is fetching or failed'
+  - selector: sources-page
+    component: src/components/sources/SourcesPage.tsx
+    description: 'Sources page (/app/data/sources) root'
+  - selector: sources-taxonomy-select
+    component: src/components/sources/SourcesPage.tsx
+    description: 'Sources page: taxonomy select, shown with two or more taxonomies'
+  - selector: sources-dataset-filter
+    component: src/components/sources/SourcesPage.tsx
+    description: 'Sources page: dataset filter segmented control, shown when the taxonomy has two or more datasets'
+  - selector: sources-count
+    component: src/components/sources/SourcesPage.tsx
+    description: 'Sources page: number of sources listed'
+  - selector: sources-table
+    component: src/components/sources/SourcesPage.tsx
+    description: 'Sources page: sources table wrapper (aria-busy while loading)'
+  - selector: extract-chunk-*
+    component: src/components/sources/ChunkList.tsx
+    description: 'Extract page: one chunk row, with dynamic 1-based chunk number suffix'
+  - selector: source-row-*
+    component: src/components/sources/SourcesPage.tsx
+    description: 'Sources table: title and detail cell, with dynamic source ID suffix'
+  - selector: source-status-*
+    component: src/components/sources/SourcesPage.tsx
+    description: 'Sources table: status chip and failure note, with dynamic source ID suffix'
+  - selector: source-last-extraction-*
+    component: src/components/sources/LastExtractionCell.tsx
+    description: 'Sources table: last extraction cell, with dynamic source ID suffix'
+  - selector: source-extract-*
+    component: src/components/sources/SourcesPage.tsx
+    description: 'Sources table: Extract / Extract again button, with dynamic source ID suffix'
+  - selector: source-remove-*
+    component: src/components/sources/SourcesPage.tsx
+    description: 'Sources table: remove button (opens a confirm), with dynamic source ID suffix'
+  - selector: source-follow-run-*
+    component: src/components/sources/LastExtractionCell.tsx
+    description: 'Sources table: link to a running or ended extraction run''s page, with dynamic source ID suffix'
+  - selector: source-open-proposal-*
+    component: src/components/sources/LastExtractionCell.tsx
+    description: 'Sources table: link to the last extraction''s proposal, with dynamic source ID suffix'
+  - selector: source-open-schema-proposal-*
+    component: src/components/sources/LastExtractionCell.tsx
+    description: 'Sources table: link to the last extraction''s schema proposal, with dynamic source ID suffix'
+  - selector: extract-run-error
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Extract page: panel shown when the followed run can''t be loaded (e.g. a stale ?run= link)'
+  - selector: extract-run-error-reason
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Extract page: why the run couldn''t be loaded (gone, or the server''s error)'

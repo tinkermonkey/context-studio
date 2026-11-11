@@ -206,14 +206,16 @@ describe("the source passage", () => {
         "p. 2 · Parts and features",
       ),
     );
-    // The title is text, not a link: a reload would lose an unsent choice and reason.
+    // Sources have no page of their own: the title links to its taxonomy's Sources page.
     const title = screen.getByTestId("operation-source-title");
     expect(title).toHaveTextContent("Whirlpool use and care guide");
     expect(title).toHaveClass("op-passage__source");
-    expect(title.tagName).toBe("SPAN");
+    expect(title).toHaveClass("entity-link");
     expect(
-      within(screen.getByTestId("operation-source-passage")).queryByRole("link"),
-    ).not.toBeInTheDocument();
+      within(screen.getByTestId("operation-source-passage")).getByRole("link", {
+        name: "Whirlpool use and care guide",
+      }),
+    ).toHaveAttribute("href", "/app/data/sources?taxonomy=tax-1");
     expect(screen.getByTestId("operation-source-passage-more")).toHaveTextContent("Also on p. 3");
     // The passages aren't repeated as plain evidence.
     expect(screen.queryByTestId("operation-evidence")).not.toBeInTheDocument();
@@ -249,6 +251,11 @@ describe("the source passage", () => {
       "false",
     );
     expect(screen.queryByTestId("operation-source-passage-mark")).not.toBeInTheDocument();
+    // A removed source isn't on the Sources page, so its title stays text.
+    expect(screen.getByTestId("operation-source-title").tagName).toBe("SPAN");
+    expect(
+      within(screen.getByTestId("operation-source-passage")).queryByRole("link"),
+    ).not.toBeInTheDocument();
   });
 });
 
