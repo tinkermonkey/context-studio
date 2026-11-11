@@ -220,13 +220,17 @@ describe("IndividualPage sources", () => {
     expect(await within(panel).findByTestId("entity-sources-summary")).toHaveTextContent(
       "2 passages in 1 source",
     );
-    const first = within(panel).getByTestId("entity-source-es-1");
+    const first = within(panel).getByTestId("entity-source-row-es-1");
     expect(first).toHaveTextContent("WRF555SDFZ French door refrigerator");
     expect(first).toHaveTextContent("p. 5");
-    expect(
-      await within(first).findByRole("link", { name: "Whirlpool use and care guide" }),
-    ).toHaveAttribute("href", "/app/data/sources/src-1");
-    expect(within(first).getByRole("link", { name: "4f2c91d0" })).toHaveAttribute(
+    // The source's title is text until the Sources page lands: the only link is the proposal.
+    await waitFor(() =>
+      expect(within(first).getByTestId("entity-source-title-es-1")).toHaveTextContent(
+        "Whirlpool use and care guide",
+      ),
+    );
+    expect(within(first).getAllByRole("link")).toHaveLength(1);
+    expect(within(first).getByTestId("entity-source-proposal-es-1")).toHaveAttribute(
       "href",
       "/app/proposals/4f2c91d0-1111",
     );

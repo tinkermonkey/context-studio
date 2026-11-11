@@ -206,11 +206,14 @@ describe("the source passage", () => {
         "p. 2 · Parts and features",
       ),
     );
-    const link = screen.getByRole("link", {
-      name: "Open the source: Whirlpool use and care guide",
-    });
-    expect(link).toHaveAttribute("href", "/app/data/sources/src-1");
-    expect(link).toHaveAttribute("data-testid", "operation-source-link");
+    // The title is text, not a link: a reload would lose an unsent choice and reason.
+    const title = screen.getByTestId("operation-source-title");
+    expect(title).toHaveTextContent("Whirlpool use and care guide");
+    expect(title).toHaveClass("op-passage__source");
+    expect(title.tagName).toBe("SPAN");
+    expect(
+      within(screen.getByTestId("operation-source-passage")).queryByRole("link"),
+    ).not.toBeInTheDocument();
     expect(screen.getByTestId("operation-source-passage-more")).toHaveTextContent("Also on p. 3");
     // The passages aren't repeated as plain evidence.
     expect(screen.queryByTestId("operation-evidence")).not.toBeInTheDocument();
@@ -295,10 +298,12 @@ describe("a near match", () => {
 
   it("is flagged in the table, and a matched one reads as using the existing individual", async () => {
     renderPage("op-used");
-    expect(await screen.findByTestId("operation-near-match-op-fridge")).toHaveTextContent(
+    expect(await screen.findByTestId("operation-near-match-chip-op-fridge")).toHaveTextContent(
       "near match",
     );
-    expect(screen.getByTestId("operation-near-match-op-used")).toHaveTextContent("used existing");
+    expect(screen.getByTestId("operation-near-match-chip-op-used")).toHaveTextContent(
+      "used existing",
+    );
     expect(await screen.findByTestId("operation-decided-record")).toHaveTextContent(
       "Used the existing individual LLM Provider Router instead of creating one.",
     );
@@ -319,6 +324,43 @@ describe("a relationship create's ends", () => {
       "data-kind",
       "new",
     );
+  });
+
+  it("can't be accepted until the creates it names are decided; Reject still works", async () => {
+    const user = userEvent.setup();
+    renderPage("op-uses");
+    const callout = await screen.findByTestId("operation-ends-callout");
+    expect(callout).toHaveTextContent(
+      "Decide #1 and #2 first: this relationship follows their choices.",
+    );
+    expect(screen.getByTestId("operation-accept")).toBeDisabled();
+    const reject = screen.getByTestId("operation-reject");
+    expect(reject).toBeEnabled();
+    server.use(http.post("*/api/proposals/:id/reject", () => HttpResponse.json(proposal)));
+    await user.click(reject);
+    expect(applies).toHaveLength(0);
+  });
+
+  it("can be accepted once the creates it names applied", async () => {
+    for (const op of proposal.operations) {
+      if (op.id === "op-fridge" || op.id === "op-filter") Object.assign(op, { status: "applied" });
+    }
+    renderPage("op-uses");
+    await waitFor(() => expect(screen.getByTestId("operation-accept")).toBeEnabled());
+    expect(screen.queryByTestId("operation-ends-callout")).not.toBeInTheDocument();
+  });
+
+  it("says to reject it when a create it names was rejected", async () => {
+    for (const op of proposal.operations) {
+      if (op.id === "op-fridge") Object.assign(op, { status: "applied" });
+      if (op.id === "op-filter") Object.assign(op, { status: "rejected" });
+    }
+    renderPage("op-uses");
+    expect(await screen.findByTestId("operation-ends-callout")).toHaveTextContent(
+      "#2 was rejected, so this relationship can't apply. Reject it.",
+    );
+    expect(screen.getByTestId("operation-accept")).toBeDisabled();
+    expect(screen.getByTestId("operation-reject")).toBeEnabled();
   });
 });
 

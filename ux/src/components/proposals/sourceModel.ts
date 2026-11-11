@@ -68,24 +68,39 @@ export function charsLabel(passage: { start: number; end: number }): string {
   return `chars ${passage.start.toLocaleString("en-US")}–${passage.end.toLocaleString("en-US")}`;
 }
 
-/**
- * Where further passages are: "Also on p. 55", "Also on pp. 1, 54", or, when
- * some have no page, "Also 2 more passages"; undefined when there are none.
- * Pages already named by the first passage are left out.
- */
-export function alsoOnLabel(passages: SourcePassage[]): string | undefined {
-  const [first, ...rest] = passages;
-  if (!first || rest.length === 0) return undefined;
-  if (rest.some((p) => p.page === null)) {
-    return `Also ${rest.length} more passage${rest.length === 1 ? "" : "s"}`;
-  }
+/** "Also on pp. 1, 54" for further passages in the shown passage's own source. */
+function sameSourceLabel(first: SourcePassage, rest: SourcePassage[]): string | undefined {
+  if (rest.length === 0) return undefined;
+  const more = `${rest.length} more passage${rest.length === 1 ? "" : "s"}`;
+  if (rest.some((p) => p.page === null)) return `Also ${more}`;
   const pages = [...new Set(rest.map((p) => p.page as number))]
     .filter((page) => page !== first.page)
     .sort((a, b) => a - b);
-  if (pages.length === 0) {
-    return `Also ${rest.length} more passage${rest.length === 1 ? "" : "s"} on this page`;
-  }
+  if (pages.length === 0) return `Also ${more} on this page`;
   return `Also on ${pages.length === 1 ? "p." : "pp."} ${pages.join(", ")}`;
+}
+
+/**
+ * Where further passages are, beside the first (the one shown): the pages of
+ * those in its source ("Also on p. 55", "Also on pp. 1, 54", or "Also 2 more
+ * passages" when some have no page), then "Also in 2 other sources" for the
+ * rest; undefined when there are none. The first passage's page is left out.
+ */
+export function alsoOnLabel(passages: SourcePassage[]): string | undefined {
+  const [first, ...rest] = passages;
+  if (!first) return undefined;
+  const same = sameSourceLabel(
+    first,
+    rest.filter((p) => p.sourceId === first.sourceId),
+  );
+  const others = new Set(rest.filter((p) => p.sourceId !== first.sourceId).map((p) => p.sourceId))
+    .size;
+  const elsewhere =
+    others > 0
+      ? `${same ? "also" : "Also"} in ${others} other source${others === 1 ? "" : "s"}`
+      : "";
+  if (!same && !elsewhere) return undefined;
+  return [same, elsewhere].filter(Boolean).join("; ");
 }
 
 /** The page (from 1) holding `offset`, given each page's start offset; null without pages. */
@@ -196,9 +211,10 @@ export function nearMatchHeldIds(operations: ProposedOperation[]): Set<string> {
   );
   const refs = new Set(open.flatMap((o) => (o.ref ? [`$${o.ref}`] : [])));
   const held = new Set(open.map((o) => o.id));
+  // The backend resolves "$ref" only in a relationship's ends.
   for (const o of operations) {
-    const values = Object.values(o.fields ?? {});
-    if (values.some((v) => typeof v === "string" && refs.has(v))) held.add(o.id);
+    const ends = [o.fields?.source_id, o.fields?.target_id];
+    if (ends.some((v) => typeof v === "string" && refs.has(v))) held.add(o.id);
   }
   return held;
 }

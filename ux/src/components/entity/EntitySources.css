@@ -43,6 +43,7 @@
     min-width: 0;
     font-size: 13px;
     font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
     overflow-wrap: anywhere;
   }
 

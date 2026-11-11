@@ -17,8 +17,15 @@ import {
   chosenAlternative,
   defaultNearMatchChoice,
   isNearMatch,
+  relationshipEnds,
   type NearMatchChoice as NearMatchChoiceValue,
+  type RelationshipEnd,
 } from "./sourceModel";
+
+/** "#1", "#1 and #2" */
+function seqList(ends: RelationshipEnd[]): string {
+  return [...new Set(ends.map((e) => `#${e.seq}`))].join(" and ");
+}
 import type { PickOutcome } from "./tieredModel";
 import type { ProposalActions } from "./useProposalActions";
 import "./proposals.css";
@@ -125,6 +132,13 @@ export function OperationDecision({
                 : "Accept new"
               : "Accept";
   const acceptOperation = () => actions.accept([operation.id], pickOptions);
+  // A relationship naming a create of this proposal applies only once that create has.
+  const ends = relationshipEnds(operation, proposal.operations);
+  const undecidedEnds = ends.filter(
+    (e) => e.kind !== "existing" && (e.status === "pending" || e.status === "failed"),
+  );
+  const rejectedEnds = ends.filter((e) => e.kind !== "existing" && e.status === "rejected");
+  const endsBlock = undecidedEnds.length > 0 || rejectedEnds.length > 0;
 
   return (
     <InspectorPanel.Section title="Decision">
@@ -182,6 +196,19 @@ export function OperationDecision({
             with. Pick the plan&apos;s answers back, or reject the operation.
           </FormCallout>
         )}
+        {rejectedEnds.length > 0 ? (
+          <FormCallout variant="warn" icon="alert" data-testid="operation-ends-callout">
+            {seqList(rejectedEnds)} {rejectedEnds.length === 1 ? "was" : "were"} rejected, so this
+            relationship can&apos;t apply. Reject it.
+          </FormCallout>
+        ) : (
+          undecidedEnds.length > 0 && (
+            <FormCallout variant="info" icon="info" data-testid="operation-ends-callout">
+              Decide {seqList(undecidedEnds)} first: this relationship follows{" "}
+              {undecidedEnds.length === 1 ? "its choice" : "their choices"}.
+            </FormCallout>
+          )
+        )}
         {editing && taxonomy ? (
           <DrTripleEditor
             operation={operation}
@@ -230,7 +257,7 @@ export function OperationDecision({
                 <Button
                   variant="primary"
                   size="sm"
-                  disabled={actions.busy || (picksChanged && !withPicks)}
+                  disabled={actions.busy || (picksChanged && !withPicks) || endsBlock}
                   onClick={acceptOperation}
                   data-testid="operation-accept"
                 >

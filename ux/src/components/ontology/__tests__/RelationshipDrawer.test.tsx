@@ -84,13 +84,16 @@ describe("RelationshipDrawer sources", () => {
     );
     renderDrawer();
 
-    const passage = await screen.findByTestId("entity-source-es-1");
+    const passage = await screen.findByTestId("entity-source-row-es-1");
     expect(screen.getByTestId("relationship-sources-section")).toBeInTheDocument();
     expect(passage).toHaveClass("entity-source");
     expect(passage).toHaveTextContent("Hang it on two picture hooks");
     expect(passage).toHaveTextContent("p. 24 · chars 1,880–1,931");
-    // An unreachable source is named by its id.
-    expect(screen.getByTestId("entity-source-link-es-1")).toHaveTextContent("Source src-1");
+    // An unreachable source is named by its id, as text: its page doesn't exist yet.
+    const title = screen.getByTestId("entity-source-title-es-1");
+    expect(title).toHaveTextContent("Source src-1");
+    expect(title.tagName).toBe("SPAN");
+    expect(title).toHaveClass("entity-source__title");
     expect(screen.getByRole("link", { name: "4f2c91d0" })).toHaveAttribute(
       "href",
       "/app/proposals/4f2c91d0-aaaa",

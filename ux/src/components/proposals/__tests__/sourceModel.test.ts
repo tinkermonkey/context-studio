@@ -99,6 +99,21 @@ describe("source passages in evidence", () => {
     expect(alsoOnLabel([passage(null), passage(null), passage(null)])).toBe("Also 2 more passages");
   });
 
+  it("lists only the shown passage's source's pages, and counts the other sources", () => {
+    const other = (sourceId: string, page: number): SourcePassage => ({
+      ...passage(page),
+      sourceId,
+    });
+    // Page 9 of another source is not "p. 9" of this one.
+    expect(alsoOnLabel([passage(5), other("src-2", 9)])).toBe("Also in 1 other source");
+    expect(alsoOnLabel([passage(5), passage(54), other("src-2", 9), other("src-3", 1)])).toBe(
+      "Also on p. 54; also in 2 other sources",
+    );
+    expect(alsoOnLabel([passage(5), other("src-2", 9), other("src-2", 12)])).toBe(
+      "Also in 1 other source",
+    );
+  });
+
   it("finds a passage's page and section from the source's offsets", () => {
     expect(pageAt(0, [0, 100, 200])).toBe(1);
     expect(pageAt(150, [0, 100, 200])).toBe(2);
@@ -211,6 +226,18 @@ describe("a relationship create's ends", () => {
 describe("what a bulk accept leaves for a near-match choice", () => {
   it("holds awaiting near matches and the operations that name them", () => {
     expect([...nearMatchHeldIds([fridge, filter, uses, madeBy])]).toEqual(["op-fridge", "op-uses"]);
+  });
+
+  it("looks for the near match's $ref only in a relationship's ends", () => {
+    // A title that happens to read like the ref is just text: "$ref" resolves only in ends.
+    const named = createProposedOperation({
+      id: "op-named",
+      op: "create",
+      kind: "individual",
+      target_id: null,
+      fields: { title: "$fridge", description: "$fridge" },
+    });
+    expect(nearMatchHeldIds([fridge, named]).has("op-named")).toBe(false);
   });
 
   it("holds nothing once the near match is decided", () => {

@@ -1133,6 +1133,8 @@
   .op-passage__source {
     min-width: 0;
     font-size: 12px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
     overflow-wrap: anywhere;
   }
 

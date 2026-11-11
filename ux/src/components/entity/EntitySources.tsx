@@ -4,7 +4,6 @@ import { useSourcesByIds } from "@/api/hooks/sources/useSource";
 import { ProposalLink } from "@/components/proposals/ProposalLink";
 import { charsLabel, pageLabel } from "@/components/proposals/sourceModel";
 import { formatDate } from "@/components/entity/EntityPageParts";
-import { sourcePath } from "@/lib/entityPaths";
 import "./EntitySources.css";
 
 interface EntitySourcesProps {
@@ -63,17 +62,17 @@ export function EntitySources({ kind, id }: EntitySourcesProps) {
             <li
               key={passage.id}
               className="entity-source"
-              data-testid={`entity-source-${passage.id}`}
+              data-testid={`entity-source-row-${passage.id}`}
             >
               <div className="entity-source__head">
                 {source && <Chip form="id-tag">{source.kind}</Chip>}
-                <a
-                  href={sourcePath(passage.source_id)}
-                  className="entity-link entity-source__title"
-                  data-testid={`entity-source-link-${passage.id}`}
+                {/* Text, not a link, until the Sources page lands (#1554). */}
+                <span
+                  className="entity-source__title"
+                  data-testid={`entity-source-title-${passage.id}`}
                 >
                   {source?.title ?? `Source ${passage.source_id.slice(0, 8)}`}
-                </a>
+                </span>
                 <span className="entity-source__where">{where}</span>
                 {source?.removed_at && <Chip variant="neutral">removed source</Chip>}
               </div>

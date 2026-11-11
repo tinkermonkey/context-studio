@@ -202,14 +202,14 @@ function OperationStatus({
         </Chip>
       )}
       {operation.matched ? (
-        <Chip variant="neutral" data-testid={`operation-near-match-${operation.id}`}>
+        <Chip variant="neutral" data-testid={`operation-near-match-chip-${operation.id}`}>
           used existing
         </Chip>
       ) : (
         isNearMatch(operation) && (
           <Chip
             variant={flagVariant(operation, "violet")}
-            data-testid={`operation-near-match-${operation.id}`}
+            data-testid={`operation-near-match-chip-${operation.id}`}
           >
             near match
           </Chip>

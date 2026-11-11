@@ -3649,9 +3649,12 @@ selectors:
   - selector: operation-source-passage-location
     component: src/components/proposals/SourcePassage.tsx
     description: "Source passage: the passage's page and section (p. 5 · Parts and features), else its character offsets"
-  - selector: operation-source-link
+  - selector: operation-source-title
     component: src/components/proposals/SourcePassage.tsx
-    description: "Source passage: link to the source's page (/app/data/sources/{id}), named by the source's title"
+    description: "Source passage: the source's title (text; a link once the Sources page lands, #1554)"
+  - selector: operation-ends-callout
+    component: src/components/proposals/OperationDecision.tsx
+    description: "Decision: a relationship create whose end is an undecided (or rejected) create in the proposal; Accept is disabled"
   - selector: operation-source-passage-text
     component: src/components/proposals/SourcePassage.tsx
     description: "Source passage: the passage text; data-placed=true when the quote is highlighted in its page's text, false when it shows alone"
@@ -3667,7 +3670,7 @@ selectors:
   - selector: operation-near-match-option-*
     component: src/components/proposals/SourcePassage.tsx
     description: "Near-match choice: one option by existing individual id, or \"new\" for Create new"
-  - selector: operation-near-match-*
+  - selector: operation-near-match-chip-*
     component: src/components/proposals/OperationColumns.tsx
     description: "Operations table status cell: \"near match\" on an individual create with alternatives, \"used existing\" once it applied as one"
   - selector: operation-relationship-ends
@@ -3694,12 +3697,15 @@ selectors:
   - selector: entity-sources-empty
     component: src/components/entity/EntitySources.tsx
     description: "Entity provenance: nothing was applied from a source"
-  - selector: entity-source-*
+  - selector: entity-source-row-*
     component: src/components/entity/EntitySources.tsx
     description: "Entity provenance: one passage by its id (source, page, quote, proposal and op)"
-  - selector: entity-source-link-*
+  - selector: entity-source-title-*
     component: src/components/entity/EntitySources.tsx
-    description: "Entity provenance: link to the passage's source, by passage id"
+    description: "Entity provenance: the passage's source title (text until the Sources page lands, #1554), by passage id"
+  - selector: entity-source-proposal-*
+    component: src/components/entity/EntitySources.tsx
+    description: "Entity provenance: link to the proposal that applied the passage, by passage id"
   - selector: individual-sources-panel
     component: src/routes/app/data/individuals_.$id.tsx
     description: "Individual page: Sources panel listing the passages it was applied from"

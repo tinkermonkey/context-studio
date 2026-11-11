@@ -16,11 +16,6 @@ export function entityPath(kind: EntityKind, id: string): string {
 /** A change proposal's review page is PROPOSAL_PAGE_PREFIX/<id>. */
 export const PROPOSAL_PAGE_PREFIX = "/app/proposals";
 
-/** A source's page (the Sources page, #1554). */
-export function sourcePath(id: string): string {
-  return `/app/data/sources/${encodeURIComponent(id)}`;
-}
-
 /** What chat answers can link to: an entity page or a proposal's review page. */
 export type LinkKind = EntityKind | "proposal";
 

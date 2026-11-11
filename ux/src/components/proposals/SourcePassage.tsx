@@ -1,7 +1,6 @@
 import { Chip, InspectorPanel } from "@tinkermonkey/heimdall-ui";
 import { useDatasets } from "@/api/hooks/ontology/useDatasets";
 import type { ProposedOperation } from "@/api/services/proposals";
-import { sourcePath } from "@/lib/entityPaths";
 import {
   CREATE_NEW,
   alsoOnLabel,
@@ -32,7 +31,8 @@ export function SourcePassageSection({ passages }: { passages: SourcePassage[] }
   const location =
     [pageLabel(first.page), source?.section].filter(Boolean).join(" · ") || charsLabel(first);
   const also = alsoOnLabel(passages);
-  const title = source?.title ?? "Open source";
+  // The source's title as text: its page arrives with the Sources page (#1554).
+  const title = source?.title ?? `Source ${first.sourceId.slice(0, 8)}`;
   return (
     <InspectorPanel.Section title="Source passage">
       <div className="op-inspector__stack op-passage" data-testid="operation-source-passage">
@@ -40,14 +40,9 @@ export function SourcePassageSection({ passages }: { passages: SourcePassage[] }
           <span className="op-passage__location" data-testid="operation-source-passage-location">
             {location}
           </span>
-          <a
-            href={sourcePath(first.sourceId)}
-            className="entity-link op-passage__source"
-            aria-label={`Open the source: ${title}`}
-            data-testid="operation-source-link"
-          >
+          <span className="op-passage__source" data-testid="operation-source-title">
             {title}
-          </a>
+          </span>
         </div>
         <blockquote
           className="op-passage__text"
