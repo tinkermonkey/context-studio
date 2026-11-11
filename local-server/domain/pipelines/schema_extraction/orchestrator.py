@@ -314,6 +314,13 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             raise exc
 
         source_text = _selected_pages(join_documents(documents), schema_state.input_data)
+        proposer = self._proposer if schema_state.input_data.get("source_id") else None
+        proposing = proposer is not None
+        if proposer is not None:
+            # Before any model call: a mirrored taxonomy's client proposes its schema changes
+            proposer.check_may_propose(
+                str(schema_state.input_data.get("scope") or ""), schema_state.input_data
+            )
 
         schema_state = replace(
             schema_state,
@@ -347,7 +354,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             schema_state = await self._stage_finalize(schema_state)
 
             # A run on a source ends in one proposal of its candidates
-            if self._proposer is not None and schema_state.input_data.get("source_id"):
+            if proposing:
                 schema_state = self._propose(schema_state)
 
         except PipelineInputError:

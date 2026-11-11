@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
@@ -168,6 +168,8 @@ class SourceExtractionService:
             ],
             "pages": pages,
             "extraction_id": str(uuid4()),
+            # Orders extractions of the same pages, whatever order their runs finish in
+            "extraction_started_at": datetime.now(timezone.utc).isoformat(),
             REQUESTED_VIA: requested_via.value,
         }
         runs = [
@@ -271,7 +273,24 @@ class SourceExtractionService:
             raise ValueError(f"The source has {source.pages} pages, not {last}")
         if not chunk_text(source.text, page_starts=source.page_starts, pages=pages):
             raise ValueError(f"Pages {pages} hold no text")
-        return pages.strip()
+        return normalized_pages(pages)
+
+
+def normalized_pages(pages: str) -> str:
+    """
+    A page selection in one spelling, so the same pages always compare equal:
+    ranges sorted and merged where they overlap or touch ("3, 1-2" -> "1-3").
+
+    Raises:
+        ValueError: If the selection is malformed
+    """
+    merged: list[list[int]] = []
+    for first, last in sorted(parse_page_range(pages)):
+        if merged and first <= merged[-1][1] + 1:
+            merged[-1][1] = max(merged[-1][1], last)
+        else:
+            merged.append([first, last])
+    return ", ".join(str(first) if first == last else f"{first}-{last}" for first, last in merged)
 
 
 def _model(config: dict[str, Any]) -> dict[str, Any]:

@@ -405,6 +405,20 @@ class TestExtractionToProposal:
         operations = parts.proposals.get(done.proposal_id).operations
         assert {e["page"] for o in operations for e in o.evidence} == {2}
 
+    def test_extractions_of_other_pages_stay_side_by_side(self, client, app, parts, house):
+        source = add_pdf(client, house)
+        [page_2] = extract(client, source["id"], pages=" 2 , 2-2").json()["runs"]
+        app.state.executor.start()
+        page_2_run = wait_for(lambda: finished(app, page_2["run_id"]))
+        [whole] = extract(client, source["id"]).json()["runs"]
+        whole_run = wait_for(lambda: finished(app, whole["run_id"]))
+
+        page_2_proposal = parts.proposals.get(page_2_run.proposal_id)
+        assert page_2_proposal.client_metadata["pages"] == "2"
+        assert page_2_proposal.client_metadata["extraction_started_at"]
+        assert page_2_proposal.status is ProposalStatus.OPEN
+        assert parts.proposals.get(whole_run.proposal_id).client_metadata["pages"] is None
+
     def test_a_run_with_nothing_to_propose_completes_with_a_warning(self, client, app, house):
         source = add_pdf(client, house, pages=(["Nothing to see here."],), name="blank.pdf")
         [run] = extract(client, source["id"]).json()["runs"]

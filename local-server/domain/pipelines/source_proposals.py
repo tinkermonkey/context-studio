@@ -13,27 +13,41 @@ points at one of them by "$ref", and the rest proposed again, as the
 relationship reflection does. A run with nothing left to propose makes no
 proposal.
 
-A new proposal supersedes the open proposal of an earlier extraction of the
-same source by the same pipeline into the same dataset: what it still awaits
-is rejected (no decision is recorded), since the new run repeats what still
-applies. The proposal's client_metadata records `{source_id, run_id,
-pipeline}`, which is how earlier extractions are found.
+A new proposal supersedes the open proposal of an older extraction of the
+same source by the same pipeline into the same dataset from the same pages:
+what it still awaits is rejected (no decision is recorded), since the new run
+repeats what still applies. Extractions are ordered by when they started, not
+when they finished: a run that finishes after a newer extraction of the same
+pages has proposed is superseded by it instead. Superseding is best effort; a
+failure is a warning on the run. The proposal's client_metadata records
+`{source_id, run_id, pipeline, pages, extraction_id, extraction_started_at}`,
+which is how other extractions are found and ordered.
+
+Proposing to a taxonomy that mirrors an external source is refused for
+schema extraction unless its client asked over MCP (`check_may_propose`), as
+for every other run that proposes schema changes.
 """
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any
 
 from domain.ontology.ports import OntologyRepository
 from domain.pipelines.entities import PipelineType
+from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.individual_extraction.source_operations import plan_individual_operations
+from domain.pipelines.requested_via import ensure_may_propose_to
 from domain.pipelines.schema_extraction.source_operations import plan_schema_operations
 from domain.pipelines.source_operations import OperationPlan, PlannedOperation
 from domain.versioning.exceptions import ProposalValidationError
 from domain.versioning.proposal_service import ProposalService
 from domain.versioning.proposals import ChangeProposal, ProposalSource, ProposalStatus
+
+_logger = logging.getLogger(__name__)
 
 # Why a newer extraction of the same source rejects an older proposal's pending operations
 SUPERSEDED_REASON = "superseded by extraction proposal {}"
@@ -77,6 +91,21 @@ class SourceProposer:
     def __init__(self, proposals: ProposalService, ontology_repo: OntologyRepository) -> None:
         self._proposals = proposals
         self._repo = ontology_repo
+
+    def check_may_propose(self, taxonomy_id: str, input_data: Mapping[str, Any]) -> None:
+        """
+        Refuse, before any model call, a run whose proposal would change the
+        schema of a taxonomy that mirrors an external source for someone other
+        than its client over MCP.
+
+        Raises:
+            PipelineInputError: If the taxonomy doesn't exist, or it is mirrored
+                and the run's requested_via isn't mcp
+        """
+        taxonomy = self._repo.get_taxonomy(taxonomy_id)
+        if taxonomy is None:
+            raise PipelineInputError(f"No taxonomy {taxonomy_id}")
+        ensure_may_propose_to(taxonomy, input_data)
 
     def propose_individuals(
         self, run_id: str, input_data: Mapping[str, Any], triples: Sequence[dict[str, Any]]
@@ -161,6 +190,9 @@ class SourceProposer:
                         "source_id": source_id,
                         "run_id": run_id,
                         "pipeline": pipeline.value,
+                        "pages": _text(input_data.get("pages")),
+                        "extraction_id": _text(input_data.get("extraction_id")),
+                        "extraction_started_at": _text(input_data.get("extraction_started_at")),
                     },
                     dataset_id=dataset_id,
                 )
@@ -176,46 +208,96 @@ class SourceProposer:
                 else "Nothing to propose: the run found no candidates that make an operation"
             )
             return ProposalOutcome(None, 0, refused, plan.skipped, warnings)
-        self._supersede_earlier(proposal, source_id, pipeline)
+        warnings += self._supersede(proposal)
         return ProposalOutcome(
             proposal.id, len(proposal.operations), refused, plan.skipped, warnings
         )
 
-    def _supersede_earlier(
-        self, proposal: ChangeProposal, source_id: str, pipeline: PipelineType
-    ) -> None:
-        """Reject what earlier extractions' open proposals of this source still await."""
-        older: list[ChangeProposal] = []
+    def _supersede(self, proposal: ChangeProposal) -> list[str]:
+        """
+        Settle the new proposal against the other extractions of the same
+        source, pipeline, dataset and page selection: what an older
+        extraction's open proposal still awaits is rejected; and when a newer
+        extraction already proposed (this run finished late), what this one
+        awaits is rejected instead. Best effort: a failure is logged and
+        returned as a warning, and never undoes the new proposal.
+
+        Returns:
+            Warnings for the run, one per proposal that could not be settled
+        """
+        warnings: list[str] = []
+        try:
+            others = [
+                other
+                for other in self._pipeline_proposals(proposal.taxonomy_id)
+                if other.id != proposal.id and _same_extraction_scope(other, proposal)
+            ]
+        except Exception as exc:  # noqa: BLE001 - the new proposal stands regardless
+            _logger.exception("Could not list earlier extractions of proposal %s", proposal.id)
+            return [f"Could not supersede earlier extractions: {exc}"]
+        started = _started_at(proposal)
+        newer = [o for o in others if _started_at(o) > started]
+        older = [o for o in others if _started_at(o) < started]
+        if newer:
+            newest = max(newer, key=_started_at)
+            older = [proposal]
+            superseding = newest
+        else:
+            superseding = proposal
+        for other in older:
+            try:
+                current = self._proposals.get(other.id)
+                if current.status is not ProposalStatus.OPEN or not current.pending:
+                    continue
+                # Nobody judged these: no decision is recorded.
+                self._proposals.reject(
+                    current.id,
+                    [o.id for o in current.pending],
+                    note=SUPERSEDED_REASON.format(superseding.id),
+                    decided_by=None,
+                )
+            except Exception as exc:  # noqa: BLE001 - one failure never fails the run
+                _logger.exception("Could not supersede proposal %s", other.id)
+                warnings.append(f"Could not supersede proposal {other.id}: {exc}")
+        return warnings
+
+    def _pipeline_proposals(self, taxonomy_id: str) -> list[ChangeProposal]:
+        """Every pipeline proposal of the taxonomy, whatever its status."""
+        found: list[ChangeProposal] = []
         offset = 0
         while True:
             page = self._proposals.list_proposals(
-                taxonomy_id=proposal.taxonomy_id,
-                status=ProposalStatus.OPEN,
+                taxonomy_id=taxonomy_id,
                 source=ProposalSource.PIPELINE,
                 limit=_PAGE,
                 offset=offset,
             )
-            older += page
+            found += page
             if len(page) < _PAGE:
-                break
+                return found
             offset += _PAGE
-        for other in older:
-            meta = other.client_metadata or {}
-            if (
-                other.id == proposal.id
-                or not other.pending
-                or meta.get("source_id") != source_id
-                or meta.get("pipeline") != pipeline.value
-                or other.dataset_id != proposal.dataset_id
-            ):
-                continue
-            # Nobody judged these: no decision is recorded.
-            self._proposals.reject(
-                other.id,
-                [o.id for o in other.pending],
-                note=SUPERSEDED_REASON.format(proposal.id),
-                decided_by=None,
-            )
+
+
+def _same_extraction_scope(one: ChangeProposal, other: ChangeProposal) -> bool:
+    """Whether two proposals extract the same source, by the same pipeline, into the same
+    dataset, from the same pages."""
+    a, b = one.client_metadata or {}, other.client_metadata or {}
+    return (
+        a.get("source_id") is not None
+        and all(a.get(key) == b.get(key) for key in ("source_id", "pipeline", "pages"))
+        and one.dataset_id == other.dataset_id
+    )
+
+
+def _started_at(proposal: ChangeProposal) -> datetime:
+    """When the extraction behind a proposal started; its creation when it records none."""
+    value = (proposal.client_metadata or {}).get("extraction_started_at")
+    try:
+        started = datetime.fromisoformat(value) if isinstance(value, str) else None
+    except ValueError:
+        started = None
+    started = started or proposal.created_at
+    return started if started.tzinfo else started.replace(tzinfo=timezone.utc)
 
 
 def _without_refused(

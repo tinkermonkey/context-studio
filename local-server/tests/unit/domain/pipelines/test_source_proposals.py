@@ -8,16 +8,26 @@ the earlier extraction's open proposal; schema candidates become class,
 predicate and relationship-type creates.
 """
 
+import asyncio
+
 import pytest
 
+from domain.pipelines.entities import PipelineType
+from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.individual_extraction.source_operations import (
     plan_individual_operations,
 )
+from domain.pipelines.schema_extraction.orchestrator import (
+    SchemaExtractionOrchestrator,
+    SchemaExtractionState,
+)
+from domain.pipelines.source_extraction import normalized_pages
 from domain.pipelines.source_operations import passage_evidence
 from domain.pipelines.source_proposals import SourceProposer
 from domain.versioning.proposal_service import ProposalService
 from domain.versioning.proposals import OperationStatus, ProposalStatus
 from domain.versioning.provenance import evidence_problem
+from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.unit.domain.versioning.test_proposal_service import (  # noqa: F401 - fixtures
     ontology,
     proposals,
@@ -105,6 +115,11 @@ def plan(repo, house, triples, dataset="home"):
     )
 
 
+def started(minute):
+    """When an extraction started: minutes past a fixed hour."""
+    return {"extraction_started_at": f"2026-11-11T10:{minute:02d}:00+00:00"}
+
+
 def run_input(house, dataset="home", **extra):
     return {
         "source_id": SOURCE,
@@ -114,6 +129,14 @@ def run_input(house, dataset="home", **extra):
         "page_starts": PAGE_STARTS,
         **extra,
     }
+
+
+@pytest.mark.parametrize(
+    ("pages", "normalized"),
+    [("2", "2"), (" 3 , 1-2", "1-3"), ("1-3, 7", "1-3, 7"), ("7, 2-2, 5-6", "2, 5-7")],
+)
+def test_page_selections_have_one_spelling(pages, normalized):
+    assert normalized_pages(pages) == normalized
 
 
 class TestPassageEvidence:
@@ -302,7 +325,7 @@ class TestProposeIndividuals:
     def test_a_run_becomes_one_pipeline_proposal_in_the_dataset(self, service, repo, house):
         outcome = SourceProposer(service, repo).propose_individuals(
             "run-1",
-            run_input(house),
+            run_input(house, pages="2-3", extraction_id="x-1", **started(5)),
             [
                 typing("WRF555", "house_appliance", [passage("WRF555", 120, 2)]),
                 typing("Acme", "house_business"),
@@ -319,6 +342,9 @@ class TestProposeIndividuals:
             "source_id": SOURCE,
             "run_id": "run-1",
             "pipeline": "individual_extraction",
+            "pages": "2-3",
+            "extraction_id": "x-1",
+            "extraction_started_at": "2026-11-11T10:05:00+00:00",
         }
         assert [(o.kind.value, o.ref) for o in proposal.operations] == [
             ("individual", "i1"),
@@ -387,6 +413,111 @@ class TestProposeIndividuals:
         )
         assert service.get(second.proposal_id).status is ProposalStatus.OPEN
         assert service.get(other_dataset.proposal_id).status is ProposalStatus.OPEN
+
+    def test_another_page_selection_is_left_open(self, service, repo, house):
+        proposer = SourceProposer(service, repo)
+        first = proposer.propose_individuals(
+            "r1", run_input(house, pages="1-10", **started(1)), [typing("A", "Business")]
+        )
+        second = proposer.propose_individuals(
+            "r2", run_input(house, pages="11-20", **started(2)), [typing("B", "Business")]
+        )
+        third = proposer.propose_individuals(
+            "r3", run_input(house, pages="1-10", **started(3)), [typing("C", "Business")]
+        )
+
+        assert service.get(first.proposal_id).status is ProposalStatus.DONE
+        assert service.get(second.proposal_id).status is ProposalStatus.OPEN
+        assert service.get(third.proposal_id).status is ProposalStatus.OPEN
+        assert service.get(third.proposal_id).client_metadata["pages"] == "1-10"
+
+    def test_an_older_extraction_finishing_late_never_supersedes_a_newer_one(
+        self, service, repo, house
+    ):
+        proposer = SourceProposer(service, repo)
+        newer = proposer.propose_individuals(
+            "r2", run_input(house, **started(2)), [typing("B", "Business")]
+        )
+        late = proposer.propose_individuals(
+            "r1", run_input(house, **started(1)), [typing("A", "Business")]
+        )
+
+        assert service.get(newer.proposal_id).status is ProposalStatus.OPEN
+        stale = service.get(late.proposal_id)
+        assert [o.status for o in stale.operations] == [OperationStatus.REJECTED]
+        assert stale.operations[0].reason == (
+            f"superseded by extraction proposal {newer.proposal_id}"
+        )
+        assert stale.client_metadata["extraction_started_at"] == started(1)["extraction_started_at"]
+
+    def test_a_failure_to_supersede_is_a_warning_and_the_proposal_stands(
+        self, service, repo, house, monkeypatch
+    ):
+        proposer = SourceProposer(service, repo)
+        first = proposer.propose_individuals(
+            "r1", run_input(house, **started(1)), [typing("A", "Business")]
+        )
+
+        def broken(*args, **kwargs):
+            raise RuntimeError("database is locked")
+
+        monkeypatch.setattr(service, "reject", broken)
+        second = proposer.propose_individuals(
+            "r2", run_input(house, **started(2)), [typing("B", "Business")]
+        )
+
+        assert second.proposal_id is not None
+        assert service.get(second.proposal_id).status is ProposalStatus.OPEN
+        assert service.get(first.proposal_id).status is ProposalStatus.OPEN
+        assert second.warnings == [
+            f"Could not supersede proposal {first.proposal_id}: database is locked"
+        ]
+
+    def test_a_derived_class_sharing_a_title_does_not_hide_the_real_one(
+        self, ontology, repo, house
+    ):
+        computed = ontology.create_scheme(taxonomy_id=house["taxonomy"], title="Computed views")
+        ontology.create_class(computed.id, "Widget", derived=True)
+        concrete = ontology.create_scheme(taxonomy_id=house["taxonomy"], title="Things")
+        widget = ontology.create_class(concrete.id, "Widget")
+
+        result = plan(repo, house, [typing("Sprocket", "Widget")])
+
+        assert [o.draft.fields["class_ids"] for o in result.operations] == [[widget.id]]
+
+
+class TestMirroredTaxonomy:
+    @pytest.mark.parametrize("via", ["api", "chat", None])
+    def test_schema_proposals_to_a_mirrored_taxonomy_are_refused_before_any_model_call(
+        self, ontology, service, repo, house, via
+    ):
+        ontology.set_taxonomy_mirrored(house["taxonomy"], True)
+        llm = FakeLLMProvider(response_content="[]")
+        orchestrator = SchemaExtractionOrchestrator(
+            llm_provider=llm,
+            ontology_repo=repo,
+            run_id="run-s",
+            proposer=SourceProposer(service, repo),
+        )
+        state = SchemaExtractionState(
+            run_id="run-s",
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            input_data={
+                "documents": ["A water filter."],
+                "scope": house["taxonomy"],
+                "source_id": SOURCE,
+                **({"requested_via": via} if via else {}),
+            },
+        )
+
+        with pytest.raises(PipelineInputError, match="mirrors an external source"):
+            asyncio.run(orchestrator.execute(state))
+        assert llm.call_count == 0
+        assert service.list_proposals() == []
+
+    def test_its_client_over_mcp_may_propose(self, ontology, service, repo, house):
+        ontology.set_taxonomy_mirrored(house["taxonomy"], True)
+        SourceProposer(service, repo).check_may_propose(house["taxonomy"], {"requested_via": "mcp"})
 
 
 class TestProposeSchema:

@@ -188,10 +188,16 @@ def _is_typing(triple: dict[str, Any]) -> bool:
 
 
 def _class_aliases(repo: OntologyRepository, taxonomy_id: str) -> dict[str, Class]:
-    """Every identifying form of the taxonomy's classes (lowercased) -> the class."""
+    """
+    Every identifying form of the taxonomy's classes (lowercased) -> the class.
+    Derived classes are left out, so one sharing a title never shadows the
+    class an individual can be created in.
+    """
     aliases: dict[str, Class] = {}
     for scheme in repo.list_concept_schemes(taxonomy_id=taxonomy_id, limit=None):
         for cls in repo.list_classes(concept_scheme_id=scheme.id, limit=None):
+            if cls.derived:
+                continue  # computed by its client, never an extraction target
             for alias in class_reference_aliases(cls):
                 aliases.setdefault(alias.strip().lower(), cls)
     return aliases
