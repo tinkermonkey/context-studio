@@ -116,6 +116,7 @@ class TestEvidenceProblem:
             (passage(start=True), "from 0 to"),
             (passage(end=1.5), "from 0 to"),
             (passage(page="5"), "from 0 to"),
+            (passage(page=0), "counts from 1"),
             (passage(start=9, end=3), "before its start"),
             ({"source_id": SOURCE, "start": 1}, "needs end"),
             (passage(source_id="  "), "must not be empty"),
@@ -388,6 +389,10 @@ class TestUnstorablePassages:
 
     def test_the_bound_itself_is_accepted(self):
         assert evidence_problem(passage(MAX_OFFSET, MAX_OFFSET, MAX_OFFSET)) is None
+
+    def test_an_entity_source_refuses_page_zero(self):
+        with pytest.raises(ValueError, match="counts from 1"):
+            EntitySource("e", "individual", SOURCE, "p", 1, 0, 10, datetime.now(timezone.utc), 0)
 
     def test_an_entity_source_refuses_an_offset_past_the_bound(self):
         with pytest.raises(ValueError, match="from 0 to"):

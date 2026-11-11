@@ -58,6 +58,13 @@ class FakeChangeProposalRepository:
     ) -> int:
         return len(self._matching(taxonomy_id, status, source, landed))
 
+    def operation_counts(self, proposal_ids: Sequence[str]) -> dict[str, int]:
+        return {
+            proposal_id: len(self._proposals[proposal_id].operations)
+            for proposal_id in proposal_ids
+            if proposal_id in self._proposals
+        }
+
     def set_landed(self, proposal_id: str, landed: Optional[Landing]) -> None:
         if proposal_id not in self._proposals:
             raise ValueError(f"No proposal {proposal_id}")

@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from domain.extraction.sources import (
     Source,
@@ -14,6 +14,8 @@ from domain.extraction.sources import (
     SourceKind,
     SourceStatus,
 )
+from domain.pipelines.entities import PipelineRunStatus
+from domain.pipelines.source_extraction import LastExtraction, LastExtractionRun
 
 _DATASET = Field(
     None,
@@ -61,6 +63,84 @@ class SourceHeadingSchema(BaseModel):
         return cls(start=heading.start, title=heading.title, level=heading.level)
 
 
+class LastExtractionRunSchema(BaseModel):
+    """One run of a source's last extraction."""
+
+    run_id: str
+    pipeline: Literal["individual_extraction", "schema_extraction"]
+    status: PipelineRunStatus
+    items_done: Optional[int] = Field(None, description="Chunks done; null until reported")
+    items_total: Optional[int] = Field(None, description="Chunks in all; null until known")
+    proposal_id: Optional[str] = Field(None, description="The proposal the run produced")
+    operations: Optional[int] = Field(None, description="How many operations that proposal has")
+
+    @classmethod
+    def from_domain(cls, run: LastExtractionRun) -> "LastExtractionRunSchema":
+        return cls(
+            run_id=run.run_id,
+            pipeline=run.pipeline.value,  # type: ignore[arg-type]
+            status=run.status,
+            items_done=run.items_done,
+            items_total=run.items_total,
+            proposal_id=run.proposal_id,
+            operations=run.operations,
+        )
+
+
+class LastExtractionSchema(BaseModel):
+    """The runs a source's most recent extract call started."""
+
+    started_at: datetime
+    dataset_id: Optional[str] = None
+    runs: list[LastExtractionRunSchema] = Field(
+        ..., description="Individual extraction first, then schema extraction when asked for"
+    )
+
+    @classmethod
+    def from_domain(cls, extraction: LastExtraction) -> "LastExtractionSchema":
+        return cls(
+            started_at=extraction.started_at,
+            dataset_id=extraction.dataset_id,
+            runs=[LastExtractionRunSchema.from_domain(run) for run in extraction.runs],
+        )
+
+
+class SourceExtractRequest(BaseModel):
+    """Extract a source into proposals."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    dataset: str = Field(
+        ..., min_length=1, max_length=255, description="The dataset (identifier or id)"
+    )
+    configuration_ref: Optional[str] = Field(
+        None,
+        max_length=255,
+        description="An individual-extraction configuration; extraction-default when omitted",
+    )
+    pages: Optional[str] = Field(
+        None, max_length=200, description='Pages to extract, such as "12-30" or "1-3, 7"'
+    )
+    schema_: bool = Field(
+        False,
+        alias="schema",
+        description="Also run schema extraction, proposing classes and relationship types",
+    )
+
+
+class SourceExtractRun(BaseModel):
+    """A run an extract call started."""
+
+    run_id: str
+    pipeline: Literal["individual_extraction", "schema_extraction"]
+
+
+class SourceExtractResponse(BaseModel):
+    """The runs an extract call started, individual extraction first."""
+
+    runs: list[SourceExtractRun]
+
+
 class SourceResponse(BaseModel):
     """A source without its text (GET /api/sources/{id}/text returns that)."""
 
@@ -86,10 +166,22 @@ class SourceResponse(BaseModel):
     removed_at: Optional[datetime] = Field(
         None, description="Set once removed; a removed source still answers for provenance"
     )
+    last_extraction: Optional[LastExtractionSchema] = Field(
+        None,
+        description=(
+            "The runs of the most recent extract call, with their progress and proposals;"
+            " null when never extracted"
+        ),
+    )
 
     @classmethod
-    def from_domain(cls, source: Source) -> "SourceResponse":
+    def from_domain(
+        cls, source: Source, last_extraction: Optional[LastExtraction] = None
+    ) -> "SourceResponse":
         return cls(
+            last_extraction=(
+                LastExtractionSchema.from_domain(last_extraction) if last_extraction else None
+            ),
             id=source.id,
             taxonomy_id=source.taxonomy_id,
             dataset_id=source.dataset_id,

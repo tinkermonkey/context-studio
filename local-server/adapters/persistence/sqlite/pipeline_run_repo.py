@@ -42,6 +42,7 @@ from domain.pipelines.entities import (
 from domain.pipelines.entities import (
     PipelineRunStatus,
     PipelineType,
+    SourceRun,
 )
 from domain.pipelines.entities import (
     SchemaConnectionRefinementRun as DomainSchemaConnectionRefinementRun,
@@ -895,6 +896,71 @@ class PipelineRepository:
             return True
 
         return self._write("link a pipeline run to its proposal", update)
+
+    def list_source_runs(self, source_ids: list[str]) -> list[SourceRun]:
+        """
+        Every extraction run on these sources (input_summary.source_id), with
+        only the columns a source's last extraction shows: one query, never
+        the runs' text or output.
+
+        Raises:
+            PipelineStorageError: If the query fails
+        """
+        if not source_ids:
+            return []
+        source_id = func.json_extract(PipelineRun.input_summary, "$.source_id")
+        session = self._get_session()
+        try:
+            rows = (
+                session.query(
+                    PipelineRun.id,
+                    PipelineRun.pipeline_type,
+                    PipelineRun.status,
+                    source_id,
+                    func.json_extract(PipelineRun.input_summary, "$.extraction_id"),
+                    func.json_extract(PipelineRun.input_summary, "$.dataset_id"),
+                    PipelineRun.created_at,
+                    PipelineRun.items_done,
+                    PipelineRun.items_total,
+                    PipelineRun.proposal_id,
+                )
+                .filter(source_id.in_(list(source_ids)))
+                .all()
+            )
+        except SQLAlchemyError as e:
+            logger.error(f"Database error when listing source runs: {e}")
+            raise PipelineStorageError("Failed to list the runs on sources") from e
+        finally:
+            if self._should_close_session():
+                session.close()
+        return [
+            SourceRun(
+                run_id=run_id,
+                pipeline_type=PipelineType(pipeline_type),
+                status=PipelineRunStatus(status),
+                source_id=str(run_source),
+                extraction_id=extraction_id,
+                dataset_id=dataset_id,
+                created_at=(
+                    created_at if created_at.tzinfo else created_at.replace(tzinfo=timezone.utc)
+                ),
+                items_done=items_done,
+                items_total=items_total,
+                proposal_id=proposal_id,
+            )
+            for (
+                run_id,
+                pipeline_type,
+                status,
+                run_source,
+                extraction_id,
+                dataset_id,
+                created_at,
+                items_done,
+                items_total,
+                proposal_id,
+            ) in rows
+        ]
 
     def get_change_events_for_run(self, run_id: str) -> "ChangeEventDictList":
         """

@@ -182,6 +182,7 @@ from domain.pipelines.schema_extraction.bootstrap import register_schema_extract
 from domain.pipelines.schema_extraction.recognition_preview import (
     SchemaRecognitionPreviewService,
 )
+from domain.pipelines.source_extraction import SourceExtractionService
 from domain.pipelines.schema_node_connection_refinement import (
     register_schema_node_connection_refinement,
 )
@@ -916,6 +917,15 @@ async def lifespan(app: FastAPI):
             llm_provider=llm_router,
             app_state=app.state,
             workers=settings.pipelines.background_workers,
+        )
+        # Extracting a source (#1552): background runs that each end in a proposal
+        app.state.source_extraction_service = SourceExtractionService(
+            sources=SQLiteSourceRepository(local_session_factory),
+            ontology_repo=cast(OntologyRepository, ontology_repo),
+            configurations=config_registry,
+            submitter=app.state.run_executor,
+            runs=pipeline_run_repo,
+            proposals=proposal_repo,
         )
 
         def run_tools_for(requested_via: RequestedVia) -> Sequence[ToolBase]:

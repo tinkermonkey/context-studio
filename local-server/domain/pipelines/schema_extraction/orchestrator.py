@@ -12,6 +12,12 @@ Execution flow (7 stages):
 5. Connection proposal — suggest relationships and properties
 6. Disambiguation — handle multi-sense terms with separate candidates
 7. Confidence scoring — clamp confidence to [0, 1]
+
+A run on a source (#1552) may name `pages` (with the source's `page_starts`):
+only text on those pages is read, and provenance is found only there (offsets
+still index the whole text). It ends in one change proposal of its class and
+property candidates when a proposer is wired (see
+domain/pipelines/source_proposals.py); the run's `proposal_id` names it.
 """
 
 from __future__ import annotations
@@ -20,7 +26,7 @@ import json
 import logging
 import re
 from dataclasses import dataclass, field, replace
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from domain.extraction.chunking import MAX_CHUNK_CHARS, chunk_text
 from domain.extraction.span_resolution import find_all_spans
@@ -35,6 +41,9 @@ from domain.pipelines.orchestration.base import (
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 from domain.pipelines.schema_extraction.prompts import SCHEMA_EXTRACTION_STAGES
 from domain.pipelines.stage_prompts import render, resolve_stage_prompts
+
+if TYPE_CHECKING:
+    from domain.pipelines.source_proposals import SourceProposer
 
 _logger = logging.getLogger(__name__)
 
@@ -118,6 +127,36 @@ def join_documents(documents: Any) -> str:
     if not isinstance(documents, list):
         return ""
     return " ".join(doc for doc in documents if isinstance(doc, str))
+
+
+def _selected_pages(text: str, input_data: dict[str, Any]) -> str:
+    """
+    The text with everything off the selected `pages` blanked out (as spaces),
+    so offsets still index the whole text and nothing off those pages is read
+    or found; the text itself without a selection.
+
+    Raises:
+        PipelineInputError: If the selection or page_starts is malformed, or
+            the selected pages hold no text
+    """
+    pages = input_data.get("pages")
+    if pages is None or pages == "":
+        return text
+    try:
+        chunks = chunk_text(
+            text, page_starts=input_data.get("page_starts") or None, pages=str(pages)
+        )
+    except (TypeError, ValueError) as error:
+        raise PipelineInputError(str(error)) from error
+    if not chunks:
+        raise PipelineInputError("The selected pages hold no text")
+    parts: list[str] = []
+    position = 0
+    for chunk in chunks:
+        parts += [" " * (chunk.start - position), text[chunk.start : chunk.end]]
+        position = chunk.end
+    parts.append(" " * (len(text) - position))
+    return "".join(parts)
 
 
 @dataclass
@@ -221,6 +260,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         run_id: str | None = None,
         status_writer: PipelineRunStatusWriter | None = None,
         config: dict[str, Any] | None = None,
+        proposer: "SourceProposer | None" = None,
     ) -> None:
         """
         Initialize orchestrator with LLM provider and optional ontology repo.
@@ -232,12 +272,15 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             status_writer: Optional port for writing run status to persistence
             config: The run's configuration; its ``stage_prompts`` override the
                 default stage prompts
+            proposer: Proposes a run on a source (input `source_id`) as one
+                change proposal; without one, it proposes nothing
         """
         super().__init__(llm_provider, run_id, status_writer)
         self._ontology_repo = ontology_repo
         self._prompts = resolve_stage_prompts(
             self.STAGE_PROMPTS, (config or {}).get("stage_prompts")
         )
+        self._proposer = proposer
 
     async def execute(self, state: PipelineState) -> PipelineState:
         """
@@ -270,7 +313,14 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             )
             raise exc
 
-        source_text = join_documents(documents)
+        source_text = _selected_pages(join_documents(documents), schema_state.input_data)
+        proposer = self._proposer if schema_state.input_data.get("source_id") else None
+        proposing = proposer is not None
+        if proposer is not None:
+            # Before any model call: a mirrored taxonomy's client proposes its schema changes
+            proposer.check_may_propose(
+                str(schema_state.input_data.get("scope") or ""), schema_state.input_data
+            )
 
         schema_state = replace(
             schema_state,
@@ -303,6 +353,10 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             # Finalize
             schema_state = await self._stage_finalize(schema_state)
 
+            # A run on a source ends in one proposal of its candidates
+            if proposing:
+                schema_state = self._propose(schema_state)
+
         except PipelineInputError:
             schema_state = replace(schema_state, current_status=PipelineRunStatus.FAILED)
             raise
@@ -321,6 +375,25 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             ) from exc
 
         return schema_state
+
+    def _propose(self, state: SchemaExtractionState) -> SchemaExtractionState:
+        """Propose the run's candidates; the result gains the proposal's id and counts."""
+        assert self._proposer is not None
+        result = dict(state.result or {})
+        try:
+            outcome = self._proposer.propose_schema(
+                state.run_id, state.input_data, result.get("candidates") or []
+            )
+        except Exception as exc:
+            raise PipelineExecutionError(
+                f"Proposing the extracted candidates failed: {exc}"
+            ) from exc
+        warnings = [{"stage": "propose", "error": warning} for warning in outcome.warnings]
+        return replace(
+            state,
+            result={**result, **outcome.to_json()},
+            parse_warnings=[*state.parse_warnings, *warnings],
+        )
 
     # ------------------------------------------------------------------
     # Stage helpers

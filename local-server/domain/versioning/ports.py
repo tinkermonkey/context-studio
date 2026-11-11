@@ -141,6 +141,10 @@ class ChangeProposalRepository(Protocol):
         """Count proposals matching the filters."""
         ...
 
+    def operation_counts(self, proposal_ids: Sequence[str]) -> dict[str, int]:
+        """How many operations each of these proposals has (missing ones are left out)."""
+        ...
+
     def set_landed(self, proposal_id: str, landed: Optional[Landing]) -> None:
         """Record where the proposal landed, or clear it (None)."""
         ...

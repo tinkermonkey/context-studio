@@ -21,6 +21,7 @@ from typing import Any, Callable
 
 from adapters.factories.orchestrator_factory import (
     build_orchestrator_services,
+    build_run_specific_data,
     create_orchestrator,
     create_pipeline_state,
 )
@@ -145,7 +146,8 @@ class BackgroundRunExecutor:
             implementation_id: Registered implementation
             configuration_ref: Registered configuration (its latest version is pinned)
             input_data: The pipeline's input
-            specific_data: Type-specific run fields (see build_run_specific_data)
+            specific_data: Type-specific run fields; built from the input by
+                build_run_specific_data when omitted
 
         Returns:
             The PENDING run
@@ -154,6 +156,8 @@ class BackgroundRunExecutor:
             UnknownPipelineError: The implementation or configuration is not registered
             PipelineStorageError: The run could not be stored
         """
+        if specific_data is None:
+            specific_data = build_run_specific_data(pipeline_type, input_data)
         if self._implementations.get(pipeline_type, implementation_id) is None:
             raise UnknownPipelineError(
                 f"Implementation not found: {pipeline_type.value}:{implementation_id}"

@@ -82,8 +82,23 @@ class PipelineTypeRegistry:
                     'str (optional) — page selection such as "12-30" or "1-3, 7";'
                     " only text on those pages is extracted. Needs page_starts"
                 ),
+                "source_title": (
+                    "str (optional) — the source's title, for the title of the proposal a"
+                    " run on a source ends in"
+                ),
+                "extraction_id": (
+                    "str (optional) — the extract call that started the run (runs started"
+                    " together share it); recorded in input_summary with source_id"
+                ),
             },
             output_contract={
+                "proposal_id": (
+                    "str | null — a run on a source (source_id) ends in one change proposal"
+                    " of its merged triples (individual and relationship creates with"
+                    " evidence and near-match alternatives); null when nothing was proposed."
+                    " With proposed_operations, refused_operations [{label, error}] and"
+                    " skipped_candidates [{label, reason}]"
+                ),
                 "triples": (
                     "list[dict] — extracted triples with subject, predicate, object,"
                     " confidence and provenance {quote, start, end}. Chunked runs merge"
@@ -107,10 +122,23 @@ class PipelineTypeRegistry:
             input_contract={
                 "documents": "list[str] — source documents to extract from",
                 "scope": "str (optional) — extraction scope",
+                "source_id": (
+                    "str (optional) — the source the documents are; the run ends in one"
+                    " change proposal of its candidates (class, predicate and relationship-type"
+                    " creates with evidence) to the scope's taxonomy"
+                ),
+                "pages": (
+                    'str (optional) — page selection such as "12-30"; only text on those'
+                    " pages is read. Needs page_starts (offset at which each page starts)"
+                ),
             },
             output_contract={
                 "classes": "list[dict] — extracted classes",
                 "properties": "list[dict] — extracted properties",
+                "proposal_id": (
+                    "str | null — a run on a source: its proposal, null when nothing was"
+                    " proposed (with proposed_operations, refused_operations, skipped_candidates)"
+                ),
             },
         ),
         PipelineType.SCHEMA_NODE_GROUNDING: PipelineTypeDefinition(

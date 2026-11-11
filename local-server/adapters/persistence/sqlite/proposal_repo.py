@@ -120,6 +120,18 @@ class SQLiteChangeProposalRepository:
         with self._session_factory() as session:
             return _filtered(session, taxonomy_id, status, source, landed).count()
 
+    def operation_counts(self, proposal_ids: Sequence[str]) -> dict[str, int]:
+        if not proposal_ids:
+            return {}
+        with self._session_factory() as session:
+            rows = (
+                session.query(ProposalOperation.proposal_id, func.count(ProposalOperation.id))
+                .filter(ProposalOperation.proposal_id.in_(list(proposal_ids)))
+                .group_by(ProposalOperation.proposal_id)
+                .all()
+            )
+            return {proposal_id: count for proposal_id, count in rows}
+
     def set_landed(self, proposal_id: str, landed: Optional[Landing]) -> None:
         with self._session_factory() as session:
             proposal = session.get(ChangeProposalRun, proposal_id)
