@@ -31,11 +31,11 @@ from domain.pipelines.requested_via import REQUESTED_VIA, RequestedVia
 
 PIPELINES = [t.value for t in PipelineType]
 # Its defaults don't fit extraction (no configuration is registered as 'default', and
-# it needs ontology_id and model), so clients extract another way (#1451).
+# it needs ontology_id and model), so clients extract a source instead (#1451).
 INDIVIDUAL_EXTRACTION_REFUSED = (
-    "run_refinement can't start individual_extraction. Extraction from a client goes"
-    " through Context Studio's extraction review page today, and through extract_source"
-    " once it ships (#1451)."
+    "run_refinement can't start individual_extraction. To extract from a document over"
+    " MCP, add it with add_source, then call extract_source; get_run follows the runs it"
+    " starts."
 )
 
 
@@ -156,11 +156,11 @@ class GetRunTool(ToolBase):
 
     name = "get_run"
     description = (
-        "Get a pipeline run started with run_refinement: its status (pending, running,"
-        " completed, failed, cancelled, or interrupted by a server restart), progress"
-        " (items_done of items_total), failure_reason, and the proposal_id of the change"
-        " proposal it produced (null until then, or when it proposed nothing). Review"
-        " the proposal with get_proposal."
+        "Get a pipeline run started with run_refinement or extract_source: its status"
+        " (pending, running, completed, failed, cancelled, or interrupted by a server"
+        " restart), progress (items_done of items_total), failure_reason, and the"
+        " proposal_id of the change proposal it produced (null until then, or when it"
+        " proposed nothing). Review the proposal with get_proposal."
     )
     input_schema = {
         "type": "object",

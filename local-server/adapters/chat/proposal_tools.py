@@ -832,7 +832,8 @@ class ListProposalsTool(_ProposalTool):
     description = (
         "List change proposals, newest first, optionally for one taxonomy and with one"
         " status (open: awaiting decisions; done: every operation applied or rejected;"
-        " reverted). Each has its id, title, source, operation counts by status and,"
+        " reverted) and source (pipeline: from extract_source and other runs; mcp, chat,"
+        " bundle, user). Each has its id, title, source, operation counts by status and,"
         " once its client landed it in the taxonomy's source, landed (repo, commit,"
         " spec_version, landed_at). landed false with status done lists the decided"
         " proposals not yet landed. Done proposals with applied operations are the"
@@ -843,6 +844,11 @@ class ListProposalsTool(_ProposalTool):
         "properties": {
             "taxonomy_id": {"type": "string", "description": "Only proposals about this taxonomy"},
             "status": {"type": "string", "enum": [s.value for s in ProposalStatus]},
+            "source": {
+                "type": "string",
+                "enum": [s.value for s in ProposalSource],
+                "description": "Only proposals from this source (pipeline: extraction runs)",
+            },
             "landed": {
                 "type": "boolean",
                 "description": "Only proposals landed (true) or not landed (false) in the source",
@@ -860,15 +866,23 @@ class ListProposalsTool(_ProposalTool):
     def run(self, args: dict[str, Any]) -> ToolOutcome:
         taxonomy_id = optional_str(args, "taxonomy_id")
         status = _status(optional_str(args, "status"))
+        source = _source(optional_str(args, "source"))
         limit = int_arg(args, "limit", DEFAULT_LIMIT, 1, MAX_LIMIT)
         offset = int_arg(args, "offset", 0, 0, 1_000_000)
         landed = args.get("landed")
         if landed is not None and not isinstance(landed, bool):
             raise ToolArgumentError("'landed' must be true or false")
         proposals = self._service.list_proposals(
-            taxonomy_id=taxonomy_id, status=status, limit=limit, offset=offset, landed=landed
+            taxonomy_id=taxonomy_id,
+            status=status,
+            source=source,
+            limit=limit,
+            offset=offset,
+            landed=landed,
         )
-        total = self._service.count_proposals(taxonomy_id=taxonomy_id, status=status, landed=landed)
+        total = self._service.count_proposals(
+            taxonomy_id=taxonomy_id, status=status, source=source, landed=landed
+        )
         payload = {
             "items": [_proposal_summary(p) for p in proposals],
             "total": total,
@@ -1102,6 +1116,16 @@ def _status(value: Optional[str]) -> Optional[ProposalStatus]:
     except ValueError:
         choices = ", ".join(s.value for s in ProposalStatus)
         raise ToolArgumentError(f"'status' must be one of {choices}") from None
+
+
+def _source(value: Optional[str]) -> Optional[ProposalSource]:
+    if value is None:
+        return None
+    try:
+        return ProposalSource(value)
+    except ValueError:
+        choices = ", ".join(s.value for s in ProposalSource)
+        raise ToolArgumentError(f"'source' must be one of {choices}") from None
 
 
 def build_proposal_tools(service: ProposalService, source: ProposalSource) -> list[ToolBase]:

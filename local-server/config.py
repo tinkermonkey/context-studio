@@ -323,6 +323,23 @@ class SourcesConfig(BaseModel):
         description="Folders a client may add a source from by path (over MCP); nothing else",
     )
 
+    @field_validator("allowed_roots")
+    @classmethod
+    def validate_allowed_roots(cls, roots: List[str]) -> List[str]:
+        """
+        Every root absolute (after ~ expands), so none can mean the server's
+        working directory, which holds config.json and .env.
+        """
+        expanded = []
+        for root in roots:
+            path = os.path.expanduser(root.strip())
+            if not root.strip() or not os.path.isabs(path):
+                raise ValueError(
+                    f"sources.allowed_roots entries must be absolute folder paths, not {root!r}"
+                )
+            expanded.append(path)
+        return expanded
+
 
 class DecisionModelInstanceConfig(BaseModel):
     """

@@ -33,6 +33,7 @@ from adapters.chat.proposal_tools import (
     build_proposal_tools,
 )
 from adapters.chat.run_tools import build_run_tools
+from adapters.chat.source_tools import build_source_tools
 from adapters.chat.tools import ToolBase, build_chat_tools
 from adapters.clustering.sklearn_clusterer import SklearnClusterer
 
@@ -981,6 +982,11 @@ async def lifespan(app: FastAPI):
                             proposal_service, ontology_repo, ProposalSource.MCP
                         ),
                         *run_tools_for(RequestedVia.MCP),
+                        *build_source_tools(
+                            source_service,
+                            app.state.source_extraction_service,
+                            settings.sources.allowed_roots,
+                        ),
                         *build_claim_tools(claim_service),
                     ],
                 )
