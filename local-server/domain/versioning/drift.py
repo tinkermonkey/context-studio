@@ -12,7 +12,8 @@ the taxonomy directly.
 A real run supersedes the open proposals of earlier re-imports of the same
 source (`supersede_earlier_imports`): the new one repeats whatever still
 applies. One that finds no drift records the source's revision on the
-taxonomy, as the taxonomy then matches it.
+taxonomy, as the taxonomy then matches it, along with any label of that
+revision the taxonomy's external references keep (`taxonomy_references`).
 """
 
 from __future__ import annotations
@@ -21,7 +22,7 @@ import threading
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol
 
-from domain.ontology.value_objects import SourceRevision
+from domain.ontology.value_objects import ExternalReference, SourceRevision
 from domain.versioning.bundle_import import bundle_source_detail, supersede_earlier_imports
 from domain.versioning.proposals import ChangeProposal, OperationDraft, ProposalSource
 
@@ -71,6 +72,11 @@ class DriftPlan:
         source_revision: The source's revision as read
         entries: What differs, by entity
         operations: Drafts that make the taxonomy match, in apply order
+        taxonomy_references: The taxonomy's external references with the
+            source's revision label on them brought up to date (DR's spec
+            reference keeps the spec version), recorded with the revision when
+            nothing differs; None when they already match. It isn't drift: no
+            operation sets it.
     """
 
     taxonomy_id: str
@@ -78,6 +84,7 @@ class DriftPlan:
     source_revision: SourceRevision | None
     entries: list[DriftEntry] = field(default_factory=list)
     operations: list[OperationDraft] = field(default_factory=list)
+    taxonomy_references: list[ExternalReference] | None = None
 
 
 class DriftPlanner(Protocol):
@@ -147,7 +154,11 @@ class DriftImportService:
                 return DriftResult(plan, proposal, True)
             supersede_earlier_imports(self._proposals, plan.taxonomy_id, plan.source, proposal)
             if proposal is None and not plan.entries:
-                self._ontology.set_taxonomy_source_revision(plan.taxonomy_id, plan.source_revision)
+                self._ontology.set_taxonomy_source_revision(
+                    plan.taxonomy_id,
+                    plan.source_revision,
+                    external_references=plan.taxonomy_references,
+                )
             return DriftResult(plan, proposal, False)
 
     def _propose(self, plan: DriftPlan, dry_run: bool) -> ChangeProposal:

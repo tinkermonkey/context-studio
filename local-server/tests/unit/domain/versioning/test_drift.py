@@ -1,9 +1,11 @@
 """Unit tests for the drift re-import service (#1464), with a fake planner."""
 
+from types import MappingProxyType
+
 import pytest
 
 from domain.ontology.services import OntologyService
-from domain.ontology.value_objects import SourceRevision
+from domain.ontology.value_objects import ExternalReference, SourceRevision
 from domain.versioning.drift import DriftEntry, DriftError, DriftImportService, DriftPlan
 from domain.versioning.proposal_service import OperationDraft, ProposalService
 from domain.versioning.proposals import (
@@ -20,6 +22,7 @@ from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_proposal_repository import FakeChangeProposalRepository
 
 REVISION = SourceRevision(repo="dr", commit="abcdef1234", spec_version="0.11.0")
+LABELLED = [ExternalReference("dr", "spec", metadata=MappingProxyType({"spec_version": "0.11.0"}))]
 
 
 class StubRevertService:
@@ -34,11 +37,17 @@ class FakePlanner:
         self.taxonomy_id, self.class_id = taxonomy_id, class_id
         self.title: str | None = None
         self.error: Exception | None = None
+        self.references: list[ExternalReference] | None = None
 
     def plan(self, location):
         if self.error is not None:
             raise self.error
-        plan = DriftPlan(taxonomy_id=self.taxonomy_id, source="spec", source_revision=REVISION)
+        plan = DriftPlan(
+            taxonomy_id=self.taxonomy_id,
+            source="spec",
+            source_revision=REVISION,
+            taxonomy_references=self.references,
+        )
         if self.title is not None:
             plan.entries.append(
                 DriftEntry(kind="class", source_id="x.op", change="update", entity_id=self.class_id)
@@ -122,6 +131,34 @@ def test_a_dry_run_with_no_drift_records_nothing(world):
     ontology, _, _, service, taxonomy_id = world
     service.reimport("spec/", dry_run=True)
     assert ontology.get_taxonomy(taxonomy_id).source_revision is None
+
+
+def test_no_drift_records_the_revision_label_on_the_taxonomy_references(world):
+    ontology, _, planner, service, taxonomy_id = world
+    planner.references = LABELLED
+
+    service.reimport("spec/", dry_run=False)
+
+    assert ontology.get_taxonomy(taxonomy_id).external_references == LABELLED
+
+
+def test_a_dry_run_leaves_the_taxonomy_references(world):
+    ontology, _, planner, service, taxonomy_id = world
+    planner.references = LABELLED
+
+    service.reimport("spec/", dry_run=True)
+
+    assert ontology.get_taxonomy(taxonomy_id).external_references == []
+
+
+def test_drift_leaves_the_taxonomy_references(world):
+    ontology, _, planner, service, taxonomy_id = world
+    planner.title, planner.references = "API operation", LABELLED
+
+    service.reimport("spec/", dry_run=False)
+
+    taxonomy = ontology.get_taxonomy(taxonomy_id)
+    assert taxonomy.external_references == [] and taxonomy.source_revision is None
 
 
 def test_a_planner_error_propagates(world):

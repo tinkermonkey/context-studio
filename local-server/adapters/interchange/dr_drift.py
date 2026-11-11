@@ -6,6 +6,8 @@ Everything the DR importer loads is compared, matched by DR id (the
 `documentation_robotics` external reference), never by identifier:
 
 - the taxonomy: its vision and summary (when the spec has a design charter);
+  its DR spec reference's spec_version isn't drift, but is brought up to date
+  with the source revision when nothing differs (`DriftPlan.taxonomy_references`);
 - predicates, by id: description, and inverse, category, archimate_alignment
   and semantics on their DR reference; a new predicate is a create, one the
   spec dropped a delete (after the relationship-type deletes);
@@ -57,6 +59,7 @@ from adapters.interchange.dr_relationships import (
     assign_relationship_identifiers,
     dr_predicate_catalog,
     dr_property_definitions,
+    with_dr_spec_version,
 )
 from adapters.interchange.dr_spec import (
     NodeSchemaRecord,
@@ -320,6 +323,11 @@ class _Planner:
                 pairs["description"] = (_text(taxonomy.description), summary)
         self._predicates = self._plan_predicates()
         self._changed(K.TAXONOMY, taxonomy, DR_TAXONOMY_IDENTIFIER, pairs)
+        # The DR spec reference's version label follows the source revision when
+        # nothing differs; it isn't drift.
+        references = with_dr_spec_version(taxonomy.external_references, self._spec_version)
+        if references != taxonomy.external_references:
+            self._plan.taxonomy_references = references
 
     def _plan_predicates(self) -> set[str]:
         """

@@ -122,6 +122,28 @@ class RelationshipSchemaRecord:
         return f"{self.source_spec_node_id}.{self.predicate}.{self.destination_spec_node_id}"
 
 
+def with_dr_spec_version(
+    references: list[ExternalReference], spec_version: str
+) -> list[ExternalReference]:
+    """
+    The dr_spec taxonomy's references with its DR spec reference's spec_version
+    set to `spec_version` (its other metadata and the other references kept as
+    they are). Without a DR spec reference, the references are returned as they are.
+    """
+    updated = []
+    for ref in references:
+        if ref.source == DR_SOURCE and ref.identifier == DR_SPEC_REFERENCE:
+            metadata = {**(ref.metadata or {}), "spec_version": spec_version}
+            ref = ExternalReference(
+                source=ref.source,
+                identifier=ref.identifier,
+                uri=ref.uri,
+                metadata=MappingProxyType(metadata),
+            )
+        updated.append(ref)
+    return updated
+
+
 def dr_cardinality_fields(cardinality: str) -> dict[str, int | None]:
     """
     A DR cardinality as structure fields: many-to-many is (0, None, None),

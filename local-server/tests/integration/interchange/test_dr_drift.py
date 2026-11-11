@@ -22,10 +22,12 @@ from adapters.interchange.dr_drift import DrDriftPlanner
 from adapters.interchange.dr_predicates import DrPredicateRules
 from adapters.interchange.dr_relationships import (
     DR_SOURCE,
+    DR_SPEC_REFERENCE,
     DR_TAXONOMY_IDENTIFIER,
     DrRelationshipRules,
     dr_predicate_catalog,
     dr_property_definitions,
+    with_dr_spec_version,
 )
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.connection import create_local_db_engine
@@ -528,6 +530,62 @@ def test_no_drift_records_the_spec_revision_on_the_taxonomy(world, spec):
 
     revision = world.repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER).source_revision
     assert revision.spec_version == MODEL_DR_SPEC_VERSION
+
+
+def _label_spec_reference(world, spec_version):
+    """Label the taxonomy's DR spec reference `spec_version`, as an older import left it."""
+    taxonomy = world.repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    taxonomy.external_references = with_dr_spec_version(taxonomy.external_references, spec_version)
+    world.repo.save_taxonomy(taxonomy)
+
+
+def _spec_reference_versions(world):
+    taxonomy = world.repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    return [
+        ref.metadata["spec_version"]
+        for ref in taxonomy.external_references
+        if ref.source == DR_SOURCE and ref.identifier == DR_SPEC_REFERENCE
+    ]
+
+
+def test_no_drift_brings_the_spec_reference_version_up_to_the_revision(world, spec):
+    _label_spec_reference(world, "0.9.0")
+    before = world.repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+
+    result = world.drift.reimport(str(spec), dry_run=False)
+
+    assert result.plan.entries == [] and result.proposal is None
+    after = world.repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    assert _spec_reference_versions(world) == [MODEL_DR_SPEC_VERSION]
+    assert after.source_revision.spec_version == MODEL_DR_SPEC_VERSION
+    # Nothing else on the taxonomy changes.
+    assert (after.title, after.description, after.vision) == (
+        before.title,
+        before.description,
+        before.vision,
+    )
+    assert len(after.external_references) == len(before.external_references)
+
+
+def test_a_dry_run_leaves_the_spec_reference_version(world, spec):
+    _label_spec_reference(world, "0.9.0")
+    before = world.repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER).source_revision
+
+    result = world.drift.reimport(str(spec))
+
+    assert result.plan.entries == []
+    assert result.plan.taxonomy_references is not None
+    assert _spec_reference_versions(world) == ["0.9.0"]
+    assert world.repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER).source_revision == before
+
+
+def test_drift_leaves_the_spec_reference_version_until_it_clears(world, spec):
+    _label_spec_reference(world, "0.9.0")
+    _edit_node(spec, "api.contact", lambda d: d.update(description="Who to contact about the API."))
+
+    world.drift.reimport(str(spec), dry_run=False)
+
+    assert _spec_reference_versions(world) == ["0.9.0"]
 
 
 def test_a_directory_that_isnt_a_spec_is_refused(world, tmp_path):

@@ -549,11 +549,20 @@ class OntologyService:
         return self._repository.save_taxonomy(taxonomy)
 
     def set_taxonomy_source_revision(
-        self, taxonomy_id: str, revision: SourceRevision | None
+        self,
+        taxonomy_id: str,
+        revision: SourceRevision | None,
+        external_references: list[ExternalReference] | None = None,
     ) -> Taxonomy:
         """
         Record the source revision a taxonomy was imported at (None clears it).
         Like `set_taxonomy_mirrored`, it records no change event.
+
+        Args:
+            taxonomy_id: The taxonomy
+            revision: The source revision, or None to clear it
+            external_references: The taxonomy's references to save with it, when
+                a reference keeps a label of the revision (None leaves them)
 
         Raises:
             EntityNotFoundError: If the taxonomy does not exist
@@ -561,9 +570,13 @@ class OntologyService:
         taxonomy = self._repository.get_taxonomy(taxonomy_id)
         if taxonomy is None:
             raise EntityNotFoundError("Taxonomy", taxonomy_id)
-        if taxonomy.source_revision == revision:
+        references = (
+            taxonomy.external_references if external_references is None else external_references
+        )
+        if taxonomy.source_revision == revision and taxonomy.external_references == references:
             return taxonomy
         taxonomy.source_revision = revision
+        taxonomy.external_references = list(references)
         return self._repository.save_taxonomy(taxonomy)
 
     def rename_taxonomy(self, taxonomy_id: str, new_title: str) -> Taxonomy:
