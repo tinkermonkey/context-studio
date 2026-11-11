@@ -184,11 +184,14 @@ function DonePanel({
   const empty = run.proposal_id ? undefined : noProposalSummary(run);
   // When no chunk found anything the panel says so; naming every chunk would repeat it.
   const warning = empty && !empty.candidatesFound ? "" : emptyChunksWarning(runChunks(run));
+  // Titled for the whole extraction: a schema proposal alone is still a result.
   const title = !empty
     ? copy.doneTitle
-    : empty.candidatesFound
-      ? copy.nothingProposedTitle
-      : copy.noCandidatesTitle;
+    : schemaRun?.proposal_id
+      ? copy.schemaDoneTitle
+      : empty.candidatesFound
+        ? copy.nothingProposedTitle
+        : copy.noCandidatesTitle;
   return (
     <Panel
       title={title}

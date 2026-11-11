@@ -67,8 +67,10 @@ interface ConfigureFormProps {
   /**
    * The taxonomy mirrors a client's spec: only that client proposes schema
    * changes to it (over MCP), so schema suggestions aren't offered here.
+   * Undefined until the taxonomy loads (or when it fails to): the option
+   * stays off until it is known.
    */
-  mirrored: boolean;
+  mirrored: boolean | undefined;
   onRunsStarted: (runs: ExtractionRunRef[]) => void;
   onBack: () => void;
   onPagesChange: (pages: number[]) => void;
@@ -91,8 +93,9 @@ function ConfigureForm({
   const [pages, setPages] = useState("");
   const [pagesError, setPagesError] = useState<string>();
   const [startError, setStartError] = useState<string>();
-  // A mirrored taxonomy's schema is its client's to change.
-  const suggestSchema = schema && !mirrored;
+  // A mirrored taxonomy's schema is its client's to change; offer it only once known not to be.
+  const schemaOffered = mirrored === false;
+  const suggestSchema = schema && schemaOffered;
 
   const configRef = configChoice ?? configurations[0]?.config_ref ?? SERVER_DEFAULT;
   const config = configurations.find((c) => c.config_ref === configRef);
@@ -176,14 +179,14 @@ function ConfigureForm({
         </Field>
 
         <label
-          className={mirrored ? "extract-check extract-check--disabled" : "extract-check"}
+          className={schemaOffered ? "extract-check" : "extract-check extract-check--disabled"}
           htmlFor="extract-schema"
         >
           <input
             id="extract-schema"
             type="checkbox"
             checked={suggestSchema}
-            disabled={mirrored}
+            disabled={!schemaOffered}
             onChange={(e) => {
               setSchema(e.target.checked);
               setStartError(undefined);
@@ -362,7 +365,7 @@ export function ExtractSourcePage({
             <ConfigureForm
               source={source}
               datasets={taxonomyDatasets}
-              mirrored={taxonomy?.mirrored ?? false}
+              mirrored={taxonomy?.mirrored}
               onRunsStarted={onRunsStarted}
               onBack={onBack}
               onPagesChange={setSelectedPages}

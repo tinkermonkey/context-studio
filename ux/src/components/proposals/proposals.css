@@ -60,12 +60,6 @@
     font-size: 12px;
   }
 
-  /* Heimdall's ProgressBar track is a shell token (dark navy on the light
-     canvas, where an empty bar reads as full); use a canvas tone. */
-  .proposal-pending .progress-bar {
-    background-color: rgb(var(--canvas-border));
-  }
-
   .proposals-footnote {
     margin: 0;
     font-size: 12.5px;
@@ -142,11 +136,6 @@
 
   .proposal-pill:hover .chip {
     filter: brightness(1.08);
-  }
-
-  /* As in the list: a canvas-toned track, not Heimdall's shell token. */
-  .proposal-summary .progress-bar {
-    background-color: rgb(var(--canvas-border));
   }
 
   .proposal-table-filter {

@@ -201,6 +201,7 @@ describe("ExtractSourcePage — configure", () => {
     );
     const schema = screen.getByTestId("extract-schema-toggle");
     expect(schema).toHaveAccessibleName(/Also suggest schema changes/);
+    await waitFor(() => expect(schema).toBeEnabled());
     await user.click(schema);
     expect(estimate).toHaveTextContent("Two runs, two proposals");
     expect(estimate).toHaveTextContent("Rough estimate: about 3–5 chunks, $0.13–$0.20.");
@@ -238,6 +239,7 @@ describe("ExtractSourcePage — configure", () => {
       within(screen.getByTestId("extract-dataset")).getByRole("radio", { name: "cabin" }),
     );
     await user.type(screen.getByTestId("extract-pages"), "1-2");
+    await waitFor(() => expect(screen.getByTestId("extract-schema-toggle")).toBeEnabled());
     await user.click(screen.getByTestId("extract-schema-toggle"));
     await user.click(screen.getByTestId("extract-start"));
 
@@ -577,6 +579,40 @@ describe("ExtractSourcePage — a run that proposes nothing", () => {
     );
   });
 
+  it("is titled for the schema proposal when only the schema run proposed", async () => {
+    serve({
+      runs: {
+        "run-1234abcd": createRun({
+          status: "completed",
+          items_done: 2,
+          items_total: 2,
+          proposal_id: null,
+          output_summary: { metadata: { chunks: chunksFound(0, 0) } },
+        }),
+        "run-schema": createRun({
+          id: "run-schema",
+          pipeline_type: "schema_extraction",
+          status: "completed",
+          proposal_id: "prop-schema",
+        }),
+      },
+    });
+    const user = userEvent.setup();
+    const { onReview } = renderPage({ runId: "run-1234abcd", schemaRunId: "run-schema" });
+
+    const review = await screen.findByTestId("extract-review-schema-proposal");
+    const panel = screen.getByTestId("extract-done-panel");
+    expect(panel).toHaveTextContent("Schema proposal ready");
+    expect(panel).not.toHaveTextContent("No candidates found");
+    // The individual run's outcome is still said in the body.
+    expect(screen.getByTestId("extract-no-proposal")).toHaveTextContent(
+      "The run read every chunk and found nothing to propose.",
+    );
+    expect(screen.queryByTestId("extract-review-proposal")).not.toBeInTheDocument();
+    await user.click(review);
+    expect(onReview).toHaveBeenCalledWith("prop-schema");
+  });
+
   it("says no candidates were found only when the chunks found none", async () => {
     serve({
       runs: {
@@ -618,7 +654,30 @@ describe("ExtractSourcePage — schema suggestions on a mirrored taxonomy", () =
     expect(schema).toHaveAttribute("type", "checkbox");
     expect(schema).toHaveAccessibleName("Also suggest schema changes");
     expect(schema).toHaveAccessibleDescription(/Runs schema extraction too/);
-    expect(schema).toBeEnabled();
+    await waitFor(() => expect(schema).toBeEnabled());
+    expect(schema.closest("label")).not.toHaveClass("extract-check--disabled");
+  });
+
+  it("keeps the option off until the taxonomy is known, and sends no schema run", async () => {
+    const { extractBodies } = serve();
+    // The taxonomy can't be read, so whether it is mirrored is never known.
+    server.use(
+      http.get("*/api/taxonomies/:id", () =>
+        HttpResponse.json({ detail: "Server error" }, { status: 500 }),
+      ),
+    );
+    const user = userEvent.setup();
+    const { onRunsStarted } = renderPage();
+
+    const schema = await screen.findByTestId("extract-schema-toggle");
+    expect(schema).toBeDisabled();
+    expect(schema.closest("label")).toHaveClass("extract-check--disabled");
+    await user.click(schema);
+    expect(schema).not.toBeChecked();
+    await user.click(screen.getByTestId("extract-start"));
+    await waitFor(() => expect(onRunsStarted).toHaveBeenCalled());
+    expect(extractBodies).toEqual([expect.objectContaining({ schema: false })]);
+    expect(schema).toBeDisabled();
   });
 
   it("disables the option and says why, and starts without it", async () => {
@@ -656,6 +715,7 @@ describe("ExtractSourcePage — a start error", () => {
     const user = userEvent.setup();
     renderPage();
     const schema = await screen.findByTestId("extract-schema-toggle");
+    await waitFor(() => expect(schema).toBeEnabled());
     await user.click(schema);
     await user.click(screen.getByTestId("extract-start"));
     const error = await screen.findByTestId("extract-start-error");
@@ -677,6 +737,7 @@ describe("ExtractSourcePage — a start error", () => {
     const { user } = await failStart();
     await user.type(screen.getByTestId("extract-pages"), "1");
     expect(screen.queryByTestId("extract-start-error")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Only the client may start/)).not.toBeInTheDocument();
   });
 
   it("clears when another dataset is chosen", async () => {
@@ -686,6 +747,7 @@ describe("ExtractSourcePage — a start error", () => {
       within(screen.getByTestId("extract-dataset")).getByRole("radio", { name: "cabin" }),
     );
     expect(screen.queryByTestId("extract-start-error")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Only the client may start/)).not.toBeInTheDocument();
   });
 });
 

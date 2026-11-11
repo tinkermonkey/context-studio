@@ -134,6 +134,7 @@ export const sourcesCopy = {
     newIndividuals: "New individuals",
     relationships: "Relationships",
     nearMatches: "Near matches",
+    schemaDoneTitle: "Schema proposal ready",
     noCandidatesTitle: "No candidates found",
     noCandidatesMessage: "The run read every chunk and found nothing to propose.",
     nothingProposedTitle: "Nothing proposed",

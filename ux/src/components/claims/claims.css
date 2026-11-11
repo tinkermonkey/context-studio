@@ -183,12 +183,6 @@
     background: rgb(var(--status-amber) / 0.08);
   }
 
-  /* Heimdall's ProgressBar track is a shell token (dark navy on the light
-     canvas, where an empty bar reads as full); use a canvas tone. */
-  .claim-probability .progress-bar {
-    background-color: rgb(var(--canvas-border));
-  }
-
   .claim-probability__name {
     font-family: var(--font-mono);
     font-size: 12px;
