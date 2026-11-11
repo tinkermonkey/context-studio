@@ -15,7 +15,7 @@ describe("app navigation — Navigator mode", () => {
     ["/app/schema/schemes/s1", "data", "data"],
     // List pages and individual pages keep their own area.
     ["/app/schema/classes", "data", "schema-classes"],
-    ["/app/data/individuals/i1", "schema", "data"],
+    ["/app/data/individuals/i1", "schema", "data-individuals"],
   ] as const)("highlights %s in %s mode as %s", (path, mode, id) => {
     expect(getActiveItemId(path, mode)).toBe(id);
   });
@@ -106,7 +106,7 @@ describe("app navigation — pipelines", () => {
     ["/app/schema/taxonomies/t1", ["Schema", "Taxonomy"], "schema-taxonomies"],
     ["/app/schema/schemes/s1", ["Schema", "Concept scheme"], "schema-schemes"],
     ["/app/schema/classes/c1", ["Schema", "Class"], "schema-classes"],
-    ["/app/data/individuals/i1", ["Data", "Individual"], "data"],
+    ["/app/data/individuals/i1", ["Data", "Individual"], "data-individuals"],
   ])("labels entity page %s until it supplies its own crumbs", (path, labels, sidebarId) => {
     expect(getBreadcrumbLabels(path)).toEqual(labels);
     expect(getActiveItemId(path)).toBe(sidebarId);
@@ -146,9 +146,10 @@ describe("app navigation — claims", () => {
 });
 
 describe("app navigation — datasets", () => {
-  it("labels the Datasets page and keeps Data selected in the sidebar", () => {
+  it("labels the Datasets page and selects Data › Datasets in the sidebar", () => {
     expect(getBreadcrumbLabels("/app/data/datasets")).toEqual(["Data", "Datasets"]);
-    expect(getActiveItemId("/app/data/datasets")).toBe("data");
+    expect(getActiveItemId("/app/data/datasets")).toBe("data-datasets");
+    expect(SIDEBAR_PATH_MAP["data-datasets"]).toBe("/app/data/datasets");
   });
 
   it("registers a command-palette action for the Datasets page", () => {
@@ -158,5 +159,31 @@ describe("app navigation — datasets", () => {
       description: "Data → Datasets",
       to: "/app/data/datasets",
     });
+  });
+});
+
+describe("app navigation — sources", () => {
+  it("maps Data › Sources to its route, breadcrumb and palette action", () => {
+    expect(SIDEBAR_PATH_MAP["data-sources"]).toBe("/app/data/sources");
+    expect(getBreadcrumbLabels("/app/data/sources")).toEqual(["Data", "Sources"]);
+    expect(NAV_ACTIONS.find((a) => a.id === "nav-sources")).toMatchObject({
+      label: "Sources",
+      to: "/app/data/sources",
+    });
+  });
+
+  it.each(["/app/data/sources", "/app/data/sources/src-1/extract"])(
+    "highlights Data › Sources for %s",
+    (path) => {
+      expect(getActiveItemId(path)).toBe("data-sources");
+    },
+  );
+
+  it("labels a source's extract page", () => {
+    expect(getBreadcrumbLabels("/app/data/sources/src-1/extract")).toEqual([
+      "Data",
+      "Sources",
+      "Extract",
+    ]);
   });
 });

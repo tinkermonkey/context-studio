@@ -205,6 +205,7 @@ describe("IndividualPage sources", () => {
       http.get("*/api/sources/:id", () =>
         HttpResponse.json({
           id: "src-1",
+          taxonomy_id: "tax-1",
           kind: "pdf",
           title: "Whirlpool use and care guide",
           page_starts: [],
@@ -223,13 +224,18 @@ describe("IndividualPage sources", () => {
     const first = within(panel).getByTestId("entity-source-row-es-1");
     expect(first).toHaveTextContent("WRF555SDFZ French door refrigerator");
     expect(first).toHaveTextContent("p. 5");
-    // The source's title is text until the Sources page lands: the only link is the proposal.
+    // The source's title links to its taxonomy's Sources page; the other link is the proposal.
     await waitFor(() =>
       expect(within(first).getByTestId("entity-source-title-es-1")).toHaveTextContent(
         "Whirlpool use and care guide",
       ),
     );
-    expect(within(first).getAllByRole("link")).toHaveLength(1);
+    expect(within(first).getAllByRole("link")).toHaveLength(2);
+    const sourceLink = within(first).getByTestId("entity-source-title-es-1");
+    expect(sourceLink).toHaveAttribute("href", "/app/data/sources?taxonomy=tax-1");
+    // An in-app link here: nothing on the entity page is lost by leaving it.
+    expect(sourceLink).not.toHaveAttribute("target");
+    expect(sourceLink).toHaveAccessibleName("Whirlpool use and care guide");
     expect(within(first).getByTestId("entity-source-proposal-es-1")).toHaveAttribute(
       "href",
       "/app/proposals/4f2c91d0-1111",

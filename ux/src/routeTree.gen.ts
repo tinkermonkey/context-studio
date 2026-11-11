@@ -30,6 +30,7 @@ import { Route as AppReferenceSourcesRouteImport } from './routes/app/reference/
 import { Route as AppProposalsProposalIdRouteImport } from './routes/app/proposals_.$proposalId'
 import { Route as AppPipelinesRunsRouteImport } from './routes/app/pipelines/runs'
 import { Route as AppPipelinesReviewRouteImport } from './routes/app/pipelines/review'
+import { Route as AppDataSourcesRouteImport } from './routes/app/data/sources'
 import { Route as AppDataIndividualsRouteImport } from './routes/app/data/individuals'
 import { Route as AppDataDatasetsRouteImport } from './routes/app/data/datasets'
 import { Route as AppSchemaSchemesIndexRouteImport } from './routes/app/schema/schemes.index'
@@ -40,6 +41,7 @@ import { Route as AppPipelinesBatchesBatchIdRouteImport } from './routes/app/pip
 import { Route as AppDataIndividualsIdRouteImport } from './routes/app/data/individuals_.$id'
 import { Route as AppPipelinesTypesTypeIndexRouteImport } from './routes/app/pipelines/types/$type.index'
 import { Route as AppPipelinesTypesTypeRunRouteImport } from './routes/app/pipelines/types/$type/run'
+import { Route as AppDataSourcesSourceIdExtractRouteImport } from './routes/app/data/sources_.$sourceId.extract'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -146,6 +148,11 @@ const AppPipelinesReviewRoute = AppPipelinesReviewRouteImport.update({
   path: '/pipelines/review',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDataSourcesRoute = AppDataSourcesRouteImport.update({
+  id: '/data/sources',
+  path: '/data/sources',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDataIndividualsRoute = AppDataIndividualsRouteImport.update({
   id: '/data/individuals',
   path: '/data/individuals',
@@ -199,6 +206,12 @@ const AppPipelinesTypesTypeRunRoute =
     path: '/pipelines/types/$type/run',
     getParentRoute: () => AppRoute,
   } as any)
+const AppDataSourcesSourceIdExtractRoute =
+  AppDataSourcesSourceIdExtractRouteImport.update({
+    id: '/data/sources_/$sourceId/extract',
+    path: '/data/sources/$sourceId/extract',
+    getParentRoute: () => AppRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -212,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
+  '/app/data/sources': typeof AppDataSourcesRoute
   '/app/pipelines/review': typeof AppPipelinesReviewRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
   '/app/proposals/$proposalId': typeof AppProposalsProposalIdRoute
@@ -230,6 +244,7 @@ export interface FileRoutesByFullPath {
   '/app/schema/schemes/$id': typeof AppSchemaSchemesIdRoute
   '/app/schema/taxonomies/$id': typeof AppSchemaTaxonomiesIdRoute
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
+  '/app/data/sources/$sourceId/extract': typeof AppDataSourcesSourceIdExtractRoute
   '/app/pipelines/types/$type/run': typeof AppPipelinesTypesTypeRunRoute
   '/app/pipelines/types/$type/': typeof AppPipelinesTypesTypeIndexRoute
 }
@@ -244,6 +259,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
+  '/app/data/sources': typeof AppDataSourcesRoute
   '/app/pipelines/review': typeof AppPipelinesReviewRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
   '/app/proposals/$proposalId': typeof AppProposalsProposalIdRoute
@@ -261,6 +277,7 @@ export interface FileRoutesByTo {
   '/app/schema/schemes/$id': typeof AppSchemaSchemesIdRoute
   '/app/schema/taxonomies/$id': typeof AppSchemaTaxonomiesIdRoute
   '/app/schema/schemes': typeof AppSchemaSchemesIndexRoute
+  '/app/data/sources/$sourceId/extract': typeof AppDataSourcesSourceIdExtractRoute
   '/app/pipelines/types/$type/run': typeof AppPipelinesTypesTypeRunRoute
   '/app/pipelines/types/$type': typeof AppPipelinesTypesTypeIndexRoute
 }
@@ -277,6 +294,7 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/app/data/datasets': typeof AppDataDatasetsRoute
   '/app/data/individuals': typeof AppDataIndividualsRoute
+  '/app/data/sources': typeof AppDataSourcesRoute
   '/app/pipelines/review': typeof AppPipelinesReviewRoute
   '/app/pipelines/runs': typeof AppPipelinesRunsRoute
   '/app/proposals_/$proposalId': typeof AppProposalsProposalIdRoute
@@ -295,6 +313,7 @@ export interface FileRoutesById {
   '/app/schema/schemes_/$id': typeof AppSchemaSchemesIdRoute
   '/app/schema/taxonomies_/$id': typeof AppSchemaTaxonomiesIdRoute
   '/app/schema/schemes/': typeof AppSchemaSchemesIndexRoute
+  '/app/data/sources_/$sourceId/extract': typeof AppDataSourcesSourceIdExtractRoute
   '/app/pipelines/types/$type/run': typeof AppPipelinesTypesTypeRunRoute
   '/app/pipelines/types/$type/': typeof AppPipelinesTypesTypeIndexRoute
 }
@@ -312,6 +331,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/data/datasets'
     | '/app/data/individuals'
+    | '/app/data/sources'
     | '/app/pipelines/review'
     | '/app/pipelines/runs'
     | '/app/proposals/$proposalId'
@@ -330,6 +350,7 @@ export interface FileRouteTypes {
     | '/app/schema/schemes/$id'
     | '/app/schema/taxonomies/$id'
     | '/app/schema/schemes/'
+    | '/app/data/sources/$sourceId/extract'
     | '/app/pipelines/types/$type/run'
     | '/app/pipelines/types/$type/'
   fileRoutesByTo: FileRoutesByTo
@@ -344,6 +365,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/data/datasets'
     | '/app/data/individuals'
+    | '/app/data/sources'
     | '/app/pipelines/review'
     | '/app/pipelines/runs'
     | '/app/proposals/$proposalId'
@@ -361,6 +383,7 @@ export interface FileRouteTypes {
     | '/app/schema/schemes/$id'
     | '/app/schema/taxonomies/$id'
     | '/app/schema/schemes'
+    | '/app/data/sources/$sourceId/extract'
     | '/app/pipelines/types/$type/run'
     | '/app/pipelines/types/$type'
   id:
@@ -376,6 +399,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/data/datasets'
     | '/app/data/individuals'
+    | '/app/data/sources'
     | '/app/pipelines/review'
     | '/app/pipelines/runs'
     | '/app/proposals_/$proposalId'
@@ -394,6 +418,7 @@ export interface FileRouteTypes {
     | '/app/schema/schemes_/$id'
     | '/app/schema/taxonomies_/$id'
     | '/app/schema/schemes/'
+    | '/app/data/sources_/$sourceId/extract'
     | '/app/pipelines/types/$type/run'
     | '/app/pipelines/types/$type/'
   fileRoutesById: FileRoutesById
@@ -553,6 +578,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPipelinesReviewRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/data/sources': {
+      id: '/app/data/sources'
+      path: '/data/sources'
+      fullPath: '/app/data/sources'
+      preLoaderRoute: typeof AppDataSourcesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/data/individuals': {
       id: '/app/data/individuals'
       path: '/data/individuals'
@@ -623,6 +655,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPipelinesTypesTypeRunRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/data/sources_/$sourceId/extract': {
+      id: '/app/data/sources_/$sourceId/extract'
+      path: '/data/sources/$sourceId/extract'
+      fullPath: '/app/data/sources/$sourceId/extract'
+      preLoaderRoute: typeof AppDataSourcesSourceIdExtractRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -646,6 +685,7 @@ interface AppRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
   AppDataDatasetsRoute: typeof AppDataDatasetsRoute
   AppDataIndividualsRoute: typeof AppDataIndividualsRoute
+  AppDataSourcesRoute: typeof AppDataSourcesRoute
   AppPipelinesReviewRoute: typeof AppPipelinesReviewRoute
   AppPipelinesRunsRoute: typeof AppPipelinesRunsRoute
   AppProposalsProposalIdRoute: typeof AppProposalsProposalIdRoute
@@ -663,6 +703,7 @@ interface AppRouteChildren {
   AppSchemaClassesIdRoute: typeof AppSchemaClassesIdRoute
   AppSchemaSchemesIdRoute: typeof AppSchemaSchemesIdRoute
   AppSchemaTaxonomiesIdRoute: typeof AppSchemaTaxonomiesIdRoute
+  AppDataSourcesSourceIdExtractRoute: typeof AppDataSourcesSourceIdExtractRoute
   AppPipelinesTypesTypeRunRoute: typeof AppPipelinesTypesTypeRunRoute
   AppPipelinesTypesTypeIndexRoute: typeof AppPipelinesTypesTypeIndexRoute
 }
@@ -676,6 +717,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppIndexRoute: AppIndexRoute,
   AppDataDatasetsRoute: AppDataDatasetsRoute,
   AppDataIndividualsRoute: AppDataIndividualsRoute,
+  AppDataSourcesRoute: AppDataSourcesRoute,
   AppPipelinesReviewRoute: AppPipelinesReviewRoute,
   AppPipelinesRunsRoute: AppPipelinesRunsRoute,
   AppProposalsProposalIdRoute: AppProposalsProposalIdRoute,
@@ -693,6 +735,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSchemaClassesIdRoute: AppSchemaClassesIdRoute,
   AppSchemaSchemesIdRoute: AppSchemaSchemesIdRoute,
   AppSchemaTaxonomiesIdRoute: AppSchemaTaxonomiesIdRoute,
+  AppDataSourcesSourceIdExtractRoute: AppDataSourcesSourceIdExtractRoute,
   AppPipelinesTypesTypeRunRoute: AppPipelinesTypesTypeRunRoute,
   AppPipelinesTypesTypeIndexRoute: AppPipelinesTypesTypeIndexRoute,
 }

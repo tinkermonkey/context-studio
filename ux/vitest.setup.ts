@@ -1487,6 +1487,30 @@ vi.mock("@tanstack/react-router", async () => {
       status: "idle",
     }),
     useSearch: () => ({}),
+    // A plain anchor: the real Link needs a router. Its href is the route with
+    // params filled in and an object `search` as the query string.
+    Link: React.forwardRef(
+      (
+        { to, params, search, children, activeProps: _a, inactiveProps: _i, ...props }: any,
+        ref: any,
+      ) => {
+        let href = String(to ?? "");
+        for (const [key, value] of Object.entries(params ?? {})) {
+          href = href.replace(`$${key}`, encodeURIComponent(String(value)));
+        }
+        const query =
+          search && typeof search === "object"
+            ? new URLSearchParams(
+                Object.entries(search).filter(([, v]) => v !== undefined) as [string, string][],
+              ).toString()
+            : "";
+        return React.createElement(
+          "a",
+          { ref, href: query ? `${href}?${query}` : href, ...props },
+          children,
+        );
+      },
+    ),
     useMatch: () => ({
       pathname: "/app",
       params: {},

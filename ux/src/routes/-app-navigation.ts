@@ -15,6 +15,7 @@ export const ROUTE_LABELS: Record<string, string[]> = {
   "/app/schema/relationships": ["Schema", "Relationships"],
   "/app/data/individuals": ["Data", "Individuals"],
   "/app/data/datasets": ["Data", "Datasets"],
+  "/app/data/sources": ["Data", "Sources"],
   "/app/graph": ["Graph view"],
   "/app/reference/sources": ["External Reference", "Sources"],
   "/app/reference/workflows": ["External Reference", "Grounding Workflows"],
@@ -35,6 +36,9 @@ export const ROUTE_TO_SIDEBAR_ID: Array<{ prefix: string; id: string }> = [
   { prefix: "/app/schema/properties", id: "schema-properties" },
   { prefix: "/app/schema/relationships", id: "schema-relationships" },
   { prefix: "/app/schema", id: "schema" },
+  { prefix: "/app/data/individuals", id: "data-individuals" },
+  { prefix: "/app/data/datasets", id: "data-datasets" },
+  { prefix: "/app/data/sources", id: "data-sources" },
   { prefix: "/app/data", id: "data" },
   { prefix: "/app/reference", id: "external-reference" },
   { prefix: "/app/pipelines/review", id: "pipelines-review" },
@@ -103,6 +107,12 @@ export const NAV_ACTIONS = [
     to: "/app/data/datasets",
   },
   {
+    id: "nav-sources",
+    label: "Sources",
+    description: "Data → Sources: files, web pages and text to extract from",
+    to: "/app/data/sources",
+  },
+  {
     id: "nav-reference-sources",
     label: "Reference Sources",
     description: "External Reference → Sources",
@@ -145,6 +155,9 @@ export const SIDEBAR_PATH_MAP: Record<string, string> = {
   "schema-properties": "/app/schema/properties",
   "schema-relationships": "/app/schema/relationships",
   data: "/app/data/individuals",
+  "data-individuals": "/app/data/individuals",
+  "data-datasets": "/app/data/datasets",
+  "data-sources": "/app/data/sources",
   "external-reference": "/app/reference/sources",
   pipelines: "/app/pipelines",
   "pipelines-types": "/app/pipelines",
@@ -210,6 +223,10 @@ const DYNAMIC_ROUTE_LABELS: Array<{
   { pattern: /^\/app\/schema\/schemes\/[^/]+$/, labels: () => ["Schema", "Concept scheme"] },
   { pattern: /^\/app\/schema\/classes\/[^/]+$/, labels: () => ["Schema", "Class"] },
   { pattern: /^\/app\/data\/individuals\/[^/]+$/, labels: () => ["Data", "Individual"] },
+  {
+    pattern: /^\/app\/data\/sources\/[^/]+\/extract$/,
+    labels: () => ["Data", "Sources", "Extract"],
+  },
 ];
 
 export function getBreadcrumbLabels(pathname: string): string[] {

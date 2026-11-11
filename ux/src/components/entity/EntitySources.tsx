@@ -4,6 +4,7 @@ import { useSourcesByIds } from "@/api/hooks/sources/useSource";
 import { ProposalLink } from "@/components/proposals/ProposalLink";
 import { charsLabel, pageLabel } from "@/components/proposals/sourceModel";
 import { formatDate } from "@/components/entity/EntityPageParts";
+import { SourcesPageLink } from "@/components/sources/SourcesPageLink";
 import "./EntitySources.css";
 
 interface EntitySourcesProps {
@@ -66,13 +67,24 @@ export function EntitySources({ kind, id }: EntitySourcesProps) {
             >
               <div className="entity-source__head">
                 {source && <Chip form="id-tag">{source.kind}</Chip>}
-                {/* Text, not a link, until the Sources page lands (#1554). */}
-                <span
-                  className="entity-source__title"
-                  data-testid={`entity-source-title-${passage.id}`}
-                >
-                  {source?.title ?? `Source ${passage.source_id.slice(0, 8)}`}
-                </span>
+                {/* A listed source links to its taxonomy's Sources page; a removed
+                    or unreadable one isn't listed there, so it stays text. */}
+                {source && !source.removed_at ? (
+                  <SourcesPageLink
+                    taxonomyId={source.taxonomy_id}
+                    className="entity-link entity-source__title"
+                    data-testid={`entity-source-title-${passage.id}`}
+                  >
+                    {source.title}
+                  </SourcesPageLink>
+                ) : (
+                  <span
+                    className="entity-source__title"
+                    data-testid={`entity-source-title-${passage.id}`}
+                  >
+                    {source?.title ?? `Source ${passage.source_id.slice(0, 8)}`}
+                  </span>
+                )}
                 <span className="entity-source__where">{where}</span>
                 {source?.removed_at && <Chip variant="neutral">removed source</Chip>}
               </div>

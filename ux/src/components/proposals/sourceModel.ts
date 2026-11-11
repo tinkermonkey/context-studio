@@ -24,6 +24,8 @@ export interface SourcePassage {
  */
 export interface PassageSource {
   title?: string;
+  /** The source's taxonomy, for a link to its Sources page. */
+  taxonomyId?: string;
   section?: string;
   text?: { text: string; start: number };
   /** The source was removed; its passages stay as provenance. */
