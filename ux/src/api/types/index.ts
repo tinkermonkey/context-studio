@@ -6296,7 +6296,7 @@ export interface components {
     DriftEntryResponse: {
       /**
        * Kind
-       * @description taxonomy, scheme, class, property or attribute
+       * @description taxonomy, scheme, class, property, attribute or predicate
        */
       kind: string;
       /**
@@ -6316,7 +6316,7 @@ export interface components {
       entity_id?: string | null;
       /**
        * Fields
-       * @description Each differing field's value: {name: {taxonomy, source}}
+       * @description Each differing field's value: {name: {taxonomy, source}}. A create lists what it would set (taxonomy null); a delete lists nothing.
        */
       fields?: {
         [key: string]: {
@@ -6346,7 +6346,7 @@ export interface components {
        * @description What differs, by entity
        */
       entries: components["schemas"]["DriftEntryResponse"][];
-      /** @description The proposal that removes the drift (not stored on a dry run); None when nothing differs */
+      /** @description The proposal that removes the drift; None when nothing differs. On a dry run it is not stored, so its id can't be fetched */
       proposal?: components["schemas"]["ChangeProposalResponse"] | null;
     };
     /**

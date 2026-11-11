@@ -12687,7 +12687,7 @@
           "kind": {
             "type": "string",
             "title": "Kind",
-            "description": "taxonomy, scheme, class, property or attribute"
+            "description": "taxonomy, scheme, class, property, attribute or predicate"
           },
           "source_id": {
             "type": "string",
@@ -12718,7 +12718,7 @@
             },
             "type": "object",
             "title": "Fields",
-            "description": "Each differing field's value: {name: {taxonomy, source}}"
+            "description": "Each differing field's value: {name: {taxonomy, source}}. A create lists what it would set (taxonomy null); a delete lists nothing."
           }
         },
         "type": "object",
@@ -12770,7 +12770,7 @@
                 "type": "null"
               }
             ],
-            "description": "The proposal that removes the drift (not stored on a dry run); None when nothing differs"
+            "description": "The proposal that removes the drift; None when nothing differs. On a dry run it is not stored, so its id can't be fetched"
           }
         },
         "type": "object",

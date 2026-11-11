@@ -37,7 +37,7 @@ from adapters.chat.tools import (
 from adapters.serialization.views import proposal_response
 from domain.chat.value_objects import EntityRef, ToolOutcome
 from domain.ontology.value_objects import SourceRevision
-from domain.versioning.drift import DriftError, DriftImportService
+from domain.versioning.drift import DriftEntry, DriftError, DriftImportService
 from domain.versioning.exceptions import (
     ChangeProposalNotFoundError,
     ChangeProposalStateError,
@@ -88,6 +88,9 @@ MAX_BLOCKER_EDGES = 10
 # Dropped from get_proposal's operations first when a result is too large; fields and
 # applied_fields stay, and the operations page instead.
 BULKY_OPERATION_KEYS = ("base", "evidence")
+# What dr_spec_drift entries can be filtered by.
+DRIFT_KINDS = ("taxonomy", "scheme", "class", "property", "attribute", "predicate")
+DRIFT_CHANGES = ("create", "update", "move", "delete")
 
 
 def proposal_ref(proposal: ChangeProposal) -> EntityRef:
@@ -883,13 +886,16 @@ class DrSpecDriftTool(ToolBase):
     description = (
         "Compare the DR spec on disk with Context Studio's dr_spec taxonomy, matched by"
         " DR id (node types moved to another layer are followed), and list what differs:"
-        " each entry has kind (taxonomy, scheme, class, property, attribute), source_id"
-        " (the DR id; an attribute is '<node id>#<name>'), change (create, update, move,"
-        " delete) and, for an update or move, each field's taxonomy and source value."
-        " With dry_run true (the default) nothing is stored; with dry_run false the drift"
-        " is proposed as one change proposal for a person to review (it supersedes the"
-        " open proposal of an earlier re-import). Pass the spec/ directory of your DR"
-        " checkout, the one holding dist/manifest.json."
+        " each entry has kind (taxonomy, scheme, class, property, attribute, predicate),"
+        " source_id (the DR id; an attribute is '<node id>#<name>'), change (create,"
+        " update, move, delete) and fields: each differing field's taxonomy and source"
+        " value (null where one side has none; a create lists what it would set)."
+        " groups counts every entry by kind, change and field names, whatever page is"
+        " shown. Entries page: pass the offset the truncated note gives, and kind or"
+        " change to narrow them. With dry_run true (the default) nothing is stored; with"
+        " dry_run false the drift is proposed as one change proposal for a person to"
+        " review (it supersedes the open proposal of an earlier re-import). Pass the"
+        " spec/ directory of your DR checkout, the one holding dist/manifest.json."
     )
     input_schema = {
         "type": "object",
@@ -901,6 +907,21 @@ class DrSpecDriftTool(ToolBase):
             "dry_run": {
                 "type": "boolean",
                 "description": "Report only (default true); false proposes the drift",
+            },
+            "kind": {
+                "type": "string",
+                "enum": list(DRIFT_KINDS),
+                "description": "Only entries of this kind",
+            },
+            "change": {
+                "type": "string",
+                "enum": list(DRIFT_CHANGES),
+                "description": "Only entries with this change",
+            },
+            "offset": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "First entry to show, among those matching kind and change",
             },
         },
         "required": ["spec_dir"],
@@ -914,6 +935,8 @@ class DrSpecDriftTool(ToolBase):
         dry_run = args.get("dry_run", True)
         if not isinstance(dry_run, bool):
             raise ToolArgumentError("'dry_run' must be true or false")
+        kind = _optional_choice(args, "kind", DRIFT_KINDS)
+        change = _optional_choice(args, "change", DRIFT_CHANGES)
         try:
             result = self._service.reimport(spec_dir, dry_run=dry_run)
         except DriftError as exc:
@@ -936,11 +959,25 @@ class DrSpecDriftTool(ToolBase):
                 "operations": len(proposal.operations) if proposal and not stored else None,
             }
         )
+        payload["groups"] = _drift_groups(plan.entries)
+        matching = [
+            entry
+            for entry in plan.entries
+            if (kind is None or entry.kind == kind) and (change is None or entry.change == change)
+        ]
+        offset = int_arg(args, "offset", 0, 0, len(matching))
+        if kind or change:
+            payload["matching"] = len(matching)
+        if offset:
+            payload["offset"] = offset
+
+        def note(kept: int) -> str:
+            rest = f"pass offset {offset + kept} for the next page"
+            return f"{rest}; the proposal's review page lists every change" if stored else rest
+
         # Entries stay even when empty: "no drift" is the answer.
-        payload["entries"] = [_compact(vars(entry).copy()) for entry in plan.entries]
-        content, _ = _capped(
-            payload, "entries", lambda kept: "the proposal's review page lists every change"
-        )
+        payload["entries"] = [_drift_entry(entry) for entry in matching[offset:]]
+        content, _ = _capped(payload, "entries", note, len(matching), offset)
         summary = f"{len(plan.entries)} entities differ" + (
             f"; proposed as {proposal.title}" if stored else ""
         )  # type: ignore[union-attr]
@@ -949,6 +986,48 @@ class DrSpecDriftTool(ToolBase):
             summary=summary,
             entities=(proposal_ref(proposal),) if stored else (),  # type: ignore[arg-type]
         )
+
+
+def _optional_choice(args: dict[str, Any], name: str, choices: Sequence[str]) -> Optional[str]:
+    """An optional argument that must be one of the choices, or None when absent."""
+    value = args.get(name)
+    if value is None:
+        return None
+    if value not in choices:
+        raise ToolArgumentError(f"'{name}' must be one of {', '.join(choices)}")
+    return str(value)
+
+
+def _drift_entry(entry: DriftEntry) -> dict[str, Any]:
+    """
+    A drift entry for the tool. Unlike _compact, it keeps nulls inside fields,
+    so a value one side lacks shows as null rather than vanishing.
+    """
+    view: dict[str, Any] = {"kind": entry.kind, "source_id": entry.source_id, "change": entry.change}
+    if entry.entity_id:
+        view["entity_id"] = entry.entity_id
+    if entry.fields:
+        view["fields"] = entry.fields
+    return view
+
+
+def _drift_groups(entries: Sequence[DriftEntry]) -> list[dict[str, Any]]:
+    """
+    Every entry counted by kind, change and, for an update or move, the names
+    of the fields that differ; largest group first.
+    """
+    counts: dict[tuple[str, str, tuple[str, ...]], int] = {}
+    for entry in entries:
+        names = tuple(sorted(entry.fields)) if entry.change in ("update", "move") else ()
+        key = (entry.kind, entry.change, names)
+        counts[key] = counts.get(key, 0) + 1
+    groups = []
+    for (kind, change, names), count in sorted(counts.items(), key=lambda item: -item[1]):
+        group: dict[str, Any] = {"kind": kind, "change": change, "count": count}
+        if names:
+            group["fields"] = list(names)
+        groups.append(group)
+    return groups
 
 
 def _revision(value: Any, name: str) -> Optional[SourceRevision]:

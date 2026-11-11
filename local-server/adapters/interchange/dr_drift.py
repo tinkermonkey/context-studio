@@ -234,7 +234,10 @@ class _Planner:
 
     def _create(self, kind: OperationKind, ref: str, fields: dict[str, Any], source_id: str) -> str:
         self._ops.append(OperationDraft(seq=0, op=T.CREATE, kind=kind, ref=ref, fields=fields))
-        self._plan.entries.append(DriftEntry(kind=kind.value, source_id=source_id, change="create"))
+        values = {name: {"taxonomy": None, "source": value} for name, value in fields.items()}
+        self._plan.entries.append(
+            DriftEntry(kind=kind.value, source_id=source_id, change="create", fields=values)
+        )
         return f"${ref}"
 
     def _changed(

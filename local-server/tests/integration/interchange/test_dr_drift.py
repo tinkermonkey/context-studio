@@ -600,3 +600,44 @@ async def test_mcp_tool_reports_by_default_and_proposes_on_request(world, spec):
     assert real.entities[0].id == proposed["proposal"]["id"]
     assert world.proposals.count_proposals() == 1
     assert missing.is_error
+
+
+async def test_mcp_tool_groups_filters_and_pages_the_drift(world, spec, monkeypatch):
+    """Every entry is counted in groups and reachable by offset without storing anything."""
+    for node in ("api.contact", "api.license", "api.server"):
+        _edit_node(spec, node, lambda d: d.update(description="Edited in DR."))
+    _add_relationship(spec, "business.product", "serves", "business.businessactor")
+    tool = DrSpecDriftTool(world.drift)
+
+    report = json.loads((await tool.execute({"spec_dir": str(spec)})).content)
+
+    assert report["total"] == 4
+    groups = {(g["kind"], g["change"], tuple(g.get("fields", ()))): g["count"] for g in report["groups"]}
+    assert groups[("class", "update", ("description",))] == 3
+    assert groups[("property", "create", ())] == 1
+    (create,) = [e for e in report["entries"] if e["change"] == "create"]
+    # A create shows what it would set; the taxonomy side is null, not dropped
+    assert create["fields"] and all(v["taxonomy"] is None for v in create["fields"].values())
+
+    narrowed = json.loads(
+        (await tool.execute({"spec_dir": str(spec), "kind": "property"})).content
+    )
+    assert narrowed["matching"] == 1 and narrowed["total"] == 4
+    assert [e["kind"] for e in narrowed["entries"]] == ["property"]
+
+    # One entry per page: the note gives the next offset and names no review page
+    monkeypatch.setattr("adapters.chat.proposal_tools.MAX_PROPOSAL_CHARS", 1)
+    first = json.loads(
+        (await tool.execute({"spec_dir": str(spec), "change": "update"})).content
+    )
+    assert len(first["entries"]) == 1
+    assert "pass offset 1" in first["truncated"] and "review page" not in first["truncated"]
+    second = json.loads(
+        (await tool.execute({"spec_dir": str(spec), "change": "update", "offset": 1})).content
+    )
+    assert second["offset"] == 1
+    assert second["entries"][0]["source_id"] != first["entries"][0]["source_id"]
+    assert world.proposals.count_proposals() == 0
+
+    bad = await tool.execute({"spec_dir": str(spec), "kind": "relationship"})
+    assert bad.is_error
