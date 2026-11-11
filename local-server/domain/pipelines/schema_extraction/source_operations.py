@@ -71,8 +71,12 @@ def plan_schema_operations(
     classes: dict[str, str] = {
         key: cls.id for key, cls in class_title_index(taxonomy_classes(repo, taxonomy_id)).items()
     }
-    # Identifiers the plan's class creates take
-    identifiers: set[str] = set()
+    # Identifiers the plan's creates take. Identifiers are unique across classes
+    # and relationship types, so the property candidates' identifiers (their
+    # slugified labels) are reserved before any class takes one.
+    identifiers: set[str] = {
+        slugify(str(c.get("label") or "")) for c in candidates if c.get("kind") != "class"
+    }
 
     def add(
         draft_fields: dict[str, Any],
@@ -172,8 +176,9 @@ def class_identifier(title: str, repo: OntologyRepository, taken: set[str]) -> s
     A new class's identifier: its title slugified ("Heating System" ->
     "heating_system"), prefixed "class_" when that isn't a valid identifier
     (a lowercase letter first, 2-64 characters), and suffixed "_2", "_3", ...
-    while an existing taxonomy, scheme or class, or another create (`taken`),
-    has it. Identifiers are global.
+    while an existing taxonomy, scheme, class or relationship type, or another
+    create of the proposal (`taken`), has it. Identifiers are unique across
+    every kind of entity.
     """
     base = slugify(title)[:MAX_IDENTIFIER_CHARS]
     try:
@@ -181,7 +186,11 @@ def class_identifier(title: str, repo: OntologyRepository, taken: set[str]) -> s
     except ValueError:
         base = f"class_{base}".rstrip("_")[:MAX_IDENTIFIER_CHARS]
     identifier, n = base, 1
-    while identifier in taken or repo.get_by_identifier(identifier) is not None:
+    while (
+        identifier in taken
+        or repo.get_by_identifier(identifier) is not None
+        or repo.get_property_definition_by_identifier(identifier) is not None
+    ):
         n += 1
         suffix = f"_{n}"
         identifier = base[: MAX_IDENTIFIER_CHARS - len(suffix)] + suffix

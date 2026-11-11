@@ -113,6 +113,12 @@ _NLP_TYPING_THRESHOLD = 0.2
 # as "use existing" choices. They never change the recognition decision.
 _RECOG_NEAR_BAND = 0.10
 
+# Choosing among a taxonomy's relationship types that share a predicate: how an
+# end that leaves its class open, or doesn't fit, ranks next to an exact class
+# (0) or an ancestor n levels up (n). Any real hierarchy is far shallower.
+_OPEN_END = 10_000
+_NO_FIT = _OPEN_END + 1
+
 # Predicate labels (post-normalization) that mark a triple as an rdf:type/is_a
 # typing assertion whose object must be an ontology class reference.
 _TYPE_PREDICATE_LABELS = frozenset(
@@ -1162,30 +1168,50 @@ class ExtractionService:
     ) -> Any:
         """
         The relationship type a triple's predicate names, among the taxonomy's
-        types sharing that predicate: the first whose domain and range both fit
-        the subject's and object's classes, else the first whose domain or range
-        fits, else the first. An end fits when the type leaves it open or names
-        one of the classes (or an ancestor of one); unknown classes fit nothing.
+        types sharing that predicate: the most specific fit.
+
+        An end fits when the type names one of the classes, or an ancestor of
+        one, or leaves the end open; unknown classes fit nothing. Types whose
+        domain and range both fit come first, then those with one end fitting.
+        Among them, the domain decides, then the range: the class itself beats
+        a nearer ancestor, which beats a farther one, which beats an open end.
+        Only a true tie falls back to list order.
         """
 
-        def fits(end_class_id: Any, class_ids: list[str]) -> bool:
+        def rank(end_class_id: Any, class_ids: list[str]) -> int | None:
+            """0 for the class itself, n for an ancestor n levels up, _OPEN_END; None: no fit."""
             if not class_ids:
-                return False
+                return None
             if not end_class_id:
-                return True
-            return any(
-                str(end_class_id) in self._class_ancestor_ids(by_id[cid], by_id)
+                return _OPEN_END
+            distances = [
+                d
                 for cid in class_ids
-                if cid in by_id
-            )
+                if (d := self._ancestor_distance(cid, str(end_class_id), by_id)) is not None
+            ]
+            return min(distances, default=None)
 
-        return max(
-            candidates,
-            key=lambda prop: (
-                fits(prop.domain_class_id, subject_class_ids)
-                + fits(prop.range_class_id, object_class_ids)
-            ),
-        )
+        def key(prop: Any) -> tuple[int, ...]:
+            ranks = [
+                rank(prop.domain_class_id, subject_class_ids),
+                rank(prop.range_class_id, object_class_ids),
+            ]
+            fitting = sum(r is not None for r in ranks)
+            return (-fitting, *(_NO_FIT if r is None else r for r in ranks))
+
+        return min(candidates, key=key)
+
+    @staticmethod
+    def _ancestor_distance(class_id: str, ancestor_id: str, by_id: dict) -> int | None:
+        """How many levels up from a class its ancestor is (0: itself); None when it isn't one."""
+        current, seen, distance = class_id, set(), 0
+        while current and current not in seen:
+            if current == ancestor_id:
+                return distance
+            seen.add(current)
+            parent = getattr(by_id.get(current), "parent_class_id", None)
+            current, distance = (str(parent) if parent else ""), distance + 1
+        return None
 
     def _is_concept_object(
         self,

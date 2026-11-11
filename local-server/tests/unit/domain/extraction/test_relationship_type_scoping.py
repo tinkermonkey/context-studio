@@ -40,7 +40,7 @@ def _type(ontology, identifier, predicate, domain, range_):
         identifier,
         identifier.replace("_", " "),
         canonical_predicate=predicate,
-        domain_class_id=domain.id,
+        domain_class_id=domain.id if domain else None,
         range_class_id=range_.id,
         create_missing_predicate=True,
     )
@@ -133,3 +133,51 @@ def test_the_prompt_offers_only_the_taxonomys_predicates(extraction, ontology, t
     vocabulary = extraction._ontology_predicate_vocabulary(taxonomies["house"])
 
     assert sorted(vocabulary) == ["located_in", "requires"]
+
+
+@pytest.fixture
+def hierarchy(ontology):
+    """Chore is a Task, which is a Thing; four located_in types from more to less specific."""
+    house = ontology.create_taxonomy(title="Chores", identifier="chores")
+    scheme = ontology.create_scheme(taxonomy_id=house.id, title="Work")
+    thing = ontology.create_class(scheme.id, "Thing", identifier="c_thing")
+    task = ontology.create_class(scheme.id, "Task", identifier="c_task", parent_class_id=thing.id)
+    chore = ontology.create_class(scheme.id, "Chore", identifier="c_chore", parent_class_id=task.id)
+    place = ontology.create_class(scheme.id, "Place", identifier="c_place")
+    types = {
+        name: _type(ontology, f"c_{name}_located_in_place", "located_in", domain, place)
+        for name, domain in (("chore", chore), ("task", task), ("thing", thing), ("open", None))
+    }
+    by_id = {c.id: c for c in (thing, task, chore, place)}
+    return {"types": types, "by_id": by_id, "chore": chore.id, "place": place.id}
+
+
+@pytest.mark.parametrize(
+    "listed, chosen",
+    [
+        (("task", "chore"), "chore"),  # the class itself beats an ancestor
+        (("thing", "task"), "task"),  # a nearer ancestor beats a farther one
+        (("open", "thing"), "thing"),  # an ancestor beats an open end
+        (("open", "chore", "thing", "task"), "chore"),
+    ],
+)
+@pytest.mark.parametrize("reverse", [False, True])
+def test_the_most_specific_type_wins_in_any_order(extraction, hierarchy, listed, chosen, reverse):
+    types = hierarchy["types"]
+    candidates = [types[name] for name in (reversed(listed) if reverse else listed)]
+
+    picked = extraction._pick_property_definition(
+        candidates, [hierarchy["chore"]], [hierarchy["place"]], hierarchy["by_id"]
+    )
+
+    assert picked.id == types[chosen].id
+
+
+def test_a_true_tie_keeps_list_order(extraction, hierarchy):
+    types = hierarchy["types"]
+    candidates = [types["task"], types["chore"]]
+
+    # Unknown classes fit nothing, so neither type is more specific
+    picked = extraction._pick_property_definition(candidates, [], [], hierarchy["by_id"])
+
+    assert picked.id == types["task"].id

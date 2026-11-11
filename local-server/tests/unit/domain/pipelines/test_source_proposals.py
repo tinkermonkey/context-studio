@@ -638,6 +638,32 @@ class TestProposeSchema:
         assert ops[2].fields["canonical_predicate"] == "filters_for"
         assert outcome.skipped == [{"label": "appliance", "reason": "exists"}]
 
+    def test_a_class_never_takes_a_relationship_types_identifier(self, ontology, repo, house):
+        ontology.create_property_definition(
+            "renter",
+            "rented by",
+            domain_class_id=house["appliance"],
+            range_class_id=house["business"],
+        )
+        candidates = [
+            {"kind": "class", "label": "Owner", "confidence": 0.8, "provenance": []},
+            {"kind": "class", "label": "Renter", "confidence": 0.8, "provenance": []},
+            {"kind": "property_definition", "label": "owner", "confidence": 0.7},
+        ]
+        result = plan_schema_operations(
+            candidates, repo, taxonomy_id=house["taxonomy"], source_id=SOURCE, page_starts=[]
+        )
+        identifiers = {
+            o.draft.kind.value: o.draft.fields["identifier"]
+            for o in result.operations
+            if o.draft.kind.value != "class"
+        }
+        classes = [
+            o.draft.fields["identifier"] for o in result.operations if o.draft.kind.value == "class"
+        ]
+        assert identifiers == {"predicate": "owner", "property": "owner"}
+        assert classes == ["owner_2", "renter_2"]
+
     def test_class_creates_get_unique_identifiers_from_their_titles(self, ontology, repo, house):
         ontology.create_class(house["scheme"], "Old heater", identifier="heating_system")
         candidates = [
