@@ -151,7 +151,7 @@ def test_run_refinement_records_who_asked_over_any_option(dr_workspace, requeste
 async def test_run_refinement_refuses_individual_extraction_and_still_runs_others(
     dr_workspace, run_setup
 ):
-    """Clients extract through the review page, and extract_source once it ships (#1451)."""
+    """Clients extract a document with add_source and extract_source instead (#1451)."""
     _, runs, tools = run_setup
     async with mcp_client(dr_workspace, write_tools=tools) as client:
         result, text = await call(
