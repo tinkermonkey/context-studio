@@ -395,8 +395,9 @@ class ExtractSourceTool(_SourceTool):
         " relationships, each with the passage it came from and any near matches to"
         " existing individuals; with schema true, a schema_extraction run over the same"
         " text too, proposing classes and relationship types. Each run ends in its own"
-        " proposal. Poll get_run with each run_id until it has a proposal_id (or failed),"
-        " then read the proposal with get_proposal. " + _REVIEW + " dataset defaults to the"
+        " proposal. Poll get_run with each run_id until it has a proposal_id (or failed, or"
+        " completed without one: its no_proposal_reason says why), then read the proposal"
+        " with get_proposal. " + _REVIEW + " dataset defaults to the"
         " source's; pages selects pages, such as '12-30' or '1-3, 7' (all by default);"
         f" configuration names an individual-extraction configuration ({DEFAULT_CONFIGURATION}"
         " by default). Extracting again supersedes the source's earlier proposal."
@@ -447,7 +448,8 @@ class ExtractSourceTool(_SourceTool):
             ],
             "next": (
                 "Poll get_run with each run_id until it has a proposal_id, then read it with"
-                " get_proposal. " + _REVIEW
+                " get_proposal. A run that completes with none proposed nothing; its"
+                " no_proposal_reason says why. " + _REVIEW
             ),
         }
         return ToolOutcome(

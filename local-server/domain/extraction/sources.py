@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from pathlib import PurePosixPath
 from typing import TYPE_CHECKING, Mapping, Optional
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 from uuid import uuid4
 
 from domain.extraction.exceptions import SourceFailedError, SourceNotReadyError
@@ -143,6 +143,15 @@ def fetched_kind(
     else:
         kind = _CONTENT_TYPE_KINDS.get(media) or named
     return SourceKind.WEB if kind is SourceKind.HTML else kind
+
+
+def fetched_file_name(page: FetchedPage) -> Optional[str]:
+    """
+    A fetched file's name: the Content-Disposition file name, else the last
+    segment of the URL's path ("ins10668b.pdf"); None when there is neither.
+    """
+    name = (page.file_name or "").strip() or PurePosixPath(unquote(urlparse(page.url).path)).name
+    return name.strip() or None
 
 
 def check_url(url: str) -> str:
@@ -437,6 +446,9 @@ class SourceService:
             return self._save_unless_removed(
                 _failed(source, SourceFailure.UNSUPPORTED_TYPE, _unsupported(page.content_type))
             )
+        if not has_title and kind is not SourceKind.WEB:
+            # A file behind a URL: its own title (read below) wins, else its file name
+            source = replace(source, title=fetched_file_name(page) or source.title)
         return self._save_unless_removed(
             self._read(source, page.data, has_title=has_title), original=page.data
         )

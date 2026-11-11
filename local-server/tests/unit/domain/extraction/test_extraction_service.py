@@ -1224,7 +1224,9 @@ class TestTypeConceptObjects:
 
         ontology_data = ontology_with_classes_and_properties
 
-        def mock_list_property_definitions(limit=None):
+        def mock_list_property_definitions(limit=None, taxonomy_id=None):
+            if taxonomy_id is not None:
+                return []  # none has a predicate in a taxonomy's catalog
             return [
                 ontology_data["improves_property"],
                 ontology_data["produces_property"],
@@ -1564,8 +1566,11 @@ class TestTypeConceptObjects:
             extraction_service_for_typing["ontology_repo"].list_property_definitions(limit=None)[2],
         ]
 
-        # Modify the mock to include the bad range property
-        def mock_list_property_definitions(limit=None):
+        # Modify the mock to include the bad range property, a type of the
+        # taxonomy by its predicate (its range class is in none)
+        def mock_list_property_definitions(limit=None, taxonomy_id=None):
+            if taxonomy_id is not None:
+                return [bad_range_property]
             return original_props + [bad_range_property]
 
         ontology_repo.list_property_definitions = mock_list_property_definitions

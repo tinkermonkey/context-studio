@@ -111,4 +111,6 @@ def test_extraction_never_offers_derived_types(service, house):
 
     assert [title for _, title in catalog] == ["Tool"]
     assert "includes" not in vocabulary and "pairs with" in vocabulary
-    assert "includes" not in extraction._property_definition_index()
+    _, by_id = extraction._class_index(taxonomy)
+    index = extraction._property_definition_index(taxonomy.id, by_id)
+    assert "includes" not in index and "pairs with" in index

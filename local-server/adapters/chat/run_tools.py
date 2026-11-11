@@ -40,7 +40,12 @@ INDIVIDUAL_EXTRACTION_REFUSED = (
 
 
 def run_payload(run: PipelineRun) -> dict[str, Any]:
-    """A run's status, progress and outcome, as tools report it."""
+    """
+    A run's status, progress and outcome, as tools report it. A run that
+    proposed nothing says why (no_proposal_reason) and how many candidates it
+    skipped for each reason (skipped_by_reason).
+    """
+    summary = run.output_summary or {}
     return {
         "run_id": run.id,
         "pipeline": run.pipeline_type.value,
@@ -49,6 +54,8 @@ def run_payload(run: PipelineRun) -> dict[str, Any]:
         "items_done": run.items_done,
         "items_total": run.items_total,
         "proposal_id": run.proposal_id,
+        "no_proposal_reason": summary.get("no_proposal_reason"),
+        "skipped_by_reason": summary.get("skipped_by_reason") or {},
         "failure_reason": run.failure_reason,
         "created_at": run.created_at,
         "started_at": run.started_at,
@@ -159,8 +166,10 @@ class GetRunTool(ToolBase):
         "Get a pipeline run started with run_refinement or extract_source: its status"
         " (pending, running, completed, failed, cancelled, or interrupted by a server"
         " restart), progress (items_done of items_total), failure_reason, and the"
-        " proposal_id of the change proposal it produced (null until then, or when it"
-        " proposed nothing). Review the proposal with get_proposal."
+        " proposal_id of the change proposal it produced (null until then). A completed"
+        " run with a null proposal_id proposed nothing and is done: no_proposal_reason"
+        " says why, and skipped_by_reason counts the candidates it skipped for each"
+        " reason. Review a proposal with get_proposal."
     )
     input_schema = {
         "type": "object",
@@ -176,10 +185,13 @@ class GetRunTool(ToolBase):
         run = self._runs.get(run_id)
         if run is None:
             return error_outcome(f"No pipeline run found with id {run_id!r}.", "Run not found")
+        payload = run_payload(run)
         progress = f" ({run.items_done}/{run.items_total})" if run.items_total else ""
+        reason = payload["no_proposal_reason"]
+        nothing = f", nothing proposed: {reason}" if reason and not run.proposal_id else ""
         return ToolOutcome(
-            content=dumps(run_payload(run)),
-            summary=f"Run {run.status.value}{progress}",
+            content=dumps(payload),
+            summary=f"Run {run.status.value}{progress}{nothing}",
             entities=_references(run),
         )
 

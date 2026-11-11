@@ -1,5 +1,7 @@
 """SourceService and the Source entity (#1551), over fake ports."""
 
+from dataclasses import replace
+
 import pytest
 
 from domain.extraction.exceptions import SourceNotReadyError
@@ -19,6 +21,7 @@ from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 from tests.fakes.fake_source_repository import (
     FakePageFetcher,
     FakeSourceFileStore,
+    FakeSourceReader,
     FakeSourceRepository,
     fake_readers,
 )
@@ -243,6 +246,43 @@ def test_a_url_to_a_pdf_becomes_a_pdf_source(service, fetcher):
     assert source.kind is SourceKind.PDF
     assert source.title == "Manual"
     assert source.pages == 2
+
+
+class UntitledReader(FakeSourceReader):
+    """A reader of files that give themselves no title."""
+
+    def read(self, data):
+        return replace(super().read(data), title=None)
+
+
+@pytest.mark.parametrize(
+    "url, file_name, title",
+    [
+        ("https://example.org/docs/ins10668b.pdf?rev=2", None, "ins10668b.pdf"),
+        ("https://example.org/docs/use%20and%20care.pdf", None, "use and care.pdf"),
+        ("https://example.org/download?id=7", "WRF555 guide.pdf", "WRF555 guide.pdf"),
+        ("https://example.org/", None, "https://example.org/"),
+    ],
+)
+def test_a_pdf_by_url_without_a_title_is_named_after_its_file(
+    ontology, repo, fetcher, files, url, file_name, title
+):
+    service = SourceService(
+        sources=repo,
+        ontology_repo=ontology,
+        readers={**fake_readers(), SourceKind.PDF: UntitledReader()},
+        fetcher=fetcher,
+        files=files,
+    )
+    fetcher.add(url, b"%PDF-1.7 one", "application/pdf", file_name=file_name)
+
+    assert service.fetch(service.add_url(T, url).id).title == title
+
+
+def test_a_pdf_by_url_takes_its_own_title_over_its_file_name(service, fetcher):
+    fetcher.add("https://example.org/ins10668b.pdf", b"%PDF-1.7 one", "application/pdf")
+    source = service.fetch(service.add_url(T, "https://example.org/ins10668b.pdf").id)
+    assert source.title == "Read title"
 
 
 def test_a_failed_fetch_fails_the_source(service, fetcher):

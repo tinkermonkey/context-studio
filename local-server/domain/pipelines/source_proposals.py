@@ -11,7 +11,8 @@ was found in as evidence, and proposed through `ProposalService.propose`.
 Operations the proposal service refuses are dropped, with every operation that
 points at one of them by "$ref", and the rest proposed again, as the
 relationship reflection does. A run with nothing left to propose makes no
-proposal.
+proposal, and its output_summary says why (`no_proposal_reason`, with
+`skipped_by_reason` counting the candidates skipped for each reason).
 
 A new proposal supersedes the open proposal of an older extraction of the
 same source by the same pipeline into the same dataset from the same pages:
@@ -67,6 +68,8 @@ class ProposalOutcome:
         refused: Operations the proposal service refused, each {"label", "error"}
         skipped: Candidates that became no operation, each {"label", "reason"}
         warnings: Sentences for the run's warnings
+        no_proposal_reason: Why nothing was proposed (a sentence); None when
+            a proposal was made
     """
 
     proposal_id: str | None
@@ -74,14 +77,17 @@ class ProposalOutcome:
     refused: list[dict[str, str]]
     skipped: list[dict[str, str]]
     warnings: list[str]
+    no_proposal_reason: str | None = None
 
     def to_json(self) -> dict[str, Any]:
         """The keys the run's output_summary gains."""
         return {
             "proposal_id": self.proposal_id,
+            "no_proposal_reason": self.no_proposal_reason,
             "proposed_operations": self.operations,
             "refused_operations": self.refused,
             "skipped_candidates": self.skipped,
+            "skipped_by_reason": skipped_by_reason(self.skipped),
         }
 
 
@@ -202,12 +208,9 @@ class SourceProposer:
 
         warnings = [f"Refused {r['label']}: {r['error']}" for r in refused]
         if proposal is None:
-            warnings.append(
-                f"Nothing to propose: {len(refused)} operations refused"
-                if refused
-                else "Nothing to propose: the run found no candidates that make an operation"
-            )
-            return ProposalOutcome(None, 0, refused, plan.skipped, warnings)
+            reason = _no_proposal_reason(plan.skipped, refused)
+            warnings.append(f"Nothing to propose. {reason}")
+            return ProposalOutcome(None, 0, refused, plan.skipped, warnings, reason)
         warnings += self._supersede(proposal)
         return ProposalOutcome(
             proposal.id, len(proposal.operations), refused, plan.skipped, warnings
@@ -336,15 +339,43 @@ def _without_refused(
         kept = [row for row in kept if row not in dependents]
 
 
+def skipped_by_reason(skipped: Sequence[Mapping[str, str]]) -> dict[str, int]:
+    """How many candidates were skipped for each reason, most first."""
+    counts: dict[str, int] = {}
+    for item in skipped:
+        counts[item["reason"]] = counts.get(item["reason"], 0) + 1
+    return dict(sorted(counts.items(), key=lambda kv: kv[1], reverse=True))
+
+
+def _no_proposal_reason(skipped: list[dict[str, str]], refused: list[dict[str, str]]) -> str:
+    """Why a run proposed nothing, as a sentence."""
+    if refused:
+        return f"All {len(refused)} operations were refused."
+    if skipped:
+        counts = ", ".join(f"{reason} {n}" for reason, n in skipped_by_reason(skipped).items())
+        return f"None of the {len(skipped)} candidates made an operation ({counts})."
+    return "The run found no candidates in the text."
+
+
+_RATIONALES = {
+    PipelineType.INDIVIDUAL_EXTRACTION: (
+        "Individuals and relationships found in the source {title!r}. Each operation"
+        " carries the passages it was found in as evidence and the extraction's confidence"
+        " as p; an individual that may already exist offers it as an alternative."
+    ),
+    PipelineType.SCHEMA_EXTRACTION: (
+        "Classes and relationship types the source {title!r} names that the taxonomy lacks."
+        " Each operation carries passages where its term occurs as evidence and the"
+        " extraction's confidence as p."
+    ),
+}
+
+
 def _rationale(
     pipeline: PipelineType, source_title: str, plan: OperationPlan, refused: list[dict[str, str]]
 ) -> str:
     """The proposal's rationale, saying what the run found and could not propose."""
-    text = (
-        f"Candidates {pipeline.value} found in the source {source_title!r}. Each operation"
-        " carries the passages it was found in as evidence and the extraction's confidence"
-        " as p; an individual that may already exist offers it as an alternative."
-    )
+    text = _RATIONALES[pipeline].format(title=source_title)
     notes = []
     if plan.skipped:
         listed = [f"{s['label']} ({s['reason']})" for s in plan.skipped[:MAX_LISTED]]

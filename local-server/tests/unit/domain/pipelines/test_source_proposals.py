@@ -21,6 +21,7 @@ from domain.pipelines.schema_extraction.orchestrator import (
     SchemaExtractionOrchestrator,
     SchemaExtractionState,
 )
+from domain.pipelines.schema_extraction.source_operations import plan_schema_operations
 from domain.pipelines.source_extraction import normalized_pages
 from domain.pipelines.source_operations import passage_evidence
 from domain.pipelines.source_proposals import SourceProposer
@@ -75,10 +76,22 @@ def house(ontology):
     }
 
 
-def typing(label, class_label, passages=(), confidence=0.8, near=None, entity_id=""):
+def typing(
+    label,
+    class_label,
+    passages=(),
+    confidence=0.8,
+    near=None,
+    entity_id="",
+    predicate=None,
+):
+    """
+    A typing triple shaped as the two-pass extraction returns it: models follow
+    the prompt's example and send property_definition_id "is_a" (#1450).
+    """
     triple = {
-        "subject": {"kind": "individual", "id": entity_id, "label": label},
-        "predicate": {"property_definition_id": "", "label": "is_a"},
+        "subject": {"kind": "individual", "id": entity_id, "label": label, "class_ids": []},
+        "predicate": predicate or {"property_definition_id": "is_a", "label": "is_a"},
         "object": {"kind": "class", "id": "", "label": class_label},
         "confidence": confidence,
         "provenance": dict(passages[0]) if passages else {},
@@ -189,6 +202,34 @@ class TestIndividualOperations:
         assert draft.probability == 0.94
         assert [(e["page"], e["start"]) for e in draft.evidence] == [(2, 120), (3, 210)]
         assert all(e["source_id"] == SOURCE for e in draft.evidence)
+
+    @pytest.mark.parametrize(
+        "predicate",
+        [
+            {"property_definition_id": "is_a", "label": "is_a"},
+            {"property_definition_id": "", "label": "is_a"},
+            {"property_definition_id": None, "label": "is_a"},
+            {"property_definition_id": "...", "label": "is a"},
+            {"property_definition_id": "type", "label": "rdf:type"},
+            {"property_definition_id": "is_a", "label": "instance_of"},
+        ],
+    )
+    def test_every_typing_shape_the_extraction_sends_makes_a_create(self, repo, house, predicate):
+        result = plan(
+            repo,
+            house,
+            [
+                typing("WRF555", "house_appliance", predicate=predicate),
+                typing("Acme", "house_business", predicate=predicate),
+                relation("WRF555", house["made_by"], "Acme"),
+            ],
+        )
+        assert [(o.draft.kind, o.label) for o in result.operations] == [
+            ("individual", "WRF555"),
+            ("individual", "Acme"),
+            ("relationship", "WRF555 made_by Acme"),
+        ]
+        assert result.skipped == []
 
     def test_the_class_is_found_by_title_reference_or_id(self, repo, house):
         result = plan(repo, house, [typing("Acme", "Business"), typing("Ice maker", "APPLIANCE")])
@@ -387,15 +428,41 @@ class TestProposeIndividuals:
         assert outcome.refused[1]["error"] == "points at a refused operation"
         assert any(w.startswith("Refused Acme") for w in outcome.warnings)
 
-    def test_nothing_to_propose_makes_no_proposal_and_a_warning(self, service, repo, house):
+    def test_nothing_to_propose_makes_no_proposal_and_says_why(self, service, repo, house):
         outcome = SourceProposer(service, repo).propose_individuals(
-            "r", run_input(house), [typing("Gizmo", "no_such_class")]
+            "r",
+            run_input(house),
+            [
+                typing("Gizmo", "no_such_class"),
+                typing("Widget", "no_such_class"),
+                relation("Gizmo", house["made_by"], "Widget"),
+            ],
         )
         assert outcome.proposal_id is None
-        assert outcome.warnings == [
-            "Nothing to propose: the run found no candidates that make an operation"
-        ]
+        reason = (
+            "None of the 3 candidates made an operation (missing_class 2, unresolved_endpoint 1)."
+        )
+        assert outcome.no_proposal_reason == reason
+        assert outcome.warnings == [f"Nothing to propose. {reason}"]
+        summary = outcome.to_json()
+        assert summary["no_proposal_reason"] == reason
+        assert summary["skipped_by_reason"] == {"missing_class": 2, "unresolved_endpoint": 1}
         assert service.list_proposals() == []
+
+    def test_a_run_that_found_nothing_says_so(self, service, repo, house):
+        outcome = SourceProposer(service, repo).propose_individuals("r", run_input(house), [])
+        assert outcome.to_json()["no_proposal_reason"] == "The run found no candidates in the text."
+        assert outcome.to_json()["skipped_by_reason"] == {}
+
+    def test_a_proposal_gives_no_reason_and_an_individual_rationale(self, service, repo, house):
+        outcome = SourceProposer(service, repo).propose_individuals(
+            "r", run_input(house), [typing("WRF555", "house_appliance")]
+        )
+        assert outcome.to_json()["no_proposal_reason"] is None
+        rationale = service.get(outcome.proposal_id).rationale
+        assert rationale.startswith(
+            "Individuals and relationships found in the source 'WRF555 use and care guide'."
+        )
 
     def test_re_extracting_supersedes_the_earlier_open_proposal(self, service, repo, house):
         proposer = SourceProposer(service, repo)
@@ -556,8 +623,13 @@ class TestProposeSchema:
         assert ops[0].fields == {
             "concept_scheme_id": house["scheme"],
             "title": "Water Filter",
+            "identifier": "water_filter",
             "description": "A replaceable filter",
         }
+        assert proposal.rationale.startswith(
+            f"Classes and relationship types the source {SOURCE!r} names that the taxonomy lacks."
+        )
+        assert "individual" not in proposal.rationale
         assert ops[0].evidence == [
             {"source_id": SOURCE, "page": None, "start": 105, "end": 117, "quote": "water filter"}
         ]
@@ -565,3 +637,45 @@ class TestProposeSchema:
         assert ops[2].fields["range_class_id"] == house["appliance"]
         assert ops[2].fields["canonical_predicate"] == "filters_for"
         assert outcome.skipped == [{"label": "appliance", "reason": "exists"}]
+
+    def test_a_class_never_takes_a_relationship_types_identifier(self, ontology, repo, house):
+        ontology.create_property_definition(
+            "renter",
+            "rented by",
+            domain_class_id=house["appliance"],
+            range_class_id=house["business"],
+        )
+        candidates = [
+            {"kind": "class", "label": "Owner", "confidence": 0.8, "provenance": []},
+            {"kind": "class", "label": "Renter", "confidence": 0.8, "provenance": []},
+            {"kind": "property_definition", "label": "owner", "confidence": 0.7},
+        ]
+        result = plan_schema_operations(
+            candidates, repo, taxonomy_id=house["taxonomy"], source_id=SOURCE, page_starts=[]
+        )
+        identifiers = {
+            o.draft.kind.value: o.draft.fields["identifier"]
+            for o in result.operations
+            if o.draft.kind.value != "class"
+        }
+        classes = [
+            o.draft.fields["identifier"] for o in result.operations if o.draft.kind.value == "class"
+        ]
+        assert identifiers == {"predicate": "owner", "property": "owner"}
+        assert classes == ["owner_2", "renter_2"]
+
+    def test_class_creates_get_unique_identifiers_from_their_titles(self, ontology, repo, house):
+        ontology.create_class(house["scheme"], "Old heater", identifier="heating_system")
+        candidates = [
+            {"kind": "class", "label": label, "confidence": 0.8, "provenance": []}
+            for label in ("Heating System", "Heating-System!", "3D Printer", "X")
+        ]
+        result = plan_schema_operations(
+            candidates, repo, taxonomy_id=house["taxonomy"], source_id=SOURCE, page_starts=[]
+        )
+        assert [o.draft.fields["identifier"] for o in result.operations] == [
+            "heating_system_2",
+            "heating_system_3",
+            "class_3d_printer",
+            "class_x",
+        ]
