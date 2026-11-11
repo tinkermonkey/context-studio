@@ -3,7 +3,6 @@ import { Chip, FormCallout, InspectorPanel, SideBySideDiff } from "@tinkermonkey
 import type { ProposedOperation } from "@/api/services/proposals";
 import { decisionState, flagVariant } from "./decisionModel";
 import {
-  CLASS_ID_FIELDS,
   asApplied,
   isAwaiting,
   SCOPE_VARIANT,
@@ -12,6 +11,7 @@ import {
   fieldLines,
   formatProbability,
   formatValue,
+  operationSubject,
   planKind,
   propertyTriples,
   replacementEndLabel,
@@ -36,17 +36,48 @@ const PROPERTY_FIELD_LABELS: Record<string, string> = {
   evidence: "spec evidence",
 };
 
-/** Fields whose values are ids or references: monospace, breaking after dots and underscores. */
-const ID_FIELDS = new Set([
-  "canonical_predicate",
-  "domain_class_id",
-  "range_class_id",
-  "parent_class_id",
-  "identifier",
-  "external_references",
-  "concept_scheme_id",
-  "taxonomy_id",
-]);
+/**
+ * Fields whose values are identifiers: monospace, breaking after dots and
+ * underscores. Fields that name entities by id read by name instead (see
+ * REFERENCE_FIELDS), with the id in a tooltip.
+ */
+const ID_FIELDS = new Set(["canonical_predicate", "identifier", "external_references"]);
+
+type ReferenceKind = "class" | "scheme" | "taxonomy" | "individual" | "property";
+
+/** Fields that name other entities by id (or "$ref"), and what they name. */
+const REFERENCE_FIELDS: Record<string, ReferenceKind> = {
+  class_ids: "class",
+  class_id: "class",
+  domain_class_id: "class",
+  range_class_id: "class",
+  parent_class_id: "class",
+  concept_scheme_id: "scheme",
+  taxonomy_id: "taxonomy",
+  property_definition_id: "property",
+};
+
+/** A relationship's ends name individuals. */
+const RELATIONSHIP_REFERENCE_FIELDS: Record<string, ReferenceKind> = {
+  source_id: "individual",
+  target_id: "individual",
+};
+
+function referenceKind(operation: ProposedOperation, field: string): ReferenceKind | undefined {
+  if (operation.kind === "relationship" && field in RELATIONSHIP_REFERENCE_FIELDS) {
+    return RELATIONSHIP_REFERENCE_FIELDS[field];
+  }
+  return REFERENCE_FIELDS[field];
+}
+
+/** A reference field's ids: one id, or a list of them; undefined for anything else. */
+function referenceIds(value: unknown): string[] | undefined {
+  if (typeof value === "string" && value) return [value];
+  if (Array.isArray(value) && value.length > 0 && value.every((v) => typeof v === "string")) {
+    return value as string[];
+  }
+  return undefined;
+}
 
 /** An id with line-break opportunities after its dots and underscores. */
 function breakable(text: string): ReactNode {
@@ -204,7 +235,46 @@ export function OperationInspector({
   const ends = relationshipEnds(operation, operations);
   const label = (field: string) =>
     operation.kind === "property" ? (PROPERTY_FIELD_LABELS[field] ?? field) : fieldLabel(field);
+  /** A referenced entity's name: an earlier create's "#seq title (new in this proposal)", or its title. */
+  const referenceName = (kind: ReferenceKind, id: string): { name: string; isNew: boolean } => {
+    if (id.startsWith("$")) {
+      const create = operations.find((o) => o.op === "create" && o.ref && `$${o.ref}` === id);
+      if (create) {
+        return {
+          name: `#${create.seq} ${operationSubject(create)} (new in this proposal)`,
+          isNew: true,
+        };
+      }
+    }
+    const name =
+      kind === "class"
+        ? context.endLabel(id, operation)
+        : kind === "property"
+          ? context.predicateOf(id)
+          : context.nameOf(id, operation);
+    return { name: name ?? id, isNew: false };
+  };
+  const references = (field: string, kind: ReferenceKind, ids: string[]): ReactNode => (
+    <span className="op-refs" data-testid={`operation-change-refs-${field}`}>
+      {ids.map((id, i) => {
+        const { name, isNew } = referenceName(kind, id);
+        return (
+          <span
+            key={`${id}-${i}`}
+            className={isNew ? "op-ref op-ref--new" : "op-ref"}
+            title={id}
+            data-ref-id={id}
+          >
+            {name}
+          </span>
+        );
+      })}
+    </span>
+  );
   const value = (field: string, v: unknown): ReactNode => {
+    const kind = referenceKind(operation, field);
+    const ids = kind ? referenceIds(v) : undefined;
+    if (kind && ids) return references(field, kind, ids);
     if (field === "evidence" && Array.isArray(v) && v.length > 0) {
       return (
         <ul className="op-change__lines">
@@ -231,10 +301,7 @@ export function OperationInspector({
         </List>
       );
     }
-    const text =
-      CLASS_ID_FIELDS.has(field) && typeof v === "string"
-        ? context.endLabel(v, operation)
-        : formatValue(v);
+    const text = formatValue(v);
     return ID_FIELDS.has(field) ? breakable(text) : text;
   };
   const valueClass = (field: string) =>

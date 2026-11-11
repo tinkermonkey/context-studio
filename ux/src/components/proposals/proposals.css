@@ -399,6 +399,25 @@
     overflow-wrap: anywhere;
   }
 
+  /* Entities a field names by id, read by name; the id is the tooltip. */
+  .op-refs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 12px;
+  }
+
+  .op-ref {
+    cursor: help;
+    text-decoration: underline dotted rgb(var(--canvas-fg-4));
+    text-underline-offset: 3px;
+  }
+
+  /* A "$ref" to an earlier create in the same proposal. */
+  .op-ref--new {
+    color: rgb(var(--canvas-fg-2));
+    font-style: italic;
+  }
+
   /* A list value (a DR type's spec evidence): one line per item. */
   .op-change__lines {
     margin: 0;

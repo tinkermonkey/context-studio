@@ -13,7 +13,7 @@ import {
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import type { LastExtractionRun, Source } from "@/api/services/sources";
 import { SourcesPage } from "../SourcesPage";
-import { createLastExtraction, createLastExtractionRun, createSource } from "./fixtures";
+import { createLastExtraction, createLastExtractionRun, createRun, createSource } from "./fixtures";
 
 const mockNavigate = vi.hoisted(() => vi.fn());
 const { toastSpy } = vi.hoisted(() => ({ toastSpy: vi.fn() }));
@@ -410,6 +410,95 @@ describe("SourcesPage", () => {
       expect(listRequests).toHaveLength(1);
     },
   );
+
+  describe("a completed extraction without a proposal", () => {
+    const completed = createSource({
+      last_extraction: createLastExtraction([
+        createLastExtractionRun({ status: "completed", items_done: 4, items_total: 4 }),
+      ]),
+    });
+    const chunks = (...found: number[]) =>
+      found.map((triples, index) => ({ index, start: 0, end: 1, triples }));
+
+    function serveRun(outputSummary: Record<string, unknown>) {
+      server.use(
+        http.get("*/api/pipelines/runs/:id", () =>
+          HttpResponse.json(
+            createRun({ status: "completed", items_done: 4, output_summary: outputSummary }),
+          ),
+        ),
+      );
+    }
+
+    it("says nothing was proposed when candidates were found, with why not", async () => {
+      serve({ sources: [completed] });
+      serveRun({
+        metadata: { chunks: chunks(24, 20, 27, 4) },
+        skipped_candidates: [
+          { label: "Compressor", reason: "exists" },
+          { label: "Water line", reason: "missing_class" },
+          { label: "Ice maker", reason: "exists" },
+        ],
+      });
+      const user = userEvent.setup();
+      render(<SourcesPage onTaxonomyChange={vi.fn()} />);
+
+      const link = await screen.findByTestId("source-follow-run-src-1");
+      await waitFor(() => expect(link).toHaveTextContent("Nothing proposed"));
+      expect(link).not.toHaveTextContent("No candidates found");
+      const why = screen.getByTestId("source-no-proposal-reason-src-1");
+      expect(why).toHaveClass("sources-note");
+      expect(why).toHaveTextContent("75 found; 2 already exist, 1 no matching class");
+      await user.click(link);
+      expect(mockNavigate).toHaveBeenCalledWith(
+        expect.objectContaining({ to: "/app/data/sources/$sourceId/extract" }),
+      );
+    });
+
+    it("shows the server's reason when the run gives one", async () => {
+      serve({ sources: [completed] });
+      serveRun({
+        metadata: { chunks: chunks(3) },
+        no_proposal_reason: "Every candidate already exists in dataset home.",
+        skipped_by_reason: { exists: 3 },
+      });
+      render(<SourcesPage onTaxonomyChange={vi.fn()} />);
+
+      const why = await screen.findByTestId("source-no-proposal-reason-src-1");
+      expect(why).toHaveTextContent("Every candidate already exists in dataset home.");
+      expect(screen.getByTestId("source-follow-run-src-1")).toHaveTextContent("Nothing proposed");
+    });
+
+    it("says no candidates were found only when none were", async () => {
+      serve({ sources: [completed] });
+      serveRun({ metadata: { chunks: chunks(0, 0) } });
+      render(<SourcesPage onTaxonomyChange={vi.fn()} />);
+
+      const link = await screen.findByTestId("source-follow-run-src-1");
+      await waitFor(() => expect(link).toHaveTextContent("No candidates found"));
+      expect(screen.queryByTestId("source-no-proposal-reason-src-1")).not.toBeInTheDocument();
+    });
+  });
+
+  it("says a taxonomy without a dataset gets a new default one with its first source", async () => {
+    serve({ sources: [], datasets: [] });
+    render(<SourcesPage onTaxonomyChange={vi.fn()} />);
+
+    const note = await screen.findByTestId("add-source-default-dataset");
+    expect(note).toHaveClass("sources-note");
+    expect(note).toHaveTextContent(
+      "This taxonomy has no dataset yet. The source goes into a new dataset, default, made when you add it.",
+    );
+    expect(within(note).getByText("default")).toHaveClass("add-source__dataset-name");
+    expect(screen.queryByTestId("add-source-dataset")).not.toBeInTheDocument();
+  });
+
+  it("doesn't mention a default dataset once the taxonomy has one", async () => {
+    serve({ datasets: [home] });
+    render(<SourcesPage onTaxonomyChange={vi.fn()} />);
+    expect(await screen.findByTestId("source-row-src-1")).toBeInTheDocument();
+    expect(screen.queryByTestId("add-source-default-dataset")).not.toBeInTheDocument();
+  });
 
   it("removes a source after confirming", async () => {
     const { deletes } = serve();

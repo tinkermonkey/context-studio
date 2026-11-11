@@ -3244,6 +3244,9 @@ selectors:
   - selector: operation-change-lines-*
     component: src/components/proposals/OperationInspector.tsx
     description: "A list value in the Change table, by field: distinguish_from as \"Class: when\" lines, evidence_signals numbered"
+  - selector: operation-change-refs-*
+    component: src/components/proposals/OperationInspector.tsx
+    description: "Entities a Change field names by id (class_ids, concept_scheme_id, source_id, ...), by field: each by name with its raw id as the tooltip; a $ref as \"#seq title (new in this proposal)\""
 
   # Review queue: decisions (#1361)
   - selector: proposal-actions
@@ -3723,6 +3726,9 @@ selectors:
   - selector: add-source-dataset
     component: src/components/sources/AddSourcePanel.tsx
     description: 'Add a source: dataset choice, shown when all datasets are listed and the taxonomy has several'
+  - selector: add-source-default-dataset
+    component: src/components/sources/AddSourcePanel.tsx
+    description: 'Add a source: note that a taxonomy without a dataset gets a new "default" one with its first source'
   - selector: add-source-dropzone
     component: src/components/sources/AddSourcePanel.tsx
     description: 'Add a source: file drop zone (a label for the hidden file input)'
@@ -3788,7 +3794,10 @@ selectors:
     description: 'Proposal ready: near matches count tile (creates with alternatives)'
   - selector: extract-no-proposal
     component: src/components/sources/ExtractRunPanel.tsx
-    description: 'Proposal ready: note shown when the run finished without a proposal'
+    description: 'Extract result: why a completed run made no proposal (no candidates found, or found but none could be proposed)'
+  - selector: extract-skipped
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Extract result: candidates not proposed, counted by reason, when a run made no proposal'
   - selector: extract-empty-chunks
     component: src/components/sources/ExtractRunPanel.tsx
     description: 'Proposal ready: warning naming chunks that gave no candidates'
@@ -3818,7 +3827,10 @@ selectors:
     description: 'Extract page: individual extraction configuration select'
   - selector: extract-schema-toggle
     component: src/components/sources/ExtractSourcePage.tsx
-    description: 'Extract page: "Also suggest schema changes" checkbox'
+    description: 'Extract page: "Also suggest schema changes" checkbox; disabled for a mirrored taxonomy'
+  - selector: extract-schema-hint
+    component: src/components/sources/ExtractSourcePage.tsx
+    description: 'Extract page: what the schema option does, or why a mirrored taxonomy does not offer it'
   - selector: extract-pages
     component: src/components/sources/ExtractSourcePage.tsx
     description: 'Extract page: optional page range input (multi-page sources only)'
@@ -3876,6 +3888,9 @@ selectors:
   - selector: source-follow-run-*
     component: src/components/sources/LastExtractionCell.tsx
     description: 'Sources table: link to a running or ended extraction run''s page, with dynamic source ID suffix'
+  - selector: source-no-proposal-reason-*
+    component: src/components/sources/LastExtractionCell.tsx
+    description: 'Sources table: why a completed extraction made no proposal (the run''s reason, or found and skipped counts), with dynamic source ID suffix'
   - selector: source-open-proposal-*
     component: src/components/sources/LastExtractionCell.tsx
     description: 'Sources table: link to the last extraction''s proposal, with dynamic source ID suffix'

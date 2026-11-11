@@ -13,11 +13,14 @@ import {
   formatCount,
   formatRange,
   formatUsd,
+  noProposalSummary,
   pageRangeLabel,
   pagesSpec,
   parsePages,
   proposalCounts,
   runChunks,
+  skippedText,
+  skipReasonLabel,
   sourceDetail,
   statusNote,
 } from "../sourceModel";
@@ -173,6 +176,71 @@ describe("sourceModel", () => {
     expect(extractionRunIds([{ run_id: "i", pipeline: "individual_extraction" }])).toEqual({
       run: "i",
       schemaRun: undefined,
+    });
+  });
+
+  describe("noProposalSummary", () => {
+    const chunk = (triples: number, index = 0) => ({ index, start: 0, end: 1, triples });
+
+    it("counts skipped candidates and refused operations by reason, most first", () => {
+      const summary = noProposalSummary(
+        createRun({
+          status: "completed",
+          output_summary: {
+            metadata: { chunks: [chunk(4), chunk(3, 1)] },
+            skipped_candidates: [
+              { label: "a", reason: "missing_class" },
+              { label: "b", reason: "exists" },
+              { label: "c", reason: "exists" },
+              { label: "d" },
+            ],
+            refused_operations: [{ label: "e", error: "Title taken" }],
+          },
+        }),
+      );
+      expect(summary).toEqual({
+        found: 7,
+        reason: undefined,
+        candidatesFound: true,
+        skipped: [
+          { reason: "exists", count: 2 },
+          { reason: "missing_class", count: 1 },
+          { reason: "invalid", count: 1 },
+          { reason: "refused", count: 1 },
+        ],
+      });
+      expect(skippedText(summary.skipped)).toBe(
+        "2 already exist, 1 no matching class, 1 malformed, 1 refused",
+      );
+    });
+
+    it("prefers the server's reason and counts, and words a reason given as a code", () => {
+      const summary = noProposalSummary(
+        createRun({
+          output_summary: {
+            no_proposal_reason: "all_candidates_skipped",
+            skipped_by_reason: { exists: 2, some_new_reason: 5, ignored: "x" },
+            skipped_candidates: [{ label: "a", reason: "invalid" }],
+          },
+        }),
+      );
+      expect(summary.reason).toBe("All candidates skipped.");
+      expect(summary.skipped).toEqual([
+        { reason: "some_new_reason", count: 5 },
+        { reason: "exists", count: 2 },
+      ]);
+      expect(skipReasonLabel("some_new_reason")).toBe("some new reason");
+      // No chunks counted, but skipped candidates mean some were found.
+      expect(summary.found).toBe(0);
+      expect(summary.candidatesFound).toBe(true);
+    });
+
+    it("finds nothing when no chunk found a candidate and none were skipped", () => {
+      const summary = noProposalSummary(
+        createRun({ output_summary: { metadata: { chunks: [chunk(0)] } } }),
+      );
+      expect(summary).toEqual({ found: 0, reason: undefined, skipped: [], candidatesFound: false });
+      expect(noProposalSummary(undefined).candidatesFound).toBe(false);
     });
   });
 });

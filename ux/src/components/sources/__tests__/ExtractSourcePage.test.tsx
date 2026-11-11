@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from "vitest";
 import type { ReactNode } from "react";
 import { screen, waitFor, within } from "@testing-library/react";
@@ -56,6 +58,7 @@ afterAll(() => server.close());
 
 interface ServeOptions {
   source?: Source;
+  taxonomy?: ReturnType<typeof createTaxonomy>;
   configs?: PipelineConfiguration[];
   runs?: Record<string, PipelineRun | (() => PipelineRun)>;
   extract?: () => Response;
@@ -63,6 +66,7 @@ interface ServeOptions {
 
 function serve({
   source = createSource(),
+  taxonomy = house,
   configs = [defaultConfig, openRouterConfig, disabledConfig, openConfig],
   runs = {},
   extract,
@@ -73,7 +77,7 @@ function serve({
   const configRequests: string[] = [];
   server.use(
     http.get("*/api/sources/:id", () => HttpResponse.json(source)),
-    http.get("*/api/taxonomies/:id", () => HttpResponse.json(house)),
+    http.get("*/api/taxonomies/:id", () => HttpResponse.json(taxonomy)),
     http.get("*/api/datasets", () => HttpResponse.json([home, cabin])),
     http.get("*/api/pipelines/types/individual_extraction/implementations", () =>
       HttpResponse.json([{ id: "default" }, { id: "open_v1" }]),
@@ -493,5 +497,208 @@ describe("ExtractSourcePage — progress and result", () => {
     expect(onBack).toHaveBeenCalled();
     await user.click(screen.getByTestId("extract-retry"));
     expect(onReset).toHaveBeenCalled();
+  });
+});
+
+/** A completed run's chunks, each with how many candidates it found. */
+function chunksFound(...found: number[]) {
+  return found.map((triples, index) => ({
+    index,
+    start: index * 5000,
+    end: (index + 1) * 5000,
+    page_first: index + 1,
+    page_last: index + 1,
+    heading: null,
+    triples,
+  }));
+}
+
+describe("ExtractSourcePage — a run that proposes nothing", () => {
+  it("says candidates were found but none could be proposed, and why not", async () => {
+    serve({
+      runs: {
+        "run-1234abcd": createRun({
+          status: "completed",
+          items_done: 4,
+          items_total: 4,
+          proposal_id: null,
+          output_summary: {
+            metadata: { chunks: chunksFound(24, 20, 27, 4) },
+            skipped_candidates: [
+              { label: "Compressor", reason: "exists" },
+              { label: "Ice maker", reason: "exists" },
+              { label: "Water line", reason: "missing_class" },
+            ],
+            refused_operations: [],
+          },
+        }),
+      },
+    });
+    renderPage({ runId: "run-1234abcd" });
+
+    const panel = await screen.findByTestId("extract-done-panel");
+    expect(panel).toHaveTextContent("Nothing proposed");
+    expect(panel).not.toHaveTextContent("Proposal ready");
+    const note = screen.getByTestId("extract-no-proposal");
+    expect(note).toHaveClass("form-callout--warn");
+    expect(note).toHaveTextContent("The chunks found 75 candidates, but none could be proposed.");
+    expect(note).not.toHaveTextContent("no candidates were found");
+    const skipped = screen.getByTestId("extract-skipped");
+    expect(skipped).toHaveClass("extract-run__skipped");
+    expect(skipped).toHaveTextContent("Not proposed2 already exist, 1 no matching class");
+    expect(within(skipped).getByText("Not proposed")).toHaveClass("extract-run__skipped-label");
+    expect(screen.queryByTestId("extract-review-proposal")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("extract-count-operations")).not.toBeInTheDocument();
+  });
+
+  it("shows the server's reason and skipped counts by reason when it reports them", async () => {
+    serve({
+      runs: {
+        "run-1234abcd": createRun({
+          status: "completed",
+          items_done: 2,
+          items_total: 2,
+          proposal_id: null,
+          output_summary: {
+            metadata: { chunks: chunksFound(6, 3) },
+            no_proposal_reason: "Every candidate already exists in dataset home.",
+            skipped_by_reason: { exists: 7, unresolved_predicate: 2 },
+          },
+        }),
+      },
+    });
+    renderPage({ runId: "run-1234abcd" });
+
+    const note = await screen.findByTestId("extract-no-proposal");
+    expect(note).toHaveTextContent("Every candidate already exists in dataset home.");
+    expect(screen.getByTestId("extract-done-panel")).toHaveTextContent("Nothing proposed");
+    expect(screen.getByTestId("extract-skipped")).toHaveTextContent(
+      "7 already exist, 2 unknown relationship type",
+    );
+  });
+
+  it("says no candidates were found only when the chunks found none", async () => {
+    serve({
+      runs: {
+        "run-1234abcd": createRun({
+          status: "completed",
+          items_done: 2,
+          items_total: 2,
+          proposal_id: null,
+          output_summary: { metadata: { chunks: chunksFound(0, 0) } },
+        }),
+      },
+    });
+    renderPage({ runId: "run-1234abcd" });
+
+    const panel = await screen.findByTestId("extract-done-panel");
+    expect(panel).toHaveTextContent("No candidates found");
+    expect(panel).not.toHaveTextContent("Proposal ready");
+    const note = screen.getByTestId("extract-no-proposal");
+    expect(note).toHaveClass("form-callout--info");
+    expect(note).toHaveTextContent("The run read every chunk and found nothing to propose.");
+    expect(screen.queryByTestId("extract-skipped")).not.toBeInTheDocument();
+    // Naming every empty chunk would only repeat the note.
+    expect(screen.queryByTestId("extract-empty-chunks")).not.toBeInTheDocument();
+  });
+});
+
+describe("ExtractSourcePage — schema suggestions on a mirrored taxonomy", () => {
+  const mirroredHouse = createTaxonomy({
+    id: "tax-house",
+    identifier: "house",
+    title: "House",
+    mirrored: true,
+  });
+
+  it("labels the option by its own name", async () => {
+    serve();
+    renderPage();
+    const schema = await screen.findByTestId("extract-schema-toggle");
+    expect(schema).toHaveAttribute("type", "checkbox");
+    expect(schema).toHaveAccessibleName("Also suggest schema changes");
+    expect(schema).toHaveAccessibleDescription(/Runs schema extraction too/);
+    expect(schema).toBeEnabled();
+  });
+
+  it("disables the option and says why, and starts without it", async () => {
+    const { extractBodies } = serve({ taxonomy: mirroredHouse });
+    const user = userEvent.setup();
+    const { onRunsStarted } = renderPage();
+
+    const schema = await screen.findByTestId("extract-schema-toggle");
+    await waitFor(() => expect(schema).toBeDisabled());
+    expect(schema).not.toBeChecked();
+    expect(schema).toHaveAccessibleName("Also suggest schema changes");
+    expect(schema).toHaveAccessibleDescription(/mirrors a client's spec/);
+    expect(screen.getByTestId("extract-schema-hint")).toHaveTextContent(
+      "only that client proposes schema changes, over MCP",
+    );
+    expect(schema.closest("label")).toHaveClass("extract-check", "extract-check--disabled");
+    expect(screen.getByTestId("extract-estimate")).toHaveTextContent("One run, one proposal");
+
+    await user.click(schema);
+    expect(schema).not.toBeChecked();
+    await user.click(screen.getByTestId("extract-start"));
+    await waitFor(() => expect(onRunsStarted).toHaveBeenCalled());
+    expect(extractBodies).toEqual([expect.objectContaining({ schema: false })]);
+  });
+});
+
+describe("ExtractSourcePage — a start error", () => {
+  const refusal = () =>
+    HttpResponse.json(
+      { detail: "Only the client may start a refinement of this taxonomy, over MCP." },
+      { status: 403 },
+    );
+
+  async function failStart() {
+    const user = userEvent.setup();
+    renderPage();
+    const schema = await screen.findByTestId("extract-schema-toggle");
+    await user.click(schema);
+    await user.click(screen.getByTestId("extract-start"));
+    const error = await screen.findByTestId("extract-start-error");
+    expect(error).toHaveClass("form-callout--error");
+    expect(error).toHaveTextContent("Only the client may start a refinement");
+    return { user, schema };
+  }
+
+  it("clears when the schema option is unchecked", async () => {
+    serve({ extract: refusal });
+    const { user, schema } = await failStart();
+    await user.click(schema);
+    expect(screen.queryByTestId("extract-start-error")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Only the client may start/)).not.toBeInTheDocument();
+  });
+
+  it("clears when the page range changes", async () => {
+    serve({ extract: refusal });
+    const { user } = await failStart();
+    await user.type(screen.getByTestId("extract-pages"), "1");
+    expect(screen.queryByTestId("extract-start-error")).not.toBeInTheDocument();
+  });
+
+  it("clears when another dataset is chosen", async () => {
+    serve({ extract: refusal });
+    const { user } = await failStart();
+    await user.click(
+      within(screen.getByTestId("extract-dataset")).getByRole("radio", { name: "cabin" }),
+    );
+    expect(screen.queryByTestId("extract-start-error")).not.toBeInTheDocument();
+  });
+});
+
+describe("progress bar track", () => {
+  it("uses the canvas border tone, so an empty bar reads empty on the light canvas", () => {
+    // Heimdall's track is the shell navy on both canvases; the app override fixes it.
+    // Vitest runs from ux/.
+    const appOverrides = readFileSync(
+      join(process.cwd(), "src/design-system/app-overrides.css"),
+      "utf8",
+    );
+    const rule = /\.progress-bar\s*\{[^}]*\}/.exec(appOverrides)?.[0] ?? "";
+    expect(rule).toContain("background-color: rgb(var(--canvas-border));");
+    expect(rule).not.toContain("shell-surface");
   });
 });

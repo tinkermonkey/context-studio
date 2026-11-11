@@ -26,6 +26,8 @@ interface AddSourcePanelProps {
   datasetId?: string;
   /** The taxonomy's datasets, offered when `datasetId` is undefined and there are several. */
   datasets: DatasetResponse[];
+  /** The taxonomy has no dataset yet: the server makes one named "default" for the first source. */
+  createsDefaultDataset?: boolean;
 }
 
 interface Errors {
@@ -35,7 +37,12 @@ interface Errors {
 }
 
 /** Add a source three ways: drop or choose a file, fetch a web page, or paste text. */
-export function AddSourcePanel({ taxonomyId, datasetId, datasets }: AddSourcePanelProps) {
+export function AddSourcePanel({
+  taxonomyId,
+  datasetId,
+  datasets,
+  createsDefaultDataset = false,
+}: AddSourcePanelProps) {
   const { toast } = useToasts();
   const addSource = useAddSource();
   const [mode, setMode] = useState<Mode>("file");
@@ -130,6 +137,14 @@ export function AddSourcePanel({ taxonomyId, datasetId, datasets }: AddSourcePan
           data-testid="add-source-mode"
         />
       </div>
+
+      {createsDefaultDataset && (
+        <p className="sources-note" data-testid="add-source-default-dataset">
+          {copy.defaultDatasetBefore}
+          <span className="add-source__dataset-name">{copy.defaultDatasetName}</span>
+          {copy.defaultDatasetAfter}
+        </p>
+      )}
 
       {mustChooseDataset && (
         <Field label={copy.datasetLabel}>

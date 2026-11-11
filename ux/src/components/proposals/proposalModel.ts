@@ -274,6 +274,12 @@ export function referencedClassIds(operation: ProposedOperation, refs?: RefMap):
       const id = value && resolveRef(value, refs);
       if (id && !id.startsWith("$")) ids.push(id);
     }
+    // An individual's classes.
+    const classIds: unknown[] = Array.isArray(values.class_ids) ? values.class_ids : [];
+    for (const value of classIds) {
+      const id = typeof value === "string" ? resolveRef(value, refs) : undefined;
+      if (id && !id.startsWith("$")) ids.push(id);
+    }
   }
   if (operation.kind === "class" && operation.target_id) ids.push(operation.target_id);
   // The classes a class's distinguish_from names, before and after.
@@ -480,6 +486,12 @@ export function namedEntityIds(
       ids.predicates.push(replacement);
     }
     const values = { ...operation.base, ...operation.fields };
+    // The scheme a class belongs to, and a taxonomy an entity names.
+    const scheme = text(values.concept_scheme_id);
+    const schemeId = scheme && resolveRef(scheme, refsOf(operation));
+    if (schemeId && !schemeId.startsWith("$")) ids.schemes.push(schemeId);
+    const taxonomyId = text(values.taxonomy_id);
+    if (taxonomyId && !taxonomyId.startsWith("$")) ids.taxonomies.push(taxonomyId);
     const owner = operation.kind === "attribute" ? text(values.class_id) : undefined;
     const ownerId = owner && resolveRef(owner, refsOf(operation));
     if (ownerId && !ownerId.startsWith("$")) ids.classes.push(ownerId);
