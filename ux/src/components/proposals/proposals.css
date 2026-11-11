@@ -1114,4 +1114,121 @@
     white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
+
+  /* Inspector: the source passage an extraction operation came from. */
+  .op-passage__where {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .op-passage__location {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .op-passage__source {
+    min-width: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
+    overflow-wrap: anywhere;
+  }
+
+  .op-passage__text {
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 6px;
+    background: rgb(var(--canvas-bg-2));
+    font-size: 13px;
+    line-height: 1.55;
+    color: rgb(var(--canvas-fg-2));
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .op-passage__text[data-placed="false"] {
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .op-passage__mark {
+    padding: 0 1px;
+    border-radius: 2px;
+    background: rgb(var(--status-amber) / 0.32);
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .op-passage__more {
+    margin: 0;
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  /* Decision: a near match, "Already in dataset …?" */
+  .op-near-match {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid rgb(var(--canvas-border));
+    border-radius: 6px;
+  }
+
+  .op-near-match__legend {
+    padding: 0 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
+  }
+
+  .op-near-match__option {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    grid-template-areas:
+      "radio label"
+      ". detail";
+    gap: 1px 8px;
+    align-items: center;
+    padding: 5px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .op-near-match__option--chosen {
+    background: rgb(var(--status-amber) / 0.08);
+  }
+
+  .op-near-match__radio {
+    grid-area: radio;
+    margin: 0;
+    accent-color: var(--accent-amber);
+  }
+
+  .op-near-match__label {
+    grid-area: label;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-1));
+    overflow-wrap: anywhere;
+  }
+
+  .op-near-match__detail {
+    grid-area: detail;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-3));
+  }
+
+  .op-near-match__note {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: rgb(var(--canvas-fg-3));
+  }
 }

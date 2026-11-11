@@ -8,6 +8,7 @@ import {
   ConfirmDialog,
 } from "@tinkermonkey/heimdall-ui";
 import { InlineInspector } from "@/components/ui/InlineInspector";
+import { EntitySources } from "@/components/entity/EntitySources";
 import {
   useDeleteRelationship,
   useCreateRelationship,
@@ -205,10 +206,11 @@ export function RelationshipDrawer({
                     key: "Created",
                     value: new Date(relationship.created_at ?? "").toLocaleDateString(),
                   },
-                  { key: "Confidence", value: "—" },
-                  { key: "Source", value: "—" },
                 ]}
               />
+            </InspectorPanel.Section>
+            <InspectorPanel.Section title="Sources" data-testid="relationship-sources-section">
+              <EntitySources kind="relationship" id={relationship.id} />
             </InspectorPanel.Section>
           </>
         ) : (

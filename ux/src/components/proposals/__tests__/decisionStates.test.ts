@@ -225,6 +225,40 @@ describe("decisionProgress", () => {
     ]);
   });
 
+  it("counts near matches and low-confidence operations as their own pills (#1555)", () => {
+    const near = {
+      op: "create" as const,
+      kind: "individual" as const,
+      target_id: null,
+      alternatives: [{ kind: "existing" as const, entity_id: "ind-1", similarity: 0.9 }],
+    };
+    const ops = [
+      op({ id: "a", probability: 0.9 }),
+      op({ id: "b", ...near, probability: 0.3 }),
+      op({ id: "c", ...near, probability: 0.95 }),
+      op({ id: "d", probability: 0.4 }),
+      op({ id: "e", probability: 0.4, stale: true }),
+    ];
+    const progress = decisionProgress(ops);
+    expect(progress).toMatchObject({ toDecide: 1, nearMatches: 2, lowConfidence: 1, stale: 1 });
+    expect(
+      progress.toDecide +
+        progress.nearMatches +
+        progress.lowConfidence +
+        progress.needChoice +
+        progress.failed +
+        progress.stale,
+    ).toBe(progress.awaiting);
+    expect(progressPills(progress)).toEqual([
+      { key: "to-decide", count: 1, label: "1 to accept or reject", variant: "amber" },
+      { key: "near-match", count: 2, label: "2 near matches", variant: "violet" },
+      { key: "low-confidence", count: 1, label: "1 low confidence", variant: "amber" },
+      { key: "stale", count: 1, label: "1 stale: apply anyway or reject", variant: "rose" },
+    ]);
+    // Low confidence follows the threshold the reviewer sets.
+    expect(decisionProgress(ops, 0.95).lowConfidence).toBe(2);
+  });
+
   it("reads All N decided once nothing awaits", () => {
     const progress = decisionProgress([
       op({ id: "a", status: "applied" }),

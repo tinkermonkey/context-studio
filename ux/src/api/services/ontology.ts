@@ -35,6 +35,7 @@ type ListProperties = components["schemas"]["ListResponse_PropertyDefinitionResp
 type RelationshipResponse = components["schemas"]["RelationshipResponse"];
 type RelationshipCreateRequest = components["schemas"]["RelationshipCreateRequest"];
 type ListRelationships = components["schemas"]["ListResponse_RelationshipResponse_"];
+export type EntitySource = components["schemas"]["EntitySourceResponse"];
 
 type DatasetResponse = components["schemas"]["DatasetResponse"];
 type DatasetCreateRequest = components["schemas"]["DatasetCreateRequest"];
@@ -319,6 +320,15 @@ class OntologyService extends BaseService {
 
   async deleteRelationship(id: string): Promise<void> {
     return this.delete<void>(`/api/relationships/${id}`);
+  }
+
+  // Provenance: the source passages behind an entity, written when a proposal applied it.
+  async listIndividualSources(id: string): Promise<EntitySource[]> {
+    return this.get<EntitySource[]>(`/api/individuals/${id}/sources`);
+  }
+
+  async listRelationshipSources(id: string): Promise<EntitySource[]> {
+    return this.get<EntitySource[]>(`/api/relationships/${id}/sources`);
   }
 }
 

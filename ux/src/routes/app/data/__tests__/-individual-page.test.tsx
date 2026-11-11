@@ -178,3 +178,70 @@ describe("IndividualPage", () => {
     expect(screen.queryByTestId("individual-dataset")).not.toBeInTheDocument();
   });
 });
+
+describe("IndividualPage sources", () => {
+  const passage = (id: string, page: number, quote: string, proposalId: string) => ({
+    id,
+    entity_id: "ind-1",
+    entity_kind: "individual",
+    source_id: "src-1",
+    proposal_id: proposalId,
+    op_seq: 1,
+    page,
+    start: 8412,
+    end: 8447,
+    quote,
+    created_at: "2026-11-10T12:00:00Z",
+  });
+
+  it("lists each source passage with its source, page, quote and proposal", async () => {
+    server.use(
+      http.get("*/api/individuals/:id/sources", () =>
+        HttpResponse.json([
+          passage("es-1", 5, "WRF555SDFZ French door refrigerator", "4f2c91d0-1111"),
+          passage("es-2", 54, "Accessories for your WRF555SDFZ", "91b7e044-2222"),
+        ]),
+      ),
+      http.get("*/api/sources/:id", () =>
+        HttpResponse.json({
+          id: "src-1",
+          kind: "pdf",
+          title: "Whirlpool use and care guide",
+          page_starts: [],
+          headings: [],
+          status: "ready",
+          removed_at: null,
+        }),
+      ),
+    );
+    render(<IndividualPage id="ind-1" />);
+
+    const panel = await screen.findByTestId("individual-sources-panel");
+    expect(await within(panel).findByTestId("entity-sources-summary")).toHaveTextContent(
+      "2 passages in 1 source",
+    );
+    const first = within(panel).getByTestId("entity-source-row-es-1");
+    expect(first).toHaveTextContent("WRF555SDFZ French door refrigerator");
+    expect(first).toHaveTextContent("p. 5");
+    // The source's title is text until the Sources page lands: the only link is the proposal.
+    await waitFor(() =>
+      expect(within(first).getByTestId("entity-source-title-es-1")).toHaveTextContent(
+        "Whirlpool use and care guide",
+      ),
+    );
+    expect(within(first).getAllByRole("link")).toHaveLength(1);
+    expect(within(first).getByTestId("entity-source-proposal-es-1")).toHaveAttribute(
+      "href",
+      "/app/proposals/4f2c91d0-1111",
+    );
+    expect(within(panel).getByRole("list", { name: "Source passages" })).toBeInTheDocument();
+  });
+
+  it("says when nothing was applied from a source", async () => {
+    render(<IndividualPage id="ind-1" />);
+
+    expect(await screen.findByTestId("entity-sources-empty")).toHaveTextContent(
+      "No source passages.",
+    );
+  });
+});

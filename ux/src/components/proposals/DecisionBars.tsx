@@ -1,4 +1,6 @@
 import { Button } from "@tinkermonkey/heimdall-ui";
+import type { ProposedOperation } from "@/api/services/proposals";
+import { nearMatchHeldNote } from "./sourceModel";
 import "./proposals.css";
 
 interface ThresholdBarProps {
@@ -70,6 +72,8 @@ interface SelectionBarProps {
    * them; each needs a resolution in the inspector.
    */
   blocked?: number;
+  /** Selected near matches and what names them: Accept selected leaves them for a choice. */
+  nearMatches?: ProposedOperation[];
   busy?: boolean;
   onClear: () => void;
   onReject: () => void;
@@ -81,17 +85,19 @@ export function SelectionBar({
   selected,
   stale,
   blocked = 0,
+  nearMatches = [],
   busy,
   onClear,
   onReject,
   onAccept,
 }: SelectionBarProps) {
-  const acceptable = selected - stale - blocked;
+  const acceptable = selected - stale - blocked - nearMatches.length;
   const notes = [
     stale > 0 &&
       `${stale} stale: Accept selected leaves ${stale === 1 ? "it" : "them"} for Apply anyway in the inspector.`,
     blocked > 0 &&
       `${blocked} blocked (in use): Accept selected skips ${blocked === 1 ? "it" : "them"}; resolve ${blocked === 1 ? "it" : "each"} in the inspector.`,
+    nearMatchHeldNote(nearMatches),
   ].filter(Boolean);
   return (
     <div className="proposal-bar proposal-bar--selection" data-testid="proposal-selection-bar">

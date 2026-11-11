@@ -125,6 +125,9 @@ export const dataset = createDataset({
 
 export const entityPageHandlers = [
   http.get("*/api/datasets", () => HttpResponse.json([dataset])),
+  // No provenance: nothing here was applied from a source.
+  http.get("*/api/individuals/:id/sources", () => HttpResponse.json([])),
+  http.get("*/api/relationships/:id/sources", () => HttpResponse.json([])),
   // No open proposals; tests of the pending-changes callout use proposalHandlers.
   http.get("*/api/proposals", () => list([])),
   http.get("*/api/taxonomies/:id/scheme-counts", () =>

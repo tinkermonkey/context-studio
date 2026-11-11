@@ -20,6 +20,8 @@ import {
 } from "./proposalModel";
 import { subjectOf } from "./OperationDiff";
 import { EvidencePack, ReflectionAnswers } from "./ReflectionAnswers";
+import { RelationshipEndsSection, SourcePassageSection } from "./SourcePassage";
+import { plainEvidenceOf, relationshipEnds, sourcePassagesOf } from "./sourceModel";
 import { textDiffOf } from "./textDiff";
 import type { OptionDefinition, Picks, ReflectionOption } from "./tieredModel";
 import type { OperationContext } from "./useOperationContext";
@@ -176,6 +178,8 @@ interface OperationInspectorProps {
   onPick?: (question: string, option: string) => void;
   /** A reflection answer's definition, for its overlay. */
   definitionOf?: (question: string, option: ReflectionOption) => OptionDefinition | undefined;
+  /** The proposal's operations, to tell which ends of a relationship create are new in it. */
+  operations?: ProposedOperation[];
 }
 
 /** The selected operation: its change field by field, rationale and evidence. */
@@ -187,13 +191,17 @@ export function OperationInspector({
   picks = {},
   onPick,
   definitionOf,
+  operations = [],
 }: OperationInspectorProps) {
   const rows = changeRows(operation);
   const state = decisionState(operation, reverted);
   // A decided operation's Decision section carries its state chip; don't repeat it here.
   const showState = isAwaiting(operation) || !decision;
   const kind = planKind(operation);
-  const evidence = (operation.evidence ?? []) as EvidenceItem[];
+  // Source passages show beside the decision; the Evidence section keeps the rest.
+  const passages = sourcePassagesOf(operation);
+  const evidence = plainEvidenceOf(operation) as EvidenceItem[];
+  const ends = relationshipEnds(operation, operations);
   const label = (field: string) =>
     operation.kind === "property" ? (PROPERTY_FIELD_LABELS[field] ?? field) : fieldLabel(field);
   const value = (field: string, v: unknown): ReactNode => {
@@ -240,6 +248,10 @@ export function OperationInspector({
         id={operation.id}
       >
         {decision}
+
+        {/* The passage it came from, right beside the decision. */}
+        {passages.length > 0 && <SourcePassageSection passages={passages} />}
+        <RelationshipEndsSection ends={ends} />
 
         {/* Before the change: a replacement linking a different pair is what to judge first. */}
         {operation.replacement_check && (
@@ -364,7 +376,7 @@ export function OperationInspector({
 
         {operation.reflection ? (
           <EvidencePack blocks={operation.reflection.evidence_pack ?? []} />
-        ) : (
+        ) : passages.length > 0 && evidence.length === 0 ? null : (
           <InspectorPanel.Section title="Evidence" count={evidence.length}>
             {evidence.length > 0 ? (
               <div className="op-inspector__stack" data-testid="operation-evidence">

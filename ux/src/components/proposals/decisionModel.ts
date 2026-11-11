@@ -14,6 +14,7 @@ import type {
 } from "@/api/services/proposals";
 import type { components } from "@/api/types";
 import { isAwaiting, propertyTriples, type ChipVariant, type TripleSource } from "./proposalModel";
+import { isNearMatch, matchedAlternative, nearMatchesOf } from "./sourceModel";
 
 export type DeleteBlockers = components["schemas"]["DeleteBlockersResponse"];
 export type BlockingEdge = components["schemas"]["BlockingEdgeResponse"];
@@ -318,6 +319,12 @@ export function decidedRecord(operation: ProposedOperation): string | undefined 
   if (operation.status === "applied" && operation.applied_fields) {
     parts.push("applied with a reviewer's edit");
   }
+  if (operation.status === "applied" && operation.matched) {
+    const title = matchedAlternative(operation)?.title;
+    parts.push(`used the existing individual${title ? ` ${title}` : ""} instead of creating one`);
+  } else if (operation.status === "applied" && nearMatchesOf(operation).length > 0) {
+    parts.push("created a new individual over its near matches");
+  }
   if (parts.length === 0) return undefined;
   const text = parts.join("; ");
   return `${text.charAt(0).toUpperCase()}${text.slice(1)}.`;
@@ -359,8 +366,12 @@ export interface DecisionProgress {
   awaiting: number;
   applied: number;
   rejected: number;
-  /** Pending, not blocked, not stale: accept or reject. */
+  /** Pending, not blocked, not stale, neither a near match nor low confidence: accept or reject. */
   toDecide: number;
+  /** Pending individual creates (not stale) that may be an individual already in the dataset. */
+  nearMatches: number;
+  /** Pending, not stale, not a near match, with a probability below the threshold. */
+  lowConfidence: number;
   /** Blocked deletes (pending or failed): move or drop the relationships using the type. */
   needChoice: number;
   /** Failed, not blocked: apply again or reject. */
@@ -373,17 +384,28 @@ export interface DecisionProgress {
   percent: number;
 }
 
-/** The banner's counts; toDecide + needChoice + failed + stale = awaiting. */
-export function decisionProgress(operations: ProposedOperation[]): DecisionProgress {
+/**
+ * The banner's counts; toDecide + nearMatches + lowConfidence + needChoice +
+ * failed + stale = awaiting. Low confidence is a probability below `threshold`.
+ */
+export function decisionProgress(
+  operations: ProposedOperation[],
+  threshold: number = DEFAULT_THRESHOLD,
+): DecisionProgress {
   const awaiting = operations.filter(isAwaiting);
   const unblocked = awaiting.filter((o) => !isBlocked(o));
   const total = operations.length;
+  const fresh = unblocked.filter((o) => o.status === "pending" && !o.stale);
+  const near = fresh.filter(isNearMatch);
+  const low = fresh.filter((o) => !isNearMatch(o) && isBelowThreshold(o, threshold));
   return {
     total,
     awaiting: awaiting.length,
     applied: operations.filter((o) => o.status === "applied").length,
     rejected: operations.filter((o) => o.status === "rejected").length,
-    toDecide: unblocked.filter((o) => o.status === "pending" && !o.stale).length,
+    toDecide: fresh.length - near.length - low.length,
+    nearMatches: near.length,
+    lowConfidence: low.length,
     needChoice: awaiting.length - unblocked.length,
     failed: unblocked.filter((o) => o.status === "failed").length,
     stale: unblocked.filter((o) => o.status === "pending" && o.stale).length,
@@ -400,10 +422,10 @@ export function decisionHeadline(progress: DecisionProgress): string {
 }
 
 export interface ProgressPill {
-  key: "to-decide" | "need-choice" | "failed" | "stale";
+  key: "to-decide" | "near-match" | "low-confidence" | "need-choice" | "failed" | "stale";
   count: number;
   label: string;
-  variant: "amber" | "rose";
+  variant: "amber" | "rose" | "violet";
 }
 
 /** The banner's breakdown of what needs a decision, each only when non-zero. */
@@ -413,6 +435,18 @@ export function progressPills(progress: DecisionProgress): ProgressPill[] {
       key: "to-decide",
       count: progress.toDecide,
       label: `${progress.toDecide} to accept or reject`,
+      variant: "amber",
+    },
+    {
+      key: "near-match",
+      count: progress.nearMatches,
+      label: `${progress.nearMatches} near match${progress.nearMatches === 1 ? "" : "es"}`,
+      variant: "violet",
+    },
+    {
+      key: "low-confidence",
+      count: progress.lowConfidence,
+      label: `${progress.lowConfidence} low confidence`,
       variant: "amber",
     },
     {

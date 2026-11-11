@@ -3641,3 +3641,74 @@ selectors:
   - selector: proposal-reject-note
     component: src/components/proposals/ProposalDetailPage.tsx
     description: "Reject all / Reject selected confirm dialog: optional reason stored with every operation it rejects"
+
+  # ── Extraction review beside the passage, near matches, entity provenance (#1555) ──
+  - selector: operation-source-passage
+    component: src/components/proposals/SourcePassage.tsx
+    description: "Operation inspector: Source passage section for an operation whose evidence locates a passage in a source"
+  - selector: operation-source-passage-location
+    component: src/components/proposals/SourcePassage.tsx
+    description: "Source passage: the passage's page and section (p. 5 · Parts and features), else its character offsets"
+  - selector: operation-source-title
+    component: src/components/proposals/SourcePassage.tsx
+    description: "Source passage: the source's title (text; a link once the Sources page lands, #1554)"
+  - selector: operation-ends-callout
+    component: src/components/proposals/OperationDecision.tsx
+    description: "Decision: a relationship create whose end is an undecided (or rejected) create in the proposal; Accept is disabled"
+  - selector: operation-source-passage-text
+    component: src/components/proposals/SourcePassage.tsx
+    description: "Source passage: the passage text; data-placed=true when the quote is highlighted in its page's text, false when it shows alone"
+  - selector: operation-source-passage-mark
+    component: src/components/proposals/SourcePassage.tsx
+    description: "Source passage: the highlighted quote (<mark>) inside its page's text"
+  - selector: operation-source-passage-more
+    component: src/components/proposals/SourcePassage.tsx
+    description: "Source passage: \"Also on pp. …\" for further passages, and a note when the source was removed"
+  - selector: operation-near-match
+    component: src/components/proposals/SourcePassage.tsx
+    description: "Decision: \"Already in dataset …?\" radio group of a near match (each existing individual with its similarity, or Create new)"
+  - selector: operation-near-match-option-*
+    component: src/components/proposals/SourcePassage.tsx
+    description: "Near-match choice: one option by existing individual id, or \"new\" for Create new"
+  - selector: operation-near-match-chip-*
+    component: src/components/proposals/OperationColumns.tsx
+    description: "Operations table status cell: \"near match\" on an individual create with alternatives, \"used existing\" once it applied as one"
+  - selector: operation-relationship-ends
+    component: src/components/proposals/SourcePassage.tsx
+    description: "Operation inspector: Ends section of a relationship create with an end created in the proposal"
+  - selector: operation-relationship-end-*
+    component: src/components/proposals/SourcePassage.tsx
+    description: "Ends section: the source or target end's chip; data-kind is existing, new or near"
+  - selector: operation-relationship-ends-note
+    component: src/components/proposals/SourcePassage.tsx
+    description: "Ends section: which ends are new in the proposal and which follow a near-match choice"
+  - selector: entity-sources
+    component: src/components/entity/EntitySources.tsx
+    description: "Entity provenance: the source passages a proposal applied an individual or relationship from"
+  - selector: entity-sources-summary
+    component: src/components/entity/EntitySources.tsx
+    description: "Entity provenance: \"N passages in M sources\""
+  - selector: entity-sources-loading
+    component: src/components/entity/EntitySources.tsx
+    description: "Entity provenance: loading note"
+  - selector: entity-sources-error
+    component: src/components/entity/EntitySources.tsx
+    description: "Entity provenance: the passages couldn't be loaded"
+  - selector: entity-sources-empty
+    component: src/components/entity/EntitySources.tsx
+    description: "Entity provenance: nothing was applied from a source"
+  - selector: entity-source-row-*
+    component: src/components/entity/EntitySources.tsx
+    description: "Entity provenance: one passage by its id (source, page, quote, proposal and op)"
+  - selector: entity-source-title-*
+    component: src/components/entity/EntitySources.tsx
+    description: "Entity provenance: the passage's source title (text until the Sources page lands, #1554), by passage id"
+  - selector: entity-source-proposal-*
+    component: src/components/entity/EntitySources.tsx
+    description: "Entity provenance: link to the proposal that applied the passage, by passage id"
+  - selector: individual-sources-panel
+    component: src/routes/app/data/individuals_.$id.tsx
+    description: "Individual page: Sources panel listing the passages it was applied from"
+  - selector: relationship-sources-section
+    component: src/components/ontology/RelationshipDrawer.tsx
+    description: "Relationship drawer: Sources section listing the passages it was applied from"

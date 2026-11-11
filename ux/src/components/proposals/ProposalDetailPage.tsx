@@ -73,6 +73,7 @@ import {
   type Picks,
   type ReflectionOption,
 } from "./tieredModel";
+import { nearMatchHeldIds, nearMatchHeldNote } from "./sourceModel";
 import { useOperationContext } from "./useOperationContext";
 import { pendingLabel, useProposalActions } from "./useProposalActions";
 import "./proposals.css";
@@ -155,7 +156,7 @@ export function ProposalDetailPage({
 
   const deciding = !!proposal && takesDecisions(proposal);
   const reverted = proposal?.status === "reverted";
-  const progress = useMemo(() => decisionProgress(operations), [operations]);
+  const progress = useMemo(() => decisionProgress(operations, threshold), [operations, threshold]);
   const filter = chosenFilter ?? defaultOperationFilter(progress, openOnAll.current);
   const shownOperations = useMemo(
     () => operationsShown(operations, filter, facets),
@@ -233,9 +234,12 @@ export function ProposalDetailPage({
   // Judgment and conflict rows of a change plan are never bulk-decided.
   // So are the operations a conflict card shows, in either view.
   const conflicted = useMemo(() => conflictedIds(operations), [operations]);
+  // Near matches, and what names them by "$ref", wait for the reviewer's choice:
+  // a bulk accept would create a new individual for each instead.
+  const nearHeld = useMemo(() => nearMatchHeldIds(operations), [operations]);
   const bulkOps = useMemo(
-    () => awaitingOps.filter((o) => isBulkEligible(o, conflicted)),
-    [awaitingOps, conflicted],
+    () => awaitingOps.filter((o) => isBulkEligible(o, conflicted) && !nearHeld.has(o.id)),
+    [awaitingOps, conflicted, nearHeld],
   );
   const bulkReady = bulkOps.filter((o) => !o.stale && !isBlocked(o));
   const showThreshold =
@@ -342,9 +346,13 @@ export function ProposalDetailPage({
   const checkedList = [...checked];
   // A blocked delete counts as blocked even when stale too: Accept selected skips it either way.
   const checkedStale = operations.filter(
-    (o) => checked.has(o.id) && o.stale && !isBlocked(o),
+    (o) => checked.has(o.id) && o.stale && !isBlocked(o) && !nearHeld.has(o.id),
   ).length;
-  const checkedBlocked = operations.filter((o) => checked.has(o.id) && isBlocked(o)).length;
+  const checkedBlocked = operations.filter(
+    (o) => checked.has(o.id) && isBlocked(o) && !nearHeld.has(o.id),
+  ).length;
+  const checkedNear = operations.filter((o) => checked.has(o.id) && nearHeld.has(o.id));
+  const heldAwaiting = awaitingOps.filter((o) => nearHeld.has(o.id));
   const awaitingIds = awaitingOps.map((o) => o.id);
   const bulkIds = bulkOps.map((o) => o.id);
   const neverBulk = awaitingOps.length - bulkOps.length;
@@ -438,7 +446,9 @@ export function ProposalDetailPage({
                               "Stale operations are left for Apply anyway",
                             blockedAwaiting > 0 &&
                               "Blocked deletes are left for a resolution in the inspector",
-                            neverBulk > 0 && "Judgment and conflict changes are decided one by one",
+                            neverBulk > heldAwaiting.length &&
+                              "Judgment and conflict changes are decided one by one",
+                            nearMatchHeldNote(heldAwaiting)?.replace(/\.$/, ""),
                           ]
                             .filter(Boolean)
                             .join(". ")
@@ -530,6 +540,7 @@ export function ProposalDetailPage({
           selected={checked.size}
           stale={checkedStale}
           blocked={checkedBlocked}
+          nearMatches={checkedNear}
           busy={actions.busy}
           onClear={() => setChecked([])}
           onReject={() => {
@@ -553,6 +564,7 @@ export function ProposalDetailPage({
             <OperationInspector
               key={operation.id}
               operation={operation}
+              operations={operations}
               context={context}
               picks={picks}
               definitionOf={definitionOf(operation)}
