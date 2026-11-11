@@ -726,7 +726,7 @@ class SourceRepository(Protocol):
         ...
 
     def get(self, source_id: str) -> Source | None:
-        """A source by id, removed or not; None if there is none."""
+        """A source by id, with its text, removed or not; None if there is none."""
         ...
 
     def list_sources(
@@ -734,8 +734,24 @@ class SourceRepository(Protocol):
         taxonomy_id: str | None = None,
         dataset_id: str | None = None,
         status: SourceStatus | None = None,
+        limit: int | None = None,
+        offset: int = 0,
     ) -> list[Source]:
-        """Sources matching every filter given, newest first, without removed ones."""
+        """
+        Sources matching every filter given, newest first, without removed ones.
+
+        Listed sources come WITHOUT their text (`text` is ""): `get` one for
+        its text, and never `save` a listed source, which would erase it.
+        """
+        ...
+
+    def count_sources(
+        self,
+        taxonomy_id: str | None = None,
+        dataset_id: str | None = None,
+        status: SourceStatus | None = None,
+    ) -> int:
+        """How many sources list_sources would return without a limit."""
         ...
 
 

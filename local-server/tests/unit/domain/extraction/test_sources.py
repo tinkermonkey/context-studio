@@ -82,11 +82,43 @@ def test_file_kind(name, content_type, kind):
     assert file_kind(name, content_type) == kind
 
 
+def test_file_kind_sniffs_a_pdf():
+    assert file_kind("manual", "application/octet-stream", b"%PDF-1.7\n...") == SourceKind.PDF
+
+
 def test_fetched_kind_prefers_the_content_type_and_calls_html_web():
     assert fetched_kind("https://x.org/a", "text/html; charset=utf-8") == SourceKind.WEB
     assert fetched_kind("https://x.org/m.pdf", None) == SourceKind.PDF
     assert fetched_kind("https://x.org/m", "application/pdf") == SourceKind.PDF
     assert fetched_kind("https://x.org/i.png", "image/png") is None
+    # A specific type wins over the URL's extension
+    assert fetched_kind("https://x.org/page.md", "text/html") == SourceKind.WEB
+
+
+@pytest.mark.parametrize(
+    "url, content_type, data, file_name, kind",
+    [
+        # PDF magic bytes win over anything the server says
+        ("https://x.org/get?id=1", "text/html", b"%PDF-1.4 ...", None, SourceKind.PDF),
+        # Generic types: the URL's extension wins when it is known
+        ("https://x.org/README.md", "text/plain", b"# A", None, SourceKind.MARKDOWN),
+        ("https://x.org/m.pdf", "application/x-pdf", b"", None, SourceKind.PDF),
+        ("https://x.org/notes.txt", "application/octet-stream", b"a", None, SourceKind.TEXT),
+        ("https://x.org/page", "text/plain", b"a", None, SourceKind.TEXT),
+        ("https://x.org/blob", "application/octet-stream", b"a", None, None),
+        # ... and a Content-Disposition file name before the URL's
+        (
+            "https://x.org/download",
+            "application/octet-stream",
+            b"#",
+            "guide.md",
+            SourceKind.MARKDOWN,
+        ),
+        ("https://x.org/a.txt", "text/plain", b"<p>", "page.html", SourceKind.WEB),
+    ],
+)
+def test_fetched_kind_for_generic_content_types(url, content_type, data, file_name, kind):
+    assert fetched_kind(url, content_type, data, file_name) == kind
 
 
 @pytest.mark.parametrize("url", ["ftp://x.org/a", "file:///etc/passwd", "x.org", "http://"])
@@ -231,6 +263,74 @@ def test_add_url_refuses_other_schemes(service):
         service.add_url(T, "file:///etc/hosts")
 
 
+def test_markdown_served_as_text_plain_is_markdown(service, fetcher):
+    fetcher.add("https://example.org/README.md", b"# Readme", "text/plain; charset=utf-8")
+    source = service.fetch(service.add_url(T, "https://example.org/README.md").id)
+    assert source.kind is SourceKind.MARKDOWN
+
+
+class _Exploding:
+    def __init__(self, error):
+        self.error = error
+
+    def fetch(self, url, max_bytes):
+        raise self.error
+
+    def save(self, source_id, kind, data):
+        raise self.error
+
+    def delete(self, source_id):
+        pass
+
+
+def test_an_unexpected_fetch_error_fails_the_source_instead_of_leaving_it_fetching(
+    ontology, repo, files
+):
+    service = make_service(ontology, repo, _Exploding(RuntimeError("bad url")), files)
+    source = service.fetch(service.add_url(T, "https://example.org/a").id)
+    assert source.status is SourceStatus.FAILED
+    assert source.failure is SourceFailure.FETCH_FAILED
+    assert source.failure_detail == "RuntimeError: bad url"
+    assert repo.get(source.id).status is SourceStatus.FAILED
+
+
+def test_a_file_store_error_during_a_fetch_fails_the_source(ontology, repo, fetcher):
+    fetcher.add("https://example.org/a", b"page")
+    service = make_service(ontology, repo, fetcher, _Exploding(OSError("disk full")))
+    source = service.fetch(service.add_url(T, "https://example.org/a").id)
+    assert source.failure is SourceFailure.FETCH_FAILED
+    assert "disk full" in source.failure_detail
+
+
+def test_a_source_removed_before_its_fetch_is_not_fetched(service, fetcher):
+    source = service.add_url(T, "https://example.org/a")
+    service.remove(source.id)
+    assert service.fetch(source.id).removed_at is not None
+    assert fetcher.fetched == []
+
+
+def test_a_source_removed_during_its_fetch_stays_removed(service, fetcher, files, repo):
+    fetcher.add("https://example.org/a", b"page")
+    source = service.add_url(T, "https://example.org/a")
+    fetcher.before_answer = lambda: service.remove(source.id)
+
+    result = service.fetch(source.id)
+
+    assert result.removed_at is not None
+    stored = repo.get(source.id)
+    assert stored.removed_at is not None
+    assert stored.status is SourceStatus.FETCHING  # the fetch's result was not saved
+    assert files.files == {}  # nor its original written
+    assert service.list_sources(T) == ([], 0)
+
+
+def test_a_source_removed_during_a_failed_fetch_stays_removed(service, fetcher, repo):
+    source = service.add_url(T, "https://example.org/missing")
+    fetcher.before_answer = lambda: service.remove(source.id)
+    service.fetch(source.id)
+    assert repo.get(source.id).removed_at is not None
+
+
 def test_fail_interrupted_fetches(service, repo):
     source = service.add_url(T, "https://example.org/a")
     assert service.fail_interrupted_fetches() == 1
@@ -252,8 +352,18 @@ def test_dataset_by_identifier_or_id_and_required_when_several(service, ontology
     with pytest.raises(EntityNotFoundError):
         service.add_text(T, "d", "z", dataset="garage")
 
-    assert [s.title for s in service.list_sources(T)] == ["b", "a"]
-    assert [s.title for s in service.list_sources(T, dataset="home")] == ["b"]
+    assert [s.title for s in service.list_sources(T)[0]] == ["b", "a"]
+    assert [s.title for s in service.list_sources(T, dataset="home")[0]] == ["b"]
+
+
+def test_list_pages_counts_and_leaves_the_text_out(service):
+    for title in ("a", "b", "c"):
+        service.add_text(T, title, f"text {title}")
+    page, total = service.list_sources(T, limit=1, offset=1)
+    assert total == 3
+    assert [s.title for s in page] == ["b"]
+    assert page[0].text == "" and page[0].chars == 6
+    assert service.get(page[0].id).text == "text b"
 
 
 def test_an_unknown_taxonomy_is_not_found(service):
@@ -286,7 +396,7 @@ def test_remove_keeps_the_record_for_provenance(service, files):
     removed = service.remove(source.id)
 
     assert removed.removed_at is not None
-    assert service.list_sources(T) == []
+    assert service.list_sources(T) == ([], 0)
     assert service.get(source.id).removed_at is not None
     assert files.files == {}
     with pytest.raises(EntityNotFoundError):

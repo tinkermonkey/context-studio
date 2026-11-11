@@ -35,16 +35,37 @@ class FakeSourceRepository:
         taxonomy_id: Optional[str] = None,
         dataset_id: Optional[str] = None,
         status: Optional[SourceStatus] = None,
+        limit: Optional[int] = None,
+        offset: int = 0,
     ) -> list[Source]:
-        found = [
-            replace(s)
+        found = self._matching(taxonomy_id, dataset_id, status)
+        found.sort(key=lambda s: (-s.created_at.timestamp(), s.id))
+        end = None if limit is None else offset + limit
+        # Like SQLite, a list leaves the text out
+        return [replace(s, text="") for s in found[offset:end]]
+
+    def count_sources(
+        self,
+        taxonomy_id: Optional[str] = None,
+        dataset_id: Optional[str] = None,
+        status: Optional[SourceStatus] = None,
+    ) -> int:
+        return len(self._matching(taxonomy_id, dataset_id, status))
+
+    def _matching(
+        self,
+        taxonomy_id: Optional[str],
+        dataset_id: Optional[str],
+        status: Optional[SourceStatus],
+    ) -> list[Source]:
+        return [
+            s
             for s in self.sources.values()
             if s.removed_at is None
             and (taxonomy_id is None or s.taxonomy_id == taxonomy_id)
             and (dataset_id is None or s.dataset_id == dataset_id)
             and (status is None or s.status == status)
         ]
-        return sorted(found, key=lambda s: (-s.created_at.timestamp(), s.id))
 
 
 class FakeSourceReader:
@@ -75,12 +96,17 @@ class FakePageFetcher:
     def __init__(self) -> None:
         self.pages: dict[str, FetchedPage] = {}
         self.fetched: list[str] = []
+        self.before_answer = None  # called just before a page is returned
 
-    def add(self, url: str, body: bytes, content_type: str = "text/html") -> None:
-        self.pages[url] = FetchedPage(data=body, content_type=content_type, url=url)
+    def add(self, url: str, body: bytes, content_type: str = "text/html", file_name=None) -> None:
+        self.pages[url] = FetchedPage(
+            data=body, content_type=content_type, url=url, file_name=file_name
+        )
 
     def fetch(self, url: str, max_bytes: int) -> FetchedPage:
         self.fetched.append(url)
+        if self.before_answer is not None:
+            self.before_answer()
         page = self.pages.get(url)
         if page is None:
             raise SourceFailedError(SourceFailure.FETCH_FAILED.value, "HTTP 404")

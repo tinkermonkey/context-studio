@@ -17,6 +17,7 @@ that name it keep pointing at a source (with its title and text).
 from __future__ import annotations
 
 import bisect
+import logging
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from enum import Enum
@@ -38,6 +39,8 @@ if TYPE_CHECKING:
         SourceReader,
         SourceRepository,
     )
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_MAX_BYTES = 50 * 1024 * 1024
 
@@ -85,8 +88,15 @@ _CONTENT_TYPE_KINDS = {
     "text/x-markdown": SourceKind.MARKDOWN,
     "text/html": SourceKind.HTML,
     "application/xhtml+xml": SourceKind.HTML,
+    "application/x-pdf": SourceKind.PDF,
     "text/plain": SourceKind.TEXT,
 }
+
+# Content types servers send for files whose real type the name says better
+# (Markdown is often served as text/plain).
+_GENERIC_TYPES = {"", "application/octet-stream", "application/x-pdf", "text/plain"}
+
+PDF_MAGIC = b"%PDF-"
 
 
 def _media_type(content_type: Optional[str]) -> str:
@@ -94,22 +104,44 @@ def _media_type(content_type: Optional[str]) -> str:
     return (content_type or "").split(";")[0].strip().lower()
 
 
-def file_kind(file_name: Optional[str], content_type: Optional[str]) -> Optional[SourceKind]:
-    """
-    An uploaded file's kind: by its extension, else its content type (browsers
-    often send Markdown as application/octet-stream). None when unsupported.
-    """
-    suffix = PurePosixPath(file_name or "").suffix.lower()
-    return _SUFFIX_KINDS.get(suffix) or _CONTENT_TYPE_KINDS.get(_media_type(content_type))
+def _suffix_kind(name: Optional[str]) -> Optional[SourceKind]:
+    return _SUFFIX_KINDS.get(PurePosixPath(name or "").suffix.lower())
 
 
-def fetched_kind(url: str, content_type: Optional[str]) -> Optional[SourceKind]:
+def file_kind(
+    file_name: Optional[str], content_type: Optional[str], data: bytes = b""
+) -> Optional[SourceKind]:
     """
-    A fetched page's kind: by the content type the server sent, else the URL's
-    extension. An HTML page is `web`; a PDF or text file behind a URL keeps its
-    format. None when unsupported.
+    An uploaded file's kind: a PDF by its first bytes, else by its extension,
+    else its content type (browsers often send Markdown as
+    application/octet-stream). None when unsupported.
     """
-    kind = _CONTENT_TYPE_KINDS.get(_media_type(content_type)) or file_kind(urlparse(url).path, None)
+    if data.startswith(PDF_MAGIC):
+        return SourceKind.PDF
+    return _suffix_kind(file_name) or _CONTENT_TYPE_KINDS.get(_media_type(content_type))
+
+
+def fetched_kind(
+    url: str,
+    content_type: Optional[str],
+    data: bytes = b"",
+    file_name: Optional[str] = None,
+) -> Optional[SourceKind]:
+    """
+    A fetched page's kind. A PDF by its first bytes; else the content type the
+    server sent, except that for a generic type (octet-stream, text/plain) the
+    name wins when its extension is known: the Content-Disposition file name,
+    else the URL's path. An HTML page is `web`; a PDF or text file behind a URL
+    keeps its format. None when unsupported.
+    """
+    if data.startswith(PDF_MAGIC):
+        return SourceKind.PDF
+    media = _media_type(content_type)
+    named = _suffix_kind(file_name) or _suffix_kind(urlparse(url).path)
+    if media in _GENERIC_TYPES:
+        kind = named or _CONTENT_TYPE_KINDS.get(media)
+    else:
+        kind = _CONTENT_TYPE_KINDS.get(media) or named
     return SourceKind.WEB if kind is SourceKind.HTML else kind
 
 
@@ -171,11 +203,13 @@ class FetchedPage:
         data: The response body
         content_type: The Content-Type header, if any
         url: The URL fetched, after redirects
+        file_name: The file name a Content-Disposition header gave, if any
     """
 
     data: bytes
     content_type: Optional[str]
     url: str
+    file_name: Optional[str] = None
 
 
 def _now() -> datetime:
@@ -301,7 +335,7 @@ class SourceService:
             DatasetRequiredError: If none is named and the taxonomy has several
             DatasetMismatchError: If the named dataset is another taxonomy's
         """
-        kind = file_kind(file_name, content_type)
+        kind = file_kind(file_name, content_type, data)
         source = Source(
             taxonomy_id=taxonomy_id,
             dataset_id=self._dataset_id(taxonomy_id, dataset),
@@ -316,7 +350,9 @@ class SourceService:
             return self._sources.save(
                 _failed(source, SourceFailure.UNSUPPORTED_TYPE, _unsupported(content_type))
             )
-        return self._sources.save(self._read(source, data, has_title=bool((title or "").strip())))
+        read = self._read(source, data, has_title=bool((title or "").strip()))
+        self._keep_original(read, data)
+        return self._sources.save(read)
 
     def add_text(
         self, taxonomy_id: str, title: str, text: str, dataset: Optional[str] = None
@@ -341,7 +377,7 @@ class SourceService:
             content_type="text/plain",
             bytes=len(data),
         )
-        return self._sources.save(self._read(source, data, has_title=True, keep_original=False))
+        return self._sources.save(self._read(source, data, has_title=True))
 
     def add_url(
         self, taxonomy_id: str, url: str, dataset: Optional[str] = None, title: Optional[str] = None
@@ -374,14 +410,23 @@ class SourceService:
             EntityNotFoundError: If the source doesn't exist
         """
         source = self.get(source_id)
-        if source.status is not SourceStatus.FETCHING:
+        if source.status is not SourceStatus.FETCHING or source.removed_at is not None:
             return source
+        try:
+            return self._fetch(source)
+        except Exception as exc:  # noqa: BLE001 - it runs in the background: never stay fetching
+            logger.exception("Fetching source %s failed", source.id)
+            return self._save_unless_removed(
+                _failed(source, SourceFailure.FETCH_FAILED, f"{type(exc).__name__}: {exc}")
+            )
+
+    def _fetch(self, source: Source) -> Source:
         has_title = source.title != source.origin
         try:
             page = self._fetcher.fetch(str(source.origin), self._max_bytes)
         except SourceFailedError as exc:
-            return self._sources.save(_failed(source, exc.failure, exc.detail))
-        kind = fetched_kind(page.url, page.content_type)
+            return self._save_unless_removed(_failed(source, exc.failure, exc.detail))
+        kind = fetched_kind(page.url, page.content_type, page.data, page.file_name)
         source = replace(
             source,
             content_type=_media_type(page.content_type) or None,
@@ -389,10 +434,24 @@ class SourceService:
             kind=kind or SourceKind.WEB,
         )
         if kind is None:
-            return self._sources.save(
+            return self._save_unless_removed(
                 _failed(source, SourceFailure.UNSUPPORTED_TYPE, _unsupported(page.content_type))
             )
-        return self._sources.save(self._read(source, page.data, has_title=has_title))
+        return self._save_unless_removed(
+            self._read(source, page.data, has_title=has_title), original=page.data
+        )
+
+    def _save_unless_removed(self, source: Source, original: Optional[bytes] = None) -> Source:
+        """
+        Save a fetch's result, and keep its original, unless the source was
+        removed while it was being fetched: then it stays removed.
+        """
+        current = self.get(source.id)
+        if current.removed_at is not None:
+            return current
+        if original is not None:
+            self._keep_original(source, original)
+        return self._sources.save(source)
 
     def fail_interrupted_fetches(self) -> int:
         """
@@ -400,9 +459,13 @@ class SourceService:
         startup. Returns how many.
         """
         interrupted = self._sources.list_sources(status=SourceStatus.FETCHING)
-        for source in interrupted:
+        for listed in interrupted:
             self._sources.save(
-                _failed(source, SourceFailure.FETCH_FAILED, "The app stopped while fetching")
+                _failed(
+                    self.get(listed.id),
+                    SourceFailure.FETCH_FAILED,
+                    "The app stopped while fetching",
+                )
             )
         return len(interrupted)
 
@@ -418,17 +481,28 @@ class SourceService:
             raise EntityNotFoundError("Source", source_id)
         return source
 
-    def list_sources(self, taxonomy_id: str, dataset: Optional[str] = None) -> list[Source]:
+    def list_sources(
+        self,
+        taxonomy_id: str,
+        dataset: Optional[str] = None,
+        limit: Optional[int] = None,
+        offset: int = 0,
+    ) -> tuple[list[Source], int]:
         """
-        A taxonomy's sources (in one dataset, identifier or id, when named),
-        newest first, without removed ones.
+        A page of a taxonomy's sources (in one dataset, identifier or id, when
+        named), newest first, without removed ones and without their text
+        (`get` has it); and how many there are in all.
 
         Raises:
             EntityNotFoundError: If the taxonomy or the named dataset doesn't exist
         """
         self._check_taxonomy(taxonomy_id)
         dataset_id = self._named_dataset_id(taxonomy_id, dataset) if dataset else None
-        return self._sources.list_sources(taxonomy_id=taxonomy_id, dataset_id=dataset_id)
+        page = self._sources.list_sources(
+            taxonomy_id=taxonomy_id, dataset_id=dataset_id, limit=limit, offset=offset
+        )
+        total = self._sources.count_sources(taxonomy_id=taxonomy_id, dataset_id=dataset_id)
+        return page, total
 
     def text(self, source_id: str, page: Optional[int] = None) -> tuple[Source, int, int]:
         """
@@ -463,9 +537,12 @@ class SourceService:
         now = _now()
         return self._sources.save(replace(source, removed_at=now, updated_at=now))
 
-    def _read(
-        self, source: Source, data: bytes, has_title: bool, keep_original: bool = True
-    ) -> Source:
+    def _keep_original(self, source: Source, data: bytes) -> None:
+        """Keep the original of a file or page that was read (not one too large)."""
+        if source.failure is not SourceFailure.TOO_LARGE:
+            self._files.save(source.id, source.kind, data)
+
+    def _read(self, source: Source, data: bytes, has_title: bool) -> Source:
         """The source with its text read, or failed: too large, or unreadable."""
         if len(data) > self._max_bytes:
             return _failed(
@@ -473,8 +550,6 @@ class SourceService:
                 SourceFailure.TOO_LARGE,
                 f"Larger than the {self._max_bytes // (1024 * 1024)} MB limit",
             )
-        if keep_original:
-            self._files.save(source.id, source.kind, data)
         try:
             read = self._readers[source.kind].read(data)
         except SourceFailedError as exc:

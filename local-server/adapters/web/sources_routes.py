@@ -17,6 +17,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, R
 from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
 from starlette.datastructures import UploadFile
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from adapters.web.dependencies import get_source_service
 from adapters.web.schemas.ontology import ListResponse
@@ -131,7 +132,8 @@ async def add_source(
                 service.add_text, body.taxonomy_id, body.title or "", body.text or "", body.dataset
             )
         return SourceResponse.from_domain(source)
-    except (HTTPException, RequestValidationError):
+    # Starlette's covers FastAPI's, and a malformed multipart body (no boundary): a 400
+    except (StarletteHTTPException, RequestValidationError):
         raise
     except Exception as exc:
         raise _http_error(exc) from exc
@@ -149,12 +151,14 @@ async def list_sources(
 ) -> ListResponse[SourceResponse]:
     """A taxonomy's sources, newest first, without removed ones."""
     try:
-        sources = await run_sync_in_executor(service.list_sources, taxonomy_id, dataset)
+        sources, total = await run_sync_in_executor(
+            service.list_sources, taxonomy_id, dataset, limit, offset
+        )
     except Exception as exc:
         raise _http_error(exc) from exc
     return ListResponse(
-        items=[SourceResponse.from_domain(s) for s in sources[offset : offset + limit]],
-        total=len(sources),
+        items=[SourceResponse.from_domain(s) for s in sources],
+        total=total,
         limit=limit,
         offset=offset,
     )

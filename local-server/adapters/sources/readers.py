@@ -189,8 +189,11 @@ class PdfTextReader:
             return None
 
     @staticmethod
-    def _outline_headings(reader: PdfReader, page_starts: list[int]) -> list[SourceHeading]:
-        """Outline (bookmark) entries as headings at the start of the page they point to."""
+    def _outline_headings(reader: Any, page_starts: list[int]) -> list[SourceHeading]:
+        """
+        Outline (bookmark) entries as headings at the start of the page they
+        point to. A broken entry is skipped; the others still count.
+        """
         headings: list[SourceHeading] = []
 
         def walk(items: list, level: int) -> None:
@@ -198,18 +201,23 @@ class PdfTextReader:
                 if isinstance(item, list):
                     walk(item, level + 1)
                     continue
-                page = reader.get_destination_page_number(item)
-                title = _squash(str(item.title or ""))
+                try:
+                    page = reader.get_destination_page_number(item)
+                    title = _squash(str(item.title or ""))
+                except Exception as exc:  # noqa: BLE001 - skip the entry, keep the rest
+                    logger.warning("Skipped a broken PDF outline entry: %s", exc)
+                    continue
                 if title and page is not None and 0 <= page < len(page_starts):
                     headings.append(
                         SourceHeading(start=page_starts[page], title=title, level=level)
                     )
 
         try:
-            walk(reader.outline, 1)
-        except Exception as exc:  # noqa: BLE001 - a broken outline means no headings
+            outline = reader.outline
+        except Exception as exc:  # noqa: BLE001 - an unreadable outline means no headings
             logger.warning("Could not read the PDF outline: %s", exc)
             return []
+        walk(outline, 1)
         return sorted(headings, key=lambda h: h.start)
 
 

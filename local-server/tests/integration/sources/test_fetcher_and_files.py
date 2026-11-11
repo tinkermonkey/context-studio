@@ -49,6 +49,29 @@ def test_a_timeout_fails_the_fetch():
     assert "Timed out" in raised.value.detail
 
 
+@pytest.mark.parametrize("url", ["http://exämple..com/", "http://exa\tmple.com/"])
+def test_an_invalid_url_fails_the_fetch(url):
+    # httpx raises InvalidURL, which isn't an HTTPError; no request is made
+    with pytest.raises(SourceFailedError) as raised:
+        HttpPageFetcher(timeout_seconds=1).fetch(url, 1000)
+    assert raised.value.failure == "fetch_failed"
+
+
+def test_the_content_disposition_file_name_comes_back():
+    def handler(request):
+        return httpx.Response(
+            200,
+            content=b"# Guide",
+            headers={
+                "content-type": "application/octet-stream",
+                "content-disposition": 'attachment; filename="install guide.md"',
+            },
+        )
+
+    page = fetcher_for(handler).fetch("https://example.org/download?id=7", 1000)
+    assert page.file_name == "install guide.md"
+
+
 def test_only_http_and_https():
     with pytest.raises(SourceFailedError) as raised:
         fetcher_for(lambda r: httpx.Response(200)).fetch("file:///etc/hosts", 1000)

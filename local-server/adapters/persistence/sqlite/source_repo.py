@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import func
+from sqlalchemy.orm import Query, Session, defer, sessionmaker
 
 from adapters.persistence.sqlite.models import SourceRecord
 from domain.extraction.sources import Source, SourceHeading, SourceStatus
@@ -18,7 +19,8 @@ def _utc(value: Optional[datetime]) -> Optional[datetime]:
     return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
 
 
-def _to_domain(row: SourceRecord) -> Source:
+def _to_domain(row: SourceRecord, with_text: bool = True) -> Source:
+    """A row as a Source; without its text (deferred in lists) when with_text is False."""
     return Source(
         id=str(row.id),
         taxonomy_id=str(row.taxonomy_id),
@@ -30,7 +32,7 @@ def _to_domain(row: SourceRecord) -> Source:
         bytes=int(row.bytes),  # type: ignore[arg-type]
         pages=int(row.pages),  # type: ignore[arg-type]
         chars=int(row.chars),  # type: ignore[arg-type]
-        text=str(row.text),
+        text=str(row.text) if with_text else "",
         page_starts=[int(s) for s in row.page_starts or []],  # type: ignore[union-attr]
         headings=[SourceHeading(**h) for h in row.headings or []],  # type: ignore[union-attr]
         status=row.status,  # type: ignore[arg-type]
@@ -95,14 +97,43 @@ class SQLiteSourceRepository:
         taxonomy_id: Optional[str] = None,
         dataset_id: Optional[str] = None,
         status: Optional[SourceStatus] = None,
+        limit: Optional[int] = None,
+        offset: int = 0,
     ) -> list[Source]:
         with self._session_factory() as session:
-            query = session.query(SourceRecord).filter(SourceRecord.removed_at.is_(None))
-            if taxonomy_id is not None:
-                query = query.filter(SourceRecord.taxonomy_id == str(taxonomy_id))
-            if dataset_id is not None:
-                query = query.filter(SourceRecord.dataset_id == str(dataset_id))
-            if status is not None:
-                query = query.filter(SourceRecord.status == SourceStatus(status).value)
-            query = query.order_by(SourceRecord.created_at.desc(), SourceRecord.id)
-            return [_to_domain(row) for row in query]
+            query = (
+                self._filtered(session, taxonomy_id, dataset_id, status)
+                .options(defer(SourceRecord.text))
+                .order_by(SourceRecord.created_at.desc(), SourceRecord.id)
+            )
+            if offset:
+                query = query.offset(offset)
+            if limit is not None:
+                query = query.limit(limit)
+            return [_to_domain(row, with_text=False) for row in query]
+
+    def count_sources(
+        self,
+        taxonomy_id: Optional[str] = None,
+        dataset_id: Optional[str] = None,
+        status: Optional[SourceStatus] = None,
+    ) -> int:
+        with self._session_factory() as session:
+            query = self._filtered(session, taxonomy_id, dataset_id, status)
+            return int(query.with_entities(func.count(SourceRecord.id)).scalar())
+
+    @staticmethod
+    def _filtered(
+        session: Session,
+        taxonomy_id: Optional[str],
+        dataset_id: Optional[str],
+        status: Optional[SourceStatus],
+    ) -> Query:
+        query = session.query(SourceRecord).filter(SourceRecord.removed_at.is_(None))
+        if taxonomy_id is not None:
+            query = query.filter(SourceRecord.taxonomy_id == str(taxonomy_id))
+        if dataset_id is not None:
+            query = query.filter(SourceRecord.dataset_id == str(dataset_id))
+        if status is not None:
+            query = query.filter(SourceRecord.status == SourceStatus(status).value)
+        return query

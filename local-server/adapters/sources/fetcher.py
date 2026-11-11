@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from email.message import Message
+
 import httpx
 
 from domain.extraction.exceptions import SourceFailedError
@@ -47,13 +49,26 @@ class HttpPageFetcher:
                         data=bytes(body),
                         content_type=response.headers.get("content-type"),
                         url=str(response.url),
+                        file_name=_disposition_file_name(
+                            response.headers.get("content-disposition")
+                        ),
                     )
         except httpx.TimeoutException as exc:
             raise _fetch_failed(f"Timed out after {self._timeout:g} seconds") from exc
-        except httpx.HTTPError as exc:
+        # InvalidURL (a typo'd host, a tab in the URL) and StreamError aren't HTTPErrors
+        except (httpx.HTTPError, httpx.InvalidURL, httpx.StreamError) as exc:
             raise _fetch_failed(f"Could not fetch the page ({exc})") from exc
         except ValueError as exc:  # check_url: not an http or https URL
             raise _fetch_failed(str(exc)) from exc
+
+
+def _disposition_file_name(header: str | None) -> str | None:
+    """The file name in a Content-Disposition header (filename or filename*), if any."""
+    if not header:
+        return None
+    message = Message()
+    message["content-disposition"] = header
+    return message.get_filename()
 
 
 def _fetch_failed(detail: str) -> SourceFailedError:

@@ -56,6 +56,26 @@ def test_pdf_reads_each_page_with_its_offset_and_outline():
     ]
 
 
+def test_a_broken_outline_entry_is_skipped_and_the_rest_kept():
+    class Entry:
+        def __init__(self, title):
+            self.title = title
+
+    class Reader:
+        outline = [Entry("Safety"), Entry("Broken"), [Entry("Shelves")]]
+
+        def get_destination_page_number(self, entry):
+            if entry.title == "Broken":
+                raise KeyError("/Dest")
+            return 1 if entry.title == "Shelves" else 0
+
+    headings = PdfTextReader._outline_headings(Reader(), [0, 40])
+    assert [(h.title, h.start, h.level) for h in headings] == [
+        ("Safety", 0, 1),
+        ("Shelves", 40, 2),
+    ]
+
+
 def test_a_scanned_pdf_has_no_text():
     with pytest.raises(SourceFailedError) as raised:
         PdfTextReader().read(scanned_pdf())

@@ -199,6 +199,24 @@ def test_an_upload_without_a_taxonomy_is_422(client):
     assert response.status_code == 422
 
 
+def test_a_multipart_body_without_a_boundary_is_400(client):
+    response = client.post(
+        "/api/sources",
+        content=b"--x\r\nnot really multipart",
+        headers={"content-type": "multipart/form-data"},
+    )
+    assert response.status_code == 400
+
+
+def test_list_pages_in_the_database(client):
+    for title in ("A", "B", "C"):
+        client.post("/api/sources", json={"taxonomy_id": T, "title": title, "text": title * 10})
+    listed = client.get("/api/sources", params={"taxonomy_id": T, "limit": 1, "offset": 1}).json()
+    assert listed["total"] == 3
+    assert [s["title"] for s in listed["items"]] == ["B"]
+    assert listed["items"][0]["chars"] == 10
+
+
 def test_an_unknown_taxonomy_is_404(client):
     response = client.post("/api/sources", json={"taxonomy_id": "nope", "title": "a", "text": "b"})
     assert response.status_code == 404

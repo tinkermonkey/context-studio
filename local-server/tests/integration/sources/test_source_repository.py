@@ -113,3 +113,17 @@ def test_list_filters_newest_first_without_removed(repo):
     assert [s.id for s in repo.list_sources(status=SourceStatus.FETCHING)] == [fetching.id]
     assert repo.list_sources(taxonomy_id="other") == []
     assert {old.id, new.id} <= {s.id for s in repo.list_sources()}
+    assert repo.count_sources(taxonomy_id=T) == 4
+    assert repo.count_sources(taxonomy_id=T, dataset_id="ds-cabin") == 1
+    assert repo.count_sources(status=SourceStatus.FETCHING) == 1
+
+
+def test_list_pages_and_leaves_the_text_out(repo):
+    for minutes in range(5):
+        repo.save(source(f"s{minutes}", minutes=minutes, text="body " * 100, chars=500))
+
+    page = repo.list_sources(taxonomy_id=T, limit=2, offset=1)
+    assert [s.title for s in page] == ["s3", "s2"]
+    assert all(s.text == "" and s.chars == 500 for s in page)
+    assert repo.get(page[0].id).text == "body " * 100
+    assert repo.count_sources(taxonomy_id=T) == 5
