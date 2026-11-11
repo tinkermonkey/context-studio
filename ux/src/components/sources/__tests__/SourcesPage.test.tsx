@@ -459,13 +459,13 @@ describe("SourcesPage", () => {
       serve({ sources: [completed] });
       serveRun({
         metadata: { chunks: chunks(3) },
-        no_proposal_reason: "Every candidate already exists in dataset home.",
+        no_proposal_reason: "None of the 3 candidates made an operation (exists 3).",
         skipped_by_reason: { exists: 3 },
       });
       render(<SourcesPage onTaxonomyChange={vi.fn()} />);
 
       const why = await screen.findByTestId("source-no-proposal-reason-src-1");
-      expect(why).toHaveTextContent("Every candidate already exists in dataset home.");
+      expect(why).toHaveTextContent("None of the 3 candidates made an operation (exists 3).");
       expect(screen.getByTestId("source-follow-run-src-1")).toHaveTextContent("Nothing proposed");
     });
 

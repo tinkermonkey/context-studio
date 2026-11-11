@@ -563,7 +563,8 @@ describe("ExtractSourcePage — a run that proposes nothing", () => {
           proposal_id: null,
           output_summary: {
             metadata: { chunks: chunksFound(6, 3) },
-            no_proposal_reason: "Every candidate already exists in dataset home.",
+            no_proposal_reason:
+              "None of the 9 candidates made an operation (exists 7, unresolved_predicate 2).",
             skipped_by_reason: { exists: 7, unresolved_predicate: 2 },
           },
         }),
@@ -572,7 +573,9 @@ describe("ExtractSourcePage — a run that proposes nothing", () => {
     renderPage({ runId: "run-1234abcd" });
 
     const note = await screen.findByTestId("extract-no-proposal");
-    expect(note).toHaveTextContent("Every candidate already exists in dataset home.");
+    expect(note).toHaveTextContent(
+      "None of the 9 candidates made an operation (exists 7, unresolved_predicate 2).",
+    );
     expect(screen.getByTestId("extract-done-panel")).toHaveTextContent("Nothing proposed");
     expect(screen.getByTestId("extract-skipped")).toHaveTextContent(
       "7 already exist, 2 unknown relationship type",

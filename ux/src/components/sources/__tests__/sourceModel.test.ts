@@ -210,26 +210,44 @@ describe("sourceModel", () => {
         ],
       });
       expect(skippedText(summary.skipped)).toBe(
-        "2 already exist, 1 no matching class, 1 malformed, 1 refused",
+        "2 already exist, 1 no matching class, 1 refused as invalid, 1 refused",
       );
     });
 
-    it("prefers the server's reason and counts, and words a reason given as a code", () => {
+    it.each([
+      ["exists", "already exist"],
+      ["missing_class", "no matching class"],
+      ["unresolved_predicate", "unknown relationship type"],
+      ["unresolved_endpoint", "an end wasn't proposed"],
+      ["literal", "values, not entities"],
+      ["derived_type", "derived relationship type"],
+      ["self_loop", "points at itself"],
+      ["invalid", "refused as invalid"],
+      ["no_scheme", "no concept scheme"],
+      // An unknown code reads as words.
+      ["some_new_reason", "some new reason"],
+    ])("words the skip reason %s as %s", (code, words) => {
+      expect(skipReasonLabel(code)).toBe(words);
+    });
+
+    it("prefers the server's reason, as it is, and its counts by reason", () => {
+      const sentence =
+        "None of the 3 candidates made an operation (missing_class 2, unresolved_endpoint 1).";
       const summary = noProposalSummary(
         createRun({
           output_summary: {
-            no_proposal_reason: "all_candidates_skipped",
+            no_proposal_reason: sentence,
             skipped_by_reason: { exists: 2, some_new_reason: 5, ignored: "x" },
             skipped_candidates: [{ label: "a", reason: "invalid" }],
           },
         }),
       );
-      expect(summary.reason).toBe("All candidates skipped.");
+      expect(summary.reason).toBe(sentence);
       expect(summary.skipped).toEqual([
         { reason: "some_new_reason", count: 5 },
         { reason: "exists", count: 2 },
       ]);
-      expect(skipReasonLabel("some_new_reason")).toBe("some new reason");
+      expect(skippedText(summary.skipped)).toBe("5 some new reason, 2 already exist");
       // No chunks counted, but skipped candidates mean some were found.
       expect(summary.found).toBe(0);
       expect(summary.candidatesFound).toBe(true);

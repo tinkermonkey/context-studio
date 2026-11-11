@@ -270,13 +270,13 @@ const SKIP_REASON_LABEL: Record<string, string> = {
   exists: "already exist",
   missing_class: "no matching class",
   unresolved_predicate: "unknown relationship type",
-  unresolved_endpoint: "an end that isn't an individual",
-  derived_type: "a derived type",
-  self_loop: "point at themselves",
-  literal: "a literal value",
-  invalid: "malformed",
+  unresolved_endpoint: "an end wasn't proposed",
+  literal: "values, not entities",
+  derived_type: "derived relationship type",
+  self_loop: "points at itself",
+  invalid: "refused as invalid",
   no_scheme: "no concept scheme",
-  title_conflict: "title already taken",
+  // Operations the proposal service refused (refused_operations), when the run lists them.
   refused: "refused",
 };
 
@@ -334,18 +334,12 @@ export function noProposalSummary(run?: PipelineRun): NoProposalSummary {
   const skipped = [...counts.entries()]
     .map(([reason, count]) => ({ reason, count }))
     .sort((a, b) => b.count - a.count);
+  // A sentence, shown as the server words it.
   const reason =
     typeof output.no_proposal_reason === "string" && output.no_proposal_reason.trim()
-      ? noProposalReasonText(output.no_proposal_reason.trim())
+      ? output.no_proposal_reason.trim()
       : undefined;
   return { found, reason, skipped, candidatesFound: found > 0 || skipped.length > 0 };
-}
-
-/** A reason the server gives as a code ("all_skipped"), in words; a sentence as it is. */
-function noProposalReasonText(reason: string): string {
-  if (!/^[a-z_]+$/.test(reason)) return reason;
-  const words = reason.replace(/_/g, " ");
-  return `${words.charAt(0).toUpperCase()}${words.slice(1)}.`;
 }
 
 /** "12 already exist, 8 no matching class", or "" when nothing was skipped. */
