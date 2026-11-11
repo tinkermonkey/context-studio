@@ -310,6 +310,20 @@ class PipelinesConfig(BaseModel):
     )
 
 
+class SourcesConfig(BaseModel):
+    """Sources extraction reads: uploaded files, web pages and text"""
+
+    max_bytes: int = Field(
+        default=50 * 1024 * 1024,
+        ge=1,
+        description="Largest file upload or fetched web page a source may have, in bytes",
+    )
+    allowed_roots: List[str] = Field(
+        default_factory=list,
+        description="Folders a client may add a source from by path (over MCP); nothing else",
+    )
+
+
 class DecisionModelInstanceConfig(BaseModel):
     """
     One named decision-model instance: which adapter serves it and how.
@@ -434,6 +448,7 @@ class Settings(BaseModel):
     recognition: RecognitionConfig = Field(default_factory=RecognitionConfig)
     chat: ChatConfig = Field(default_factory=ChatConfig)
     pipelines: PipelinesConfig = Field(default_factory=PipelinesConfig)
+    sources: SourcesConfig = Field(default_factory=SourcesConfig)
     decision_models: DecisionModelsConfig = Field(default_factory=DecisionModelsConfig)
     mcp: McpConfig = Field(default_factory=McpConfig)
     sync: Optional[SyncConfig] = Field(default=None, description="Synchronization configuration")

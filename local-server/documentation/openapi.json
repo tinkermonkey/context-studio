@@ -8798,6 +8798,396 @@
         }
       }
     },
+    "/api/sources": {
+      "post": {
+        "tags": [
+          "sources"
+        ],
+        "summary": "Add Source",
+        "description": "Add a source: a multipart file (PDF, Markdown, HTML or plain text), or JSON\nwith a `url` to fetch or a `title` and pasted `text`. A file or text is read\nat once: `ready`, or `failed` saying why (too_large, unsupported_type,\nno_text). A URL comes back `fetching` and is fetched in the background.",
+        "operationId": "add_source_api_sources_post",
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy, dataset or source not found"
+          },
+          "422": {
+            "description": "Neither a file, a URL nor text; or the dataset must be named"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "description": "A file upload (multipart/form-data): PDF, Markdown, HTML or plain text.",
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "title": "File",
+                    "type": "string"
+                  },
+                  "taxonomy_id": {
+                    "title": "Taxonomy Id",
+                    "type": "string"
+                  },
+                  "dataset": {
+                    "anyOf": [
+                      {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The dataset (identifier or id); defaults to the taxonomy's only dataset",
+                    "title": "Dataset"
+                  },
+                  "title": {
+                    "anyOf": [
+                      {
+                        "maxLength": 500,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Defaults to the file's own",
+                    "title": "Title"
+                  }
+                },
+                "required": [
+                  "file",
+                  "taxonomy_id"
+                ],
+                "title": "SourceUploadForm",
+                "type": "object"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "description": "A web page to fetch (`url`), or pasted text (`title` and `text`).",
+                "properties": {
+                  "taxonomy_id": {
+                    "minLength": 1,
+                    "title": "Taxonomy Id",
+                    "type": "string"
+                  },
+                  "dataset": {
+                    "anyOf": [
+                      {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "The dataset (identifier or id); defaults to the taxonomy's only dataset",
+                    "title": "Dataset"
+                  },
+                  "url": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "An http or https page; one page, no crawling",
+                    "title": "Url"
+                  },
+                  "title": {
+                    "anyOf": [
+                      {
+                        "maxLength": 500,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Required with `text`",
+                    "title": "Title"
+                  },
+                  "text": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Pasted text",
+                    "title": "Text"
+                  }
+                },
+                "required": [
+                  "taxonomy_id"
+                ],
+                "title": "SourceCreateRequest",
+                "type": "object"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "sources"
+        ],
+        "summary": "List Sources",
+        "description": "A taxonomy's sources, newest first, without removed ones.",
+        "operationId": "list_sources_api_sources_get",
+        "parameters": [
+          {
+            "name": "taxonomy_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "The taxonomy",
+              "title": "Taxonomy Id"
+            },
+            "description": "The taxonomy"
+          },
+          {
+            "name": "dataset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only this dataset's sources (identifier or id)",
+              "title": "Dataset"
+            },
+            "description": "Only this dataset's sources (identifier or id)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "description": "Maximum number of results",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "Maximum number of results"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of results to skip",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of results to skip"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListResponse_SourceResponse_"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy, dataset or source not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sources/{source_id}": {
+      "get": {
+        "tags": [
+          "sources"
+        ],
+        "summary": "Get Source",
+        "description": "One source, removed or not, without its text.",
+        "operationId": "get_source_api_sources__source_id__get",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy, dataset or source not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "sources"
+        ],
+        "summary": "Remove Source",
+        "description": "Remove a source: it leaves the list and its original file is deleted. Its\nrecord stays, so entities applied from it keep their provenance.",
+        "operationId": "remove_source_api_sources__source_id__delete",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy, dataset or source not found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sources/{source_id}/text": {
+      "get": {
+        "tags": [
+          "sources"
+        ],
+        "summary": "Get Source Text",
+        "description": "A source's text, one page or all of it, with its offsets in the whole text.",
+        "operationId": "get_source_text_api_sources__source_id__text_get",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Id"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "A page (from 1); all the text without",
+              "title": "Page"
+            },
+            "description": "A page (from 1); all the text without"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceTextResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Taxonomy, dataset or source not found"
+          },
+          "409": {
+            "description": "The source is fetching or failed, so it has no text"
+          },
+          "422": {
+            "description": "The source has no such page"
+          }
+        }
+      }
+    },
     "/api/v1/interchange/bundles": {
       "post": {
         "tags": [
@@ -15556,6 +15946,41 @@
         ],
         "title": "ListResponse[RelationshipResponse]"
       },
+      "ListResponse_SourceResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SourceResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "List of items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total number of items"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Limit applied"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Offset applied"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "ListResponse[SourceResponse]"
+      },
       "ListResponse_TaxonomyResponse_": {
         "properties": {
           "items": {
@@ -19440,6 +19865,193 @@
         "title": "ServiceMetricsResponse",
         "description": "Response containing service-level metrics."
       },
+      "SourceFailure": {
+        "type": "string",
+        "enum": [
+          "too_large",
+          "unsupported_type",
+          "no_text",
+          "fetch_failed"
+        ],
+        "title": "SourceFailure",
+        "description": "Why a source failed."
+      },
+      "SourceHeadingSchema": {
+        "properties": {
+          "start": {
+            "type": "integer",
+            "title": "Start",
+            "description": "Character offset in the source text"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "level": {
+            "type": "integer",
+            "title": "Level",
+            "description": "1 for a top-level heading"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "title",
+          "level"
+        ],
+        "title": "SourceHeadingSchema",
+        "description": "A heading in a source's text."
+      },
+      "SourceKind": {
+        "type": "string",
+        "enum": [
+          "pdf",
+          "markdown",
+          "html",
+          "text",
+          "web"
+        ],
+        "title": "SourceKind",
+        "description": "What a source is: an uploaded file's format, a fetched web page, or text."
+      },
+      "SourceResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "taxonomy_id": {
+            "type": "string",
+            "title": "Taxonomy Id"
+          },
+          "dataset_id": {
+            "type": "string",
+            "title": "Dataset Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SourceKind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "origin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin",
+            "description": "The URL or file name; null for pasted text"
+          },
+          "content_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Type"
+          },
+          "bytes": {
+            "type": "integer",
+            "title": "Bytes"
+          },
+          "pages": {
+            "type": "integer",
+            "title": "Pages"
+          },
+          "chars": {
+            "type": "integer",
+            "title": "Chars"
+          },
+          "page_starts": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Page Starts",
+            "description": "Character offset where each page starts; page 1 starts at 0"
+          },
+          "headings": {
+            "items": {
+              "$ref": "#/components/schemas/SourceHeadingSchema"
+            },
+            "type": "array",
+            "title": "Headings"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SourceStatus"
+          },
+          "failure": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceFailure"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "failure_detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Detail"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "removed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Removed At",
+            "description": "Set once removed; a removed source still answers for provenance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "taxonomy_id",
+          "dataset_id",
+          "kind",
+          "title",
+          "bytes",
+          "pages",
+          "chars",
+          "page_starts",
+          "headings",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "SourceResponse",
+        "description": "A source without its text (GET /api/sources/{id}/text returns that)."
+      },
       "SourceRevisionSchema": {
         "properties": {
           "repo": {
@@ -19531,6 +20143,63 @@
         "type": "object",
         "title": "SourceSpanSchema",
         "description": "Immutable representation of a span in source text with provenance information."
+      },
+      "SourceStatus": {
+        "type": "string",
+        "enum": [
+          "fetching",
+          "ready",
+          "failed"
+        ],
+        "title": "SourceStatus",
+        "description": "Where a source is: being fetched, readable, or not."
+      },
+      "SourceTextResponse": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page",
+            "description": "The page (from 1); null for all the text"
+          },
+          "pages": {
+            "type": "integer",
+            "title": "Pages"
+          },
+          "start": {
+            "type": "integer",
+            "title": "Start",
+            "description": "Offset of `text` in the source's whole text"
+          },
+          "end": {
+            "type": "integer",
+            "title": "End"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_id",
+          "pages",
+          "start",
+          "end",
+          "text"
+        ],
+        "title": "SourceTextResponse",
+        "description": "A source's text: one page, or all of it."
       },
       "StagePromptPayload": {
         "properties": {

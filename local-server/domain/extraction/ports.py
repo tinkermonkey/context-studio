@@ -12,6 +12,13 @@ from typing import TYPE_CHECKING, Literal, Protocol, Sequence
 
 if TYPE_CHECKING:
     from domain.extraction.entities import ExtractionResult, ExtractionRun
+    from domain.extraction.sources import (
+        FetchedPage,
+        Source,
+        SourceKind,
+        SourceStatus,
+        SourceText,
+    )
 
 
 # ============================================================================
@@ -703,4 +710,69 @@ class ExtractionRunRepository(Protocol):
         Returns:
             The updated ExtractionRun
         """
+        ...
+
+
+# ============================================================================
+# Sources (#1551)
+# ============================================================================
+
+
+class SourceRepository(Protocol):
+    """Port for storing sources: files, web pages and text extraction reads."""
+
+    def save(self, source: Source) -> Source:
+        """Insert a source, or replace the one with its id; returns it as stored."""
+        ...
+
+    def get(self, source_id: str) -> Source | None:
+        """A source by id, removed or not; None if there is none."""
+        ...
+
+    def list_sources(
+        self,
+        taxonomy_id: str | None = None,
+        dataset_id: str | None = None,
+        status: SourceStatus | None = None,
+    ) -> list[Source]:
+        """Sources matching every filter given, newest first, without removed ones."""
+        ...
+
+
+class SourceReader(Protocol):
+    """Port for reading one format's text, with its page and heading offsets."""
+
+    def read(self, data: bytes) -> SourceText:
+        """
+        Read a file's text.
+
+        Raises:
+            SourceFailedError: If the file can't be read (no_text for a PDF with
+                no text layer, for instance)
+        """
+        ...
+
+
+class PageFetcher(Protocol):
+    """Port for fetching one web page (http or https; no links followed)."""
+
+    def fetch(self, url: str, max_bytes: int) -> FetchedPage:
+        """
+        Fetch a URL's body.
+
+        Raises:
+            SourceFailedError: too_large past max_bytes, fetch_failed otherwise
+        """
+        ...
+
+
+class SourceFileStore(Protocol):
+    """Port for keeping a source's original file beside the workspace databases."""
+
+    def save(self, source_id: str, kind: SourceKind, data: bytes) -> None:
+        """Keep a source's original."""
+        ...
+
+    def delete(self, source_id: str) -> None:
+        """Delete a source's original, if one is kept."""
         ...

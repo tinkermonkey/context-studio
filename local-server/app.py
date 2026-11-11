@@ -80,6 +80,7 @@ from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.persistence.sqlite.entity_source_repo import SQLiteEntitySourceRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIndex
+from adapters.persistence.sqlite.source_repo import SQLiteSourceRepository
 from adapters.persistence.sqlite.transaction import SharedSessionFactory, SqliteTransactionScope
 from adapters.pipelines.run_executor import BackgroundRunExecutor
 from adapters.recognition.individual_recognizer import CascadeIndividualRecognizer
@@ -89,6 +90,9 @@ from adapters.reference.grounding import GroundingAdapter
 from adapters.reference.proxy import ReferenceProxy
 from adapters.reference.schema_org import SchemaOrgSource
 from adapters.reference.wikidata import WikidataSource
+from adapters.sources.fetcher import HttpPageFetcher
+from adapters.sources.file_store import LocalSourceFileStore
+from adapters.sources.readers import source_readers
 from adapters.sync.duckdb_sync import DuckDBSyncAdapter
 from adapters.sync.noop_sync import NoOpSyncTarget
 
@@ -113,6 +117,7 @@ from adapters.web.pipelines_routes import config_router as pipeline_config_route
 from adapters.web.pipelines_routes import router as pipelines_router
 from adapters.web.proposals_routes import router as proposals_router
 from adapters.web.reference_routes import router as reference_router
+from adapters.web.sources_routes import router as sources_router
 from adapters.web.versioning_routes import router as versioning_router
 from config import SyncAdapterType, get_config_manager, get_settings
 from domain.admin.demo_dataset_service import LoadDemoDataset
@@ -122,6 +127,7 @@ from domain.chat.services import ChatService
 from domain.extraction.events import ExtractionCompleted
 from domain.extraction.ports import ReferenceSource
 from domain.extraction.services import ExtractionService
+from domain.extraction.sources import SourceService
 from domain.graph.services import GraphAnalysisService
 from domain.interchange.bundle import BundleExporter
 from domain.interchange.services import ImportRunService
@@ -643,6 +649,23 @@ async def lifespan(app: FastAPI):
         claim_service = ClaimService(
             SQLiteClaimRepository(shared_session_factory), cast(OntologyRepository, ontology_repo)
         )
+        # Sources' original files are kept beside the workspace databases
+        sources_dir = Path(settings.database.local_db_path).resolve().parent / "sources"
+        source_service = SourceService(
+            sources=SQLiteSourceRepository(local_session_factory),
+            ontology_repo=cast(OntologyRepository, ontology_repo),
+            readers=source_readers(),
+            fetcher=HttpPageFetcher(),
+            files=LocalSourceFileStore(sources_dir),
+            max_bytes=settings.sources.max_bytes,
+        )
+        try:
+            interrupted = source_service.fail_interrupted_fetches()
+            if interrupted:
+                logger.info("Failed %d source fetches the last run left unfinished", interrupted)
+        except OperationalError as exc:  # local.db not migrated to the sources table yet
+            logger.error("Source fetch cleanup skipped (run migrations): %s", exc)
+        logger.info("SourceService created; originals kept in %s", sources_dir)
 
         # Interchange service for import run tracking
         import_run_service = ImportRunService()
@@ -829,6 +852,7 @@ async def lifespan(app: FastAPI):
         )
         app.state.approval_policy_service = approval_policy_service
         app.state.claim_service = claim_service
+        app.state.source_service = source_service
         app.state.admin_service = admin_service
         app.state.load_demo_dataset = load_demo_dataset
         app.state.db_manager = db_manager
@@ -1021,6 +1045,7 @@ app.include_router(interchange_router)
 app.include_router(chat_router)
 app.include_router(proposals_router)
 app.include_router(claims_router)
+app.include_router(sources_router)
 app.include_router(bundle_router)
 app.include_router(drift_router)
 app.include_router(decision_router)

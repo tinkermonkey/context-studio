@@ -1871,6 +1871,71 @@ class ClaimRecord(Base):  # type: ignore[valid-type,misc]
         return f"<ClaimRecord(taxonomy={self.taxonomy_id}, key={self.key})>"
 
 
+class SourceRecord(Base):  # type: ignore[valid-type,misc]
+    """
+    A file, web page or text that extraction reads (#1551).
+
+    Attributes:
+        id: UUID as string, primary key
+        taxonomy_id: The taxonomy (deleted with it)
+        dataset_id: The dataset its data goes into (deleted with it)
+        kind: pdf, markdown, html, text or web
+        title: Display name
+        origin: The URL or file name it came from; null for pasted text
+        content_type, bytes: The original's media type and size
+        pages, chars: Page count and text length
+        text: The extracted text
+        page_starts: JSON list of the offset where each page starts
+        headings: JSON list of {start, title, level}
+        status: fetching, ready or failed
+        failure, failure_detail: Why it failed, when it did
+        created_at, updated_at: Timestamps (UTC)
+        removed_at: When it was removed; the row stays so provenance can name it
+    """
+
+    __tablename__ = "sources"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    taxonomy_id = Column(
+        String(36),
+        ForeignKey("ontology_entities.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    dataset_id = Column(
+        String(36),
+        ForeignKey("datasets.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    kind = Column(String(20), nullable=False)
+    title = Column(String(500), nullable=False)
+    origin = Column(Text, nullable=True)
+    content_type = Column(String(255), nullable=True)
+    bytes = Column(Integer, nullable=False, default=0)
+    pages = Column(Integer, nullable=False, default=0)
+    chars = Column(Integer, nullable=False, default=0)
+    text = Column(Text, nullable=False, default="")
+    page_starts = Column(JSON, nullable=False, default=list)
+    headings = Column(JSON, nullable=False, default=list)
+    status = Column(String(20), nullable=False)
+    failure = Column(String(30), nullable=True)
+    failure_detail = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False)
+    updated_at = Column(DateTime(timezone=True), nullable=False)
+    removed_at = Column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        CheckConstraint(
+            "kind IN ('pdf', 'markdown', 'html', 'text', 'web')", name="ck_source_kind"
+        ),
+        CheckConstraint("status IN ('fetching', 'ready', 'failed')", name="ck_source_status"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<SourceRecord(id={self.id}, kind={self.kind}, status={self.status})>"
+
+
 class ApprovalPolicyRecord(Base):  # type: ignore[valid-type,misc]
     """
     A taxonomy's approval policy: which proposed operations may apply on their own.
