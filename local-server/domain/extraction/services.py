@@ -108,6 +108,11 @@ _MAX_VOCABULARY_PREDICATES = 200
 _NLP_TYPING_TOP_K = 8
 _NLP_TYPING_THRESHOLD = 0.2
 
+# Recognition near misses (#1552): an unresolved mention's candidates that
+# scored within this much below the recognition bar are offered to a reviewer
+# as "use existing" choices. They never change the recognition decision.
+_RECOG_NEAR_BAND = 0.10
+
 # Predicate labels (post-normalization) that mark a triple as an rdf:type/is_a
 # typing assertion whose object must be an ontology class reference.
 _TYPE_PREDICATE_LABELS = frozenset(
@@ -1485,10 +1490,25 @@ class ExtractionService:
             )
 
         resolution: dict[str, tuple[str, str]] = {}
+        near_matches: dict[str, list[dict]] = {}
         for key, (mention, class_id) in mention_class.items():
-            resolved = self._resolve_mention(mention, class_id, dataset_id)
+            resolved, near = self._recognize_mention(mention, class_id, dataset_id)
             if resolved is not None:
                 resolution[key] = resolved
+            elif near:
+                near_matches[key] = near
+
+        # Near misses ride on the mention's typing triples of the class that was
+        # searched, for a reviewer to choose "use existing" over a new individual
+        for triple in triples:
+            if not self._is_typing_triple(triple):
+                continue
+            key = str(triple.get("subject", {}).get("label", "")).strip().lower()
+            if not near_matches.get(key):
+                continue
+            cls = by_alias.get(str(triple.get("object", {}).get("label", "")).strip().lower())
+            if (str(cls.id) if cls is not None else None) == mention_class[key][1]:
+                triple["near_matches"] = [dict(match) for match in near_matches[key]]
         if not resolution:
             return triples
 
@@ -1508,14 +1528,33 @@ class ExtractionService:
         """
         Resolve one extracted mention to an existing individual, or None (new node).
 
+        Returns ``(individual_id, canonical_title)`` on resolution; see
+        `_recognize_mention` for the rules.
+        """
+        return self._recognize_mention(mention, class_id, dataset_id)[0]
+
+    def _recognize_mention(
+        self, mention: str, class_id: str | None, dataset_id: str | None = None
+    ) -> tuple[tuple[str, str] | None, list[dict]]:
+        """
+        Resolve one extracted mention, and report its near misses when it stays new.
+
         Exact-label match (case-insensitive title within the grounded class) always
         wins. Otherwise a vector match is accepted only when it clears the
         recognition threshold, beats the runner-up by the ambiguity margin, and —
-        for short/acronym mentions — clears a stricter bar. Returns
-        ``(individual_id, canonical_title)`` on resolution.
+        for short/acronym mentions — clears a stricter bar.
+
+        When the mention is not resolved, every candidate that scored within
+        ``_RECOG_NEAR_BAND`` below the bar it had to clear (or above it, but
+        refused by the ambiguity margin) is a near miss. Near misses never change
+        the decision; they are offered to a reviewer as "use existing" choices.
+
+        Returns:
+            ``((individual_id, canonical_title) or None, near_matches)``, where
+            each near match is ``{"entity_id", "label", "similarity"}``, best first
         """
         if self._individual_index is None:
-            return None
+            return None, []
         class_ids = [class_id] if class_id else []
         embedding = self._embedding_service.embed(mention)
         # Datasets share classes: only the run's dataset's individuals match.
@@ -1523,12 +1562,12 @@ class ExtractionService:
             embedding, class_ids=class_ids, top_k=5, threshold=0.0, dataset_id=dataset_id
         )
         if not candidates:
-            return None
+            return None, []
 
         mention_lower = mention.strip().lower()
         for candidate in candidates:
             if candidate.title.strip().lower() == mention_lower:
-                return candidate.individual_id, candidate.title
+                return (candidate.individual_id, candidate.title), []
 
         top = candidates[0]
         min_score = (
@@ -1536,11 +1575,20 @@ class ExtractionService:
             if len(mention.strip()) < self._recog_min_len
             else self._recog_threshold
         )
+        near = [
+            {
+                "entity_id": candidate.individual_id,
+                "label": candidate.title,
+                "similarity": round(candidate.score, 4),
+            }
+            for candidate in candidates
+            if candidate.score >= min_score - _RECOG_NEAR_BAND
+        ]
         if top.score < min_score:
-            return None
+            return None, near
         if len(candidates) > 1 and (top.score - candidates[1].score) < self._recog_margin:
-            return None
-        return top.individual_id, top.title
+            return None, near
+        return (top.individual_id, top.title), []
 
     def _is_typing_triple(self, triple: dict) -> bool:
         """Return True when a triple is an ``is_a``/rdf:type assertion (object is a class)."""

@@ -22,6 +22,7 @@ import re
 from dataclasses import dataclass, field, replace
 from typing import Any, cast
 
+from domain.extraction.chunking import MAX_CHUNK_CHARS, chunk_text
 from domain.extraction.span_resolution import find_all_spans
 from domain.extraction.value_objects import SourceSpan
 from domain.pipelines.entities import PipelineRunStatus
@@ -36,8 +37,6 @@ from domain.pipelines.schema_extraction.prompts import SCHEMA_EXTRACTION_STAGES
 from domain.pipelines.stage_prompts import render, resolve_stage_prompts
 
 _logger = logging.getLogger(__name__)
-
-_MAX_CHUNK_CHARS = 8000
 
 
 def _serialize_provenance(spans: list[SourceSpan]) -> list[dict[str, Any]]:
@@ -327,7 +326,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
     # Stage helpers
     # ------------------------------------------------------------------
 
-    def _chunk_text(self, text: str, max_chars: int = _MAX_CHUNK_CHARS) -> list[str]:
+    def _chunk_text(self, text: str, max_chars: int = MAX_CHUNK_CHARS) -> list[str]:
         """
         Split text into chunks of at most max_chars on sentence boundaries.
 
@@ -338,27 +337,8 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         Returns:
             List of text chunks; always at least one element
         """
-        if len(text) <= max_chars:
-            return [text]
-
-        sentences = re.split(r"(?<=[.!?])\s+", text)
-        chunks: list[str] = []
-        current: list[str] = []
-        current_len = 0
-
-        for sentence in sentences:
-            if current_len + len(sentence) > max_chars and current:
-                chunks.append(" ".join(current))
-                current = [sentence]
-                current_len = len(sentence)
-            else:
-                current.append(sentence)
-                current_len += len(sentence)
-
-        if current:
-            chunks.append(" ".join(current))
-
-        return chunks if chunks else [text]
+        chunks = chunk_text(text, max_chars=max_chars)
+        return [text[chunk.start : chunk.end] for chunk in chunks] or [text]
 
     def _has_concrete_provenance(self, spans: list[SourceSpan]) -> bool:
         """

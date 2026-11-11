@@ -62,10 +62,43 @@ class PipelineTypeRegistry:
             input_contract={
                 "text": "str (required) — source text to extract from",
                 "ontology_id": "str (required) — target ontology identifier",
+                "dataset_id": "str (optional) — dataset recognition matches individuals in",
+                "source_id": (
+                    "str (optional) — the source the text came from; carried into"
+                    " metadata.source_id. Any of source_id, page_starts, headings or"
+                    " pages extracts the text chunk by chunk (about 8000 characters,"
+                    " split at headings, then pages, never mid-sentence); the chunks"
+                    " are the run's items (items_done/items_total)"
+                ),
+                "page_starts": (
+                    "list[int] (optional) — character offset at which each page starts,"
+                    " in page order; numbers passage pages from 1"
+                ),
+                "headings": (
+                    "list[{start: int, title: str, level: int}] (optional) — headings"
+                    " in the text; chunks break at them first"
+                ),
+                "pages": (
+                    'str (optional) — page selection such as "12-30" or "1-3, 7";'
+                    " only text on those pages is extracted. Needs page_starts"
+                ),
             },
             output_contract={
-                "triples": "list[dict] — extracted triples with subject, predicate, object",
+                "triples": (
+                    "list[dict] — extracted triples with subject, predicate, object,"
+                    " confidence and provenance {quote, start, end}. Chunked runs merge"
+                    " a triple found in several chunks into one and add passages:"
+                    " [{quote, start, end, page}] (provenance is the first placed passage;"
+                    " offsets index the whole text). An individual's typing triple"
+                    " carries near_matches: [{entity_id, label, similarity}] when"
+                    " recognition found existing individuals close to it"
+                ),
                 "warnings": "list[str] — validation issues during extraction",
+                "metadata": (
+                    "dict — model, tokens_used, duration_ms; chunked runs add source_id,"
+                    " pages and chunks: [{index, start, end, page_first, page_last,"
+                    " heading, triples}]"
+                ),
             },
         ),
         PipelineType.SCHEMA_EXTRACTION: PipelineTypeDefinition(

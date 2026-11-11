@@ -525,3 +525,20 @@ class TestJoinDocuments:
 
     def test_non_list_input_is_empty(self):
         assert join_documents("not a list") == ""
+
+
+class TestChunkText:
+    """Schema extraction chunks normalized text with the shared chunker."""
+
+    def test_short_text_is_one_chunk(self, orchestrator):
+        assert orchestrator._chunk_text("Short text.") == ["Short text."]
+
+    def test_empty_text_is_one_empty_chunk(self, orchestrator):
+        assert orchestrator._chunk_text("") == [""]
+
+    def test_long_text_splits_on_sentences_and_rejoins_to_the_text(self, orchestrator):
+        text = " ".join(f"Sentence {i} is about a gateway." for i in range(600))
+        chunks = orchestrator._chunk_text(text)
+        assert len(chunks) > 1
+        assert all(len(chunk) <= 8000 and chunk.endswith(".") for chunk in chunks)
+        assert " ".join(chunks) == text
