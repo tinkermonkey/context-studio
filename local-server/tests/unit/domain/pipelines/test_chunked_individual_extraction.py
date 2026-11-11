@@ -175,6 +175,38 @@ class TestMergeChunkTriples:
             {"entity_id": "b", "label": "Ice bin", "similarity": 0.86},
         ]
 
+    def test_merged_triple_takes_an_id_found_in_a_later_chunk(self):
+        chunk = Chunk(index=0, start=0, end=100)
+        later = _relation("Ice maker", "part of", "Freezer", "freezer", 0)
+        later["subject"]["id"] = "ice-id"
+        later["object"]["id"] = "freezer-id"
+        first = _relation("Ice maker", "part of", "Freezer", "the freezer", 10)
+        first["object"]["id"] = "kept-id"
+        merged = merge_chunk_triples([(chunk, [first]), (chunk, [later])])
+        assert merged[0]["subject"]["id"] == "ice-id"
+        assert merged[0]["object"]["id"] == "kept-id"
+
+    def test_provenance_is_the_first_placed_passage(self):
+        first = Chunk(index=0, start=0, end=100, page_first=1, page_last=1)
+        second = Chunk(index=1, start=100, end=200, page_first=2, page_last=2)
+        merged = merge_chunk_triples(
+            [
+                (first, [_typing("Door", quote="a door", start=None)]),
+                (second, [_typing("Door", quote="door", start=5)]),
+            ],
+            page_starts=[0, 100],
+        )
+        assert merged[0]["provenance"] == {"quote": "door", "start": 105, "end": 109}
+        assert merged[0]["passages"][0]["start"] is None  # passages keep their order
+
+    def test_repeated_page_starts_keep_page_numbers(self):
+        chunk = Chunk(index=0, start=0, end=34)
+        merged = merge_chunk_triples(
+            [(chunk, [_typing("Drawer", quote="Drawer", start=21)])],
+            page_starts=[0, 10, 21, 21],
+        )
+        assert merged[0]["passages"][0]["page"] == 4
+
     def test_input_triples_are_not_modified(self):
         chunk = Chunk(index=0, start=100, end=200)
         triple = _typing("Door", quote="door", start=1)
@@ -319,6 +351,7 @@ class TestChunkedOrchestrator:
             {"pages": "1-2"},  # needs page_starts
             {"page_starts": "0, 10"},
             {"page_starts": [0, -1]},
+            {"page_starts": [0, 12, 5]},
             {"headings": [{"title": "No start"}]},
             {"pages": ["1"], "page_starts": [0]},
             {"pages": "two", "page_starts": [0]},

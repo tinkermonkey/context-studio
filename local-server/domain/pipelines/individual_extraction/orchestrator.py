@@ -307,6 +307,8 @@ def _page_starts(value: Any) -> list[int]:
         isinstance(start, int) and not isinstance(start, bool) and start >= 0 for start in value
     ):
         raise PipelineInputError("page_starts must be a list of non-negative character offsets")
+    if any(later < earlier for earlier, later in zip(value, value[1:])):
+        raise PipelineInputError("page_starts must never decrease")
     return value
 
 

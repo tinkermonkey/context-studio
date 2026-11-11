@@ -154,6 +154,59 @@ class TestChunkText:
         assert chunks[0].heading == "Overview"
 
 
+class TestReviewFixes:
+    """Page starts mid-sentence, repeated page starts, page range merging, tiny chunks."""
+
+    def test_page_start_mid_sentence_moves_to_the_sentence_end_before_it(self):
+        text = _sentences(30)
+        page_two = text.index("S14 ") + 20  # inside sentence 14
+        chunks = chunk_text(text, max_chars=1000, page_starts=[0, page_two])
+        assert chunks[0].end == text.index("S14 ") - 1
+        _assert_covers_sentences(text, chunks)
+        assert chunks[1].page_first == 1  # the rest of page one's sentence leads chunk 1
+
+    def test_page_start_mid_word_never_splits_the_word(self):
+        text = _sentences(30)
+        page_two = text.index("S13 ") + 2  # inside the word "S13"
+        chunks = chunk_text(text, max_chars=1000, page_starts=[0, page_two])
+        _assert_covers_sentences(text, chunks)
+        assert chunks[0].end == text.index("S13 ") - 1
+
+    def test_page_start_without_a_sentence_end_before_it_uses_the_next_one(self):
+        text = _sentences(10, length=300)  # sentence ends at 300, 601, 902, ...
+        chunks = chunk_text(text, max_chars=1000, page_starts=[0, 550])
+        assert chunks[0].end == 601
+        _assert_covers_sentences(text, chunks)
+
+    def test_repeated_page_start_keeps_later_page_numbers(self):
+        text = "Door one. Shelf two. Drawer three."
+        starts = [0, 10, 21, 21]  # page 3 is empty
+        assert page_of(21, starts) == 4
+        chunks = chunk_text(text, page_starts=starts, pages="4")
+        assert [(c.start, c.page_first, c.page_last) for c in chunks] == [(21, 4, 4)]
+
+    def test_decreasing_page_starts_are_refused(self):
+        with pytest.raises(ValueError):
+            chunk_text("Door one. Shelf two.", page_starts=[0, 12, 5])
+
+    def test_overlapping_page_ranges_merge(self):
+        text = _sentences(10)
+        starts = [text.index(f"S{i} ") for i in range(0, 10, 2)]
+        chunks = chunk_text(text, page_starts=starts, pages="1-3, 2-4")
+        assert len(chunks) == 1
+        assert (chunks[0].page_first, chunks[0].page_last) == (1, 4)
+
+    def test_page_ranges_come_out_in_page_order(self):
+        text = _sentences(10)
+        starts = [text.index(f"S{i} ") for i in range(0, 10, 2)]
+        chunks = chunk_text(text, page_starts=starts, pages="5, 1")
+        assert [c.page_first for c in chunks] == [1, 5]
+
+    def test_too_small_max_chars_is_refused(self):
+        with pytest.raises(ValueError):
+            chunk_text("Some text.", max_chars=10)
+
+
 class TestPageHelpers:
     def test_page_of(self):
         starts = [0, 100, 250]

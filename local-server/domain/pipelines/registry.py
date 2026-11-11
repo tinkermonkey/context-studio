@@ -88,7 +88,7 @@ class PipelineTypeRegistry:
                     "list[dict] — extracted triples with subject, predicate, object,"
                     " confidence and provenance {quote, start, end}. Chunked runs merge"
                     " a triple found in several chunks into one and add passages:"
-                    " [{quote, start, end, page}] (provenance is the first passage;"
+                    " [{quote, start, end, page}] (provenance is the first placed passage;"
                     " offsets index the whole text). An individual's typing triple"
                     " carries near_matches: [{entity_id, label, similarity}] when"
                     " recognition found existing individuals close to it"

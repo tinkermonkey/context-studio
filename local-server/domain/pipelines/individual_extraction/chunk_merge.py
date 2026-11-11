@@ -29,9 +29,11 @@ def merge_chunk_triples(
 
     - ``passages``: ``[{quote, start, end, page}]`` from every chunk it was
       found in, in the order found, offsets into the whole text
-    - ``provenance``: the first passage's ``{quote, start, end}`` (a quote the
-      text could not place keeps null offsets)
+    - ``provenance``: ``{quote, start, end}`` of the first passage placed in
+      the text, else of the first passage (whose offsets are then null)
     - ``confidence``: the highest of the merged triples
+    - subject and object ``id``: taken from a later triple when the first had
+      none (recognition found the existing node in another chunk)
     - ``near_matches``: the union of the merged triples' recognition near
       misses, best first (only when any had them)
 
@@ -45,7 +47,7 @@ def merge_chunk_triples(
     Returns:
         The merged triples
     """
-    starts = sorted(set(page_starts or []))
+    starts = list(page_starts or [])
     merged: dict[tuple, dict[str, Any]] = {}
     for chunk, triples in chunk_triples:
         for triple in triples:
@@ -65,6 +67,12 @@ def merge_chunk_triples(
                     item["near_matches"] = _merge_near_matches(
                         item.get("near_matches") or [], triple["near_matches"]
                     )
+                for role in ("subject", "object"):
+                    # A chunk where recognition found the existing node supplies its id
+                    node, other = item.get(role), triple.get(role)
+                    if isinstance(node, dict) and isinstance(other, dict):
+                        if not node.get("id") and other.get("id"):
+                            node["id"] = other["id"]
             if span["quote"] is not None:
                 passage = {**span, "page": _passage_page(span, chunk, starts)}
                 if passage not in item["passages"]:
@@ -72,7 +80,8 @@ def merge_chunk_triples(
 
     for item in merged.values():
         if item["passages"]:
-            first = item["passages"][0]
+            placed = [p for p in item["passages"] if p["start"] is not None]
+            first = (placed or item["passages"])[0]
             item["provenance"] = {key: first[key] for key in ("quote", "start", "end")}
     return list(merged.values())
 

@@ -1498,13 +1498,16 @@ class ExtractionService:
             elif near:
                 near_matches[key] = near
 
-        # Near misses ride on the mention's typing triples, for a reviewer to
-        # choose "use existing" instead of creating a new individual
+        # Near misses ride on the mention's typing triples of the class that was
+        # searched, for a reviewer to choose "use existing" over a new individual
         for triple in triples:
             if not self._is_typing_triple(triple):
                 continue
             key = str(triple.get("subject", {}).get("label", "")).strip().lower()
-            if near_matches.get(key):
+            if not near_matches.get(key):
+                continue
+            cls = by_alias.get(str(triple.get("object", {}).get("label", "")).strip().lower())
+            if (str(cls.id) if cls is not None else None) == mention_class[key][1]:
                 triple["near_matches"] = [dict(match) for match in near_matches[key]]
         if not resolution:
             return triples

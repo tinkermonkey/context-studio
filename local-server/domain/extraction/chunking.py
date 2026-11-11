@@ -3,9 +3,10 @@ Split long source text into extraction chunks.
 
 A chunk is a span of the whole text, so offsets found inside a chunk map back
 to the whole text by adding the chunk's start. Chunks hold at most
-``max_chars`` characters and break, in order of preference, at a heading, at a
-page start, at the end of a sentence (or a blank line), and only when a single
-sentence is longer than a chunk, at a space.
+``max_chars`` characters and break, in order of preference, at a heading, at
+the sentence end nearest a page start (pages often start mid-sentence), at the
+end of a sentence (or a blank line), and only when a single sentence is longer
+than a chunk, at a space.
 """
 
 from __future__ import annotations
@@ -16,6 +17,8 @@ from dataclasses import dataclass
 from typing import Sequence
 
 MAX_CHUNK_CHARS = 8000
+# Smaller chunks are refused: they would hold barely a sentence
+MIN_CHUNK_CHARS = 100
 
 # A sentence ends at ., ! or ? followed by whitespace, or at a blank line
 _SENTENCE_BREAK = re.compile(r"(?<=[.!?])\s+|\n\s*\n")
@@ -109,9 +112,16 @@ def chunk_text(
         The chunks in text order; empty when there is no text to chunk
 
     Raises:
-        ValueError: ``pages`` is malformed, or given without ``page_starts``
+        ValueError: ``max_chars`` is under MIN_CHUNK_CHARS, ``page_starts``
+            decreases, or ``pages`` is malformed or given without ``page_starts``
     """
-    starts = sorted(set(page_starts or []))
+    if max_chars < MIN_CHUNK_CHARS:
+        raise ValueError(f"max_chars must be at least {MIN_CHUNK_CHARS}")
+    # Kept as given: an empty page repeats the next page's start, and dropping
+    # the repeat would renumber every later page
+    starts = list(page_starts or [])
+    if any(later < earlier for earlier, later in zip(starts, starts[1:])):
+        raise ValueError("page_starts must never decrease")
     heading_list = sorted(headings or [], key=lambda h: h.start)
     heading_starts = [h.start for h in heading_list]
 
@@ -150,14 +160,20 @@ def _windows(text: str, starts: list[int], pages: str | None) -> list[tuple[int,
         return [(0, len(text))]
     if not starts:
         raise ValueError("A page range needs page starts")
-    windows: list[tuple[int, int]] = []
-    for first, last in parse_page_range(pages):
+    # Overlapping or touching ranges merge, so no page is extracted twice
+    ranges: list[list[int]] = []
+    for first, last in sorted(parse_page_range(pages)):
         if first > len(starts):
             continue
         last = min(last, len(starts))
-        end = starts[last] if last < len(starts) else len(text)
-        windows.append((starts[first - 1], end))
-    return windows
+        if ranges and first <= ranges[-1][1] + 1:
+            ranges[-1][1] = max(ranges[-1][1], last)
+        else:
+            ranges.append([first, last])
+    return [
+        (starts[first - 1], starts[last] if last < len(starts) else len(text))
+        for first, last in ranges
+    ]
 
 
 def _break_point(
@@ -170,12 +186,23 @@ def _break_point(
 ) -> int:
     """Where a chunk starting at ``start`` ends, at or before ``limit``."""
     floor = start + max_chars // 2
-    for cuts in (heading_cuts, page_cuts):
-        inside = [c for c in cuts if floor <= c <= limit]
-        if inside:
-            return inside[-1]
     sentence_ends = [m.start() for m in _SENTENCE_BREAK.finditer(text, start, limit)]
     sentence_ends = [e for e in sentence_ends if e > start]
+
+    headings_inside = [c for c in heading_cuts if floor <= c <= limit]
+    if headings_inside:
+        return headings_inside[-1]
+    pages_inside = [c for c in page_cuts if floor <= c <= limit]
+    if pages_inside:
+        # A page often starts mid-sentence in a PDF text layer: break at the
+        # sentence end nearest before the page start, else the first after it
+        page_start = pages_inside[-1]
+        before = [e for e in sentence_ends if floor <= e <= page_start]
+        if before:
+            return before[-1]
+        after = [e for e in sentence_ends if e > page_start]
+        if after:
+            return after[0]
     if sentence_ends:
         return sentence_ends[-1]
     spaces = [m.start() for m in _WHITESPACE.finditer(text, floor, limit)]

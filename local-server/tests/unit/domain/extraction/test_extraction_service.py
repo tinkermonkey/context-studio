@@ -1047,6 +1047,20 @@ class TestRecognition:
         assert triples[0]["subject"]["id"] == "kube-id"
         assert "near_matches" not in triples[0]
 
+    def test_near_matches_ride_only_on_the_searched_class(self):
+        # The mention is searched in its first typing triple's class (System
+        # Software); its typing as a Data Object gets no System Software near misses
+        idx = self._index_with_kubernetes()
+        idx.add("swarm-id", "Docker Swarm", [self.CLASS_SW])
+        service = self._service(idx)
+        triples = [
+            self._typing_triple("K8s"),
+            self._typing_triple("K8s", class_ref="application.dataobject"),
+        ]
+        service._recognize_individuals(triples, _Ontology())
+        assert "near_matches" in triples[0]
+        assert "near_matches" not in triples[1]
+
     def test_near_matches_ride_only_on_typing_triples(self):
         idx = self._index_with_kubernetes()
         idx.add("swarm-id", "Docker Swarm", [self.CLASS_SW])
