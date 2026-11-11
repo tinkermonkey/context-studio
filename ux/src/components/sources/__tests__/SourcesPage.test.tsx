@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { render } from "@/test/test-utils";
+import axiosInstance from "@/api/client/axios";
 import {
   createDataset,
   createListTaxonomies,
@@ -236,7 +237,12 @@ describe("SourcesPage", () => {
   });
 
   it("uploads a chosen file as multipart", async () => {
-    const { posts } = serve();
+    serve();
+    // Assert on the form the service hands axios rather than re-parsing the
+    // request: Node's FormData (undici) refuses jsdom's File in some versions.
+    const post = vi
+      .spyOn(axiosInstance, "post")
+      .mockResolvedValueOnce({ data: createSource({ id: "src-new", title: "manual.md" }) });
     const user = userEvent.setup();
     render(<SourcesPage onTaxonomyChange={vi.fn()} />);
     await screen.findByTestId("source-row-src-1");
@@ -247,12 +253,20 @@ describe("SourcesPage", () => {
     const file = new File(["# Manual"], "manual.md", { type: "text/markdown" });
     await user.upload(screen.getByTestId("add-source-file-input"), file);
 
-    await waitFor(() => expect(posts).toHaveLength(1));
-    expect(posts[0].headers.get("content-type")).toMatch(/^multipart\/form-data/);
-    const form = await posts[0].formData();
+    await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
+    const [url, body, config] = post.mock.calls[0];
+    expect(url).toBe("/api/sources");
+    expect(body).toBeInstanceOf(FormData);
+    const form = body as FormData;
     expect(form.get("taxonomy_id")).toBe("tax-house");
     expect(form.get("dataset")).toBe("ds-home");
-    expect(await (form.get("file") as Blob).text()).toBe("# Manual");
+    expect(form.get("file")).toBe(file);
+    // Not the instance's JSON default, which would make axios serialize the form as JSON.
+    expect(config?.headers).toMatchObject({ "Content-Type": "multipart/form-data" });
+    await waitFor(() =>
+      expect(toastSpy).toHaveBeenCalledWith("success", "Added “manual.md”", undefined),
+    );
+    post.mockRestore();
   });
 
   it("asks which dataset a new source goes to when all datasets are shown", async () => {
