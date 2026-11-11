@@ -11,11 +11,13 @@ orchestrators, with a fake extraction port, a fake LLM and a fake page fetcher
 
 import asyncio
 import json
+import os
 import time
 from types import SimpleNamespace
 
 import pytest
 
+from adapters.chat import source_tools
 from adapters.chat.proposal_tools import build_proposal_tools
 from adapters.chat.run_tools import build_run_tools
 from adapters.chat.source_tools import build_source_tools
@@ -239,8 +241,8 @@ class TestAddSource:
         [
             (lambda r: r.outside / "secret.md", "is not inside a folder clients may read from"),
             (lambda r: r.allowed / ".." / "outside" / "secret.md", "is not inside a folder"),
-            (lambda r: r.allowed / "missing.md", "is not a file"),
-            (lambda r: r.allowed, "is not a file"),
+            (lambda r: r.allowed / "missing.md", "is not a regular file"),
+            (lambda r: r.allowed, "is not a regular file"),
             (lambda r: "allowed/notes.md", "Give an absolute path"),
         ],
     )
@@ -306,6 +308,108 @@ class TestAddSource:
         assert is_error is True
         assert "turned off" in payload["error"]
         assert "sources.allowed_roots" in payload["error"]
+
+    @pytest.mark.parametrize("root", ["", ".", "relative/folder"])
+    async def test_a_relative_root_never_means_the_working_directory(self, setup, house, root):
+        async with mcp_client(setup.workspace, write_tools=setup.tools((root,))) as client:
+            is_error, payload, _ = await call(
+                client,
+                "add_source",
+                {
+                    "taxonomy_id": house["taxonomy"],
+                    "dataset": "home",
+                    "path": os.path.abspath("config.py"),
+                },
+            )
+
+        assert is_error is True
+        assert "must list absolute folders" in payload["error"]
+
+    async def add_path(self, setup, house, path):
+        async with mcp_client(setup.workspace, write_tools=setup.tools()) as client:
+            is_error, payload, _ = await call(
+                client,
+                "add_source",
+                {"taxonomy_id": house["taxonomy"], "dataset": "home", "path": str(path)},
+            )
+            _, listed, _ = await call(client, "list_sources", {"taxonomy_id": house["taxonomy"]})
+        assert listed["total"] == 0  # nothing stored
+        return is_error, payload
+
+    async def test_a_file_swapped_for_a_symlink_after_the_check_is_refused(
+        self, setup, house, roots, monkeypatch
+    ):
+        checked = source_tools.readable_path
+
+        def check_then_swap(raw, allowed_roots):
+            resolved = checked(raw, allowed_roots)
+            resolved.unlink()
+            resolved.symlink_to(roots.outside / "secret.md")
+            return resolved
+
+        monkeypatch.setattr(source_tools, "readable_path", check_then_swap)
+
+        is_error, payload = await self.add_path(setup, house, roots.allowed / "notes.md")
+
+        assert is_error is True
+        assert "could not be opened" in payload["error"]
+
+    async def test_a_folder_swapped_for_a_symlink_after_the_check_is_refused(
+        self, setup, house, roots, monkeypatch
+    ):
+        """The last component is a regular file, but the folder above it now points out."""
+        inner = roots.allowed / "inner"
+        inner.mkdir()
+        (inner / "secret.md").write_text("# Inside\n\nFine to read.")
+        checked = source_tools.readable_path
+
+        def check_then_swap(raw, allowed_roots):
+            resolved = checked(raw, allowed_roots)
+            (inner / "secret.md").unlink()
+            inner.rmdir()
+            inner.symlink_to(roots.outside, target_is_directory=True)
+            return resolved
+
+        monkeypatch.setattr(source_tools, "readable_path", check_then_swap)
+
+        is_error, payload = await self.add_path(setup, house, inner / "secret.md")
+
+        assert is_error is True
+        assert "is not inside a folder clients may read from" in payload["error"]
+
+    async def test_a_fifo_is_refused_without_blocking(self, setup, house, roots):
+        fifo = roots.allowed / "pipe.md"
+        os.mkfifo(fifo)
+
+        is_error, payload = await asyncio.wait_for(self.add_path(setup, house, fifo), timeout=10)
+
+        assert is_error is True
+        assert "is not a regular file" in payload["error"]
+
+    async def test_a_hard_link_to_an_outside_file_is_refused(self, setup, house, roots):
+        link = roots.allowed / "hard.md"
+        os.link(roots.outside / "secret.md", link)
+
+        is_error, payload = await self.add_path(setup, house, link)
+
+        assert is_error is True
+        assert "has other hard links" in payload["error"]
+
+    async def test_a_title_is_capped(self, setup, house):
+        async with mcp_client(setup.workspace, write_tools=setup.tools()) as client:
+            is_error, payload, _ = await call(
+                client, "add_source", add_text(house, title="t" * 501)
+            )
+            ok, _, _ = await call(client, "add_source", add_text(house, title="t" * 500))
+
+        assert is_error is True
+        # The MCP server checks the schema's maxLength; the tool checks it again
+        assert "is too long" in payload["error"] or "500" in payload["error"]
+        assert ok is False
+        add_source = build_source_tools(setup.sources, setup.extraction, ())[0]
+        outcome = add_source._run_safely(add_text(house, title="t" * 501))
+        assert outcome.is_error is True
+        assert "at most 500 characters" in json.loads(outcome.content)["error"]
 
     async def test_a_url_is_fetched_after_the_call_returns(self, setup, house):
         url = "https://example.com/fridge"

@@ -23,6 +23,7 @@ from config import (
     S3Config,
     ServerConfig,
     Settings,
+    SourcesConfig,
     SyncAdapterType,
     SyncConfig,
     url_origin,
@@ -322,6 +323,20 @@ class TestCorsOriginsDefault:
         """Each install generates its own token; the committed example must not hold one."""
         with open(EXAMPLE_CONFIG) as f:
             assert not Settings(**json.load(f)).mcp.auth_token
+
+
+class TestSourcesConfig:
+    def test_allowed_roots_default_to_none(self) -> None:
+        assert SourcesConfig().allowed_roots == []
+
+    def test_absolute_roots_are_kept_and_home_expands(self) -> None:
+        config = SourcesConfig(allowed_roots=["/data/docs", "~/notes"])
+        assert config.allowed_roots == ["/data/docs", str(Path("~/notes").expanduser())]
+
+    @pytest.mark.parametrize("root", ["", "  ", ".", "docs", "./docs", "~user-that-does-not-exist"])
+    def test_a_relative_or_empty_root_is_a_config_error(self, root: str) -> None:
+        with pytest.raises(ValidationError, match="must be absolute folder paths"):
+            SourcesConfig(allowed_roots=["/data/docs", root])
 
 
 class TestMcpConfig:

@@ -18,9 +18,16 @@ add sources and start extractions.
 
 from __future__ import annotations
 
+import os
+import stat
 import threading
 from pathlib import Path
 from typing import Any, Optional, Sequence
+
+try:
+    import fcntl
+except ImportError:  # Windows: a descriptor's path can't be confirmed, so paths are refused
+    fcntl = None  # type: ignore[assignment]
 
 from adapters.chat.proposal_tools import DEFAULT_LIMIT, PROPOSAL_KIND, _capped
 from adapters.chat.tools import (
@@ -50,9 +57,11 @@ from domain.pipelines.source_extraction import (
 )
 
 _REVIEW = (
-    "A person decides each operation in Context Studio's review queue; these tools" " never decide."
+    "A person decides each operation in Context Studio's review queue; these tools never decide."
 )
 _FORMATS = "PDF (its text layer; scanned PDFs have none), Markdown, HTML or plain text"
+# As the REST routes cap it
+MAX_TITLE_CHARS = 500
 # What a source result leaves out: get_source is for following status, not reading.
 _OMITTED = {"page_starts", "headings"}
 
@@ -77,14 +86,13 @@ class PathRefusedError(ValueError):
     """A path a client may not add a source from."""
 
 
-def readable_path(raw: str, allowed_roots: Sequence[str]) -> Path:
+def _roots(allowed_roots: Sequence[str]) -> list[Path]:
     """
-    The file a path names, resolved (symlinks followed), when it is a file
-    inside one of the allowed roots.
+    The allowed roots, resolved.
 
     Raises:
-        PathRefusedError: If no roots are configured, the path is relative, it
-            resolves outside every root, or it is not an existing file
+        PathRefusedError: If there are none, or one is not absolute (config.py
+            refuses those too: a relative root would mean the server's folder)
     """
     if not allowed_roots:
         raise PathRefusedError(
@@ -93,19 +101,93 @@ def readable_path(raw: str, allowed_roots: Sequence[str]) -> Path:
             " sources.allowed_roots and restart Context Studio; or pass the file's"
             " contents as text, or its url."
         )
-    path = Path(raw).expanduser()
-    if not path.is_absolute():
-        raise PathRefusedError(f"Give an absolute path, not {raw!r}")
-    resolved = path.resolve()
-    roots = [Path(root).expanduser().resolve() for root in allowed_roots]
-    if not any(resolved.is_relative_to(root) for root in roots):
+    roots = [Path(root.strip()).expanduser() for root in allowed_roots]
+    if not all(root.is_absolute() and str(root).strip() for root in roots):
+        raise PathRefusedError("config.json sources.allowed_roots must list absolute folders")
+    return [root.resolve() for root in roots]
+
+
+def _refuse_outside(raw: str, path: Path, roots: Sequence[Path]) -> None:
+    if not any(path.is_relative_to(root) for root in roots):
         raise PathRefusedError(
             f"{raw!r} is not inside a folder clients may read from"
             f" ({', '.join(str(r) for r in roots)}; config.json sources.allowed_roots)"
         )
-    if not resolved.is_file():
-        raise PathRefusedError(f"{raw!r} is not a file")
+
+
+def readable_path(raw: str, allowed_roots: Sequence[str]) -> Path:
+    """
+    The path, resolved (symlinks followed), when it is inside one of the
+    allowed roots. `read_allowed_file` checks the file it actually opens again.
+
+    Raises:
+        PathRefusedError: If no roots are configured, the path is relative, or
+            it resolves outside every root
+    """
+    roots = _roots(allowed_roots)
+    path = Path(raw).expanduser()
+    if not path.is_absolute():
+        raise PathRefusedError(f"Give an absolute path, not {raw!r}")
+    resolved = path.resolve()
+    _refuse_outside(raw, resolved, roots)
     return resolved
+
+
+def _descriptor_path(fd: int) -> Optional[Path]:
+    """The path an open descriptor refers to now; None where the platform can't say."""
+    if fcntl is not None and hasattr(fcntl, "F_GETPATH"):  # macOS
+        named = fcntl.fcntl(fd, fcntl.F_GETPATH, bytes(1024))
+        return Path(os.fsdecode(named.split(b"\0", 1)[0]))
+    proc = f"/proc/self/fd/{fd}"  # Linux
+    if os.path.islink(proc):
+        return Path(os.readlink(proc))
+    return None
+
+
+def read_allowed_file(raw: str, allowed_roots: Sequence[str], max_bytes: int) -> tuple[Path, bytes]:
+    """
+    Read a file inside the allowed roots: its real path and at most max_bytes
+    + 1 bytes (one past, so a file too large is known).
+
+    The checks are made on the descriptor that is read, not the name, so a file
+    swapped for a symlink, a FIFO or a link elsewhere after `readable_path`
+    can't get in: the last component may not be a symlink, the file must be a
+    regular file with no other hard links, and its path once open must still
+    be inside a root.
+
+    Raises:
+        PathRefusedError: If any check fails or the file can't be read
+    """
+    resolved = readable_path(raw, allowed_roots)
+    roots = _roots(allowed_roots)
+    nofollow = getattr(os, "O_NOFOLLOW", None)
+    if nofollow is None:
+        raise PathRefusedError("This platform can't read a source by path safely")
+    try:
+        fd = os.open(resolved, os.O_RDONLY | os.O_NONBLOCK | nofollow)
+    except FileNotFoundError:
+        raise PathRefusedError(f"{raw!r} is not a regular file") from None
+    except OSError as exc:  # ELOOP: the last component became a symlink
+        raise PathRefusedError(f"{raw!r} could not be opened: {exc.strerror}") from None
+    try:
+        info = os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode):
+            raise PathRefusedError(f"{raw!r} is not a regular file")
+        if info.st_nlink > 1:
+            raise PathRefusedError(f"{raw!r} has other hard links, so it can't be read")
+        real = _descriptor_path(fd)
+        if real is None:
+            raise PathRefusedError("This platform can't confirm where an open file is")
+        _refuse_outside(raw, real, roots)  # its real path: no names resolved again
+        file = os.fdopen(fd, "rb")
+    except BaseException:
+        os.close(fd)
+        raise
+    with file:
+        try:
+            return real, file.read(max_bytes + 1)
+        except OSError as exc:
+            raise PathRefusedError(f"{raw!r} could not be read: {exc.strerror}") from None
 
 
 class _SourceTool(ToolBase):
@@ -143,9 +225,10 @@ class AddSourceTool(_SourceTool):
         "Add a source for extraction to a taxonomy's dataset: exactly one of path (a local"
         " file), url (a web page) or text (with a title). A file is "
         + _FORMATS
-        + "; it is read only if its absolute path, symlinks followed, is inside a folder"
-        " listed in Context Studio's config.json sources.allowed_roots (none are by"
-        " default), and anything else is refused. A url is one http or https page (no links"
+        + "; it is read only if it is a regular file (no other hard links) whose absolute"
+        " path, symlinks followed, is inside a folder listed in Context Studio's"
+        " config.json sources.allowed_roots (none are by default), and anything else is"
+        " refused. A url is one http or https page (no links"
         " followed, a PDF or text file behind a URL works too): the source comes back with"
         " status fetching and turns ready or failed in the background, so poll get_source"
         " until it does. A file or text is read at once. A source that can't be read is"
@@ -159,9 +242,7 @@ class AddSourceTool(_SourceTool):
             "taxonomy_id": {"type": "string", "description": "Taxonomy the source is for"},
             "dataset": {
                 "type": "string",
-                "description": (
-                    "Dataset (identifier or id); needed only when the taxonomy" " has several"
-                ),
+                "description": "Dataset (identifier or id); needed only with several",
             },
             "path": {
                 "type": "string",
@@ -171,6 +252,7 @@ class AddSourceTool(_SourceTool):
             "text": {"type": "string", "description": "Text to add (needs a title)"},
             "title": {
                 "type": "string",
+                "maxLength": MAX_TITLE_CHARS,
                 "description": "Title; for a file or page, defaults to its own title or name",
             },
         },
@@ -190,6 +272,8 @@ class AddSourceTool(_SourceTool):
         taxonomy_id = required_str(args, "taxonomy_id")
         dataset = optional_str(args, "dataset")
         title = optional_str(args, "title")
+        if title is not None and len(title) > MAX_TITLE_CHARS:
+            raise ToolArgumentError(f"'title' must be at most {MAX_TITLE_CHARS} characters")
         given = {k: args.get(k) for k in ("path", "url", "text") if args.get(k) not in (None, "")}
         if len(given) != 1:
             raise ToolArgumentError("pass exactly one of 'path', 'url' or 'text'")
@@ -203,13 +287,9 @@ class AddSourceTool(_SourceTool):
             source = self._sources.add_url(taxonomy_id, url, dataset, title)
             _fetch_in_background(self._sources, source.id)
         else:
-            path = readable_path(required_str(args, "path"), self._allowed_roots)
-            try:
-                with path.open("rb") as file:
-                    # One byte past the limit, so a file too large is stored as too_large
-                    data = file.read(self._sources.max_bytes + 1)
-            except OSError as exc:
-                raise PathRefusedError(f"{str(path)!r} could not be read: {exc.strerror}") from exc
+            path, data = read_allowed_file(
+                required_str(args, "path"), self._allowed_roots, self._sources.max_bytes
+            )
             source = self._sources.add_file(
                 taxonomy_id, str(path), data, dataset=dataset, title=title
             )
