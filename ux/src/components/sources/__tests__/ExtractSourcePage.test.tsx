@@ -117,7 +117,7 @@ function serve({
               id: "b",
               op: "create",
               kind: "individual",
-              ...({ alternatives: [{ kind: "existing", entity_id: "i-9" }] } as object),
+              alternatives: [{ kind: "existing", entity_id: "i-9" }],
             }),
             createProposedOperation({ id: "c", op: "create", kind: "relationship" }),
           ],

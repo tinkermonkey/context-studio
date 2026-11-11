@@ -10,7 +10,7 @@ import {
   createListTaxonomies,
   createTaxonomy,
 } from "@/api/services/__tests__/fixtures/ontology.fixtures";
-import type { Source } from "@/api/services/sources";
+import type { LastExtractionRun, Source } from "@/api/services/sources";
 import { SourcesPage } from "../SourcesPage";
 import { createLastExtraction, createLastExtractionRun, createSource } from "./fixtures";
 
@@ -315,7 +315,7 @@ describe("SourcesPage", () => {
 
   it("re-reads the list while an extraction runs, and stops once it finishes", async () => {
     let calls = 0;
-    const withRun = (status: string) =>
+    const withRun = (status: LastExtractionRun["status"]) =>
       createSource({
         last_extraction: createLastExtraction([
           createLastExtractionRun({
@@ -381,18 +381,21 @@ describe("SourcesPage", () => {
     ["interrupted", "Stopped when the app closed"],
     ["cancelled", "Run cancelled"],
     ["failed", "Run failed"],
-  ])("says a %s extraction ended without a proposal, and doesn't poll", async (status, text) => {
-    const ended = createSource({
-      last_extraction: createLastExtraction([createLastExtractionRun({ status })]),
-    });
-    const { listRequests } = serve({ sources: [ended] });
-    render(<SourcesPage onTaxonomyChange={vi.fn()} />);
+  ] as const)(
+    "says a %s extraction ended without a proposal, and doesn't poll",
+    async (status, text) => {
+      const ended = createSource({
+        last_extraction: createLastExtraction([createLastExtractionRun({ status })]),
+      });
+      const { listRequests } = serve({ sources: [ended] });
+      render(<SourcesPage onTaxonomyChange={vi.fn()} />);
 
-    expect(await screen.findByTestId("source-follow-run-src-1")).toHaveTextContent(text);
-    expect(screen.getByTestId("source-extract-src-1")).toHaveTextContent("Extract again");
-    await new Promise((resolve) => setTimeout(resolve, 2500));
-    expect(listRequests).toHaveLength(1);
-  });
+      expect(await screen.findByTestId("source-follow-run-src-1")).toHaveTextContent(text);
+      expect(screen.getByTestId("source-extract-src-1")).toHaveTextContent("Extract again");
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+      expect(listRequests).toHaveLength(1);
+    },
+  );
 
   it("removes a source after confirming", async () => {
     const { deletes } = serve();

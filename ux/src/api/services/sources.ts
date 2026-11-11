@@ -1,34 +1,8 @@
 import { BaseService } from "./base";
 import type { components } from "@/api/types";
 
-// TODO(#1552): the extract endpoint and `last_extraction` are typed by hand until
-// the wave-2 backend lands and the types regenerate.
-export type ExtractionPipeline = "individual_extraction" | "schema_extraction";
-
-/** One run of a source's last extraction, as the source summarizes it. */
-export interface LastExtractionRun {
-  run_id: string;
-  pipeline: ExtractionPipeline;
-  status: string;
-  items_done: number | null;
-  items_total: number | null;
-  proposal_id: string | null;
-  /** The proposal's operation count, once it has one. */
-  operations: number | null;
-}
-
-/** A source's most recent extraction: one run, two with schema suggestions. */
-export interface LastExtraction {
-  started_at: string;
-  /** The dataset the extraction was for, which need not be the source's. */
-  dataset_id: string;
-  runs: LastExtractionRun[];
-}
-
-/** A source (file, web page or pasted text) without its text. */
-export type Source = components["schemas"]["SourceResponse"] & {
-  last_extraction?: LastExtraction | null;
-};
+/** A source (file, web page or pasted text) without its text, with its last extraction. */
+export type Source = components["schemas"]["SourceResponse"];
 export type SourceKind = components["schemas"]["SourceKind"];
 export type SourceStatus = components["schemas"]["SourceStatus"];
 export type SourceFailure = components["schemas"]["SourceFailure"];
@@ -36,9 +10,18 @@ export type SourceFailure = components["schemas"]["SourceFailure"];
 export type SourceHeading = components["schemas"]["SourceHeadingSchema"];
 /** One page's text, or the whole text, with its offsets in the whole text. */
 export type SourceText = components["schemas"]["SourceTextResponse"];
-type ListSources = Omit<components["schemas"]["ListResponse_SourceResponse_"], "items"> & {
-  items: Source[];
-};
+type ListSources = components["schemas"]["ListResponse_SourceResponse_"];
+
+/** A source's most recent extraction: one run, two with schema suggestions. */
+export type LastExtraction = components["schemas"]["LastExtractionSchema"];
+/** One run of a source's last extraction, as the source summarizes it. */
+export type LastExtractionRun = components["schemas"]["LastExtractionRunSchema"];
+/** POST /api/sources/{id}/extract */
+export type ExtractSourceRequest = components["schemas"]["SourceExtractRequest"];
+/** 202 from POST /api/sources/{id}/extract: the background runs it started. */
+export type ExtractSourceResponse = components["schemas"]["SourceExtractResponse"];
+export type ExtractionRunRef = components["schemas"]["SourceExtractRun"];
+export type ExtractionPipeline = ExtractionRunRef["pipeline"];
 
 export interface SourceListParams {
   taxonomy_id: string;
@@ -59,28 +42,6 @@ export type NewSource =
   | { kind: "file"; file: File; title?: string }
   | { kind: "url"; url: string }
   | { kind: "text"; title: string; text: string };
-
-/** POST /api/sources/{id}/extract */
-export interface ExtractSourceRequest {
-  /** The dataset the proposal and its individuals belong to (identifier or id). */
-  dataset: string;
-  /** An individual_extraction configuration; the server's default without. */
-  configuration_ref?: string;
-  /** Pages to read: digits, "-" and commas only, e.g. "1-12,15"; every page without. */
-  pages?: string;
-  /** Also run schema extraction, into a separate proposal. */
-  schema?: boolean;
-}
-
-export interface ExtractionRunRef {
-  run_id: string;
-  pipeline: ExtractionPipeline;
-}
-
-/** 202 from POST /api/sources/{id}/extract: the background runs it started. */
-export interface ExtractSourceResponse {
-  runs: ExtractionRunRef[];
-}
 
 class SourcesService extends BaseService {
   /** A taxonomy's sources, newest first, without removed ones. */

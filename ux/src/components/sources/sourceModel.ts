@@ -243,11 +243,7 @@ export function proposalCounts(proposal: ChangeProposal): ProposalCounts {
     operations: ops.length,
     individuals: ops.filter((o) => o.op === "create" && o.kind === "individual").length,
     relationships: ops.filter((o) => o.kind === "relationship").length,
-    // `alternatives` arrives with the near-match work (#1553); read it loosely until then.
-    nearMatches: ops.filter((o) => {
-      const alternatives = (o as { alternatives?: unknown }).alternatives;
-      return Array.isArray(alternatives) && alternatives.length > 0;
-    }).length,
+    nearMatches: ops.filter((o) => (o.alternatives?.length ?? 0) > 0).length,
   };
 }
 

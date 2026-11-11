@@ -116,7 +116,7 @@ function ConfigureForm({
           dataset,
           ...(configRef ? { configuration_ref: configRef } : {}),
           ...(spec ? { pages: spec } : {}),
-          ...(schema ? { schema: true } : {}),
+          schema,
         },
       },
       {
@@ -280,7 +280,7 @@ export function ExtractSourcePage({
   // The dataset this run extracts into, from the source's last extraction when it is this one.
   const lastExtraction = source.last_extraction;
   const runDatasetId = lastExtraction?.runs.some((r) => r.run_id === runId)
-    ? lastExtraction.dataset_id
+    ? (lastExtraction.dataset_id ?? undefined)
     : undefined;
 
   const cancel = () => {
