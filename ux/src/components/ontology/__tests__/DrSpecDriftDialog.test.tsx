@@ -21,7 +21,12 @@ const entries = [
     entity_id: "c1",
     fields: { description: { taxonomy: "Old", source: "New" } },
   },
-  { kind: "property", source_id: "api.contact.uses.api.server", change: "create", fields: {} },
+  {
+    kind: "property",
+    source_id: "api.contact.uses.api.server",
+    change: "create",
+    fields: { title: { taxonomy: null, source: "uses" } },
+  },
 ];
 
 const requests: Array<{ spec_dir: string; dry_run: boolean }> = [];
@@ -76,6 +81,9 @@ describe("DrSpecDriftDialog", () => {
     expect(within(table).getByText("update")).toHaveClass("chip--cyan");
     expect(within(table).getByText("create")).toHaveClass("chip--emerald");
     expect(within(table).getByText("description")).toHaveClass("drift-dialog__fields");
+    // A create lists what it would set, which isn't a difference: it shows a dash
+    expect(within(table).getByText("—")).toHaveClass("drift-dialog__fields");
+    expect(within(table).queryByText("title")).not.toBeInTheDocument();
     expect(window.localStorage.getItem(SPEC_DIR_KEY)).toBe(SPEC);
 
     await user.click(screen.getByTestId("dr-drift-propose"));

@@ -47,8 +47,9 @@ class DriftEntry:
         change: create (only in the source), update, move (it changed scheme in
             the source; it may differ otherwise too) or delete (only in the taxonomy)
         entity_id: The taxonomy's entity (None for a create)
-        fields: For an update or move, each differing field's value in the
-            taxonomy and in the source: {name: {"taxonomy": ..., "source": ...}}
+        fields: Each differing field's value in the taxonomy and in the source:
+            {name: {"taxonomy": ..., "source": ...}}. A create lists the values it
+            would set (taxonomy None; unset ones left out); a delete lists nothing.
     """
 
     kind: str

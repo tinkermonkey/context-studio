@@ -26,7 +26,9 @@ class DriftEntryResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    kind: str = Field(..., description="taxonomy, scheme, class, property or attribute")
+    kind: str = Field(
+        ..., description="taxonomy, scheme, class, property, attribute or predicate"
+    )
     source_id: str = Field(
         ..., description="Its id in the source (a DR id; an attribute's is '<node id>#<name>')"
     )
@@ -40,7 +42,10 @@ class DriftEntryResponse(BaseModel):
     entity_id: Optional[str] = Field(None, description="The taxonomy's entity (None for a create)")
     fields: dict[str, dict[str, Any]] = Field(
         default_factory=dict,
-        description="Each differing field's value: {name: {taxonomy, source}}",
+        description=(
+            "Each differing field's value: {name: {taxonomy, source}}. A create lists what"
+            " it would set (taxonomy null); a delete lists nothing."
+        ),
     )
 
 
@@ -56,7 +61,7 @@ class DriftResponse(BaseModel):
     proposal: Optional[ChangeProposalResponse] = Field(
         None,
         description=(
-            "The proposal that removes the drift (not stored on a dry run); None when"
-            " nothing differs"
+            "The proposal that removes the drift; None when nothing differs. On a dry run"
+            " it is not stored, so its id can't be fetched"
         ),
     )
