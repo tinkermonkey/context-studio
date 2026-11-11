@@ -630,6 +630,31 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/relationships/{relationship_id}/sources": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Relationship Sources
+     * @description The source passages a relationship was extracted from (its provenance),
+     *     oldest first: one per passage of each applied proposal operation that
+     *     created it, written when it applied.
+     *
+     *     Raises:
+     *         HTTPException: 404 if the relationship does not exist
+     */
+    get: operations["get_relationship_sources_api_relationships__relationship_id__sources_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/properties": {
     parameters: {
       query?: never;
@@ -964,6 +989,31 @@ export interface paths {
      *         HTTPException: 404 if not found
      */
     delete: operations["delete_individual_api_individuals__individual_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/individuals/{individual_id}/sources": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Individual Sources
+     * @description The source passages an individual was extracted from (its provenance),
+     *     oldest first: one per passage of each applied proposal operation that
+     *     created or changed it, or chose it as a near match ("use existing").
+     *
+     *     Raises:
+     *         HTTPException: 404 if the individual does not exist
+     */
+    get: operations["get_individual_sources_api_individuals__individual_id__sources_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -3818,6 +3868,9 @@ export interface paths {
      *     chosen_alternatives records, in each applied operation's decision, the
      *     alternative the reviewer chose over the proposal's pick (gold's
      *     chosen_alternative), e.g. a reflection's answers when accepted with an edit.
+     *     For an individual create with near matches, {"kind": "existing",
+     *     "entity_id"} applies it as that existing individual: nothing is created,
+     *     and relationships that name it by "$ref" point at the existing one.
      */
     post: operations["apply_proposal_api_proposals__proposal_id__apply_post"];
     delete?: never;
@@ -4133,6 +4186,55 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    /**
+     * AlternativeRequest
+     * @description A near match an individual create may be instead: an individual already in the dataset.
+     */
+    AlternativeRequest: {
+      /**
+       * Kind
+       * @description Always "existing"
+       * @constant
+       */
+      kind: "existing";
+      /**
+       * Entity Id
+       * @description An individual in the proposal's taxonomy and dataset
+       */
+      entity_id: string;
+      /**
+       * Similarity
+       * @description How alike the two are, 0 to 1
+       */
+      similarity?: number | null;
+    };
+    /**
+     * AlternativeResponse
+     * @description A near match of an individual create: an individual already in the dataset.
+     */
+    AlternativeResponse: {
+      /**
+       * Kind
+       * @description Always "existing"
+       * @constant
+       */
+      kind: "existing";
+      /**
+       * Entity Id
+       * @description The existing individual
+       */
+      entity_id: string;
+      /**
+       * Similarity
+       * @description How alike the two are, 0 to 1
+       */
+      similarity?: number | null;
+      /**
+       * Title
+       * @description The individual's current title; null if it no longer exists
+       */
+      title?: string | null;
+    };
     /**
      * AnalyzeTextRequest
      * @description Request to analyze text for linguistic features and named entities.
@@ -4932,7 +5034,7 @@ export interface components {
       };
       /**
        * Chosen Alternatives
-       * @description Operation id -> the alternative the reviewer chose over the proposal's pick (e.g. a reflection's answers per question): a non-empty object, for an operation in operation_ids that edits also has (the edit applies it); recorded in its decision as chosen_alternative
+       * @description Operation id -> the alternative the reviewer chose over the proposal's pick (e.g. a reflection's answers per question): a non-empty object, for an operation in operation_ids that edits also has (the edit applies it); recorded in its decision as chosen_alternative. For an individual create, {"kind": "existing", "entity_id"} naming one of its alternatives (near matches) needs no edit: the create is not performed, the operation applies as that existing individual (result_entity_id), and later operations' "$ref" to it point there
        */
       chosen_alternatives?: {
         [key: string]: {
@@ -6440,6 +6542,64 @@ export interface components {
       kind: "taxonomy" | "scheme" | "class" | "individual" | "property" | "proposal";
       /** Title */
       title: string;
+    };
+    /**
+     * EntitySourceResponse
+     * @description One source passage behind an entity (provenance), written when a proposal applied.
+     */
+    EntitySourceResponse: {
+      /** Id */
+      id: string;
+      /**
+       * Entity Id
+       * @description The individual, relationship or class
+       */
+      entity_id: string;
+      /**
+       * Entity Kind
+       * @description individual, relationship or class
+       */
+      entity_kind: string;
+      /**
+       * Source Id
+       * @description The source the passage is in (kept when the source is removed)
+       */
+      source_id: string;
+      /**
+       * Proposal Id
+       * @description The proposal whose operation recorded it
+       */
+      proposal_id: string;
+      /**
+       * Op Seq
+       * @description That operation's seq
+       */
+      op_seq: number;
+      /**
+       * Page
+       * @description The passage's page, if the source has pages
+       */
+      page?: number | null;
+      /**
+       * Start
+       * @description The passage's start offset in the source's text
+       */
+      start: number;
+      /**
+       * End
+       * @description The passage's end offset (exclusive)
+       */
+      end: number;
+      /**
+       * Quote
+       * @description The passage's text
+       */
+      quote?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
     };
     /** ErrorEvent */
     ErrorEvent: {
@@ -8828,7 +8988,7 @@ export interface components {
       notes?: string | null;
       /**
        * Evidence
-       * @description Supporting {"quote", "url", "entity_id"} items
+       * @description Supporting {"quote", "url", "entity_id"} items (text values), or passages in a source: {"source_id", "page", "start", "end", "quote"}, where start and end are character offsets into the source's text (non-negative integers, end exclusive and not before start) and page is a non-negative integer or null. An applied individual, relationship or class operation records each source passage as the entity's provenance
        */
       evidence?: {
         [key: string]: unknown;
@@ -8838,6 +8998,11 @@ export interface components {
        * @description The proposer's confidence, 0 to 1
        */
       probability?: number | null;
+      /**
+       * Alternatives
+       * @description An individual create only: its near matches, individuals already in the dataset it may be. Applying it with chosen_alternatives {"kind": "existing", "entity_id"} creates nothing and points its "$ref" uses at that individual
+       */
+      alternatives?: components["schemas"]["AlternativeRequest"][];
       /** @description A claimed scope; it can only make the computed scope stricter */
       scope?: components["schemas"]["ChangeScope"] | null;
       /**
@@ -8879,19 +9044,33 @@ export interface components {
        * @description Free-text notes kept with the operation; never applied to the entity
        */
       notes?: string | null;
-      /** Evidence */
+      /**
+       * Evidence
+       * @description Supporting {"quote", "url", "entity_id"} items (text values), or passages in a source: {"source_id", "page", "start", "end", "quote"}, where start and end are character offsets into the source's text (non-negative integers, end exclusive and not before start) and page is a non-negative integer or null. An applied individual, relationship or class operation records each source passage as the entity's provenance
+       */
       evidence?: {
         [key: string]: unknown;
       }[];
       /** Probability */
       probability?: number | null;
+      /**
+       * Alternatives
+       * @description An individual create only: its near matches, individuals already in the dataset it may be. Choose one at apply with chosen_alternatives {"kind": "existing", "entity_id"}
+       */
+      alternatives?: components["schemas"]["AlternativeResponse"][];
       scope: components["schemas"]["ChangeScope"];
       status: components["schemas"]["OperationStatus"];
       /**
        * Result Entity Id
-       * @description The entity made or changed
+       * @description The entity made or changed; for a matched create, the existing individual
        */
       result_entity_id?: string | null;
+      /**
+       * Matched
+       * @description Applied as one of its alternatives: the create made nothing, and result_entity_id is the existing individual its "$ref" uses point at
+       * @default false
+       */
+      matched: boolean;
       /**
        * Reason
        * @description Why it failed ("<code>: <detail>") or was rejected
@@ -11673,6 +11852,37 @@ export interface operations {
       };
     };
   };
+  get_relationship_sources_api_relationships__relationship_id__sources_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        relationship_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EntitySourceResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_property_definitions_api_properties_get: {
     parameters: {
       query?: {
@@ -12206,6 +12416,37 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_individual_sources_api_individuals__individual_id__sources_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        individual_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EntitySourceResponse"][];
+        };
       };
       /** @description Validation Error */
       422: {

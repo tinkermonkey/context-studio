@@ -6,7 +6,7 @@ Names carry the ChangeProposal prefix, the domain's name for a proposal.
 
 import logging
 from datetime import datetime
-from typing import Any, Collection, Optional
+from typing import Any, Collection, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -37,6 +37,29 @@ logger = logging.getLogger(__name__)
 # ==================== Requests ====================
 
 
+EVIDENCE_DESCRIPTION = (
+    'Supporting {"quote", "url", "entity_id"} items (text values), or passages in a source: '
+    '{"source_id", "page", "start", "end", "quote"}, where start and end are character '
+    "offsets into the source's text (non-negative integers, end exclusive and not before "
+    "start) and page is a non-negative integer or null. An applied individual, relationship "
+    "or class operation records each source passage as the entity's provenance"
+)
+
+
+class AlternativeRequest(BaseModel):
+    """A near match an individual create may be instead: an individual already in the dataset."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    kind: Literal["existing"] = Field(..., description='Always "existing"')
+    entity_id: str = Field(
+        ..., min_length=1, description="An individual in the proposal's taxonomy and dataset"
+    )
+    similarity: Optional[float] = Field(
+        None, ge=0.0, le=1.0, description="How alike the two are, 0 to 1"
+    )
+
+
 class ProposedOperationRequest(BaseModel):
     """One operation as proposed."""
 
@@ -62,11 +85,15 @@ class ProposedOperationRequest(BaseModel):
         description="Free-text notes kept with the operation (e.g. a maintainer's notes); "
         "never applied to the entity. Blank notes are stored as null",
     )
-    evidence: list[dict[str, Any]] = Field(
-        default_factory=list, description='Supporting {"quote", "url", "entity_id"} items'
-    )
+    evidence: list[dict[str, Any]] = Field(default_factory=list, description=EVIDENCE_DESCRIPTION)
     probability: Optional[float] = Field(
         None, ge=0.0, le=1.0, description="The proposer's confidence, 0 to 1"
+    )
+    alternatives: list[AlternativeRequest] = Field(
+        default_factory=list,
+        description="An individual create only: its near matches, individuals already in the "
+        'dataset it may be. Applying it with chosen_alternatives {"kind": "existing", '
+        '"entity_id"} creates nothing and points its "$ref" uses at that individual',
     )
     scope: Optional[ChangeScope] = Field(
         None, description="A claimed scope; it can only make the computed scope stricter"
@@ -191,7 +218,10 @@ class ChangeProposalApplyRequest(BaseModel):
         description="Operation id -> the alternative the reviewer chose over the proposal's "
         "pick (e.g. a reflection's answers per question): a non-empty object, for an "
         "operation in operation_ids that edits also has (the edit applies it); recorded in "
-        "its decision as chosen_alternative",
+        'its decision as chosen_alternative. For an individual create, {"kind": "existing", '
+        '"entity_id"} naming one of its alternatives (near matches) needs no edit: the '
+        "create is not performed, the operation applies as that existing individual "
+        '(result_entity_id), and later operations\' "$ref" to it point there',
     )
 
 
@@ -451,6 +481,17 @@ class ReflectionResponse(BaseModel):
         )
 
 
+class AlternativeResponse(BaseModel):
+    """A near match of an individual create: an individual already in the dataset."""
+
+    kind: Literal["existing"] = Field(..., description='Always "existing"')
+    entity_id: str = Field(..., description="The existing individual")
+    similarity: Optional[float] = Field(None, description="How alike the two are, 0 to 1")
+    title: Optional[str] = Field(
+        None, description="The individual's current title; null if it no longer exists"
+    )
+
+
 class ProposedOperationResponse(BaseModel):
     """One proposed operation and its outcome."""
 
@@ -471,11 +512,25 @@ class ProposedOperationResponse(BaseModel):
     notes: Optional[str] = Field(
         None, description="Free-text notes kept with the operation; never applied to the entity"
     )
-    evidence: list[dict[str, Any]] = Field(default_factory=list)
+    evidence: list[dict[str, Any]] = Field(default_factory=list, description=EVIDENCE_DESCRIPTION)
     probability: Optional[float] = None
+    alternatives: list[AlternativeResponse] = Field(
+        default_factory=list,
+        description="An individual create only: its near matches, individuals already in the "
+        'dataset it may be. Choose one at apply with chosen_alternatives {"kind": "existing", '
+        '"entity_id"}',
+    )
     scope: ChangeScope
     status: OperationStatus
-    result_entity_id: Optional[str] = Field(None, description="The entity made or changed")
+    result_entity_id: Optional[str] = Field(
+        None,
+        description="The entity made or changed; for a matched create, the existing individual",
+    )
+    matched: bool = Field(
+        False,
+        description="Applied as one of its alternatives: the create made nothing, and "
+        'result_entity_id is the existing individual its "$ref" uses point at',
+    )
     reason: Optional[str] = Field(
         None, description='Why it failed ("<code>: <detail>") or was rejected'
     )
@@ -587,6 +642,7 @@ class ChangeProposalResponse(BaseModel):
         auto_apply_ids: Optional[Collection[str]] = None,
         type_usage: Optional[dict[str, DeleteBlockers]] = None,
         dataset_impacts: Optional[dict[str, list[DatasetImpact]]] = None,
+        alternative_titles: Optional[dict[str, str]] = None,
     ) -> "ChangeProposalResponse":
         """
         Build the response, flagging the operations in stale_ids, with their blockers.
@@ -597,6 +653,7 @@ class ChangeProposalResponse(BaseModel):
                 is a dry run and each operation says whether it would auto-apply
             type_usage: See ProposalService.type_usage
             dataset_impacts: See ProposalService.dataset_impacts
+            alternative_titles: See ProposalService.alternative_titles
         """
         blockers = blockers or {}
         checks = replacement_checks or {}
@@ -625,6 +682,10 @@ class ChangeProposalResponse(BaseModel):
                 for o in proposal.operations
             ],
         )
+        titles = alternative_titles or {}
+        for operation in response.operations:
+            for alternative in operation.alternatives:
+                alternative.title = titles.get(alternative.entity_id)
         if auto_apply_ids is not None:
             auto = set(auto_apply_ids)
             response.dry_run = True
@@ -664,6 +725,26 @@ def _reflection(operation: ProposedOperation) -> Optional[ReflectionResponse]:
             "Unreadable reflection evidence on operation %s", operation.id, exc_info=True
         )
         return None
+
+
+class EntitySourceResponse(BaseModel):
+    """One source passage behind an entity (provenance), written when a proposal applied."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    entity_id: str = Field(..., description="The individual, relationship or class")
+    entity_kind: str = Field(..., description="individual, relationship or class")
+    source_id: str = Field(
+        ..., description="The source the passage is in (kept when the source is removed)"
+    )
+    proposal_id: str = Field(..., description="The proposal whose operation recorded it")
+    op_seq: int = Field(..., description="That operation's seq")
+    page: Optional[int] = Field(None, description="The passage's page, if the source has pages")
+    start: int = Field(..., description="The passage's start offset in the source's text")
+    end: int = Field(..., description="The passage's end offset (exclusive)")
+    quote: Optional[str] = Field(None, description="The passage's text")
+    created_at: datetime
 
 
 class OperationErrorResponse(BaseModel):

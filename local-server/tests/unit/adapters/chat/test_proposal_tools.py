@@ -141,6 +141,9 @@ class FakeProposalService:
     def dataset_impacts(self, proposal):
         return {}
 
+    def alternative_titles(self, proposal):
+        return {}
+
     def auto_apply_operation_ids(self, proposal):
         return self.auto
 
@@ -211,6 +214,7 @@ def test_propose_schema_defines_every_operation_field():
         "rationale",
         "notes",
         "evidence",
+        "alternatives",
         "probability",
         "replacement",
     }
@@ -666,6 +670,7 @@ class TestGetProposal:
             "fields": {"description": "Description 1"},
             "scope": "editorial",
             "status": "pending",
+            "matched": False,
             "stale": True,
         }
         assert (second["status"], second["stale"], second["result_entity_id"]) == (

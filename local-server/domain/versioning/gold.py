@@ -55,7 +55,8 @@ class ProposalDecision:
             (backfilled)
         proposed: The operation as proposed (see `proposed_snapshot`)
         applied_fields: The fields finally applied (the edit, if edited); None
-            when rejected
+            when rejected; empty when a create was matched to an existing
+            individual (it applied nothing)
         result_entity_id: The entity created or changed, when applied
         reason: Why (a reject note)
         resolution: How an applied relationship-type delete resolved the
@@ -111,6 +112,7 @@ def proposed_snapshot(operation: ProposedOperation) -> dict[str, Any]:
         "probability": operation.probability,
         "scope": operation.scope.value,
         "proposed_replacement_id": operation.proposed_replacement_id,
+        "alternatives": [dict(a) for a in operation.alternatives],
     }
 
 
@@ -139,6 +141,8 @@ def decision_of(
         edited = operation.applied_fields is not None
         decision = DecisionKind.APPLIED_WITH_EDITS if edited else DecisionKind.APPLIED
         applied = dict(operation.applied_fields if edited else operation.fields)  # type: ignore[arg-type]
+        if operation.matched:
+            applied = {}
     else:
         raise ValueError(f"seq {operation.seq} is {operation.status.value}, not decided")
     return ProposalDecision(

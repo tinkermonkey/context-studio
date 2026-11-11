@@ -454,6 +454,7 @@ def _operation_to_orm(proposal_id: str, operation: ProposedOperation) -> Proposa
         resolution=_resolution_json(operation),
         proposed_replacement_id=operation.proposed_replacement_id,
         type_change=_type_change_json(operation),
+        alternatives=[dict(a) for a in operation.alternatives],
     )
 
 
@@ -495,6 +496,7 @@ def _operation_to_domain(row: ProposalOperation) -> ProposedOperation:
             if row.type_change is not None
             else None
         ),
+        alternatives=[dict(a) for a in row.alternatives or []],  # type: ignore[union-attr]
     )
 
 

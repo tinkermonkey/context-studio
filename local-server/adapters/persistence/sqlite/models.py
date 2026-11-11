@@ -1672,6 +1672,8 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
         type_change: JSON {action, before, after, swap, replacement} when an applied
             relationship-type create, update or delete changed the type (see the
             domain's TypeChange); null otherwise
+        alternatives: JSON list of an individual create's near matches,
+            {kind: "existing", entity_id, similarity}; [] otherwise
     """
 
     __tablename__ = "proposal_operations"
@@ -1702,6 +1704,7 @@ class ProposalOperation(Base):  # type: ignore[valid-type,misc]
     resolution = Column(JSON, nullable=True)
     proposed_replacement_id = Column(String(101), nullable=True)
     type_change = Column(JSON, nullable=True)
+    alternatives = Column(JSON, nullable=False, default=list, server_default="[]")
 
     __table_args__ = (UniqueConstraint("proposal_id", "seq", name="uq_proposal_operation_seq"),)
 
@@ -1768,6 +1771,51 @@ class ProposalDecisionRecord(Base):  # type: ignore[valid-type,misc]
 
     def __repr__(self) -> str:
         return f"<ProposalDecisionRecord(operation={self.operation_id}, decision={self.decision})>"
+
+
+class EntitySourceRecord(Base):  # type: ignore[valid-type,misc]
+    """
+    Provenance: one source passage behind one entity, written when a proposal
+    operation whose evidence locates it applied.
+
+    Attributes:
+        id: UUID as string, primary key
+        entity_id: The individual, relationship or class (no FK: rows of a
+            deleted entity stay until their proposal is reverted)
+        entity_kind: individual, relationship or class
+        source_id: The source the passage is in (no FK: sources are
+            soft-deleted and provenance outlives them)
+        proposal_id: FK to change_proposals.id, the proposal that wrote it
+        op_seq: The seq of the operation that wrote it
+        page: The page the passage is on, if the source has pages
+        start, end: Character offsets of the passage in the source's text (end exclusive)
+        quote: The passage's text
+        created_at: When it was written (UTC)
+    """
+
+    __tablename__ = "entity_sources"
+
+    id = Column(String(36), primary_key=True, nullable=False)
+    entity_id = Column(String(36), nullable=False, index=True)
+    entity_kind = Column(String(20), nullable=False)
+    source_id = Column(String(36), nullable=False, index=True)
+    proposal_id = Column(
+        String(36),
+        ForeignKey("change_proposals.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    op_seq = Column(Integer, nullable=False)
+    page = Column(Integer, nullable=True)
+    start = Column(Integer, nullable=False)
+    end = Column(Integer, nullable=False)
+    quote = Column(Text, nullable=True)
+    created_at = Column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+
+    def __repr__(self) -> str:
+        return f"<EntitySourceRecord(entity={self.entity_id}, source={self.source_id})>"
 
 
 class ClaimRecord(Base):  # type: ignore[valid-type,misc]

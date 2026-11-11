@@ -19,6 +19,7 @@ export function createProposedOperation(overrides?: Partial<ProposedOperation>):
     evidence: [],
     scope: "editorial",
     status: "pending",
+    matched: false,
     stale: false,
     ...overrides,
   };

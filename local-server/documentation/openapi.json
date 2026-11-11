@@ -1625,6 +1625,53 @@
         }
       }
     },
+    "/api/relationships/{relationship_id}/sources": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Get Relationship Sources",
+        "description": "The source passages a relationship was extracted from (its provenance),\noldest first: one per passage of each applied proposal operation that\ncreated it, written when it applied.\n\nRaises:\n    HTTPException: 404 if the relationship does not exist",
+        "operationId": "get_relationship_sources_api_relationships__relationship_id__sources_get",
+        "parameters": [
+          {
+            "name": "relationship_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Relationship Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EntitySourceResponse"
+                  },
+                  "title": "Response Get Relationship Sources Api Relationships  Relationship Id  Sources Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/properties": {
       "post": {
         "tags": [
@@ -2583,6 +2630,53 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/individuals/{individual_id}/sources": {
+      "get": {
+        "tags": [
+          "ontology"
+        ],
+        "summary": "Get Individual Sources",
+        "description": "The source passages an individual was extracted from (its provenance),\noldest first: one per passage of each applied proposal operation that\ncreated or changed it, or chose it as a near match (\"use existing\").\n\nRaises:\n    HTTPException: 404 if the individual does not exist",
+        "operationId": "get_individual_sources_api_individuals__individual_id__sources_get",
+        "parameters": [
+          {
+            "name": "individual_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Individual Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EntitySourceResponse"
+                  },
+                  "title": "Response Get Individual Sources Api Individuals  Individual Id  Sources Get"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -7452,7 +7546,7 @@
           "proposals"
         ],
         "summary": "Apply Proposal",
-        "description": "Apply the chosen operations in seq order under the proposal's run.\n\nEach operation records its own outcome; one that fails (e.g. \"target_changed\")\ndoes not undo the others. Pass a stale operation in force_stale to apply it\nanyway (edited ones too).\n\nedits corrects property-definition updates and deletes before they apply:\neach replaces the operation's proposed fields, applied as an update. A field\nproblem, or a breach of the taxonomy's rules (for dr_spec: both classes are\nDR spec classes, the predicate is in its predicate catalog, and no other\nrelationship type or operation has the triple), fails only that operation\nwith \"invalid_edit: ...\"; it stays open, to apply again with a corrected\nedit or reject. For dr_spec the identifier and DR external reference follow\nfrom the triple. What was applied is returned as the operation's\napplied_fields.\n\nresolutions lets a relationship-type delete apply although relationships\nstill use the type (its blockers list them): \"move\" gives each the\nreplacement type instead (all must fit its domain and range, inheritance-\naware, and allow their attributes, or nothing moves), \"delete\" deletes them\ntoo. The relationships and the type change in one transaction tagged with\nthe proposal's run, so Revert restores them together; a failure fails only\nthat operation (\"unresolvable: ...\" for a misfit) and changes nothing.\nWithout a resolution such a delete fails as in use. A property update that\nretargets a type relationships use (another domain and range pair) needs\none the same way (its blockers list them); a retarget of an unused type\nneeds none. What was moved or deleted is returned as the operation's\nresolution.\n\nA property update that reverses the type (domain and range swapped) swaps\nthe ends of every relationship using it in place (each keeps its id), and\na rename keeps them, in one transaction with the update; Revert undoes both.\n\nchosen_alternatives records, in each applied operation's decision, the\nalternative the reviewer chose over the proposal's pick (gold's\nchosen_alternative), e.g. a reflection's answers when accepted with an edit.",
+        "description": "Apply the chosen operations in seq order under the proposal's run.\n\nEach operation records its own outcome; one that fails (e.g. \"target_changed\")\ndoes not undo the others. Pass a stale operation in force_stale to apply it\nanyway (edited ones too).\n\nedits corrects property-definition updates and deletes before they apply:\neach replaces the operation's proposed fields, applied as an update. A field\nproblem, or a breach of the taxonomy's rules (for dr_spec: both classes are\nDR spec classes, the predicate is in its predicate catalog, and no other\nrelationship type or operation has the triple), fails only that operation\nwith \"invalid_edit: ...\"; it stays open, to apply again with a corrected\nedit or reject. For dr_spec the identifier and DR external reference follow\nfrom the triple. What was applied is returned as the operation's\napplied_fields.\n\nresolutions lets a relationship-type delete apply although relationships\nstill use the type (its blockers list them): \"move\" gives each the\nreplacement type instead (all must fit its domain and range, inheritance-\naware, and allow their attributes, or nothing moves), \"delete\" deletes them\ntoo. The relationships and the type change in one transaction tagged with\nthe proposal's run, so Revert restores them together; a failure fails only\nthat operation (\"unresolvable: ...\" for a misfit) and changes nothing.\nWithout a resolution such a delete fails as in use. A property update that\nretargets a type relationships use (another domain and range pair) needs\none the same way (its blockers list them); a retarget of an unused type\nneeds none. What was moved or deleted is returned as the operation's\nresolution.\n\nA property update that reverses the type (domain and range swapped) swaps\nthe ends of every relationship using it in place (each keeps its id), and\na rename keeps them, in one transaction with the update; Revert undoes both.\n\nchosen_alternatives records, in each applied operation's decision, the\nalternative the reviewer chose over the proposal's pick (gold's\nchosen_alternative), e.g. a reflection's answers when accepted with an edit.\nFor an individual create with near matches, {\"kind\": \"existing\",\n\"entity_id\"} applies it as that existing individual: nothing is created,\nand relationships that name it by \"$ref\" point at the existing one.",
         "operationId": "apply_proposal_api_proposals__proposal_id__apply_post",
         "parameters": [
           {
@@ -8869,6 +8963,90 @@
   },
   "components": {
     "schemas": {
+      "AlternativeRequest": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "existing",
+            "title": "Kind",
+            "description": "Always \"existing\""
+          },
+          "entity_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Entity Id",
+            "description": "An individual in the proposal's taxonomy and dataset"
+          },
+          "similarity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Similarity",
+            "description": "How alike the two are, 0 to 1"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "entity_id"
+        ],
+        "title": "AlternativeRequest",
+        "description": "A near match an individual create may be instead: an individual already in the dataset."
+      },
+      "AlternativeResponse": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "existing",
+            "title": "Kind",
+            "description": "Always \"existing\""
+          },
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id",
+            "description": "The existing individual"
+          },
+          "similarity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Similarity",
+            "description": "How alike the two are, 0 to 1"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title",
+            "description": "The individual's current title; null if it no longer exists"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "entity_id"
+        ],
+        "title": "AlternativeResponse",
+        "description": "A near match of an individual create: an individual already in the dataset."
+      },
       "AnalyzeTextRequest": {
         "properties": {
           "text": {
@@ -10142,7 +10320,7 @@
             },
             "type": "object",
             "title": "Chosen Alternatives",
-            "description": "Operation id -> the alternative the reviewer chose over the proposal's pick (e.g. a reflection's answers per question): a non-empty object, for an operation in operation_ids that edits also has (the edit applies it); recorded in its decision as chosen_alternative"
+            "description": "Operation id -> the alternative the reviewer chose over the proposal's pick (e.g. a reflection's answers per question): a non-empty object, for an operation in operation_ids that edits also has (the edit applies it); recorded in its decision as chosen_alternative. For an individual create, {\"kind\": \"existing\", \"entity_id\"} naming one of its alternatives (near matches) needs no edit: the create is not performed, the operation applies as that existing individual (result_entity_id), and later operations' \"$ref\" to it point there"
           }
         },
         "type": "object",
@@ -12947,6 +13125,92 @@
         ],
         "title": "EntityRefSchema",
         "description": "An entity or proposal a tool returned; answers may link to it as entity:<kind>/<id>."
+      },
+      "EntitySourceResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id",
+            "description": "The individual, relationship or class"
+          },
+          "entity_kind": {
+            "type": "string",
+            "title": "Entity Kind",
+            "description": "individual, relationship or class"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id",
+            "description": "The source the passage is in (kept when the source is removed)"
+          },
+          "proposal_id": {
+            "type": "string",
+            "title": "Proposal Id",
+            "description": "The proposal whose operation recorded it"
+          },
+          "op_seq": {
+            "type": "integer",
+            "title": "Op Seq",
+            "description": "That operation's seq"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page",
+            "description": "The passage's page, if the source has pages"
+          },
+          "start": {
+            "type": "integer",
+            "title": "Start",
+            "description": "The passage's start offset in the source's text"
+          },
+          "end": {
+            "type": "integer",
+            "title": "End",
+            "description": "The passage's end offset (exclusive)"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote",
+            "description": "The passage's text"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "entity_id",
+          "entity_kind",
+          "source_id",
+          "proposal_id",
+          "op_seq",
+          "start",
+          "end",
+          "created_at"
+        ],
+        "title": "EntitySourceResponse",
+        "description": "One source passage behind an entity (provenance), written when a proposal applied."
       },
       "ErrorEvent": {
         "properties": {
@@ -17015,7 +17279,7 @@
             },
             "type": "array",
             "title": "Evidence",
-            "description": "Supporting {\"quote\", \"url\", \"entity_id\"} items"
+            "description": "Supporting {\"quote\", \"url\", \"entity_id\"} items (text values), or passages in a source: {\"source_id\", \"page\", \"start\", \"end\", \"quote\"}, where start and end are character offsets into the source's text (non-negative integers, end exclusive and not before start) and page is a non-negative integer or null. An applied individual, relationship or class operation records each source passage as the entity's provenance"
           },
           "probability": {
             "anyOf": [
@@ -17030,6 +17294,14 @@
             ],
             "title": "Probability",
             "description": "The proposer's confidence, 0 to 1"
+          },
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/AlternativeRequest"
+            },
+            "type": "array",
+            "title": "Alternatives",
+            "description": "An individual create only: its near matches, individuals already in the dataset it may be. Applying it with chosen_alternatives {\"kind\": \"existing\", \"entity_id\"} creates nothing and points its \"$ref\" uses at that individual"
           },
           "scope": {
             "anyOf": [
@@ -17142,7 +17414,8 @@
               "type": "object"
             },
             "type": "array",
-            "title": "Evidence"
+            "title": "Evidence",
+            "description": "Supporting {\"quote\", \"url\", \"entity_id\"} items (text values), or passages in a source: {\"source_id\", \"page\", \"start\", \"end\", \"quote\"}, where start and end are character offsets into the source's text (non-negative integers, end exclusive and not before start) and page is a non-negative integer or null. An applied individual, relationship or class operation records each source passage as the entity's provenance"
           },
           "probability": {
             "anyOf": [
@@ -17154,6 +17427,14 @@
               }
             ],
             "title": "Probability"
+          },
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/AlternativeResponse"
+            },
+            "type": "array",
+            "title": "Alternatives",
+            "description": "An individual create only: its near matches, individuals already in the dataset it may be. Choose one at apply with chosen_alternatives {\"kind\": \"existing\", \"entity_id\"}"
           },
           "scope": {
             "$ref": "#/components/schemas/ChangeScope"
@@ -17171,7 +17452,13 @@
               }
             ],
             "title": "Result Entity Id",
-            "description": "The entity made or changed"
+            "description": "The entity made or changed; for a matched create, the existing individual"
+          },
+          "matched": {
+            "type": "boolean",
+            "title": "Matched",
+            "description": "Applied as one of its alternatives: the create made nothing, and result_entity_id is the existing individual its \"$ref\" uses point at",
+            "default": false
           },
           "reason": {
             "anyOf": [

@@ -23,7 +23,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from adapters.web.dependencies import get_ontology_service
+from adapters.web.dependencies import get_ontology_service, get_proposal_service
 from adapters.web.schemas.ontology import (
     AttributeDefinitionCreateRequest,
     AttributeDefinitionResponse,
@@ -59,6 +59,7 @@ from adapters.web.schemas.ontology import (
     TaxonomyResponse,
     TaxonomyUpdateRequest,
 )
+from adapters.web.schemas.proposals import EntitySourceResponse
 from domain.ontology.entities import Dataset, Taxonomy
 from domain.ontology.exceptions import (
     CircularReferenceError,
@@ -69,6 +70,7 @@ from domain.ontology.exceptions import (
     OntologyError,
 )
 from domain.ontology.services import STRUCTURE_FIELDS, OntologyService
+from domain.versioning.proposal_service import ProposalService
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
@@ -1024,6 +1026,34 @@ async def delete_relationship(
         raise HTTPException(status_code=status_code, detail=message)
 
 
+@router.get("/relationships/{relationship_id}/sources", response_model=list[EntitySourceResponse])
+async def get_relationship_sources(
+    relationship_id: str,
+    service: OntologyService = Depends(get_ontology_service),
+    proposals: ProposalService = Depends(get_proposal_service),
+) -> list[EntitySourceResponse]:
+    """
+    The source passages a relationship was extracted from (its provenance),
+    oldest first: one per passage of each applied proposal operation that
+    created it, written when it applied.
+
+    Raises:
+        HTTPException: 404 if the relationship does not exist
+    """
+
+    def run() -> list[EntitySourceResponse]:
+        service.get_relationship(relationship_id)
+        return [
+            EntitySourceResponse.model_validate(s) for s in proposals.sources_of(relationship_id)
+        ]
+
+    try:
+        return await run_sync_in_executor(run)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
 # ==================== PropertyDefinition Endpoints ====================
 
 
@@ -1583,6 +1613,32 @@ async def get_individual(
     try:
         individual = await run_sync_in_executor(service.get_individual, individual_id)
         return IndividualResponse.model_validate(individual)
+    except Exception as exc:
+        status_code, message = _handle_domain_error(exc)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+@router.get("/individuals/{individual_id}/sources", response_model=list[EntitySourceResponse])
+async def get_individual_sources(
+    individual_id: str,
+    service: OntologyService = Depends(get_ontology_service),
+    proposals: ProposalService = Depends(get_proposal_service),
+) -> list[EntitySourceResponse]:
+    """
+    The source passages an individual was extracted from (its provenance),
+    oldest first: one per passage of each applied proposal operation that
+    created or changed it, or chose it as a near match ("use existing").
+
+    Raises:
+        HTTPException: 404 if the individual does not exist
+    """
+
+    def run() -> list[EntitySourceResponse]:
+        service.get_individual(individual_id)
+        return [EntitySourceResponse.model_validate(s) for s in proposals.sources_of(individual_id)]
+
+    try:
+        return await run_sync_in_executor(run)
     except Exception as exc:
         status_code, message = _handle_domain_error(exc)
         raise HTTPException(status_code=status_code, detail=message)

@@ -16,6 +16,7 @@ from domain.versioning.proposals import (
     ProposalStatus,
     ProposedOperation,
 )
+from domain.versioning.provenance import EntitySource
 from domain.versioning.value_objects import (
     ChangeHistoryResult,
     ChangeOperation,
@@ -177,6 +178,22 @@ class ChangeProposalRepository(Protocol):
 
     def set_status(self, proposal_id: str, status: ProposalStatus) -> None:
         """Persist the proposal's status."""
+        ...
+
+
+class EntitySourceRepository(Protocol):
+    """Port for the source passages behind applied entities (see domain.versioning.provenance)."""
+
+    def add(self, sources: Sequence[EntitySource]) -> None:
+        """Store these rows."""
+        ...
+
+    def list_for_entity(self, entity_id: str) -> list[EntitySource]:
+        """The entity's rows, oldest first."""
+        ...
+
+    def delete_for_proposal(self, proposal_id: str) -> int:
+        """Remove the rows the proposal's operations wrote; return how many."""
         ...
 
 

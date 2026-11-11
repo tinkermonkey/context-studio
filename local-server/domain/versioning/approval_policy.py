@@ -259,7 +259,9 @@ def auto_apply_ids(
     The operations a policy lets apply as soon as they are proposed, in seq order.
 
     An operation that points at a "$ref" qualifies only if the create it points
-    at does too, so it never fails for want of an entity it depends on.
+    at does too, so it never fails for want of an entity it depends on. A
+    create with near matches (alternatives) never qualifies: a reviewer chooses
+    between it and the existing individuals.
 
     Args:
         policy: The taxonomy's policy, or None (then nothing auto-applies)
@@ -277,7 +279,7 @@ def auto_apply_ids(
     chosen: list[str] = []
     applied_refs: set[str] = set()
     for operation in sorted(operations, key=lambda o: o.seq):
-        if not policy.allows(operation, classes(operation), source):
+        if operation.alternatives or not policy.allows(operation, classes(operation), source):
             continue
         if not _refs(operation.fields, id_fields) <= applied_refs:
             continue

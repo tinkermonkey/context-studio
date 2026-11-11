@@ -5,7 +5,7 @@ outcome's entity refs must be exactly what the result shows.
 """
 
 import json
-
+from datetime import datetime, timezone
 from types import MappingProxyType
 
 import pytest
@@ -21,6 +21,7 @@ from adapters.persistence.sqlite.schema_vector_index import SqliteSchemaVectorIn
 from domain.chat.value_objects import EntityRef
 from domain.ontology.entities import Individual
 from domain.ontology.value_objects import ExternalReference
+from domain.versioning.provenance import EntitySource
 from tests.integration.chat.conftest import (
     ADMIN_HEALTH_ID,
     API_SCHEME_ID,
@@ -29,6 +30,7 @@ from tests.integration.chat.conftest import (
     LIST_CLASSES_ID,
     OPERATION_ID,
     REALIZES_ID,
+    RELATIONSHIP_ID,
     SERVICE_CLASS_ID,
     TAXONOMY_ID,
 )
@@ -260,6 +262,47 @@ class TestGetEntity:
         # A proposer changing a DR type's attributes resends these whole (#1397).
         prop = dr_workspace.ontology.get_property_definition(REALIZES_ID)
         assert result["external_references"] == [r.to_dict() for r in prop.external_references]
+
+    async def test_individuals_and_relationships_list_their_sources(self, dr_workspace):
+        """#1553: provenance rows written when a proposal applied, read through sources_of."""
+        now = datetime.now(timezone.utc)
+        rows = {
+            ADMIN_HEALTH_ID: [
+                EntitySource(ADMIN_HEALTH_ID, "individual", "src-1", "p-1", 1, 10, 24, now, 5, "q")
+            ],
+            RELATIONSHIP_ID: [
+                EntitySource(RELATIONSHIP_ID, "relationship", "src-1", "p-1", 2, 0, 9, now)
+            ],
+        }
+        tools = {
+            t.spec.name: t
+            for t in build_chat_tools(
+                dr_workspace.ontology, dr_workspace.graph, sources_of=lambda i: rows.get(i, [])
+            )
+        }
+
+        _, individual = await call(tools, "get_entity", id=ADMIN_HEALTH_ID)
+        _, relationship = await call(tools, "get_entity", id=RELATIONSHIP_ID)
+        _, other = await call(tools, "get_entity", id=LIST_CLASSES_ID)
+
+        assert individual["sources"] == [
+            {
+                "source_id": "src-1",
+                "page": 5,
+                "start": 10,
+                "end": 24,
+                "quote": "q",
+                "proposal_id": "p-1",
+                "op_seq": 1,
+            }
+        ]
+        assert [(s["op_seq"], s["page"]) for s in relationship["sources"]] == [(2, None)]
+        assert other["sources"] == []
+
+    async def test_without_a_provenance_reader_there_are_no_sources(self, tools):
+        _, result = await call(tools, "get_entity", id=ADMIN_HEALTH_ID)
+
+        assert "sources" not in result
 
     async def test_unknown_id_is_error(self, tools):
         outcome, result = await call(tools, "get_entity", id="missing-id")
