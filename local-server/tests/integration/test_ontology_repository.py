@@ -9,7 +9,7 @@ Tests the adapter against a real in-memory SQLite database to verify:
 - Cascade deletion
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from sqlalchemy import create_engine, event
@@ -992,3 +992,17 @@ def test_new_entities_keep_a_given_created_at(
     with session_factory() as session:
         row = session.get(PropertyDefinitionORM, "prop-2")
         assert row.created_at.replace(tzinfo=None) == ORIGINAL_CREATED_AT
+
+
+def test_timestamps_read_back_as_utc(repo, sample_taxonomy, sample_class):
+    """SQLite keeps no zone: timestamps come back aware UTC, so the API sends "Z"."""
+    created = datetime(2026, 11, 11, 21, 55, 32, tzinfo=timezone(timedelta(hours=-5)))
+    individual = save_in_dataset(
+        repo, Individual(id="ind-utc", class_ids=[sample_class.id], title="U", created_at=created)
+    )
+
+    read = repo.get_individual(individual.id)
+    assert read.created_at.tzinfo is not None
+    assert read.created_at.utcoffset() == timedelta(0)
+    assert read.created_at == created
+    assert repo.get_taxonomy(sample_taxonomy.id).last_modified.utcoffset() == timedelta(0)

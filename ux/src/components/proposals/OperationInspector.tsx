@@ -246,9 +246,14 @@ export function OperationInspector({
         };
       }
     }
+    // A relationship type's ends read as its triple does, by identifier; any
+    // other class reference reads by title (a generated identifier such as
+    // cls_9b6f4832 means nothing to a reviewer).
     const name =
       kind === "class"
-        ? context.endLabel(id, operation)
+        ? operation.kind === "property"
+          ? context.endLabel(id, operation)
+          : (context.nameOf(id, operation) ?? context.endLabel(id, operation))
         : kind === "property"
           ? context.predicateOf(id)
           : context.nameOf(id, operation);

@@ -613,7 +613,11 @@ class TestExtractSource:
             for arguments, message in (
                 ({"source_id": "nope"}, "nope"),
                 ({"source_id": failed["id"]}, "is failed"),
-                ({"source_id": ready["id"], "pages": "3"}, "The source has 1 pages"),
+                ({"source_id": ready["id"], "pages": "3"}, "The source has 1 page, not 3"),
+                (
+                    {"source_id": ready["id"], "configuration_ref": "x"},
+                    "Unknown argument(s): configuration_ref. This tool takes:",
+                ),
                 ({"source_id": ready["id"], "pages": "two"}, ""),
                 ({"source_id": ready["id"], "dataset": "garage"}, "garage"),
                 ({"source_id": ready["id"], "configuration": "nope"}, "'nope' is not"),

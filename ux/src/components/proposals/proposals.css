@@ -151,6 +151,12 @@
     align-items: center;
   }
 
+  /* The change keeps a readable width: beside the inspector on a narrow canvas
+     the table scrolls sideways in its frame rather than breaking words. */
+  .op-change-cell {
+    min-width: 200px;
+  }
+
   /* A decided operation's change: still readable, but out of the way, in
      neutral tones (no rose strike, no amber change). */
   .op-change-cell--decided {

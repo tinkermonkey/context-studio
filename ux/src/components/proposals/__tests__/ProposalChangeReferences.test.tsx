@@ -90,11 +90,12 @@ describe("the inspector's Change section names what an operation refers to", () 
   it("reads an individual's classes by name, a $ref class as new in this proposal", async () => {
     renderPage("op-ind");
     const row = await screen.findByTestId("operation-change-row-class_ids");
-    await waitFor(() => expect(row).toHaveTextContent("application_service"));
+    await waitFor(() => expect(row).toHaveTextContent("ApplicationService"));
+    expect(row).not.toHaveTextContent("application_service");
     expect(row).not.toHaveTextContent('["class-2"');
     expect(row).not.toHaveTextContent("$c1");
 
-    const existing = refsOf("class_ids").getByText("application_service");
+    const existing = refsOf("class_ids").getByText("ApplicationService");
     expect(existing).toHaveClass("op-ref");
     expect(existing).not.toHaveClass("op-ref--new");
     // The raw id stays in the tooltip.

@@ -20,6 +20,7 @@ import { useChatPanelStore } from "@/stores/chatPanel";
 import { ChatPanel } from "@/components/chat/ChatPanel";
 import { useChatEntryPoints } from "@/components/chat/useChatEntryPoints";
 import { useHealth, useConfig } from "@/api/hooks/admin";
+import { API_PORT } from "@/api/client/axios";
 import { useEntityCounts } from "@/api/hooks/ontology/useEntityCounts";
 import { useQueryClient } from "@tanstack/react-query";
 import { useChangeProposals } from "@/api/hooks/proposals";
@@ -194,7 +195,7 @@ function AppShell() {
       <div className="statusbar__item statusbar__item--pulse">
         <div className={`statusbar__pulse statusbar__pulse--${apiPulseTone}`} />
         <span className="statusbar__label">graph daemon</span>
-        <span className="statusbar__label--mono">:8100</span>
+        {API_PORT && <span className="statusbar__label--mono">:{API_PORT}</span>}
       </div>
       {(classCount > 0 || individualCount > 0 || relationshipCount > 0) && (
         <>

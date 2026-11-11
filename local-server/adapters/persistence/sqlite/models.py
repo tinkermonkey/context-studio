@@ -40,8 +40,31 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.orm import column_property, declarative_base
+from sqlalchemy.types import TypeDecorator
 
 Base = declarative_base()  # type: ignore[valid-type]
+
+
+class UtcDateTime(TypeDecorator):  # type: ignore[type-arg]
+    """
+    A timestamp stored in UTC and read back as an aware UTC datetime.
+
+    SQLite keeps no time zone, so a plain DateTime column reads back naive and
+    the API would serialize it without "Z"; browsers then take it as local time.
+    """
+
+    impl = DateTime(timezone=True)
+    cache_ok = True
+
+    def process_bind_param(self, value: datetime | None, dialect: Any) -> datetime | None:
+        if value is not None and value.tzinfo is not None:
+            return value.astimezone(timezone.utc)
+        return value
+
+    def process_result_value(self, value: datetime | None, dialect: Any) -> datetime | None:
+        if value is not None and value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value
 
 
 class OntologyEntity(Base):  # type: ignore[valid-type,misc]
@@ -108,13 +131,13 @@ class OntologyEntity(Base):  # type: ignore[valid-type,misc]
         doc="Full vision statement in markdown (for taxonomy); description holds its summary",
     )
     created_at = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         doc="UTC timestamp of creation",
     )
     last_modified = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
@@ -420,13 +443,13 @@ class Predicate(Base):  # type: ignore[valid-type,misc]
     )
     version = Column(Integer, nullable=False, default=1, doc="For optimistic locking")
     created_at = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         doc="UTC timestamp of creation",
     )
     last_modified = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
@@ -548,7 +571,7 @@ class Relationship(Base):  # type: ignore[valid-type,misc]
         doc="PropertyDefinition that types this relationship",
     )
     created_at = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         doc="UTC timestamp of creation (immutable)",
@@ -642,12 +665,12 @@ class PropertyDefinition(Base):  # type: ignore[valid-type,misc]
         doc="Tri-state: NULL=not evaluated, 0=not relevant, 1=relevant",
     )
     created_at = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
     )
     last_modified = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
@@ -750,13 +773,13 @@ class AttributeDefinition(Base):  # type: ignore[valid-type,misc]
         doc="JSON list of {source, identifier, uri, metadata}",
     )
     created_at = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         doc="UTC timestamp of creation",
     )
     last_modified = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
@@ -837,7 +860,7 @@ class ChangeEvent(Base):  # type: ignore[valid-type,misc]
     )
     new_state = Column(JSON, nullable=False, doc="JSON snapshot after change (null for delete)")
     timestamp = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         index=True,
@@ -917,7 +940,7 @@ class ExtractionResult(Base):  # type: ignore[valid-type,misc]
         doc="Total time spent on extraction (milliseconds)",
     )
     created_at = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         index=True,
@@ -961,26 +984,26 @@ class Batch(Base):  # type: ignore[valid-type,misc]
         doc="Current status (pending, running, completed, failed, cancelled)",
     )
     created_at = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         index=True,
         doc="UTC timestamp of batch creation",
     )
     started_at = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=True,
         index=True,
         doc="UTC timestamp when batch transitioned to RUNNING",
     )
     completed_at = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=True,
         index=True,
         doc="UTC timestamp when batch transitioned to terminal state",
     )
     last_updated = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         index=True,
@@ -1031,7 +1054,7 @@ class BatchRun(Base):  # type: ignore[valid-type,misc]
         doc="FK to batches.id for batch aggregation",
     )
     created_at = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         index=True,
@@ -1282,7 +1305,7 @@ class PipelineRun(BatchRun):
         doc="LLM metadata: model, tokens_used, duration_ms (JSON dict)",
     )
     started_at = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=True,
         doc="UTC timestamp when run transitioned to RUNNING status",
     )
@@ -1756,7 +1779,7 @@ class ProposalDecisionRecord(Base):  # type: ignore[valid-type,misc]
     kind = Column(String(20), nullable=False)
     op = Column(String(10), nullable=False)
     decision = Column(String(20), nullable=False, index=True)
-    decided_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    decided_at = Column(UtcDateTime(), nullable=False, index=True)
     decided_by = Column(String(50), nullable=False, index=True)
     proposed = Column(JSON, nullable=False, default=dict)
     applied_fields = Column(JSON, nullable=True)
@@ -1766,7 +1789,7 @@ class ProposalDecisionRecord(Base):  # type: ignore[valid-type,misc]
     chosen_alternative = Column(JSON, nullable=True)
     probability = Column(Float, nullable=True)
     model = Column(String(100), nullable=True)
-    superseded_at = Column(DateTime(timezone=True), nullable=True)
+    superseded_at = Column(UtcDateTime(), nullable=True)
     superseded_by = Column(String(50), nullable=True)
 
     def __repr__(self) -> str:
@@ -1811,7 +1834,7 @@ class EntitySourceRecord(Base):  # type: ignore[valid-type,misc]
     end = Column(Integer, nullable=False)
     quote = Column(Text, nullable=True)
     created_at = Column(
-        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
+        UtcDateTime(), nullable=False, default=lambda: datetime.now(timezone.utc)
     )
 
     def __repr__(self) -> str:
@@ -1862,8 +1885,8 @@ class ClaimRecord(Base):  # type: ignore[valid-type,misc]
     # none_as_null: an untriaged claim stores SQL NULL, not JSON 'null', so it filters
     triage = Column(JSON(none_as_null=True), nullable=True)
     verdict = Column(JSON(none_as_null=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), nullable=False)
-    updated_at = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(UtcDateTime(), nullable=False)
+    updated_at = Column(UtcDateTime(), nullable=False)
 
     __table_args__ = (UniqueConstraint("taxonomy_id", "key", name="uq_claim_taxonomy_key"),)
 
@@ -1921,9 +1944,9 @@ class SourceRecord(Base):  # type: ignore[valid-type,misc]
     status = Column(String(20), nullable=False)
     failure = Column(String(30), nullable=True)
     failure_detail = Column(Text, nullable=True)
-    created_at = Column(DateTime(timezone=True), nullable=False)
-    updated_at = Column(DateTime(timezone=True), nullable=False)
-    removed_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(UtcDateTime(), nullable=False)
+    updated_at = Column(UtcDateTime(), nullable=False)
+    removed_at = Column(UtcDateTime(), nullable=True)
 
     __table_args__ = (
         CheckConstraint(
@@ -1956,7 +1979,7 @@ class ApprovalPolicyRecord(Base):  # type: ignore[valid-type,misc]
     )
     rules = Column(JSON, nullable=False, default=dict)
     updated_at = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
@@ -2006,7 +2029,7 @@ class GroundingWorkflow(Base):  # type: ignore[valid-type,misc]
         doc="Workflow status: active, inactive, error",
     )
     last_run = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=True,
         doc="UTC timestamp of most recent run",
     )
@@ -2016,12 +2039,12 @@ class GroundingWorkflow(Base):  # type: ignore[valid-type,misc]
         doc="Record count from most recent run",
     )
     created_at = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
     )
     updated_at = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
@@ -2075,7 +2098,7 @@ class WorkflowRun(Base):  # type: ignore[valid-type,misc]
         doc="Number of records processed",
     )
     timestamp = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         index=True,
@@ -2135,12 +2158,12 @@ class Dataset(Base):  # type: ignore[valid-type,misc]
         doc="Schema operations never block on this dataset's data",
     )
     created_at = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
     )
     last_modified = Column(
-        DateTime(timezone=True),
+        UtcDateTime(),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),

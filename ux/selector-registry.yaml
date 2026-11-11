@@ -3903,3 +3903,6 @@ selectors:
   - selector: extract-run-error-reason
     component: src/components/sources/ExtractRunPanel.tsx
     description: 'Extract page: why the run couldn''t be loaded (gone, or the server''s error)'
+  - selector: dashboard-daemon-status
+    component: src/routes/app/index.tsx
+    description: 'Dashboard: the API health (graph daemon healthy, degraded or unavailable); a degraded one lists its issues in the tooltip'

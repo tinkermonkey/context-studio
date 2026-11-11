@@ -227,12 +227,19 @@ class WikidataUpstreamConfig(ReferenceUpstreamConfig):
     upstream: str = Field(default="https://www.wikidata.org", description="The API's base URL")
 
 
+class WikipediaUpstreamConfig(ReferenceUpstreamConfig):
+    """Wikipedia pages added as sources (Data › Sources) are fetched through the proxy"""
+
+    upstream: str = Field(default="https://en.wikipedia.org", description="The site's base URL")
+
+
 class ReferenceUpstreamsConfig(BaseModel):
     """The reference APIs the reference proxy fronts"""
 
     conceptnet: ConceptNetUpstreamConfig = Field(default_factory=ConceptNetUpstreamConfig)
     dbpedia: DBpediaUpstreamConfig = Field(default_factory=DBpediaUpstreamConfig)
     wikidata: WikidataUpstreamConfig = Field(default_factory=WikidataUpstreamConfig)
+    wikipedia: WikipediaUpstreamConfig = Field(default_factory=WikipediaUpstreamConfig)
 
 
 class ReferenceProxyConfig(BaseModel):

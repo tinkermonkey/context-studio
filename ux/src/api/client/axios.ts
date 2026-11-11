@@ -14,4 +14,7 @@ const axiosInstance = axios.create({
 
 applyInterceptors(axiosInstance);
 
+/** The API server's port, as the status bar shows it ("" for a URL's default port). */
+export const API_PORT = new URL(axiosInstance.defaults.baseURL ?? "/", window.location.href).port;
+
 export default axiosInstance;
