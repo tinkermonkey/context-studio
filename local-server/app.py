@@ -26,6 +26,7 @@ from sqlalchemy.exc import OperationalError
 
 from adapters.chat.claim_tools import build_claim_tools
 from adapters.chat.context import ConfigChatSettings, OntologyWorkspaceContext
+from adapters.chat.interchange_tools import build_interchange_tools
 from adapters.chat.proposal_tools import (
     DrSpecDriftTool,
     MarkProposalLandedTool,
@@ -939,6 +940,9 @@ async def lifespan(app: FastAPI):
                         *build_proposal_tools(proposal_service, ProposalSource.MCP),
                         MarkProposalLandedTool(proposal_service, ProposalSource.MCP),
                         DrSpecDriftTool(app.state.drift_import_service),
+                        *build_interchange_tools(
+                            proposal_service, ontology_repo, ProposalSource.MCP
+                        ),
                         *run_tools_for(RequestedVia.MCP),
                         *build_claim_tools(claim_service),
                     ],

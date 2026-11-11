@@ -146,3 +146,31 @@ def test_run_refinement_records_who_asked_over_any_option(dr_workspace, requeste
     run, input_data = runs.claim_next_pending()
     assert run.id == json.loads(outcome.content)["run_id"]
     assert input_data["requested_via"] == requested_via.value
+
+
+async def test_run_refinement_refuses_individual_extraction_and_still_runs_others(
+    dr_workspace, run_setup
+):
+    """Clients extract through the review page, and extract_source once it ships (#1451)."""
+    _, runs, tools = run_setup
+    async with mcp_client(dr_workspace, write_tools=tools) as client:
+        result, text = await call(
+            client,
+            "run_refinement",
+            {
+                "taxonomy_id": TAXONOMY_ID,
+                "pipeline": "individual_extraction",
+                "options": {"text": "Admin Health realizes Health Monitoring."},
+            },
+        )
+        assert result["isError"] is True
+        assert "can't start individual_extraction" in text
+        assert "extract_source" in text
+        assert runs.list() == []  # no run was started
+
+        _, text = await call(
+            client, "run_refinement", {"taxonomy_id": TAXONOMY_ID, "pipeline": "no_op"}
+        )
+        run_id = json.loads(text)["run_id"]
+        finished = await wait_for_run(client, run_id, lambda r: r["status"] == "completed")
+        assert finished["pipeline"] == "no_op"
