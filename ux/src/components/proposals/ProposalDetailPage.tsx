@@ -13,6 +13,7 @@ import {
 } from "@tinkermonkey/heimdall-ui";
 import { useChangeProposal, useProposalDecisions } from "@/api/hooks/proposals";
 import { useTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
+import { useTaxonomyPredicates } from "@/api/hooks/ontology/usePredicates";
 import { ApiError } from "@/api/client/interceptors";
 import type { ProposedOperation } from "@/api/services/proposals";
 import { SchemaPageLayout } from "@/components/schema/SchemaPageLayout";
@@ -37,7 +38,7 @@ import {
   ANY_FACETS,
   defaultOperationFilter,
   facetCounts,
-  drPredicateDescriptions,
+  predicateDescriptions,
   linksToDecided,
   operationsShown,
   nextSelection,
@@ -132,7 +133,8 @@ export function ProposalDetailPage({
   const refs = useMemo(() => (proposal ? refsByOperation([proposal]) : undefined), [proposal]);
   const context = useOperationContext(operations, refs);
   const actions = useProposalActions(proposal);
-  const predicateCatalog = useMemo(() => drPredicateDescriptions(taxonomy), [taxonomy]);
+  const { data: predicates } = useTaxonomyPredicates(proposal?.taxonomy_id);
+  const predicateDefinitions = useMemo(() => predicateDescriptions(predicates), [predicates]);
   const [threshold, setThreshold] = useState(DEFAULT_THRESHOLD);
   const [checkedIds, setChecked] = useState<string[]>([]);
   // The operations a confirmed reject covers: all awaiting, or the checked ones.
@@ -334,7 +336,7 @@ export function ProposalDetailPage({
             | { canonical_predicate?: string | null; description?: string | null }
             | undefined;
           const own = current?.canonical_predicate === predicate ? current.description : undefined;
-          return predicateCatalog.get(predicate) ?? (own || undefined);
+          return predicateDefinitions.get(predicate) ?? (own || undefined);
         },
       });
   const causeOf = (operation: ProposedOperation) =>

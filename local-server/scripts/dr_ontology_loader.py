@@ -52,7 +52,6 @@ from adapters.interchange.dr_predicates import dr_predicate_reference
 from adapters.interchange.dr_relationships import (  # noqa: F401 - re-exported for the scripts
     DR_ATTRIBUTE_SCHEMA,
     DR_SOURCE,
-    DR_SPEC_REFERENCE,
     DR_TAXONOMY_IDENTIFIER,
     RelationshipSchemaRecord,
     assign_relationship_identifiers,
@@ -146,31 +145,10 @@ def _upsert_taxonomy(
             vision=vision,
         )
         summary.taxonomies_updated += 1
-    taxonomy = _store_spec_reference(repo, taxonomy, spec_version)  # type: ignore[arg-type]
     catalog = read_predicate_catalog(spec_dir)
     if catalog is not None:
-        _upsert_predicates(service, repo, taxonomy, catalog)
+        _upsert_predicates(service, repo, taxonomy, catalog)  # type: ignore[arg-type]
     return taxonomy  # type: ignore[return-value]
-
-
-def _store_spec_reference(
-    repo: OntologyRepository, taxonomy: Taxonomy, spec_version: str
-) -> Taxonomy:
-    """Keep the spec version on the taxonomy's DR reference."""
-    reference = ExternalReference(
-        source=DR_SOURCE,
-        identifier=DR_SPEC_REFERENCE,
-        metadata=MappingProxyType({"spec_version": spec_version}),
-    )
-    others = [
-        ref
-        for ref in taxonomy.external_references
-        if not (ref.source == DR_SOURCE and ref.identifier == DR_SPEC_REFERENCE)
-    ]
-    if [*others, reference] == taxonomy.external_references:
-        return taxonomy
-    taxonomy.external_references = [*others, reference]
-    return repo.save_taxonomy(taxonomy)
 
 
 def _upsert_predicates(

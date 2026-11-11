@@ -23,6 +23,7 @@ import {
   createIndividual,
   createListIndividuals,
   createIndividualCreateRequest,
+  createPredicate,
   createPropertyDefinition,
   createListProperties,
   createPropertyDefinitionCreateRequest,
@@ -1208,6 +1209,38 @@ describe("OntologyService - Individuals", () => {
       await expect(
         ontologyService.getIndividualInheritedProperties("not-found"),
       ).rejects.toMatchObject({
+        name: "ApiError",
+        status: 404,
+      });
+    });
+  });
+});
+
+// ============================================================================
+// Predicate Tests
+// ============================================================================
+
+describe("OntologyService - Predicates", () => {
+  describe("listTaxonomyPredicates", () => {
+    it("returns the taxonomy's catalog from GET /api/taxonomies/:id/predicates", async () => {
+      const predicates = [
+        createPredicate({ identifier: "serves", taxonomy_id: "tax-123", description: "Helps." }),
+      ];
+      server.use(
+        http.get("*/api/taxonomies/tax-123/predicates", () => HttpResponse.json(predicates)),
+      );
+
+      expect(await ontologyService.listTaxonomyPredicates("tax-123")).toEqual(predicates);
+    });
+
+    it("throws ApiError with 404 for an unknown taxonomy", async () => {
+      server.use(
+        http.get("*/api/taxonomies/missing/predicates", () =>
+          HttpResponse.json({ detail: "Taxonomy not found" }, { status: 404 }),
+        ),
+      );
+
+      await expect(ontologyService.listTaxonomyPredicates("missing")).rejects.toMatchObject({
         name: "ApiError",
         status: 404,
       });

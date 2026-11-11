@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Button, Field, FormCallout, SegmentedControl, TextInput } from "@tinkermonkey/heimdall-ui";
 import { useTaxonomyClasses } from "@/api/hooks/ontology/useClasses";
+import { useTaxonomyPredicates } from "@/api/hooks/ontology/usePredicates";
 import { useProperties } from "@/api/hooks/ontology/useProperties";
 import { ApiError } from "@/api/client/interceptors";
 import type { ChangeProposal, ProposedOperation } from "@/api/services/proposals";
@@ -9,7 +10,7 @@ import {
   checkDrTriple,
   decisionPreview,
   drEditFields,
-  drPredicateCatalog,
+  predicateCatalog,
   drSpecOf,
   drTripleId,
   drTriplesOf,
@@ -91,9 +92,10 @@ export function DrTripleEditor({
 }: DrTripleEditorProps) {
   const isDelete = operation.op === "delete";
   const { classes, isError: classesFailed } = useTaxonomyClasses(taxonomy.id);
+  const { data: predicates, isError: predicatesFailed } = useTaxonomyPredicates(taxonomy.id);
   const spec = useMemo(
-    () => (classes ? drSpecOf(classes, drPredicateCatalog(taxonomy)) : undefined),
-    [classes, taxonomy],
+    () => (classes && predicates ? drSpecOf(classes, predicateCatalog(predicates)) : undefined),
+    [classes, predicates],
   );
   const triples = useMemo(
     () => (spec ? drTriplesOf(operation, spec, current) : {}),
@@ -219,9 +221,9 @@ export function DrTripleEditor({
         </FormCallout>
       )}
 
-      {classesFailed && (
+      {(classesFailed || predicatesFailed) && (
         <FormCallout variant="error" icon="alert">
-          Couldn't load the dr_spec classes to check the edit.
+          Couldn't load the dr_spec classes and predicates to check the edit.
         </FormCallout>
       )}
 

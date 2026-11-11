@@ -13,6 +13,7 @@ import { render } from "@/test/test-utils";
 import { component, entityPageHandlers, serviceClass, taxonomy } from "@/test/entityPageHandlers";
 import { openProposal, proposalHandlers } from "@/test/proposalFixtures";
 import type { ChangeProposal } from "@/api/services/proposals";
+import { createPredicate } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import { downloadJson } from "@/lib/download";
 import { ProposalDetailPage } from "../ProposalDetailPage";
 
@@ -70,7 +71,7 @@ afterEach(() => {
 });
 afterAll(() => server.close());
 
-/** dr_spec classes with DR references, and a taxonomy holding the predicate catalog. */
+/** dr_spec classes with DR references, and the taxonomy's predicate catalog. */
 function useDrSpec() {
   const dr = (identifier: string) => [{ source: "documentation_robotics", identifier }];
   server.use(
@@ -85,17 +86,12 @@ function useDrSpec() {
         offset: 0,
       }),
     ),
-    http.get("*/api/taxonomies/:id", () =>
-      HttpResponse.json({
-        ...taxonomy,
-        external_references: [
-          {
-            source: "documentation_robotics",
-            identifier: "spec",
-            metadata: { predicates: { realizes: {}, serves: {}, uses: {} } },
-          },
-        ],
-      }),
+    http.get("*/api/taxonomies/:id/predicates", () =>
+      HttpResponse.json(
+        ["realizes", "serves", "uses"].map((identifier) =>
+          createPredicate({ identifier, taxonomy_id: taxonomy.id }),
+        ),
+      ),
     ),
   );
 }
@@ -530,8 +526,6 @@ describe("accept all and the results", () => {
       note: "superseded by the next export",
     });
   });
-
-
 });
 
 describe("revert", () => {

@@ -209,26 +209,26 @@ class TestTaxonomyCRUD:
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_taxonomy_external_references_are_returned_with_metadata(self, client, repository):
-        """GET returns the taxonomy's external references, e.g. dr_spec's predicate catalog."""
-        taxonomy_id = client.post("/api/taxonomies", json={"title": "DR spec"}).json()["id"]
+        """GET returns the taxonomy's external references with their metadata."""
+        taxonomy_id = client.post("/api/taxonomies", json={"title": "Linked"}).json()["id"]
         assert client.get(f"/api/taxonomies/{taxonomy_id}").json()["external_references"] == []
         taxonomy = repository.get_taxonomy(taxonomy_id)
-        catalog = {"serves": {"inverse": "served-by", "category": "dependency"}}
+        metadata = {"edition": "2024", "layers": {"core": {"stable": True}}}
         taxonomy.external_references = [
             ExternalReference(
-                source="documentation_robotics",
-                identifier="spec",
-                metadata=MappingProxyType({"spec_version": "0.10.0", "predicates": catalog}),
+                source="example",
+                identifier="vocabulary",
+                metadata=MappingProxyType(metadata),
             )
         ]
         repository.save_taxonomy(taxonomy)
 
         expected = [
             {
-                "source": "documentation_robotics",
-                "identifier": "spec",
+                "source": "example",
+                "identifier": "vocabulary",
                 "uri": None,
-                "metadata": {"spec_version": "0.10.0", "predicates": catalog},
+                "metadata": metadata,
             }
         ]
         assert (

@@ -32,11 +32,10 @@ from domain.versioning.proposals import (
 
 DR_SOURCE = "documentation_robotics"
 DR_TAXONOMY_IDENTIFIER = "dr_spec"
-# The dr_spec taxonomy's DR reference; its metadata holds the spec version. The
-# spec's predicate catalog is the taxonomy's predicates: each one's DR metadata
-# (DR_PREDICATE_KEYS) rides on its own DR reference.
-DR_SPEC_REFERENCE = "spec"
-# A predicate's DR-only fields, kept on its DR reference's metadata.
+# The spec's predicate catalog is the dr_spec taxonomy's predicates (the
+# predicates table); the spec revision it was imported at is the taxonomy's
+# source_revision. A predicate's DR-only fields, kept on its own DR reference's
+# metadata:
 DR_PREDICATE_KEYS = ("inverse", "category", "archimate_alignment", "semantics")
 # A relationship type's spec attributes, kept on its DR reference's metadata:
 # "strength" (the schema's properties.strength.const) and "evidence" (its

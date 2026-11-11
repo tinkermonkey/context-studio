@@ -740,7 +740,8 @@ def test_the_import_loads_the_predicate_catalog_as_the_taxonomys_predicates(part
         "inverse": "owned-by",
         "category": "business",
     }
-    assert "predicates" not in taxonomy.external_references[0].metadata
+    # The catalog lives in the predicates table only: the taxonomy carries no DR reference.
+    assert taxonomy.external_references == []
     used = {p.canonical_predicate for p in repo.list_property_definitions(limit=None)}
     assert "owns" not in used  # in the catalog, used by no relationship type
 
@@ -749,9 +750,9 @@ def test_a_reimport_keeps_one_catalog(parts, tmp_path):
     ontology, repo, _ = parts
     import_dr_ontology(ontology, repo, spec_with_catalog(tmp_path / "spec"))
 
-    refs = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER).external_references
-    assert [(r.source, r.identifier) for r in refs] == [(DR_SOURCE, "spec")]
-    assert refs[0].metadata["spec_version"] == "0.8.4"
+    taxonomy = repo.get_by_identifier(DR_TAXONOMY_IDENTIFIER)
+    assert taxonomy.external_references == []
+    assert taxonomy.source_revision.spec_version == "0.8.4"
     assert len(dr_predicate_catalog(repo)) == 70
 
 

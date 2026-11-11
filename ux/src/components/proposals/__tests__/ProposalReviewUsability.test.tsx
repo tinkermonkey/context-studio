@@ -12,7 +12,7 @@ import { render } from "@/test/test-utils";
 import { entityPageHandlers, taxonomy } from "@/test/entityPageHandlers";
 import { goldPage, proposalHandlers } from "@/test/proposalFixtures";
 import { CLASS_IDS, reflectionProposal } from "@/test/reflectionFixtures";
-import { createClass } from "@/api/services/__tests__/fixtures/ontology.fixtures";
+import { createClass, createPredicate } from "@/api/services/__tests__/fixtures/ontology.fixtures";
 import type { ChangeProposal } from "@/api/services/proposals";
 import { ProposalDetailPage } from "../ProposalDetailPage";
 
@@ -38,22 +38,19 @@ beforeEach(() => {
     http.get("*/api/classes", () =>
       HttpResponse.json({ items: CLASSES, total: CLASSES.length, limit: 500, offset: 0 }),
     ),
-    http.get("*/api/taxonomies/:id", () =>
-      HttpResponse.json({
-        ...taxonomy,
-        external_references: [
-          {
-            source: "documentation_robotics",
-            identifier: "spec",
-            metadata: {
-              predicates: {
-                holds: { description: "The source keeps the destination inside it." },
-                located_in: { description: "The source sits within the destination." },
-              },
-            },
-          },
-        ],
-      }),
+    http.get("*/api/taxonomies/:id/predicates", () =>
+      HttpResponse.json([
+        createPredicate({
+          identifier: "holds",
+          taxonomy_id: taxonomy.id,
+          description: "The source keeps the destination inside it.",
+        }),
+        createPredicate({
+          identifier: "located_in",
+          taxonomy_id: taxonomy.id,
+          description: "The source sits within the destination.",
+        }),
+      ]),
     ),
     http.post("*/api/proposals/:id/reject", async ({ request }) => {
       const body = (await request.json()) as { operation_ids: string[] };

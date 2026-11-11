@@ -19,6 +19,7 @@ function invalidateOntology(queryClient: QueryClient) {
     QUERY_KEYS.relationshipsRoot,
     QUERY_KEYS.datasetsRoot,
     QUERY_KEYS.properties,
+    QUERY_KEYS.predicates,
     QUERY_KEYS.graph,
     QUERY_KEYS.changesRoot,
   ]) {

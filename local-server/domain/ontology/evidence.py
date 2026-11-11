@@ -26,8 +26,9 @@ clipping, so a clipped definition can run a little further than DR's; the
 facts are unchanged.
 
 Predicate meanings come from an optional predicate catalog (DR's is the dr_spec
-taxonomy's `ExternalReference(documentation_robotics, "spec").metadata.predicates`);
-without one, a relationship type's own description is its meaning.
+taxonomy's predicates, each one's description; see
+`adapters.interchange.dr_relationships.dr_predicate_catalog`); without one, a
+relationship type's own description is its meaning.
 """
 
 import json

@@ -140,6 +140,8 @@ export const entityPageHandlers = [
       },
     ]),
   ),
+  // An empty predicate catalog; tests of predicate definitions serve their own.
+  http.get("*/api/taxonomies/:id/predicates", () => HttpResponse.json([])),
   http.get("*/api/taxonomies/:id", ({ params }) =>
     params.id === "tax-1"
       ? HttpResponse.json(taxonomy)
