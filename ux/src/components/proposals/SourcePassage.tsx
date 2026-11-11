@@ -43,8 +43,10 @@ export function SourcePassageSection({ passages }: { passages: SourcePassage[] }
             {location}
           </span>
           {linkTaxonomy ? (
+            // A new tab, so leaving never loses an unsent decision or reason.
             <SourcesPageLink
               taxonomyId={linkTaxonomy}
+              newTab
               className="entity-link op-passage__source"
               data-testid="operation-source-title"
             >

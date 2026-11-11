@@ -231,10 +231,11 @@ describe("IndividualPage sources", () => {
       ),
     );
     expect(within(first).getAllByRole("link")).toHaveLength(2);
-    expect(within(first).getByTestId("entity-source-title-es-1")).toHaveAttribute(
-      "href",
-      "/app/data/sources?taxonomy=tax-1",
-    );
+    const sourceLink = within(first).getByTestId("entity-source-title-es-1");
+    expect(sourceLink).toHaveAttribute("href", "/app/data/sources?taxonomy=tax-1");
+    // An in-app link here: nothing on the entity page is lost by leaving it.
+    expect(sourceLink).not.toHaveAttribute("target");
+    expect(sourceLink).toHaveAccessibleName("Whirlpool use and care guide");
     expect(within(first).getByTestId("entity-source-proposal-es-1")).toHaveAttribute(
       "href",
       "/app/proposals/4f2c91d0-1111",

@@ -206,16 +206,20 @@ describe("the source passage", () => {
         "p. 2 · Parts and features",
       ),
     );
-    // Sources have no page of their own: the title links to its taxonomy's Sources page.
+    // Sources have no page of their own: the title links to its taxonomy's Sources
+    // page, in a new tab so an unsent decision and reason here aren't lost.
     const title = screen.getByTestId("operation-source-title");
     expect(title).toHaveTextContent("Whirlpool use and care guide");
     expect(title).toHaveClass("op-passage__source");
     expect(title).toHaveClass("entity-link");
-    expect(
-      within(screen.getByTestId("operation-source-passage")).getByRole("link", {
-        name: "Whirlpool use and care guide",
-      }),
-    ).toHaveAttribute("href", "/app/data/sources?taxonomy=tax-1");
+    const link = within(screen.getByTestId("operation-source-passage")).getByRole("link", {
+      name: "Whirlpool use and care guide (opens in a new tab)",
+    });
+    expect(link).toBe(title);
+    expect(link).toHaveAttribute("href", "/app/data/sources?taxonomy=tax-1");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    expect(within(link).getByText("(opens in a new tab)")).toHaveClass("sr-only");
     expect(screen.getByTestId("operation-source-passage-more")).toHaveTextContent("Also on p. 3");
     // The passages aren't repeated as plain evidence.
     expect(screen.queryByTestId("operation-evidence")).not.toBeInTheDocument();

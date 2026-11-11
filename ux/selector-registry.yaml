@@ -3651,7 +3651,7 @@ selectors:
     description: "Source passage: the passage's page and section (p. 5 · Parts and features), else its character offsets"
   - selector: operation-source-title
     component: src/components/proposals/SourcePassage.tsx
-    description: "Source passage: the source's title, a link to its taxonomy's Sources page (text for a removed or unknown source)"
+    description: "Source passage: the source's title, a link to its taxonomy's Sources page that opens in a new tab so an unsent decision survives (text for a removed or unknown source)"
   - selector: operation-ends-callout
     component: src/components/proposals/OperationDecision.tsx
     description: "Decision: a relationship create whose end is an undecided (or rejected) create in the proposal; Accept is disabled"
