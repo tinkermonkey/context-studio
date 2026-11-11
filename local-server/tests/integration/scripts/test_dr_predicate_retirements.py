@@ -16,8 +16,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 import pytest
 
+from adapters.interchange.dr_reflection_plan import PlanError, import_reflection_plan
 from adapters.interchange.dr_spec_changes import spec_changes_for
-from scripts.dr_reflection_plan import PlanError, import_reflection_plan
 from tests.integration.scripts import test_dr_reflection_plan as plan_tests
 from tests.integration.scripts.test_dr_reflection_plan import operation, plan_with
 

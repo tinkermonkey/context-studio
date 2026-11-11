@@ -32,6 +32,12 @@ from sqlalchemy.orm import sessionmaker
 
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.interchange.dr_predicates import DrPredicateRules
+from adapters.interchange.dr_reflection_plan import (
+    PlanError,
+    decisions_for,
+    import_reflection_plan,
+    read_plan,
+)
 from adapters.interchange.dr_relationships import (
     DR_TAXONOMY_IDENTIFIER,
     DrRelationshipRules,
@@ -56,7 +62,6 @@ from domain.versioning.proposals import (
 )
 from domain.versioning.revert_service import RevertService
 from scripts.dr_ontology_loader import DR_SOURCE, import_dr_ontology
-from scripts.dr_reflection_plan import PlanError, decisions_for, import_reflection_plan, read_plan
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.integration.pipelines._harness.dr_spec import pinned_dr_spec_dir
 from tests.utils.change_recording import wire_change_recorder

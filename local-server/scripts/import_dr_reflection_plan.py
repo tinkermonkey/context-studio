@@ -22,6 +22,7 @@ from typing import cast
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from adapters.events.in_process import InProcessEventPublisher
+from adapters.interchange.dr_reflection_plan import PlanError, import_reflection_plan, read_plan
 from adapters.persistence.sqlite.change_repo import SQLiteChangeRepository
 from adapters.persistence.sqlite.connection import DatabaseManager
 from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
@@ -32,7 +33,6 @@ from domain.ontology.services import OntologyService
 from domain.versioning.exceptions import ProposalValidationError
 from domain.versioning.proposal_service import ProposalService
 from domain.versioning.revert_service import RevertService
-from scripts.dr_reflection_plan import PlanError, import_reflection_plan, read_plan
 
 
 def main() -> int:

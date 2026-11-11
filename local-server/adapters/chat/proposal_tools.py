@@ -586,8 +586,8 @@ def _stored(proposal: ChangeProposal, view: Optional[dict[str, Any]]) -> ToolOut
     )
 
 
-def _dry_run(view: dict[str, Any]) -> ToolOutcome:
-    """A dry run: what proposing would do, with nothing stored."""
+def _dry_run(view: dict[str, Any], tool: str = "propose_changes") -> ToolOutcome:
+    """A dry run: what proposing would do, with nothing stored; `tool` stores it for real."""
     operations = _outcomes(view, _DRY_RUN_KEYS)
     auto = sum(1 for o in operations if o.get("auto_apply"))
     blocked = sum(1 for o in operations if "blockers" in o)
@@ -597,7 +597,7 @@ def _dry_run(view: dict[str, Any]) -> ToolOutcome:
     ]
     if blocked:
         notes.append(f"{blocked} blocked by relationships still using the type.")
-    notes.append("Call propose_changes again without dry_run to store it.")
+    notes.append(f"Call {tool} again without dry_run to store it.")
     payload: dict[str, Any] = {
         "stored": False,
         "dry_run": True,

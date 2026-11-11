@@ -16,7 +16,6 @@ from adapters.chat.proposal_tools import PROPOSAL_KIND
 from adapters.chat.tools import (
     ToolArgumentError,
     ToolBase,
-    dataset_arg,
     dumps,
     error_outcome,
     required_str,
@@ -31,6 +30,13 @@ from domain.pipelines.entities import PipelineRun, PipelineType
 from domain.pipelines.requested_via import REQUESTED_VIA, RequestedVia
 
 PIPELINES = [t.value for t in PipelineType]
+# Its defaults don't fit extraction (no configuration is registered as 'default', and
+# it needs ontology_id and model), so clients extract another way (#1451).
+INDIVIDUAL_EXTRACTION_REFUSED = (
+    "run_refinement can't start individual_extraction. Extraction from a client goes"
+    " through Context Studio's extraction review page today, and through extract_source"
+    " once it ships (#1451)."
+)
 
 
 def run_payload(run: PipelineRun) -> dict[str, Any]:
@@ -67,7 +73,8 @@ class RunRefinementTool(ToolBase):
         " finishes. scope says what to refine (passed to the pipeline as is); options"
         " holds the pipeline's other inputs, plus implementation_id and"
         " configuration_ref (both default to 'default'). A taxonomy that mirrors a"
-        " client's source only accepts passes its client starts over MCP."
+        " client's source only accepts passes its client starts over MCP. "
+        + INDIVIDUAL_EXTRACTION_REFUSED
     )
     input_schema = {
         "type": "object",
@@ -84,11 +91,6 @@ class RunRefinementTool(ToolBase):
             "options": {
                 "type": "object",
                 "description": "Other pipeline inputs, implementation_id, configuration_ref",
-            },
-            "dataset": {
-                "type": "string",
-                "description": "individual_extraction only: the dataset (identifier or id) to"
-                " extract into; needed when the taxonomy has several (see list_datasets)",
             },
         },
         "required": ["taxonomy_id", "pipeline"],
@@ -120,6 +122,8 @@ class RunRefinementTool(ToolBase):
             )
 
         ptype = PipelineType(pipeline)
+        if ptype is PipelineType.INDIVIDUAL_EXTRACTION:
+            return error_outcome(INDIVIDUAL_EXTRACTION_REFUSED, "Pipeline not started here")
         implementation_id = str(options.get("implementation_id") or "default")
         configuration_ref = str(options.get("configuration_ref") or "default")
         input_data = {
@@ -131,9 +135,6 @@ class RunRefinementTool(ToolBase):
             # After the options, so a caller can't claim another entry point
             REQUESTED_VIA: self._requested_via.value,
         }
-        if ptype is PipelineType.INDIVIDUAL_EXTRACTION:
-            # Recognition and apply stay inside one dataset (none yet: apply makes `default`).
-            input_data["dataset_id"] = dataset_arg(self._ontology, args, taxonomy_id)
         try:
             run = self._executor.submit(
                 ptype,

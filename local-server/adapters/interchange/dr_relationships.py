@@ -8,7 +8,7 @@ definition per relationship schema, each keyed back to DR by an external
 reference (source "documentation_robotics"; a class's identifier is its spec
 node id, a property definition's the relationship id
 "{source}.{predicate}.{destination}"). The loader, the reflection-plan importer
-(`scripts/dr_reflection_plan.py`) and `DrRelationshipRules`, which ProposalService
+(`dr_reflection_plan.py`) and `DrRelationshipRules`, which ProposalService
 applies to changes of DR relationship types, share what is here.
 """
 

@@ -7,13 +7,15 @@ the DR repo, whose header holds the contract). Each operation creates, updates
 or deletes one relationship schema, which Context Studio holds as a property
 definition keyed back to DR by an external reference (source
 "documentation_robotics", identifier "{source}.{predicate}.{destination}"; see
-`dr_ontology_loader.py`).
+`scripts/dr_ontology_loader.py`).
 
 `import_reflection_plan` resolves every operation against the workspace and
 proposes them, through ProposalService, as one change proposal on the
-`dr_spec` taxonomy. DR's fields are mapped onto Context Studio's: predicate ->
-canonical_predicate, source/destination spec node -> domain/range class, and a
-new triple -> a new identifier and DR reference. DR's `base` and `dr`
+`dr_spec` taxonomy. `scripts/import_dr_reflection_plan.py` and the MCP tool
+`submit_reflection_plan` (`adapters/chat/interchange_tools.py`) both call it.
+DR's fields are mapped onto Context Studio's: predicate -> canonical_predicate,
+source/destination spec node -> domain/range class, and a new triple -> a new
+identifier and DR reference. DR's `base` and `dr`
 bookkeeping are ignored; Context Studio captures its own base. Each
 operation keeps DR's seq, the join key for the decisions coming back. A
 delete's `replacement` (the DR relationship id of the type that expresses the
@@ -372,10 +374,20 @@ def _update_fields(
 
 
 def import_reflection_plan(
-    plan: dict[str, Any], proposal_service: ProposalService, repo: OntologyRepository
+    plan: dict[str, Any],
+    proposal_service: ProposalService,
+    repo: OntologyRepository,
+    source: ProposalSource = ProposalSource.PIPELINE,
+    dry_run: bool = False,
 ) -> ChangeProposal:
     """
     Propose a reflection plan as one change proposal on the dr_spec taxonomy.
+
+    Args:
+        source: Recorded on the proposal: pipeline for the import script, mcp
+            for the submit_reflection_plan tool
+        dry_run: Validate only; the proposal comes back unstored (see
+            ProposalService.propose)
 
     Raises:
         PlanError: If the plan is malformed or an operation can't be proposed
@@ -403,9 +415,10 @@ def import_reflection_plan(
         taxonomy_id=workspace.taxonomy_id,
         title=plan.get("title") or f"DR reflection plan: {plan.get('layer')} layer",
         operations=drafts,
-        source=ProposalSource.PIPELINE,
+        source=source,
         rationale=plan.get("rationale"),
         source_detail=plan.get("source_detail"),
+        dry_run=dry_run,
         source_revision=_source_revision(plan),
     )
 

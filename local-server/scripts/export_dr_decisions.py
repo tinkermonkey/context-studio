@@ -20,11 +20,11 @@ from pathlib import Path
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from adapters.interchange.dr_reflection_plan import decisions_for
 from adapters.persistence.sqlite.connection import DatabaseManager
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from config import get_config_manager
 from domain.versioning.gold import DecisionFilter, by_operation
-from scripts.dr_reflection_plan import decisions_for
 
 
 def main() -> int:
