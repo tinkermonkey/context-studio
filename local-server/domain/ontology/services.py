@@ -64,6 +64,7 @@ from .exceptions import (
     CircularReferenceError,
     DatasetMismatchError,
     DerivedTypeError,
+    DomainRangeMismatchError,
     DuplicateEntityError,
     EntityInUseError,
     EntityNotFoundError,
@@ -76,6 +77,7 @@ from .ports import (
     OntologyRepository,
     SchemaVectorIndex,
 )
+from .relationship_fit import RelationshipFit
 from .snapshots import entity_snapshot
 from .value_objects import (
     ClassCounts,
@@ -1773,6 +1775,9 @@ class OntologyService:
         - source_id != target_id (no self-loops)
         - Both source and target entities exist (can be Classes or Individuals)
         - The property definition exists
+        - The ends fit its domain and range: an end of the class or a subclass
+          of it, open where either is untyped (#1574; see
+          domain.ontology.relationship_fit)
         - The relationship triple (source_id, target_id, property_definition_id) is unique
 
         Args:
@@ -1792,6 +1797,7 @@ class OntologyService:
                 or not a JSON scalar
             DuplicateEntityError: If the relationship triple already exists
             EntityNotFoundError: If source, target, or property definition does not exist
+            DomainRangeMismatchError: If an end doesn't fit the type's domain or range
         """
         if source_id == target_id:
             raise ValueError("A relationship cannot have the same source and target")
@@ -1812,6 +1818,7 @@ class OntologyService:
         taxonomy_id = None
         if source_class:
             taxonomy_id = source_class.taxonomy_id
+            source_class_ids: tuple[str, ...] = (source_id,)
         else:
             source_individual = self._repository.get_individual(source_id)
             if source_individual:
@@ -1819,15 +1826,25 @@ class OntologyService:
                 individual_class = self._repository.get_class(source_individual.class_ids[0])
                 if individual_class:
                     taxonomy_id = individual_class.taxonomy_id
+                source_class_ids = tuple(source_individual.class_ids)
             else:
                 raise EntityNotFoundError("Entity", source_id)
 
         # Validate target entity exists (try Class first, then Individual)
         target_class = self._repository.get_class(target_id)
-        if not target_class:
+        if target_class:
+            target_class_ids: tuple[str, ...] = (target_id,)
+        else:
             target_individual = self._repository.get_individual(target_id)
             if not target_individual:
                 raise EntityNotFoundError("Entity", target_id)
+            target_class_ids = tuple(target_individual.class_ids)
+
+        misfit = RelationshipFit(self._repository).misfit(
+            prop_def, source_class_ids, target_class_ids
+        )
+        if misfit is not None:
+            raise DomainRangeMismatchError(prop_def.identifier, misfit)
 
         # Check if this relationship triple already exists
         existing_relationships = self._repository.list_relationships(

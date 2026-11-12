@@ -23,6 +23,7 @@ class RelationshipFit:
         self._repo = repo
         self._ancestors: dict[str, frozenset[str]] = {}
         self._titles: dict[str, str] = {}
+        self._ends: dict[str, tuple[str, ...] | None] = {}
 
     def misfit(
         self,
@@ -70,7 +71,12 @@ class RelationshipFit:
 
     def end_class_ids(self, entity_id: str) -> tuple[str, ...] | None:
         """An existing end's classes: an individual's, or a class end itself; None if it is gone."""
-        individual = self._repo.get_individual(entity_id)
-        if individual is not None:
-            return tuple(individual.class_ids)
-        return (entity_id,) if self._repo.get_class(entity_id) is not None else None
+        if entity_id not in self._ends:
+            individual = self._repo.get_individual(entity_id)
+            if individual is not None:
+                self._ends[entity_id] = tuple(individual.class_ids)
+            elif self._repo.get_class(entity_id) is not None:
+                self._ends[entity_id] = (entity_id,)
+            else:
+                self._ends[entity_id] = None
+        return self._ends[entity_id]

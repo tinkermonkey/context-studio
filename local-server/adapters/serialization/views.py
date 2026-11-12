@@ -66,7 +66,7 @@ def proposal_response(
         usage,
         service.dataset_impacts(proposal) if with_usage else None,
         service.alternative_titles(proposal),
-        service.domain_range_mismatches(proposal),
+        service.domain_range_mismatches(proposal) if with_usage else None,
     )
 
 

@@ -28,10 +28,10 @@ from domain.ontology.datasets import resolve_dataset_id
 from domain.ontology.exceptions import (
     DatasetMismatchError,
     DerivedTypeError,
+    DomainRangeMismatchError,
     DuplicateEntityError,
     EntityNotFoundError,
 )
-from domain.ontology.relationship_fit import RelationshipFit
 from domain.pipelines.apply_result import ApplyResult, MergedMention
 from domain.pipelines.apply_selection import (
     MERGE,
@@ -615,23 +615,6 @@ class IndividualExtractionApplyService:
             result.relationships_skipped += 1
             return
 
-        prop = self._repo.get_property_definition(property_definition_id)
-        if prop is not None:
-            fit = RelationshipFit(self._repo)
-            misfit = fit.misfit(
-                prop, fit.end_class_ids(source_id) or (), fit.end_class_ids(target_id) or ()
-            )
-            if misfit is not None:
-                _logger.info(
-                    "Skipping relationship %s -[%s]-> %s: %s",
-                    source_id,
-                    prop.identifier,
-                    target_id,
-                    misfit,
-                )
-                result.relationships_skipped += 1
-                return
-
         existing = self._repo.list_relationships(
             source_id=source_id,
             target_id=target_id,
@@ -651,16 +634,22 @@ class IndividualExtractionApplyService:
                 property_definition_id=property_definition_id,
                 source_run_id=source_run_id,
             )
-        except (EntityNotFoundError, DerivedTypeError, DatasetMismatchError):
+        except (
+            EntityNotFoundError,
+            DerivedTypeError,
+            DatasetMismatchError,
+            DomainRangeMismatchError,
+        ) as exc:
             # The extracted predicate or object refers to an entity that does not exist,
-            # the relationship type is derived (its client computes those), or the
-            # object is in another dataset (relationships never cross datasets).
+            # the relationship type is derived (its client computes those), the
+            # object is in another dataset (relationships never cross datasets), or
+            # an end doesn't fit the type's domain or range (#1574).
             _logger.warning(
-                "Skipping relationship %s -[%s]-> %s: endpoint or property not found, or"
-                " the relationship type is derived",
+                "Skipping relationship %s -[%s]-> %s: %s",
                 source_id,
                 property_definition_id,
                 target_id,
+                exc,
             )
             result.relationships_skipped += 1
             return

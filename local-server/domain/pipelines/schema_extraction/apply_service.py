@@ -17,7 +17,7 @@ import logging
 import re
 from typing import TYPE_CHECKING
 
-from domain.ontology.exceptions import DuplicateEntityError
+from domain.ontology.exceptions import DomainRangeMismatchError, DuplicateEntityError
 from domain.pipelines.apply_result import ApplyResult, SkipReason
 from domain.pipelines.apply_selection import check_accepted_ids
 from domain.pipelines.candidate_ids import (
@@ -297,12 +297,18 @@ class SchemaExtractionApplyService:
                 _already_present(candidate_id)
                 continue
 
-            new_rel = self._ontology_service.create_relationship(
-                source_id=src_id,
-                target_id=tgt_id,
-                property_definition_id=prop_def.id,
-                source_run_id=run.id,
-            )
+            try:
+                new_rel = self._ontology_service.create_relationship(
+                    source_id=src_id,
+                    target_id=tgt_id,
+                    property_definition_id=prop_def.id,
+                    source_run_id=run.id,
+                )
+            except DomainRangeMismatchError as exc:
+                _logger.info("Skipping connection %s: %s", candidate_id, exc)
+                result.relationships_skipped += 1
+                result.skip(candidate_id, "domain_range_mismatch")
+                continue
             result.relationships_created += 1
             result.created_relationship_ids.append(new_rel.id)
             result.applied_candidate_ids.append(candidate_id)

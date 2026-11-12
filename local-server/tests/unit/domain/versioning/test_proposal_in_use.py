@@ -13,6 +13,7 @@ from types import MappingProxyType
 import pytest
 
 import domain.versioning.proposal_service as proposal_service_module
+from domain.ontology.entities import Relationship
 from domain.ontology.events import GraphInvalidated
 from domain.ontology.services import OntologyService
 from domain.ontology.value_objects import ExternalReference
@@ -807,11 +808,18 @@ def test_a_reverse_swaps_every_relationships_ends_in_place_in_one_transaction(
     assert record.p == 1.0
 
 
-def test_a_reverse_keeps_a_pair_running_both_ways(service, graph, repo, ontology):
+def test_a_reverse_keeps_a_pair_running_both_ways(service, graph, repo):
     """a -> b and b -> a of one type swap to b -> a and a -> b, each keeping its id."""
     first = repo.get_relationship(graph["first"])
-    mirror = ontology.create_relationship(
-        first.target_id, first.source_id, graph["triggers_function"]
+    # b -> a breaks the type's domain and range, so the service refuses it (#1574);
+    # data stored before that was enforced may still hold one.
+    mirror = repo.save_relationship(
+        Relationship(
+            id="mirror",
+            source_id=first.target_id,
+            target_id=first.source_id,
+            property_definition_id=graph["triggers_function"],
+        )
     )
     before = ends(repo, graph["triggers_function"])
     proposal = propose_update(service, graph, **reverse_fields(graph))

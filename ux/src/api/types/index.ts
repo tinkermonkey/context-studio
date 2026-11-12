@@ -4527,7 +4527,7 @@ export interface components {
       skipped_candidate_ids?: string[];
       /**
        * Skip Reasons
-       * @description Why each skipped_candidate_id was skipped (one entry per id). not_selected / below_threshold: never selected for apply. Every other reason means the candidate was selected but could not be applied: invalid (malformed candidate), unresolved_endpoint (a relationship endpoint is neither accepted nor in the graph), unresolved_predicate (the property definition does not exist), title_conflict (an existing entity owns the title), missing_class (no existing class to type an individual), self_loop (source and target are the same entity), derived_type (its class or relationship type is derived: the client computes those, so none is created). Populated for schema_extraction and individual_extraction.
+       * @description Why each skipped_candidate_id was skipped (one entry per id). not_selected / below_threshold: never selected for apply. Every other reason means the candidate was selected but could not be applied: invalid (malformed candidate), unresolved_endpoint (a relationship endpoint is neither accepted nor in the graph), unresolved_predicate (the property definition does not exist), title_conflict (an existing entity owns the title), missing_class (no existing class to type an individual), self_loop (source and target are the same entity), derived_type (its class or relationship type is derived: the client computes those, so none is created), domain_range_mismatch (a relationship's ends don't fit its type's domain or range). Populated for schema_extraction and individual_extraction.
        */
       skip_reasons?: {
         [key: string]:
@@ -4539,7 +4539,8 @@ export interface components {
           | "title_conflict"
           | "missing_class"
           | "self_loop"
-          | "derived_type";
+          | "derived_type"
+          | "domain_range_mismatch";
       };
       /**
        * Existing Candidate Ids
@@ -9280,7 +9281,7 @@ export interface components {
       blockers?: components["schemas"]["DeleteBlockersResponse"] | null;
       /**
        * Domain Range Mismatch
-       * @description A pending or failed relationship create whose source or target doesn't fit its type's domain or range (inheritance-aware: an individual of a subclass fits): why, e.g. 'target is Place, not Room'. Applying it fails (domain_range_mismatch) and the approval policy never auto-applies it. Null otherwise
+       * @description A pending or failed relationship create whose source or target doesn't fit its type's domain or range (inheritance-aware: an individual of a subclass fits): why, e.g. 'target is Place, not Room'. Applying it fails (domain_range_mismatch) and the approval policy never auto-applies it. Null otherwise, and in proposal lists (read the proposal for it)
        */
       domain_range_mismatch?: string | null;
       /**

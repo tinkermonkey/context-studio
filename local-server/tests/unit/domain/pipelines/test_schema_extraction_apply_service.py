@@ -335,6 +335,38 @@ class TestRelationships:
         assert result.relationships_created == 0
         assert result.relationships_skipped == 1
 
+    def test_skips_relationship_whose_ends_dont_fit_the_type(self, svc, repo):
+        # Contains runs Alpha -> Alpha (#1574): Beta isn't an Alpha.
+        for cls_id, title in (("cls-a", "Alpha"), ("cls-b", "Beta")):
+            repo.save_class(
+                Class(id=cls_id, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title=title)
+            )
+        repo.save_property_definition(
+            PropertyDefinition(
+                id="prop-1",
+                identifier="contains",
+                title="Contains",
+                domain_class_id="cls-a",
+                range_class_id="cls-a",
+            )
+        )
+        run = _make_run(
+            connections=[
+                {
+                    "subject_ref": "Alpha",
+                    "predicate": "Contains",
+                    "object_ref": "Beta",
+                    "confidence": 0.9,
+                },
+            ]
+        )
+
+        result = svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
+
+        assert result.relationships_created == 0
+        assert result.relationships_skipped == 1
+        assert list(result.skip_reasons.values()) == ["domain_range_mismatch"]
+
     def test_relationship_dedup_on_second_apply(self, svc, repo):
         cls_a = Class(
             id="cls-a",

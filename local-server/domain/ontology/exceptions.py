@@ -66,6 +66,18 @@ class DerivedTypeError(OntologyError):
     pass
 
 
+class DomainRangeMismatchError(OntologyError):
+    """
+    Raised when a relationship's ends don't fit its type's domain and range
+    (see domain.ontology.relationship_fit); `reason` says which end and why.
+    """
+
+    def __init__(self, type_identifier: str, reason: str):
+        self.type_identifier = type_identifier
+        self.reason = reason
+        super().__init__(f"Doesn't fit relationship type {type_identifier}: {reason}")
+
+
 class DatasetRequiredError(OntologyError):
     """Raised when a taxonomy has several datasets and a write names none of them."""
 

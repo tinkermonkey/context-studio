@@ -46,6 +46,7 @@ from domain.ontology.datasets import resolve_dataset_id
 from domain.ontology.exceptions import (
     DatasetMismatchError,
     DatasetRequiredError,
+    DomainRangeMismatchError,
     EntityNotFoundError,
     OntologyError,
 )
@@ -869,7 +870,8 @@ class ProposalService:
         )
         if not allowed:
             return allowed
-        blocked = self.in_use_blockers(proposal).keys() | self.domain_range_mismatches(proposal)
+        mismatches, deferred = self._fit_review(proposal)
+        blocked = self.in_use_blockers(proposal).keys() | mismatches.keys() | deferred
         return [i for i in allowed if i not in blocked]
 
     def _classes(
@@ -1597,6 +1599,7 @@ class ProposalService:
         applied with the entity it made or changed, or failed with a reason
         (target_changed, target_missing, unresolved_ref, invalid_edit,
         invalid_evidence: a source passage that can't be stored, refused,
+        domain_range_mismatch: a relationship whose ends don't fit its type,
         error). Operations already applied stay applied when a later one fails.
         Property-definition creates and updates are also checked by the rules
         that govern them, if any (refused).
@@ -2464,15 +2467,6 @@ class ProposalService:
                 self._check_dataset(operation, dataset_id)
             except _Invalid as exc:
                 raise _ApplyFailed(exc.code, exc.message) from exc
-            if operation.kind is K.RELATIONSHIP and operation.op is OperationType.CREATE:
-                # Its ends are resolved now: "$ref" ends and types are known.
-                misfit = self._domain_range_misfit(fields, {}, RelationshipFit(self._repo))
-                if misfit is not None:
-                    raise _ApplyFailed(
-                        DOMAIN_RANGE_MISMATCH,
-                        f"{misfit}; change the type's domain or range first (a type in use"
-                        " needs its relationships resolved), or reject it",
-                    )
             result = self._dispatch(operation, fields, run_id, operation.op, dataset_id)
             if operation.kind is K.PROPERTY and operation.op is OperationType.CREATE:
                 operation.type_change = TypeChange(
@@ -2500,6 +2494,12 @@ class ProposalService:
         except _ApplyFailed as exc:
             operation.status = OperationStatus.FAILED
             operation.reason = exc.reason
+        except DomainRangeMismatchError as exc:
+            operation.status = OperationStatus.FAILED
+            operation.reason = (
+                f"{DOMAIN_RANGE_MISMATCH}: {exc.reason}; change the type's domain or range"
+                " first (a type in use needs its relationships resolved), or reject it"
+            )
         except (OntologyError, ValueError) as exc:
             operation.status = OperationStatus.FAILED
             operation.reason = f"{APPLY_ERROR}: {exc}"
@@ -2844,59 +2844,78 @@ class ProposalService:
         """
         The pending and failed relationship creates whose ends don't fit their
         type's domain and range (#1574): operation id -> why ("target is
-        Place, not Room"). Applying one fails (domain_range_mismatch), and the
-        approval policy never auto-applies one.
+        Place, not Room"). Applying one fails (domain_range_mismatch:
+        OntologyService.create_relationship refuses it), and the approval
+        policy never auto-applies one.
 
         Fitting is inheritance-aware and open where untyped (see
         `domain.ontology.relationship_fit`). An end the proposal creates is
         judged by its create's classes, or by the entity it made once applied.
-        What the proposal may still change isn't flagged: a type it creates or
-        whose domain or range it updates, an end in a class it creates or
-        whose classes it updates, an end that is gone. Applying checks the
-        resolved ends again.
+        What the proposal may still change isn't flagged (see `_fit_review`),
+        nor what isn't known before applying: a type or class the proposal
+        creates, an end that is gone.
         """
-        pending = proposal.pending
-        changing = {
-            o.target_id
-            for o in pending
-            if o.op is OperationType.UPDATE
-            and (
-                (o.kind is K.PROPERTY and {"domain_class_id", "range_class_id"} & o.fields.keys())
-                or (o.kind is K.INDIVIDUAL and "class_ids" in o.fields)
-            )
-        }
+        return self._fit_review(proposal)[0]
+
+    def _fit_review(self, proposal: ChangeProposal) -> tuple[dict[str, str], set[str]]:
+        """
+        (mismatches, deferred) of the proposal's pending and failed
+        relationship creates. Deferred are those whose verdict another
+        awaiting operation of the proposal may change: an update of its type's
+        domain or range, of an end individual's classes, or of the parent of a
+        class in an end's class chain or of the type's domain or range class.
+        Neither is auto-applied: a deferred create waits for its change, which
+        applies before it only when both are applied in seq order.
+        """
+        retyped: set[Any] = set()
+        reclassed: set[Any] = set()
+        reparented: set[Any] = set()
+        for o in proposal.pending:
+            if o.kind is K.PROPERTY and o.op is OperationType.UPDATE:
+                if {"domain_class_id", "range_class_id"} & o.fields.keys():
+                    retyped.add(o.target_id)
+            elif o.kind is K.INDIVIDUAL and o.op is OperationType.UPDATE:
+                if "class_ids" in o.fields:
+                    reclassed.add(o.target_id)
+            elif o.kind is K.CLASS and o.op in (OperationType.UPDATE, OperationType.MOVE):
+                if "parent_class_id" in o.fields:
+                    reparented.add(o.target_id)
         fit = RelationshipFit(self._repo)
+        types: dict[str, PropertyDefinition | None] = {}
         creates = {o.ref: o for o in proposal.operations if o.ref}
-        found: dict[str, str] = {}
+        mismatches: dict[str, str] = {}
+        deferred: set[str] = set()
         for operation in proposal.operations:
             fields = operation.fields
+            property_id = fields.get("property_definition_id")
             if (
                 operation.kind is not K.RELATIONSHIP
                 or operation.op is not OperationType.CREATE
                 or operation.status not in (OperationStatus.PENDING, OperationStatus.FAILED)
-                or changing & {fields.get(n) for n in ("property_definition_id", *_ENDS)}
+                or not isinstance(property_id, str)
+                or _is_ref(property_id)
             ):
                 continue
-            misfit = self._domain_range_misfit(fields, creates, fit)
+            if property_id not in types:
+                types[property_id] = self._repo.get_property_definition(property_id)
+            prop = types[property_id]
+            if prop is None:
+                continue
+            ends = [self._planned_classes(fields.get(n), creates, fit) for n in _ENDS]
+            if ends[0] is None or ends[1] is None:
+                continue
+            chain = {a for classes in ends for c in classes for a in fit.ancestors_of(c)}
+            if (
+                property_id in retyped
+                or reclassed & {fields.get(n) for n in _ENDS}
+                or reparented & (chain | {prop.domain_class_id, prop.range_class_id})
+            ):
+                deferred.add(operation.id)
+                continue
+            misfit = fit.misfit(prop, ends[0], ends[1])
             if misfit is not None:
-                found[operation.id] = misfit
-        return found
-
-    def _domain_range_misfit(
-        self,
-        fields: Mapping[str, Any],
-        creates: Mapping[str, ProposedOperation],
-        fit: RelationshipFit,
-    ) -> str | None:
-        """Why a relationship create breaks its type's domain or range (None: fits, or not known)."""
-        property_id = fields.get("property_definition_id")
-        prop = None if _is_ref(property_id) else self._load(K.PROPERTY, property_id)
-        if prop is None:
-            return None
-        source, target = (self._planned_classes(fields.get(n), creates, fit) for n in _ENDS)
-        if source is None or target is None:
-            return None
-        return fit.misfit(prop, source, target)
+                mismatches[operation.id] = misfit
+        return mismatches, deferred
 
     def _planned_classes(
         self, end: Any, creates: Mapping[str, ProposedOperation], fit: RelationshipFit

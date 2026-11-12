@@ -576,7 +576,7 @@ class ProposedOperationResponse(BaseModel):
         "fit its type's domain or range (inheritance-aware: an individual of a subclass "
         "fits): why, e.g. 'target is Place, not Room'. Applying it fails "
         "(domain_range_mismatch) and the approval policy never auto-applies it. Null "
-        "otherwise",
+        "otherwise, and in proposal lists (read the proposal for it)",
     )
     proposed_replacement_id: Optional[str] = Field(
         None,

@@ -149,3 +149,55 @@ def test_the_approval_policy_never_auto_applies_a_mismatch(
 
     assert ops[1].status is OperationStatus.PENDING
     assert ops[2].status is OperationStatus.APPLIED
+
+
+def test_a_create_waiting_on_a_type_update_is_not_auto_applied_before_it(
+    proposals, ontology, repo, reverter, graph, ends
+):
+    policies = FakeApprovalPolicyRepository()
+    policies.save(ApprovalPolicy(graph["taxonomy"], (AutoApplyRule(op=T.CREATE),)))
+    service = ProposalService(proposals, ontology, repo, reverter, approval_policies=policies)
+
+    proposal = propose(
+        service,
+        graph,
+        draft(1, T.UPDATE, K.PROPERTY, graph["near"], range_class_id=graph["place"]),
+        near(2, graph["den"], ends["garden"], graph["near"]),
+    )
+    ops = by_seq(proposal)
+
+    # Neither applied at once: the create waits for the retarget it needs.
+    assert [ops[1].status, ops[2].status] == [OperationStatus.PENDING, OperationStatus.PENDING]
+    assert service.auto_apply_operation_ids(proposal) == []
+    applied = by_seq(service.apply(proposal.id, [ops[1].id, ops[2].id]))
+    assert applied[2].status is OperationStatus.APPLIED
+
+
+def test_a_reparent_in_the_proposal_defers_the_verdict_and_then_applies(service, ontology, graph):
+    # A Nook is not a Room until the proposal moves it under Room.
+    nook = ontology.create_class(graph["vocab"], "Nook")
+    reading = ontology.create_individual(nook.id, "Reading nook")
+    proposal = propose(
+        service,
+        graph,
+        draft(1, T.MOVE, K.CLASS, nook.id, parent_class_id=graph["room"]),
+        near(2, graph["den"], reading.id, graph["near"]),
+    )
+    ops = by_seq(proposal)
+
+    assert service.domain_range_mismatches(proposal) == {}
+    applied = by_seq(service.apply(proposal.id, [ops[1].id, ops[2].id]))
+    assert applied[1].status is OperationStatus.APPLIED
+    assert applied[2].status is OperationStatus.APPLIED
+
+
+def test_a_reparent_elsewhere_in_the_graph_leaves_the_flag(service, ontology, graph, ends):
+    shed = ontology.create_class(graph["vocab"], "Shed")
+    proposal = propose(
+        service,
+        graph,
+        draft(1, T.MOVE, K.CLASS, shed.id, parent_class_id=graph["room"]),
+        near(2, graph["den"], ends["garden"], graph["near"]),
+    )
+
+    assert list(service.domain_range_mismatches(proposal).values()) == ["target is Place, not Room"]
