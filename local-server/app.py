@@ -21,7 +21,6 @@ from typing import cast
 
 import uvicorn
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import OperationalError
 
 from adapters.chat.claim_tools import build_claim_tools
@@ -118,6 +117,7 @@ from adapters.web.pipelines_routes import config_router as pipeline_config_route
 from adapters.web.pipelines_routes import router as pipelines_router
 from adapters.web.proposals_routes import router as proposals_router
 from adapters.web.reference_routes import router as reference_router
+from adapters.web.request_guard import add_browser_guards
 from adapters.web.sources_routes import router as sources_router
 from adapters.web.versioning_routes import router as versioning_router
 from config import SyncAdapterType, get_config_manager, get_settings
@@ -1046,14 +1046,8 @@ app = FastAPI(lifespan=lifespan, title="Context Studio", version="1.0.0")
 # Get settings for middleware configuration from global singleton
 settings = get_settings()
 
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.server.cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Only the app's own UI may call the API from a browser
+add_browser_guards(app, settings.server)
 
 # Include routers (these are the FastAPI APIRouter instances)
 app.include_router(ontology_router)

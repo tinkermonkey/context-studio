@@ -2,9 +2,6 @@
   "server": {
     "host": "127.0.0.1",
     "port": 8888,
-    "cors_origins": [
-      "*"
-    ],
     "ui_base_url": "http://localhost:3888"
   },
   "database": {
