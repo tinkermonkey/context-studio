@@ -103,8 +103,11 @@ export const sourcesCopy = {
       "Runs schema extraction too. New classes and predicates go in a separate proposal, since schema changes follow the taxonomy's approval policy.",
     schemaMirroredHint:
       "Not available here: this taxonomy mirrors a client's spec, so only that client proposes schema changes, over MCP.",
+    skipBoilerplateLabel: "Skip boilerplate and other languages",
+    skipBoilerplateHint:
+      "Leaves out warranty, safety, legal and contact sections, and copies of the text in other languages. Each run lists what it skipped.",
     pagesLabel: "Pages",
-    pagesHint: "Optional. Skip safety, warranty and index pages to save time and cost.",
+    pagesHint: "Optional. Leave out index or appendix pages to save time and cost.",
     pagesPlaceholder: "e.g. 1-12, 15",
     /** `chunks` is a count or a range ("3–6"); `cost` likewise, when a price is known. */
     estimate: (chunks: string, schema: boolean, dataset: string, cost?: string) => {

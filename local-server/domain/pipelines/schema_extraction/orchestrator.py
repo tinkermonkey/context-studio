@@ -15,7 +15,11 @@ Execution flow (7 stages):
 
 A run on a source (#1552) may name `pages` (with the source's `page_starts`):
 only text on those pages is read, and provenance is found only there (offsets
-still index the whole text). It ends in one change proposal of its class and
+still index the whole text). Unless `skip_boilerplate` is false, the source's
+warranty, safety, legal and contact sections and its copies in other
+languages are left unread the same way (see domain/extraction/section_filter.py);
+the result's `skipped_sections` and `skipped_sections_by_reason` say what was
+skipped. It ends in one change proposal of its class and
 property candidates when a proposer is wired (see
 domain/pipelines/source_proposals.py); the run's `proposal_id` names it.
 """
@@ -28,7 +32,15 @@ import re
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any, cast
 
-from domain.extraction.chunking import MAX_CHUNK_CHARS, chunk_text
+from domain.extraction.chunking import MAX_CHUNK_CHARS, Heading, chunk_text
+from domain.extraction.section_filter import (
+    NOTHING_LEFT,
+    SKIP_INPUT,
+    SkippedSection,
+    skip_note,
+    skip_summary,
+    skipped_sections,
+)
 from domain.extraction.span_resolution import find_all_spans
 from domain.extraction.value_objects import SourceSpan
 from domain.pipelines.entities import PipelineRunStatus
@@ -47,6 +59,9 @@ if TYPE_CHECKING:
     from domain.pipelines.source_proposals import SourceProposer
 
 _logger = logging.getLogger(__name__)
+
+# Input keys that mark the documents as a source, whose boilerplate is skipped
+_SOURCE_KEYS = ("source_id", "page_starts", "headings", "pages")
 
 
 def _serialize_provenance(spans: list[SourceSpan]) -> list[dict[str, Any]]:
@@ -130,34 +145,56 @@ def join_documents(documents: Any) -> str:
     return " ".join(doc for doc in documents if isinstance(doc, str))
 
 
-def _selected_pages(text: str, input_data: dict[str, Any]) -> str:
+def _readable_text(text: str, input_data: dict[str, Any]) -> tuple[str, list[SkippedSection]]:
     """
-    The text with everything off the selected `pages` blanked out (as spaces),
-    so offsets still index the whole text and nothing off those pages is read
-    or found; the text itself without a selection.
+    The text with everything off the selected `pages`, and a source's skipped
+    sections (unless `skip_boilerplate` is false), blanked out as spaces, so
+    offsets still index the whole text and nothing blanked is read or found;
+    with the sections skipped. The text itself when nothing is left out.
 
     Raises:
-        PipelineInputError: If the selection or page_starts is malformed, or
-            the selected pages hold no text
+        PipelineInputError: If the selection, page_starts or skip_boilerplate
+            is malformed, or nothing on the selected pages is left to read
     """
     pages = input_data.get("pages")
-    if pages is None or pages == "":
-        return text
+    pages = None if pages is None or pages == "" else str(pages)
+    skip = input_data.get(SKIP_INPUT, True)
+    if not isinstance(skip, bool):
+        raise PipelineInputError(f"{SKIP_INPUT} must be true or false")
+    skip = skip and any(input_data.get(key) is not None for key in _SOURCE_KEYS)
+    if pages is None and not skip:
+        return text, []
+    page_starts = input_data.get("page_starts") or None
+    headings = [
+        Heading(start=h["start"], title=str(h.get("title") or ""))
+        for h in input_data.get("headings") or []
+        if isinstance(h, dict) and isinstance(h.get("start"), int)
+    ]
     try:
+        skipped = (
+            skipped_sections(text, page_starts=page_starts, headings=headings, pages=pages)
+            if skip
+            else []
+        )
         chunks = chunk_text(
-            text, page_starts=input_data.get("page_starts") or None, pages=str(pages)
+            text,
+            page_starts=page_starts,
+            pages=pages,
+            skip=[(s.start, s.end) for s in skipped],
         )
     except (TypeError, ValueError) as error:
         raise PipelineInputError(str(error)) from error
     if not chunks:
-        raise PipelineInputError("The selected pages hold no text")
+        raise PipelineInputError(NOTHING_LEFT if skipped else "The selected pages hold no text")
+    if pages is None and not skipped:
+        return text, []
     parts: list[str] = []
     position = 0
     for chunk in chunks:
         parts += [" " * (chunk.start - position), text[chunk.start : chunk.end]]
         position = chunk.end
     parts.append(" " * (len(text) - position))
-    return "".join(parts)
+    return "".join(parts), skipped
 
 
 @dataclass
@@ -240,6 +277,8 @@ class SchemaExtractionState(PipelineState):
     candidate_properties: list[CandidatePropertyDefinition] = field(default_factory=list)
     proposed_connections: list[CandidateConnection] = field(default_factory=list)
     steps_completed: list[str] = field(default_factory=list)
+    # skipped_sections and skipped_sections_by_reason, when sections were skipped
+    skipped: dict[str, Any] = field(default_factory=dict)
 
 
 class SchemaExtractionOrchestrator(PipelineOrchestrator):
@@ -314,7 +353,8 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             )
             raise exc
 
-        source_text = _selected_pages(join_documents(documents), schema_state.input_data)
+        whole_text = join_documents(documents)
+        source_text, skipped = _readable_text(whole_text, schema_state.input_data)
         proposer = self._proposer if schema_state.input_data.get("source_id") else None
         proposing = proposer is not None
         if proposer is not None:
@@ -323,9 +363,15 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                 str(schema_state.input_data.get("scope") or ""), schema_state.input_data
             )
 
+        page_starts = schema_state.input_data.get("page_starts") or []
         schema_state = replace(
             schema_state,
             source_text=source_text,
+            skipped=skip_summary(skipped, whole_text, page_starts) if skipped else {},
+            parse_warnings=[
+                *schema_state.parse_warnings,
+                *([{"stage": "text_ingestion", "error": skip_note(skipped)}] if skipped else []),
+            ],
             current_status=PipelineRunStatus.RUNNING,
         )
 
@@ -918,6 +964,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             "connection_count": len(state.proposed_connections),
             "warnings": state.parse_warnings,
         }
+        result.update(state.skipped)
 
         return replace(
             state,

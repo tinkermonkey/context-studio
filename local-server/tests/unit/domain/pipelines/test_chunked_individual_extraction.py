@@ -379,3 +379,73 @@ class TestChunkedOrchestrator:
             await task
         assert len(extraction.calls) == 1
         assert writer.progress == [(0, 3), (1, 3)]
+
+
+_ENGLISH = (
+    "Bracket mounts on the wall with the screws. Anchor goes into the hole before the"
+    " screw. Dock snaps onto the bracket when it is level."
+)
+_FRENCH = (
+    "Support se fixe au mur avec les vis. Ancrage va dans le trou pour que le support"
+    " tienne. Station se place sur le support et elle est de niveau."
+)
+_WARRANTY = (
+    "LIMITED WARRANTY\nMoen warrants to the original consumer purchaser that this product"
+    " is free from defects in workmanship. Proof of purchase is required."
+)
+
+
+class TestSkipBoilerplate:
+    """A source's boilerplate and other-language copies are skipped by default (#1575)."""
+
+    def _sheet(self):
+        text = "\n\n".join([_ENGLISH, _FRENCH, _WARRANTY])
+        starts = [0, len(_ENGLISH) + 2, len(_ENGLISH) + len(_FRENCH) + 4]
+        return text, starts
+
+    async def test_french_copy_and_warranty_are_skipped_and_reported(self):
+        extraction = _FakeExtraction()
+        text, starts = self._sheet()
+
+        state = await _orchestrator(extraction).execute(
+            _state(text=text, source_id="src-1", page_starts=starts)
+        )
+
+        assert extraction.calls == [_ENGLISH]
+        result = state.result
+        assert [(s["reason"], s["page_first"]) for s in result["skipped_sections"]] == [
+            ("other_language", 2),
+            ("warranty", 3),
+        ]
+        assert result["skipped_sections_by_reason"] == {"other_language": 1, "warranty": 1}
+        assert result["warnings"][0].startswith("Skipped 2 sections as boilerplate")
+        assert [c["page_first"] for c in result["metadata"]["chunks"]] == [1]
+
+    async def test_skip_boilerplate_false_extracts_everything(self):
+        extraction = _FakeExtraction()
+        text, starts = self._sheet()
+
+        state = await _orchestrator(extraction).execute(
+            _state(text=text, source_id="src-1", page_starts=starts, skip_boilerplate=False)
+        )
+
+        read = "".join(extraction.calls)
+        assert "Support se fixe" in read and "Moen warrants" in read
+        assert "skipped_sections" not in state.result
+
+    async def test_pasted_text_is_never_filtered(self):
+        extraction = _FakeExtraction()
+
+        await _orchestrator(extraction).execute(_state(text=_FRENCH))
+
+        assert extraction.calls == [_FRENCH]
+
+    async def test_nothing_left_is_an_input_error_naming_the_switch(self):
+        with pytest.raises(PipelineInputError, match="skip_boilerplate"):
+            await _orchestrator(_FakeExtraction()).execute(_state(text=_FRENCH, source_id="src-1"))
+
+    async def test_skip_boilerplate_must_be_a_boolean(self):
+        with pytest.raises(PipelineInputError, match="skip_boilerplate"):
+            await _orchestrator(_FakeExtraction()).execute(
+                _state(text=_ENGLISH, source_id="src-1", skip_boilerplate="no")
+            )

@@ -92,6 +92,7 @@ def chunk_text(
     page_starts: Sequence[int] | None = None,
     headings: Sequence[Heading] | None = None,
     pages: str | None = None,
+    skip: Sequence[tuple[int, int]] | None = None,
 ) -> list[Chunk]:
     """
     Split ``text`` into chunks of at most ``max_chars`` characters.
@@ -107,6 +108,8 @@ def chunk_text(
         headings: Headings in the text
         pages: Page selection (see parse_page_range); only text on those pages
             is chunked. Needs ``page_starts``.
+        skip: (start, end) spans left out, such as the sections
+            section_filter.skipped_sections finds; no chunk overlaps one
 
     Returns:
         The chunks in text order; empty when there is no text to chunk
@@ -126,7 +129,7 @@ def chunk_text(
     heading_starts = [h.start for h in heading_list]
 
     chunks: list[Chunk] = []
-    for window_start, window_end in _windows(text, starts, pages):
+    for window_start, window_end in _without(selected_spans(text, starts, pages), skip or []):
         heading_cuts = [s for s in heading_starts if window_start < s < window_end]
         page_cuts = [s for s in starts if window_start < s < window_end]
         start = _skip_whitespace(text, window_start, window_end)
@@ -154,8 +157,16 @@ def chunk_text(
     return chunks
 
 
-def _windows(text: str, starts: list[int], pages: str | None) -> list[tuple[int, int]]:
-    """The spans of text to chunk: the whole text, or the selected pages."""
+def selected_spans(
+    text: str, page_starts: Sequence[int], pages: str | None
+) -> list[tuple[int, int]]:
+    """
+    The spans of text a page selection covers: the whole text without one.
+
+    Raises:
+        ValueError: ``pages`` is malformed or given without ``page_starts``
+    """
+    starts = list(page_starts)
     if not pages or not pages.strip():
         return [(0, len(text))]
     if not starts:
@@ -174,6 +185,24 @@ def _windows(text: str, starts: list[int], pages: str | None) -> list[tuple[int,
         (starts[first - 1], starts[last] if last < len(starts) else len(text))
         for first, last in ranges
     ]
+
+
+def _without(
+    spans: list[tuple[int, int]], skip: Sequence[tuple[int, int]]
+) -> list[tuple[int, int]]:
+    """``spans`` with every ``skip`` span cut out of them."""
+    for skip_start, skip_end in sorted(skip):
+        kept: list[tuple[int, int]] = []
+        for start, end in spans:
+            if skip_end <= start or skip_start >= end:
+                kept.append((start, end))
+                continue
+            if start < skip_start:
+                kept.append((start, skip_start))
+            if skip_end < end:
+                kept.append((skip_end, end))
+        spans = kept
+    return spans
 
 
 def _break_point(

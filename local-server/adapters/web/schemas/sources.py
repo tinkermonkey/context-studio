@@ -126,6 +126,13 @@ class SourceExtractRequest(BaseModel):
         alias="schema",
         description="Also run schema extraction, proposing classes and relationship types",
     )
+    skip_boilerplate: bool = Field(
+        True,
+        description=(
+            "Skip warranty, safety, legal and contact sections and copies in other"
+            " languages; each run's output lists the skipped_sections"
+        ),
+    )
 
 
 class SourceExtractRun(BaseModel):

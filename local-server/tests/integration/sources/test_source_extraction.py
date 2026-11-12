@@ -58,6 +58,12 @@ from tests.utils.change_recording import wire_change_recorder
 
 PAGE_1 = ["Whirlpool WRF555SDFZ use and care guide", "The WRF555SDFZ is a Microservice."]
 PAGE_2 = ["Parts and features", "The WRF555SDFZ is made by Acme. Acme Microservice."]
+# The same kind of guide in French, as an install sheet's translated copy (#1575)
+FRENCH_PAGE = [
+    "INSTRUCTIONS D'INSTALLATION",
+    "Support se fixe au mur avec les vis et le ruban de peintre.",
+    "Placez le support sur le mur pour que la station tienne, et serrez les vis a la main.",
+]
 
 
 class FakeExtraction:
@@ -303,6 +309,18 @@ class TestExtractRoute:
             extract(client, source["id"], configuration_ref="extraction-open-v1").status_code == 422
         )
 
+    def test_a_source_of_boilerplate_only_is_extracted_only_when_asked(self, client, app, house):
+        source = add_pdf(client, house, pages=(FRENCH_PAGE,), name="fr.pdf")
+
+        refused = extract(client, source["id"])
+        assert refused.status_code == 422
+        assert "skip_boilerplate" in refused.json()["detail"]
+
+        response = extract(client, source["id"], skip_boilerplate=False)
+        assert response.status_code == 202, response.text
+        [run] = response.json()["runs"]
+        assert app.state.runs.get(run["run_id"]).input_summary["skip_boilerplate"] is False
+
     def test_a_never_extracted_source_has_no_last_extraction(self, client, house):
         source = add_pdf(client, house)
         assert source["last_extraction"] is None
@@ -412,6 +430,21 @@ class TestExtractionToProposal:
 
         operations = parts.proposals.get(done.proposal_id).operations
         assert {e["page"] for o in operations for e in o.evidence} == {2}
+
+    def test_other_language_pages_are_skipped_and_counted(self, client, app, parts, house):
+        source = add_pdf(client, house, pages=(PAGE_1, FRENCH_PAGE, PAGE_2))
+        [run] = extract(client, source["id"]).json()["runs"]
+        app.state.executor.start()
+        done = wait_for(lambda: finished(app, run["run_id"]))
+
+        summary = done.output_summary
+        assert summary["skipped_sections_by_reason"] == {"other_language": 1}
+        [section] = summary["skipped_sections"]
+        assert (section["page_first"], section["page_last"]) == (2, 2)
+        # The English pages either side are read, each as its own chunk
+        assert [c["page_first"] for c in summary["metadata"]["chunks"]] == [1, 3]
+        assert app.state.extraction.calls == 2
+        assert done.proposal_id is not None
 
     def test_extractions_of_other_pages_stay_side_by_side(self, client, app, parts, house):
         source = add_pdf(client, house)
