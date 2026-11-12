@@ -1,81 +1,109 @@
 # Context Studio
 
-Context Studio is a local-first application for building and curating knowledge graphs, and using those graphs for retrieval-augmented generation (RAG) and communication — with both humans and agents.
+A local-first workbench for designing and curating an ontology: the taxonomies, classes, relationship types and individuals that describe a domain. Pipelines, the in-app chat, and agents connected over MCP all suggest changes. Every suggestion waits in one review queue with its rationale and evidence, and what you accept becomes the context that people browse and agents query.
 
-It gives you a workbench for turning unstructured source material into a structured, well-typed ontology: taxonomies, concept schemes, classes, and the typed relationships between them. Once curated, that graph becomes a grounded context layer — something an LLM pipeline can retrieve against instead of hallucinating structure on the fly, and something a human can browse and trust.
+**Agents propose. People decide. The graph becomes everyone's context.**
 
-## Concept
+**→ [Read the field guide](https://tinkermonkey.github.io/context-studio/)** for the idea behind it, a worked example, and a guide to each area of the app with its MCP tools. This README covers getting it running.
 
-Most RAG systems retrieve loose chunks of text and hope the LLM infers the relationships between them. Context Studio inverts that: the relationships *are* the data. Concepts are extracted from source material, matched or merged against existing entities using vector search over curated definitions (not just titles), and wired into an explicit ontology using standard knowledge-representation terms (`Taxonomy`, `ConceptScheme`, `Class`, `Relationship`, `ObjectProperty` — aligned with OWL/RDF/SKOS).
+## Quick start
 
-That process is split into two halves:
+You need Python 3.11 or later, Node.js 24, and an API key for Anthropic, OpenAI or OpenRouter.
 
-- **Curation** — a UI for humans to browse, edit, and approve the graph: creating classes, defining relationships, reviewing what extraction proposed.
-- **Extraction** — an LLM/NLP pipeline that reads source documents, proposes new entities and relationships grounded in the existing graph, and hands them to curation for review.
+1. **Install the back end.**
 
-Because everything is local-first, the graph, the models, and the pipeline configuration all live on the end user's machine — with optional remote sync for sharing or backup — rather than depending on a hosted service.
+   ```bash
+   cd local-server
+   python -m venv .venv
+   .venv/bin/pip install -r requirements.txt
+   cp config.example.json config.json
+   ```
 
-## Architecture
+   Put your key in `config.json` under `llm`: `anthropic_api_key`, `openai_api_key` or `openrouter_api_key`. The file holds secrets, so git ignores it.
 
-Context Studio is designed to be packaged as a desktop app (via Tauri) and run entirely on the end user's workstation.
+2. **Install the front end.**
 
-```
-/app                # Tauri v2 desktop shell — future packaging of /ux as a native app (not yet wired up)
-/documentation       # Product documentation
-/legacy              # REFERENCE ONLY — the previous implementation (frozen, not part of the active build)
-/local-server        # Python back end for the desktop app (active greenfield build)
-/rearchitecture       # Architecture design documents for the new back end
-/ux                  # React front end for the desktop app (Vite build)
-```
+   ```bash
+   cd ux
+   npm install
+   ```
 
-### Back end (`/local-server`)
+3. **Start both servers** from the repo root. `--migrate` creates or upgrades the databases.
 
-- **Stack:** Python, FastAPI, SQLite (with SQLiteVector for embeddings), Alembic migrations, configurable LLM pipelines, remote sync via DuckDB + Parquet
-- **Pattern:** Hexagonal architecture (ports & adapters) organized around six bounded contexts, each owning its own domain entities, ports, and use cases:
-  1. **Ontology Management** — taxonomies, concept schemes, classes, relationships, property definitions
-  2. **Graph Analysis** — in-memory graph construction, traversal, SPARQL, network metrics
-  3. **Knowledge Extraction** — the RAG pipeline, NLP processing, external knowledge enrichment
-  4. **LLM Pipeline Management** — pipeline configuration and execution tracking
-  5. **Version Control & Collaboration** — change events, change proposals (review and apply), revert, sync
-  6. **System Administration** — health, background tasks, configuration
+   ```bash
+   ./dev.sh --migrate
+   ```
 
-The domain layer (`domain/`) has zero infrastructure imports — no FastAPI, no SQLAlchemy, no I/O — so business logic can be tested in isolation and infrastructure can be swapped without touching it. Persistence is split across three SQLite databases: `local.db` (the ontology workspace), `operations.db` (pipeline execution/background tasks), and cached/imported reference data pulled from sources like ConceptNet, DBpedia, and schema.org.
+   The API runs on `:8000` and the UI on `:3100`. Open http://localhost:3100.
 
-### Front end (`/ux`)
+4. **Load something to look at.** On the empty Dashboard, choose **Load Demo Dataset › Software Architecture**, or **Create taxonomy** to start your own. Write the taxonomy's **Vision**: agents read it before they propose anything.
 
-- **Stack:** React, TypeScript, Vite, Flowbite React, Tailwind CSS
-- **State/data:** TanStack Router, Query, Table, and Form; a type-safe API client generated from the back end's OpenAPI spec
-- **Design system:** built on `@tinkermonkey/heimdall-ui`, with a reference prototype under `ux/design/` used as the source of truth for new pages
+From here the field guide's [getting-started path](https://tinkermonkey.github.io/context-studio/#vision) takes you through growing the model from documents and running the review loop.
 
-The front end is built strictly after the corresponding back-end API is implemented and validated — API contracts and generated types come first, then hooks and services, then the UX workflows that use them.
+## Connect an agent (MCP)
 
-### Configuration (`local-server/config.json`)
-
-The back end reads `local-server/config.json` (or the file `CONFIG_PATH` names). Each machine has its own copy, and git ignores it because it holds secrets: LLM API keys and the MCP token. On first start without one, the back end writes the defaults. To start from the repository's settings instead, copy `local-server/config.example.json` to `local-server/config.json` before the first start.
-
-### MCP server (`/mcp`)
-
-The running back end serves an MCP server at `/mcp`, so Claude Code and other MCP clients can read the workspace. It offers the same read-only tools as the in-app chat (`list_taxonomies`, `search_entities`, `get_entity`, and the list, neighbor and path tools), plus each taxonomy's vision statement as a markdown resource. Tool results include links to the entity pages in the app (base URL from `server.ui_base_url` in `config.json`; null turns links off).
-
-Every request to `/mcp` needs a bearer token: without `Authorization: Bearer <token>` it gets a 401. On first start the back end generates the token and saves it as `mcp.auth_token` in `config.json`. To issue a new one, clear the value and restart; registered clients then need the new token.
-
-To connect Claude Code, open **Settings → Integrations** in the app. It shows the token and a ready-to-paste command for this server's host and port:
+The back end serves an MCP server at `http://127.0.0.1:8000/mcp`. Open **Configuration › Integrations** in the app for the token and a ready-to-paste command:
 
 ```bash
 claude mcp add --transport http context-studio http://127.0.0.1:8000/mcp \
-  --header "Authorization: Bearer <token from Settings → Integrations>"
+  --header "Authorization: Bearer <token from Configuration › Integrations>"
 ```
 
-The server only starts when `server.host` is a loopback address. It also refuses requests whose `Host` or `Origin` header is not local, so a web page cannot reach it through the browser. The settings endpoint that hands the token to the UI (`GET /api/v1/admin/mcp`) is narrower still, and it does not rely on CORS. It only answers while the MCP server runs, to a loopback client under a loopback `Host` header. The request must also carry either no `Origin` header (same-origin and command-line callers) or the UI's own origin: `server.ui_base_url`, or an entry in `server.cors_origins` other than `*`.
+Agents can search and traverse the model, propose changes for review, add and extract sources, start refinement runs and submit claims. The [Agents guide](https://tinkermonkey.github.io/context-studio/#agents) lists all 26 tools.
 
-### CORS and the REST API
+The token is generated on first start and saved as `mcp.auth_token` in `config.json`. To rotate it, clear the value and restart. The MCP server only starts when `server.host` is a loopback address.
 
-Only the app's own UI may call the back end from a browser. The allowed origins are the origin of `server.ui_base_url` (`http://localhost:3100` by default) plus each entry in `server.cors_origins`. A `*` entry is ignored, with a warning at startup. If you open the UI at another origin, such as `http://127.0.0.1:3100`, or package it as a desktop app (Tauri uses `tauri://localhost`, or `http://tauri.localhost` on Windows), add that origin to `server.cors_origins` in `config.json`.
+## Where to go next
 
-CORS approval alone does not stop another page from sending a request it cannot read the answer to, so the back end also refuses (403) every request whose `Origin` header is neither an allowed origin nor the back end's own. Requests without an `Origin` header, such as `curl` and MCP clients, are not affected. While `server.host` is a loopback address, it also refuses requests whose `Host` header is not `localhost`, `127.x.x.x` or `::1`, which blocks DNS-rebinding pages.
+| To… | Read |
+| --- | --- |
+| Understand the idea and see a worked example | [Vision](https://tinkermonkey.github.io/context-studio/#vision) |
+| Design taxonomies, classes and relationship types | [Schema](https://tinkermonkey.github.io/context-studio/#schema) |
+| Keep datasets apart and trace where facts came from | [Data](https://tinkermonkey.github.io/context-studio/#data) |
+| Review, apply and revert changes | [Proposals](https://tinkermonkey.github.io/context-studio/#proposals) |
+| Triage review notes | [Claims](https://tinkermonkey.github.io/context-studio/#claims) |
+| Turn documents into cited facts | [Sources](https://tinkermonkey.github.io/context-studio/#sources) |
+| Configure and audit LLM pipelines | [Pipelines](https://tinkermonkey.github.io/context-studio/#pipelines) |
+| Explore the graph and ask questions | [Graph & chat](https://tinkermonkey.github.io/context-studio/#explore) |
+| See what works today and what's planned | [Where it stands](https://tinkermonkey.github.io/context-studio/#vision) |
 
-**Residual risk:** the REST API (`/api/...`) is still unauthenticated. Anything that can reach the back end's port can read and change the workspace, including other processes on the same machine. The origin and host checks limit what web pages can do in a browser; they are not authentication. Keep `server.host` on a loopback address. The Vite dev server (`npm run dev`) listens on every network interface and proxies `/api` to the back end on `127.0.0.1`. So while it runs, other machines on your network can reach the REST API through port 3100, and the back end sees them as local; that includes `GET /api/v1/admin/mcp` and the MCP token.
+## Repository layout
+
+```
+/local-server     Python back end: FastAPI, SQLite, Alembic, LLM pipelines, MCP server
+/ux               React front end (Vite, TanStack, Heimdall design system)
+/documentation    Product documentation, including the field guide's source
+/rearchitecture   Design documents for the back end
+/app              Tauri desktop shell, not yet wired up
+/legacy           The previous implementation, frozen, for reference only
+```
+
+The back end follows a hexagonal (ports and adapters) design; `domain/` has no infrastructure imports. See [architecture_design.md](rearchitecture/architecture_design.md) and the [ontology workbench proposal](rearchitecture/ontology_workbench_proposal.md). [CLAUDE.md](CLAUDE.md) holds the working conventions for contributors and agents.
+
+## Development
+
+```bash
+# Back end (from local-server/)
+.venv/bin/pytest tests/unit -q
+.venv/bin/python scripts/check_domain_imports.py
+
+# Front end (from ux/)
+npm run typecheck
+npm test
+```
+
+When the API changes, run `local-server/scripts/update_api_specs.py`, then `npm run generate-types` in `ux/`.
+
+The field guide is a single HTML page at [documentation/field-guide/index.html](documentation/field-guide/index.html). A push to `main` that changes it republishes the site.
+
+## Configuration and security
+
+The back end reads `local-server/config.json`, or the file `CONFIG_PATH` names. Without one, it writes the defaults on first start.
+
+Only the app's own UI may call the API from a browser. The allowed origins are the origin of `server.ui_base_url` (`http://localhost:3100` by default) plus each entry in `server.cors_origins`. If you open the UI at another origin, such as `http://127.0.0.1:3100` or a Tauri build, add that origin to `server.cors_origins`. A `*` entry is ignored. The back end refuses (403) browser requests from any other origin and, while it listens on loopback, requests with a non-local `Host` header.
+
+**Residual risk:** the REST API itself has no login. Anything that can reach the back end's port can read and change the workspace, including other processes on the same machine. Keep `server.host` on a loopback address. The Vite dev server listens on every network interface and proxies `/api`, so while `npm run dev` runs, other machines on your network can reach the API through port 3100, including the endpoint that returns the MCP token.
 
 ## Status
 
-The back end is an active greenfield rebuild replacing a frozen legacy implementation (kept under `/legacy` for reference only, with no backwards-compatibility requirement). The front end is being built out page by page against the new API as each capability lands on the back end.
+Active development. The back end is a greenfield rebuild; the front end is built page by page as each capability lands. The field guide's [Where it stands](https://tinkermonkey.github.io/context-studio/#vision) section lists what works today, what's in progress and what's planned, and [#1322](https://github.com/tinkermonkey/context-studio/issues/1322) tracks open work.

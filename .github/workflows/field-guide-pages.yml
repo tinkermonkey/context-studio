@@ -1,0 +1,37 @@
+name: Field guide (GitHub Pages)
+
+# Publishes documentation/field-guide/ to https://tinkermonkey.github.io/context-studio/
+# whenever the guide changes on main.
+"on":
+  push:
+    branches: [ main ]
+    paths:
+      - 'documentation/field-guide/**'
+      - '.github/workflows/field-guide-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy the field guide
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: documentation/field-guide
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,1863 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Context Studio field guide: the idea, a worked example, how to get started, and a guide to each area of the app and its MCP tools.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fbbf24'/%3E%3Cstop offset='1' stop-color='%23b45309'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='7' fill='url(%23g)'/%3E%3Ctext x='16' y='21' font-family='monospace' font-weight='700' font-size='13' text-anchor='middle' fill='%231a1205'%3ECS%3C/text%3E%3C/svg%3E">
+<title>Context Studio Field Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: Heimdall two-surface shell. Dark slate shell (sidebar, topbar, statusbar) in every theme;
+   the canvas is light by default and dark navy in dark mode, notched 8px into the shell at top-left. */
+:root {
+  --shell-bg: #0f1729;
+  --shell-bg-2: #13203a;
+  --shell-surface: #1b2949;
+  --shell-border: #1e2a44;
+  --shell-border-2: #2a3a5c;
+  --shell-fg-1: #e6edf3;
+  --shell-fg-2: #a6b1bd;
+  --shell-fg-3: #7d8997;
+  --amber: #fbbf24;
+  --amber-deep: #b45309;
+
+  --canvas-bg: #ffffff;
+  --canvas-bg-2: #f7f9fb;
+  --canvas-card: #ffffff;
+  --canvas-fg-1: #0b1220;
+  --canvas-fg-2: #475569;
+  --canvas-fg-3: #64748b;
+  --canvas-border: #e5e9ee;
+  --canvas-border-strong: #d6dce3;
+
+  --accent-ink: #b45309;
+  --accent-tint: rgba(251, 191, 36, 0.10);
+  --accent-line: rgba(180, 83, 9, 0.35);
+  --ok: #15803d;
+  --ok-tint: rgba(16, 185, 129, 0.10);
+  --warn: #92400e;
+  --warn-tint: rgba(245, 158, 11, 0.08);
+  --warn-line: rgba(245, 158, 11, 0.35);
+  --err: #be123c;
+  --d-indigo: #4f46e5;
+  --d-emerald: #047857;
+  --d-cyan: #0e7490;
+  --d-violet: #6d28d9;
+  --d-amber: #b45309;
+  --d-rose: #be123c;
+  --d-slate: #475569;
+  --graph-edge: #aab4c2;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --canvas-bg: #0b1426;
+    --canvas-bg-2: #13203a;
+    --canvas-card: #111c33;
+    --canvas-fg-1: #e2e8f0;
+    --canvas-fg-2: #a3b1c4;
+    --canvas-fg-3: #8593a8;
+    --canvas-border: #22314f;
+    --canvas-border-strong: #354973;
+    --accent-ink: #fbbf24;
+    --accent-tint: rgba(251, 191, 36, 0.10);
+    --accent-line: rgba(251, 191, 36, 0.35);
+    --ok: #34d399;
+    --ok-tint: rgba(16, 185, 129, 0.12);
+    --warn: #fcd34d;
+    --warn-tint: rgba(245, 158, 11, 0.08);
+    --warn-line: rgba(245, 158, 11, 0.35);
+    --err: #fb7185;
+    --d-indigo: #818cf8;
+    --d-emerald: #34d399;
+    --d-cyan: #22d3ee;
+    --d-violet: #a78bfa;
+    --d-amber: #fbbf24;
+    --d-rose: #fb7185;
+    --d-slate: #94a3b8;
+  --graph-edge: #4a5d85;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --canvas-bg: #0b1426;
+  --canvas-bg-2: #13203a;
+  --canvas-card: #111c33;
+  --canvas-fg-1: #e2e8f0;
+  --canvas-fg-2: #a3b1c4;
+  --canvas-fg-3: #8593a8;
+  --canvas-border: #22314f;
+  --canvas-border-strong: #354973;
+  --accent-ink: #fbbf24;
+  --accent-tint: rgba(251, 191, 36, 0.10);
+  --accent-line: rgba(251, 191, 36, 0.35);
+  --ok: #34d399;
+  --ok-tint: rgba(16, 185, 129, 0.12);
+  --warn: #fcd34d;
+  --warn-tint: rgba(245, 158, 11, 0.08);
+  --warn-line: rgba(245, 158, 11, 0.35);
+  --err: #fb7185;
+  --d-indigo: #818cf8;
+  --d-emerald: #34d399;
+  --d-cyan: #22d3ee;
+  --d-violet: #a78bfa;
+  --d-amber: #fbbf24;
+  --d-rose: #fb7185;
+  --d-slate: #94a3b8;
+  --graph-edge: #4a5d85;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--shell-bg); }
+body { margin: 0; }
+body {
+  background: var(--shell-bg);
+  color: var(--canvas-fg-1);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: rgba(251, 191, 36, 0.25); }
+a { color: inherit; }
+:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.35); border-radius: 4px; }
+code, .mono { font-family: var(--font-mono); }
+
+/* ---------- shell ---------- */
+.app {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  min-height: 100vh;
+}
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--shell-bg-2);
+  border-right: 1px solid var(--shell-border);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 16px 12px 16px max(12px, env(safe-area-inset-left, 0px));
+  color: var(--shell-fg-2);
+}
+.brand { display: flex; align-items: center; gap: 10px; padding: 2px 6px 0; text-decoration: none; }
+.brand-mark {
+  width: 30px; height: 30px; border-radius: 6px; flex: none;
+  background: linear-gradient(135deg, #fbbf24, #b45309);
+  display: grid; place-items: center;
+  font: 700 12px/1 var(--font-mono); color: #1a1205; letter-spacing: -0.02em;
+}
+.brand-name { color: var(--shell-fg-1); font-weight: 600; font-size: 14px; letter-spacing: -0.01em; }
+.brand-sub { font: 500 10px/1.2 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--shell-fg-3); }
+.nav { display: flex; flex-direction: column; gap: 16px; }
+.nav-group { display: flex; flex-direction: column; gap: 2px; }
+.nav-label {
+  font: 500 10px/1 var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--shell-fg-3); padding: 0 10px 6px;
+}
+.nav a {
+  position: relative;
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: 6px;
+  color: var(--shell-fg-2); text-decoration: none; font-weight: 500; font-size: 13.5px;
+  transition: background 120ms ease, color 120ms ease;
+  white-space: nowrap;
+}
+.nav a:hover { background: var(--shell-surface); color: var(--shell-fg-1); }
+.nav a[aria-current="page"] { background: var(--shell-surface); color: var(--shell-fg-1); }
+.nav a[aria-current="page"]::before {
+  content: ""; position: absolute; left: -12px; top: 6px; bottom: 6px; width: 2px; background: var(--amber); border-radius: 0 2px 2px 0;
+}
+.nav a svg { flex: none; color: var(--shell-fg-3); }
+.nav a[aria-current="page"] svg { color: var(--amber); }
+.nav .count { margin-left: auto; font: 500 10.5px/1 var(--font-mono); color: var(--shell-fg-3); }
+.sidebar-foot {
+  margin-top: auto; padding: 10px; border: 1px solid var(--shell-border); border-radius: 8px;
+  font-size: 12px; color: var(--shell-fg-3); line-height: 1.5;
+}
+.sidebar-foot strong { color: var(--shell-fg-2); font-weight: 500; }
+
+.main { display: flex; flex-direction: column; min-width: 0; }
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  min-height: 48px;
+  padding: 8px max(20px, env(safe-area-inset-right, 0px)) 8px 20px;
+  background: var(--shell-bg-2);
+  border-bottom: 1px solid var(--shell-border);
+  color: var(--shell-fg-2);
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--shell-bg-2); }
+.crumbs { font: 500 12px/1 var(--font-mono); color: var(--shell-fg-3); display: flex; gap: 8px; align-items: center; min-width: 0; }
+.crumbs b { color: var(--shell-fg-1); font-weight: 500; }
+.topbar-chips { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.env-pill {
+  font: 500 11px/1 var(--font-mono); padding: 5px 9px; border-radius: 999px;
+  border: 1px solid rgba(251, 191, 36, 0.28); background: rgba(251, 191, 36, 0.10); color: var(--amber);
+}
+.shell-chip {
+  font: 500 11px/1 var(--font-mono); padding: 5px 8px; border-radius: 4px;
+  border: 1px solid var(--shell-border-2); color: var(--shell-fg-2);
+}
+.canvas {
+  flex: 1;
+  background: var(--canvas-bg);
+  border-top-left-radius: 8px;
+  margin-top: 6px;
+  min-width: 0;
+}
+.canvas-inner {
+  max-width: 1120px;
+  padding-block: 26px 40px;
+  padding-left: 28px;
+  padding-right: max(28px, env(safe-area-inset-right, 0px));
+}
+.statusbar {
+  display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center;
+  padding: 7px max(20px, env(safe-area-inset-right, 0px)) 7px 20px;
+  background: var(--shell-bg-2); border-top: 1px solid var(--shell-border);
+  font: 500 11px/1.3 var(--font-mono); color: var(--shell-fg-3);
+}
+.statusbar .live { display: inline-flex; align-items: center; gap: 7px; color: var(--shell-fg-2); }
+.dot { position: relative; width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block; }
+.dot::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; background: #10b981;
+  animation: pulse 1.6s ease-out infinite;
+}
+@keyframes pulse { from { transform: scale(0.6); opacity: 0.5; } to { transform: scale(2.2); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .dot::after { animation: none; } * { transition: none !important; } }
+
+/* ---------- page typography ---------- */
+.page { display: flex; flex-direction: column; gap: 28px; }
+.page-head { display: flex; flex-direction: column; gap: 8px; max-width: 760px; }
+.eyebrow {
+  font: 500 10.5px/1 var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--canvas-fg-3);
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+}
+.eyebrow .tag { color: var(--accent-ink); }
+h1 { margin: 0; font-size: 26px; line-height: 1.2; font-weight: 700; letter-spacing: -0.022em; text-wrap: balance; }
+.hero h1 { font-size: 34px; letter-spacing: -0.028em; }
+.lede { margin: 0; color: var(--canvas-fg-2); font-size: 15.5px; line-height: 1.6; max-width: 68ch; }
+h2 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -0.015em; text-wrap: balance; }
+h3 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+p { margin: 0; }
+.muted { color: var(--canvas-fg-2); }
+.small { font-size: 12.5px; }
+.section { display: flex; flex-direction: column; gap: 12px; }
+.section-head { display: flex; flex-direction: column; gap: 4px; }
+.section-head p { color: var(--canvas-fg-2); max-width: 72ch; }
+
+/* ---------- primitives ---------- */
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font: 500 11.5px/1 var(--font-mono); padding: 4px 7px; border-radius: 4px;
+  border: 1px solid var(--canvas-border-strong); background: var(--canvas-bg-2); color: var(--canvas-fg-2);
+  white-space: nowrap;
+}
+.chip.accent { border-color: var(--accent-line); background: var(--accent-tint); color: var(--accent-ink); }
+.chip.ok { border-color: rgba(16, 185, 129, 0.3); background: var(--ok-tint); color: var(--ok); }
+.chip.warn { border-color: var(--warn-line); background: var(--warn-tint); color: var(--warn); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+code.inline {
+  font-size: 12.5px; padding: 1px 5px; border-radius: 4px;
+  background: var(--canvas-bg-2); border: 1px solid var(--canvas-border); color: var(--canvas-fg-1);
+  overflow-wrap: anywhere;
+}
+.panel {
+  border: 1px solid var(--canvas-border); border-radius: 8px; background: var(--canvas-card);
+  min-width: 0;
+}
+.panel-head {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 11px 16px; border-bottom: 1px solid var(--canvas-border);
+  background: var(--canvas-bg-2); border-radius: 8px 8px 0 0;
+}
+.panel-head .eyebrow { color: var(--canvas-fg-2); }
+.panel-head .right { margin-left: auto; }
+.panel-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+
+/* stat tiles: 2px colored left bar keyed to the metric */
+.stat {
+  position: relative; padding: 14px 16px 14px 18px; border: 1px solid var(--canvas-border); border-radius: 8px;
+  background: var(--canvas-card); display: flex; flex-direction: column; gap: 6px; overflow: hidden;
+}
+.stat::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--bar, var(--amber)); }
+.stat .num { font: 700 28px/1 var(--font-mono); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.stat .label { font: 500 10.5px/1.2 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--canvas-fg-3); }
+.stat .note { font-size: 12.5px; color: var(--canvas-fg-2); }
+
+/* the one-door diagram */
+.door {
+  display: grid; grid-template-columns: 1.1fr 0.9fr 1fr 1.1fr; gap: 0; align-items: stretch;
+  border: 1px solid var(--canvas-border); border-radius: 8px; background: var(--canvas-bg-2); overflow: hidden;
+}
+.door-col { padding: 14px; display: flex; flex-direction: column; gap: 8px; position: relative; min-width: 0; }
+.door-col + .door-col { border-left: 1px dashed var(--canvas-border-strong); }
+.door-col + .door-col::before {
+  content: ""; position: absolute; left: -6px; top: 50%; width: 10px; height: 10px; margin-top: -5px;
+  border-top: 1px solid var(--canvas-fg-3); border-right: 1px solid var(--canvas-fg-3);
+  transform: rotate(45deg); background: var(--canvas-bg-2);
+}
+.door-col .eyebrow { margin-bottom: 2px; }
+.door-col .eyebrow b { color: var(--canvas-fg-1); font-weight: 600; }
+.node {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 6px; border: 1px solid var(--canvas-border-strong);
+  background: var(--canvas-card); text-decoration: none; font-size: 13px; font-weight: 500;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.node:hover { border-color: var(--accent-line); }
+.node .sw { width: 3px; align-self: stretch; border-radius: 2px; background: var(--c, var(--d-slate)); flex: none; }
+.node small { display: block; font-weight: 400; color: var(--canvas-fg-3); font-size: 11.5px; }
+.node.focus { border-color: var(--accent-line); background: var(--accent-tint); }
+
+/* stage ladder */
+.ladder { display: flex; flex-direction: column; border: 1px solid var(--canvas-border); border-radius: 8px; overflow: hidden; background: var(--canvas-card); }
+.rung {
+  display: grid; grid-template-columns: 56px minmax(0, 1.25fr) minmax(0, 1fr); gap: 0;
+  border-top: 1px solid var(--canvas-border);
+}
+.rung:first-child { border-top: 0; }
+.rung > div { padding: 14px 16px; min-width: 0; }
+.rung .n {
+  font: 600 13px/1 var(--font-mono); color: var(--canvas-fg-3); background: var(--canvas-bg-2);
+  border-right: 1px solid var(--canvas-border); display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 16px;
+}
+.rung .n span { font-size: 9.5px; letter-spacing: 0.1em; }
+.rung .do { display: flex; flex-direction: column; gap: 6px; }
+.rung .get { border-left: 1px dashed var(--canvas-border); display: flex; flex-direction: column; gap: 6px; }
+.rung .get .eyebrow { color: var(--ok); }
+.rung .do .eyebrow { color: var(--canvas-fg-3); }
+.rung.value .n { color: var(--accent-ink); }
+
+/* flow strip (pipeline card) */
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 0; row-gap: 10px; }
+.flow .step {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 8px 11px; border: 1px solid var(--canvas-border-strong); border-radius: 6px; background: var(--canvas-card);
+  font-size: 12.5px; font-weight: 500; max-width: 200px;
+}
+.flow .step small { font: 400 11px/1.35 var(--font-mono); color: var(--canvas-fg-3); }
+.flow .step.hl { border-color: var(--accent-line); background: var(--accent-tint); }
+.flow .link { width: 26px; height: 1px; background: var(--canvas-fg-3); position: relative; flex: none; }
+.flow .link::after {
+  content: ""; position: absolute; right: 0; top: -3px; width: 6px; height: 6px;
+  border-top: 1px solid var(--canvas-fg-3); border-right: 1px solid var(--canvas-fg-3); transform: rotate(45deg);
+}
+
+/* workflows: UX steps vs agent tool calls */
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.steps li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; padding: 9px 0; border-top: 1px dashed var(--canvas-border); }
+.steps li:first-child { border-top: 0; padding-top: 0; }
+.steps .k {
+  width: 22px; height: 22px; border-radius: 4px; border: 1px solid var(--canvas-border-strong); background: var(--canvas-bg-2);
+  font: 600 11px/20px var(--font-mono); text-align: center; color: var(--canvas-fg-2);
+}
+.steps .where { display: block; font: 500 11.5px/1.4 var(--font-mono); color: var(--accent-ink); margin-bottom: 2px; overflow-wrap: anywhere; }
+.term {
+  background: var(--shell-bg); color: var(--shell-fg-2); border: 1px solid var(--shell-border-2); border-radius: 8px;
+  font: 400 12.5px/1.65 var(--font-mono); overflow-x: auto; min-width: 0;
+}
+.term-head {
+  display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--shell-border);
+  font: 500 10.5px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--shell-fg-3);
+}
+.term-head .right { margin-left: auto; letter-spacing: 0; text-transform: none; }
+.term pre { margin: 0; padding: 12px 14px; white-space: pre; }
+.term .t { color: #fbbf24; }
+.term .c { color: #6e7a87; }
+.term .a { color: #e6edf3; }
+.term .s { color: #34d399; }
+.copy {
+  font: 500 11px/1 var(--font-mono); color: var(--shell-fg-2); background: transparent; border: 1px solid var(--shell-border-2);
+  border-radius: 4px; padding: 5px 8px; cursor: pointer;
+}
+.copy:hover { color: var(--shell-fg-1); border-color: var(--shell-fg-3); }
+
+/* use cases */
+.case { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border: 1px solid var(--canvas-border); border-radius: 8px; background: var(--canvas-card); }
+.case .who { font: 500 10.5px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--canvas-fg-3); }
+.case p { color: var(--canvas-fg-2); font-size: 13.5px; }
+
+/* area cards on vision */
+.area {
+  display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; text-decoration: none;
+  border: 1px solid var(--canvas-border); border-radius: 8px; background: var(--canvas-card);
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.area:hover { border-color: var(--accent-line); background: var(--canvas-bg-2); }
+.area-top { display: flex; align-items: center; gap: 9px; }
+.area-ic { width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center; border: 1px solid var(--canvas-border-strong); color: var(--c); flex: none; }
+.area h3 { font-size: 14px; }
+.area p { color: var(--canvas-fg-2); font-size: 13px; }
+.area .route { margin-top: auto; font: 500 11.5px/1 var(--font-mono); color: var(--canvas-fg-3); }
+
+/* values */
+.value { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border-top: 1px solid var(--canvas-border); }
+.values { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 20px; }
+.value h3 { display: flex; gap: 8px; align-items: center; }
+.value h3 svg { color: var(--ok); flex: none; }
+.value p { color: var(--canvas-fg-2); font-size: 13.5px; }
+.callout {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center;
+  padding: 16px 18px; border: 1px solid var(--accent-line); background: var(--accent-tint); border-radius: 8px;
+}
+.callout .big { font: 700 30px/1 var(--font-mono); color: var(--accent-ink); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.callout p { color: var(--canvas-fg-2); }
+.callout b { color: var(--canvas-fg-1); font-weight: 600; }
+
+/* limits (AlertStrip-style) */
+.limits { border: 1px solid var(--warn-line); background: var(--warn-tint); border-radius: 8px; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+.limits .eyebrow { color: var(--warn); }
+.limits ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; color: var(--canvas-fg-2); font-size: 13px; }
+
+/* connects-to */
+.links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.xlink {
+  display: flex; flex-direction: column; gap: 4px; padding: 11px 14px; border: 1px solid var(--canvas-border); border-radius: 8px;
+  text-decoration: none; background: var(--canvas-card); transition: border-color 120ms ease;
+}
+.xlink:hover { border-color: var(--accent-line); }
+.xlink .to { font: 500 10.5px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-ink); }
+.xlink b { font-weight: 600; font-size: 13.5px; }
+.xlink span { color: var(--canvas-fg-2); font-size: 12.5px; }
+
+/* tables */
+.table-wrap { overflow-x: auto; border: 1px solid var(--canvas-border); border-radius: 8px; background: var(--canvas-card); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th {
+  text-align: left; font: 500 10.5px/1.2 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--canvas-fg-3); background: var(--canvas-bg-2); padding: 9px 14px; border-bottom: 1px solid var(--canvas-border);
+}
+td { padding: 9px 14px; border-top: 1px solid var(--canvas-border); vertical-align: top; color: var(--canvas-fg-2); }
+tr:first-child td { border-top: 0; }
+td:first-child { color: var(--canvas-fg-1); white-space: nowrap; }
+td code { font-size: 12px; color: var(--canvas-fg-1); }
+
+/* hierarchy tree */
+.tree { list-style: none; margin: 0; padding: 0; font: 500 12.5px/1 var(--font-mono); }
+.tree li { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-top: 1px dashed var(--canvas-border); }
+.tree li:first-child { border-top: 0; }
+.tree .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px 4px 0; border: 1px solid var(--canvas-border-strong); border-radius: 4px; background: var(--canvas-card); overflow: hidden; }
+.tree .pill::before { content: ""; width: 3px; align-self: stretch; margin: -4px 4px -4px 0; background: var(--c, var(--d-slate)); }
+.tree .kind { color: var(--canvas-fg-3); font-size: 11px; }
+.tree .l1 { padding-left: 18px; } .tree .l2 { padding-left: 36px; } .tree .l3 { padding-left: 54px; }
+
+.divider { height: 1px; background: var(--canvas-border); }
+.next { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.next a { font: 500 12.5px/1 var(--font-mono); color: var(--canvas-fg-2); text-decoration: none; padding: 8px 10px; border: 1px solid var(--canvas-border); border-radius: 6px; }
+.next a:hover { color: var(--accent-ink); border-color: var(--accent-line); }
+
+
+/* in the box */
+.box { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--canvas-border); border-radius: 8px; background: var(--canvas-card); }
+.box-item { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.box-item + .box-item { border-left: 1px dashed var(--canvas-border); }
+.box-item p { font-size: 13px; color: var(--canvas-fg-2); }
+.canvas a:not(.node):not(.area):not(.xlink):not(.tarea):not(.kg-link) { color: var(--accent-ink); text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: 2px; }
+.canvas a:not(.node):not(.area):not(.xlink):not(.tarea):not(.kg-link):hover { text-decoration-color: currentColor; }
+/* the idea table */
+table.idea td:first-child { font: 500 11.5px/1.4 var(--font-mono); color: var(--canvas-fg-3); text-transform: uppercase; letter-spacing: 0.06em; }
+table.idea td:nth-child(3) { color: var(--canvas-fg-1); }
+table.idea th:nth-child(3) { color: var(--accent-ink); }
+/* thread */
+.thread { display: flex; flex-direction: column; }
+.trow { display: grid; grid-template-columns: 104px minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 10px 16px; border-top: 1px dashed var(--canvas-border); }
+.trow:first-child { border-top: 0; }
+.trow.hl { background: var(--accent-tint); }
+.tkind { font: 500 10.5px/1.6 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--canvas-fg-3); }
+.tbody { display: block; min-width: 0; font-size: 13.5px; font-weight: 500; line-height: 1.5; }
+.tbody > code { font-size: 12.5px; overflow-wrap: anywhere; }
+.tbody > span:not(.chip) { display: block; margin-top: 3px; font-weight: 400; color: var(--canvas-fg-2); font-size: 13px; }
+.tbody > .chip { margin-left: 4px; vertical-align: 1px; }
+.tarea { font: 500 11px/1.6 var(--font-mono); color: var(--canvas-fg-3); text-decoration: none; white-space: nowrap; }
+.tarea:hover { color: var(--accent-ink); }
+.ask { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border: 1px solid var(--canvas-border); border-radius: 8px; background: var(--canvas-bg-2); }
+.ask p { color: var(--canvas-fg-2); font-size: 13px; }
+.ask .via { margin-top: auto; font: 500 11px/1.4 var(--font-mono); color: var(--accent-ink); }
+/* checks and status lists */
+.checks, .slist { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 7px; font-size: 13px; color: var(--canvas-fg-2); }
+.checks li, .slist li { position: relative; padding-left: 16px; }
+.checks li::before { content: ""; position: absolute; left: 2px; top: 6px; width: 7px; height: 4px; border-left: 1.5px solid var(--ok); border-bottom: 1.5px solid var(--ok); transform: rotate(-45deg); }
+.slist li::before { content: ""; position: absolute; left: 3px; top: 8px; width: 5px; height: 5px; border-radius: 50%; background: var(--canvas-fg-3); }
+.rung h3 { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.rung .do .term { margin-top: 4px; }
+.rung .do .term pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 1000px) { .box { grid-template-columns: repeat(2, minmax(0, 1fr)); } .box-item:nth-child(3) { border-left: 0; } .box-item:nth-child(n+3) { border-top: 1px dashed var(--canvas-border); } }
+@media (max-width: 820px) { .trow { grid-template-columns: minmax(0, 1fr) auto; } .tkind { grid-column: 1 / -1; } }
+@media (max-width: 560px) { .box { grid-template-columns: minmax(0, 1fr); } .box-item + .box-item { border-left: 0; border-top: 1px dashed var(--canvas-border); } }
+
+
+/* hero concept graph (Heimdall GraphCanvas look: card nodes, swatch, kind chip, label pills, dot grid) */
+.kg { border: 1px solid var(--canvas-border); border-radius: 8px; background: var(--canvas-bg); overflow: hidden; }
+.kg-head { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 1px solid var(--canvas-border); background: var(--canvas-bg-2); }
+.kg-head .right { margin-left: auto; }
+.kg-svg { display: block; width: 100%; }
+.kg-dot { fill: var(--canvas-fg-3); opacity: 0.3; }
+.kg-node .box { fill: var(--canvas-card); stroke: var(--canvas-border-strong); stroke-width: 1; transition: stroke 100ms ease; }
+.kg-node a:hover .box, .kg-node a:focus-visible .box { stroke: var(--amber-deep); }
+.kg-node a { cursor: pointer; outline: none; }
+.kg-node .ring { fill: none; stroke: var(--amber); stroke-width: 2; }
+.kg-node.sel .box { stroke: var(--amber-deep); }
+.kg-node .lbl { font: 500 13px var(--font-sans); fill: var(--canvas-fg-1); dominant-baseline: central; }
+.kg-node.sel .lbl { font-weight: 600; }
+.kg-node .kind-bg { fill: var(--canvas-bg-2); stroke: var(--canvas-border); }
+.kg-node .kind { font: 600 9.5px var(--font-mono); letter-spacing: 0.05em; fill: var(--canvas-fg-3); dominant-baseline: central; text-transform: uppercase; }
+.kg-edge .line { fill: none; stroke: var(--graph-edge); stroke-width: 1.25; }
+.kg-edge.hot .line { stroke: var(--amber); stroke-width: 1.75; }
+.kg-arrow { fill: var(--graph-edge); }
+.kg-arrow.hot { fill: var(--amber); }
+.kg-edge .lbg { fill: var(--canvas-bg); stroke: var(--canvas-border); }
+.kg-edge.hot .lbg { fill: var(--amber-deep); stroke: var(--amber-deep); }
+.kg-edge .ltx { font: 500 10.5px var(--font-mono); fill: var(--canvas-fg-2); text-anchor: middle; dominant-baseline: central; }
+.kg-edge.hot .ltx { fill: #ffffff; font-weight: 600; }
+.kg-foot { padding: 8px 14px; border-top: 1px dashed var(--canvas-border); font-size: 12.5px; color: var(--canvas-fg-2); }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1000px) {
+  .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .door { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .door-col:nth-child(3) { border-left: 0; border-top: 1px dashed var(--canvas-border-strong); }
+  .door-col:nth-child(3)::before { display: none; }
+  .door-col:nth-child(4) { border-top: 1px dashed var(--canvas-border-strong); }
+  .values { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 820px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .sidebar {
+    position: static; height: auto; flex-direction: row; align-items: center; gap: 12px;
+    padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
+    border-right: 0; border-bottom: 1px solid var(--shell-border); overflow-x: auto;
+  }
+  .brand-sub, .sidebar-foot, .nav-label, .nav .count { display: none; }
+  .brand-name { display: none; }
+  .nav { flex-direction: row; gap: 2px; }
+  .nav-group { flex-direction: row; gap: 2px; }
+  .nav a[aria-current="page"]::before { left: 8px; right: 8px; top: auto; bottom: -1px; width: auto; height: 2px; }
+  .topbar { position: static; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .canvas { margin-top: 0; }
+  .canvas-inner { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 32px; }
+  .statusbar { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .grid-2, .grid-3, .links { grid-template-columns: minmax(0, 1fr); }
+  .hero h1 { font-size: 28px; }
+}
+@media (max-width: 560px) {
+  .grid-4, .door, .values { grid-template-columns: minmax(0, 1fr); }
+  .door-col + .door-col { border-left: 0; border-top: 1px dashed var(--canvas-border-strong); }
+  .door-col + .door-col::before { left: 50%; top: -6px; margin: 0 0 0 -5px; transform: rotate(135deg); display: block; }
+  .rung { grid-template-columns: 44px minmax(0, 1fr); }
+  .rung .get { grid-column: 2; border-left: 0; border-top: 1px dashed var(--canvas-border); }
+  .rung .n { grid-row: span 2; }
+  .callout { grid-template-columns: minmax(0, 1fr); }
+  .flow .link { width: 16px; }
+  .topbar-chips .shell-chip { display: none; }
+}
+</style>
+</head>
+<body>
+
+
+<div class="app">
+  <aside class="sidebar" aria-label="Guide navigation">
+    <a class="brand" href="#vision">
+      <span class="brand-mark">CS</span>
+      <span><span class="brand-name">Context Studio</span><br><span class="brand-sub">Field guide</span></span>
+    </a>
+    <nav class="nav">
+      <div class="nav-group">
+        <div class="nav-label">Overview</div>
+        <a href="#vision" data-nav="vision"><i data-icon="compass"></i>Vision</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Curate</div>
+        <a href="#schema" data-nav="schema"><i data-icon="layers"></i>Schema</a>
+        <a href="#data" data-nav="data"><i data-icon="database"></i>Data</a>
+        <a href="#proposals" data-nav="proposals"><i data-icon="pr"></i>Proposals</a>
+        <a href="#claims" data-nav="claims"><i data-icon="message"></i>Claims</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Grow</div>
+        <a href="#sources" data-nav="sources"><i data-icon="doc"></i>Sources</a>
+        <a href="#pipelines" data-nav="pipelines"><i data-icon="workflow"></i>Pipelines</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Use</div>
+        <a href="#explore" data-nav="explore"><i data-icon="graph"></i>Graph &amp; chat</a>
+        <a href="#agents" data-nav="agents"><i data-icon="bot"></i>Agents (MCP)</a>
+      </div>
+    </nav>
+    <div class="sidebar-foot">
+      <strong>Written against main</strong> on 2026-11-12. Each page lists what is not built yet.<br><a href="https://github.com/tinkermonkey/context-studio" target="_blank" rel="noopener" style="color: var(--shell-fg-2)">tinkermonkey/context-studio</a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="crumbs"><span>guide</span><span>/</span><b id="crumb">vision</b></div>
+      <div class="topbar-chips">
+        <span class="shell-chip">ui :3100</span>
+        <span class="shell-chip">api :8000</span>
+        <span class="env-pill">local-first</span>
+      </div>
+    </header>
+
+    <main class="canvas">
+      <div class="canvas-inner">
+
+<!-- =================================================================== VISION -->
+<section class="page" data-page="vision" id="p-vision">
+  <div class="page-head hero">
+    <div class="eyebrow"><span class="tag">Overview · November 2026</span><span>Vision &amp; getting started</span></div>
+    <h1>Agents propose. People decide. The graph becomes everyone's context.</h1>
+    <p class="lede">Context Studio is a local-first workbench for designing and curating an ontology: the taxonomies, classes, relationship types and individuals that describe a domain. Pipelines, chat, and agents connected over MCP all suggest changes. Every suggestion waits in one review queue with its rationale and evidence. What you accept becomes structure that people browse and agents query.</p>
+  </div>
+
+  <figure class="kg" id="kg" style="margin: 0">
+    <div class="kg-head"><span class="eyebrow">Context Studio, as a graph</span><span class="right chip accent">concept</span></div>
+    <svg class="kg-svg" id="kg-svg" role="group" aria-labelledby="kg-title kg-desc">
+      <title id="kg-title">What Context Studio is</title>
+      <desc id="kg-desc">Agents propose changes to Context Studio. People decide in Context Studio. Context Studio curates the knowledge graph. Sources ground the knowledge graph. The knowledge graph is context for agents.</desc>
+    </svg>
+    <figcaption class="kg-foot">Read each arrow as a sentence: agents propose, people decide, sources ground the graph, and the graph becomes the agents' context. Select a node to open its guide.</figcaption>
+  </figure>
+
+  <div class="box">
+    <div class="box-item"><span class="eyebrow">The app</span><p><a href="#schema">Schema</a>, <a href="#data">Data</a>, <a href="#proposals">Proposals</a>, <a href="#claims">Claims</a>, <a href="#sources">Sources</a>, <a href="#pipelines">Pipelines</a> and the <a href="#explore">Graph view</a>, at <code class="inline">localhost:3100</code>.</p></div>
+    <div class="box-item"><span class="eyebrow">The MCP server</span><p><a href="#agents">26 tools and 2 resources</a> at <code class="inline">:8000/mcp</code>, for Claude Code and client projects.</p></div>
+    <div class="box-item"><span class="eyebrow">The chat assistant</span><p><a href="#explore">⌘J anywhere</a>. The same tools as MCP, inside the app.</p></div>
+    <div class="box-item"><span class="eyebrow">The source</span><p><a href="https://github.com/tinkermonkey/context-studio" target="_blank" rel="noopener">tinkermonkey/context-studio</a>: FastAPI and SQLite back end, React front end built on <a href="https://github.com/tinkermonkey/heimdall" target="_blank" rel="noopener">Heimdall</a>.</p></div>
+  </div>
+
+  <div class="grid-4">
+    <div class="stat" style="--bar: var(--d-amber)"><span class="label">Review queue</span><span class="num">1</span><span class="note">Every change from every source goes through it</span></div>
+    <div class="stat" style="--bar: var(--d-indigo)"><span class="label">MCP tools</span><span class="num">26</span><span class="note">Read, propose, extract, run, triage</span></div>
+    <div class="stat" style="--bar: var(--d-violet)"><span class="label">Pipeline types</span><span class="num">8</span><span class="note">Extraction, refinement, reflection, triage</span></div>
+    <div class="stat" style="--bar: var(--d-emerald)"><span class="label">Proposal sources</span><span class="num">5</span><span class="note">Pipeline, MCP, chat, bundle import, user</span></div>
+  </div>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="eyebrow">The idea</div>
+      <h2>An ontology that changes by proposal, not by hand edit</h2>
+      <p>Most shared vocabularies live in files: a spec folder, a schema module, a wiki page. Whoever edits the file changes the model, and each agent learns the vocabulary from whatever was pasted into its prompt. Context Studio keeps the model in one place, turns every change into a reviewable proposal, and serves the result to people and agents alike. Each project's repo stays the release channel.</p>
+    </div>
+    <div class="table-wrap">
+      <table class="idea">
+        <thead><tr><th></th><th>An ontology in files</th><th>An ontology in Context Studio</th></tr></thead>
+        <tbody>
+          <tr><td>Unit of change</td><td>A file diff</td><td>A typed operation: create a class, retarget a relationship, delete a type still in use</td></tr>
+          <tr><td>Who suggests</td><td>Whoever edits the file</td><td>Pipelines, chat, Claude Code and client projects over MCP, bundle imports</td></tr>
+          <tr><td>Checked by</td><td>A reviewer reading YAML</td><td>A review queue: diff, rationale, evidence and probability on every operation, routine changes accepted in bulk</td></tr>
+          <tr><td>Evidence</td><td>The commit message, if anywhere</td><td>The quoted source passage, kept on each accepted fact</td></tr>
+          <tr><td>What agents see</td><td>What was pasted into the prompt</td><td>Live search, neighbors, paths, the taxonomy's vision and full bundles</td></tr>
+          <tr><td>Decisions</td><td>Lost in pull request threads</td><td>Stored as gold and used to benchmark the pipelines that made the suggestion</td></tr>
+          <tr><td>Release</td><td>The repo</td><td>Still the repo: decisions export back, and the client records where each one landed</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">Principles from the <a href="https://github.com/tinkermonkey/context-studio/blob/main/rearchitecture/ontology_workbench_proposal.md" target="_blank" rel="noopener">ontology workbench proposal</a>: agents propose, people decide; one tool registry, every face; the repo releases, Context Studio refines; intent travels with every call; every decision is data.</p>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="eyebrow">A thread through the model</div>
+      <h2>One paper, from the demo schema to an agent's answer</h2>
+      <p>Follow one concept through Context Studio, starting from the demo you can load on an empty workspace. <b>Load Demo Dataset › Software Architecture</b> gives you a published taxonomy with 10 concept schemes, 60 classes and 11 relationship types, built from 15 classic papers. You then paste one of those papers in as a source and review what extraction finds. The individuals and relationship below are the ones the demo's gold data expects from that paper.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="eyebrow">software_architecture · dataset papers</span><span class="right chip accent">example</span></div>
+      <div class="thread">
+        <div class="trow"><span class="tkind">taxonomy</span><div class="tbody"><code>software_architecture</code><span>Architectural styles, distributed-systems primitives and the trade-offs between them. Loaded from the demo, already published.</span></div><a class="tarea" href="#schema">Schema</a></div>
+        <div class="trow"><span class="tkind">scheme</span><div class="tbody"><code>consensus_protocols</code><span>One of the 10 schemes. In the graph view, schemes are the layers.</span></div><a class="tarea" href="#schema">Schema</a></div>
+        <div class="trow"><span class="tkind">class</span><div class="tbody"><code>Raft</code>, a kind of <code>Consensus Protocol</code><span>"A consensus protocol designed for understandability, decomposing consensus into leader election, log replication, and safety." Linked to Wikidata <a href="https://www.wikidata.org/wiki/Q22971723" target="_blank" rel="noopener">Q22971723</a> and DBpedia. Its sibling is <code class="inline">Paxos</code>, with <code class="inline">Multi-Paxos</code> beneath it.</span></div><a class="tarea" href="#schema">Schema</a></div>
+        <div class="trow"><span class="tkind">dataset</span><div class="tbody"><code>papers</code><span>A dataset you create to hold what you read, so it stays apart from any other data over the same schema.</span></div><a class="tarea" href="#data">Data</a></div>
+        <div class="trow"><span class="tkind">source</span><div class="tbody">Ongaro and Ousterhout, <i>In search of an understandable consensus algorithm</i> (2014)<span>Pasted as text under Data › Sources, then extracted into <code class="inline">papers</code> with <b>Also suggest schema changes</b> ticked.</span></div><a class="tarea" href="#sources">Sources</a></div>
+        <div class="trow hl"><span class="tkind">proposal</span><div class="tbody">3 individuals and 1 new relationship type<span>The individuals <code class="inline">Raft Leader</code>, <code class="inline">Raft Follower</code> and <code class="inline">Raft Candidate</code>, each typed as Raft and each quoting its passage: "each in one of three states: leader, follower, or candidate". A separate schema proposal adds the relationship type <code class="inline">equivalent to</code>, because the paper says Raft "produces a result equivalent to Multi-Paxos" and the schema has no way to say that.</span></div><a class="tarea" href="#proposals">Proposals</a></div>
+        <div class="trow"><span class="tkind">review</span><div class="tbody">Accept the clear ones, decide the rest<span>The three roles clear the mechanical tier. Whether the schema needs <code class="inline">equivalent to</code> is a judgment call: accept it, edit it, or reject it with a reason. Either way the decision is stored as gold.</span></div><a class="tarea" href="#proposals">Proposals</a></div>
+        <div class="trow"><span class="tkind">applied</span><div class="tbody">Individuals with their citations<span>Each role's page shows the passage and the paper it came from. The whole proposal can be reverted in one step.</span></div><a class="tarea" href="#data">Data</a></div>
+        <div class="trow"><span class="tkind">agent context</span><div class="tbody"><code>search_entities</code> · <code>get_neighbors</code> · <code>find_path</code><span>Claude Code, or the chat assistant, now answers questions about Raft from your model, with links back to each page.</span></div><a class="tarea" href="#agents">Agents</a></div>
+      </div>
+    </div>
+    <div class="grid-3">
+      <div class="ask"><span class="eyebrow">Ask the graph</span><h3>Which consensus protocols are in the model?</h3><p>Raft and Paxos, with Multi-Paxos as a kind of Paxos: the subclasses of Consensus Protocol.</p><span class="via">list_children · consensus_protocol</span></div>
+      <div class="ask"><span class="eyebrow">Ask the graph</span><h3>How does Raft relate to Paxos?</h3><p>Both are consensus protocols, and once you accept the new type, Raft is <code class="inline">equivalent to</code> Multi-Paxos.</p><span class="via">find_path · Raft → Multi-Paxos</span></div>
+      <div class="ask"><span class="eyebrow">Ask the graph</span><h3>Where does "Raft Leader" come from?</h3><p>The 2014 paper, with the quoted passage and the proposal that added it, including who accepted it and when.</p><span class="via">get_entity · get_proposal</span></div>
+    </div>
+    <p class="small muted">Claims are not on this thread. They come from review notes about a taxonomy, for example a reviewer arguing that the three roles are states rather than individuals. See <a href="#claims">Claims</a>. For a larger example, where a client project proposes changes to its own spec, see <a href="#agents">Agents</a>.</p>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="eyebrow">How it fits together</div>
+      <h2>Every change enters through one door</h2>
+      <p>Suggestions come from many places. They all become proposals. Only accepted proposals change the schema and data, and everything you curate is available to read back out. Click any box to open its guide.</p>
+    </div>
+    <div class="door" role="list">
+      <div class="door-col" role="listitem">
+        <div class="eyebrow"><b>Propose</b></div>
+        <a class="node" href="#sources" style="--c: var(--d-cyan)"><span class="sw"></span><span>Sources<small>Files, web pages, pasted text</small></span></a>
+        <a class="node" href="#pipelines" style="--c: var(--d-violet)"><span class="sw"></span><span>Pipelines<small>Extraction and refinement runs</small></span></a>
+        <a class="node" href="#agents" style="--c: var(--d-indigo)"><span class="sw"></span><span>Agents over MCP<small>Claude Code, DR, House</small></span></a>
+        <a class="node" href="#explore" style="--c: var(--d-slate)"><span class="sw"></span><span>Chat<small>In-app assistant, same tools</small></span></a>
+      </div>
+      <div class="door-col" role="listitem">
+        <div class="eyebrow"><b>Decide</b></div>
+        <a class="node focus" href="#proposals" style="--c: var(--d-amber)"><span class="sw"></span><span>Proposals<small>Accept, edit, reject, revert</small></span></a>
+        <a class="node" href="#claims" style="--c: var(--d-rose)"><span class="sw"></span><span>Claims<small>Triaged review notes</small></span></a>
+      </div>
+      <div class="door-col" role="listitem">
+        <div class="eyebrow"><b>Curate</b></div>
+        <a class="node" href="#schema" style="--c: var(--d-indigo)"><span class="sw"></span><span>Schema<small>Taxonomies, classes, relationship types</small></span></a>
+        <a class="node" href="#data" style="--c: var(--d-emerald)"><span class="sw"></span><span>Data<small>Datasets and individuals, with provenance</small></span></a>
+      </div>
+      <div class="door-col" role="listitem">
+        <div class="eyebrow"><b>Use</b></div>
+        <a class="node" href="#explore" style="--c: var(--d-cyan)"><span class="sw"></span><span>Graph &amp; chat<small>Layouts, paths, SPARQL, questions</small></span></a>
+        <a class="node" href="#agents" style="--c: var(--d-indigo)"><span class="sw"></span><span>Agent context<small>Search, traverse, vision, bundles</small></span></a>
+        <a class="node" href="#agents" style="--c: var(--d-slate)"><span class="sw"></span><span>Client round trip<small>Decisions back to DR and House</small></span></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="eyebrow">Get started</div>
+      <h2>From a fresh checkout to a source of truth</h2>
+      <p>Five steps, in the order you meet them. The first three take under an hour. After step 3 you mostly work by asking Claude, and the value compounds as reviewed decisions pile up.</p>
+    </div>
+    <div class="ladder">
+      <div class="rung">
+        <div class="n">1<span>RUN</span></div>
+        <div class="do">
+          <h3>Run it locally</h3>
+          <p class="muted small">Clone <a href="https://github.com/tinkermonkey/context-studio" target="_blank" rel="noopener">the repo</a>, copy <code class="inline">local-server/config.example.json</code> to <code class="inline">config.json</code> and add an Anthropic, OpenAI or OpenRouter key. Then start both servers from the repo root:</p>
+          <div class="term"><pre><span class="a">./dev.sh --migrate</span>   <span class="c"># API :8000, UI :3100, waits for health</span></pre></div>
+        </div>
+        <div class="get">
+          <div class="eyebrow">Unlocks</div>
+          <p class="small muted">The app at <code class="inline">localhost:3100</code>, the REST API, and an MCP endpoint at <code class="inline">:8000/mcp</code>. All data stays in SQLite on your machine.</p>
+        </div>
+      </div>
+      <div class="rung">
+        <div class="n">2<span>SEED</span></div>
+        <div class="do">
+          <h3>Seed a schema and write its vision</h3>
+          <p class="muted small">On the empty Dashboard, pick <b>Load Demo Dataset</b>, or choose <b>Create taxonomy</b> and add concept schemes and classes. Open the taxonomy and fill in <b>Summary</b> and <b>Vision</b>: what the model is for and what it leaves out.</p>
+        </div>
+        <div class="get">
+          <div class="eyebrow">Unlocks</div>
+          <p class="small muted">A browsable model with a stated purpose. The vision travels with every chat turn and MCP read, so agents work toward your intent. <a href="#schema">Schema guide</a></p>
+        </div>
+      </div>
+      <div class="rung value">
+        <div class="n">3<span>CONNECT</span></div>
+        <div class="do">
+          <h3>Connect an agent <span class="chip ok">first value</span></h3>
+          <p class="muted small">Copy the command from <b>Configuration › Integrations</b>, run it, then ask Claude Code about your model. Set a chat model on the General tab for the in-app assistant.</p>
+          <div class="term"><pre><span class="a">claude mcp add --transport http context-studio http://127.0.0.1:8000/mcp \
+  --header "Authorization: Bearer &lt;token&gt;"</span>
+<span class="c">&gt;</span> <span class="s">Which Context Studio class fits gossip protocols? Propose one if none does.</span></pre></div>
+        </div>
+        <div class="get">
+          <div class="eyebrow">Unlocks</div>
+          <p class="small muted">Claude Code looks up your vocabulary instead of inventing it, and proposes what's missing, with links back to the app. <a href="#agents">Agents guide</a></p>
+        </div>
+      </div>
+      <div class="rung">
+        <div class="n">4<span>GROW</span></div>
+        <div class="do">
+          <h3>Grow it from evidence</h3>
+          <p class="muted small">Add a PDF, web page or pasted text under <b>Data › Sources</b> and extract it into a dataset, or ask an agent to. Review the proposal it produces.</p>
+          <div class="term"><pre><span class="c">&gt;</span> <span class="s">Add https://en.wikipedia.org/wiki/Raft_(algorithm) as a source and extract it into papers.</span></pre></div>
+        </div>
+        <div class="get">
+          <div class="eyebrow">Unlocks</div>
+          <p class="small muted">Individuals and relationships that cite the passage they came from, and schema gaps that show up as proposals. <a href="#sources">Sources guide</a></p>
+        </div>
+      </div>
+      <div class="rung value">
+        <div class="n">5<span>LOOP</span></div>
+        <div class="do">
+          <h3>Run the loop with your clients <span class="chip accent">compounds</span></h3>
+          <p class="muted small">Client projects send proposals over MCP and read decisions back. Review notes become triaged claims. Refinement runs sharpen definitions and connections. An approval policy applies routine, non-breaking changes by itself.</p>
+          <div class="term"><pre><span class="c">&gt;</span> <span class="s">Run definition refinement on the consensus_protocols scheme of software_architecture.</span></pre></div>
+        </div>
+        <div class="get">
+          <div class="eyebrow">Unlocks</div>
+          <p class="small muted">One reviewed, versioned source of truth for structure, plus a growing gold set of decisions to benchmark pipelines against. <a href="#proposals">Proposals guide</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="eyebrow">The value</div>
+      <h2>What you get for curating here</h2>
+    </div>
+    <div class="callout">
+      <div class="big">221/221</div>
+      <p><b>Operations accepted with no field edits</b> when the <a href="https://github.com/tinkermonkey/documentation_robotics" target="_blank" rel="noopener">Documentation Robotics</a> spec was refined through Context Studio (Gate C). Both passes landed back in DR from the export with no hand-edited spec files. House now pulls its structure from Context Studio and tests its code against it.</p>
+    </div>
+    <div class="values">
+      <div class="value"><h3><i data-icon="shield"></i>Nothing changes unreviewed</h3><p>Agent and pipeline writes are proposals. An approval policy can auto-apply routine changes; breaking changes, new taxonomies and vision edits always wait for a person.</p></div>
+      <div class="value"><h3><i data-icon="quote"></i>Facts cite their source</h3><p>Extracted individuals keep the page and quote they came from. The citation stays even if the source is removed later.</p></div>
+      <div class="value"><h3><i data-icon="history"></i>Everything is reversible</h3><p>Every write is a change event. Revert a whole proposal in one transaction, with conflicts explained.</p></div>
+      <div class="value"><h3><i data-icon="target"></i>Decisions become data</h3><p>Each accept, reject and claim verdict is stored as gold, a benchmark for the pipelines and decision models that made the suggestion.</p></div>
+      <div class="value"><h3><i data-icon="bot"></i>Grounded agents</h3><p>Agents read the same model you curate: semantic search, neighbors, paths, the taxonomy's vision and full bundles.</p></div>
+      <div class="value"><h3><i data-icon="lock"></i>Local by default</h3><p>SQLite files on your machine. The MCP server only listens on loopback and needs a bearer token.</p></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="eyebrow">You'll know it's working when</span></div>
+      <div class="panel-body">
+        <ul class="checks">
+          <li>Agents answer with your class and relationship names, and propose new ones instead of inventing them.</li>
+          <li>Most of a proposal clears in the mechanical tier, and your time goes to the judgment calls.</li>
+          <li>You can answer "where did this come from?" for any fact from its page.</li>
+          <li>A client lands a reviewed change in its repo without hand-editing the spec.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="eyebrow">Functional areas</div>
+      <h2>The guides</h2>
+    </div>
+    <div class="grid-4">
+      <a class="area" href="#schema" style="--c: var(--d-indigo)"><div class="area-top"><span class="area-ic"><i data-icon="layers"></i></span><h3>Schema</h3></div><p>Design taxonomies, concept schemes, classes and relationship types.</p><span class="route">/app/schema</span></a>
+      <a class="area" href="#data" style="--c: var(--d-emerald)"><div class="area-top"><span class="area-ic"><i data-icon="database"></i></span><h3>Data</h3></div><p>Datasets and individuals over one schema, each with provenance.</p><span class="route">/app/data</span></a>
+      <a class="area" href="#proposals" style="--c: var(--d-amber)"><div class="area-top"><span class="area-ic"><i data-icon="pr"></i></span><h3>Proposals</h3></div><p>The review queue: tiered decisions, evidence, apply and revert.</p><span class="route">/app/proposals</span></a>
+      <a class="area" href="#claims" style="--c: var(--d-rose)"><div class="area-top"><span class="area-ic"><i data-icon="message"></i></span><h3>Claims</h3></div><p>Review notes split into claims, triaged by a decision model.</p><span class="route">/app/claims</span></a>
+      <a class="area" href="#sources" style="--c: var(--d-cyan)"><div class="area-top"><span class="area-ic"><i data-icon="doc"></i></span><h3>Sources</h3></div><p>Turn documents into proposed individuals that cite their passage.</p><span class="route">/app/data/sources</span></a>
+      <a class="area" href="#pipelines" style="--c: var(--d-violet)"><div class="area-top"><span class="area-ic"><i data-icon="workflow"></i></span><h3>Pipelines</h3></div><p>Configure, try out and audit the LLM pipelines and decision models.</p><span class="route">/app/pipelines</span></a>
+      <a class="area" href="#explore" style="--c: var(--d-cyan)"><div class="area-top"><span class="area-ic"><i data-icon="graph"></i></span><h3>Graph &amp; chat</h3></div><p>Explore structure visually and ask questions of it.</p><span class="route">/app/graph · ⌘J</span></a>
+      <a class="area" href="#agents" style="--c: var(--d-indigo)"><div class="area-top"><span class="area-ic"><i data-icon="bot"></i></span><h3>Agents (MCP)</h3></div><p>Connect Claude Code and client projects; the tool catalog.</p><span class="route">:8000/mcp</span></a>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="eyebrow">Where it stands</div>
+      <h2>What works, what's moving, what's next</h2>
+      <p>As of 2026-11-12 on <code class="inline">main</code>. Each area page lists its own gaps under "Not built yet".</p>
+    </div>
+    <div class="grid-3 status">
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow">Works today</span><span class="right chip ok">main</span></div>
+        <div class="panel-body">
+          <ul class="slist">
+            <li>Schema and data editing, datasets, provenance</li>
+            <li>Proposals: tiered review, edit then accept, apply, revert, gold</li>
+            <li>Sources: files, web pages and text, extracted into proposals</li>
+            <li>Refinement runs, claims triage, decision models</li>
+            <li>Graph view with paths and SPARQL; chat assistant</li>
+            <li>MCP server and the DR and House round trips</li>
+          </ul>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow">In progress</span><span class="right chip accent">Phase D</span></div>
+        <div class="panel-body">
+          <ul class="slist">
+            <li>Extraction quality on real documents: <a href="https://github.com/tinkermonkey/context-studio/issues/1570" target="_blank" rel="noopener">#1570</a> <a href="https://github.com/tinkermonkey/context-studio/issues/1571" target="_blank" rel="noopener">#1571</a> <a href="https://github.com/tinkermonkey/context-studio/issues/1575" target="_blank" rel="noopener">#1575</a></li>
+            <li>Relationships between individuals in different chunks: <a href="https://github.com/tinkermonkey/context-studio/issues/1572" target="_blank" rel="noopener">#1572</a></li>
+            <li>Relationship creates checked against domain and range: <a href="https://github.com/tinkermonkey/context-studio/issues/1574" target="_blank" rel="noopener">#1574</a></li>
+            <li>Litmus tests and examples on nodes, to sharpen disambiguation: <a href="https://github.com/tinkermonkey/context-studio/issues/1333" target="_blank" rel="noopener">#1333</a></li>
+            <li>Tracking: <a href="https://github.com/tinkermonkey/context-studio/issues/1453" target="_blank" rel="noopener">#1453</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow">Planned</span><span class="right chip">not started</span></div>
+        <div class="panel-body">
+          <ul class="slist">
+            <li>Graph view: searchable selectors, entity links, schema graph, latest Heimdall graph: <a href="https://github.com/tinkermonkey/context-studio/issues/1318" target="_blank" rel="noopener">#1318</a> <a href="https://github.com/tinkermonkey/context-studio/issues/1319" target="_blank" rel="noopener">#1319</a> <a href="https://github.com/tinkermonkey/context-studio/issues/1320" target="_blank" rel="noopener">#1320</a> <a href="https://github.com/tinkermonkey/context-studio/issues/1448" target="_blank" rel="noopener">#1448</a></li>
+            <li>Extraction review corrections saved as gold: <a href="https://github.com/tinkermonkey/context-studio/issues/1316" target="_blank" rel="noopener">#1316</a></li>
+            <li>Bulk operations when authoring a proposal: <a href="https://github.com/tinkermonkey/context-studio/issues/1468" target="_blank" rel="noopener">#1468</a></li>
+            <li>Grounding wizard, one run per node: <a href="https://github.com/tinkermonkey/context-studio/issues/1504" target="_blank" rel="noopener">#1504</a></li>
+            <li>No issue yet: screens for approval policies and reference search</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="eyebrow">Read more</div>
+    </div>
+    <div class="links">
+      <a class="xlink" href="https://github.com/tinkermonkey/context-studio#readme" target="_blank" rel="noopener"><span class="to">README</span><b>Setup and MCP</b><span>Running the stack and connecting an agent.</span></a>
+      <a class="xlink" href="https://github.com/tinkermonkey/context-studio/blob/main/rearchitecture/ontology_workbench_proposal.md" target="_blank" rel="noopener"><span class="to">Design</span><b>Ontology workbench proposal</b><span>The vision, principles and gate results.</span></a>
+      <a class="xlink" href="https://github.com/tinkermonkey/context-studio/blob/main/rearchitecture/architecture_design.md" target="_blank" rel="noopener"><span class="to">Design</span><b>Architecture</b><span>Bounded contexts, ports and adapters.</span></a>
+    </div>
+  </section>
+</section>
+
+<!-- =================================================================== SCHEMA -->
+<section class="page" data-page="schema" id="p-schema" hidden>
+  <div class="page-head">
+    <div class="eyebrow"><span class="tag">Curate</span><span>/app/schema</span></div>
+    <h1>Schema</h1>
+    <p class="lede">Design the shape of the domain: taxonomies hold concept schemes, schemes hold classes, and relationship types say how classes connect. A clear schema is what makes extraction accurate, review fast and agent answers consistent.</p>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-head"><span class="eyebrow">The model</span><span class="right chip accent">example</span></div>
+      <div class="panel-body">
+        <ul class="tree">
+          <li><span class="pill" style="--c: var(--d-indigo)">software_architecture</span><span class="kind">taxonomy · vision, summary, version</span></li>
+          <li class="l1"><span class="pill" style="--c: var(--d-cyan)">architectural_styles</span><span class="kind">concept scheme · scope note</span></li>
+          <li class="l2"><span class="pill" style="--c: var(--d-emerald)">Architectural Style</span><span class="kind">class</span></li>
+          <li class="l3"><span class="pill" style="--c: var(--d-emerald)">REST</span><span class="kind">subclass · definition, attributes</span></li>
+          <li class="l3"><span class="pill" style="--c: var(--d-amber)">satisfies constraint → Stateless Constraint</span><span class="kind">relationship type</span></li>
+        </ul>
+        <p class="small muted">From the Software Architecture demo: REST is "an architectural style for distributed hypermedia systems, defined by six constraints", and Stateless Constraint lives in the <code class="inline">architectural_constraints</code> scheme.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="eyebrow">What each part carries</span></div>
+      <div class="panel-body">
+        <div class="table-wrap" style="border: 0">
+          <table>
+            <tbody>
+              <tr><td>Taxonomy</td><td>Summary, vision, draft or published version, approval policy</td></tr>
+              <tr><td>Concept scheme</td><td>Scope note; becomes a layer in the graph view</td></tr>
+              <tr><td>Class</td><td>Definition plus an operational definition: what to distinguish it from, evidence signals, standard reference</td></tr>
+              <tr><td>Relationship type</td><td>Predicate, domain and range, cardinality, symmetry, edge attributes, relevance</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Use cases</div><h2>When you work here</h2></div>
+    <div class="grid-2">
+      <div class="case"><span class="who">New domain</span><h3>Design a model from scratch</h3><p>Start with a taxonomy and a one-paragraph vision, or load the Software Architecture demo to see a finished one. Sketch the schemes, then let extraction from real documents tell you which classes are missing.</p></div>
+      <div class="case"><span class="who">Client spec</span><h3>Mirror a project's spec</h3><p>Import the <a href="https://github.com/tinkermonkey/documentation_robotics" target="_blank" rel="noopener">DR</a> spec as the <code class="inline">dr_spec</code> taxonomy. <b>Check drift</b> compares it with the spec on disk and proposes the difference.</p></div>
+      <div class="case"><span class="who">Quality</span><h3>Sharpen definitions</h3><p>Operational definitions drive matching. Classes that say what they are not, and what evidence signals them, get fewer wrong extractions.</p></div>
+      <div class="case"><span class="who">Release</span><h3>Publish and share a version</h3><p>Publish moves a taxonomy from draft with a commit message and diff summary. <b>Export bundle</b> gives clients a JSON snapshot.</p></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Workflows</div><h2>Build a schema</h2><p>Edits you make in the app write directly and are recorded as change events. Agents make the same edits as proposals that you review.</p></div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow">In the app</span></div>
+        <div class="panel-body">
+          <ol class="steps">
+            <li><span class="k">1</span><div><span class="where">Schema › Taxonomies</span>Create a taxonomy, or load a demo dataset from the empty Dashboard.</div></li>
+            <li><span class="k">2</span><div><span class="where">Taxonomy detail</span>Write the Summary and Vision. Chat and Claude Code both read the vision.</div></li>
+            <li><span class="k">3</span><div><span class="where">New concept scheme › New class</span>Add schemes, then classes and child classes. Give each class a definition and attributes.</div></li>
+            <li><span class="k">4</span><div><span class="where">Schema › Properties</span>Define relationship types between classes. Mark each Relevant or Irrelevant.</div></li>
+            <li><span class="k">5</span><div><span class="where">Taxonomy drawer › Publish</span>Publish a version, then <b>Export bundle</b> for clients.</div></li>
+          </ol>
+        </div>
+      </div>
+      <div class="term">
+        <div class="term-head">From an agent<span class="right">MCP</span></div>
+<pre><span class="t">list_taxonomies</span>()                      <span class="c"># ids, summaries, vision?</span>
+<span class="t">list_children</span>(<span class="a">id</span>=<span class="s">"software_architecture"</span>)  <span class="c"># schemes</span>
+<span class="t">get_entity</span>(<span class="a">id</span>=…)                     <span class="c"># fields, parents, definition</span>
+<span class="t">list_relationship_types</span>(<span class="a">taxonomy_id</span>=…)
+<span class="t">list_predicates</span>(<span class="a">taxonomy_id</span>=…)         <span class="c"># the relation verbs</span>
+
+<span class="c"># read the intent before proposing</span>
+resource <span class="s">contextstudio://taxonomies/{id}/vision</span>
+
+<span class="t">propose_changes</span>(
+  <span class="a">taxonomy_id</span>=…, <span class="a">title</span>=<span class="s">"Add Gossip Protocol"</span>,
+  <span class="a">operations</span>=[{op: <span class="s">"create"</span>, kind: <span class="s">"class"</span>, …}],  <span class="c"># Gossip Protocol</span>
+  <span class="a">rationale</span>=…, <span class="a">dry_run</span>=<span class="s">true</span>)           <span class="c"># validate first</span>
+<span class="c"># then without dry_run: lands in Proposals</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <div class="limits">
+    <div class="eyebrow">Not built yet</div>
+    <ul>
+      <li>SKOS, OWL and GraphML import and export exist only as REST calls under <code class="inline">/api/v1/interchange</code>; there is no screen for them.</li>
+      <li>Bundle import runs from <code class="inline">scripts/import_bundle.py</code> or REST, not from the UI.</li>
+      <li>In progress: litmus tests and examples on classes and relationship types, to sharpen disambiguation (<a href="https://github.com/tinkermonkey/context-studio/issues/1333" target="_blank" rel="noopener">#1333</a>).</li>
+    </ul>
+  </div>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Connects to</div></div>
+    <div class="links">
+      <a class="xlink" href="#data"><span class="to">Data</span><b>Populate it</b><span>Individuals are instances of these classes.</span></a>
+      <a class="xlink" href="#pipelines"><span class="to">Pipelines</span><b>Refine it</b><span>Grounding, definition and connection runs suggest improvements.</span></a>
+      <a class="xlink" href="#proposals"><span class="to">Proposals</span><b>Review agent edits</b><span>Every agent and pipeline change lands there first.</span></a>
+    </div>
+  </section>
+</section>
+
+<!-- =================================================================== DATA -->
+<section class="page" data-page="data" id="p-data" hidden>
+  <div class="page-head">
+    <div class="eyebrow"><span class="tag">Curate</span><span>/app/data</span></div>
+    <h1>Data</h1>
+    <p class="lede">Individuals are the things your schema describes: a specific service, a person, a place. They live in named datasets, so several bodies of data can share one schema without mixing. Each individual shows the source passage that justified it.</p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span class="eyebrow">One schema, many datasets</span><span class="right chip">?dataset= follows you across pages</span></div>
+    <div class="panel-body">
+      <div class="flow">
+        <div class="step">Taxonomy schema<small>classes + relationship types</small></div>
+        <span class="link"></span>
+        <div class="step hl">Dataset<small>papers</small></div>
+        <span class="link"></span>
+        <div class="step">Individuals<small>classes + property values</small></div>
+        <span class="link"></span>
+        <div class="step">Relationships<small>typed, directed edges</small></div>
+        <span class="link"></span>
+        <div class="step">Provenance<small>source · page · quote</small></div>
+      </div>
+      <p class="small muted">Example: individuals extracted from papers go in a dataset <code class="inline">papers</code> over the Software Architecture schema. A second dataset, say <code class="inline">our-systems</code>, can describe your own services with the same classes without mixing the two.</p>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Use cases</div><h2>When you work here</h2></div>
+    <div class="grid-3">
+      <div class="case"><span class="who">Separation</span><h3>Keep bodies of data apart</h3><p>Reading notes, your own systems and an experiment each get a dataset. Lists, extraction and proposals are scoped to the one you pick.</p></div>
+      <div class="case"><span class="who">Trust</span><h3>Check where a fact came from</h3><p>An individual's Sources panel shows each passage that supports it, even after the source document was removed.</p></div>
+      <div class="case"><span class="who">Hand edits</span><h3>Fix one record quickly</h3><p>Edit classes and property values directly, including inherited properties. The change is recorded and can be reverted.</p></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Workflows</div><h2>Populate a dataset</h2></div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow">In the app</span></div>
+        <div class="panel-body">
+          <ol class="steps">
+            <li><span class="k">1</span><div><span class="where">Data › Datasets</span>Create a dataset with an identifier and title under a taxonomy.</div></li>
+            <li><span class="k">2</span><div><span class="where">Dashboard dataset selector</span>Pick it. Every page now scopes to it.</div></li>
+            <li><span class="k">3</span><div><span class="where">Data › Sources</span>Extract a document into the dataset. This is the main way data grows.</div></li>
+            <li><span class="k">4</span><div><span class="where">Data › Individuals</span>Add or edit individuals by hand in the drawer.</div></li>
+            <li><span class="k">5</span><div><span class="where">Individual detail</span>Check incoming and outgoing relationships and the Sources panel.</div></li>
+          </ol>
+        </div>
+      </div>
+      <div class="term">
+        <div class="term-head">From an agent<span class="right">MCP</span></div>
+<pre><span class="t">list_datasets</span>(<span class="a">taxonomy_id</span>=…)          <span class="c"># names and counts</span>
+<span class="t">search_entities</span>(<span class="a">query</span>=<span class="s">"raft leader"</span>,
+                <span class="a">kinds</span>=[<span class="s">"individual"</span>])
+<span class="t">list_children</span>(<span class="a">id</span>=<span class="s">&lt;class&gt;</span>, <span class="a">dataset</span>=<span class="s">"papers"</span>)
+<span class="t">list_relationships</span>(<span class="a">entity_id</span>=…, <span class="a">direction</span>=<span class="s">"both"</span>)
+
+<span class="c"># add or change individuals: always a proposal</span>
+<span class="t">propose_changes</span>(<span class="a">taxonomy_id</span>=…, <span class="a">dataset</span>=<span class="s">"papers"</span>,
+                <span class="a">operations</span>=[{op: <span class="s">"create"</span>, kind: <span class="s">"individual"</span>, …}])</pre>
+      </div>
+    </div>
+  </section>
+
+  <div class="limits">
+    <div class="eyebrow">Good to know</div>
+    <ul>
+      <li>Bulk loads of a client's model run as scripts, for example <code class="inline">scripts/import_dr_model.py</code> for DR model elements.</li>
+    </ul>
+  </div>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Connects to</div></div>
+    <div class="links">
+      <a class="xlink" href="#sources"><span class="to">Sources</span><b>Fill it from documents</b><span>Extraction proposes individuals with citations.</span></a>
+      <a class="xlink" href="#schema"><span class="to">Schema</span><b>The classes it uses</b><span>Better definitions, better matches.</span></a>
+      <a class="xlink" href="#explore"><span class="to">Graph &amp; chat</span><b>See it connected</b><span>Paths, neighborhoods and questions.</span></a>
+    </div>
+  </section>
+</section>
+
+<!-- =================================================================== SOURCES -->
+<section class="page" data-page="sources" id="p-sources" hidden>
+  <div class="page-head">
+    <div class="eyebrow"><span class="tag">Grow</span><span>/app/data/sources</span></div>
+    <h1>Sources &amp; extraction</h1>
+    <p class="lede">Turn documents into proposed individuals and relationships. Every candidate points back to the passage it came from, so review is a matter of reading the quote and deciding.</p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span class="eyebrow">What happens to a source</span></div>
+    <div class="panel-body">
+      <div class="flow">
+        <div class="step">Add<small>pdf · md · html · text · url</small></div>
+        <span class="link"></span>
+        <div class="step">Chunk<small>at headings, ~8k chars</small></div>
+        <span class="link"></span>
+        <div class="step">Extract individuals<small>with passages + near matches</small></div>
+        <span class="link"></span>
+        <div class="step">Suggest schema<small>optional, same run</small></div>
+        <span class="link"></span>
+        <div class="step hl">One proposal per run<small>review in Proposals</small></div>
+        <span class="link"></span>
+        <div class="step">Applied<small>provenance recorded</small></div>
+      </div>
+      <p class="small muted">Web pages are fetched once and kept. Wikipedia pages go through the built-in caching proxy, <a href="https://github.com/tinkermonkey/reference-api-buddy" target="_blank" rel="noopener">reference-api-buddy</a>. Extracting a source again replaces its open proposal.</p>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Use cases</div><h2>When you work here</h2></div>
+    <div class="grid-3">
+      <div class="case"><span class="who">Bootstrap</span><h3>Read a paper or spec into a dataset</h3><p>Drop a PDF or Markdown document, extract a page range, and accept the things it names. The Raft paper yields its leader, follower and candidate roles.</p></div>
+      <div class="case"><span class="who">Reference</span><h3>Pull in a public article</h3><p>Paste a Wikipedia URL. The page is fetched through the proxy, and its facts arrive cited to the article.</p></div>
+      <div class="case"><span class="who">Schema gaps</span><h3>Let text reveal missing classes</h3><p>Tick <b>Also suggest schema changes</b>. Things that fit no class come back as a separate schema proposal.</p></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Workflows</div><h2>Extract a document</h2></div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow">In the app</span></div>
+        <div class="panel-body">
+          <ol class="steps">
+            <li><span class="k">1</span><div><span class="where">Data › Sources</span>Drop a file, enter a URL and choose <b>Fetch page</b>, or paste text.</div></li>
+            <li><span class="k">2</span><div><span class="where">Source row › Extract</span>Pick the dataset, an extraction configuration and an optional page range.</div></li>
+            <li><span class="k">3</span><div><span class="where">Extract page</span>Optionally tick <b>Also suggest schema changes</b>. Start the run and watch progress chunk by chunk.</div></li>
+            <li><span class="k">4</span><div><span class="where">Review proposal</span>Open the proposal. Read each source passage; accept, edit or reject.</div></li>
+            <li><span class="k">5</span><div><span class="where">Individual detail</span>Accepted facts show the passage under Sources.</div></li>
+          </ol>
+        </div>
+      </div>
+      <div class="term">
+        <div class="term-head">From an agent<span class="right">MCP</span></div>
+<pre><span class="t">add_source</span>(<span class="a">taxonomy_id</span>=…, <span class="a">dataset</span>=…,
+           <span class="a">url</span>=<span class="s">"https://en.wikipedia.org/wiki/Raft_(algorithm)"</span>)
+<span class="c">#   or path=… (must be under sources.allowed_roots)</span>
+<span class="c">#   or text=… with title=…</span>
+<span class="t">get_source</span>(<span class="a">source_id</span>=…)                <span class="c"># fetching → ready</span>
+<span class="t">extract_source</span>(<span class="a">source_id</span>=…, <span class="a">pages</span>=<span class="s">"1-12"</span>,
+               <span class="a">schema</span>=<span class="s">true</span>)               <span class="c"># one run each</span>
+<span class="t">get_run</span>(<span class="a">run_id</span>=…)                      <span class="c"># progress, proposal_id</span>
+<span class="t">get_proposal</span>(<span class="a">id</span>=…)                     <span class="c"># hand to a person</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <div class="limits">
+    <div class="eyebrow">Good to know</div>
+    <ul>
+      <li>Agents can add local files only from folders listed in <code class="inline">config.json › sources.allowed_roots</code>, which is empty by default.</li>
+      <li>Schema suggestions are off for mirrored taxonomies such as <code class="inline">dr_spec</code>; only that client proposes schema changes there.</li>
+      <li>Removing a source hides it but keeps the citations on facts already accepted.</li>
+      <li>In progress: fewer duplicate and junk candidates on real documents (<a href="https://github.com/tinkermonkey/context-studio/issues/1570" target="_blank" rel="noopener">#1570</a>, <a href="https://github.com/tinkermonkey/context-studio/issues/1571" target="_blank" rel="noopener">#1571</a>, <a href="https://github.com/tinkermonkey/context-studio/issues/1575" target="_blank" rel="noopener">#1575</a>), relationships across chunks (<a href="https://github.com/tinkermonkey/context-studio/issues/1572" target="_blank" rel="noopener">#1572</a>), and domain and range checks on new relationships (<a href="https://github.com/tinkermonkey/context-studio/issues/1574" target="_blank" rel="noopener">#1574</a>).</li>
+    </ul>
+  </div>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Connects to</div></div>
+    <div class="links">
+      <a class="xlink" href="#proposals"><span class="to">Proposals</span><b>Review the results</b><span>Each run ends in a proposal.</span></a>
+      <a class="xlink" href="#pipelines"><span class="to">Pipelines</span><b>Tune the extractor</b><span>Configurations, prompts and the example library.</span></a>
+      <a class="xlink" href="#data"><span class="to">Data</span><b>Where facts land</b><span>Individuals with their citations.</span></a>
+    </div>
+  </section>
+</section>
+
+<!-- =================================================================== PIPELINES -->
+<section class="page" data-page="pipelines" id="p-pipelines" hidden>
+  <div class="page-head">
+    <div class="eyebrow"><span class="tag">Grow</span><span>/app/pipelines</span></div>
+    <h1>Pipelines</h1>
+    <p class="lede">The LLM pipelines that extract and refine. Configure provider, model and prompts, try a configuration on sample paragraphs, and audit every run. Results from schema-level runs arrive as proposals, so a person still decides.</p>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Pipeline type</th><th>What it suggests</th><th>Start it from</th></tr></thead>
+      <tbody>
+        <tr><td><code>individual_extraction</code></td><td>Individuals and relationships from a source, with passages</td><td>Sources, run wizard, <code>extract_source</code></td></tr>
+        <tr><td><code>schema_extraction</code></td><td>Classes and relationship types the text needs</td><td>Sources, run wizard, Extraction review</td></tr>
+        <tr><td><code>schema_node_grounding</code></td><td>Links from classes to DBpedia and ConceptNet concepts</td><td>Run wizard, <code>run_refinement</code></td></tr>
+        <tr><td><code>schema_node_definition_refinement</code></td><td>Sharper class definitions</td><td>Run wizard, <code>run_refinement</code></td></tr>
+        <tr><td><code>schema_node_connection_refinement</code></td><td>Missing or wrong relationships between classes</td><td>Run wizard, <code>run_refinement</code></td></tr>
+        <tr><td><code>schema_relationship_reflection</code></td><td>A change plan from sorting questions about relationship types</td><td><code>run_refinement</code></td></tr>
+        <tr><td><code>notes_to_claims</code></td><td>Atomic claims split from review notes</td><td><code>run_refinement</code></td></tr>
+        <tr><td><code>claim_triage</code></td><td>Validity, category, severity and fix scope for each claim</td><td><code>run_refinement</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-head"><span class="eyebrow">Decision models</span><span class="right chip accent">default: clef</span></div>
+      <div class="panel-body">
+        <p class="muted">Some judgments are posed as choice, score or yes/no questions answered with probabilities. Reflection and claim triage use them; their answers show up in the proposal inspector, where you can override the pick. The default <code class="inline">clef</code> model runs on Cloudflare Workers AI and falls back to an LLM. Configure them in <code class="inline">config.json › decision_models</code>.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="eyebrow">Reference data</span><span class="right chip">/app/reference/sources</span></div>
+      <div class="panel-body">
+        <p class="muted">ConceptNet, DBpedia, Wikidata and schema.org back the grounding pipeline. A built-in proxy, <a href="https://github.com/tinkermonkey/reference-api-buddy" target="_blank" rel="noopener">reference-api-buddy</a>, caches every response and rate-limits each upstream, so repeated runs are fast and polite. The Reference Sources page shows which upstreams are reachable.</p>
+      </div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Use cases</div><h2>When you work here</h2></div>
+    <div class="grid-2">
+      <div class="case"><span class="who">Tuning</span><h3>Try a prompt before trusting it</h3><p>Extraction review runs schema and individual extraction side by side on one of 13 curated paragraphs, or on your own. Compare with earlier runs of the same example.</p></div>
+      <div class="case"><span class="who">Cost and quality</span><h3>Compare models and providers</h3><p>Duplicate a configuration, switch Anthropic, OpenAI or OpenRouter model, and compare the runs.</p></div>
+      <div class="case"><span class="who">Refinement</span><h3>Improve an existing taxonomy</h3><p>Run definition and connection refinement over a scheme. You get a proposal, not silent edits.</p></div>
+      <div class="case"><span class="who">Audit</span><h3>Trace and undo a run</h3><p>The Runs page shows every run's results and the change events it produced. Revert an apply from the drawer.</p></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Workflows</div><h2>Configure, try, run, audit</h2></div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow">In the app</span></div>
+        <div class="panel-body">
+          <ol class="steps">
+            <li><span class="k">1</span><div><span class="where">Pipelines › Pipeline types › type</span>Create a configuration: provider, model, temperature, max tokens, stage prompts.</div></li>
+            <li><span class="k">2</span><div><span class="where">Pipelines › Extraction review</span>Pick an example or paste a paragraph, choose taxonomy and configuration, run both extractors.</div></li>
+            <li><span class="k">3</span><div><span class="where">Type › Run</span>Use the run wizard for extraction, grounding, definition or connection refinement.</div></li>
+            <li><span class="k">4</span><div><span class="where">Pipelines › Runs</span>Filter by type and status. Open a run to apply selected candidates or revert an apply.</div></li>
+          </ol>
+        </div>
+      </div>
+      <div class="term">
+        <div class="term-head">From an agent<span class="right">MCP</span></div>
+<pre><span class="t">run_refinement</span>(<span class="a">taxonomy_id</span>=…,
+  <span class="a">pipeline</span>=<span class="s">"schema_node_definition_refinement"</span>,
+  <span class="a">scope</span>={…})                           <span class="c"># background run</span>
+<span class="t">get_run</span>(<span class="a">run_id</span>=…)                      <span class="c"># status, progress</span>
+<span class="t">get_proposal</span>(<span class="a">id</span>=<span class="s">&lt;run.proposal_id&gt;</span>)
+
+<span class="c"># individual_extraction is refused here:</span>
+<span class="c"># use extract_source on a source instead</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <div class="limits">
+    <div class="eyebrow">Not built yet</div>
+    <ul>
+      <li>Extraction review applies accepted candidates directly, without a proposal. Use Sources when you want the review queue.</li>
+      <li>Batch runs (<code class="inline">/app/pipelines/batches</code>) are a placeholder until a background task runner exists (<a href="https://github.com/tinkermonkey/context-studio/issues/1505" target="_blank" rel="noopener">#1505</a>).</li>
+      <li>Planned: extraction review corrections saved as gold (<a href="https://github.com/tinkermonkey/context-studio/issues/1316" target="_blank" rel="noopener">#1316</a>); the grounding wizard running one run per selected node (<a href="https://github.com/tinkermonkey/context-studio/issues/1504" target="_blank" rel="noopener">#1504</a>).</li>
+      <li>Grounding workflows (<code class="inline">/app/reference/workflows</code>) save fine, but <b>Run now</b> does not enrich anything yet.</li>
+      <li>Reference search exists in the REST API only; no screen searches ConceptNet or DBpedia. The Configure, Sync and Delete actions on Reference Sources do nothing yet.</li>
+    </ul>
+  </div>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Connects to</div></div>
+    <div class="links">
+      <a class="xlink" href="#sources"><span class="to">Sources</span><b>Run on documents</b><span>Extraction is started per source.</span></a>
+      <a class="xlink" href="#proposals"><span class="to">Proposals</span><b>Decide the output</b><span>Refinement runs end in proposals.</span></a>
+      <a class="xlink" href="#claims"><span class="to">Claims</span><b>Triage notes</b><span>notes_to_claims and claim_triage.</span></a>
+    </div>
+  </section>
+</section>
+
+<!-- =================================================================== PROPOSALS -->
+<section class="page" data-page="proposals" id="p-proposals" hidden>
+  <div class="page-head">
+    <div class="eyebrow"><span class="tag">Curate</span><span>/app/proposals</span></div>
+    <h1>Proposals</h1>
+    <p class="lede">The one door. Changes from pipelines, chat, Claude Code over MCP and bundle imports all land here, with rationale, evidence and a probability. Nothing changes the ontology until it is applied, except what a taxonomy's approval policy applies by itself.</p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span class="eyebrow">Lifecycle</span></div>
+    <div class="panel-body">
+      <div class="flow">
+        <div class="step">Proposed<small>chat · mcp · pipeline · bundle</small></div>
+        <span class="link"></span>
+        <div class="step">Classified<small>editorial · additive · breaking</small></div>
+        <span class="link"></span>
+        <div class="step hl">Decided<small>accept · edit · reject</small></div>
+        <span class="link"></span>
+        <div class="step">Applied<small>change events + gold</small></div>
+        <span class="link"></span>
+        <div class="step">Landed<small>client records commit</small></div>
+      </div>
+      <p class="small muted">Any applied proposal can be reverted in one transaction. Conflicts with later changes are explained before anything is undone.</p>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="stat" style="--bar: var(--d-emerald)"><span class="label">Mechanical</span><span class="note">Routine changes. Accept everything above a probability threshold with one slider.</span></div>
+    <div class="stat" style="--bar: var(--d-amber)"><span class="label">Judgment</span><span class="note">Decided row by row in the inspector: diff, rationale, evidence, source passage, reflection answers.</span></div>
+    <div class="stat" style="--bar: var(--d-rose)"><span class="label">Conflicts</span><span class="note">Shown side by side, including stale targets that changed since the proposal was made.</span></div>
+  </div>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Use cases</div><h2>When you work here</h2></div>
+    <div class="grid-2">
+      <div class="case"><span class="who">Extraction</span><h3>Accept what a document says</h3><p>Read the quoted passage beside each candidate individual; accept the clear ones in bulk and decide the rest.</p></div>
+      <div class="case"><span class="who">Client plans</span><h3>Adjudicate a DR reflection plan</h3><p>DR submits a plan as one proposal. Edit a triple before accepting, or replace it. The decision goes back to DR.</p></div>
+      <div class="case"><span class="who">Safe deletes</span><h3>Remove a relationship type still in use</h3><p>The in-use resolver moves its relationships to another type, deletes them too, or keeps the type.</p></div>
+      <div class="case"><span class="who">Recovery</span><h3>Undo a bad change</h3><p>Revert the whole proposal. Failed rows from an apply can be applied again after a fix.</p></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Workflows</div><h2>Review and apply</h2></div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow">In the app</span></div>
+        <div class="panel-body">
+          <ol class="steps">
+            <li><span class="k">1</span><div><span class="where">Sidebar › Proposals</span>The badge counts open proposals. Filter by status, taxonomy, source or age.</div></li>
+            <li><span class="k">2</span><div><span class="where">Proposal › Needs decision</span>Group by scope or op. Set the threshold for mechanical changes.</div></li>
+            <li><span class="k">3</span><div><span class="where">Operation inspector</span>Read the diff and evidence. Accept, reject with a reason, or edit then accept.</div></li>
+            <li><span class="k">4</span><div><span class="where">Apply</span>See the outcome per row. Use <b>Apply again</b> for failures.</div></li>
+            <li><span class="k">5</span><div><span class="where">Revert proposal</span>Undo everything it applied, if needed.</div></li>
+          </ol>
+        </div>
+      </div>
+      <div class="term">
+        <div class="term-head">From an agent<span class="right">MCP</span></div>
+<pre><span class="t">propose_changes</span>(…, <span class="a">dry_run</span>=<span class="s">true</span>)     <span class="c"># validate as a whole</span>
+<span class="t">propose_changes</span>(…)                     <span class="c"># returns proposal id + link</span>
+<span class="t">list_proposals</span>(<span class="a">status</span>=<span class="s">"open"</span>, <span class="a">source</span>=<span class="s">"mcp"</span>)
+<span class="t">get_proposal</span>(<span class="a">id</span>=…)                     <span class="c"># per-op status, stale flag</span>
+
+<span class="c"># client round trip (DR)</span>
+<span class="t">submit_reflection_plan</span>(<span class="a">taxonomy_id</span>=<span class="s">"dr_spec"</span>, <span class="a">plan</span>=…)
+<span class="t">get_decisions</span>(<span class="a">proposal_id</span>=…)           <span class="c"># joined to plan by seq</span>
+<span class="t">get_spec_changes</span>(<span class="a">proposal_id</span>=…)        <span class="c"># applied changes to write</span>
+<span class="t">mark_proposal_landed</span>(<span class="a">id</span>=…, <span class="a">commit</span>=<span class="s">"a1b2c3d"</span>,
+                     <span class="a">repo</span>=…, <span class="a">spec_version</span>=…)</pre>
+      </div>
+    </div>
+  </section>
+
+  <div class="panel">
+    <div class="panel-head"><span class="eyebrow">Approval policy</span><span class="right chip">per taxonomy</span></div>
+    <div class="panel-body">
+      <p class="muted">Rules on operation, kind, class and scope, plus a minimum probability, let routine changes apply as soon as they are proposed. House uses this to create activities directly while still confirming places. Three things never auto-apply: breaking changes, new taxonomies and vision edits. Every decision, manual or automatic, is stored as gold and can be exported from <code class="inline">/api/taxonomies/{id}/gold/export</code>.</p>
+    </div>
+  </div>
+
+  <div class="limits">
+    <div class="eyebrow">Not built yet</div>
+    <ul>
+      <li>Approval policies are set only through REST: <code class="inline">PUT /api/taxonomies/{id}/approval-policy</code>. There is no screen or MCP tool for them yet.</li>
+      <li>Planned: bulk operations when authoring a proposal (<a href="https://github.com/tinkermonkey/context-studio/issues/1468" target="_blank" rel="noopener">#1468</a>).</li>
+    </ul>
+  </div>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Connects to</div></div>
+    <div class="links">
+      <a class="xlink" href="#agents"><span class="to">Agents</span><b>Who proposes</b><span>Claude Code, DR, House over MCP.</span></a>
+      <a class="xlink" href="#sources"><span class="to">Sources</span><b>Extraction proposals</b><span>Each run produces one.</span></a>
+      <a class="xlink" href="#claims"><span class="to">Claims</span><b>Notes that lead to fixes</b><span>Triage first, then propose.</span></a>
+    </div>
+  </section>
+</section>
+
+<!-- =================================================================== CLAIMS -->
+<section class="page" data-page="claims" id="p-claims" hidden>
+  <div class="page-head">
+    <div class="eyebrow"><span class="tag">Curate</span><span>/app/claims</span></div>
+    <h1>Claims</h1>
+    <p class="lede">Reviewer and maintainer notes about a taxonomy, split into atomic statements and triaged by a decision model. Your verdicts are benchmark gold. Claims change nothing in the taxonomy by themselves; real defects become proposals.</p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><span class="eyebrow">From notes to fixes</span></div>
+    <div class="panel-body">
+      <div class="flow">
+        <div class="step">Notes<small>review comments, issues</small></div>
+        <span class="link"></span>
+        <div class="step">Claims<small>one statement each</small></div>
+        <span class="link"></span>
+        <div class="step">Triage<small>decision model</small></div>
+        <span class="link"></span>
+        <div class="step hl">Verdict<small>yours, stored as gold</small></div>
+        <span class="link"></span>
+        <div class="step">Fix<small>a proposal</small></div>
+      </div>
+      <div class="chips">
+        <span class="chip warn">real_defect</span>
+        <span class="chip ok">works_as_designed</span>
+        <span class="chip">judgment_call</span>
+        <span class="chip">out_of_scope</span>
+        <span class="chip">severity 0–3</span>
+        <span class="chip">fix scope 0–3</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Use cases</div><h2>When you work here</h2></div>
+    <div class="grid-3">
+      <div class="case"><span class="who">Backlog</span><h3>Sort a pile of feedback</h3><p>Turn a long review thread into claims and see which are real defects, ranked by severity.</p></div>
+      <div class="case"><span class="who">Impact</span><h3>See what a note touches</h3><p>Each claim lists the entities it affects and the references it could not resolve.</p></div>
+      <div class="case"><span class="who">Benchmark</span><h3>Grade the decision model</h3><p>Your verdicts are gold. Export them to measure how often triage agrees with you.</p></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Workflows</div><h2>Triage review notes</h2></div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow">In the app</span></div>
+        <div class="panel-body">
+          <ol class="steps">
+            <li><span class="k">1</span><div><span class="where">Claims</span>Filter by taxonomy, subject, triage validity and whether a verdict exists.</div></li>
+            <li><span class="k">2</span><div><span class="where">Claim inspector</span>Read the source note, affected entities, triage probabilities and suggested change.</div></li>
+            <li><span class="k">3</span><div><span class="where">Verdict form</span>Save your verdict with a reason, or clear it.</div></li>
+            <li><span class="k">4</span><div><span class="where">Export</span>Export claims with verdicts for benchmarking.</div></li>
+          </ol>
+        </div>
+      </div>
+      <div class="term">
+        <div class="term-head">From an agent<span class="right">MCP</span></div>
+<pre><span class="c"># either submit claims you split yourself</span>
+<span class="t">submit_claims</span>(<span class="a">taxonomy_id</span>=…, <span class="a">claims</span>=[…])
+<span class="c"># or let a pipeline split the notes</span>
+<span class="t">run_refinement</span>(<span class="a">taxonomy_id</span>=…, <span class="a">pipeline</span>=<span class="s">"notes_to_claims"</span>)
+
+<span class="t">run_refinement</span>(<span class="a">taxonomy_id</span>=…, <span class="a">pipeline</span>=<span class="s">"claim_triage"</span>)
+<span class="t">list_claims</span>(<span class="a">taxonomy_id</span>=…, <span class="a">validity</span>=<span class="s">"real_defect"</span>,
+            <span class="a">has_verdict</span>=<span class="s">true</span>)
+<span class="t">propose_changes</span>(…)                     <span class="c"># the fix, for review</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <div class="limits">
+    <div class="eyebrow">Not built yet</div>
+    <ul>
+      <li>There is no button in the app to split notes or run triage. Start both from an agent with <code class="inline">run_refinement</code>, or over REST.</li>
+    </ul>
+  </div>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Connects to</div></div>
+    <div class="links">
+      <a class="xlink" href="#proposals"><span class="to">Proposals</span><b>Turn defects into fixes</b><span>Fixes are reviewed like any change.</span></a>
+      <a class="xlink" href="#pipelines"><span class="to">Pipelines</span><b>Decision models</b><span>How triage answers its questions.</span></a>
+      <a class="xlink" href="#agents"><span class="to">Agents</span><b>Where notes come from</b><span>Clients submit claims over MCP.</span></a>
+    </div>
+  </section>
+</section>
+
+<!-- =================================================================== EXPLORE -->
+<section class="page" data-page="explore" id="p-explore" hidden>
+  <div class="page-head">
+    <div class="eyebrow"><span class="tag">Use</span><span>/app/graph · chat ⌘J</span></div>
+    <h1>Graph &amp; chat</h1>
+    <p class="lede">See the structure you have curated and ask questions of it. The graph view shows layers, clusters and paths; the chat assistant answers from the workspace using the same tools agents use, and can draft proposals.</p>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-head"><span class="eyebrow">Graph view</span><span class="right chip">/app/graph</span></div>
+      <div class="panel-body">
+        <p class="muted">Layers are concept schemes. Filter by layer, class and node kind, then switch layouts.</p>
+        <div class="chips"><span class="chip">Layered</span><span class="chip">Clustered</span><span class="chip">Organic</span><span class="chip">Orthogonal</span></div>
+        <div class="table-wrap" style="border: 0">
+          <table><tbody>
+            <tr><td>Focus mode</td><td>Show one node's neighborhood to a chosen depth</td></tr>
+            <tr><td>Metrics</td><td>Nodes, edges, communities, average degree, top centrality, degree distribution</td></tr>
+            <tr><td>Path finder</td><td>Shortest path between two entities</td></tr>
+            <tr><td>SPARQL</td><td>Query the graph as RDF triples</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="eyebrow">Chat assistant</span><span class="right chip">⌘J anywhere</span></div>
+      <div class="panel-body">
+        <p class="muted">An agent over the same read, propose and run tools as MCP, with the taxonomy summary in context. <b>Ask about this</b> on any entity page sends that page along. Proposals it drafts appear as cards you can open in review.</p>
+        <div class="term">
+<pre><span class="c">you   </span><span class="a">Which classes have the most individuals?</span>
+<span class="c">tool  </span><span class="t">search_entities</span> · <span class="t">list_children</span>
+<span class="c">you   </span><span class="a">How does Raft relate to Paxos?</span>
+<span class="c">tool  </span><span class="t">find_path</span>(<span class="s">Raft</span>, <span class="s">Multi-Paxos</span>)</pre>
+        </div>
+        <p class="small muted">Needs a chat model set in Configuration › General. Anthropic is used when its key works, otherwise OpenRouter.</p>
+      </div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Use cases</div><h2>When you work here</h2></div>
+    <div class="grid-2">
+      <div class="case"><span class="who">Health check</span><h3>Spot structural problems</h3><p>Isolated classes, over-connected hubs and odd communities stand out in the clustered layout and the metrics tab.</p></div>
+      <div class="case"><span class="who">Explain</span><h3>Show how two ideas connect</h3><p>Path finder or chat traces the chain of relationships between any two entities.</p></div>
+      <div class="case"><span class="who">Analysis</span><h3>Ask precise questions</h3><p>SPARQL answers questions the screens don't, such as every class in one scheme that has no definition.</p></div>
+      <div class="case"><span class="who">Drafting</span><h3>Talk through a change</h3><p>Describe what's wrong in chat; it reads the model and drafts a proposal for you to review.</p></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Workflows</div><h2>Explore a neighborhood</h2></div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow">In the app</span></div>
+        <div class="panel-body">
+          <ol class="steps">
+            <li><span class="k">1</span><div><span class="where">Taxonomy detail › Open in graph</span>Or open Graph view from the sidebar.</div></li>
+            <li><span class="k">2</span><div><span class="where">Graph filters</span>Pick layers and node kinds; choose a layout.</div></li>
+            <li><span class="k">3</span><div><span class="where">Node inspector</span>Select a node, turn on focus mode, set depth.</div></li>
+            <li><span class="k">4</span><div><span class="where">Inspector tabs</span>Check metrics, find a path, or run a SPARQL query.</div></li>
+          </ol>
+        </div>
+      </div>
+      <div class="term">
+        <div class="term-head">From an agent<span class="right">MCP</span></div>
+<pre><span class="t">search_entities</span>(<span class="a">query</span>=<span class="s">"leader election"</span>)  <span class="c"># semantic + name</span>
+<span class="t">get_neighbors</span>(<span class="a">id</span>=…, <span class="a">direction</span>=<span class="s">"both"</span>,
+              <span class="a">depth</span>=<span class="s">2</span>)                 <span class="c"># up to 2 hops</span>
+<span class="t">find_path</span>(<span class="a">source_id</span>=…, <span class="a">target_id</span>=…)
+<span class="t">list_relationships</span>(<span class="a">entity_id</span>=…, <span class="a">direction</span>=<span class="s">"out"</span>)</pre>
+      </div>
+    </div>
+  </section>
+
+  <div class="limits">
+    <div class="eyebrow">Good to know</div>
+    <ul>
+      <li>There is no separate retrieval endpoint for RAG. Agents retrieve through the tools above, the taxonomy vision and bundle exports.</li>
+      <li>Planned: searchable layer and class selectors (<a href="https://github.com/tinkermonkey/context-studio/issues/1318" target="_blank" rel="noopener">#1318</a>), a labelled data graph and a schema graph (<a href="https://github.com/tinkermonkey/context-studio/issues/1319" target="_blank" rel="noopener">#1319</a>), nodes linked to their pages (<a href="https://github.com/tinkermonkey/context-studio/issues/1320" target="_blank" rel="noopener">#1320</a>), and the latest Heimdall graph components (<a href="https://github.com/tinkermonkey/context-studio/issues/1448" target="_blank" rel="noopener">#1448</a>).</li>
+    </ul>
+  </div>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Connects to</div></div>
+    <div class="links">
+      <a class="xlink" href="#schema"><span class="to">Schema</span><b>Fix what you find</b><span>Edit classes and relationship types.</span></a>
+      <a class="xlink" href="#agents"><span class="to">Agents</span><b>Same tools, outside the app</b><span>Claude Code reads the graph too.</span></a>
+      <a class="xlink" href="#proposals"><span class="to">Proposals</span><b>Review chat drafts</b><span>Chat proposals wait there.</span></a>
+    </div>
+  </section>
+</section>
+
+<!-- =================================================================== AGENTS -->
+<section class="page" data-page="agents" id="p-agents" hidden>
+  <div class="page-head">
+    <div class="eyebrow"><span class="tag">Use</span><span>http://127.0.0.1:8000/mcp</span></div>
+    <h1>Agents (MCP)</h1>
+    <p class="lede">Connect Claude Code and client projects over MCP. Agents read the ontology and propose changes; a person reviews them in the app. One tool registry serves MCP and the in-app chat, so both see the same model.</p>
+  </div>
+
+  <div class="term">
+    <div class="term-head">Connect Claude Code<span class="right"><button class="copy" type="button" id="copy-mcp">Copy</button></span></div>
+<pre id="mcp-cmd"><span class="a">claude mcp add --transport http context-studio http://127.0.0.1:8000/mcp \
+  --header "Authorization: Bearer &lt;token from Configuration › Integrations&gt;"</span></pre>
+  </div>
+  <p class="small muted">The <a href="https://github.com/tinkermonkey/context-studio#connect-an-agent-mcp" target="_blank" rel="noopener">README's MCP section</a> covers setup. The token is generated on first start and saved as <code class="inline">mcp.auth_token</code> in <code class="inline">config.json</code>. Configuration › Integrations shows it and the full command. To rotate it, clear the value and restart. The MCP server only starts when the API listens on loopback.</p>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Tool catalog</div><h2>26 tools, 2 resources</h2><p>Results end with links to the matching page in the app. Unknown arguments are refused with the list of valid ones.</p></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Group</th><th>Tools</th><th>For</th></tr></thead>
+        <tbody>
+          <tr><td>Read</td><td><code>list_taxonomies</code> <code>list_datasets</code> <code>search_entities</code> <code>get_entity</code> <code>list_children</code> <code>list_relationships</code> <code>list_relationship_types</code> <code>list_predicates</code> <code>get_neighbors</code> <code>find_path</code></td><td>Grounding: look things up instead of guessing</td></tr>
+          <tr><td>Propose</td><td><code>propose_changes</code> <code>get_proposal</code> <code>list_proposals</code></td><td>Suggest changes; follow their review</td></tr>
+          <tr><td>Sources</td><td><code>add_source</code> <code>list_sources</code> <code>get_source</code> <code>extract_source</code></td><td>Grow a dataset from documents</td></tr>
+          <tr><td>Runs</td><td><code>run_refinement</code> <code>get_run</code></td><td>Start refinement pipelines in the background</td></tr>
+          <tr><td>Claims</td><td><code>submit_claims</code> <code>list_claims</code></td><td>Feed review notes into triage</td></tr>
+          <tr><td>Client round trip</td><td><code>submit_reflection_plan</code> <code>dr_spec_drift</code> <code>get_decisions</code> <code>get_spec_changes</code> <code>mark_proposal_landed</code></td><td>Send plans in, read decisions out, record where they landed</td></tr>
+          <tr><td>Resources</td><td><code>contextstudio://taxonomies/{id}/vision</code> <code>…/{id}/bundle</code></td><td>The model's intent and a full JSON snapshot</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Patterns</div><h2>Three ways agents use it</h2></div>
+    <div class="grid-3">
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow">Claude Code in your repo</span></div>
+        <div class="panel-body">
+          <p class="muted small">While writing code or docs, the agent searches the ontology for the right class and relationship names, and proposes a new class when one is missing instead of inventing it locally.</p>
+          <div class="chips"><span class="chip">search_entities</span><span class="chip">get_entity</span><span class="chip accent">propose_changes</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow"><a href="https://github.com/tinkermonkey/documentation_robotics" target="_blank" rel="noopener">Documentation Robotics</a></span></div>
+        <div class="panel-body">
+          <p class="muted small">DR plans changes to its spec and submits them as one proposal. A person adjudicates here. DR reads the decisions, writes its spec, and records the commit where the change landed.</p>
+          <div class="chips"><span class="chip">submit_reflection_plan</span><span class="chip">get_decisions</span><span class="chip accent">mark_proposal_landed</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow"><a href="https://github.com/tinkermonkey/house" target="_blank" rel="noopener">House</a></span><span class="right chip">private repo</span></div>
+        <div class="panel-body">
+          <p class="muted small">House round-trips through bundles. It pulls its bundle from Context Studio and tests its code against it, so Context Studio is House's source of truth for structure.</p>
+          <div class="chips"><span class="chip">…/bundle</span><span class="chip">propose_changes</span><span class="chip accent">approval policy</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Advanced example</div><h2>Context Studio on its own architecture</h2><p>Context Studio is used to build <a href="https://github.com/tinkermonkey/documentation_robotics" target="_blank" rel="noopener">Documentation Robotics</a>, which in turn models this repo. Two projects meet here, so read the layers carefully: the <b>schema</b> is DR's spec, imported as the mirrored taxonomy <code class="inline">dr_spec</code>; the <b>data</b> is this repo's own DR model, loaded as the dataset <code class="inline">context-studio</code>.</p></div>
+    <div class="panel">
+      <div class="panel-head"><span class="eyebrow">dr_spec · dataset context-studio</span><span class="right chip accent">example</span></div>
+      <div class="thread">
+        <div class="trow"><span class="tkind">class</span><div class="tbody"><code>ApplicationService</code> <span class="chip">application.applicationservice</span><span>One class per DR node type, one scheme per DR layer. Standard: ArchiMate 3.2 §9.3. Its distinguish-from text separates it from ApplicationFunction.</span></div><a class="tarea" href="#schema">Schema</a></div>
+        <div class="trow"><span class="tkind">rel. type</span><div class="tbody"><code>operation references applicationservice</code><span>From DR spec 0.10.0's relationship schemas, many-to-many.</span></div><a class="tarea" href="#schema">Schema</a></div>
+        <div class="trow"><span class="tkind">individual</span><div class="tbody"><code>application.applicationservice.versioning-service</code><span>Loaded from <code class="inline">documentation-robotics/model</code> by <code class="inline">scripts/import_dr_model.py</code>, with <code class="inline">approve-proposal</code> and three other operations referencing it.</span></div><a class="tarea" href="#data">Data</a></div>
+        <div class="trow hl"><span class="tkind">proposal</span><div class="tbody">Claude Code corrects the model<span>Reading the code, the agent sees proposals are now applied with <code class="inline">POST /api/proposals/{id}/apply</code> and proposes <code class="inline">api.operation.apply-proposal</code> with its <code class="inline">references</code> edge. A hypothetical step: it shows drift being caught by review.</span></div><a class="tarea" href="#proposals">Proposals</a></div>
+        <div class="trow"><span class="tkind">round trip</span><div class="tbody">Schema changes go the other way<span>DR proposes changes to its own spec with <code class="inline">submit_reflection_plan</code>, a person decides here, and DR reads <code class="inline">get_decisions</code>, lands them, and calls <code class="inline">mark_proposal_landed</code>.</span></div><a class="tarea" href="#proposals">Proposals</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Workflows</div><h2>Set up and use a connection</h2></div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><span class="eyebrow">In the app</span></div>
+        <div class="panel-body">
+          <ol class="steps">
+            <li><span class="k">1</span><div><span class="where">Configuration › Integrations</span>Copy the endpoint and the <code class="inline">claude mcp add</code> command.</div></li>
+            <li><span class="k">2</span><div><span class="where">Taxonomy detail › Vision</span>Write what the model is for. Agents read it before proposing.</div></li>
+            <li><span class="k">3</span><div><span class="where">Proposals</span>Filter by source <code class="inline">mcp</code> to review what agents sent.</div></li>
+            <li><span class="k">4</span><div><span class="where">Proposal › Decision sent back</span>For client proposals, see what the client will read back.</div></li>
+          </ol>
+        </div>
+      </div>
+      <div class="term">
+        <div class="term-head">A typical agent session<span class="right">MCP</span></div>
+<pre><span class="t">list_taxonomies</span>()
+read <span class="s">contextstudio://taxonomies/house/vision</span>
+<span class="t">search_entities</span>(<span class="a">query</span>=<span class="s">"laundry room"</span>)
+<span class="c"># nothing fits: propose instead of inventing</span>
+<span class="t">propose_changes</span>(<span class="a">taxonomy_id</span>=<span class="s">"house"</span>,
+  <span class="a">title</span>=<span class="s">"Add LaundryRoom"</span>, <span class="a">operations</span>=[…],
+  <span class="a">rationale</span>=<span class="s">"Needed by the chores module"</span>)
+<span class="c"># → link to the proposal; a person decides</span>
+<span class="t">get_proposal</span>(<span class="a">id</span>=…)</pre>
+      </div>
+    </div>
+  </section>
+
+  <div class="limits">
+    <div class="eyebrow">Good to know</div>
+    <ul>
+      <li>Mirrored taxonomies, such as <code class="inline">dr_spec</code>, accept schema proposals and refinement runs only from their own client over MCP.</li>
+      <li>The REST API itself has no login; origin and host checks keep other web pages out. While <code class="inline">npm run dev</code> runs, Vite listens on all network interfaces, so treat your local network as trusted.</li>
+      <li>The MCP server offers tools and resources but no prompts.</li>
+    </ul>
+  </div>
+
+  <section class="section">
+    <div class="section-head"><div class="eyebrow">Connects to</div></div>
+    <div class="links">
+      <a class="xlink" href="#proposals"><span class="to">Proposals</span><b>Where agent writes go</b><span>Review, apply, send decisions back.</span></a>
+      <a class="xlink" href="#explore"><span class="to">Graph &amp; chat</span><b>The in-app agent</b><span>Same tools, inside the app.</span></a>
+      <a class="xlink" href="#vision"><span class="to">Vision</span><b>Back to the overview</b><span>How all the areas fit together.</span></a>
+    </div>
+  </section>
+</section>
+
+        <div class="divider" style="margin-top: 32px"></div>
+        <nav class="next" id="pager" aria-label="Previous and next guide" style="margin-top: 16px"></nav>
+      </div>
+    </main>
+
+    <footer class="statusbar">
+      <span class="live"><span class="dot"></span>context-studio</span>
+      <span>ui :3100</span><span>api :8000</span><span>mcp /mcp</span>
+      <span id="status-page">9 guides · vision</span>
+    </footer>
+  </div>
+</div>
+
+<script>
+(function () {
+  var P = {
+    compass: '<circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36z"/>',
+    layers: '<path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>',
+    database: '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+    pr: '<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M6 9v12"/>',
+    message: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8"/><path d="M8 13h5"/>',
+    doc: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+    workflow: '<rect x="3" y="3" width="8" height="8" rx="2"/><path d="M7 11v4a2 2 0 0 0 2 2h4"/><rect x="13" y="13" width="8" height="8" rx="2"/>',
+    graph: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98"/><path d="m15.41 6.51-6.82 3.98"/>',
+    bot: '<rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><path d="M8 16h.01"/><path d="M16 16h.01"/>',
+    shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>',
+    quote: '<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.76-2.02-2-2H4c-1.25 0-2 .75-2 1.97V11c0 1.25.75 2 2 2h1c0 2.5-1 4-3 5"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.76-2.02-2-2h-4c-1.25 0-2 .75-2 1.97V11c0 1.25.75 2 2 2h1c0 2.5-1 4-3 5"/>',
+    history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+    target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+    lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'
+  };
+  document.querySelectorAll('i[data-icon]').forEach(function (el) {
+    var size = el.closest('.nav') ? 16 : (el.closest('.area-ic') ? 15 : 16);
+    el.outerHTML = '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (P[el.dataset.icon] || '') + '</svg>';
+  });
+
+  var order = ['vision', 'schema', 'data', 'proposals', 'claims', 'sources', 'pipelines', 'explore', 'agents'];
+  var names = { vision: 'Vision', schema: 'Schema', data: 'Data', proposals: 'Proposals', claims: 'Claims', sources: 'Sources', pipelines: 'Pipelines', explore: 'Graph & chat', agents: 'Agents (MCP)' };
+  var pages = {};
+  document.querySelectorAll('[data-page]').forEach(function (s) { pages[s.dataset.page] = s; });
+  var pager = document.getElementById('pager');
+
+  function show(scroll) {
+    var id = (location.hash || '').slice(1);
+    if (!pages[id]) id = 'vision';
+    order.forEach(function (k) { pages[k].hidden = k !== id; });
+    document.querySelectorAll('[data-nav]').forEach(function (a) {
+      if (a.dataset.nav === id) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+    document.getElementById('crumb').textContent = id;
+    document.getElementById('status-page').textContent = '9 guides · ' + id;
+    var i = order.indexOf(id);
+    var prev = order[(i + order.length - 1) % order.length], next = order[(i + 1) % order.length];
+    pager.innerHTML = '<a href="#' + prev + '">← ' + names[prev] + '</a><a href="#' + next + '">' + names[next] + ' →</a>';
+    if (scroll) window.scrollTo(0, 0);
+  }
+  window.addEventListener('hashchange', function () { show(true); });
+  show(false);
+
+
+  // ---- hero concept graph, drawn in Heimdall's GraphCanvas style ----
+  (function () {
+    var svg = document.getElementById('kg-svg');
+    if (!svg) return;
+    var NS = 'http://www.w3.org/2000/svg';
+    var NODES = [
+      { id: 'agents', label: 'Agents', kind: 'mcp', c: 'var(--d-indigo)', href: '#agents' },
+      { id: 'people', label: 'People', kind: 'review', c: 'var(--d-cyan)', href: '#proposals' },
+      { id: 'cs', label: 'Context Studio', kind: 'workbench', c: 'var(--d-amber)', sel: true },
+      { id: 'kg', label: 'Knowledge graph', kind: 'schema + data', c: 'var(--d-emerald)', href: '#schema' },
+      { id: 'src', label: 'Sources', kind: 'docs', c: 'var(--d-slate)', href: '#sources' }
+    ];
+    var EDGES = [
+      { s: 'agents', t: 'cs', l: 'propose to' },
+      { s: 'people', t: 'cs', l: 'decide in' },
+      { s: 'cs', t: 'kg', l: 'curates' },
+      { s: 'src', t: 'kg', l: 'ground' },
+      { s: 'kg', t: 'agents', l: 'context for', hot: true, curve: true }
+    ];
+    var LAYOUT = {
+      wide: { h: 250, pos: { agents: [0.15, 64], people: [0.15, 190], cs: [0.47, 127], kg: [0.82, 96], src: [0.82, 204] }, ctrl: [0.5, -34] },
+      narrow: { h: 420, pos: { agents: [0.25, 42], people: [0.75, 42], cs: [0.6, 150], kg: [0.6, 270], src: [0.6, 382] }, ctrl: [-0.1, 160] }
+    };
+    function el(tag, attrs, parent) {
+      var e = document.createElementNS(NS, tag);
+      for (var k in attrs) e.setAttribute(k, attrs[k]);
+      if (parent) parent.appendChild(e);
+      return e;
+    }
+    function edgePoint(n, tx, ty) {
+      var dx = tx - n.x, dy = ty - n.y;
+      if (!dx && !dy) return [n.x, n.y];
+      var t = Math.min(dx ? (n.w / 2 + 3) / Math.abs(dx) : Infinity, dy ? (n.h / 2 + 3) / Math.abs(dy) : Infinity);
+      return [n.x + dx * t, n.y + dy * t];
+    }
+    function draw() {
+      var W = Math.round(svg.getBoundingClientRect().width);
+      if (!W) return;
+      var L = W >= 620 ? LAYOUT.wide : LAYOUT.narrow;
+      var H = L.h;
+      while (svg.lastChild && svg.lastChild.nodeName !== 'desc') svg.removeChild(svg.lastChild);
+      svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+      svg.setAttribute('height', H);
+      var defs = el('defs', {}, svg);
+      var pat = el('pattern', { id: 'kg-grid', width: 18, height: 18, patternUnits: 'userSpaceOnUse' }, defs);
+      el('circle', { cx: 1, cy: 1, r: 1, 'class': 'kg-dot' }, pat);
+      ['', 'hot'].forEach(function (v) {
+        var m = el('marker', { id: 'kg-arr' + v, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
+        el('path', { d: 'M0,1 L9,5 L0,9 z', 'class': 'kg-arrow ' + v }, m);
+      });
+      el('rect', { x: 0, y: 0, width: W, height: H, fill: 'url(#kg-grid)' }, svg);
+      var edgeLayer = el('g', {}, svg), labelLayer = el('g', {}, svg), nodeLayer = el('g', {}, svg);
+      var byId = {};
+      NODES.forEach(function (n) {
+        var g = el('g', { 'class': 'kg-node' + (n.sel ? ' sel' : '') }, nodeLayer);
+        var host = n.href ? el('a', { href: n.href, 'class': 'kg-link', 'aria-label': n.label + ': open its guide' }, g) : g;
+        var ring = n.sel ? el('rect', { 'class': 'ring', rx: 6 }, host) : null;
+        var box = el('rect', { 'class': 'box', rx: 4, height: 30 }, host);
+        var sw = el('rect', { width: 3, height: 16, rx: 1, fill: n.c }, host);
+        var lbl = el('text', { 'class': 'lbl' }, host); lbl.textContent = n.label;
+        var kbg = el('rect', { 'class': 'kind-bg', rx: 2, height: 15 }, host);
+        var kt = el('text', { 'class': 'kind' }, host); kt.textContent = n.kind;
+        var lw = lbl.getComputedTextLength(), kw = kt.getComputedTextLength() + 10;
+        var w = 6 + 3 + 7 + lw + 8 + kw + 8, h = 30;
+        var p = L.pos[n.id], cx = Math.max(w / 2 + 6, Math.min(W - w / 2 - 6, p[0] * W)), cy = p[1];
+        var x = cx - w / 2, y = cy - h / 2;
+        box.setAttribute('x', x); box.setAttribute('y', y); box.setAttribute('width', w);
+        if (ring) { ring.setAttribute('x', x - 3); ring.setAttribute('y', y - 3); ring.setAttribute('width', w + 6); ring.setAttribute('height', h + 6); }
+        sw.setAttribute('x', x + 6); sw.setAttribute('y', cy - 8);
+        lbl.setAttribute('x', x + 16); lbl.setAttribute('y', cy + 0.5);
+        kbg.setAttribute('x', x + 16 + lw + 8); kbg.setAttribute('y', cy - 7.5); kbg.setAttribute('width', kw);
+        kt.setAttribute('x', x + 16 + lw + 13); kt.setAttribute('y', cy + 0.5);
+        byId[n.id] = { x: cx, y: cy, w: w, h: h };
+      });
+      EDGES.forEach(function (e) {
+        var a = byId[e.s], b = byId[e.t];
+        var g = el('g', { 'class': 'kg-edge' + (e.hot ? ' hot' : '') }, edgeLayer);
+        var d, mx, my;
+        if (e.curve) {
+          var qx = L.ctrl[0] * W, qy = L.ctrl[1];
+          var p0 = edgePoint(a, qx, qy), p1 = edgePoint(b, qx, qy);
+          d = 'M' + p0[0] + ',' + p0[1] + ' Q' + qx + ',' + qy + ' ' + p1[0] + ',' + p1[1];
+          mx = 0.25 * p0[0] + 0.5 * qx + 0.25 * p1[0]; my = 0.25 * p0[1] + 0.5 * qy + 0.25 * p1[1];
+        } else {
+          var s0 = edgePoint(a, b.x, b.y), s1 = edgePoint(b, a.x, a.y);
+          d = 'M' + s0[0] + ',' + s0[1] + ' L' + s1[0] + ',' + s1[1];
+          mx = (s0[0] + s1[0]) / 2; my = (s0[1] + s1[1]) / 2;
+        }
+        el('path', { 'class': 'line', d: d, 'marker-end': 'url(#kg-arr' + (e.hot ? 'hot' : '') + ')' }, g);
+        var lg = el('g', { 'class': 'kg-edge' + (e.hot ? ' hot' : '') }, labelLayer);
+        var bg = el('rect', { 'class': 'lbg', rx: 3, height: 17 }, lg);
+        var t = el('text', { 'class': 'ltx', x: mx, y: my + 0.5 }, lg); t.textContent = e.l;
+        var tw = t.getComputedTextLength() + 12;
+        mx = Math.max(tw / 2 + 4, Math.min(W - tw / 2 - 4, mx)); t.setAttribute('x', mx);
+        bg.setAttribute('x', mx - tw / 2); bg.setAttribute('y', my - 8.5); bg.setAttribute('width', tw);
+      });
+    }
+    var raf = 0;
+    function schedule() { cancelAnimationFrame(raf); raf = requestAnimationFrame(draw); }
+    draw();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedule);
+    if (window.ResizeObserver) new ResizeObserver(schedule).observe(svg);
+    else window.addEventListener('resize', schedule);
+    window.addEventListener('hashchange', schedule);
+  })();
+
+  var btn = document.getElementById('copy-mcp');
+  btn.addEventListener('click', function () {
+    var text = document.getElementById('mcp-cmd').textContent;
+    var done = function () { btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = 'Copy'; }, 1500); };
+    var fallback = function () {
+      var r = document.createRange(); r.selectNodeContents(document.getElementById('mcp-cmd'));
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = 'Selected';
+    };
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+  });
+})();
+</script>
+
+</body>
+</html>
