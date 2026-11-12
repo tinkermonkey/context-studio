@@ -6,6 +6,10 @@ them to the whole text (and to a page), then folds the same triple found in
 several chunks into one, keeping every passage as evidence. A typing triple
 (individual ``is_a`` class) is an individual candidate, so the same individual
 of the same class found in several chunks becomes one candidate.
+
+Individuals are matched by `individual_key` (#1575), so "screws (D)" and
+"Screw", or "Moen Inc." and "Moen", are the same individual, shown by its
+`preferred_label`.
 """
 
 from __future__ import annotations
@@ -15,6 +19,7 @@ from typing import Any, Sequence
 
 from domain.extraction.chunking import Chunk, page_of
 from domain.pipelines.candidate_ids import mention_key
+from domain.pipelines.individual_extraction.labels import individual_key, preferred_label
 
 
 def merge_chunk_triples(
@@ -25,7 +30,8 @@ def merge_chunk_triples(
     Merge per-chunk triples into whole-text triples with every passage.
 
     Triples merge when their subject, predicate and object match after
-    normalizing labels. The merged triple is the first one found, with:
+    normalizing labels (individuals by `individual_key`). The merged triple is
+    the first one found, with:
 
     - ``passages``: ``[{quote, start, end, page}]`` from every chunk it was
       found in, in the order found, offsets into the whole text
@@ -36,6 +42,10 @@ def merge_chunk_triples(
       none (recognition found the existing node in another chunk)
     - ``near_matches``: the union of the merged triples' recognition near
       misses, best first (only when any had them)
+
+    Every individual without an id, in any triple, takes its key's preferred
+    label: a recognized individual's title when one with that key was
+    recognized, else `preferred_label` of every label found with that key.
 
     Merged triples are in order of first appearance, so the positional
     candidate ids (``triple-{i}``) stay stable.
@@ -49,8 +59,11 @@ def merge_chunk_triples(
     """
     starts = list(page_starts or [])
     merged: dict[tuple, dict[str, Any]] = {}
+    # Individual key -> (titles of recognized individuals, every label found)
+    labels: dict[str, tuple[list[str], list[str]]] = {}
     for chunk, triples in chunk_triples:
         for triple in triples:
+            _collect_labels(triple, labels)
             span = _whole_text_span(triple.get("provenance"), chunk)
             key = _triple_key(triple)
             item = merged.get(key)
@@ -79,6 +92,7 @@ def merge_chunk_triples(
                     item["passages"].append(passage)
 
     for item in merged.values():
+        _relabel(item, labels)
         if item["passages"]:
             placed = [p for p in item["passages"] if p["start"] is not None]
             first = (placed or item["passages"])[0]
@@ -114,11 +128,45 @@ def _triple_key(triple: dict[str, Any]) -> tuple:
     object_value = obj.get("label") if obj.get("kind") != "literal" else obj.get("value")
     return (
         subject.get("kind"),
-        mention_key(str(subject.get("label") or "")),
+        _node_key(subject.get("kind"), subject.get("label")),
         mention_key(str(predicate.get("label") or "")),
         obj.get("kind"),
-        mention_key(str(object_value if object_value is not None else "")),
+        _node_key(obj.get("kind"), object_value),
     )
+
+
+def _node_key(kind: Any, label: Any) -> str:
+    """A subject or object label normalized: an individual's by `individual_key`."""
+    text = str(label if label is not None else "")
+    return individual_key(text) if kind == "individual" else mention_key(text)
+
+
+def _individual_nodes(triple: dict[str, Any]) -> list[dict[str, Any]]:
+    """A triple's subject and object that are individuals with a label."""
+    return [
+        node
+        for node in (triple.get("subject"), triple.get("object"))
+        if isinstance(node, dict) and node.get("kind") == "individual" and node.get("label")
+    ]
+
+
+def _collect_labels(triple: dict[str, Any], labels: dict[str, tuple[list[str], list[str]]]) -> None:
+    """Note a triple's individual labels under their key, a recognized one's as a title."""
+    for node in _individual_nodes(triple):
+        label = str(node["label"])
+        titles, found = labels.setdefault(individual_key(label), ([], []))
+        found.append(label)
+        if node.get("id"):
+            titles.append(label)
+
+
+def _relabel(item: dict[str, Any], labels: dict[str, tuple[list[str], list[str]]]) -> None:
+    """Give a merged triple's unrecognized individuals their key's preferred label."""
+    for node in _individual_nodes(item):
+        if node.get("id"):
+            continue  # a recognized individual keeps its title
+        titles, found = labels[individual_key(str(node["label"]))]
+        node["label"] = titles[0] if titles else preferred_label(found)
 
 
 def _merge_near_matches(first: list[dict], second: list[dict]) -> list[dict]:
