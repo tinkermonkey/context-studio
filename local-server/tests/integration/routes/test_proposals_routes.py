@@ -328,6 +328,38 @@ class TestApply:
         assert (forced["status"], forced["stale"]) == ("applied", False)
         assert ontology.get_class(graph["room"]).description == "Any room"
 
+    def test_a_relationship_outside_its_types_range_is_flagged_and_fails(
+        self, client, graph, ontology
+    ):
+        place = ontology.create_class(graph["vocab"], "Place")
+        garden = ontology.create_individual(place.id, "Garden")
+        near = ontology.create_property_definition(
+            "near", "near", domain_class_id=graph["room"], range_class_id=graph["room"]
+        )
+        proposal = _propose(
+            client,
+            graph,
+            {
+                "seq": 1,
+                "op": "create",
+                "kind": "relationship",
+                "fields": {
+                    "source_id": graph["den"],
+                    "target_id": garden.id,
+                    "property_definition_id": near.id,
+                },
+            },
+        )
+        [operation] = proposal["operations"]
+        assert operation["domain_range_mismatch"] == "target is Place, not Room"
+
+        failed = client.post(
+            f"/api/proposals/{proposal['id']}/apply", json={"operation_ids": [operation["id"]]}
+        ).json()["operations"][0]
+        assert failed["status"] == "failed"
+        assert failed["reason"].startswith("domain_range_mismatch: target is Place, not Room")
+        assert ontology.list_relationships(property_id=near.id) == []
+
     def test_input_errors(self, client, graph):
         proposal = _propose(client, graph, _describe_room(graph, seq=1))
         [op_id] = _op_ids(proposal, 1)

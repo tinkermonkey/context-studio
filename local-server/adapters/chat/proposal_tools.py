@@ -363,6 +363,9 @@ class ProposeChangesTool(_ProposalTool):
         " (edges), the types they could all move to (replacements) or why none fits"
         " (move_unavailable_reason); a reviewer must resolve them before it applies."
         " A delete naming its replacement has replacement_check (see get_proposal)."
+        " A relationship create whose source or target doesn't fit its type's domain or"
+        " range (an individual of a subclass fits) has domain_range_mismatch saying why;"
+        " it never applies as is: pick a fitting type or ends, or leave it out."
         " With dry_run true nothing is stored or applied: you get the same check, each"
         " operation's scope, stale flag, blockers, replacement check and auto_apply"
         " (eligible to auto-apply: the approval policy would apply it at once and no"
@@ -572,7 +575,15 @@ def _not_stored(
 
 
 # What propose_changes reports of each operation (get_proposal has the rest).
-_OUTCOME_KEYS = ("seq", "status", "scope", "result_entity_id", "reason", "blockers")
+_OUTCOME_KEYS = (
+    "seq",
+    "status",
+    "scope",
+    "result_entity_id",
+    "reason",
+    "blockers",
+    "domain_range_mismatch",
+)
 _DRY_RUN_KEYS = (
     "seq",
     "op",
@@ -581,6 +592,7 @@ _DRY_RUN_KEYS = (
     "auto_apply",
     "stale",
     "blockers",
+    "domain_range_mismatch",
     "dataset_impact",
 )
 
@@ -663,14 +675,20 @@ def _dry_run(view: dict[str, Any], tool: str = "propose_changes") -> ToolOutcome
 
 def _needs_attention(operation: dict[str, Any]) -> bool:
     """
-    A dry-run operation that is blocked, stale, or names a replacement that
-    isn't the same pair of classes or that the proposal also deletes.
+    A dry-run operation that is blocked, stale, a relationship that doesn't
+    fit its type, or names a replacement that isn't the same pair of classes or
+    that the proposal also deletes.
     """
     check = operation.get("replacement_check") or {}
     flagged = check and (
         check.get("pair") != "same" or check.get("replacement_deleted") or check.get("cycle")
     )
-    return bool(operation.get("blockers") or operation.get("stale") or flagged)
+    return bool(
+        operation.get("blockers")
+        or operation.get("stale")
+        or operation.get("domain_range_mismatch")
+        or flagged
+    )
 
 
 def _dry_run_digest(payload: dict[str, Any]) -> dict[str, Any]:
@@ -688,9 +706,9 @@ def _dry_run_digest(payload: dict[str, Any]) -> dict[str, Any]:
         "auto_apply_seqs": [o["seq"] for o in plain if o.get("auto_apply")],
         "review_seqs": [o["seq"] for o in plain if not o.get("auto_apply")],
         "digest": (
-            "too many operations to list whole: operations details those blocked, stale"
-            " or with a flagged replacement (attention_seqs lists them all); the rest"
-            " validated and are listed by seq"
+            "too many operations to list whole: operations details those blocked, stale,"
+            " not fitting their type or with a flagged replacement (attention_seqs lists"
+            " them all); the rest validated and are listed by seq"
         ),
     }
 
@@ -730,7 +748,8 @@ class GetProposalTool(_ProposalTool):
         " its relationships), or missing; replacement_deleted means the proposal deletes"
         " the replacement too (chain follows each delete's replacement; cycle means the"
         " deletes name each other and none survives). A pending relationship-type delete"
-        " still in use has blockers (see propose_changes). Each operation also has its"
+        " still in use has blockers, and a relationship create that doesn't fit its"
+        " type has domain_range_mismatch (see propose_changes). Each operation also has its"
         " base (the touched values when proposed; a delete's whole entity), rationale,"
         " notes, evidence (source passages carry source_id, page, start and end) and"
         " probability; an individual create may list alternatives (near matches: existing"

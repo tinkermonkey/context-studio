@@ -36,6 +36,7 @@ from domain.ontology.events import (
 )
 from domain.ontology.exceptions import (
     CircularReferenceError,
+    DomainRangeMismatchError,
     DuplicateEntityError,
     EntityNotFoundError,
     IdentifierConflictError,
@@ -1284,6 +1285,52 @@ class TestCreateRelationship:
                 target_id=mammal.id,
                 property_definition_id=prop.id,
             )
+
+
+class TestCreateRelationshipDomainRange:
+    """create_relationship refuses ends that don't fit the type's domain and range (#1574)."""
+
+    @pytest.fixture
+    def house(self, service):
+        tax = service.create_taxonomy(title="House")
+        scheme = service.create_scheme(taxonomy_id=tax.id, title="Vocabulary")
+        room = service.create_class(concept_scheme_id=scheme.id, title="Room")
+        kitchen = service.create_class(
+            concept_scheme_id=scheme.id, title="Kitchen", parent_class_id=room.id
+        )
+        place = service.create_class(concept_scheme_id=scheme.id, title="Place")
+        near = service.create_property_definition(
+            identifier="near", title="near", domain_class_id=room.id, range_class_id=room.id
+        )
+        return {
+            "near": near.id,
+            "kitchen": kitchen.id,
+            "den": service.create_individual(room.id, "Den").id,
+            "galley": service.create_individual(kitchen.id, "Galley").id,
+            "garden": service.create_individual(place.id, "Garden").id,
+        }
+
+    def test_a_target_outside_the_range_raises_with_the_reason(self, service, house):
+        with pytest.raises(DomainRangeMismatchError) as caught:
+            service.create_relationship(house["den"], house["garden"], house["near"])
+
+        assert caught.value.reason == "target is Place, not Room"
+        assert service._repository.list_relationships(property_id=house["near"]) == []
+
+    def test_a_source_outside_the_domain_raises(self, service, house):
+        with pytest.raises(DomainRangeMismatchError, match="source is Place, not Room"):
+            service.create_relationship(house["garden"], house["den"], house["near"])
+
+    def test_a_subclass_individual_and_a_subclass_end_fit(self, service, house):
+        service.create_relationship(house["den"], house["galley"], house["near"])
+        service.create_relationship(house["kitchen"], house["den"], house["near"])
+
+        assert len(service._repository.list_relationships(property_id=house["near"])) == 2
+
+    def test_an_untyped_type_accepts_any_ends(self, service, house):
+        loose = service.create_property_definition(identifier="beside", title="beside")
+
+        service.create_relationship(house["den"], house["garden"], loose.id)
 
 
 class TestDeleteRelationship:

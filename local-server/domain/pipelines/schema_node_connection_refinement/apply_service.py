@@ -20,7 +20,7 @@ import logging
 import re
 from typing import TYPE_CHECKING
 
-from domain.ontology.exceptions import EntityNotFoundError
+from domain.ontology.exceptions import DomainRangeMismatchError, EntityNotFoundError
 from domain.pipelines.apply_result import ApplyResult
 from domain.pipelines.apply_selection import check_accepted_ids
 from domain.pipelines.candidate_ids import enumerate_items
@@ -149,12 +149,17 @@ class SchemaConnectionRefinementApplyService:
                 if existing or prop_def.derived:
                     result.relationships_skipped += 1
                     continue
-                new_rel = self._ontology_service.create_relationship(
-                    source_id=src_id,
-                    target_id=tgt_id,
-                    property_definition_id=prop_def.id,
-                    source_run_id=run.id,
-                )
+                try:
+                    new_rel = self._ontology_service.create_relationship(
+                        source_id=src_id,
+                        target_id=tgt_id,
+                        property_definition_id=prop_def.id,
+                        source_run_id=run.id,
+                    )
+                except DomainRangeMismatchError as exc:
+                    _logger.info("Skipping connection %s -> %s: %s", src_id, tgt_id, exc)
+                    result.relationships_skipped += 1
+                    continue
                 result.relationships_created += 1
                 result.created_relationship_ids.append(new_rel.id)
 

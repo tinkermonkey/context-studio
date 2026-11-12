@@ -20,6 +20,7 @@ import shutil
 import tempfile
 from pathlib import Path
 from types import SimpleNamespace
+from uuid import uuid4
 
 import pytest
 from sqlalchemy.orm import sessionmaker
@@ -34,6 +35,7 @@ from adapters.persistence.sqlite.ontology_repo import SQLiteOntologyRepository
 from adapters.persistence.sqlite.proposal_repo import SQLiteChangeProposalRepository
 from adapters.persistence.sqlite.transaction import SharedSessionFactory, SqliteTransactionScope
 from domain.interchange.services import get_current_batch_run_id, set_batch_run_context
+from domain.ontology.entities import Relationship
 from domain.ontology.services import OntologyService
 from domain.versioning.proposal_service import OperationDraft, ProposalService
 from domain.versioning.proposals import (
@@ -219,7 +221,16 @@ def test_a_reverse_swaps_a_pair_running_both_ways(parts):
     repo = parts.repo
     reversed_type = prop_by_dr_id(repo, REVERSED)
     one = repo.list_relationships(property_id=reversed_type.id, limit=1)[0]
-    mirror = parts.ontology.create_relationship(one.target_id, one.source_id, reversed_type.id)
+    # The mirror breaks the type's domain and range, so the service refuses it
+    # (#1574); data stored before that was enforced may still hold one.
+    mirror = repo.save_relationship(
+        Relationship(
+            id=str(uuid4()),
+            source_id=one.target_id,
+            target_id=one.source_id,
+            property_definition_id=reversed_type.id,
+        )
+    )
     before = edges(repo, reversed_type)
 
     proposal = reverse_and_rename(parts)

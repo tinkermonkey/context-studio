@@ -51,6 +51,7 @@ from typing import TYPE_CHECKING, Any, Iterable
 
 from domain.ontology.datasets import yielding_dataset_ids
 from domain.ontology.entities import edge_attribute_values
+from domain.ontology.relationship_fit import RelationshipFit
 
 if TYPE_CHECKING:
     from domain.ontology.entities import PropertyDefinition, Relationship
@@ -203,9 +204,8 @@ class InUseInspector:
 
     def __init__(self, repo: OntologyRepository) -> None:
         self._repo = repo
-        self._ancestors: dict[str, frozenset[str]] = {}
+        self._fit = RelationshipFit(repo)
         self._ends: dict[str, EdgeEnd] = {}
-        self._class_titles: dict[str, str] = {}
         self._types: list[PropertyDefinition] | None = None
         self._class_taxonomies: dict[str, str | None] = {}
         self._yielding: frozenset[str] | None = None
@@ -367,21 +367,10 @@ class InUseInspector:
 
     def ancestors_of(self, class_id: str) -> frozenset[str]:
         """The class and every class above it."""
-        if class_id not in self._ancestors:
-            seen: list[str] = []
-            current: str | None = class_id
-            while current is not None and current not in seen:
-                seen.append(current)
-                cls = self._repo.get_class(current)
-                current = cls.parent_class_id if cls is not None else None
-            self._ancestors[class_id] = frozenset(seen)
-        return self._ancestors[class_id]
+        return self._fit.ancestors_of(class_id)
 
     def _class_title(self, class_id: str) -> str:
-        if class_id not in self._class_titles:
-            cls = self._repo.get_class(class_id)
-            self._class_titles[class_id] = cls.title if cls is not None else class_id
-        return self._class_titles[class_id]
+        return self._fit.class_title(class_id)
 
     def edge(self, relationship: Relationship) -> BlockingEdge:
         """A relationship with its ends' classes and datasets."""

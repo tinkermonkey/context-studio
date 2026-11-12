@@ -434,3 +434,43 @@ describe("deciding from the banner and the table", () => {
     expect(screen.queryByTestId("operation-decided-by")).not.toBeInTheDocument();
   });
 });
+
+describe("a relationship that doesn't fit its type (#1574)", () => {
+  beforeEach(() => {
+    proposal.operations.push({
+      ...opById("op-class"),
+      id: "op-edge",
+      seq: 5,
+      op: "create",
+      kind: "relationship",
+      target_id: null,
+      fields: { source_id: "class-2", target_id: "class-1", property_definition_id: "prop-1" },
+      base: {},
+      scope: "additive",
+      status: "failed",
+      reason: "domain_range_mismatch: target is Service, not Component",
+      domain_range_mismatch: "target is Service, not Component",
+    });
+  });
+
+  it("flags the row and explains the mismatch instead of offering Apply again", async () => {
+    renderPage("op-edge");
+
+    const chip = await screen.findByTestId("operation-domain-range-op-edge");
+    expect(chip).toHaveTextContent("doesn't fit type");
+    expect(chip).toHaveAttribute("title", "target is Service, not Component");
+    expect(screen.getByTestId("operation-domain-range-callout")).toHaveTextContent(
+      "It doesn't fit its relationship type: target is Service, not Component.",
+    );
+    expect(screen.queryByTestId("operation-failed-callout")).not.toBeInTheDocument();
+  });
+
+  it("shows nothing for a relationship that fits", async () => {
+    opById("op-edge").domain_range_mismatch = null;
+    renderPage("op-edge");
+
+    expect(await screen.findByTestId("operation-status-op-edge")).toBeInTheDocument();
+    expect(screen.queryByTestId("operation-domain-range-op-edge")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("operation-domain-range-callout")).not.toBeInTheDocument();
+  });
+});

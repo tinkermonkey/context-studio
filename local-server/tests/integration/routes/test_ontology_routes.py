@@ -519,6 +519,36 @@ class TestRelationshipCRUD:
         )
         assert response.status_code == status.HTTP_201_CREATED
 
+    def test_create_relationship_outside_its_types_range_returns_422(self, client):
+        """POST /api/relationships refuses ends that don't fit the type (#1574)."""
+        taxonomy_id = client.post("/api/taxonomies", json={"title": "House"}).json()["id"]
+        scheme_id = client.post(
+            f"/api/taxonomies/{taxonomy_id}/schemes", json={"title": "Vocabulary"}
+        ).json()["id"]
+        room_id, place_id = (
+            client.post(f"/api/schemes/{scheme_id}/classes", json={"title": t}).json()["id"]
+            for t in ("Room", "Place")
+        )
+        created = client.post(
+            "/api/properties",
+            json={
+                "identifier": "near",
+                "title": "near",
+                "domain_class_id": room_id,
+                "range_class_id": room_id,
+            },
+        )
+        assert created.status_code == status.HTTP_201_CREATED, created.text
+
+        response = client.post(
+            "/api/relationships",
+            json={"source_id": room_id, "target_id": place_id, "relationship_type": "near"},
+        )
+
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert "target is Place, not Room" in response.json()["detail"]
+        assert client.get("/api/relationships").json()["total"] == 0
+
     def test_list_relationships_returns_200(self, client):
         """GET /api/relationships returns 200 with list response."""
         tax_response = client.post("/api/taxonomies", json={"title": "Test Taxonomy"})

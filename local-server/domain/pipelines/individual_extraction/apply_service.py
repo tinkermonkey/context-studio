@@ -28,6 +28,7 @@ from domain.ontology.datasets import resolve_dataset_id
 from domain.ontology.exceptions import (
     DatasetMismatchError,
     DerivedTypeError,
+    DomainRangeMismatchError,
     DuplicateEntityError,
     EntityNotFoundError,
 )
@@ -609,7 +610,7 @@ class IndividualExtractionApplyService:
         source_run_id: str,
         result: ApplyResult,
     ) -> None:
-        """Create a relationship if it does not already exist."""
+        """Create a relationship if it does not already exist and fits its type (#1574)."""
         if source_id == target_id:
             result.relationships_skipped += 1
             return
@@ -633,16 +634,22 @@ class IndividualExtractionApplyService:
                 property_definition_id=property_definition_id,
                 source_run_id=source_run_id,
             )
-        except (EntityNotFoundError, DerivedTypeError, DatasetMismatchError):
+        except (
+            EntityNotFoundError,
+            DerivedTypeError,
+            DatasetMismatchError,
+            DomainRangeMismatchError,
+        ) as exc:
             # The extracted predicate or object refers to an entity that does not exist,
-            # the relationship type is derived (its client computes those), or the
-            # object is in another dataset (relationships never cross datasets).
+            # the relationship type is derived (its client computes those), the
+            # object is in another dataset (relationships never cross datasets), or
+            # an end doesn't fit the type's domain or range (#1574).
             _logger.warning(
-                "Skipping relationship %s -[%s]-> %s: endpoint or property not found, or"
-                " the relationship type is derived",
+                "Skipping relationship %s -[%s]-> %s: %s",
                 source_id,
                 property_definition_id,
                 target_id,
+                exc,
             )
             result.relationships_skipped += 1
             return

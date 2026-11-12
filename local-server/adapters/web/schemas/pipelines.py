@@ -421,7 +421,8 @@ class ApplyRunResponse(BaseModel):
             "entity owns the title), missing_class (no existing class to type an "
             "individual), self_loop (source and target are the same entity), "
             "derived_type (its class or relationship type is derived: the client "
-            "computes those, so none is created). "
+            "computes those, so none is created), domain_range_mismatch (a "
+            "relationship's ends don't fit its type's domain or range). "
             "Populated for schema_extraction and individual_extraction."
         ),
     )

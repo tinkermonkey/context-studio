@@ -354,6 +354,58 @@ class TestRelationshipCreation:
         assert len(rels) == 1
         assert rels[0].source_run_id == "run-ind-1"
 
+    def _typed_target(self, repo):
+        """works_for runs Person -> Org; a Company is an Org, a Place is not (#1574)."""
+        for cls_id, title, parent in (
+            ("cls-org", "Org", None),
+            ("cls-company", "Company", "cls-org"),
+            ("cls-place", "Place", None),
+        ):
+            repo.save_class(
+                Class(
+                    id=cls_id,
+                    concept_scheme_id=SCHEME_ID,
+                    taxonomy_id=TAXONOMY_ID,
+                    title=title,
+                    parent_class_id=parent,
+                )
+            )
+        repo.save_property_definition(
+            PropertyDefinition(
+                id="prop-works-for",
+                identifier="works_for",
+                title="Works for",
+                domain_class_id=CLASS_ID,
+                range_class_id="cls-org",
+            )
+        )
+
+    def test_a_relationship_outside_the_types_range_is_skipped(self, svc, repo):
+        self._typed_target(repo)
+        run = _make_run(
+            triples=[_make_triple("Alice", predicate_prop_id="prop-works-for", obj_id="cls-place")]
+        )
+
+        result = svc.apply(run)
+
+        assert result.individuals_created == 1
+        assert result.relationships_created == 0
+        assert result.relationships_skipped == 1
+        assert repo.list_relationships(property_id="prop-works-for") == []
+
+    def test_a_relationship_to_a_subclass_of_the_range_is_created(self, svc, repo):
+        self._typed_target(repo)
+        run = _make_run(
+            triples=[
+                _make_triple("Alice", predicate_prop_id="prop-works-for", obj_id="cls-company")
+            ]
+        )
+
+        result = svc.apply(run)
+
+        assert result.relationships_created == 1
+        assert result.relationships_skipped == 0
+
 
 # ---------------------------------------------------------------------------
 # Recognition stage
