@@ -113,14 +113,12 @@ def _view(service: ProposalService, proposal: ChangeProposal, dry_run: bool = Fa
     drift), compacted: nulls and empty lists or objects are left out, and each
     in-use blocker lists at most MAX_BLOCKER_EDGES relationships and move
     targets (edges_total and replacements_total say how many there are), and
-    dry_run and no_passage appear only when true.
+    dry_run appears only when true.
     """
     view = _compact(proposal_response(service, proposal, dry_run=dry_run).model_dump(mode="json"))
     if not view.get("dry_run"):
         view.pop("dry_run", None)
     for operation in view["operations"]:
-        if not operation.get("no_passage"):
-            operation.pop("no_passage", None)
         blockers = operation.get("blockers") or {}
         for key in ("edges", "replacements"):
             if len(blockers.get(key, ())) > MAX_BLOCKER_EDGES:
