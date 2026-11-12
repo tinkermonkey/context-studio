@@ -39,6 +39,7 @@ from domain.pipelines.orchestration.base import (
     PipelineState,
 )
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
+from domain.pipelines.schema_extraction.apply_service import class_title_key, taxonomy_classes
 from domain.pipelines.schema_extraction.prompts import SCHEMA_EXTRACTION_STAGES
 from domain.pipelines.stage_prompts import render, resolve_stage_prompts
 
@@ -541,18 +542,22 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         """
         Stage 3: Classify each candidate as existing (True) or new (False).
 
-        If ontology_id is provided and an ontology_repo is wired in, fetches existing
-        class labels and marks candidates that already exist. Otherwise marks all as new.
+        If ontology_id (a taxonomy id) is provided and an ontology_repo is wired in,
+        marks candidates whose title (by ``class_title_key``) a class in that taxonomy
+        has, the rule apply dedups by. Otherwise marks all as new.
         """
-        existing_labels: set[str] = set()
+        existing_titles: set[str] = set()
 
         ontology_id = state.input_data.get("ontology_id")
         if ontology_id and self._ontology_repo is not None:
-            classes = self._ontology_repo.list_classes(limit=None)
-            existing_labels = {cls.label.lower() for cls in classes}
+            existing_titles = {
+                class_title_key(cls.title)
+                for cls in taxonomy_classes(self._ontology_repo, str(ontology_id))
+            }
 
         classified = {
-            concept: concept.lower() in existing_labels for concept in state.candidate_concepts
+            concept: class_title_key(concept) in existing_titles
+            for concept in state.candidate_concepts
         }
 
         return replace(

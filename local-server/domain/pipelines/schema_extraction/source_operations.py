@@ -4,7 +4,9 @@ A schema-extraction run's candidates on a source as proposal operations (#1552).
 The same rules as applying a run (`apply_service.py`) decide what is new: a
 class candidate whose title (by `class_title_key`) the taxonomy already has,
 or a property candidate whose identifier (its label slugified) a relationship
-type already has, is skipped.
+type already has, is skipped; so is a property candidate whose identifier a
+class, scheme or taxonomy has ("identifier_taken": identifiers are unique
+across kinds, and a type is matched to its candidate by that slug).
 
 - A new class is a class create in the taxonomy's first concept scheme (a
   reviewer can edit it before applying), with its proposed definition as its
@@ -142,6 +144,12 @@ def plan_schema_operations(
             continue
         if identifier in properties or repo.get_property_definition_by_identifier(identifier):
             plan.skip(label, "exists")
+            continue
+        if repo.get_by_identifier(identifier) is not None:
+            # A class, scheme or taxonomy has it (identifiers are unique across
+            # kinds); the type keeps its slug, so it isn't proposed. The plan's
+            # own class creates never take it: property identifiers are reserved.
+            plan.skip(label, "identifier_taken")
             continue
         properties.add(identifier)
         if repo.get_predicate_by_identifier(taxonomy_id, identifier) is None:

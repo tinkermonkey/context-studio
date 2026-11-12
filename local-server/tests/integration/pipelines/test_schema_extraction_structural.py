@@ -9,6 +9,8 @@ Tests verify:
 5. Uses shared test harness for fixture I/O
 """
 
+from unittest.mock import MagicMock
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -142,6 +144,28 @@ class TestSchemaExtractionStructural:
         assert len(result.created_class_ids) == 1
         assert len(result.created_property_definition_ids) == 1
         assert len(result.created_relationship_ids) == 1
+
+
+class TestIdentifierTaken:
+    """A new relationship type whose identifier a class has is skipped (#1571)."""
+
+    def test_apply_skips_the_type_instead_of_a_unique_error(self, ontology_service, ontology_repo):
+        taxonomy = ontology_service.create_taxonomy(title="House", identifier="house")
+        scheme = ontology_service.create_scheme(taxonomy.id, "Resources", identifier="resources")
+        ontology_service.create_class(scheme.id, "Ownership", identifier="owns")
+        run = MagicMock()
+        run.id = "run-1"
+        run.output_summary = {
+            "candidates": [{"kind": "property_definition", "label": "Owns", "confidence": 0.9}],
+            "connections": [],
+        }
+
+        result = SchemaExtractionApplyService(ontology_service, ontology_repo).apply(
+            run, taxonomy_id=taxonomy.id, concept_scheme_id=scheme.id
+        )
+
+        assert result.skip_reasons == {"property-0": "identifier_taken"}
+        assert ontology_repo.get_property_definition_by_identifier("owns") is None
 
 
 class TestSchemaExtractionViaHarness:

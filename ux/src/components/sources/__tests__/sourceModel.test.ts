@@ -224,6 +224,7 @@ describe("sourceModel", () => {
       ["self_loop", "points at itself"],
       ["invalid", "refused as invalid"],
       ["no_scheme", "no concept scheme"],
+      ["identifier_taken", "identifier already in use"],
       // An unknown code reads as words.
       ["some_new_reason", "some new reason"],
     ])("words the skip reason %s as %s", (code, words) => {

@@ -9,6 +9,8 @@ recorded as a ChangeEvent that the run's revert can undo.
 Idempotent: applying the same run twice produces no duplicates. Deduplication is
 content-based (class title anywhere in the taxonomy, compared by ``class_title_key``;
 identifier for property definitions; source+target+property triple for relationships).
+A property candidate whose identifier a class, scheme or taxonomy already has is
+skipped (``identifier_taken``): identifiers are unique across every kind of entity.
 """
 
 from __future__ import annotations
@@ -223,6 +225,12 @@ class SchemaExtractionApplyService:
             if self._repo.get_property_definition_by_identifier(identifier) is not None:
                 result.properties_skipped += 1
                 _already_present(candidate_id)
+                continue
+            if self._repo.get_by_identifier(identifier) is not None:
+                # A class, scheme or taxonomy has it (identifiers are unique across
+                # kinds). Connections naming this type skip as unresolved_predicate.
+                result.properties_skipped += 1
+                result.skip(candidate_id, "identifier_taken")
                 continue
             try:
                 # Its predicate is its identifier, added to the taxonomy's catalog

@@ -261,6 +261,51 @@ class TestPropertyDefinitions:
         assert result2.properties_created == 0
         assert result2.properties_skipped == 1
 
+    @pytest.mark.parametrize("taken_by", ["class", "scheme", "taxonomy"])
+    def test_skips_a_type_whose_identifier_another_kind_has(self, svc, repo, taken_by):
+        # Identifiers are unique across kinds (#1571): skipped, not a UNIQUE error.
+        for cls_id, title in (("cls-a", "Alpha"), ("cls-b", "Beta")):
+            repo.save_class(
+                Class(id=cls_id, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID, title=title)
+            )
+        if taken_by == "class":
+            repo.save_class(
+                Class(
+                    id="cls-o",
+                    concept_scheme_id=SCHEME_ID,
+                    taxonomy_id=TAXONOMY_ID,
+                    identifier="owns",
+                    title="Ownership",
+                )
+            )
+        elif taken_by == "scheme":
+            repo.save_concept_scheme(
+                ConceptScheme(id="cs-o", taxonomy_id=TAXONOMY_ID, identifier="owns", title="O")
+            )
+        else:
+            repo.save_taxonomy(Taxonomy(id="tx-o", identifier="owns", title="Owns"))
+        run = _make_run(
+            candidates=[{"kind": "property_definition", "label": "Owns", "confidence": 0.9}],
+            connections=[
+                {
+                    "subject_ref": "Alpha",
+                    "predicate": "owns",
+                    "object_ref": "Beta",
+                    "confidence": 0.9,
+                }
+            ],
+        )
+        result = svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
+
+        assert result.properties_created == 0
+        assert result.properties_skipped == 1
+        assert result.relationships_created == 0
+        assert result.skip_reasons == {
+            "property-0": "identifier_taken",
+            "connection-0": "unresolved_predicate",
+        }
+        assert repo.get_property_definition_by_identifier("owns") is None
+
 
 # ---------------------------------------------------------------------------
 # Relationships

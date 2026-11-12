@@ -16,6 +16,7 @@ sys.path.append(
 import pytest
 
 from domain.extraction.value_objects import SourceSpan
+from domain.ontology.entities import Class, ConceptScheme, Taxonomy
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.ports import LLMResponse
 from domain.pipelines.schema_extraction.orchestrator import (
@@ -23,6 +24,7 @@ from domain.pipelines.schema_extraction.orchestrator import (
     SchemaExtractionState,
     join_documents,
 )
+from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
 
 class _MockLLM:
@@ -542,3 +544,57 @@ class TestChunkText:
         assert len(chunks) > 1
         assert all(len(chunk) <= 8000 and chunk.endswith(".") for chunk in chunks)
         assert " ".join(chunks) == text
+
+
+class TestClassification:
+    """Classification marks candidates whose title a class in the run's taxonomy has (#1571)."""
+
+    @pytest.fixture
+    def repo(self):
+        repo = FakeOntologyRepository()
+        for n, title in ((1, "Data Object"), (2, "Gateway")):
+            repo.save_taxonomy(Taxonomy(id=f"tx-{n}", identifier=f"tax_{n}", title=f"T{n}"))
+            repo.save_concept_scheme(
+                ConceptScheme(
+                    id=f"cs-{n}", taxonomy_id=f"tx-{n}", identifier=f"scheme_{n}", title="S"
+                )
+            )
+            repo.save_class(
+                Class(
+                    id=f"cls-{n}",
+                    concept_scheme_id=f"cs-{n}",
+                    taxonomy_id=f"tx-{n}",
+                    identifier=f"class_{n}",
+                    title=title,
+                )
+            )
+        return repo
+
+    @staticmethod
+    def _classify(mock_llm, repo, input_data):
+        orchestrator = SchemaExtractionOrchestrator(
+            llm_provider=mock_llm, ontology_repo=repo, run_id="test-run", status_writer=None
+        )
+        state = SchemaExtractionState(
+            run_id="test-run",
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            input_data=input_data,
+            candidate_concepts=["dataobject", "Gateway", "Microservice"],
+        )
+        return orchestrator._stage_classification(state)
+
+    @pytest.mark.asyncio
+    async def test_titles_of_the_run_taxonomys_classes_only(self, mock_llm, repo):
+        state = await self._classify(mock_llm, repo, {"ontology_id": "tx-1"})
+        # "dataobject" is "Data Object" by title key; Gateway is in another taxonomy
+        assert state.classified_concepts == {
+            "dataobject": True,
+            "Gateway": False,
+            "Microservice": False,
+        }
+        assert state.steps_completed[-1] == "classification"
+
+    @pytest.mark.asyncio
+    async def test_without_a_taxonomy_every_candidate_is_new(self, mock_llm, repo):
+        state = await self._classify(mock_llm, repo, {})
+        assert not any(state.classified_concepts.values())

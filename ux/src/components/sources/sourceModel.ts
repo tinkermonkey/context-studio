@@ -277,6 +277,7 @@ const SKIP_REASON_LABEL: Record<string, string> = {
   domain_range_mismatch: "doesn't fit the relationship type",
   invalid: "refused as invalid",
   no_scheme: "no concept scheme",
+  identifier_taken: "identifier already in use",
   // Operations the proposal service refused (refused_operations), when the run lists them.
   refused: "refused",
 };

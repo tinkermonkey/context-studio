@@ -696,6 +696,21 @@ class TestProposeSchema:
         assert identifiers == {"predicate": "owner", "property": "owner"}
         assert classes == ["owner_2", "renter_2"]
 
+    def test_a_type_whose_identifier_a_class_has_is_skipped(self, repo, house):
+        # Appliance's identifier is house_appliance; the type keeps its slug (#1571)
+        candidates = [
+            {"kind": "property_definition", "label": "House Appliance", "confidence": 0.7},
+            {"kind": "property_definition", "label": "repairs", "confidence": 0.7},
+        ]
+        result = plan_schema_operations(
+            candidates, repo, taxonomy_id=house["taxonomy"], source_id=SOURCE, page_starts=[]
+        )
+        assert [(o.draft.kind.value, o.draft.fields["identifier"]) for o in result.operations] == [
+            ("predicate", "repairs"),
+            ("property", "repairs"),
+        ]
+        assert result.skipped == [{"label": "House Appliance", "reason": "identifier_taken"}]
+
     def test_class_creates_get_unique_identifiers_from_their_titles(self, ontology, repo, house):
         ontology.create_class(house["scheme"], "Old heater", identifier="heating_system")
         candidates = [
