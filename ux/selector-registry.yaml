@@ -3527,6 +3527,12 @@ selectors:
   - selector: operation-blocked-*
     component: src/components/proposals/OperationColumns.tsx
     description: "Amber \"N in use: move or drop\" chip on an awaiting relationship-type delete whose type relationships still use, by operation id"
+  - selector: operation-domain-range-*
+    component: src/components/proposals/OperationColumns.tsx
+    description: "Amber \"doesn't fit type\" chip on an awaiting relationship create whose ends break its type's domain or range (title says why), by operation id"
+  - selector: operation-domain-range-callout
+    component: src/components/proposals/OperationDecision.tsx
+    description: "Warn callout in the Decision section of a relationship create that doesn't fit its type's domain or range: why, and that applying it fails"
   - selector: proposal-selection-note
     component: src/components/proposals/DecisionBars.tsx
     description: "Selection bar text: stale and blocked operations Accept selected leaves out, else how it applies"

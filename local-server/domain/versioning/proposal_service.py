@@ -41,6 +41,7 @@ from uuid import uuid4
 from domain.interchange.services import get_current_batch_run_id, set_batch_run_context
 from domain.ontology.entities import Class, PropertyDefinition, validate_relationship_attributes
 from domain.ontology.events import GraphInvalidated
+from domain.ontology.relationship_fit import RelationshipFit
 from domain.ontology.datasets import resolve_dataset_id
 from domain.ontology.exceptions import (
     DatasetMismatchError,
@@ -138,10 +139,13 @@ INVALID_EDIT = "invalid_edit"
 INVALID_EVIDENCE = "invalid_evidence"
 RULE_REFUSED = "refused"
 UNRESOLVABLE = "unresolvable"
+DOMAIN_RANGE_MISMATCH = "domain_range_mismatch"
 
 REVERTED_REASON = "proposal reverted"
 
 _REF_PREFIX = "$"
+# A relationship's end fields
+_ENDS = ("source_id", "target_id")
 # Marks a predicate an earlier delete of the proposal retires (see _check_predicate_op)
 _RETIRED = "<retired>"
 
@@ -865,7 +869,7 @@ class ProposalService:
         )
         if not allowed:
             return allowed
-        blocked = self.in_use_blockers(proposal)
+        blocked = self.in_use_blockers(proposal).keys() | self.domain_range_mismatches(proposal)
         return [i for i in allowed if i not in blocked]
 
     def _classes(
@@ -2460,6 +2464,15 @@ class ProposalService:
                 self._check_dataset(operation, dataset_id)
             except _Invalid as exc:
                 raise _ApplyFailed(exc.code, exc.message) from exc
+            if operation.kind is K.RELATIONSHIP and operation.op is OperationType.CREATE:
+                # Its ends are resolved now: "$ref" ends and types are known.
+                misfit = self._domain_range_misfit(fields, {}, RelationshipFit(self._repo))
+                if misfit is not None:
+                    raise _ApplyFailed(
+                        DOMAIN_RANGE_MISMATCH,
+                        f"{misfit}; change the type's domain or range first (a type in use"
+                        " needs its relationships resolved), or reject it",
+                    )
             result = self._dispatch(operation, fields, run_id, operation.op, dataset_id)
             if operation.kind is K.PROPERTY and operation.op is OperationType.CREATE:
                 operation.type_change = TypeChange(
@@ -2826,6 +2839,88 @@ class ProposalService:
         classes) while relationships use it.
         """
         return self.in_use(proposal, with_usage=False)[0]
+
+    def domain_range_mismatches(self, proposal: ChangeProposal) -> dict[str, str]:
+        """
+        The pending and failed relationship creates whose ends don't fit their
+        type's domain and range (#1574): operation id -> why ("target is
+        Place, not Room"). Applying one fails (domain_range_mismatch), and the
+        approval policy never auto-applies one.
+
+        Fitting is inheritance-aware and open where untyped (see
+        `domain.ontology.relationship_fit`). An end the proposal creates is
+        judged by its create's classes, or by the entity it made once applied.
+        What the proposal may still change isn't flagged: a type it creates or
+        whose domain or range it updates, an end in a class it creates or
+        whose classes it updates, an end that is gone. Applying checks the
+        resolved ends again.
+        """
+        pending = proposal.pending
+        changing = {
+            o.target_id
+            for o in pending
+            if o.op is OperationType.UPDATE
+            and (
+                (o.kind is K.PROPERTY and {"domain_class_id", "range_class_id"} & o.fields.keys())
+                or (o.kind is K.INDIVIDUAL and "class_ids" in o.fields)
+            )
+        }
+        fit = RelationshipFit(self._repo)
+        creates = {o.ref: o for o in proposal.operations if o.ref}
+        found: dict[str, str] = {}
+        for operation in proposal.operations:
+            fields = operation.fields
+            if (
+                operation.kind is not K.RELATIONSHIP
+                or operation.op is not OperationType.CREATE
+                or operation.status not in (OperationStatus.PENDING, OperationStatus.FAILED)
+                or changing & {fields.get(n) for n in ("property_definition_id", *_ENDS)}
+            ):
+                continue
+            misfit = self._domain_range_misfit(fields, creates, fit)
+            if misfit is not None:
+                found[operation.id] = misfit
+        return found
+
+    def _domain_range_misfit(
+        self,
+        fields: Mapping[str, Any],
+        creates: Mapping[str, ProposedOperation],
+        fit: RelationshipFit,
+    ) -> str | None:
+        """Why a relationship create breaks its type's domain or range (None: fits, or not known)."""
+        property_id = fields.get("property_definition_id")
+        prop = None if _is_ref(property_id) else self._load(K.PROPERTY, property_id)
+        if prop is None:
+            return None
+        source, target = (self._planned_classes(fields.get(n), creates, fit) for n in _ENDS)
+        if source is None or target is None:
+            return None
+        return fit.misfit(prop, source, target)
+
+    def _planned_classes(
+        self, end: Any, creates: Mapping[str, ProposedOperation], fit: RelationshipFit
+    ) -> tuple[str, ...] | None:
+        """
+        A relationship end's classes as they will be: an existing individual's
+        or class's, or those of an individual the proposal creates (once
+        applied, of the entity it made). None when that isn't known yet.
+        """
+        if not isinstance(end, str) or not end:
+            return None
+        if not _is_ref(end):
+            return fit.end_class_ids(end)
+        create = creates.get(end[1:])
+        if create is None:
+            return None
+        if create.status is OperationStatus.APPLIED and create.result_entity_id:
+            return fit.end_class_ids(create.result_entity_id)
+        class_ids = create.fields.get("class_ids") if create.kind is K.INDIVIDUAL else None
+        if not isinstance(class_ids, list) or not class_ids:
+            return None
+        if any(not isinstance(c, str) or _is_ref(c) for c in class_ids):
+            return None  # a class the proposal creates: its parents aren't known yet
+        return tuple(class_ids)
 
     def type_usage(self, proposal: ChangeProposal) -> dict[str, DeleteBlockers]:
         """

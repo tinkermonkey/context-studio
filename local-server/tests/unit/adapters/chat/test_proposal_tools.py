@@ -135,6 +135,9 @@ class FakeProposalService:
     def in_use_blockers(self, proposal):
         return self.blockers
 
+    def domain_range_mismatches(self, proposal):
+        return {}
+
     def in_use(self, proposal, with_usage=True):
         return self.blockers, {}
 

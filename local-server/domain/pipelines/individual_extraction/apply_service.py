@@ -31,6 +31,7 @@ from domain.ontology.exceptions import (
     DuplicateEntityError,
     EntityNotFoundError,
 )
+from domain.ontology.relationship_fit import RelationshipFit
 from domain.pipelines.apply_result import ApplyResult, MergedMention
 from domain.pipelines.apply_selection import (
     MERGE,
@@ -609,10 +610,27 @@ class IndividualExtractionApplyService:
         source_run_id: str,
         result: ApplyResult,
     ) -> None:
-        """Create a relationship if it does not already exist."""
+        """Create a relationship if it does not already exist and fits its type (#1574)."""
         if source_id == target_id:
             result.relationships_skipped += 1
             return
+
+        prop = self._repo.get_property_definition(property_definition_id)
+        if prop is not None:
+            fit = RelationshipFit(self._repo)
+            misfit = fit.misfit(
+                prop, fit.end_class_ids(source_id) or (), fit.end_class_ids(target_id) or ()
+            )
+            if misfit is not None:
+                _logger.info(
+                    "Skipping relationship %s -[%s]-> %s: %s",
+                    source_id,
+                    prop.identifier,
+                    target_id,
+                    misfit,
+                )
+                result.relationships_skipped += 1
+                return
 
         existing = self._repo.list_relationships(
             source_id=source_id,

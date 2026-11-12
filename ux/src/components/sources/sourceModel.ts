@@ -274,6 +274,7 @@ const SKIP_REASON_LABEL: Record<string, string> = {
   literal: "values, not entities",
   derived_type: "derived relationship type",
   self_loop: "points at itself",
+  domain_range_mismatch: "doesn't fit the relationship type",
   invalid: "refused as invalid",
   no_scheme: "no concept scheme",
   // Operations the proposal service refused (refused_operations), when the run lists them.

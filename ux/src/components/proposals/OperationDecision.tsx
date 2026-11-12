@@ -150,13 +150,22 @@ export function OperationDecision({
               : `${staleCause ? staleCauseText(staleCause) : "Its target changed after it was proposed."} Applying it needs Apply anyway, which keeps the proposed values.`}
           </FormCallout>
         )}
-        {failed && !operation.stale && !resolver && !picksChanged && (
-          <FormCallout variant="error" icon="alert" data-testid="operation-failed-callout">
-            {editFailed
-              ? "The edit wasn't applied (the reason is under Change). Edit it again, apply the proposal as it stands, or reject it."
-              : "The last apply failed (the reason is under Change). Apply it again, or reject it."}
+        {operation.domain_range_mismatch && (
+          <FormCallout variant="warn" icon="alert" data-testid="operation-domain-range-callout">
+            {`It doesn't fit its relationship type: ${operation.domain_range_mismatch}. Applying it fails; reject it, or change the type's domain or range first.`}
           </FormCallout>
         )}
+        {failed &&
+          !operation.stale &&
+          !operation.domain_range_mismatch &&
+          !resolver &&
+          !picksChanged && (
+            <FormCallout variant="error" icon="alert" data-testid="operation-failed-callout">
+              {editFailed
+                ? "The edit wasn't applied (the reason is under Change). Edit it again, apply the proposal as it stands, or reject it."
+                : "The last apply failed (the reason is under Change). Apply it again, or reject it."}
+            </FormCallout>
+          )}
 
         {!!operation.dataset_impact?.length && (
           <FormCallout variant="info" icon="info" data-testid="operation-dataset-impact">

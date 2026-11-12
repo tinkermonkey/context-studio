@@ -18,8 +18,9 @@ misses as alternatives ({kind: existing, entity_id, similarity}).
 
 Relationships come from triples whose predicate is a relationship type: a
 create whose ends are "$ref" of an individual create or an existing id, with
-the triple's passages and confidence. A relationship that already exists, or
-whose end or type can't be resolved, is skipped.
+the triple's passages and confidence. A relationship that already exists,
+whose end or type can't be resolved, or whose ends don't fit the type's domain
+and range (`domain_range_mismatch`, inheritance-aware: #1574), is skipped.
 
 Literal (data property) triples are not proposed: extraction emits none, and
 applying a run supports none.
@@ -34,6 +35,7 @@ from typing import Any
 from domain.extraction.services import class_reference_aliases, is_typing_triple
 from domain.ontology.entities import Class
 from domain.ontology.ports import OntologyRepository
+from domain.ontology.relationship_fit import RelationshipFit
 from domain.pipelines.candidate_ids import mention_key
 from domain.pipelines.individual_extraction.apply_service import (
     find_individual_by_label,
@@ -123,6 +125,8 @@ def plan_individual_operations(
 
     # Mention key -> "$ref" of its create, or the existing individual's id
     resolved: dict[str, str] = {}
+    # "$ref" of an individual create -> its classes
+    planned: dict[str, list[str]] = {}
     for key, individual in individuals.items():
         existing = individual.existing_id or find_individual_by_label(
             repo, individual.label, individual.class_ids, dataset_id
@@ -132,6 +136,7 @@ def plan_individual_operations(
             continue
         ref = f"i{len(plan.operations) + 1}"
         resolved[key] = f"${ref}"
+        planned[f"${ref}"] = individual.class_ids
         plan.operations.append(
             PlannedOperation(
                 draft=OperationDraft(
@@ -149,8 +154,9 @@ def plan_individual_operations(
         )
 
     relationships: dict[tuple[str, str, str], _Relationship] = {}
+    fit = RelationshipFit(repo)
     for triple in triples:
-        relationship = _relationship(triple, repo, resolved, dataset_id, plan)
+        relationship = _relationship(triple, repo, resolved, planned, fit, dataset_id, plan)
         if relationship is None:
             continue
         key = (relationship.source, relationship.property_id, relationship.target)
@@ -257,6 +263,8 @@ def _relationship(
     triple: dict[str, Any],
     repo: OntologyRepository,
     resolved: dict[str, str],
+    planned: dict[str, list[str]],
+    fit: RelationshipFit,
     dataset_id: str | None,
     plan: OperationPlan,
 ) -> _Relationship | None:
@@ -290,6 +298,12 @@ def _relationship(
         return None
     if source == target:
         plan.skip(label, "self_loop")
+        return None
+    source_classes, target_classes = (
+        planned[end] if end in planned else fit.end_class_ids(end) or () for end in (source, target)
+    )
+    if fit.misfit(prop, source_classes, target_classes) is not None:
+        plan.skip(label, "domain_range_mismatch")
         return None
     if not source.startswith("$") and not target.startswith("$"):
         if repo.list_relationships(

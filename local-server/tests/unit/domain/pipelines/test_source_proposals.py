@@ -361,6 +361,38 @@ class TestIndividualOperations:
             "literal",
         ]
 
+    def test_relationships_whose_ends_dont_fit_the_type_are_skipped(self, ontology, repo, house):
+        # made_by runs Appliance -> Business; a Manufacturer is a Business.
+        ontology.create_class(house["scheme"], "Manufacturer", parent_class_id=house["business"])
+        result = plan(
+            repo,
+            house,
+            [
+                typing("WRF555", "house_appliance"),
+                typing("Acme", "Manufacturer"),
+                relation(
+                    "WRF555", house["made_by"], "Kitchen refrigerator", object_id=house["fridge"]
+                ),
+                relation(
+                    "Whirlpool Corporation",
+                    house["made_by"],
+                    "WRF555",
+                    subject_id=house["whirlpool"],
+                ),
+                relation("WRF555", house["made_by"], "Acme"),
+            ],
+        )
+        relationships = [
+            o.draft.fields for o in result.operations if o.draft.kind == "relationship"
+        ]
+        assert relationships == [
+            {"source_id": "$i1", "target_id": "$i2", "property_definition_id": house["made_by"]}
+        ]
+        assert result.skipped == [
+            {"label": "WRF555 made_by Kitchen refrigerator", "reason": "domain_range_mismatch"},
+            {"label": "Whirlpool Corporation made_by WRF555", "reason": "domain_range_mismatch"},
+        ]
+
 
 class TestProposeIndividuals:
     def test_a_run_becomes_one_pipeline_proposal_in_the_dataset(self, service, repo, house):

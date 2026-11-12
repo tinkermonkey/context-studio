@@ -18135,6 +18135,18 @@
             ],
             "description": "A pending or failed relationship-type delete, or update that retargets the type, whose type relationships still use: applying it as proposed fails; it needs a resolution. Null otherwise. The proposed replacement, when it fits, is listed first"
           },
+          "domain_range_mismatch": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain Range Mismatch",
+            "description": "A pending or failed relationship create whose source or target doesn't fit its type's domain or range (inheritance-aware: an individual of a subclass fits): why, e.g. 'target is Place, not Room'. Applying it fails (domain_range_mismatch) and the approval policy never auto-applies it. Null otherwise"
+          },
           "proposed_replacement_id": {
             "anyOf": [
               {

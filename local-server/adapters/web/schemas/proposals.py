@@ -570,6 +570,14 @@ class ProposedOperationResponse(BaseModel):
         "needs a resolution. Null otherwise. "
         "The proposed replacement, when it fits, is listed first",
     )
+    domain_range_mismatch: Optional[str] = Field(
+        None,
+        description="A pending or failed relationship create whose source or target doesn't "
+        "fit its type's domain or range (inheritance-aware: an individual of a subclass "
+        "fits): why, e.g. 'target is Place, not Room'. Applying it fails "
+        "(domain_range_mismatch) and the approval policy never auto-applies it. Null "
+        "otherwise",
+    )
     proposed_replacement_id: Optional[str] = Field(
         None,
         description="A relationship-type or class delete only: the type the proposer names "
@@ -643,6 +651,7 @@ class ChangeProposalResponse(BaseModel):
         type_usage: Optional[dict[str, DeleteBlockers]] = None,
         dataset_impacts: Optional[dict[str, list[DatasetImpact]]] = None,
         alternative_titles: Optional[dict[str, str]] = None,
+        domain_range_mismatches: Optional[dict[str, str]] = None,
     ) -> "ChangeProposalResponse":
         """
         Build the response, flagging the operations in stale_ids, with their blockers.
@@ -654,6 +663,7 @@ class ChangeProposalResponse(BaseModel):
             type_usage: See ProposalService.type_usage
             dataset_impacts: See ProposalService.dataset_impacts
             alternative_titles: See ProposalService.alternative_titles
+            domain_range_mismatches: See ProposalService.domain_range_mismatches
         """
         blockers = blockers or {}
         checks = replacement_checks or {}
@@ -682,6 +692,9 @@ class ChangeProposalResponse(BaseModel):
                 for o in proposal.operations
             ],
         )
+        mismatches = domain_range_mismatches or {}
+        for operation in response.operations:
+            operation.domain_range_mismatch = mismatches.get(operation.id)
         titles = alternative_titles or {}
         for operation in response.operations:
             for alternative in operation.alternatives:

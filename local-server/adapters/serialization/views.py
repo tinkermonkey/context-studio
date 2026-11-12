@@ -52,9 +52,9 @@ def proposal_response(
     with_usage: bool = True,
 ) -> ChangeProposalResponse:
     """
-    The REST view of a proposal: stale flags, in-use blockers and replacement
-    checks; for a dry run, each operation's auto-apply eligibility too (see
-    ProposalService.auto_apply_operation_ids).
+    The REST view of a proposal: stale flags, in-use blockers, replacement
+    checks and domain/range mismatches; for a dry run, each operation's
+    auto-apply eligibility too (see ProposalService.auto_apply_operation_ids).
     """
     blockers, usage = service.in_use(proposal, with_usage=with_usage)
     return ChangeProposalResponse.from_domain(
@@ -66,6 +66,7 @@ def proposal_response(
         usage,
         service.dataset_impacts(proposal) if with_usage else None,
         service.alternative_titles(proposal),
+        service.domain_range_mismatches(proposal),
     )
 
 

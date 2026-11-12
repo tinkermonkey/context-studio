@@ -215,6 +215,15 @@ function OperationStatus({
           </Chip>
         )
       )}
+      {operation.domain_range_mismatch && (
+        <Chip
+          variant="amber"
+          data-testid={`operation-domain-range-${operation.id}`}
+          title={operation.domain_range_mismatch}
+        >
+          doesn't fit type
+        </Chip>
+      )}
       {blockers && (
         <Chip variant="amber" data-testid={`operation-blocked-${operation.id}`}>
           {blockers.edges.length} in use: move or drop

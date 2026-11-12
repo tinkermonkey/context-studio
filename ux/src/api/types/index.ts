@@ -9279,6 +9279,11 @@ export interface components {
       /** @description A pending or failed relationship-type delete, or update that retargets the type, whose type relationships still use: applying it as proposed fails; it needs a resolution. Null otherwise. The proposed replacement, when it fits, is listed first */
       blockers?: components["schemas"]["DeleteBlockersResponse"] | null;
       /**
+       * Domain Range Mismatch
+       * @description A pending or failed relationship create whose source or target doesn't fit its type's domain or range (inheritance-aware: an individual of a subclass fits): why, e.g. 'target is Place, not Room'. Applying it fails (domain_range_mismatch) and the approval policy never auto-applies it. Null otherwise
+       */
+      domain_range_mismatch?: string | null;
+      /**
        * Proposed Replacement Id
        * @description A relationship-type or class delete only: the type the proposer names as its replacement (an id, or "$<ref>" of a create of the same kind in this proposal). A class's replacement is informational: it tells a client that mirrors the taxonomy what to migrate the deleted class's elements to
        */
