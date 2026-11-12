@@ -10,17 +10,21 @@ simple, explainable heuristics, so the chunker can leave them out:
   headings, after blank lines, and at heading-like lines (a short line that
   is mostly upper case, or that names a boilerplate topic, such as "Limited
   Lifetime Warranty").
-- **Language.** A section of at least ``MIN_WORDS`` words is in another
-  language when the common short words (stopwords) of French, Spanish or
-  German in it outnumber the English ones more than two to one. The
+- **Language.** A section of at least ``MIN_LANGUAGE_WORDS`` words is in
+  another language when the common short words (stopwords) of French, Spanish
+  or German make up at least ``MIN_OTHER_SHARE`` of it and outnumber the
+  English ones more than two to one. Prose has many stopwords; a multilingual
+  parts list ("Screws / Vis / Tornillos") has few, so it is kept. The
   workspace's language is English: no setting names another.
 - **Boilerplate.** A section is boilerplate when at least ``MIN_HITS`` of its
-  words are warranty, safety, legal or contact terms and they make up at least
-  ``MIN_DENSITY`` of it; a heading that names the topic counts as
-  ``HEADING_HITS`` terms. Its reason is the topic with the most terms.
-- **Short sections** (too few words to judge, and no boilerplate) take the
-  verdict of the section before them, else the one after, so a page number or
-  a one-line label inside a skipped copy is skipped with it.
+  words are terms of one topic (warranty, safety, legal or contact) and they
+  make up at least ``MIN_DENSITY`` of it, or ``HEADED_DENSITY`` when a heading
+  names the topic; such a heading counts as ``HEADING_HITS`` terms. Contact
+  terms are only strong signals: phone numbers, web and e-mail addresses.
+- **Fragments** (at most ``MAX_FRAGMENT_WORDS`` words and no sentence, such
+  as a page number or a label) are skipped only when the judged sections on
+  both sides of them are skipped for the same reason, so a page number inside
+  a skipped copy goes with it. Every other short section is kept.
 
 Neighbouring sections skipped for the same reason are reported as one.
 """
@@ -47,13 +51,20 @@ LEGAL = "legal"
 CONTACT = "contact"
 
 # Fewer words than this are too few to judge a section's language by
-MIN_WORDS = 12
+MIN_LANGUAGE_WORDS = 6
 # Another language's stopwords must outnumber the English ones by this factor
 LANGUAGE_RATIO = 2
 MIN_OTHER_STOPWORDS = 3
-# Boilerplate: at least this many terms, making up at least this share of the words
+# ... and make up at least this share of the words (prose: 0.35-0.55; a
+# trilingual parts list: about 0.15)
+MIN_OTHER_SHARE = 0.3
+# Boilerplate: at least this many terms of one topic, making up at least this
+# share of the words (the lower share when a heading names the topic)
 MIN_HITS = 3
-MIN_DENSITY = 0.05
+MIN_DENSITY = 0.1
+HEADED_DENSITY = 0.05
+# A section this short, with no sentence in it, is a fragment (page number, label)
+MAX_FRAGMENT_WORDS = 3
 # A heading naming a boilerplate topic counts as this many of its terms
 HEADING_HITS = 3
 # A heading-like line is at most this long
@@ -64,6 +75,9 @@ PREVIEW_CHARS = 80
 _WORD = re.compile(r"[^\W\d_]+")
 _LINE = re.compile(r"[^\n]*\n?")
 _SPACES = re.compile(r"\s+")
+# A sentence ends in one of these; a numbered step starts with a number and a word
+_SENTENCE_END = re.compile(r"[.!?:]\s*$|[.!?]\s")
+_STEP = re.compile(r"^\W*(?:step\s*)?\d+[.)]?\s+[^\W\d_]", re.IGNORECASE)
 
 # Common short words found only in that language (words shared with English,
 # such as "a", "on", "in" and "an", are left out of every list)
@@ -90,7 +104,7 @@ _TERMS: dict[str, re.Pattern[str]] = {
         r"\bwarrant\w*|\bguarantee\w*|\bpurchaser\w*|\bproof of purchase\b|\bmerchantab\w*"
         r"|\bconsequential\b|\bincidental\b|\bdefects?\b|\bliab(?:le|ility)\b|\bimplied\b"
         r"|\bexclusions?\b|\bremed(?:y|ies)\b|\bjurisdictions?\b|\bworkmanship\b"
-        r"|\bfitness for a particular purpose\b|\bdamages\b|\blegal rights\b"
+        r"|\bfitness for a particular purpose\b|\blegal rights\b"
     ),
     SAFETY: re.compile(
         r"\bwarnings?\b|\bcaution\b|\bdanger\w*|\bhazard\w*|\binjur(?:y|ies)\b|\bdeath\b"
@@ -102,10 +116,12 @@ _TERMS: dict[str, re.Pattern[str]] = {
         r"©|\bcopyright\w*|\ball rights reserved\b|\btrademarks?\b|\bregistered\b"
         r"|\bpatents?\b|\bterms and conditions\b|\bprivacy\b"
     ),
+    # Only strong signals: generic words such as "contact", "call" and "hours"
+    # are ordinary instruction wording
     CONTACT: re.compile(
-        r"\bcustomer service\b|\bcontact\b|\bcall\b|\bvisit\b|\bhours\b|\bmonday\b|\bfriday\b"
-        r"|\be-?mail\b|\b(?:www\.)?[\w-]+\.(?:com|ca|org|net)\b"
+        r"\bcustomer service\b|[\w.+-]+@[\w-]+\.\w+|\b(?:www\.)?[\w-]+\.(?:com|ca|org|net)\b"
         r"|\b1[-. ]?8\d\d[-. ]?\w{3}[-. ]?\w{4}\b|\(\d{3}\)\s?\d{3}-\d{4}"
+        r"|\b\d{3}[-.]\d{3}[-.]\d{4}\b"
     ),
 }
 
@@ -113,8 +129,9 @@ _TERMS: dict[str, re.Pattern[str]] = {
 _HEADINGS: dict[str, re.Pattern[str]] = {
     WARRANTY: re.compile(r"\bwarrant(?:y|ies)\b|\bgarantie\b|\bgarant[íi]a\b"),
     SAFETY: re.compile(
-        r"^\W*(?:warning|caution|danger|important safety|safety (?:information|instructions"
-        r"|warnings?|notices?)|avertissement|advertencia|precauci[óo]n|mise en garde)\b"
+        r"^\W*(?:warnings?|caution|danger|important safety (?:information|instructions)"
+        r"|safety (?:information|instructions|warnings?|notices?)|avertissement|advertencia"
+        r"|precauci[óo]n|mise en garde)\W*$"
     ),
     LEGAL: re.compile(r"\bcopyright\b|\blegal notices?\b|\btrademarks?\b|\ball rights reserved\b"),
     CONTACT: re.compile(
@@ -270,44 +287,64 @@ def _first_line(section: str) -> str:
 def _judge(section: str, heading_title: str | None) -> str | None | bool:
     """
     A section's verdict: the reason it is skipped, None to keep it, or False
-    when it is too short to judge.
+    when it is a fragment that goes with its neighbours.
     """
     lowered = section.lower()
     words = _WORD.findall(lowered)
-    if len(words) >= MIN_WORDS:
+    if len(words) >= MIN_LANGUAGE_WORDS:
         english = sum(1 for word in words if word in _ENGLISH)
         other = sum(1 for word in words if word in _OTHER)
-        if other >= MIN_OTHER_STOPWORDS and other > LANGUAGE_RATIO * english:
+        if (
+            other >= MIN_OTHER_STOPWORDS
+            and other >= MIN_OTHER_SHARE * len(words)
+            and other > LANGUAGE_RATIO * english
+        ):
             return OTHER_LANGUAGE
 
     hits = {topic: len(pattern.findall(lowered)) for topic, pattern in _TERMS.items()}
     first = _first_line(section)
     titles = [heading_title or "", first if _heading_like(first) else ""]
-    for topic in {_heading_topic(title) for title in titles if title}:
-        if topic is not None:
-            hits[topic] += HEADING_HITS
-    total = sum(hits.values())
-    if total >= MIN_HITS and total >= MIN_DENSITY * max(len(words), 1):
-        return max(hits, key=lambda topic: hits[topic])
-    return None if len(words) >= MIN_WORDS else False
+    headed = {_heading_topic(title) for title in titles if title} - {None}
+    for topic in headed:
+        hits[topic] += HEADING_HITS
+    for topic in sorted(hits, key=lambda topic: hits[topic], reverse=True):
+        density = HEADED_DENSITY if topic in headed else MIN_DENSITY
+        if hits[topic] >= MIN_HITS and hits[topic] >= density * len(words):
+            return topic
+    return False if _fragment(section, words) else None
+
+
+def _fragment(section: str, words: list[str]) -> bool:
+    """A page number or label: a few words, no sentence and no numbered step."""
+    return (
+        len(words) <= MAX_FRAGMENT_WORDS
+        and not _SENTENCE_END.search(section)
+        and not _STEP.match(section)
+    )
 
 
 def _verdicts(judged: list[str | None | bool]) -> list[str | None]:
-    """Each section's verdict, a short section taking its neighbour's."""
-    verdicts: list[str | None | bool] = list(judged)
-    previous: str | None | bool = False
-    for i, verdict in enumerate(verdicts):
-        if verdict is False:
-            verdicts[i] = previous
-        else:
-            previous = verdict
-    following: str | None | bool = None
-    for i in range(len(verdicts) - 1, -1, -1):
-        if verdicts[i] is False:
-            verdicts[i] = following
-        else:
-            following = verdicts[i]
-    return [v if isinstance(v, str) else None for v in verdicts]
+    """
+    Each section's verdict: a run of fragments is skipped only when the judged
+    sections on both sides of it are skipped for the same reason (a run at
+    either end needs only the one neighbour it has); otherwise it is kept.
+    """
+    verdicts: list[str | None] = []
+    i = 0
+    while i < len(judged):
+        if judged[i] is not False:
+            verdict = judged[i]
+            verdicts.append(verdict if isinstance(verdict, str) else None)
+            i += 1
+            continue
+        run_end = i
+        while run_end < len(judged) and judged[run_end] is False:
+            run_end += 1
+        neighbours = {judged[j] for j in (i - 1, run_end) if 0 <= j < len(judged)}
+        reason = neighbours.pop() if len(neighbours) == 1 else None
+        verdicts.extend([reason if isinstance(reason, str) else None] * (run_end - i))
+        i = run_end
+    return verdicts
 
 
 def skipped_by_reason(sections: Sequence[SkippedSection]) -> dict[str, int]:

@@ -217,3 +217,92 @@ class TestChunkTextSkip:
         chunks = chunk_text(text, page_starts=starts)
 
         assert "".join(text[c.start : c.end] for c in chunks).count("Moen garantit") == 1
+
+
+# A Moen parts list: English, French and Spanish on each line (review of #1575)
+TRILINGUAL_PARTS = """A. Adhesive Disk / Disque adhésif / Disco adhesivo
+B. Hand Shower Dock / Support de douche / Soporte de la regadera
+C. Wall Anchors / Chevilles / Taquetes
+D. Screws / Vis / Tornillos
+E. Painter's Tape / Ruban de masquage / Cinta de pintor"""
+
+SPACED_STEPS = [
+    "1. Clean the wall with rubbing alcohol and let it dry.",
+    "2. Peel the backing from the adhesive disk (A).",
+    "3. Press the dock (E) onto the disk.",
+    "4. Insert the hand shower into the dock.",
+]
+
+
+class TestRealContentIsKept:
+    """Regressions: real instructions the first heuristics dropped (review of #1575)."""
+
+    def test_a_trilingual_parts_list_and_its_heading_are_kept(self):
+        text = "Installation\n\n" + TRILINGUAL_PARTS
+
+        assert skipped_sections(text) == []
+
+    def test_a_trilingual_parts_list_after_a_warning_is_kept(self):
+        text = MAGNET_WARNING + "\n\nInstallation\n\n" + TRILINGUAL_PARTS
+
+        skipped = skipped_sections(text)
+
+        assert [(s.start, s.end, s.reason) for s in skipped] == [
+            (0, len(MAGNET_WARNING), SAFETY)
+        ]
+
+    def test_a_french_copy_with_spaced_steps_is_still_skipped(self):
+        text = "\n\n".join(
+            [
+                "1. Placez le ruban sur le mur.",
+                "2. Percez les trous et insérez les ancrages dans le mur.",
+                "3. Fixez le support au mur avec les vis.",
+            ]
+        )
+
+        assert [(s.start, s.end, s.reason) for s in skipped_sections(text)] == [
+            (0, len(text), OTHER_LANGUAGE)
+        ]
+
+    def test_spaced_steps_after_a_warning_are_kept(self):
+        text = "\n\n".join([MAGNET_WARNING, *SPACED_STEPS])
+
+        skipped = skipped_sections(text)
+
+        assert [(s.start, s.end, s.reason) for s in skipped] == [
+            (0, len(MAGNET_WARNING), SAFETY)
+        ]
+        kept = _kept_text(text, [0], skipped)
+        assert all(step in kept for step in SPACED_STEPS)
+
+    def test_a_short_sentence_after_the_warranty_is_kept(self):
+        text = ENGLISH_WARRANTY + "\n\nTighten by hand."
+
+        skipped = skipped_sections(text)
+
+        assert [(s.end, s.reason) for s in skipped] == [(len(ENGLISH_WARRANTY), WARRANTY)]
+
+    def test_ordinary_wording_about_contact_and_hours_is_kept(self):
+        text = (
+            "Press the adhesive disk firmly so it is in full contact with the wall."
+            " Allow 24 hours before use. Do not hang the hand shower for 24 hours."
+        )
+
+        assert skipped_sections(text) == []
+
+    def test_a_caution_line_in_the_steps_is_kept(self):
+        text = (
+            "To avoid injury, wear safety glasses when drilling.\n"
+            "Caution: drilling into hidden pipes can cause damages to your home."
+        )
+
+        assert skipped_sections(text) == []
+
+    def test_a_safety_notice_without_a_heading_is_still_skipped(self):
+        text = (
+            "Proposition 65 WARNING: This product can expose you to chemicals including lead,"
+            " known to the State of California to cause cancer and birth defects or other"
+            " reproductive harm. For more information go to www.P65Warnings.ca.gov."
+        )
+
+        assert [s.reason for s in skipped_sections(text)] == [SAFETY]
