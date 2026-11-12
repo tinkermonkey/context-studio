@@ -43,7 +43,8 @@ def run_payload(run: PipelineRun) -> dict[str, Any]:
     """
     A run's status, progress and outcome, as tools report it. A run that
     proposed nothing says why (no_proposal_reason) and how many candidates it
-    skipped for each reason (skipped_by_reason).
+    skipped for each reason (skipped_by_reason). A run on a source counts the
+    sections it left unread for each reason (skipped_sections_by_reason).
     """
     summary = run.output_summary or {}
     return {
@@ -56,6 +57,7 @@ def run_payload(run: PipelineRun) -> dict[str, Any]:
         "proposal_id": run.proposal_id,
         "no_proposal_reason": summary.get("no_proposal_reason"),
         "skipped_by_reason": summary.get("skipped_by_reason") or {},
+        "skipped_sections_by_reason": summary.get("skipped_sections_by_reason") or {},
         "failure_reason": run.failure_reason,
         "created_at": run.created_at,
         "started_at": run.started_at,

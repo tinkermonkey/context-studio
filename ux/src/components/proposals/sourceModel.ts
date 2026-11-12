@@ -208,15 +208,59 @@ export function similarityLabel(alternative: Alternative): string | undefined {
  * that name one by "$ref", which can't apply until it is decided.
  */
 export function nearMatchHeldIds(operations: ProposedOperation[]): Set<string> {
+  return heldWithNamers(operations, isNearMatch);
+}
+
+/**
+ * The fields the backend resolves "$ref" in: every id field (ID_FIELDS in
+ * local-server/domain/versioning/proposal_service.py). Elsewhere, e.g. in a
+ * title, "$x" is just text.
+ */
+const ID_FIELDS = [
+  "taxonomy_id",
+  "concept_scheme_id",
+  "parent_class_id",
+  "class_id",
+  "class_ids",
+  "domain_class_id",
+  "range_class_id",
+  "property_definition_id",
+  "source_id",
+  "target_id",
+];
+
+/** The "$ref"s an operation names: in its id fields (a value or a list) and its replacement. */
+function refsNamed(operation: ProposedOperation): string[] {
+  const values: unknown[] = [
+    ...ID_FIELDS.map((name) => operation.fields?.[name]),
+    operation.proposed_replacement_id,
+  ].flat();
+  return values.filter((v): v is string => typeof v === "string" && v.startsWith("$"));
+}
+
+/**
+ * The awaiting operations `holds` picks, and the operations that name a held
+ * one by "$ref" (and what names those, in turn), which can't apply until it
+ * is decided.
+ */
+function heldWithNamers(
+  operations: ProposedOperation[],
+  holds: (operation: ProposedOperation) => boolean,
+): Set<string> {
   const open = operations.filter(
-    (o) => (o.status === "pending" || o.status === "failed") && isNearMatch(o),
+    (o) => (o.status === "pending" || o.status === "failed") && holds(o),
   );
-  const refs = new Set(open.flatMap((o) => (o.ref ? [`$${o.ref}`] : [])));
   const held = new Set(open.map((o) => o.id));
-  // The backend resolves "$ref" only in a relationship's ends.
-  for (const o of operations) {
-    const ends = [o.fields?.source_id, o.fields?.target_id];
-    if (ends.some((v) => typeof v === "string" && refs.has(v))) held.add(o.id);
+  const refs = new Set(open.flatMap((o) => (o.ref ? [`$${o.ref}`] : [])));
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const o of operations) {
+      if (held.has(o.id) || !refsNamed(o).some((r) => refs.has(r))) continue;
+      held.add(o.id);
+      if (o.ref) refs.add(`$${o.ref}`);
+      grew = true;
+    }
   }
   return held;
 }
@@ -238,6 +282,43 @@ export function nearMatchHeldNote(held: ProposedOperation[]): string | undefined
       ? `, with ${waiting} operation${waiting === 1 ? "" : "s"} that name${waiting === 1 ? "s" : ""} one`
       : "";
   return `${nearText}${waitingText}.`;
+}
+
+// ==================== Operations without a passage ====================
+
+/**
+ * An extraction's operation that cites no passage in its source: the
+ * extraction couldn't place its quote in the text (the server flags it).
+ */
+export function lacksPassage(operation: ProposedOperation): boolean {
+  return operation.no_passage === true;
+}
+
+/**
+ * Operations a bulk accept holds back because nothing shows where they came
+ * from: awaiting operations without a passage, and the operations that name
+ * one by "$ref". Each can still be accepted on its own.
+ */
+export function noPassageHeldIds(operations: ProposedOperation[]): Set<string> {
+  return heldWithNamers(operations, lacksPassage);
+}
+
+/**
+ * What a bulk accept held back among `held` (see noPassageHeldIds): "Held back
+ * 3 operations without a passage, with 1 that names one: accept each on its own."
+ */
+export function noPassageHeldNote(held: ProposedOperation[]): string | undefined {
+  if (held.length === 0) return undefined;
+  const bare = held.filter(lacksPassage).length;
+  const naming = held.length - bare;
+  const operations = (n: number) => `${n} operation${n === 1 ? "" : "s"}`;
+  const name = (n: number) => (n === 1 ? "names" : "name");
+  if (bare === 0) {
+    return `Held back ${operations(naming)} that ${name(naming)} an operation without a passage.`;
+  }
+  const namingText = naming > 0 ? `, with ${naming} that ${name(naming)} one` : "";
+  const each = held.length === 1 ? "it" : "each";
+  return `Held back ${operations(bare)} without a passage${namingText}: accept ${each} on its own.`;
 }
 
 /** The existing individual a matched create applied as, by its alternative. */

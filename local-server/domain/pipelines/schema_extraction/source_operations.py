@@ -4,7 +4,9 @@ A schema-extraction run's candidates on a source as proposal operations (#1552).
 The same rules as applying a run (`apply_service.py`) decide what is new: a
 class candidate whose title (by `class_title_key`) the taxonomy already has,
 or a property candidate whose identifier (its label slugified) a relationship
-type already has, is skipped.
+type already has, is skipped; so is a property candidate whose identifier a
+class, scheme or taxonomy has ("identifier_taken": identifiers are unique
+across kinds, and a type is matched to its candidate by that slug).
 
 - A new class is a class create in the taxonomy's first concept scheme (a
   reviewer can edit it before applying), with its proposed definition as its
@@ -25,8 +27,8 @@ from collections.abc import Sequence
 from typing import Any
 
 from domain.ontology.ports import OntologyRepository
-from domain.ontology.value_objects import validate_identifier
 from domain.pipelines.schema_extraction.apply_service import (
+    class_identifier,
     class_title_index,
     class_title_key,
     slugify,
@@ -42,7 +44,6 @@ from domain.versioning.proposal_service import OperationDraft
 from domain.versioning.proposals import OperationKind, OperationType
 
 MAX_PASSAGES = 10
-MAX_IDENTIFIER_CHARS = 64
 
 
 def plan_schema_operations(
@@ -143,6 +144,12 @@ def plan_schema_operations(
         if identifier in properties or repo.get_property_definition_by_identifier(identifier):
             plan.skip(label, "exists")
             continue
+        if repo.get_by_identifier(identifier) is not None:
+            # A class, scheme or taxonomy has it (identifiers are unique across
+            # kinds); the type keeps its slug, so it isn't proposed. The plan's
+            # own class creates never take it: property identifiers are reserved.
+            plan.skip(label, "identifier_taken")
+            continue
         properties.add(identifier)
         if repo.get_predicate_by_identifier(taxonomy_id, identifier) is None:
             predicates[identifier] = f"p{len(plan.operations) + 1}"
@@ -169,32 +176,6 @@ def plan_schema_operations(
         ref = f"r{len(plan.operations) + 1}"
         add(fields, OperationKind.PROPERTY, ref, candidate, label, frozenset(needs))
     return plan
-
-
-def class_identifier(title: str, repo: OntologyRepository, taken: set[str]) -> str:
-    """
-    A new class's identifier: its title slugified ("Heating System" ->
-    "heating_system"), prefixed "class_" when that isn't a valid identifier
-    (a lowercase letter first, 2-64 characters), and suffixed "_2", "_3", ...
-    while an existing taxonomy, scheme, class or relationship type, or another
-    create of the proposal (`taken`), has it. Identifiers are unique across
-    every kind of entity.
-    """
-    base = slugify(title)[:MAX_IDENTIFIER_CHARS]
-    try:
-        validate_identifier(base)
-    except ValueError:
-        base = f"class_{base}".rstrip("_")[:MAX_IDENTIFIER_CHARS]
-    identifier, n = base, 1
-    while (
-        identifier in taken
-        or repo.get_by_identifier(identifier) is not None
-        or repo.get_property_definition_by_identifier(identifier) is not None
-    ):
-        n += 1
-        suffix = f"_{n}"
-        identifier = base[: MAX_IDENTIFIER_CHARS - len(suffix)] + suffix
-    return identifier
 
 
 def _evidence(

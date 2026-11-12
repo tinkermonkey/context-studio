@@ -16,13 +16,16 @@ sys.path.append(
 import pytest
 
 from domain.extraction.value_objects import SourceSpan
+from domain.ontology.entities import Class, ConceptScheme, Taxonomy
 from domain.pipelines.entities import PipelineType
+from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.ports import LLMResponse
 from domain.pipelines.schema_extraction.orchestrator import (
     SchemaExtractionOrchestrator,
     SchemaExtractionState,
     join_documents,
 )
+from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
 
 class _MockLLM:
@@ -542,3 +545,132 @@ class TestChunkText:
         assert len(chunks) > 1
         assert all(len(chunk) <= 8000 and chunk.endswith(".") for chunk in chunks)
         assert " ".join(chunks) == text
+
+
+class TestClassification:
+    """Classification marks candidates whose title a class in the run's taxonomy has (#1571)."""
+
+    @pytest.fixture
+    def repo(self):
+        repo = FakeOntologyRepository()
+        for n, title in ((1, "Data Object"), (2, "Gateway")):
+            repo.save_taxonomy(Taxonomy(id=f"tx-{n}", identifier=f"tax_{n}", title=f"T{n}"))
+            repo.save_concept_scheme(
+                ConceptScheme(
+                    id=f"cs-{n}", taxonomy_id=f"tx-{n}", identifier=f"scheme_{n}", title="S"
+                )
+            )
+            repo.save_class(
+                Class(
+                    id=f"cls-{n}",
+                    concept_scheme_id=f"cs-{n}",
+                    taxonomy_id=f"tx-{n}",
+                    identifier=f"class_{n}",
+                    title=title,
+                )
+            )
+        return repo
+
+    @staticmethod
+    def _classify(mock_llm, repo, input_data):
+        orchestrator = SchemaExtractionOrchestrator(
+            llm_provider=mock_llm, ontology_repo=repo, run_id="test-run", status_writer=None
+        )
+        state = SchemaExtractionState(
+            run_id="test-run",
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            input_data=input_data,
+            candidate_concepts=["dataobject", "Gateway", "Microservice"],
+        )
+        return orchestrator._stage_classification(state)
+
+    @pytest.mark.asyncio
+    async def test_titles_of_the_run_taxonomys_classes_only(self, mock_llm, repo):
+        state = await self._classify(mock_llm, repo, {"ontology_id": "tx-1"})
+        # "dataobject" is "Data Object" by title key; Gateway is in another taxonomy
+        assert state.classified_concepts == {
+            "dataobject": True,
+            "Gateway": False,
+            "Microservice": False,
+        }
+        assert state.steps_completed[-1] == "classification"
+
+    @pytest.mark.asyncio
+    async def test_without_a_taxonomy_every_candidate_is_new(self, mock_llm, repo):
+        state = await self._classify(mock_llm, repo, {})
+        assert not any(state.classified_concepts.values())
+
+
+_ENGLISH = (
+    "A microservice exposes its API through the gateway. The gateway routes each request"
+    " to the service that owns it, and it checks the caller's token first."
+)
+_FRENCH = (
+    "Un microservice expose son API par la passerelle. La passerelle envoie chaque requête"
+    " au service qui la possède, et elle vérifie le jeton de l'appelant."
+)
+_WARRANTY = (
+    "LIMITED WARRANTY\nThe vendor warrants to the original purchaser that the product is"
+    " free from defects in workmanship, and is not liable for incidental damages."
+)
+
+
+class TestSkipBoilerplate:
+    """A source's boilerplate and other-language copies are left unread (#1570)."""
+
+    def _input(self, **extra):
+        text = "\n\n".join([_ENGLISH, _FRENCH, _WARRANTY])
+        starts = [0, len(_ENGLISH) + 2, len(_ENGLISH) + len(_FRENCH) + 4]
+        return {"documents": [text], "page_starts": starts, "model": "m", **extra}
+
+    def _state(self, **extra):
+        return SchemaExtractionState(
+            run_id="test-run",
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            input_data=self._input(**extra),
+        )
+
+    async def test_skipped_sections_are_blanked_and_reported(self, orchestrator):
+        state = await orchestrator.execute(self._state(source_id="src-1"))
+
+        text = self._input()["documents"][0]
+        assert len(state.source_text) == len(text)
+        assert state.source_text.startswith(_ENGLISH)
+        assert state.source_text[len(_ENGLISH) :].strip() == ""
+        assert state.normalized_text == _ENGLISH
+        assert [s["reason"] for s in state.result["skipped_sections"]] == [
+            "other_language",
+            "warranty",
+        ]
+        assert state.result["skipped_sections_by_reason"] == {
+            "other_language": 1,
+            "warranty": 1,
+        }
+        assert state.result["warnings"][0]["stage"] == "text_ingestion"
+
+    async def test_skip_boilerplate_false_reads_everything(self, orchestrator):
+        state = await orchestrator.execute(self._state(source_id="src-1", skip_boilerplate=False))
+
+        assert state.source_text == self._input()["documents"][0]
+        assert "skipped_sections" not in state.result
+
+    async def test_documents_that_are_no_source_are_read_whole(self, orchestrator):
+        state = await orchestrator.execute(
+            SchemaExtractionState(
+                run_id="test-run",
+                pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+                input_data={"documents": [_FRENCH], "model": "m"},
+            )
+        )
+
+        assert state.source_text == _FRENCH
+
+    async def test_nothing_left_is_an_input_error(self, orchestrator):
+        with pytest.raises(PipelineInputError, match="skip_boilerplate"):
+            await orchestrator.execute(
+                SchemaExtractionState(
+                    run_id="test-run",
+                    pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+                    input_data={"documents": [_FRENCH], "source_id": "src-1", "model": "m"},
+                )
+            )

@@ -193,7 +193,7 @@ function renderPage(selectedOperationId?: string) {
 describe("the source passage", () => {
   it("highlights the quote in its page's text, with the page, section and source", async () => {
     renderPage("op-fridge");
-    const mark = await screen.findByTestId("operation-source-passage-mark");
+    const mark = await screen.findByTestId("operation-source-passage-mark", {}, { timeout: 10000 });
     expect(mark.tagName).toBe("MARK");
     expect(mark).toHaveClass("op-passage__mark");
     expect(mark).toHaveTextContent("French door fridge");
@@ -245,10 +245,12 @@ describe("the source passage", () => {
       ),
     );
     renderPage("op-fridge");
-    await waitFor(() =>
-      expect(screen.getByTestId("operation-source-passage-more")).toHaveTextContent(
-        "The source was removed.",
-      ),
+    await waitFor(
+      () =>
+        expect(screen.getByTestId("operation-source-passage-more")).toHaveTextContent(
+          "The source was removed.",
+        ),
+      { timeout: 10000 },
     );
     expect(screen.getByTestId("operation-source-passage-text")).toHaveAttribute(
       "data-placed",

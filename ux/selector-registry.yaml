@@ -3682,6 +3682,12 @@ selectors:
   - selector: operation-near-match-chip-*
     component: src/components/proposals/OperationColumns.tsx
     description: "Operations table status cell: \"near match\" on an individual create with alternatives, \"used existing\" once it applied as one"
+  - selector: operation-no-passage-*
+    component: src/components/proposals/OperationColumns.tsx
+    description: "Operations table status cell: amber \"no passage\" chip (role note) on an extraction's operation that cites no passage in its source (no_passage), by operation id; bulk accepts hold it back"
+  - selector: operation-no-passage
+    component: src/components/proposals/SourcePassage.tsx
+    description: "Operation inspector: note in place of the source passage on an operation without one (no_passage): the extraction couldn't place it, bulk accept holds it back"
   - selector: operation-relationship-ends
     component: src/components/proposals/SourcePassage.tsx
     description: "Operation inspector: Ends section of a relationship create with an end created in the proposal"
@@ -3837,6 +3843,9 @@ selectors:
   - selector: extract-schema-hint
     component: src/components/sources/ExtractSourcePage.tsx
     description: 'Extract page: what the schema option does, or why a mirrored taxonomy does not offer it'
+  - selector: extract-skip-boilerplate-toggle
+    component: src/components/sources/ExtractSourcePage.tsx
+    description: 'Extract page: "Skip boilerplate and other languages" checkbox, on by default'
   - selector: extract-pages
     component: src/components/sources/ExtractSourcePage.tsx
     description: 'Extract page: optional page range input (multi-page sources only)'

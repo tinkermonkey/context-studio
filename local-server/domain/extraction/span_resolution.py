@@ -8,8 +8,30 @@ pipelines to reliably ground provenance information.
 """
 
 import difflib
+import functools
+import unicodedata
 
 from domain.extraction.value_objects import SourceSpan
+
+# Curly quotes and primes, compared as straight ones
+_QUOTES = str.maketrans(
+    {
+        "‘": "'",
+        "’": "'",
+        "‚": "'",
+        "‛": "'",
+        "′": "'",
+        "“": '"',
+        "”": '"',
+        "„": '"',
+        "‟": '"',
+        "″": '"',
+    }
+)
+# The soft hyphen and the registered, copyright and trademark marks: quotes leave them out
+_DROPPED = frozenset("­®©™")
+# Hyphens and dashes: PDF text breaks words with them where a quote joins them
+_HYPHENS = frozenset("-‐‑‒–—―−")
 
 
 def resolve_span(
@@ -26,8 +48,10 @@ def resolve_span(
 
     1. Exact substring match: locate quote in source_text. If found multiple times,
        use hint_start to pick the occurrence closest to the hint.
-    2. Normalized match: collapse whitespace, case-fold both quote and source_text,
-       then repeat the substring search. Derive offsets from the original source.
+    2. Normalized match: normalize both quote and source_text (whitespace collapsed,
+       case-folded, and PDF typography such as curly quotes, ligatures and line-break
+       hyphens folded: `_normalize_with_offsets`), then repeat the substring search.
+       Derive offsets from the original source.
     3. Bounded fuzzy match: if hint_start is provided, scan a ±200 character window
        around the hint and slide substrings of length len(quote)±20% looking for a
        match above 0.80 similarity (difflib.SequenceMatcher.ratio).
@@ -58,7 +82,7 @@ def resolve_span(
         start, end = exact_match_result
         return SourceSpan(quote=quote, start=start, end=end)
 
-    # Stage 2: Normalized match (whitespace-collapsed, case-folded)
+    # Stage 2: Normalized match (whitespace, case and typography folded)
     normalized_result = _find_normalized_match(quote, source_text, hint_start)
     if normalized_result is not None:
         start, end = normalized_result
@@ -92,7 +116,7 @@ def find_all_spans(
 
     This function intentionally uses only stages 1-2 of the resolution cascade:
     1. Exact matching: locate term exactly in source_text
-    2. Normalized matching: collapse whitespace and case-fold both term and source
+    2. Normalized matching: normalize both term and source (`_normalize_with_offsets`)
 
     Args:
         term: The text to find (a known schema label). Must be non-empty.
@@ -117,8 +141,9 @@ def find_all_spans(
     # Stage 2: Normalized matches (always run to catch case-variant occurrences)
     normalized_matches = _find_all_normalized_matches(term, source_text)
     for start, end in normalized_matches:
-        # Avoid duplicates from stage 1 (exact match will also be found in normalized)
-        if not any(s.start == start and s.end == end for s in spans):
+        # Stage 1 found this occurrence already when the spans overlap; its span
+        # is kept (a normalized one can end elsewhere: "Moen®" ends before the ®).
+        if not any(e_start < end and start < e_end for e_start, e_end in exact_matches):
             spans.append(SourceSpan(quote=source_text[start:end], start=start, end=end))
 
     return spans
@@ -192,11 +217,9 @@ def _find_normalized_match(
     quote: str, source_text: str, hint_start: int | None
 ) -> tuple[int, int] | None:
     """
-    Find match using whitespace-normalized, case-folded comparison.
+    Find a match by normalized comparison (see `_normalize_with_offsets`).
 
-    Collapses runs of whitespace to single spaces, strips leading/trailing
-    whitespace, and case-folds both quote and source_text. If multiple matches
-    exist, uses hint_start to select the closest one.
+    If several matches exist, uses hint_start to select the closest one.
 
     Args:
         quote: The text to find.
@@ -206,60 +229,17 @@ def _find_normalized_match(
     Returns:
         Tuple of (start, end) in the original source_text, or None if not found.
     """
-    normalized_quote = _normalize_text(quote)
-    normalized_source = _normalize_text(source_text)
-
-    # Find all normalized matches
-    occurrences: list[int] = []
-    pos = 0
-    while True:
-        pos = normalized_source.find(normalized_quote, pos)
-        if pos == -1:
-            break
-        occurrences.append(pos)
-        pos += 1
-
-    if not occurrences:
+    matches = _find_all_normalized_matches(quote, source_text)
+    if not matches:
         return None
-
-    # Pick the best match (first or closest to hint)
-    if len(occurrences) == 1:
-        best_normalized_pos = occurrences[0]
-    else:
-        # Multiple occurrences: pick first, or closest to hint if provided
-        if hint_start is not None:
-            # Map each normalized position back to original and pick closest to hint
-            candidates = []
-            for norm_pos in occurrences:
-                orig_pos = _map_normalized_to_original(normalized_source, source_text, norm_pos)
-                if orig_pos is not None:
-                    candidates.append((norm_pos, orig_pos))
-
-            if candidates:
-                best_normalized_pos, _ = min(candidates, key=lambda c: abs(c[1] - hint_start))
-            else:
-                best_normalized_pos = occurrences[0]
-        else:
-            # No hint: return the first occurrence
-            best_normalized_pos = occurrences[0]
-
-    # Map the normalized position back to the original text
-    original_start = _map_normalized_to_original(
-        normalized_source, source_text, best_normalized_pos
-    )
-    original_end = _map_normalized_to_original(
-        normalized_source, source_text, best_normalized_pos + len(normalized_quote)
-    )
-
-    if original_start is not None and original_end is not None:
-        return (original_start, original_end)
-
-    return None
+    if hint_start is not None:
+        return min(matches, key=lambda match: abs(match[0] - hint_start))
+    return matches[0]
 
 
 def _find_all_normalized_matches(term: str, source_text: str) -> list[tuple[int, int]]:
     """
-    Find all matches using whitespace-normalized, case-folded comparison.
+    Find all matches by normalized comparison (see `_normalize_with_offsets`).
 
     Args:
         term: The text to find.
@@ -268,27 +248,19 @@ def _find_all_normalized_matches(term: str, source_text: str) -> list[tuple[int,
     Returns:
         List of (start, end) tuples in the original source_text for each match.
     """
+    normalized_term, _ = _normalize_with_offsets(term)
+    if not normalized_term:
+        return []
+    normalized_source, offsets = _normalize_source(source_text)
+
     matches: list[tuple[int, int]] = []
-    normalized_term = _normalize_text(term)
-    normalized_source = _normalize_text(source_text)
-
-    pos = 0
-    while True:
-        pos = normalized_source.find(normalized_term, pos)
-        if pos == -1:
-            break
-
-        # Map position back to original source text
-        original_start = _map_normalized_to_original(normalized_source, source_text, pos)
-        original_end = _map_normalized_to_original(
-            normalized_source, source_text, pos + len(normalized_term)
-        )
-
-        if original_start is not None and original_end is not None:
-            matches.append((original_start, original_end))
-
-        pos += 1
-
+    pos = normalized_source.find(normalized_term)
+    while pos != -1:
+        # From the first matched character's offset to just past the last's
+        # (every part of a character a fold expanded has that character's offset).
+        last = offsets[pos + len(normalized_term) - 1]
+        matches.append((offsets[pos], last + 1))
+        pos = normalized_source.find(normalized_term, pos + 1)
     return matches
 
 
@@ -310,21 +282,20 @@ def _find_fuzzy_match(quote: str, source_text: str, hint_start: int) -> bool:
     window_half = 200
     window_start = max(0, hint_start - window_half)
     window_end = min(len(source_text), hint_start + window_half)
-    window = source_text[window_start:window_end]
+    # Both normalized once (see `_normalize_with_offsets`); candidates are cut from the window
+    window, _ = _normalize_with_offsets(source_text[window_start:window_end])
+    normalized_quote, _ = _normalize_with_offsets(quote)
 
-    quote_len = len(quote)
+    quote_len = len(normalized_quote)
     min_len = max(1, int(quote_len * 0.8))  # 80% of quote length
     max_len = int(quote_len * 1.2)  # 120% of quote length
-
-    normalized_quote = _normalize_text(quote)
 
     # Slide through window
     for candidate_len in range(min_len, max_len + 1):
         for i in range(len(window) - candidate_len + 1):
             candidate = window[i : i + candidate_len]
-            normalized_candidate = _normalize_text(candidate)
 
-            ratio = difflib.SequenceMatcher(None, normalized_quote, normalized_candidate).ratio()
+            ratio = difflib.SequenceMatcher(None, normalized_quote, candidate).ratio()
 
             if ratio >= 0.80:
                 return True
@@ -332,84 +303,77 @@ def _find_fuzzy_match(quote: str, source_text: str, hint_start: int) -> bool:
     return False
 
 
-
-
-def _normalize_text(text: str) -> str:
+@functools.lru_cache(maxsize=4)
+def _normalize_source(source_text: str) -> tuple[str, tuple[int, ...]]:
     """
-    Normalize text by collapsing whitespace and case-folding.
+    Normalize a whole source text once for all the lookups made in it.
 
-    Replaces runs of whitespace with single spaces, strips leading/trailing
-    whitespace, and case-folds using Unicode case folding rules.
+    Schema extraction looks up every concept, relationship and property in the
+    same source, and normalizing it is a pass in Python over every character,
+    so the last few sources are kept (see `_normalize_with_offsets`).
+
+    Args:
+        source_text: The source document text.
+
+    Returns:
+        (the normalized text, the offset in source_text of each of its characters)
+    """
+    normalized, offsets = _normalize_with_offsets(source_text)
+    return normalized, tuple(offsets)
+
+
+def _normalize_with_offsets(text: str) -> tuple[str, list[int]]:
+    """
+    Normalize text for comparison, keeping where each character came from.
+
+    Text read from a PDF differs from what a model quotes back of it in ways
+    that change no word, so both sides are normalized alike:
+
+    - case-folded, compatibility forms unfolded (NFKC: the "fi" ligature is "fi")
+    - curly quotes and primes as straight ones
+    - the soft hyphen and the registered, copyright and trademark marks dropped
+    - hyphens and dashes dropped, and a word a hyphen splits at a line break
+      joined ("instal-\\nlation" is "installation", as "hand-held" is "handheld")
+    - runs of whitespace as one space, none at either end
 
     Args:
         text: The text to normalize.
 
     Returns:
-        Normalized text.
+        (the normalized text, the offset in text of each of its characters);
+        every part of a character a fold expands (ß is "ss") has its offset
     """
-    # Collapse runs of whitespace to single spaces
-    normalized = " ".join(text.split())
-    # Case-fold using Unicode case folding rules
-    return normalized.casefold()
+    folded: list[tuple[str, int]] = []
+    for index, char in enumerate(text):
+        if char in _DROPPED:
+            continue
+        for part in unicodedata.normalize("NFKC", char.translate(_QUOTES)).casefold():
+            folded.append((part, index))
 
-
-def _map_normalized_to_original(
-    normalized_text: str, original_text: str, normalized_pos: int
-) -> int | None:
-    """
-    Map a position in normalized text back to the original text.
-
-    Correctly handles casefold expansion where a single original character
-    (e.g., 'ß') may become multiple characters in normalized text (e.g., 'ss').
-
-    Args:
-        normalized_text: The normalized (whitespace-collapsed, case-folded) text.
-        original_text: The original text.
-        normalized_pos: A position in normalized_text.
-
-    Returns:
-        The corresponding position in original_text, or None if mapping fails.
-    """
-    normalized_idx = 0
-    original_idx = 0
-
-    # Skip leading whitespace in original text — it's removed entirely during normalization
-    while original_idx < len(original_text) and original_text[original_idx].isspace():
-        original_idx += 1
-
-    # If we're looking for position 0 in normalized, we're done after skipping whitespace
-    if normalized_idx == normalized_pos:
-        return original_idx if original_idx <= len(original_text) else None
-
-    while original_idx < len(original_text) and normalized_idx < normalized_pos:
-        if original_text[original_idx].isspace():
-            # Skip all consecutive whitespace in original
-            while original_idx < len(original_text) and original_text[original_idx].isspace():
-                original_idx += 1
-            # In normalized, this becomes a single space
-            if normalized_idx < len(normalized_text) and normalized_text[normalized_idx].isspace():
-                normalized_idx += 1
-        else:
-            # Non-whitespace character may expand when case-folded
-            char = original_text[original_idx]
-            folded = char.casefold()
-            folded_len = len(folded)
-
-            # If normalized_pos falls within this character's expansion
-            if normalized_idx + folded_len > normalized_pos:
-                # If normalized_pos is exactly at the start of the expansion,
-                # return the position before this character
-                if normalized_idx == normalized_pos:
-                    return original_idx
-                else:
-                    # Otherwise, return the position after this character
-                    return original_idx + 1
-
-            normalized_idx += folded_len
-            original_idx += 1
-
-    # If we've reached the exact position
-    if normalized_idx == normalized_pos:
-        return original_idx
-
-    return None
+    chars: list[str] = []
+    offsets: list[int] = []
+    space_at: int | None = None
+    k = 0
+    while k < len(folded):
+        char, index = folded[k]
+        if char in _HYPHENS:
+            after = k + 1
+            while after < len(folded) and folded[after][0].isspace():
+                after += 1
+            line_break = any(folded[m][0] == "\n" for m in range(k + 1, after))
+            # At a line break the whitespace goes too: the hyphen split one word
+            k = after if line_break else k + 1
+            continue
+        if char.isspace():
+            if space_at is None:
+                space_at = index
+            k += 1
+            continue
+        if space_at is not None and chars:
+            chars.append(" ")
+            offsets.append(space_at)
+        space_at = None
+        chars.append(char)
+        offsets.append(index)
+        k += 1
+    return "".join(chars), offsets

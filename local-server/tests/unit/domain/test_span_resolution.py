@@ -8,6 +8,7 @@ and edge cases (None inputs, empty quote, empty source text).
 import pytest
 
 from domain.extraction.span_resolution import (
+    _normalize_source,
     find_all_spans,
     resolve_span,
 )
@@ -694,6 +695,76 @@ class TestCasefoldExpansion:
         assert source_text[span.start:span.end].casefold() == quote.casefold()
 
 
+class TestPdfTypography:
+    """
+    Text read from a PDF differs from what a model quotes back in ways that
+    change no word (#1575): those quotes are placed, at the source's offsets.
+    """
+
+    SOURCE = (
+        "Moen® recommends using painter’s tape and a pencil. Use the adhesive "
+        "disk (A) to ﬁx the hand-\nshower dock (E). Insert wall an-\nchors (C) into "
+        "the holes — not the tile."
+    )
+
+    @pytest.mark.parametrize(
+        ("quote", "found"),
+        [
+            # A curly apostrophe and a registered mark
+            ("Moen recommends using painter's tape", "Moen® recommends using painter’s tape"),
+            # A ligature, and a compound hyphenated at a line break
+            ("to fix the hand-shower dock", "to ﬁx the hand-\nshower dock"),
+            ("to fix the handshower dock", "to ﬁx the hand-\nshower dock"),
+            # A word split by a hyphen at a line break
+            ("Insert wall anchors (C)", "Insert wall an-\nchors (C)"),
+            # A dash the quote writes as a hyphen
+            ("the holes - not the tile", "the holes — not the tile"),
+        ],
+    )
+    def test_quote_is_placed_at_the_source_text(self, quote, found):
+        span = resolve_span(quote, None, None, self.SOURCE)
+
+        assert span.quote == quote
+        assert self.SOURCE[span.start : span.end] == found
+
+    def test_find_all_spans_folds_typography_too(self):
+        spans = find_all_spans("Painter's Tape", self.SOURCE)
+
+        assert [s.quote for s in spans] == ["painter’s tape"]
+
+    @pytest.mark.parametrize(
+        ("term", "source_text", "expected"),
+        [
+            ("Moen®", "Use the Moen® dock.", (8, 13)),
+            ("Moen™", "Use the Moen™ dock.", (8, 13)),
+            ("data\u00ad", "Raw data\u00adbase.", (4, 9)),
+        ],
+    )
+    def test_find_all_spans_keeps_one_span_per_occurrence(self, term, source_text, expected):
+        """The normalized match of an exact one ends elsewhere; the exact span is kept."""
+        spans = find_all_spans(term, source_text)
+
+        assert [(s.start, s.end) for s in spans] == [expected]
+
+    def test_find_all_spans_keeps_a_case_variant_beside_an_exact_one(self):
+        spans = find_all_spans("Moen®", "Moen® and MOEN® docks.")
+
+        assert [s.quote for s in spans] == ["Moen®", "MOEN"]
+
+    @pytest.mark.parametrize(
+        "quote",
+        [
+            "painters tape",  # a dropped apostrophe is a different word
+            "wall an chors",  # a split word is not two words
+            "Moen recommends painter's tape",  # a word left out
+        ],
+    )
+    def test_a_different_wording_is_still_not_placed(self, quote):
+        span = resolve_span(quote, None, None, self.SOURCE)
+
+        assert (span.start, span.end) == (None, None)
+
+
 class TestIntegrationScenarios:
     """Integration tests with realistic extraction scenarios."""
 
@@ -742,3 +813,28 @@ class TestIntegrationScenarios:
 
         # Should find via normalized matching
         assert span.quote is not None
+
+
+class TestSourceNormalizedOnce:
+    """
+    Schema extraction looks up every label in the same source: the source is
+    normalized once for all of them, not once per lookup (#1575).
+    """
+
+    def test_repeated_lookups_normalize_the_source_once(self):
+        source_text = "The Heating System warms the House. A heating system needs a Boiler."
+        _normalize_source.cache_clear()
+
+        for term in ["Heating System", "House", "Boiler", "boiler", "Heating System"]:
+            find_all_spans(term, source_text)
+        resolve_span("the house", None, None, source_text)
+        resolve_span("A HEATING SYSTEM", 30, None, source_text)
+
+        assert _normalize_source.cache_info().misses == 1
+
+    def test_a_new_source_is_normalized_for_itself(self):
+        _normalize_source.cache_clear()
+
+        assert [s.quote for s in find_all_spans("house", "A House.")] == ["House"]
+        assert [s.quote for s in find_all_spans("house", "Two HOUSES.")] == ["HOUSE"]
+        assert _normalize_source.cache_info().misses == 2

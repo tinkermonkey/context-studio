@@ -90,6 +90,7 @@ function ConfigureForm({
   const [dataset, setDataset] = useState(source.dataset_id);
   const [configChoice, setConfigChoice] = useState<string | undefined>(undefined);
   const [schema, setSchema] = useState(false);
+  const [skipBoilerplate, setSkipBoilerplate] = useState(true);
   const [pages, setPages] = useState("");
   const [pagesError, setPagesError] = useState<string>();
   const [startError, setStartError] = useState<string>();
@@ -128,6 +129,7 @@ function ConfigureForm({
           ...(configRef ? { configuration_ref: configRef } : {}),
           ...(spec ? { pages: spec } : {}),
           schema: suggestSchema,
+          skip_boilerplate: skipBoilerplate,
         },
       },
       {
@@ -205,6 +207,29 @@ function ConfigureForm({
               data-testid="extract-schema-hint"
             >
               {mirrored ? copy.schemaMirroredHint : copy.schemaHint}
+            </span>
+          </span>
+        </label>
+
+        <label className="extract-check" htmlFor="extract-skip-boilerplate">
+          <input
+            id="extract-skip-boilerplate"
+            type="checkbox"
+            checked={skipBoilerplate}
+            onChange={(e) => {
+              setSkipBoilerplate(e.target.checked);
+              setStartError(undefined);
+            }}
+            aria-labelledby="extract-skip-boilerplate-label"
+            aria-describedby="extract-skip-boilerplate-hint"
+            data-testid="extract-skip-boilerplate-toggle"
+          />
+          <span className="extract-check__text">
+            <span id="extract-skip-boilerplate-label" className="extract-check__label">
+              {copy.skipBoilerplateLabel}
+            </span>
+            <span id="extract-skip-boilerplate-hint" className="sources-note">
+              {copy.skipBoilerplateHint}
             </span>
           </span>
         </label>

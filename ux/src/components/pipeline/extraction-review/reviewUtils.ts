@@ -13,6 +13,7 @@ export const SKIP_REASON_LABEL: Record<SkipReason, string> = {
   unresolved_endpoint: "endpoint not accepted or in the graph",
   unresolved_predicate: "predicate not accepted or in the graph",
   title_conflict: "title already used by another entity",
+  identifier_taken: "identifier already used by a class, scheme or taxonomy",
   missing_class: "no existing class to type it",
   self_loop: "source and target are the same",
   derived_type: "its type is derived: the client computes those",

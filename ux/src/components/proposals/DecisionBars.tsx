@@ -74,6 +74,8 @@ interface SelectionBarProps {
   blocked?: number;
   /** Selected near matches and what names them: Accept selected leaves them for a choice. */
   nearMatches?: ProposedOperation[];
+  /** Selected operations without a passage and what names them: Accept selected holds them back. */
+  noPassage?: ProposedOperation[];
   busy?: boolean;
   onClear: () => void;
   onReject: () => void;
@@ -86,18 +88,22 @@ export function SelectionBar({
   stale,
   blocked = 0,
   nearMatches = [],
+  noPassage = [],
   busy,
   onClear,
   onReject,
   onAccept,
 }: SelectionBarProps) {
-  const acceptable = selected - stale - blocked - nearMatches.length;
+  const acceptable = selected - stale - blocked - nearMatches.length - noPassage.length;
+  const unplaced = noPassage.length;
   const notes = [
     stale > 0 &&
       `${stale} stale: Accept selected leaves ${stale === 1 ? "it" : "them"} for Apply anyway in the inspector.`,
     blocked > 0 &&
       `${blocked} blocked (in use): Accept selected skips ${blocked === 1 ? "it" : "them"}; resolve ${blocked === 1 ? "it" : "each"} in the inspector.`,
     nearMatchHeldNote(nearMatches),
+    unplaced > 0 &&
+      `${unplaced} without a passage: Accept selected holds ${unplaced === 1 ? "it" : "them"} back; accept ${unplaced === 1 ? "it" : "each"} on its own.`,
   ].filter(Boolean);
   return (
     <div className="proposal-bar proposal-bar--selection" data-testid="proposal-selection-bar">

@@ -35,14 +35,14 @@ from adapters.web.schemas.sources import (
 )
 from domain.extraction.exceptions import SourceNotReadyError
 from domain.extraction.sources import Source, SourceService
-from domain.pipelines.exceptions import PipelineInputError
-from domain.pipelines.requested_via import RequestedVia
-from domain.pipelines.source_extraction import SourceExtractionService
 from domain.ontology.exceptions import (
     DatasetMismatchError,
     DatasetRequiredError,
     EntityNotFoundError,
 )
+from domain.pipelines.exceptions import PipelineInputError
+from domain.pipelines.requested_via import RequestedVia
+from domain.pipelines.source_extraction import SourceExtractionService
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
@@ -275,7 +275,9 @@ async def extract_source(
     run's items) and ends in one proposal for review in the dataset; with
     `schema`, a schema-extraction run over the same text too, with its own
     proposal. Follow the runs with GET /api/pipelines/runs/{id}, or the
-    source's `last_extraction`.
+    source's `last_extraction`. Unless `skip_boilerplate` is false, the
+    source's warranty, safety, legal and contact sections and its copies in
+    other languages are skipped; each run's output says what was.
     """
     service = _extraction_service(request)
     if service is None:
@@ -292,6 +294,7 @@ async def extract_source(
             body.pages,
             body.schema_,
             RequestedVia.API,
+            body.skip_boilerplate,
         )
     except Exception as exc:
         raise _http_error(exc) from exc

@@ -4210,7 +4210,9 @@ export interface paths {
      *     run's items) and ends in one proposal for review in the dataset; with
      *     `schema`, a schema-extraction run over the same text too, with its own
      *     proposal. Follow the runs with GET /api/pipelines/runs/{id}, or the
-     *     source's `last_extraction`.
+     *     source's `last_extraction`. Unless `skip_boilerplate` is false, the
+     *     source's warranty, safety, legal and contact sections and its copies in
+     *     other languages are skipped; each run's output says what was.
      */
     post: operations["extract_source_api_sources__source_id__extract_post"];
     delete?: never;
@@ -4527,7 +4529,7 @@ export interface components {
       skipped_candidate_ids?: string[];
       /**
        * Skip Reasons
-       * @description Why each skipped_candidate_id was skipped (one entry per id). not_selected / below_threshold: never selected for apply. Every other reason means the candidate was selected but could not be applied: invalid (malformed candidate), unresolved_endpoint (a relationship endpoint is neither accepted nor in the graph), unresolved_predicate (the property definition does not exist), title_conflict (an existing entity owns the title), missing_class (no existing class to type an individual), self_loop (source and target are the same entity), derived_type (its class or relationship type is derived: the client computes those, so none is created), domain_range_mismatch (a relationship's ends don't fit its type's domain or range). Populated for schema_extraction and individual_extraction.
+       * @description Why each skipped_candidate_id was skipped (one entry per id). not_selected / below_threshold: never selected for apply. Every other reason means the candidate was selected but could not be applied: invalid (malformed candidate), unresolved_endpoint (a relationship endpoint is neither accepted nor in the graph), unresolved_predicate (the property definition does not exist), title_conflict (an existing entity owns the title), identifier_taken (a class, scheme or taxonomy already has a new relationship type's identifier), missing_class (no existing class to type an individual), self_loop (source and target are the same entity), derived_type (its class or relationship type is derived: the client computes those, so none is created), domain_range_mismatch (a relationship's ends don't fit its type's domain or range). Populated for schema_extraction and individual_extraction.
        */
       skip_reasons?: {
         [key: string]:
@@ -4537,6 +4539,7 @@ export interface components {
           | "unresolved_endpoint"
           | "unresolved_predicate"
           | "title_conflict"
+          | "identifier_taken"
           | "missing_class"
           | "self_loop"
           | "derived_type"
@@ -9292,6 +9295,12 @@ export interface components {
       /** @description Set when a relationship-type delete's proposed_replacement_id is: how its pair compares */
       replacement_check?: components["schemas"]["ReplacementCheckResponse"] | null;
       /**
+       * No Passage
+       * @description An operation of an extraction from a source that cites no passage in it: the extraction couldn't place its quote in the text. The approval policy never auto-applies it, and the review's bulk accept leaves it to be accepted on its own
+       * @default false
+       */
+      no_passage: boolean;
+      /**
        * Auto Apply
        * @description A dry run only: eligible to auto-apply, i.e. the taxonomy's approval policy would apply it as soon as proposed and no in-use blockers stop it (applying can still fail). Null otherwise
        */
@@ -10446,6 +10455,12 @@ export interface components {
        * @default false
        */
       schema: boolean;
+      /**
+       * Skip Boilerplate
+       * @description Skip warranty, safety, legal and contact sections and copies in other languages; each run's output lists the skipped_sections
+       * @default true
+       */
+      skip_boilerplate: boolean;
     };
     /**
      * SourceExtractResponse

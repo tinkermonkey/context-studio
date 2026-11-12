@@ -29,7 +29,8 @@ from adapters.persistence.sqlite.transaction import SharedSessionFactory, Sqlite
 from adapters.web.ontology_routes import router as ontology_router
 from adapters.web.proposals_routes import router as proposals_router
 from domain.ontology.services import OntologyService
-from domain.versioning.proposal_service import ProposalService
+from domain.versioning.proposal_service import OperationDraft, ProposalService
+from domain.versioning.proposals import ProposalSource
 from domain.versioning.revert_service import RevertService
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.utils.change_recording import wire_change_recorder
@@ -234,3 +235,30 @@ def test_an_individual_without_provenance_has_no_sources(client, house):
 @pytest.mark.parametrize("path", ["individuals", "relationships"])
 def test_sources_of_an_unknown_entity_are_404(client, path):
     assert client.get(f"/api/{path}/missing/sources").status_code == 404
+
+
+def test_an_extraction_operation_without_a_passage_is_flagged(client, house):
+    """#1575: an extraction from a source flags each operation that cites no passage in it."""
+    service = client.app.state.proposal_service
+
+    def create(seq, title, evidence):
+        return OperationDraft(
+            seq=seq,
+            op="create",
+            kind="individual",
+            fields={"class_ids": [house["appliance"]], "title": title},
+            evidence=evidence,
+        )
+
+    extraction = service.propose(
+        house["taxonomy"],
+        "Extraction: manual",
+        [create(1, "Fridge", [PASSAGE]), create(2, "Pacemaker", [{"quote": "pacemaker"}])],
+        ProposalSource.PIPELINE,
+        client_metadata={"source_id": SOURCE, "pipeline": "individual_extraction"},
+    )
+    by_hand = client.post("/api/proposals", json=body(house, evidence=()))
+
+    fetched = client.get(f"/api/proposals/{extraction.id}").json()
+    assert [o["no_passage"] for o in fetched["operations"]] == [False, True]
+    assert [o["no_passage"] for o in by_hand.json()["operations"]] == [False, False]

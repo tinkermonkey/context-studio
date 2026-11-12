@@ -13,6 +13,7 @@ SkipReason = Literal[
     "unresolved_endpoint",  # a relationship endpoint is neither accepted nor in the graph
     "unresolved_predicate",  # the relationship's property definition does not exist
     "title_conflict",  # an existing entity with a different identifier owns the title
+    "identifier_taken",  # a class, scheme or taxonomy already has its identifier
     "missing_class",  # an individual has no existing class to be typed as
     "self_loop",  # a relationship whose source and target resolve to the same entity
     "derived_type",  # its class or relationship type is derived: its client computes those

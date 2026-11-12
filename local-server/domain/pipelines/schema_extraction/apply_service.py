@@ -9,6 +9,8 @@ recorded as a ChangeEvent that the run's revert can undo.
 Idempotent: applying the same run twice produces no duplicates. Deduplication is
 content-based (class title anywhere in the taxonomy, compared by ``class_title_key``;
 identifier for property definitions; source+target+property triple for relationships).
+A property candidate whose identifier a class, scheme or taxonomy already has is
+skipped (``identifier_taken``): identifiers are unique across every kind of entity.
 """
 
 from __future__ import annotations
@@ -18,6 +20,7 @@ import re
 from typing import TYPE_CHECKING
 
 from domain.ontology.exceptions import DomainRangeMismatchError, DuplicateEntityError
+from domain.ontology.value_objects import validate_identifier
 from domain.pipelines.apply_result import ApplyResult, SkipReason
 from domain.pipelines.apply_selection import check_accepted_ids
 from domain.pipelines.candidate_ids import (
@@ -26,6 +29,8 @@ from domain.pipelines.candidate_ids import (
 )
 
 _logger = logging.getLogger(__name__)
+
+MAX_IDENTIFIER_CHARS = 64
 
 if TYPE_CHECKING:
     from domain.ontology.entities import Class
@@ -48,6 +53,32 @@ def class_title_key(title: str | None) -> str:
     titles) instead of creating a near-duplicate class.
     """
     return re.sub(r"[\s_-]+", "", (title or "").lower())
+
+
+def class_identifier(title: str, repo: "OntologyRepository", taken: set[str]) -> str:
+    """
+    A new class's identifier: its title slugified ("Heating System" ->
+    "heating_system"), prefixed "class_" when that isn't a valid identifier
+    (a lowercase letter first, 2-64 characters), and suffixed "_2", "_3", ...
+    while an existing taxonomy, scheme, class or relationship type, or another
+    create of the proposal (`taken`), has it. Identifiers are unique across
+    every kind of entity.
+    """
+    base = slugify(title)[:MAX_IDENTIFIER_CHARS]
+    try:
+        validate_identifier(base)
+    except ValueError:
+        base = f"class_{base}".rstrip("_")[:MAX_IDENTIFIER_CHARS]
+    identifier, n = base, 1
+    while (
+        identifier in taken
+        or repo.get_by_identifier(identifier) is not None
+        or repo.get_property_definition_by_identifier(identifier) is not None
+    ):
+        n += 1
+        suffix = f"_{n}"
+        identifier = base[: MAX_IDENTIFIER_CHARS - len(suffix)] + suffix
+    return identifier
 
 
 def taxonomy_classes(repo: "OntologyRepository", taxonomy_id: str) -> "list[Class]":
@@ -173,6 +204,16 @@ class SchemaExtractionApplyService:
             for key, c in class_title_index(taxonomy_classes(self._repo, taxonomy_id)).items()
         }
 
+        # Identifiers are unique across classes and relationship types, so the
+        # selected property candidates' slugs are reserved before any class
+        # takes one (the source planner does the same).
+        taken: set[str] = {
+            slugify(c.get("label", ""))
+            for cid, c in candidates
+            if c.get("kind") == "property_definition"
+            and _is_selected(cid, c.get("confidence", 0.0))
+        }
+
         class_candidates = [(cid, c) for cid, c in candidates if c.get("kind") == "class"]
         for candidate_id, candidate in class_candidates:
             label = candidate.get("label", "").strip()
@@ -193,11 +234,14 @@ class SchemaExtractionApplyService:
                 # Classes are written first and earlier ones were only reused,
                 # so nothing has been written yet.
                 raise ValueError("Choose a concept scheme for the new classes")
+            identifier = class_identifier(label, self._repo, taken)
+            taken.add(identifier)
             new_class = self._ontology_service.create_class(
                 concept_scheme_id=concept_scheme_id,
                 title=label,
                 description=candidate.get("proposed_definition"),
                 source_run_id=run.id,
+                identifier=identifier,
             )
             class_title_to_id[class_title_key(label)] = new_class.id
             result.classes_created += 1
@@ -223,6 +267,12 @@ class SchemaExtractionApplyService:
             if self._repo.get_property_definition_by_identifier(identifier) is not None:
                 result.properties_skipped += 1
                 _already_present(candidate_id)
+                continue
+            if self._repo.get_by_identifier(identifier) is not None:
+                # A class, scheme or taxonomy has it (identifiers are unique across
+                # kinds). Connections naming this type skip as unresolved_predicate.
+                result.properties_skipped += 1
+                result.skip(candidate_id, "identifier_taken")
                 continue
             try:
                 # Its predicate is its identifier, added to the taxonomy's catalog

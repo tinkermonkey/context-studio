@@ -90,6 +90,11 @@ class PipelineTypeRegistry:
                     "str (optional) — the extract call that started the run (runs started"
                     " together share it); recorded in input_summary with source_id"
                 ),
+                "skip_boilerplate": (
+                    "bool (optional, true by default) — on a source, skip its warranty,"
+                    " safety, legal and contact sections and its copies in other languages"
+                    " (see domain/extraction/section_filter.py); false reads everything"
+                ),
             },
             output_contract={
                 "proposal_id": (
@@ -109,6 +114,12 @@ class PipelineTypeRegistry:
                     " recognition found existing individuals close to it"
                 ),
                 "warnings": "list[str] — validation issues during extraction",
+                "skipped_sections": (
+                    "list[dict] — a run on a source: the sections it left unread,"
+                    " [{start, end, page_first, page_last, reason, preview}] (reason:"
+                    " other_language, warranty, safety, legal or contact), with"
+                    " skipped_sections_by_reason {reason: count}; absent when none"
+                ),
                 "metadata": (
                     "dict — model, tokens_used, duration_ms; chunked runs add source_id,"
                     " pages and chunks: [{index, start, end, page_first, page_last,"
@@ -131,6 +142,11 @@ class PipelineTypeRegistry:
                     'str (optional) — page selection such as "12-30"; only text on those'
                     " pages is read. Needs page_starts (offset at which each page starts)"
                 ),
+                "skip_boilerplate": (
+                    "bool (optional, true by default) — on a source, skip its warranty,"
+                    " safety, legal and contact sections and its copies in other languages"
+                    " (see domain/extraction/section_filter.py); false reads everything"
+                ),
             },
             output_contract={
                 "classes": "list[dict] — extracted classes",
@@ -138,6 +154,10 @@ class PipelineTypeRegistry:
                 "proposal_id": (
                     "str | null — a run on a source: its proposal, null when nothing was"
                     " proposed (with proposed_operations, refused_operations, skipped_candidates)"
+                ),
+                "skipped_sections": (
+                    "list[dict] — a run on a source: the sections it left unread, as for"
+                    " individual_extraction, with skipped_sections_by_reason"
                 ),
             },
         ),

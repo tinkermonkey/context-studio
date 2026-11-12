@@ -218,6 +218,17 @@ describe("bulkSummary", () => {
     ]);
   });
 
+  it("says how many operations without a passage it held back (#1575)", () => {
+    const unplaced = { ...openProposal.operations[0], no_passage: true };
+    expect(
+      bulkSummary(["op-rename"], 0, 0, after({ "op-rename": "applied" }), [], [unplaced]),
+    ).toEqual([
+      "success",
+      "Applied 1",
+      "Held back 1 operation without a passage: accept it on its own.",
+    ]);
+  });
+
   it("says nothing applied when every operation was skipped", () => {
     expect(bulkSummary([], 1, 0, undefined)).toEqual([
       "info",

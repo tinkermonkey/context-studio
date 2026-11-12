@@ -590,6 +590,12 @@ class ProposedOperationResponse(BaseModel):
         description="Set when a relationship-type delete's proposed_replacement_id is: how "
         "its pair compares",
     )
+    no_passage: bool = Field(
+        False,
+        description="An operation of an extraction from a source that cites no passage in it: "
+        "the extraction couldn't place its quote in the text. The approval policy never "
+        "auto-applies it, and the review's bulk accept leaves it to be accepted on its own",
+    )
     auto_apply: Optional[bool] = Field(
         None,
         description="A dry run only: eligible to auto-apply, i.e. the taxonomy's approval "
@@ -693,8 +699,9 @@ class ChangeProposalResponse(BaseModel):
             ],
         )
         mismatches = domain_range_mismatches or {}
-        for operation in response.operations:
+        for operation, source in zip(response.operations, proposal.operations):
             operation.domain_range_mismatch = mismatches.get(operation.id)
+            operation.no_passage = proposal.lacks_passage(source)
         titles = alternative_titles or {}
         for operation in response.operations:
             for alternative in operation.alternatives:

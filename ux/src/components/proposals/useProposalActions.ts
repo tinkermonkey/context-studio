@@ -21,7 +21,12 @@ import {
   splitStale,
   type Resolutions,
 } from "./decisionModel";
-import { nearMatchHeldIds, nearMatchHeldNote } from "./sourceModel";
+import {
+  nearMatchHeldIds,
+  nearMatchHeldNote,
+  noPassageHeldIds,
+  noPassageHeldNote,
+} from "./sourceModel";
 import { keptNote } from "./tieredModel";
 
 export type Edits = Record<string, Record<string, unknown>>;
@@ -76,6 +81,8 @@ export function bulkSummary(
   after: ChangeProposal | undefined,
   /** Near matches (and what waits on them) left for the reviewer's choice. */
   nearMatches: ProposedOperation[] = [],
+  /** Operations without a passage (and what names them) held back to accept one by one. */
+  noPassage: ProposedOperation[] = [],
 ): ["success" | "info", string, string | undefined] {
   const sentIds = new Set(sent);
   const outcomes = (after?.operations ?? []).filter((o) => sentIds.has(o.id));
@@ -92,6 +99,7 @@ export function bulkSummary(
       `${blocked} still ${blocked === 1 ? "needs" : "need"} a decision (in use: choose move or drop in the inspector).`,
     stale > 0 && `${plural(stale, "stale operation")} left for Apply anyway.`,
     nearMatchHeldNote(nearMatches),
+    noPassageHeldNote(noPassage),
   ].filter(Boolean);
   return [failed > 0 || sent.length === 0 ? "info" : "success", title, left.join(" ") || undefined];
 }
@@ -258,16 +266,22 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
   /**
    * Accept the operations that need no confirmation or choice: stale ones are
    * left for Apply anyway, and blocked deletes (relationships still use the
-   * type) for a resolution in the inspector. Once the apply returns, a toast
-   * says what applied and what still needs a decision (never sent, so not failed).
+   * type) for a resolution in the inspector. Near matches and operations
+   * without a passage (with what names them) are held back for the reviewer.
+   * Once the apply returns, a toast says what applied and what still needs a
+   * decision (never sent, so not failed).
    */
   const acceptFresh = async (operationIds: string[]) => {
     if (!proposal || inFlight.current) return;
     // A near match accepted without a choice would create a new individual: never in bulk.
     const held = nearMatchHeldIds(proposal.operations);
-    const chosen = operationIds.filter((opId) => !held.has(opId));
-    const nearMatches = proposal.operations.filter(
-      (o) => held.has(o.id) && operationIds.includes(o.id),
+    // Nothing shows where an operation without a passage came from: accepted one by one.
+    const unplaced = noPassageHeldIds(proposal.operations);
+    const chosen = operationIds.filter((opId) => !held.has(opId) && !unplaced.has(opId));
+    const asked = (o: ProposedOperation) => operationIds.includes(o.id);
+    const nearMatches = proposal.operations.filter((o) => held.has(o.id) && asked(o));
+    const noPassage = proposal.operations.filter(
+      (o) => unplaced.has(o.id) && !held.has(o.id) && asked(o),
     );
     const { unblocked, blocked } = splitBlocked(proposal.operations, chosen);
     const { fresh, stale } = splitStale(proposal.operations, unblocked);
@@ -276,7 +290,9 @@ export function useProposalActions(proposal: ChangeProposal | undefined) {
       outcome = await send(fresh, []);
       if (outcome.error || outcome.cancelled) return; // send says why
     }
-    toast(...bulkSummary(fresh, blocked.length, stale.length, outcome.proposal, nearMatches));
+    toast(
+      ...bulkSummary(fresh, blocked.length, stale.length, outcome.proposal, nearMatches, noPassage),
+    );
   };
 
   const confirmForce = async () => {
