@@ -5,6 +5,7 @@ Tests that warnings are properly emitted when candidates, connections, or
 properties lack concrete provenance in the source text.
 """
 
+import json
 import os
 import sys
 
@@ -404,6 +405,16 @@ class _DisambiguationLLM:
         )
 
 
+_SOURCE = (
+    "Python coroutines run on the event loop.\n"
+    "A GUI toolkit runs its own Event Loop to dispatch clicks.\n"
+    "Wrap a coroutine in a Task to schedule it. Each Task on the sprint board is a unit of work.\n"
+    "An asyncio Future holds a result; a concurrent.futures Future wraps a thread.\n"
+    "Have a contractor check the cooling system each spring. A clean filter helps the "
+    "cooling system run efficiently."
+)
+
+
 def _state_with(*labels: str) -> SchemaExtractionState:
     from domain.pipelines.schema_extraction.orchestrator import CandidateClass
 
@@ -411,7 +422,8 @@ def _state_with(*labels: str) -> SchemaExtractionState:
         run_id="run",
         pipeline_type=PipelineType.SCHEMA_EXTRACTION,
         input_data={},
-        normalized_text="Python coroutines run on the event loop.",
+        source_text=_SOURCE,
+        normalized_text=" ".join(_SOURCE.split()),
         candidate_classes=[
             CandidateClass(label=label, proposed_definition=f"{label} definition", confidence=0.9)
             for label in labels
@@ -427,34 +439,31 @@ async def _disambiguate(content: str, *labels: str):
     return result.candidate_classes
 
 
+def _reply(term: str, *senses: dict) -> str:
+    return json.dumps(
+        {"ambiguous_terms": [{"term": term, "rationale": "two uses", "senses": list(senses)}]}
+    )
+
+
 class TestDisambiguation:
-    """Disambiguation splits only on in-text senses and never puts definitions in labels."""
+    """A term is split into senses only when each sense quotes a different passage."""
 
     @pytest.mark.asyncio
-    async def test_off_domain_senses_are_dropped_and_term_left_unsplit(self):
-        reply = (
-            '```json\n{"ambiguous_terms": [{"term": "Python", "rationale": "r", "senses": ['
-            '{"qualifier": "language", "definition": "The programming language", '
-            '"used_in_text": true},'
-            '{"qualifier": "snake", "definition": "A large snake", "used_in_text": false}'
-            "]}]}\n```"
-        )
-        classes = await _disambiguate(reply, "Python", "Coroutine")
-
-        assert [c.label for c in classes] == ["Python", "Coroutine"]
-        assert classes[0].proposed_definition == "Python definition"
-        assert classes[0].disambiguation_rationale is None
-
-    @pytest.mark.asyncio
-    async def test_in_text_senses_split_with_short_labels_and_sense_definitions(self):
-        reply = (
-            '{"ambiguous_terms": [{"term": "event loop", "rationale": "two uses", "senses": ['
-            '{"qualifier": "asyncio", "definition": "The asyncio scheduler that runs '
-            'coroutines", "used_in_text": true},'
-            '{"qualifier": "GUI", "definition": "A UI framework loop dispatching events", '
-            '"used_in_text": true},'
-            '{"qualifier": "snake", "definition": "Off topic", "used_in_text": false}'
-            "]}]}"
+    async def test_senses_with_distinct_found_quotes_split(self):
+        reply = _reply(
+            "event loop",
+            {
+                "qualifier": "asyncio",
+                "definition": "The asyncio scheduler that runs coroutines",
+                "quote": "coroutines run on the event loop",
+            },
+            {
+                # Case and whitespace differ from the source; the quote is still found
+                "qualifier": "GUI",
+                "definition": "A UI framework loop dispatching events",
+                "quote": "runs its own  event loop to dispatch clicks",
+            },
+            {"qualifier": "snake", "definition": "Off topic", "quote": "a large snake"},
         )
         classes = await _disambiguate(reply, "Event Loop")
 
@@ -471,15 +480,93 @@ class TestDisambiguation:
         ]
         assert classes[0].disambiguation_rationale is None
         assert all(c.disambiguation_rationale.endswith("two uses") for c in classes[1:])
+        # Each sense's provenance is the passage its quote matched in the source
+        first, second = classes[1].provenance, classes[2].provenance
+        assert [(s.quote, _SOURCE[s.start : s.end]) for s in first] == [
+            ("coroutines run on the event loop", "coroutines run on the event loop")
+        ]
+        assert [s.quote for s in second] == ["runs its own Event Loop to dispatch clicks"]
+        assert _SOURCE[second[0].start : second[0].end] == second[0].quote
+
+    @pytest.mark.asyncio
+    async def test_over_reported_senses_without_findable_quotes_collapse(self):
+        # The ENERGY STAR failure: categories the text never uses the term in
+        reply = _reply(
+            "Cooling System",
+            {"qualifier": "Functional Category", "definition": "A class of systems"},
+            {
+                "qualifier": "Physical Equipment",
+                "definition": "The installed unit",
+                "quote": "The cooling system is the equipment that cools the home",
+            },
+            {
+                "qualifier": "Maintenance Target",
+                "definition": "What gets serviced",
+                "quote": "check the cooling system each spring",
+            },
+        )
+        classes = await _disambiguate(reply, "Cooling System")
+
+        assert [c.label for c in classes] == ["Cooling System"]
+        assert classes[0].disambiguation_rationale is None
+
+    @pytest.mark.asyncio
+    async def test_senses_citing_the_same_passage_collapse(self):
+        reply = _reply(
+            "Cooling System",
+            {
+                "qualifier": "equipment",
+                "definition": "The installed unit",
+                "quote": "check the cooling system each spring",
+            },
+            {
+                "qualifier": "maintenance target",
+                "definition": "What gets serviced",
+                "quote": "contractor check the cooling system",
+            },
+            {
+                "qualifier": "category",
+                "definition": "A class of systems",
+                "quote": "check the cooling system each spring",
+            },
+        )
+        classes = await _disambiguate(reply, "Cooling System")
+
+        assert [c.label for c in classes] == ["Cooling System"]
+
+    @pytest.mark.asyncio
+    async def test_a_quote_that_does_not_name_the_term_is_no_evidence(self):
+        reply = _reply(
+            "Cooling System",
+            {"qualifier": "equipment", "quote": "check the cooling system each spring"},
+            {"qualifier": "efficiency", "quote": "A clean filter helps"},
+        )
+        classes = await _disambiguate(reply, "Cooling System")
+
+        assert [c.label for c in classes] == ["Cooling System"]
+
+    @pytest.mark.asyncio
+    async def test_plain_string_senses_have_no_quote_and_collapse(self):
+        reply = '{"ambiguous_terms": [{"term": "Python", "senses": ["language", "snake"]}]}'
+        classes = await _disambiguate(reply, "Python", "Coroutine")
+
+        assert [c.label for c in classes] == ["Python", "Coroutine"]
+        assert classes[0].proposed_definition == "Python definition"
 
     @pytest.mark.asyncio
     async def test_long_qualifier_never_becomes_a_label(self):
-        reply = (
-            '{"ambiguous_terms": [{"term": "Task", "rationale": "r", "senses": ['
-            '{"qualifier": "An asyncio Task object that wraps a coroutine", '
-            '"definition": "Wraps a coroutine", "used_in_text": true},'
-            '{"qualifier": "unit of work", "definition": "Work to do", "used_in_text": true}'
-            "]}]}"
+        reply = _reply(
+            "Task",
+            {
+                "qualifier": "An asyncio Task object that wraps a coroutine",
+                "definition": "Wraps a coroutine",
+                "quote": "Wrap a coroutine in a Task",
+            },
+            {
+                "qualifier": "unit of work",
+                "definition": "Work to do",
+                "quote": "Each Task on the sprint board",
+            },
         )
         classes = await _disambiguate(reply, "Task")
 
@@ -487,13 +574,12 @@ class TestDisambiguation:
         assert classes[1].proposed_definition == "Wraps a coroutine"
 
     @pytest.mark.asyncio
-    async def test_string_false_drops_a_sense_and_fallback_counts_kept_senses(self):
-        reply = (
-            '{"ambiguous_terms": [{"term": "Future", "rationale": "r", "senses": ['
-            '{"qualifier": "dictionary meaning", "used_in_text": "false"},'
-            '{"qualifier": "", "definition": "An asyncio Future", "used_in_text": true},'
-            '{"qualifier": "concurrent.futures object", "used_in_text": "yes"}'
-            "]}]}"
+    async def test_fallback_qualifier_counts_kept_senses(self):
+        reply = _reply(
+            "Future",
+            {"qualifier": "dictionary meaning", "quote": "the time to come"},
+            {"qualifier": "", "definition": "An asyncio Future", "quote": "asyncio Future"},
+            {"qualifier": "concurrent.futures object", "quote": "concurrent.futures Future"},
         )
         classes = await _disambiguate(reply, "Future")
 

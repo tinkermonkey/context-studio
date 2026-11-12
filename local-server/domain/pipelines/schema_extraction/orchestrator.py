@@ -41,7 +41,7 @@ from domain.extraction.section_filter import (
     skip_summary,
     skipped_sections,
 )
-from domain.extraction.span_resolution import find_all_spans
+from domain.extraction.span_resolution import find_all_spans, resolve_span
 from domain.extraction.value_objects import SourceSpan
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
@@ -95,42 +95,51 @@ def _serialize_provenance(spans: list[SourceSpan]) -> list[dict[str, Any]]:
 _MAX_QUALIFIER_WORDS = 3
 
 
-def _is_false(value: Any) -> bool:
-    """True for a boolean false or a string the LLM used to mean false."""
-    if isinstance(value, str):
-        return value.strip().lower() in {"false", "no", "0"}
-    return value is False
-
-
-def _in_text_senses(raw_senses: Any) -> list[tuple[str, str | None]]:
+def _in_text_senses(
+    raw_senses: Any, term: str, source_text: str
+) -> list[tuple[str, str | None, SourceSpan]]:
     """
-    Normalize a disambiguation reply's senses to ``(qualifier, definition)`` pairs,
-    keeping only senses the text uses.
+    The senses of ``term`` a disambiguation reply shows the text using, as
+    ``(qualifier, definition, quote span)``.
 
-    Structured senses carry ``used_in_text``; a sense marked false (boolean or
-    the strings "false"/"no"/"0") is dropped. Plain-string senses (the older reply
-    shape) count as used. Qualifiers are capped at three words so a definition can
-    never become a label; a longer or missing qualifier falls back to "sense N",
-    numbered among the kept senses. Duplicate qualifiers are dropped.
+    A sense needs evidence: its ``quote`` is found in the source text (exactly
+    or once whitespace, case and typography are folded; see ``resolve_span``),
+    names the term, and is not a passage an earlier kept sense quoted (their
+    spans overlap). A sense without one (a plain string, no quote, a paraphrase,
+    a dictionary meaning the text never uses) is dropped, so a model that
+    over-reports senses cannot split a term the text uses in one sense. The span
+    is the source text the quote matched.
+
+    Qualifiers are capped at three words so a definition can never become a
+    label; a longer or missing qualifier falls back to "sense N", numbered among
+    the kept senses. Duplicate qualifiers are dropped.
     """
-    pairs: list[tuple[str, str | None]] = []
+    senses: list[tuple[str, str | None, SourceSpan]] = []
+    places: list[tuple[int, int]] = []
     seen: set[str] = set()
     for sense in raw_senses if isinstance(raw_senses, list) else []:
-        if isinstance(sense, dict):
-            if _is_false(sense.get("used_in_text")):
-                continue
-            qualifier = str(sense.get("qualifier") or "").strip()
-            definition = str(sense.get("definition") or "").strip() or None
-        else:
-            qualifier = str(sense or "").strip()
-            definition = qualifier or None
+        if not isinstance(sense, dict):
+            continue
+        quote = str(sense.get("quote") or "").strip()
+        found = resolve_span(quote or None, None, None, source_text)
+        if found.start is None or found.end is None:
+            continue
+        start, end = found.start, found.end
+        if not find_all_spans(term, source_text[start:end]):
+            continue
+        if any(start < other_end and other_start < end for other_start, other_end in places):
+            continue
+        qualifier = str(sense.get("qualifier") or "").strip()
+        definition = str(sense.get("definition") or "").strip() or None
         if not qualifier or len(qualifier.split()) > _MAX_QUALIFIER_WORDS:
-            qualifier = f"sense {len(pairs) + 1}"
+            qualifier = f"sense {len(senses) + 1}"
         if qualifier.lower() in seen:
             continue
         seen.add(qualifier.lower())
-        pairs.append((qualifier, definition))
-    return pairs
+        places.append((start, end))
+        quote_span = SourceSpan(quote=source_text[start:end], start=start, end=end)
+        senses.append((qualifier, definition, quote_span))
+    return senses
 
 
 def join_documents(documents: Any) -> str:
@@ -829,11 +838,15 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         Stage 6: Add sense candidates for a term only when the text itself uses
         it in more than one sense. The original term is kept.
 
-        Senses the text does not use (dictionary meanings such as "Python (a
-        snake)" in a programming text) are dropped. A term with fewer than two
-        in-text senses is left as it is. When a term is split, each sense's
-        definition goes into ``proposed_definition``; the label stays the term
-        plus a short qualifier (at most three words), never the definition.
+        The model reports senses with a verbatim quote each, and only senses
+        whose quotes are found in the source text, name the term and sit at
+        different places in it count (see ``_in_text_senses``): a term is split
+        only when two or more do, so senses the text does not use (dictionary
+        meanings such as "Python (a snake)" in a programming text, or a
+        category the model infers) leave it as one candidate. When a term is
+        split, each sense's definition goes into ``proposed_definition``, its
+        quote is the sense's provenance, and the label stays the term plus a
+        short qualifier (at most three words), never the definition.
         """
         if not state.candidate_classes:
             return replace(state, steps_completed=state.steps_completed + ["disambiguation"])
@@ -864,7 +877,6 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                         continue
                     term = str(ambig.get("term") or "").strip()
                     rationale = ambig.get("rationale", "") or ""
-                    senses = _in_text_senses(ambig.get("senses", []))
 
                     original_idx = next(
                         (
@@ -874,10 +886,15 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                         ),
                         -1,
                     )
-                    if original_idx < 0 or len(senses) < 2:
+                    if original_idx < 0:
+                        continue
+                    original = disambiguated[original_idx]
+                    senses = _in_text_senses(
+                        ambig.get("senses", []), original.label, state.source_text
+                    )
+                    if len(senses) < 2:
                         continue
 
-                    original = disambiguated[original_idx]
                     # Keep the original term: connection proposal (stage 5) ran
                     # before this stage and refers to it by label, so removing it
                     # would leave those connections pointing at no class and apply
@@ -888,10 +905,10 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                             label=f"{original.label} ({qualifier})",
                             proposed_definition=definition or original.proposed_definition,
                             confidence=max(0.0, original.confidence - 0.1),
-                            provenance=original.provenance,
+                            provenance=[quote_span],
                             disambiguation_rationale=f"Sense {i + 1}: {rationale}",
                         )
-                        for i, (qualifier, definition) in enumerate(senses)
+                        for i, (qualifier, definition, quote_span) in enumerate(senses)
                     ]
                     disambiguated = (
                         disambiguated[:original_idx] + split + disambiguated[original_idx + 1 :]
