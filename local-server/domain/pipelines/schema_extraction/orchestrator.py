@@ -1224,7 +1224,8 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                     # before this stage and refers to it by label, so removing it
                     # would leave those connections pointing at no class and apply
                     # would silently drop them. The senses follow it as narrower
-                    # candidates the reviewer can accept or reject.
+                    # candidates the reviewer can accept or reject, placed under it
+                    # (placement ran before this stage, so they have no parent yet).
                     split = [original] + [
                         CandidateClass(
                             label=f"{original.label} ({qualifier})",
@@ -1232,6 +1233,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
                             confidence=max(0.0, original.confidence - 0.1),
                             provenance=[quote_span],
                             disambiguation_rationale=f"Sense {i + 1}: {rationale}",
+                            proposed_parent=original.label,
                         )
                         for i, (qualifier, definition, quote_span) in enumerate(senses)
                     ]

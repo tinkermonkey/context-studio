@@ -482,6 +482,8 @@ class TestDisambiguation:
         ]
         assert classes[0].disambiguation_rationale is None
         assert all(c.disambiguation_rationale.endswith("two uses") for c in classes[1:])
+        # The senses sit under the term they split
+        assert [c.proposed_parent for c in classes[1:]] == [classes[0].label] * 2
         # Each sense's provenance is the passage its quote matched in the source
         first, second = classes[1].provenance, classes[2].provenance
         assert [(s.quote, _SOURCE[s.start : s.end]) for s in first] == [
