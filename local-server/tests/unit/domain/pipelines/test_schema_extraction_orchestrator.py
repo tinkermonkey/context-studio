@@ -5,6 +5,7 @@ Tests that warnings are properly emitted when candidates, connections, or
 properties lack concrete provenance in the source text.
 """
 
+import json
 import os
 import sys
 
@@ -21,6 +22,8 @@ from domain.pipelines.entities import PipelineType
 from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.ports import LLMResponse
 from domain.pipelines.schema_extraction.orchestrator import (
+    CandidateClass,
+    CandidateConnection,
     SchemaExtractionOrchestrator,
     SchemaExtractionState,
     join_documents,
@@ -69,7 +72,7 @@ class _MockLLM:
             content = '["Microservice", "UnknownTerm"]'
         elif "Return a JSON object mapping" in system_prompt:
             # Definition synthesis
-            content = '{"Microservice": "A small service", ' '"UnknownTerm": "An unknown concept"}'
+            content = '{"Microservice": "A small service", "UnknownTerm": "An unknown concept"}'
         elif "disambiguation" in system_prompt.lower():
             content = '{"ambiguous_terms": []}'
         elif "relationships and properties" in user_prompt.lower():
@@ -218,16 +221,16 @@ class TestWarningEmissions:
 
         # Both the unknown relationship and unknown property should
         # generate warnings (no provenance in text)
-        assert (
-            len(conn_warnings) > 0
-        ), "Expected at least one connection_proposal warning for unknown terms"
+        assert len(conn_warnings) > 0, (
+            "Expected at least one connection_proposal warning for unknown terms"
+        )
         assert any(
             "UnknownA" in w.get("error", "") or "UnknownB" in w.get("error", "")
             for w in conn_warnings
         ), "Expected warning to mention unknown relationship"
-        assert any(
-            "UnknownProperty" in w.get("error", "") for w in conn_warnings
-        ), "Expected warning to mention unknown property"
+        assert any("UnknownProperty" in w.get("error", "") for w in conn_warnings), (
+            "Expected warning to mention unknown property"
+        )
 
     @pytest.mark.asyncio
     async def test_finalize_includes_warnings_in_result(self, orchestrator):
@@ -599,6 +602,233 @@ class TestClassification:
     async def test_without_a_taxonomy_every_candidate_is_new(self, mock_llm, repo):
         state = await self._classify(mock_llm, repo, {})
         assert not any(state.classified_concepts.values())
+
+    @pytest.mark.asyncio
+    async def test_scope_names_the_taxonomy_as_source_runs_pass_it(self, mock_llm, repo):
+        state = await self._classify(mock_llm, repo, {"scope": "tx-2"})
+        assert state.classified_concepts["Gateway"] is True
+
+
+class _PlacementLLM:
+    """Replies to the placement stage with a scripted reply and records its prompt."""
+
+    def __init__(self, reply):
+        self.reply = reply
+        self.user_prompts = []
+
+    async def complete_async(self, system_prompt, user_prompt, model, **kwargs):
+        self.user_prompts.append(user_prompt)
+        content = self.reply if isinstance(self.reply, str) else json.dumps(self.reply)
+        return LLMResponse(
+            content=content,
+            tokens_in=1,
+            tokens_out=1,
+            duration_ms=1,
+            finish_reason="stop",
+            model=model,
+        )
+
+
+class TestPlacement:
+    """Placement puts candidates under existing classes or each other, and makes
+    measurements attributes of a class (#1570)."""
+
+    @pytest.fixture
+    def repo(self):
+        repo = FakeOntologyRepository()
+        repo.save_taxonomy(Taxonomy(id="tx-h", identifier="house", title="House"))
+        repo.save_concept_scheme(
+            ConceptScheme(id="cs-h", taxonomy_id="tx-h", identifier="resources", title="R")
+        )
+        for n, (title, description) in enumerate(
+            (("Appliance", "A machine\n that does a household task."), ("Task", None)), start=1
+        ):
+            repo.save_class(
+                Class(
+                    id=f"cls-{n}",
+                    concept_scheme_id="cs-h",
+                    taxonomy_id="tx-h",
+                    identifier=f"class_{n}",
+                    title=title,
+                    description=description,
+                )
+            )
+        return repo
+
+    @staticmethod
+    async def _place(reply, repo=None, input_data=None, labels=None):
+        llm = _PlacementLLM(reply)
+        orchestrator = SchemaExtractionOrchestrator(
+            llm_provider=llm, ontology_repo=repo, run_id="test-run", status_writer=None
+        )
+        labels = labels or ["Heat Pump", "Air Filter", "Voltage", "Indoor Humidity"]
+        state = SchemaExtractionState(
+            run_id="test-run",
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            input_data=input_data if input_data is not None else {"scope": "tx-h"},
+            candidate_classes=[
+                CandidateClass(label=label, proposed_definition=f"{label} defined.")
+                for label in labels
+            ],
+        )
+        return llm, await orchestrator._stage_placement(state)
+
+    @pytest.mark.asyncio
+    async def test_classes_get_parents_and_measurements_become_attributes(self, repo):
+        reply = {
+            "placements": [
+                {"label": "heat pump", "role": "class", "parent": "appliance"},
+                {"label": "Air Filter", "role": "class", "parent": "Heat Pump"},
+                {
+                    "label": "Voltage",
+                    "role": "attribute",
+                    "of": "Heat Pump",
+                    "value_type": "float",
+                    "unit": "V",
+                },
+                {
+                    "label": "Indoor Humidity",
+                    "role": "attribute",
+                    "of": "appliance",
+                    "unit": "null",
+                },
+            ]
+        }
+        llm, state = await self._place(reply, repo)
+
+        assert [(c.label, c.proposed_parent) for c in state.candidate_classes] == [
+            ("Heat Pump", "Appliance"),
+            ("Air Filter", "Heat Pump"),
+        ]
+        assert [
+            (a.label, a.of_class, a.value_type, a.unit, a.proposed_definition)
+            for a in state.candidate_attributes
+        ] == [
+            ("Voltage", "Heat Pump", "number", "V", "Voltage defined."),
+            ("Indoor Humidity", "Appliance", "string", None, "Indoor Humidity defined."),
+        ]
+        assert state.steps_completed[-1] == "placement"
+        assert state.parse_warnings == []
+        prompt = llm.user_prompts[0]
+        assert "- Appliance: A machine that does a household task.\n- Task\n" in prompt
+        assert "- Heat Pump: Heat Pump defined." in prompt
+        assert "string, integer, number, date, boolean" in prompt
+
+    @pytest.mark.asyncio
+    async def test_unknown_names_and_self_parents_are_dropped_with_warnings(self, repo):
+        reply = {
+            "placements": [
+                {"label": "Heat Pump", "role": "class", "parent": "Machine"},
+                {"label": "Air Filter", "role": "class", "parent": "Air Filter"},
+                # An attribute can't belong to another attribute
+                {"label": "Voltage", "role": "attribute", "of": "Indoor Humidity"},
+                {"label": "Indoor Humidity", "role": "attribute", "of": "Dishwasher"},
+                {"label": "Not A Candidate", "role": "class", "parent": "Task"},
+            ]
+        }
+        _, state = await self._place(reply, repo)
+
+        assert [c.proposed_parent for c in state.candidate_classes] == [None, None]
+        assert [a.of_class for a in state.candidate_attributes] == [None, None]
+        errors = [w["error"] for w in state.parse_warnings]
+        assert len(errors) == 4  # one per name that resolves to no other class
+        assert any("Machine" in e for e in errors)
+        assert any("Dishwasher" in e for e in errors)
+
+    @pytest.mark.asyncio
+    async def test_a_cycle_among_candidates_is_cut(self, repo):
+        reply = {
+            "placements": [
+                {"label": "A", "role": "class", "parent": "B"},
+                {"label": "B", "role": "class", "parent": "C"},
+                {"label": "C", "role": "class", "parent": "A"},
+                {"label": "D", "role": "class", "parent": "Appliance"},
+            ]
+        }
+        _, state = await self._place(reply, repo, labels=["A", "B", "C", "D"])
+
+        assert [(c.label, c.proposed_parent) for c in state.candidate_classes] == [
+            ("A", "B"),
+            ("B", "C"),
+            ("C", None),
+            ("D", "Appliance"),
+        ]
+        assert any("cycle" in w["error"] for w in state.parse_warnings)
+
+    @pytest.mark.asyncio
+    async def test_without_a_taxonomy_it_places_among_the_candidates(self):
+        reply = {
+            "placements": [
+                {"label": "Air Filter", "role": "class", "parent": "Heat Pump"},
+                {"label": "Heat Pump", "role": "class", "parent": "Appliance"},
+            ]
+        }
+        llm, state = await self._place(reply, input_data={}, labels=["Heat Pump", "Air Filter"])
+
+        assert "Existing classes:\n(none)" in llm.user_prompts[0]
+        assert [(c.label, c.proposed_parent) for c in state.candidate_classes] == [
+            ("Heat Pump", None),
+            ("Air Filter", "Heat Pump"),
+        ]
+
+    @pytest.mark.asyncio
+    async def test_an_unreadable_reply_leaves_every_candidate_a_top_level_class(self, repo):
+        _, state = await self._place("[]", repo)
+
+        assert len(state.candidate_classes) == 4
+        assert state.candidate_attributes == []
+        assert state.parse_warnings[0]["stage"] == "placement"
+
+    @pytest.mark.asyncio
+    async def test_subclass_of_connections_fill_missing_parents(self, repo):
+        _, state = await self._place(
+            {"placements": [{"label": "Heat Pump", "role": "class", "parent": "Appliance"}]},
+            repo,
+            labels=["Heat Pump", "Air Filter", "Filter Media"],
+        )
+        orchestrator = SchemaExtractionOrchestrator(
+            llm_provider=_PlacementLLM("{}"), ontology_repo=repo, run_id="test-run"
+        )
+        state.proposed_connections = [
+            CandidateConnection("Heat Pump", "subclass_of", "Task"),  # already placed
+            CandidateConnection("Air Filter", "is a", "Heat Pump"),
+            CandidateConnection("Filter Media", "subclass_of", "Unknown"),
+            CandidateConnection("Filter Media", "part_of", "Air Filter"),
+        ]
+
+        state = orchestrator._parents_from_connections(state)
+
+        assert [(c.label, c.proposed_parent) for c in state.candidate_classes] == [
+            ("Heat Pump", "Appliance"),
+            ("Air Filter", "Heat Pump"),
+            ("Filter Media", None),
+        ]
+
+    @pytest.mark.asyncio
+    async def test_attributes_are_serialized_with_the_candidates(self, repo):
+        reply = {
+            "placements": [
+                {"label": "Heat Pump", "role": "class", "parent": "Appliance"},
+                {"label": "Voltage", "role": "attribute", "of": "Heat Pump", "unit": "V"},
+            ]
+        }
+        _, state = await self._place(reply, repo, labels=["Heat Pump", "Voltage"])
+        orchestrator = SchemaExtractionOrchestrator(llm_provider=_PlacementLLM("{}"))
+
+        state = await orchestrator._stage_finalize(state)
+
+        heat_pump, voltage = state.result["candidates"]
+        assert heat_pump["kind"] == "class"
+        assert heat_pump["proposed_parent"] == "Appliance"
+        assert {k: voltage[k] for k in ("kind", "label", "of", "value_type", "unit")} == {
+            "kind": "attribute",
+            "label": "Voltage",
+            "of": "Heat Pump",
+            "value_type": "string",
+            "unit": "V",
+        }
+        assert state.result["attribute_count"] == 1
+        assert state.result["candidate_count"] == 1
 
 
 _ENGLISH = (

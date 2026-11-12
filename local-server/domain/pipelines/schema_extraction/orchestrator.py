@@ -4,14 +4,22 @@ Schema Extraction pipeline orchestrator.
 Analyzes text to extract schema structure: candidate Classes and PropertyDefinitions
 with provenance, confidence scores, and disambiguation rationale.
 
-Execution flow (7 stages):
+Execution flow (8 stages):
 1. Text ingestion — normalize, chunk if needed
 2. Candidate concept identification — extract noun phrases/technical terms (per chunk, merged)
 3. Classification — match against existing schema or mark as new
 4. Definition synthesis — generate definitions in one batched LLM call
-5. Connection proposal — suggest relationships and properties
-6. Disambiguation — handle multi-sense terms with separate candidates
-7. Confidence scoring — clamp confidence to [0, 1]
+5. Placement — put each candidate under an existing class or another candidate
+   (`proposed_parent`), or make it an attribute of a class (#1570)
+6. Connection proposal — suggest relationships and properties; a `subclass_of`
+   connection gives a class that placement left without a parent its parent
+7. Disambiguation — handle multi-sense terms with separate candidates
+8. Confidence scoring — clamp confidence to [0, 1]
+
+The run's taxonomy is its `ontology_id`, else its `scope` (source and review
+runs pass the taxonomy as `scope`). Classification and placement read its
+classes; without a taxonomy (or repo) placement still runs, with no existing
+classes.
 
 A run on a source (#1552) may name `pages` (with the source's `page_starts`):
 only text on those pages is read, and provenance is found only there (offsets
@@ -51,17 +59,51 @@ from domain.pipelines.orchestration.base import (
     PipelineState,
 )
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
-from domain.pipelines.schema_extraction.apply_service import class_title_key, taxonomy_classes
+from domain.pipelines.schema_extraction.apply_service import (
+    ATTRIBUTE_DATATYPES,
+    class_title_key,
+    slugify,
+    taxonomy_classes,
+)
 from domain.pipelines.schema_extraction.prompts import SCHEMA_EXTRACTION_STAGES
 from domain.pipelines.stage_prompts import render, resolve_stage_prompts
 
 if TYPE_CHECKING:
+    from domain.ontology.entities import Class
     from domain.pipelines.source_proposals import SourceProposer
 
 _logger = logging.getLogger(__name__)
 
 # Input keys that mark the documents as a source, whose boilerplate is skipped
 _SOURCE_KEYS = ("source_id", "page_starts", "headings", "pages")
+
+# The value types placement may give an attribute
+ATTRIBUTE_VALUE_TYPES = ATTRIBUTE_DATATYPES
+# Words the LLM uses for a value type, mapped to one of ATTRIBUTE_VALUE_TYPES
+_VALUE_TYPE_ALIASES = {
+    "float": "number",
+    "decimal": "number",
+    "double": "number",
+    "numeric": "number",
+    "int": "integer",
+    "text": "string",
+    "str": "string",
+    "bool": "boolean",
+    "datetime": "date",
+}
+# Existing classes the placement prompt lists: the first ones with a one-line
+# description, the rest by title only, up to a cap
+MAX_DESCRIBED_CLASSES = 100
+MAX_LISTED_CLASSES = 400
+_MAX_DESCRIPTION_CHARS = 120
+# Connection predicates (slugified) that make their subject a kind of their object
+_SUBCLASS_PREDICATES = frozenset({"subclass_of", "is_a"})
+
+
+def run_taxonomy_id(input_data: dict[str, Any]) -> str | None:
+    """The run's taxonomy: its ontology_id, else its scope (as source runs pass it)."""
+    taxonomy_id = input_data.get("ontology_id") or input_data.get("scope")
+    return str(taxonomy_id) if taxonomy_id else None
 
 
 def _serialize_provenance(spans: list[SourceSpan]) -> list[dict[str, Any]]:
@@ -133,6 +175,85 @@ def _in_text_senses(raw_senses: Any) -> list[tuple[str, str | None]]:
     return pairs
 
 
+def _text_or_none(value: Any) -> str | None:
+    """A reply's text value stripped; None for a missing, empty or "null" one."""
+    if value is None or isinstance(value, (dict, list)):
+        return None
+    text = str(value).strip()
+    return None if text.lower() in {"", "null", "none"} else text
+
+
+def _value_type(value: Any) -> str:
+    """A reply's value type as one of ATTRIBUTE_VALUE_TYPES; "string" when unknown."""
+    text = str(value or "").strip().lower()
+    text = _VALUE_TYPE_ALIASES.get(text, text)
+    return text if text in ATTRIBUTE_VALUE_TYPES else "string"
+
+
+def _existing_classes_text(classes: list[Class]) -> str:
+    """The placement prompt's list of the taxonomy's classes (see MAX_LISTED_CLASSES)."""
+    lines: list[str] = []
+    for n, cls in enumerate(classes[:MAX_LISTED_CLASSES]):
+        description = " ".join((cls.description or "").split()) if n < MAX_DESCRIBED_CLASSES else ""
+        if len(description) > _MAX_DESCRIPTION_CHARS:
+            description = description[: _MAX_DESCRIPTION_CHARS - 3].rstrip() + "..."
+        lines.append(f"- {cls.title}: {description}" if description else f"- {cls.title}")
+    if len(classes) > MAX_LISTED_CLASSES:
+        lines.append(f"- ... and {len(classes) - MAX_LISTED_CLASSES} more")
+    return "\n".join(lines) or "(none)"
+
+
+def _class_names(classes: list[CandidateClass], existing: dict[str, str]) -> dict[str, str]:
+    """Title key -> title of every class a placement may name: existing ones win."""
+    names = dict(existing)
+    for candidate in classes:
+        names.setdefault(class_title_key(candidate.label), candidate.label)
+    return names
+
+
+def _resolve_class(name: str | None, own_label: str, names: dict[str, str]) -> str | None:
+    """The title a placement's class name resolves to; None for itself or an unknown name."""
+    key = class_title_key(name)
+    if not key or key == class_title_key(own_label):
+        return None
+    return names.get(key)
+
+
+def _break_parent_cycles(
+    classes: list[CandidateClass], existing: dict[str, str]
+) -> tuple[list[CandidateClass], list[str]]:
+    """
+    The classes with every cycle of parents among the candidates cut: the
+    candidate whose parent closes a cycle is left top-level. A parent that is an
+    existing class ends a chain. Returns the classes and a note per cut.
+    """
+    classes = list(classes)
+    index = {class_title_key(c.label): i for i, c in enumerate(classes)}
+    problems: list[str] = []
+
+    def parent_of(i: int) -> int | None:
+        key = class_title_key(classes[i].proposed_parent)
+        return index.get(key) if key and key not in existing else None
+
+    done: set[int] = set()
+    for start in range(len(classes)):
+        path: list[int] = []
+        current: int | None = start
+        while current is not None and current not in done:
+            if current in path:
+                last = path[-1]
+                problems.append(
+                    f"Parent {classes[last].proposed_parent!r} of {classes[last].label!r}"
+                    " makes a cycle"
+                )
+                classes[last] = replace(classes[last], proposed_parent=None)
+                break
+            path.append(current)
+            current = parent_of(current)
+        done.update(path)
+    return classes, problems
+
+
 def join_documents(documents: Any) -> str:
     """
     Concatenate schema-extraction input documents into the single source text.
@@ -199,13 +320,21 @@ def _readable_text(text: str, input_data: dict[str, Any]) -> tuple[str, list[Ski
 
 @dataclass
 class CandidateClass:
-    """A candidate class extracted from text."""
+    """
+    A candidate class extracted from text.
+
+    Attributes:
+        proposed_parent: The title of the class it is a kind of: an existing
+            class of the run's taxonomy or another class candidate; None for a
+            top-level class
+    """
 
     label: str
     proposed_definition: str | None = None
     confidence: float = 0.5
     provenance: list[SourceSpan] = field(default_factory=list)
     disambiguation_rationale: str | None = None
+    proposed_parent: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
@@ -213,9 +342,46 @@ class CandidateClass:
             "kind": "class",
             "label": self.label,
             "proposed_definition": self.proposed_definition,
+            "proposed_parent": self.proposed_parent,
             "confidence": self.confidence,
             "provenance": _serialize_provenance(self.provenance),
             "disambiguation_rationale": self.disambiguation_rationale,
+        }
+
+
+@dataclass
+class CandidateAttribute:
+    """
+    A candidate attribute: a measurement or other value that describes the
+    instances of a class (placement made it one instead of a class).
+
+    Attributes:
+        of_class: The title of the class it describes: an existing class of the
+            run's taxonomy or a class candidate; None when the reply named no
+            class that resolves (then it is not proposed)
+        value_type: One of ATTRIBUTE_VALUE_TYPES
+        unit: Its unit ("V", "%"), if any
+    """
+
+    label: str
+    of_class: str | None = None
+    value_type: str = "string"
+    unit: str | None = None
+    proposed_definition: str | None = None
+    confidence: float = 0.5
+    provenance: list[SourceSpan] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary for serialization."""
+        return {
+            "kind": "attribute",
+            "label": self.label,
+            "proposed_definition": self.proposed_definition,
+            "of": self.of_class,
+            "value_type": self.value_type,
+            "unit": self.unit,
+            "confidence": self.confidence,
+            "provenance": _serialize_provenance(self.provenance),
         }
 
 
@@ -274,6 +440,9 @@ class SchemaExtractionState(PipelineState):
     candidate_concepts: list[str] = field(default_factory=list)
     classified_concepts: dict[str, bool] = field(default_factory=dict)
     candidate_classes: list[CandidateClass] = field(default_factory=list)
+    candidate_attributes: list[CandidateAttribute] = field(default_factory=list)
+    # Title key (class_title_key) -> title of each class in the run's taxonomy
+    existing_classes: dict[str, str] = field(default_factory=dict)
     candidate_properties: list[CandidatePropertyDefinition] = field(default_factory=list)
     proposed_connections: list[CandidateConnection] = field(default_factory=list)
     steps_completed: list[str] = field(default_factory=list)
@@ -283,7 +452,7 @@ class SchemaExtractionState(PipelineState):
 
 class SchemaExtractionOrchestrator(PipelineOrchestrator):
     """
-    Orchestrator for schema extraction using a 7-stage execution flow.
+    Orchestrator for schema extraction using an 8-stage execution flow.
 
     Each stage processes the state sequentially and produces candidates or connections.
     Transitions are deterministic (no branching on LLM output).
@@ -388,13 +557,19 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             # Stage 4: Definition synthesis
             schema_state = await self._stage_definition_synthesis(schema_state)
 
-            # Stage 5: Connection proposal
-            schema_state = await self._stage_connection_proposal(schema_state)
+            # Stage 5: Placement, before connections so measurements made
+            # attributes are not offered as relationship ends
+            schema_state = await self._stage_placement(schema_state)
 
-            # Stage 6: Disambiguation
+            # Stage 6: Connection proposal; subclass_of connections fill parents
+            # placement left empty
+            schema_state = await self._stage_connection_proposal(schema_state)
+            schema_state = self._parents_from_connections(schema_state)
+
+            # Stage 7: Disambiguation
             schema_state = await self._stage_disambiguation(schema_state)
 
-            # Stage 7: Confidence scoring
+            # Stage 8: Confidence scoring
             schema_state = await self._stage_confidence_scoring(schema_state)
 
             # Finalize
@@ -588,18 +763,11 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         """
         Stage 3: Classify each candidate as existing (True) or new (False).
 
-        If ontology_id (a taxonomy id) is provided and an ontology_repo is wired in,
-        marks candidates whose title (by ``class_title_key``) a class in that taxonomy
-        has, the rule apply dedups by. Otherwise marks all as new.
+        If the run has a taxonomy (see ``run_taxonomy_id``) and an ontology_repo is
+        wired in, marks candidates whose title (by ``class_title_key``) a class in
+        that taxonomy has, the rule apply dedups by. Otherwise marks all as new.
         """
-        existing_titles: set[str] = set()
-
-        ontology_id = state.input_data.get("ontology_id")
-        if ontology_id and self._ontology_repo is not None:
-            existing_titles = {
-                class_title_key(cls.title)
-                for cls in taxonomy_classes(self._ontology_repo, str(ontology_id))
-            }
+        existing_titles = {class_title_key(cls.title) for cls in self._taxonomy_classes(state)}
 
         classified = {
             concept: class_title_key(concept) in existing_titles
@@ -703,6 +871,163 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             state,
             candidate_classes=candidates,
             steps_completed=state.steps_completed + ["definition_synthesis"],
+        )
+
+    def _taxonomy_classes(self, state: SchemaExtractionState) -> list[Class]:
+        """The classes of the run's taxonomy; none without a taxonomy or repo."""
+        taxonomy_id = run_taxonomy_id(state.input_data)
+        if not taxonomy_id or self._ontology_repo is None:
+            return []
+        return taxonomy_classes(self._ontology_repo, taxonomy_id)
+
+    async def _stage_placement(self, state: SchemaExtractionState) -> SchemaExtractionState:
+        """
+        Placement (after definition synthesis): place each candidate in the
+        taxonomy's hierarchy, in one LLM call.
+
+        The reply gives each candidate a role. A class gets ``proposed_parent``:
+        an existing class or another class candidate it is a kind of. An
+        attribute (a measurement or other value) leaves the class candidates and
+        becomes a CandidateAttribute of the class it describes, with a value
+        type and unit. Names are matched by ``class_title_key``; a parent that
+        names nothing known is dropped, a cycle among candidate parents is cut,
+        and an attribute whose class names nothing known keeps ``of_class``
+        None. A reply that can't be read leaves every candidate a top-level
+        class, with a warning.
+        """
+        steps = state.steps_completed + ["placement"]
+        if not state.candidate_classes:
+            return replace(state, steps_completed=steps)
+
+        classes = self._taxonomy_classes(state)
+        existing = {class_title_key(cls.title): cls.title for cls in classes}
+        prompt = self._prompts["placement"]
+        user_prompt = render(
+            prompt.user,
+            {
+                "existing_classes": _existing_classes_text(classes),
+                "candidates": "\n".join(
+                    f"- {c.label}: {c.proposed_definition}"
+                    if c.proposed_definition
+                    else f"- {c.label}"
+                    for c in state.candidate_classes
+                ),
+                "value_types": ", ".join(ATTRIBUTE_VALUE_TYPES),
+            },
+        )
+        response = await self._call_llm(
+            system_prompt=prompt.system,
+            user_prompt=user_prompt,
+            model=state.input_data.get("model", "google/gemini-3-flash-preview"),
+            temperature=0.0,
+            max_tokens=4000,
+            response_format="json",
+        )
+        state = replace(state, existing_classes=existing)
+
+        entries: dict[str, dict[str, Any]] = {}
+        try:
+            parsed = extract_json(response.content)
+            placements = parsed.get("placements") if isinstance(parsed, dict) else None
+            if not isinstance(placements, list):
+                raise ValueError(f"Expected a placements list, got {type(parsed).__name__}")
+            for entry in placements:
+                if isinstance(entry, dict):
+                    entries.setdefault(class_title_key(str(entry.get("label") or "")), entry)
+        except (json.JSONDecodeError, ValueError) as e:
+            warning = {
+                "stage": "placement",
+                "error": f"JSON parse error: {str(e)}",
+                "response_preview": response.content[:200],
+                "fallback_action": "every candidate stays a top-level class",
+            }
+            return replace(
+                state, parse_warnings=state.parse_warnings + [warning], steps_completed=steps
+            )
+
+        kept: list[CandidateClass] = []
+        attributes: list[CandidateAttribute] = []
+        for candidate in state.candidate_classes:
+            entry = entries.get(class_title_key(candidate.label)) or {}
+            if str(entry.get("role") or "").strip().lower() == "attribute":
+                attributes.append(
+                    CandidateAttribute(
+                        label=candidate.label,
+                        of_class=_text_or_none(entry.get("of")),
+                        value_type=_value_type(entry.get("value_type")),
+                        unit=_text_or_none(entry.get("unit")),
+                        proposed_definition=candidate.proposed_definition,
+                        confidence=candidate.confidence,
+                        provenance=candidate.provenance,
+                    )
+                )
+            else:
+                kept.append(replace(candidate, proposed_parent=_text_or_none(entry.get("parent"))))
+
+        problems: list[str] = []
+        names = _class_names(kept, existing)
+        placed: list[CandidateClass] = []
+        for candidate in kept:
+            parent = _resolve_class(candidate.proposed_parent, candidate.label, names)
+            if candidate.proposed_parent and parent is None:
+                problems.append(
+                    f"Parent {candidate.proposed_parent!r} of {candidate.label!r} is not a class"
+                    " or candidate"
+                )
+            placed.append(replace(candidate, proposed_parent=parent))
+        resolved_attributes: list[CandidateAttribute] = []
+        for attribute in attributes:
+            of_class = _resolve_class(attribute.of_class, attribute.label, names)
+            if of_class is None:
+                problems.append(
+                    f"Attribute {attribute.label!r} describes {attribute.of_class!r}, which is"
+                    " not a class or candidate"
+                )
+            resolved_attributes.append(replace(attribute, of_class=of_class))
+        placed, cut = _break_parent_cycles(placed, existing)
+        problems += cut
+
+        warnings = [
+            {"stage": "placement", "error": problem, "fallback_action": "left unplaced"}
+            for problem in problems
+        ]
+        return replace(
+            state,
+            candidate_classes=placed,
+            candidate_attributes=resolved_attributes,
+            parse_warnings=state.parse_warnings + warnings,
+            steps_completed=steps,
+        )
+
+    def _parents_from_connections(self, state: SchemaExtractionState) -> SchemaExtractionState:
+        """
+        A class candidate that placement left without a parent takes one from a
+        ``subclass_of`` (or ``is_a``) connection whose subject it is, when its
+        object is an existing class or another class candidate.
+        """
+        names = _class_names(state.candidate_classes, state.existing_classes)
+        parents: dict[str, str] = {}
+        for conn in state.proposed_connections:
+            if slugify(conn.predicate) not in _SUBCLASS_PREDICATES:
+                continue
+            parent = _resolve_class(conn.object_ref, conn.subject_ref, names)
+            if parent is not None:
+                parents.setdefault(class_title_key(conn.subject_ref), parent)
+        if not parents:
+            return state
+        classes = [
+            c
+            if c.proposed_parent
+            else replace(c, proposed_parent=parents.get(class_title_key(c.label)))
+            for c in state.candidate_classes
+        ]
+        classes, cut = _break_parent_cycles(classes, state.existing_classes)
+        warnings = [
+            {"stage": "connection_proposal", "error": problem, "fallback_action": "left unplaced"}
+            for problem in cut
+        ]
+        return replace(
+            state, candidate_classes=classes, parse_warnings=state.parse_warnings + warnings
         )
 
     async def _stage_connection_proposal(
@@ -937,12 +1262,17 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             replace(conn, confidence=max(0.0, min(1.0, conn.confidence)))
             for conn in state.proposed_connections
         ]
+        normalized_attributes = [
+            replace(attribute, confidence=max(0.0, min(1.0, attribute.confidence)))
+            for attribute in state.candidate_attributes
+        ]
 
         return replace(
             state,
             candidate_classes=normalized_classes,
             candidate_properties=normalized_properties,
             proposed_connections=normalized_connections,
+            candidate_attributes=normalized_attributes,
             steps_completed=state.steps_completed + ["confidence_scoring"],
         )
 
@@ -953,6 +1283,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         candidates = []
         candidates.extend([c.to_dict() for c in state.candidate_classes])
         candidates.extend([p.to_dict() for p in state.candidate_properties])
+        candidates.extend([a.to_dict() for a in state.candidate_attributes])
 
         connections = [c.to_dict() for c in state.proposed_connections]
 
@@ -961,6 +1292,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             "connections": connections,
             "candidate_count": len(state.candidate_classes),
             "property_count": len(state.candidate_properties),
+            "attribute_count": len(state.candidate_attributes),
             "connection_count": len(state.proposed_connections),
             "warnings": state.parse_warnings,
         }

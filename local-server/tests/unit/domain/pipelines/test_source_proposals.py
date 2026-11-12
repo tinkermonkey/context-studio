@@ -726,3 +726,132 @@ class TestProposeSchema:
             "class_3d_printer",
             "class_x",
         ]
+
+
+class TestSchemaPlacement:
+    """#1570: classes go under their proposed parent, measurements become attributes."""
+
+    def plan(self, repo, house, candidates, page_starts=()):
+        return plan_schema_operations(
+            candidates,
+            repo,
+            taxonomy_id=house["taxonomy"],
+            source_id=SOURCE,
+            page_starts=list(page_starts),
+        )
+
+    def test_a_class_goes_under_an_existing_parent_or_an_earlier_class_create(self, repo, house):
+        candidates = [
+            # The child comes first; its parent is planned before it
+            {"kind": "class", "label": "Chest Freezer", "proposed_parent": "Freezer"},
+            {"kind": "class", "label": "Freezer", "proposed_parent": "appliance"},
+            {"kind": "class", "label": "Filter", "proposed_parent": None},
+        ]
+        result = self.plan(repo, house, candidates)
+
+        ops = [(o.draft.ref, o.draft.fields["title"]) for o in result.operations]
+        assert ops == [("c1", "Freezer"), ("c2", "Chest Freezer"), ("c3", "Filter")]
+        freezer, chest, filter_ = result.operations
+        assert freezer.draft.fields["parent_class_id"] == house["appliance"]
+        assert freezer.needs == frozenset()
+        assert chest.draft.fields["parent_class_id"] == "$c1"
+        assert chest.needs == frozenset({"c1"})
+        assert "parent_class_id" not in filter_.draft.fields
+        assert filter_.draft.notes is None
+
+    def test_a_parent_in_another_scheme_or_unknown_leaves_it_top_level_with_a_note(
+        self, ontology, repo, house
+    ):
+        tools = ontology.create_scheme(taxonomy_id=house["taxonomy"], title="Tools")
+        ontology.create_class(tools.id, "Hand Tool", identifier="hand_tool")
+        candidates = [
+            {"kind": "class", "label": "Wrench", "proposed_parent": "Hand Tool"},
+            {"kind": "class", "label": "Gauge", "proposed_parent": "Instrument"},
+        ]
+        wrench, gauge = self.plan(repo, house, candidates).operations
+
+        assert wrench.draft.fields["concept_scheme_id"] == house["scheme"]
+        assert "parent_class_id" not in wrench.draft.fields
+        assert "another concept scheme" in wrench.draft.notes
+        assert "parent_class_id" not in gauge.draft.fields
+        assert "Instrument" in gauge.draft.notes
+
+    def test_a_parent_cycle_is_cut_where_it_closes(self, repo, house):
+        candidates = [
+            {"kind": "class", "label": "Pump", "proposed_parent": "Motor"},
+            {"kind": "class", "label": "Motor", "proposed_parent": "Pump"},
+        ]
+        motor, pump = self.plan(repo, house, candidates).operations
+
+        assert motor.draft.fields["title"] == "Motor"
+        assert "parent_class_id" not in motor.draft.fields
+        assert pump.draft.fields["parent_class_id"] == f"${motor.draft.ref}"
+
+    def test_attributes_become_attribute_creates_on_their_class(self, ontology, repo, house):
+        ontology.create_attribute_definition(
+            class_id=house["appliance"], identifier="voltage", title="Voltage", datatype="number"
+        )
+        candidates = [
+            {"kind": "class", "label": "Heat Pump", "proposed_parent": "Appliance"},
+            {
+                "kind": "attribute",
+                "label": "Indoor Humidity",
+                "of": "Heat Pump",
+                "value_type": "number",
+                "unit": "%",
+                "proposed_definition": "Relative humidity indoors.",
+                "confidence": 0.6,
+                "provenance": [{"quote": "humidity", "start": 120, "end": 128}],
+            },
+            {"kind": "attribute", "label": "Current", "of": "appliance", "value_type": "float"},
+            {"kind": "attribute", "label": "Voltage", "of": "Appliance", "value_type": "number"},
+            {"kind": "attribute", "label": "Starting Cycle", "of": None},
+            {"kind": "attribute", "label": "Noise", "of": "Dishwasher"},
+            {"kind": "attribute", "label": "  ", "of": "Appliance"},
+        ]
+        result = self.plan(repo, house, candidates, PAGE_STARTS)
+
+        pump, humidity, current = result.operations
+        assert humidity.draft.kind.value == "attribute"
+        assert humidity.draft.fields == {
+            "class_id": "$c1",
+            "identifier": "indoor_humidity",
+            "title": "Indoor Humidity",
+            "datatype": "number",
+            "description": "Relative humidity indoors. Unit: %.",
+        }
+        assert humidity.needs == frozenset({"c1"})
+        assert humidity.draft.probability == 0.6
+        assert humidity.draft.evidence == [
+            {"source_id": SOURCE, "page": 2, "start": 120, "end": 128, "quote": "humidity"}
+        ]
+        assert current.draft.fields["class_id"] == house["appliance"]
+        assert current.draft.fields["datatype"] == "string"  # only known types pass
+        assert current.needs == frozenset()
+        assert result.skipped == [
+            {"label": "Voltage", "reason": "exists"},
+            {"label": "Starting Cycle", "reason": "no_class"},
+            {"label": "Noise", "reason": "no_class"},
+            {"label": "(no label)", "reason": "invalid"},
+        ]
+
+    def test_placed_classes_and_attributes_are_proposed(self, service, repo, house):
+        candidates = [
+            {"kind": "class", "label": "Air Conditioner", "proposed_parent": "Appliance"},
+            {"kind": "class", "label": "Window Unit", "proposed_parent": "Air Conditioner"},
+            {"kind": "attribute", "label": "Voltage", "of": "Window Unit", "value_type": "number"},
+        ]
+        outcome = SourceProposer(service, repo).propose_schema(
+            "run-p", {"source_id": SOURCE, "scope": house["taxonomy"]}, candidates
+        )
+
+        assert outcome.refused == []
+        ops = service.get(outcome.proposal_id).operations
+        assert [(o.kind.value, o.ref) for o in ops] == [
+            ("class", "c1"),
+            ("class", "c2"),
+            ("attribute", "a3"),
+        ]
+        assert ops[0].fields["parent_class_id"] == house["appliance"]
+        assert ops[1].fields["parent_class_id"] == "$c1"
+        assert ops[2].fields["class_id"] == "$c2"

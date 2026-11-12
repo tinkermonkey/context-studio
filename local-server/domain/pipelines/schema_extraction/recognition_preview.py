@@ -132,7 +132,8 @@ class SchemaRecognitionPreviewService:
         self, output_summary: dict[str, Any] | None, taxonomy_id: str
     ) -> list[SchemaRecognitionHit]:
         """
-        Report one hit per class, property and connection candidate of a run.
+        Report one hit per class, property and connection candidate of a run
+        (attribute candidates get none).
 
         Proposed classes are compared with every class in the taxonomy, the
         same classes apply reuses (``taxonomy_classes``).
@@ -163,6 +164,8 @@ class SchemaRecognitionPreviewService:
                 hits.append(
                     self._class_hit(candidate_id, label, class_by_title, class_by_id, taxonomy_id)
                 )
+            elif candidate.get("kind") == "attribute":
+                continue  # an attribute is matched within its class on apply, not here
             else:
                 hits.append(self._property_hit(candidate_id, label))
 

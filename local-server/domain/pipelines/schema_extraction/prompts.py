@@ -1,5 +1,6 @@
 """
-Default stage prompts for the LLM schema extraction pipeline ("default" implementation).
+Default stage prompts for the LLM schema extraction pipeline ("default" implementation),
+in the order the stages run.
 
 A configuration can override any of them through ``stage_prompts``; see
 domain/pipelines/stage_prompts.py. The defaults render byte-identical to the
@@ -51,6 +52,53 @@ SCHEMA_EXTRACTION_STAGES: tuple[StageDefinition, ...] = (
                 "Labels: {labels}\n\n"
                 "Context: {context}\n\n"
                 "Return JSON: {{example}, ...}"
+            ),
+        ),
+    ),
+    StageDefinition(
+        key="placement",
+        label="Placement",
+        description=(
+            "Places each candidate under an existing class or another candidate, and marks"
+            " measurements and other values as attributes of a class instead of classes."
+        ),
+        placeholders={
+            "existing_classes": (
+                "The taxonomy's classes, one per line: title and a one-line description"
+                ' (titles only past the first ones); "(none)" without a taxonomy'
+            ),
+            "candidates": "The candidates, one per line: label and definition",
+            "value_types": "The attribute value types, comma-separated",
+        },
+        default=StagePrompt(
+            system=(
+                "You are an expert in ontology design. You place new candidate terms into an "
+                "existing class hierarchy. A class is a kind of thing, person, place, process "
+                "or event whose instances can be told apart. An attribute is a measurement, "
+                "quantity, rating, setting, date, identifier or other value that describes "
+                "the instances of a class. Return only a JSON object."
+            ),
+            user=(
+                "Existing classes:\n{existing_classes}\n\n"
+                "Candidates:\n{candidates}\n\n"
+                "For each candidate decide its role.\n"
+                '- role "class": give its parent, the most specific existing class or other '
+                "candidate that it is a kind of, by its exact title; null when none fits. "
+                "A parent is never the candidate itself, nor something it is only a part of, "
+                "located in or used with.\n"
+                '- role "attribute" (such as voltage, current, humidity, temperature, '
+                "capacity, a rating, a date or a model number): give the class whose "
+                "instances it describes, an existing class or a candidate, by its exact "
+                "title; its value_type, one of {value_types}; and its unit, such as "
+                '"V" or "%", or null.\n\n'
+                "Return JSON:\n"
+                "{\n"
+                '  "placements": [\n'
+                '    {"label": "Candidate1", "role": "class", "parent": "Existing Class"},\n'
+                '    {"label": "Candidate2", "role": "attribute", "of": "Candidate1", '
+                '"value_type": "number", "unit": "V"}\n'
+                "  ]\n"
+                "}"
             ),
         ),
     ),
