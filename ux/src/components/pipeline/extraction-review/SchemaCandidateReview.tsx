@@ -624,7 +624,9 @@ function SchemaCandidateReviewBody({
           noPadding
           title="Candidates"
           subtitle={`Accept or reject each proposal. Existing: "exists" is reused on apply, "similar" is close to a class already in ${scope.taxonomyLabel}.`}
-          headerAction={
+          data-testid="extraction-review-schema-candidates"
+        >
+          <div className="xr-panel-toolbar">
             <SegmentedControl
               value={kind}
               onChange={(v) => setKind(v as CandidateType)}
@@ -633,9 +635,7 @@ function SchemaCandidateReviewBody({
                 label: `${TYPE_LABEL[t]} · ${countOf(t)}`,
               }))}
             />
-          }
-          data-testid="extraction-review-schema-candidates"
-        >
+          </div>
           {recognitionError && (
             <ErrorBanner error={recognitionError} compact message="Existing-match preview failed" />
           )}
