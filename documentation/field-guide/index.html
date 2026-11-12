@@ -862,6 +862,7 @@ table.idea th:nth-child(3) { color: var(--accent-ink); }
         <div class="panel-body">
           <ul class="slist">
             <li>Schema and data editing, datasets, provenance</li>
+            <li>Relationships checked against their type's domain and range</li>
             <li>Proposals: tiered review, edit then accept, apply, revert, gold</li>
             <li>Sources: files, web pages and text, extracted into proposals</li>
             <li>Refinement runs, claims triage, decision models</li>
@@ -876,7 +877,6 @@ table.idea th:nth-child(3) { color: var(--accent-ink); }
           <ul class="slist">
             <li>Extraction quality on real documents: <a href="https://github.com/tinkermonkey/context-studio/issues/1570" target="_blank" rel="noopener">#1570</a> <a href="https://github.com/tinkermonkey/context-studio/issues/1571" target="_blank" rel="noopener">#1571</a> <a href="https://github.com/tinkermonkey/context-studio/issues/1575" target="_blank" rel="noopener">#1575</a></li>
             <li>Relationships between individuals in different chunks: <a href="https://github.com/tinkermonkey/context-studio/issues/1572" target="_blank" rel="noopener">#1572</a></li>
-            <li>Relationship creates checked against domain and range: <a href="https://github.com/tinkermonkey/context-studio/issues/1574" target="_blank" rel="noopener">#1574</a></li>
             <li>Litmus tests and examples on nodes, to sharpen disambiguation: <a href="https://github.com/tinkermonkey/context-studio/issues/1333" target="_blank" rel="noopener">#1333</a></li>
             <li>Tracking: <a href="https://github.com/tinkermonkey/context-studio/issues/1453" target="_blank" rel="noopener">#1453</a></li>
           </ul>
@@ -1167,7 +1167,7 @@ resource <span class="s">contextstudio://taxonomies/{id}/vision</span>
       <li>Agents can add local files only from folders listed in <code class="inline">config.json › sources.allowed_roots</code>, which is empty by default.</li>
       <li>Schema suggestions are off for mirrored taxonomies such as <code class="inline">dr_spec</code>; only that client proposes schema changes there.</li>
       <li>Removing a source hides it but keeps the citations on facts already accepted.</li>
-      <li>Next up: fewer duplicate and junk candidates on real documents (<a href="https://github.com/tinkermonkey/context-studio/issues/1570" target="_blank" rel="noopener">#1570</a>, <a href="https://github.com/tinkermonkey/context-studio/issues/1571" target="_blank" rel="noopener">#1571</a>, <a href="https://github.com/tinkermonkey/context-studio/issues/1575" target="_blank" rel="noopener">#1575</a>), relationships across chunks (<a href="https://github.com/tinkermonkey/context-studio/issues/1572" target="_blank" rel="noopener">#1572</a>), and domain and range checks on new relationships (<a href="https://github.com/tinkermonkey/context-studio/issues/1574" target="_blank" rel="noopener">#1574</a>).</li>
+      <li>Next up: fewer duplicate and junk candidates on real documents (<a href="https://github.com/tinkermonkey/context-studio/issues/1570" target="_blank" rel="noopener">#1570</a>, <a href="https://github.com/tinkermonkey/context-studio/issues/1571" target="_blank" rel="noopener">#1571</a>, <a href="https://github.com/tinkermonkey/context-studio/issues/1575" target="_blank" rel="noopener">#1575</a>) and relationships across chunks (<a href="https://github.com/tinkermonkey/context-studio/issues/1572" target="_blank" rel="noopener">#1572</a>).</li>
     </ul>
   </div>
 
