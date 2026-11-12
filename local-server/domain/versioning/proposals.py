@@ -30,6 +30,7 @@ from uuid import uuid4
 
 from domain.ontology.entities import same_attribute_value
 from domain.ontology.value_objects import SourceRevision
+from domain.versioning.provenance import SOURCE_ID, source_passages
 
 
 class ProposalSource(str, Enum):
@@ -647,6 +648,27 @@ class ChangeProposal:
     def pending(self) -> list[ProposedOperation]:
         """Operations still awaiting a decision: pending or failed."""
         return [o for o in self.operations if not o.decided]
+
+    @property
+    def extracted_from_source(self) -> bool:
+        """
+        An extraction run's proposal on a source: its client_metadata names
+        the source (see domain.pipelines.source_proposals), and each operation
+        cites the passages it was found in as evidence.
+        """
+        return self.source is ProposalSource.PIPELINE and bool(
+            (self.client_metadata or {}).get(SOURCE_ID)
+        )
+
+    def lacks_passage(self, operation: ProposedOperation) -> bool:
+        """
+        Whether an operation of an extraction from a source cites no passage
+        in it: the extraction couldn't place its quote in the text (or gave
+        none), so nothing shows where it came from. A person decides each such
+        operation: the approval policy never applies it, and the review's bulk
+        accept leaves it. Always False for other proposals.
+        """
+        return self.extracted_from_source and not source_passages(operation.evidence)
 
     def settle_status(self) -> ProposalStatus:
         """

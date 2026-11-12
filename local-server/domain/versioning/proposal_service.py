@@ -853,7 +853,9 @@ class ProposalService:
         What the policy allows, less the relationship-type deletes still in use:
         applying one as proposed would fail, so it waits for a reviewer to
         resolve its relationships. Nothing auto-applies to a mirrored taxonomy:
-        its source applies a change first, so a person decides each one.
+        its source applies a change first, so a person decides each one. Nor
+        does an operation of an extraction from a source that cites no passage
+        in it (`ChangeProposal.lacks_passage`), or one that names it by "$ref".
         """
         taxonomy = self._repo.get_taxonomy(proposal.taxonomy_id)
         if taxonomy is None or taxonomy.mirrored:
@@ -862,7 +864,8 @@ class ProposalService:
         inspector = InUseInspector(self._repo)
         allowed = auto_apply_ids(
             self._policies.get(proposal.taxonomy_id) if self._policies else None,
-            proposal.operations,
+            # Left out, so what names one by "$ref" waits too
+            [o for o in proposal.operations if not proposal.lacks_passage(o)],
             lambda operation: self._classes(operation, creates, inspector),
             lambda operation: self._inside_taxonomy(operation, proposal.taxonomy_id),
             id_fields=frozenset(ID_FIELDS),

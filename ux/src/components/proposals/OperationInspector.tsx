@@ -20,8 +20,8 @@ import {
 } from "./proposalModel";
 import { subjectOf } from "./OperationDiff";
 import { EvidencePack, ReflectionAnswers } from "./ReflectionAnswers";
-import { RelationshipEndsSection, SourcePassageSection } from "./SourcePassage";
-import { plainEvidenceOf, relationshipEnds, sourcePassagesOf } from "./sourceModel";
+import { NoPassageSection, RelationshipEndsSection, SourcePassageSection } from "./SourcePassage";
+import { lacksPassage, plainEvidenceOf, relationshipEnds, sourcePassagesOf } from "./sourceModel";
 import { textDiffOf } from "./textDiff";
 import type { OptionDefinition, Picks, ReflectionOption } from "./tieredModel";
 import type { OperationContext } from "./useOperationContext";
@@ -323,6 +323,7 @@ export function OperationInspector({
 
         {/* The passage it came from, right beside the decision. */}
         {passages.length > 0 && <SourcePassageSection passages={passages} />}
+        {lacksPassage(operation) && <NoPassageSection />}
         <RelationshipEndsSection ends={ends} />
 
         {/* Before the change: a replacement linking a different pair is what to judge first. */}

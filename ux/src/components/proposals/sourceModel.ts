@@ -208,8 +208,19 @@ export function similarityLabel(alternative: Alternative): string | undefined {
  * that name one by "$ref", which can't apply until it is decided.
  */
 export function nearMatchHeldIds(operations: ProposedOperation[]): Set<string> {
+  return heldWithNamers(operations, isNearMatch);
+}
+
+/**
+ * The awaiting operations `holds` picks, and the operations that name one of
+ * them by "$ref", which can't apply until it is decided.
+ */
+function heldWithNamers(
+  operations: ProposedOperation[],
+  holds: (operation: ProposedOperation) => boolean,
+): Set<string> {
   const open = operations.filter(
-    (o) => (o.status === "pending" || o.status === "failed") && isNearMatch(o),
+    (o) => (o.status === "pending" || o.status === "failed") && holds(o),
   );
   const refs = new Set(open.flatMap((o) => (o.ref ? [`$${o.ref}`] : [])));
   const held = new Set(open.map((o) => o.id));
@@ -238,6 +249,43 @@ export function nearMatchHeldNote(held: ProposedOperation[]): string | undefined
       ? `, with ${waiting} operation${waiting === 1 ? "" : "s"} that name${waiting === 1 ? "s" : ""} one`
       : "";
   return `${nearText}${waitingText}.`;
+}
+
+// ==================== Operations without a passage ====================
+
+/**
+ * An extraction's operation that cites no passage in its source: the
+ * extraction couldn't place its quote in the text (the server flags it).
+ */
+export function lacksPassage(operation: ProposedOperation): boolean {
+  return operation.no_passage === true;
+}
+
+/**
+ * Operations a bulk accept holds back because nothing shows where they came
+ * from: awaiting operations without a passage, and the operations that name
+ * one by "$ref". Each can still be accepted on its own.
+ */
+export function noPassageHeldIds(operations: ProposedOperation[]): Set<string> {
+  return heldWithNamers(operations, lacksPassage);
+}
+
+/**
+ * What a bulk accept held back among `held` (see noPassageHeldIds): "Held back
+ * 3 operations without a passage, with 1 that names one: accept each on its own."
+ */
+export function noPassageHeldNote(held: ProposedOperation[]): string | undefined {
+  if (held.length === 0) return undefined;
+  const bare = held.filter(lacksPassage).length;
+  const naming = held.length - bare;
+  const operations = (n: number) => `${n} operation${n === 1 ? "" : "s"}`;
+  const name = (n: number) => (n === 1 ? "names" : "name");
+  if (bare === 0) {
+    return `Held back ${operations(naming)} that ${name(naming)} an operation without a passage.`;
+  }
+  const namingText = naming > 0 ? `, with ${naming} that ${name(naming)} one` : "";
+  const each = held.length === 1 ? "it" : "each";
+  return `Held back ${operations(bare)} without a passage${namingText}: accept ${each} on its own.`;
 }
 
 /** The existing individual a matched create applied as, by its alternative. */

@@ -11,10 +11,13 @@ import {
   chosenAlternative,
   defaultNearMatchChoice,
   isNearMatch,
+  lacksPassage,
   matchedAlternative,
   nearMatchHeldIds,
   nearMatchHeldNote,
   nearMatchesOf,
+  noPassageHeldIds,
+  noPassageHeldNote,
   pageAt,
   placePassage,
   plainEvidenceOf,
@@ -245,11 +248,45 @@ describe("what a bulk accept leaves for a near-match choice", () => {
     expect(nearMatchHeldIds([decided, filter, uses]).size).toBe(0);
   });
 
-  it("says what it left", () => {
+  it("says what it left (near matches)", () => {
     expect(nearMatchHeldNote([])).toBeUndefined();
     expect(nearMatchHeldNote([fridge])).toBe("1 near match is left for you to decide.");
     expect(nearMatchHeldNote([fridge, fridge, uses])).toBe(
       "2 near matches are left for you to decide, with 1 operation that names one.",
+    );
+  });
+});
+
+describe("what a bulk accept holds back for want of a passage (#1575)", () => {
+  const unplaced = { ...filter, no_passage: true };
+
+  it("reads the server's no_passage flag", () => {
+    expect(lacksPassage(unplaced)).toBe(true);
+    expect(lacksPassage(filter)).toBe(false);
+  });
+
+  it("holds awaiting operations without a passage and the operations that name them", () => {
+    expect([...noPassageHeldIds([filter, unplaced, uses, madeBy])].sort()).toEqual(
+      ["op-filter", "op-made-by", "op-uses"].sort(),
+    );
+    expect(noPassageHeldIds([filter, uses]).size).toBe(0);
+  });
+
+  it("holds nothing once it is decided", () => {
+    const decided = { ...unplaced, status: "rejected" as const };
+    expect(noPassageHeldIds([decided, uses, madeBy]).size).toBe(0);
+  });
+
+  it("says how many it held back", () => {
+    expect(noPassageHeldNote([])).toBeUndefined();
+    expect(noPassageHeldNote([unplaced])).toBe(
+      "Held back 1 operation without a passage: accept it on its own.",
+    );
+    expect(noPassageHeldNote([unplaced, unplaced, uses])).toBe(
+      "Held back 2 operations without a passage, with 1 that names one: accept each on its own.",
+    );
+    expect(noPassageHeldNote([uses, madeBy])).toBe(
+      "Held back 2 operations that name an operation without a passage.",
     );
   });
 });

@@ -675,6 +675,7 @@ class TestGetProposal:
             "status": "pending",
             "matched": False,
             "stale": True,
+            "no_passage": False,
         }
         assert (second["status"], second["stale"], second["result_entity_id"]) == (
             "applied",

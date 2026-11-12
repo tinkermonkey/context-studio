@@ -47,6 +47,8 @@ Hard rules beat the policy:
   changing one never auto-applies, though a relationship may use one);
 - an operation that points at a "$ref" auto-applies only if the create it
   points at does too;
+- an operation of an extraction from a source that cites no passage in it
+  never auto-applies (ProposalService leaves it out: `ChangeProposal.lacks_passage`);
 - with no policy, nothing auto-applies.
 
 The policy is set by a person through the REST API; it is never exposed as an

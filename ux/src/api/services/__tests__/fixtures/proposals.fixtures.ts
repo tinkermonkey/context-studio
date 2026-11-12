@@ -21,6 +21,7 @@ export function createProposedOperation(overrides?: Partial<ProposedOperation>):
     status: "pending",
     matched: false,
     stale: false,
+    no_passage: false,
     ...overrides,
   };
 }
