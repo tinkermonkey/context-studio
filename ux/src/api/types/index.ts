@@ -7253,7 +7253,7 @@ export interface components {
       candidate_type: "grounding";
       /**
        * Candidate Id
-       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
        */
       candidate_id: string;
       /**
@@ -9698,7 +9698,7 @@ export interface components {
       candidate_type: "refinement";
       /**
        * Candidate Id
-       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
        */
       candidate_id: string;
       /**
@@ -10173,7 +10173,7 @@ export interface components {
       candidate_type: "schema_attribute";
       /**
        * Candidate Id
-       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
        */
       candidate_id: string;
       /**
@@ -10227,7 +10227,7 @@ export interface components {
       candidate_type: "schema_class";
       /**
        * Candidate Id
-       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
        */
       candidate_id: string;
       /**
@@ -10275,7 +10275,7 @@ export interface components {
       candidate_type: "schema_connection";
       /**
        * Candidate Id
-       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
        */
       candidate_id: string;
       /**
@@ -10318,7 +10318,7 @@ export interface components {
       candidate_type: "schema_property";
       /**
        * Candidate Id
-       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
        */
       candidate_id: string;
       /**
@@ -11211,7 +11211,7 @@ export interface components {
       candidate_type: "triple";
       /**
        * Candidate Id
-       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
        */
       candidate_id: string;
       /**

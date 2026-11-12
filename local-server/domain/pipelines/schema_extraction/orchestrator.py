@@ -101,9 +101,16 @@ _SUBCLASS_PREDICATES = frozenset({"subclass_of", "is_a"})
 
 
 def run_taxonomy_id(input_data: dict[str, Any]) -> str | None:
-    """The run's taxonomy: its ontology_id, else its scope (as source runs pass it)."""
-    taxonomy_id = input_data.get("ontology_id") or input_data.get("scope")
-    return str(taxonomy_id) if taxonomy_id else None
+    """
+    The run's taxonomy: its ontology_id, else its taxonomy_id (chat and MCP
+    runs), else its scope when that is a single id (source and review runs pass
+    the taxonomy there; a chat run's scope is entity ids or a layer instead).
+    """
+    for key in ("ontology_id", "taxonomy_id"):
+        if input_data.get(key):
+            return str(input_data[key])
+    scope = input_data.get("scope")
+    return scope if isinstance(scope, str) and scope else None
 
 
 def _serialize_provenance(spans: list[SourceSpan]) -> list[dict[str, Any]]:

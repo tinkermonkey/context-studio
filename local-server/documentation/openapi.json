@@ -14587,7 +14587,7 @@
           "candidate_id": {
             "type": "string",
             "title": "Candidate Id",
-            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
+            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
           },
           "confidence": {
             "type": "number",
@@ -18820,7 +18820,7 @@
           "candidate_id": {
             "type": "string",
             "title": "Candidate Id",
-            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
+            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
           },
           "confidence": {
             "type": "number",
@@ -19613,7 +19613,7 @@
           "candidate_id": {
             "type": "string",
             "title": "Candidate Id",
-            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
+            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
           },
           "confidence": {
             "type": "number",
@@ -19698,7 +19698,7 @@
           "candidate_id": {
             "type": "string",
             "title": "Candidate Id",
-            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
+            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
           },
           "confidence": {
             "type": "number",
@@ -19777,7 +19777,7 @@
           "candidate_id": {
             "type": "string",
             "title": "Candidate Id",
-            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
+            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
           },
           "confidence": {
             "type": "number",
@@ -19832,7 +19832,7 @@
           "candidate_id": {
             "type": "string",
             "title": "Candidate Id",
-            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
+            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
           },
           "confidence": {
             "type": "number",
@@ -21490,7 +21490,7 @@
           "candidate_id": {
             "type": "string",
             "title": "Candidate Id",
-            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
+            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
           },
           "confidence": {
             "type": "number",

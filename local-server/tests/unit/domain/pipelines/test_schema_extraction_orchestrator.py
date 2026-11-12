@@ -27,6 +27,7 @@ from domain.pipelines.schema_extraction.orchestrator import (
     SchemaExtractionOrchestrator,
     SchemaExtractionState,
     join_documents,
+    run_taxonomy_id,
 )
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
@@ -694,6 +695,22 @@ class TestClassification:
     async def test_scope_names_the_taxonomy_as_source_runs_pass_it(self, mock_llm, repo):
         state = await self._classify(mock_llm, repo, {"scope": "tx-2"})
         assert state.classified_concepts["Gateway"] is True
+
+
+@pytest.mark.parametrize(
+    ("input_data", "expected"),
+    [
+        ({"ontology_id": "tx-1", "taxonomy_id": "tx-2", "scope": "tx-3"}, "tx-1"),
+        # A chat or MCP run_refinement: scope is entity ids or a layer
+        ({"taxonomy_id": "tx-2", "scope": ["cls-1"]}, "tx-2"),
+        ({"taxonomy_id": "tx-2", "scope": "application"}, "tx-2"),
+        ({"scope": "tx-3"}, "tx-3"),
+        ({"scope": ["cls-1"]}, None),
+        ({}, None),
+    ],
+)
+def test_run_taxonomy_id(input_data, expected):
+    assert run_taxonomy_id(input_data) == expected
 
 
 class _PlacementLLM:

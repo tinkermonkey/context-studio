@@ -566,7 +566,8 @@ class CandidateBase(BaseModel):
         ...,
         description=(
             "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, "
-            "grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
+            "attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's "
+            "accepted_candidate_ids"
         ),
     )
     confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0.0-1.0)")
