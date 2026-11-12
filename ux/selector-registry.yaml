@@ -2698,7 +2698,7 @@ selectors:
     description: "Schema run header with run id, status chip, configuration and duration"
   - selector: extraction-review-schema-candidates
     component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
-    description: "Schema candidates panel with class/property/connection filter and table"
+    description: "Schema candidates panel with class/property/attribute/connection filter and table"
   - selector: extraction-review-schema-decision-*
     component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
     description: "Accept/reject pair in a schema candidate row (extraction-review-schema-decision-{key}, buttons suffixed -yes/-no)"
@@ -2723,6 +2723,12 @@ selectors:
   - selector: extraction-review-schema-existing-*
     component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
     description: "Existing-match cell in a schema candidate row (extraction-review-schema-existing-{key}): exists (reused on apply), similar (advisory vector match) or new"
+  - selector: extraction-review-schema-parent-*
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Muted \"under {parent}\" line under a class candidate's label (extraction-review-schema-parent-{key}); absent for top-level classes"
+  - selector: extraction-review-schema-of-class-*
+    component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
+    description: "Of-class cell in an attribute candidate row (extraction-review-schema-of-class-{key}); \"no class · skipped on apply\" when none resolves"
   - selector: extraction-review-schema-inspector-match
     component: src/components/pipeline/extraction-review/SchemaCandidateReview.tsx
     description: "Existing-match section of the schema inspector for the selected candidate"

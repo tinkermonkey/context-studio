@@ -49,6 +49,12 @@ export interface SchemaRow {
   proposed_definition?: string | null;
   proposed_domain?: string | null;
   proposed_range?: string | null;
+  /** Class candidates: the class it is a kind of (existing or proposed); null when top-level. */
+  proposed_parent?: string | null;
+  /** Attribute candidates: the class it describes; null when none resolves. */
+  of_class?: string | null;
+  value_type?: string;
+  unit?: string | null;
   subject_ref?: string;
   predicate?: string;
   object_ref?: string;
@@ -71,13 +77,19 @@ function toRow(c: SchemaExtractionCandidate): SchemaRow {
       object_ref: c.object_ref,
     };
   }
-  return {
-    ...base,
-    label: c.label,
-    proposed_definition: c.proposed_definition ?? null,
-    proposed_domain: c.candidate_type === "schema_property" ? c.proposed_domain : undefined,
-    proposed_range: c.candidate_type === "schema_property" ? c.proposed_range : undefined,
-  };
+  const shared = { ...base, label: c.label, proposed_definition: c.proposed_definition ?? null };
+  if (c.candidate_type === "schema_property") {
+    return { ...shared, proposed_domain: c.proposed_domain, proposed_range: c.proposed_range };
+  }
+  if (c.candidate_type === "schema_attribute") {
+    return {
+      ...shared,
+      of_class: c.of_class ?? null,
+      value_type: c.value_type,
+      unit: c.unit ?? null,
+    };
+  }
+  return { ...shared, proposed_parent: c.proposed_parent ?? null };
 }
 
 const PIPELINE_TYPE = "schema_extraction";
@@ -190,6 +202,7 @@ export function SchemaCandidateReview({ slot, text, scope, onRetry }: SchemaCand
 const TYPE_LABEL: Record<CandidateType, string> = {
   schema_class: "Classes",
   schema_property: "Properties",
+  schema_attribute: "Attributes",
   schema_connection: "Connections",
 };
 
@@ -216,9 +229,7 @@ function SchemaCandidateReviewBody({
     (recognitionHits ?? []).filter((h) => h.candidate_type === t);
   const countOf = (t: CandidateType) => rows.filter((r) => r.candidate_type === t).length;
   const [kind, setKind] = useState<CandidateType>(
-    () =>
-      (["schema_class", "schema_property", "schema_connection"] as const).find(countOf) ??
-      "schema_class",
+    () => (Object.keys(TYPE_LABEL) as CandidateType[]).find(countOf) ?? "schema_class",
   );
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [decisions, setDecisions] = useState<Record<string, ReviewDecisionValue>>({});
@@ -268,8 +279,8 @@ function SchemaCandidateReviewBody({
     },
     decisions,
   };
-  // A connection whose endpoint is a proposed class that is not accepted (and does
-  // not already exist) is skipped on apply.
+  // A connection whose endpoint, or an attribute whose class, is a proposed class
+  // that is not accepted (and does not already exist) is skipped on apply.
   const unacceptedClassLabels = new Set(
     rows
       .filter(
@@ -281,12 +292,14 @@ function SchemaCandidateReviewBody({
       .map((r) => r.label.toLowerCase()),
   );
   const reusedCount = accepted.filter((r) => hitById.get(r.id)?.will_match_existing).length;
-  const orphaned = accepted.filter(
-    (r) =>
-      r.candidate_type === "schema_connection" &&
-      [r.subject_ref, r.object_ref].some((ref) =>
-        unacceptedClassLabels.has(ref?.toLowerCase() ?? ""),
-      ),
+  const classRefsOf = (r: SchemaRow) =>
+    r.candidate_type === "schema_connection"
+      ? [r.subject_ref, r.object_ref]
+      : r.candidate_type === "schema_attribute"
+        ? [r.of_class]
+        : [];
+  const orphaned = accepted.filter((r) =>
+    classRefsOf(r).some((ref) => unacceptedClassLabels.has(ref?.toLowerCase() ?? "")),
   );
   const labelFor = (id: string) => rows.find((r) => r.id === id)?.label ?? id;
 
@@ -328,7 +341,19 @@ function SchemaCandidateReviewBody({
         key: "label" as const,
         label: "Proposed class",
         width: "160px",
-        render: (v: unknown) => <span className="xr-strong">{String(v)}</span>,
+        render: (v: unknown, r: SchemaRow) => (
+          <div className="xr-node-ref">
+            <span className="xr-strong">{String(v)}</span>
+            {r.proposed_parent && (
+              <span
+                className="xr-mono-muted"
+                data-testid={`extraction-review-schema-parent-${r.id}`}
+              >
+                under {r.proposed_parent}
+              </span>
+            )}
+          </div>
+        ),
       },
       {
         key: "proposed_definition" as const,
@@ -364,6 +389,50 @@ function SchemaCandidateReviewBody({
       confCol,
       decisionCol,
     ],
+    schema_attribute: [
+      {
+        key: "label" as const,
+        label: "Proposed attribute",
+        width: "160px",
+        render: (v: unknown) => <span className="xr-strong">{String(v)}</span>,
+      },
+      {
+        key: "of_class" as const,
+        label: "Of class",
+        render: (v: unknown, r: SchemaRow) =>
+          v ? (
+            <span className="xr-mono" data-testid={`extraction-review-schema-of-class-${r.id}`}>
+              {String(v)}
+            </span>
+          ) : (
+            <span
+              className="xr-mono-muted"
+              data-testid={`extraction-review-schema-of-class-${r.id}`}
+            >
+              no class · skipped on apply
+            </span>
+          ),
+      },
+      {
+        key: "value_type" as const,
+        label: "Value type",
+        width: "100px",
+        render: (v: unknown) => <Chip form="id-tag">{String(v || "string")}</Chip>,
+      },
+      {
+        key: "unit" as const,
+        label: "Unit",
+        width: "72px",
+        render: (v: unknown) =>
+          v ? (
+            <span className="xr-mono">{String(v)}</span>
+          ) : (
+            <span className="xr-mono-muted">—</span>
+          ),
+      },
+      confCol,
+      decisionCol,
+    ],
     schema_connection: [
       {
         key: "subject_ref" as const,
@@ -392,6 +461,24 @@ function SchemaCandidateReviewBody({
     { key: "confidence", value: <span className="xr-mono">{pct(r.confidence)}</span> },
     ...(r.candidate_type !== "schema_connection"
       ? [{ key: "definition", value: r.proposed_definition || "—" }]
+      : []),
+    ...(r.candidate_type === "schema_class"
+      ? [
+          {
+            key: "parent",
+            value: <span className="xr-mono">{r.proposed_parent || "— (top-level)"}</span>,
+          },
+        ]
+      : []),
+    ...(r.candidate_type === "schema_attribute"
+      ? [
+          {
+            key: "of_class",
+            value: <span className="xr-mono">{r.of_class || "— (skipped on apply)"}</span>,
+          },
+          { key: "value_type", value: <span className="xr-mono">{r.value_type || "string"}</span> },
+          { key: "unit", value: <span className="xr-mono">{r.unit || "—"}</span> },
+        ]
       : []),
     ...(r.candidate_type === "schema_property"
       ? [
@@ -443,7 +530,7 @@ function SchemaCandidateReviewBody({
 
   return (
     <>
-      <StatGrid columns={4}>
+      <StatGrid columns={5}>
         <StatTile
           label="CLASSES"
           value={countOf("schema_class")}
@@ -457,6 +544,13 @@ function SchemaCandidateReviewBody({
           color="cyan"
           icon="component"
           meta={recognitionHits ? matchSummary(hitsOf("schema_property")) : "proposed properties"}
+        />
+        <StatTile
+          label="ATTRIBUTES"
+          value={countOf("schema_attribute")}
+          color="neutral"
+          icon="tag"
+          meta="values describing a class"
         />
         <StatTile
           label="CONNECTIONS"
@@ -512,11 +606,13 @@ function SchemaCandidateReviewBody({
               <InspectorPanel.Section title="Proposal">
                 <KVGrid rows={proposalRows(r)} />
               </InspectorPanel.Section>
-              <InspectorPanel.Section title="Existing match">
-                <div data-testid="extraction-review-schema-inspector-match">
-                  <KVGrid rows={matchRows(r)} />
-                </div>
-              </InspectorPanel.Section>
+              {r.candidate_type !== "schema_attribute" && (
+                <InspectorPanel.Section title="Existing match">
+                  <div data-testid="extraction-review-schema-inspector-match">
+                    <KVGrid rows={matchRows(r)} />
+                  </div>
+                </InspectorPanel.Section>
+              )}
               <InspectorPanel.Section title="Provenance" count={r.provenance.length}>
                 <ProvenanceList provenance={r.provenance} />
               </InspectorPanel.Section>
@@ -601,9 +697,9 @@ function SchemaCandidateReviewBody({
         message={
           <div className="xr-stack-sm" data-testid="extraction-review-schema-confirm">
             <span>
-              Creates draft classes, property definitions and relationships from the {counts.yes}{" "}
-              accepted candidates. Rejected and pending candidates are skipped; entities that
-              already exist with the same name (ignoring case and spacing) are reused.
+              Creates draft classes, attributes, property definitions and relationships from the{" "}
+              {counts.yes} accepted candidates. Rejected and pending candidates are skipped;
+              entities that already exist with the same name (ignoring case and spacing) are reused.
             </span>
             {reusedCount > 0 && (
               <span className="xr-chip-row">
@@ -616,7 +712,7 @@ function SchemaCandidateReviewBody({
                 icon="alert"
                 data-testid="extraction-review-schema-orphan-warning"
               >
-                {`${orphaned.length} accepted connection${orphaned.length > 1 ? "s" : ""} point${orphaned.length > 1 ? "" : "s"} at a proposed class you did not accept and will be skipped unless that class already exists: ${orphaned.map((r) => r.label).join(", ")}.`}
+                {`${orphaned.length} accepted candidate${orphaned.length > 1 ? "s" : ""} point${orphaned.length > 1 ? "" : "s"} at a proposed class you did not accept and will be skipped unless that class already exists: ${orphaned.map((r) => r.label).join(", ")}.`}
               </FormCallout>
             )}
           </div>

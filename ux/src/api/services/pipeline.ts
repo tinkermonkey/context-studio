@@ -29,9 +29,11 @@ export type TripleCandidate = components["schemas"]["TripleCandidate"];
 export type SchemaClassCandidate = components["schemas"]["SchemaClassCandidate"];
 export type SchemaPropertyCandidate = components["schemas"]["SchemaPropertyCandidate"];
 export type SchemaConnectionCandidate = components["schemas"]["SchemaConnectionCandidate"];
+export type SchemaAttributeCandidate = components["schemas"]["SchemaAttributeCandidate"];
 export type SchemaExtractionCandidate =
   | SchemaClassCandidate
   | SchemaPropertyCandidate
+  | SchemaAttributeCandidate
   | SchemaConnectionCandidate;
 export type RecognitionPreviewRequest = components["schemas"]["RecognitionPreviewRequest"];
 export type RecognitionPreviewResponse = components["schemas"]["RecognitionPreviewResponse"];
@@ -44,7 +46,12 @@ export type CandidateItem =
   | components["schemas"]["GroundingCandidate"]
   | components["schemas"]["RefinementCandidate"];
 
-const SCHEMA_CANDIDATE_TYPES = new Set(["schema_class", "schema_property", "schema_connection"]);
+const SCHEMA_CANDIDATE_TYPES = new Set([
+  "schema_class",
+  "schema_property",
+  "schema_attribute",
+  "schema_connection",
+]);
 
 export interface RunListParams {
   limit?: number;
@@ -150,7 +157,7 @@ class PipelineService extends BaseService {
     return this.get<CandidateItem[]>(`/api/pipelines/runs/${runId}/candidates`);
   }
 
-  /** Typed schema_extraction candidates (classes, properties, connections) with provenance. */
+  /** Typed schema_extraction candidates (classes, properties, attributes, connections) with provenance. */
   async getSchemaExtractionCandidates(runId: string): Promise<SchemaExtractionCandidate[]> {
     const items = await this.get<CandidateItem[]>(
       `/api/pipelines/runs/${runId}/schema-extraction-candidates`,
