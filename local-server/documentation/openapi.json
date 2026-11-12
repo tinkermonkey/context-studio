@@ -9194,7 +9194,7 @@
           "sources"
         ],
         "summary": "Extract Source",
-        "description": "Extract a ready source into proposals, in the background: an\nindividual-extraction run that reads it chunk by chunk (the chunks are the\nrun's items) and ends in one proposal for review in the dataset; with\n`schema`, a schema-extraction run over the same text too, with its own\nproposal. Follow the runs with GET /api/pipelines/runs/{id}, or the\nsource's `last_extraction`.",
+        "description": "Extract a ready source into proposals, in the background: an\nindividual-extraction run that reads it chunk by chunk (the chunks are the\nrun's items) and ends in one proposal for review in the dataset; with\n`schema`, a schema-extraction run over the same text too, with its own\nproposal. Follow the runs with GET /api/pipelines/runs/{id}, or the\nsource's `last_extraction`. Unless `skip_boilerplate` is false, the\nsource's warranty, safety, legal and contact sections and its copies in\nother languages are skipped; each run's output says what was.",
         "operationId": "extract_source_api_sources__source_id__extract_post",
         "parameters": [
           {
@@ -20096,6 +20096,12 @@
             "title": "Schema",
             "description": "Also run schema extraction, proposing classes and relationship types",
             "default": false
+          },
+          "skip_boilerplate": {
+            "type": "boolean",
+            "title": "Skip Boilerplate",
+            "description": "Skip warranty, safety, legal and contact sections and copies in other languages; each run's output lists the skipped_sections",
+            "default": true
           }
         },
         "type": "object",

@@ -250,11 +250,31 @@ describe("ExtractSourcePage — configure", () => {
         configuration_ref: "extraction-openrouter-default",
         pages: "1-2",
         schema: true,
+        skip_boilerplate: true,
       },
     ]);
     expect(onRunsStarted).toHaveBeenCalledWith([
       { run_id: "run-1234abcd", pipeline: "individual_extraction" },
     ]);
+  });
+
+  it("skips boilerplate by default, and can read it too", async () => {
+    const { extractBodies } = serve();
+    const user = userEvent.setup();
+    const { onRunsStarted } = renderPage();
+
+    const toggle = await screen.findByTestId("extract-skip-boilerplate-toggle");
+    expect(toggle).toHaveAttribute("type", "checkbox");
+    expect(toggle).toHaveAccessibleName(/Skip boilerplate and other languages/);
+    expect(toggle).toHaveAccessibleDescription(/warranty, safety, legal and contact sections/);
+    expect(toggle).toBeChecked();
+
+    await user.click(toggle);
+    expect(toggle).not.toBeChecked();
+    await user.click(screen.getByTestId("extract-start"));
+
+    await waitFor(() => expect(onRunsStarted).toHaveBeenCalled());
+    expect(extractBodies).toEqual([expect.objectContaining({ skip_boilerplate: false })]);
   });
 
   it.each([

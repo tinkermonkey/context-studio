@@ -4210,7 +4210,9 @@ export interface paths {
      *     run's items) and ends in one proposal for review in the dataset; with
      *     `schema`, a schema-extraction run over the same text too, with its own
      *     proposal. Follow the runs with GET /api/pipelines/runs/{id}, or the
-     *     source's `last_extraction`.
+     *     source's `last_extraction`. Unless `skip_boilerplate` is false, the
+     *     source's warranty, safety, legal and contact sections and its copies in
+     *     other languages are skipped; each run's output says what was.
      */
     post: operations["extract_source_api_sources__source_id__extract_post"];
     delete?: never;
@@ -10446,6 +10448,12 @@ export interface components {
        * @default false
        */
       schema: boolean;
+      /**
+       * Skip Boilerplate
+       * @description Skip warranty, safety, legal and contact sections and copies in other languages; each run's output lists the skipped_sections
+       * @default true
+       */
+      skip_boilerplate: boolean;
     };
     /**
      * SourceExtractResponse

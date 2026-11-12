@@ -446,13 +446,17 @@ def _source_summary(input_data: dict[str, Any]) -> dict[str, Any]:
     What an extraction run records in its input_summary about where it reads
     from: the dataset it extracts into and, for a run on a source, the source
     and the extract call that started it (so the source's latest extraction
-    is found while its runs execute).
+    is found while its runs execute). A run told to read a source's
+    boilerplate too records skip_boilerplate false.
     """
-    return {
+    summary: dict[str, Any] = {
         key: str(input_data[key])
         for key in ("dataset_id", "source_id", "extraction_id")
         if input_data.get(key)
     }
+    if input_data.get("skip_boilerplate") is False:
+        summary["skip_boilerplate"] = False
+    return summary
 
 
 def build_run_specific_data(

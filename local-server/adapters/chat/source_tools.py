@@ -400,7 +400,10 @@ class ExtractSourceTool(_SourceTool):
         " with get_proposal. " + _REVIEW + " dataset defaults to the"
         " source's; pages selects pages, such as '12-30' or '1-3, 7' (all by default);"
         f" configuration names an individual-extraction configuration ({DEFAULT_CONFIGURATION}"
-        " by default). Extracting again supersedes the source's earlier proposal."
+        " by default). Warranty, safety, legal and contact sections and copies in other"
+        " languages are skipped unless skip_boilerplate is false; get_run's"
+        " skipped_sections_by_reason counts them. Extracting again supersedes the source's"
+        " earlier proposal."
     )
     input_schema = {
         "type": "object",
@@ -422,6 +425,13 @@ class ExtractSourceTool(_SourceTool):
                 "type": "boolean",
                 "description": "Also propose schema changes (classes, relationship types)",
             },
+            "skip_boilerplate": {
+                "type": "boolean",
+                "description": (
+                    "Skip warranty, safety, legal and contact sections and copies in other"
+                    " languages (true by default)"
+                ),
+            },
         },
         "required": ["source_id"],
     }
@@ -431,6 +441,9 @@ class ExtractSourceTool(_SourceTool):
         schema = args.get("schema", False)
         if not isinstance(schema, bool):
             raise ToolArgumentError("'schema' must be true or false")
+        skip_boilerplate = args.get("skip_boilerplate", True)
+        if not isinstance(skip_boilerplate, bool):
+            raise ToolArgumentError("'skip_boilerplate' must be true or false")
         dataset = optional_str(args, "dataset") or self._sources.get(source_id).dataset_id
         runs = self._extraction.extract(
             source_id,
@@ -439,6 +452,7 @@ class ExtractSourceTool(_SourceTool):
             pages=optional_str(args, "pages"),
             schema=schema,
             requested_via=RequestedVia.MCP,
+            skip_boilerplate=skip_boilerplate,
         )
         payload = {
             "source_id": source_id,

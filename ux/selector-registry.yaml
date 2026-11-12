@@ -3837,6 +3837,9 @@ selectors:
   - selector: extract-schema-hint
     component: src/components/sources/ExtractSourcePage.tsx
     description: 'Extract page: what the schema option does, or why a mirrored taxonomy does not offer it'
+  - selector: extract-skip-boilerplate-toggle
+    component: src/components/sources/ExtractSourcePage.tsx
+    description: 'Extract page: "Skip boilerplate and other languages" checkbox, on by default'
   - selector: extract-pages
     component: src/components/sources/ExtractSourcePage.tsx
     description: 'Extract page: optional page range input (multi-page sources only)'

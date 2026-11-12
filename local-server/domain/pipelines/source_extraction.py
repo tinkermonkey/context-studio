@@ -19,9 +19,10 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
-from domain.extraction.chunking import chunk_text, parse_page_range
+from domain.extraction.chunking import Heading, chunk_text, parse_page_range
 from domain.extraction.exceptions import SourceNotReadyError
 from domain.extraction.ports import SourceRepository
+from domain.extraction.section_filter import NOTHING_LEFT, SKIP_INPUT, skipped_sections
 from domain.extraction.sources import Source, SourceStatus
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.ports import OntologyRepository
@@ -104,6 +105,7 @@ class SourceExtractionService:
         pages: str | None = None,
         schema: bool = False,
         requested_via: RequestedVia = RequestedVia.API,
+        skip_boilerplate: bool = True,
     ) -> list[PipelineRun]:
         """
         Start extracting a source: an individual-extraction run, and with
@@ -120,6 +122,9 @@ class SourceExtractionService:
                 when omitted
             schema: Also suggest schema changes (classes and relationship types)
             requested_via: The entry point that asked, recorded on the runs
+            skip_boilerplate: Leave out the source's warranty, safety, legal and
+                contact sections and its copies in other languages (see
+                domain/extraction/section_filter.py); false extracts everything
 
         Returns:
             The pending runs, individual extraction first
@@ -129,7 +134,8 @@ class SourceExtractionService:
                 taxonomy, doesn't exist
             SourceNotReadyError: If the source is fetching, failed or removed
             ValueError: If the page selection is malformed, names pages the
-                source lacks or holds no text, or the configuration isn't an
+                source lacks or holds no text (or only skipped sections, when
+                skip_boilerplate), or the configuration isn't an
                 individual-extraction configuration that can read a source
             PipelineInputError: If `schema` is asked of a taxonomy that mirrors
                 an external source, other than by its client over MCP
@@ -140,6 +146,8 @@ class SourceExtractionService:
             raise EntityNotFoundError("Taxonomy", source.taxonomy_id)
         dataset_id = self._dataset_id(source.taxonomy_id, dataset)
         pages = self._checked_pages(source, pages)
+        if skip_boilerplate:
+            self._check_text_left(source, pages)
         individual_ref = configuration_ref or DEFAULT_CONFIGURATION
         individual = self._configurations.get_latest(
             PipelineType.INDIVIDUAL_EXTRACTION, SOURCE_IMPLEMENTATION, individual_ref
@@ -167,6 +175,7 @@ class SourceExtractionService:
                 {"start": h.start, "title": h.title, "level": h.level} for h in source.headings
             ],
             "pages": pages,
+            SKIP_INPUT: skip_boilerplate,
             "extraction_id": str(uuid4()),
             # Orders extractions of the same pages, whatever order their runs finish in
             "extraction_started_at": datetime.now(timezone.utc).isoformat(),
@@ -262,6 +271,28 @@ class SourceExtractionService:
             if dataset in (candidate.id, candidate.identifier):
                 return candidate.id
         raise EntityNotFoundError("Dataset", dataset)
+
+    @staticmethod
+    def _check_text_left(source: Source, pages: str | None) -> None:
+        """
+        Refuse an extraction that would skip every section of the selected pages.
+
+        Raises:
+            ValueError: If only skipped sections are left
+        """
+        skipped = skipped_sections(
+            source.text,
+            page_starts=source.page_starts,
+            headings=[Heading(h.start, h.title, h.level) for h in source.headings],
+            pages=pages,
+        )
+        if skipped and not chunk_text(
+            source.text,
+            page_starts=source.page_starts,
+            pages=pages,
+            skip=[(s.start, s.end) for s in skipped],
+        ):
+            raise ValueError(NOTHING_LEFT)
 
     @staticmethod
     def _checked_pages(source: Source, pages: str | None) -> str | None:

@@ -8,7 +8,11 @@ integrating with the new pipeline framework.
 Pasted text is extracted in one call, as before. A source (input with
 ``source_id``, ``page_starts``, ``headings`` or ``pages``) is extracted chunk
 by chunk: the chunks are the run's items, and the triples found in each are
-merged over the whole source (see chunk_merge.py). A run on a source
+merged over the whole source (see chunk_merge.py). Unless ``skip_boilerplate``
+is false, a source's warranty, safety, legal and contact sections and its
+copies in other languages are left out of the chunks (see
+domain/extraction/section_filter.py); the result's ``skipped_sections`` and
+``skipped_sections_by_reason`` say what was skipped. A run on a source
 (``source_id``) ends in one change proposal of the merged triples when a
 proposer is wired (see domain/pipelines/source_proposals.py); the run's
 ``proposal_id`` names it.
@@ -24,6 +28,14 @@ from typing import TYPE_CHECKING, Any
 
 from domain.extraction.chunking import Chunk, Heading, chunk_text
 from domain.extraction.prompts import INDIVIDUAL_EXTRACTION_STAGES
+from domain.extraction.section_filter import (
+    NOTHING_LEFT,
+    SKIP_INPUT,
+    SkippedSection,
+    skip_note,
+    skip_summary,
+    skipped_sections,
+)
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipelines.individual_extraction.chunk_merge import merge_chunk_triples
@@ -122,6 +134,8 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 - source_id, page_starts, headings, pages: Optional; any of
                   them extracts the text chunk by chunk (see the registry's
                   input contract)
+                - skip_boilerplate: Optional, true by default; false extracts a
+                  source's boilerplate sections and other-language copies too
 
         Returns:
             Updated IndividualExtractionState with extracted triples and metadata
@@ -178,19 +192,29 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         is_source = any(state.input_data.get(key) is not None for key in _SOURCE_KEYS)
         page_starts: list[int] = []
         chunks: list[Chunk] = []
+        skipped: list[SkippedSection] = []
         if is_source:
             page_starts = _page_starts(state.input_data.get("page_starts"))
+            headings = _headings(state.input_data.get("headings"))
+            pages = _pages(state.input_data.get("pages"))
             try:
+                if _skip_boilerplate(state.input_data):
+                    skipped = skipped_sections(
+                        text, page_starts=page_starts, headings=headings, pages=pages
+                    )
                 chunks = chunk_text(
                     text,
                     page_starts=page_starts,
-                    headings=_headings(state.input_data.get("headings")),
-                    pages=_pages(state.input_data.get("pages")),
+                    headings=headings,
+                    pages=pages,
+                    skip=[(s.start, s.end) for s in skipped],
                 )
             except ValueError as error:
                 raise PipelineInputError(str(error)) from error
             if not chunks:
-                raise PipelineInputError("The selected pages hold no text")
+                raise PipelineInputError(
+                    NOTHING_LEFT if skipped else "The selected pages hold no text"
+                )
 
         # Update state with input data
         state = replace(
@@ -204,11 +228,14 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         )
 
         try:
-            proposal: dict[str, Any] = {}
+            outcome_keys: dict[str, Any] = {}
             if is_source:
                 triples, warnings, metadata = await self._extract_by_chunk(
                     state, chunks, page_starts
                 )
+                if skipped:
+                    warnings = [skip_note(skipped), *warnings]
+                    outcome_keys = skip_summary(skipped, text, page_starts)
                 if self._proposer is not None and state.input_data.get("source_id"):
                     try:
                         outcome = self._proposer.propose_individuals(
@@ -219,7 +246,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                             f"Proposing the extracted candidates failed: {exc}"
                         ) from exc
                     warnings = [*warnings, *outcome.warnings]
-                    proposal = outcome.to_json()
+                    outcome_keys = {**outcome_keys, **outcome.to_json()}
             else:
                 result = self._extraction_service.extract_triples(
                     text=text,
@@ -241,7 +268,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                     "triples": triples,
                     "warnings": warnings,
                     "metadata": metadata,
-                    **proposal,
+                    **outcome_keys,
                 },
                 current_status=PipelineRunStatus.COMPLETED,
             )
@@ -355,6 +382,16 @@ def _headings(value: Any) -> list[Heading]:
             )
         )
     return headings
+
+
+def _skip_boilerplate(input_data: dict[str, Any]) -> bool:
+    """Validate ``skip_boilerplate``: true unless given as false."""
+    value = input_data.get(SKIP_INPUT)
+    if value is None:
+        return True
+    if not isinstance(value, bool):
+        raise PipelineInputError(f"{SKIP_INPUT} must be true or false")
+    return value
 
 
 def _pages(value: Any) -> str | None:
