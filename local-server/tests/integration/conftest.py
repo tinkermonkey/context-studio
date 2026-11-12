@@ -43,9 +43,14 @@ def block_network(request):
     Tests can opt-out with @pytest.mark.external_network marker. Per the
     marker registration in pytest.ini, @pytest.mark.real_llm also implies
     external_network — a real_llm test is pointless if it can't reach the
-    network.
+    network. Recording cassettes (--refresh-cassettes) calls the real
+    provider, so it lifts the block too.
     """
-    if "external_network" in request.keywords or "real_llm" in request.keywords:
+    if (
+        "external_network" in request.keywords
+        or "real_llm" in request.keywords
+        or request.config.getoption("--refresh-cassettes", default=False)
+    ):
         yield
         return
 
