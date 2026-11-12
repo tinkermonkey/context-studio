@@ -231,8 +231,8 @@ describe("what a bulk accept leaves for a near-match choice", () => {
     expect([...nearMatchHeldIds([fridge, filter, uses, madeBy])]).toEqual(["op-fridge", "op-uses"]);
   });
 
-  it("looks for the near match's $ref only in a relationship's ends", () => {
-    // A title that happens to read like the ref is just text: "$ref" resolves only in ends.
+  it("looks for the near match's $ref only in id fields", () => {
+    // A title that happens to read like the ref is just text: "$ref" resolves only in id fields.
     const named = createProposedOperation({
       id: "op-named",
       op: "create",
@@ -275,6 +275,71 @@ describe("what a bulk accept holds back for want of a passage (#1575)", () => {
   it("holds nothing once it is decided", () => {
     const decided = { ...unplaced, status: "rejected" as const };
     expect(noPassageHeldIds([decided, uses, madeBy]).size).toBe(0);
+  });
+
+  // A schema extraction's class without a passage, and what names it
+  const unplacedClass = createProposedOperation({
+    id: "op-c1",
+    seq: 10,
+    op: "create",
+    kind: "class",
+    target_id: null,
+    ref: "c1",
+    fields: { title: "Fixture", concept_scheme_id: "scheme-1" },
+    no_passage: true,
+  });
+  const relationshipType = (id: string, fields: Record<string, unknown>, ref?: string) =>
+    createProposedOperation({
+      id,
+      op: "create",
+      kind: "property",
+      target_id: null,
+      ref,
+      fields: { identifier: id, predicate_id: "pred-1", ...fields },
+    });
+
+  it("holds what names it as a relationship type's domain or range", () => {
+    const byDomain = relationshipType("op-domain", { domain_class_id: "$c1", range_class_id: "c9" });
+    const byRange = relationshipType("op-range", { domain_class_id: "c9", range_class_id: "$c1" });
+    const other = relationshipType("op-other", { domain_class_id: "c9", range_class_id: "c8" });
+    expect([...noPassageHeldIds([unplacedClass, byDomain, byRange, other])].sort()).toEqual(
+      ["op-c1", "op-domain", "op-range"].sort(),
+    );
+  });
+
+  it("holds what names it in a list of ids", () => {
+    const member = createProposedOperation({
+      id: "op-member",
+      op: "create",
+      kind: "individual",
+      target_id: null,
+      fields: { title: "Kitchen faucet", class_ids: ["class-1", "$c1"] },
+    });
+    expect([...noPassageHeldIds([unplacedClass, member])].sort()).toEqual(
+      ["op-c1", "op-member"].sort(),
+    );
+  });
+
+  it("holds what names a held operation, transitively, whatever the order", () => {
+    // The relationship names the individual, which names the held class
+    const link = createProposedOperation({
+      id: "op-link",
+      op: "create",
+      kind: "relationship",
+      target_id: null,
+      fields: { property_definition_id: "prop-1", source_id: "$faucet", target_id: "ind-9" },
+    });
+    const faucet = createProposedOperation({
+      id: "op-faucet",
+      op: "create",
+      kind: "individual",
+      target_id: null,
+      ref: "faucet",
+      fields: { title: "Kitchen faucet", class_ids: ["$c1"] },
+    });
+    expect([...noPassageHeldIds([link, faucet, unplacedClass])].sort()).toEqual(
+      ["op-c1", "op-faucet", "op-link"].sort(),
+    );
   });
 
   it("says how many it held back", () => {

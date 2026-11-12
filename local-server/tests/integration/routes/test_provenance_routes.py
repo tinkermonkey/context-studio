@@ -255,7 +255,7 @@ def test_an_extraction_operation_without_a_passage_is_flagged(client, house):
         "Extraction: manual",
         [create(1, "Fridge", [PASSAGE]), create(2, "Pacemaker", [{"quote": "pacemaker"}])],
         ProposalSource.PIPELINE,
-        client_metadata={"source_id": SOURCE},
+        client_metadata={"source_id": SOURCE, "pipeline": "individual_extraction"},
     )
     by_hand = client.post("/api/proposals", json=body(house, evidence=()))
 

@@ -32,6 +32,10 @@ from domain.ontology.entities import same_attribute_value
 from domain.ontology.value_objects import SourceRevision
 from domain.versioning.provenance import SOURCE_ID, source_passages
 
+# The pipeline an individual extraction's proposal names in its client_metadata
+# (domain.pipelines.source_proposals writes PipelineType.INDIVIDUAL_EXTRACTION).
+INDIVIDUAL_EXTRACTION = "individual_extraction"
+
 
 class ProposalSource(str, Enum):
     """Who or what made the proposal."""
@@ -662,13 +666,19 @@ class ChangeProposal:
 
     def lacks_passage(self, operation: ProposedOperation) -> bool:
         """
-        Whether an operation of an extraction from a source cites no passage
-        in it: the extraction couldn't place its quote in the text (or gave
-        none), so nothing shows where it came from. A person decides each such
-        operation: the approval policy never applies it, and the review's bulk
-        accept leaves it. Always False for other proposals.
+        Whether an operation of an individual extraction from a source cites
+        no passage in it: the extraction couldn't place its quote in the text
+        (or gave none), so nothing shows where it came from. A person decides
+        each such operation: the approval policy never applies it, and the
+        review's bulk accept leaves it. Always False for other proposals,
+        a schema extraction's among them: its classes are abstractions matched
+        by label, and many rightly have no passage.
         """
-        return self.extracted_from_source and not source_passages(operation.evidence)
+        return (
+            self.extracted_from_source
+            and (self.client_metadata or {}).get("pipeline") == INDIVIDUAL_EXTRACTION
+            and not source_passages(operation.evidence)
+        )
 
     def settle_status(self) -> ProposalStatus:
         """

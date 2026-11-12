@@ -27,8 +27,8 @@ from collections.abc import Sequence
 from typing import Any
 
 from domain.ontology.ports import OntologyRepository
-from domain.ontology.value_objects import validate_identifier
 from domain.pipelines.schema_extraction.apply_service import (
+    class_identifier,
     class_title_index,
     class_title_key,
     slugify,
@@ -44,7 +44,6 @@ from domain.versioning.proposal_service import OperationDraft
 from domain.versioning.proposals import OperationKind, OperationType
 
 MAX_PASSAGES = 10
-MAX_IDENTIFIER_CHARS = 64
 
 
 def plan_schema_operations(
@@ -177,32 +176,6 @@ def plan_schema_operations(
         ref = f"r{len(plan.operations) + 1}"
         add(fields, OperationKind.PROPERTY, ref, candidate, label, frozenset(needs))
     return plan
-
-
-def class_identifier(title: str, repo: OntologyRepository, taken: set[str]) -> str:
-    """
-    A new class's identifier: its title slugified ("Heating System" ->
-    "heating_system"), prefixed "class_" when that isn't a valid identifier
-    (a lowercase letter first, 2-64 characters), and suffixed "_2", "_3", ...
-    while an existing taxonomy, scheme, class or relationship type, or another
-    create of the proposal (`taken`), has it. Identifiers are unique across
-    every kind of entity.
-    """
-    base = slugify(title)[:MAX_IDENTIFIER_CHARS]
-    try:
-        validate_identifier(base)
-    except ValueError:
-        base = f"class_{base}".rstrip("_")[:MAX_IDENTIFIER_CHARS]
-    identifier, n = base, 1
-    while (
-        identifier in taken
-        or repo.get_by_identifier(identifier) is not None
-        or repo.get_property_definition_by_identifier(identifier) is not None
-    ):
-        n += 1
-        suffix = f"_{n}"
-        identifier = base[: MAX_IDENTIFIER_CHARS - len(suffix)] + suffix
-    return identifier
 
 
 def _evidence(

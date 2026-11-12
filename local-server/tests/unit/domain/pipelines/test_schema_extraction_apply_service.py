@@ -306,6 +306,21 @@ class TestPropertyDefinitions:
         }
         assert repo.get_property_definition_by_identifier("owns") is None
 
+    def test_a_class_created_alongside_never_takes_a_types_identifier(self, svc, repo):
+        # The type's slug is reserved before classes are named, as the planner does.
+        run = _make_run(
+            candidates=[
+                {"kind": "class", "label": "Owner", "confidence": 0.9},
+                {"kind": "property_definition", "label": "Owner", "confidence": 0.9},
+            ]
+        )
+        result = svc.apply(run, concept_scheme_id=SCHEME_ID, taxonomy_id=TAXONOMY_ID)
+
+        assert result.classes_created == 1
+        assert result.properties_created == 1
+        assert repo.get_property_definition_by_identifier("owner") is not None
+        assert repo.get_class(result.created_class_ids[0]).identifier == "owner_2"
+
 
 # ---------------------------------------------------------------------------
 # Relationships

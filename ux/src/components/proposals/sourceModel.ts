@@ -212,8 +212,36 @@ export function nearMatchHeldIds(operations: ProposedOperation[]): Set<string> {
 }
 
 /**
- * The awaiting operations `holds` picks, and the operations that name one of
- * them by "$ref", which can't apply until it is decided.
+ * The fields the backend resolves "$ref" in: every id field (ID_FIELDS in
+ * local-server/domain/versioning/proposal_service.py). Elsewhere, e.g. in a
+ * title, "$x" is just text.
+ */
+const ID_FIELDS = [
+  "taxonomy_id",
+  "concept_scheme_id",
+  "parent_class_id",
+  "class_id",
+  "class_ids",
+  "domain_class_id",
+  "range_class_id",
+  "property_definition_id",
+  "source_id",
+  "target_id",
+];
+
+/** The "$ref"s an operation names: in its id fields (a value or a list) and its replacement. */
+function refsNamed(operation: ProposedOperation): string[] {
+  const values: unknown[] = [
+    ...ID_FIELDS.map((name) => operation.fields?.[name]),
+    operation.proposed_replacement_id,
+  ].flat();
+  return values.filter((v): v is string => typeof v === "string" && v.startsWith("$"));
+}
+
+/**
+ * The awaiting operations `holds` picks, and the operations that name a held
+ * one by "$ref" (and what names those, in turn), which can't apply until it
+ * is decided.
  */
 function heldWithNamers(
   operations: ProposedOperation[],
@@ -222,12 +250,17 @@ function heldWithNamers(
   const open = operations.filter(
     (o) => (o.status === "pending" || o.status === "failed") && holds(o),
   );
-  const refs = new Set(open.flatMap((o) => (o.ref ? [`$${o.ref}`] : [])));
   const held = new Set(open.map((o) => o.id));
-  // The backend resolves "$ref" only in a relationship's ends.
-  for (const o of operations) {
-    const ends = [o.fields?.source_id, o.fields?.target_id];
-    if (ends.some((v) => typeof v === "string" && refs.has(v))) held.add(o.id);
+  const refs = new Set(open.flatMap((o) => (o.ref ? [`$${o.ref}`] : [])));
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const o of operations) {
+      if (held.has(o.id) || !refsNamed(o).some((r) => refs.has(r))) continue;
+      held.add(o.id);
+      if (o.ref) refs.add(`$${o.ref}`);
+      grew = true;
+    }
   }
   return held;
 }

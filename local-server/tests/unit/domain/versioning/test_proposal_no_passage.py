@@ -1,6 +1,7 @@
 """
-Unit tests (#1575): an operation of an extraction from a source that cites no
-passage in it is flagged, and never auto-applies (nor what names it by "$ref").
+Unit tests (#1575): an operation of an individual extraction from a source that
+cites no passage in it is flagged, and never auto-applies (nor what names it by
+"$ref"). A schema extraction's operations are never flagged.
 """
 
 from datetime import datetime, timezone
@@ -27,6 +28,7 @@ from tests.unit.domain.versioning.test_approval_policy import (  # noqa: F401 - 
 
 SOURCE = "src-moen"
 FROM_SOURCE = {"source_id": SOURCE, "pipeline": "individual_extraction"}
+SCHEMA_FROM_SOURCE = {"source_id": SOURCE, "pipeline": "schema_extraction"}
 
 
 def passage(start=10, end=24, quote="adhesive disk"):
@@ -82,6 +84,14 @@ class TestLacksPassage:
 
         assert not other.extracted_from_source
         assert not other.lacks_passage(bare)
+
+    def test_a_schema_extraction_operation_without_a_passage_does_not_lack_one(self):
+        # Its classes are abstractions matched by label: many rightly have no passage
+        bare = operation(1)
+        schema = proposal([bare], client_metadata=SCHEMA_FROM_SOURCE)
+
+        assert schema.extracted_from_source
+        assert not schema.lacks_passage(bare)
 
 
 class TestAutoApply:
@@ -146,6 +156,28 @@ class TestAutoApply:
         # A dry run's verdict is the same selection
         first, _, _, last = stored.operations
         assert service.auto_apply_operation_ids(stored) == [first.id, last.id]
+
+    def test_a_schema_extraction_class_without_a_passage_applies(
+        self, service, policies, house
+    ):
+        policies.save(ApprovalPolicy(house["taxonomy"], (AutoApplyRule(op=T.CREATE),)))
+        draft = OperationDraft(
+            1,
+            T.CREATE,
+            K.CLASS,
+            ref="c1",
+            fields={"concept_scheme_id": house["scheme"], "title": "Fixture"},
+        )
+
+        stored = service.propose(
+            house["taxonomy"],
+            "Schema extraction: Moen",
+            [draft],
+            ProposalSource.PIPELINE,
+            client_metadata=SCHEMA_FROM_SOURCE,
+        )
+
+        assert stored.operations[0].status is OperationStatus.APPLIED
 
     def test_without_a_source_the_same_operations_apply(self, service, policies, house):
         policies.save(ApprovalPolicy(house["taxonomy"], (AutoApplyRule(op=T.CREATE),)))
