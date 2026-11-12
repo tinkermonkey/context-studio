@@ -1,0 +1,19 @@
+{
+  "text": "HAND SHOWER WITH SLIDE BAR\nInstallation Guide\n\nBefore you begin\nRead these instructions all the way through before starting. Installation takes about 30 minutes for most showers. If you are mounting the slide bar into tile, allow extra time for drilling.\n\nWhat's in the box\n1 hand shower\n1 shower hose, 69 in (175 cm)\n1 slide bar with sliding holder\n2 wall brackets\n1 diverter\n2 rubber washers\n4 mounting screws\n4 wall anchors\n\nTools you will need\n- Drill with a 1/4 in masonry bit for tile, or a standard bit for drywall\n- Adjustable wrench\n- Phillips screwdriver\n- Level\n- Pencil\n- Plumber's tape\n- Soft cloth, to protect the finish from wrench marks\n\nInstallation\n1. Turn off the water supply to the shower, or shut the main valve.\n2. Unscrew the shower head from the shower arm with the adjustable wrench. Clean old tape and mineral buildup off the shower arm threads.\n3. Wrap the shower arm threads clockwise with three turns of plumber's tape.\n4. Thread the diverter onto the shower arm by hand, then snug it a quarter turn with the wrench. Wrap the jaws in the soft cloth so the finish is not scratched. Thread the shower head onto the front outlet of the diverter.\n5. Hold the slide bar against the wall below the shower arm. Use the level to make it plumb and mark the two wall bracket positions with the pencil.\n6. Drill a hole at each mark. Tap a wall anchor into each hole until it sits flush with the tile.\n7. Fasten the wall brackets with the mounting screws, then snap the slide bar into the brackets.\n8. Place a rubber washer in each end of the shower hose. Connect one end to the bottom outlet of the diverter and the other end to the hand shower. Hand-tighten only.\n9. Peel the clear film and the tab off the spray face of the hand shower.\n10. Turn the water back on. Switch the diverter between the shower head and the hand shower, and check every connection for leaks. If a connection drips, tighten it another eighth of a turn.\n\nSpecifications\nFlow rate: 1.75 gpm (6.6 L/min) at 80 psi\nMaximum water pressure: 125 psi\nHose length: 69 in (175 cm)\n\nCare and cleaning\nWipe the hand shower and slide bar with a soft, damp cloth and dry them. Do not use abrasive cleaners, scouring pads or cleaners that contain bleach; they damage the finish. If the spray nozzles clog with mineral deposits, rub them with your thumb while the water runs. For heavy buildup, soak the spray face in an even mix of white vinegar and water for an hour, then rinse.\n\nLIMITED LIFETIME WARRANTY\nThe manufacturer warrants to the original consumer purchaser that this product will be free from defects in material and workmanship for as long as the original purchaser owns the home in which it was first installed. Proof of purchase is required. This warranty excludes damage from misuse, abrasive cleaners or improper installation. The manufacturer will, at its option, repair or replace a defective product; this is the sole remedy. All implied warranties, including merchantability and fitness for a particular purpose, are limited to the duration of this warranty. Incidental and consequential damages are excluded. Some jurisdictions do not allow these limitations, so they may not apply to you. This warranty gives you specific legal rights.\n\nWARNING\nThe hand shower docks in its holder with magnets. Keep the hand shower at least 6 in (15 cm) away from a pacemaker, defibrillator or other implantable medical device, since strong magnets can interfere with it. Keep small parts such as washers out of reach of children; they are a choking hazard.\n\n",
+  "page_starts": [
+    0,
+    654,
+    2068
+  ],
+  "ontology_id": "house-ontology",
+  "existing_classes": [
+    "Appliance",
+    "Fixture",
+    "Part",
+    "Supply",
+    "Task",
+    "Tool"
+  ],
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}

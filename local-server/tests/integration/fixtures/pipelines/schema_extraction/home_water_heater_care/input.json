@@ -1,0 +1,13 @@
+{
+  "text": "Water Heater Care: A Yearly Routine\n\nA tank water heater works quietly for ten to fifteen years if it gets a little attention once a year. Whether yours is a gas water heater with a burner or an electric water heater with heating elements, the routine is the same: a tank flush, a relief valve test, an anode rod inspection and a check of the thermostat.\n\nTank flush\nHard water leaves minerals that settle to the bottom of the tank as sediment. Sediment insulates the water from the burner or the lower heating element, so the heater runs longer and may rumble or pop. Before a tank flush, turn the gas control to \"pilot\" or switch off the breaker for an electric unit, and close the cold water supply valve. Attach a garden hose to the drain valve near the bottom of the tank and run it to a floor drain or outside. Open a hot water faucet in the house to let air in, then open the drain valve and let the water run until it comes out clear. Close the drain valve, refill the tank with the faucet open until water flows steadily, and only then restore the gas or power. Never switch on an electric water heater with an empty tank; the heating elements burn out within seconds.\n\nRelief valve test\nThe relief valve opens if the water gets too hot or the pressure inside the tank climbs too high. Once a year, set a bucket under the discharge pipe and lift the valve's lever for a few seconds. Water should rush out and stop when you let go. If nothing comes out, or the valve keeps dripping afterward, replace it.\n\nAnode rod inspection\nThe anode rod is a long metal rod, usually magnesium or aluminum, that corrodes so the steel tank does not. Every two to three years, unscrew it from the top of the tank with a 1-1/16 in socket and a breaker bar. If more than six inches of core wire show, or the rod is caked with calcium, install a new anode rod. Wrap its threads with plumber's tape before threading it in.\n\nThermostat\nMany units leave the factory with a temperature setting of 140°F, but 120°F is hot enough for most households and cuts standby heat loss. An electric water heater has an upper and a lower thermostat behind access panels; set both to the same temperature.\n\nKnow your water heater\nThe tank capacity, recovery rate and energy factor are printed on the rating plate on the side of the water heater. A household of four usually needs a tank capacity of about 50 gallons.\n\nCaution: water above 125°F can cause severe scald burns in seconds, especially to young children and older adults.\n",
+  "ontology_id": "house-ontology",
+  "existing_classes": [
+    "Appliance",
+    "Part",
+    "Supply",
+    "Task",
+    "Tool"
+  ],
+  "model": "claude-opus-4-7",
+  "temperature": 0.0
+}
