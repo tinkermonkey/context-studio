@@ -23,6 +23,7 @@ Candidate response schemas:
 - Discriminated union variants:
   - SchemaClassCandidate — class extraction candidate
   - SchemaPropertyCandidate — property definition candidate
+  - SchemaAttributeCandidate — attribute (measurement or other value) of a class
   - SchemaConnectionCandidate — connection/relationship candidate
   - NodeReference — reference to an extracted node (individual_extraction)
   - PredicateReference — reference to a predicate/property (individual_extraction)
@@ -352,6 +353,11 @@ class ApplyRunResponse(BaseModel):
     properties_skipped: int = Field(
         default=0, description="PropertyDefinition candidates skipped (already exist)"
     )
+    attributes_created: int = Field(default=0, description="AttributeDefinition entities created")
+    attributes_skipped: int = Field(
+        default=0,
+        description="Attribute candidates skipped (already exist, not selected, or no class)",
+    )
     relationships_created: int = Field(default=0, description="Relationship entities created")
     relationships_removed: int = Field(default=0, description="Relationship entities removed")
     relationships_modified: int = Field(default=0, description="Relationship entities modified")
@@ -387,6 +393,9 @@ class ApplyRunResponse(BaseModel):
     )
     created_property_definition_ids: list[str] = Field(
         default_factory=list, description="IDs of created property definitions"
+    )
+    created_attribute_definition_ids: list[str] = Field(
+        default_factory=list, description="IDs of created attribute definitions"
     )
     created_external_reference_ids: list[str] = Field(
         default_factory=list, description="URIs of created external references"
@@ -424,7 +433,8 @@ class ApplyRunResponse(BaseModel):
             "are the same entity), "
             "derived_type (its class or relationship type is derived: the client "
             "computes those, so none is created), domain_range_mismatch (a "
-            "relationship's ends don't fit its type's domain or range). "
+            "relationship's ends don't fit its type's domain or range), no_class (an "
+            "attribute's class is neither accepted nor in the taxonomy). "
             "Populated for schema_extraction and individual_extraction."
         ),
     )
@@ -579,6 +589,35 @@ class SchemaClassCandidate(CandidateBase):
     disambiguation_rationale: Optional[str] = Field(
         None, description="Rationale for this candidate when multiple senses are disambiguated"
     )
+    proposed_parent: Optional[str] = Field(
+        None,
+        description=(
+            "Title of the class it is a kind of: an existing class of the taxonomy or another"
+            " class candidate; null for a top-level class"
+        ),
+    )
+
+
+class SchemaAttributeCandidate(CandidateBase):
+    """Candidate attribute from schema extraction: a measurement or other value
+    describing the instances of a class (an existing class or a class candidate)."""
+
+    candidate_type: Literal["schema_attribute"] = "schema_attribute"
+    label: str = Field(..., description="Attribute label/name")
+    proposed_definition: Optional[str] = Field(
+        None, description="Proposed definition of the attribute"
+    )
+    of_class: Optional[str] = Field(
+        None,
+        description=(
+            "Title of the class it describes; null when the run named none that resolves"
+            " (it is then skipped on apply as no_class)"
+        ),
+    )
+    value_type: str = Field(
+        "string", description="Its datatype: string, integer, number, date or boolean"
+    )
+    unit: Optional[str] = Field(None, description='Its unit, such as "V" or "%"')
 
 
 class SchemaPropertyCandidate(CandidateBase):
@@ -700,6 +739,7 @@ CandidateItem = Annotated[
     Union[
         Annotated[SchemaClassCandidate, Tag("schema_class")],
         Annotated[SchemaPropertyCandidate, Tag("schema_property")],
+        Annotated[SchemaAttributeCandidate, Tag("schema_attribute")],
         Annotated[SchemaConnectionCandidate, Tag("schema_connection")],
         Annotated[TripleCandidate, Tag("triple")],
         Annotated[GroundingCandidate, Tag("grounding")],

@@ -4351,6 +4351,9 @@
                         "$ref": "#/components/schemas/SchemaPropertyCandidate"
                       },
                       {
+                        "$ref": "#/components/schemas/SchemaAttributeCandidate"
+                      },
+                      {
                         "$ref": "#/components/schemas/SchemaConnectionCandidate"
                       },
                       {
@@ -4368,6 +4371,7 @@
                       "mapping": {
                         "schema_class": "#/components/schemas/SchemaClassCandidate",
                         "schema_property": "#/components/schemas/SchemaPropertyCandidate",
+                        "schema_attribute": "#/components/schemas/SchemaAttributeCandidate",
                         "schema_connection": "#/components/schemas/SchemaConnectionCandidate",
                         "triple": "#/components/schemas/TripleCandidate",
                         "grounding": "#/components/schemas/GroundingCandidate",
@@ -4428,6 +4432,9 @@
                         "$ref": "#/components/schemas/SchemaPropertyCandidate"
                       },
                       {
+                        "$ref": "#/components/schemas/SchemaAttributeCandidate"
+                      },
+                      {
                         "$ref": "#/components/schemas/SchemaConnectionCandidate"
                       },
                       {
@@ -4445,6 +4452,7 @@
                       "mapping": {
                         "schema_class": "#/components/schemas/SchemaClassCandidate",
                         "schema_property": "#/components/schemas/SchemaPropertyCandidate",
+                        "schema_attribute": "#/components/schemas/SchemaAttributeCandidate",
                         "schema_connection": "#/components/schemas/SchemaConnectionCandidate",
                         "triple": "#/components/schemas/TripleCandidate",
                         "grounding": "#/components/schemas/GroundingCandidate",
@@ -4505,6 +4513,9 @@
                         "$ref": "#/components/schemas/SchemaPropertyCandidate"
                       },
                       {
+                        "$ref": "#/components/schemas/SchemaAttributeCandidate"
+                      },
+                      {
                         "$ref": "#/components/schemas/SchemaConnectionCandidate"
                       },
                       {
@@ -4522,6 +4533,7 @@
                       "mapping": {
                         "schema_class": "#/components/schemas/SchemaClassCandidate",
                         "schema_property": "#/components/schemas/SchemaPropertyCandidate",
+                        "schema_attribute": "#/components/schemas/SchemaAttributeCandidate",
                         "schema_connection": "#/components/schemas/SchemaConnectionCandidate",
                         "triple": "#/components/schemas/TripleCandidate",
                         "grounding": "#/components/schemas/GroundingCandidate",
@@ -4582,6 +4594,9 @@
                         "$ref": "#/components/schemas/SchemaPropertyCandidate"
                       },
                       {
+                        "$ref": "#/components/schemas/SchemaAttributeCandidate"
+                      },
+                      {
                         "$ref": "#/components/schemas/SchemaConnectionCandidate"
                       },
                       {
@@ -4599,6 +4614,7 @@
                       "mapping": {
                         "schema_class": "#/components/schemas/SchemaClassCandidate",
                         "schema_property": "#/components/schemas/SchemaPropertyCandidate",
+                        "schema_attribute": "#/components/schemas/SchemaAttributeCandidate",
                         "schema_connection": "#/components/schemas/SchemaConnectionCandidate",
                         "triple": "#/components/schemas/TripleCandidate",
                         "grounding": "#/components/schemas/GroundingCandidate",
@@ -4659,6 +4675,9 @@
                         "$ref": "#/components/schemas/SchemaPropertyCandidate"
                       },
                       {
+                        "$ref": "#/components/schemas/SchemaAttributeCandidate"
+                      },
+                      {
                         "$ref": "#/components/schemas/SchemaConnectionCandidate"
                       },
                       {
@@ -4676,6 +4695,7 @@
                       "mapping": {
                         "schema_class": "#/components/schemas/SchemaClassCandidate",
                         "schema_property": "#/components/schemas/SchemaPropertyCandidate",
+                        "schema_attribute": "#/components/schemas/SchemaAttributeCandidate",
                         "schema_connection": "#/components/schemas/SchemaConnectionCandidate",
                         "triple": "#/components/schemas/TripleCandidate",
                         "grounding": "#/components/schemas/GroundingCandidate",
@@ -9609,6 +9629,18 @@
             "description": "PropertyDefinition candidates skipped (already exist)",
             "default": 0
           },
+          "attributes_created": {
+            "type": "integer",
+            "title": "Attributes Created",
+            "description": "AttributeDefinition entities created",
+            "default": 0
+          },
+          "attributes_skipped": {
+            "type": "integer",
+            "title": "Attributes Skipped",
+            "description": "Attribute candidates skipped (already exist, not selected, or no class)",
+            "default": 0
+          },
           "relationships_created": {
             "type": "integer",
             "title": "Relationships Created",
@@ -9695,6 +9727,14 @@
             "title": "Created Property Definition Ids",
             "description": "IDs of created property definitions"
           },
+          "created_attribute_definition_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Created Attribute Definition Ids",
+            "description": "IDs of created attribute definitions"
+          },
           "created_external_reference_ids": {
             "items": {
               "type": "string"
@@ -9741,12 +9781,13 @@
                 "missing_class",
                 "self_loop",
                 "derived_type",
-                "domain_range_mismatch"
+                "domain_range_mismatch",
+                "no_class"
               ]
             },
             "type": "object",
             "title": "Skip Reasons",
-            "description": "Why each skipped_candidate_id was skipped (one entry per id). not_selected / below_threshold: never selected for apply. Every other reason means the candidate was selected but could not be applied: invalid (malformed candidate), unresolved_endpoint (a relationship endpoint is neither accepted nor in the graph), unresolved_predicate (the property definition does not exist), title_conflict (an existing entity owns the title), identifier_taken (a class, scheme or taxonomy already has a new relationship type's identifier), missing_class (no existing class to type an individual), self_loop (source and target are the same entity), derived_type (its class or relationship type is derived: the client computes those, so none is created), domain_range_mismatch (a relationship's ends don't fit its type's domain or range). Populated for schema_extraction and individual_extraction."
+            "description": "Why each skipped_candidate_id was skipped (one entry per id). not_selected / below_threshold: never selected for apply. Every other reason means the candidate was selected but could not be applied: invalid (malformed candidate), unresolved_endpoint (a relationship endpoint is neither accepted nor in the graph), unresolved_predicate (the property definition does not exist), title_conflict (an existing entity owns the title), identifier_taken (a class, scheme or taxonomy already has a new relationship type's identifier), missing_class (no existing class to type an individual), self_loop (source and target are the same entity), derived_type (its class or relationship type is derived: the client computes those, so none is created), domain_range_mismatch (a relationship's ends don't fit its type's domain or range), no_class (an attribute's class is neither accepted nor in the taxonomy). Populated for schema_extraction and individual_extraction."
           },
           "existing_candidate_ids": {
             "items": {
@@ -19561,6 +19602,91 @@
         "title": "SPARQLResponse",
         "description": "Response from SPARQL query execution."
       },
+      "SchemaAttributeCandidate": {
+        "properties": {
+          "candidate_type": {
+            "type": "string",
+            "const": "schema_attribute",
+            "title": "Candidate Type",
+            "default": "schema_attribute"
+          },
+          "candidate_id": {
+            "type": "string",
+            "title": "Candidate Id",
+            "description": "Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "description": "Confidence score (0.0-1.0)"
+          },
+          "provenance": {
+            "items": {
+              "$ref": "#/components/schemas/SourceSpanSchema"
+            },
+            "type": "array",
+            "title": "Provenance",
+            "description": "List of source spans with provenance information"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Attribute label/name"
+          },
+          "proposed_definition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Definition",
+            "description": "Proposed definition of the attribute"
+          },
+          "of_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Of Class",
+            "description": "Title of the class it describes; null when the run named none that resolves (it is then skipped on apply as no_class)"
+          },
+          "value_type": {
+            "type": "string",
+            "title": "Value Type",
+            "description": "Its datatype: string, integer, number, date or boolean",
+            "default": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit",
+            "description": "Its unit, such as \"V\" or \"%\""
+          }
+        },
+        "type": "object",
+        "required": [
+          "candidate_id",
+          "confidence",
+          "label"
+        ],
+        "title": "SchemaAttributeCandidate",
+        "description": "Candidate attribute from schema extraction: a measurement or other value\ndescribing the instances of a class (an existing class or a class candidate)."
+      },
       "SchemaClassCandidate": {
         "properties": {
           "candidate_type": {
@@ -19617,6 +19743,18 @@
             ],
             "title": "Disambiguation Rationale",
             "description": "Rationale for this candidate when multiple senses are disambiguated"
+          },
+          "proposed_parent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Parent",
+            "description": "Title of the class it is a kind of: an existing class of the taxonomy or another class candidate; null for a top-level class"
           }
         },
         "type": "object",
