@@ -74,7 +74,7 @@ import {
   type Picks,
   type ReflectionOption,
 } from "./tieredModel";
-import { nearMatchHeldIds, nearMatchHeldNote } from "./sourceModel";
+import { nearMatchHeldIds, nearMatchHeldNote, noPassageHeldIds } from "./sourceModel";
 import { useOperationContext } from "./useOperationContext";
 import { pendingLabel, useProposalActions } from "./useProposalActions";
 import "./proposals.css";
@@ -243,7 +243,10 @@ export function ProposalDetailPage({
     () => awaitingOps.filter((o) => isBulkEligible(o, conflicted) && !nearHeld.has(o.id)),
     [awaitingOps, conflicted, nearHeld],
   );
-  const bulkReady = bulkOps.filter((o) => !o.stale && !isBlocked(o));
+  // Operations without a passage (and what names them) go along to Accept N ready,
+  // which holds them back and says how many: each is accepted on its own.
+  const passageHeld = useMemo(() => noPassageHeldIds(operations), [operations]);
+  const bulkReady = bulkOps.filter((o) => !o.stale && !isBlocked(o) && !passageHeld.has(o.id));
   const showThreshold =
     !byKind && deciding && awaitingOps.length > 0 && hasProbabilities(operations);
   // The threshold picks only from what the filters show, so it never checks hidden rows.
@@ -346,14 +349,19 @@ export function ProposalDetailPage({
       context.targetGone(operation),
     );
   const checkedList = [...checked];
+  // Held back first (near matches, then operations without a passage), as Accept selected does.
+  const isHeld = (o: ProposedOperation) => nearHeld.has(o.id) || passageHeld.has(o.id);
   // A blocked delete counts as blocked even when stale too: Accept selected skips it either way.
   const checkedStale = operations.filter(
-    (o) => checked.has(o.id) && o.stale && !isBlocked(o) && !nearHeld.has(o.id),
+    (o) => checked.has(o.id) && o.stale && !isBlocked(o) && !isHeld(o),
   ).length;
   const checkedBlocked = operations.filter(
-    (o) => checked.has(o.id) && isBlocked(o) && !nearHeld.has(o.id),
+    (o) => checked.has(o.id) && isBlocked(o) && !isHeld(o),
   ).length;
   const checkedNear = operations.filter((o) => checked.has(o.id) && nearHeld.has(o.id));
+  const checkedNoPassage = operations.filter(
+    (o) => checked.has(o.id) && passageHeld.has(o.id) && !nearHeld.has(o.id),
+  );
   const heldAwaiting = awaitingOps.filter((o) => nearHeld.has(o.id));
   const awaitingIds = awaitingOps.map((o) => o.id);
   const bulkIds = bulkOps.map((o) => o.id);
@@ -451,6 +459,8 @@ export function ProposalDetailPage({
                             neverBulk > heldAwaiting.length &&
                               "Judgment and conflict changes are decided one by one",
                             nearMatchHeldNote(heldAwaiting)?.replace(/\.$/, ""),
+                            bulkOps.some((o) => passageHeld.has(o.id)) &&
+                              "Operations without a passage are held back to accept one by one",
                           ]
                             .filter(Boolean)
                             .join(". ")
@@ -543,6 +553,7 @@ export function ProposalDetailPage({
           stale={checkedStale}
           blocked={checkedBlocked}
           nearMatches={checkedNear}
+          noPassage={checkedNoPassage}
           busy={actions.busy}
           onClear={() => setChecked([])}
           onReject={() => {

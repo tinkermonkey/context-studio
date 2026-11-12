@@ -9,7 +9,7 @@ import {
   resolutionChip,
 } from "./decisionModel";
 import { OperationDiff } from "./OperationDiff";
-import { isNearMatch } from "./sourceModel";
+import { isNearMatch, lacksPassage } from "./sourceModel";
 import {
   OP_VARIANT,
   formatProbability,
@@ -214,6 +214,17 @@ function OperationStatus({
             near match
           </Chip>
         )
+      )}
+      {lacksPassage(operation) && (
+        <Chip
+          variant={flagVariant(operation, "amber")}
+          role="note"
+          aria-label="No passage: the extraction couldn't place this in its source"
+          title="The extraction couldn't place this in its source. Bulk accept holds it back."
+          data-testid={`operation-no-passage-${operation.id}`}
+        >
+          no passage
+        </Chip>
       )}
       {operation.domain_range_mismatch && (
         <Chip

@@ -694,6 +694,57 @@ class TestCasefoldExpansion:
         assert source_text[span.start:span.end].casefold() == quote.casefold()
 
 
+class TestPdfTypography:
+    """
+    Text read from a PDF differs from what a model quotes back in ways that
+    change no word (#1575): those quotes are placed, at the source's offsets.
+    """
+
+    SOURCE = (
+        "Moen® recommends using painter’s tape and a pencil. Use the adhesive "
+        "disk (A) to ﬁx the hand-\nshower dock (E). Insert wall an-\nchors (C) into "
+        "the holes — not the tile."
+    )
+
+    @pytest.mark.parametrize(
+        ("quote", "found"),
+        [
+            # A curly apostrophe and a registered mark
+            ("Moen recommends using painter's tape", "Moen® recommends using painter’s tape"),
+            # A ligature, and a compound hyphenated at a line break
+            ("to fix the hand-shower dock", "to ﬁx the hand-\nshower dock"),
+            ("to fix the handshower dock", "to ﬁx the hand-\nshower dock"),
+            # A word split by a hyphen at a line break
+            ("Insert wall anchors (C)", "Insert wall an-\nchors (C)"),
+            # A dash the quote writes as a hyphen
+            ("the holes - not the tile", "the holes — not the tile"),
+        ],
+    )
+    def test_quote_is_placed_at_the_source_text(self, quote, found):
+        span = resolve_span(quote, None, None, self.SOURCE)
+
+        assert span.quote == quote
+        assert self.SOURCE[span.start : span.end] == found
+
+    def test_find_all_spans_folds_typography_too(self):
+        spans = find_all_spans("Painter's Tape", self.SOURCE)
+
+        assert [s.quote for s in spans] == ["painter’s tape"]
+
+    @pytest.mark.parametrize(
+        "quote",
+        [
+            "painters tape",  # a dropped apostrophe is a different word
+            "wall an chors",  # a split word is not two words
+            "Moen recommends painter's tape",  # a word left out
+        ],
+    )
+    def test_a_different_wording_is_still_not_placed(self, quote):
+        span = resolve_span(quote, None, None, self.SOURCE)
+
+        assert (span.start, span.end) == (None, None)
+
+
 class TestIntegrationScenarios:
     """Integration tests with realistic extraction scenarios."""
 

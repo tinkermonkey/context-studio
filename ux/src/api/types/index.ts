@@ -9292,6 +9292,12 @@ export interface components {
       /** @description Set when a relationship-type delete's proposed_replacement_id is: how its pair compares */
       replacement_check?: components["schemas"]["ReplacementCheckResponse"] | null;
       /**
+       * No Passage
+       * @description An operation of an extraction from a source that cites no passage in it: the extraction couldn't place its quote in the text. The approval policy never auto-applies it, and the review's bulk accept leaves it to be accepted on its own
+       * @default false
+       */
+      no_passage: boolean;
+      /**
        * Auto Apply
        * @description A dry run only: eligible to auto-apply, i.e. the taxonomy's approval policy would apply it as soon as proposed and no in-use blockers stop it (applying can still fail). Null otherwise
        */

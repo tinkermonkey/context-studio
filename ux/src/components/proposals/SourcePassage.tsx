@@ -85,6 +85,22 @@ export function SourcePassageSection({ passages }: { passages: SourcePassage[] }
   );
 }
 
+/**
+ * In place of the passage, for an extraction's operation that cites none:
+ * the extraction couldn't place its quote in the source, so check it before
+ * accepting. Bulk accept holds it back; Accept here still applies it.
+ */
+export function NoPassageSection() {
+  return (
+    <InspectorPanel.Section title="Source passage">
+      <p className="entity-note" role="note" data-testid="operation-no-passage">
+        No passage: the extraction couldn't place this in its source, so nothing shows where it came
+        from. Bulk accept holds it back; check it, then accept it here.
+      </p>
+    </InspectorPanel.Section>
+  );
+}
+
 interface NearMatchChoiceProps {
   operation: ProposedOperation;
   /** The proposal's taxonomy and dataset, to name the dataset in the question. */
