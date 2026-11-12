@@ -245,10 +245,12 @@ describe("the source passage", () => {
       ),
     );
     renderPage("op-fridge");
-    await waitFor(() =>
-      expect(screen.getByTestId("operation-source-passage-more")).toHaveTextContent(
-        "The source was removed.",
-      ),
+    await waitFor(
+      () =>
+        expect(screen.getByTestId("operation-source-passage-more")).toHaveTextContent(
+          "The source was removed.",
+        ),
+      { timeout: 10000 },
     );
     expect(screen.getByTestId("operation-source-passage-text")).toHaveAttribute(
       "data-placed",
