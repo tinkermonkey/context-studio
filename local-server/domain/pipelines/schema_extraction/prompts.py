@@ -139,7 +139,10 @@ SCHEMA_EXTRACTION_STAGES: tuple[StageDefinition, ...] = (
     StageDefinition(
         key="disambiguation",
         label="Disambiguation",
-        description="Splits a term into senses only when the text uses it in more than one.",
+        description=(
+            "Splits a term into senses only when the text uses it in more than one, "
+            "with a quote for each."
+        ),
         placeholders={
             "terms": "The candidate labels, comma-separated",
             "context": _CONTEXT,
@@ -149,7 +152,11 @@ SCHEMA_EXTRACTION_STAGES: tuple[StageDefinition, ...] = (
                 "You are an expert in word sense disambiguation for ontology design. "
                 "Report only terms that the given text itself uses in MORE THAN ONE distinct "
                 "sense. Ignore senses that do not occur in the text, such as everyday or "
-                "dictionary meanings unrelated to its subject. "
+                "dictionary meanings unrelated to its subject, and categories or roles the "
+                "term could belong to. "
+                "Every sense needs a quote: a short passage copied word for word from the "
+                "text that contains the term used in that sense. Each sense's quote must be "
+                "a different passage. A sense you cannot quote is not used in the text. "
                 "Return a JSON object with ambiguous terms and their senses."
             ),
             user=(
@@ -163,7 +170,8 @@ SCHEMA_EXTRACTION_STAGES: tuple[StageDefinition, ...] = (
                 '    {"term": "Term1", "rationale": "Why the text uses it in several senses",\n'
                 '     "senses": [\n'
                 '       {"qualifier": "1-3 word sense name", "definition": "One-sentence '
-                'definition of this sense", "used_in_text": true}\n'
+                'definition of this sense", "quote": "Verbatim words from the text using '
+                'the term in this sense"}\n'
                 "     ]}\n"
                 "  ]\n"
                 "}"
