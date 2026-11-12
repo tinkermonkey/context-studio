@@ -629,9 +629,9 @@ table.idea th:nth-child(3) { color: var(--accent-ink); }
     <div class="kg-head"><span class="eyebrow">Context Studio, as a graph</span><span class="right chip accent">concept</span></div>
     <svg class="kg-svg" id="kg-svg" role="group" aria-labelledby="kg-title kg-desc">
       <title id="kg-title">What Context Studio is</title>
-      <desc id="kg-desc">Agents propose changes to Context Studio. People decide in Context Studio. Context Studio curates the knowledge graph. Sources ground the knowledge graph. The knowledge graph is context for agents.</desc>
+      <desc id="kg-desc">Agents propose changes to Context Studio. People decide in Context Studio. Context Studio curates the knowledge graph. Sources and people ground the knowledge graph. The knowledge graph is context for agents and for people.</desc>
     </svg>
-    <figcaption class="kg-foot">Read each arrow as a sentence: agents propose, people decide, sources ground the graph, and the graph becomes the agents' context. Select a node to open its guide.</figcaption>
+    <figcaption class="kg-foot">Read each arrow as a sentence: agents propose, people decide, sources and people ground the graph, and the graph becomes context for agents and people alike. Select a node to open its guide.</figcaption>
   </figure>
 
   <div class="box">
@@ -1757,11 +1757,13 @@ read <span class="s">contextstudio://taxonomies/house/vision</span>
       { s: 'people', t: 'cs', l: 'decide in' },
       { s: 'cs', t: 'kg', l: 'curates' },
       { s: 'src', t: 'kg', l: 'ground' },
-      { s: 'kg', t: 'agents', l: 'context for', hot: true, curve: true }
+      { s: 'people', t: 'kg', l: 'ground', curve: 'pk' },
+      { s: 'kg', t: 'agents', l: 'context for', hot: true },
+      { s: 'kg', t: 'people', l: 'context for', hot: true }
     ];
     var LAYOUT = {
-      wide: { h: 250, pos: { agents: [0.15, 64], people: [0.15, 190], cs: [0.47, 127], kg: [0.82, 96], src: [0.82, 204] }, ctrl: [0.5, -34] },
-      narrow: { h: 420, pos: { agents: [0.25, 42], people: [0.75, 42], cs: [0.6, 150], kg: [0.6, 270], src: [0.6, 382] }, ctrl: [-0.1, 160] }
+      wide: { h: 326, pos: { cs: [0.5, 46], agents: [0.22, 150], people: [0.78, 150], kg: [0.5, 212], src: [0.5, 296] }, ctrl: { pk: [0.76, 296, 0.35] } },
+      narrow: { h: 420, pos: { cs: [0.5, 40], agents: [0.2, 150], people: [0.8, 150], kg: [0.5, 262], src: [0.5, 380] }, ctrl: { pk: [0.97, 320, 0.2] } }
     };
     function el(tag, attrs, parent) {
       var e = document.createElementNS(NS, tag);
@@ -1778,7 +1780,7 @@ read <span class="s">contextstudio://taxonomies/house/vision</span>
     function draw() {
       var W = Math.round(svg.getBoundingClientRect().width);
       if (!W) return;
-      var L = W >= 620 ? LAYOUT.wide : LAYOUT.narrow;
+      var L = W >= 640 ? LAYOUT.wide : LAYOUT.narrow;
       var H = L.h;
       while (svg.lastChild && svg.lastChild.nodeName !== 'desc') svg.removeChild(svg.lastChild);
       svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
@@ -1819,10 +1821,11 @@ read <span class="s">contextstudio://taxonomies/house/vision</span>
         var g = el('g', { 'class': 'kg-edge' + (e.hot ? ' hot' : '') }, edgeLayer);
         var d, mx, my;
         if (e.curve) {
-          var qx = L.ctrl[0] * W, qy = L.ctrl[1];
+          var qx = L.ctrl[e.curve][0] * W, qy = L.ctrl[e.curve][1], u = L.ctrl[e.curve][2] || 0.5;
           var p0 = edgePoint(a, qx, qy), p1 = edgePoint(b, qx, qy);
           d = 'M' + p0[0] + ',' + p0[1] + ' Q' + qx + ',' + qy + ' ' + p1[0] + ',' + p1[1];
-          mx = 0.25 * p0[0] + 0.5 * qx + 0.25 * p1[0]; my = 0.25 * p0[1] + 0.5 * qy + 0.25 * p1[1];
+          mx = (1 - u) * (1 - u) * p0[0] + 2 * u * (1 - u) * qx + u * u * p1[0];
+          my = (1 - u) * (1 - u) * p0[1] + 2 * u * (1 - u) * qy + u * u * p1[1];
         } else {
           var s0 = edgePoint(a, b.x, b.y), s1 = edgePoint(b, a.x, a.y);
           d = 'M' + s0[0] + ',' + s0[1] + ' L' + s1[0] + ',' + s1[1];
