@@ -5,8 +5,9 @@ operations (#1552).
 Individuals come from typing triples (an individual ``is_a`` a class, as the
 extraction service decides: `is_typing_triple`): one
 create per mention, in every class it was typed with. Mentions are the same
-when their labels share an `individual_key` (#1575: "screws (D)" and "Screw",
-"Moen Inc." and "Moen"); the create is titled with their `preferred_label`. A
+when their labels share a key among the run's individual labels (`LabelKeys`,
+#1575: "screws (D)" and "Screw", "Moen Inc." and "Moen", but not "Screw (B)"
+and "Screw (D)"); the create is titled with their preferred label. A
 one-word mention that is the head word of exactly one other mention's label,
 typed with all of its classes, is that mention ("bracket" is "Mounting
 Bracket"), unless it names an existing individual. A mention recognized as an
@@ -21,8 +22,9 @@ confidence of its typing triples as probability, every passage it was found in
 as evidence ({source_id, page, start, end, quote}), and its near matches as
 alternatives ({kind: existing, entity_id, similarity}): recognition's near
 misses, then the individuals of its classes in the dataset whose label has its
-key, or its key without the first word ("Moen handheld shower" offers
-"handheld shower"), with no similarity.
+key, or (for a key of three or more words) its key without the first word
+("Moen handheld shower" offers "handheld shower"; "Hand Shower" does not offer
+"Shower"), with no similarity.
 
 Relationships come from triples whose predicate is a relationship type: a
 create whose ends are "$ref" of an individual create or an existing id, with
@@ -49,9 +51,8 @@ from domain.pipelines.individual_extraction.apply_service import (
     typed_classes,
 )
 from domain.pipelines.individual_extraction.labels import (
+    LabelKeys,
     head_word,
-    individual_key,
-    preferred_label,
     without_leading_word,
 )
 from domain.pipelines.source_operations import (
@@ -75,11 +76,6 @@ class _Individual:
     confidences: list[Any] = field(default_factory=list)
     alternatives: list[dict[str, Any]] = field(default_factory=list)
     existing_id: str | None = None
-
-    @property
-    def label(self) -> str:
-        """The label its create is titled with."""
-        return preferred_label(self.labels)
 
 
 @dataclass
@@ -116,6 +112,12 @@ def plan_individual_operations(
     """
     plan = OperationPlan()
     aliases = _class_aliases(repo, taxonomy_id)
+    keys = LabelKeys(
+        node.get("label")
+        for triple in triples
+        for node in (triple.get("subject"), triple.get("object"))
+        if isinstance(node, dict) and node.get("kind") == "individual"
+    )
     individuals: dict[str, _Individual] = {}
     for triple in triples:
         subject = triple.get("subject") or {}
@@ -129,7 +131,7 @@ def plan_individual_operations(
         if not class_ids:
             plan.skip(label, "missing_class")
             continue
-        individual = individuals.setdefault(individual_key(label), _Individual())
+        individual = individuals.setdefault(keys.key(label), _Individual())
         individual.labels.append(label)
         individual.class_ids += [c for c in class_ids if c not in individual.class_ids]
         individual.evidence = merged_evidence(
@@ -166,6 +168,7 @@ def plan_individual_operations(
                 for entity_id in existing_keys.matches(key, individual.class_ids)
             ],
         )
+        title = keys.preferred_label(individual.labels)
         ref = f"i{len(plan.operations) + 1}"
         resolved[key] = f"${ref}"
         planned[f"${ref}"] = individual.class_ids
@@ -176,12 +179,12 @@ def plan_individual_operations(
                     op=OperationType.CREATE,
                     kind=OperationKind.INDIVIDUAL,
                     ref=ref,
-                    fields={"title": individual.label, "class_ids": individual.class_ids},
+                    fields={"title": title, "class_ids": individual.class_ids},
                     evidence=individual.evidence,
                     probability=best_probability(*individual.confidences),
                     alternatives=individual.alternatives,
                 ),
-                label=individual.label,
+                label=title,
             )
         )
     for short, long in folded.items():
@@ -190,7 +193,7 @@ def plan_individual_operations(
     relationships: dict[tuple[str, str, str], _Relationship] = {}
     fit = RelationshipFit(repo)
     for triple in triples:
-        relationship = _relationship(triple, repo, resolved, planned, fit, dataset_id, plan)
+        relationship = _relationship(triple, repo, resolved, keys, planned, fit, dataset_id, plan)
         if relationship is None:
             continue
         key = (relationship.source, relationship.property_id, relationship.target)
@@ -359,7 +362,10 @@ def _fold_head_words(
 
 
 class _ExistingKeys:
-    """The dataset's existing individuals of each class by `individual_key`, read once a class."""
+    """
+    The dataset's existing individuals of each class by their `LabelKeys` key
+    among the class's titles, read once a class.
+    """
 
     def __init__(self, repo: OntologyRepository, dataset_id: str | None) -> None:
         self._repo = repo
@@ -369,8 +375,9 @@ class _ExistingKeys:
     def matches(self, key: str, class_ids: list[str]) -> list[str]:
         """
         Ids of the existing individuals of the classes whose key is ``key``, then
-        of those whose key is ``key`` without its first word (a leading brand or
-        maker: "moen handheld shower" -> "handheld shower").
+        of those whose key is ``key`` without its first word when it has three
+        or more (a leading brand or maker: "moen handheld shower" ->
+        "handheld shower", but "hand shower" is not "shower").
         """
         found: list[str] = []
         for wanted in (key, without_leading_word(key)):
@@ -382,11 +389,12 @@ class _ExistingKeys:
 
     def _of_class(self, class_id: str) -> list[tuple[str, str]]:
         if class_id not in self._by_class:
+            individuals = self._repo.list_individuals(
+                class_id=class_id, limit=None, dataset_id=self._dataset_id
+            )
+            keys = LabelKeys(individual.title for individual in individuals)
             self._by_class[class_id] = [
-                (individual_key(individual.title), individual.id)
-                for individual in self._repo.list_individuals(
-                    class_id=class_id, limit=None, dataset_id=self._dataset_id
-                )
+                (keys.key(individual.title), individual.id) for individual in individuals
             ]
         return self._by_class[class_id]
 
@@ -395,6 +403,7 @@ def _relationship(
     triple: dict[str, Any],
     repo: OntologyRepository,
     resolved: dict[str, str],
+    keys: LabelKeys,
     planned: dict[str, list[str]],
     fit: RelationshipFit,
     dataset_id: str | None,
@@ -423,8 +432,8 @@ def _relationship(
     if prop.derived:
         plan.skip(label, "derived_type")
         return None
-    source = _end(subject, repo, resolved, dataset_id)
-    target = _end(obj, repo, resolved, dataset_id)
+    source = _end(subject, repo, resolved, keys, dataset_id)
+    target = _end(obj, repo, resolved, keys, dataset_id)
     if source is None or target is None:
         plan.skip(label, "unresolved_endpoint")
         return None
@@ -447,7 +456,11 @@ def _relationship(
 
 
 def _end(
-    node: dict[str, Any], repo: OntologyRepository, resolved: dict[str, str], dataset_id: str | None
+    node: dict[str, Any],
+    repo: OntologyRepository,
+    resolved: dict[str, str],
+    keys: LabelKeys,
+    dataset_id: str | None,
 ) -> str | None:
     """
     A relationship end: an existing individual (by id, else the mention's
@@ -461,7 +474,7 @@ def _end(
     existing = _existing_individual(repo, node.get("id"), dataset_id)
     if existing is not None:
         return existing
-    return resolved.get(individual_key(str(node.get("label") or "")))
+    return resolved.get(keys.key(str(node.get("label") or "")))
 
 
 def _evidence(

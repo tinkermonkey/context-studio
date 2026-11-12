@@ -10,7 +10,13 @@ picks the form to show for the merged individual.
 The key drops a trailing diagram letter ("(A)"), apostrophes, case, extra
 whitespace and trailing corporate suffixes (Inc., Incorporated, Corp.,
 Corporation, LLC, Ltd., Co.), and singularizes the last word with simple
-English rules. It is only a merge key; it is never shown.
+English rules (plural-only nouns such as "glasses" stay as they are). It is
+only a merge key; it is never shown.
+
+A diagram letter is not always a mere callout: "Screw (B)" and "Screw (D)" are
+two parts of one diagram. `LabelKeys` keys the labels found together (one
+run's triples, one class's existing individuals) and keeps the letter in the
+key and the shown label when the same name is found with different letters.
 """
 
 from __future__ import annotations
@@ -19,12 +25,16 @@ import re
 from collections.abc import Iterable
 
 # A trailing diagram callout: "adhesive disk (A)"
-_DIAGRAM_LETTER = re.compile(r"\s*\(\s*[A-Za-z]\s*\)\s*$")
+_DIAGRAM_LETTER = re.compile(r"\s*\(\s*([A-Za-z])\s*\)\s*$")
+# A diagram letter kept in a key: "(b)"
+_KEY_LETTER = re.compile(r"\([a-z]\)")
 _APOSTROPHES = re.compile(r"['‘’ʼ`´]")
 _CORPORATE_SUFFIXES = frozenset({"inc", "incorporated", "corp", "corporation", "llc", "ltd", "co"})
 # Punctuation left dangling once a corporate suffix is dropped: "Moen, Inc.", "Smith & Co."
 _DANGLING = ",&"
 _TRAILING_PUNCTUATION = ".,;:"
+# Nouns that are plural in form only: "Safety Glasses" is not "Safety Glass"
+_PLURAL_ONLY = frozenset({"glasses", "pliers", "scissors", "shears", "goggles", "tongs"})
 
 
 def surface_label(label: str | None) -> str:
@@ -52,6 +62,47 @@ def individual_key(label: str | None) -> str:
     if tokens:
         tokens[-1] = _singular(tokens[-1].rstrip(_TRAILING_PUNCTUATION) or tokens[-1])
     return " ".join(token.lower() for token in tokens)
+
+
+class LabelKeys:
+    """
+    The merge keys of individual labels found together: one run's triples, or
+    one class's existing individuals.
+
+    A label's key is its `individual_key`, unless the labels name the same
+    thing with different diagram letters ("Screw (B)", "screws (D)"): those are
+    different parts, so the letter stays in their key ("screw (b)") and in the
+    label shown, and the name without a letter ("Screw") is another individual.
+    With one letter only, the letter is a callout and drops ("screws (D)" is
+    "Screw").
+    """
+
+    def __init__(self, labels: Iterable[str | None]) -> None:
+        letters: dict[str, set[str]] = {}
+        for label in labels:
+            letter = _diagram_letter(label)
+            if letter is not None:
+                letters.setdefault(individual_key(label), set()).add(letter)
+        self._lettered = {key for key, found in letters.items() if len(found) > 1}
+
+    def key(self, label: str | None) -> str:
+        """A label's merge key among these labels."""
+        key = individual_key(label)
+        letter = _diagram_letter(label)
+        return f"{key} ({letter.lower()})" if letter and key in self._lettered else key
+
+    def preferred_label(self, labels: Iterable[str | None]) -> str:
+        """
+        The label to show for labels that share a key: `preferred_label`, with
+        their diagram letter when the letter is part of the key.
+        """
+        labels = list(labels)
+        shown = preferred_label(labels)
+        for label in labels:
+            letter = _diagram_letter(label)
+            if letter and self.key(label) != individual_key(label):
+                return f"{shown} ({letter})"
+        return shown
 
 
 def preferred_label(labels: Iterable[str | None]) -> str:
@@ -82,9 +133,24 @@ def head_word(key: str) -> str | None:
 
 
 def without_leading_word(key: str) -> str | None:
-    """A multi-word key without its first word ("moen handheld shower" -> "handheld shower")."""
+    """
+    A key of three or more words without its first word, a leading brand or
+    maker ("moen handheld shower" -> "handheld shower"); None for a shorter
+    key, whose first word is part of the name ("hand shower" is not "shower").
+    A diagram letter kept in the key is not a word.
+    """
     words = key.split()
-    return " ".join(words[1:]) if len(words) > 1 else None
+    named = words[:-1] if words and _KEY_LETTER.fullmatch(words[-1]) else words
+    return " ".join(words[1:]) if len(named) >= 3 else None
+
+
+def _diagram_letter(label: str | None) -> str | None:
+    """A label's trailing diagram letter, uppercased ("disk (a)" -> "A"), else None."""
+    text = " ".join(str(label or "").split())
+    match = _DIAGRAM_LETTER.search(text)
+    if match is None or not text[: match.start()].strip():
+        return None
+    return match.group(1).upper()
 
 
 def _plain(label: str) -> str:
@@ -100,6 +166,8 @@ def _singular(word: str) -> str:
     if len(word) <= 3 or word.isupper() or not word.replace("-", "").isalpha():
         return word
     lower = word.lower()
+    if lower in _PLURAL_ONLY:
+        return word
     if lower.endswith("ies") and len(word) > 4:
         return word[:-3] + "y"
     if lower.endswith(("ches", "shes", "sses", "xes", "zes")):

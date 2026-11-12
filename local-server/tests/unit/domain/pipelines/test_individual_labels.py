@@ -7,6 +7,11 @@ merged individual shows its plainest capitalized label. A one-word mention that
 is the head word of exactly one other mention of the same classes folds into
 it. A new individual whose label, without a leading brand, is an existing
 individual's offers it as a near match.
+
+Merging must not go too far: the same name with different diagram letters
+("Screw (B)", "Screw (D)") is different parts, plural-only nouns ("Safety
+Glasses") are not plurals, and a two-word name is not its head noun ("Hand
+Shower" is not "Shower").
 """
 
 import os
@@ -21,9 +26,11 @@ import pytest
 from domain.extraction.chunking import Chunk
 from domain.pipelines.individual_extraction.chunk_merge import merge_chunk_triples
 from domain.pipelines.individual_extraction.labels import (
+    LabelKeys,
     individual_key,
     preferred_label,
     surface_label,
+    without_leading_word,
 )
 from tests.unit.domain.pipelines.test_source_proposals import (  # noqa: F401 - fixtures
     house,
@@ -65,6 +72,8 @@ class TestIndividualKey:
             ("Inc.", ""),  # a suffix alone is the name
             ("Hand Shower Dock", "Dock"),  # head nouns are not keys
             ("Python (programming language)", "Python"),  # only one-letter callouts go
+            ("Safety Glasses", "Safety Glass"),  # plural-only nouns stay as they are
+            ("Pliers", "Plier"),
         ],
     )
     def test_different_names_keep_different_keys(self, one, other):
@@ -88,6 +97,42 @@ class TestIndividualKey:
     )
     def test_the_preferred_label_is_the_plain_capitalized_form(self, labels, shown):
         assert preferred_label(labels) == shown
+
+    @pytest.mark.parametrize(
+        "key, shorter",
+        [
+            ("moen handheld shower", "handheld shower"),
+            ("hand shower", None),  # a two-word name is not its head noun
+            ("wall anchor", None),
+            ("hex screw (b)", None),  # a kept diagram letter is not a word
+            ("shower", None),
+        ],
+    )
+    def test_only_a_key_of_three_words_or_more_drops_its_leading_word(self, key, shorter):
+        assert without_leading_word(key) == shorter
+
+
+class TestLabelKeys:
+    def test_one_diagram_letter_is_a_callout_that_drops(self):
+        keys = LabelKeys(["Screw", "screws (D)", "Adhesive Disk", "adhesive disk (A)"])
+        assert keys.key("Screw") == keys.key("screws (D)")
+        assert keys.key("Adhesive Disk") == keys.key("adhesive disk (A)")
+        assert keys.preferred_label(["screws (D)", "Screw"]) == "Screw"
+
+    def test_one_name_with_different_letters_is_different_parts(self):
+        keys = LabelKeys(
+            ["Screw (B)", "screws (D)", "Screw (d)", "Screw", "Washer (B)", "Washer (G)"]
+        )
+        assert keys.key("Screw (B)") != keys.key("screws (D)")
+        assert keys.key("screws (D)") == keys.key("Screw (d)")
+        assert keys.key("Washer (B)") != keys.key("Washer (G)")
+        # Without a letter the name is neither part
+        assert keys.key("Screw") not in {keys.key("Screw (B)"), keys.key("Screw (D)")}
+
+    def test_a_kept_letter_is_shown(self):
+        keys = LabelKeys(["Screw (B)", "screws (D)", "Screw (D)"])
+        assert keys.preferred_label(["screws (D)", "Screw (D)"]) == "Screw (D)"
+        assert keys.preferred_label(["Screw (B)"]) == "Screw (B)"
 
 
 def _typing(label, class_label="Part", quote=None, start=None):
@@ -159,6 +204,40 @@ class TestChunkMerge:
         ]
         assert len(relations[0]["passages"]) == 2
 
+    def test_one_name_with_different_letters_stays_different_parts(self):
+        first = Chunk(index=0, start=0, end=100)
+        second = Chunk(index=1, start=100, end=200)
+        merged = merge_chunk_triples(
+            [
+                (
+                    first,
+                    [
+                        _typing("Screw (B)", quote="Screw", start=1),
+                        _typing("Screw (D)", quote="Screw", start=10),
+                        _relation("Screw (B)", "Washer (B)", "B", 20),
+                    ],
+                ),
+                (
+                    second,
+                    [
+                        _typing("screws (D)", quote="screws", start=1),
+                        _typing("Screw", quote="Screw", start=10),
+                        _relation("Screw (D)", "Washer (G)", "D", 20),
+                    ],
+                ),
+            ]
+        )
+        assert [(t["subject"]["label"], len(t["passages"])) for t in merged[:2]] == [
+            ("Screw (B)", 1),
+            ("Screw (D)", 2),
+        ]
+        assert merged[3]["subject"]["label"] == "Screw"
+        relations = [t for t in merged if t["predicate"]["label"] == "fastens"]
+        assert [(t["subject"]["label"], t["object"]["label"]) for t in relations] == [
+            ("Screw (B)", "Washer (B)"),
+            ("Screw (D)", "Washer (G)"),
+        ]
+
     def test_a_recognized_individual_keeps_its_title_and_lends_it(self):
         chunk = Chunk(index=0, start=0, end=100)
         recognized = _typing("Moen Incorporated", "Business")
@@ -222,6 +301,30 @@ class TestPlannedIndividuals:
             ],
         )
         assert result.operations == []
+
+    def test_one_name_with_different_letters_is_one_create_a_part(self, repo, house):
+        result = plan(
+            repo,
+            house,
+            [
+                typing("Washer (B)", "house_appliance"),
+                typing("washers (G)", "house_appliance"),
+                typing("Washer (G)", "house_appliance"),
+                typing("Washer", "house_appliance"),
+                typing("Acme", "house_business"),
+                relation("Washer (B)", house["made_by"], "Acme"),
+                relation("washers (G)", house["made_by"], "Acme"),
+            ],
+        )
+        creates = [o.draft for o in result.operations if o.draft.kind == "individual"]
+        assert [d.fields["title"] for d in creates] == [
+            "Washer (B)",
+            "Washer (G)",
+            "Washer",
+            "Acme",
+        ]
+        relationships = [o.draft for o in result.operations if o.draft.kind == "relationship"]
+        assert [d.fields["source_id"] for d in relationships] == ["$i1", "$i2"]
 
     @pytest.mark.parametrize(
         "short, long",
@@ -302,6 +405,35 @@ class TestLabelNearMatches:
         assert create.draft.fields["title"] == "Moen handheld showers"
         assert create.draft.alternatives == [
             {"kind": "existing", "entity_id": shower.id, "similarity": None}
+        ]
+
+    @pytest.mark.parametrize(
+        "label, existing",
+        [("Hand Shower", "Shower"), ("Wall Anchor", "Anchor"), ("hand showers", "Showers")],
+    )
+    def test_a_two_word_mention_is_not_offered_its_head_noun(
+        self, ontology, repo, house, label, existing
+    ):
+        ontology.create_individual(house["appliance"], existing, dataset_id=house["home"])
+        result = plan(repo, house, [typing(label, "house_appliance")])
+        assert result.operations[0].draft.alternatives == []
+
+    def test_existing_parts_with_different_letters_are_offered_only_their_own(
+        self, ontology, repo, house
+    ):
+        part_b = ontology.create_individual(
+            house["appliance"], "Screw (B)", dataset_id=house["home"]
+        )
+        ontology.create_individual(house["appliance"], "Screw (D)", dataset_id=house["home"])
+        result = plan(
+            repo,
+            house,
+            [typing("screws (B)", "house_appliance"), typing("Screw (G)", "house_appliance")],
+        )
+        assert [o.draft.fields["title"] for o in result.operations] == ["screws (B)", "Screw (G)"]
+        assert [o.draft.alternatives for o in result.operations] == [
+            [{"kind": "existing", "entity_id": part_b.id, "similarity": None}],
+            [],
         ]
 
     def test_another_form_of_an_existing_name_is_offered(self, repo, house):

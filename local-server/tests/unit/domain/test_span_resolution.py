@@ -8,6 +8,7 @@ and edge cases (None inputs, empty quote, empty source text).
 import pytest
 
 from domain.extraction.span_resolution import (
+    _normalize_source,
     find_all_spans,
     resolve_span,
 )
@@ -732,6 +733,25 @@ class TestPdfTypography:
         assert [s.quote for s in spans] == ["painter’s tape"]
 
     @pytest.mark.parametrize(
+        ("term", "source_text", "expected"),
+        [
+            ("Moen®", "Use the Moen® dock.", (8, 13)),
+            ("Moen™", "Use the Moen™ dock.", (8, 13)),
+            ("data\u00ad", "Raw data\u00adbase.", (4, 9)),
+        ],
+    )
+    def test_find_all_spans_keeps_one_span_per_occurrence(self, term, source_text, expected):
+        """The normalized match of an exact one ends elsewhere; the exact span is kept."""
+        spans = find_all_spans(term, source_text)
+
+        assert [(s.start, s.end) for s in spans] == [expected]
+
+    def test_find_all_spans_keeps_a_case_variant_beside_an_exact_one(self):
+        spans = find_all_spans("Moen®", "Moen® and MOEN® docks.")
+
+        assert [s.quote for s in spans] == ["Moen®", "MOEN"]
+
+    @pytest.mark.parametrize(
         "quote",
         [
             "painters tape",  # a dropped apostrophe is a different word
@@ -793,3 +813,28 @@ class TestIntegrationScenarios:
 
         # Should find via normalized matching
         assert span.quote is not None
+
+
+class TestSourceNormalizedOnce:
+    """
+    Schema extraction looks up every label in the same source: the source is
+    normalized once for all of them, not once per lookup (#1575).
+    """
+
+    def test_repeated_lookups_normalize_the_source_once(self):
+        source_text = "The Heating System warms the House. A heating system needs a Boiler."
+        _normalize_source.cache_clear()
+
+        for term in ["Heating System", "House", "Boiler", "boiler", "Heating System"]:
+            find_all_spans(term, source_text)
+        resolve_span("the house", None, None, source_text)
+        resolve_span("A HEATING SYSTEM", 30, None, source_text)
+
+        assert _normalize_source.cache_info().misses == 1
+
+    def test_a_new_source_is_normalized_for_itself(self):
+        _normalize_source.cache_clear()
+
+        assert [s.quote for s in find_all_spans("house", "A House.")] == ["House"]
+        assert [s.quote for s in find_all_spans("house", "Two HOUSES.")] == ["HOUSE"]
+        assert _normalize_source.cache_info().misses == 2

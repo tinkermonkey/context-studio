@@ -8,6 +8,7 @@ pipelines to reliably ground provenance information.
 """
 
 import difflib
+import functools
 import unicodedata
 
 from domain.extraction.value_objects import SourceSpan
@@ -140,8 +141,9 @@ def find_all_spans(
     # Stage 2: Normalized matches (always run to catch case-variant occurrences)
     normalized_matches = _find_all_normalized_matches(term, source_text)
     for start, end in normalized_matches:
-        # Avoid duplicates from stage 1 (exact match will also be found in normalized)
-        if not any(s.start == start and s.end == end for s in spans):
+        # Stage 1 found this occurrence already when the spans overlap; its span
+        # is kept (a normalized one can end elsewhere: "Moen®" ends before the ®).
+        if not any(e_start < end and start < e_end for e_start, e_end in exact_matches):
             spans.append(SourceSpan(quote=source_text[start:end], start=start, end=end))
 
     return spans
@@ -249,7 +251,7 @@ def _find_all_normalized_matches(term: str, source_text: str) -> list[tuple[int,
     normalized_term, _ = _normalize_with_offsets(term)
     if not normalized_term:
         return []
-    normalized_source, offsets = _normalize_with_offsets(source_text)
+    normalized_source, offsets = _normalize_source(source_text)
 
     matches: list[tuple[int, int]] = []
     pos = normalized_source.find(normalized_term)
@@ -299,6 +301,25 @@ def _find_fuzzy_match(quote: str, source_text: str, hint_start: int) -> bool:
                 return True
 
     return False
+
+
+@functools.lru_cache(maxsize=4)
+def _normalize_source(source_text: str) -> tuple[str, tuple[int, ...]]:
+    """
+    Normalize a whole source text once for all the lookups made in it.
+
+    Schema extraction looks up every concept, relationship and property in the
+    same source, and normalizing it is a pass in Python over every character,
+    so the last few sources are kept (see `_normalize_with_offsets`).
+
+    Args:
+        source_text: The source document text.
+
+    Returns:
+        (the normalized text, the offset in source_text of each of its characters)
+    """
+    normalized, offsets = _normalize_with_offsets(source_text)
+    return normalized, tuple(offsets)
 
 
 def _normalize_with_offsets(text: str) -> tuple[str, list[int]]:
