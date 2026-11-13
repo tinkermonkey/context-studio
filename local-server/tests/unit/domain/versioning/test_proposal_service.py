@@ -66,6 +66,18 @@ class RunTagRecorder:
         self.tags.append((type(event).__name__, get_current_batch_run_id()))
 
 
+class CountingProposalRepository(FakeChangeProposalRepository):
+    """Counts reads of a whole proposal: each loads every one of its operations."""
+
+    def __init__(self):
+        super().__init__()
+        self.gets = 0
+
+    def get(self, proposal_id):
+        self.gets += 1
+        return super().get(proposal_id)
+
+
 @pytest.fixture()
 def publisher():
     return FakeEventPublisher()
@@ -565,6 +577,49 @@ class TestApply:
         assert rel.source_run_id == proposal.id
         holds = ontology.get_property_definition(result[8].result_entity_id)
         assert holds.external_references[0].identifier == "y"
+
+    def test_apply_does_not_read_the_proposal_again_for_each_operation(
+        self, ontology, repo, reverter, graph
+    ):
+        proposals = CountingProposalRepository()
+        service = ProposalService(proposals, ontology, repo, reverter)
+        types = range(2, 8)
+        proposal = propose(
+            service,
+            graph,
+            draft(1, T.CREATE, K.PREDICATE, identifier="holds", title="holds"),
+            *(
+                draft(
+                    seq,
+                    T.CREATE,
+                    K.PROPERTY,
+                    identifier=f"holds_{seq}",
+                    title=f"holds {seq}",
+                    canonical_predicate="holds",
+                )
+                for seq in types
+            ),
+            draft(8, T.UPDATE, K.PROPERTY, graph["near"], title="near to"),
+        )
+        proposals.gets = 0
+        service.apply(proposal.id, ids(proposal, 1))
+        reads_for_one = proposals.gets
+        proposals.gets = 0
+
+        result = by_seq(service.apply(proposal.id, ids(proposal, *types, 8)))
+
+        assert {o.status for o in result.values()} == {OperationStatus.APPLIED}, {
+            s: o.reason for s, o in result.items()
+        }
+        # An apply reads the proposal as often for seven operations as for one.
+        assert proposals.gets == reads_for_one
+        # Each still gets the proposal's taxonomy: the predicate lands in its catalog,
+        # and the types (no domain, no range) find their predicate there.
+        holds = repo.get_predicate_by_identifier(graph["taxonomy"], "holds")
+        assert holds is not None and holds.id == result[1].result_entity_id
+        for seq in types:
+            created = ontology.get_property_definition(result[seq].result_entity_id)
+            assert created.predicate_id == holds.id
 
     def test_an_ontology_error_fails_only_that_operation(self, service, graph):
         proposal = propose(
