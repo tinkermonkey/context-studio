@@ -10,7 +10,9 @@ of the same class found in several chunks becomes one candidate.
 Individuals are matched by their `LabelKeys` key among every individual
 label of the source (#1575), so "screws (D)" and "Screw", or "Moen Inc." and
 "Moen", are the same individual, shown by its preferred label; "Screw (B)" and
-"Screw (D)" stay two.
+"Screw (D)" stay two, and so do a name and the same name with a corporate
+suffix that the source's typing triples type with different classes
+("Wikimedia Enterprise" a product, "Wikimedia Enterprise LLC" a business).
 """
 
 from __future__ import annotations
@@ -19,6 +21,7 @@ import copy
 from typing import Any, Sequence
 
 from domain.extraction.chunking import Chunk, page_of
+from domain.extraction.services import is_typing_triple
 from domain.pipelines.candidate_ids import mention_key
 from domain.pipelines.individual_extraction.labels import LabelKeys
 
@@ -60,11 +63,10 @@ def merge_chunk_triples(
         The merged triples
     """
     starts = list(page_starts or [])
+    every_triple = [triple for _, triples in chunk_triples for triple in triples]
     keys = LabelKeys(
-        str(node["label"])
-        for _, triples in chunk_triples
-        for triple in triples
-        for node in _individual_nodes(triple)
+        (str(node["label"]) for triple in every_triple for node in _individual_nodes(triple)),
+        typed=(typing for triple in every_triple if (typing := _typing(triple)) is not None),
     )
     merged: dict[tuple, dict[str, Any]] = {}
     # Individual key -> (titles of recognized individuals, every label found)
@@ -156,6 +158,14 @@ def _individual_nodes(triple: dict[str, Any]) -> list[dict[str, Any]]:
         for node in (triple.get("subject"), triple.get("object"))
         if isinstance(node, dict) and node.get("kind") == "individual" and node.get("label")
     ]
+
+
+def _typing(triple: dict[str, Any]) -> tuple[str, str] | None:
+    """A typing triple's individual label and the class it names (as triples match), else None."""
+    subject, obj = triple.get("subject"), triple.get("object") or {}
+    if not is_typing_triple(triple) or not any(n is subject for n in _individual_nodes(triple)):
+        return None
+    return str(subject["label"]), mention_key(str(obj.get("label") or ""))
 
 
 def _collect_labels(

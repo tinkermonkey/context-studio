@@ -83,11 +83,17 @@ class MockLLMProvider:
         else:
             # Normal responses for working stages
             if stage == "disambiguation":
-                # Stage 6: Disambiguation - handle multi-sense terms
+                # Stage 6: Disambiguation - handle multi-sense terms; a sense
+                # counts only with a quote found in the text (the last has none)
                 content = (
                     '{"ambiguous_terms": '
-                    '[{"term": "Service", "senses": '
-                    '["Microservice instance", "Web service", "Business service"], '
+                    '[{"term": "Service", "senses": ['
+                    '{"qualifier": "Microservice instance", '
+                    '"quote": "a small, independent service"}, '
+                    '{"qualifier": "Web service", '
+                    '"quote": "Services communicate with each other"}, '
+                    '{"qualifier": "Business service", '
+                    '"quote": "a service the business sells"}], '
                     '"rationale": "Service has multiple meanings in different contexts"}]'
                     "}"
                 )
@@ -339,9 +345,16 @@ async def test_schema_extraction_disambiguation():
         len(disambiguated_candidates) > 0
     ), "Should have disambiguated candidates for multi-sense terms"
 
+    # Only the senses whose quotes are in the text become candidates
+    assert [c["label"] for c in disambiguated_candidates] == [
+        "Service (Microservice instance)",
+        "Service (Web service)",
+    ]
     for candidate in disambiguated_candidates:
         assert "disambiguation_rationale" in candidate
         assert isinstance(candidate["disambiguation_rationale"], str)
+        [span] = candidate["provenance"]
+        assert source_text[span["start"] : span["end"]] == span["quote"]
 
 
 @pytest.mark.asyncio

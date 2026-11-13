@@ -1,16 +1,24 @@
 """
 Apply service for schema extraction pipeline.
 
-Converts CandidateClass and CandidatePropertyDefinition outputs from a completed
-schema extraction run into DRAFT ontology entities (Class, PropertyDefinition, Relationship)
-created via OntologyService, so each creation publishes its domain event and is
-recorded as a ChangeEvent that the run's revert can undo.
+Converts CandidateClass, CandidateAttribute and CandidatePropertyDefinition outputs
+from a completed schema extraction run into DRAFT ontology entities (Class,
+AttributeDefinition, PropertyDefinition, Relationship) created via OntologyService, so
+each creation publishes its domain event and is recorded as a ChangeEvent that the
+run's revert can undo.
+
+A new class takes its ``proposed_parent`` (#1570) as parent when that class exists or
+is created by the same apply (parents are created first) and is in the new class's
+scheme; otherwise it is top-level. An attribute candidate becomes an attribute of the
+class it describes (``of``), existing or created by the same apply; without one it is
+skipped (``no_class``).
 
 Idempotent: applying the same run twice produces no duplicates. Deduplication is
 content-based (class title anywhere in the taxonomy, compared by ``class_title_key``;
-identifier for property definitions; source+target+property triple for relationships).
-A property candidate whose identifier a class, scheme or taxonomy already has is
-skipped (``identifier_taken``): identifiers are unique across every kind of entity.
+identifier for attributes within their class and for property definitions;
+source+target+property triple for relationships). A property candidate whose identifier
+a class, scheme or taxonomy already has is skipped (``identifier_taken``): identifiers
+are unique across every kind of entity.
 """
 
 from __future__ import annotations
@@ -20,7 +28,7 @@ import re
 from typing import TYPE_CHECKING
 
 from domain.ontology.exceptions import DomainRangeMismatchError, DuplicateEntityError
-from domain.ontology.value_objects import validate_identifier
+from domain.ontology.value_objects import DataType, validate_identifier
 from domain.pipelines.apply_result import ApplyResult, SkipReason
 from domain.pipelines.apply_selection import check_accepted_ids
 from domain.pipelines.candidate_ids import (
@@ -31,6 +39,10 @@ from domain.pipelines.candidate_ids import (
 _logger = logging.getLogger(__name__)
 
 MAX_IDENTIFIER_CHARS = 64
+# The datatypes an attribute candidate may have (a class attribute holding one value)
+ATTRIBUTE_DATATYPES: tuple[str, ...] = tuple(
+    t.value for t in DataType if t not in (DataType.ARRAY, DataType.OBJECT)
+)
 
 if TYPE_CHECKING:
     from domain.ontology.entities import Class
@@ -81,6 +93,67 @@ def class_identifier(title: str, repo: "OntologyRepository", taken: set[str]) ->
     return identifier
 
 
+def attribute_identifier(label: str) -> str | None:
+    """
+    An attribute candidate's identifier: its label slugified ("Indoor Humidity"
+    -> "indoor_humidity"), prefixed "attr_" when that isn't a valid identifier;
+    None for a label with nothing to slugify. Attribute identifiers are unique
+    only within their class.
+    """
+    base = slugify(label)[:MAX_IDENTIFIER_CHARS]
+    if not base:
+        return None
+    try:
+        return validate_identifier(base)
+    except ValueError:
+        return f"attr_{base}"[:MAX_IDENTIFIER_CHARS]
+
+
+def attribute_datatype(candidate: dict) -> str:
+    """An attribute candidate's value_type as a datatype; "string" when unknown."""
+    value_type = str(candidate.get("value_type") or "")
+    return value_type if value_type in ATTRIBUTE_DATATYPES else DataType.STRING.value
+
+
+def attribute_description(candidate: dict) -> str | None:
+    """An attribute candidate's definition, with its unit when it has one."""
+    definition = str(candidate.get("proposed_definition") or "").strip()
+    unit = str(candidate.get("unit") or "").strip()
+    if unit:
+        definition = f"{definition} Unit: {unit}.".strip()
+    return definition or None
+
+
+def ordered_parents_first(candidates: "list[dict]") -> "list[dict]":
+    """
+    Class candidates reordered so a candidate named as another's
+    ``proposed_parent`` comes before it; otherwise in their order. A cycle is
+    broken where it closes (that child comes first and its parent can't be
+    resolved when it is created).
+    """
+    by_key: dict[str, dict] = {}
+    for candidate in candidates:
+        by_key.setdefault(class_title_key(candidate.get("label")), candidate)
+    ordered: list[dict] = []
+    placed: set[int] = set()
+    visiting: set[int] = set()
+
+    def visit(candidate: dict) -> None:
+        if id(candidate) in placed or id(candidate) in visiting:
+            return
+        visiting.add(id(candidate))
+        parent = by_key.get(class_title_key(candidate.get("proposed_parent")))
+        if parent is not None:
+            visit(parent)
+        visiting.discard(id(candidate))
+        placed.add(id(candidate))
+        ordered.append(candidate)
+
+    for candidate in candidates:
+        visit(candidate)
+    return ordered
+
+
 def taxonomy_classes(repo: "OntologyRepository", taxonomy_id: str) -> "list[Class]":
     """
     Every class in a taxonomy, scheme by scheme, oldest scheme first.
@@ -111,14 +184,14 @@ class SchemaExtractionApplyService:
     """
     Materializes schema extraction pipeline output into ontology entities.
 
-    Creates Class, PropertyDefinition, and Relationship entities (DRAFT status) through
-    OntologyService with source_run_id set to the originating pipeline run ID. Reads
-    used for deduplication go through the OntologyRepository port.
+    Creates Class, AttributeDefinition, PropertyDefinition and Relationship entities
+    (DRAFT status) through OntologyService with source_run_id set to the originating
+    pipeline run ID. Reads used for deduplication go through the OntologyRepository port.
 
-    NOTE: This service performs multiple sequential writes (classes, then property
-    definitions, then relationships). If a write fails mid-apply, earlier writes are
-    already persisted with no rollback; they are recorded as ChangeEvents, so reverting
-    the run removes them.
+    NOTE: This service performs multiple sequential writes (classes, then attributes,
+    then property definitions, then relationships). If a write fails mid-apply, earlier
+    writes are already persisted with no rollback; they are recorded as ChangeEvents,
+    so reverting the run removes them.
     """
 
     def __init__(
@@ -148,10 +221,11 @@ class SchemaExtractionApplyService:
             confidence_threshold: Minimum confidence to include a candidate (0.0–1.0).
                 Ignored when ``accepted_candidate_ids`` is given.
             accepted_candidate_ids: Explicit reviewer selection of ``class-{i}``,
-                ``property-{i}`` and ``connection-{i}`` ids; when given it is the
-                full selection — everything else is skipped regardless of
-                confidence. An accepted connection whose endpoint class was not
-                accepted (and does not already exist) is skipped.
+                ``property-{i}``, ``attribute-{i}`` and ``connection-{i}`` ids; when
+                given it is the full selection — everything else is skipped
+                regardless of confidence. An accepted connection whose endpoint
+                class was not accepted (and does not already exist) is skipped, as
+                is an accepted attribute whose class was not.
 
         Returns:
             ApplyResult with counts of created and skipped entities. Selected
@@ -172,8 +246,7 @@ class SchemaExtractionApplyService:
                 raise ValueError(f"Concept scheme {concept_scheme_id} not found")
             if scheme.taxonomy_id != taxonomy_id:
                 raise ValueError(
-                    f"Concept scheme {concept_scheme_id} does not belong to taxonomy "
-                    f"{taxonomy_id}"
+                    f"Concept scheme {concept_scheme_id} does not belong to taxonomy {taxonomy_id}"
                 )
 
         result = ApplyResult()
@@ -199,10 +272,12 @@ class SchemaExtractionApplyService:
         # --- Classes ---
         # Title key -> id across the taxonomy, for existing and newly created
         # classes alike (used for dedup and for resolving connection endpoints).
+        existing_classes = taxonomy_classes(self._repo, taxonomy_id)
         class_title_to_id: dict[str, str] = {
-            key: c.id
-            for key, c in class_title_index(taxonomy_classes(self._repo, taxonomy_id)).items()
+            key: c.id for key, c in class_title_index(existing_classes).items()
         }
+        # Class id -> its scheme: a new class takes a parent only in its own scheme
+        class_scheme: dict[str, str] = {c.id: c.concept_scheme_id for c in existing_classes}
 
         # Identifiers are unique across classes and relationship types, so the
         # selected property candidates' slugs are reserved before any class
@@ -214,7 +289,12 @@ class SchemaExtractionApplyService:
             and _is_selected(cid, c.get("confidence", 0.0))
         }
 
+        # Parents before their children, so a parent created here is found
         class_candidates = [(cid, c) for cid, c in candidates if c.get("kind") == "class"]
+        order = {
+            id(c): n for n, c in enumerate(ordered_parents_first([c for _, c in class_candidates]))
+        }
+        class_candidates.sort(key=lambda pair: order[id(pair[1])])
         for candidate_id, candidate in class_candidates:
             label = candidate.get("label", "").strip()
             confidence = candidate.get("confidence", 0.0)
@@ -236,16 +316,65 @@ class SchemaExtractionApplyService:
                 raise ValueError("Choose a concept scheme for the new classes")
             identifier = class_identifier(label, self._repo, taken)
             taken.add(identifier)
+            parent_id = class_title_to_id.get(class_title_key(candidate.get("proposed_parent")))
+            if parent_id and class_scheme.get(parent_id) != concept_scheme_id:
+                _logger.info(
+                    "Class candidate %r stays top-level: its parent %r is in another scheme",
+                    label,
+                    candidate.get("proposed_parent"),
+                )
+                parent_id = None
             new_class = self._ontology_service.create_class(
                 concept_scheme_id=concept_scheme_id,
                 title=label,
                 description=candidate.get("proposed_definition"),
                 source_run_id=run.id,
                 identifier=identifier,
+                parent_class_id=parent_id,
             )
             class_title_to_id[class_title_key(label)] = new_class.id
+            class_scheme[new_class.id] = concept_scheme_id
             result.classes_created += 1
             result.created_class_ids.append(new_class.id)
+            result.applied_candidate_ids.append(candidate_id)
+
+        # --- Attributes ---
+        # On the class each describes: one that existed or was just created
+        for candidate_id, candidate in candidates:
+            if candidate.get("kind") != "attribute":
+                continue
+            label = (candidate.get("label") or "").strip()
+            identifier = attribute_identifier(label)
+            if not _is_selected(candidate_id, candidate.get("confidence", 0.0)):
+                result.attributes_skipped += 1
+                result.skip(candidate_id, unselected_reason)
+                continue
+            if not identifier:
+                result.attributes_skipped += 1
+                result.skip(candidate_id, "invalid")
+                continue
+            class_id = class_title_to_id.get(class_title_key(candidate.get("of")))
+            if not class_id:
+                result.attributes_skipped += 1
+                result.skip(candidate_id, "no_class")
+                continue
+            if any(
+                a.identifier == identifier
+                for a in self._repo.list_attribute_definitions(class_id=class_id, limit=None)
+            ):
+                result.attributes_skipped += 1
+                _already_present(candidate_id)
+                continue
+            new_attribute = self._ontology_service.create_attribute_definition(
+                class_id=class_id,
+                identifier=identifier,
+                title=label,
+                datatype=attribute_datatype(candidate),
+                description=attribute_description(candidate),
+                source_run_id=run.id,
+            )
+            result.attributes_created += 1
+            result.created_attribute_definition_ids.append(new_attribute.id)
             result.applied_candidate_ids.append(candidate_id)
 
         # --- Property Definitions ---

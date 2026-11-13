@@ -278,6 +278,7 @@ const SKIP_REASON_LABEL: Record<string, string> = {
   invalid: "refused as invalid",
   no_scheme: "no concept scheme",
   identifier_taken: "identifier already in use",
+  no_class: "no class to put it on",
   // Operations the proposal service refused (refused_operations), when the run lists them.
   refused: "refused",
 };

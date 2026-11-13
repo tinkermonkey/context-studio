@@ -699,3 +699,69 @@ def entity_key_clusters(mentions: list[dict]) -> set[frozenset[str]]:
     for mention in mentions:
         clusters.setdefault(mention["node_id"], set()).add(mention["entity_key"])
     return {frozenset(entity_keys) for entity_keys in clusters.values()}
+
+
+# ---------------------------------------------------------------------------
+# Schema structure (#1570): where new classes sit, and what should not be a
+# class at all. Callers pass comparable label keys (normalized the way their
+# suite compares labels), so these stay plain set arithmetic.
+# ---------------------------------------------------------------------------
+
+# A trailing parenthesized qualifier, as in "Cooling System (Functional Category)"
+_SENSE_QUALIFIER = re.compile(r"\s*\([^()]*\)\s*$")
+
+
+def sense_base(label: str) -> str:
+    """
+    A class label without its trailing sense qualifier.
+
+    "Cooling System (Functional Category)" -> "Cooling System". A label with
+    no qualifier is returned as it is.
+    """
+    return _SENSE_QUALIFIER.sub("", label or "")
+
+
+def sense_duplicate_count(labels: list[str]) -> int:
+    """
+    How many class labels repeat a term another label already names.
+
+    Labels are compared by their `sense_base`, lemma/stem-normalized, so
+    "Heat Pump", "Heat Pump (Device)" and "Heat Pumps" are one term proposed
+    three times: a count of 2. Zero when each term is proposed once.
+    """
+    bases = [normalize_label(sense_base(label)) for label in labels if sense_base(label)]
+    return len(bases) - len(set(bases))
+
+
+def forbidden_label_hits(forbidden: list[str], actual: list[str]) -> list[str]:
+    """
+    The actual class labels the gold says must not be classes, sorted, each once.
+
+    For what a text should not yield as a class: measurements (they are
+    attributes) and warranty, safety or legal terms.
+    """
+    return sorted(set(forbidden) & set(actual))
+
+
+def parent_accuracy(
+    expected_parents: dict[str, set[str]], actual_parents: dict[str, Optional[str]]
+) -> float:
+    """
+    Of the classes that have an expected parent and were extracted, the share
+    placed under one of the parents the gold accepts.
+
+    Args:
+        expected_parents: Class label -> the parent labels accepted for it
+        actual_parents: Extracted class label -> the parent it was placed
+            under, or None for a top-level class
+
+    Returns:
+        Accuracy in [0, 1]; 1.0 (vacuously) when no class with an expected
+        parent was extracted, so a missed class is not counted twice (class
+        recall already counts it).
+    """
+    scored = [label for label in expected_parents if label in actual_parents]
+    if not scored:
+        return 1.0
+    correct = sum(1 for label in scored if actual_parents[label] in expected_parents[label])
+    return round(correct / len(scored), 4)

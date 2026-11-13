@@ -159,6 +159,7 @@ class TestSchemaExtractionStagePrompts:
         assert [s.key for s in SCHEMA_EXTRACTION_STAGES] == [
             "candidate_identification",
             "definition_synthesis",
+            "placement",
             "connection_proposal",
             "disambiguation",
         ]

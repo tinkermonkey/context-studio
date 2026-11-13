@@ -22,6 +22,11 @@ Metric floors (enforced only for GATED_SCENARIOS):
 Every scenario currently in the corpus is in DIAGNOSTIC_SCENARIOS: its metrics
 are computed and emitted on every run but do not gate, and the test asserts
 only that the pipeline completes and proposes classes. See that constant.
+
+Structure metrics (#1570), emitted only for scenarios whose gold opts in (see
+compute_structure_metrics): parent_accuracy, attribute_recall,
+forbidden_class_count and sense_duplicate_count. A scenario whose input.json
+lists `existing_classes` runs against a taxonomy seeded with them.
 """
 
 import json
@@ -36,6 +41,10 @@ from sqlalchemy.orm import sessionmaker
 
 from adapters.events.in_process import InProcessEventPublisher
 from adapters.llm.provider_router import LLMProviderRouter
+from adapters.persistence.sqlite.connection import (
+    create_local_db_engine,
+    create_session_factory,
+)
 from adapters.persistence.sqlite.extraction_repo import SQLiteExtractionRepository
 from adapters.persistence.sqlite.extraction_run_repo import (
     SQLiteExtractionRunRepository,
@@ -58,6 +67,7 @@ from domain.pipelines.schema_extraction import (
 )
 from domain.pipelines.schema_extraction.apply_service import (
     SchemaExtractionApplyService,
+    taxonomy_classes,
 )
 from tests.fakes.fake_embedding_service import FakeEmbeddingService
 from tests.fakes.fake_event_publisher import FakeEventPublisher
@@ -74,7 +84,12 @@ from tests.integration.pipelines._harness.cassettes import (
 )
 from tests.integration.pipelines._harness.metrics import (
     brier_score,
+    forbidden_label_hits,
     jaccard_similarity,
+    parent_accuracy,
+    precision_recall_f1,
+    sense_base,
+    sense_duplicate_count,
 )
 from tests.integration.pipelines._harness.report import FloorGate, MetricsEmitter
 
@@ -105,8 +120,24 @@ QUALITY_SCENARIOS = [
 # sits at 0.2-0.4. They are kept as an always-reported diagnostic group: metrics
 # are emitted every run (split="diagnostic") but never gate. A scenario moves to
 # GATED_SCENARIOS once it has SME-authored ground truth sized to the text.
-DIAGNOSTIC_SCENARIOS: frozenset[str] = frozenset(QUALITY_SCENARIOS)
-GATED_SCENARIOS: frozenset[str] = frozenset(QUALITY_SCENARIOS) - DIAGNOSTIC_SCENARIOS
+#
+# Home-appliance documents (#1570): a heat pump maintenance page, a hand shower
+# installation sheet (a three-page source) and a water heater care page. Their
+# gold also says where each class belongs among the seeded `existing_classes`,
+# which measurements are attributes, and which labels must not be classes (see
+# compute_structure_metrics). Kept out of QUALITY_SCENARIOS, which the open_v1
+# baseline and scripts/quality_loop.py also iterate. Diagnostic until the
+# placement and sense-collapsing work lands and their gold is reviewed; with no
+# cassette recorded yet, cassette mode skips them (quality_llm_provider_factory).
+APPLIANCE_SCENARIOS = [
+    "home_hand_shower_installation",
+    "home_heat_pump_maintenance",
+    "home_water_heater_care",
+]
+ALL_SCENARIOS = QUALITY_SCENARIOS + APPLIANCE_SCENARIOS
+
+DIAGNOSTIC_SCENARIOS: frozenset[str] = frozenset(ALL_SCENARIOS)
+GATED_SCENARIOS: frozenset[str] = frozenset(ALL_SCENARIOS) - DIAGNOSTIC_SCENARIOS
 
 # Metric floors for schema extraction quality
 METRIC_FLOORS = {
@@ -187,10 +218,117 @@ def extract_confidence(item: dict, default: float = 0.5) -> float:
     return item.get("confidence", default)
 
 
+# Where a class candidate may carry its placement and its attributes. The
+# pipeline does not emit either yet (#1570 adds them); these name the shapes the
+# structure metrics read, so the placement work only has to match one of them.
+_PARENT_KEYS = ("proposed_parent", "parent", "parent_label")
+_NESTED_ATTRIBUTE_KEYS = ("proposed_attributes", "attributes")
+_ATTRIBUTE_KINDS = ("attribute", "attribute_definition")
+
+
+def _candidate_parent(candidate: dict) -> str | None:
+    """The label of the class a class candidate was placed under, or None."""
+    for key in _PARENT_KEYS:
+        value = candidate.get(key)
+        if isinstance(value, dict):
+            value = value.get("label")
+        if isinstance(value, str) and value.strip():
+            return value
+    return None
+
+
+def _attribute_labels(candidates: list[dict]) -> list[str]:
+    """
+    Normalized labels of every attribute the run proposed: attribute candidates,
+    and attributes listed on a class candidate.
+    """
+    labels = [c.get("label") for c in candidates if c.get("kind") in _ATTRIBUTE_KINDS]
+    for candidate in candidates:
+        if candidate.get("kind") != "class":
+            continue
+        for key in _NESTED_ATTRIBUTE_KEYS:
+            for item in candidate.get(key) or []:
+                labels.append(item.get("label") if isinstance(item, dict) else item)
+    return [normalize_label(label) for label in labels if isinstance(label, str) and label]
+
+
+def _expected_parent_labels(parent: str | list[str]) -> set[str]:
+    """A gold class's accepted parents: one label or a list of them, normalized."""
+    parents = [parent] if isinstance(parent, str) else parent
+    return {normalize_label(p) for p in parents}
+
+
+def compute_structure_metrics(
+    expected_result: dict, actual_classes: list[dict], actual_candidates: list[dict]
+) -> dict:
+    """
+    Schema structure metrics (#1570), for gold that opts in. `actual_classes`
+    are the run's class candidates to score; `actual_candidates` all of its
+    candidates, where attribute candidates are found.
+
+    Gold opts in with a `forbidden_class_labels` list, or with `parent` or
+    `attributes` on an expected class. Then:
+
+    - parent_accuracy: of the expected classes with a `parent` that were
+      extracted, the share placed under it (or under one of a list of parents)
+    - attribute_recall: share of the expected classes' `attributes` the run
+      proposed as attributes, by label (whatever class it attached them to)
+    - forbidden_class_count: classes whose label, without a sense qualifier,
+      is on the forbidden list (measurements, warranty and safety junk)
+    - sense_duplicate_count: classes repeating a term another class names,
+      such as "Cooling System (Functional Category)" beside "Cooling System"
+
+    Returns {} for gold that does not opt in, so other scenarios' rows are unchanged.
+    """
+    expected_classes = expected_result.get("extracted_classes", [])
+    forbidden = expected_result.get("forbidden_class_labels")
+    with_parent = [c for c in expected_classes if c.get("parent")]
+    expected_attributes = [
+        normalize_label(attribute)
+        for c in expected_classes
+        for attribute in c.get("attributes") or []
+    ]
+    if forbidden is None and not with_parent and not expected_attributes:
+        return {}
+
+    metrics: dict = {}
+    if with_parent:
+        actual_parents: dict[str, str | None] = {}
+        for candidate in actual_classes:
+            parent = _candidate_parent(candidate)
+            actual_parents.setdefault(
+                normalize_label(candidate.get("label", "")),
+                normalize_label(parent) if parent else None,
+            )
+        metrics["parent_accuracy"] = parent_accuracy(
+            {
+                normalize_label(c["label"]): _expected_parent_labels(c["parent"])
+                for c in with_parent
+            },
+            actual_parents,
+        )
+    if expected_attributes:
+        actual_attributes = _attribute_labels(actual_candidates)
+        metrics["attribute_recall"] = precision_recall_f1(
+            expected_attributes, actual_attributes
+        ).recall
+    labels = [c.get("label", "") for c in actual_classes if c.get("label")]
+    hits = forbidden_label_hits(
+        [normalize_label(label) for label in forbidden or []],
+        [normalize_label(sense_base(label)) for label in labels],
+    )
+    if hits:
+        _logger.info(f"Forbidden classes proposed: {hits}")
+    metrics["forbidden_class_count"] = len(hits)
+    metrics["sense_duplicate_count"] = sense_duplicate_count(labels)
+    return metrics
+
+
 def compute_quality_metrics(
     expected_output: dict,
     actual_output: dict,
     distractors: dict | None = None,
+    existing_class_labels: list[str] | None = None,
 ) -> dict:
     """
     Compute quality metrics for schema extraction.
@@ -199,8 +337,11 @@ def compute_quality_metrics(
         expected_output: Expected output from fixture
         actual_output: Actual output from pipeline
         distractors: Optional distractor dict with off-topic classes/properties
+        existing_class_labels: Classes already in the run's taxonomy; class
+            candidates that echo one are left out of every class score
 
-    Returns dict with keys: class_jaccard, property_jaccard, connection_overlap, brier.
+    Returns dict with keys: class_jaccard, property_jaccard, connection_overlap,
+    brier, and the compute_structure_metrics keys when the gold opts in.
     """
     distractors = distractors or {}
     expected_result = expected_output.get("result", {})
@@ -217,7 +358,12 @@ def compute_quality_metrics(
     actual_connections = actual_result.get("connections", [])
 
     # Split candidates into classes and properties
-    actual_classes = [c for c in actual_candidates if c.get("kind") == "class"]
+    existing_keys = {normalize_label(label) for label in existing_class_labels or []}
+    actual_classes = [
+        c
+        for c in actual_candidates
+        if c.get("kind") == "class" and normalize_label(c.get("label", "")) not in existing_keys
+    ]
     actual_properties = [c for c in actual_candidates if c.get("kind") == "property_definition"]
 
     # Convert connections to relationship format for comparison
@@ -276,7 +422,54 @@ def compute_quality_metrics(
         "property_jaccard": property_jaccard,
         "connection_overlap": connection_overlap,
         "brier": brier,
+        **compute_structure_metrics(expected_result, actual_classes, actual_candidates),
     }
+
+
+def _pipeline_input(fixture_input: dict) -> dict:
+    """
+    The run input for a fixture: its text as the one document, and without
+    `existing_classes` (those are seeded into the taxonomy, not passed in).
+    """
+    pipeline_input = {k: v for k, v in fixture_input.items() if k != "existing_classes"}
+    if "text" in pipeline_input and "documents" not in pipeline_input:
+        pipeline_input["documents"] = [pipeline_input.pop("text")]
+    return pipeline_input
+
+
+def _seed_existing_classes(taxonomy_id: str, labels: list[str]) -> SQLiteOntologyRepository:
+    """An in-memory ontology whose taxonomy `taxonomy_id` holds a class per label."""
+    engine = create_local_db_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    repo = SQLiteOntologyRepository(create_session_factory(engine))
+    repo.save_taxonomy(
+        Taxonomy(
+            id=taxonomy_id,
+            identifier="house",
+            title="House",
+            description="Existing classes for a schema extraction quality scenario",
+        )
+    )
+    scheme = ConceptScheme(
+        id=str(uuid4()),
+        identifier="house_scheme",
+        taxonomy_id=taxonomy_id,
+        title="House Scheme",
+        description="Existing classes for a schema extraction quality scenario",
+    )
+    repo.save_concept_scheme(scheme)
+    for label in labels:
+        repo.save_class(
+            Class(
+                id=str(uuid4()),
+                identifier=normalize_label(label),
+                concept_scheme_id=scheme.id,
+                taxonomy_id=taxonomy_id,
+                title=label,
+                description=f"A {label.lower()}",
+            )
+        )
+    return repo
 
 
 @pytest.fixture
@@ -399,7 +592,7 @@ class TestQualitySchemaExtraction:
     """Quality test suite for schema_extraction pipeline."""
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("scenario", QUALITY_SCENARIOS)
+    @pytest.mark.parametrize("scenario", ALL_SCENARIOS)
     async def test_quality_scenario_with_metrics(
         self,
         scenario: str,
@@ -431,20 +624,21 @@ class TestQualitySchemaExtraction:
         # If it's a recording provider, we need to flush it after execution
         is_recording = isinstance(quality_provider, RecordingLLMProvider)
 
-        orchestrator = SchemaExtractionOrchestrator(
-            llm_provider=quality_provider,
-            ontology_repo=None,
-        )
-
         # Load fixture
         fixture_input = load_fixture("schema_extraction", scenario)
         expected_output = load_expected_output("schema_extraction", scenario)
         distractors = load_distractors("schema_extraction", scenario) or {}
+        existing_classes = fixture_input.get("existing_classes") or []
+        pipeline_input = _pipeline_input(fixture_input)
 
-        # Convert input format: wrap text in documents array if needed
-        pipeline_input = fixture_input.copy()
-        if "text" in pipeline_input and "documents" not in pipeline_input:
-            pipeline_input["documents"] = [pipeline_input.pop("text")]
+        orchestrator = SchemaExtractionOrchestrator(
+            llm_provider=quality_provider,
+            ontology_repo=(
+                _seed_existing_classes(fixture_input["ontology_id"], existing_classes)
+                if existing_classes
+                else None
+            ),
+        )
 
         # Run pipeline
         state = SchemaExtractionState(
@@ -465,7 +659,9 @@ class TestQualitySchemaExtraction:
         }
 
         # Compute quality metrics
-        metrics = compute_quality_metrics(expected_output, actual_output, distractors)
+        metrics = compute_quality_metrics(
+            expected_output, actual_output, distractors, existing_classes
+        )
 
         # Log metrics for debugging
         _logger.info(f"Schema extraction metrics for {scenario}: {metrics}")
@@ -609,7 +805,7 @@ class TestQualitySchemaExtraction:
 
     @pytest.mark.real_llm
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("scenario", QUALITY_SCENARIOS)
+    @pytest.mark.parametrize("scenario", ALL_SCENARIOS)
     async def test_live_quality_scenario(
         self,
         scenario: str,
@@ -659,20 +855,21 @@ class TestQualitySchemaExtraction:
         except ValueError as e:
             pytest.skip(f"LLM provider initialization failed: {e}")
 
-        orchestrator = SchemaExtractionOrchestrator(
-            llm_provider=llm_provider,
-            ontology_repo=ontology_repo,
-        )
-
         # Load fixture
         fixture_input = load_fixture("schema_extraction", scenario)
         expected_output = load_expected_output("schema_extraction", scenario)
         distractors = load_distractors("schema_extraction", scenario) or {}
+        existing_classes = fixture_input.get("existing_classes") or []
+        pipeline_input = _pipeline_input(fixture_input)
 
-        # Convert input format: wrap text in documents array if needed
-        pipeline_input = fixture_input.copy()
-        if "text" in pipeline_input and "documents" not in pipeline_input:
-            pipeline_input["documents"] = [pipeline_input.pop("text")]
+        orchestrator = SchemaExtractionOrchestrator(
+            llm_provider=llm_provider,
+            ontology_repo=(
+                _seed_existing_classes(fixture_input["ontology_id"], existing_classes)
+                if existing_classes
+                else ontology_repo
+            ),
+        )
 
         # Run pipeline with real LLM
         state = SchemaExtractionState(
@@ -699,7 +896,9 @@ class TestQualitySchemaExtraction:
             cassette_path.write_text(json.dumps(cassette_data, indent=2))
 
         # Compute quality metrics
-        metrics = compute_quality_metrics(expected_output, actual_output, distractors)
+        metrics = compute_quality_metrics(
+            expected_output, actual_output, distractors, existing_classes
+        )
 
         # Log metrics for debugging
         _logger.info(f"Schema extraction metrics for {scenario}: {metrics}")
@@ -779,3 +978,76 @@ class TestQualityHarness:
             _assert_quality(scenario, {"status": "completed", "result": {"candidates": []}}, low)
         with pytest.raises(AssertionError, match="did not complete"):
             _assert_quality(scenario, {"status": "failed", "result": {}}, low)
+
+    def test_appliance_scenarios_are_diagnostic_and_have_fixtures(self):
+        for scenario in APPLIANCE_SCENARIOS:
+            assert scenario in DIAGNOSTIC_SCENARIOS and scenario not in GATED_SCENARIOS
+            fixture_input = load_fixture("schema_extraction", scenario)
+            expected = load_expected_output("schema_extraction", scenario)["result"]
+            assert fixture_input["existing_classes"] and fixture_input["ontology_id"]
+            assert expected["forbidden_class_labels"]
+            # No expected class is also forbidden, and none repeats a term
+            labels = [c["label"] for c in expected["extracted_classes"]]
+            forbidden = {normalize_label(label) for label in expected["forbidden_class_labels"]}
+            assert not {normalize_label(label) for label in labels} & forbidden, scenario
+            assert sense_duplicate_count(labels) == 0, scenario
+            # Every expected parent is a seeded class or another expected class
+            known = {normalize_label(label) for label in labels + fixture_input["existing_classes"]}
+            for c in expected["extracted_classes"]:
+                if c.get("parent"):
+                    assert _expected_parent_labels(c["parent"]) <= known, (scenario, c)
+
+    def test_structure_metrics_only_for_gold_that_opts_in(self):
+        expected = {"result": {"extracted_classes": [{"label": "EventLoop"}]}}
+        actual = {"result": {"candidates": [{"kind": "class", "label": "Event Loop"}]}}
+        assert set(compute_quality_metrics(expected, actual)) == {
+            "class_jaccard",
+            "property_jaccard",
+            "connection_overlap",
+            "brier",
+        }
+
+    def test_structure_metrics(self):
+        expected = {
+            "result": {
+                "extracted_classes": [
+                    {"label": "Heat Pump", "parent": "Appliance", "attributes": ["Voltage"]},
+                    {"label": "Air Filter", "parent": ["Supply", "Part"]},
+                    {"label": "Thermostat", "attributes": ["Setpoint"]},
+                ],
+                "forbidden_class_labels": ["Voltage", "Indoor Humidity"],
+            }
+        }
+        actual = {
+            "result": {
+                "candidates": [
+                    {"kind": "class", "label": "Appliance"},
+                    {"kind": "class", "label": "Heat Pump", "proposed_parent": "Appliance"},
+                    {"kind": "class", "label": "Heat Pump (Device)"},
+                    {"kind": "class", "label": "Air Filter", "parent": None},
+                    {"kind": "class", "label": "Indoor Humidity (Measurement)"},
+                    {"kind": "class", "label": "Thermostat", "attributes": [{"label": "Setpoint"}]},
+                    {"kind": "attribute", "label": "voltage"},
+                ],
+            }
+        }
+        metrics = compute_quality_metrics(expected, actual, existing_class_labels=["Appliance"])
+        assert metrics["parent_accuracy"] == 0.5  # Heat Pump placed, Air Filter top-level
+        assert metrics["attribute_recall"] == 1.0  # a kind=attribute and a nested one
+        assert metrics["forbidden_class_count"] == 1  # Indoor Humidity, qualifier ignored
+        assert metrics["sense_duplicate_count"] == 1  # Heat Pump (Device)
+        # The echoed existing class "Appliance" is not counted as an extra class
+        assert metrics["class_jaccard"] == round(3 / 5, 4)
+
+    def test_existing_classes_are_seeded_into_the_run_taxonomy(self):
+        repo = _seed_existing_classes("house-ontology", ["Appliance", "Supply"])
+        assert {c.title for c in taxonomy_classes(repo, "house-ontology")} == {
+            "Appliance",
+            "Supply",
+        }
+
+    def test_pipeline_input_leaves_out_existing_classes(self):
+        pipeline_input = _pipeline_input(
+            {"text": "Some text.", "ontology_id": "t", "existing_classes": ["Appliance"]}
+        )
+        assert pipeline_input == {"documents": ["Some text."], "ontology_id": "t"}

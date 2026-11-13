@@ -1,0 +1,191 @@
+{
+  "status": "completed",
+  "result": {
+    "extracted_classes": [
+      {
+        "label": "Hand Shower",
+        "confidence": 0.85,
+        "parent": "Fixture",
+        "attributes": [
+          "Flow Rate",
+          "Maximum Water Pressure"
+        ]
+      },
+      {
+        "label": "Shower Head",
+        "confidence": 0.85,
+        "parent": "Fixture"
+      },
+      {
+        "label": "Shower Hose",
+        "confidence": 0.85,
+        "parent": "Part",
+        "attributes": [
+          "Hose Length"
+        ]
+      },
+      {
+        "label": "Slide Bar",
+        "confidence": 0.85,
+        "parent": "Part"
+      },
+      {
+        "label": "Wall Bracket",
+        "confidence": 0.85,
+        "parent": "Part"
+      },
+      {
+        "label": "Diverter",
+        "confidence": 0.85,
+        "parent": "Part"
+      },
+      {
+        "label": "Shower Arm",
+        "confidence": 0.85,
+        "parent": "Part"
+      },
+      {
+        "label": "Rubber Washer",
+        "confidence": 0.85,
+        "parent": "Part"
+      },
+      {
+        "label": "Mounting Screw",
+        "confidence": 0.85,
+        "parent": "Part"
+      },
+      {
+        "label": "Wall Anchor",
+        "confidence": 0.85,
+        "parent": "Part"
+      },
+      {
+        "label": "Drill",
+        "confidence": 0.85,
+        "parent": "Tool"
+      },
+      {
+        "label": "Masonry Bit",
+        "confidence": 0.85,
+        "parent": "Tool"
+      },
+      {
+        "label": "Adjustable Wrench",
+        "confidence": 0.85,
+        "parent": "Tool"
+      },
+      {
+        "label": "Phillips Screwdriver",
+        "confidence": 0.85,
+        "parent": "Tool"
+      },
+      {
+        "label": "Level",
+        "confidence": 0.85,
+        "parent": "Tool"
+      },
+      {
+        "label": "Plumber's Tape",
+        "confidence": 0.85,
+        "parent": "Supply"
+      },
+      {
+        "label": "White Vinegar",
+        "confidence": 0.85,
+        "parent": "Supply"
+      },
+      {
+        "label": "Installation",
+        "confidence": 0.85,
+        "parent": "Task"
+      },
+      {
+        "label": "Cleaning",
+        "confidence": 0.85,
+        "parent": "Task"
+      }
+    ],
+    "extracted_properties": [
+      {
+        "label": "connects to",
+        "confidence": 0.8
+      },
+      {
+        "label": "holds",
+        "confidence": 0.8
+      },
+      {
+        "label": "fastened with",
+        "confidence": 0.8
+      },
+      {
+        "label": "threads onto",
+        "confidence": 0.8
+      }
+    ],
+    "extracted_relationships": [
+      {
+        "subject_class": "Shower Hose",
+        "predicate": "connects to",
+        "object_class": "Diverter",
+        "confidence": 0.82
+      },
+      {
+        "subject_class": "Shower Hose",
+        "predicate": "connects to",
+        "object_class": "Hand Shower",
+        "confidence": 0.82
+      },
+      {
+        "subject_class": "Slide Bar",
+        "predicate": "holds",
+        "object_class": "Hand Shower",
+        "confidence": 0.82
+      },
+      {
+        "subject_class": "Wall Bracket",
+        "predicate": "fastened with",
+        "object_class": "Mounting Screw",
+        "confidence": 0.82
+      },
+      {
+        "subject_class": "Diverter",
+        "predicate": "threads onto",
+        "object_class": "Shower Arm",
+        "confidence": 0.82
+      }
+    ],
+    "forbidden_class_labels": [
+      "Flow Rate",
+      "Water Pressure",
+      "Maximum Water Pressure",
+      "Hose Length",
+      "Gallons Per Minute",
+      "PSI",
+      "Warranty",
+      "Limited Lifetime Warranty",
+      "Original Purchaser",
+      "Consumer Purchaser",
+      "Proof Of Purchase",
+      "Merchantability",
+      "Fitness For A Particular Purpose",
+      "Incidental Damages",
+      "Consequential Damages",
+      "Defect",
+      "Workmanship",
+      "Jurisdiction",
+      "Legal Rights",
+      "Pacemaker",
+      "Defibrillator",
+      "Implantable Medical Device",
+      "Medical Device",
+      "Choking Hazard",
+      "Children",
+      "Tab",
+      "Clear Film"
+    ]
+  },
+  "created_class_ids": [],
+  "created_property_ids": [],
+  "created_relationship_ids": []
+}

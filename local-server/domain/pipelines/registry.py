@@ -132,11 +132,14 @@ class PipelineTypeRegistry:
             description="Extract schema structure from documents",
             input_contract={
                 "documents": "list[str] — source documents to extract from",
-                "scope": "str (optional) — extraction scope",
+                "scope": (
+                    "str (optional) — the taxonomy extracted for (ontology_id also names it);"
+                    " its classes are matched and offered as parents and attribute owners"
+                ),
                 "source_id": (
                     "str (optional) — the source the documents are; the run ends in one"
-                    " change proposal of its candidates (class, predicate and relationship-type"
-                    " creates with evidence) to the scope's taxonomy"
+                    " change proposal of its candidates (class, attribute, predicate and"
+                    " relationship-type creates with evidence) to the scope's taxonomy"
                 ),
                 "pages": (
                     'str (optional) — page selection such as "12-30"; only text on those'
@@ -149,8 +152,21 @@ class PipelineTypeRegistry:
                 ),
             },
             output_contract={
-                "classes": "list[dict] — extracted classes",
-                "properties": "list[dict] — extracted properties",
+                "candidates": (
+                    "list[dict] — by kind: class {label, proposed_definition, proposed_parent"
+                    " (title of an existing class or another class candidate it is a kind of,"
+                    " or null), confidence, provenance, disambiguation_rationale};"
+                    " property_definition {label, proposed_domain, proposed_range, ...};"
+                    " attribute {label, proposed_definition, of (title of the existing class or"
+                    " class candidate it describes, null when none resolves), value_type"
+                    " (string | integer | number | date | boolean), unit, confidence,"
+                    " provenance} — a measurement or other value placed on a class instead"
+                    " of becoming one"
+                ),
+                "connections": "list[dict] — {subject_ref, predicate, object_ref, confidence}",
+                "candidate_count": "int — class candidates",
+                "property_count": "int — property candidates",
+                "attribute_count": "int — attribute candidates",
                 "proposal_id": (
                     "str | null — a run on a source: its proposal, null when nothing was"
                     " proposed (with proposed_operations, refused_operations, skipped_candidates)"

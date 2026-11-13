@@ -241,6 +241,7 @@ export function applyResultRows(
     [
       ["classes", result.classes_created],
       ["properties", result.properties_created],
+      ["attributes", result.attributes_created],
       ["individuals", result.individuals_created],
       ["relationships", result.relationships_created],
     ] as [string, number][]

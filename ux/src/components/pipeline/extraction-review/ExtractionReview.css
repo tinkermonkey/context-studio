@@ -136,6 +136,15 @@
   gap: 12px;
 }
 
+/* a filter row at the top of a noPadding panel body, so the header subtitle keeps its width */
+.xr-panel-toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  overflow-x: auto;
+  border-bottom: 1px solid rgb(var(--canvas-border));
+}
+
 .xr-empty {
   display: flex;
   flex-direction: column;

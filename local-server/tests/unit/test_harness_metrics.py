@@ -11,16 +11,20 @@ from tests.integration.pipelines._harness.metrics import (
     candidate_recall,
     cosine_similarity,
     delta_set_overlap,
+    forbidden_label_hits,
     jaccard_similarity,
     label_accuracy,
     label_match_tier,
     mean_reciprocal_rank,
     normalize_label,
+    parent_accuracy,
     precision_recall_f1,
     predicate_recall,
     ranking_metrics,
     ranking_precision_at_k,
     reciprocal_rank,
+    sense_base,
+    sense_duplicate_count,
     soft_precision_recall_f1,
 )
 
@@ -624,3 +628,90 @@ class TestRecognitionMetrics:
 
         r = recognition_metrics([])
         assert r.dedup_f1 == 1.0 and r.gt_entity_count == 0
+
+
+class TestSenseBase:
+    """Stripping a sense qualifier from a class label (#1570)."""
+
+    def test_strips_trailing_qualifier(self):
+        assert sense_base("Cooling System (Functional Category)") == "Cooling System"
+
+    def test_label_without_qualifier_is_unchanged(self):
+        assert sense_base("Heat Pump") == "Heat Pump"
+
+    def test_only_the_trailing_qualifier_goes(self):
+        assert sense_base("T (and P) Valve (Safety)") == "T (and P) Valve"
+
+
+class TestSenseDuplicateCount:
+    """Each system proposed once, not once per sense (#1570)."""
+
+    def test_distinct_terms_have_no_duplicates(self):
+        assert sense_duplicate_count(["Heat Pump", "Furnace", "Air Filter"]) == 0
+
+    def test_term_and_its_sense_variants(self):
+        labels = [
+            "Cooling System",
+            "Cooling System (Functional Category)",
+            "Cooling System (Equipment)",
+            "Furnace",
+        ]
+        assert sense_duplicate_count(labels) == 2
+
+    def test_variants_without_the_bare_term(self):
+        assert sense_duplicate_count(["Filter (Air)", "Filter (Water)"]) == 1
+
+    def test_plural_and_case_variants_count(self):
+        assert sense_duplicate_count(["Heat Pump", "heat pumps"]) == 1
+
+    def test_empty(self):
+        assert sense_duplicate_count([]) == 0
+
+
+class TestForbiddenLabelHits:
+    """Classes the gold says must not exist: measurements, warranty and safety junk."""
+
+    def test_reports_each_hit_once_sorted(self):
+        hits = forbidden_label_hits(
+            forbidden=["voltage", "pacemaker", "merchantability"],
+            actual=["heatpump", "voltage", "pacemaker", "voltage"],
+        )
+        assert hits == ["pacemaker", "voltage"]
+
+    def test_no_hits(self):
+        assert forbidden_label_hits(forbidden=["voltage"], actual=["heatpump"]) == []
+
+    def test_empty_forbidden_list(self):
+        assert forbidden_label_hits(forbidden=[], actual=["voltage"]) == []
+
+
+class TestParentAccuracy:
+    """New classes placed under the parent the gold expects (#1570)."""
+
+    def test_all_placed_correctly(self):
+        expected = {"heatpump": {"appliance"}, "airfilter": {"supply"}}
+        actual = {"heatpump": "appliance", "airfilter": "supply"}
+        assert parent_accuracy(expected, actual) == 1.0
+
+    def test_top_level_class_is_wrong(self):
+        expected = {"heatpump": {"appliance"}, "airfilter": {"supply"}}
+        actual = {"heatpump": "appliance", "airfilter": None}
+        assert parent_accuracy(expected, actual) == 0.5
+
+    def test_any_accepted_parent_counts(self):
+        expected = {"thermostat": {"part", "appliance"}}
+        assert parent_accuracy(expected, {"thermostat": "appliance"}) == 1.0
+
+    def test_missed_classes_are_not_scored(self):
+        expected = {"heatpump": {"appliance"}, "furnace": {"appliance"}}
+        assert parent_accuracy(expected, {"heatpump": None}) == 0.0
+        assert parent_accuracy(expected, {"furnace": "appliance"}) == 1.0
+
+    def test_classes_without_an_expected_parent_are_not_scored(self):
+        expected = {"heatpump": {"appliance"}}
+        actual = {"heatpump": "appliance", "ductwork": None}
+        assert parent_accuracy(expected, actual) == 1.0
+
+    def test_nothing_scored_is_vacuously_accurate(self):
+        assert parent_accuracy({"heatpump": {"appliance"}}, {}) == 1.0
+        assert parent_accuracy({}, {"heatpump": None}) == 1.0

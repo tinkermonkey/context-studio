@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { renderWithProviders } from "@/test/test-utils";
+import type { SchemaExtractionCandidate } from "@/api/services/pipeline";
 import { SchemaCandidateReview } from "../SchemaCandidateReview";
 import { SCHEMA_CANDIDATES, SCHEMA_RECOGNITION, SCOPE, XR_TEXT, makeRun } from "./fixtures";
 
@@ -29,6 +30,7 @@ const BIZ_SCHEME = { id: "scheme-biz", identifier: "business", title: "Business 
 function renderReady(
   recognition: () => Response = () => HttpResponse.json(SCHEMA_RECOGNITION),
   schemes: Array<typeof APP_SCHEME> | (() => Response) = [APP_SCHEME],
+  candidates: SchemaExtractionCandidate[] = SCHEMA_CANDIDATES,
 ) {
   previewBody = null;
   server.use(
@@ -38,7 +40,7 @@ function renderReady(
         : HttpResponse.json({ items: schemes, total: schemes.length, limit: 100, offset: 0 }),
     ),
     http.get("*/api/pipelines/runs/run-s/schema-extraction-candidates", () =>
-      HttpResponse.json(SCHEMA_CANDIDATES),
+      HttpResponse.json(candidates),
     ),
     http.post("*/api/pipelines/runs/run-s/recognition-preview", async ({ request }) => {
       previewBody = await request.json();
@@ -147,7 +149,7 @@ describe("SchemaCandidateReview — review", () => {
     const bar = screen.getByTestId("extraction-review-schema-apply-bar");
     expect(bar).toHaveTextContent("1 accepted");
     expect(bar).toHaveTextContent("1 rejected");
-    expect(bar).toHaveTextContent("3 pending");
+    expect(bar).toHaveTextContent("4 pending");
     expect(screen.getByTestId("extraction-review-schema-decision-class-0-yes")).toHaveAttribute(
       "aria-pressed",
       "true",
@@ -484,5 +486,127 @@ describe("SchemaCandidateReview — where new classes go", () => {
     const message = await screen.findByTestId("extraction-review-schema-no-schemes");
     expect(message).toHaveAttribute("role", "alert");
     expect(screen.getByTestId("extraction-review-schema-apply")).toBeDisabled();
+  });
+});
+
+describe("SchemaCandidateReview — class parents and attributes", () => {
+  const attributesTab = (panel: HTMLElement) =>
+    within(panel).getByRole("radio", { name: /Attributes/ });
+
+  it("shows a class candidate's proposed parent in the table and inspector", async () => {
+    const panel = await renderReady();
+    expect(screen.getByTestId("extraction-review-schema-parent-class-1")).toHaveTextContent(
+      "under Business Object",
+    );
+    expect(screen.getByTestId("extraction-review-schema-parent-class-1")).toHaveClass(
+      "xr-mono-muted",
+    );
+    expect(screen.queryByTestId("extraction-review-schema-parent-class-0")).not.toBeInTheDocument();
+
+    await userEvent.click(within(panel).getByText("Insurance Claim"));
+    const inspector = screen.getByTestId("extraction-review-schema-inspector");
+    expect(inspector).toHaveTextContent("parent");
+    expect(inspector).toHaveTextContent("Business Object");
+  });
+
+  it("lists attribute candidates with their class, value type, unit and confidence", async () => {
+    const panel = await renderReady();
+    expect(screen.getByText("ATTRIBUTES").closest(".stat-tile")).toHaveClass("stat-tile--neutral");
+    const tab = attributesTab(panel);
+    expect(tab).toHaveTextContent("Attributes · 1");
+    expect(tab).toHaveAttribute("aria-checked", "false");
+    expect(within(panel).queryByText("Claim Amount")).not.toBeInTheDocument();
+
+    await userEvent.click(tab);
+    expect(attributesTab(panel)).toHaveAttribute("aria-checked", "true");
+    const row = within(panel).getByText("Claim Amount").closest("tr")!;
+    expect(within(row).getByText("Claim Amount")).toHaveClass("xr-strong");
+    expect(
+      within(row).getByTestId("extraction-review-schema-of-class-attribute-0"),
+    ).toHaveTextContent("Insurance Claim");
+    expect(within(row).getByText("number")).toHaveClass("chip");
+    expect(within(row).getByText("USD")).toHaveClass("xr-mono");
+    expect(within(row).getByText("77%")).toBeInTheDocument();
+    expect(
+      within(row).getByTestId("extraction-review-schema-decision-attribute-0-yes"),
+    ).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("shows the selected attribute in the inspector without an existing-match section", async () => {
+    const panel = await renderReady();
+    await userEvent.click(attributesTab(panel));
+    await userEvent.click(within(panel).getByText("Claim Amount"));
+    const inspector = screen.getByTestId("extraction-review-schema-inspector");
+    expect(inspector).toHaveTextContent("SCHEMA ATTRIBUTE CANDIDATE");
+    expect(inspector).toHaveTextContent("of_class");
+    expect(inspector).toHaveTextContent("USD");
+    expect(
+      screen.queryByTestId("extraction-review-schema-inspector-match"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("marks an attribute without a class as skipped on apply", async () => {
+    const orphan: SchemaExtractionCandidate = {
+      candidate_type: "schema_attribute",
+      candidate_id: "attribute-0",
+      label: "Resolution Window",
+      confidence: 0.6,
+      of_class: null,
+      value_type: "string",
+      unit: null,
+      provenance: [],
+    };
+    const panel = await renderReady(undefined, undefined, [orphan]);
+    // The only candidate type opens by default.
+    expect(attributesTab(panel)).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByTestId("extraction-review-schema-of-class-attribute-0")).toHaveTextContent(
+      "no class · skipped on apply",
+    );
+  });
+
+  it("sends accepted attributes in the apply selection and reports them created", async () => {
+    let applyBody: unknown = null;
+    server.use(
+      http.post("*/api/pipelines/runs/run-s/apply", async ({ request }) => {
+        applyBody = await request.json();
+        return HttpResponse.json({
+          run_id: "run-s",
+          pipeline_type: "schema_extraction",
+          classes_created: 1,
+          properties_created: 0,
+          attributes_created: 1,
+          individuals_created: 0,
+          relationships_created: 0,
+          applied_candidate_ids: ["class-1", "attribute-0"],
+          skipped_candidate_ids: [],
+          skip_reasons: {},
+          merged_mentions: [],
+        });
+      }),
+    );
+    const panel = await renderReady();
+    await screen.findByTestId("extraction-review-schema-existing-class-1");
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-1-yes"));
+    await userEvent.click(attributesTab(panel));
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-attribute-0-yes"));
+    await screen.findByText("Application Layer · application");
+    await userEvent.click(screen.getByTestId("extraction-review-schema-apply"));
+    expect(screen.queryByTestId("extraction-review-schema-orphan-warning")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Apply 2 accepted" }));
+
+    const created = await screen.findByTestId("extraction-review-apply-result-created");
+    expect(applyBody).toEqual({ accepted_candidate_ids: ["class-1", "attribute-0"] });
+    expect(within(created).getByText("1 attributes created")).toHaveClass("chip--neutral");
+  });
+
+  it("warns when an accepted attribute's class is a proposed class that is not accepted", async () => {
+    const panel = await renderReady();
+    await userEvent.click(attributesTab(panel));
+    await userEvent.click(screen.getByTestId("extraction-review-schema-decision-attribute-0-yes"));
+    await userEvent.click(screen.getByTestId("extraction-review-schema-apply"));
+    const warning = screen.getByTestId("extraction-review-schema-orphan-warning");
+    expect(warning).toHaveClass("form-callout--warn");
+    expect(warning).toHaveTextContent("1 accepted candidate points at a proposed class");
+    expect(warning).toHaveTextContent("Claim Amount");
   });
 });

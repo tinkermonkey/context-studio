@@ -28,6 +28,7 @@ export const SCHEMA_CANDIDATES: SchemaExtractionCandidate[] = [
     label: "Insurance Claim",
     confidence: 0.88,
     proposed_definition: "A request for compensation.",
+    proposed_parent: "Business Object",
     provenance: [span("insurance claims"), span("Each claim")],
   },
   {
@@ -47,6 +48,17 @@ export const SCHEMA_CANDIDATES: SchemaExtractionCandidate[] = [
     proposed_domain: "business.business-actor",
     proposed_range: "business.business-object",
     provenance: [span("submit")],
+  },
+  {
+    candidate_type: "schema_attribute",
+    candidate_id: "attribute-0",
+    label: "Claim Amount",
+    confidence: 0.77,
+    proposed_definition: "The amount of money the claim asks for.",
+    of_class: "Insurance Claim",
+    value_type: "number",
+    unit: "USD",
+    provenance: [span("insurance claims")],
   },
   {
     candidate_type: "schema_connection",
