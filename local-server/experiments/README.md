@@ -12,6 +12,8 @@ for the rationale behind it.
 ```
 experiments/
 ├── reports/<run_id>.{json,md}   # error reports (§3.2) — one pair per evaluation run
+│                                #   tournament_<run_id>_benchmark.json: the benchmark pass
+│                                #   benchmark_<document>_<label>_<stamp>.{json,md}: a scored proposal
 ├── ledger.py                    # read/write helpers + CLI for ledger.jsonl (Loop C)
 ├── ledger.jsonl                 # append-only experiment record (accepted + rejected)
 └── README.md                    # this file
@@ -37,7 +39,74 @@ writes a `<run_id>.json` / `<run_id>.md` pair here:
 Report files are generated artifacts (gitignored — see `.gitignore`); only
 this README and the `reports/` directory itself are tracked.
 
+## The benchmark
+
+Loop C's objective since 2026-11 (`documentation/karpathy_loop_design.md` §3.4): three long
+documents with hand-made gold extractions under
+`tests/integration/fixtures/pipelines/extraction_benchmark/` (read its README first). A run is
+scored on the individuals that would reach the review queue: found F1, typed F1, core recall,
+type accuracy, relationship recall, and the failure counts Loop C selects targets from.
+
+```bash
+# from local-server/, venv active
+python scripts/benchmark_replay.py                    # offline: replay the cassettes, score
+python scripts/benchmark_replay.py --record --spend   # record with the live LLM (cheap model)
+
+# against a running server (./dev.sh)
+python scripts/extraction_benchmark.py validate
+python scripts/extraction_benchmark.py load                              # gold -> datasets bench-*
+python scripts/extraction_benchmark.py run --document edit_check --spend # extract with a configuration, score
+python scripts/extraction_benchmark.py score --document edit_check --proposal <id>
+```
+
+`benchmark_replay.py` runs the `default` pipeline in process, each document as a source (chunked,
+merged, planned), against the pinned DR spec the gold files were made for, with real embeddings
+and a schema index so the class catalog offered per chunk is the one the app would offer. It
+reports `not_recorded` or `stale` instead of numbers when the cassettes are missing or no longer
+answer the prompts, and exits 2. Building the ontology takes about a minute.
+
+`extraction_benchmark.py run` measures what a user gets: the server's own code, a pipeline
+configuration's model and stage prompts, and a real proposal left in the review queue.
+
 ## Prerequisites to a full run
+
+Both cassette sets must answer the current prompts. The cassette key hashes the whole prompt, so
+any change to a prompt or to what feeds it (the class catalog, the predicate list, chunking, the
+DR spec snapshot) invalidates them; the tournament then exits 3 and Loop C stops at Evaluate until
+both are recorded again:
+
+```bash
+python scripts/record_default_cassettes.py --record
+python scripts/benchmark_replay.py --record --spend
+```
+
+Both were recorded on 2026-11-12 with `google/gemini-3-flash-preview` (34 calls each, about 150k
+tokens per set). Either recorder refuses to save a response the provider cut short or errored on
+part-way: the pipeline reads such a response as "found nothing", and a cassette would replay that
+one-off failure as the pipeline's answer from then on.
+
+### The baseline (2026-11-12, `default` pipeline, main at 6786257c)
+
+| | found F1 | typed F1 | recall (core) | precision | type accuracy | relationship recall |
+|---|---|---|---|---|---|---|
+| `edit_check` (dev) | 0.259 | 0.122 | 0.250 (0.333) | 0.268 | 0.474 | 0.000 |
+| `gitlab_architecture` (dev) | 0.564 | 0.287 | 0.434 (0.794) | 0.803 | 0.509 | 0.036 |
+| `wikimedia_enterprise` (holdout) | 0.326 | 0.170 | 0.232 (0.289) | 0.548 | 0.522 | 0.000 |
+| **dev mean** | **0.411** | **0.205** | 0.342 (0.564) | 0.535 | 0.491 | 0.018 |
+
+Triple-corpus guard for the same recording day: dev strict-F1 0.932, soft-F1 0.943.
+
+**How much a second take moves it.** The documents were recorded three times with nothing changed
+(temperature 0). Dev found F1 came out 0.405 to 0.411 and dev typed F1 0.200 to 0.206; the holdout
+document's typed F1 0.170 to 0.199. About 86% of the individuals an identify call names are the
+same from one take to the next. The accept gate's margins (0.02 on dev, 0.04 on the holdout
+document) are set above that; a gain inside it is not a result.
+
+Where the baseline loses, on the dev documents: 126 gold individuals not found (41 of them core),
+36 found with a type gold does not accept, 57 predictions that match nothing, 8 known distractors
+extracted, and 133 of 136 stated relationships missing. By layer, statements are the gap: 2 of the
+41 motivation-layer individuals on the dev documents are found (1 of 43 on the holdout document).
+
 
 Before the `default` LLM pipeline (`IndividualExtractionOrchestrator`) can
 compete as a Loop B variant, its cassettes must be recorded once. Loop A/B
@@ -79,6 +148,14 @@ why) is Loop-A-tuned on dev, then scored on the full corpus. Output:
 - a scoreboard telemetry row per variant in
   `tests/integration/fixtures/pipelines/_metrics/quality_tournament_individual_extraction.jsonl`
   (gitignored, same JSONL schema `quality_loop.py` uses).
+
+The run ends with the benchmark pass (above): a "Benchmark" section in the digest,
+`reports/tournament_<run_id>_benchmark.json` with each document's score and the lists behind it,
+and `benchmark_dev` / `benchmark_holdout` rows in the telemetry file.
+
+A variant whose cassettes no longer answer its prompts is flagged in a "STALE CASSETTES" section
+at the top of the digest and the run exits 3. The extraction service turns a missing recording
+into "no triples", so before this check a stale cassette set read as a pipeline scoring 0.
 
 Each run also scores every variant's tuned config against the Wave 1 DR
 bootstrap scenarios (`dataset_split.py`'s `DR_BOOTSTRAP_SCENARIOS`,
@@ -127,47 +204,40 @@ what the `individual_recognition` episode corpus measures instead).
 refinement cycle. Each invocation of the Workflow runs exactly **one**
 iteration:
 
-1. **Evaluate** — runs Loop B (`quality_tournament.py`) and reads back the
-   incumbent's scoreboard + error report, including the incumbent's Wave 1
-   bootstrap diagnostics (reported as `bootstrap` for visibility and the
-   ledger — see the Loop B section above — never as an input to any decision
-   below).
-2. **Select** — reads `ledger.jsonl` for hypotheses already rejected, then
-   ranks the incumbent's failure classes (`failure_stage_counts` in the error
-   report) by GT-triple count and maps the top ones to hypotheses from the
-   seeded backlog (design doc §7 items 1–6; item 0, the live-LLM-path bugfix,
-   already landed in Phase 2).
-3. **Experiment** — fans out one experimenter agent per selected hypothesis,
-   each in its own git worktree (`isolation: 'worktree'`), each implementing
-   exactly one change and reporting a Loop-A-tuned dev/holdout evaluation of
-   it.
-4. **Verify** — an adversarial agent checks each candidate for gate integrity
-   (no edits to the harness/GT fixtures/split/ledger, tests reproduce, single
-   change, diff matches the stated hypothesis).
-5. **Decide** — the accept gate (design doc §6: dev soft-F1 improves by
-   > 0.005, dev strict-F1 doesn't regress, holdout strict-F1 doesn't collapse
-   by more than 0.02) is applied to the best verified candidate. Accepted →
-   merge into `experiment/karpathy-loop`, refresh cassettes if the change
-   touched a prompt, append a ledger entry. Everything else (including a
-   verified-but-not-best candidate) → discard the worktree, append a ledger
-   entry with the rejection reason.
+1. **Evaluate** — runs Loop B and reads the incumbent's benchmark measures (dev: `edit_check`,
+   `gitlab_architecture`; holdout: `wikimedia_enterprise`), its failure counts, and the triple
+   corpus's guard measure (the `default` variant's dev strict-F1). A stale or missing recording
+   ends the iteration with `status: "error"` before anything is spent.
+2. **Select** — reads `ledger.jsonl` for hypotheses already decided, ranks the benchmark's failure
+   kinds (`missed_core`, `missed_supporting`, `mistyped`, `spurious`, `excluded_extracted`,
+   `relationship_missed`) by count and maps the top ones to the seeded backlog (design doc §7).
+3. **Experiment** — fans out one experimenter agent per hypothesis, each in its own git worktree,
+   each implementing exactly one change. A change to a prompt, or to what feeds one, records both
+   cassette sets again on its branch. The candidate is measured by the same steps as the incumbent.
+4. **Verify** — an adversarial agent checks each candidate: none of the frozen paths changed (the
+   harness, the gold extractions, the schema snapshots, the tournament and benchmark scripts, the
+   ledger), nothing in the diff is specific to a benchmark document, tests reproduce, the committed
+   cassettes replay to the claimed scores, one change, and the diff matches the hypothesis.
+5. **Decide** — the accept gate (design doc §6) on the best verified candidate: benchmark dev found
+   F1 improves by > 0.02 with typed F1 not regressing, or typed F1 improves by > 0.02 with found
+   F1 dipping at most 0.05; the holdout document's typed F1 does not drop by more than 0.04; the
+   triple corpus's dev strict-F1 does not drop by more than 0.02. Accepted → merge into
+   `experiment/karpathy-loop`, append a ledger entry. Everything else → discard the worktree,
+   append a ledger entry with the reason.
 
-Invoke it with the `Workflow` tool, e.g. `{name: "karpathy-loop", args:
-{iteration: 1}}`. Because each call is one iteration, driving the full loop
-means calling it repeatedly (e.g. via `/loop`) and threading state through
-`args` from the previous call's return value — see the workflow's own
-`meta.whenToUse` for the exact fields (`iteration`, `consecutiveNoAccept`,
-`hypothesisCount`, `integrationBranch`, `holdoutFloors`,
-`maxConsecutiveNoAccept`, `cumulativeCostUsd`, `totalBudgetUsd`). The
-returned `status` (`"stopped"` / `"accepted"` / `"no_accept"` / `"error"`)
-and `stop` field tell the driver whether to keep iterating — stop conditions
-are the holdout floors being met, three consecutive no-accept iterations
-(plateau), or the cost/iteration budget in `args` being exhausted (design doc
-§4.3 step 6).
+Invoke it with the `Workflow` tool by `scriptPath` (`.claude/workflows/karpathy-loop.js`; a
+workflow launched by `name` can run a stale cached copy), e.g. `args: {iteration: 1}`. Each call
+is one iteration: call it repeatedly (e.g. via `/loop`) and thread state through `args` from the
+previous call's return value (`iteration`, `consecutiveNoAccept`, `hypothesisCount`,
+`integrationBranch`, `holdoutFloors`, `maxConsecutiveNoAccept`, `cumulativeCostUsd`,
+`totalBudgetUsd`). The returned `status` (`"stopped"` / `"accepted"` / `"no_accept"` / `"error"`)
+and `stop` field tell the driver whether to keep iterating: stop when the holdout document's typed
+floors are met, after three consecutive no-accept iterations, or when the budget in `args` is
+used up. Between iterations the driver promotes the integration branch to `main` (experimenter
+worktrees fork from `main`), by PR when a human should look.
 
-Running this against the real corpus is expensive (a full Loop B tournament
-plus several worktree-isolated coding agents per iteration) and is Phase 7 in
-the design doc's build plan — out of scope for the infrastructure itself.
+`node .claude/workflows/karpathy-loop.mechanics.test.mjs` checks the gate, target selection and
+the prompts' frozen-path lists without running any agent.
 
 ## `ledger.py` / `ledger.jsonl`
 

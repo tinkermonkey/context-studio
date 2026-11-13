@@ -263,6 +263,13 @@ def record_all(scenarios: list[str]) -> int:
         )
 
         asyncio.run(orchestrator.execute(state))
+        if recording_provider.incomplete_count:
+            print(
+                f"  ERROR {scenario}: the provider cut short or errored on "
+                f"{recording_provider.incomplete_count} response(s); cassette not written. "
+                f"Record it again with --only {scenario}."
+            )
+            return 1
         recording_provider.flush()
 
         print(f"  recorded {scenario:<38} -> {cassette_path}")

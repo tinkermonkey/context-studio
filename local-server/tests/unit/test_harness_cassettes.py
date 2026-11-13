@@ -289,6 +289,29 @@ class TestRecordingLLMProvider:
             recorder.complete(system_prompt="sys1", user_prompt="user1", model="test")
             assert recorder.call_count == 2
 
+    def test_incomplete_count_counts_cut_short_and_errored_responses(self):
+        """A response that ended with an error or at the length limit is not a whole answer."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            responses = {
+                _compute_prompt_hash("sys", prompt, "test", 0.0, None): LLMResponse(
+                    content='{"triples": [',
+                    tokens_in=0,
+                    tokens_out=0,
+                    duration_ms=1.0,
+                    finish_reason=finish_reason,
+                    model="test",
+                )
+                for prompt, finish_reason in (("errored", "error"), ("too long", "length"))
+            }
+            recorder = RecordingLLMProvider(FakeLLMProvider(responses), Path(tmpdir) / "test.json")
+
+            recorder.complete(system_prompt="sys", user_prompt="whole answer", model="test")
+            assert recorder.incomplete_count == 0
+
+            recorder.complete(system_prompt="sys", user_prompt="errored", model="test")
+            recorder.complete(system_prompt="sys", user_prompt="too long", model="test")
+            assert recorder.incomplete_count == 2
+
     def test_same_prompt_uses_same_key(self):
         """Same prompt hashes to same cassette key."""
         with tempfile.TemporaryDirectory() as tmpdir:

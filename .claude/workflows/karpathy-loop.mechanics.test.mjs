@@ -47,14 +47,14 @@ function loadPureDeclarations() {
   const sandbox = { console };
   vm.createContext(sandbox);
   vm.runInContext(
-    `${declarations}\nglobalThis.__mechanics = { clamp, meetsFloors, selectTargets, acceptGate, SEED_BACKLOG, EPSILON, HOLDOUT_SLACK, SOFT_SLACK, DEFAULT_HOLDOUT_FLOORS, hypothesisPipeline, incumbentPipelineOf };`,
+    `${declarations}\nglobalThis.__mechanics = { clamp, meetsFloors, selectTargets, acceptGate, SEED_BACKLOG, FAILURE_KINDS, FROZEN_PATHS, EPSILON, HOLDOUT_SLACK, COVERAGE_SLACK, GUARD_SLACK, DEFAULT_HOLDOUT_FLOORS, evaluatePrompt, experimentPrompt, verifyPrompt };`,
     sandbox,
     { filename: SOURCE_PATH },
   );
   return sandbox.__mechanics;
 }
 
-const { clamp, meetsFloors, selectTargets, acceptGate, SEED_BACKLOG, EPSILON, HOLDOUT_SLACK, SOFT_SLACK, DEFAULT_HOLDOUT_FLOORS, hypothesisPipeline, incumbentPipelineOf } =
+const { clamp, meetsFloors, selectTargets, acceptGate, SEED_BACKLOG, FAILURE_KINDS, FROZEN_PATHS, EPSILON, HOLDOUT_SLACK, COVERAGE_SLACK, GUARD_SLACK, DEFAULT_HOLDOUT_FLOORS, evaluatePrompt, experimentPrompt, verifyPrompt } =
   loadPureDeclarations();
 
 let passCount = 0;
@@ -75,7 +75,7 @@ function test(name, fn) {
 // -- clamp -------------------------------------------------------------
 
 test("clamp bounds a value below the minimum", () => {
-  assert.equal(clamp(0, 2, 4), 2);
+  assert.equal(clamp(1, 2, 4), 2);
 });
 test("clamp bounds a value above the maximum", () => {
   assert.equal(clamp(9, 2, 4), 4);
@@ -87,302 +87,197 @@ test("clamp passes through an in-range value", () => {
 // -- meetsFloors (§4.3 step 6 success stop-check) -----------------------
 
 test("meetsFloors triggers the success stop-check when every holdout floor is met exactly", () => {
-  const holdout = { strict_precision: 0.6, strict_recall: 0.5, strict_f1: 0.5 };
+  const holdout = { typed_precision: 0.6, typed_recall: 0.5, typed_f1: 0.5 };
   assert.equal(meetsFloors(holdout, DEFAULT_HOLDOUT_FLOORS), true);
 });
 test("meetsFloors does not trigger when a single floor is missed", () => {
-  const holdout = { strict_precision: 0.59, strict_recall: 0.5, strict_f1: 0.5 };
+  const holdout = { typed_precision: 0.59, typed_recall: 0.5, typed_f1: 0.5 };
   assert.equal(meetsFloors(holdout, DEFAULT_HOLDOUT_FLOORS), false);
 });
-test("meetsFloors never triggers while holdout GT review is pending, even at perfect floors", () => {
-  const holdout = { strict_precision: 1, strict_recall: 1, strict_f1: 1 };
-  assert.equal(meetsFloors(holdout, DEFAULT_HOLDOUT_FLOORS, true), false);
+test("meetsFloors does not trigger on a holdout with no typed measures (an unmeasured run)", () => {
+  assert.equal(meetsFloors({}, DEFAULT_HOLDOUT_FLOORS), false);
 });
 
 // -- acceptGate (§6 accept gate) -----------------------------------------
 // Boundary cases are constructed so the subtraction the gate itself performs
 // lands on an exact IEEE-754 value (e.g. diffing against 0) rather than
 // relying on decimal literals like `0.5 + 0.005` landing exactly on
-// `EPSILON`, which they do not (double-precision rounding pushes the sum
-// a hair past 0.005).
+// `EPSILON`, which they do not.
 
-test("acceptGate accepts when dev soft-F1 beats incumbent by more than epsilon and nothing else regresses", () => {
-  const incumbentDev = { soft_f1: 0, strict_f1: 0.3 };
-  const incumbentHoldout = { strict_f1: 0.28 };
-  const candidate = { dev: { soft_f1: EPSILON + 0.001, strict_f1: 0.3 }, holdout: { strict_f1: 0.28 } };
-  const result = acceptGate(candidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK);
+function incumbentAt({ f1 = 0, typed_f1 = 0.3, holdout = 0.28, guard = 0.9 } = {}) {
+  return { dev: { f1, typed_f1 }, holdout: { typed_f1: holdout }, guard: { strict_f1: guard } };
+}
+function candidateAt({ f1 = 0, typed_f1 = 0.3, holdout = 0.28, guard = 0.9 } = {}) {
+  return { dev: { f1, typed_f1 }, holdout: { typed_f1: holdout }, guard: { strict_f1: guard } };
+}
+function gate(candidate, incumbent) {
+  return acceptGate(candidate, incumbent, EPSILON, HOLDOUT_SLACK, COVERAGE_SLACK, GUARD_SLACK);
+}
+
+test("acceptGate accepts when dev found F1 beats the incumbent by more than epsilon and nothing regresses", () => {
+  const result = gate(candidateAt({ f1: EPSILON + 0.001 }), incumbentAt());
   assert.equal(result.passes, true);
   // `result.reasons` is an array from the vm sandbox realm, so compare by
-  // length/content rather than assert.deepEqual (which is prototype-strict
-  // and cross-realm arrays never share a prototype).
+  // length/content rather than assert.deepEqual (cross-realm arrays never
+  // share a prototype).
   assert.equal(result.reasons.length, 0);
 });
 test("acceptGate rejects exactly at the improvement boundary (diff == epsilon, not > epsilon)", () => {
-  const incumbentDev = { soft_f1: 0, strict_f1: 0.3 };
-  const incumbentHoldout = { strict_f1: 0.28 };
-  const candidate = { dev: { soft_f1: EPSILON, strict_f1: 0.3 }, holdout: { strict_f1: 0.28 } };
-  const result = acceptGate(candidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK, false, SOFT_SLACK);
+  const result = gate(candidateAt({ f1: EPSILON }), incumbentAt());
   assert.equal(result.passes, false);
-  assert.ok(result.reasons.some((r) => r.includes("neither dev soft-F1")));
+  assert.ok(result.reasons.some((r) => r.includes("neither dev found F1")));
 });
-test("acceptGate rejects on dev strict-F1 regression even when soft-F1 improves", () => {
-  const incumbentDev = { soft_f1: 0, strict_f1: 0.3 };
-  const incumbentHoldout = { strict_f1: 0.28 };
-  const candidate = { dev: { soft_f1: 0.6, strict_f1: 0.29 }, holdout: { strict_f1: 0.28 } };
-  const result = acceptGate(candidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK);
+test("acceptGate rejects a coverage gain that costs any typed F1 (no slack on exactness)", () => {
+  const result = gate(candidateAt({ f1: 0.6, typed_f1: 0.29 }), incumbentAt());
   assert.equal(result.passes, false);
   assert.ok(result.reasons.some((r) => r.includes("regresses")));
 });
-test("acceptGate rejects when holdout strict-F1 collapses beyond the slack", () => {
-  const incumbentDev = { soft_f1: 0, strict_f1: 0.3 };
-  const incumbentHoldout = { strict_f1: 0.28 };
-  const candidate = {
-    dev: { soft_f1: 0.6, strict_f1: 0.31 },
-    holdout: { strict_f1: incumbentHoldout.strict_f1 - HOLDOUT_SLACK - 0.001 },
-  };
-  const result = acceptGate(candidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK);
+test("acceptGate accepts a typed F1 gain that dips found F1 within coverageSlack", () => {
+  const incumbent = incumbentAt({ f1: 0.5, typed_f1: 0.3 });
+  const result = gate(candidateAt({ f1: 0.5 - COVERAGE_SLACK + 0.01, typed_f1: 0.4 }), incumbent);
+  assert.equal(result.passes, true);
+});
+test("acceptGate rejects a typed F1 gain when found F1 drops beyond coverageSlack", () => {
+  const incumbent = incumbentAt({ f1: 0.5, typed_f1: 0.3 });
+  const result = gate(candidateAt({ f1: 0.5 - COVERAGE_SLACK - 0.01, typed_f1: 0.4 }), incumbent);
   assert.equal(result.passes, false);
-  assert.ok(result.reasons.some((r) => r.includes("collapses")));
+  assert.ok(result.reasons.some((r) => r.includes("coverageSlack")));
+});
+test("acceptGate rejects when the holdout document's typed F1 drops beyond the slack", () => {
+  const incumbent = incumbentAt({ holdout: 0.5 });
+  const result = gate(candidateAt({ f1: 0.6, holdout: 0.5 - HOLDOUT_SLACK - 0.01 }), incumbent);
+  assert.equal(result.passes, false);
+  assert.ok(result.reasons.some((r) => r.includes("holdout typed F1")));
 });
 test("acceptGate tolerates a holdout drop exactly at the slack boundary", () => {
-  const incumbentDev = { soft_f1: 0, strict_f1: 0.3 };
-  const incumbentHoldout = { strict_f1: 0.28 };
-  const candidate = {
-    dev: { soft_f1: 0.6, strict_f1: 0.31 },
-    holdout: { strict_f1: incumbentHoldout.strict_f1 - HOLDOUT_SLACK },
-  };
-  const result = acceptGate(candidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK);
+  // incumbent 0.02 and candidate 0: the gate computes 0 < 0.02 - 0.02, which is false.
+  const incumbent = incumbentAt({ holdout: HOLDOUT_SLACK });
+  const result = gate(candidateAt({ f1: 0.6, holdout: 0 }), incumbent);
   assert.equal(result.passes, true);
 });
-test("acceptGate does not block on a holdout collapse while GT review is pending -- surfaces it as an advisory instead", () => {
-  const incumbentDev = { soft_f1: 0, strict_f1: 0.3 };
-  const incumbentHoldout = { strict_f1: 0.28 };
-  const candidate = {
-    dev: { soft_f1: 0.6, strict_f1: 0.31 },
-    holdout: { strict_f1: incumbentHoldout.strict_f1 - HOLDOUT_SLACK - 0.1 },
-  };
-  const result = acceptGate(candidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK, true);
-  assert.equal(result.passes, true);
-  assert.equal(result.reasons.length, 0);
-  assert.ok(result.advisories.some((a) => a.includes("pending human review")));
-});
-
-// -- symmetric gate: strict-F1-driven acceptance (§6) ---------------------
-// A candidate may earn acceptance by improving exactness (strict-F1) even when
-// soft-F1 (coverage) dips within SOFT_SLACK — the two_pass-v2 case.
-test("acceptGate accepts a strict-F1 improvement that dips soft-F1 within softSlack (the two_pass-v2 trade)", () => {
-  const incumbentDev = { soft_f1: 0.412, strict_f1: 0.324 };
-  const incumbentHoldout = { strict_f1: 0.321 };
-  // two_pass v2: strict +0.035, soft -0.033 (< SOFT_SLACK), holdout steady.
-  const candidate = { dev: { soft_f1: 0.379, strict_f1: 0.359 }, holdout: { strict_f1: 0.322 } };
-  const result = acceptGate(candidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK, false, SOFT_SLACK);
-  assert.equal(result.passes, true);
-  assert.equal(result.reasons.length, 0);
-});
-test("acceptGate rejects a strict-F1 improvement when soft-F1 collapses beyond softSlack", () => {
-  const incumbentDev = { soft_f1: 0.412, strict_f1: 0.324 };
-  const incumbentHoldout = { strict_f1: 0.321 };
-  // strict improves, but soft drops 0.10 (> SOFT_SLACK=0.05): a real coverage collapse, not a trade.
-  const candidate = { dev: { soft_f1: 0.312, strict_f1: 0.359 }, holdout: { strict_f1: 0.322 } };
-  const result = acceptGate(candidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK, false, SOFT_SLACK);
+test("acceptGate rejects when the triple-corpus guard drops beyond its slack, however good the benchmark gain", () => {
+  const incumbent = incumbentAt({ guard: 0.9 });
+  const result = gate(candidateAt({ f1: 0.9, typed_f1: 0.9, holdout: 0.9, guard: 0.9 - GUARD_SLACK - 0.01 }), incumbent);
   assert.equal(result.passes, false);
-  assert.ok(result.reasons.some((r) => r.includes("collapses more than softSlack")));
+  assert.ok(result.reasons.some((r) => r.includes("triple-corpus strict-F1")));
 });
-test("acceptGate still keeps a hard strict-F1 floor for soft-driven acceptance (no slack there)", () => {
-  const incumbentDev = { soft_f1: 0.40, strict_f1: 0.30 };
-  const incumbentHoldout = { strict_f1: 0.28 };
-  // soft improves hugely but strict regresses even slightly: soft-driven path
-  // keeps the hard floor, so this is rejected (exactness is never traded away
-  // when coverage drives acceptance).
-  const candidate = { dev: { soft_f1: 0.60, strict_f1: 0.299 }, holdout: { strict_f1: 0.28 } };
-  const result = acceptGate(candidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK, false, SOFT_SLACK);
+test("acceptGate is not rescued by a guard or holdout gain when dev does not improve", () => {
+  const result = gate(candidateAt({ holdout: 0.9, guard: 1 }), incumbentAt());
   assert.equal(result.passes, false);
-  assert.ok(result.reasons.some((r) => r.includes("regresses below incumbent floor")));
 });
-
-// -- acceptGate bootstrap immunity (karpathy_loop_dr_ontology_design.md §5
-// Must-Fix 2 / ADR-7: Wave 1 DR bootstrap scenarios are diagnostic-only and
-// must never, alone, be sufficient grounds for an accept/reject decision) ---
-
-test("acceptGate's signature has no bootstrap parameter -- structurally cannot gate on it", () => {
-  assert.equal(acceptGate.length, 7); // candidate, incumbentDev, incumbentHoldout, epsilon, holdoutSlack, holdoutReviewPending, softSlack
-});
-
-test("acceptGate's decision is identical whether the candidate carries glowing, terrible, or no bootstrap diagnostics", () => {
-  const incumbentDev = { soft_f1: 0, strict_f1: 0.3 };
-  const incumbentHoldout = { strict_f1: 0.28 };
-  const baseCandidate = { dev: { soft_f1: 0.6, strict_f1: 0.31 }, holdout: { strict_f1: 0.28 } };
-
-  const noBootstrap = acceptGate(baseCandidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK);
-  const glowingBootstrap = acceptGate(
-    { ...baseCandidate, bootstrap: { strict_f1: 1, soft_f1: 1 } },
-    incumbentDev,
-    incumbentHoldout,
-    EPSILON,
-    HOLDOUT_SLACK,
-  );
-  const terribleBootstrap = acceptGate(
-    { ...baseCandidate, bootstrap: { strict_f1: 0, soft_f1: 0 } },
-    incumbentDev,
-    incumbentHoldout,
-    EPSILON,
-    HOLDOUT_SLACK,
-  );
-
-  assert.equal(noBootstrap.passes, true);
-  assert.equal(glowingBootstrap.passes, noBootstrap.passes);
-  assert.equal(terribleBootstrap.passes, noBootstrap.passes);
-  // Compare by content (JSON.stringify), not assert.deepEqual -- these arrays
-  // cross the vm sandbox realm boundary and never share a prototype.
-  assert.equal(JSON.stringify(glowingBootstrap.reasons), JSON.stringify(noBootstrap.reasons));
-  assert.equal(JSON.stringify(terribleBootstrap.reasons), JSON.stringify(noBootstrap.reasons));
-});
-
-test("acceptGate rejects on a genuine dev regression even when bootstrap diagnostics are perfect -- bootstrap alone cannot rescue a bad candidate", () => {
-  const incumbentDev = { soft_f1: 0, strict_f1: 0.3 };
-  const incumbentHoldout = { strict_f1: 0.28 };
-  const candidate = {
-    dev: { soft_f1: EPSILON, strict_f1: 0.3 }, // fails to beat incumbent by > epsilon
-    holdout: { strict_f1: 0.28 },
-    bootstrap: { strict_f1: 1, soft_f1: 1 },
-  };
-  const result = acceptGate(candidate, incumbentDev, incumbentHoldout, EPSILON, HOLDOUT_SLACK);
-  assert.equal(result.passes, false);
+test("acceptGate reads only dev, holdout and guard: extra diagnostics on a candidate change nothing", () => {
+  const incumbent = incumbentAt();
+  const plain = gate(candidateAt({ f1: 0.2 }), incumbent);
+  const decorated = gate({ ...candidateAt({ f1: 0.2 }), bootstrap: { strict_f1: 0 }, recognition: { f1: 0 } }, incumbent);
+  assert.equal(decorated.passes, plain.passes);
+  assert.equal(acceptGate.length, 6);
 });
 
 // -- selectTargets (§4.3 step 2) -----------------------------------------
 
-test("selectTargets ranks failure classes by GT-triple count (highest first)", () => {
-  const failureStageCounts = { label_mismatch: 3, candidate_missing: 40 };
-  const [target] = selectTargets(failureStageCounts, [], [], 1, "open_v1");
-  assert.equal(target.targetStage, "candidate_missing");
+test("every backlog hypothesis names only failure kinds the benchmark reports", () => {
+  for (const hyp of SEED_BACKLOG) {
+    assert.ok(hyp.id && hyp.summary, "a hypothesis needs an id and a summary");
+    for (const kind of hyp.kinds) {
+      assert.ok(FAILURE_KINDS.includes(kind), `${hyp.id}: unknown failure kind ${kind}`);
+    }
+  }
+  const ids = SEED_BACKLOG.map((h) => h.id);
+  assert.equal(new Set(ids).size, ids.length, "hypothesis ids are unique");
+});
+test("every benchmark failure kind has at least one hypothesis", () => {
+  for (const kind of FAILURE_KINDS) {
+    assert.ok(SEED_BACKLOG.some((h) => h.kinds.includes(kind)), `no hypothesis for ${kind}`);
+  }
+});
+test("selectTargets ranks failure kinds by count (highest first)", () => {
+  const [target] = selectTargets({ spurious: 3, mistyped: 40 }, [], [], 1);
+  assert.equal(target.targetKind, "mistyped");
 });
 test("selectTargets excludes hypotheses the ledger already rejected", () => {
-  const failureStageCounts = { candidate_missing: 40 };
-  const rejected = SEED_BACKLOG.filter((h) => h.stages.includes("candidate_missing")).map((h) => h.id);
-  assert.ok(rejected.length > 0, "fixture assumption: at least one seeded hypothesis targets candidate_missing");
-  const targets = selectTargets(failureStageCounts, rejected, [], 3, "open_v1");
-  for (const target of targets) {
-    assert.ok(!rejected.includes(target.id), `expected ${target.id} to be excluded as already rejected`);
-  }
+  const rejected = SEED_BACKLOG.filter((h) => h.kinds.includes("mistyped")).map((h) => h.id);
+  const targets = selectTargets({ mistyped: 40 }, rejected, [], 2);
+  for (const t of targets) assert.ok(!rejected.includes(t.id), `${t.id} was rejected`);
 });
 test("selectTargets excludes hypotheses the ledger already accepted (merged into the incumbent)", () => {
-  const failureStageCounts = { candidate_missing: 40 };
-  const accepted = SEED_BACKLOG.filter((h) => h.stages.includes("candidate_missing")).map((h) => h.id);
-  assert.ok(accepted.length > 0, "fixture assumption: at least one seeded hypothesis targets candidate_missing");
-  const targets = selectTargets(failureStageCounts, [], accepted, 3, "open_v1");
-  for (const target of targets) {
-    assert.ok(!accepted.includes(target.id), `expected ${target.id} to be excluded as already accepted/merged`);
+  const accepted = ["full_class_catalog"];
+  const targets = selectTargets({ mistyped: 40 }, [], accepted, SEED_BACKLOG.length);
+  assert.ok(!targets.some((t) => t.id === "full_class_catalog"));
+});
+test("selectTargets returns nothing once every seeded hypothesis is decided", () => {
+  const all = SEED_BACKLOG.map((h) => h.id);
+  assert.equal(selectTargets({ mistyped: 40 }, all, [], 3).length, 0);
+  assert.equal(selectTargets({ mistyped: 40 }, [], all, 3).length, 0);
+});
+test("selectTargets never selects a hypothesis marked blocked or done", () => {
+  const first = SEED_BACKLOG.find((h) => h.kinds.includes("mistyped"));
+  for (const flag of ["blocked", "done"]) {
+    first[flag] = true;
+    try {
+      const targets = selectTargets({ mistyped: 40 }, [], [], SEED_BACKLOG.length);
+      assert.ok(!targets.some((t) => t.id === first.id), `${first.id} is ${flag}`);
+    } finally {
+      delete first[flag];
+    }
   }
 });
-test("selectTargets returns nothing once every seeded hypothesis is rejected", () => {
-  const failureStageCounts = { candidate_missing: 40 };
-  const allIds = SEED_BACKLOG.map((h) => h.id);
-  const targets = selectTargets(failureStageCounts, allIds, [], 3, "open_v1");
-  assert.equal(targets.length, 0);
+test("selectTargets never selects the same hypothesis twice and backfills to the requested count", () => {
+  const targets = selectTargets({ mistyped: 40, missed_core: 30 }, [], [], 4);
+  assert.equal(targets.length, 4);
+  assert.equal(new Set(targets.map((t) => t.id)).size, 4);
 });
-test("selectTargets returns nothing once every seeded hypothesis is accepted", () => {
-  const failureStageCounts = { candidate_missing: 40 };
-  const allIds = SEED_BACKLOG.map((h) => h.id);
-  const targets = selectTargets(failureStageCounts, [], allIds, 3, "open_v1");
-  assert.equal(targets.length, 0);
-});
-// These inject a synthetic entry rather than depend on the live backlog
-// containing a blocked/done hypothesis (the set flips as hypotheses land), so
-// they exercise the filter itself regardless of current backlog state.
-test("selectTargets never selects a hypothesis marked blocked, even when its stage is top-ranked", () => {
-  const synthetic = { id: "__synthetic_blocked__", stages: ["candidate_missing"], summary: "x", blocked: true };
-  SEED_BACKLOG.push(synthetic);
-  try {
-    const targets = selectTargets({ candidate_missing: 1000 }, [], [], SEED_BACKLOG.length, "open_v1");
-    assert.ok(!targets.some((t) => t.id === synthetic.id), "expected blocked hypothesis to never be selected");
-  } finally {
-    SEED_BACKLOG.pop();
-  }
-});
-test("selectTargets never selects a hypothesis marked done (implemented outside the loop)", () => {
-  const synthetic = { id: "__synthetic_done__", stages: ["candidate_missing"], summary: "x", done: true };
-  SEED_BACKLOG.push(synthetic);
-  try {
-    const targets = selectTargets({ candidate_missing: 1000 }, [], [], SEED_BACKLOG.length, "open_v1");
-    assert.ok(!targets.some((t) => t.id === synthetic.id), "expected done hypothesis to never be selected");
-  } finally {
-    SEED_BACKLOG.pop();
-  }
+test("selectTargets backfills a kind-less hypothesis only after the ranked kinds are used up", () => {
+  const targets = selectTargets({}, [], [], SEED_BACKLOG.length);
+  assert.ok(targets.some((t) => t.id === "per_source_confidence_bands" && t.targetKind === "general"));
 });
 
-// -- pipeline scoping (§4.3 step 2): a hypothesis only helps if it targets the
-// incumbent pipeline; an off-pipeline hypothesis is scored as its own variant
-// and can never clear the accept gate against a different-pipeline incumbent.
-test("incumbentPipelineOf maps default* variants to the default pipeline, else open_v1", () => {
-  assert.equal(incumbentPipelineOf("default"), "default");
-  assert.equal(incumbentPipelineOf("default+grounding"), "default");
-  assert.equal(incumbentPipelineOf("default+two_pass_individual_then_relationship"), "default");
-  assert.equal(incumbentPipelineOf("open_v1"), "open_v1");
-  assert.equal(incumbentPipelineOf(undefined), "open_v1");
-});
-test("selectTargets under a default incumbent never selects an open_v1 hypothesis", () => {
-  // candidate_missing is dominated by open_v1 hypotheses in the backlog; under a
-  // default incumbent none of them are eligible (regression guard for the bug
-  // that wasted a whole iteration on open_v1 no-ops).
-  const targets = selectTargets({ candidate_missing: 1000, relation_not_derived: 5 }, [], [], 4, "default");
-  for (const t of targets) {
-    assert.notEqual(hypothesisPipeline(t.id), "open_v1", `expected no open_v1 hypothesis, got ${t.id}`);
+// -- prompts: the measurement layer stays frozen ---------------------------
+
+const EVALUATION = {
+  errorReportPath: "experiments/reports/tournament_x_benchmark.json",
+  dev: { typed_f1: 0.2, f1: 0.4 },
+  holdout: { typed_f1: 0.1 },
+  guard: { strict_f1: 0.9 },
+};
+const CANDIDATE = {
+  hypothesisId: "full_class_catalog",
+  summary: "offer every class",
+  worktreePath: "/tmp/wt",
+  branchName: "wt-1",
+  baseCommit: "abc",
+  changedFiles: [],
+  diffStat: "",
+  testsPassed: true,
+  dev: { typed_f1: 0.3, f1: 0.4 },
+  holdout: { typed_f1: 0.1 },
+  guard: { strict_f1: 0.9 },
+};
+
+test("the experimenter and the verifier are both given every frozen path", () => {
+  const experiment = experimentPrompt({ id: "x", summary: "y", targetKind: "mistyped" }, EVALUATION);
+  const verify = verifyPrompt(CANDIDATE);
+  for (const frozen of FROZEN_PATHS) {
+    assert.ok(experiment.includes(frozen), `experiment prompt lacks ${frozen}`);
+    assert.ok(verify.includes(frozen), `verify prompt lacks ${frozen}`);
   }
 });
-test("selectTargets under a default incumbent selects a live default-pipeline hypothesis", () => {
-  // two_pass is classified 'default' but marked done (landed as the incumbent);
-  // temporarily clear its done flag to prove default-pipeline hypotheses ARE
-  // selected under a default incumbent (the pipeline-scoping fix), independent
-  // of how many default hypotheses remain live in the backlog.
-  const twoPass = SEED_BACKLOG.find((h) => h.id === "two_pass_individual_then_relationship");
-  assert.ok(twoPass, "fixture assumption: two_pass hypothesis exists in the backlog");
-  const savedDone = twoPass.done;
-  twoPass.done = false;
-  try {
-    const targets = selectTargets(
-      { candidate_missing: 85, relation_not_derived: 34, predicate_mismatch: 2 },
-      [],
-      [],
-      3,
-      "default",
-    );
-    assert.ok(
-      targets.some((t) => t.id === "two_pass_individual_then_relationship"),
-      `expected two_pass to be selected under the default incumbent, got ${targets.map((t) => t.id).join(", ")}`,
-    );
-  } finally {
-    twoPass.done = savedDone;
+test("the frozen paths cover the gold extractions, the harness, the scorer scripts and the ledger", () => {
+  for (const needle of ["extraction_benchmark/", "_harness/", "quality_tournament.py", "benchmark_replay.py", "ledger.jsonl", "fixtures/dr_spec/"]) {
+    assert.ok(FROZEN_PATHS.some((p) => p.includes(needle)), `nothing freezes ${needle}`);
   }
 });
-test("the default-pipeline extraction backlog is consolidated — every seeded default hypothesis is done or blocked", () => {
-  // CONSOLIDATION (see documentation/individual_extraction_refinement_learnings.md):
-  // rag, two_pass, default_label_canonicalization, and default_relationship_object_recall
-  // landed (done); the two coverage-surfacing attempts are blocked (proven dead).
-  // No live default-pipeline extraction hypothesis remains — the effort hit its
-  // useful ceiling for this corpus/GT. This test documents that state and guards
-  // the pipeline classifier for these ids.
-  const defaultHyps = SEED_BACKLOG.filter((h) => hypothesisPipeline(h.id) === "default");
-  assert.ok(defaultHyps.length > 0, "fixture assumption: default-pipeline hypotheses exist");
-  for (const h of defaultHyps) {
-    assert.ok(h.done || h.blocked, `${h.id} should be done or blocked at the consolidation point`);
-  }
-  // Selection under a default incumbent therefore yields no default extraction
-  // hypothesis (only the pipeline-agnostic per_source_confidence_bands remains).
-  const ids = selectTargets({ candidate_missing: 96, label_mismatch: 32 }, [], [], 3, "default").map((t) => t.id);
-  for (const gone of ["default_relationship_object_recall", "default_coverage_completion", "default_coverage_with_relations", "default_label_canonicalization"]) {
-    assert.ok(!ids.includes(gone), `${gone} (done/blocked) must not be selected`);
-  }
+test("the cassette directories are not frozen: an experiment that changes a prompt must re-record them", () => {
+  assert.ok(!FROZEN_PATHS.some((p) => p.includes("cassettes")));
+  const experiment = experimentPrompt({ id: "x", summary: "y", targetKind: "mistyped" }, EVALUATION);
+  assert.ok(experiment.includes("scripts/record_default_cassettes.py --record"));
+  assert.ok(experiment.includes("scripts/benchmark_replay.py --record --spend"));
 });
-test("pipeline-agnostic hypotheses are eligible under either incumbent", () => {
-  assert.equal(hypothesisPipeline("per_source_confidence_bands"), "both");
-  for (const incumbent of ["open_v1", "default"]) {
-    const targets = selectTargets({}, [], [], SEED_BACKLOG.length, incumbent);
-    assert.ok(
-      targets.some((t) => t.id === "per_source_confidence_bands"),
-      `expected per_source_confidence_bands eligible under ${incumbent}`,
-    );
-  }
+test("the incumbent and each candidate are measured by the same steps", () => {
+  const evaluate = evaluatePrompt();
+  const experiment = experimentPrompt({ id: "x", summary: "y", targetKind: "mistyped" }, EVALUATION);
+  const step = "python scripts/quality_tournament.py --pipeline individual --passes 1 --restarts 1";
+  assert.ok(evaluate.includes(step) && experiment.includes(step));
+  assert.ok(evaluate.includes("STALE CASSETTES") && experiment.includes("STALE CASSETTES"));
 });
 
 console.log(`\n${passCount} passed, ${failCount} failed`);

@@ -1,0 +1,2415 @@
+{
+ "format": "extraction-benchmark/1",
+ "document": {
+  "id": "edit_check",
+  "title": "Edit check",
+  "perspective": "product",
+  "source_url": "https://www.mediawiki.org/wiki/Edit_check",
+  "revision": "8706872",
+  "retrieved": "2026-11-12",
+  "license": "CC BY-SA 4.0",
+  "attribution": "MediaWiki.org contributors and the Wikimedia Foundation Editing team",
+  "dataset": {
+   "identifier": "bench-edit-check",
+   "title": "Benchmark: Edit check (MediaWiki)"
+  }
+ },
+ "taxonomy": {
+  "identifier": "dr_spec",
+  "spec_version": "0.11.0",
+  "source_commit": "a06f0564a1a32dda9837e6b8053b619bc98ea22b"
+ },
+ "individuals": [
+  {
+   "key": "edit-check",
+   "title": "Edit Check",
+   "class": "product.softwarecapability",
+   "tier": "core",
+   "description": "The visual editor's ability to check the change someone is making and offer actionable feedback about Wikipedia policies while they edit.",
+   "aliases": [
+    "Edit check",
+    "Edit Checks",
+    "Checks"
+   ],
+   "acceptable_classes": [
+    "product.feature",
+    "application.applicationcomponent"
+   ],
+   "data": {
+    "status": "delivered"
+   },
+   "evidence": [
+    {
+     "quote": "Offer people actionable feedback about Wikipedia policies while they are editing.",
+     "start": 14,
+     "end": 95
+    },
+    {
+     "quote": "will check the changes people are attempting to make and present them with actions they can take to improve these changes",
+     "start": 5576,
+     "end": 5697
+    }
+   ]
+  },
+  {
+   "key": "reference-check",
+   "title": "Reference Check",
+   "class": "product.feature",
+   "tier": "core",
+   "description": "The first check: detects new content added without a reference and prompts the editor to add one.",
+   "aliases": [
+    "Reference check",
+    "reference Edit Check",
+    "Reference Edit Check"
+   ],
+   "data": {
+    "status": "delivered"
+   },
+   "evidence": [
+    {
+     "quote": "The first \"check\" the Editing Team will be introducing is one that will detect when people are attempting to add *new* content to an existing article *without* a corresponding reference and prompt them to do so.",
+     "start": 5775,
+     "end": 5986
+    },
+    {
+     "quote": "- **Reference check**",
+     "start": 730,
+     "end": 751
+    }
+   ]
+  },
+  {
+   "key": "link-check",
+   "title": "Link check and Reference reliability",
+   "class": "product.feature",
+   "tier": "core",
+   "description": "A check on the links and the reliability of the references an editor adds; listed among the available features.",
+   "aliases": [
+    "Link check",
+    "Reference reliability"
+   ],
+   "data": {
+    "status": "delivered"
+   },
+   "evidence": [
+    {
+     "quote": "- **Link check and Reference reliability**",
+     "start": 752,
+     "end": 794
+    }
+   ]
+  },
+  {
+   "key": "paste-check",
+   "title": "Paste Check",
+   "class": "product.feature",
+   "tier": "core",
+   "description": "A check on pasted content; listed among the available features.",
+   "data": {
+    "status": "delivered"
+   },
+   "evidence": [
+    {
+     "quote": "- **Paste Check**",
+     "start": 795,
+     "end": 812
+    }
+   ]
+  },
+  {
+   "key": "tone-check",
+   "title": "Tone Check",
+   "class": "product.feature",
+   "tier": "core",
+   "description": "A new check the Editing team is working on.",
+   "aliases": [
+    "Tone check"
+   ],
+   "data": {
+    "status": "developing"
+   },
+   "evidence": [
+    {
+     "quote": "- **Tone check**",
+     "start": 853,
+     "end": 869
+    }
+   ]
+  },
+  {
+   "key": "multi-check",
+   "title": "Multi-Check",
+   "class": "product.feature",
+   "tier": "core",
+   "description": "Showing several Reference Checks within a single editing session.",
+   "aliases": [
+    "Multi-Check (References)",
+    "multi-check"
+   ],
+   "data": {
+    "status": "delivered"
+   },
+   "evidence": [
+    {
+     "quote": "Multi-Check caused statistically significant increases in the proportion of edits that include a reference",
+     "start": 13747,
+     "end": 13853
+    },
+    {
+     "quote": "multiple reference checks were shown within a single editing session",
+     "start": 15484,
+     "end": 15552
+    }
+   ]
+  },
+  {
+   "key": "suggestion-mode",
+   "title": "Suggestion Mode",
+   "class": "product.feature",
+   "tier": "core",
+   "description": "A related feature that presents suggestions on existing article content; available as a Beta Feature.",
+   "acceptable_classes": [
+    "product.softwarecapability"
+   ],
+   "data": {
+    "status": "developing"
+   },
+   "evidence": [
+    {
+     "quote": "The team is continuing to work on Suggestion Mode. The feature has been available as a Beta Feature globally since early March",
+     "start": 3052,
+     "end": 3178
+    },
+    {
+     "quote": "- **Suggestion Mode**",
+     "start": 920,
+     "end": 941
+    }
+   ]
+  },
+  {
+   "key": "textmatch",
+   "title": "TextMatch",
+   "class": "product.feature",
+   "tier": "core",
+   "description": "A related feature communities use to create custom local types of Suggestion.",
+   "aliases": [
+    "textMatch",
+    "textmatch"
+   ],
+   "data": {
+    "status": "developing"
+   },
+   "evidence": [
+    {
+     "quote": "Some communities have started to use the textMatch feature to create custom local types of Suggestion.",
+     "start": 3745,
+     "end": 3847
+    },
+    {
+     "quote": "- **TextMatch**",
+     "start": 942,
+     "end": 957
+    }
+   ]
+  },
+  {
+   "key": "add-an-image-suggestion",
+   "title": "Add an image suggestion",
+   "class": "product.feature",
+   "tier": "supporting",
+   "description": "A new experimental suggestion type that reuses the Growth team's functionality.",
+   "aliases": [
+    "Add an image"
+   ],
+   "data": {
+    "status": "developing"
+   },
+   "evidence": [
+    {
+     "quote": "A new experimental suggestion type, \"Add an image\", has been created using the same functionality as the Growth team's version.",
+     "start": 2017,
+     "end": 2144
+    }
+   ]
+  },
+  {
+   "key": "add-a-link-suggestion",
+   "title": "Add a link suggestion",
+   "class": "product.feature",
+   "tier": "supporting",
+   "description": "A suggestion type being improved so it can become a default global suggestion type.",
+   "aliases": [
+    "Add a link"
+   ],
+   "data": {
+    "status": "developing"
+   },
+   "evidence": [
+    {
+     "quote": "improving the functionality of the \"Add a link\" suggestion type, so that it can become a default global suggestion type in the future",
+     "start": 2169,
+     "end": 2302
+    }
+   ]
+  },
+  {
+   "key": "check-configurability",
+   "title": "Edit Check configurability",
+   "class": "product.softwarecapability",
+   "tier": "core",
+   "description": "The ability for volunteers, per project, to audit and edit the logic that activates a check and to review the edits made by people shown it.",
+   "aliases": [
+    "Configurability",
+    "Checks' configuration"
+   ],
+   "acceptable_classes": [
+    "product.feature"
+   ],
+   "data": {
+    "status": "developing"
+   },
+   "evidence": [
+    {
+     "quote": "Edit Check will enable volunteers, on a per project basis to:",
+     "start": 12709,
+     "end": 12770
+    },
+    {
+     "quote": "Equipping moderators with a new ability to specify the feedback inexperienced volunteers are presented with while they are editing",
+     "start": 8155,
+     "end": 8285
+    }
+   ]
+  },
+  {
+   "key": "suggestion-storage",
+   "title": "Suggestion storage",
+   "class": "product.softwarecapability",
+   "tier": "supporting",
+   "description": "A planned ability to store Suggestions so other features, and an article's Read mode, can use them.",
+   "acceptable_classes": [
+    "product.feature"
+   ],
+   "data": {
+    "status": "developing"
+   },
+   "evidence": [
+    {
+     "quote": "The team is building a way for Suggestions to be stored more efficiently",
+     "start": 2762,
+     "end": 2834
+    }
+   ]
+  },
+  {
+   "key": "newcomer",
+   "title": "Newcomers and Junior Contributors",
+   "class": "product.persona",
+   "tier": "core",
+   "description": "People still learning the basics of contributing to Wikipedia (fewer than 100 cumulative edits, including first-time editors); the project centres on those in Sub-Saharan Africa.",
+   "aliases": [
+    "Newcomer",
+    "Newcomers",
+    "Junior Contributor",
+    "Junior Contributors",
+    "new volunteers",
+    "inexperienced volunteers",
+    "Inexperienced volunteers",
+    "newcomers and Junior Contributors"
+   ],
+   "acceptable_classes": [
+    "motivation.stakeholder",
+    "business.businessrole"
+   ],
+   "data": {
+    "category": "primary",
+    "proficiency": "novice"
+   },
+   "evidence": [
+    {
+     "quote": "Experience: **Learning the basics of contributing to Wikipedia**",
+     "start": 9725,
+     "end": 9789
+    },
+    {
+     "quote": "people who have published <100 cumulative edits to a single, or multiple, Wikipedias",
+     "start": 9895,
+     "end": 9979
+    },
+    {
+     "quote": "Newcomers and Junior Contributors from Sub-Saharan Africa",
+     "start": 1044,
+     "end": 1101
+    }
+   ]
+  },
+  {
+   "key": "moderator",
+   "title": "Experienced volunteers and moderators",
+   "class": "product.persona",
+   "tier": "core",
+   "description": "Experienced volunteers who review and revert newcomers' edits, judge whether changes are useful, and audit and configure how Edit Check presents policies.",
+   "aliases": [
+    "Moderator",
+    "Moderators",
+    "moderators",
+    "Experienced volunteer",
+    "Experienced volunteers",
+    "experienced volunteers",
+    "experienced editors",
+    "Experienced volunteers/moderators"
+   ],
+   "acceptable_classes": [
+    "motivation.stakeholder",
+    "business.businessrole",
+    "security.role"
+   ],
+   "data": {
+    "category": "secondary"
+   },
+   "evidence": [
+    {
+     "quote": "**Experienced volunteers/moderators** – need to do more work reverting low-quality edits",
+     "start": 7323,
+     "end": 7411
+    },
+    {
+     "quote": "Moderators at the English and French Wikipedias will notice improvements in the quality of edits newcomers are making",
+     "start": 1241,
+     "end": 1358
+    },
+    {
+     "quote": "it is crucial that moderators be empowered to configure when, and for whom, Edit Check becomes activated",
+     "start": 12267,
+     "end": 12371
+    }
+   ]
+  },
+  {
+   "key": "administrator",
+   "title": "Administrator",
+   "class": "business.businessrole",
+   "tier": "supporting",
+   "description": "A wiki administrator, who can configure Suggestion Mode locally.",
+   "aliases": [
+    "Administrators"
+   ],
+   "acceptable_classes": [
+    "product.persona",
+    "security.role"
+   ],
+   "evidence": [
+    {
+     "quote": "Administrators at all Wikipedias can help to configure this tool",
+     "start": 4153,
+     "end": 4217
+    }
+   ]
+  },
+  {
+   "key": "publishing-workflow",
+   "title": "Publishing an edit",
+   "class": "product.userworkflow",
+   "tier": "supporting",
+   "description": "The editor's journey from making a change in the visual editor to publishing it.",
+   "aliases": [
+    "publishing workflow",
+    "editing workflow"
+   ],
+   "evidence": [
+    {
+     "quote": "a new step within the *mobile* visual editor's publishing workflow",
+     "start": 13080,
+     "end": 13146
+    }
+   ]
+  },
+  {
+   "key": "reference-check-step",
+   "title": "Reference Check step",
+   "class": "product.workflowstep",
+   "tier": "supporting",
+   "description": "The step added to the mobile publishing workflow that appears when new content has no reference.",
+   "acceptable_classes": [
+    "ux.view",
+    "navigation.flowstep"
+   ],
+   "evidence": [
+    {
+     "quote": "will introduce a new step within the *mobile* visual editor's publishing workflow that people will see if/when they add new content *without* a reference",
+     "start": 13065,
+     "end": 13218
+    }
+   ]
+  },
+  {
+   "key": "multi-check-deployment",
+   "title": "Multi-Check deployment (25 June 2025)",
+   "class": "product.milestone",
+   "tier": "supporting",
+   "description": "Multi-Check was deployed to every wiki where Reference Check was available.",
+   "data": {
+    "status": "completed"
+   },
+   "evidence": [
+    {
+     "quote": "Multi-Check was deployed to all wikis where Reference Check is currently available on June 25, 2025.",
+     "start": 14004,
+     "end": 14104
+    }
+   ]
+  },
+  {
+   "key": "siderail-redesign",
+   "title": "Desktop siderail redesign (December 2024)",
+   "class": "product.milestone",
+   "tier": "supporting",
+   "description": "Release of the new desktop design that shows checks alongside the article.",
+   "data": {
+    "status": "completed"
+   },
+   "evidence": [
+    {
+     "quote": "In December 2024, we released a new design for the Edit Check desktop experience.",
+     "start": 16947,
+     "end": 17028
+    }
+   ]
+  },
+  {
+   "key": "suggestion-mode-beta",
+   "title": "Suggestion Mode Beta Feature release",
+   "class": "product.milestone",
+   "tier": "supporting",
+   "description": "Suggestion Mode became available as a Beta Feature, first at English Wikipedia and then globally.",
+   "data": {
+    "status": "completed"
+   },
+   "evidence": [
+    {
+     "quote": "available as a Beta Feature globally since early March and at English Wikipedia since early February",
+     "start": 3124,
+     "end": 3224
+    }
+   ]
+  },
+  {
+   "key": "edit-check-siderail",
+   "title": "Edit Check siderail",
+   "class": "ux.subview",
+   "tier": "supporting",
+   "description": "The desktop region beside the article in which checks are shown.",
+   "aliases": [
+    "siderail"
+   ],
+   "acceptable_classes": [
+    "ux.view",
+    "ux.librarysubview",
+    "ux.componentinstance"
+   ],
+   "evidence": [
+    {
+     "quote": "This change shifted Edit Checks from appearing *within* articles to appearing *alongside* them, in a new \"siderail.\"",
+     "start": 17029,
+     "end": 17145
+    },
+    {
+     "quote": "Edit checks are shown at the side on Desktop.",
+     "start": 13235,
+     "end": 13280
+    }
+   ]
+  },
+  {
+   "key": "special-editchecks",
+   "title": "Special:EditChecks",
+   "class": "ux.view",
+   "tier": "supporting",
+   "description": "The special page that shows a wiki's local check configuration.",
+   "evidence": [
+    {
+     "quote": "Clearer and more accurate details in `Special:EditChecks` which shows the local configuration",
+     "start": 3552,
+     "end": 3645
+    }
+   ]
+  },
+  {
+   "key": "hide-suggestions-toggle",
+   "title": "Hide suggestions toggle",
+   "class": "ux.actioncomponent",
+   "tier": "supporting",
+   "description": "A toggle button that temporarily hides suggestions.",
+   "evidence": [
+    {
+     "quote": "Addition of a toggle-button to hide suggestions temporarily",
+     "start": 3417,
+     "end": 3476
+    }
+   ]
+  },
+  {
+   "key": "visual-editor",
+   "title": "Visual editor",
+   "class": "application.applicationcomponent",
+   "tier": "core",
+   "description": "The editing software, on desktop and mobile, that Edit Check is built into.",
+   "aliases": [
+    "visual editor",
+    "VE",
+    "VisualEditor",
+    "mobile visual editor"
+   ],
+   "acceptable_classes": [
+    "ux.uxapplication"
+   ],
+   "evidence": [
+    {
+     "quote": "the Editing Team will be introducing new functionality within the visual editor (desktop and mobile)",
+     "start": 5470,
+     "end": 5570
+    },
+    {
+     "quote": "a set of improvements for the visual editor",
+     "start": 210,
+     "end": 253
+    }
+   ]
+  },
+  {
+   "key": "editcheck-init-js",
+   "title": "editcheck/init.js",
+   "class": "application.applicationcomponent",
+   "tier": "supporting",
+   "description": "The code module in which the Reference Check activation conditions are implemented and maintained.",
+   "acceptable_classes": [
+    "technology.artifact",
+    "application.applicationfunction"
+   ],
+   "evidence": [
+    {
+     "quote": "The conditions above are implemented and maintained in code here: editcheck/init.js",
+     "start": 11456,
+     "end": 11539
+    }
+   ]
+  },
+  {
+   "key": "reference-detection",
+   "title": "Reference detection",
+   "class": "application.applicationfunction",
+   "tier": "supporting",
+   "description": "The heuristic that decides when Reference Check activates.",
+   "aliases": [
+    "Reference Detection",
+    "the heuristic"
+   ],
+   "acceptable_classes": [
+    "product.softwarecapability",
+    "product.feature"
+   ],
+   "evidence": [
+    {
+     "quote": "### Reference Detection",
+     "start": 10788,
+     "end": 10811
+    },
+    {
+     "quote": "empower volunteers, on a per-project basis, to evolve the heuristic to become more robust over time",
+     "start": 10961,
+     "end": 11060
+    }
+   ]
+  },
+  {
+   "key": "editing-team",
+   "title": "Editing Team",
+   "class": "business.businessactor",
+   "tier": "core",
+   "description": "The Wikimedia Foundation team that builds Edit Check.",
+   "aliases": [
+    "Editing team",
+    "the team"
+   ],
+   "acceptable_classes": [
+    "motivation.stakeholder"
+   ],
+   "evidence": [
+    {
+     "quote": "The Editing Team is working on a set of improvements for the visual editor",
+     "start": 179,
+     "end": 253
+    }
+   ]
+  },
+  {
+   "key": "wmf-product-department",
+   "title": "Wikimedia Foundation Product Department",
+   "class": "business.businessactor",
+   "tier": "supporting",
+   "description": "The department that is prioritizing this work.",
+   "aliases": [
+    "Product Department"
+   ],
+   "acceptable_classes": [
+    "motivation.stakeholder"
+   ],
+   "evidence": [
+    {
+     "quote": "why the Wikimedia Foundation's Product Department is prioritizing this work",
+     "start": 501,
+     "end": 576
+    }
+   ]
+  },
+  {
+   "key": "growth-team",
+   "title": "Growth team",
+   "class": "business.businessactor",
+   "tier": "supporting",
+   "description": "The team whose 'Add an image' functionality and community configuration system Edit Check builds on.",
+   "aliases": [
+    "Growth Team"
+   ],
+   "evidence": [
+    {
+     "quote": "using the same functionality as the Growth team's version",
+     "start": 2086,
+     "end": 2143
+    }
+   ]
+  },
+  {
+   "key": "edit",
+   "title": "Edit",
+   "class": "business.businessobject",
+   "tier": "supporting",
+   "description": "A change someone publishes to a Wikipedia article; new content edits are what the checks act on and what the experiments measure.",
+   "aliases": [
+    "edits",
+    "new content edit",
+    "new content edits",
+    "change",
+    "changes"
+   ],
+   "acceptable_classes": [
+    "application.dataobject"
+   ],
+   "evidence": [
+    {
+     "quote": "published edits that add new content",
+     "start": 22973,
+     "end": 23009
+    },
+    {
+     "quote": "People shown the Reference Check are **2.2 times more likely** to publish a new content edit",
+     "start": 19052,
+     "end": 19144
+    }
+   ]
+  },
+  {
+   "key": "reference",
+   "title": "Reference",
+   "class": "business.businessobject",
+   "tier": "supporting",
+   "description": "A citation that supports content added to an article.",
+   "aliases": [
+    "references",
+    "citation",
+    "source"
+   ],
+   "acceptable_classes": [
+    "application.dataobject"
+   ],
+   "evidence": [
+    {
+     "quote": "add *new* content to an existing article *without* a corresponding reference",
+     "start": 5884,
+     "end": 5960
+    }
+   ]
+  },
+  {
+   "key": "suggestion",
+   "title": "Suggestion",
+   "class": "business.businessobject",
+   "tier": "supporting",
+   "description": "An improvement that Suggestion Mode proposes for existing content.",
+   "aliases": [
+    "Suggestions",
+    "suggestions"
+   ],
+   "acceptable_classes": [
+    "application.dataobject"
+   ],
+   "evidence": [
+    {
+     "quote": "create custom local types of Suggestion",
+     "start": 3807,
+     "end": 3846
+    }
+   ]
+  },
+  {
+   "key": "policies-and-guidelines",
+   "title": "Wikipedia policies and guidelines",
+   "class": "business.businessobject",
+   "tier": "supporting",
+   "description": "The policies, guidelines and conventions editors are expected to follow, which the checks make visible.",
+   "aliases": [
+    "policies and guidelines",
+    "project policies and conventions",
+    "norms and standards"
+   ],
+   "acceptable_classes": [
+    "motivation.constraint",
+    "motivation.principle"
+   ],
+   "evidence": [
+    {
+     "quote": "do not make people aware of the Wikipedia policies and guidelines they are expected to follow",
+     "start": 6623,
+     "end": 6716
+    }
+   ]
+  },
+  {
+   "key": "moderating-changes",
+   "title": "Moderating changes",
+   "class": "business.businessfunction",
+   "tier": "supporting",
+   "description": "Volunteers' long-standing work to react to and moderate changes, including reverting low-quality edits.",
+   "aliases": [
+    "moderation",
+    "patrol"
+   ],
+   "acceptable_classes": [
+    "business.businessprocess",
+    "business.businesscapability"
+   ],
+   "evidence": [
+    {
+     "quote": "**React** to and moderate changes to Wikipedia articles.",
+     "start": 27190,
+     "end": 27246
+    },
+    {
+     "quote": "need to do more work reverting low-quality edits and posting messages on inexperienced volunteers' talk pages",
+     "start": 7363,
+     "end": 7472
+    }
+   ]
+  },
+  {
+   "key": "wikipedia-projects",
+   "title": "Wikipedia projects",
+   "class": "motivation.stakeholder",
+   "tier": "supporting",
+   "description": "The wikis as a whole, which struggle to grow and diversify their volunteers.",
+   "aliases": [
+    "Wikimedia wikis",
+    "wikis"
+   ],
+   "evidence": [
+    {
+     "quote": "**Wikipedia projects** – struggle to grow and diversify their volunteer populations",
+     "start": 7759,
+     "end": 7842
+    }
+   ]
+  },
+  {
+   "key": "goal-newcomers-confident",
+   "title": "Newcomers feel safe and confident publishing changes they are proud of",
+   "class": "motivation.goal",
+   "tier": "core",
+   "description": "Objective 1: newcomers and Junior Contributors from Sub-Saharan Africa feel safe and confident enough to publish changes they are proud of and that experienced volunteers find useful.",
+   "acceptable_classes": [
+    "motivation.outcome"
+   ],
+   "evidence": [
+    {
+     "quote": "Newcomers and Junior Contributors from Sub-Saharan Africa will feel safe and confident enough while editing to publish changes they are proud of and that experienced volunteers consider useful.",
+     "start": 1044,
+     "end": 1237
+    }
+   ]
+  },
+  {
+   "key": "goal-moderators-engaged",
+   "title": "Moderators see better newcomer edits and configure Edit Check",
+   "class": "motivation.goal",
+   "tier": "core",
+   "description": "Objective 2: moderators at the English and French Wikipedias notice better newcomer edits and are motivated to configure how Edit Check presents policies.",
+   "acceptable_classes": [
+    "motivation.outcome"
+   ],
+   "evidence": [
+    {
+     "quote": "Moderators at the English and French Wikipedias will notice improvements in the quality of edits newcomers are making and be motivated to configure how Edit Check presents policies to them.",
+     "start": 1241,
+     "end": 1430
+    }
+   ]
+  },
+  {
+   "key": "goal-norms-legible",
+   "title": "Make existing norms legible and actionable while editing",
+   "class": "motivation.goal",
+   "tier": "supporting",
+   "description": "Make the norms and standards currently in place legible and actionable to people while they are editing.",
+   "acceptable_classes": [
+    "motivation.principle",
+    "motivation.requirement"
+   ],
+   "evidence": [
+    {
+     "quote": "we first need to make the norms and standards that are currently in place legible and actionable to people while they are editing",
+     "start": 9266,
+     "end": 9395
+    }
+   ]
+  },
+  {
+   "key": "goal-diverse-norms",
+   "title": "Policies and content reflect the diverse experiences of the people served",
+   "class": "motivation.goal",
+   "tier": "supporting",
+   "description": "The longer-term future the project works toward: wikis' policies, norms and content reflect the diverse experiences of the people they serve.",
+   "evidence": [
+    {
+     "quote": "to evolve towards a future where wikis' policies and cultural norms – and ultimately, content – reflect the diverse experiences of the people these projects are intended to serve",
+     "start": 9086,
+     "end": 9264
+    }
+   ]
+  },
+  {
+   "key": "outcome-edit-quality",
+   "title": "Higher quality of newcomer edits in the main namespace",
+   "class": "motivation.outcome",
+   "tier": "core",
+   "description": "Intended impact 1: increase the quality of the edits newcomers and Junior Contributors in Sub-Saharan Africa publish in the main namespace.",
+   "acceptable_classes": [
+    "motivation.goal"
+   ],
+   "data": {
+    "status": "achieved"
+   },
+   "evidence": [
+    {
+     "quote": "Increase the quality of edits newcomers and Junior Contributors editing from within Sub-Saharan Africa publish in the main namespace",
+     "start": 22806,
+     "end": 22938
+    }
+   ]
+  },
+  {
+   "key": "outcome-references-added",
+   "title": "Newcomers accompany new content with a reference",
+   "class": "motivation.outcome",
+   "tier": "core",
+   "description": "Intended impact 2: increase the likelihood that newcomers and Junior Contributors accompany new content with a reference.",
+   "acceptable_classes": [
+    "motivation.goal"
+   ],
+   "data": {
+    "status": "achieved"
+   },
+   "evidence": [
+    {
+     "quote": "Increase the likelihood that newcomers and Junior Contributors editing from within Sub-Saharan Africa will accompany the new content they are adding with a reference",
+     "start": 23280,
+     "end": 23445
+    }
+   ]
+  },
+  {
+   "key": "outcome-safe-confident",
+   "title": "Newcomers report feeling safe and confident",
+   "class": "motivation.outcome",
+   "tier": "core",
+   "description": "Intended impact 3: newcomers and Junior Contributors report feeling safe and confident making changes to Wikipedia.",
+   "acceptable_classes": [
+    "motivation.goal"
+   ],
+   "evidence": [
+    {
+     "quote": "Newcomers and Junior Contributors editing from within Sub-Saharan Africa will report feeling safe and confident making changes to Wikipedia",
+     "start": 23803,
+     "end": 23942
+    }
+   ]
+  },
+  {
+   "key": "outcome-volunteers-iterate-config",
+   "title": "Experienced volunteers audit and iterate on the default configurations",
+   "class": "motivation.outcome",
+   "tier": "core",
+   "description": "Intended impact 4: experienced volunteers independently audit and iterate on Edit Check's default configurations.",
+   "acceptable_classes": [
+    "motivation.goal"
+   ],
+   "evidence": [
+    {
+     "quote": "Experienced volunteers will independently audit and iterate upon Edit Check's default configurations to ensure Edit Check is causing newcomers and Junior Contributors to make productive edits.",
+     "start": 24186,
+     "end": 24378
+    }
+   ]
+  },
+  {
+   "key": "outcome-reference-awareness",
+   "title": "Newcomers are more aware of the need to add a reference",
+   "class": "motivation.outcome",
+   "tier": "core",
+   "description": "Intended impact 5: newcomers and Junior Contributors are more aware of the need to add a reference because the visual editor prompts them.",
+   "acceptable_classes": [
+    "motivation.goal"
+   ],
+   "evidence": [
+    {
+     "quote": "Newcomers and Junior Contributors will be more aware of the need to add a reference when contributing new content because the visual editor will prompt them to do so",
+     "start": 24394,
+     "end": 24559
+    }
+   ]
+  },
+  {
+   "key": "assessment-policies-not-surfaced",
+   "title": "Editing interfaces do not make people aware of policies",
+   "class": "motivation.assessment",
+   "tier": "core",
+   "description": "The gap the project responds to: the visual editor and other editing interfaces do not make people aware of the policies and guidelines they are expected to follow.",
+   "acceptable_classes": [
+    "motivation.driver"
+   ],
+   "data": {
+    "assessment_type": "gap"
+   },
+   "evidence": [
+    {
+     "quote": "The trouble is that the visual editor and other editing interfaces do not make people aware of the Wikipedia policies and guidelines they are expected to follow.",
+     "start": 6556,
+     "end": 6717
+    }
+   ]
+  },
+  {
+   "key": "driver-newcomers-driven-away",
+   "title": "Good-faith newcomer edits are reverted and newcomers leave",
+   "class": "motivation.driver",
+   "tier": "supporting",
+   "description": "Inexperienced volunteers become disappointed and frustrated when their good-faith changes are undone, which drives them away.",
+   "acceptable_classes": [
+    "motivation.assessment"
+   ],
+   "data": {
+    "category": "operational"
+   },
+   "evidence": [
+    {
+     "quote": "become disappointed and frustrated when the good-faith change(s) they arrived to the wiki seeking to make are undone (read: reverted), deleted, and/or scrutinized in inequitable ways",
+     "start": 6973,
+     "end": 7155
+    }
+   ]
+  },
+  {
+   "key": "driver-moderation-burden",
+   "title": "Moderation burden on experienced volunteers",
+   "class": "motivation.driver",
+   "tier": "supporting",
+   "description": "Experienced volunteers must do more work reverting low-quality edits and educating newcomers, which makes them sceptical and impatient.",
+   "acceptable_classes": [
+    "motivation.assessment"
+   ],
+   "data": {
+    "category": "operational"
+   },
+   "evidence": [
+    {
+     "quote": "Continually needing to educate inexperienced volunteers and undo their changes can lead to experienced volunteers becoming skeptical of inexperienced volunteers and impatient with them.",
+     "start": 7570,
+     "end": 7755
+    }
+   ]
+  },
+  {
+   "key": "driver-volunteer-growth",
+   "title": "Wikipedia projects struggle to grow and diversify their volunteers",
+   "class": "motivation.driver",
+   "tier": "supporting",
+   "description": "The projects struggle to grow and diversify their volunteer populations and to shrink knowledge gaps.",
+   "acceptable_classes": [
+    "motivation.assessment"
+   ],
+   "data": {
+    "category": "strategic"
+   },
+   "evidence": [
+    {
+     "quote": "struggle to grow and diversify their volunteer populations and shrink the knowledge gaps present within Wikimedia wikis",
+     "start": 7784,
+     "end": 7903
+    }
+   ]
+  },
+  {
+   "key": "driver-retention-outside-europe",
+   "title": "Difficulty retaining editors outside Europe and North America",
+   "class": "motivation.driver",
+   "tier": "supporting",
+   "description": "The movement struggles to retain editors who live outside Europe and North America.",
+   "acceptable_classes": [
+    "motivation.assessment"
+   ],
+   "data": {
+    "category": "strategic"
+   },
+   "evidence": [
+    {
+     "quote": "The movement struggles to retain editors who live outside Europe and North America.",
+     "start": 10356,
+     "end": 10439
+    }
+   ]
+  },
+  {
+   "key": "assessment-ssa-underrepresented",
+   "title": "People from Sub-Saharan Africa are underrepresented among editors",
+   "class": "motivation.assessment",
+   "tier": "supporting",
+   "description": "People from Sub-Saharan Africa are 1% of active editors but 15% of the world's population and 7% of its internet population.",
+   "acceptable_classes": [
+    "motivation.driver"
+   ],
+   "data": {
+    "assessment_type": "gap"
+   },
+   "evidence": [
+    {
+     "quote": "people from Sub-Saharan Africa represent only 1% of active unique editors, despite representing 15% of the global population and 7% of the global internet population",
+     "start": 10515,
+     "end": 10680
+    }
+   ]
+  },
+  {
+   "key": "assessment-reference-check-ab-test",
+   "title": "Reference Check A/B test",
+   "class": "motivation.assessment",
+   "tier": "core",
+   "description": "The finding that Reference Check raised the quality of newcomers' edits without significant disruption (2.2 times more constructive edits with a reference; revert rate down 8.6%).",
+   "aliases": [
+    "Reference Check A/B Test"
+   ],
+   "acceptable_classes": [
+    "motivation.outcome"
+   ],
+   "data": {
+    "assessment_type": "impact"
+   },
+   "evidence": [
+    {
+     "quote": "Reference Check caused an **increase in the quality of edits** newcomers publish and **did not cause any significant disruption**.",
+     "start": 18615,
+     "end": 18745
+    },
+    {
+     "quote": "People shown the Reference Check are **2.2 times more likely** to publish a new content edit that includes a reference and is constructive (not reverted within 48 hours).",
+     "start": 19052,
+     "end": 19222
+    }
+   ]
+  },
+  {
+   "key": "assessment-multi-check-ab-test",
+   "title": "Multi-Check (References) A/B test",
+   "class": "motivation.assessment",
+   "tier": "core",
+   "description": "The finding that Multi-Check significantly raised the share of edits that include a reference and are not reverted, without harming edit completion.",
+   "aliases": [
+    "Multi-Check (References) A/B Test"
+   ],
+   "acceptable_classes": [
+    "motivation.outcome"
+   ],
+   "data": {
+    "assessment_type": "impact"
+   },
+   "evidence": [
+    {
+     "quote": "Multi-Check caused statistically significant increases in the proportion of edits that include a reference and are not reverted within 48 hours without causing undesirable changes in edit completion or other forms of disruption (e.g. blocks).",
+     "start": 13747,
+     "end": 13989
+    }
+   ]
+  },
+  {
+   "key": "assessment-multi-check-phase-1",
+   "title": "Multi-Check Phase 1 impact analysis",
+   "class": "motivation.assessment",
+   "tier": "core",
+   "description": "The before-and-after finding that moving checks to the desktop siderail was net positive (revert rate down 15.7%).",
+   "aliases": [
+    "Multi-Check Phase 1 Impact Analysis"
+   ],
+   "acceptable_classes": [
+    "motivation.outcome"
+   ],
+   "data": {
+    "assessment_type": "impact"
+   },
+   "evidence": [
+    {
+     "quote": "The findings above suggest this design change has been net positive.",
+     "start": 17965,
+     "end": 18033
+    },
+    {
+     "quote": "The revert rate of new content edits where Reference Check was activated decreased by **15.7%**.",
+     "start": 17331,
+     "end": 17427
+    }
+   ]
+  },
+  {
+   "key": "assessment-llm-reference-verification",
+   "title": "LLMs can evaluate whether sources corroborate claims (English)",
+   "class": "motivation.assessment",
+   "tier": "supporting",
+   "description": "Research confirmed that, in English, LLMs are effective at evaluating whether web-based sources corroborate claims on Wikipedia.",
+   "data": {
+    "assessment_type": "feasibility"
+   },
+   "evidence": [
+    {
+     "quote": "This research confirmed that in English LLMs are effective at evaluating whether web-based sources corroborate claims on Wikipedia.",
+     "start": 2548,
+     "end": 2679
+    }
+   ]
+  },
+  {
+   "key": "risk-edit-quality-decreases",
+   "title": "Risk: edit quality decreases",
+   "class": "motivation.assessment",
+   "tier": "core",
+   "description": "One of the impacts the Edit Check features are intended to avert, with the data that would show it.",
+   "acceptable_classes": [
+    "motivation.outcome",
+    "motivation.driver"
+   ],
+   "data": {
+    "assessment_type": "risk"
+   },
+   "evidence": [
+    {
+     "quote": "| 1. | Edit quality decreases |",
+     "start": 24829,
+     "end": 24860
+    }
+   ]
+  },
+  {
+   "key": "risk-harder-to-patrol",
+   "title": "Risk: edits become harder to patrol",
+   "class": "motivation.assessment",
+   "tier": "core",
+   "description": "One of the impacts the Edit Check features are intended to avert, with the data that would show it.",
+   "acceptable_classes": [
+    "motivation.outcome",
+    "motivation.driver"
+   ],
+   "data": {
+    "assessment_type": "risk"
+   },
+   "evidence": [
+    {
+     "quote": "Edits become more difficult to patrol because unreliable citations are difficult to detect",
+     "start": 25158,
+     "end": 25248
+    }
+   ]
+  },
+  {
+   "key": "risk-completion-rate-drops",
+   "title": "Risk: edit completion rate drastically decreases",
+   "class": "motivation.assessment",
+   "tier": "core",
+   "description": "One of the impacts the Edit Check features are intended to avert, with the data that would show it.",
+   "acceptable_classes": [
+    "motivation.outcome",
+    "motivation.driver"
+   ],
+   "data": {
+    "assessment_type": "risk"
+   },
+   "evidence": [
+    {
+     "quote": "Edit completion rate drastically decreases",
+     "start": 25527,
+     "end": 25569
+    }
+   ]
+  },
+  {
+   "key": "risk-abandonment-rises",
+   "title": "Risk: edit abandonment rate drastically increases",
+   "class": "motivation.assessment",
+   "tier": "core",
+   "description": "One of the impacts the Edit Check features are intended to avert, with the data that would show it.",
+   "acceptable_classes": [
+    "motivation.outcome",
+    "motivation.driver"
+   ],
+   "data": {
+    "assessment_type": "risk"
+   },
+   "evidence": [
+    {
+     "quote": "Edit abandonment rate drastically increases",
+     "start": 25721,
+     "end": 25764
+    }
+   ]
+  },
+  {
+   "key": "risk-blocks-increase",
+   "title": "Risk: blocks increase",
+   "class": "motivation.assessment",
+   "tier": "core",
+   "description": "One of the impacts the Edit Check features are intended to avert, with the data that would show it.",
+   "acceptable_classes": [
+    "motivation.outcome",
+    "motivation.driver"
+   ],
+   "data": {
+    "assessment_type": "risk"
+   },
+   "evidence": [
+    {
+     "quote": "| 5. | Blocks increase |",
+     "start": 25945,
+     "end": 25969
+    }
+   ]
+  },
+  {
+   "key": "risk-false-positives",
+   "title": "Risk: high false positive or false negative rates",
+   "class": "motivation.assessment",
+   "tier": "core",
+   "description": "One of the impacts the Edit Check features are intended to avert, with the data that would show it.",
+   "acceptable_classes": [
+    "motivation.outcome",
+    "motivation.driver"
+   ],
+   "data": {
+    "assessment_type": "risk"
+   },
+   "evidence": [
+    {
+     "quote": "High false positive or false negative rates",
+     "start": 26148,
+     "end": 26191
+    }
+   ]
+  },
+  {
+   "key": "risk-too-resource-intensive",
+   "title": "Risk: Edit Check is too resource intensive to scale",
+   "class": "motivation.assessment",
+   "tier": "core",
+   "description": "One of the impacts the Edit Check features are intended to avert, with the data that would show it.",
+   "acceptable_classes": [
+    "motivation.outcome",
+    "motivation.driver"
+   ],
+   "data": {
+    "assessment_type": "risk"
+   },
+   "evidence": [
+    {
+     "quote": "Edit Check is too resource intensive to scale",
+     "start": 26640,
+     "end": 26685
+    }
+   ]
+  },
+  {
+   "key": "principle-minimize-false-positives",
+   "title": "Minimize false positives",
+   "class": "motivation.principle",
+   "tier": "core",
+   "description": "Start with an approach that minimizes the likelihood of false positives.",
+   "acceptable_classes": [
+    "motivation.requirement"
+   ],
+   "evidence": [
+    {
+     "quote": "the Editing Team is pursuing an approach with Edit Check that minimizes the likelihood of false positives",
+     "start": 10823,
+     "end": 10928
+    }
+   ]
+  },
+  {
+   "key": "principle-start-simple",
+   "title": "Start with a limited, straightforward set of rules",
+   "class": "motivation.principle",
+   "tier": "supporting",
+   "description": "Begin with a small, simple rule set so guidance is intuitive for newcomers and does not create work for experienced volunteers.",
+   "acceptable_classes": [
+    "motivation.requirement",
+    "motivation.constraint"
+   ],
+   "evidence": [
+    {
+     "quote": "The Editing Team arrived at the decision to *start* with a relatively limited and straightforward set of rules in order to:",
+     "start": 11541,
+     "end": 11664
+    }
+   ]
+  },
+  {
+   "key": "requirement-moderators-configure",
+   "title": "Moderators can configure when and for whom Edit Check activates",
+   "class": "motivation.requirement",
+   "tier": "core",
+   "description": "Moderators must be able to configure when, and for whom, a check activates, so the software promotes behaviour they find productive.",
+   "acceptable_classes": [
+    "motivation.principle"
+   ],
+   "data": {
+    "requirement_type": "functional"
+   },
+   "evidence": [
+    {
+     "quote": "The Editing Team thinks it is crucial that moderators be empowered to configure when, and for whom, Edit Check becomes activated.",
+     "start": 12243,
+     "end": 12372
+    }
+   ]
+  },
+  {
+   "key": "requirement-reference-check-activation",
+   "title": "Reference Check activation conditions",
+   "class": "motivation.requirement",
+   "tier": "core",
+   "description": "Reference Check activates only when a new paragraph is added, it contains no reference, and the page is in the main namespace.",
+   "data": {
+    "requirement_type": "functional"
+   },
+   "evidence": [
+    {
+     "quote": "This strategy amounts to the initial reference Edit Check becoming activated if/when all of the following conditions are met:",
+     "start": 11063,
+     "end": 11188
+    },
+    {
+     "quote": "A minimum of one new paragraph of text is added to the article someone is editing",
+     "start": 11193,
+     "end": 11274
+    }
+   ]
+  },
+  {
+   "key": "metric-revert-rate",
+   "title": "Revert rate",
+   "class": "apm.metricinstrument",
+   "tier": "core",
+   "description": "The share of new content edits reverted within 48 hours.",
+   "aliases": [
+    "revert rate",
+    "new content edit revert rate"
+   ],
+   "evidence": [
+    {
+     "quote": "New content edit revert rate **decreased by 8.6%** if Reference Check was available.",
+     "start": 19532,
+     "end": 19616
+    },
+    {
+     "quote": "- *Revert Rate*",
+     "start": 14523,
+     "end": 14538
+    }
+   ]
+  },
+  {
+   "key": "metric-edit-completion-rate",
+   "title": "Edit completion rate",
+   "class": "apm.metricinstrument",
+   "tier": "core",
+   "description": "The proportion of edits that are started and then successfully published.",
+   "aliases": [
+    "edit completion rate"
+   ],
+   "evidence": [
+    {
+     "quote": "Proportion of edits that are started (`event.action` = `init`) that are successfully published (`event.action` = `saveSuccess`).",
+     "start": 25572,
+     "end": 25700
+    },
+    {
+     "quote": "**Edit Completion Rate**",
+     "start": 20481,
+     "end": 20505
+    }
+   ]
+  },
+  {
+   "key": "metric-edit-abandonment-rate",
+   "title": "Edit abandonment rate",
+   "class": "apm.metricinstrument",
+   "tier": "supporting",
+   "description": "The proportion of contributors shown Edit Check feedback who abandon their edit.",
+   "evidence": [
+    {
+     "quote": "Proportion of contributors that are presented Edit Check feedback and abandon their edits",
+     "start": 25767,
+     "end": 25856
+    }
+   ]
+  },
+  {
+   "key": "metric-block-rate",
+   "title": "Block rate",
+   "class": "apm.metricinstrument",
+   "tier": "core",
+   "description": "The rate at which users are blocked after being shown a check and publishing.",
+   "aliases": [
+    "block rates"
+   ],
+   "evidence": [
+    {
+     "quote": "**Block Rate**",
+     "start": 20955,
+     "end": 20969
+    }
+   ]
+  },
+  {
+   "key": "metric-false-negative-rate",
+   "title": "False negative rate",
+   "class": "apm.metricinstrument",
+   "tier": "core",
+   "description": "The share of new content edits published without a reference and without being shown Reference Check.",
+   "evidence": [
+    {
+     "quote": "**False Negative Rate**",
+     "start": 21145,
+     "end": 21168
+    }
+   ]
+  },
+  {
+   "key": "metric-false-positive-rate",
+   "title": "False positive rate",
+   "class": "apm.metricinstrument",
+   "tier": "core",
+   "description": "The share of contributors who dismiss the prompt because the content does not need a reference.",
+   "evidence": [
+    {
+     "quote": "**False Positive Rate**",
+     "start": 21345,
+     "end": 21368
+    }
+   ]
+  },
+  {
+   "key": "metric-constructive-retention-rate",
+   "title": "Constructive retention rate",
+   "class": "apm.metricinstrument",
+   "tier": "core",
+   "description": "How likely a contributor is to return and make another non-reverted edit in their second month.",
+   "evidence": [
+    {
+     "quote": "**Constructive Retention Rate**",
+     "start": 20098,
+     "end": 20129
+    }
+   ]
+  },
+  {
+   "key": "metric-edits-with-reference",
+   "title": "Proportion of new content edits with a reference",
+   "class": "apm.metricinstrument",
+   "tier": "core",
+   "description": "The share of published new-content edits that include a reference.",
+   "evidence": [
+    {
+     "quote": "- *Proportion of new content edits with a reference*",
+     "start": 14121,
+     "end": 14173
+    },
+    {
+     "quote": "Increase in the percentage of published edits that add new content *and* include a reference",
+     "start": 23448,
+     "end": 23540
+    }
+   ]
+  },
+  {
+   "key": "metric-users-with-reference",
+   "title": "Proportion of users who publish a new content edit with a reference",
+   "class": "apm.metricinstrument",
+   "tier": "core",
+   "description": "The share of distinct users who publish at least one new-content edit that includes a reference.",
+   "evidence": [
+    {
+     "quote": "- *Proportion of users that publish at least one new content edit with a reference*",
+     "start": 14833,
+     "end": 14916
+    },
+    {
+     "quote": "Increase in the percent of newcomers or Junior Contributors from SSA that publish at least one new content edit that includes a reference",
+     "start": 23541,
+     "end": 23678
+    }
+   ]
+  },
+  {
+   "key": "assessment-newcomers-in-africa-asia",
+   "title": "Newcomers are twice as likely to live in Africa or Asia",
+   "class": "motivation.assessment",
+   "tier": "supporting",
+   "description": "One of the findings behind the choice of audience.",
+   "acceptable_classes": [
+    "motivation.driver"
+   ],
+   "data": {
+    "assessment_type": "gap"
+   },
+   "evidence": [
+    {
+     "quote": "Newcomers are two times more likely to live in Africa or Asia.",
+     "start": 10291,
+     "end": 10353
+    }
+   ]
+  },
+  {
+   "key": "assessment-ssa-editors-english-french",
+   "title": "80% of registered editors in Sub-Saharan Africa contribute to English or French Wikipedia",
+   "class": "motivation.assessment",
+   "tier": "supporting",
+   "description": "One of the findings behind the choice of audience and wikis.",
+   "acceptable_classes": [
+    "motivation.driver"
+   ],
+   "evidence": [
+    {
+     "quote": "80% of registered editors in Sub-Saharan Africa contribute to English or French Wikipedia.",
+     "start": 10684,
+     "end": 10774
+    }
+   ]
+  }
+ ],
+ "relationships": [
+  {
+   "source": "reference-check",
+   "predicate": "realizes",
+   "target": "edit-check",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "The first \"check\" the Editing Team will be introducing",
+     "start": 5775,
+     "end": 5829
+    }
+   ]
+  },
+  {
+   "source": "link-check",
+   "predicate": "realizes",
+   "target": "edit-check",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "Several features are available within Edit Check:",
+     "start": 679,
+     "end": 728
+    }
+   ]
+  },
+  {
+   "source": "paste-check",
+   "predicate": "realizes",
+   "target": "edit-check",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "Several features are available within Edit Check:",
+     "start": 679,
+     "end": 728
+    }
+   ]
+  },
+  {
+   "source": "tone-check",
+   "predicate": "realizes",
+   "target": "edit-check",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "The Editing team works on new Checks:",
+     "start": 814,
+     "end": 851
+    }
+   ]
+  },
+  {
+   "source": "multi-check",
+   "predicate": "realizes",
+   "target": "edit-check",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "we will continue depending on this new design paradigm as we introduce new types of Edit Checks",
+     "start": 18047,
+     "end": 18142
+    }
+   ]
+  },
+  {
+   "source": "multi-check",
+   "predicate": "depends-on",
+   "target": "reference-check",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "Multi-Check was deployed to all wikis where Reference Check is currently available",
+     "start": 14004,
+     "end": 14086
+    }
+   ]
+  },
+  {
+   "source": "add-an-image-suggestion",
+   "predicate": "depends-on",
+   "target": "suggestion-mode",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "A new experimental suggestion type, \"Add an image\"",
+     "start": 2017,
+     "end": 2067
+    }
+   ]
+  },
+  {
+   "source": "add-a-link-suggestion",
+   "predicate": "depends-on",
+   "target": "suggestion-mode",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "the \"Add a link\" suggestion type",
+     "start": 2200,
+     "end": 2232
+    }
+   ]
+  },
+  {
+   "source": "textmatch",
+   "predicate": "depends-on",
+   "target": "suggestion-mode",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "whether you can locally create them with textmatch",
+     "start": 4881,
+     "end": 4931
+    }
+   ]
+  },
+  {
+   "source": "reference-check",
+   "predicate": "serves",
+   "target": "newcomer",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "prompting newcomers and Junior Contributors to add sources",
+     "start": 12010,
+     "end": 12068
+    }
+   ]
+  },
+  {
+   "source": "suggestion-mode",
+   "predicate": "serves",
+   "target": "moderator",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "what actions and instructions Suggestion Mode will present to experienced editors who use the Beta Feature for Suggestion Mode",
+     "start": 4630,
+     "end": 4756
+    }
+   ]
+  },
+  {
+   "source": "edit-check",
+   "predicate": "supports",
+   "target": "goal-newcomers-confident",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "To equip newcomers and Junior Contributors from Sub-Saharan Africa with the know-how and tools to publish changes they are proud of and that experienced volunteers consider useful, the Editing Team will be introducing new functionality",
+     "start": 5289,
+     "end": 5524
+    }
+   ]
+  },
+  {
+   "source": "check-configurability",
+   "predicate": "supports",
+   "target": "goal-moderators-engaged",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "be motivated to configure how Edit Check presents policies to them",
+     "start": 1363,
+     "end": 1429
+    }
+   ]
+  },
+  {
+   "source": "edit-check",
+   "predicate": "supports",
+   "target": "goal-norms-legible",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "make the norms and standards that are currently in place legible and actionable to people while they are editing",
+     "start": 9283,
+     "end": 9395
+    }
+   ]
+  },
+  {
+   "source": "check-configurability",
+   "predicate": "satisfies",
+   "target": "requirement-moderators-configure",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "In line with the above, and drawing inspiration from how the Edit filter",
+     "start": 12508,
+     "end": 12580
+    }
+   ]
+  },
+  {
+   "source": "reference-check",
+   "predicate": "satisfies",
+   "target": "requirement-reference-check-activation",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "the initial reference Edit Check becoming activated if/when all of the following conditions are met",
+     "start": 11088,
+     "end": 11187
+    }
+   ]
+  },
+  {
+   "source": "multi-check",
+   "predicate": "scheduled-for",
+   "target": "multi-check-deployment",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "Multi-Check was deployed to all wikis where Reference Check is currently available on June 25, 2025.",
+     "start": 14004,
+     "end": 14104
+    }
+   ]
+  },
+  {
+   "source": "suggestion-mode",
+   "predicate": "scheduled-for",
+   "target": "suggestion-mode-beta",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "The feature has been available as a Beta Feature globally since early March",
+     "start": 3103,
+     "end": 3178
+    }
+   ]
+  },
+  {
+   "source": "publishing-workflow",
+   "predicate": "composes",
+   "target": "reference-check-step",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "a new step within the *mobile* visual editor's publishing workflow",
+     "start": 13080,
+     "end": 13146
+    }
+   ]
+  },
+  {
+   "source": "reference-check-step",
+   "predicate": "uses",
+   "target": "reference-check",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "that people will see if/when they add new content *without* a reference",
+     "start": 13147,
+     "end": 13218
+    }
+   ]
+  },
+  {
+   "source": "publishing-workflow",
+   "predicate": "serves",
+   "target": "newcomer",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "The first version of Edit Check will introduce a new step",
+     "start": 13033,
+     "end": 13090
+    }
+   ]
+  },
+  {
+   "source": "outcome-safe-confident",
+   "predicate": "realizes",
+   "target": "goal-newcomers-confident",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "will report feeling safe and confident making changes to Wikipedia",
+     "start": 23876,
+     "end": 23942
+    }
+   ]
+  },
+  {
+   "source": "outcome-edit-quality",
+   "predicate": "realizes",
+   "target": "goal-moderators-engaged",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "Increase the quality of edits newcomers and Junior Contributors editing from within Sub-Saharan Africa publish in the main namespace",
+     "start": 22806,
+     "end": 22938
+    }
+   ]
+  },
+  {
+   "source": "outcome-volunteers-iterate-config",
+   "predicate": "realizes",
+   "target": "goal-moderators-engaged",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "Experienced volunteers will independently audit and iterate upon Edit Check's default configurations",
+     "start": 24186,
+     "end": 24286
+    }
+   ]
+  },
+  {
+   "source": "assessment-policies-not-surfaced",
+   "predicate": "influence",
+   "target": "goal-newcomers-confident",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "This project seeks to address the challenges above by:",
+     "start": 7906,
+     "end": 7960
+    }
+   ]
+  },
+  {
+   "source": "driver-newcomers-driven-away",
+   "predicate": "influence",
+   "target": "goal-newcomers-confident",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "These poor interactions are demotivating and drive these could-be volunteers and community members",
+     "start": 7157,
+     "end": 7255
+    }
+   ]
+  },
+  {
+   "source": "driver-moderation-burden",
+   "predicate": "influence",
+   "target": "goal-moderators-engaged",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "need to do more work reverting low-quality edits",
+     "start": 7363,
+     "end": 7411
+    }
+   ]
+  },
+  {
+   "source": "assessment-reference-check-ab-test",
+   "predicate": "influence",
+   "target": "outcome-edit-quality",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "Reference Check caused an **increase in the quality of edits** newcomers publish",
+     "start": 18615,
+     "end": 18695
+    }
+   ]
+  },
+  {
+   "source": "assessment-reference-check-ab-test",
+   "predicate": "influence",
+   "target": "outcome-references-added",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "People shown the Reference Check are **2.2 times more likely** to publish a new content edit that includes a reference",
+     "start": 19052,
+     "end": 19170
+    }
+   ]
+  },
+  {
+   "source": "assessment-multi-check-ab-test",
+   "predicate": "influence",
+   "target": "outcome-references-added",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "Multi-Check caused statistically significant increases in the proportion of edits that include a reference",
+     "start": 13747,
+     "end": 13853
+    }
+   ]
+  },
+  {
+   "source": "assessment-multi-check-phase-1",
+   "predicate": "influence",
+   "target": "outcome-edit-quality",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "The revert rate of new content edits where Reference Check was activated decreased by **15.7%**.",
+     "start": 17331,
+     "end": 17427
+    }
+   ]
+  },
+  {
+   "source": "principle-minimize-false-positives",
+   "predicate": "influence",
+   "target": "requirement-reference-check-activation",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "This strategy amounts to the initial reference Edit Check becoming activated if/when all of the following conditions are met:",
+     "start": 11063,
+     "end": 11188
+    }
+   ]
+  },
+  {
+   "source": "principle-start-simple",
+   "predicate": "influence",
+   "target": "requirement-reference-check-activation",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "The Editing Team arrived at the decision to *start* with a relatively limited and straightforward set of rules",
+     "start": 11541,
+     "end": 11651
+    }
+   ]
+  },
+  {
+   "source": "wikipedia-projects",
+   "predicate": "associated-with",
+   "target": "driver-volunteer-growth",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "**Wikipedia projects** – struggle to grow and diversify their volunteer populations",
+     "start": 7759,
+     "end": 7842
+    }
+   ]
+  },
+  {
+   "source": "driver-retention-outside-europe",
+   "predicate": "influence",
+   "target": "goal-newcomers-confident",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "The four focus criteria listed above are outgrowths of:",
+     "start": 10232,
+     "end": 10287
+    }
+   ]
+  },
+  {
+   "source": "metric-revert-rate",
+   "predicate": "measures-outcome",
+   "target": "outcome-edit-quality",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "*Decrease* in the proportion of published edits that add new content and are reverted within 48 hours",
+     "start": 22941,
+     "end": 23042
+    }
+   ]
+  },
+  {
+   "source": "metric-edits-with-reference",
+   "predicate": "measures-outcome",
+   "target": "outcome-references-added",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "Increase in the percentage of published edits that add new content *and* include a reference",
+     "start": 23448,
+     "end": 23540
+    }
+   ]
+  },
+  {
+   "source": "visual-editor",
+   "predicate": "assigned-to",
+   "target": "reference-detection",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "the visual editor will prompt them to do so in cases where they have not done so themselves",
+     "start": 24516,
+     "end": 24607
+    }
+   ]
+  },
+  {
+   "source": "editcheck-init-js",
+   "predicate": "assigned-to",
+   "target": "reference-detection",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "The conditions above are implemented and maintained in code here: editcheck/init.js",
+     "start": 11456,
+     "end": 11539
+    }
+   ]
+  },
+  {
+   "source": "visual-editor",
+   "predicate": "composes",
+   "target": "editcheck-init-js",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "The conditions above are implemented and maintained in code here: editcheck/init.js",
+     "start": 11456,
+     "end": 11539
+    }
+   ]
+  },
+  {
+   "source": "reference-detection",
+   "predicate": "satisfies",
+   "target": "requirement-reference-check-activation",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "This strategy amounts to the initial reference Edit Check becoming activated",
+     "start": 11063,
+     "end": 11139
+    }
+   ]
+  },
+  {
+   "source": "risk-false-positives",
+   "predicate": "influence",
+   "target": "requirement-reference-check-activation",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "minimizes the likelihood of false positives",
+     "start": 10885,
+     "end": 10928
+    }
+   ]
+  },
+  {
+   "source": "assessment-ssa-underrepresented",
+   "predicate": "influence",
+   "target": "goal-newcomers-confident",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "The four focus criteria listed above are outgrowths of:",
+     "start": 10232,
+     "end": 10287
+    }
+   ]
+  },
+  {
+   "source": "goal-norms-legible",
+   "predicate": "influence",
+   "target": "goal-diverse-norms",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "we first need to make the norms and standards that are currently in place legible and actionable to people while they are editing",
+     "start": 9266,
+     "end": 9395
+    }
+   ]
+  },
+  {
+   "source": "assessment-policies-not-surfaced",
+   "predicate": "associated-with",
+   "target": "driver-newcomers-driven-away",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "lead to undesirable outcomes for inexperienced volunteers, experienced volunteers, and Wikipedia projects as a whole",
+     "start": 6820,
+     "end": 6936
+    }
+   ]
+  },
+  {
+   "source": "assessment-policies-not-surfaced",
+   "predicate": "associated-with",
+   "target": "driver-moderation-burden",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "lead to undesirable outcomes for inexperienced volunteers, experienced volunteers, and Wikipedia projects as a whole",
+     "start": 6820,
+     "end": 6936
+    }
+   ]
+  },
+  {
+   "source": "assessment-policies-not-surfaced",
+   "predicate": "associated-with",
+   "target": "driver-volunteer-growth",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "lead to undesirable outcomes for inexperienced volunteers, experienced volunteers, and Wikipedia projects as a whole",
+     "start": 6820,
+     "end": 6936
+    }
+   ]
+  },
+  {
+   "source": "edit-check",
+   "predicate": "scheduled-for",
+   "target": "siderail-redesign",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "In December 2024, we released a new design for the Edit Check desktop experience.",
+     "start": 16947,
+     "end": 17028
+    }
+   ]
+  },
+  {
+   "source": "multi-check",
+   "predicate": "serves",
+   "target": "newcomer",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "To learn whether the Multi-Check was effective at causing, newcomers to publish new content edits that include references",
+     "start": 13337,
+     "end": 13458
+    }
+   ]
+  },
+  {
+   "source": "metric-users-with-reference",
+   "predicate": "measures-outcome",
+   "target": "outcome-reference-awareness",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "Increase in the percent of newcomers or Junior Contributors from SSA that publish at least one new content edit that includes a reference",
+     "start": 23541,
+     "end": 23678
+    }
+   ]
+  },
+  {
+   "source": "metric-users-with-reference",
+   "predicate": "measures-outcome",
+   "target": "outcome-references-added",
+   "tier": "core",
+   "evidence": [
+    {
+     "quote": "Increase in the percent of newcomers or Junior Contributors from SSA that publish at least one new content edit that includes a reference",
+     "start": 23541,
+     "end": 23678
+    }
+   ]
+  },
+  {
+   "source": "assessment-newcomers-in-africa-asia",
+   "predicate": "influence",
+   "target": "goal-newcomers-confident",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "The four focus criteria listed above are outgrowths of:",
+     "start": 10232,
+     "end": 10287
+    }
+   ]
+  },
+  {
+   "source": "assessment-ssa-editors-english-french",
+   "predicate": "influence",
+   "target": "goal-newcomers-confident",
+   "tier": "supporting",
+   "evidence": [
+    {
+     "quote": "The four focus criteria listed above are outgrowths of:",
+     "start": 10232,
+     "end": 10287
+    }
+   ]
+  }
+ ],
+ "excluded": [
+  {
+   "label": "Edit filter",
+   "reason": "Named only as a system the configurability design drew inspiration from; prior art."
+  },
+  {
+   "label": "Growth Team Community configuration",
+   "reason": "Named only as a system the configurability design drew inspiration from; prior art."
+  },
+  {
+   "label": "Educating and guiding newcomers / Preventing destructive changes",
+   "reason": "The preamble to the Background table of prior art: what volunteers have long done, not part of Edit Check."
+  },
+  {
+   "label": "Revision risk score",
+   "reason": "A per-edit model score used as a filter inside the revert measure, not a measure of this product."
+  },
+  {
+   "label": "Suggestion Mode A/B experiment",
+   "reason": "An experiment still collecting data; it has no finding yet."
+  },
+  {
+   "label": "Beta Feature",
+   "reason": "A release channel, captured as the Suggestion Mode Beta Feature milestone."
+  },
+  {
+   "label": "LLM trained on the Manual of Style",
+   "reason": "An investigation in progress."
+  },
+  {
+   "label": "edit-tags",
+   "reason": "An implementation detail of published edits."
+  },
+  {
+   "label": "main namespace (NS:0)",
+   "reason": "A condition inside the activation requirement."
+  },
+  {
+   "label": "Deployment process",
+   "reason": "A pointer to another page."
+  },
+  {
+   "label": "Glossary",
+   "reason": "A pointer to another page."
+  },
+  {
+   "label": "Reference decline rate",
+   "reason": "A figure reported once in the Phase 1 analysis, without being named as a measure."
+  },
+  {
+   "label": "Theory of change",
+   "reason": "A hypothesis about cause and effect ('built on the belief that…'); DR has no type for a belief, and its content is carried by the goals and outcomes."
+  },
+  {
+   "label": "Background table of community initiatives (CopyPatrol, ORES, XLinkBot, Salebot, Earwig's Copyvio Detector, CiteHighlighter, The Wikipedia Adventure, …)",
+   "reason": "Prior art that inspired the project; none is part of Edit Check."
+  },
+  {
+   "label": "CopyPatrol",
+   "reason": "Prior art in the Background table."
+  },
+  {
+   "label": "ORES",
+   "reason": "Prior art in the Background table."
+  },
+  {
+   "label": "XLinkBot",
+   "reason": "Prior art in the Background table."
+  },
+  {
+   "label": "The Wikipedia Adventure",
+   "reason": "Prior art in the Background table."
+  },
+  {
+   "label": "Extension:Disambiguator",
+   "reason": "Prior art in the Background table."
+  },
+  {
+   "label": "phab:T329988 / T388731 / T327959",
+   "reason": "Ticket references."
+  },
+  {
+   "label": "Help:Suggestion mode",
+   "reason": "A documentation page."
+  },
+  {
+   "label": "ignoreQuotedContent / addReference",
+   "reason": "Configuration keys and internal identifiers, below the level of a named element."
+  },
+  {
+   "label": "test group / control group",
+   "reason": "Experiment protocol, not an element of the product."
+  },
+  {
+   "label": "English Wikipedia / French Wikipedia / Sub-Saharan Africa",
+   "reason": "Where the work is focused: scope of goals and personas, not elements."
+  },
+  {
+   "label": "Community Conversations",
+   "reason": "A meeting series."
+  },
+  {
+   "label": "event.action = init / saveSuccess / abort",
+   "reason": "Instrumentation event values quoted to define a metric."
+  },
+  {
+   "label": "19 June 2026 / 10 April 2026 / 4 February 2026 status updates",
+   "reason": "Dated progress reports; the deliveries they mention are captured as milestones and features."
+  }
+ ]
+}

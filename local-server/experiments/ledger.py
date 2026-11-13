@@ -77,6 +77,10 @@ import sys
 from pathlib import Path
 from typing import Any, Optional, Union
 
+# Run as a script (`python experiments/ledger.py ...` from local-server/), the
+# script's own directory is on the path, not local-server/.
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+
 from utils.logger import get_logger
 
 LEDGER_PATH = Path(__file__).parent / "ledger.jsonl"
