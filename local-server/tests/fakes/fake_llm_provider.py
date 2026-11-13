@@ -85,7 +85,15 @@ class FakeLLMProvider:
             model=model,
         )
 
-    def forget(self, system_prompt: str, user_prompt: str, model: str, **_: Any) -> None:
+    def forget(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format: Literal["json", "text"] | None = None,
+    ) -> None:
         """Nothing to drop: this fake keeps no responses."""
 
     def is_model_available(self, model: str) -> bool:

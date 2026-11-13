@@ -137,7 +137,10 @@ CUT_OFF = "The LLM response for identify_individuals was still incomplete after 
 
 
 class ChunkExtraction:
-    """Answers each chunk in turn with its triples, or fails it with a reason (a string)."""
+    """
+    Answers each chunk in turn with its triples, or fails it with a reason (a
+    string): CUT_OFF is an incomplete LLM response, any other an internal error.
+    """
 
     def __init__(self, *answers):
         self._answers = list(answers)
@@ -150,7 +153,7 @@ class ChunkExtraction:
                 warnings=[f"Extraction failed: {answer}"],
                 metadata={},
                 failure_reason=answer,
-                incomplete_response=True,
+                incomplete_response=answer == CUT_OFF,
             )
         return SimpleNamespace(
             triples=answer, warnings=[], metadata={}, failure_reason=None, incomplete_response=False
@@ -625,6 +628,20 @@ class TestProposeIndividuals:
             f"superseded by extraction proposal {newer.result['proposal_id']}"
         ]
         assert service.get(newer.result["proposal_id"]).status is ProposalStatus.OPEN
+
+    async def test_the_rationale_does_not_quote_an_internal_error(self, service, repo, house):
+        sql = "(sqlite3.OperationalError) database is locked [SQL: SELECT * FROM runs]"
+        run = await extract_source(
+            SourceProposer(service, repo), house, "r1", 1, sql, [typing("A", "Business")], []
+        )
+
+        rationale = service.get(run.result["proposal_id"]).rationale
+        assert "SQL" not in rationale and "sqlite3" not in rationale
+        assert (
+            "Extraction failed for 1 of 3 chunks (chunk 1), so what they hold is missing."
+            " First failure: an internal error, recorded in failed_chunks of run r1."
+        ) in rationale
+        assert run.result["failed_chunks"][0]["failure_reason"] == sql
 
     async def test_failed_chunks_and_nothing_found_elsewhere_is_not_an_empty_text(
         self, service, repo, house

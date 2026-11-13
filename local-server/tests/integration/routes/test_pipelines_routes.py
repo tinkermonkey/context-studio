@@ -909,7 +909,10 @@ class TestPipelineErrorHandling:
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         body = response.json()
         assert "detail" in body
-        assert body["detail"] == "Pipeline execution failed"
+        # The reason is withheld; the failed run, named in the detail, records it
+        (run,) = client.app.state.pipeline_run_repo.list()
+        assert body["detail"] == f"Pipeline execution failed (run {run.id})"
+        assert run.failure_reason == "Internal logic failed"
 
     def test_orchestrator_raises_generic_pipeline_error_returns_500(self, client, registries):
         """Test that generic PipelineExecutionError from orchestrator returns 500."""
@@ -1481,7 +1484,7 @@ class TestIndividualExtractionFailures:
         assert run.status == PipelineRunStatus.FAILED
         assert run.failure_reason == "Ontology tax-1 not found"
 
-    def test_another_failure_is_a_500_that_keeps_its_reason_on_the_run(
+    def test_another_failure_is_a_500_naming_the_run_that_keeps_its_reason(
         self, client, registries, pipeline_run_repo
     ):
         reason = "(sqlite3.OperationalError) database is locked [SQL: SELECT * FROM runs]"
@@ -1490,8 +1493,8 @@ class TestIndividualExtractionFailures:
         )
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-        assert response.json()["detail"] == "Pipeline execution failed"
         (run,) = pipeline_run_repo.list()
+        assert response.json()["detail"] == f"Pipeline execution failed (run {run.id})"
         assert run.status == PipelineRunStatus.FAILED
         assert run.failure_reason == f"Extraction failed: {reason}"
 

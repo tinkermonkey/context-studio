@@ -100,7 +100,14 @@ class TestLLMProviderRouter:
         )
 
         for provider in router._providers.values():
-            provider.forget.assert_called_once_with("sys", "user", "gpt-4", 0.0, 8000, "json")
+            provider.forget.assert_called_once_with(
+                system_prompt="sys",
+                user_prompt="user",
+                model="gpt-4",
+                temperature=0.0,
+                max_tokens=8000,
+                response_format="json",
+            )
 
     def test_router_init_with_no_keys(self):
         """Router raises ValueError when initialized with no API keys."""

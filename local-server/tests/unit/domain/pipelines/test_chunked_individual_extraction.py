@@ -391,6 +391,25 @@ class TestFailedExtraction:
         assert proposer.unread == [note]
         assert result["proposal_id"] == "prop-1"
 
+    async def test_an_internal_error_is_not_quoted_in_the_note_or_the_proposal(self):
+        # Chunk 2 fails on a database error, chunk 3 on an incomplete response
+        extraction = _FakeExtraction(failing={3}, broken={2})
+        proposer = _RecordingProposer()
+
+        state = await _orchestrator(extraction, proposer=proposer).execute(
+            _state(text=_long_text(300), source_id="src-1")
+        )
+
+        result = state.result
+        note = result["warnings"][0]
+        assert note == (
+            "Extraction failed for 2 of 3 chunks (chunks 2, 3), so what they hold is missing."
+            " First failure: an internal error, recorded in failed_chunks of run run-1"
+        )
+        assert proposer.unread == [note]
+        # The run's own record keeps the full reasons
+        assert [c["failure_reason"] for c in result["failed_chunks"]] == [SQL, INCOMPLETE]
+
     async def test_a_run_with_no_failed_chunk_reports_none(self):
         proposer = _RecordingProposer()
         state = await _orchestrator(_FakeExtraction(), proposer=proposer).execute(

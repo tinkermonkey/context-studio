@@ -249,14 +249,14 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         try:
             outcome_keys: dict[str, Any] = {}
             if is_source:
-                triples, warnings, metadata = await self._extract_by_chunk(
+                triples, warnings, metadata, unread = await self._extract_by_chunk(
                     state, chunks, page_starts
                 )
-                failed = [c for c in metadata["chunks"] if c["failure_reason"]]
-                unread = _failed_chunks_note(failed, len(chunks)) if failed else None
                 if unread:
                     warnings = [unread, *warnings]
-                    outcome_keys = {"failed_chunks": failed}
+                    outcome_keys = {
+                        "failed_chunks": [c for c in metadata["chunks"] if c["failure_reason"]]
+                    }
                 if skipped:
                     warnings = [skip_note(skipped), *warnings]
                     outcome_keys = {**outcome_keys, **skip_summary(skipped, text, page_starts)}
@@ -323,7 +323,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
 
     async def _extract_by_chunk(
         self, state: IndividualExtractionState, chunks: list[Chunk], page_starts: list[int]
-    ) -> tuple[list[dict[str, Any]], list[str], dict[str, Any]]:
+    ) -> tuple[list[dict[str, Any]], list[str], dict[str, Any], str | None]:
         """
         Extract each chunk in turn, then merge the triples over the whole text.
 
@@ -332,7 +332,8 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         failed adds no triples and says why in its summary's failure_reason.
 
         Returns:
-            (merged triples, warnings, metadata)
+            (merged triples, warnings, metadata, a sentence saying which chunks
+            failed or None when none did)
 
         Raises:
             ExtractionFailedError: If the extraction of every chunk failed
@@ -344,7 +345,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         chunk_triples: list[tuple[Chunk, list[dict[str, Any]]]] = []
         warnings: list[str] = []
         chunk_summaries: list[dict[str, Any]] = []
-        failures: list[Any] = []
+        failures: list[tuple[Chunk, Any]] = []
         tokens_used = 0
         duration_ms = 0
         for done, chunk in enumerate(chunks, start=1):
@@ -359,7 +360,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             )
             chunk_triples.append((chunk, result.triples))
             if result.failure_reason:
-                failures.append(result)
+                failures.append((chunk, result))
             warnings.extend(f"Chunk {done} of {total}: {warning}" for warning in result.warnings)
             tokens_used += int(result.metadata.get("tokens_used") or 0)
             duration_ms += int(result.metadata.get("duration_ms") or 0)
@@ -379,8 +380,8 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
 
         if len(failures) == total:
             raise _failure(
-                failures,
-                f"Extraction failed for every chunk ({total}): {failures[0].failure_reason}",
+                [result for _, result in failures],
+                f"Extraction failed for every chunk ({total}): {failures[0][1].failure_reason}",
             )
 
         metadata = {
@@ -391,7 +392,8 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             "pages": state.input_data.get("pages"),
             "chunks": chunk_summaries,
         }
-        return merge_chunk_triples(chunk_triples, page_starts), warnings, metadata
+        unread = _failed_chunks_note(failures, total, state.run_id) if failures else None
+        return merge_chunk_triples(chunk_triples, page_starts), warnings, metadata, unread
 
 
 def _failure(results: list[Any], message: str) -> PipelineExecutionError:
@@ -405,13 +407,25 @@ def _failure(results: list[Any], message: str) -> PipelineExecutionError:
     return PipelineExecutionError(message)
 
 
-def _failed_chunks_note(failed: list[dict[str, Any]], total: int) -> str:
-    """A sentence saying which chunks' extraction failed, so what they hold is missing."""
-    numbers = ", ".join(str(chunk["index"] + 1) for chunk in failed)
-    noun = "chunk" if len(failed) == 1 else "chunks"
+def _failed_chunks_note(failures: list[tuple[Chunk, Any]], total: int, run_id: str) -> str:
+    """
+    A sentence saying which chunks' extraction failed, so what they hold is
+    missing. It leads the run's warnings and goes into its proposal, which
+    reviewers and clients read, so it gives the first failure's reason only
+    when that is an LLM response that stayed incomplete: any other reason may
+    quote an internal error, and stays in the run's failed_chunks.
+    """
+    numbers = ", ".join(str(chunk.index + 1) for chunk, _ in failures)
+    noun = "chunk" if len(failures) == 1 else "chunks"
+    first = failures[0][1]
+    reason = (
+        first.failure_reason
+        if first.incomplete_response
+        else f"an internal error, recorded in failed_chunks of run {run_id}"
+    )
     return (
-        f"Extraction failed for {len(failed)} of {total} chunks ({noun} {numbers}), so what"
-        f" they hold is missing. First failure: {failed[0]['failure_reason']}"
+        f"Extraction failed for {len(failures)} of {total} chunks ({noun} {numbers}), so what"
+        f" they hold is missing. First failure: {reason}"
     )
 
 

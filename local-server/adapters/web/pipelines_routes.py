@@ -1032,8 +1032,7 @@ async def run_pipeline(
     - individual_extraction: requires text and ontology_id. With the default
       implementation, an unknown ontology_id is a 400, and an extraction that
       fails because an LLM response stays incomplete is a 500 whose detail
-      gives the reason and the failed run's id; with async either fails the
-      run instead
+      gives the reason; with async either fails the run instead
     - schema_extraction: requires documents, optional scope
     - schema_node_grounding: requires node_id (a class) or node_label; optional
       sources (default: the configuration's sources). An unknown node_id is a 400;
@@ -1047,7 +1046,8 @@ async def run_pipeline(
       plan as a change proposal (the run's proposal_id)
 
     Creates a pipeline run, executes it with the registered implementation,
-    and returns the run with execution results. With `async: true` the run is
+    and returns the run with execution results. A run whose execution fails is
+    a 500 whose detail ends with the failed run's id; the run records the reason. With `async: true` the run is
     stored pending and returned at once (202); a background worker executes it.
 
     Args:
@@ -1187,8 +1187,8 @@ async def run_pipeline(
         PipelineExecutionError,
     ) as exc:
         status_code, message = _handle_domain_error(exc)
-        if isinstance(exc, ExtractionFailedError):
-            # The failed run is stored; name it so the caller can read it
+        if isinstance(exc, PipelineExecutionError):
+            # The failed run is stored with its reason; name it so the caller can read it
             message = f"{message} (run {run_id})"
         try:
             repo.update_failure_info(run_id, str(exc), output_summary={"error": message})
@@ -1204,6 +1204,7 @@ async def run_pipeline(
     except Exception as exc:
         domain_exc = PipelineExecutionError(f"Unexpected orchestrator failure: {str(exc)}")
         status_code, message = _handle_domain_error(domain_exc)
+        message = f"{message} (run {run_id})"
         try:
             repo.update_failure_info(run_id, str(exc), output_summary={"error": str(exc)})
             # Update batch timestamps and status when run fails

@@ -291,7 +291,12 @@ class RecordingLLMProvider:
     ) -> None:
         """Have the real provider drop its cached response, so a retry reaches the model."""
         self._delegate.forget(
-            system_prompt, user_prompt, model, temperature, max_tokens, response_format
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            response_format=response_format,
         )
 
     def is_model_available(self, model: str) -> bool:
