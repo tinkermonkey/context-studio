@@ -998,6 +998,42 @@ class TestOpenRouterErrorHandling:
         # The body's own message is logged, never quoted
         assert "Provider returned error" not in str(exc_info.value)
 
+    @pytest.mark.parametrize(
+        "content",
+        [
+            b"",
+            b"<html>Bad gateway: the secret upstream page</html>",
+            b'{"choices": [{"mess',
+            b"\xff\xfe",
+        ],
+        ids=["empty", "html", "cut-off", "not-text"],
+    )
+    def test_a_200_whose_body_is_not_json_may_pass(self, content):
+        provider = self.create_provider_with_mock_client()
+        provider._client.post.return_value = httpx.Response(
+            200,
+            content=content,
+            request=httpx.Request("POST", "https://openrouter.ai/api/v1/chat/completions"),
+        )
+
+        with pytest.raises(LLMTransientError) as exc_info:
+            self.complete(provider)
+
+        assert not isinstance(exc_info.value, LLMRateLimitError)
+        # The body is logged, never quoted
+        assert str(exc_info.value) == "OpenRouter answered with a body that is not JSON"
+
+    def test_a_body_that_cannot_be_decoded_may_pass(self):
+        provider = self.create_provider_with_mock_client()
+        failure = httpx.DecodingError("Error -3 while decompressing data")
+        provider._client.post.side_effect = failure
+
+        with pytest.raises(LLMTransientError) as exc_info:
+            self.complete(provider)
+
+        assert str(exc_info.value) == "OpenRouter answered with a body that is not JSON"
+        assert exc_info.value.__cause__ is failure
+
     def test_an_error_body_is_read_by_its_code_as_a_status_would_be(self):
         with pytest.raises(LLMRateLimitError):
             self.complete(self.provider_answering_body({"error": {"code": 429}}))

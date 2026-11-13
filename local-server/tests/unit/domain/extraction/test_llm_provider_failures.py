@@ -217,6 +217,8 @@ class TestFailureThatNeverPasses:
         )
         assert result.warnings == [f"Extraction failed: {result.failure_reason}"]
         assert result.incomplete_response is False
+        # The reason is the provider's, written for the caller
+        assert result.provider_failed is True
         # Another text may be answered: the provider may be back by then
         assert result.provider_refused is False
         assert run.status == ExtractionRunStatus.FAILED
@@ -229,15 +231,74 @@ class TestFailureThatNeverPasses:
             "The LLM request for identify_individuals still failed after"
             f" {_MAX_LLM_ATTEMPTS} attempts: OpenRouter rate limit exceeded"
         )
+        assert result.provider_failed is True
         assert result.provider_refused is True
         assert result.incomplete_response is False
         assert run.status == ExtractionRunStatus.FAILED
 
-    def test_the_last_failure_decides_what_the_extraction_reports(self):
+
+class TestAttemptsThatFailedInDifferentWays:
+    """
+    No one failure outlasted the attempts, so the extraction says so and
+    reports the last. A rate limit that was not met by every attempt is no
+    refusal any other text would meet: it was never asked again.
+    """
+
+    @staticmethod
+    def _mixed(last):
+        return (
+            "The LLM gave no complete answer for identify_individuals in"
+            f" {_MAX_LLM_ATTEMPTS} attempts that failed in different ways, the last with: {last}"
+        )
+
+    @pytest.mark.parametrize(
+        "attempts",
+        [
+            (SERVER_ERROR, SERVER_ERROR, RATE_LIMIT),
+            (CUT_SHORT, CUT_SHORT, RATE_LIMIT),
+            (RATE_LIMIT, SERVER_ERROR, RATE_LIMIT),
+            (RATE_LIMIT, CUT_SHORT, RATE_LIMIT),
+        ],
+        ids=["503-503-429", "cut-cut-429", "429-503-429", "429-cut-429"],
+    )
+    def test_a_rate_limit_not_met_by_every_attempt_is_no_refusal(self, attempts):
+        llm = _ScriptedLLM(*attempts)
+        result, run, _ = _extract(llm)
+        assert len(llm.calls) == _MAX_LLM_ATTEMPTS
+        assert result.triples == []
+        assert result.failure_reason == self._mixed("OpenRouter rate limit exceeded")
+        assert "still failed after" not in result.failure_reason
+        assert result.provider_failed is True
+        assert result.provider_refused is False
+        assert result.incomplete_response is False
+        assert run.status == ExtractionRunStatus.FAILED
+
+    def test_rate_limits_then_a_server_error_reports_the_server_error(self):
         llm = _ScriptedLLM(RATE_LIMIT, RATE_LIMIT, SERVER_ERROR)
         result, _, _ = _extract(llm)
-        assert result.failure_reason.endswith("attempts: OpenRouter API error: 503")
+        assert result.failure_reason == self._mixed("OpenRouter API error: 503")
+        assert result.provider_failed is True
         assert result.provider_refused is False
+
+    def test_provider_failures_then_an_incomplete_response_is_an_incomplete_response(self):
+        llm = _ScriptedLLM(RATE_LIMIT, SERVER_ERROR, CUT_SHORT)
+        result, _, _ = _extract(llm)
+        assert result.failure_reason.startswith(
+            self._mixed("it holds no complete JSON object")[:-1]
+        )
+        assert "still incomplete after" not in result.failure_reason
+        assert result.incomplete_response is True
+        assert result.provider_failed is False
+        assert result.provider_refused is False
+
+    def test_two_kinds_of_failure_that_may_pass_are_one_way_of_failing(self):
+        # A server error and a timeout are both "the provider did not answer"
+        llm = _ScriptedLLM(SERVER_ERROR, TIMEOUT, SERVER_ERROR)
+        result, _, _ = _extract(llm)
+        assert result.failure_reason == (
+            "The LLM request for identify_individuals still failed after"
+            f" {_MAX_LLM_ATTEMPTS} attempts: OpenRouter API error: 503"
+        )
 
 
 class TestFailureThatCannotPass:
@@ -249,6 +310,7 @@ class TestFailureThatCannotPass:
         assert waits == []
         assert result.triples == []
         assert result.failure_reason == str(refusal)
+        assert result.provider_failed is True
         assert result.provider_refused is True
         assert result.incomplete_response is False
         assert run.status == ExtractionRunStatus.FAILED
@@ -259,11 +321,14 @@ class TestFailureThatCannotPass:
         assert len(llm.calls) == 1
         assert waits == []
         assert result.failure_reason == "OpenRouter response missing 'usage' field"
+        # Its reason is not known to be written for the caller
+        assert result.provider_failed is False
         assert result.provider_refused is False
 
     def test_a_complete_extraction_is_no_refusal(self):
         result, _, _ = _extract(_ScriptedLLM(IDENTIFIED, RELATED))
         assert result.failure_reason is None
+        assert result.provider_failed is False
         assert result.provider_refused is False
 
 

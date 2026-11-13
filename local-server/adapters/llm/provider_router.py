@@ -9,7 +9,8 @@ that supports the model, and the rejecting provider is skipped from then on. Cha
 turns also fall through, for that call only, when a provider can't be reached.
 A completion that fails because the last provider rejected its key, has no such
 model or is rate limited raises the domain's LLMProviderError for it, so a run
-can tell a failure every request will meet from one about a single request.
+can tell a failure every request will meet from one about a single request. So
+does every later completion for a model left with no provider by rejected keys.
 
 This adapter implements the LLMProvider port and is used by the Knowledge Extraction
 and LLM Pipeline services.
@@ -203,14 +204,14 @@ class LLMProviderRouter:
             LLMResponse with the completion
 
         Raises:
-            ValueError: If no provider is available for the requested model
+            ValueError: If no configured provider supports the requested model
             LLMRequestRefusedError: If every supporting provider rejected its key,
-                or the provider has no such model
+                now or in an earlier call, or the provider has no such model
             LLMRateLimitError: If the provider's rate limit turned the request away
             Exception: The provider's own error for any other failure
         """
         auth_error: Exception | None = None
-        for name, provider in self._providers_for(model):
+        for name, provider in self._completion_providers(model):
             try:
                 return provider.complete(
                     system_prompt=system_prompt,
@@ -346,6 +347,26 @@ class LLMProviderRouter:
             raise ValueError(message)
         return candidates
 
+    def _completion_providers(self, model: str) -> list[tuple[str, LLMProvider]]:
+        """
+        The providers to try for a completion: those _providers_for lists.
+
+        Raises:
+            LLMRequestRefusedError: If the model has no usable provider because
+                every provider that supports it rejected its API key, which
+                every later completion for the model will meet too
+            ValueError: If no configured provider supports the model
+        """
+        try:
+            return self._providers_for(model)
+        except ValueError as error:
+            if any(
+                name in self._rejected_providers and provider.is_model_available(model)
+                for name, provider in self._providers.items()
+            ):
+                raise LLMRequestRefusedError(str(error)) from error
+            raise
+
     def _reject_provider(self, name: str, error: Exception) -> None:
         """Stop routing to a provider that rejected its API key, with a warning."""
         self._rejected_providers.add(name)
@@ -441,14 +462,14 @@ class LLMProviderRouter:
             LLMResponse with the completion
 
         Raises:
-            ValueError: If no provider is available for the requested model
+            ValueError: If no configured provider supports the requested model
             LLMRequestRefusedError: If every supporting provider rejected its key,
-                or the provider has no such model
+                now or in an earlier call, or the provider has no such model
             LLMRateLimitError: If the provider's rate limit turned the request away
             Exception: The provider's own error for any other failure
         """
         auth_error: Exception | None = None
-        for name, provider in self._providers_for(model):
+        for name, provider in self._completion_providers(model):
             try:
                 # Use the provider's async method if it has one, otherwise run the
                 # sync method in an executor

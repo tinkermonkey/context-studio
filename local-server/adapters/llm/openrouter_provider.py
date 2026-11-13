@@ -136,9 +136,9 @@ class OpenRouterProvider:
             LLMRequestRefusedError: If the API key is rejected, the model is
                 unknown or the account is out of credits
             LLMRateLimitError: If the rate limit turned the request away
-            LLMTransientError: If OpenRouter answered with a server error or an
-                error in place of a completion, did not answer in time, or
-                could not be reached
+            LLMTransientError: If OpenRouter answered with a server error, an
+                error in place of a completion or a body that is not JSON, did
+                not answer in time, or could not be reached
             RuntimeError: For other HTTP errors and malformed responses
         """
         # Check cache
@@ -184,7 +184,15 @@ class OpenRouterProvider:
             duration_ms = time.time() * 1000 - start_ms
 
             response.raise_for_status()
-            data = response.json()
+            try:
+                data = response.json()
+            except ValueError as e:
+                # An empty body, or one cut off or replaced on the way: not an answer
+                logger.error(
+                    f"OpenRouter answered {response.status_code} with a body that is"
+                    f" not JSON ({len(response.content)} bytes): {response.text[:500]}"
+                )
+                raise LLMTransientError("OpenRouter answered with a body that is not JSON") from e
 
             # Validate response structure
             if not isinstance(data, dict):
@@ -256,6 +264,9 @@ class OpenRouterProvider:
             raise LLMTransientError(
                 f"OpenRouter did not answer: {type(e).__name__}: {str(e)}"
             ) from e
+        except httpx.DecodingError as e:
+            # The body could not be read under its declared content encoding
+            raise LLMTransientError("OpenRouter answered with a body that is not JSON") from e
         except (RuntimeError, LLMProviderError):
             raise
         except Exception as e:

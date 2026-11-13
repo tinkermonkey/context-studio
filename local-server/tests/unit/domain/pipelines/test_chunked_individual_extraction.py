@@ -232,6 +232,7 @@ class _Result:
     metadata: dict = field(default_factory=dict)
     failure_reason: str | None = None
     incomplete_response: bool = False
+    provider_failed: bool = False
     provider_refused: bool = False
 
 
@@ -245,6 +246,11 @@ SQL = "(sqlite3.OperationalError) database is locked [SQL: SELECT * FROM ontolog
 
 REFUSED = "OpenRouter API key is invalid or unauthorized"
 
+UNANSWERED = (
+    "The LLM request for identify_individuals still failed after 3 attempts:"
+    " OpenRouter API error: 503"
+)
+
 
 class _FakeExtraction:
     """
@@ -252,15 +258,17 @@ class _FakeExtraction:
     The calls numbered in ``failing`` (from 1) fail instead, as the service
     reports an LLM response that stayed incomplete; those in ``broken`` fail
     for another reason; those in ``refused`` fail as the service reports a
-    provider that refuses the model's requests.
+    provider that refuses the model's requests; those in ``unanswered`` fail
+    as it reports a provider that did not answer within the attempts.
     """
 
-    def __init__(self, on_call=None, failing=(), finds=True, broken=(), refused=()):
+    def __init__(self, on_call=None, failing=(), finds=True, broken=(), refused=(), unanswered=()):
         self.calls: list[str] = []
         self._on_call = on_call
         self._failing = set(failing)
         self._broken = set(broken)
         self._refused = set(refused)
+        self._unanswered = set(unanswered)
         self._finds = finds
 
     def extract_triples(
@@ -283,7 +291,16 @@ class _FakeExtraction:
                 warnings=[f"Extraction failed: {REFUSED}"],
                 metadata={"model": model, "tokens_used": 0, "duration_ms": 2},
                 failure_reason=REFUSED,
+                provider_failed=True,
                 provider_refused=True,
+            )
+        if len(self.calls) in self._unanswered:
+            return _Result(
+                triples=[],
+                warnings=[f"Extraction failed: {UNANSWERED}"],
+                metadata={"model": model, "tokens_used": 0, "duration_ms": 3000},
+                failure_reason=UNANSWERED,
+                provider_failed=True,
             )
         if len(self.calls) in self._broken:
             return _Result(triples=[], warnings=[f"Extraction failed: {SQL}"], failure_reason=SQL)
@@ -501,6 +518,53 @@ class TestProviderThatRefusesTheRun:
         )
         assert len(extraction.calls) == 3
         assert state.current_status == PipelineRunStatus.COMPLETED
+
+
+class TestProviderThatDidNotAnswer:
+    """
+    A provider failure that outlasted its retries without being a refusal (a
+    server error, a timeout): the caller is told the provider's reason, and the
+    run goes on, since the provider may answer for the next chunk.
+    """
+
+    async def test_the_chunk_fails_with_its_reason_and_the_run_goes_on(self):
+        extraction = _FakeExtraction(unanswered={1})
+        proposer = _RecordingProposer()
+
+        state = await _orchestrator(extraction, proposer=proposer).execute(
+            _state(text=_long_text(400), source_id="src-1")  # 4 chunks
+        )
+
+        assert len(extraction.calls) == 4
+        assert state.current_status == PipelineRunStatus.COMPLETED
+        assert [c["failure_reason"] for c in state.result["failed_chunks"]] == [UNANSWERED]
+        note = state.result["warnings"][0]
+        assert note == (
+            "Extraction failed for 1 of 4 chunks (chunk 1), so what they hold is missing."
+            f" First failure: {UNANSWERED}"
+        )
+        assert "an internal error" not in note
+        assert proposer.unread == [note]
+
+    async def test_pasted_text_fails_with_the_reason(self):
+        extraction = _FakeExtraction(unanswered={1})
+        with pytest.raises(ExtractionFailedError) as raised:
+            await _orchestrator(extraction).execute(_state(text="Door one. Shelf two."))
+        assert str(raised.value) == f"Extraction failed: {UNANSWERED}"
+
+    async def test_every_chunk_unanswered_fails_the_run_with_the_reason(self):
+        extraction = _FakeExtraction(unanswered={1, 2, 3})
+        with pytest.raises(ExtractionFailedError) as raised:
+            await _orchestrator(extraction).execute(_state(text=_long_text(300), source_id="src-1"))
+        # Every chunk was tried: none of the failures was one the next would meet
+        assert len(extraction.calls) == 3
+        assert str(raised.value) == f"Extraction failed for every chunk (3): {UNANSWERED}"
+
+    async def test_an_internal_error_among_them_is_still_not_told(self):
+        extraction = _FakeExtraction(unanswered={1, 3}, broken={2})
+        with pytest.raises(PipelineExecutionError) as raised:
+            await _orchestrator(extraction).execute(_state(text=_long_text(300), source_id="src-1"))
+        assert not isinstance(raised.value, ExtractionFailedError)
 
 
 class TestFailedRunRecordsWhatItCost:

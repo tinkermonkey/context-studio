@@ -27,6 +27,7 @@ from domain.ontology.ports import (
 )
 from domain.pipelines.candidate_ids import mention_key
 from domain.pipelines.exceptions import (
+    LLMProviderError,
     LLMRateLimitError,
     LLMRequestRefusedError,
     LLMTransientError,
@@ -70,6 +71,41 @@ _MAX_LLM_ATTEMPTS = 3
 # Seconds waited before the second attempt after a provider failure that may
 # pass; the wait doubles before each attempt after that
 _FIRST_RETRY_WAIT_SECONDS = 1.0
+
+
+def _no_whole_answer(
+    stage: str, failures: list[IncompleteLLMResponseError | LLMTransientError]
+) -> IncompleteLLMResponseError | LLMTransientError:
+    """
+    The failure of a stage whose every attempt got no whole answer, from why
+    each attempt failed, in order.
+
+    Attempts that all failed the same way are reported as that failure
+    outlasting them. Attempts that failed in different ways are reported by
+    the last, as an incomplete response or a provider failure that may pass:
+    never as a rate limit, since a rate limit that was not met every time did
+    not outlast the attempts and says nothing about the next text.
+    """
+    last = failures[-1]
+    incomplete = isinstance(last, IncompleteLLMResponseError)
+    if len({type(failure) for failure in failures}) > 1:
+        kind = IncompleteLLMResponseError if incomplete else LLMTransientError
+        message = (
+            f"The LLM gave no complete answer for {stage} in {len(failures)} attempts"
+            f" that failed in different ways, the last with: {last}"
+        )
+    elif incomplete:
+        kind = IncompleteLLMResponseError
+        message = (
+            f"The LLM response for {stage} was still incomplete after"
+            f" {len(failures)} attempts: {last}"
+        )
+    else:
+        kind = type(last)
+        message = f"The LLM request for {stage} still failed after {len(failures)} attempts: {last}"
+    failure = kind(message)
+    failure.__cause__ = last
+    return failure
 
 
 class _TokenTally:
@@ -598,8 +634,10 @@ class ExtractionService:
                 - failure_reason: why the extraction failed (its triples are then
                   empty), e.g. an LLM response that stayed incomplete; None on success
                 - incomplete_response: True when that is why it failed
-                - provider_refused: True when it failed because the provider
-                  refuses the model's requests, as it would for any other text
+                - provider_failed: True when it failed because the LLM provider
+                  did not answer a request
+                - provider_refused: True when that provider failure is one any
+                  other text would meet too (it refuses the model's requests)
 
         Raises:
             ExtractionError: If text validation fails
@@ -643,6 +681,7 @@ class ExtractionService:
         run_status = ExtractionRunStatus.COMPLETED
         failure_reason = None
         incomplete_response = False
+        provider_failed = False
         provider_refused = False
 
         try:
@@ -671,7 +710,8 @@ class ExtractionService:
                 run_status = ExtractionRunStatus.FAILED
                 failure_reason = str(exc) or type(exc).__name__
                 incomplete_response = isinstance(exc, IncompleteLLMResponseError)
-                # A rate limit that reaches here outlasted every attempt
+                provider_failed = isinstance(exc, LLMProviderError)
+                # A rate limit that reaches here was met by every attempt
                 provider_refused = isinstance(exc, (LLMRequestRefusedError, LLMRateLimitError))
                 warnings.append(f"Extraction failed: {failure_reason}")
 
@@ -730,6 +770,7 @@ class ExtractionService:
             },
             failure_reason=failure_reason,
             incomplete_response=incomplete_response,
+            provider_failed=provider_failed,
             provider_refused=provider_refused,
         )
 
@@ -1022,7 +1063,8 @@ class ExtractionService:
         Raises:
             IncompleteLLMResponseError: If the last attempt's response was incomplete
             LLMTransientError: If the last attempt met a provider failure that
-                may pass; an LLMRateLimitError when that was a rate limit
+                may pass; an LLMRateLimitError only when every attempt met the
+                rate limit
         """
         request = {
             "system_prompt": system_prompt,
@@ -1032,7 +1074,8 @@ class ExtractionService:
             "max_tokens": 8000,
             "response_format": "json",
         }
-        failure: IncompleteLLMResponseError | LLMTransientError
+        # Why each attempt got no whole answer, in order
+        failures: list[IncompleteLLMResponseError | LLMTransientError] = []
         for attempt in range(1, _MAX_LLM_ATTEMPTS + 1):
             try:
                 response = self._llm.complete(**request)
@@ -1044,11 +1087,7 @@ class ExtractionService:
                     _MAX_LLM_ATTEMPTS,
                     exc,
                 )
-                failure = type(exc)(
-                    f"The LLM request for {stage} still failed after"
-                    f" {_MAX_LLM_ATTEMPTS} attempts: {exc}"
-                )
-                failure.__cause__ = exc
+                failures.append(exc)
                 if attempt < _MAX_LLM_ATTEMPTS:
                     self._sleep(_FIRST_RETRY_WAIT_SECONDS * 2 ** (attempt - 1))
                 continue
@@ -1065,11 +1104,8 @@ class ExtractionService:
                     problem,
                 )
                 self._llm.forget(**request)
-                failure = IncompleteLLMResponseError(
-                    f"The LLM response for {stage} was still incomplete after"
-                    f" {_MAX_LLM_ATTEMPTS} attempts: {problem}"
-                )
-        raise failure
+                failures.append(IncompleteLLMResponseError(problem))
+        raise _no_whole_answer(stage, failures)
 
     def _post_process_triples(
         self, triples: list[dict], ontology, dataset_id: str | None = None

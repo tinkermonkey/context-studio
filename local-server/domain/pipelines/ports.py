@@ -129,10 +129,13 @@ class TripleExtractionResult(Protocol):
     failure_reason: str | None
     # True when it failed because an LLM response stayed incomplete
     incomplete_response: bool
-    # True when it failed because the provider refuses the model's requests (a
-    # rejected key, an unknown model, a rate limit that outlasted every attempt),
-    # as it would for any other text. With either flag the failure_reason is
-    # written for the caller, while any other may quote an internal error
+    # True when it failed because the LLM provider did not answer a request. With
+    # this flag or incomplete_response the failure_reason is written for the
+    # caller, while any other may quote an internal error
+    provider_failed: bool
+    # True when that provider failure is one any other text would meet too: the
+    # provider refuses the model's requests (a rejected key, an unknown model)
+    # or its rate limit turned every attempt away. Never true without provider_failed
     provider_refused: bool
 
 

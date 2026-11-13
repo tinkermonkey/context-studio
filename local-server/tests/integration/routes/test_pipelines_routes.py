@@ -1440,12 +1440,14 @@ class _FailingExtraction:
         failure_reason=None,
         unknown_ontology=False,
         incomplete_response=True,
+        provider_failed=False,
         provider_refused=False,
         tokens_used=0,
     ):
         self._failure_reason = failure_reason
         self._unknown_ontology = unknown_ontology
         self._incomplete_response = incomplete_response
+        self._provider_failed = provider_failed or provider_refused
         self._provider_refused = provider_refused
         self._tokens_used = tokens_used
 
@@ -1458,6 +1460,7 @@ class _FailingExtraction:
             metadata={"model": model, "tokens_used": self._tokens_used, "duration_ms": 7},
             failure_reason=self._failure_reason,
             incomplete_response=self._incomplete_response,
+            provider_failed=self._provider_failed,
             provider_refused=self._provider_refused,
         )
 
@@ -1532,6 +1535,28 @@ class TestIndividualExtractionFailures:
             registries,
             _FailingExtraction(
                 failure_reason=reason, incomplete_response=False, provider_refused=True
+            ),
+        )
+
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+        (run,) = pipeline_run_repo.list()
+        assert response.json()["detail"] == f"Extraction failed: {reason} (run {run.id})"
+        assert run.failure_reason == f"Extraction failed: {reason}"
+
+    def test_a_provider_that_did_not_answer_is_a_500_with_the_reason_and_the_run_id(
+        self, client, registries, pipeline_run_repo
+    ):
+        # A provider failure that outlasted its retries is no refusal, and its
+        # reason is still the provider's, written for the caller
+        reason = (
+            "The LLM request for identify_individuals still failed after 3 attempts:"
+            " OpenRouter API error: 503"
+        )
+        response = self._post(
+            client,
+            registries,
+            _FailingExtraction(
+                failure_reason=reason, incomplete_response=False, provider_failed=True
             ),
         )
 

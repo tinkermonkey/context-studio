@@ -24,8 +24,10 @@ failed, a warning and the proposal's rationale (or ``no_proposal_reason``) say
 so, the run's proposal supersedes no other proposal of the source, and it fails
 only when every chunk did. The exception is a failure every later chunk would
 meet too (the provider refuses the model's requests: a rejected key, an unknown
-model, a rate limit that outlasted its retries): the run stops there and fails,
-saying so, with no later chunk tried. The error of a run that fails on its
+model, a rate limit that turned every attempt away): the run stops there and
+fails, saying so, with no later chunk tried. A provider failure that outlasts
+its retries without being one of those (a server error, a timeout) fails its
+chunk only. The error of a run that fails on its
 extractions, or on proposing what they found, carries what its model calls cost
 (``llm_metadata``). An ontology that doesn't exist is an input error.
 """
@@ -165,8 +167,9 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 or no ontology has ontology_id
             ExtractionFailedError: If the extraction failed (pasted text, or
                 every chunk of a source) because an LLM response stayed
-                incomplete or the provider refuses the model's requests, or a
-                source's run stopped at such a refusal; the message is the reason
+                incomplete or the provider did not answer, or a source's run
+                stopped at a chunk the provider refused as it would every later
+                one; the message is the reason
             PipelineExecutionError: If it failed for another reason, or
                 anything else fails. The llm_metadata of a failed extraction's
                 or a failed proposal's error is what the run's model calls cost
@@ -350,9 +353,9 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
 
         Raises:
             ExtractionFailedError: If the extraction of every chunk failed
-                because an LLM response stayed incomplete or the provider
-                refuses the model's requests, or a chunk before the last was
-                so refused
+                because an LLM response stayed incomplete or the provider did
+                not answer, or the provider refused a chunk before the last as
+                it would every later one
             PipelineExecutionError: If every chunk failed, some for another reason
         """
         total = len(chunks)
@@ -435,10 +438,11 @@ def _failure(
 def _reason_is_for_caller(result: Any) -> bool:
     """
     Whether a failed extraction's reason was written for the run's caller: an
-    LLM response that stayed incomplete, or a provider that refuses the model's
-    requests. Any other reason may quote an internal error.
+    LLM response that stayed incomplete, or an LLM provider that did not answer
+    (whether or not it would answer for another text). Any other reason may
+    quote an internal error.
     """
-    return bool(result.incomplete_response or result.provider_refused)
+    return bool(result.incomplete_response or result.provider_failed)
 
 
 # The keys of a run's metadata that say what its model calls cost

@@ -511,8 +511,8 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
             "External service unavailable",
         )
     elif isinstance(exc, ExtractionFailedError):
-        # An LLM response stayed incomplete, or the provider refuses the model's
-        # requests: the message is written for the caller.
+        # An LLM response stayed incomplete, or the LLM provider did not answer:
+        # the message is written for the caller.
         # Any other failed extraction is a PipelineExecutionError, answered below
         # without its reason, which may quote an internal error
         _logger.error(f"Extraction failed: {exc}")

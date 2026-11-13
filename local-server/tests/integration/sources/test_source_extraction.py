@@ -40,7 +40,11 @@ from domain.extraction.services import ExtractionService
 from domain.extraction.sources import SourceService
 from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineRunStatus
-from domain.pipelines.exceptions import LLMRequestRefusedError
+from domain.pipelines.exceptions import (
+    LLMRateLimitError,
+    LLMRequestRefusedError,
+    LLMTransientError,
+)
 from domain.pipelines.individual_extraction.bootstrap import register_individual_extraction
 from domain.pipelines.ports import LLMResponse
 from domain.pipelines.registry import (
@@ -636,6 +640,20 @@ class NeverRelatingLLM(TwoPassLLM):
         pass
 
 
+class FailingFirstLLM(TwoPassLLM):
+    """Fails its first requests with these errors, in order, then answers."""
+
+    def __init__(self, *failures):
+        self._failures = list(failures)
+        self.calls = 0
+
+    def complete(self, system_prompt, user_prompt, model, **_):
+        self.calls += 1
+        if self._failures:
+            raise self._failures.pop(0)
+        return super().complete(system_prompt, user_prompt, model)
+
+
 def _run_to_end(client, app, house, pages):
     """Extract a PDF of these pages and return its run once it has ended."""
     source = add_pdf(client, house, pages=pages)
@@ -661,7 +679,55 @@ class TestFailedExtractionRun:
             event_publisher=InProcessEventPublisher(),
             extraction_repo=Mock(),
             extraction_run_repo=Mock(),
+            sleep=lambda seconds: None,
         )
+
+    class TestProviderDownForTheFirstChunk:
+        """Three attempts fail and are spent on chunk 1; the provider then answers."""
+
+        ATTEMPTS = {
+            "server errors": (
+                [LLMTransientError("OpenRouter API error: 503")] * 3,
+                "The LLM request for identify_individuals still failed after 3 attempts:"
+                " OpenRouter API error: 503",
+            ),
+            # The rate limit was met once, by the last attempt, and never asked again
+            "a rate limit at the last attempt": (
+                [
+                    LLMTransientError("OpenRouter API error: 503"),
+                    LLMTransientError("OpenRouter API error: 503"),
+                    LLMRateLimitError("OpenRouter rate limit exceeded"),
+                ],
+                "The LLM gave no complete answer for identify_individuals in 3 attempts"
+                " that failed in different ways, the last with: OpenRouter rate limit exceeded",
+            ),
+        }
+
+        @pytest.fixture(params=list(ATTEMPTS))
+        def attempts(self, request):
+            return self.ATTEMPTS[request.param]
+
+        @pytest.fixture()
+        def llm(self, attempts):
+            return FailingFirstLLM(*attempts[0])
+
+        def test_the_run_goes_on_and_tells_the_caller_why_the_chunk_failed(
+            self, client, app, house, llm, attempts
+        ):
+            done = _run_to_end(client, app, house, _long_pages(4))
+
+            reason = attempts[1]
+            assert done.status is PipelineRunStatus.COMPLETED, done.failure_reason
+            total = done.items_total
+            assert total >= 3
+            # Three attempts for chunk 1, then two passes for each later chunk
+            assert llm.calls == 3 + 2 * (total - 1)
+            failed = done.output_summary["failed_chunks"]
+            assert [(c["index"], c["failure_reason"]) for c in failed] == [(0, reason)]
+            assert done.output_summary["warnings"][0] == (
+                f"Extraction failed for 1 of {total} chunks (chunk 1), so what they hold is"
+                f" missing. First failure: {reason}"
+            )
 
     class TestRejectedKey:
         @pytest.fixture()

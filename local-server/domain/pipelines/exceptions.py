@@ -97,8 +97,8 @@ class PipelineExecutionError(PipelineError):
 class ExtractionFailedError(PipelineExecutionError):
     """
     Raised when a run's extraction failed because an LLM response stayed
-    incomplete or the provider refuses the model's requests. The message is
-    that reason, written for the run's caller.
+    incomplete or the LLM provider did not answer. The message is that reason,
+    written for the run's caller.
     """
 
     pass

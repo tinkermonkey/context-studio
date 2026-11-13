@@ -482,14 +482,40 @@ class TestLLMProviderRouterAuthFallback:
         assert str(exc_info.value) == "The openrouter provider rejected its API key"
         assert exc_info.value.__cause__ is last_error
 
-        # Later calls fail fast with a clear message naming the rejecting providers
-        with pytest.raises(ValueError) as exc_info:
+        # Later calls are refused too, with no request sent, naming the
+        # rejecting providers: a run still learns that every request will fail
+        with pytest.raises(LLMRequestRefusedError) as exc_info:
             await self.call(router, "claude-opus-4-7", use_async)
         message = str(exc_info.value)
         assert "No provider available for model: claude-opus-4-7" in message
         assert "rejected their API key: anthropic, openrouter" in message
         assert anthropic.calls == 1
         assert openrouter.calls == 1
+
+    @pytest.mark.parametrize("use_async", [False, True])
+    async def test_a_model_no_provider_supports_is_not_a_refusal(self, use_async):
+        # A rejected key elsewhere does not make an unsupported model a refusal:
+        # no provider that supports it was ever asked
+        anthropic = FailingLLMProvider(["claude-opus-4-7"], FakeAuthError())
+        router = self.create_router(anthropic=anthropic)
+        with pytest.raises(LLMRequestRefusedError):
+            await self.call(router, "claude-opus-4-7", use_async)
+
+        with pytest.raises(ValueError, match="No provider available for model: gpt-4o"):
+            await self.call(router, "gpt-4o", use_async)
+
+    async def test_chat_for_a_model_left_without_a_provider_is_still_a_value_error(self):
+        # Chat reports a ValueError's message to the user as it is
+        anthropic = FailingLLMProvider(["claude-opus-4-7"], FakeAuthError())
+        router = self.create_router(anthropic=anthropic)
+        with pytest.raises(LLMRequestRefusedError):
+            await self.call(router, "claude-opus-4-7", use_async=False)
+
+        with pytest.raises(ValueError, match="rejected their API key: anthropic"):
+            async for _ in router.stream_chat(
+                system="", messages=[], tools=[], model="claude-opus-4-7"
+            ):
+                pass
 
     @pytest.mark.parametrize("use_async", [False, True])
     async def test_providers_not_supporting_model_are_not_tried(self, use_async):
