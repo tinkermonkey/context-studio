@@ -37,6 +37,32 @@ def _response_text(response: Any) -> str:
     return "".join(block.text for block in response.content or [] if block.type == "text")
 
 
+def _system_blocks(system_prompt: str) -> Any:
+    """
+    The system prompt as the request sends it: one text block the API may
+    cache. A pipeline that makes many calls with one long system prompt (a
+    class catalog, say) then pays for reading it once, not per call; a prompt
+    shorter than the model's minimum cacheable length is simply not cached.
+    An empty system prompt is sent as it is: the API rejects an empty block.
+    """
+    if not system_prompt:
+        return system_prompt
+    return [{"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}]
+
+
+def _input_tokens(usage: Any) -> tuple[int, int]:
+    """
+    (every input token of a response, those read from the cache).
+
+    With caching the API reports the cached part of the prompt apart from
+    `input_tokens`, as tokens written to the cache and tokens read from it. A
+    response's input is the three together.
+    """
+    written = getattr(usage, "cache_creation_input_tokens", None) or 0
+    read = getattr(usage, "cache_read_input_tokens", None) or 0
+    return usage.input_tokens + written + read, read
+
+
 class AnthropicProvider:
     """
     LLM provider for Anthropic Claude models.
@@ -47,6 +73,8 @@ class AnthropicProvider:
 
     AVAILABLE_MODELS = [
         "claude-sonnet-5-5",
+        "claude-opus-5-5",
+        "claude-haiku-5-5",
         "claude-opus-4-7",
         "claude-opus-4-6",
         "claude-sonnet-4-6",
@@ -56,8 +84,13 @@ class AnthropicProvider:
     # Models that reject an explicit `temperature` (the API returns a 400
     # "temperature is deprecated for this model" error) — these models reason
     # at a fixed internal temperature and do not accept sampling overrides.
-    # Claude Sonnet 5.5 rejects any non-default value, including 0.0.
-    MODELS_WITHOUT_TEMPERATURE = {"claude-opus-4-7", "claude-sonnet-5-5"}
+    # The Claude 5.5 models reject any non-default value, including 0.0.
+    MODELS_WITHOUT_TEMPERATURE = {
+        "claude-opus-4-7",
+        "claude-sonnet-5-5",
+        "claude-opus-5-5",
+        "claude-haiku-5-5",
+    }
 
     # The anthropic SDK 1.x removed `temperature` from `messages.create()`
     # (passing it is a TypeError), but the API version it sends (2023-06-01)
@@ -126,7 +159,7 @@ class AnthropicProvider:
                 kwargs = {
                     "model": model,
                     "max_tokens": max_tokens,
-                    "system": system_prompt,
+                    "system": _system_blocks(system_prompt),
                     "messages": [{"role": "user", "content": user_prompt}],
                 }
 
@@ -143,12 +176,14 @@ class AnthropicProvider:
                 elapsed_time = time.perf_counter() - start_time
                 duration_ms = elapsed_time * 1000
 
-                span.set_attribute("llm.tokens.input", response.usage.input_tokens)
+                tokens_in, cache_read = _input_tokens(response.usage)
+                span.set_attribute("llm.tokens.input", tokens_in)
+                span.set_attribute("llm.tokens.cache_read", cache_read)
                 span.set_attribute("llm.tokens.output", response.usage.output_tokens)
 
                 return LLMResponse(
                     content=_response_text(response),
-                    tokens_in=response.usage.input_tokens,
+                    tokens_in=tokens_in,
                     tokens_out=response.usage.output_tokens,
                     duration_ms=duration_ms,
                     finish_reason=response.stop_reason or "unknown",

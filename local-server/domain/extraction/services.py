@@ -26,13 +26,7 @@ from domain.ontology.ports import (
     SchemaVectorIndex,
 )
 from domain.pipelines.candidate_ids import mention_key
-from domain.pipelines.exceptions import (
-    LLMProviderError,
-    LLMRateLimitError,
-    LLMRequestRefusedError,
-    LLMTransientError,
-)
-from domain.pipelines.ports import LLMProvider, LLMResponse
+from domain.pipelines.ports import LLMProvider
 from domain.pipelines.stage_prompts import StagePrompt, render, resolve_stage_prompts
 from domain.ports import EventPublisher
 
@@ -51,6 +45,9 @@ from .entities import (
 )
 from .events import ExtractionCompleted
 from .exceptions import ExtractionError, IncompleteLLMResponseError, InvalidInputError
+from .llm_calls import MAX_LLM_ATTEMPTS as _MAX_LLM_ATTEMPTS  # noqa: F401 (tests read it here)
+from .llm_calls import TokenTally as _TokenTally
+from .llm_calls import complete_parsed, failure_fields
 from .ports import (
     ExtractionRepository,
     ExtractionRunRepository,
@@ -62,64 +59,6 @@ from .span_resolution import resolve_span
 from .value_objects import ExtractionLayerResult, LayerInput, LayerOutput, SourceSpan
 
 _logger = logging.getLogger(__name__)
-
-# How many times each triple-extraction call (identify, then derive) is made
-# before the extraction fails: an attempt is spent by a response that is not the
-# model's whole answer and by a provider failure that may pass
-_MAX_LLM_ATTEMPTS = 3
-
-# Seconds waited before the second attempt after a provider failure that may
-# pass; the wait doubles before each attempt after that
-_FIRST_RETRY_WAIT_SECONDS = 1.0
-
-
-def _no_whole_answer(
-    stage: str, failures: list[IncompleteLLMResponseError | LLMTransientError]
-) -> IncompleteLLMResponseError | LLMTransientError:
-    """
-    The failure of a stage whose every attempt got no whole answer, from why
-    each attempt failed, in order.
-
-    Attempts that all failed the same way are reported as that failure
-    outlasting them. Attempts that failed in different ways are reported by
-    the last, as an incomplete response or a provider failure that may pass:
-    never as a rate limit, since a rate limit that was not met every time did
-    not outlast the attempts and says nothing about the next text.
-    """
-    last = failures[-1]
-    incomplete = isinstance(last, IncompleteLLMResponseError)
-    if len({type(failure) for failure in failures}) > 1:
-        kind = IncompleteLLMResponseError if incomplete else LLMTransientError
-        message = (
-            f"The LLM gave no complete answer for {stage} in {len(failures)} attempts"
-            f" that failed in different ways, the last with: {last}"
-        )
-    elif incomplete:
-        kind = IncompleteLLMResponseError
-        message = (
-            f"The LLM response for {stage} was still incomplete after"
-            f" {len(failures)} attempts: {last}"
-        )
-    else:
-        kind = type(last)
-        message = f"The LLM request for {stage} still failed after {len(failures)} attempts: {last}"
-    failure = kind(message)
-    failure.__cause__ = last
-    return failure
-
-
-class _TokenTally:
-    """
-    The tokens of every LLM response one extraction received, whether or not
-    the extraction could use it.
-    """
-
-    def __init__(self) -> None:
-        self.total = 0
-
-    def add(self, response: LLMResponse) -> None:
-        self.total += response.tokens_in + response.tokens_out
-
 
 # Default prompts for the two LLM passes, used when no configuration overrides them.
 _DEFAULT_PROMPTS = resolve_stage_prompts(INDIVIDUAL_EXTRACTION_STAGES, None)
@@ -708,11 +647,11 @@ class ExtractionService:
                 _logger.error(f"Triple extraction failed: {exc}", exc_info=exc)
                 extracted_triples = []
                 run_status = ExtractionRunStatus.FAILED
-                failure_reason = str(exc) or type(exc).__name__
-                incomplete_response = isinstance(exc, IncompleteLLMResponseError)
-                provider_failed = isinstance(exc, LLMProviderError)
-                # A rate limit that reaches here was met by every attempt
-                provider_refused = isinstance(exc, (LLMRequestRefusedError, LLMRateLimitError))
+                failed = failure_fields(exc)
+                failure_reason = failed["failure_reason"]
+                incomplete_response = failed["incomplete_response"]
+                provider_failed = failed["provider_failed"]
+                provider_refused = failed["provider_refused"]
                 warnings.append(f"Extraction failed: {failure_reason}")
 
             # Update run record: the responses of a failed extraction cost tokens too
@@ -1074,38 +1013,14 @@ class ExtractionService:
             "max_tokens": 8000,
             "response_format": "json",
         }
-        # Why each attempt got no whole answer, in order
-        failures: list[IncompleteLLMResponseError | LLMTransientError] = []
-        for attempt in range(1, _MAX_LLM_ATTEMPTS + 1):
-            try:
-                response = self._llm.complete(**request)
-            except LLMTransientError as exc:
-                _logger.warning(
-                    "LLM request for %s failed, attempt %d of %d: %s",
-                    stage,
-                    attempt,
-                    _MAX_LLM_ATTEMPTS,
-                    exc,
-                )
-                failures.append(exc)
-                if attempt < _MAX_LLM_ATTEMPTS:
-                    self._sleep(_FIRST_RETRY_WAIT_SECONDS * 2 ** (attempt - 1))
-                continue
-            spent.add(response)
-            try:
-                return self._parse_triple_extraction_response(response.content, text, ontology_id)
-            except IncompleteLLMResponseError as exc:
-                problem = f"{exc} (finish_reason={response.finish_reason})"
-                _logger.warning(
-                    "Incomplete LLM response for %s, attempt %d of %d: %s",
-                    stage,
-                    attempt,
-                    _MAX_LLM_ATTEMPTS,
-                    problem,
-                )
-                self._llm.forget(**request)
-                failures.append(IncompleteLLMResponseError(problem))
-        raise _no_whole_answer(stage, failures)
+        return complete_parsed(
+            self._llm,
+            self._sleep,
+            stage,
+            request,
+            lambda content: self._parse_triple_extraction_response(content, text, ontology_id),
+            spent,
+        )
 
     def _post_process_triples(
         self, triples: list[dict], ontology, dataset_id: str | None = None

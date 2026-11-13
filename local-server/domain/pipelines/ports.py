@@ -65,6 +65,11 @@ class LLMProvider(Protocol):
         """
         Request a completion from an LLM.
 
+        A provider may cache the system prompt, so a caller that makes many
+        calls with one long system prompt should keep it the same, byte for
+        byte, and put what varies in the user prompt. tokens_in counts every
+        input token of the response, cached or not.
+
         Raises:
             LLMTransientError: The same request may be answered if made again
                 (a server error, a timeout); an LLMRateLimitError for a rate limit
