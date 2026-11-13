@@ -163,3 +163,11 @@ def test_summary_is_trusted_only_when_every_document_scored():
     assert summary["status"] == "stale"
     assert summary["dev"] == {} and summary["holdout"] == {}
     assert summarize([DocumentResult("edit_check", "not_recorded")])["status"] == "not_recorded"
+
+
+def test_a_run_over_some_documents_is_partial_and_gives_no_split_mean():
+    one = score(load_gold("edit_check"), [])
+    summary = summarize([DocumentResult("edit_check", "scored", one, calls=1)])
+    assert summary["status"] == "partial"
+    assert summary["dev"] == {} and summary["holdout"] == {} and summary["failure_counts"] == {}
+    assert summarize([])["status"] == "partial"

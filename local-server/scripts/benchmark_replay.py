@@ -276,7 +276,9 @@ async def replay_all(
 def summarize(results: list[DocumentResult]) -> dict[str, Any]:
     """
     Dev and holdout means, the failure counts over dev, and whether the run can
-    be trusted: `status` is "scored" only when every document scored.
+    be trusted: `status` is "scored" only when every benchmark document scored.
+    A run over some of the documents is "partial": a split's mean is given only
+    when all of its documents scored, so one document never stands for dev.
     """
     scored = {r.document_id: r.score for r in results if r.score is not None}
     status = "scored"
@@ -286,12 +288,16 @@ def summarize(results: list[DocumentResult]) -> dict[str, Any]:
         status = "not_recorded"
     dev = [scored[d] for d in DEV_DOCUMENTS if d in scored]
     holdout = [scored[d] for d in HOLDOUT_DOCUMENTS if d in scored]
+    whole_dev = len(dev) == len(DEV_DOCUMENTS)
+    whole_holdout = len(holdout) == len(HOLDOUT_DOCUMENTS)
+    if status == "scored" and not (whole_dev and whole_holdout):
+        status = "partial"
     return {
         "status": status,
         "documents": {r.document_id: r.status for r in results},
-        "dev": mean_metrics(dev),
-        "holdout": mean_metrics(holdout),
-        "failure_counts": failure_counts(dev),
+        "dev": mean_metrics(dev) if whole_dev else {},
+        "holdout": mean_metrics(holdout) if whole_holdout else {},
+        "failure_counts": failure_counts(dev) if whole_dev else {},
     }
 
 
@@ -375,7 +381,7 @@ def main() -> int:
                 f"dev typed F1 {summary['dev']['typed_f1']:.3f}, "
                 f"found F1 {summary['dev']['f1']:.3f}"
             )
-    return 0 if summary["status"] == "scored" else 2
+    return 0 if summary["status"] in ("scored", "partial") else 2
 
 
 if __name__ == "__main__":

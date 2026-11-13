@@ -1,6 +1,8 @@
 """Unit tests for scoring an extraction run against a benchmark gold extraction."""
 
+import json
 import os
+import shutil
 import sys
 
 import pytest
@@ -8,6 +10,8 @@ import pytest
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from tests.integration.pipelines._harness.benchmark import (
+    BENCHMARK_DIR,
+    SCHEMA_BUNDLE,
     Gold,
     GoldIndividual,
     GoldRelationship,
@@ -67,17 +71,36 @@ class TestNameKey:
 
 
 class TestMatching:
-    def test_matches_by_title_or_alias_once(self):
+    def test_matches_by_title_or_alias_once_preferring_the_title(self):
         predicted = [Predicted("runner", (COMPONENT,)), Predicted("GitLab Runners", (COMPONENT,))]
         matches = match_individuals(_gold(), predicted)
-        assert {i: g.key for i, g in matches.items()} == {0: "runner"}
+        assert {i: g.key for i, g in matches.items()} == {1: "runner"}
 
     def test_a_second_name_for_a_found_individual_is_a_duplicate_not_an_error(self):
         predicted = [Predicted("runner", (COMPONENT,)), Predicted("GitLab Runners", (COMPONENT,))]
         result = score(_gold(), predicted)
-        assert result.duplicates == ["GitLab Runners"]
+        assert result.duplicates == ["runner"]
         assert result.spurious == []
         assert result.metrics["precision"] == 1.0
+
+    def test_of_two_names_for_one_individual_the_correctly_typed_one_finds_it(self):
+        wrong, right = Predicted("GitLab Runner", (SOFTWARE,)), Predicted("Runner", (COMPONENT,))
+        for predicted in ([wrong, right], [right, wrong]):
+            result = score(_gold(), predicted)
+            assert result.counts["typed"] == 1, [p.title for p in predicted]
+            assert result.duplicates == ["GitLab Runner"]
+            assert result.mistyped == []
+
+    def test_statements_pair_off_strongest_first_whatever_the_order(self):
+        weak = Predicted("help alleviate pressure from Puma", (OUTCOME,))
+        strong = Predicted("Reduce load on the app server", (GOAL,), (Passage(110, 150),))
+        for predicted in ([weak, strong], [strong, weak]):
+            matches = match_individuals(_gold(), predicted)
+            assert [predicted[i].title for i in matches] == [strong.title]
+
+    def test_a_prediction_without_a_class_does_not_match_a_statement_by_passage(self):
+        predicted = [Predicted("Reduce load on the app server", (), (Passage(110, 150),))]
+        assert match_individuals(_gold(), predicted) == {}
 
     def test_statement_matches_by_overlapping_passage(self):
         predicted = [Predicted("Reduce load on the app server", (GOAL,), (Passage(110, 150),))]
@@ -127,6 +150,29 @@ class TestScore:
         assert result.metrics["relationship_recall"] == 0.5
         assert result.metrics["relationship_recall_reachable"] == 1.0
         assert result.missed_relationships == ["GitLab Runner uses Gitaly"]
+
+    def test_a_right_class_beside_a_wrong_one_is_mistyped(self):
+        predicted = [
+            Predicted("Gitaly", (COMPONENT, SOFTWARE, GOAL)),  # the gold class and two others
+            Predicted("Redis", (SOFTWARE, "data-store.database")),  # gold and an acceptable one
+        ]
+        result = score(_gold(), predicted)
+        assert [m["key"] for m in result.mistyped] == ["gitaly"]
+        assert result.metrics["type_accuracy"] == 0.5
+        assert result.metrics["type_accuracy_any"] == 1.0
+        assert result.metrics["type_accuracy_exact"] == 1.0
+        assert result.metrics["typed_recall"] == 0.25
+
+    def test_a_relationship_end_under_another_name_of_the_individual_counts(self):
+        predicted = [
+            Predicted("GitLab Runner", (COMPONENT,)),
+            Predicted("Runner", (COMPONENT,)),
+            Predicted("Gitaly", (COMPONENT,)),
+        ]
+        result = score(_gold(), predicted, [PredictedRelationship("Runners", "uses", "Gitaly")])
+        assert result.duplicates == ["Runner"]
+        assert result.metrics["relationship_recall"] == 0.5
+        assert result.missed_relationships == ["Redis serves Gitaly"]
 
     def test_an_empty_run_scores_zero_without_dividing_by_zero(self):
         result = score(_gold(), [])
@@ -197,6 +243,21 @@ class TestGoldFiles:
         assert result.missed == []
         assert result.metrics["typed_f1"] == 1.0
         assert result.metrics["relationship_recall"] == 1.0
+
+    def test_validation_reports_a_shared_name_and_evidence_without_offsets(self, tmp_path):
+        document_id = benchmark_documents()[0]
+        shutil.copy(BENCHMARK_DIR / SCHEMA_BUNDLE, tmp_path / SCHEMA_BUNDLE)
+        shutil.copytree(BENCHMARK_DIR / document_id, tmp_path / document_id)
+        path = tmp_path / document_id / "gold.json"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        first, second = data["individuals"][0], data["individuals"][1]
+        second["aliases"] = [*second.get("aliases", []), first["title"]]
+        del first["evidence"][0]["start"]
+        path.write_text(json.dumps(data), encoding="utf-8")
+
+        problems = validate_gold(document_id, tmp_path)
+        assert any("is also a name of" in p and second["key"] in p for p in problems), problems
+        assert f"{first['key']}: evidence needs quote, start and end" in problems
 
     @pytest.mark.parametrize("document_id", benchmark_documents())
     def test_aliases_do_not_collide_between_individuals(self, document_id):

@@ -276,8 +276,11 @@ def validate_gold(document_id: str, directory: Path = BENCHMARK_DIR) -> list[str
         if not evidence:
             problems.append(f"{owner}: no evidence")
         for item in evidence:
-            if source[item["start"] : item["end"]] != item["quote"]:
-                problems.append(f"{owner}: quote is not at {item['start']}..{item['end']}")
+            start, end, quote = item.get("start"), item.get("end"), item.get("quote")
+            if not isinstance(start, int) or not isinstance(end, int) or not quote:
+                problems.append(f"{owner}: evidence needs quote, start and end")
+            elif source[start:end] != quote:
+                problems.append(f"{owner}: quote is not at {start}..{end}")
 
     class_of: dict[str, str] = {}
     for item in data["individuals"]:
@@ -300,11 +303,14 @@ def validate_gold(document_id: str, directory: Path = BENCHMARK_DIR) -> list[str
         check_evidence(key, item.get("evidence", ()))
     titles = Counter(name_key(item["title"]) for item in data["individuals"])
     problems += [f"duplicate title {title!r}" for title, count in titles.items() if count > 1]
-    names = {
-        name_key(n)
-        for item in data["individuals"]
-        for n in (item["title"], *item.get("aliases", ()))
-    }
+    # A name two individuals share can only ever find the first of them
+    owner_of: dict[str, str] = {}
+    for item in data["individuals"]:
+        for name in dict.fromkeys(name_key(n) for n in (item["title"], *item.get("aliases", ()))):
+            other = owner_of.setdefault(name, item["key"])
+            if other != item["key"] and titles[name] < 2:
+                problems.append(f"{item['key']}: name {name!r} is also a name of {other}")
+    names = set(owner_of)
     for entry in data.get("excluded", ()):
         for part in str(entry["label"]).split(" / "):
             if name_key(part) in names:
@@ -440,37 +446,73 @@ def match_individuals(gold: Gold, predicted: Sequence[Predicted]) -> dict[int, G
     Pair predictions with gold individuals, one to one: index of the
     prediction -> the gold individual it found. Names are matched first; what
     is left is matched to gold statements by passage.
+
+    The pairing does not depend on the order of the predictions. When several
+    predictions name one gold individual ("GitLab Runner" and "Runner"), the
+    one that is typed correctly finds it, then the one under its title; the
+    others are duplicates. Statements pair off strongest affinity first.
     """
+    by_name = _gold_by_name(gold)
+    named: dict[str, list[int]] = {}
+    for index, prediction in enumerate(predicted):
+        found = by_name.get(name_key(prediction.title))
+        if found is not None:
+            named.setdefault(found.key, []).append(index)
+    gold_by_key = {g.key: g for g in gold.individuals}
+    matches: dict[int, GoldIndividual] = {}
+    for key, indexes in named.items():
+        individual = gold_by_key[key]
+        best = min(
+            indexes,
+            key=lambda i: (
+                not typed_correctly(individual, predicted[i]),
+                name_key(predicted[i].title) != name_key(individual.title),
+                i,
+            ),
+        )
+        matches[best] = individual
+    taken = set(named)
+    pairs = sorted(
+        (
+            (-affinity, index, position)
+            for index, prediction in enumerate(predicted)
+            if index not in matches and _may_be_statement(prediction)
+            for position, g in enumerate(gold.individuals)
+            if g.is_statement
+            and g.key not in taken
+            and (affinity := _statement_affinity(g, prediction)) > 0
+        ),
+    )
+    for _, index, position in pairs:
+        individual = gold.individuals[position]
+        if index not in matches and individual.key not in taken:
+            matches[index] = individual
+            taken.add(individual.key)
+    return matches
+
+
+def typed_correctly(gold: GoldIndividual, prediction: Predicted) -> bool:
+    """
+    Whether a prediction's typing is one a careful modeller would accept: it
+    has a class, and every class it was given is the gold class or an
+    acceptable one. A prediction typed with the right class and a wrong one
+    beside it is mistyped: the individual would be created in both.
+    """
+    return bool(prediction.class_refs) and all(gold.accepts(ref) for ref in prediction.class_refs)
+
+
+def _gold_by_name(gold: Gold) -> dict[str, GoldIndividual]:
+    """Each gold name -> its individual (the first, should two share a name)."""
     by_name: dict[str, GoldIndividual] = {}
     for individual in gold.individuals:
         for name in individual.names:
             by_name.setdefault(name, individual)
-    matches: dict[int, GoldIndividual] = {}
-    taken: set[str] = set()
-    for index, prediction in enumerate(predicted):
-        found = by_name.get(name_key(prediction.title))
-        if found is not None and found.key not in taken:
-            matches[index] = found
-            taken.add(found.key)
-    statements = [g for g in gold.individuals if g.is_statement and g.key not in taken]
-    for index, prediction in enumerate(predicted):
-        if index in matches or not _may_be_statement(prediction):
-            continue
-        best = max(
-            (g for g in statements if g.key not in taken),
-            key=lambda g: _statement_affinity(g, prediction),
-            default=None,
-        )
-        if best is not None and _statement_affinity(best, prediction) > 0:
-            matches[index] = best
-            taken.add(best.key)
-    return matches
+    return by_name
 
 
 def _may_be_statement(prediction: Predicted) -> bool:
-    return not prediction.class_refs or any(
-        layer_of(ref) == STATEMENT_LAYER for ref in prediction.class_refs
-    )
+    """A prediction typed as a statement; one with no class cannot be matched by passage."""
+    return any(layer_of(ref) == STATEMENT_LAYER for ref in prediction.class_refs)
 
 
 def _statement_affinity(gold: GoldIndividual, prediction: Predicted) -> float:
@@ -497,7 +539,10 @@ def score(
     """Score a run's individuals and relationships against a document's gold extraction."""
     matches = match_individuals(gold, predicted)
     found = {g.key: index for index, g in matches.items()}
-    typed = {
+    typed = {index for index, g in matches.items() if typed_correctly(g, predicted[index])}
+    # Diagnostics: an accepted class is among those given (the gap to `typed`
+    # is typing with several classes), and the gold class itself is among them.
+    any_accepted = {
         index
         for index, g in matches.items()
         if any(g.accepts(ref) for ref in predicted[index].class_refs)
@@ -540,6 +585,7 @@ def score(
         "typed_recall_core": _ratio(sum(1 for g in core if g.key in typed_keys), len(core)),
         "typed_precision": _ratio(len(typed), counted),
         "type_accuracy": _ratio(len(typed), len(matches)),
+        "type_accuracy_any": _ratio(len(any_accepted), len(matches)),
         "type_accuracy_exact": _ratio(len(exact), len(matches)),
         "layer_accuracy": _ratio(len(same_layer), len(matches)),
         "evidence_agreement": _ratio(len(grounded), len(matches)),
@@ -548,11 +594,15 @@ def score(
     metrics["typed_f1"] = _f1(metrics["typed_precision"], metrics["typed_recall"])
 
     gold_by_key = {g.key: g for g in gold.individuals}
-    pred_gold = {name_key(predicted[i].title): g.key for i, g in matches.items()}
+    # A relationship's end is the gold individual its name finds: any of that
+    # individual's names (a run may state "Runner uses Gitaly" and title the
+    # individual "GitLab Runner"), or the statement a prediction was paired with.
+    end_key = {name: g.key for name, g in _gold_by_name(gold).items()}
+    end_key.update({name_key(predicted[i].title): g.key for i, g in matches.items()})
     stated = {
-        (pred_gold[name_key(r.source)], r.predicate, pred_gold[name_key(r.target)])
+        (end_key[name_key(r.source)], r.predicate, end_key[name_key(r.target)])
         for r in relationships
-        if name_key(r.source) in pred_gold and name_key(r.target) in pred_gold
+        if name_key(r.source) in end_key and name_key(r.target) in end_key
     }
     gold_triples = {(r.source, r.predicate, r.target) for r in gold.relationships}
     reachable = {t for t in gold_triples if t[0] in found and t[2] in found}

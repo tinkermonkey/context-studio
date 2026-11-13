@@ -5,19 +5,24 @@ Read/write helpers for `local-server/experiments/ledger.jsonl` — one JSON
 line per experiment (accepted and rejected), in the exact shape specified by
 `documentation/karpathy_loop_design.md` §8:
 
-    {"experiment_id": "...", "iteration": 12, "hypothesis": "copular handling",
-     "variant": "open_v1+copular", "diff_stat": "...", "base_commit": "...",
-     "dev": {"strict_f1": 0.31, "soft_f1": 0.52, "candidate_recall": 0.71},
-     "holdout": {"strict_f1": 0.28, "soft_f1": 0.47},
+    {"experiment_id": "...", "iteration": 12, "hypothesis": "full_class_catalog",
+     "variant": "default+full_class_catalog", "diff_stat": "...", "base_commit": "...",
+     "dev": {"typed_f1": 0.41, "f1": 0.58}, "holdout": {"typed_f1": 0.37, "f1": 0.55},
+     "guard": {"strict_f1": 0.92, "soft_f1": 0.93},
      "decision": "accepted", "reason": "", "cost_usd": 0.11, "agent": "worktree-2"}
+
+`dev` and `holdout` are the extraction benchmark's measures and `guard` the
+triple corpus's (entries before the 2026-11 baseline reset carry triple-corpus
+metrics in `dev`/`holdout`). All three are null for a candidate that could not
+be measured.
 
 Entries may also carry an optional `bootstrap` field — the Wave 1 DR
 bootstrap-scenario diagnostics (`karpathy_loop_dr_ontology_design.md` §5,
 `dataset_split.py`'s `DR_BOOTSTRAP_SCENARIOS`), logged for visibility only.
 It is not in `REQUIRED_FIELDS` and nothing that reads the ledger
 (`rejected_hypotheses`, the §6 accept gate) ever consults it — see
-`acceptGate` in `.claude/workflows/karpathy-loop.js`, which takes only `dev`
-and `holdout` as arguments.
+`acceptGate` in `.claude/workflows/karpathy-loop.js`, which reads only `dev`,
+`holdout` and `guard`.
 
 The ledger is the loop's negative-result memory (design doc §6 guardrails):
 `rejected_hypotheses()` is consulted by target selection (§4.3 step 2) so a

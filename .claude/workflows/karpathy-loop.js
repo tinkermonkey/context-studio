@@ -1,7 +1,7 @@
 export const meta = {
   name: 'karpathy-loop',
   description: 'Run one Loop C iteration for individual-extraction refinement: evaluate on the benchmark documents, select failure targets, fan out experimenter agents, verify, accept/reject, update the ledger.',
-  whenToUse: 'Invoke to run exactly ONE Karpathy-loop iteration (documentation/karpathy_loop_design.md §4.3) for the local-server default individual-extraction pipeline. The objective is the extraction benchmark (long documents scored on the individuals found, tests/integration/fixtures/pipelines/extraction_benchmark/); the short-passage triple corpus is a regression guard. Each call is one iteration; drive repeated iterations from outside this script (e.g. via /loop) and thread state across calls through `args`: {iteration, consecutiveNoAccept, hypothesisCount, integrationBranch, holdoutFloors, maxConsecutiveNoAccept, cumulativeCostUsd, totalBudgetUsd}. Read the returned `stop` field (and `status`) after every call: "stopped" means a floor/plateau/budget stop-check tripped and the outer loop should halt; "error" means the evaluation could not be trusted (stale or unrecorded cassettes) and a human must record them; otherwise pass the returned `consecutiveNoAccept` and incremented `iteration` into the next call’s args. Do not invoke casually: one iteration runs the variant tournament plus several worktree-isolated coding agents, and every experiment that changes a prompt re-records cassettes with the live LLM.',
+  whenToUse: 'Invoke to run exactly ONE Karpathy-loop iteration (documentation/karpathy_loop_design.md §4.3) for the local-server default individual-extraction pipeline. The objective is the extraction benchmark (long documents scored on the individuals found, tests/integration/fixtures/pipelines/extraction_benchmark/); the short-passage triple corpus is a regression guard. Each call is one iteration; drive repeated iterations from outside this script (e.g. via /loop) and thread state across calls through `args`: {iteration, consecutiveNoAccept, hypothesisCount, integrationBranch, holdoutFloors, maxConsecutiveNoAccept, cumulativeCostUsd, totalBudgetUsd}. Read the returned `stop` field (and `status`) after every call: "stopped" means a floor/plateau/budget stop-check tripped and the outer loop should halt; "error" means the evaluation could not be trusted (stale or unrecorded cassettes) and a human must record them; "accepted" always comes with a `stop`, because the accepted change sits on the integration branch while the incumbent is measured on `main`: promote that branch to `main` (by PR) before the next call. Halt whenever `stop` is not null. Otherwise pass the returned `consecutiveNoAccept`, `cumulativeCostUsd` and incremented `iteration` into the next call’s args. Do not invoke casually: one iteration runs the variant tournament plus several worktree-isolated coding agents, and every experiment that changes a prompt re-records cassettes with the live LLM.',
   phases: [
     { title: 'Evaluate', detail: 'Run Loop B (variant tournament + benchmark replay); read the incumbent scores and failure counts' },
     { title: 'Select', detail: 'Rank benchmark failure kinds by count; drop hypotheses the ledger already decided' },
@@ -64,6 +64,10 @@ const FROZEN_PATHS = [
 // individual_extraction/). `kinds` maps a hypothesis to the benchmark failure
 // kinds it is expected to move; an empty list means it targets something the
 // failure counts do not show and is only picked as a last-resort filler.
+// `blocked: true` keeps a hypothesis out of selection: the accept gate reads
+// only the individuals' found F1 and typed F1, so a change that moves only
+// relationships or confidences cannot pass it however well it works. Unblock
+// one when the gate reads a measure it can move.
 // Hypotheses from the earlier triple-corpus era (two-pass extraction, class
 // catalog grounding, concept objects, label canonicalization: landed; noun-chunk
 // surfacing and retrieval-based typing: rejected) are recorded in §7 of the
@@ -127,12 +131,14 @@ const SEED_BACKLOG = [
   {
     id: 'cross_chunk_relationships',
     kinds: ['relationship_missed'],
+    blocked: true,
     summary:
       'Derive relationships across chunks. The derive stage sees only the individuals identified in its own chunk, so a relationship between individuals introduced in different sections is never stated. After merging, run the derive stage once more over the merged individuals with the passages that mention two of them.',
   },
   {
     id: 'per_source_confidence_bands',
     kinds: [],
+    blocked: true,
     summary:
       'Per-source confidence bands (calibrated ranges per extraction source) so apply-time thresholding means something. Not visible in the failure counts.',
   },
@@ -194,7 +200,7 @@ const EXPERIMENT_RESULT_SCHEMA = {
   type: 'object',
   required: [
     'hypothesisId', 'worktreePath', 'branchName', 'baseCommit', 'diffStat', 'changedFiles',
-    'changesPrompts', 'cassettesRecorded', 'testsPassed', 'measurementStatus', 'dev', 'holdout', 'guard',
+    'changesPrompts', 'cassettesRecorded', 'testsPassed', 'measurementStatus',
     'summary', 'failureCountsDelta',
   ],
   properties: {
@@ -209,7 +215,9 @@ const EXPERIMENT_RESULT_SCHEMA = {
     recordingCostUsd: { type: 'number' },
     testsPassed: { type: 'boolean' },
     testsSummary: { type: 'string' },
+    // `dev`, `holdout` and `guard` are present exactly when this is "scored".
     measurementStatus: { type: 'string', enum: ['scored', 'stale', 'not_recorded', 'failed'] },
+    measurementDetail: { type: 'string' },
     dev: BENCHMARK_METRICS,
     holdout: BENCHMARK_METRICS,
     guard: GUARD_METRICS,
@@ -239,7 +247,7 @@ const DECIDE_SCHEMA = {
   required: ['hypothesisId', 'decision', 'ledgerAppended'],
   properties: {
     hypothesisId: { type: 'string' },
-    decision: { type: 'string', enum: ['accepted', 'rejected'] },
+    decision: { type: 'string', enum: ['accepted', 'rejected', 'deferred'] },
     merged: { type: 'boolean' },
     worktreeDiscarded: { type: 'boolean' },
     ledgerAppended: { type: 'boolean' },
@@ -344,7 +352,9 @@ function experimentPrompt(hypothesis, evaluation) {
     '7. Measure the candidate exactly as the incumbent was measured:',
     ...MEASURE_STEPS,
     '   Report `measurementStatus`, `dev`, `holdout` and `guard`. A status other than "scored" means step 4',
-    '   was needed and skipped, or failed: fix that rather than reporting numbers.',
+    '   was needed and skipped, or failed: fix that rather than reporting numbers. If it still cannot be',
+    '   scored, report the status and say why in `measurementDetail`, and leave `dev`, `holdout` and',
+    '   `guard` out: never report a number the steps above did not produce.',
     '8. In `failureCountsDelta`, compare the candidate\'s failure counts with the incumbent\'s for your',
     '   target kind and say which concrete examples moved.',
     '9. Capture, from inside the worktree after committing: `git diff main...HEAD --stat` (diffStat),',
@@ -366,7 +376,7 @@ function verifyPrompt(candidate) {
     `Claimed changed files: ${JSON.stringify(candidate.changedFiles)}`,
     `Claimed diff stat: ${candidate.diffStat}`,
     `Claimed tests passed: ${candidate.testsPassed}`,
-    `Claimed scores: dev typed F1 ${candidate.dev.typed_f1}, dev found F1 ${candidate.dev.f1}, holdout typed F1 ${candidate.holdout.typed_f1}, guard strict-F1 ${candidate.guard.strict_f1}`,
+    `Claimed scores: dev typed F1 ${candidate.dev.typed_f1}, dev found F1 ${candidate.dev.f1}, holdout typed F1 ${candidate.holdout.typed_f1}, guard strict-F1 ${candidate.guard.strict_f1}, guard soft-F1 ${candidate.guard.soft_f1}`,
     '',
     'Checks — ALL must pass for verdict "pass":',
     '1. Integrity: `cd` into the worktree and run `git diff main...HEAD --name-only`. FAIL',
@@ -382,8 +392,12 @@ function verifyPrompt(candidate) {
     '   inside the worktree. FAIL (`testsReproduced: false`) if anything fails now.',
     '5. Scores: from the worktree\'s `local-server/`, run `python scripts/benchmark_replay.py --json`. It',
     '   must exit 0 with status "scored" (the committed cassettes answer every prompt of the committed',
-    '   code), and its dev typed_f1 and f1 must equal the claimed ones to three decimals. FAIL',
-    '   (`scoresReproduced: false`) otherwise.',
+    '   code), and its dev typed_f1, dev f1 and holdout typed_f1 must equal the claimed ones to three',
+    '   decimals. Then run `python scripts/quality_tournament.py --pipeline individual --passes 1 --restarts 1`',
+    '   (it replays recordings only): it must exit 0, and the `default` row of the newest',
+    '   `experiments/reports/tournament_<run_id>.md` digest must show the claimed guard strict-F1 in its',
+    '   `dev strict-F1` column. FAIL (`scoresReproduced: false`) if any of these differs: the accept gate',
+    '   reads every one of them.',
     '',
     'Return structured output only — no prose.',
   ].join('\n')
@@ -399,8 +413,9 @@ function decidePrompt(candidate, decision, reason, iteration, integrationBranch,
     diff_stat: candidate.diffStat,
     base_commit: candidate.baseCommit,
     // Benchmark measures over the dev and holdout documents.
-    dev: candidate.dev,
-    holdout: candidate.holdout,
+    // null for a candidate that could not be measured.
+    dev: candidate.dev || null,
+    holdout: candidate.holdout || null,
     // The triple corpus, kept so the record shows what the guard saw.
     guard: candidate.guard || null,
     decision,
@@ -428,9 +443,14 @@ function decidePrompt(candidate, decision, reason, iteration, integrationBranch,
     lines.push(
       `1. Ensure a local branch \`${integrationBranch}\` exists (create it from \`main\` if absent:`,
       `   \`git branch ${integrationBranch} main\`).`,
-      `2. \`git checkout ${integrationBranch} && git merge --no-ff ${candidate.branchName}\`. The candidate's`,
+      '2. Merge in a temporary worktree, never by checking the branch out in the repository root (the',
+      '   root stays on the branch it is on: the incumbent is measured there, and the ledger file below',
+      '   is an uncommitted change in it):',
+      `   \`git worktree add <a new temporary directory> ${integrationBranch}\`, then inside it`,
+      `   \`git merge --no-ff ${candidate.branchName}\`, then \`git worktree remove\` it. The candidate's`,
       '   recorded cassettes come with the merge. Resolve only trivial conflicts; if the merge is not',
-      '   trivial, stop and report the conflict instead of guessing.',
+      '   trivial, `git merge --abort`, remove the temporary worktree, set `merged: false` and report the',
+      '   conflict instead of guessing.',
       '3. From `local-server/`, append the ledger entry via stdin. Do NOT paste the JSON into a',
       '   single-quoted shell argument — free-form text in `reason` can contain apostrophes, backticks,',
       '   or `$` that break shell quoting. Run this exactly, with the heredoc delimiter line unindented:',
@@ -440,6 +460,15 @@ function decidePrompt(candidate, decision, reason, iteration, integrationBranch,
       '   Set `ledgerAppended: true` only if this command exits 0.',
       `4. \`git worktree remove ${candidate.worktreePath}\` (do NOT delete branch ${candidate.branchName} —`,
       '   it is now merged history on the integration branch).',
+    )
+  } else if (decision === 'deferred') {
+    // Passed the gate but another candidate was accepted. No ledger entry: a
+    // "rejected" entry would keep a hypothesis that passed from being drafted
+    // again against the new incumbent.
+    lines.push(
+      '1. Do NOT append a ledger entry; set `ledgerAppended: false`.',
+      `2. \`git worktree remove --force ${candidate.worktreePath}\`.`,
+      `3. \`git branch -D ${candidate.branchName}\`.`,
     )
   } else {
     lines.push(
@@ -516,6 +545,18 @@ function selectTargets(failureCounts, rejectedHypothesisIds, acceptedHypothesisI
 function acceptGate(candidate, incumbent, epsilon, holdoutSlack, coverageSlack, guardSlack) {
   const reasons = []
 
+  // A missing number is not a pass: every comparison below is false against
+  // undefined, which would read as "did not collapse".
+  const missing = []
+  for (const [name, run] of [['candidate', candidate], ['incumbent', incumbent]]) {
+    for (const [group, key] of [['dev', 'f1'], ['dev', 'typed_f1'], ['holdout', 'typed_f1'], ['guard', 'strict_f1']]) {
+      if (!Number.isFinite(run && run[group] && run[group][key])) missing.push(`${name} ${group}.${key}`)
+    }
+  }
+  if (missing.length > 0) {
+    return { passes: false, reasons: [`not measured: ${missing.join(', ')}`] }
+  }
+
   // Improvement on dev: found F1 rewards coverage, typed F1 rewards exactness.
   //   - Coverage-driven: found F1 improves and typed F1 does not regress at all.
   //   - Exactness-driven: typed F1 improves and found F1 dips by at most
@@ -558,6 +599,44 @@ function acceptGate(candidate, incumbent, epsilon, holdoutSlack, coverageSlack, 
   return { passes: improves && !holdoutCollapsed && !guardCollapsed, reasons }
 }
 
+// A candidate carries all three measurements only when its run was scored.
+function isMeasured(candidate) {
+  return Boolean(candidate && candidate.measurementStatus === 'scored' && candidate.dev && candidate.holdout && candidate.guard)
+}
+
+// §4.3 step 5: every verified candidate is checked against the accept gate, and
+// of those that pass, the one with the highest dev typed F1 (then found F1) is
+// accepted. One per iteration: two candidates were each measured against the
+// same incumbent, never together.
+function gateCandidates(verified, incumbent) {
+  const gated = verified.map((p) => ({
+    ...p,
+    gate: acceptGate(p.candidate, incumbent, EPSILON, HOLDOUT_SLACK, COVERAGE_SLACK, GUARD_SLACK),
+  }))
+  let best = null
+  for (const p of gated) {
+    if (!p.gate.passes) continue
+    const better = !best
+      || p.candidate.dev.typed_f1 > best.candidate.dev.typed_f1
+      || (p.candidate.dev.typed_f1 === best.candidate.dev.typed_f1 && p.candidate.dev.f1 > best.candidate.dev.f1)
+    if (better) best = p
+  }
+  return { gated, best }
+}
+
+// The `stop` field of an iteration that ran: an accepted change has to reach
+// `main` before the next iteration measures the incumbent there, and a run of
+// iterations without an accept is a plateau.
+function stopAfter(accepted, nextConsecutiveNoAccept, maxConsecutiveNoAccept, integrationBranch) {
+  if (accepted) {
+    return { reason: `accepted: promote ${integrationBranch} to main before the next iteration (the incumbent is measured on main)` }
+  }
+  if (nextConsecutiveNoAccept >= maxConsecutiveNoAccept) {
+    return { reason: `plateau reached after this iteration (${nextConsecutiveNoAccept} consecutive no-accept)` }
+  }
+  return null
+}
+
 // `args` may arrive already parsed, or — depending on how this workflow was
 // invoked (a slash-command wrapper, or a stringified /loop hand-off) — as a
 // JSON string. Without this, every read below silently falls back to its
@@ -593,6 +672,8 @@ if (consecutiveNoAccept >= maxConsecutiveNoAccept) {
     reason: `plateau: ${consecutiveNoAccept} consecutive no-accept iterations (>= ${maxConsecutiveNoAccept}) — escalate to human`,
     iteration,
     consecutiveNoAccept,
+    cumulativeCostUsd,
+    stop: { reason: 'plateau' },
   }
 }
 if (totalBudgetUsd != null && cumulativeCostUsd >= totalBudgetUsd) {
@@ -601,6 +682,8 @@ if (totalBudgetUsd != null && cumulativeCostUsd >= totalBudgetUsd) {
     reason: `budget exhausted: cumulative $${cumulativeCostUsd} >= cap $${totalBudgetUsd}`,
     iteration,
     consecutiveNoAccept,
+    cumulativeCostUsd,
+    stop: { reason: 'budget exhausted' },
   }
 }
 
@@ -608,7 +691,14 @@ phase('Evaluate')
 log(`Karpathy loop iteration ${iteration}: measuring the incumbent (Loop B + benchmark replay)`)
 const evaluation = await agent(evaluatePrompt(), { schema: EVALUATION_SCHEMA, phase: 'Evaluate', label: 'evaluate:loopB' })
 if (!evaluation) {
-  return { status: 'error', reason: 'Evaluate step returned no result (agent skipped or failed)', iteration, consecutiveNoAccept }
+  return {
+    status: 'error',
+    reason: 'Evaluate step returned no result (agent skipped or failed)',
+    iteration,
+    consecutiveNoAccept,
+    cumulativeCostUsd,
+    stop: { reason: 'the incumbent could not be measured' },
+  }
 }
 // A stale or missing recording is not a low score. Nothing is selected,
 // drafted or accepted against a measurement that did not happen.
@@ -618,6 +708,8 @@ if (evaluation.measurementStatus !== 'scored' || !evaluation.dev || !evaluation.
     reason: `the incumbent could not be measured (${evaluation.measurementStatus}): ${evaluation.measurementDetail || 'see the tournament digest'}. Record the cassettes on main (scripts/record_default_cassettes.py --record; scripts/benchmark_replay.py --record --spend) before running the loop`,
     iteration,
     consecutiveNoAccept,
+    cumulativeCostUsd,
+    stop: { reason: 'the incumbent could not be measured' },
     evaluation,
   }
 }
@@ -629,6 +721,8 @@ if (meetsFloors(evaluation.holdout, holdoutFloors)) {
     reason: 'holdout typed floors met (§1 exit criterion)',
     iteration,
     consecutiveNoAccept,
+    cumulativeCostUsd,
+    stop: { reason: 'holdout typed floors met' },
     evaluation,
   }
 }
@@ -646,6 +740,9 @@ if (targets.length === 0) {
     reason: 'no untried hypotheses remain in the seeded backlog (all already rejected or accepted) — read the benchmark report and add new hypotheses to SEED_BACKLOG',
     iteration,
     consecutiveNoAccept: consecutiveNoAccept + 1,
+    cumulativeCostUsd,
+    // Another iteration would select nothing again.
+    stop: { reason: 'the hypothesis backlog is exhausted' },
     evaluation,
   }
 }
@@ -660,15 +757,21 @@ const experimentResults = await parallel(targets.map((target) => async () => {
   })
   return result ? { ...result, hypothesisId: result.hypothesisId || target.id } : null
 }))
-// A candidate that could not be measured is not a candidate.
-const candidates = experimentResults.filter((c) => c && c.measurementStatus === 'scored' && c.dev && c.holdout && c.guard)
+// Every agent that returned did work in a worktree, and may have paid for a
+// recording, whether or not its candidate could be measured.
+const returned = experimentResults.filter(Boolean)
+const iterationCostUsd = returned.reduce((sum, c) => sum + (c.recordingCostUsd || 0), 0)
+const candidates = returned.filter(isMeasured)
+const unmeasured = returned.filter((c) => !isMeasured(c))
 
-if (candidates.length === 0) {
+if (returned.length === 0) {
   return {
     status: 'no_accept',
-    reason: 'no experimenter returned a measured candidate (agents failed, were skipped, or left stale cassettes)',
+    reason: 'no experimenter returned a result (agents failed or were skipped)',
     iteration,
     consecutiveNoAccept: consecutiveNoAccept + 1,
+    cumulativeCostUsd,
+    stop: stopAfter(false, consecutiveNoAccept + 1, maxConsecutiveNoAccept, integrationBranch),
     evaluation,
     targets,
     experimentResults,
@@ -691,32 +794,36 @@ const verified = paired.filter((p) =>
   && (p.verdict.forbiddenPathHits || []).length === 0
 )
 
-let best = null
-for (const p of verified) {
-  if (!best || p.candidate.dev.typed_f1 > best.candidate.dev.typed_f1) best = p
-}
-
-const gateResult = best
-  ? acceptGate(best.candidate, evaluation, EPSILON, HOLDOUT_SLACK, COVERAGE_SLACK, GUARD_SLACK)
-  : null
-const accepted = Boolean(best && gateResult && gateResult.passes)
+const { gated, best } = gateCandidates(verified, evaluation)
+const accepted = Boolean(best)
 
 phase('Decide')
 const decisions = paired.map((p) => {
-  if (accepted && p.candidate.hypothesisId === best.candidate.hypothesisId) {
+  const gatedEntry = gated.find((g) => g.candidate.hypothesisId === p.candidate.hypothesisId)
+  if (!gatedEntry) {
+    const reason = `failed verification: ${p.verdict ? p.verdict.reason : 'verifier agent returned no result'}`
+    return { candidate: p.candidate, decision: 'rejected', reason }
+  }
+  if (gatedEntry === best) {
     return { candidate: p.candidate, decision: 'accepted', reason: 'passed verification and the §6 accept gate' }
   }
-  const verifyFailed = !(p.verdict && p.verdict.verdict === 'pass')
-  let reason
-  if (verifyFailed) {
-    reason = `failed verification: ${p.verdict ? p.verdict.reason : 'verifier agent returned no result'}`
-  } else if (best && p.candidate.hypothesisId === best.candidate.hypothesisId) {
-    reason = `verified but failed the §6 accept gate: ${gateResult.reasons.join('; ')}`
-  } else {
-    reason = 'verified but not the best-scoring verified candidate this iteration (§4.3 step 5: only the best verified candidate is checked against the accept gate)'
+  if (gatedEntry.gate.passes) {
+    return {
+      candidate: p.candidate,
+      decision: 'deferred',
+      reason: `passed the §6 accept gate, but ${best.candidate.hypothesisId} scored higher and one change is accepted per iteration; not written to the ledger, so it is drafted again against the new incumbent`,
+    }
   }
-  return { candidate: p.candidate, decision: 'rejected', reason }
-})
+  return {
+    candidate: p.candidate,
+    decision: 'rejected',
+    reason: `verified but failed the §6 accept gate: ${gatedEntry.gate.reasons.join('; ')}`,
+  }
+}).concat(unmeasured.map((candidate) => ({
+  candidate,
+  decision: 'rejected',
+  reason: `not measured (${candidate.measurementStatus}): ${candidate.measurementDetail || 'no detail given'}. This is not evidence against the hypothesis: to retry it, fix the cause and reopen it by hand`,
+})))
 
 const outcomes = await parallel(decisions.map((d) => () =>
   agent(decidePrompt(d.candidate, d.decision, d.reason, iteration, integrationBranch, evaluation.incumbentVariant), {
@@ -727,7 +834,6 @@ const outcomes = await parallel(decisions.map((d) => () =>
 ))
 
 const nextConsecutiveNoAccept = accepted ? 0 : consecutiveNoAccept + 1
-const iterationCostUsd = candidates.reduce((sum, c) => sum + (c.recordingCostUsd || 0), 0)
 
 return {
   status: accepted ? 'accepted' : 'no_accept',
@@ -739,9 +845,8 @@ return {
   evaluation,
   targets,
   candidates: paired,
+  unmeasured,
   decisions,
   outcomes,
-  stop: nextConsecutiveNoAccept >= maxConsecutiveNoAccept
-    ? { reason: `plateau reached after this iteration (${nextConsecutiveNoAccept} consecutive no-accept)` }
-    : null,
+  stop: stopAfter(accepted, nextConsecutiveNoAccept, maxConsecutiveNoAccept, integrationBranch),
 }

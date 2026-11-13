@@ -107,32 +107,8 @@ Where the baseline loses, on the dev documents: 126 gold individuals not found (
 extracted, and 133 of 136 stated relationships missing. By layer, statements are the gap: 2 of the
 41 motivation-layer individuals on the dev documents are found (1 of 43 on the holdout document).
 
-
-Before the `default` LLM pipeline (`IndividualExtractionOrchestrator`) can
-compete as a Loop B variant, its cassettes must be recorded once. Loop A/B
-never make live LLM calls (`karpathy_loop_design.md` §4.1/§5) — every variant
-must replay entirely from recorded cassettes — so until the cassette set exists
-under `tests/integration/fixtures/cassettes/individual_extraction/`,
-`build_registry()` in `scripts/quality_tournament.py` deliberately leaves the
-`default` variant unregistered and the tournament has nothing to replay.
-
-- **REQUIRED — record the `default` cassette set** (one-time bootstrap, before
-  registering the `default` variant in Loop B):
-
-  ```bash
-  # from local-server/, venv active. Dry-run first (no calls, prints the plan):
-  python scripts/record_default_cassettes.py --dry-run
-  # Then record for real (spends money — see cost note):
-  python scripts/record_default_cassettes.py --record
-  ```
-
-  Cost note: `--record` makes one live LLM call per corpus scenario against the
-  real provider (the corpus fixtures pin the `default` pipeline to
-  `claude-opus-4-7`); the default behavior with no flag, and `--dry-run`, make
-  zero calls. The `dr_spec` scenarios additionally require the sibling
-  `documentation_robotics/spec` checkout to build their ontology — scenarios
-  whose ontology can't be built are skipped with a message rather than recorded
-  empty.
+`python scripts/record_default_cassettes.py --dry-run` prints what a recording would call without
+calling anything.
 
 ## Loop B: `scripts/quality_tournament.py`
 
@@ -167,10 +143,11 @@ independently-produced ground truth graded against the imported DR spec, too
 thin (2 scenarios currently on disk, of a 4-scenario target — see
 `karpathy_loop_dr_ontology_design.md` §5 — covering at most 4 of 12 layers)
 to holdout-split or optimize
-against — and is never mixed into `dev`/`holdout` aggregation, the error
-report's `failure_stage_counts` (Loop C target selection), or the §6 accept
-gate: `acceptGate` in `.claude/workflows/karpathy-loop.js` takes only `dev`
-and `holdout` as arguments and structurally cannot read bootstrap metrics.
+against — and is never mixed into `dev`/`holdout` aggregation, Loop C's target
+selection (which ranks the benchmark's `failure_counts`), or the §6 accept
+gate: `acceptGate` in `.claude/workflows/karpathy-loop.js` reads the benchmark's
+`dev` and `holdout` measures and the triple corpus's `guard` measure, and
+structurally cannot read bootstrap metrics.
 
 ## Recognition A/B measurement: `scripts/measure_recognition_quality_effect.py`
 
@@ -211,19 +188,26 @@ iteration:
 2. **Select** — reads `ledger.jsonl` for hypotheses already decided, ranks the benchmark's failure
    kinds (`missed_core`, `missed_supporting`, `mistyped`, `spurious`, `excluded_extracted`,
    `relationship_missed`) by count and maps the top ones to the seeded backlog (design doc §7).
+   Hypotheses marked `blocked` are never selected: the gate reads the individuals' found F1 and
+   typed F1 only, so a change that moves nothing but relationships or confidences cannot pass it.
 3. **Experiment** — fans out one experimenter agent per hypothesis, each in its own git worktree,
    each implementing exactly one change. A change to a prompt, or to what feeds one, records both
    cassette sets again on its branch. The candidate is measured by the same steps as the incumbent.
+   One that cannot be measured (stale recordings, a failed run) is recorded in the ledger as
+   rejected with that reason, and its worktree is discarded.
 4. **Verify** — an adversarial agent checks each candidate: none of the frozen paths changed (the
    harness, the gold extractions, the schema snapshots, the tournament and benchmark scripts, the
    ledger), nothing in the diff is specific to a benchmark document, tests reproduce, the committed
-   cassettes replay to the claimed scores, one change, and the diff matches the hypothesis.
-5. **Decide** — the accept gate (design doc §6) on the best verified candidate: benchmark dev found
+   cassettes replay to every number the gate reads (dev found F1 and typed F1, holdout typed F1,
+   the triple corpus's dev strict-F1), one change, and the diff matches the hypothesis.
+5. **Decide** — the accept gate (design doc §6) on every verified candidate: benchmark dev found
    F1 improves by > 0.02 with typed F1 not regressing, or typed F1 improves by > 0.02 with found
    F1 dipping at most 0.05; the holdout document's typed F1 does not drop by more than 0.04; the
-   triple corpus's dev strict-F1 does not drop by more than 0.02. Accepted → merge into
-   `experiment/karpathy-loop`, append a ledger entry. Everything else → discard the worktree,
-   append a ledger entry with the reason.
+   triple corpus's dev strict-F1 does not drop by more than 0.02. A missing number fails the
+   gate. Of the candidates that pass, the one with the highest dev typed F1 is accepted: merged
+   into `experiment/karpathy-loop` with a ledger entry. Others that pass are discarded without a
+   ledger entry, so they are drafted again against the new incumbent. Everything else → discard
+   the worktree, append a ledger entry with the reason.
 
 Invoke it with the `Workflow` tool by `scriptPath` (`.claude/workflows/karpathy-loop.js`; a
 workflow launched by `name` can run a stale cached copy), e.g. `args: {iteration: 1}`. Each call
@@ -231,10 +215,14 @@ is one iteration: call it repeatedly (e.g. via `/loop`) and thread state through
 previous call's return value (`iteration`, `consecutiveNoAccept`, `hypothesisCount`,
 `integrationBranch`, `holdoutFloors`, `maxConsecutiveNoAccept`, `cumulativeCostUsd`,
 `totalBudgetUsd`). The returned `status` (`"stopped"` / `"accepted"` / `"no_accept"` / `"error"`)
-and `stop` field tell the driver whether to keep iterating: stop when the holdout document's typed
-floors are met, after three consecutive no-accept iterations, or when the budget in `args` is
-used up. Between iterations the driver promotes the integration branch to `main` (experimenter
-worktrees fork from `main`), by PR when a human should look.
+and `stop` field tell the driver whether to keep iterating: halt whenever `stop` is not null.
+That is when the holdout document's typed floors are met, after three consecutive no-accept
+iterations, when the backlog is exhausted, when the budget in `args` is used up (checked before
+an iteration starts, so the last iteration can overrun it), and after every accept. The
+incumbent is measured on `main` and experimenter worktrees fork from `main`, so an accepted
+change has to be promoted from the integration branch to `main`, by PR, before the next
+iteration. Ledger entries are appended in the main checkout's working tree and are not committed
+by the loop: commit `experiments/ledger.jsonl` with the promotion.
 
 `node .claude/workflows/karpathy-loop.mechanics.test.mjs` checks the gate, target selection and
 the prompts' frozen-path lists without running any agent.

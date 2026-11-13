@@ -109,7 +109,7 @@ Output: best knob config for the variant + telemetry rows (existing JSONL emitte
 
 Reintroduces the legacy POC's strongest asset (the `rag_experiments` parallel-variant harness) on the new stack:
 
-- A **variant registry** maps names to (orchestrator implementation, base config, knob space). Initially: `open_v1` (incumbent), plus each experiment branch under evaluation.
+- A **variant registry** maps names to (orchestrator implementation, base config, knob space). Today: `default` (the incumbent the loop refines), `default+grounding` and `open_v1`.
 
 - The tournament runner evaluates every registered variant on all dev scenarios (Loop A tunes each variant's knobs first), then ranks by soft-F1 with strict-F1 and the §3.1 diagnostics displayed alongside.
 
@@ -141,9 +141,9 @@ One iteration:
 
 - **Verify (adversarial).** A reviewer sub-agent checks each candidate for gate integrity (see §6): no edits to the frozen paths; tests pass; the committed cassettes replay to the claimed scores; the diff does what the hypothesis says, and nothing in it is specific to a benchmark document. Candidates that fail verification are rejected regardless of score.
 
-- **Accept/reject.** For the best verified candidate, the orchestrator applies the **accept gate** (§6). Accepted → merge to the loop branch, refresh cassettes if applicable, append ledger entry, this variant becomes the incumbent. Rejected → discard worktree, append ledger entry with the negative result and the reason.
+- **Accept/reject.** The orchestrator applies the **accept gate** (§6) to every verified candidate; of those that pass, the one with the highest dev typed F1 is accepted (one per iteration: two candidates were each measured against the same incumbent, never together). Accepted → merge to the loop branch (its cassettes come with it), append ledger entry; the iteration ends with a stop, because the incumbent is measured on `main` and the change has to be promoted there first. A candidate that passes but is not the one accepted → discard worktree, no ledger entry, so it is drafted again against the new incumbent. Rejected, or could not be measured → discard worktree, append ledger entry with the reason.
 
-- **Stop check.** Stop when: the holdout document's typed floors are met (success); or K = 3 consecutive iterations produce no accepted change (plateau — escalate to human); or the iteration/cost budget is exhausted.
+- **Stop check.** Stop when: the holdout document's typed floors are met (success); or K = 3 consecutive iterations produce no accepted change (plateau — escalate to human); or the backlog is exhausted; or the cost budget is exhausted; or a change was accepted and awaits promotion to `main`.
 
 ### 4.4 Orchestration in Claude Code
 
@@ -155,7 +155,7 @@ Loop C maps directly onto Claude Code's multi-agent primitives; no new orchestra
 
 - **Sequencing:** hypotheses within one iteration must be independent (touch different failure classes or different files); otherwise run them in successive iterations. The orchestrator enforces this when selecting targets.
 
-- **Human checkpoints:** the loop runs unattended within one iteration, but merges to `main` are batched and PR'd for human review at natural milestones (e.g. every accepted-change cluster, or when floors are reached). The loop branch (`experiment/karpathy-loop`) is the integration line in between.
+- **Human checkpoints:** the loop runs unattended within one iteration and stops after each accepted change. The loop branch (`experiment/karpathy-loop`) holds that change until a human reviews it and merges it to `main` by PR; the next iteration measures the incumbent on `main`.
 
 ## 5. LLM management
 
@@ -167,7 +167,7 @@ Loop C maps directly onto Claude Code's multi-agent primitives; no new orchestra
 
 - **Refresh policy:** an experiment that changes a prompt records both sets on its branch; an accepted candidate's cassettes come to the integration branch with its merge. Recording uses the cheap model (gemini-flash class) unless an experiment specifically targets model choice. The benchmark is about 17 chunks, so two calls each.
 
-- **Budget:** the orchestrator tracks estimated cost per iteration (cassette refresh count × per-refresh cost + agent tokens) against a per-iteration cap and a total-run cap, both set at launch. Exhaustion is a hard stop, recorded in the ledger.
+- **Budget:** each experimenter estimates what its recording cost; the workflow sums those into `cumulativeCostUsd` and refuses to start an iteration once that reaches the total-run cap set at launch (`totalBudgetUsd`). The cap is checked before an iteration, so the last one can overrun it by up to one iteration's recordings; agent tokens are not counted.
 
 - **Live-mode smoke:** one live (non-cassette) evaluation of the incumbent per accepted-change cluster, to ensure the recorded world hasn't diverged from reality. Prerequisite: fix the currently-broken live path (last run scored 0.0 across all scenarios — suspected output-contract mismatch; this is item 0 of the backlog).
 
@@ -179,7 +179,8 @@ An experiment is **accepted** iff it improves the benchmark's dev documents and 
 - **No holdout collapse:** typed F1 on the holdout document ≥ incumbent − 0.04 (the same three recordings ranged over 0.028 on it). One document is a noisy veto: a rejection on this ground alone deserves a human look before the hypothesis is written off.
 - **Guard:** the triple corpus's dev strict-F1 for the `default` variant ≥ incumbent − 0.02 (GUARD_SLACK).
 - **Integrity:** the diff touches none of the frozen paths: `tests/integration/pipelines/_harness/`, `tests/integration/fixtures/pipelines/extraction_benchmark/`, `tests/integration/fixtures/pipelines/individual_extraction/`, `tests/integration/fixtures/dr_spec/`, `scripts/quality_tournament.py`, `scripts/benchmark_replay.py`, `scripts/extraction_benchmark.py`, `experiments/ledger.jsonl`; and no prompt or code change names a benchmark document.
-- **Health:** unchanged (below).
+- **Health:** the tests for what the change touched pass, and the domain-purity check passes (`scripts/check_domain_imports.py`). The full backend suite runs in CI when the change is promoted to `main`.
+- **Fail closed:** a missing number fails the gate, and the verifier reproduces every number the gate reads before it is applied.
 
 The original formulation, for the record:
 
@@ -245,7 +246,7 @@ Each maps to the benchmark failure kinds it should move.
 - **Tables and diagrams as inventories** (`tables_and_diagrams`).
 - **The scope rule** (`scope_rule_in_prompt`): "every individual the text mentions" pulls in prior art and examples.
 - **One class per individual at merge** (`one_class_per_individual_at_merge`).
-- **Relationships across chunks** (`cross_chunk_relationships`).
+- **Relationships across chunks** (`cross_chunk_relationships`). Blocked in the workflow's backlog: the gate reads no relationship measure, so this change could not pass it however well it works. Unblock it when relationship recall becomes a gate measure.
 
 **Baseline (2026-11-12, recorded with `google/gemini-3-flash-preview`):** dev found F1 0.411, typed F1 0.205; holdout found F1 0.326, typed F1 0.170; triple-corpus guard dev strict-F1 0.932. On the dev documents 126 gold individuals are not found (41 core), 36 are mistyped, 57 predictions match nothing, and 133 of 136 stated relationships are missing. Statements are the largest gap: 2 of the dev documents' 41 motivation-layer individuals are found, and 1 of the holdout document's 43. Per-document numbers and the run-to-run spread are in `local-server/experiments/README.md`.
 

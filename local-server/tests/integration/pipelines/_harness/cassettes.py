@@ -198,7 +198,7 @@ class CassetteStaleError(Exception):
 
 
 # Finish reasons that mean the response is not the model's whole answer.
-_INCOMPLETE_FINISHES = frozenset({"error", "length", "max_tokens"})
+_INCOMPLETE_FINISHES = frozenset({"error", "length", "max_tokens", "content_filter"})
 
 
 class RecordingLLMProvider:
@@ -219,6 +219,7 @@ class RecordingLLMProvider:
         self._delegate = delegate
         self._cassette_path = Path(cassette_path)
         self._recordings: dict[str, dict[str, Any]] = {}
+        self._failed_calls = 0
 
     def complete(
         self,
@@ -233,16 +234,20 @@ class RecordingLLMProvider:
     ) -> LLMResponse:
         """Request a completion and record the response."""
         key = _compute_prompt_hash(system_prompt, user_prompt, model, temperature, seed)
-        response = self._delegate.complete(
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-            model=model,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            response_format=response_format,
-            timeout=timeout,
-            seed=seed,
-        )
+        try:
+            response = self._delegate.complete(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                response_format=response_format,
+                timeout=timeout,
+                seed=seed,
+            )
+        except Exception:
+            self._failed_calls += 1
+            raise
         self._recordings[key] = {
             "content": response.content,
             "tokens_in": response.tokens_in,
@@ -265,16 +270,20 @@ class RecordingLLMProvider:
     ) -> LLMResponse:
         """Request a completion (async) and record the response."""
         key = _compute_prompt_hash(system_prompt, user_prompt, model, temperature, seed)
-        response = await self._delegate.complete_async(
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-            model=model,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            response_format=response_format,
-            timeout=timeout,
-            seed=seed,
-        )
+        try:
+            response = await self._delegate.complete_async(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                response_format=response_format,
+                timeout=timeout,
+                seed=seed,
+            )
+        except Exception:
+            self._failed_calls += 1
+            raise
         self._recordings[key] = {
             "content": response.content,
             "tokens_in": response.tokens_in,
@@ -309,15 +318,17 @@ class RecordingLLMProvider:
     @property
     def incomplete_count(self) -> int:
         """
-        Number of recorded responses the provider cut short or errored on.
+        Number of calls the provider cut short, errored on, or raised from.
 
         A response that stops for its length, or with a provider error part-way
         through, is usually not valid JSON, and the pipeline then treats the call
-        as having found nothing. Saved to a cassette, that one-off failure would be
-        replayed as the pipeline's answer from then on, so callers should check
-        this before `flush()` and record again when it is not 0.
+        as having found nothing; a call that raises (a rate limit, a timeout) is
+        caught by the pipeline and treated the same way, and leaves no recording
+        at all. Saved to a cassette, either would stand as the pipeline's answer
+        from then on, so callers should check this before `flush()` and record
+        again when it is not 0.
         """
-        return sum(
+        return self._failed_calls + sum(
             1 for r in self._recordings.values() if r["finish_reason"] in _INCOMPLETE_FINISHES
         )
 

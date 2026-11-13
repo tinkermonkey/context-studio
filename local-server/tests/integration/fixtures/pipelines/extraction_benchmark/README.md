@@ -117,7 +117,21 @@ the document into a fresh `bench-run-*` dataset with a pipeline configuration an
 proposal it produces; the proposal stays pending in the review queue.
 
 Scoring is in `tests/integration/pipelines/_harness/benchmark.py`: recall (all and core),
-precision, type accuracy (the gold type or an acceptable one), typed F1, relationship recall, a
-breakdown by layer, and the lists behind them (missed, mistyped, spurious, known distractors).
+precision, type accuracy, typed F1, relationship recall, a breakdown by layer, and the lists
+behind them (missed, mistyped, spurious, duplicates, known distractors). The rules:
+
+- A prediction finds a gold individual by its title or an alias; a prediction typed as a
+  statement can also find a gold statement by its passage. The pairing does not depend on the
+  order of the predictions.
+- A found individual is typed correctly when every class the run gave it is the gold class or
+  an acceptable one. The right class with a wrong one beside it is mistyped: the individual
+  would be created in both. `type_accuracy_any` reports how many had an accepted class among
+  several, to tell hedged typing from wrong typing.
+- When two predictions name the same gold individual ("GitLab Runner" and "Runner"), the
+  correctly typed one finds it and the other is a duplicate. Duplicates are listed, and left out
+  of precision: gold sometimes joins what a run may defensibly extract apart ("Link check and
+  Reference reliability"), and a run can have at most one duplicate per alias.
+- A relationship's ends are resolved by any name of a gold individual, so a relationship stated
+  under an alias counts.
 Offline, the variant tournament scores each variant on these documents from recorded LLM
 responses; see `experiments/README.md`.

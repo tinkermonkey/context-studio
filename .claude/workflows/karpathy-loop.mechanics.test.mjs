@@ -2,7 +2,8 @@
 /**
  * Standalone mechanics check for karpathy-loop.js's pure decision-logic
  * functions (documentation/karpathy_loop_design.md §4.3/§6): `clamp`,
- * `meetsFloors`, `selectTargets`, and `acceptGate`.
+ * `meetsFloors`, `selectTargets`, `acceptGate`, `isMeasured`, `gateCandidates`
+ * and `stopAfter`, and the prompts the agents are given.
  *
  * karpathy-loop.js cannot be executed directly by plain Node: it is a
  * Workflow script whose top-level body uses host-injected bindings
@@ -47,14 +48,14 @@ function loadPureDeclarations() {
   const sandbox = { console };
   vm.createContext(sandbox);
   vm.runInContext(
-    `${declarations}\nglobalThis.__mechanics = { clamp, meetsFloors, selectTargets, acceptGate, SEED_BACKLOG, FAILURE_KINDS, FROZEN_PATHS, EPSILON, HOLDOUT_SLACK, COVERAGE_SLACK, GUARD_SLACK, DEFAULT_HOLDOUT_FLOORS, evaluatePrompt, experimentPrompt, verifyPrompt };`,
+    `${declarations}\nglobalThis.__mechanics = { clamp, meetsFloors, selectTargets, acceptGate, SEED_BACKLOG, FAILURE_KINDS, FROZEN_PATHS, EPSILON, HOLDOUT_SLACK, COVERAGE_SLACK, GUARD_SLACK, DEFAULT_HOLDOUT_FLOORS, evaluatePrompt, experimentPrompt, verifyPrompt, decidePrompt, isMeasured, gateCandidates, stopAfter };`,
     sandbox,
     { filename: SOURCE_PATH },
   );
   return sandbox.__mechanics;
 }
 
-const { clamp, meetsFloors, selectTargets, acceptGate, SEED_BACKLOG, FAILURE_KINDS, FROZEN_PATHS, EPSILON, HOLDOUT_SLACK, COVERAGE_SLACK, GUARD_SLACK, DEFAULT_HOLDOUT_FLOORS, evaluatePrompt, experimentPrompt, verifyPrompt } =
+const { clamp, meetsFloors, selectTargets, acceptGate, SEED_BACKLOG, FAILURE_KINDS, FROZEN_PATHS, EPSILON, HOLDOUT_SLACK, COVERAGE_SLACK, GUARD_SLACK, DEFAULT_HOLDOUT_FLOORS, evaluatePrompt, experimentPrompt, verifyPrompt, decidePrompt, isMeasured, gateCandidates, stopAfter } =
   loadPureDeclarations();
 
 let passCount = 0;
@@ -150,7 +151,7 @@ test("acceptGate rejects when the holdout document's typed F1 drops beyond the s
   assert.ok(result.reasons.some((r) => r.includes("holdout typed F1")));
 });
 test("acceptGate tolerates a holdout drop exactly at the slack boundary", () => {
-  // incumbent 0.02 and candidate 0: the gate computes 0 < 0.02 - 0.02, which is false.
+  // incumbent HOLDOUT_SLACK and candidate 0: the gate computes 0 < slack - slack, which is false.
   const incumbent = incumbentAt({ holdout: HOLDOUT_SLACK });
   const result = gate(candidateAt({ f1: 0.6, holdout: 0 }), incumbent);
   assert.equal(result.passes, true);
@@ -171,6 +172,79 @@ test("acceptGate reads only dev, holdout and guard: extra diagnostics on a candi
   const decorated = gate({ ...candidateAt({ f1: 0.2 }), bootstrap: { strict_f1: 0 }, recognition: { f1: 0 } }, incumbent);
   assert.equal(decorated.passes, plain.passes);
   assert.equal(acceptGate.length, 6);
+});
+
+test("acceptGate accepts a typed F1 gain just over epsilon and rejects one exactly at it", () => {
+  assert.equal(gate(candidateAt({ typed_f1: EPSILON + 0.001 }), incumbentAt({ typed_f1: 0 })).passes, true);
+  assert.equal(gate(candidateAt({ typed_f1: EPSILON }), incumbentAt({ typed_f1: 0 })).passes, false);
+});
+test("acceptGate tolerates a found F1 dip exactly at coverageSlack and a guard drop exactly at its slack", () => {
+  const dip = gate(candidateAt({ f1: 0, typed_f1: 0.4 }), incumbentAt({ f1: COVERAGE_SLACK, typed_f1: 0.3 }));
+  assert.equal(dip.passes, true);
+  const guard = gate(candidateAt({ f1: 0.6, guard: 0 }), incumbentAt({ guard: GUARD_SLACK }));
+  assert.equal(guard.passes, true);
+});
+test("acceptGate fails closed when any number it reads is missing on either side", () => {
+  const good = candidateAt({ f1: 0.6 });
+  for (const [group, key] of [["dev", "f1"], ["dev", "typed_f1"], ["holdout", "typed_f1"], ["guard", "strict_f1"]]) {
+    for (const side of ["candidate", "incumbent"]) {
+      const broken = side === "candidate" ? candidateAt({ f1: 0.6 }) : incumbentAt();
+      delete broken[group][key];
+      const result = side === "candidate" ? gate(broken, incumbentAt()) : gate(good, broken);
+      assert.equal(result.passes, false, `${side} without ${group}.${key} passed`);
+      assert.ok(result.reasons[0].includes(`${side} ${group}.${key}`));
+    }
+  }
+  const noGuard = candidateAt({ f1: 0.6 });
+  delete noGuard.guard;
+  assert.equal(gate(noGuard, incumbentAt()).passes, false);
+  assert.equal(gate(candidateAt({ f1: Number.NaN }), incumbentAt()).passes, false);
+});
+
+// -- gateCandidates (§4.3 step 5) and what follows a decision ---------------
+
+function verifiedAt(hypothesisId, measures) {
+  return { candidate: { hypothesisId, ...candidateAt(measures) }, verdict: { verdict: "pass" } };
+}
+
+test("gateCandidates gates every verified candidate: a passing one is not lost to a higher-typed one that fails", () => {
+  const incumbent = incumbentAt({ f1: 0.5, typed_f1: 0.3 });
+  // A: typed +0.03 but found -0.06 (beyond coverageSlack). B: found +0.05, typed +0.01.
+  const a = verifiedAt("a", { f1: 0.44, typed_f1: 0.33 });
+  const b = verifiedAt("b", { f1: 0.55, typed_f1: 0.31 });
+  const { gated, best } = gateCandidates([a, b], incumbent);
+  assert.equal(gated.length, 2);
+  assert.equal(gated[0].gate.passes, false);
+  assert.equal(best.candidate.hypothesisId, "b");
+});
+test("gateCandidates accepts the highest dev typed F1 among those that pass, then the highest found F1", () => {
+  const incumbent = incumbentAt({ f1: 0.5, typed_f1: 0.3 });
+  const low = verifiedAt("low", { f1: 0.6, typed_f1: 0.35 });
+  const high = verifiedAt("high", { f1: 0.55, typed_f1: 0.4 });
+  const tie = verifiedAt("tie", { f1: 0.6, typed_f1: 0.4 });
+  assert.equal(gateCandidates([low, high], incumbent).best.candidate.hypothesisId, "high");
+  assert.equal(gateCandidates([high, tie, low], incumbent).best.candidate.hypothesisId, "tie");
+});
+test("gateCandidates accepts nothing when no candidate passes, or none was verified", () => {
+  const incumbent = incumbentAt({ f1: 0.5, typed_f1: 0.3 });
+  assert.equal(gateCandidates([verifiedAt("flat", { f1: 0.5, typed_f1: 0.3 })], incumbent).best, null);
+  assert.equal(gateCandidates([], incumbent).best, null);
+});
+test("isMeasured needs a scored status and all three measurements", () => {
+  const scored = { measurementStatus: "scored", ...candidateAt() };
+  assert.equal(isMeasured(scored), true);
+  assert.equal(isMeasured({ ...scored, measurementStatus: "stale" }), false);
+  for (const group of ["dev", "holdout", "guard"]) {
+    const partial = { ...scored };
+    delete partial[group];
+    assert.equal(isMeasured(partial), false, `measured without ${group}`);
+  }
+  assert.equal(isMeasured(null), false);
+});
+test("stopAfter stops on an accept (promote to main first) and on a plateau, and not otherwise", () => {
+  assert.ok(stopAfter(true, 0, 3, "experiment/x").reason.includes("promote experiment/x to main"));
+  assert.ok(stopAfter(false, 3, 3, "experiment/x").reason.includes("plateau"));
+  assert.equal(stopAfter(false, 2, 3, "experiment/x"), null);
 });
 
 // -- selectTargets (§4.3 step 2) -----------------------------------------
@@ -226,9 +300,22 @@ test("selectTargets never selects the same hypothesis twice and backfills to the
   assert.equal(targets.length, 4);
   assert.equal(new Set(targets.map((t) => t.id)).size, 4);
 });
-test("selectTargets backfills a kind-less hypothesis only after the ranked kinds are used up", () => {
+test("selectTargets backfills from the rest of the backlog when the failure counts name nothing", () => {
+  const open = SEED_BACKLOG.filter((h) => !h.blocked);
   const targets = selectTargets({}, [], [], SEED_BACKLOG.length);
-  assert.ok(targets.some((t) => t.id === "per_source_confidence_bands" && t.targetKind === "general"));
+  assert.equal(targets.length, open.length);
+  for (const t of targets) assert.ok(FAILURE_KINDS.includes(t.targetKind), `${t.id}: ${t.targetKind}`);
+});
+test("selectTargets never spends a slot on a hypothesis the gate cannot credit", () => {
+  // Missing relationships outnumber every individual failure kind at baseline,
+  // but the gate reads no relationship measure.
+  const counts = { relationship_missed: 133, missed_supporting: 85, spurious: 57, missed_core: 41, mistyped: 36 };
+  const targets = selectTargets(counts, [], [], SEED_BACKLOG.length);
+  assert.equal(targets[0].targetKind, "missed_supporting");
+  for (const id of ["cross_chunk_relationships", "per_source_confidence_bands"]) {
+    assert.ok(SEED_BACKLOG.find((h) => h.id === id).blocked, `${id} is not blocked`);
+    assert.ok(!targets.some((t) => t.id === id), `${id} was selected`);
+  }
 });
 
 // -- prompts: the measurement layer stays frozen ---------------------------
@@ -278,6 +365,29 @@ test("the incumbent and each candidate are measured by the same steps", () => {
   const step = "python scripts/quality_tournament.py --pipeline individual --passes 1 --restarts 1";
   assert.ok(evaluate.includes(step) && experiment.includes(step));
   assert.ok(evaluate.includes("STALE CASSETTES") && experiment.includes("STALE CASSETTES"));
+});
+
+test("the verifier reproduces every number the gate reads", () => {
+  const verify = verifyPrompt({ ...CANDIDATE, guard: { strict_f1: 0.9, soft_f1: 0.95 } });
+  assert.ok(verify.includes("holdout typed_f1"));
+  assert.ok(verify.includes("python scripts/quality_tournament.py --pipeline individual --passes 1 --restarts 1"));
+  assert.ok(verify.includes("dev strict-F1"));
+});
+test("an accepted candidate is merged without checking a branch out in the repository root", () => {
+  const decide = decidePrompt(CANDIDATE, "accepted", "ok", 1, "experiment/x", "default");
+  assert.ok(decide.includes("git worktree add"));
+  assert.ok(!decide.includes("git checkout experiment/x"));
+  assert.ok(decide.includes("ledger.py append --stdin"));
+});
+test("a deferred candidate is discarded without a ledger entry; an unmeasured one is recorded with null measures", () => {
+  const deferred = decidePrompt(CANDIDATE, "deferred", "another scored higher", 1, "experiment/x", "default");
+  assert.ok(!deferred.includes("ledger.py append"));
+  assert.ok(deferred.includes("git worktree remove --force /tmp/wt"));
+  const unmeasured = { ...CANDIDATE, measurementStatus: "stale" };
+  for (const group of ["dev", "holdout", "guard"]) delete unmeasured[group];
+  const rejected = decidePrompt(unmeasured, "rejected", "not measured (stale)", 1, "experiment/x", "default");
+  assert.ok(rejected.includes('"dev":null,"holdout":null'));
+  assert.ok(rejected.includes("ledger.py append --stdin"));
 });
 
 console.log(`\n${passCount} passed, ${failCount} failed`);
