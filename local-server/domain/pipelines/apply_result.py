@@ -18,6 +18,7 @@ SkipReason = Literal[
     "self_loop",  # a relationship whose source and target resolve to the same entity
     "derived_type",  # its class or relationship type is derived: its client computes those
     "domain_range_mismatch",  # its ends don't fit the relationship type's domain or range
+    "no_class",  # an attribute's class is neither accepted nor in the taxonomy
 ]
 
 
@@ -50,6 +51,8 @@ class ApplyResult:
     properties_created: int = 0
     properties_updated: int = 0
     properties_skipped: int = 0
+    attributes_created: int = 0
+    attributes_skipped: int = 0
     relationships_created: int = 0
     relationships_removed: int = 0
     relationships_modified: int = 0
@@ -63,6 +66,7 @@ class ApplyResult:
     created_individual_ids: list[str] = field(default_factory=list)
     created_relationship_ids: list[str] = field(default_factory=list)
     created_property_definition_ids: list[str] = field(default_factory=list)
+    created_attribute_definition_ids: list[str] = field(default_factory=list)
     created_external_reference_ids: list[str] = field(default_factory=list)
     created_taxonomy_ids: list[str] = field(default_factory=list)
     recognized_individual_ids: list[str] = field(default_factory=list)
@@ -118,6 +122,13 @@ class ApplyResult:
                 f"properties_created ({self.properties_created}) and "
                 f"created_property_definition_ids "
                 f"({len(self.created_property_definition_ids)} items) must be "
+                "consistent"
+            )
+        if self.attributes_created != len(self.created_attribute_definition_ids):
+            raise ValueError(
+                f"attributes_created ({self.attributes_created}) and "
+                f"created_attribute_definition_ids "
+                f"({len(self.created_attribute_definition_ids)} items) must be "
                 "consistent"
             )
         both = set(self.applied_candidate_ids) & set(self.skipped_candidate_ids)

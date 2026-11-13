@@ -447,6 +447,60 @@ class TestSchemaExtractionHTTP:
             == "Chosen over 'Component' due to context mentioning orchestration and deployment"
         )
 
+    def test_candidates_endpoint_returns_parents_and_attributes(
+        self, schema_client, pipeline_run_repo, batch_repo
+    ):
+        """GET /candidates gives a class its proposed_parent and lists attributes (#1570)."""
+        from domain.pipelines.entities import PipelineRunStatus
+
+        batch = batch_repo.create()
+        test_run = pipeline_run_repo.create(
+            batch_run_id=batch.id,
+            pipeline_type=PipelineType.SCHEMA_EXTRACTION,
+            implementation_id="default",
+            configuration_ref="schema-extraction-default",
+            configuration_slug="schema-extraction-default",
+            configuration_version=1,
+        )
+        pipeline_run_repo.update_summaries(
+            test_run.id,
+            output_summary={
+                "candidates": [
+                    {
+                        "kind": "class",
+                        "label": "Heat Pump",
+                        "proposed_parent": "Appliance",
+                        "confidence": 0.8,
+                        "provenance": [],
+                    },
+                    {
+                        "kind": "attribute",
+                        "label": "Voltage",
+                        "of": "Heat Pump",
+                        "value_type": "number",
+                        "unit": "V",
+                        "confidence": 0.7,
+                        "provenance": [],
+                    },
+                ],
+                "connections": [],
+            },
+        )
+        pipeline_run_repo.update_status(test_run.id, PipelineRunStatus.COMPLETED)
+
+        response = schema_client.get(f"/api/pipelines/runs/{test_run.id}/candidates")
+
+        assert response.status_code == status.HTTP_200_OK
+        heat_pump, voltage = response.json()
+        assert heat_pump["proposed_parent"] == "Appliance"
+        assert voltage["candidate_id"] == "attribute-0"
+        assert voltage["candidate_type"] == "schema_attribute"
+        assert (voltage["of_class"], voltage["value_type"], voltage["unit"]) == (
+            "Heat Pump",
+            "number",
+            "V",
+        )
+
 
 # ---------------------------------------------------------------------------- #
 # Canon-driven assertions                                                      #
@@ -585,9 +639,9 @@ class TestSchemaExtractionAgainstCanon:
         assert result_state.current_status == PipelineRunStatus.COMPLETED
         assert result_state.result is not None
         candidate_count = result_state.result.get("candidate_count", 0)
-        assert (
-            candidate_count > 0
-        ), f"Expected ≥1 candidate; got {candidate_count}. result={result_state.result}"
+        assert candidate_count > 0, (
+            f"Expected ≥1 candidate; got {candidate_count}. result={result_state.result}"
+        )
 
     def test_canon_candidates_include_microservice_terminology(self):
         """At least one produced candidate must match a canon expected entity label."""

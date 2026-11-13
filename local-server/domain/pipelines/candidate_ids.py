@@ -4,7 +4,7 @@ Stable candidate identity for pipeline run output.
 Candidates are identified positionally within a run's ``output_summary``:
 
 - ``triple-{i}``: index into ``output_summary["triples"]`` (individual extraction)
-- ``class-{i}`` / ``property-{i}``: index within the ``kind``-filtered
+- ``class-{i}`` / ``property-{i}`` / ``attribute-{i}``: index within the ``kind``-filtered
   ``output_summary["candidates"]`` list (schema extraction)
 - ``connection-{i}``: index into ``output_summary["connections"]`` (schema extraction)
 - ``grounding-{i}`` / ``refinement-{i}``: index into the grounding / refinement list
@@ -20,7 +20,11 @@ from __future__ import annotations
 
 from typing import Any
 
-SCHEMA_CANDIDATE_PREFIXES = {"class": "class", "property_definition": "property"}
+SCHEMA_CANDIDATE_PREFIXES = {
+    "class": "class",
+    "property_definition": "property",
+    "attribute": "attribute",
+}
 
 
 def enumerate_items(items: list[dict] | None, prefix: str) -> list[tuple[str, dict]]:

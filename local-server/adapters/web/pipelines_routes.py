@@ -75,6 +75,7 @@ from adapters.web.schemas.pipelines import (
     RefinementCandidate,
     ResumeBatchResponse,
     RevertRunResponse,
+    SchemaAttributeCandidate,
     SchemaClassCandidate,
     SchemaConnectionCandidate,
     SchemaPropertyCandidate,
@@ -268,8 +269,25 @@ def _map_schema_class_candidate(
         label=candidate_dict.get("label", ""),
         proposed_definition=candidate_dict.get("proposed_definition"),
         disambiguation_rationale=candidate_dict.get("disambiguation_rationale"),
+        proposed_parent=candidate_dict.get("proposed_parent"),
         confidence=_safe_confidence(candidate_dict.get("confidence")),
         provenance=provenance,
+    )
+
+
+def _map_schema_attribute_candidate(
+    candidate_id: str, candidate_dict: dict[str, Any]
+) -> SchemaAttributeCandidate:
+    """Map an orchestrator attribute candidate to a SchemaAttributeCandidate response."""
+    return SchemaAttributeCandidate(
+        candidate_id=candidate_id,
+        label=candidate_dict.get("label", ""),
+        proposed_definition=candidate_dict.get("proposed_definition"),
+        of_class=candidate_dict.get("of"),
+        value_type=str(candidate_dict.get("value_type") or "string"),
+        unit=candidate_dict.get("unit"),
+        confidence=_safe_confidence(candidate_dict.get("confidence")),
+        provenance=_normalize_provenance(candidate_dict.get("provenance", [])),
     )
 
 
@@ -1299,15 +1317,17 @@ def _extract_schema_extraction_candidates(run: PipelineRun) -> list[CandidateIte
     output_summary = run.output_summary or {}
 
     for candidate_dict in output_summary.get("candidates", []) or []:
-        if candidate_dict.get("kind") not in ("class", "property_definition"):
+        if candidate_dict.get("kind") not in ("class", "property_definition", "attribute"):
             _logger.warning(
                 f"Skipping candidate with unrecognized kind: {candidate_dict.get('kind')}. "
-                f"Expected 'class' or 'property_definition'."
+                f"Expected 'class', 'property_definition' or 'attribute'."
             )
 
     for candidate_id, candidate_dict in enumerate_schema_candidates(output_summary):
         if candidate_dict.get("kind") == "class":
             result.append(_map_schema_class_candidate(candidate_id, candidate_dict))
+        elif candidate_dict.get("kind") == "attribute":
+            result.append(_map_schema_attribute_candidate(candidate_id, candidate_dict))
         else:
             result.append(_map_schema_property_candidate(candidate_id, candidate_dict))
 
@@ -1995,6 +2015,8 @@ async def apply_pipeline_run(
         properties_created=apply_result.properties_created,
         properties_updated=apply_result.properties_updated,
         properties_skipped=apply_result.properties_skipped,
+        attributes_created=apply_result.attributes_created,
+        attributes_skipped=apply_result.attributes_skipped,
         relationships_created=apply_result.relationships_created,
         relationships_removed=apply_result.relationships_removed,
         relationships_modified=apply_result.relationships_modified,
@@ -2008,6 +2030,7 @@ async def apply_pipeline_run(
         created_individual_ids=apply_result.created_individual_ids,
         created_relationship_ids=apply_result.created_relationship_ids,
         created_property_definition_ids=apply_result.created_property_definition_ids,
+        created_attribute_definition_ids=apply_result.created_attribute_definition_ids,
         created_external_reference_ids=apply_result.created_external_reference_ids,
         recognized_individual_ids=apply_result.recognized_individual_ids,
         applied_candidate_ids=apply_result.applied_candidate_ids,

@@ -18,6 +18,7 @@ export const SKIP_REASON_LABEL: Record<SkipReason, string> = {
   self_loop: "source and target are the same",
   derived_type: "its type is derived: the client computes those",
   domain_range_mismatch: "doesn't fit the relationship type",
+  no_class: "its class is not accepted or in the taxonomy",
 };
 
 /** Reasons meaning the candidate was never selected (rejected or below threshold). */

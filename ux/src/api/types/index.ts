@@ -4434,6 +4434,18 @@ export interface components {
        */
       properties_skipped: number;
       /**
+       * Attributes Created
+       * @description AttributeDefinition entities created
+       * @default 0
+       */
+      attributes_created: number;
+      /**
+       * Attributes Skipped
+       * @description Attribute candidates skipped (already exist, not selected, or no class)
+       * @default 0
+       */
+      attributes_skipped: number;
+      /**
        * Relationships Created
        * @description Relationship entities created
        * @default 0
@@ -4508,6 +4520,11 @@ export interface components {
        */
       created_property_definition_ids?: string[];
       /**
+       * Created Attribute Definition Ids
+       * @description IDs of created attribute definitions
+       */
+      created_attribute_definition_ids?: string[];
+      /**
        * Created External Reference Ids
        * @description URIs of created external references
        */
@@ -4529,7 +4546,7 @@ export interface components {
       skipped_candidate_ids?: string[];
       /**
        * Skip Reasons
-       * @description Why each skipped_candidate_id was skipped (one entry per id). not_selected / below_threshold: never selected for apply. Every other reason means the candidate was selected but could not be applied: invalid (malformed candidate), unresolved_endpoint (a relationship endpoint is neither accepted nor in the graph), unresolved_predicate (the property definition does not exist), title_conflict (an existing entity owns the title), identifier_taken (a class, scheme or taxonomy already has a new relationship type's identifier), missing_class (no existing class to type an individual), self_loop (source and target are the same entity), derived_type (its class or relationship type is derived: the client computes those, so none is created), domain_range_mismatch (a relationship's ends don't fit its type's domain or range). Populated for schema_extraction and individual_extraction.
+       * @description Why each skipped_candidate_id was skipped (one entry per id). not_selected / below_threshold: never selected for apply. Every other reason means the candidate was selected but could not be applied: invalid (malformed candidate), unresolved_endpoint (a relationship endpoint is neither accepted nor in the graph), unresolved_predicate (the property definition does not exist), title_conflict (an existing entity owns the title), identifier_taken (a class, scheme or taxonomy already has a new relationship type's identifier), missing_class (no existing class to type an individual), self_loop (source and target are the same entity), derived_type (its class or relationship type is derived: the client computes those, so none is created), domain_range_mismatch (a relationship's ends don't fit its type's domain or range), no_class (an attribute's class is neither accepted nor in the taxonomy). Populated for schema_extraction and individual_extraction.
        */
       skip_reasons?: {
         [key: string]:
@@ -4543,7 +4560,8 @@ export interface components {
           | "missing_class"
           | "self_loop"
           | "derived_type"
-          | "domain_range_mismatch";
+          | "domain_range_mismatch"
+          | "no_class";
       };
       /**
        * Existing Candidate Ids
@@ -7235,7 +7253,7 @@ export interface components {
       candidate_type: "grounding";
       /**
        * Candidate Id
-       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
        */
       candidate_id: string;
       /**
@@ -9680,7 +9698,7 @@ export interface components {
       candidate_type: "refinement";
       /**
        * Candidate Id
-       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
        */
       candidate_id: string;
       /**
@@ -10143,6 +10161,59 @@ export interface components {
       triple_count: number;
     };
     /**
+     * SchemaAttributeCandidate
+     * @description Candidate attribute from schema extraction: a measurement or other value
+     *     describing the instances of a class (an existing class or a class candidate).
+     */
+    SchemaAttributeCandidate: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      candidate_type: "schema_attribute";
+      /**
+       * Candidate Id
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       */
+      candidate_id: string;
+      /**
+       * Confidence
+       * @description Confidence score (0.0-1.0)
+       */
+      confidence: number;
+      /**
+       * Provenance
+       * @description List of source spans with provenance information
+       */
+      provenance?: components["schemas"]["SourceSpanSchema"][];
+      /**
+       * Label
+       * @description Attribute label/name
+       */
+      label: string;
+      /**
+       * Proposed Definition
+       * @description Proposed definition of the attribute
+       */
+      proposed_definition?: string | null;
+      /**
+       * Of Class
+       * @description Title of the class it describes; null when the run named none that resolves (it is then skipped on apply as no_class)
+       */
+      of_class?: string | null;
+      /**
+       * Value Type
+       * @description Its datatype: string, integer, number, date or boolean
+       * @default string
+       */
+      value_type: string;
+      /**
+       * Unit
+       * @description Its unit, such as "V" or "%"
+       */
+      unit?: string | null;
+    };
+    /**
      * SchemaClassCandidate
      * @description Candidate class entity from schema extraction or grounding.
      *
@@ -10156,7 +10227,7 @@ export interface components {
       candidate_type: "schema_class";
       /**
        * Candidate Id
-       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
        */
       candidate_id: string;
       /**
@@ -10184,6 +10255,11 @@ export interface components {
        * @description Rationale for this candidate when multiple senses are disambiguated
        */
       disambiguation_rationale?: string | null;
+      /**
+       * Proposed Parent
+       * @description Title of the class it is a kind of: an existing class of the taxonomy or another class candidate; null for a top-level class
+       */
+      proposed_parent?: string | null;
     };
     /**
      * SchemaConnectionCandidate
@@ -10199,7 +10275,7 @@ export interface components {
       candidate_type: "schema_connection";
       /**
        * Candidate Id
-       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
        */
       candidate_id: string;
       /**
@@ -10242,7 +10318,7 @@ export interface components {
       candidate_type: "schema_property";
       /**
        * Candidate Id
-       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
        */
       candidate_id: string;
       /**
@@ -11135,7 +11211,7 @@ export interface components {
       candidate_type: "triple";
       /**
        * Candidate Id
-       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
+       * @description Stable id within the run (triple-{i}, class-{i}, property-{i}, connection-{i}, attribute-{i}, grounding-{i}, refinement-{i}); pass to apply's accepted_candidate_ids
        */
       candidate_id: string;
       /**
@@ -13901,6 +13977,7 @@ export interface operations {
           "application/json": (
             | components["schemas"]["SchemaClassCandidate"]
             | components["schemas"]["SchemaPropertyCandidate"]
+            | components["schemas"]["SchemaAttributeCandidate"]
             | components["schemas"]["SchemaConnectionCandidate"]
             | components["schemas"]["TripleCandidate"]
             | components["schemas"]["GroundingCandidate"]
@@ -13939,6 +14016,7 @@ export interface operations {
           "application/json": (
             | components["schemas"]["SchemaClassCandidate"]
             | components["schemas"]["SchemaPropertyCandidate"]
+            | components["schemas"]["SchemaAttributeCandidate"]
             | components["schemas"]["SchemaConnectionCandidate"]
             | components["schemas"]["TripleCandidate"]
             | components["schemas"]["GroundingCandidate"]
@@ -13977,6 +14055,7 @@ export interface operations {
           "application/json": (
             | components["schemas"]["SchemaClassCandidate"]
             | components["schemas"]["SchemaPropertyCandidate"]
+            | components["schemas"]["SchemaAttributeCandidate"]
             | components["schemas"]["SchemaConnectionCandidate"]
             | components["schemas"]["TripleCandidate"]
             | components["schemas"]["GroundingCandidate"]
@@ -14015,6 +14094,7 @@ export interface operations {
           "application/json": (
             | components["schemas"]["SchemaClassCandidate"]
             | components["schemas"]["SchemaPropertyCandidate"]
+            | components["schemas"]["SchemaAttributeCandidate"]
             | components["schemas"]["SchemaConnectionCandidate"]
             | components["schemas"]["TripleCandidate"]
             | components["schemas"]["GroundingCandidate"]
@@ -14053,6 +14133,7 @@ export interface operations {
           "application/json": (
             | components["schemas"]["SchemaClassCandidate"]
             | components["schemas"]["SchemaPropertyCandidate"]
+            | components["schemas"]["SchemaAttributeCandidate"]
             | components["schemas"]["SchemaConnectionCandidate"]
             | components["schemas"]["TripleCandidate"]
             | components["schemas"]["GroundingCandidate"]

@@ -681,3 +681,113 @@ class TestTaxonomyWideClasses:
         svc.apply(run, taxonomy_id=TAXONOMY_ID)
 
         assert repo.list_relationships(limit=None)[0].source_id == "cls-a"
+
+
+# ---------------------------------------------------------------------------
+# Placement: parents and attributes (#1570)
+# ---------------------------------------------------------------------------
+
+
+class TestPlacement:
+    def _class(self, repo, title):
+        return next(c for c in repo.list_classes(limit=None) if c.title == title)
+
+    def test_a_class_takes_its_parent_existing_or_created_first(self, svc, repo):
+        repo.save_class(_existing_class("cls-appliance", "Appliance"))
+        run = _make_run(
+            candidates=[
+                {"kind": "class", "label": "Chest Freezer", "proposed_parent": "Freezer"},
+                {"kind": "class", "label": "Freezer", "proposed_parent": "appliance"},
+                {"kind": "class", "label": "Filter", "proposed_parent": None},
+            ]
+        )
+
+        result = svc.apply(run, taxonomy_id=TAXONOMY_ID, concept_scheme_id=SCHEME_ID)
+
+        assert result.classes_created == 3
+        freezer = self._class(repo, "Freezer")
+        assert freezer.parent_class_id == "cls-appliance"
+        assert self._class(repo, "Chest Freezer").parent_class_id == freezer.id
+        assert self._class(repo, "Filter").parent_class_id is None
+        assert sorted(result.applied_candidate_ids) == ["class-0", "class-1", "class-2"]
+
+    def test_a_parent_in_another_scheme_or_not_selected_leaves_it_top_level(self, svc, repo):
+        repo.save_concept_scheme(
+            ConceptScheme(id="cs-other", taxonomy_id=TAXONOMY_ID, identifier="other", title="O")
+        )
+        repo.save_class(_existing_class("cls-tool", "Hand Tool", scheme="cs-other"))
+        run = _make_run(
+            candidates=[
+                {"kind": "class", "label": "Wrench", "proposed_parent": "Hand Tool"},
+                {"kind": "class", "label": "Gauge", "proposed_parent": "Instrument"},
+                {"kind": "class", "label": "Instrument", "confidence": 0.9},
+            ]
+        )
+
+        svc.apply(
+            run,
+            taxonomy_id=TAXONOMY_ID,
+            concept_scheme_id=SCHEME_ID,
+            accepted_candidate_ids=["class-0", "class-1"],
+        )
+
+        assert self._class(repo, "Wrench").parent_class_id is None
+        assert self._class(repo, "Gauge").parent_class_id is None
+
+    def test_attributes_are_created_on_their_class(self, svc, repo, event_publisher):
+        repo.save_class(_existing_class("cls-appliance", "Appliance"))
+        run = _make_run(
+            candidates=[
+                {"kind": "class", "label": "Heat Pump", "proposed_parent": "Appliance"},
+                {
+                    "kind": "attribute",
+                    "label": "Indoor Humidity",
+                    "of": "Heat Pump",
+                    "value_type": "number",
+                    "unit": "%",
+                    "proposed_definition": "Relative humidity indoors.",
+                    "confidence": 0.6,
+                },
+                {"kind": "attribute", "label": "Voltage", "of": "appliance", "confidence": 0.6},
+                {"kind": "attribute", "label": "Noise", "of": "Dishwasher", "confidence": 0.6},
+                {"kind": "attribute", "label": "Starting Cycle", "of": None, "confidence": 0.6},
+            ]
+        )
+
+        result = svc.apply(run, taxonomy_id=TAXONOMY_ID, concept_scheme_id=SCHEME_ID)
+
+        pump = self._class(repo, "Heat Pump")
+        humidity = repo.list_attribute_definitions(class_id=pump.id, limit=None)
+        assert [(a.identifier, a.datatype.value, a.description) for a in humidity] == [
+            ("indoor_humidity", "number", "Relative humidity indoors. Unit: %.")
+        ]
+        assert humidity[0].source_run_id == "run-abc"
+        voltage = repo.list_attribute_definitions(class_id="cls-appliance", limit=None)
+        assert [(a.identifier, a.datatype.value) for a in voltage] == [("voltage", "string")]
+        assert result.attributes_created == 2
+        assert result.created_attribute_definition_ids == [humidity[0].id, voltage[0].id]
+        assert result.attributes_skipped == 2
+        assert result.skip_reasons == {"attribute-2": "no_class", "attribute-3": "no_class"}
+        assert {"attribute-0", "attribute-1"} <= set(result.applied_candidate_ids)
+
+        again = svc.apply(run, taxonomy_id=TAXONOMY_ID, concept_scheme_id=SCHEME_ID)
+        assert again.attributes_created == 0
+        assert {"attribute-0", "attribute-1"} <= set(again.existing_candidate_ids)
+
+    def test_an_attribute_whose_class_was_not_accepted_is_skipped(self, svc, repo):
+        run = _make_run(
+            candidates=[
+                {"kind": "class", "label": "Heat Pump"},
+                {"kind": "attribute", "label": "Voltage", "of": "Heat Pump"},
+            ]
+        )
+
+        result = svc.apply(
+            run,
+            taxonomy_id=TAXONOMY_ID,
+            concept_scheme_id=SCHEME_ID,
+            accepted_candidate_ids=["attribute-0"],
+        )
+
+        assert result.skip_reasons == {"class-0": "not_selected", "attribute-0": "no_class"}
+        assert result.attributes_created == 0
