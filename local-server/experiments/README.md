@@ -63,7 +63,10 @@ python scripts/extraction_benchmark.py score --document edit_check --proposal <i
 merged, planned), against the pinned DR spec the gold files were made for, with real embeddings
 and a schema index so the class catalog offered per chunk is the one the app would offer. It
 reports `not_recorded` or `stale` instead of numbers when the cassettes are missing or no longer
-answer the prompts, and exits 2. Building the ontology takes about a minute.
+answer the prompts, and `failed` when the extraction itself failed with every prompt answered (a
+run with a failed chunk is not scored), and exits 2. A run over some of the documents
+(`--document`) is `partial` and prints each document's score without a dev or holdout mean.
+Building the ontology takes about a minute.
 
 `extraction_benchmark.py run` measures what a user gets: the server's own code, a pipeline
 configuration's model and stage prompts, and a real proposal left in the review queue.
@@ -85,25 +88,30 @@ tokens per set). Either recorder refuses to save a response the provider cut sho
 part-way: the pipeline reads such a response as "found nothing", and a cassette would replay that
 one-off failure as the pipeline's answer from then on.
 
-### The baseline (2026-11-12, `default` pipeline, main at 6786257c)
+### The baseline (recorded 2026-11-12, `default` pipeline, scored on main at c55e3494)
 
 | | found F1 | typed F1 | recall (core) | precision | type accuracy | relationship recall |
 |---|---|---|---|---|---|---|
-| `edit_check` (dev) | 0.259 | 0.122 | 0.250 (0.333) | 0.268 | 0.474 | 0.000 |
-| `gitlab_architecture` (dev) | 0.564 | 0.287 | 0.434 (0.794) | 0.803 | 0.509 | 0.036 |
-| `wikimedia_enterprise` (holdout) | 0.326 | 0.170 | 0.232 (0.289) | 0.548 | 0.522 | 0.000 |
-| **dev mean** | **0.411** | **0.205** | 0.342 (0.564) | 0.535 | 0.491 | 0.018 |
+| `edit_check` (dev) | 0.259 | 0.068 | 0.250 (0.333) | 0.268 | 0.263 | 0.000 |
+| `gitlab_architecture` (dev) | 0.564 | 0.160 | 0.434 (0.794) | 0.803 | 0.283 | 0.036 |
+| `wikimedia_enterprise` (holdout) | 0.326 | 0.156 | 0.232 (0.289) | 0.548 | 0.478 | 0.000 |
+| **dev mean** | **0.411** | **0.114** | 0.342 (0.564) | 0.535 | 0.273 | 0.018 |
 
-Triple-corpus guard for the same recording day: dev strict-F1 0.932, soft-F1 0.943.
+Triple-corpus guard for the same recordings: dev strict-F1 0.932, soft-F1 0.943.
+
+Type accuracy counts a found individual as typed correctly only when every class the run gave it
+is the gold class or an acceptable one. On the dev documents 49% of found individuals have an
+accepted class among those given (`type_accuracy_any`) and 27% have only accepted classes: the
+difference is individuals proposed in several classes at once (GitLab Workhorse in four).
 
 **How much a second take moves it.** The documents were recorded three times with nothing changed
-(temperature 0). Dev found F1 came out 0.405 to 0.411 and dev typed F1 0.200 to 0.206; the holdout
-document's typed F1 0.170 to 0.199. About 86% of the individuals an identify call names are the
+(temperature 0). Dev found F1 came out 0.405 to 0.411 and dev typed F1 0.109 to 0.117; the holdout
+document's typed F1 0.156 to 0.184. About 86% of the individuals an identify call names are the
 same from one take to the next. The accept gate's margins (0.02 on dev, 0.04 on the holdout
 document) are set above that; a gain inside it is not a result.
 
 Where the baseline loses, on the dev documents: 126 gold individuals not found (41 of them core),
-36 found with a type gold does not accept, 57 predictions that match nothing, 8 known distractors
+52 found but not typed correctly, 57 predictions that match nothing, 8 known distractors
 extracted, and 133 of 136 stated relationships missing. By layer, statements are the gap: 2 of the
 41 motivation-layer individuals on the dev documents are found (1 of 43 on the holdout document).
 

@@ -49,6 +49,7 @@ from domain.extraction.services import ExtractionService
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineType
+from domain.pipelines.exceptions import PipelineExecutionError
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
     IndividualExtractionState,
@@ -188,6 +189,13 @@ async def extract_document(
         },
     )
     result = (await orchestrator.execute(state)).result or {}
+    failed = result.get("failed_chunks") or []
+    if failed:
+        # The run completed without what those chunks hold: not a run to score
+        raise PipelineExecutionError(
+            f"extraction failed for {len(failed)} chunk(s) of {document_id}: "
+            f"{failed[0].get('failure_reason')}"
+        )
     plan = plan_individual_operations(
         result.get("triples", []),
         ontology.repo,
@@ -246,10 +254,11 @@ class DocumentResult:
     """One document's outcome: a score, or why there is none."""
 
     document_id: str
-    status: str  # "scored", "not_recorded" or "stale"
+    status: str  # "scored", "not_recorded", "stale" or "failed"
     score: BenchmarkScore | None = None
     calls: int = 0
     misses: int = 0
+    detail: str = ""
 
 
 async def replay_document(document_id: str, config: dict[str, Any] | None = None) -> DocumentResult:
@@ -258,11 +267,21 @@ async def replay_document(document_id: str, config: dict[str, Any] | None = None
     if not path.exists():
         return DocumentResult(document_id, "not_recorded")
     provider = CassetteLLMProvider(path)
-    individuals, relationships = await extract_document(
-        benchmark_ontology(), cast(LLMProvider, provider), document_id, config=config
-    )
+    individuals: list[Predicted] = []
+    relationships: list[PredictedRelationship] = []
+    failure = ""
+    try:
+        individuals, relationships = await extract_document(
+            benchmark_ontology(), cast(LLMProvider, provider), document_id, config=config
+        )
+    except PipelineExecutionError as exc:
+        # A prompt with no recording fails its chunk, and the run with it when
+        # every chunk fails; with every prompt answered, the failure is the run's own
+        failure = str(exc)
     if provider.misses:
         return DocumentResult(document_id, "stale", calls=provider.calls, misses=provider.misses)
+    if failure:
+        return DocumentResult(document_id, "failed", calls=provider.calls, detail=failure)
     result = score(load_gold(document_id), individuals, relationships)
     return DocumentResult(document_id, "scored", result, calls=provider.calls)
 
@@ -278,7 +297,8 @@ def summarize(results: list[DocumentResult]) -> dict[str, Any]:
     Dev and holdout means, the failure counts over dev, and whether the run can
     be trusted: `status` is "scored" only when every benchmark document scored.
     A run over some of the documents is "partial": a split's mean is given only
-    when all of its documents scored, so one document never stands for dev.
+    when all of its documents scored, so one document never stands for dev. A
+    document whose extraction failed with every prompt answered is "failed".
     """
     scored = {r.document_id: r.score for r in results if r.score is not None}
     status = "scored"
@@ -286,6 +306,8 @@ def summarize(results: list[DocumentResult]) -> dict[str, Any]:
         status = "stale"
     elif any(r.status == "not_recorded" for r in results):
         status = "not_recorded"
+    elif any(r.status == "failed" for r in results):
+        status = "failed"
     dev = [scored[d] for d in DEV_DOCUMENTS if d in scored]
     holdout = [scored[d] for d in HOLDOUT_DOCUMENTS if d in scored]
     whole_dev = len(dev) == len(DEV_DOCUMENTS)
@@ -317,9 +339,12 @@ async def record_document(document_id: str, model: str) -> DocumentResult:
     path = cassette_path(document_id)
     path.parent.mkdir(parents=True, exist_ok=True)
     recorder = RecordingLLMProvider(router, path)
-    individuals, relationships = await extract_document(
-        benchmark_ontology(), cast(LLMProvider, recorder), document_id, model=model
-    )
+    try:
+        individuals, relationships = await extract_document(
+            benchmark_ontology(), cast(LLMProvider, recorder), document_id, model=model
+        )
+    except PipelineExecutionError as exc:
+        raise SystemExit(f"{document_id}: {exc}; nothing was saved. Record it again.") from exc
     if recorder.incomplete_count:
         raise SystemExit(
             f"{document_id}: the provider cut short or errored on {recorder.incomplete_count} of "
@@ -334,6 +359,7 @@ def print_results(results: list[DocumentResult]) -> None:
     for r in results:
         if r.score is None:
             detail = f" ({r.misses} of {r.calls} calls have no recording)" if r.misses else ""
+            detail = detail or (f" ({r.detail})" if r.detail else "")
             print(f"{r.document_id:<24} {r.status}{detail}")
             continue
         m = r.score.metrics

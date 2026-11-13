@@ -22,8 +22,8 @@ export const meta = {
 // the other, and must not collapse the holdout document or the triple corpus.
 // Both margins sit above what re-recording the SAME pipeline moves the score
 // (three recordings of the incumbent, 2026-11-12, temperature 0: dev found F1
-// and typed F1 each ranged over 0.006; the holdout document's typed F1 over
-// 0.028). Every experiment that changes a prompt re-records, so a smaller gain
+// ranged over 0.006 and dev typed F1 over 0.009; the holdout document's typed
+// F1 over 0.028). Every experiment that changes a prompt re-records, so a smaller gain
 // is not distinguishable from a second take.
 const EPSILON = 0.02
 const HOLDOUT_SLACK = 0.04

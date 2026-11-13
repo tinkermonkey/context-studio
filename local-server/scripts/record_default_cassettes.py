@@ -155,6 +155,7 @@ def record_all(scenarios: list[str]) -> int:
     from config import get_settings
     from domain.extraction.services import ExtractionService
     from domain.pipelines.entities import PipelineType
+    from domain.pipelines.exceptions import PipelineExecutionError
     from domain.pipelines.individual_extraction import (
         IndividualExtractionOrchestrator,
         IndividualExtractionState,
@@ -262,7 +263,11 @@ def record_all(scenarios: list[str]) -> int:
             input_data=fixture_input,
         )
 
-        asyncio.run(orchestrator.execute(state))
+        try:
+            asyncio.run(orchestrator.execute(state))
+        except PipelineExecutionError as exc:
+            print(f"  ERROR {scenario}: {exc}; cassette not written. Record it again.")
+            return 1
         if recording_provider.incomplete_count:
             print(
                 f"  ERROR {scenario}: the provider cut short or errored on "

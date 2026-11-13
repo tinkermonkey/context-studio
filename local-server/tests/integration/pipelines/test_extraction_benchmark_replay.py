@@ -171,3 +171,21 @@ def test_a_run_over_some_documents_is_partial_and_gives_no_split_mean():
     assert summary["status"] == "partial"
     assert summary["dev"] == {} and summary["holdout"] == {} and summary["failure_counts"] == {}
     assert summarize([])["status"] == "partial"
+
+
+def test_every_document_scored_gives_both_split_means():
+    results = [
+        DocumentResult(d, "scored", score(load_gold(d), []), calls=1)
+        for d in ("edit_check", "gitlab_architecture", "wikimedia_enterprise")
+    ]
+    summary = summarize(results)
+    assert summary["status"] == "scored"
+    assert summary["dev"]["typed_f1"] == 0.0 and summary["holdout"]["typed_f1"] == 0.0
+    assert summary["failure_counts"]["missed_core"] > 0
+
+
+def test_a_document_whose_extraction_failed_is_not_scored():
+    failed = DocumentResult("edit_check", "failed", calls=4, detail="extraction failed")
+    summary = summarize([failed])
+    assert summary["status"] == "failed"
+    assert summary["dev"] == {}

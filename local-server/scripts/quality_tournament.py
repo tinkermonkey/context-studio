@@ -75,6 +75,7 @@ from adapters.persistence.sqlite.models import Base
 from domain.extraction.services import ExtractionService
 from domain.ontology.ports import EmbeddingService
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
+from domain.pipelines.exceptions import PipelineExecutionError
 from domain.pipelines.individual_extraction.configurations.open_v1 import (
     get_open_v1_config,
 )
@@ -596,7 +597,15 @@ def _make_default_variant(
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
             input_data=fixture,
         )
-        result_state = await orch.execute(state)
+        try:
+            result_state = await orch.execute(state)
+        except PipelineExecutionError:
+            # A prompt with no recording fails the extraction. That is a stale
+            # cassette, reported from the provider's miss count (`_stale_variants`),
+            # not a crash; a failure with every prompt answered is the pipeline's own.
+            if not provider.misses:
+                raise
+            return []
         return (result_state.result or {}).get("triples", [])
 
     return Variant(
@@ -1375,6 +1384,9 @@ def _render_benchmark_section(
             "_Stale: the pipeline's prompts changed since the cassettes were recorded. Record "
             "again with `python scripts/benchmark_replay.py --record --spend`._"
         )
+    elif summary["status"] == "failed":
+        failed = "; ".join(f"{r.document_id}: {r.detail}" for r in results if r.status == "failed")
+        lines.append(f"_Failed: the extraction itself failed with every prompt answered. {failed}_")
     elif summary["status"] == "partial":
         lines.append(
             "_Partial: not every benchmark document was scored (a document's `gold.json` is "
