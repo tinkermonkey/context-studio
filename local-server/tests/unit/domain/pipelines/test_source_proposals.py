@@ -496,6 +496,15 @@ class TestProposeIndividuals:
             "Individuals and relationships found in the source 'WRF555 use and care guide'."
         )
 
+    def test_the_rationale_says_what_the_run_could_not_read(self, service, repo, house):
+        note = "Extraction failed for 1 of 3 chunks (chunk 2), so what they hold is missing."
+        outcome = SourceProposer(service, repo).propose_individuals(
+            "r", run_input(house), [typing("WRF555", "house_appliance")], [note]
+        )
+        rationale = service.get(outcome.proposal_id).rationale
+        assert rationale.startswith("Individuals and relationships found in the source")
+        assert rationale.endswith(f" as an alternative. {note}")
+
     def test_re_extracting_supersedes_the_earlier_open_proposal(self, service, repo, house):
         proposer = SourceProposer(service, repo)
         first = proposer.propose_individuals("r1", run_input(house), [typing("A", "Business")])

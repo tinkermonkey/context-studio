@@ -23,7 +23,7 @@ from typing import Literal
 import httpx
 
 from domain.pipelines.exceptions import PipelineExternalServiceError
-from domain.pipelines.ports import LLMResponse
+from domain.pipelines.ports import INCOMPLETE_FINISH_REASONS, LLMResponse
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
@@ -197,6 +197,15 @@ class OpenRouterProvider:
                 finish_reason=finish_reason,
                 model=model,
             )
+
+            # An incomplete response (provider error part-way, or cut at the output
+            # limit) is returned but never cached, so asking again reaches the model
+            if finish_reason in INCOMPLETE_FINISH_REASONS:
+                logger.warning(
+                    f"OpenRouter response for model {model} is incomplete"
+                    f" (finish_reason={finish_reason}); not caching it"
+                )
+                return llm_response
 
             # Cache result with LRU eviction
             with self._cache_lock:

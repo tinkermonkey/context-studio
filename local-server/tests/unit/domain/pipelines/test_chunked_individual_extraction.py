@@ -5,6 +5,8 @@ A source (input with source_id, page_starts, headings or pages) is extracted
 chunk by chunk: offsets map back to the whole text, the same triple found in
 several chunks merges with every passage, progress is reported per chunk and a
 cancelled run stops before its next chunk. Pasted text is extracted in one call.
+An extraction that fails is never read as "found nothing": it fails the run
+(pasted text, or every chunk of a source) or is reported in failed_chunks.
 """
 
 import os
@@ -16,12 +18,13 @@ sys.path.append(
 
 import asyncio
 from dataclasses import dataclass, field
+from types import SimpleNamespace
 
 import pytest
 
 from domain.extraction.chunking import Chunk
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
-from domain.pipelines.exceptions import PipelineInputError
+from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipelines.individual_extraction.chunk_merge import merge_chunk_triples
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
@@ -220,14 +223,23 @@ class _Result:
     triples: list
     warnings: list = field(default_factory=list)
     metadata: dict = field(default_factory=dict)
+    failure_reason: str | None = None
+
+
+INCOMPLETE = "The LLM response was still incomplete after 3 attempts: it stopped early"
 
 
 class _FakeExtraction:
-    """Extracts one typing triple per 'Name.' sentence of the text it is given."""
+    """
+    Extracts one typing triple per 'Name.' sentence of the text it is given.
+    The calls numbered in ``failing`` (from 1) fail instead, as the service
+    reports an LLM response that stayed incomplete.
+    """
 
-    def __init__(self, on_call=None):
+    def __init__(self, on_call=None, failing=()):
         self.calls: list[str] = []
         self._on_call = on_call
+        self._failing = set(failing)
 
     def extract_triples(
         self, text, ontology_id, model, temperature, stage_prompts=None, dataset_id=None
@@ -235,6 +247,13 @@ class _FakeExtraction:
         self.calls.append(text)
         if self._on_call:
             self._on_call(len(self.calls))
+        if len(self.calls) in self._failing:
+            return _Result(
+                triples=[],
+                warnings=[f"Extraction failed: {INCOMPLETE}"],
+                metadata={"model": model, "tokens_used": 0, "duration_ms": 5},
+                failure_reason=INCOMPLETE,
+            )
         triples = []
         for sentence in text.split(". "):
             name = sentence.strip().rstrip(".").split(" ")[0]
@@ -272,10 +291,77 @@ def _long_text(sentences: int) -> str:
     return " ".join(n + " " + "x" * (60 - len(n) - 2) + "." for n in names)
 
 
-def _orchestrator(extraction, writer=None):
+def _orchestrator(extraction, writer=None, proposer=None):
     return IndividualExtractionOrchestrator(
-        llm_provider=None, extraction_service=extraction, run_id="run-1", status_writer=writer
+        llm_provider=None,
+        extraction_service=extraction,
+        run_id="run-1",
+        status_writer=writer,
+        proposer=proposer,
     )
+
+
+class _RecordingProposer:
+    """Records what the run proposes and the notes for the proposal's rationale."""
+
+    def __init__(self):
+        self.triples: list = []
+        self.notes: list[str] = []
+
+    def propose_individuals(self, run_id, input_data, triples, notes=()):
+        self.triples = list(triples)
+        self.notes = list(notes)
+        return SimpleNamespace(warnings=[], to_json=lambda: {"proposal_id": "prop-1"})
+
+
+class TestFailedExtraction:
+    async def test_pasted_text_whose_extraction_fails_fails_the_run(self):
+        extraction = _FakeExtraction(failing={1})
+        with pytest.raises(PipelineExecutionError, match="Extraction failed: The LLM response"):
+            await _orchestrator(extraction).execute(_state(text="Door one. Shelf two."))
+
+    async def test_a_failed_chunk_is_reported_and_the_other_chunks_are_kept(self):
+        extraction = _FakeExtraction(failing={2})
+        writer = _StatusWriter()
+        proposer = _RecordingProposer()
+        text = _long_text(300)  # 3 chunks
+
+        state = await _orchestrator(extraction, writer, proposer).execute(
+            _state(text=text, source_id="src-1")
+        )
+
+        assert state.current_status == PipelineRunStatus.COMPLETED
+        assert writer.progress == [(0, 3), (1, 3), (2, 3), (3, 3)]
+        result = state.result
+        chunks = result["metadata"]["chunks"]
+        assert [c["failure_reason"] for c in chunks] == [None, INCOMPLETE, None]
+        assert result["failed_chunks"] == [chunks[1]]
+        assert len(result["triples"]) == chunks[0]["triples"] + chunks[2]["triples"] > 0
+        note = result["warnings"][0]
+        assert note.startswith("Extraction failed for 1 of 3 chunks (chunk 2), so what")
+        assert note.endswith(f"First failure: {INCOMPLETE}")
+        assert f"Chunk 2 of 3: Extraction failed: {INCOMPLETE}" in result["warnings"]
+        # The proposal is made from what was read, and its rationale says what wasn't
+        assert proposer.triples == result["triples"]
+        assert proposer.notes == [note]
+        assert result["proposal_id"] == "prop-1"
+
+    async def test_a_run_with_no_failed_chunk_reports_none(self):
+        proposer = _RecordingProposer()
+        state = await _orchestrator(_FakeExtraction(), proposer=proposer).execute(
+            _state(text=_long_text(300), source_id="src-1")
+        )
+        assert "failed_chunks" not in state.result
+        assert proposer.notes == []
+
+    async def test_a_source_whose_every_chunk_fails_fails_the_run(self):
+        extraction = _FakeExtraction(failing={1, 2, 3})
+        proposer = _RecordingProposer()
+        with pytest.raises(PipelineExecutionError, match=r"every chunk \(3\): The LLM response"):
+            await _orchestrator(extraction, proposer=proposer).execute(
+                _state(text=_long_text(300), source_id="src-1")
+            )
+        assert proposer.triples == []
 
 
 class TestChunkedOrchestrator:

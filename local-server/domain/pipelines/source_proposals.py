@@ -114,7 +114,11 @@ class SourceProposer:
         ensure_may_propose_to(taxonomy, input_data)
 
     def propose_individuals(
-        self, run_id: str, input_data: Mapping[str, Any], triples: Sequence[dict[str, Any]]
+        self,
+        run_id: str,
+        input_data: Mapping[str, Any],
+        triples: Sequence[dict[str, Any]],
+        notes: Sequence[str] = (),
     ) -> ProposalOutcome:
         """
         Propose an individual-extraction run's merged triples (individual and
@@ -125,6 +129,8 @@ class SourceProposer:
             input_data: The run's input: ontology_id, dataset_id, source_id,
                 source_title, page_starts
             triples: The run's merged triples
+            notes: Sentences the proposal's rationale adds, saying what the run
+                could not read (chunks whose extraction failed)
         """
         source_id = str(input_data["source_id"])
         plan = plan_individual_operations(
@@ -142,6 +148,7 @@ class SourceProposer:
             str(input_data["ontology_id"]),
             _text(input_data.get("dataset_id")),
             plan,
+            notes,
         )
 
     def propose_schema(
@@ -177,6 +184,7 @@ class SourceProposer:
         taxonomy_id: str,
         dataset_id: str | None,
         plan: OperationPlan,
+        notes: Sequence[str] = (),
     ) -> ProposalOutcome:
         source_id = str(input_data["source_id"])
         source_title = _text(input_data.get("source_title")) or source_id
@@ -190,7 +198,7 @@ class SourceProposer:
                     title=f"Extraction: {source_title[:MAX_TITLE_SOURCE_CHARS]}",
                     operations=[row.draft for row in rows],
                     source=ProposalSource.PIPELINE,
-                    rationale=_rationale(pipeline, source_title, plan, refused),
+                    rationale=_rationale(pipeline, source_title, plan, refused, notes),
                     source_detail=f"{pipeline.value} run {run_id} on source {source_id}",
                     client_metadata={
                         "source_id": source_id,
@@ -372,11 +380,15 @@ _RATIONALES = {
 
 
 def _rationale(
-    pipeline: PipelineType, source_title: str, plan: OperationPlan, refused: list[dict[str, str]]
+    pipeline: PipelineType,
+    source_title: str,
+    plan: OperationPlan,
+    refused: list[dict[str, str]],
+    run_notes: Sequence[str] = (),
 ) -> str:
-    """The proposal's rationale, saying what the run found and could not propose."""
+    """The proposal's rationale, saying what the run found, could not read and could not propose."""
     text = _RATIONALES[pipeline].format(title=source_title)
-    notes = []
+    notes = [note.rstrip(".") for note in run_notes]
     if plan.skipped:
         listed = [f"{s['label']} ({s['reason']})" for s in plan.skipped[:MAX_LISTED]]
         more = len(plan.skipped) - MAX_LISTED

@@ -290,6 +290,40 @@ class TestOpenRouterCaching:
         assert response2.content == "cached response"
         assert provider._client.post.call_count == 1  # No new API call
 
+    @pytest.mark.parametrize("finish_reason", ["error", "length"])
+    def test_incomplete_response_is_returned_but_not_cached(self, finish_reason):
+        """A response that stopped early is not cached, so asking again reaches the model."""
+        provider = self.create_provider_with_mock_client()
+
+        def http_response(content, reason):
+            response = Mock()
+            response.status_code = 200
+            response.json.return_value = {
+                "choices": [{"message": {"content": content}, "finish_reason": reason}],
+                "usage": {"prompt_tokens": 0, "completion_tokens": 0},
+            }
+            return response
+
+        provider._client.post.side_effect = [
+            http_response('{"triples": [{"subj', finish_reason),
+            http_response('{"triples": []}', "stop"),
+        ]
+        request = dict(system_prompt="sys", user_prompt="user", model="gpt-4", max_tokens=8000)
+
+        first = provider.complete(**request)
+        assert first.finish_reason == finish_reason
+        assert first.content == '{"triples": [{"subj'
+        assert len(provider._response_cache) == 0
+
+        second = provider.complete(**request)
+        assert second.finish_reason == "stop"
+        assert second.content == '{"triples": []}'
+        assert provider._client.post.call_count == 2
+
+        # The complete response is cached as before
+        assert provider.complete(**request) is second
+        assert provider._client.post.call_count == 2
+
     def test_cache_miss_different_max_tokens(self):
         """Identical prompts with different max_tokens miss cache."""
         provider = self.create_provider_with_mock_client()

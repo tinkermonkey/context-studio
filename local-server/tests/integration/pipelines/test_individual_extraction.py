@@ -88,9 +88,13 @@ class TestIndividualExtractionViaHarness:
 
     @pytest.mark.asyncio
     async def test_harness_loads_and_runs_basic_extraction(
-        self, registered_extraction, extraction_service
+        self, registered_extraction, extraction_service, ontology_repo
     ):
         """Harness successfully loads fixture, runs orchestrator via harness."""
+        # The fixture names its ontology; a run on an ontology that doesn't exist fails
+        ontology_repo.save_taxonomy(
+            Taxonomy(id="test-ontology-123", identifier="fixture_ontology", title="Fixture")
+        )
         _, config_registry = registered_extraction
         impl_registry = PipelineImplementationRegistry()
         register_individual_extraction(impl_registry, config_registry)

@@ -120,10 +120,16 @@ class PipelineTypeRegistry:
                     " other_language, warranty, safety, legal or contact), with"
                     " skipped_sections_by_reason {reason: count}; absent when none"
                 ),
+                "failed_chunks": (
+                    "list[dict] — a run on a source: the chunks whose extraction failed"
+                    " (for one, an LLM response that stayed incomplete), as in"
+                    " metadata.chunks; what they hold is missing from triples and the"
+                    " proposal. Absent when none; a run fails when every chunk did"
+                ),
                 "metadata": (
                     "dict — model, tokens_used, duration_ms; chunked runs add source_id,"
                     " pages and chunks: [{index, start, end, page_first, page_last,"
-                    " heading, triples}]"
+                    " heading, triples, failure_reason}]"
                 ),
             },
         ),

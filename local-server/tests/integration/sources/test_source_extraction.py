@@ -116,7 +116,9 @@ class FakeExtraction:
                     "provenance": {"quote": "made by Acme", "start": start, "end": start + 12},
                 },
             ]
-        return SimpleNamespace(triples=triples, warnings=[], metadata={"tokens_used": 1})
+        return SimpleNamespace(
+            triples=triples, warnings=[], metadata={"tokens_used": 1}, failure_reason=None
+        )
 
 
 @pytest.fixture()

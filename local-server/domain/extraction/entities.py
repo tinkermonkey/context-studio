@@ -273,11 +273,14 @@ class TripleExtractionResult:
         triples: List of extracted triple dictionaries
         warnings: List of warnings or validation issues encountered
         metadata: Extraction metadata (model, tokens_used, duration_ms)
+        failure_reason: Why the extraction failed, in which case triples is
+            empty; None when it succeeded (an empty success found nothing)
     """
 
     triples: list[dict]
     warnings: list[str]
     metadata: dict[str, int | str]
+    failure_reason: str | None = None
 
 
 @dataclass(frozen=True)

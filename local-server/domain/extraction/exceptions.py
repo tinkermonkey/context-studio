@@ -27,6 +27,16 @@ class NLPProcessorNotReadyError(ExtractionError):
     pass
 
 
+class IncompleteLLMResponseError(ExtractionError):
+    """
+    Raised when an LLM response is not the model's whole answer: it stopped
+    early (provider error or output limit) or its content is not the JSON
+    that was asked for.
+    """
+
+    pass
+
+
 class SourceFailedError(ExtractionError):
     """
     Raised by a SourceReader or PageFetcher when a source can't be read or

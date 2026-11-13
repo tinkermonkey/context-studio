@@ -48,6 +48,12 @@ class LLMResponse:
     model: str
 
 
+# finish_reason values that say the content is not the model's whole answer: the
+# provider failed part-way ("error") or the output limit cut it off ("length" from
+# OpenAI and OpenRouter, "max_tokens" from Anthropic)
+INCOMPLETE_FINISH_REASONS = frozenset({"error", "length", "max_tokens"})
+
+
 class LLMProvider(Protocol):
     """Port for LLM completion and model introspection."""
 
@@ -99,6 +105,8 @@ class TripleExtractionResult(Protocol):
     triples: list[dict]
     warnings: list[str]
     metadata: dict[str, Any]
+    # Why the extraction failed (its triples are then empty); None when it succeeded
+    failure_reason: str | None
 
 
 class ExtractionPort(Protocol):
