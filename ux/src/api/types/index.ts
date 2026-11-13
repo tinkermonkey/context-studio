@@ -1914,7 +1914,10 @@ export interface paths {
      * @description Invoke a pipeline by type.
      *
      *     The request body structure depends on the pipeline type. Supported types:
-     *     - individual_extraction: requires text and ontology_id
+     *     - individual_extraction: requires text and ontology_id. An unknown
+     *       ontology_id is a 400. An extraction that fails (for one, an LLM response
+     *       that stays incomplete) is a 500 whose detail gives the reason and the
+     *       failed run's id; with async either fails the run instead
      *     - schema_extraction: requires documents, optional scope
      *     - schema_node_grounding: requires node_id (a class) or node_label; optional
      *       sources (default: the configuration's sources). An unknown node_id is a 400;

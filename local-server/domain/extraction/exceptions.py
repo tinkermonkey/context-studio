@@ -29,9 +29,9 @@ class NLPProcessorNotReadyError(ExtractionError):
 
 class IncompleteLLMResponseError(ExtractionError):
     """
-    Raised when an LLM response is not the model's whole answer: it stopped
-    early (provider error or output limit) or its content is not the JSON
-    that was asked for.
+    Raised when an LLM response is not the model's whole answer: its content
+    is not the JSON that was asked for (cut short by a provider error or the
+    output limit, or simply another shape).
     """
 
     pass

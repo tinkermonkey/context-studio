@@ -17,7 +17,9 @@ proposal, and its output_summary says why (`no_proposal_reason`, with
 A new proposal supersedes the open proposal of an older extraction of the
 same source by the same pipeline into the same dataset from the same pages:
 what it still awaits is rejected (no decision is recorded), since the new run
-repeats what still applies. Extractions are ordered by when they started, not
+repeats what still applies. A run that could not read all of its text (chunks
+whose extraction failed) repeats only part of it, so it supersedes nothing:
+earlier proposals stay open, and its rationale says what it lacks. Extractions are ordered by when they started, not
 when they finished: a run that finishes after a newer extraction of the same
 pages has proposed is superseded by it instead. Superseding is best effort; a
 failure is a warning on the run. The proposal's client_metadata records
@@ -118,7 +120,7 @@ class SourceProposer:
         run_id: str,
         input_data: Mapping[str, Any],
         triples: Sequence[dict[str, Any]],
-        notes: Sequence[str] = (),
+        unread: str | None = None,
     ) -> ProposalOutcome:
         """
         Propose an individual-extraction run's merged triples (individual and
@@ -129,8 +131,10 @@ class SourceProposer:
             input_data: The run's input: ontology_id, dataset_id, source_id,
                 source_title, page_starts
             triples: The run's merged triples
-            notes: Sentences the proposal's rationale adds, saying what the run
-                could not read (chunks whose extraction failed)
+            unread: A sentence saying what the run could not read (chunks whose
+                extraction failed); None when it read everything. Such a run
+                is partial: its rationale and no_proposal_reason say so, and
+                it supersedes no earlier proposal
         """
         source_id = str(input_data["source_id"])
         plan = plan_individual_operations(
@@ -148,7 +152,7 @@ class SourceProposer:
             str(input_data["ontology_id"]),
             _text(input_data.get("dataset_id")),
             plan,
-            notes,
+            unread,
         )
 
     def propose_schema(
@@ -184,7 +188,7 @@ class SourceProposer:
         taxonomy_id: str,
         dataset_id: str | None,
         plan: OperationPlan,
-        notes: Sequence[str] = (),
+        unread: str | None = None,
     ) -> ProposalOutcome:
         source_id = str(input_data["source_id"])
         source_title = _text(input_data.get("source_title")) or source_id
@@ -198,7 +202,7 @@ class SourceProposer:
                     title=f"Extraction: {source_title[:MAX_TITLE_SOURCE_CHARS]}",
                     operations=[row.draft for row in rows],
                     source=ProposalSource.PIPELINE,
-                    rationale=_rationale(pipeline, source_title, plan, refused, notes),
+                    rationale=_rationale(pipeline, source_title, plan, refused, unread),
                     source_detail=f"{pipeline.value} run {run_id} on source {source_id}",
                     client_metadata={
                         "source_id": source_id,
@@ -216,10 +220,11 @@ class SourceProposer:
 
         warnings = [f"Refused {r['label']}: {r['error']}" for r in refused]
         if proposal is None:
-            reason = _no_proposal_reason(plan.skipped, refused)
+            reason = _no_proposal_reason(plan.skipped, refused, unread)
             warnings.append(f"Nothing to propose. {reason}")
             return ProposalOutcome(None, 0, refused, plan.skipped, warnings, reason)
-        warnings += self._supersede(proposal)
+        if unread is None:
+            warnings += self._supersede(proposal)
         return ProposalOutcome(
             proposal.id, len(proposal.operations), refused, plan.skipped, warnings
         )
@@ -355,14 +360,23 @@ def skipped_by_reason(skipped: Sequence[Mapping[str, str]]) -> dict[str, int]:
     return dict(sorted(counts.items(), key=lambda kv: kv[1], reverse=True))
 
 
-def _no_proposal_reason(skipped: list[dict[str, str]], refused: list[dict[str, str]]) -> str:
-    """Why a run proposed nothing, as a sentence."""
+def _no_proposal_reason(
+    skipped: list[dict[str, str]], refused: list[dict[str, str]], unread: str | None = None
+) -> str:
+    """
+    Why a run proposed nothing, as a sentence. A run that could not read all
+    of its text says that first, and never that the text holds no candidates.
+    """
     if refused:
-        return f"All {len(refused)} operations were refused."
-    if skipped:
+        reason = f"All {len(refused)} operations were refused."
+    elif skipped:
         counts = ", ".join(f"{reason} {n}" for reason, n in skipped_by_reason(skipped).items())
-        return f"None of the {len(skipped)} candidates made an operation ({counts})."
-    return "The run found no candidates in the text."
+        reason = f"None of the {len(skipped)} candidates made an operation ({counts})."
+    elif unread:
+        reason = "The run found no candidates in what it could read."
+    else:
+        reason = "The run found no candidates in the text."
+    return f"{_sentence(unread)} {reason}" if unread else reason
 
 
 _RATIONALES = {
@@ -384,11 +398,13 @@ def _rationale(
     source_title: str,
     plan: OperationPlan,
     refused: list[dict[str, str]],
-    run_notes: Sequence[str] = (),
+    unread: str | None = None,
 ) -> str:
     """The proposal's rationale, saying what the run found, could not read and could not propose."""
     text = _RATIONALES[pipeline].format(title=source_title)
-    notes = [note.rstrip(".") for note in run_notes]
+    notes = []
+    if unread:
+        notes.append(f"{_sentence(unread)} Any earlier proposal for this source stays open")
     if plan.skipped:
         listed = [f"{s['label']} ({s['reason']})" for s in plan.skipped[:MAX_LISTED]]
         more = len(plan.skipped) - MAX_LISTED
@@ -404,6 +420,11 @@ def _rationale(
             + (f"; and {more} more" if more > 0 else "")
         )
     return (text + (f" {'. '.join(notes)}." if notes else ""))[:8000]
+
+
+def _sentence(text: str) -> str:
+    """The text, ending in one full stop."""
+    return text.rstrip(".") + "."
 
 
 def _text(value: Any) -> str | None:

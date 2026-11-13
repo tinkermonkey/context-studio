@@ -1,11 +1,11 @@
 """
 Unit tests for incomplete LLM responses in triple extraction.
 
-A response that is not the model's whole answer (it stopped on a provider
-error or at the output limit, or its content is not the JSON asked for) says
-nothing about the text. The extraction asks again a bounded number of times
-and, if no attempt completes, fails where the caller can see it instead of
-returning an empty success.
+A response that is not the model's whole answer (its content is not the JSON
+asked for: cut short by a provider error or the output limit, or another
+shape) says nothing about the text. The extraction asks again a bounded number
+of times and, if no attempt completes, fails where the caller can see it
+instead of returning an empty success.
 """
 
 import json
@@ -20,6 +20,7 @@ sys.path.append(
 import pytest
 
 from domain.extraction.entities import ExtractionRunStatus
+from domain.extraction.exceptions import InvalidInputError
 from domain.extraction.services import _MAX_LLM_ATTEMPTS, ExtractionService
 from domain.pipelines.ports import LLMResponse
 
@@ -54,7 +55,10 @@ CUT_SHORT = IDENTIFIED[:40]
 
 
 class _ScriptedLLM:
-    """Returns the scripted (content, finish_reason) responses in order."""
+    """
+    Returns the scripted (content, finish_reason) responses in order; a third
+    element True marks the response as answered from the provider's cache.
+    """
 
     def __init__(self, *responses):
         self._responses = list(responses)
@@ -62,7 +66,7 @@ class _ScriptedLLM:
 
     def complete(self, system_prompt, user_prompt, model, **kwargs):
         self.calls.append(user_prompt)
-        content, finish_reason = self._responses.pop(0)
+        content, finish_reason, *cached = self._responses.pop(0)
         return LLMResponse(
             content=content,
             tokens_in=10,
@@ -70,6 +74,7 @@ class _ScriptedLLM:
             duration_ms=1.0,
             finish_reason=finish_reason,
             model=model,
+            cached=bool(cached and cached[0]),
         )
 
 
@@ -77,6 +82,8 @@ class _BareOntologyRepo:
     """A taxonomy with no classes or relationship types."""
 
     def get_taxonomy(self, taxonomy_id):
+        if taxonomy_id == "missing":
+            return None
         return SimpleNamespace(id=taxonomy_id, title="Tools")
 
     def list_concept_schemes(self, taxonomy_id, limit=None):
@@ -102,7 +109,7 @@ class _Publisher:
         return []
 
 
-def _extract(llm):
+def _extract(llm, ontology_id="tax-1"):
     run_repo = _RunRepo()
     service = ExtractionService(
         ontology_repo=_BareOntologyRepo(),
@@ -114,7 +121,7 @@ def _extract(llm):
         extraction_repo=None,
         extraction_run_repo=run_repo,
     )
-    result = service.extract_triples(TEXT, "tax-1", "model-1", 0.0)
+    result = service.extract_triples(TEXT, ontology_id, "model-1", 0.0)
     return result, run_repo.run
 
 
@@ -145,6 +152,13 @@ class TestIncompleteResponseIsAskedAgain:
             (IDENTIFIED[:-2], "stop"),  # JSON that does not parse
             ("I could not find anything.", "stop"),  # no JSON at all
             (None, "stop"),  # no content
+            # JSON that parses but is not the shape asked for
+            ("{}", "stop"),
+            ('{"individuals": [{"label": "Nextflow"}]}', "stop"),
+            ('{"error": {"message": "overloaded"}}', "stop"),
+            ('{"triples": null}', "stop"),
+            (json.dumps([_typing("Nextflow")]), "stop"),  # a top-level array
+            ("[]", None),
         ],
     )
     def test_incomplete_identify_response_then_a_good_one_yields_the_good_ones_triples(
@@ -160,11 +174,16 @@ class TestIncompleteResponseIsAskedAgain:
         assert llm.calls[0] == llm.calls[1]
         assert len(llm.calls) == 3
 
-    def test_a_response_that_parses_but_stopped_early_is_not_trusted(self):
-        fewer = json.dumps({"triples": [_typing("Nextflow")]})
-        llm = _ScriptedLLM((fewer, "length"), (IDENTIFIED, "stop"), (RELATED, "stop"))
+    @pytest.mark.parametrize("finish_reason", ["length", "max_tokens", "error", None])
+    def test_a_response_that_parses_is_the_whole_answer_whatever_its_finish_reason(
+        self, finish_reason
+    ):
+        # An object cut short cannot parse, so one that does was not cut short
+        llm = _ScriptedLLM((IDENTIFIED, finish_reason), (RELATED, finish_reason))
         result, _ = _extract(llm)
         assert _labels(result) == EXPECTED
+        assert result.failure_reason is None
+        assert len(llm.calls) == 2
 
     def test_incomplete_relationship_response_then_a_good_one_keeps_the_relationships(self):
         llm = _ScriptedLLM((IDENTIFIED, "stop"), (RELATED[:30], "length"), (RELATED, "stop"))
@@ -186,11 +205,13 @@ class TestResponseThatNeverCompletes:
     @pytest.mark.parametrize(
         "content, finish_reason, problem",
         [
-            (CUT_SHORT, "error", "it stopped early (finish_reason=error)"),
-            (CUT_SHORT, "length", "it stopped early (finish_reason=length)"),
+            (CUT_SHORT, "error", "it holds no complete JSON object (finish_reason=error)"),
+            (CUT_SHORT, "length", "it holds no complete JSON object (finish_reason=length)"),
             (IDENTIFIED[:-2], "stop", "its JSON does not parse"),
-            (CUT_SHORT, "stop", "it holds no complete JSON object"),
-            ("nothing here", "stop", "it holds no complete JSON object"),
+            ("nothing here", "stop", "it holds no complete JSON object (finish_reason=stop)"),
+            ("{}", "stop", "its JSON has no triples list (finish_reason=stop)"),
+            ('{"triples": null}', "stop", "its JSON has no triples list (finish_reason=stop)"),
+            ("[]", None, "it holds no complete JSON object (finish_reason=None)"),
         ],
     )
     def test_is_a_failure_the_caller_can_see_not_an_empty_success(
@@ -201,7 +222,8 @@ class TestResponseThatNeverCompletes:
         assert len(llm.calls) == _MAX_LLM_ATTEMPTS
         assert result.triples == []
         assert result.failure_reason.startswith(
-            f"The LLM response was still incomplete after {_MAX_LLM_ATTEMPTS} attempts: {problem}"
+            "The LLM response for identify_individuals was still incomplete after"
+            f" {_MAX_LLM_ATTEMPTS} attempts: {problem}"
         )
         assert result.warnings == [f"Extraction failed: {result.failure_reason}"]
         assert run.status == ExtractionRunStatus.FAILED
@@ -210,5 +232,36 @@ class TestResponseThatNeverCompletes:
         llm = _ScriptedLLM((IDENTIFIED, "stop"), *[(RELATED[:30], "error")] * _MAX_LLM_ATTEMPTS)
         result, run = _extract(llm)
         assert result.triples == []
+        assert result.failure_reason.startswith(
+            "The LLM response for derive_relationships was still incomplete after"
+        )
         assert "finish_reason=error" in result.failure_reason
         assert run.status == ExtractionRunStatus.FAILED
+        # 1 identify call, then every attempt of the derive call
+        assert len(llm.calls) == 1 + _MAX_LLM_ATTEMPTS
+
+    def test_a_cached_incomplete_response_is_not_asked_for_again(self):
+        # The provider would answer every retry with the same cached response
+        llm = _ScriptedLLM(("{}", "stop"), ("{}", "stop", True))
+        result, run = _extract(llm)
+        assert len(llm.calls) == 2
+        assert result.failure_reason == (
+            "The LLM response for identify_individuals was incomplete: its JSON has no"
+            " triples list (finish_reason=stop). The provider answered attempt 2 from its"
+            " cache, so it was not asked again"
+        )
+        assert run.status == ExtractionRunStatus.FAILED
+
+    def test_a_cached_complete_response_is_used(self):
+        llm = _ScriptedLLM((IDENTIFIED, "stop", True), (RELATED, "stop", True))
+        result, _ = _extract(llm)
+        assert _labels(result) == EXPECTED
+        assert result.failure_reason is None
+
+
+class TestUnknownOntology:
+    def test_is_invalid_input_before_any_model_call(self):
+        llm = _ScriptedLLM()
+        with pytest.raises(InvalidInputError, match="Ontology missing not found"):
+            _extract(llm, ontology_id="missing")
+        assert llm.calls == []

@@ -14,20 +14,39 @@ Configuration:
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 import threading
 import time
 from collections import OrderedDict
+from dataclasses import replace
 from typing import Literal
 
 import httpx
 
 from domain.pipelines.exceptions import PipelineExternalServiceError
-from domain.pipelines.ports import INCOMPLETE_FINISH_REASONS, LLMResponse
+from domain.pipelines.ports import LLMResponse
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+def _is_whole_answer(response: LLMResponse, response_format: str | None) -> bool:
+    """
+    Whether a response is safe to cache as the model's whole answer: it
+    finished normally ("stop"; a provider error, the output limit, a content
+    filter or no finish reason all fail this), it has content, and that
+    content is JSON when JSON was asked for.
+    """
+    if response.finish_reason != "stop" or not response.content:
+        return False
+    if response_format == "json":
+        try:
+            json.loads(response.content)
+        except ValueError:
+            return False
+    return True
 
 
 class OpenRouterProvider:
@@ -36,7 +55,8 @@ class OpenRouterProvider:
 
     Routes requests to any OpenRouter-available model. Supports response
     caching keyed by (prompt_hash, model, temperature, max_tokens, response_format)
-    with a bounded LRU cache.
+    with a bounded LRU cache. Only a whole answer is cached (see
+    _is_whole_answer), and a response served from the cache says so (cached).
     """
 
     BASE_URL = "https://openrouter.ai/api/v1"
@@ -120,7 +140,7 @@ class OpenRouterProvider:
                 self._response_cache.move_to_end(cache_key)
         if cached is not None:
             logger.debug(f"Cache hit for model {model}")
-            return cached
+            return replace(cached, cached=True)
 
         # Prepare request
         messages = [
@@ -198,11 +218,11 @@ class OpenRouterProvider:
                 model=model,
             )
 
-            # An incomplete response (provider error part-way, or cut at the output
-            # limit) is returned but never cached, so asking again reaches the model
-            if finish_reason in INCOMPLETE_FINISH_REASONS:
+            # A response that may not be the model's whole answer is returned but
+            # never cached, so asking again reaches the model
+            if not _is_whole_answer(llm_response, response_format):
                 logger.warning(
-                    f"OpenRouter response for model {model} is incomplete"
+                    f"OpenRouter response for model {model} may be incomplete"
                     f" (finish_reason={finish_reason}); not caching it"
                 )
                 return llm_response

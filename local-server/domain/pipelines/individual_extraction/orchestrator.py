@@ -20,8 +20,9 @@ proposer is wired (see domain/pipelines/source_proposals.py); the run's
 An extraction that fails (for one, an LLM response that stays incomplete) is
 never read as "found nothing". Pasted text fails the run. A source carries on
 with its other chunks: the result's ``failed_chunks`` lists the chunks that
-failed, a warning and the proposal's rationale say so, and the run fails only
-when every chunk did.
+failed, a warning and the proposal's rationale (or ``no_proposal_reason``) say
+so, the run supersedes no earlier proposal of the source, and it fails only
+when every chunk did. An ontology that doesn't exist is an input error.
 """
 
 from __future__ import annotations
@@ -33,6 +34,7 @@ from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any
 
 from domain.extraction.chunking import Chunk, Heading, chunk_text
+from domain.extraction.exceptions import InvalidInputError
 from domain.extraction.prompts import INDIVIDUAL_EXTRACTION_STAGES
 from domain.extraction.section_filter import (
     NOTHING_LEFT,
@@ -43,7 +45,11 @@ from domain.extraction.section_filter import (
     skipped_sections,
 )
 from domain.pipelines.entities import PipelineRunStatus
-from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
+from domain.pipelines.exceptions import (
+    ExtractionFailedError,
+    PipelineExecutionError,
+    PipelineInputError,
+)
 from domain.pipelines.individual_extraction.chunk_merge import merge_chunk_triples
 from domain.pipelines.orchestration.base import (
     PipelineOrchestrator,
@@ -149,8 +155,11 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             Updated IndividualExtractionState with extracted triples and metadata
 
         Raises:
-            PipelineInputError: If required input fields are missing or invalid
-            PipelineExecutionError: If extraction fails
+            PipelineInputError: If required input fields are missing or invalid,
+                or no ontology has ontology_id
+            ExtractionFailedError: If the extraction failed (pasted text, or
+                every chunk of a source); the message is the reason
+            PipelineExecutionError: If anything else fails
         """
         self._write_running_status()
 
@@ -242,9 +251,9 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                     state, chunks, page_starts
                 )
                 failed = [c for c in metadata["chunks"] if c["failure_reason"]]
-                notes = [_failed_chunks_note(failed, len(chunks))] if failed else []
-                if failed:
-                    warnings = [*notes, *warnings]
+                unread = _failed_chunks_note(failed, len(chunks)) if failed else None
+                if unread:
+                    warnings = [unread, *warnings]
                     outcome_keys = {"failed_chunks": failed}
                 if skipped:
                     warnings = [skip_note(skipped), *warnings]
@@ -252,7 +261,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 if self._proposer is not None and state.input_data.get("source_id"):
                     try:
                         outcome = self._proposer.propose_individuals(
-                            state.run_id, state.input_data, triples, notes
+                            state.run_id, state.input_data, triples, unread
                         )
                     except Exception as exc:
                         raise PipelineExecutionError(
@@ -270,7 +279,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                     dataset_id=state.input_data.get("dataset_id"),
                 )
                 if result.failure_reason:
-                    raise PipelineExecutionError(f"Extraction failed: {result.failure_reason}")
+                    raise ExtractionFailedError(f"Extraction failed: {result.failure_reason}")
                 triples, warnings, metadata = result.triples, result.warnings, result.metadata
 
             # Populate result state
@@ -291,6 +300,9 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         except PipelineInputError:
             state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
+        except InvalidInputError as exc:
+            state = replace(state, current_status=PipelineRunStatus.FAILED)
+            raise PipelineInputError(str(exc)) from exc
         except PipelineExecutionError:
             state = replace(state, current_status=PipelineRunStatus.FAILED)
             raise
@@ -321,7 +333,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             (merged triples, warnings, metadata)
 
         Raises:
-            PipelineExecutionError: If the extraction of every chunk failed
+            ExtractionFailedError: If the extraction of every chunk failed
         """
         total = len(chunks)
         self._report_progress(0, total)
@@ -360,7 +372,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
 
         reasons = [c["failure_reason"] for c in chunk_summaries if c["failure_reason"]]
         if len(reasons) == total:
-            raise PipelineExecutionError(
+            raise ExtractionFailedError(
                 f"Extraction failed for every chunk ({total}): {reasons[0]}"
             )
 

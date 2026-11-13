@@ -290,9 +290,22 @@ class TestOpenRouterCaching:
         assert response2.content == "cached response"
         assert provider._client.post.call_count == 1  # No new API call
 
-    @pytest.mark.parametrize("finish_reason", ["error", "length"])
-    def test_incomplete_response_is_returned_but_not_cached(self, finish_reason):
-        """A response that stopped early is not cached, so asking again reaches the model."""
+    @pytest.mark.parametrize(
+        "content, finish_reason",
+        [
+            ('{"triples": [{"subj', "error"),  # the provider failed part-way
+            ('{"triples": [{"subj', "length"),  # cut at the output limit
+            ('{"triples": []}', "content_filter"),
+            ('{"triples": []}', None),  # a null finish reason
+            ('{"triples": [{"subj', "stop"),  # JSON was asked for; this is not JSON
+            ("", "stop"),
+            (None, "stop"),
+        ],
+    )
+    def test_a_response_that_may_be_incomplete_is_returned_but_not_cached(
+        self, content, finish_reason
+    ):
+        """Asking again after such a response reaches the model."""
         provider = self.create_provider_with_mock_client()
 
         def http_response(content, reason):
@@ -305,24 +318,46 @@ class TestOpenRouterCaching:
             return response
 
         provider._client.post.side_effect = [
-            http_response('{"triples": [{"subj', finish_reason),
+            http_response(content, finish_reason),
             http_response('{"triples": []}', "stop"),
         ]
-        request = dict(system_prompt="sys", user_prompt="user", model="gpt-4", max_tokens=8000)
+        request = dict(
+            system_prompt="sys",
+            user_prompt="user",
+            model="gpt-4",
+            max_tokens=8000,
+            response_format="json",
+        )
 
         first = provider.complete(**request)
-        assert first.finish_reason == finish_reason
-        assert first.content == '{"triples": [{"subj'
+        assert (first.content, first.finish_reason, first.cached) == (content, finish_reason, False)
         assert len(provider._response_cache) == 0
 
         second = provider.complete(**request)
-        assert second.finish_reason == "stop"
-        assert second.content == '{"triples": []}'
+        assert (second.content, second.finish_reason) == ('{"triples": []}', "stop")
+        assert second.cached is False
         assert provider._client.post.call_count == 2
 
-        # The complete response is cached as before
-        assert provider.complete(**request) is second
+        # The whole answer is cached, and a response served from the cache says so
+        third = provider.complete(**request)
+        assert third.content == second.content
+        assert third.cached is True
         assert provider._client.post.call_count == 2
+
+    def test_text_that_is_not_json_is_cached_when_json_was_not_asked_for(self):
+        provider = self.create_provider_with_mock_client()
+        response = Mock()
+        response.status_code = 200
+        response.json.return_value = {
+            "choices": [{"message": {"content": "plain words"}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 1, "completion_tokens": 2},
+        }
+        provider._client.post.return_value = response
+        request = dict(system_prompt="sys", user_prompt="user", model="gpt-4")
+
+        assert provider.complete(**request).cached is False
+        assert provider.complete(**request).cached is True
+        assert provider._client.post.call_count == 1
 
     def test_cache_miss_different_max_tokens(self):
         """Identical prompts with different max_tokens miss cache."""

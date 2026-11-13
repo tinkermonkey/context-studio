@@ -26,7 +26,7 @@ from domain.ontology.ports import (
     SchemaVectorIndex,
 )
 from domain.pipelines.candidate_ids import mention_key
-from domain.pipelines.ports import INCOMPLETE_FINISH_REASONS, LLMProvider
+from domain.pipelines.ports import LLMProvider
 from domain.pipelines.stage_prompts import StagePrompt, render, resolve_stage_prompts
 from domain.ports import EventPublisher
 
@@ -44,7 +44,7 @@ from .entities import (
     TripleExtractionResult,
 )
 from .events import ExtractionCompleted
-from .exceptions import ExtractionError, IncompleteLLMResponseError
+from .exceptions import ExtractionError, IncompleteLLMResponseError, InvalidInputError
 from .ports import (
     ExtractionRepository,
     ExtractionRunRepository,
@@ -57,8 +57,8 @@ from .value_objects import ExtractionLayerResult, LayerInput, LayerOutput, Sourc
 
 _logger = logging.getLogger(__name__)
 
-# How many times a triple-extraction call is made before a response that is not
-# the model's whole answer fails the extraction
+# How many times each triple-extraction call (identify, then derive) is made
+# before a response that is not the model's whole answer fails the extraction
 _MAX_LLM_ATTEMPTS = 3
 
 # Default prompts for the two LLM passes, used when no configuration overrides them.
@@ -570,12 +570,16 @@ class ExtractionService:
 
         Raises:
             ExtractionError: If text validation fails
+            InvalidInputError: If no ontology has ontology_id
             ValueError: If temperature is out of range
         """
         if not text or not text.strip():
             raise ExtractionError("Text cannot be empty")
         if not 0.0 <= temperature <= 2.0:
             raise ValueError(f"temperature must be 0.0–2.0, got {temperature}")
+        ontology = self._ontology_repo.get_taxonomy(ontology_id)
+        if not ontology:
+            raise InvalidInputError(f"Ontology {ontology_id} not found")
 
         prompts = resolve_stage_prompts(INDIVIDUAL_EXTRACTION_STAGES, stage_prompts)
 
@@ -608,11 +612,6 @@ class ExtractionService:
 
         try:
             try:
-                # Get ontology to validate it exists
-                ontology = self._ontology_repo.get_taxonomy(ontology_id)
-                if not ontology:
-                    raise ValueError(f"Ontology {ontology_id} not found")
-
                 # Two-pass extraction (karpathy_loop_design.md §7): pass 1 grounds
                 # individuals to ontology classes, pass 2 derives relationships from
                 # the closed set of predicates the ontology permits between those
@@ -886,7 +885,13 @@ class ExtractionService:
             text, ontology, (prompts or {}).get(IDENTIFY_INDIVIDUALS)
         )
         individual_triples, tokens_used, parse_warnings = self._complete_triples(
-            individual_system, individual_user, model, temperature, text, ontology_id
+            IDENTIFY_INDIVIDUALS,
+            individual_system,
+            individual_user,
+            model,
+            temperature,
+            text,
+            ontology_id,
         )
         individual_triples = self._canonicalize_triples_against_ontology(
             individual_triples, ontology
@@ -926,7 +931,13 @@ class ExtractionService:
             text, ontology, individuals, (prompts or {}).get(DERIVE_RELATIONSHIPS)
         )
         relationship_triples, tokens, rel_warnings = self._complete_triples(
-            relationship_system, relationship_user, model, temperature, text, ontology_id
+            DERIVE_RELATIONSHIPS,
+            relationship_system,
+            relationship_user,
+            model,
+            temperature,
+            text,
+            ontology_id,
         )
         relationship_triples = [
             triple for triple in relationship_triples if not self._is_typing_triple(triple)
@@ -935,6 +946,7 @@ class ExtractionService:
 
     def _complete_triples(
         self,
+        stage: str,
         system_prompt: str,
         user_prompt: str,
         model: str,
@@ -943,13 +955,20 @@ class ExtractionService:
         ontology_id: str,
     ) -> tuple[list[dict], int, list[str]]:
         """
-        Ask the LLM for triples, asking again when the response is not its whole answer.
+        Ask the LLM for a stage's triples, asking again when the response is
+        not its whole answer.
 
-        A response is incomplete when its finish_reason says it stopped early
-        (provider error or output limit) or its content is not the JSON asked
-        for. Such a response says nothing about the text, so it is never read
-        as "no triples": the same call is made again, up to _MAX_LLM_ATTEMPTS
-        times in all. A complete first response is used as is.
+        A response is the whole answer when it parses into the JSON asked for
+        (an object with a ``triples`` list), whatever its finish_reason: an
+        object cut short cannot parse. Any other response says nothing about
+        the text, so it is never read as "no triples": the same call is made
+        again, up to _MAX_LLM_ATTEMPTS times in all. A complete first response
+        is used as is. A response the provider answered from its cache would
+        come back the same, so it is not asked for again.
+
+        Args:
+            stage: The stage key (identify_individuals or derive_relationships),
+                named in the failure
 
         Returns:
             Tuple of (parsed triples, tokens used by every attempt, parse warnings).
@@ -969,24 +988,27 @@ class ExtractionService:
             )
             tokens += response.tokens_in + response.tokens_out
             try:
-                if response.finish_reason in INCOMPLETE_FINISH_REASONS:
-                    raise IncompleteLLMResponseError(
-                        f"it stopped early (finish_reason={response.finish_reason})"
-                    )
                 triples, warnings = self._parse_triple_extraction_response(
                     response.content, text, ontology_id
                 )
                 return triples, tokens, warnings
             except IncompleteLLMResponseError as exc:
-                problem = str(exc)
+                problem = f"{exc} (finish_reason={response.finish_reason})"
                 _logger.warning(
-                    "Incomplete LLM response, attempt %d of %d: %s",
+                    "Incomplete LLM response for %s, attempt %d of %d: %s",
+                    stage,
                     attempt,
                     _MAX_LLM_ATTEMPTS,
                     problem,
                 )
+            if response.cached:
+                raise IncompleteLLMResponseError(
+                    f"The LLM response for {stage} was incomplete: {problem}. The provider"
+                    f" answered attempt {attempt} from its cache, so it was not asked again"
+                )
         raise IncompleteLLMResponseError(
-            f"The LLM response was still incomplete after {_MAX_LLM_ATTEMPTS} attempts: {problem}"
+            f"The LLM response for {stage} was still incomplete after"
+            f" {_MAX_LLM_ATTEMPTS} attempts: {problem}"
         )
 
     def _post_process_triples(
@@ -2134,7 +2156,8 @@ class ExtractionService:
             Unresolved spans are recorded as warnings; triples are always retained.
 
         Raises:
-            IncompleteLLMResponseError: If the response holds no JSON object that parses
+            IncompleteLLMResponseError: If the response is not a JSON object
+                with a ``triples`` list
         """
         warnings: list[str] = []
         try:
@@ -2144,7 +2167,9 @@ class ExtractionService:
                 raise IncompleteLLMResponseError("it holds no complete JSON object")
 
             response_json = json.loads(json_match.group())
-            triples_data = response_json.get("triples", [])
+            triples_data = response_json.get("triples")
+            if not isinstance(triples_data, list):
+                raise IncompleteLLMResponseError("its JSON has no triples list")
 
             triples = []
             for triple_data in triples_data:

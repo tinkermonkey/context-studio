@@ -23,8 +23,9 @@ from types import SimpleNamespace
 import pytest
 
 from domain.extraction.chunking import Chunk
+from domain.extraction.exceptions import InvalidInputError
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
-from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
+from domain.pipelines.exceptions import ExtractionFailedError, PipelineInputError
 from domain.pipelines.individual_extraction.chunk_merge import merge_chunk_triples
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
@@ -226,7 +227,10 @@ class _Result:
     failure_reason: str | None = None
 
 
-INCOMPLETE = "The LLM response was still incomplete after 3 attempts: it stopped early"
+INCOMPLETE = (
+    "The LLM response for identify_individuals was still incomplete after 3 attempts:"
+    " it holds no complete JSON object (finish_reason=error)"
+)
 
 
 class _FakeExtraction:
@@ -236,10 +240,11 @@ class _FakeExtraction:
     reports an LLM response that stayed incomplete.
     """
 
-    def __init__(self, on_call=None, failing=()):
+    def __init__(self, on_call=None, failing=(), finds=True):
         self.calls: list[str] = []
         self._on_call = on_call
         self._failing = set(failing)
+        self._finds = finds
 
     def extract_triples(
         self, text, ontology_id, model, temperature, stage_prompts=None, dataset_id=None
@@ -257,7 +262,7 @@ class _FakeExtraction:
         triples = []
         for sentence in text.split(". "):
             name = sentence.strip().rstrip(".").split(" ")[0]
-            if name:
+            if name and self._finds:
                 triples.append(_typing(name, quote=name, start=text.index(name)))
         return _Result(
             triples=triples,
@@ -302,23 +307,35 @@ def _orchestrator(extraction, writer=None, proposer=None):
 
 
 class _RecordingProposer:
-    """Records what the run proposes and the notes for the proposal's rationale."""
+    """Records what the run proposes and what it says it could not read."""
 
     def __init__(self):
         self.triples: list = []
-        self.notes: list[str] = []
+        self.unread: list = []
 
-    def propose_individuals(self, run_id, input_data, triples, notes=()):
+    def propose_individuals(self, run_id, input_data, triples, unread=None):
         self.triples = list(triples)
-        self.notes = list(notes)
+        self.unread.append(unread)
         return SimpleNamespace(warnings=[], to_json=lambda: {"proposal_id": "prop-1"})
+
+
+class _UnknownOntology:
+    def extract_triples(self, text, ontology_id, **_):
+        raise InvalidInputError(f"Ontology {ontology_id} not found")
 
 
 class TestFailedExtraction:
     async def test_pasted_text_whose_extraction_fails_fails_the_run(self):
         extraction = _FakeExtraction(failing={1})
-        with pytest.raises(PipelineExecutionError, match="Extraction failed: The LLM response"):
+        with pytest.raises(ExtractionFailedError, match="Extraction failed: The LLM response"):
             await _orchestrator(extraction).execute(_state(text="Door one. Shelf two."))
+
+    @pytest.mark.parametrize("source", [{}, {"source_id": "src-1"}])
+    async def test_an_ontology_that_does_not_exist_is_an_input_error(self, source):
+        with pytest.raises(PipelineInputError, match="Ontology onto-1 not found"):
+            await _orchestrator(_UnknownOntology()).execute(
+                _state(text="Door one. Shelf two.", **source)
+            )
 
     async def test_a_failed_chunk_is_reported_and_the_other_chunks_are_kept(self):
         extraction = _FakeExtraction(failing={2})
@@ -343,7 +360,7 @@ class TestFailedExtraction:
         assert f"Chunk 2 of 3: Extraction failed: {INCOMPLETE}" in result["warnings"]
         # The proposal is made from what was read, and its rationale says what wasn't
         assert proposer.triples == result["triples"]
-        assert proposer.notes == [note]
+        assert proposer.unread == [note]
         assert result["proposal_id"] == "prop-1"
 
     async def test_a_run_with_no_failed_chunk_reports_none(self):
@@ -352,12 +369,12 @@ class TestFailedExtraction:
             _state(text=_long_text(300), source_id="src-1")
         )
         assert "failed_chunks" not in state.result
-        assert proposer.notes == []
+        assert proposer.unread == [None]
 
     async def test_a_source_whose_every_chunk_fails_fails_the_run(self):
         extraction = _FakeExtraction(failing={1, 2, 3})
         proposer = _RecordingProposer()
-        with pytest.raises(PipelineExecutionError, match=r"every chunk \(3\): The LLM response"):
+        with pytest.raises(ExtractionFailedError, match=r"every chunk \(3\): The LLM response"):
             await _orchestrator(extraction, proposer=proposer).execute(
                 _state(text=_long_text(300), source_id="src-1")
             )

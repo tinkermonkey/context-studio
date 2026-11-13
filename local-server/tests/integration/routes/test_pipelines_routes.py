@@ -6,6 +6,7 @@ and pipeline run management via REST API.
 """
 
 import tempfile
+from types import SimpleNamespace
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
@@ -29,6 +30,7 @@ from domain.pipelines.exceptions import (
     PipelineInputError,
     PipelineStorageError,
 )
+from domain.extraction.exceptions import InvalidInputError
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
 )
@@ -1425,6 +1427,72 @@ class TestRunStatusLifecycle:
         assert (
             "timeout" in run.failure_reason.lower() or "unavailable" in run.failure_reason.lower()
         )
+
+
+class _FailingExtraction:
+    """An extraction service whose extraction fails, or whose ontology is unknown."""
+
+    def __init__(self, failure_reason=None, unknown_ontology=False):
+        self._failure_reason = failure_reason
+        self._unknown_ontology = unknown_ontology
+
+    def extract_triples(self, text, ontology_id, **_):
+        if self._unknown_ontology:
+            raise InvalidInputError(f"Ontology {ontology_id} not found")
+        return SimpleNamespace(
+            triples=[],
+            warnings=[f"Extraction failed: {self._failure_reason}"],
+            metadata={},
+            failure_reason=self._failure_reason,
+        )
+
+
+class TestIndividualExtractionFailures:
+    """A synchronous individual extraction that fails tells the caller why."""
+
+    @staticmethod
+    def _post(client, registries, extraction):
+        ptype = PipelineType.INDIVIDUAL_EXTRACTION
+        registries["implementation_registry"].register_impl(
+            ptype, "default", IndividualExtractionOrchestrator
+        )
+        registries["config_registry"].register(ptype, "default", "default", {"model": "m"})
+        client.app.state.ontology_repo.get_taxonomy.return_value = None
+        client.app.state.extraction_service = extraction
+        return client.post(
+            f"/api/pipelines/{ptype.value}/run",
+            json={
+                "implementation_id": "default",
+                "configuration_ref": "default",
+                "text": "Ada Lovelace wrote the first program.",
+                "ontology_id": "tax-1",
+                "model": "m",
+            },
+        )
+
+    def test_unknown_ontology_is_a_400_with_the_reason(self, client, registries, pipeline_run_repo):
+        response = self._post(client, registries, _FailingExtraction(unknown_ontology=True))
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json()["detail"] == "Ontology tax-1 not found"
+        (run,) = pipeline_run_repo.list()
+        assert run.status == PipelineRunStatus.FAILED
+        assert run.failure_reason == "Ontology tax-1 not found"
+
+    def test_failed_extraction_is_a_500_with_the_reason_and_the_run_id(
+        self, client, registries, pipeline_run_repo
+    ):
+        reason = (
+            "The LLM response for identify_individuals was still incomplete after 3 attempts:"
+            " it holds no complete JSON object (finish_reason=error)"
+        )
+        response = self._post(client, registries, _FailingExtraction(failure_reason=reason))
+
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+        (run,) = pipeline_run_repo.list()
+        assert response.json()["detail"] == f"Extraction failed: {reason} (run {run.id})"
+        assert run.status == PipelineRunStatus.FAILED
+        assert run.failure_reason == f"Extraction failed: {reason}"
 
 
 class TestRunSourceText:

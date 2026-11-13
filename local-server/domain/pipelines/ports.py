@@ -38,6 +38,8 @@ class LLMResponse:
         duration_ms: Time spent processing the request in milliseconds
         finish_reason: Reason the model stopped (e.g., 'stop', 'length')
         model: Name of the model that generated the response
+        cached: True when the provider answered from its response cache
+            instead of asking the model; asking again returns the same response
     """
 
     content: str
@@ -46,12 +48,7 @@ class LLMResponse:
     duration_ms: float
     finish_reason: str
     model: str
-
-
-# finish_reason values that say the content is not the model's whole answer: the
-# provider failed part-way ("error") or the output limit cut it off ("length" from
-# OpenAI and OpenRouter, "max_tokens" from Anthropic)
-INCOMPLETE_FINISH_REASONS = frozenset({"error", "length", "max_tokens"})
+    cached: bool = False
 
 
 class LLMProvider(Protocol):

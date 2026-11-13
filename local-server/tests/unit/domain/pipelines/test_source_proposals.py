@@ -9,11 +9,16 @@ predicate and relationship-type creates.
 """
 
 import asyncio
+from types import SimpleNamespace
 
 import pytest
 
-from domain.pipelines.entities import PipelineType
+from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.exceptions import PipelineInputError
+from domain.pipelines.individual_extraction.orchestrator import (
+    IndividualExtractionOrchestrator,
+    IndividualExtractionState,
+)
 from domain.pipelines.individual_extraction.source_operations import (
     plan_individual_operations,
 )
@@ -126,6 +131,44 @@ def plan(repo, house, triples, dataset="home"):
         source_id=SOURCE,
         page_starts=PAGE_STARTS,
     )
+
+
+CUT_OFF = "The LLM response for identify_individuals was still incomplete after 3 attempts"
+
+
+class ChunkExtraction:
+    """Answers each chunk in turn with its triples, or fails it with a reason (a string)."""
+
+    def __init__(self, *answers):
+        self._answers = list(answers)
+
+    def extract_triples(self, text, ontology_id, model, temperature, **_):
+        answer = self._answers.pop(0)
+        if isinstance(answer, str):
+            return SimpleNamespace(
+                triples=[],
+                warnings=[f"Extraction failed: {answer}"],
+                metadata={},
+                failure_reason=answer,
+            )
+        return SimpleNamespace(triples=answer, warnings=[], metadata={}, failure_reason=None)
+
+
+async def extract_source(proposer, house, run_id, minute, *chunk_answers):
+    """Run the individual-extraction orchestrator over a three-chunk source, proposing for real."""
+    text = " ".join("word " * 11 + "end." for _ in range(300))  # 18,299 characters
+    orchestrator = IndividualExtractionOrchestrator(
+        llm_provider=None,
+        extraction_service=ChunkExtraction(*chunk_answers),
+        run_id=run_id,
+        proposer=proposer,
+    )
+    state = IndividualExtractionState(
+        run_id=run_id,
+        pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+        input_data={**run_input(house, **started(minute)), "text": text, "model": "m"},
+    )
+    return await orchestrator.execute(state)
 
 
 def started(minute):
@@ -499,11 +542,64 @@ class TestProposeIndividuals:
     def test_the_rationale_says_what_the_run_could_not_read(self, service, repo, house):
         note = "Extraction failed for 1 of 3 chunks (chunk 2), so what they hold is missing."
         outcome = SourceProposer(service, repo).propose_individuals(
-            "r", run_input(house), [typing("WRF555", "house_appliance")], [note]
+            "r", run_input(house), [typing("WRF555", "house_appliance")], note
         )
         rationale = service.get(outcome.proposal_id).rationale
         assert rationale.startswith("Individuals and relationships found in the source")
-        assert rationale.endswith(f" as an alternative. {note}")
+        assert rationale.endswith(
+            f" as an alternative. {note} Any earlier proposal for this source stays open."
+        )
+
+    async def test_a_run_with_failed_chunks_leaves_the_earlier_proposal_open(
+        self, service, repo, house
+    ):
+        proposer = SourceProposer(service, repo)
+        whole = await extract_source(
+            proposer, house, "r1", 1, [typing("A", "Business")], [typing("B", "Business")], []
+        )
+        partial = await extract_source(
+            proposer, house, "r2", 2, CUT_OFF, CUT_OFF, [typing("C", "Business")]
+        )
+
+        # The partial run completes and proposes what it read, saying what it lacks
+        assert partial.current_status is PipelineRunStatus.COMPLETED
+        assert [c["index"] for c in partial.result["failed_chunks"]] == [0, 1]
+        newer = service.get(partial.result["proposal_id"])
+        assert [o.status for o in newer.operations] == [OperationStatus.PENDING]
+        assert "Extraction failed for 2 of 3 chunks (chunks 1, 2)" in newer.rationale
+        assert "Any earlier proposal for this source stays open." in newer.rationale
+        # What the earlier, whole run proposed still awaits review
+        older = service.get(whole.result["proposal_id"])
+        assert older.status is ProposalStatus.OPEN
+        assert [o.status for o in older.operations] == [OperationStatus.PENDING] * 2
+
+        # A later run that reads everything supersedes both
+        again = await extract_source(
+            proposer, house, "r3", 3, [typing("A", "Business")], [typing("B", "Business")], []
+        )
+        for earlier in (whole, partial):
+            settled = service.get(earlier.result["proposal_id"])
+            assert settled.status is ProposalStatus.DONE
+            assert {o.reason for o in settled.operations} == {
+                f"superseded by extraction proposal {again.result['proposal_id']}"
+            }
+
+    async def test_failed_chunks_and_nothing_found_elsewhere_is_not_an_empty_text(
+        self, service, repo, house
+    ):
+        proposer = SourceProposer(service, repo)
+        whole = await extract_source(proposer, house, "r1", 1, [typing("A", "Business")], [], [])
+        partial = await extract_source(proposer, house, "r2", 2, CUT_OFF, CUT_OFF, [])
+
+        assert partial.current_status is PipelineRunStatus.COMPLETED
+        assert partial.result["proposal_id"] is None
+        reason = partial.result["no_proposal_reason"]
+        assert reason == (
+            "Extraction failed for 2 of 3 chunks (chunks 1, 2), so what they hold is missing."
+            f" First failure: {CUT_OFF}. The run found no candidates in what it could read."
+        )
+        assert f"Nothing to propose. {reason}" in partial.result["warnings"]
+        assert service.get(whole.result["proposal_id"]).status is ProposalStatus.OPEN
 
     def test_re_extracting_supersedes_the_earlier_open_proposal(self, service, repo, house):
         proposer = SourceProposer(service, repo)

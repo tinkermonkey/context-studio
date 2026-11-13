@@ -174,7 +174,10 @@ class GetRunTool(ToolBase):
         " proposal_id of the change proposal it produced (null until then). A completed"
         " run with a null proposal_id proposed nothing and is done: no_proposal_reason"
         " says why, and skipped_by_reason counts the candidates it skipped for each"
-        " reason. Review a proposal with get_proposal."
+        " reason. An extraction of a source that could not read some of its chunks"
+        " still completes: failed_chunks lists them with each failure_reason, what"
+        " they hold is missing from the proposal, and earlier proposals of the source"
+        " stay open. Review a proposal with get_proposal."
     )
     input_schema = {
         "type": "object",
@@ -194,9 +197,11 @@ class GetRunTool(ToolBase):
         progress = f" ({run.items_done}/{run.items_total})" if run.items_total else ""
         reason = payload["no_proposal_reason"]
         nothing = f", nothing proposed: {reason}" if reason and not run.proposal_id else ""
+        failed = len(payload["failed_chunks"])
+        partial = f", {failed} chunk{'' if failed == 1 else 's'} failed" if failed else ""
         return ToolOutcome(
             content=dumps(payload),
-            summary=f"Run {run.status.value}{progress}{nothing}",
+            summary=f"Run {run.status.value}{progress}{partial}{nothing}",
             entities=_references(run),
         )
 
