@@ -194,7 +194,7 @@ class _RecordingExtraction:
 
     def extract_triples(self, **kwargs):
         self.kwargs = kwargs
-        return SimpleNamespace(triples=[], warnings=[], metadata={})
+        return SimpleNamespace(triples=[], warnings=[], metadata={}, failure_reason=None)
 
 
 class TestIndividualExtractionStagePrompts:

@@ -44,7 +44,9 @@ def run_payload(run: PipelineRun) -> dict[str, Any]:
     A run's status, progress and outcome, as tools report it. A run that
     proposed nothing says why (no_proposal_reason) and how many candidates it
     skipped for each reason (skipped_by_reason). A run on a source counts the
-    sections it left unread for each reason (skipped_sections_by_reason).
+    sections it left unread for each reason (skipped_sections_by_reason) and
+    lists the chunks whose extraction failed (failed_chunks), which its
+    proposal lacks.
     """
     summary = run.output_summary or {}
     return {
@@ -58,6 +60,7 @@ def run_payload(run: PipelineRun) -> dict[str, Any]:
         "no_proposal_reason": summary.get("no_proposal_reason"),
         "skipped_by_reason": summary.get("skipped_by_reason") or {},
         "skipped_sections_by_reason": summary.get("skipped_sections_by_reason") or {},
+        "failed_chunks": summary.get("failed_chunks") or [],
         "failure_reason": run.failure_reason,
         "created_at": run.created_at,
         "started_at": run.started_at,
@@ -171,7 +174,10 @@ class GetRunTool(ToolBase):
         " proposal_id of the change proposal it produced (null until then). A completed"
         " run with a null proposal_id proposed nothing and is done: no_proposal_reason"
         " says why, and skipped_by_reason counts the candidates it skipped for each"
-        " reason. Review a proposal with get_proposal."
+        " reason. An extraction of a source that could not read some of its chunks"
+        " still completes: failed_chunks lists them with each failure_reason, what"
+        " they hold is missing from the proposal, and that proposal supersedes no"
+        " other proposal of the source. Review a proposal with get_proposal."
     )
     input_schema = {
         "type": "object",
@@ -191,9 +197,11 @@ class GetRunTool(ToolBase):
         progress = f" ({run.items_done}/{run.items_total})" if run.items_total else ""
         reason = payload["no_proposal_reason"]
         nothing = f", nothing proposed: {reason}" if reason and not run.proposal_id else ""
+        failed = len(payload["failed_chunks"])
+        partial = f", {failed} chunk{'' if failed == 1 else 's'} failed" if failed else ""
         return ToolOutcome(
             content=dumps(payload),
-            summary=f"Run {run.status.value}{progress}{nothing}",
+            summary=f"Run {run.status.value}{progress}{partial}{nothing}",
             entities=_references(run),
         )
 

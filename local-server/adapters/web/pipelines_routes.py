@@ -106,6 +106,7 @@ from domain.pipelines.entities import (
 )
 from domain.pipelines.exceptions import (
     ApplySelectionError,
+    ExtractionFailedError,
     PipelineExecutionError,
     PipelineExternalServiceError,
     PipelineInputError,
@@ -509,6 +510,12 @@ def _handle_domain_error(exc: Exception) -> tuple[int, str]:
             http_status.HTTP_503_SERVICE_UNAVAILABLE,
             "External service unavailable",
         )
+    elif isinstance(exc, ExtractionFailedError):
+        # An LLM response stayed incomplete: the message is written for the caller.
+        # Any other failed extraction is a PipelineExecutionError, answered below
+        # without its reason, which may quote an internal error
+        _logger.error(f"Extraction failed: {exc}")
+        return (http_status.HTTP_500_INTERNAL_SERVER_ERROR, str(exc))
     elif isinstance(exc, PipelineExecutionError):
         _logger.error(f"Pipeline execution error: {exc}", exc_info=exc)
         return (
@@ -1022,7 +1029,10 @@ async def run_pipeline(
     Invoke a pipeline by type.
 
     The request body structure depends on the pipeline type. Supported types:
-    - individual_extraction: requires text and ontology_id
+    - individual_extraction: requires text and ontology_id. With the default
+      implementation, an unknown ontology_id is a 400, and an extraction that
+      fails because an LLM response stays incomplete is a 500 whose detail
+      gives the reason; with async either fails the run instead
     - schema_extraction: requires documents, optional scope
     - schema_node_grounding: requires node_id (a class) or node_label; optional
       sources (default: the configuration's sources). An unknown node_id is a 400;
@@ -1036,7 +1046,8 @@ async def run_pipeline(
       plan as a change proposal (the run's proposal_id)
 
     Creates a pipeline run, executes it with the registered implementation,
-    and returns the run with execution results. With `async: true` the run is
+    and returns the run with execution results. A run whose execution fails is
+    a 500 whose detail ends with the failed run's id; the run records the reason. With `async: true` the run is
     stored pending and returned at once (202); a background worker executes it.
 
     Args:
@@ -1176,6 +1187,9 @@ async def run_pipeline(
         PipelineExecutionError,
     ) as exc:
         status_code, message = _handle_domain_error(exc)
+        if isinstance(exc, PipelineExecutionError):
+            # The failed run is stored with its reason; name it so the caller can read it
+            message = f"{message} (run {run_id})"
         try:
             repo.update_failure_info(run_id, str(exc), output_summary={"error": message})
             spent = getattr(exc, "llm_metadata", None)
@@ -1190,6 +1204,7 @@ async def run_pipeline(
     except Exception as exc:
         domain_exc = PipelineExecutionError(f"Unexpected orchestrator failure: {str(exc)}")
         status_code, message = _handle_domain_error(domain_exc)
+        message = f"{message} (run {run_id})"
         try:
             repo.update_failure_info(run_id, str(exc), output_summary={"error": str(exc)})
             # Update batch timestamps and status when run fails

@@ -11,10 +11,15 @@ import asyncio
 import json
 import tempfile
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 
+from domain.extraction.services import ExtractionService
 from domain.pipelines.ports import LLMResponse
+from tests.fakes.canon_aware_fake_llm import CanonAwareFakeLLMProvider
+from tests.fakes.fake_llm_provider import FakeLLMProvider as SharedFakeLLMProvider
 from tests.integration.pipelines._harness.cassettes import (
     CassetteLLMProvider,
     CassetteStaleError,
@@ -429,6 +434,59 @@ class TestRecordingLLMProvider:
                     recorder.flush()
             finally:
                 os.chmod(cassette_path.parent, 0o755)
+
+
+class TestForget:
+    """The doubles take the port's forget(), so a rejected response is retried under them."""
+
+    REQUEST = dict(
+        system_prompt="sys",
+        user_prompt="user",
+        model="m",
+        temperature=0.0,
+        max_tokens=8000,
+        response_format="json",
+    )
+
+    def test_recorder_passes_forget_to_the_provider_it_wraps(self, tmp_path):
+        delegate = Mock()
+        RecordingLLMProvider(delegate, tmp_path / "c.json").forget(**self.REQUEST)
+        delegate.forget.assert_called_once_with(**self.REQUEST)
+
+    @pytest.mark.parametrize("fake", [SharedFakeLLMProvider, CanonAwareFakeLLMProvider])
+    def test_recorder_over_a_shared_fake_forgets_without_error(self, fake, tmp_path):
+        # forget() uses no state, so the fake needs no setup
+        recorder = RecordingLLMProvider(fake.__new__(fake), tmp_path / "c.json")
+        recorder.forget(**self.REQUEST)
+        recorder.forget("sys", "user", "m")
+
+    def test_cassette_provider_has_nothing_to_forget(self, tmp_path):
+        path = tmp_path / "c.json"
+        path.write_text("{}")
+        CassetteLLMProvider(path).forget(**self.REQUEST)
+
+    def test_extraction_under_a_recorder_over_a_fake_reports_an_incomplete_response(self, tmp_path):
+        # The fake answers "{}" every time: the retry must run, not die on forget()
+        fake = SharedFakeLLMProvider(response_content="{}")
+        repo = Mock()
+        repo.get_taxonomy.return_value = SimpleNamespace(id="tax-1", title="Tools")
+        repo.list_concept_schemes.return_value = []
+        service = ExtractionService(
+            ontology_repo=repo,
+            embedding_service=None,
+            llm=RecordingLLMProvider(fake, tmp_path / "c.json"),
+            nlp=None,
+            reference_sources=[],
+            event_publisher=Mock(),
+            extraction_repo=None,
+            extraction_run_repo=Mock(),
+        )
+
+        result = service.extract_triples("Nextflow runs on Slurm.", "tax-1", "m", 0.0)
+
+        assert result.incomplete_response is True
+        assert "its JSON has no triples list" in result.failure_reason
+        assert fake.call_count == 3
 
 
 class TestCassetteLLMProvider:
