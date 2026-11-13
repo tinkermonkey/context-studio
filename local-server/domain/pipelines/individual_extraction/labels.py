@@ -17,12 +17,17 @@ A diagram letter is not always a mere callout: "Screw (B)" and "Screw (D)" are
 two parts of one diagram. `LabelKeys` keys the labels found together (one
 run's triples, one class's existing individuals) and keeps the letter in the
 key and the shown label when the same name is found with different letters.
+
+Nor is a corporate suffix always a mere variant: "Wikimedia Enterprise" can be
+a product and "Wikimedia Enterprise LLC" the company behind it. Given the
+classes a run typed its labels with, `LabelKeys` keeps the suffix in the key
+when the name with a suffix and the name without one share no class.
 """
 
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable
+from collections.abc import Hashable, Iterable
 
 # A trailing diagram callout: "adhesive disk (A)"
 _DIAGRAM_LETTER = re.compile(r"\s*\(\s*([A-Za-z])\s*\)\s*$")
@@ -30,6 +35,8 @@ _DIAGRAM_LETTER = re.compile(r"\s*\(\s*([A-Za-z])\s*\)\s*$")
 _KEY_LETTER = re.compile(r"\([a-z]\)")
 _APOSTROPHES = re.compile(r"['‘’ʼ`´]")
 _CORPORATE_SUFFIXES = frozenset({"inc", "incorporated", "corp", "corporation", "llc", "ltd", "co"})
+# A corporate suffix kept in a key, whichever suffix it was: "wikimedia enterprise (inc)"
+_CORPORATE_MARK = "(inc)"
 # Punctuation left dangling once a corporate suffix is dropped: "Moen, Inc.", "Smith & Co."
 _DANGLING = ",&"
 _TRAILING_PUNCTUATION = ".,;:"
@@ -54,7 +61,7 @@ def individual_key(label: str | None) -> str:
     True
     """
     tokens = _APOSTROPHES.sub("", surface_label(label)).split()
-    while len(tokens) > 1 and tokens[-1].lower().strip(".,") in _CORPORATE_SUFFIXES:
+    while _ends_with_corporate_suffix(tokens):
         tokens.pop()
         while len(tokens) > 1 and not tokens[-1].strip(_DANGLING):
             tokens.pop()
@@ -75,21 +82,47 @@ class LabelKeys:
     label shown, and the name without a letter ("Screw") is another individual.
     With one letter only, the letter is a callout and drops ("screws (D)" is
     "Screw").
+
+    ``typed`` says which classes a run typed the labels with, as (label, class)
+    pairs. When a name is typed both with a corporate suffix and without one,
+    and the two forms share no class ("Wikimedia Enterprise" a product,
+    "Wikimedia Enterprise LLC" a business), they are different things: the
+    suffixed labels get a key of their own ("wikimedia enterprise (inc)"), so
+    each keeps its own label. Forms that share a class ("Moen" and "Moen Inc.",
+    both businesses), or of which only one is typed, are one individual.
     """
 
-    def __init__(self, labels: Iterable[str | None]) -> None:
+    def __init__(
+        self,
+        labels: Iterable[str | None],
+        typed: Iterable[tuple[str | None, Hashable]] = (),
+    ) -> None:
         letters: dict[str, set[str]] = {}
         for label in labels:
             letter = _diagram_letter(label)
             if letter is not None:
                 letters.setdefault(individual_key(label), set()).add(letter)
         self._lettered = {key for key, found in letters.items() if len(found) > 1}
+        # Key -> the classes of its labels without a corporate suffix, and with one
+        plain: dict[str, set[Hashable]] = {}
+        corporate: dict[str, set[Hashable]] = {}
+        for label, class_id in typed:
+            forms = corporate if _has_corporate_suffix(label) else plain
+            forms.setdefault(individual_key(label), set()).add(class_id)
+        self._corporate = {
+            key
+            for key, classes in corporate.items()
+            if key in plain and plain[key].isdisjoint(classes)
+        }
 
     def key(self, label: str | None) -> str:
         """A label's merge key among these labels."""
-        key = individual_key(label)
+        name = individual_key(label)
+        key = name
+        if name in self._corporate and _has_corporate_suffix(label):
+            key = f"{name} {_CORPORATE_MARK}"
         letter = _diagram_letter(label)
-        return f"{key} ({letter.lower()})" if letter and key in self._lettered else key
+        return f"{key} ({letter.lower()})" if letter and name in self._lettered else key
 
     def preferred_label(self, labels: Iterable[str | None]) -> str:
         """
@@ -100,7 +133,7 @@ class LabelKeys:
         shown = preferred_label(labels)
         for label in labels:
             letter = _diagram_letter(label)
-            if letter and self.key(label) != individual_key(label):
+            if letter and individual_key(label) in self._lettered:
                 return f"{shown} ({letter})"
         return shown
 
@@ -124,6 +157,14 @@ def preferred_label(labels: Iterable[str | None]) -> str:
             item[0],
         ),
     )[1]
+
+
+def without_corporate_mark(key: str) -> str:
+    """
+    A key without the corporate suffix `LabelKeys` kept in it
+    ("wikimedia enterprise (inc)" -> "wikimedia enterprise"); any other key as is.
+    """
+    return key.removesuffix(f" {_CORPORATE_MARK}")
 
 
 def head_word(key: str) -> str | None:
@@ -151,6 +192,16 @@ def _diagram_letter(label: str | None) -> str | None:
     if match is None or not text[: match.start()].strip():
         return None
     return match.group(1).upper()
+
+
+def _ends_with_corporate_suffix(tokens: list[str]) -> bool:
+    """Whether a name's last word is a corporate suffix (a suffix alone is the name)."""
+    return len(tokens) > 1 and tokens[-1].lower().strip(".,") in _CORPORATE_SUFFIXES
+
+
+def _has_corporate_suffix(label: str | None) -> bool:
+    """Whether a label ends with a corporate suffix that `individual_key` drops."""
+    return _ends_with_corporate_suffix(_APOSTROPHES.sub("", surface_label(label)).split())
 
 
 def _plain(label: str) -> str:

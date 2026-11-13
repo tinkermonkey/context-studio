@@ -7,7 +7,9 @@ extraction service decides: `is_typing_triple`): one
 create per mention, in every class it was typed with. Mentions are the same
 when their labels share a key among the run's individual labels (`LabelKeys`,
 #1575: "screws (D)" and "Screw", "Moen Inc." and "Moen", but not "Screw (B)"
-and "Screw (D)"); the create is titled with their preferred label. A
+and "Screw (D)", nor a name and the same name with a corporate suffix typed
+with different classes: "Wikimedia Enterprise" a product and "Wikimedia
+Enterprise LLC" a business); the create is titled with their preferred label. A
 one-word mention that is the head word of exactly one other mention's label,
 typed with all of its classes, is that mention ("bracket" is "Mounting
 Bracket"), unless it names an existing individual. A mention recognized as an
@@ -53,6 +55,7 @@ from domain.pipelines.individual_extraction.apply_service import (
 from domain.pipelines.individual_extraction.labels import (
     LabelKeys,
     head_word,
+    without_corporate_mark,
     without_leading_word,
 )
 from domain.pipelines.source_operations import (
@@ -112,13 +115,8 @@ def plan_individual_operations(
     """
     plan = OperationPlan()
     aliases = _class_aliases(repo, taxonomy_id)
-    keys = LabelKeys(
-        node.get("label")
-        for triple in triples
-        for node in (triple.get("subject"), triple.get("object"))
-        if isinstance(node, dict) and node.get("kind") == "individual"
-    )
-    individuals: dict[str, _Individual] = {}
+    # Each typing triple of a labelled individual, with its label and classes
+    typings: list[tuple[dict[str, Any], str, list[str]]] = []
     for triple in triples:
         subject = triple.get("subject") or {}
         if subject.get("kind") != "individual" or not is_typing_triple(triple):
@@ -131,6 +129,20 @@ def plan_individual_operations(
         if not class_ids:
             plan.skip(label, "missing_class")
             continue
+        typings.append((triple, label, class_ids))
+
+    keys = LabelKeys(
+        (
+            node.get("label")
+            for triple in triples
+            for node in (triple.get("subject"), triple.get("object"))
+            if isinstance(node, dict) and node.get("kind") == "individual"
+        ),
+        typed=((label, class_id) for _, label, class_ids in typings for class_id in class_ids),
+    )
+    individuals: dict[str, _Individual] = {}
+    for triple, label, class_ids in typings:
+        subject = triple.get("subject") or {}
         individual = individuals.setdefault(keys.key(label), _Individual())
         individual.labels.append(label)
         individual.class_ids += [c for c in class_ids if c not in individual.class_ids]
@@ -377,8 +389,10 @@ class _ExistingKeys:
         Ids of the existing individuals of the classes whose key is ``key``, then
         of those whose key is ``key`` without its first word when it has three
         or more (a leading brand or maker: "moen handheld shower" ->
-        "handheld shower", but "hand shower" is not "shower").
+        "handheld shower", but "hand shower" is not "shower"). A corporate
+        suffix kept in ``key`` is left out: within a class it is only a variant.
         """
+        key = without_corporate_mark(key)
         found: list[str] = []
         for wanted in (key, without_leading_word(key)):
             for class_id in class_ids:
