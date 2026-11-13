@@ -5,12 +5,15 @@ Tests verify the full pipeline type enumeration, implementation discovery,
 and pipeline run management via REST API.
 """
 
+import asyncio
 import tempfile
-from types import SimpleNamespace
+import threading
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
+import httpx
 import pytest
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
@@ -22,6 +25,7 @@ from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
 from adapters.web.extraction_examples import load_extraction_examples
 from adapters.web.pipelines_routes import router
+from domain.extraction.exceptions import InvalidInputError
 from domain.pipelines.apply_result import ApplyResult
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.exceptions import (
@@ -30,10 +34,10 @@ from domain.pipelines.exceptions import (
     PipelineInputError,
     PipelineStorageError,
 )
-from domain.extraction.exceptions import InvalidInputError
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
 )
+from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -46,8 +50,9 @@ from domain.pipelines.schema_node_grounding.scoring import (
     GroundingCandidate,
     ScoredCandidate,
 )
-from tests.utils.parent_rows import create_batch_row
+from tests.fakes.fake_llm_provider import FakeLLMProvider
 from tests.utils.datasets import save_in_dataset
+from tests.utils.parent_rows import create_batch_row
 
 # Constant for mocking the orchestrator creation function
 ORCHESTRATOR_PATCH_PATH = "adapters.web.pipelines_routes.create_orchestrator"
@@ -1575,6 +1580,66 @@ class TestIndividualExtractionFailures:
         (run,) = pipeline_run_repo.list()
         assert run.status == PipelineRunStatus.FAILED
         assert run.llm_metadata == {"model": "m", "tokens_used": 120, "duration_ms": 7}
+
+
+class _BlockingLLM(FakeLLMProvider):
+    """An LLM whose call blocks its thread until released, as a slow provider's does."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.called = threading.Event()
+        self.release = threading.Event()
+
+    def complete(self, *args, **kwargs):
+        self.called.set()
+        # Bounded: were the call made on the event loop, nothing could release it
+        self.release.wait(timeout=1.0)
+        return super().complete(*args, **kwargs)
+
+
+class TestSynchronousRunLeavesTheEventLoopFree:
+    """A synchronous run blocks a worker thread, not the server's event loop."""
+
+    async def test_other_requests_are_served_while_the_runs_llm_call_blocks(
+        self, pipeline_run_repo, batch_repo, registries
+    ):
+        llm = _BlockingLLM()
+        registries["implementation_registry"].register_impl(
+            PipelineType.NO_OP, "default", NoOpPipelineOrchestrator
+        )
+        registries["config_registry"].register(
+            PipelineType.NO_OP, "default", "default", {"model": "test-model"}
+        )
+        app = FastAPI()
+        app.include_router(router)
+        app.state.pipeline_run_repo = pipeline_run_repo
+        app.state.batch_repo = batch_repo
+        app.state.implementation_registry = registries["implementation_registry"]
+        app.state.config_registry = registries["config_registry"]
+        app.state.llm_router = llm
+
+        # One event loop serves both requests, as the server's does
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://test"
+        ) as http:
+            run_request = asyncio.create_task(http.post("/api/pipelines/no_op/run", json={}))
+            try:
+                while not (llm.called.is_set() or run_request.done()):
+                    await asyncio.sleep(0.005)
+                listed = await http.get("/api/pipelines/runs")
+                answered_mid_run = not run_request.done()
+            finally:
+                llm.release.set()
+            response = await run_request
+
+        assert answered_mid_run, "the run finished before another request was answered"
+        # The run's own thread wrote its status; this loop read it meanwhile
+        assert [run["status"] for run in listed.json()["items"]] == ["running"]
+        assert response.status_code == status.HTTP_201_CREATED
+        body = response.json()
+        assert body["status"] == "completed"
+        assert body["output_summary"]["status"] == "completed"
+        assert llm.call_count == 1
 
 
 class TestRunSourceText:
