@@ -25,6 +25,8 @@ local-server/config.json
 # Unused leftover at the repo root; ignored so a key put there can't be committed
 /config.json
 local-server/downloads/
+# Saved originals of a workspace's sources, kept beside local.db
+local-server/sources/
 local-server/logs/
 local-server/reports/
 local-server/.benchmark-cache/
