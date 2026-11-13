@@ -36,7 +36,9 @@ class OpenRouterProvider:
 
     Routes requests to any OpenRouter-available model. Supports response
     caching keyed by (prompt_hash, model, temperature, max_tokens, response_format)
-    with a bounded LRU cache.
+    with a bounded LRU cache. A response the provider ended with an error is
+    not cached; whether any other response is what its caller needed is the
+    caller's call, which drops one it cannot use with forget().
     """
 
     BASE_URL = "https://openrouter.ai/api/v1"
@@ -197,6 +199,14 @@ class OpenRouterProvider:
                 finish_reason=finish_reason,
                 model=model,
             )
+
+            # A response the provider ended with an error is returned but never
+            # cached, so asking again reaches the model
+            if finish_reason == "error":
+                logger.warning(
+                    f"OpenRouter response for model {model} ended with an error;" " not caching it"
+                )
+                return llm_response
 
             # Cache result with LRU eviction
             with self._cache_lock:
@@ -394,6 +404,22 @@ class OpenRouterProvider:
         prompt_hash = hashlib.sha256(combined.encode()).hexdigest()[:16]
         format_str = response_format or "text"
         return f"{prompt_hash}:{model}:{temperature}:{max_tokens}:{format_str}"
+
+    def forget(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format: Literal["json", "text"] | None = None,
+    ) -> None:
+        """Drop the cached response to this request, if there is one."""
+        cache_key = self._make_cache_key(
+            system_prompt, user_prompt, model, temperature, max_tokens, response_format
+        )
+        with self._cache_lock:
+            self._response_cache.pop(cache_key, None)
 
     def clear_cache(self) -> None:
         """Clear the response cache."""

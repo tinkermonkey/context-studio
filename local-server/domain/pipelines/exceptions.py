@@ -52,3 +52,12 @@ class PipelineExecutionError(PipelineError):
     def __init__(self, message: str = "", llm_metadata: dict | None = None) -> None:
         super().__init__(message)
         self.llm_metadata = llm_metadata
+
+
+class ExtractionFailedError(PipelineExecutionError):
+    """
+    Raised when a run's extraction failed because an LLM response stayed
+    incomplete. The message is that reason, written for the run's caller.
+    """
+
+    pass

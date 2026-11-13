@@ -89,6 +89,26 @@ class TestLLMProviderRouter:
         router._providers.clear()
         return router
 
+    def test_forget_reaches_every_provider(self):
+        """Any provider may hold the response, so each is told to drop it."""
+        router = self.create_test_router()
+        router._providers["openrouter"] = Mock()
+        router._providers["anthropic"] = Mock()
+
+        router.forget(
+            "sys", "user", "gpt-4", temperature=0.0, max_tokens=8000, response_format="json"
+        )
+
+        for provider in router._providers.values():
+            provider.forget.assert_called_once_with(
+                system_prompt="sys",
+                user_prompt="user",
+                model="gpt-4",
+                temperature=0.0,
+                max_tokens=8000,
+                response_format="json",
+            )
+
     def test_router_init_with_no_keys(self):
         """Router raises ValueError when initialized with no API keys."""
         with pytest.raises(ValueError) as exc_info:

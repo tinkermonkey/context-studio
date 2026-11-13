@@ -17,12 +17,16 @@ proposal, and its output_summary says why (`no_proposal_reason`, with
 A new proposal supersedes the open proposal of an older extraction of the
 same source by the same pipeline into the same dataset from the same pages:
 what it still awaits is rejected (no decision is recorded), since the new run
-repeats what still applies. Extractions are ordered by when they started, not
+repeats what still applies. A run that could not read all of its text (chunks
+whose extraction failed) repeats only part of it, so its proposal is partial
+(client_metadata `partial`): it supersedes no other proposal, older or newer,
+and its rationale says what it lacks. A newer whole proposal still supersedes
+it. Extractions are ordered by when they started, not
 when they finished: a run that finishes after a newer extraction of the same
 pages has proposed is superseded by it instead. Superseding is best effort; a
 failure is a warning on the run. The proposal's client_metadata records
-`{source_id, run_id, pipeline, pages, extraction_id, extraction_started_at}`,
-which is how other extractions are found and ordered.
+`{source_id, run_id, pipeline, pages, extraction_id, extraction_started_at,
+partial}`, which is how other extractions are found and ordered.
 
 Proposing to a taxonomy that mirrors an external source is refused for
 schema extraction unless its client asked over MCP (`check_may_propose`), as
@@ -114,7 +118,11 @@ class SourceProposer:
         ensure_may_propose_to(taxonomy, input_data)
 
     def propose_individuals(
-        self, run_id: str, input_data: Mapping[str, Any], triples: Sequence[dict[str, Any]]
+        self,
+        run_id: str,
+        input_data: Mapping[str, Any],
+        triples: Sequence[dict[str, Any]],
+        unread: str | None = None,
     ) -> ProposalOutcome:
         """
         Propose an individual-extraction run's merged triples (individual and
@@ -125,6 +133,10 @@ class SourceProposer:
             input_data: The run's input: ontology_id, dataset_id, source_id,
                 source_title, page_starts
             triples: The run's merged triples
+            unread: A sentence saying what the run could not read (chunks whose
+                extraction failed); None when it read everything. Such a run
+                is partial: its rationale and no_proposal_reason say so, and
+                its proposal supersedes no other
         """
         source_id = str(input_data["source_id"])
         plan = plan_individual_operations(
@@ -142,6 +154,7 @@ class SourceProposer:
             str(input_data["ontology_id"]),
             _text(input_data.get("dataset_id")),
             plan,
+            unread,
         )
 
     def propose_schema(
@@ -177,6 +190,7 @@ class SourceProposer:
         taxonomy_id: str,
         dataset_id: str | None,
         plan: OperationPlan,
+        unread: str | None = None,
     ) -> ProposalOutcome:
         source_id = str(input_data["source_id"])
         source_title = _text(input_data.get("source_title")) or source_id
@@ -190,7 +204,7 @@ class SourceProposer:
                     title=f"Extraction: {source_title[:MAX_TITLE_SOURCE_CHARS]}",
                     operations=[row.draft for row in rows],
                     source=ProposalSource.PIPELINE,
-                    rationale=_rationale(pipeline, source_title, plan, refused),
+                    rationale=_rationale(pipeline, source_title, plan, refused, unread),
                     source_detail=f"{pipeline.value} run {run_id} on source {source_id}",
                     client_metadata={
                         "source_id": source_id,
@@ -199,6 +213,7 @@ class SourceProposer:
                         "pages": _text(input_data.get("pages")),
                         "extraction_id": _text(input_data.get("extraction_id")),
                         "extraction_started_at": _text(input_data.get("extraction_started_at")),
+                        "partial": unread is not None,
                     },
                     dataset_id=dataset_id,
                 )
@@ -208,7 +223,7 @@ class SourceProposer:
 
         warnings = [f"Refused {r['label']}: {r['error']}" for r in refused]
         if proposal is None:
-            reason = _no_proposal_reason(plan.skipped, refused)
+            reason = _no_proposal_reason(plan.skipped, refused, unread)
             warnings.append(f"Nothing to propose. {reason}")
             return ProposalOutcome(None, 0, refused, plan.skipped, warnings, reason)
         warnings += self._supersede(proposal)
@@ -222,8 +237,10 @@ class SourceProposer:
         source, pipeline, dataset and page selection: what an older
         extraction's open proposal still awaits is rejected; and when a newer
         extraction already proposed (this run finished late), what this one
-        awaits is rejected instead. Best effort: a failure is logged and
-        returned as a warning, and never undoes the new proposal.
+        awaits is rejected instead. Only a whole proposal supersedes: a
+        partial one (its run could not read all of its text) rejects nothing
+        and is never why another is rejected. Best effort: a failure is logged
+        and returned as a warning, and never undoes the new proposal.
 
         Returns:
             Warnings for the run, one per proposal that could not be settled
@@ -239,12 +256,14 @@ class SourceProposer:
             _logger.exception("Could not list earlier extractions of proposal %s", proposal.id)
             return [f"Could not supersede earlier extractions: {exc}"]
         started = _started_at(proposal)
-        newer = [o for o in others if _started_at(o) > started]
+        newer = [o for o in others if _started_at(o) > started and not _is_partial(o)]
         older = [o for o in others if _started_at(o) < started]
         if newer:
             newest = max(newer, key=_started_at)
             older = [proposal]
             superseding = newest
+        elif _is_partial(proposal):
+            return warnings
         else:
             superseding = proposal
         for other in older:
@@ -290,6 +309,11 @@ def _same_extraction_scope(one: ChangeProposal, other: ChangeProposal) -> bool:
         and all(a.get(key) == b.get(key) for key in ("source_id", "pipeline", "pages"))
         and one.dataset_id == other.dataset_id
     )
+
+
+def _is_partial(proposal: ChangeProposal) -> bool:
+    """Whether the proposal's run could not read all of its text."""
+    return bool((proposal.client_metadata or {}).get("partial"))
 
 
 def _started_at(proposal: ChangeProposal) -> datetime:
@@ -347,14 +371,23 @@ def skipped_by_reason(skipped: Sequence[Mapping[str, str]]) -> dict[str, int]:
     return dict(sorted(counts.items(), key=lambda kv: kv[1], reverse=True))
 
 
-def _no_proposal_reason(skipped: list[dict[str, str]], refused: list[dict[str, str]]) -> str:
-    """Why a run proposed nothing, as a sentence."""
+def _no_proposal_reason(
+    skipped: list[dict[str, str]], refused: list[dict[str, str]], unread: str | None = None
+) -> str:
+    """
+    Why a run proposed nothing, as a sentence. A run that could not read all
+    of its text says that first, and never that the text holds no candidates.
+    """
     if refused:
-        return f"All {len(refused)} operations were refused."
-    if skipped:
+        reason = f"All {len(refused)} operations were refused."
+    elif skipped:
         counts = ", ".join(f"{reason} {n}" for reason, n in skipped_by_reason(skipped).items())
-        return f"None of the {len(skipped)} candidates made an operation ({counts})."
-    return "The run found no candidates in the text."
+        reason = f"None of the {len(skipped)} candidates made an operation ({counts})."
+    elif unread:
+        reason = "The run found no candidates in what it could read."
+    else:
+        reason = "The run found no candidates in the text."
+    return f"{_sentence(unread)} {reason}" if unread else reason
 
 
 _RATIONALES = {
@@ -372,11 +405,17 @@ _RATIONALES = {
 
 
 def _rationale(
-    pipeline: PipelineType, source_title: str, plan: OperationPlan, refused: list[dict[str, str]]
+    pipeline: PipelineType,
+    source_title: str,
+    plan: OperationPlan,
+    refused: list[dict[str, str]],
+    unread: str | None = None,
 ) -> str:
-    """The proposal's rationale, saying what the run found and could not propose."""
+    """The proposal's rationale, saying what the run found, could not read and could not propose."""
     text = _RATIONALES[pipeline].format(title=source_title)
     notes = []
+    if unread:
+        notes.append(f"{_sentence(unread)} This proposal supersedes no other for this source")
     if plan.skipped:
         listed = [f"{s['label']} ({s['reason']})" for s in plan.skipped[:MAX_LISTED]]
         more = len(plan.skipped) - MAX_LISTED
@@ -392,6 +431,11 @@ def _rationale(
             + (f"; and {more} more" if more > 0 else "")
         )
     return (text + (f" {'. '.join(notes)}." if notes else ""))[:8000]
+
+
+def _sentence(text: str) -> str:
+    """The text, ending in one full stop."""
+    return text.rstrip(".") + "."
 
 
 def _text(value: Any) -> str | None:

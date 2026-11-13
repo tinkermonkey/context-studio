@@ -1914,7 +1914,10 @@ export interface paths {
      * @description Invoke a pipeline by type.
      *
      *     The request body structure depends on the pipeline type. Supported types:
-     *     - individual_extraction: requires text and ontology_id
+     *     - individual_extraction: requires text and ontology_id. With the default
+     *       implementation, an unknown ontology_id is a 400, and an extraction that
+     *       fails because an LLM response stays incomplete is a 500 whose detail
+     *       gives the reason; with async either fails the run instead
      *     - schema_extraction: requires documents, optional scope
      *     - schema_node_grounding: requires node_id (a class) or node_label; optional
      *       sources (default: the configuration's sources). An unknown node_id is a 400;
@@ -1928,7 +1931,8 @@ export interface paths {
      *       plan as a change proposal (the run's proposal_id)
      *
      *     Creates a pipeline run, executes it with the registered implementation,
-     *     and returns the run with execution results. With `async: true` the run is
+     *     and returns the run with execution results. A run whose execution fails is
+     *     a 500 whose detail ends with the failed run's id; the run records the reason. With `async: true` the run is
      *     stored pending and returned at once (202); a background worker executes it.
      *
      *     Args:

@@ -329,6 +329,26 @@ class LLMProviderRouter:
             " that supports the model, if any."
         )
 
+    def forget(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format: Literal["json", "text"] | None = None,
+    ) -> None:
+        """Drop the response any provider keeps for this request."""
+        for provider in self._providers.values():
+            provider.forget(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                response_format=response_format,
+            )
+
     def is_model_available(self, model: str) -> bool:
         """
         Check if a model is available from any provider.
