@@ -11,7 +11,9 @@ individual's offers it as a near match.
 Merging must not go too far: the same name with different diagram letters
 ("Screw (B)", "Screw (D)") is different parts, plural-only nouns ("Safety
 Glasses") are not plurals, and a two-word name is not its head noun ("Hand
-Shower" is not "Shower").
+Shower" is not "Shower"), and a name with a corporate suffix typed with another
+class than the name without one is another thing ("Wikimedia Enterprise" the
+product, "Wikimedia Enterprise LLC" the business).
 """
 
 import os
@@ -30,6 +32,7 @@ from domain.pipelines.individual_extraction.labels import (
     individual_key,
     preferred_label,
     surface_label,
+    without_corporate_mark,
     without_leading_word,
 )
 from tests.unit.domain.pipelines.test_source_proposals import (  # noqa: F401 - fixtures
@@ -133,6 +136,42 @@ class TestLabelKeys:
         keys = LabelKeys(["Screw (B)", "screws (D)", "Screw (D)"])
         assert keys.preferred_label(["screws (D)", "Screw (D)"]) == "Screw (D)"
         assert keys.preferred_label(["Screw (B)"]) == "Screw (B)"
+
+    @pytest.mark.parametrize(
+        "typed",
+        [
+            [],  # no classes known
+            [("Moen", "business"), ("Moen Inc.", "business"), ("Moen Incorporated", "business")],
+            [("Moen", "business"), ("Moen Inc.", "business"), ("Moen Inc.", "brand")],
+            [("Moen Inc.", "business")],  # the name without a suffix is not typed
+            [("Moen", "product")],  # nor the name with one
+        ],
+    )
+    def test_a_corporate_suffix_is_a_variant_unless_typed_with_another_class(self, typed):
+        keys = LabelKeys(["Moen", "Moen Inc.", "Moen Incorporated"], typed=typed)
+        assert keys.key("Moen") == keys.key("Moen Inc.") == keys.key("Moen Incorporated")
+
+    def test_a_corporate_suffix_typed_with_another_class_is_another_thing(self):
+        labels = ["Wikimedia Enterprise", "Wikimedia Enterprise LLC", "Wikimedia Enterprise, Inc."]
+        keys = LabelKeys(
+            [*labels, "Moen", "Moen Inc."],
+            typed=[
+                ("Wikimedia Enterprise", "product"),
+                ("Wikimedia Enterprise LLC", "business"),
+                ("Moen", "business"),
+                ("Moen Inc.", "business"),
+            ],
+        )
+        assert keys.key("Wikimedia Enterprise") != keys.key("Wikimedia Enterprise LLC")
+        assert keys.key("wikimedia enterprises") == keys.key("Wikimedia Enterprise")
+        # Any suffix names the business
+        assert keys.key("Wikimedia Enterprise, Inc.") == keys.key("Wikimedia Enterprise LLC")
+        assert keys.preferred_label(labels[1:]) == "Wikimedia Enterprise LLC"
+        assert keys.preferred_label(labels[:1]) == "Wikimedia Enterprise"
+        assert keys.key("Moen") == keys.key("Moen Inc.")
+        assert without_corporate_mark(keys.key("Wikimedia Enterprise LLC")) == keys.key(
+            "Wikimedia Enterprise"
+        )
 
 
 def _typing(label, class_label="Part", quote=None, start=None):
@@ -238,6 +277,36 @@ class TestChunkMerge:
             ("Screw (D)", "Washer (G)"),
         ]
 
+    def test_a_corporate_suffix_typed_with_another_class_stays_another_individual(self):
+        first = Chunk(index=0, start=0, end=100)
+        second = Chunk(index=1, start=100, end=200)
+        merged = merge_chunk_triples(
+            [
+                (
+                    first,
+                    [
+                        _typing("Wikimedia Enterprise", "Product", quote="Enterprise", start=1),
+                        _typing("Wikimedia Enterprise LLC", "Business", quote="LLC", start=30),
+                    ],
+                ),
+                (
+                    second,
+                    [
+                        _typing("Wikimedia Enterprise", "Product", quote="Enterprise", start=5),
+                        _relation("Wikimedia Enterprise, LLC", "Wikimedia Enterprise", "runs", 40),
+                    ],
+                ),
+            ]
+        )
+        assert [
+            (t["subject"]["label"], t["object"]["label"], [p["start"] for p in t["passages"]])
+            for t in merged
+        ] == [
+            ("Wikimedia Enterprise", "Product", [1, 105]),
+            ("Wikimedia Enterprise LLC", "Business", [30]),
+            ("Wikimedia Enterprise LLC", "Wikimedia Enterprise", [140]),
+        ]
+
     def test_a_recognized_individual_keeps_its_title_and_lends_it(self):
         chunk = Chunk(index=0, start=0, end=100)
         recognized = _typing("Moen Incorporated", "Business")
@@ -276,6 +345,83 @@ class TestPlannedIndividuals:
         moen = result.operations[0].draft
         assert moen.probability == 0.9
         assert len(moen.evidence) == 2
+
+    def test_a_corporate_suffix_typed_with_the_same_class_is_one_create(self, repo, house):
+        result = plan(
+            repo,
+            house,
+            [
+                typing("Moen", "house_business", [passage("Moen", 1, 1)]),
+                typing("Moen Inc.", "house_business", [passage("Moen Inc.", 110, 2)]),
+                typing("Moen Incorporated", "house_business", [passage("Moen", 150, 2)]),
+                # Typed with another class too, the forms still share one
+                typing("Moen Inc.", "house_appliance"),
+            ],
+        )
+        [create] = result.operations
+        assert create.draft.fields == {
+            "title": "Moen",
+            "class_ids": [house["business"], house["appliance"]],
+        }
+        assert [e["start"] for e in create.draft.evidence] == [1, 110, 150]
+
+    def test_a_corporate_suffix_typed_with_another_class_is_another_create(self, repo, house):
+        result = plan(
+            repo,
+            house,
+            [
+                typing("Wikimedia Enterprise", "house_appliance", [passage("Enterprise", 1, 1)]),
+                typing("Wikimedia Enterprise LLC", "house_business", [passage("LLC", 110, 2)]),
+                typing("Wikimedia Enterprise", "house_appliance", [passage("Enterprise", 150, 2)]),
+                relation("Wikimedia Enterprise", house["made_by"], "Wikimedia Enterprise, LLC"),
+            ],
+        )
+        creates = [o.draft for o in result.operations if o.draft.kind == "individual"]
+        assert [(d.fields["title"], d.fields["class_ids"]) for d in creates] == [
+            ("Wikimedia Enterprise", [house["appliance"]]),
+            ("Wikimedia Enterprise LLC", [house["business"]]),
+        ]
+        assert [[e["start"] for e in d.evidence] for d in creates] == [[1, 150], [110]]
+        [relationship] = [o.draft for o in result.operations if o.draft.kind == "relationship"]
+        assert relationship.fields["source_id"] == "$i1"
+        assert relationship.fields["target_id"] == "$i2"
+        assert result.skipped == []
+
+    @pytest.mark.parametrize(
+        "class_label, starts, made_by",
+        [
+            # The business: it folds into the name with the suffix
+            ("house_business", [[1], [110, 150]], ["$i2"]),
+            # The product, which nothing is made by
+            ("house_appliance", [[1, 150], [110]], []),
+        ],
+    )
+    def test_a_head_word_mention_folds_into_the_form_of_its_class(
+        self, repo, house, class_label, starts, made_by
+    ):
+        result = plan(
+            repo,
+            house,
+            [
+                typing("Wikimedia Enterprise", "house_appliance", [passage("Enterprise", 1, 1)]),
+                typing("Wikimedia Enterprise LLC", "house_business", [passage("LLC", 110, 2)]),
+                typing("Enterprise", class_label, [passage("Enterprise", 150, 2)]),
+                typing("Kitchen sink", "house_appliance"),
+                relation("Kitchen sink", house["made_by"], "Enterprise"),
+            ],
+        )
+        creates = [o.draft for o in result.operations if o.draft.kind == "individual"]
+        assert [d.fields["title"] for d in creates] == [
+            "Wikimedia Enterprise",
+            "Wikimedia Enterprise LLC",
+            "Kitchen sink",
+        ]
+        assert [[e["start"] for e in d.evidence] for d in creates[:2]] == starts
+        # A relationship end named by the head word is the mention it folded into
+        targets = [
+            o.draft.fields["target_id"] for o in result.operations if o.draft.kind == "relationship"
+        ]
+        assert targets == made_by
 
     def test_relationships_resolve_any_form_of_the_name(self, repo, house):
         result = plan(
@@ -440,6 +586,20 @@ class TestLabelNearMatches:
         result = plan(repo, house, [typing("Whirlpool Inc.", "house_business")])
         assert result.operations[0].draft.alternatives == [
             {"kind": "existing", "entity_id": house["whirlpool"], "similarity": None}
+        ]
+
+    def test_a_business_apart_from_its_product_is_offered_the_existing_business(self, repo, house):
+        result = plan(
+            repo,
+            house,
+            [typing("Whirlpool", "house_appliance"), typing("Whirlpool Inc.", "house_business")],
+        )
+        assert [(o.draft.fields["title"], o.draft.alternatives) for o in result.operations] == [
+            ("Whirlpool", []),
+            (
+                "Whirlpool Inc.",
+                [{"kind": "existing", "entity_id": house["whirlpool"], "similarity": None}],
+            ),
         ]
 
     def test_recognition_near_matches_come_first_and_are_not_repeated(self, ontology, repo, house):

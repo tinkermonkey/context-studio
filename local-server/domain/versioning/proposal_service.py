@@ -1731,15 +1731,7 @@ class ProposalService:
                             operation, resolution, refs, proposal.id, forced, covered
                         )
                     else:
-                        self._apply_one(
-                            operation,
-                            refs,
-                            proposal.id,
-                            forced,
-                            resolution,
-                            covered,
-                            dataset_id=proposal.dataset_id,
-                        )
+                        self._apply_one(operation, refs, proposal, forced, resolution, covered)
                     decisions = []
                     if operation.status is OperationStatus.APPLIED:
                         decisions.append(
@@ -1913,7 +1905,7 @@ class ProposalService:
                 fields,
                 resolution,
                 proposal.id,
-                lambda: self._dispatch(operation, fields, proposal.id, OperationType.UPDATE),
+                lambda: self._dispatch(operation, fields, proposal, OperationType.UPDATE),
                 covered,
             )
             base = {
@@ -2411,12 +2403,13 @@ class ProposalService:
         self,
         operation: ProposedOperation,
         refs: dict[str, ProposedOperation],
-        run_id: str,
+        proposal: ChangeProposal,
         forced: bool,
         resolution: InUseResolution | None = None,
         covered: Mapping[str, int] | None = None,
-        dataset_id: str | None = None,
     ) -> None:
+        run_id = proposal.id
+
         def run() -> str:
             fields = {
                 name: self._resolved(value, refs) if name in ID_FIELDS else value
@@ -2440,7 +2433,7 @@ class ProposalService:
                     fields,
                     resolution,
                     run_id,
-                    lambda: self._dispatch(operation, fields, run_id, operation.op),
+                    lambda: self._dispatch(operation, fields, proposal, operation.op),
                     covered,
                 )
             if operation.kind is K.PROPERTY and operation.op is OperationType.DELETE:
@@ -2452,25 +2445,25 @@ class ProposalService:
                     inspector = InUseInspector(self._repo)
                     _, follows = inspector.partition(inspector.edges(operation.target_id))
                     self._yield_type_delete(change, inspector, follows, run_id)
-                    result = self._dispatch(operation, fields, run_id, operation.op)
+                    result = self._dispatch(operation, fields, proposal, operation.op)
                 operation.type_change = change
                 return result
             if operation.op is OperationType.DELETE and operation.kind is K.PREDICATE:
                 with self._atomic():
                     self._move_predicate_users(operation, refs)
-                    return self._dispatch(operation, fields, run_id, operation.op)
+                    return self._dispatch(operation, fields, proposal, operation.op)
             if operation.op is OperationType.DELETE and operation.kind in (K.CLASS, K.ATTRIBUTE):
                 with self._atomic():
                     plan = self._yield_plan(operation, refs, InUseInspector(self._repo))
                     if plan:
                         apply_yield(self._ontology, plan, run_id)
-                    return self._dispatch(operation, fields, run_id, operation.op)
+                    return self._dispatch(operation, fields, proposal, operation.op)
             try:
                 # The graph may have moved on since review: check the dataset again.
-                self._check_dataset(operation, dataset_id)
+                self._check_dataset(operation, proposal.dataset_id)
             except _Invalid as exc:
                 raise _ApplyFailed(exc.code, exc.message) from exc
-            result = self._dispatch(operation, fields, run_id, operation.op, dataset_id)
+            result = self._dispatch(operation, fields, proposal, operation.op)
             if operation.kind is K.PROPERTY and operation.op is OperationType.CREATE:
                 operation.type_change = TypeChange(
                     SchemaChangeAction.CREATE, after=self._type_fields(result)
@@ -3248,15 +3241,17 @@ class ProposalService:
         self,
         operation: ProposedOperation,
         fields: dict[str, Any],
-        run_id: str,
+        proposal: ChangeProposal,
         op: OperationType,
-        dataset_id: str | None = None,
     ) -> str:
         """
         Make the change through OntologyService; returns the entity id made or changed.
 
         `op` is what to do: the operation's own op, or an update when a
-        reviewer's edit turned a delete into one.
+        reviewer's edit turned a delete into one. `proposal` is the one being
+        applied, as `apply` loaded it: its id is the run, and its taxonomy and
+        dataset are read from it, never from the repository again (a read per
+        operation loads every operation each time).
         """
         kind, target = operation.kind, operation.target_id
         svc = self._ontology
@@ -3284,11 +3279,10 @@ class ProposalService:
         ):
             # A predicate goes in the proposal's taxonomy's catalog; a relationship
             # type with neither a domain nor a range finds its predicate there.
-            proposal = self._proposals.get(run_id)
-            values["taxonomy_id"] = proposal.taxonomy_id if proposal else None
+            values["taxonomy_id"] = proposal.taxonomy_id
 
         if op is OperationType.CREATE:
-            return self._create(kind, values, run_id, dataset_id)
+            return self._create(kind, values, proposal.id, proposal.dataset_id)
 
         if op is OperationType.MOVE:
             if kind is K.SCHEME:
