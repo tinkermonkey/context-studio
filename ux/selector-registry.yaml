@@ -3819,6 +3819,9 @@ selectors:
   - selector: extract-empty-chunks
     component: src/components/sources/ExtractRunPanel.tsx
     description: 'Proposal ready: warning naming chunks that gave no candidates'
+  - selector: extract-failed-chunks
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Extract result: how many chunks failed and which, so what they hold is missing'
   - selector: extract-back
     component: src/components/sources/ExtractRunPanel.tsx
     description: 'Extract page: "Back to sources" button after a run ends'
@@ -3890,7 +3893,7 @@ selectors:
     description: 'Sources page: sources table wrapper (aria-busy while loading)'
   - selector: extract-chunk-*
     component: src/components/sources/ChunkList.tsx
-    description: 'Extract page: one chunk row, with dynamic 1-based chunk number suffix'
+    description: 'Extract page: one chunk row, with dynamic 1-based chunk number suffix; a failed chunk has its reason at extract-chunk-<n>-reason'
   - selector: source-row-*
     component: src/components/sources/SourcesPage.tsx
     description: 'Sources table: title and detail cell, with dynamic source ID suffix'

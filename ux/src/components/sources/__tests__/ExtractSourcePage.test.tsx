@@ -429,9 +429,14 @@ describe("ExtractSourcePage — progress and result", () => {
     expect(chunk1).toHaveTextContent("Parts");
     expect(chunk1).toHaveTextContent("pp. 1–2");
     expect(within(chunk1).getByText("5 found")).toHaveClass("chip--emerald");
-    expect(within(screen.getByTestId("extract-chunk-2")).getByText("0 found")).toHaveClass(
-      "chip--neutral",
-    );
+    const chunk2 = screen.getByTestId("extract-chunk-2");
+    expect(within(chunk2).getByText("0 found")).toHaveClass("chip--neutral");
+    // Every chunk was read: nothing is marked failed.
+    expect(chunk2).toHaveClass("chunk-list__row");
+    expect(chunk2).not.toHaveClass("chunk-list__row--failed");
+    expect(screen.queryByTestId("extract-chunk-2-reason")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("extract-failed-chunks")).not.toBeInTheDocument();
+    expect(done).not.toHaveTextContent("Partial proposal ready");
     expect(screen.getByTestId("extract-chunk-count")).toHaveTextContent("3 chunks · 4 pages");
 
     await user.click(screen.getByTestId("extract-review-proposal"));
@@ -532,8 +537,166 @@ function chunksFound(...found: number[]) {
     page_last: index + 1,
     heading: null,
     triples,
+    failure_reason: null as string | null,
   }));
 }
+
+/** The same chunks, with the extraction of those at `failed` (0-based) having failed. */
+function chunksWithFailures(found: number[], failed: Record<number, string>) {
+  return chunksFound(...found).map((chunk) => ({
+    ...chunk,
+    failure_reason: failed[chunk.index] ?? null,
+  }));
+}
+
+const CUT_SHORT = "The model's answer was cut short after 3 attempts.";
+
+describe("ExtractSourcePage — a run some of whose chunks failed", () => {
+  it("marks one failed chunk of three and calls the proposal partial", async () => {
+    const chunks = chunksWithFailures([5, 0, 0], { 1: CUT_SHORT });
+    serve({
+      runs: {
+        "run-1234abcd": createRun({
+          status: "completed",
+          items_done: 3,
+          proposal_id: "prop-1",
+          output_summary: {
+            metadata: { chunks },
+            failed_chunks: [chunks[1]],
+            warnings: [
+              `Extraction failed for 1 of 3 chunks (chunk 2), so what they hold is missing. First failure: ${CUT_SHORT}`,
+            ],
+          },
+        }),
+      },
+    });
+    renderPage({ runId: "run-1234abcd" });
+
+    const done = await screen.findByTestId("extract-done-panel");
+    expect(done).toHaveTextContent("Partial proposal ready");
+    await waitFor(() =>
+      expect(screen.getByTestId("extract-count-operations")).toHaveTextContent("3"),
+    );
+
+    const failed = screen.getByTestId("extract-failed-chunks");
+    expect(failed).toHaveClass("form-callout--error");
+    expect(failed).toHaveAttribute("role", "alert");
+    expect(failed).toHaveTextContent(
+      "Extraction failed for 1 of 3 chunks: chunk 2. What it holds is missing.",
+    );
+    // The failed chunk is not one that gave no candidates; the empty one still is.
+    const empty = screen.getByTestId("extract-empty-chunks");
+    expect(empty).toHaveClass("form-callout--warn");
+    expect(empty).toHaveTextContent("Chunk 3 gave no candidates.");
+    expect(done).not.toHaveTextContent("Chunk 2 gave no candidates");
+    expect(done).not.toHaveTextContent("Chunks 2 and 3 gave no candidates");
+
+    const chunk2 = screen.getByTestId("extract-chunk-2");
+    expect(chunk2).toHaveClass("chunk-list__row", "chunk-list__row--failed");
+    expect(within(chunk2).getByText("failed")).toHaveClass("chip--rose");
+    expect(chunk2).not.toHaveTextContent("0 found");
+    const reason = screen.getByTestId("extract-chunk-2-reason");
+    expect(reason).toHaveClass("chunk-list__reason");
+    expect(reason).toHaveTextContent(CUT_SHORT);
+    // The chunks that were read keep their counts.
+    expect(within(screen.getByTestId("extract-chunk-1")).getByText("5 found")).toHaveClass(
+      "chip--emerald",
+    );
+    const chunk3 = screen.getByTestId("extract-chunk-3");
+    expect(within(chunk3).getByText("0 found")).toHaveClass("chip--neutral");
+    expect(chunk3).not.toHaveClass("chunk-list__row--failed");
+    expect(within(screen.getByTestId("extract-chunk-list")).getAllByRole("listitem")).toHaveLength(
+      3,
+    );
+    expect(screen.getByTestId("extract-review-proposal")).toBeInTheDocument();
+  });
+
+  it("says two of three chunks failed, not that no candidates were found", async () => {
+    const chunks = chunksWithFailures([0, 0, 0], { 1: CUT_SHORT, 2: "Connection reset by peer" });
+    const serverReason =
+      "Extraction failed for 2 of 3 chunks (chunks 2, 3), so what they hold is missing." +
+      ` First failure: ${CUT_SHORT} The run found no candidates in what it could read.`;
+    serve({
+      runs: {
+        "run-1234abcd": createRun({
+          status: "completed",
+          items_done: 3,
+          proposal_id: null,
+          output_summary: {
+            metadata: { chunks },
+            failed_chunks: chunks.slice(1),
+            warnings: [`Nothing to propose. ${serverReason}`],
+            no_proposal_reason: serverReason,
+          },
+        }),
+      },
+    });
+    renderPage({ runId: "run-1234abcd" });
+
+    const panel = await screen.findByTestId("extract-done-panel");
+    expect(panel).toHaveTextContent("Nothing proposed");
+    expect(panel).not.toHaveTextContent("No candidates found");
+    expect(panel).not.toHaveTextContent("Proposal ready");
+
+    const failed = screen.getByTestId("extract-failed-chunks");
+    expect(failed).toHaveClass("form-callout--error");
+    expect(failed).toHaveAttribute("role", "alert");
+    expect(failed).toHaveTextContent(
+      "Extraction failed for 2 of 3 chunks: chunks 2 and 3. What they hold is missing.",
+    );
+    // What was read found nothing: said once, without repeating which chunks failed.
+    const note = screen.getByTestId("extract-no-proposal");
+    expect(note).toHaveClass("form-callout--info");
+    expect(note).toHaveTextContent("The chunks that were read found nothing to propose.");
+    expect(panel).not.toHaveTextContent("The run read every chunk");
+    expect(panel).not.toHaveTextContent("gave no candidates");
+    expect(screen.queryByTestId("extract-empty-chunks")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("extract-review-proposal")).not.toBeInTheDocument();
+
+    for (const [n, why] of [
+      [2, CUT_SHORT],
+      [3, "Connection reset by peer"],
+    ] as const) {
+      const row = screen.getByTestId(`extract-chunk-${n}`);
+      expect(row).toHaveClass("chunk-list__row--failed");
+      expect(within(row).getByText("failed")).toHaveClass("chip--rose");
+      expect(screen.getByTestId(`extract-chunk-${n}-reason`)).toHaveTextContent(why);
+    }
+    const chunk1 = screen.getByTestId("extract-chunk-1");
+    expect(within(chunk1).getByText("0 found")).toHaveClass("chip--neutral");
+    expect(chunk1).not.toHaveClass("chunk-list__row--failed");
+  });
+
+  it("still says why found candidates were not proposed", async () => {
+    serve({
+      runs: {
+        "run-1234abcd": createRun({
+          status: "completed",
+          items_done: 3,
+          proposal_id: null,
+          output_summary: {
+            metadata: { chunks: chunksWithFailures([4, 0, 3], { 1: CUT_SHORT }) },
+            no_proposal_reason:
+              "Extraction failed for 1 of 3 chunks (chunk 2), so what they hold is missing." +
+              ` First failure: ${CUT_SHORT} None of the 7 candidates made an operation (exists 7).`,
+            skipped_by_reason: { exists: 7 },
+          },
+        }),
+      },
+    });
+    renderPage({ runId: "run-1234abcd" });
+
+    const panel = await screen.findByTestId("extract-done-panel");
+    expect(panel).toHaveTextContent("Nothing proposed");
+    expect(screen.getByTestId("extract-failed-chunks")).toHaveTextContent(
+      "Extraction failed for 1 of 3 chunks: chunk 2. What it holds is missing.",
+    );
+    const note = screen.getByTestId("extract-no-proposal");
+    expect(note).toHaveClass("form-callout--warn");
+    expect(note).toHaveTextContent("The chunks found 7 candidates, but none could be proposed.");
+    expect(screen.getByTestId("extract-skipped")).toHaveTextContent("7 already exist");
+  });
+});
 
 describe("ExtractSourcePage — a run that proposes nothing", () => {
   it("says candidates were found but none could be proposed, and why not", async () => {

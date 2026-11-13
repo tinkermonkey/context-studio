@@ -478,6 +478,27 @@ describe("SourcesPage", () => {
       await waitFor(() => expect(link).toHaveTextContent("No candidates found"));
       expect(screen.queryByTestId("source-no-proposal-reason-src-1")).not.toBeInTheDocument();
     });
+
+    it("says chunks failed rather than that no candidates were found", async () => {
+      serve({ sources: [completed] });
+      serveRun({
+        metadata: {
+          chunks: chunks(0, 0, 0).map((chunk) =>
+            chunk.index === 0 ? chunk : { ...chunk, failure_reason: "The answer was cut short." },
+          ),
+        },
+      });
+      render(<SourcesPage onTaxonomyChange={vi.fn()} />);
+
+      const link = await screen.findByTestId("source-follow-run-src-1");
+      await waitFor(() => expect(link).toHaveTextContent("Nothing proposed"));
+      expect(link).not.toHaveTextContent("No candidates found");
+      const why = screen.getByTestId("source-no-proposal-reason-src-1");
+      expect(why).toHaveClass("sources-note");
+      expect(why).toHaveTextContent(
+        "Extraction failed for 2 of 3 chunks: chunks 2 and 3. What they hold is missing.",
+      );
+    });
   });
 
   it("says a taxonomy without a dataset gets a new default one with its first source", async () => {

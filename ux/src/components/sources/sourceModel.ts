@@ -203,6 +203,8 @@ export interface RunChunk {
   page_last?: number | null;
   heading?: string | null;
   triples: number;
+  /** Why the chunk's extraction failed; unset when it was read. What a failed chunk holds is missing. */
+  failure_reason?: string | null;
 }
 
 /** A finished chunked run's chunks; empty while running or for an unchunked run. */
@@ -217,16 +219,42 @@ function joinWords(words: string[]): string {
   return `${words.slice(0, -1).join(", ")} and ${words[words.length - 1]}`;
 }
 
-/** "Chunks 14 and 15 (Warranty, Index) gave no candidates.", or "" when every chunk gave some. */
-export function emptyChunksWarning(chunks: RunChunk[]): string {
-  const empty = chunks.filter((c) => c.triples === 0);
-  if (empty.length === 0) return "";
-  const numbers = joinWords(empty.map((c) => String(c.index + 1)));
-  const headings = empty.map((c) => c.heading).filter((h): h is string => !!h);
+/** "chunk 2 (Warranty)" or "chunks 14 and 15 (Warranty, Index)". */
+function namedChunks(chunks: RunChunk[]): string {
+  const numbers = joinWords(chunks.map((c) => String(c.index + 1)));
+  const headings = chunks.map((c) => c.heading).filter((h): h is string => !!h);
   const named = headings.length > 0 ? ` (${headings.join(", ")})` : "";
-  return empty.length === 1
-    ? `Chunk ${numbers}${named} gave no candidates.`
-    : `Chunks ${numbers}${named} gave no candidates.`;
+  return `${chunks.length === 1 ? "chunk" : "chunks"} ${numbers}${named}`;
+}
+
+const capitalized = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+
+/** The chunks whose extraction failed. */
+export function failedChunks(chunks: RunChunk[]): RunChunk[] {
+  return chunks.filter((c) => !!c.failure_reason);
+}
+
+/**
+ * "Chunks 14 and 15 (Warranty, Index) gave no candidates.", or "" when every
+ * chunk that was read gave some. A failed chunk was not read, so it is not
+ * counted here: see failedChunksWarning.
+ */
+export function emptyChunksWarning(chunks: RunChunk[]): string {
+  const empty = chunks.filter((c) => c.triples === 0 && !c.failure_reason);
+  if (empty.length === 0) return "";
+  return `${capitalized(namedChunks(empty))} gave no candidates.`;
+}
+
+/**
+ * "Extraction failed for 2 of 3 chunks: chunks 2 and 3 (Warranty, Index). What
+ * they hold is missing.", or "" when no chunk failed.
+ */
+export function failedChunksWarning(chunks: RunChunk[]): string {
+  const failed = failedChunks(chunks);
+  if (failed.length === 0) return "";
+  const total = chunks.length === 1 ? "1 chunk" : `${chunks.length} chunks`;
+  const missing = failed.length === 1 ? "What it holds is missing." : "What they hold is missing.";
+  return `Extraction failed for ${failed.length} of ${total}: ${namedChunks(failed)}. ${missing}`;
 }
 
 export interface ProposalCounts {
@@ -298,6 +326,11 @@ export interface NoProposalSummary {
   skipped: Array<{ reason: string; count: number }>;
   /** True when candidates were found but none could be proposed. */
   candidatesFound: boolean;
+  /**
+   * Which chunks failed, as a sentence (failedChunksWarning); "" when every
+   * chunk was read. With it, the run cannot say the text holds no candidates.
+   */
+  failedNote: string;
 }
 
 /** A {reason: count} object's positive counts. */
@@ -329,7 +362,8 @@ function listedCounts(value: unknown): Map<string, number> {
  */
 export function noProposalSummary(run?: PipelineRun): NoProposalSummary {
   const output = (run?.output_summary ?? {}) as Record<string, unknown>;
-  const found = runChunks(run).reduce((sum, c) => sum + (c.triples ?? 0), 0);
+  const chunks = runChunks(run);
+  const found = chunks.reduce((sum, c) => sum + (c.triples ?? 0), 0);
   const reported = reportedCounts(output.skipped_by_reason);
   const counts = reported.size > 0 ? reported : listedCounts(output.skipped_candidates);
   const refused = Array.isArray(output.refused_operations) ? output.refused_operations.length : 0;
@@ -342,7 +376,13 @@ export function noProposalSummary(run?: PipelineRun): NoProposalSummary {
     typeof output.no_proposal_reason === "string" && output.no_proposal_reason.trim()
       ? output.no_proposal_reason.trim()
       : undefined;
-  return { found, reason, skipped, candidatesFound: found > 0 || skipped.length > 0 };
+  return {
+    found,
+    reason,
+    skipped,
+    candidatesFound: found > 0 || skipped.length > 0,
+    failedNote: failedChunksWarning(chunks),
+  };
 }
 
 /** "12 already exist, 8 no matching class", or "" when nothing was skipped. */
