@@ -33,7 +33,8 @@ function endedText(run: LastExtractionRun): string {
 
 /**
  * A completed run that made no proposal, read in full for why: nothing found,
- * or candidates found that none could be proposed (and why not).
+ * candidates found that none could be proposed (and why not), or chunks whose
+ * extraction failed, after which it cannot say that nothing was there to find.
  */
 function NoProposalLink({
   sourceId,
@@ -48,12 +49,13 @@ function NoProposalLink({
   const summary = run ? noProposalSummary(run) : undefined;
   const label = !summary
     ? copy.noProposal
-    : summary.candidatesFound
+    : summary.candidatesFound || summary.failedNote
       ? copy.nothingProposed
       : copy.noCandidates;
   const why =
     summary?.reason ??
     [
+      summary?.failedNote ?? "",
       summary && summary.found > 0 ? copy.foundCount(summary.found) : "",
       skippedText(summary?.skipped ?? []),
     ]

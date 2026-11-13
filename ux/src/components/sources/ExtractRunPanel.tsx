@@ -14,6 +14,7 @@ import { isRunActive } from "@/api/hooks/sources/useExtractionRun";
 import { sourcesCopy } from "./copy";
 import {
   emptyChunksWarning,
+  failedChunksWarning,
   noProposalSummary,
   proposalCounts,
   runChunks,
@@ -141,11 +142,13 @@ function RunningPanel({
 
 /** Why a completed run proposed nothing: none found, or found but none could be proposed. */
 function NoProposalNote({ summary }: { summary: NoProposalSummary }) {
-  const message =
-    summary.reason ??
-    (summary.candidatesFound
-      ? copy.nothingProposedMessage(summary.found)
-      : copy.noCandidatesMessage);
+  const ownWords = summary.candidatesFound
+    ? copy.nothingProposedMessage(summary.found)
+    : summary.failedNote
+      ? copy.nothingInReadChunksMessage
+      : copy.noCandidatesMessage;
+  // A run with failed chunks leads its reason with them, which the panel has just said.
+  const message = summary.failedNote ? ownWords : (summary.reason ?? ownWords);
   const skipped = skippedText(summary.skipped);
   return (
     <>
@@ -182,14 +185,20 @@ function DonePanel({
   const extractionDataset = proposal?.dataset_id ?? datasetId;
   const counts = proposal ? proposalCounts(proposal) : undefined;
   const empty = run.proposal_id ? undefined : noProposalSummary(run);
+  const chunks = runChunks(run);
+  // Chunks whose extraction failed: what they hold is missing from the result.
+  const failed = failedChunksWarning(chunks);
   // When no chunk found anything the panel says so; naming every chunk would repeat it.
-  const warning = empty && !empty.candidatesFound ? "" : emptyChunksWarning(runChunks(run));
+  const warning = empty && !empty.candidatesFound ? "" : emptyChunksWarning(chunks);
   // Titled for the whole extraction: a schema proposal alone is still a result.
+  // A run that could not read every chunk never says the text holds no candidates.
   const title = !empty
-    ? copy.doneTitle
+    ? failed
+      ? copy.partialDoneTitle
+      : copy.doneTitle
     : schemaRun?.proposal_id
       ? copy.schemaDoneTitle
-      : empty.candidatesFound
+      : empty.candidatesFound || failed
         ? copy.nothingProposedTitle
         : copy.noCandidatesTitle;
   return (
@@ -202,6 +211,11 @@ function DonePanel({
       data-testid="extract-done-panel"
     >
       <div className="extract-run">
+        {failed && (
+          <FormCallout variant="error" icon="alert" data-testid="extract-failed-chunks">
+            {failed}
+          </FormCallout>
+        )}
         {empty ? (
           <NoProposalNote summary={empty} />
         ) : (

@@ -331,4 +331,16 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+  /* A chunk whose extraction failed: its reason wraps under the title, so the
+     chip sits at the top of the row rather than beside the middle of it. */
+  .chunk-list__row--failed {
+    align-items: flex-start;
+  }
+
+  .chunk-list__reason {
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-2));
+    overflow-wrap: anywhere;
+  }
 }

@@ -14,6 +14,8 @@ interface ChunkRow {
   pages: string;
   state: string;
   tone: ChipTone;
+  /** Why the chunk's extraction failed, when it did. */
+  failure?: string;
 }
 
 function chunkRows(run: PipelineRun): ChunkRow[] {
@@ -23,8 +25,13 @@ function chunkRows(run: PipelineRun): ChunkRow[] {
       n: c.index + 1,
       title: c.heading || copy.chunk(c.index + 1),
       pages: pageRangeLabel(c.page_first, c.page_last),
-      state: copy.found(c.triples),
-      tone: c.triples > 0 ? "emerald" : "neutral",
+      // A failed chunk was not read: it is not one that held nothing.
+      ...(c.failure_reason
+        ? { state: copy.failed, tone: "rose" as const, failure: c.failure_reason }
+        : {
+            state: copy.found(c.triples),
+            tone: c.triples > 0 ? ("emerald" as const) : ("neutral" as const),
+          }),
     }));
   }
   const total = run.items_total ?? 0;
@@ -52,8 +59,9 @@ interface ChunkListProps {
 
 /**
  * The run's chunks. A finished run lists each chunk's heading, pages and
- * candidate count; a running one shows which chunks are read, which is
- * being read and which wait. Before a run, only the estimated count shows.
+ * candidate count, or that its extraction failed and why; a running one shows
+ * which chunks are read, which is being read and which wait. Before a run,
+ * only the estimated count shows.
  */
 export function ChunkList({ run, estimatedChunks, pages }: ChunkListProps) {
   const rows = run ? chunkRows(run) : [];
@@ -69,11 +77,25 @@ export function ChunkList({ run, estimatedChunks, pages }: ChunkListProps) {
       {rows.length > 0 && (
         <ol className="chunk-list__rows">
           {rows.map((row) => (
-            <li key={row.n} className="chunk-list__row" data-testid={`extract-chunk-${row.n}`}>
+            <li
+              key={row.n}
+              className={
+                row.failure ? "chunk-list__row chunk-list__row--failed" : "chunk-list__row"
+              }
+              data-testid={`extract-chunk-${row.n}`}
+            >
               <span className="chunk-list__n">{row.n}</span>
               <span className="chunk-list__text">
                 <span className="chunk-list__title">{row.title}</span>
                 {row.pages && <span className="sources-mono-muted">{row.pages}</span>}
+                {row.failure && (
+                  <span
+                    className="chunk-list__reason"
+                    data-testid={`extract-chunk-${row.n}-reason`}
+                  >
+                    {row.failure}
+                  </span>
+                )}
               </span>
               <Chip variant={row.tone}>{row.state}</Chip>
             </li>

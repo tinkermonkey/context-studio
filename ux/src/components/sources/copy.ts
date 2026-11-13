@@ -131,6 +131,8 @@ export const sourcesCopy = {
     cancelFailed: "Could not cancel the run.",
     schemaRun: "Schema suggestions",
     doneTitle: "Proposal ready",
+    /** Some chunks failed, so the proposal lacks what they hold. */
+    partialDoneTitle: "Partial proposal ready",
     doneSubtitle: (title: string, dataset?: string) =>
       dataset ? `Extraction: ${title} · dataset ${dataset}` : `Extraction: ${title}`,
     operations: "Operations",
@@ -140,6 +142,8 @@ export const sourcesCopy = {
     schemaDoneTitle: "Schema proposal ready",
     noCandidatesTitle: "No candidates found",
     noCandidatesMessage: "The run read every chunk and found nothing to propose.",
+    /** For a run some of whose chunks failed: it did not read every chunk. */
+    nothingInReadChunksMessage: "The chunks that were read found nothing to propose.",
     nothingProposedTitle: "Nothing proposed",
     /** `found` is 0 when the run didn't count its candidates (an unchunked run). */
     nothingProposedMessage: (found: number) =>
@@ -170,6 +174,7 @@ export const sourcesCopy = {
     reading: "reading",
     read: "read",
     found: (n: number) => `${n} found`,
+    failed: "failed",
     note: "Split at headings, about 8k characters each, never mid-sentence. Candidates found in several chunks merge into one operation with every passage as evidence.",
   },
 } as const;

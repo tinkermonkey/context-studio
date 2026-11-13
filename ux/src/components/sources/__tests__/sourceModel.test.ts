@@ -10,6 +10,8 @@ import {
   emptyChunksWarning,
   estimateCost,
   extractionRunIds,
+  failedChunks,
+  failedChunksWarning,
   formatCount,
   formatRange,
   formatUsd,
@@ -145,6 +147,60 @@ describe("sourceModel", () => {
     expect(runChunks(createRun())).toEqual([]);
   });
 
+  describe("chunks whose extraction failed", () => {
+    const chunksOf = (...chunks: Array<{ heading?: string; triples: number; failed?: string }>) =>
+      runChunks(
+        createRun({
+          status: "completed",
+          output_summary: {
+            metadata: {
+              chunks: chunks.map((c, index) => ({
+                index,
+                start: index * 8000,
+                end: (index + 1) * 8000,
+                heading: c.heading ?? null,
+                triples: c.triples,
+                failure_reason: c.failed ?? null,
+              })),
+            },
+          },
+        }),
+      );
+
+    it("says nothing when every chunk was read", () => {
+      const chunks = chunksOf({ triples: 4 }, { triples: 2 }, { triples: 0 });
+      expect(failedChunks(chunks)).toEqual([]);
+      expect(failedChunksWarning(chunks)).toBe("");
+      expect(emptyChunksWarning(chunks)).toBe("Chunk 3 gave no candidates.");
+    });
+
+    it("names one failed chunk of three, and never calls it empty", () => {
+      const chunks = chunksOf(
+        { heading: "Parts", triples: 4 },
+        { heading: "Warranty", triples: 0, failed: "The response was cut short." },
+        { heading: "Index", triples: 0 },
+      );
+      expect(failedChunks(chunks).map((c) => c.index)).toEqual([1]);
+      expect(failedChunksWarning(chunks)).toBe(
+        "Extraction failed for 1 of 3 chunks: chunk 2 (Warranty). What it holds is missing.",
+      );
+      // Only the chunk that was read and held nothing gave no candidates.
+      expect(emptyChunksWarning(chunks)).toBe("Chunk 3 (Index) gave no candidates.");
+    });
+
+    it("names two failed chunks of three", () => {
+      const chunks = chunksOf(
+        { triples: 0 },
+        { triples: 0, failed: "The response was cut short." },
+        { triples: 0, failed: "Connection reset" },
+      );
+      expect(failedChunksWarning(chunks)).toBe(
+        "Extraction failed for 2 of 3 chunks: chunks 2 and 3. What they hold is missing.",
+      );
+      expect(emptyChunksWarning(chunks)).toBe("Chunk 1 gave no candidates.");
+    });
+  });
+
   it("counts a proposal's operations, new individuals, relationships and near matches", () => {
     const proposal = createChangeProposal({
       operations: [
@@ -202,6 +258,7 @@ describe("sourceModel", () => {
         found: 7,
         reason: undefined,
         candidatesFound: true,
+        failedNote: "",
         skipped: [
           { reason: "exists", count: 2 },
           { reason: "missing_class", count: 1 },
@@ -258,8 +315,34 @@ describe("sourceModel", () => {
       const summary = noProposalSummary(
         createRun({ output_summary: { metadata: { chunks: [chunk(0)] } } }),
       );
-      expect(summary).toEqual({ found: 0, reason: undefined, skipped: [], candidatesFound: false });
+      expect(summary).toEqual({
+        found: 0,
+        reason: undefined,
+        skipped: [],
+        candidatesFound: false,
+        failedNote: "",
+      });
       expect(noProposalSummary(undefined).candidatesFound).toBe(false);
+    });
+
+    it("says which chunks failed, so finding nothing is not the text holding nothing", () => {
+      const summary = noProposalSummary(
+        createRun({
+          output_summary: {
+            metadata: {
+              chunks: [
+                chunk(0),
+                { ...chunk(0, 1), failure_reason: "The response was cut short." },
+                { ...chunk(0, 2), failure_reason: "The response was cut short." },
+              ],
+            },
+          },
+        }),
+      );
+      expect(summary.candidatesFound).toBe(false);
+      expect(summary.failedNote).toBe(
+        "Extraction failed for 2 of 3 chunks: chunks 2 and 3. What they hold is missing.",
+      );
     });
   });
 });
