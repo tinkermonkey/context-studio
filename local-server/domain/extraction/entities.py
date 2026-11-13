@@ -275,12 +275,16 @@ class TripleExtractionResult:
         metadata: Extraction metadata (model, tokens_used, duration_ms)
         failure_reason: Why the extraction failed, in which case triples is
             empty; None when it succeeded (an empty success found nothing)
+        incomplete_response: True when it failed because an LLM response
+            stayed incomplete; such a failure_reason is written for the caller,
+            while any other may quote an internal error
     """
 
     triples: list[dict]
     warnings: list[str]
     metadata: dict[str, int | str]
     failure_reason: str | None = None
+    incomplete_response: bool = False
 
 
 @dataclass(frozen=True)

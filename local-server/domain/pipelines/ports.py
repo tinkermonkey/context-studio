@@ -38,8 +38,6 @@ class LLMResponse:
         duration_ms: Time spent processing the request in milliseconds
         finish_reason: Reason the model stopped (e.g., 'stop', 'length')
         model: Name of the model that generated the response
-        cached: True when the provider answered from its response cache
-            instead of asking the model; asking again returns the same response
     """
 
     content: str
@@ -48,7 +46,6 @@ class LLMResponse:
     duration_ms: float
     finish_reason: str
     model: str
-    cached: bool = False
 
 
 class LLMProvider(Protocol):
@@ -82,6 +79,23 @@ class LLMProvider(Protocol):
         """Request a completion from an LLM (async version)."""
         ...
 
+    def forget(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format: Literal["json", "text"] | None = None,
+    ) -> None:
+        """
+        Drop any response the provider keeps for this request, so the next
+        identical request asks the model. A caller that found a response
+        unusable calls this before asking again; only the caller knows what it
+        needed. A provider that keeps no responses does nothing.
+        """
+        ...
+
     def is_model_available(self, model: str) -> bool:
         """Check if a specific model is available."""
         ...
@@ -104,6 +118,9 @@ class TripleExtractionResult(Protocol):
     metadata: dict[str, Any]
     # Why the extraction failed (its triples are then empty); None when it succeeded
     failure_reason: str | None
+    # True when it failed because an LLM response stayed incomplete: that reason is
+    # written for the caller, while any other failure_reason may quote an internal error
+    incomplete_response: bool
 
 
 class ExtractionPort(Protocol):

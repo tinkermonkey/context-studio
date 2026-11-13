@@ -18,13 +18,15 @@ A new proposal supersedes the open proposal of an older extraction of the
 same source by the same pipeline into the same dataset from the same pages:
 what it still awaits is rejected (no decision is recorded), since the new run
 repeats what still applies. A run that could not read all of its text (chunks
-whose extraction failed) repeats only part of it, so it supersedes nothing:
-earlier proposals stay open, and its rationale says what it lacks. Extractions are ordered by when they started, not
+whose extraction failed) repeats only part of it, so its proposal is partial
+(client_metadata `partial`): it supersedes no other proposal, older or newer,
+and its rationale says what it lacks. A newer whole proposal still supersedes
+it. Extractions are ordered by when they started, not
 when they finished: a run that finishes after a newer extraction of the same
 pages has proposed is superseded by it instead. Superseding is best effort; a
 failure is a warning on the run. The proposal's client_metadata records
-`{source_id, run_id, pipeline, pages, extraction_id, extraction_started_at}`,
-which is how other extractions are found and ordered.
+`{source_id, run_id, pipeline, pages, extraction_id, extraction_started_at,
+partial}`, which is how other extractions are found and ordered.
 
 Proposing to a taxonomy that mirrors an external source is refused for
 schema extraction unless its client asked over MCP (`check_may_propose`), as
@@ -134,7 +136,7 @@ class SourceProposer:
             unread: A sentence saying what the run could not read (chunks whose
                 extraction failed); None when it read everything. Such a run
                 is partial: its rationale and no_proposal_reason say so, and
-                it supersedes no earlier proposal
+                its proposal supersedes no other
         """
         source_id = str(input_data["source_id"])
         plan = plan_individual_operations(
@@ -211,6 +213,7 @@ class SourceProposer:
                         "pages": _text(input_data.get("pages")),
                         "extraction_id": _text(input_data.get("extraction_id")),
                         "extraction_started_at": _text(input_data.get("extraction_started_at")),
+                        "partial": unread is not None,
                     },
                     dataset_id=dataset_id,
                 )
@@ -223,8 +226,7 @@ class SourceProposer:
             reason = _no_proposal_reason(plan.skipped, refused, unread)
             warnings.append(f"Nothing to propose. {reason}")
             return ProposalOutcome(None, 0, refused, plan.skipped, warnings, reason)
-        if unread is None:
-            warnings += self._supersede(proposal)
+        warnings += self._supersede(proposal)
         return ProposalOutcome(
             proposal.id, len(proposal.operations), refused, plan.skipped, warnings
         )
@@ -235,8 +237,10 @@ class SourceProposer:
         source, pipeline, dataset and page selection: what an older
         extraction's open proposal still awaits is rejected; and when a newer
         extraction already proposed (this run finished late), what this one
-        awaits is rejected instead. Best effort: a failure is logged and
-        returned as a warning, and never undoes the new proposal.
+        awaits is rejected instead. Only a whole proposal supersedes: a
+        partial one (its run could not read all of its text) rejects nothing
+        and is never why another is rejected. Best effort: a failure is logged
+        and returned as a warning, and never undoes the new proposal.
 
         Returns:
             Warnings for the run, one per proposal that could not be settled
@@ -252,12 +256,14 @@ class SourceProposer:
             _logger.exception("Could not list earlier extractions of proposal %s", proposal.id)
             return [f"Could not supersede earlier extractions: {exc}"]
         started = _started_at(proposal)
-        newer = [o for o in others if _started_at(o) > started]
+        newer = [o for o in others if _started_at(o) > started and not _is_partial(o)]
         older = [o for o in others if _started_at(o) < started]
         if newer:
             newest = max(newer, key=_started_at)
             older = [proposal]
             superseding = newest
+        elif _is_partial(proposal):
+            return warnings
         else:
             superseding = proposal
         for other in older:
@@ -303,6 +309,11 @@ def _same_extraction_scope(one: ChangeProposal, other: ChangeProposal) -> bool:
         and all(a.get(key) == b.get(key) for key in ("source_id", "pipeline", "pages"))
         and one.dataset_id == other.dataset_id
     )
+
+
+def _is_partial(proposal: ChangeProposal) -> bool:
+    """Whether the proposal's run could not read all of its text."""
+    return bool((proposal.client_metadata or {}).get("partial"))
 
 
 def _started_at(proposal: ChangeProposal) -> datetime:
@@ -404,7 +415,7 @@ def _rationale(
     text = _RATIONALES[pipeline].format(title=source_title)
     notes = []
     if unread:
-        notes.append(f"{_sentence(unread)} Any earlier proposal for this source stays open")
+        notes.append(f"{_sentence(unread)} This proposal supersedes no other for this source")
     if plan.skipped:
         listed = [f"{s['label']} ({s['reason']})" for s in plan.skipped[:MAX_LISTED]]
         more = len(plan.skipped) - MAX_LISTED

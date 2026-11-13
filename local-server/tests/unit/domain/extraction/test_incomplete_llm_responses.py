@@ -56,17 +56,18 @@ CUT_SHORT = IDENTIFIED[:40]
 
 class _ScriptedLLM:
     """
-    Returns the scripted (content, finish_reason) responses in order; a third
-    element True marks the response as answered from the provider's cache.
+    Returns the scripted (content, finish_reason) responses in order, and
+    records the requests it is told to forget.
     """
 
     def __init__(self, *responses):
         self._responses = list(responses)
         self.calls: list[str] = []
+        self.forgotten: list[dict] = []
 
     def complete(self, system_prompt, user_prompt, model, **kwargs):
         self.calls.append(user_prompt)
-        content, finish_reason, *cached = self._responses.pop(0)
+        content, finish_reason = self._responses.pop(0)
         return LLMResponse(
             content=content,
             tokens_in=10,
@@ -74,8 +75,29 @@ class _ScriptedLLM:
             duration_ms=1.0,
             finish_reason=finish_reason,
             model=model,
-            cached=bool(cached and cached[0]),
         )
+
+    def forget(self, **request):
+        self.forgotten.append(request)
+
+
+class _CachingLLM:
+    """
+    A provider that keeps its response to each request, as OpenRouterProvider
+    does, in front of a scripted model.
+    """
+
+    def __init__(self, *responses):
+        self.model = _ScriptedLLM(*responses)
+        self._kept: dict[str, LLMResponse] = {}
+
+    def complete(self, system_prompt, user_prompt, model, **kwargs):
+        if user_prompt not in self._kept:
+            self._kept[user_prompt] = self.model.complete(system_prompt, user_prompt, model)
+        return self._kept[user_prompt]
+
+    def forget(self, system_prompt, user_prompt, model, **_):
+        self._kept.pop(user_prompt, None)
 
 
 class _BareOntologyRepo:
@@ -139,8 +161,10 @@ class TestIncompleteResponseIsAskedAgain:
         assert _labels(result) == EXPECTED
         assert len(llm.calls) == 2
         assert result.failure_reason is None
+        assert result.incomplete_response is False
         assert result.metadata["tokens_used"] == 30
         assert run.status == ExtractionRunStatus.COMPLETED
+        assert llm.forgotten == []
 
     @pytest.mark.parametrize(
         "content, finish_reason",
@@ -173,6 +197,10 @@ class TestIncompleteResponseIsAskedAgain:
         # The retry repeats the same prompt
         assert llm.calls[0] == llm.calls[1]
         assert len(llm.calls) == 3
+        # The provider was told to forget exactly the request it answered badly
+        (forgotten,) = llm.forgotten
+        assert forgotten["user_prompt"] == llm.calls[0]
+        assert (forgotten["max_tokens"], forgotten["response_format"]) == (8000, "json")
 
     @pytest.mark.parametrize("finish_reason", ["length", "max_tokens", "error", None])
     def test_a_response_that_parses_is_the_whole_answer_whatever_its_finish_reason(
@@ -226,7 +254,10 @@ class TestResponseThatNeverCompletes:
             f" {_MAX_LLM_ATTEMPTS} attempts: {problem}"
         )
         assert result.warnings == [f"Extraction failed: {result.failure_reason}"]
+        assert result.incomplete_response is True
         assert run.status == ExtractionRunStatus.FAILED
+        # Every rejected response was dropped, the last one too
+        assert len(llm.forgotten) == _MAX_LLM_ATTEMPTS
 
     def test_relationship_pass_that_never_completes_fails_the_extraction(self):
         llm = _ScriptedLLM((IDENTIFIED, "stop"), *[(RELATED[:30], "error")] * _MAX_LLM_ATTEMPTS)
@@ -240,23 +271,49 @@ class TestResponseThatNeverCompletes:
         # 1 identify call, then every attempt of the derive call
         assert len(llm.calls) == 1 + _MAX_LLM_ATTEMPTS
 
-    def test_a_cached_incomplete_response_is_not_asked_for_again(self):
-        # The provider would answer every retry with the same cached response
-        llm = _ScriptedLLM(("{}", "stop"), ("{}", "stop", True))
-        result, run = _extract(llm)
-        assert len(llm.calls) == 2
-        assert result.failure_reason == (
-            "The LLM response for identify_individuals was incomplete: its JSON has no"
-            " triples list (finish_reason=stop). The provider answered attempt 2 from its"
-            " cache, so it was not asked again"
-        )
+    def test_another_failure_is_not_an_incomplete_response(self):
+        class _Broken(_ScriptedLLM):
+            def complete(self, *args, **kwargs):
+                raise RuntimeError("OpenRouter rate limit exceeded")
+
+        result, run = _extract(_Broken())
+        assert result.failure_reason == "OpenRouter rate limit exceeded"
+        assert result.incomplete_response is False
         assert run.status == ExtractionRunStatus.FAILED
 
-    def test_a_cached_complete_response_is_used(self):
-        llm = _ScriptedLLM((IDENTIFIED, "stop", True), (RELATED, "stop", True))
+
+class TestProviderThatKeepsResponses:
+    """A response the extraction rejects is never served again from the provider's cache."""
+
+    @pytest.mark.parametrize(
+        "rejected", ["{}", '{"triples": null}', '{"relationships": []}', "null", "[]"]
+    )
+    def test_rejected_then_good_makes_two_model_calls_and_does_not_poison_a_later_run(
+        self, rejected
+    ):
+        llm = _CachingLLM((rejected, "stop"), (IDENTIFIED, "stop"), (RELATED, "stop"))
         result, _ = _extract(llm)
         assert _labels(result) == EXPECTED
-        assert result.failure_reason is None
+        # identify: the rejected answer, then the good one; derive: one call
+        assert len(llm.model.calls) == 3
+        assert llm.model.calls[0] == llm.model.calls[1]
+
+        # A later run of the same text is answered from the cache with the good answers
+        later, _ = _extract(llm)
+        assert _labels(later) == EXPECTED
+        assert len(llm.model.calls) == 3
+
+    def test_a_run_that_never_completes_leaves_nothing_cached_for_the_next(self):
+        llm = _CachingLLM(
+            *[("{}", "stop")] * _MAX_LLM_ATTEMPTS, (IDENTIFIED, "stop"), (RELATED, "stop")
+        )
+        failed, _ = _extract(llm)
+        assert failed.incomplete_response is True
+        assert len(llm.model.calls) == _MAX_LLM_ATTEMPTS
+
+        later, _ = _extract(llm)
+        assert _labels(later) == EXPECTED
+        assert len(llm.model.calls) == _MAX_LLM_ATTEMPTS + 2
 
 
 class TestUnknownOntology:

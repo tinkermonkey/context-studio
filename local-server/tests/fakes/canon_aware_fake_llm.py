@@ -185,6 +185,9 @@ class CanonAwareFakeLLMProvider:
             seed=seed,
         )
 
+    def forget(self, system_prompt: str, user_prompt: str, model: str, **_: Any) -> None:
+        """Nothing to drop: this fake keeps no responses."""
+
     def is_model_available(self, model: str) -> bool:
         return model in self.available_models
 

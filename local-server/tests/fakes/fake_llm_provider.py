@@ -85,6 +85,9 @@ class FakeLLMProvider:
             model=model,
         )
 
+    def forget(self, system_prompt: str, user_prompt: str, model: str, **_: Any) -> None:
+        """Nothing to drop: this fake keeps no responses."""
+
     def is_model_available(self, model: str) -> bool:
         """
         Check if a model is available.

@@ -567,6 +567,7 @@ class ExtractionService:
                 - metadata: extraction metadata (model, tokens_used, duration_ms)
                 - failure_reason: why the extraction failed (its triples are then
                   empty), e.g. an LLM response that stayed incomplete; None on success
+                - incomplete_response: True when that is why it failed
 
         Raises:
             ExtractionError: If text validation fails
@@ -609,6 +610,7 @@ class ExtractionService:
         tokens_used = 0
         run_status = ExtractionRunStatus.COMPLETED
         failure_reason = None
+        incomplete_response = False
 
         try:
             try:
@@ -644,6 +646,7 @@ class ExtractionService:
                 extracted_triples = []
                 run_status = ExtractionRunStatus.FAILED
                 failure_reason = str(exc) or type(exc).__name__
+                incomplete_response = isinstance(exc, IncompleteLLMResponseError)
                 warnings.append(f"Extraction failed: {failure_reason}")
 
             # Update run record
@@ -699,6 +702,7 @@ class ExtractionService:
                 "duration_ms": duration_ms,
             },
             failure_reason=failure_reason,
+            incomplete_response=incomplete_response,
         )
 
     def _ontology_class_catalog(self, ontology) -> list[tuple[str, str]]:
@@ -961,10 +965,10 @@ class ExtractionService:
         A response is the whole answer when it parses into the JSON asked for
         (an object with a ``triples`` list), whatever its finish_reason: an
         object cut short cannot parse. Any other response says nothing about
-        the text, so it is never read as "no triples": the same call is made
-        again, up to _MAX_LLM_ATTEMPTS times in all. A complete first response
-        is used as is. A response the provider answered from its cache would
-        come back the same, so it is not asked for again.
+        the text, so it is never read as "no triples": the provider is told to
+        forget it, so it is never served again from a response cache, and the
+        same call is made again, up to _MAX_LLM_ATTEMPTS times in all. A
+        complete first response is used as is.
 
         Args:
             stage: The stage key (identify_individuals or derive_relationships),
@@ -976,16 +980,17 @@ class ExtractionService:
         Raises:
             IncompleteLLMResponseError: If no attempt returned a complete response
         """
+        request = {
+            "system_prompt": system_prompt,
+            "user_prompt": user_prompt,
+            "model": model,
+            "temperature": temperature,
+            "max_tokens": 8000,
+            "response_format": "json",
+        }
         tokens = 0
         for attempt in range(1, _MAX_LLM_ATTEMPTS + 1):
-            response = self._llm.complete(
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-                model=model,
-                temperature=temperature,
-                max_tokens=8000,
-                response_format="json",
-            )
+            response = self._llm.complete(**request)
             tokens += response.tokens_in + response.tokens_out
             try:
                 triples, warnings = self._parse_triple_extraction_response(
@@ -1001,11 +1006,7 @@ class ExtractionService:
                     _MAX_LLM_ATTEMPTS,
                     problem,
                 )
-            if response.cached:
-                raise IncompleteLLMResponseError(
-                    f"The LLM response for {stage} was incomplete: {problem}. The provider"
-                    f" answered attempt {attempt} from its cache, so it was not asked again"
-                )
+                self._llm.forget(**request)
         raise IncompleteLLMResponseError(
             f"The LLM response for {stage} was still incomplete after"
             f" {_MAX_LLM_ATTEMPTS} attempts: {problem}"

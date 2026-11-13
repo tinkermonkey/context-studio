@@ -150,8 +150,11 @@ class ChunkExtraction:
                 warnings=[f"Extraction failed: {answer}"],
                 metadata={},
                 failure_reason=answer,
+                incomplete_response=True,
             )
-        return SimpleNamespace(triples=answer, warnings=[], metadata={}, failure_reason=None)
+        return SimpleNamespace(
+            triples=answer, warnings=[], metadata={}, failure_reason=None, incomplete_response=False
+        )
 
 
 async def extract_source(proposer, house, run_id, minute, *chunk_answers):
@@ -461,6 +464,7 @@ class TestProposeIndividuals:
             "pages": "2-3",
             "extraction_id": "x-1",
             "extraction_started_at": "2026-11-11T10:05:00+00:00",
+            "partial": False,
         }
         assert [(o.kind.value, o.ref) for o in proposal.operations] == [
             ("individual", "i1"),
@@ -547,8 +551,9 @@ class TestProposeIndividuals:
         rationale = service.get(outcome.proposal_id).rationale
         assert rationale.startswith("Individuals and relationships found in the source")
         assert rationale.endswith(
-            f" as an alternative. {note} Any earlier proposal for this source stays open."
+            f" as an alternative. {note} This proposal supersedes no other for this source."
         )
+        assert service.get(outcome.proposal_id).client_metadata["partial"] is True
 
     async def test_a_run_with_failed_chunks_leaves_the_earlier_proposal_open(
         self, service, repo, house
@@ -567,7 +572,7 @@ class TestProposeIndividuals:
         newer = service.get(partial.result["proposal_id"])
         assert [o.status for o in newer.operations] == [OperationStatus.PENDING]
         assert "Extraction failed for 2 of 3 chunks (chunks 1, 2)" in newer.rationale
-        assert "Any earlier proposal for this source stays open." in newer.rationale
+        assert "This proposal supersedes no other for this source." in newer.rationale
         # What the earlier, whole run proposed still awaits review
         older = service.get(whole.result["proposal_id"])
         assert older.status is ProposalStatus.OPEN
@@ -583,6 +588,43 @@ class TestProposeIndividuals:
             assert {o.reason for o in settled.operations} == {
                 f"superseded by extraction proposal {again.result['proposal_id']}"
             }
+
+    async def test_a_whole_run_finishing_after_a_newer_partial_one_is_not_rejected_for_it(
+        self, service, repo, house
+    ):
+        proposer = SourceProposer(service, repo)
+        oldest = await extract_source(proposer, house, "rA", 1, [typing("A", "Business")], [], [])
+        partial = await extract_source(
+            proposer, house, "rB", 3, CUT_OFF, CUT_OFF, [typing("B", "Business")]
+        )
+        # Started before the partial run, finished after it
+        late = await extract_source(proposer, house, "rC", 2, [typing("C", "Business")], [], [])
+
+        whole = service.get(late.result["proposal_id"])
+        assert whole.status is ProposalStatus.OPEN
+        assert [o.status for o in whole.operations] == [OperationStatus.PENDING]
+        # The late whole run supersedes the older whole one, and leaves the partial one be
+        assert service.get(oldest.result["proposal_id"]).operations[0].reason == (
+            f"superseded by extraction proposal {whole.id}"
+        )
+        assert service.get(partial.result["proposal_id"]).status is ProposalStatus.OPEN
+
+    async def test_a_partial_run_finishing_after_a_newer_whole_one_is_superseded_by_it(
+        self, service, repo, house
+    ):
+        proposer = SourceProposer(service, repo)
+        newer = await extract_source(proposer, house, "rN", 3, [typing("N", "Business")], [], [])
+        # Started before the whole run, finished after it
+        late = await extract_source(
+            proposer, house, "rO", 2, CUT_OFF, CUT_OFF, [typing("O", "Business")]
+        )
+
+        stale = service.get(late.result["proposal_id"])
+        assert stale.status is ProposalStatus.DONE
+        assert [o.reason for o in stale.operations] == [
+            f"superseded by extraction proposal {newer.result['proposal_id']}"
+        ]
+        assert service.get(newer.result["proposal_id"]).status is ProposalStatus.OPEN
 
     async def test_failed_chunks_and_nothing_found_elsewhere_is_not_an_empty_text(
         self, service, repo, house

@@ -1432,9 +1432,10 @@ class TestRunStatusLifecycle:
 class _FailingExtraction:
     """An extraction service whose extraction fails, or whose ontology is unknown."""
 
-    def __init__(self, failure_reason=None, unknown_ontology=False):
+    def __init__(self, failure_reason=None, unknown_ontology=False, incomplete_response=True):
         self._failure_reason = failure_reason
         self._unknown_ontology = unknown_ontology
+        self._incomplete_response = incomplete_response
 
     def extract_triples(self, text, ontology_id, **_):
         if self._unknown_ontology:
@@ -1444,6 +1445,7 @@ class _FailingExtraction:
             warnings=[f"Extraction failed: {self._failure_reason}"],
             metadata={},
             failure_reason=self._failure_reason,
+            incomplete_response=self._incomplete_response,
         )
 
 
@@ -1479,7 +1481,21 @@ class TestIndividualExtractionFailures:
         assert run.status == PipelineRunStatus.FAILED
         assert run.failure_reason == "Ontology tax-1 not found"
 
-    def test_failed_extraction_is_a_500_with_the_reason_and_the_run_id(
+    def test_another_failure_is_a_500_that_keeps_its_reason_on_the_run(
+        self, client, registries, pipeline_run_repo
+    ):
+        reason = "(sqlite3.OperationalError) database is locked [SQL: SELECT * FROM runs]"
+        response = self._post(
+            client, registries, _FailingExtraction(failure_reason=reason, incomplete_response=False)
+        )
+
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+        assert response.json()["detail"] == "Pipeline execution failed"
+        (run,) = pipeline_run_repo.list()
+        assert run.status == PipelineRunStatus.FAILED
+        assert run.failure_reason == f"Extraction failed: {reason}"
+
+    def test_incomplete_response_is_a_500_with_the_reason_and_the_run_id(
         self, client, registries, pipeline_run_repo
     ):
         reason = (

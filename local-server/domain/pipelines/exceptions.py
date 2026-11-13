@@ -56,8 +56,8 @@ class PipelineExecutionError(PipelineError):
 
 class ExtractionFailedError(PipelineExecutionError):
     """
-    Raised when a run's extraction failed for a reason its caller is told: for
-    one, an LLM response that stayed incomplete. The message is that reason.
+    Raised when a run's extraction failed because an LLM response stayed
+    incomplete. The message is that reason, written for the run's caller.
     """
 
     pass

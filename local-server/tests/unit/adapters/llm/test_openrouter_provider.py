@@ -12,12 +12,15 @@ Tests verify:
 - Response parsing and token counting
 """
 
+import json
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import httpx
 import pytest
 
 from adapters.llm.openrouter_provider import OpenRouterProvider
+from domain.extraction.services import ExtractionService
 from domain.pipelines.exceptions import PipelineExternalServiceError
 from domain.pipelines.ports import LLMResponse
 
@@ -290,74 +293,134 @@ class TestOpenRouterCaching:
         assert response2.content == "cached response"
         assert provider._client.post.call_count == 1  # No new API call
 
+    @staticmethod
+    def http_response(content, finish_reason="stop"):
+        response = Mock()
+        response.status_code = 200
+        response.json.return_value = {
+            "choices": [{"message": {"content": content}, "finish_reason": finish_reason}],
+            "usage": {"prompt_tokens": 1, "completion_tokens": 2},
+        }
+        return response
+
+    def test_a_response_that_ended_with_an_error_is_returned_but_not_cached(self):
+        """Asking again after a provider error reaches the model."""
+        provider = self.create_provider_with_mock_client()
+        provider._client.post.side_effect = [
+            self.http_response('{"triples": [{"subj', "error"),
+            self.http_response('{"triples": []}'),
+        ]
+        request = dict(system_prompt="sys", user_prompt="user", model="gpt-4", max_tokens=8000)
+
+        first = provider.complete(**request)
+        assert (first.content, first.finish_reason) == ('{"triples": [{"subj', "error")
+        assert len(provider._response_cache) == 0
+
+        assert provider.complete(**request).content == '{"triples": []}'
+        assert provider.complete(**request).content == '{"triples": []}'
+        assert provider._client.post.call_count == 2
+
     @pytest.mark.parametrize(
         "content, finish_reason",
         [
-            ('{"triples": [{"subj', "error"),  # the provider failed part-way
-            ('{"triples": [{"subj', "length"),  # cut at the output limit
-            ('{"triples": []}', "content_filter"),
-            ('{"triples": []}', None),  # a null finish reason
-            ('{"triples": [{"subj', "stop"),  # JSON was asked for; this is not JSON
-            ("", "stop"),
-            (None, "stop"),
+            ('```json\n{"triples": []}\n```', "stop"),  # fenced JSON
+            ('Here it is: {"triples": []}', "stop"),  # JSON in prose
+            ("{}", "stop"),  # the provider cannot know what shape its caller needs
+            ('{"triples": []}', "length"),  # cut at the limit, yet whole
+            ('{"triples": []}', None),
         ],
     )
-    def test_a_response_that_may_be_incomplete_is_returned_but_not_cached(
-        self, content, finish_reason
-    ):
-        """Asking again after such a response reaches the model."""
+    def test_the_provider_does_not_judge_content(self, content, finish_reason):
+        """Every other response is cached, whatever its content, in JSON mode too."""
         provider = self.create_provider_with_mock_client()
+        provider._client.post.return_value = self.http_response(content, finish_reason)
+        request = dict(
+            system_prompt="sys", user_prompt="user", model="gpt-4", response_format="json"
+        )
 
-        def http_response(content, reason):
-            response = Mock()
-            response.status_code = 200
-            response.json.return_value = {
-                "choices": [{"message": {"content": content}, "finish_reason": reason}],
-                "usage": {"prompt_tokens": 0, "completion_tokens": 0},
-            }
-            return response
+        assert provider.complete(**request).content == content
+        assert provider.complete(**request).content == content
+        assert provider._client.post.call_count == 1
 
+    def test_forget_drops_the_cached_response_to_that_request_only(self):
+        provider = self.create_provider_with_mock_client()
         provider._client.post.side_effect = [
-            http_response(content, finish_reason),
-            http_response('{"triples": []}', "stop"),
+            self.http_response("{}"),
+            self.http_response("other"),
+            self.http_response('{"triples": []}'),
         ]
         request = dict(
             system_prompt="sys",
             user_prompt="user",
             model="gpt-4",
+            temperature=0.0,
             max_tokens=8000,
             response_format="json",
         )
+        other = {**request, "user_prompt": "another"}
+        assert provider.complete(**request).content == "{}"
+        assert provider.complete(**other).content == "other"
 
-        first = provider.complete(**request)
-        assert (first.content, first.finish_reason, first.cached) == (content, finish_reason, False)
-        assert len(provider._response_cache) == 0
+        provider.forget(**request)
 
-        second = provider.complete(**request)
-        assert (second.content, second.finish_reason) == ('{"triples": []}', "stop")
-        assert second.cached is False
-        assert provider._client.post.call_count == 2
+        assert provider.complete(**request).content == '{"triples": []}'
+        assert provider.complete(**other).content == "other"
+        assert provider._client.post.call_count == 3
+        # Forgetting a request that was never cached is harmless
+        provider.forget(**{**request, "user_prompt": "never asked"})
 
-        # The whole answer is cached, and a response served from the cache says so
-        third = provider.complete(**request)
-        assert third.content == second.content
-        assert third.cached is True
-        assert provider._client.post.call_count == 2
-
-    def test_text_that_is_not_json_is_cached_when_json_was_not_asked_for(self):
+    def test_extraction_over_this_provider_is_not_poisoned_by_a_rejected_answer(self):
+        """
+        The model answers {} once, then well: the extraction service makes two
+        model calls for that stage and succeeds, and a later run of the same
+        text is answered from the cache with the good answers.
+        """
+        identified = json.dumps(
+            {
+                "triples": [
+                    {
+                        "subject": {"kind": "individual", "label": label},
+                        "predicate": {"label": "is_a"},
+                        "object": {"kind": "class", "label": "Tool"},
+                        "confidence": 0.9,
+                        "provenance": {"raw": label},
+                    }
+                    for label in ("Nextflow", "Slurm")
+                ]
+            }
+        )
         provider = self.create_provider_with_mock_client()
-        response = Mock()
-        response.status_code = 200
-        response.json.return_value = {
-            "choices": [{"message": {"content": "plain words"}, "finish_reason": "stop"}],
-            "usage": {"prompt_tokens": 1, "completion_tokens": 2},
-        }
-        provider._client.post.return_value = response
-        request = dict(system_prompt="sys", user_prompt="user", model="gpt-4")
+        provider._client.post.side_effect = [
+            self.http_response("{}"),
+            self.http_response(identified),
+            self.http_response('{"triples": []}'),  # derive: no relationships
+        ]
+        repo = Mock()
+        repo.get_taxonomy.return_value = SimpleNamespace(id="tax-1", title="Tools")
+        repo.list_concept_schemes.return_value = []
+        repo.list_property_definitions.return_value = []
+        publisher = Mock()
+        publisher.publish.return_value = []
+        service = ExtractionService(
+            ontology_repo=repo,
+            embedding_service=None,
+            llm=provider,
+            nlp=None,
+            reference_sources=[],
+            event_publisher=publisher,
+            extraction_repo=None,
+            extraction_run_repo=Mock(),
+        )
 
-        assert provider.complete(**request).cached is False
-        assert provider.complete(**request).cached is True
-        assert provider._client.post.call_count == 1
+        first = service.extract_triples("Nextflow runs on Slurm.", "tax-1", "gpt-4", 0.0)
+        assert first.failure_reason is None
+        assert [t["subject"]["label"] for t in first.triples] == ["Nextflow", "Slurm"]
+        assert provider._client.post.call_count == 3
+
+        later = service.extract_triples("Nextflow runs on Slurm.", "tax-1", "gpt-4", 0.0)
+        assert later.failure_reason is None
+        assert [t["subject"]["label"] for t in later.triples] == ["Nextflow", "Slurm"]
+        assert provider._client.post.call_count == 3
 
     def test_cache_miss_different_max_tokens(self):
         """Identical prompts with different max_tokens miss cache."""

@@ -25,7 +25,11 @@ import pytest
 from domain.extraction.chunking import Chunk
 from domain.extraction.exceptions import InvalidInputError
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
-from domain.pipelines.exceptions import ExtractionFailedError, PipelineInputError
+from domain.pipelines.exceptions import (
+    ExtractionFailedError,
+    PipelineExecutionError,
+    PipelineInputError,
+)
 from domain.pipelines.individual_extraction.chunk_merge import merge_chunk_triples
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
@@ -225,6 +229,7 @@ class _Result:
     warnings: list = field(default_factory=list)
     metadata: dict = field(default_factory=dict)
     failure_reason: str | None = None
+    incomplete_response: bool = False
 
 
 INCOMPLETE = (
@@ -233,17 +238,22 @@ INCOMPLETE = (
 )
 
 
+SQL = "(sqlite3.OperationalError) database is locked [SQL: SELECT * FROM ontology_entities]"
+
+
 class _FakeExtraction:
     """
     Extracts one typing triple per 'Name.' sentence of the text it is given.
     The calls numbered in ``failing`` (from 1) fail instead, as the service
-    reports an LLM response that stayed incomplete.
+    reports an LLM response that stayed incomplete; those in ``broken`` fail
+    for another reason.
     """
 
-    def __init__(self, on_call=None, failing=(), finds=True):
+    def __init__(self, on_call=None, failing=(), finds=True, broken=()):
         self.calls: list[str] = []
         self._on_call = on_call
         self._failing = set(failing)
+        self._broken = set(broken)
         self._finds = finds
 
     def extract_triples(
@@ -258,7 +268,10 @@ class _FakeExtraction:
                 warnings=[f"Extraction failed: {INCOMPLETE}"],
                 metadata={"model": model, "tokens_used": 0, "duration_ms": 5},
                 failure_reason=INCOMPLETE,
+                incomplete_response=True,
             )
+        if len(self.calls) in self._broken:
+            return _Result(triples=[], warnings=[f"Extraction failed: {SQL}"], failure_reason=SQL)
         triples = []
         for sentence in text.split(". "):
             name = sentence.strip().rstrip(".").split(" ")[0]
@@ -329,6 +342,21 @@ class TestFailedExtraction:
         extraction = _FakeExtraction(failing={1})
         with pytest.raises(ExtractionFailedError, match="Extraction failed: The LLM response"):
             await _orchestrator(extraction).execute(_state(text="Door one. Shelf two."))
+
+    @pytest.mark.parametrize(
+        "source, broken",
+        [({}, {1}), ({"source_id": "src-1"}, {2}), ({"source_id": "s"}, {1, 2, 3})],
+    )
+    async def test_a_failure_that_is_not_an_incomplete_response_is_not_told_to_the_caller(
+        self, source, broken
+    ):
+        # Its reason may quote an internal error, so the run fails with the plain
+        # execution error (whose message the route withholds), never the caller-facing one
+        failing = {1, 2, 3} - broken
+        extraction = _FakeExtraction(failing=failing, broken=broken)
+        with pytest.raises(PipelineExecutionError) as raised:
+            await _orchestrator(extraction).execute(_state(text=_long_text(300), **source))
+        assert not isinstance(raised.value, ExtractionFailedError)
 
     @pytest.mark.parametrize("source", [{}, {"source_id": "src-1"}])
     async def test_an_ontology_that_does_not_exist_is_an_input_error(self, source):

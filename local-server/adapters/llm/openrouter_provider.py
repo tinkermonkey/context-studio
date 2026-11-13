@@ -14,12 +14,10 @@ Configuration:
 from __future__ import annotations
 
 import hashlib
-import json
 import re
 import threading
 import time
 from collections import OrderedDict
-from dataclasses import replace
 from typing import Literal
 
 import httpx
@@ -32,31 +30,15 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-def _is_whole_answer(response: LLMResponse, response_format: str | None) -> bool:
-    """
-    Whether a response is safe to cache as the model's whole answer: it
-    finished normally ("stop"; a provider error, the output limit, a content
-    filter or no finish reason all fail this), it has content, and that
-    content is JSON when JSON was asked for.
-    """
-    if response.finish_reason != "stop" or not response.content:
-        return False
-    if response_format == "json":
-        try:
-            json.loads(response.content)
-        except ValueError:
-            return False
-    return True
-
-
 class OpenRouterProvider:
     """
     LLM provider adapter for OpenRouter API.
 
     Routes requests to any OpenRouter-available model. Supports response
     caching keyed by (prompt_hash, model, temperature, max_tokens, response_format)
-    with a bounded LRU cache. Only a whole answer is cached (see
-    _is_whole_answer), and a response served from the cache says so (cached).
+    with a bounded LRU cache. A response the provider ended with an error is
+    not cached; whether any other response is what its caller needed is the
+    caller's call, which drops one it cannot use with forget().
     """
 
     BASE_URL = "https://openrouter.ai/api/v1"
@@ -140,7 +122,7 @@ class OpenRouterProvider:
                 self._response_cache.move_to_end(cache_key)
         if cached is not None:
             logger.debug(f"Cache hit for model {model}")
-            return replace(cached, cached=True)
+            return cached
 
         # Prepare request
         messages = [
@@ -218,12 +200,11 @@ class OpenRouterProvider:
                 model=model,
             )
 
-            # A response that may not be the model's whole answer is returned but
-            # never cached, so asking again reaches the model
-            if not _is_whole_answer(llm_response, response_format):
+            # A response the provider ended with an error is returned but never
+            # cached, so asking again reaches the model
+            if finish_reason == "error":
                 logger.warning(
-                    f"OpenRouter response for model {model} may be incomplete"
-                    f" (finish_reason={finish_reason}); not caching it"
+                    f"OpenRouter response for model {model} ended with an error;" " not caching it"
                 )
                 return llm_response
 
@@ -423,6 +404,22 @@ class OpenRouterProvider:
         prompt_hash = hashlib.sha256(combined.encode()).hexdigest()[:16]
         format_str = response_format or "text"
         return f"{prompt_hash}:{model}:{temperature}:{max_tokens}:{format_str}"
+
+    def forget(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        model: str,
+        temperature: float = 0.0,
+        max_tokens: int = 2000,
+        response_format: Literal["json", "text"] | None = None,
+    ) -> None:
+        """Drop the cached response to this request, if there is one."""
+        cache_key = self._make_cache_key(
+            system_prompt, user_prompt, model, temperature, max_tokens, response_format
+        )
+        with self._cache_lock:
+            self._response_cache.pop(cache_key, None)
 
     def clear_cache(self) -> None:
         """Clear the response cache."""
