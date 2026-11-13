@@ -13,8 +13,9 @@ line per experiment (accepted and rejected), in the exact shape specified by
 
 `dev` and `holdout` are the extraction benchmark's measures and `guard` the
 triple corpus's (entries before the 2026-11 baseline reset carry triple-corpus
-metrics in `dev`/`holdout`). All three are null for a candidate that could not
-be measured (`decision: "unmeasured"`).
+metrics in `dev`/`holdout`). A `decision: "unmeasured"` entry has all three
+null when the candidate could not be measured, and its claimed numbers when it
+was measured but the verifier returned nothing.
 
 Entries may also carry an optional `bootstrap` field — the Wave 1 DR
 bootstrap-scenario diagnostics (`karpathy_loop_dr_ontology_design.md` §5,

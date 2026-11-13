@@ -109,6 +109,22 @@ class TestMatching:
             assert result.counts["typed"] == 1, [p.title for p in predicted]
             assert [s["title"] for s in result.spurious] == ["Respond quickly"]
 
+    def test_statements_pair_so_that_as_many_as_possible_are_found(self):
+        # "wide" could be either statement, "narrow" only the first: both are found
+        first = GoldIndividual(
+            "x", "Serve pages quickly", GOAL, "core", evidence=(Passage(0, 100),)
+        )
+        second = GoldIndividual(
+            "y", "Keep hosting cheap", GOAL, "core", evidence=(Passage(40, 200),)
+        )
+        gold = Gold("sample", (first, second), (), frozenset())
+        wide = Predicted("aaa bbb", (GOAL,), (Passage(50, 90),))
+        narrow = Predicted("ccc ddd", (GOAL,), (Passage(10, 30),))
+        for predicted in ([wide, narrow], [narrow, wide]):
+            result = score(gold, predicted)
+            assert result.metrics["recall"] == 1.0, [p.title for p in predicted]
+            assert result.metrics["typed_f1"] == 1.0
+
     def test_a_prediction_that_names_an_individual_never_pairs_with_another_by_passage(self):
         # Named like one gold statement, with the passage of another: a duplicate in any order
         gold = _gold()
@@ -198,6 +214,36 @@ class TestScore:
         assert result.duplicates == ["Runner"]
         assert result.metrics["relationship_recall"] == 0.5
         assert result.missed_relationships == ["Redis serves Gitaly"]
+
+    def test_diagnostics_read_every_prediction_standing_for_the_individual(self):
+        predicted = [Predicted("GitLab Runner", ()), Predicted("Runner", (COMPONENT,))]
+        for order in (predicted, predicted[::-1]):
+            metrics = score(_gold(), order).metrics
+            assert metrics["type_accuracy"] == 1.0
+            assert metrics["type_accuracy_any"] == metrics["type_accuracy_exact"] == 1.0
+            assert metrics["layer_accuracy"] == 1.0
+
+    def test_a_title_two_found_statements_share_names_neither_relationship_end(self):
+        first = GoldIndividual(
+            "x", "Serve pages quickly", GOAL, "core", evidence=(Passage(0, 100),)
+        )
+        second = GoldIndividual(
+            "y", "Keep hosting cheap", GOAL, "core", evidence=(Passage(200, 300),)
+        )
+        zeta = GoldIndividual("z", "Zeta", COMPONENT, "core")
+        gold = Gold(
+            "sample", (first, second, zeta), (GoldRelationship("z", "realizes", "x"),), frozenset()
+        )
+        predicted = [
+            Predicted("Reduce load fast", (GOAL,), (Passage(10, 50),)),
+            Predicted("Reduce load fast", (GOAL,), (Passage(210, 250),)),
+            Predicted("Zeta", (COMPONENT,)),
+        ]
+        stated = [PredictedRelationship("Zeta", "realizes", "Reduce load fast")]
+        for order in (predicted, predicted[::-1], [predicted[1], predicted[0], predicted[2]]):
+            result = score(gold, order, stated)
+            assert result.metrics["recall"] == 1.0
+            assert result.metrics["relationship_recall"] == 0.0
 
     def test_a_relationship_end_naming_an_individual_the_run_did_not_find_does_not_count(self):
         predicted = [Predicted("Gitaly", (COMPONENT,))]

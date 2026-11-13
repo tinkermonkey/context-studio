@@ -277,7 +277,8 @@ const MEASURE_STEPS = [
   'b. Find the newest `experiments/reports/tournament_<run_id>.md` digest (`scoreboardPath`) and the',
   '   `experiments/reports/tournament_<run_id>_benchmark.json` beside it (`errorReportPath`).',
   'c. Read the benchmark JSON. Its `status` must be "scored"; "not_recorded" or "stale" becomes the',
-  '   `measurementStatus` (the benchmark cassettes are missing or out of date). When scored: `dev` and',
+  '   `measurementStatus` (the benchmark cassettes are missing or out of date), and any other status',
+  '   ("partial": a benchmark document is missing) is "failed". When scored: `dev` and',
   '   `holdout` are its `dev` and `holdout` objects (typed_f1, typed_precision, typed_recall, f1,',
   '   precision, recall, recall_core, type_accuracy, relationship_recall), and the failure counts are',
   '   its `failure_counts`. Each document\'s `missed`, `mistyped`, `spurious` and `excluded_hits` lists',
@@ -827,7 +828,10 @@ const decisions = paired.map((p) => {
 }).concat(unmeasured.map((candidate) => ({
   // Recorded, with its cost, but not as a rejection: a recording that failed or
   // a run that could not be scored says nothing about the hypothesis, which
-  // stays selectable. The plateau count bounds how often that can repeat.
+  // stays selectable and may be drafted again next iteration. Nothing counts
+  // repeats; the loop halts for a human after every accept and after three
+  // iterations without one, and the ledger shows a hypothesis that keeps
+  // failing to measure.
   candidate,
   decision: 'unmeasured',
   reason: `not measured (${candidate.measurementStatus}): ${candidate.measurementDetail || 'no detail given'}`,

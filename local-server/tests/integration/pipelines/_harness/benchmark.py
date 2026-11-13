@@ -447,13 +447,13 @@ def match_individuals(gold: Gold, predicted: Sequence[Predicted]) -> dict[int, G
     prediction -> the gold individual it found. Names are matched first; what
     is left is matched to gold statements by passage.
 
-    Which gold individuals are found, and which of them are typed correctly,
-    does not depend on the order of the predictions. When several predictions
-    name one gold individual ("GitLab Runner" and "Runner"), the one under its
-    title finds it and the others are duplicates (`named_groups`). Statements
-    pair off strongest affinity first, a correctly typed prediction before
-    another of the same affinity; a prediction that names a gold individual
-    never pairs with a different one by passage.
+    How many gold individuals are found, and how many of them are typed
+    correctly, does not depend on the order of the predictions. When several
+    predictions name one gold individual ("GitLab Runner" and "Runner"), the
+    one under its title finds it and the others are duplicates
+    (`named_groups`). A prediction that names a gold individual never pairs
+    with a different one by passage; the rest pair with statements so that as
+    many statements as possible are found (`_pair_statements`).
     """
     groups = named_groups(gold, predicted)
     gold_by_key = {g.key: g for g in gold.individuals}
@@ -462,25 +462,61 @@ def match_individuals(gold: Gold, predicted: Sequence[Predicted]) -> dict[int, G
         individual = gold_by_key[key]
         title = name_key(individual.title)
         matches[min(indexes, key=lambda i: (name_key(predicted[i].title) != title, i))] = individual
-    taken = set(groups)
     named = {index for indexes in groups.values() for index in indexes}
-    pairs = sorted(
-        (
-            (-affinity, not typed_correctly(g, [prediction]), index, position)
-            for index, prediction in enumerate(predicted)
-            if index not in named and _may_be_statement(prediction)
-            for position, g in enumerate(gold.individuals)
-            if g.is_statement
-            and g.key not in taken
-            and (affinity := _statement_affinity(g, prediction)) > 0
-        ),
-    )
-    for _, _, index, position in pairs:
-        individual = gold.individuals[position]
-        if index not in matches and individual.key not in taken:
-            matches[index] = individual
-            taken.add(individual.key)
+    statements = [g for g in gold.individuals if g.is_statement and g.key not in groups]
+    candidates = {
+        index: prediction
+        for index, prediction in enumerate(predicted)
+        if index not in named and _may_be_statement(prediction)
+    }
+    matches.update(_pair_statements(statements, candidates))
     return matches
+
+
+def _pair_statements(
+    statements: Sequence[GoldIndividual], candidates: Mapping[int, Predicted]
+) -> dict[int, GoldIndividual]:
+    """
+    Pair predictions with the gold statements they could be, one to one, so
+    that as many statements as possible are found (a maximum matching: when
+    one prediction could be either of two statements and another only the
+    first, both are found). Each prediction tries its strongest statement
+    first, a correctly typed one before another of the same affinity, and the
+    predictions are taken in an order of their own (strongest first, then by
+    title, classes and passages), never the order they were given in.
+    """
+    options: dict[int, list[int]] = {}
+    strength: dict[int, tuple[float, bool]] = {}
+    for index, prediction in candidates.items():
+        ranked = sorted(
+            (-affinity, not typed_correctly(g, [prediction]), position)
+            for position, g in enumerate(statements)
+            if (affinity := _statement_affinity(g, prediction)) > 0
+        )
+        if ranked:
+            options[index] = [position for _, _, position in ranked]
+            strength[index] = ranked[0][:2]
+
+    def own_order(index: int) -> tuple[Any, ...]:
+        prediction = candidates[index]
+        passages = tuple((p.start, p.end) for p in prediction.evidence)
+        return (*strength[index], name_key(prediction.title), prediction.class_refs, passages)
+
+    holder: dict[int, int] = {}
+
+    def place(index: int, tried: set[int]) -> bool:
+        for position in options[index]:
+            if position in tried:
+                continue
+            tried.add(position)
+            if position not in holder or place(holder[position], tried):
+                holder[position] = index
+                return True
+        return False
+
+    for index in sorted(options, key=own_order):
+        place(index, set())
+    return {index: statements[position] for position, index in holder.items()}
 
 
 def named_groups(gold: Gold, predicted: Sequence[Predicted]) -> dict[str, list[int]]:
@@ -551,25 +587,20 @@ def score(
         index: [predicted[i] for i in groups.get(g.key, [index])] for index, g in matches.items()
     }
     typed = {index for index, g in matches.items() if typed_correctly(g, standing[index])}
-    # Diagnostics: an accepted class is among those given (the gap to `typed`
-    # is typing with several classes), and the gold class itself is among them.
-    any_accepted = {
-        index
-        for index, g in matches.items()
-        if any(g.accepts(ref) for ref in predicted[index].class_refs)
-    }
-    exact = {index for index, g in matches.items() if g.class_ref in predicted[index].class_refs}
-    same_layer = {
-        index
-        for index, g in matches.items()
-        if any(layer_of(ref) == g.layer for ref in predicted[index].class_refs)
-    }
+    # Diagnostics, read like `typed` from every prediction standing for the
+    # individual: an accepted class is among those given (the gap to `typed` is
+    # typing with several classes), the gold class itself is, one of its layer is.
+    given = {index: [ref for p in standing[index] for ref in p.class_refs] for index in matches}
+    any_accepted = {i for i, g in matches.items() if any(g.accepts(ref) for ref in given[i])}
+    exact = {i for i, g in matches.items() if g.class_ref in given[i]}
+    same_layer = {i for i, g in matches.items() if any(layer_of(r) == g.layer for r in given[i])}
     grounded = {
         index
         for index, g in matches.items()
         if any(
             p.overlap(e) >= MIN_PASSAGE_OVERLAP
-            for p in predicted[index].evidence
+            for prediction in standing[index]
+            for p in prediction.evidence
             for e in g.evidence
         )
     }
@@ -608,8 +639,15 @@ def score(
     # A relationship's end is the found individual its name finds: any of that
     # individual's names (a run may state "Runner uses Gitaly" and title the
     # individual "GitLab Runner"), or the statement a prediction was paired with.
-    end_key = {name: g.key for name, g in _gold_by_name(gold).items() if g.key in found}
-    end_key.update({name_key(predicted[i].title): g.key for i, g in matches.items()})
+    # A title two found individuals share (two statements a run titled alike)
+    # names neither.
+    ends: dict[str, set[str]] = {}
+    for name, g in _gold_by_name(gold).items():
+        if g.key in found:
+            ends.setdefault(name, set()).add(g.key)
+    for i, g in matches.items():
+        ends.setdefault(name_key(predicted[i].title), set()).add(g.key)
+    end_key = {name: next(iter(keys)) for name, keys in ends.items() if len(keys) == 1}
     stated = {
         (end_key[name_key(r.source)], r.predicate, end_key[name_key(r.target)])
         for r in relationships

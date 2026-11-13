@@ -1377,9 +1377,12 @@ def _render_benchmark_section(
         )
     elif summary["status"] == "partial":
         lines.append(
-            "_Partial: not every benchmark document was scored, so there are no dev or holdout "
-            "means. A document's `gold.json` is missing from the fixtures._"
+            "_Partial: not every benchmark document was scored (a document's `gold.json` is "
+            "missing from the fixtures). A split has a mean only when all of its documents "
+            "scored._"
         )
+        if summary["failure_counts"]:
+            lines.append(f"Failure counts over dev: {summary['failure_counts']}")
     else:
         lines.append(f"Failure counts over dev: {summary['failure_counts']}")
         lines.append(f"Detail: `{report_path}`")

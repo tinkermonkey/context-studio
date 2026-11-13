@@ -121,8 +121,9 @@ precision, type accuracy, typed F1, relationship recall, a breakdown by layer, a
 behind them (missed, mistyped, spurious, duplicates, known distractors). The rules:
 
 - A prediction finds a gold individual by its title or an alias; a prediction typed as a
-  statement that names no gold individual can also find a gold statement by its passage. What is
-  found, and what is typed correctly, does not depend on the order of the predictions.
+  statement that names no gold individual can also find a gold statement by its passage, and
+  those pair so that as many statements as possible are found. The scores do not depend on the
+  order of the predictions.
 - A found individual is typed correctly when every class the run gave it, under any of its
   names, is the gold class or an acceptable one. The right class with a wrong one beside it is
   mistyped, on one prediction or split over two that name the same individual: it would be
@@ -133,6 +134,7 @@ behind them (missed, mistyped, spurious, duplicates, known distractors). The rul
   precision: gold sometimes joins what a run may defensibly extract apart ("Link check and
   Reference reliability"). Their classes still count toward the typing rule above.
 - A relationship's ends are resolved by any name of an individual the run found, so a
-  relationship stated under an alias counts.
+  relationship stated under an alias counts. A title the run gave to two found statements names
+  neither.
 Offline, the variant tournament scores each variant on these documents from recorded LLM
 responses; see `experiments/README.md`.
