@@ -5,19 +5,25 @@ Read/write helpers for `local-server/experiments/ledger.jsonl` — one JSON
 line per experiment (accepted and rejected), in the exact shape specified by
 `documentation/karpathy_loop_design.md` §8:
 
-    {"experiment_id": "...", "iteration": 12, "hypothesis": "copular handling",
-     "variant": "open_v1+copular", "diff_stat": "...", "base_commit": "...",
-     "dev": {"strict_f1": 0.31, "soft_f1": 0.52, "candidate_recall": 0.71},
-     "holdout": {"strict_f1": 0.28, "soft_f1": 0.47},
+    {"experiment_id": "...", "iteration": 12, "hypothesis": "full_class_catalog",
+     "variant": "default+full_class_catalog", "diff_stat": "...", "base_commit": "...",
+     "dev": {"typed_f1": 0.41, "f1": 0.58}, "holdout": {"typed_f1": 0.37, "f1": 0.55},
+     "guard": {"strict_f1": 0.92, "soft_f1": 0.93},
      "decision": "accepted", "reason": "", "cost_usd": 0.11, "agent": "worktree-2"}
+
+`dev` and `holdout` are the extraction benchmark's measures and `guard` the
+triple corpus's (entries before the 2026-11 baseline reset carry triple-corpus
+metrics in `dev`/`holdout`). A `decision: "unmeasured"` entry has all three
+null when the candidate could not be measured, and its claimed numbers when it
+was measured but the verifier returned nothing.
 
 Entries may also carry an optional `bootstrap` field — the Wave 1 DR
 bootstrap-scenario diagnostics (`karpathy_loop_dr_ontology_design.md` §5,
 `dataset_split.py`'s `DR_BOOTSTRAP_SCENARIOS`), logged for visibility only.
 It is not in `REQUIRED_FIELDS` and nothing that reads the ledger
 (`rejected_hypotheses`, the §6 accept gate) ever consults it — see
-`acceptGate` in `.claude/workflows/karpathy-loop.js`, which takes only `dev`
-and `holdout` as arguments.
+`acceptGate` in `.claude/workflows/karpathy-loop.js`, which reads only `dev`,
+`holdout` and `guard`.
 
 The ledger is the loop's negative-result memory (design doc §6 guardrails):
 `rejected_hypotheses()` is consulted by target selection (§4.3 step 2) so a
@@ -77,6 +83,10 @@ import sys
 from pathlib import Path
 from typing import Any, Optional, Union
 
+# Run as a script (`python experiments/ledger.py ...` from local-server/), the
+# script's own directory is on the path, not local-server/.
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+
 from utils.logger import get_logger
 
 LEDGER_PATH = Path(__file__).parent / "ledger.jsonl"
@@ -100,7 +110,13 @@ REQUIRED_FIELDS = (
 
 BASELINE_RESET_DECISION = "baseline_reset"
 
-VALID_DECISIONS = ("accepted", "rejected", BASELINE_RESET_DECISION)
+# An experiment that ran but could not be measured or verified (a failed
+# recording, a stale cassette, a verifier that returned nothing). It is recorded
+# with its cost, and says nothing about the hypothesis: only "rejected" entries
+# keep a hypothesis from being selected again.
+UNMEASURED_DECISION = "unmeasured"
+
+VALID_DECISIONS = ("accepted", "rejected", UNMEASURED_DECISION, BASELINE_RESET_DECISION)
 
 
 class LedgerEntryError(ValueError):
@@ -113,7 +129,7 @@ def validate_entry(entry: dict[str, Any]) -> None:
 
     Raises:
         LedgerEntryError: If a required field is missing, or `decision` is
-            not one of "accepted"/"rejected"/"baseline_reset".
+            not one of "accepted"/"rejected"/"unmeasured"/"baseline_reset".
     """
     missing = [field for field in REQUIRED_FIELDS if field not in entry]
     if missing:
@@ -272,11 +288,11 @@ def rejected_hypotheses(ledger_path: Optional[Union[Path, str]] = None) -> list[
     Return the distinct `hypothesis` strings of every rejected experiment
     recorded since the last baseline reset, in first-seen order.
 
-    Target selection (§4.3 step 2) excludes these unless the codebase has
-    materially changed in the relevant area — that judgment call is made by
-    the humans/agents driving the loop, not automated here. Rejections
-    recorded before a baseline reset (e.g. against the retired placeholder
-    ontology) are scoped out entirely: see `entries_since_last_baseline_reset`.
+    Target selection (§4.3 step 2) excludes these until the next baseline
+    reset. Rejections recorded before a baseline reset (e.g. against the
+    retired placeholder ontology) are scoped out entirely: see
+    `entries_since_last_baseline_reset`. An "unmeasured" entry is not a
+    rejection and is not returned.
     """
     seen: list[str] = []
     for entry in entries_since_last_baseline_reset(ledger_path):

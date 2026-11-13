@@ -11,6 +11,7 @@ sibling checkout, so expected row counts and recorded cassettes stay stable.
 |---|---|---|
 | `dr_spec_0.8.4.tar.xz` | `89f87e94` ("Bump spec version to 0.8.4") | `PINNED_DR_SPEC_VERSION`: the DR ontology integration tests and `scripts/record_recognition_episode_cassettes.py` |
 | `dr_spec_0.10.0.tar.xz` | `9aaf1317` ("spec: retire supports-goals and fulfills-requirements; fix 18 four-part relationship ids") | `MODEL_DR_SPEC_VERSION`: `test_dr_model_import.py`, which imports Context Studio's own DR model (`documentation-robotics/model/`) |
+| `dr_spec_0.11.0.tar.xz` | `a06f0564` (the commit the workspace's DR taxonomy mirrored when the extraction benchmark was made) | `BENCHMARK_DR_SPEC_VERSION` in `scripts/benchmark_replay.py`: the ontology the benchmark documents are extracted against. `test_extraction_benchmark_replay.py` checks it builds the same classes, definitions and relationship types as `fixtures/pipelines/extraction_benchmark/dr_spec.bundle.json.xz` |
 
 Moving `PINNED_DR_SPEC_VERSION` to a new spec version means updating the expected
 counts and re-recording the cassettes. Moving `MODEL_DR_SPEC_VERSION` only needs

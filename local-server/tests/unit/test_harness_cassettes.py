@@ -7,6 +7,7 @@ Tests for CassetteLLMProvider and RecordingLLMProvider covering:
 - File I/O error handling
 """
 
+import asyncio
 import json
 import tempfile
 from pathlib import Path
@@ -293,6 +294,50 @@ class TestRecordingLLMProvider:
             # counts distinct prompts, not total complete() invocations.
             recorder.complete(system_prompt="sys1", user_prompt="user1", model="test")
             assert recorder.call_count == 2
+
+    def test_incomplete_count_counts_cut_short_and_errored_responses(self):
+        """A response that ended with an error or at the length limit is not a whole answer."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            responses = {
+                _compute_prompt_hash("sys", prompt, "test", 0.0, None): LLMResponse(
+                    content='{"triples": [',
+                    tokens_in=0,
+                    tokens_out=0,
+                    duration_ms=1.0,
+                    finish_reason=finish_reason,
+                    model="test",
+                )
+                for prompt, finish_reason in (("errored", "error"), ("too long", "length"))
+            }
+            recorder = RecordingLLMProvider(FakeLLMProvider(responses), Path(tmpdir) / "test.json")
+
+            recorder.complete(system_prompt="sys", user_prompt="whole answer", model="test")
+            assert recorder.incomplete_count == 0
+
+            recorder.complete(system_prompt="sys", user_prompt="errored", model="test")
+            recorder.complete(system_prompt="sys", user_prompt="too long", model="test")
+            assert recorder.incomplete_count == 2
+
+    def test_incomplete_count_counts_calls_that_raised(self):
+        """A call that raised left no recording; the take is not a clean one."""
+
+        class FailingProvider(FakeLLMProvider):
+            def complete(self, *args, **kwargs):
+                raise RuntimeError("rate limit exceeded")
+
+            async def complete_async(self, *args, **kwargs):
+                raise RuntimeError("rate limit exceeded")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            recorder = RecordingLLMProvider(FailingProvider(), Path(tmpdir) / "test.json")
+            with pytest.raises(RuntimeError):
+                recorder.complete(system_prompt="sys", user_prompt="user", model="test")
+            with pytest.raises(RuntimeError):
+                asyncio.run(
+                    recorder.complete_async(system_prompt="sys", user_prompt="user", model="test")
+                )
+            assert recorder.call_count == 0
+            assert recorder.incomplete_count == 2
 
     def test_same_prompt_uses_same_key(self):
         """Same prompt hashes to same cassette key."""

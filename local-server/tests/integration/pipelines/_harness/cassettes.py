@@ -197,6 +197,10 @@ class CassetteStaleError(Exception):
     pass
 
 
+# Finish reasons that mean the response is not the model's whole answer.
+_INCOMPLETE_FINISHES = frozenset({"error", "length", "max_tokens", "content_filter"})
+
+
 class RecordingLLMProvider:
     """Wraps a real LLMProvider, recording interactions to disk.
 
@@ -215,6 +219,7 @@ class RecordingLLMProvider:
         self._delegate = delegate
         self._cassette_path = Path(cassette_path)
         self._recordings: dict[str, dict[str, Any]] = {}
+        self._failed_calls = 0
 
     def complete(
         self,
@@ -229,16 +234,20 @@ class RecordingLLMProvider:
     ) -> LLMResponse:
         """Request a completion and record the response."""
         key = _compute_prompt_hash(system_prompt, user_prompt, model, temperature, seed)
-        response = self._delegate.complete(
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-            model=model,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            response_format=response_format,
-            timeout=timeout,
-            seed=seed,
-        )
+        try:
+            response = self._delegate.complete(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                response_format=response_format,
+                timeout=timeout,
+                seed=seed,
+            )
+        except Exception:
+            self._failed_calls += 1
+            raise
         self._recordings[key] = {
             "content": response.content,
             "tokens_in": response.tokens_in,
@@ -261,16 +270,20 @@ class RecordingLLMProvider:
     ) -> LLMResponse:
         """Request a completion (async) and record the response."""
         key = _compute_prompt_hash(system_prompt, user_prompt, model, temperature, seed)
-        response = await self._delegate.complete_async(
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-            model=model,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            response_format=response_format,
-            timeout=timeout,
-            seed=seed,
-        )
+        try:
+            response = await self._delegate.complete_async(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                response_format=response_format,
+                timeout=timeout,
+                seed=seed,
+            )
+        except Exception:
+            self._failed_calls += 1
+            raise
         self._recordings[key] = {
             "content": response.content,
             "tokens_in": response.tokens_in,
@@ -321,6 +334,23 @@ class RecordingLLMProvider:
         """
         return len(self._recordings)
 
+    @property
+    def incomplete_count(self) -> int:
+        """
+        Number of calls the provider cut short, errored on, or raised from.
+
+        A response that stops for its length, or with a provider error part-way
+        through, is usually not valid JSON, and the pipeline then treats the call
+        as having found nothing; a call that raises (a rate limit, a timeout) is
+        caught by the pipeline and treated the same way, and leaves no recording
+        at all. Saved to a cassette, either would stand as the pipeline's answer
+        from then on, so callers should check this before `flush()` and record
+        again when it is not 0.
+        """
+        return self._failed_calls + sum(
+            1 for r in self._recordings.values() if r["finish_reason"] in _INCOMPLETE_FINISHES
+        )
+
     def flush(self) -> None:
         """Write recorded cassette to disk."""
         try:
@@ -353,6 +383,11 @@ class CassetteLLMProvider:
         self._cassette_path = Path(cassette_path)
         with open(self._cassette_path, "r") as f:
             self._cassette: dict[str, dict[str, Any]] = json.load(f)
+        # Calls answered and calls with no recording. Callers that catch
+        # CassetteStaleError (the extraction service does, returning no triples)
+        # must check `misses`, or a stale cassette reads as a pipeline scoring 0.
+        self.calls = 0
+        self.misses = 0
 
     def complete(
         self,
@@ -367,8 +402,10 @@ class CassetteLLMProvider:
     ) -> LLMResponse:
         """Replay a response from the cassette."""
         key = _compute_prompt_hash(system_prompt, user_prompt, model, temperature, seed)
+        self.calls += 1
 
         if key not in self._cassette:
+            self.misses += 1
             raise CassetteStaleError(
                 f"No recorded response for prompt hash {key[:12]}... "
                 f"Cassette may be stale or test inputs changed. "

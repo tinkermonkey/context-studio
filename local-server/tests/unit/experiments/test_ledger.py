@@ -188,6 +188,21 @@ class TestRejectedHypotheses:
 
         assert rejected_hypotheses(ledger_path) == ["a", "c"]
 
+    def test_an_unmeasured_experiment_is_recorded_and_its_hypothesis_stays_selectable(
+        self, tmp_path
+    ):
+        ledger_path = tmp_path / "ledger.jsonl"
+        append_entry(
+            _entry(
+                experiment_id="1-a", hypothesis="a", decision="unmeasured", dev=None, holdout=None
+            ),
+            ledger_path=ledger_path,
+        )
+
+        assert [e["decision"] for e in read_entries(ledger_path)] == ["unmeasured"]
+        assert rejected_hypotheses(ledger_path) == []
+        assert accepted_hypotheses(ledger_path) == []
+
     def test_duplicate_rejected_hypothesis_appears_once_in_first_seen_order(self, tmp_path):
         ledger_path = tmp_path / "ledger.jsonl"
         append_entry(
