@@ -447,43 +447,35 @@ def match_individuals(gold: Gold, predicted: Sequence[Predicted]) -> dict[int, G
     prediction -> the gold individual it found. Names are matched first; what
     is left is matched to gold statements by passage.
 
-    The pairing does not depend on the order of the predictions. When several
-    predictions name one gold individual ("GitLab Runner" and "Runner"), the
-    one that is typed correctly finds it, then the one under its title; the
-    others are duplicates. Statements pair off strongest affinity first.
+    Which gold individuals are found, and which of them are typed correctly,
+    does not depend on the order of the predictions. When several predictions
+    name one gold individual ("GitLab Runner" and "Runner"), the one under its
+    title finds it and the others are duplicates (`named_groups`). Statements
+    pair off strongest affinity first, a correctly typed prediction before
+    another of the same affinity; a prediction that names a gold individual
+    never pairs with a different one by passage.
     """
-    by_name = _gold_by_name(gold)
-    named: dict[str, list[int]] = {}
-    for index, prediction in enumerate(predicted):
-        found = by_name.get(name_key(prediction.title))
-        if found is not None:
-            named.setdefault(found.key, []).append(index)
+    groups = named_groups(gold, predicted)
     gold_by_key = {g.key: g for g in gold.individuals}
     matches: dict[int, GoldIndividual] = {}
-    for key, indexes in named.items():
+    for key, indexes in groups.items():
         individual = gold_by_key[key]
-        best = min(
-            indexes,
-            key=lambda i: (
-                not typed_correctly(individual, predicted[i]),
-                name_key(predicted[i].title) != name_key(individual.title),
-                i,
-            ),
-        )
-        matches[best] = individual
-    taken = set(named)
+        title = name_key(individual.title)
+        matches[min(indexes, key=lambda i: (name_key(predicted[i].title) != title, i))] = individual
+    taken = set(groups)
+    named = {index for indexes in groups.values() for index in indexes}
     pairs = sorted(
         (
-            (-affinity, index, position)
+            (-affinity, not typed_correctly(g, [prediction]), index, position)
             for index, prediction in enumerate(predicted)
-            if index not in matches and _may_be_statement(prediction)
+            if index not in named and _may_be_statement(prediction)
             for position, g in enumerate(gold.individuals)
             if g.is_statement
             and g.key not in taken
             and (affinity := _statement_affinity(g, prediction)) > 0
         ),
     )
-    for _, index, position in pairs:
+    for _, _, index, position in pairs:
         individual = gold.individuals[position]
         if index not in matches and individual.key not in taken:
             matches[index] = individual
@@ -491,14 +483,27 @@ def match_individuals(gold: Gold, predicted: Sequence[Predicted]) -> dict[int, G
     return matches
 
 
-def typed_correctly(gold: GoldIndividual, prediction: Predicted) -> bool:
+def named_groups(gold: Gold, predicted: Sequence[Predicted]) -> dict[str, list[int]]:
+    """Gold key -> the indexes of every prediction that names that individual, in order."""
+    by_name = _gold_by_name(gold)
+    groups: dict[str, list[int]] = {}
+    for index, prediction in enumerate(predicted):
+        found = by_name.get(name_key(prediction.title))
+        if found is not None:
+            groups.setdefault(found.key, []).append(index)
+    return groups
+
+
+def typed_correctly(gold: GoldIndividual, predictions: Sequence[Predicted]) -> bool:
     """
-    Whether a prediction's typing is one a careful modeller would accept: it
-    has a class, and every class it was given is the gold class or an
-    acceptable one. A prediction typed with the right class and a wrong one
-    beside it is mistyped: the individual would be created in both.
+    Whether a run's typing of a gold individual is one a careful modeller would
+    accept: it gave it a class, and every class it gave it, under any of its
+    names, is the gold class or an acceptable one. The right class with a
+    wrong one beside it is mistyped, whether both are on one prediction or on
+    two that name the same individual: it would be created in both.
     """
-    return bool(prediction.class_refs) and all(gold.accepts(ref) for ref in prediction.class_refs)
+    refs = [ref for prediction in predictions for ref in prediction.class_refs]
+    return bool(refs) and all(gold.accepts(ref) for ref in refs)
 
 
 def _gold_by_name(gold: Gold) -> dict[str, GoldIndividual]:
@@ -539,7 +544,13 @@ def score(
     """Score a run's individuals and relationships against a document's gold extraction."""
     matches = match_individuals(gold, predicted)
     found = {g.key: index for index, g in matches.items()}
-    typed = {index for index, g in matches.items() if typed_correctly(g, predicted[index])}
+    # Every prediction that stands for a found individual: all that name it, or
+    # the one paired with it by passage.
+    groups = named_groups(gold, predicted)
+    standing = {
+        index: [predicted[i] for i in groups.get(g.key, [index])] for index, g in matches.items()
+    }
+    typed = {index for index, g in matches.items() if typed_correctly(g, standing[index])}
     # Diagnostics: an accepted class is among those given (the gap to `typed`
     # is typing with several classes), and the gold class itself is among them.
     any_accepted = {
@@ -594,10 +605,10 @@ def score(
     metrics["typed_f1"] = _f1(metrics["typed_precision"], metrics["typed_recall"])
 
     gold_by_key = {g.key: g for g in gold.individuals}
-    # A relationship's end is the gold individual its name finds: any of that
+    # A relationship's end is the found individual its name finds: any of that
     # individual's names (a run may state "Runner uses Gitaly" and title the
     # individual "GitLab Runner"), or the statement a prediction was paired with.
-    end_key = {name: g.key for name, g in _gold_by_name(gold).items()}
+    end_key = {name: g.key for name, g in _gold_by_name(gold).items() if g.key in found}
     end_key.update({name_key(predicted[i].title): g.key for i, g in matches.items()})
     stated = {
         (end_key[name_key(r.source)], r.predicate, end_key[name_key(r.target)])
@@ -646,7 +657,7 @@ def score(
                 "key": g.key,
                 "title": predicted[i].title,
                 "gold": g.class_ref,
-                "predicted": list(predicted[i].class_refs),
+                "predicted": list(dict.fromkeys(ref for p in standing[i] for ref in p.class_refs)),
             }
             for i, g in matches.items()
             if i not in typed

@@ -121,17 +121,18 @@ precision, type accuracy, typed F1, relationship recall, a breakdown by layer, a
 behind them (missed, mistyped, spurious, duplicates, known distractors). The rules:
 
 - A prediction finds a gold individual by its title or an alias; a prediction typed as a
-  statement can also find a gold statement by its passage. The pairing does not depend on the
-  order of the predictions.
-- A found individual is typed correctly when every class the run gave it is the gold class or
-  an acceptable one. The right class with a wrong one beside it is mistyped: the individual
-  would be created in both. `type_accuracy_any` reports how many had an accepted class among
-  several, to tell hedged typing from wrong typing.
-- When two predictions name the same gold individual ("GitLab Runner" and "Runner"), the
-  correctly typed one finds it and the other is a duplicate. Duplicates are listed, and left out
-  of precision: gold sometimes joins what a run may defensibly extract apart ("Link check and
-  Reference reliability"), and a run can have at most one duplicate per alias.
-- A relationship's ends are resolved by any name of a gold individual, so a relationship stated
-  under an alias counts.
+  statement that names no gold individual can also find a gold statement by its passage. What is
+  found, and what is typed correctly, does not depend on the order of the predictions.
+- A found individual is typed correctly when every class the run gave it, under any of its
+  names, is the gold class or an acceptable one. The right class with a wrong one beside it is
+  mistyped, on one prediction or split over two that name the same individual: it would be
+  created in both. `type_accuracy_any` reports how many had an accepted class among those given,
+  to tell hedged typing from wrong typing.
+- When two predictions name the same gold individual ("GitLab Runner" and "Runner"), the one
+  under its title finds it and the other is a duplicate. Duplicates are listed, and left out of
+  precision: gold sometimes joins what a run may defensibly extract apart ("Link check and
+  Reference reliability"). Their classes still count toward the typing rule above.
+- A relationship's ends are resolved by any name of an individual the run found, so a
+  relationship stated under an alias counts.
 Offline, the variant tournament scores each variant on these documents from recorded LLM
 responses; see `experiments/README.md`.

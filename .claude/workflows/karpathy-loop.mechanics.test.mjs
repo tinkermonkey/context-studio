@@ -385,9 +385,11 @@ test("a deferred candidate is discarded without a ledger entry; an unmeasured on
   assert.ok(deferred.includes("git worktree remove --force /tmp/wt"));
   const unmeasured = { ...CANDIDATE, measurementStatus: "stale" };
   for (const group of ["dev", "holdout", "guard"]) delete unmeasured[group];
-  const rejected = decidePrompt(unmeasured, "rejected", "not measured (stale)", 1, "experiment/x", "default");
-  assert.ok(rejected.includes('"dev":null,"holdout":null'));
-  assert.ok(rejected.includes("ledger.py append --stdin"));
+  const recorded = decidePrompt(unmeasured, "unmeasured", "not measured (stale)", 1, "experiment/x", "default");
+  assert.ok(recorded.includes('"dev":null,"holdout":null'));
+  assert.ok(recorded.includes('"decision":"unmeasured"'));
+  assert.ok(recorded.includes("ledger.py append --stdin"));
+  assert.ok(recorded.includes("git worktree remove --force /tmp/wt"));
 });
 
 console.log(`\n${passCount} passed, ${failCount} failed`);

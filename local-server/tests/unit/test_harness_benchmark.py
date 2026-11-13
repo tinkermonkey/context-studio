@@ -83,13 +83,16 @@ class TestMatching:
         assert result.spurious == []
         assert result.metrics["precision"] == 1.0
 
-    def test_of_two_names_for_one_individual_the_correctly_typed_one_finds_it(self):
-        wrong, right = Predicted("GitLab Runner", (SOFTWARE,)), Predicted("Runner", (COMPONENT,))
+    def test_a_wrong_class_under_another_name_of_the_individual_is_mistyped(self):
+        right, wrong = Predicted("GitLab Runner", (COMPONENT,)), Predicted("Runner", (SOFTWARE,))
         for predicted in ([wrong, right], [right, wrong]):
             result = score(_gold(), predicted)
-            assert result.counts["typed"] == 1, [p.title for p in predicted]
-            assert result.duplicates == ["GitLab Runner"]
-            assert result.mistyped == []
+            assert result.counts["typed"] == 0, [p.title for p in predicted]
+            assert result.duplicates == ["Runner"]
+            [mistyped] = result.mistyped
+            assert sorted(mistyped["predicted"]) == sorted([COMPONENT, SOFTWARE])
+        both_right = [right, Predicted("Runner", (COMPONENT,))]
+        assert score(_gold(), both_right).counts["typed"] == 1
 
     def test_statements_pair_off_strongest_first_whatever_the_order(self):
         weak = Predicted("help alleviate pressure from Puma", (OUTCOME,))
@@ -97,6 +100,28 @@ class TestMatching:
         for predicted in ([weak, strong], [strong, weak]):
             matches = match_individuals(_gold(), predicted)
             assert [predicted[i].title for i in matches] == [strong.title]
+
+    def test_of_two_statements_of_one_affinity_the_correctly_typed_one_pairs(self):
+        wrong = Predicted("Respond quickly", ("motivation.requirement",), (Passage(100, 160),))
+        right = Predicted("Make responses fast", (GOAL,), (Passage(100, 160),))
+        for predicted in ([wrong, right], [right, wrong]):
+            result = score(_gold(), predicted)
+            assert result.counts["typed"] == 1, [p.title for p in predicted]
+            assert [s["title"] for s in result.spurious] == ["Respond quickly"]
+
+    def test_a_prediction_that_names_an_individual_never_pairs_with_another_by_passage(self):
+        # Named like one gold statement, with the passage of another: a duplicate in any order
+        gold = _gold()
+        other = GoldIndividual(
+            "goal-cost", "Cut cost", GOAL, "supporting", evidence=(Passage(200, 300, "cut cost"),)
+        )
+        gold = Gold(gold.document_id, (*gold.individuals, other), gold.relationships, gold.excluded)
+        stray = Predicted("Alleviate pressure from Puma", (GOAL,), (Passage(200, 300),))
+        own = Predicted("Alleviate pressure from Puma", (GOAL,), (Passage(100, 160),))
+        for predicted in ([stray, own], [own, stray]):
+            result = score(gold, predicted)
+            assert result.counts["matched"] == 1, result.counts
+            assert result.counts["duplicates"] == 1
 
     def test_a_prediction_without_a_class_does_not_match_a_statement_by_passage(self):
         predicted = [Predicted("Reduce load on the app server", (), (Passage(110, 150),))]
@@ -173,6 +198,11 @@ class TestScore:
         assert result.duplicates == ["Runner"]
         assert result.metrics["relationship_recall"] == 0.5
         assert result.missed_relationships == ["Redis serves Gitaly"]
+
+    def test_a_relationship_end_naming_an_individual_the_run_did_not_find_does_not_count(self):
+        predicted = [Predicted("Gitaly", (COMPONENT,))]
+        result = score(_gold(), predicted, [PredictedRelationship("Redis", "serves", "Gitaly")])
+        assert result.metrics["relationship_recall"] == 0.0
 
     def test_an_empty_run_scores_zero_without_dividing_by_zero(self):
         result = score(_gold(), [])

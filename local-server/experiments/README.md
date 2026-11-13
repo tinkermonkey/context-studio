@@ -194,7 +194,7 @@ iteration:
    each implementing exactly one change. A change to a prompt, or to what feeds one, records both
    cassette sets again on its branch. The candidate is measured by the same steps as the incumbent.
    One that cannot be measured (stale recordings, a failed run) is recorded in the ledger as
-   rejected with that reason, and its worktree is discarded.
+   `unmeasured` with that reason and its worktree is discarded; the hypothesis stays selectable.
 4. **Verify** — an adversarial agent checks each candidate: none of the frozen paths changed (the
    harness, the gold extractions, the schema snapshots, the tournament and benchmark scripts, the
    ledger), nothing in the diff is specific to a benchmark document, tests reproduce, the committed

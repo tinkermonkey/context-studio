@@ -7,7 +7,7 @@ export const meta = {
     { title: 'Select', detail: 'Rank benchmark failure kinds by count; drop hypotheses the ledger already decided' },
     { title: 'Experiment', detail: 'Fan out one worktree-isolated agent per hypothesis' },
     { title: 'Verify', detail: 'Adversarial gate-integrity check per candidate' },
-    { title: 'Decide', detail: 'Accept gate on the best verified candidate; merge or discard, append the ledger' },
+    { title: 'Decide', detail: 'Accept gate on every verified candidate; merge the best that passes, discard the rest, append the ledger' },
   ],
 }
 
@@ -247,7 +247,7 @@ const DECIDE_SCHEMA = {
   required: ['hypothesisId', 'decision', 'ledgerAppended'],
   properties: {
     hypothesisId: { type: 'string' },
-    decision: { type: 'string', enum: ['accepted', 'rejected', 'deferred'] },
+    decision: { type: 'string', enum: ['accepted', 'rejected', 'deferred', 'unmeasured'] },
     merged: { type: 'boolean' },
     worktreeDiscarded: { type: 'boolean' },
     ledgerAppended: { type: 'boolean' },
@@ -471,6 +471,8 @@ function decidePrompt(candidate, decision, reason, iteration, integrationBranch,
       `3. \`git branch -D ${candidate.branchName}\`.`,
     )
   } else {
+    // "rejected" and "unmeasured" both leave a ledger entry and no worktree.
+    // Only a "rejected" entry keeps the hypothesis from being selected again.
     lines.push(
       '1. From `local-server/`, append the ledger entry via stdin (same rationale as the accepted path —',
       '   do NOT paste the JSON into a single-quoted shell argument). Run this exactly, with the heredoc',
@@ -799,10 +801,13 @@ const accepted = Boolean(best)
 
 phase('Decide')
 const decisions = paired.map((p) => {
-  const gatedEntry = gated.find((g) => g.candidate.hypothesisId === p.candidate.hypothesisId)
+  // By identity, not by hypothesis id: an id is whatever the agent returned.
+  const gatedEntry = gated.find((g) => g.candidate === p.candidate)
+  if (!p.verdict) {
+    return { candidate: p.candidate, decision: 'unmeasured', reason: 'not verified: the verifier agent returned no result' }
+  }
   if (!gatedEntry) {
-    const reason = `failed verification: ${p.verdict ? p.verdict.reason : 'verifier agent returned no result'}`
-    return { candidate: p.candidate, decision: 'rejected', reason }
+    return { candidate: p.candidate, decision: 'rejected', reason: `failed verification: ${p.verdict.reason}` }
   }
   if (gatedEntry === best) {
     return { candidate: p.candidate, decision: 'accepted', reason: 'passed verification and the §6 accept gate' }
@@ -820,9 +825,12 @@ const decisions = paired.map((p) => {
     reason: `verified but failed the §6 accept gate: ${gatedEntry.gate.reasons.join('; ')}`,
   }
 }).concat(unmeasured.map((candidate) => ({
+  // Recorded, with its cost, but not as a rejection: a recording that failed or
+  // a run that could not be scored says nothing about the hypothesis, which
+  // stays selectable. The plateau count bounds how often that can repeat.
   candidate,
-  decision: 'rejected',
-  reason: `not measured (${candidate.measurementStatus}): ${candidate.measurementDetail || 'no detail given'}. This is not evidence against the hypothesis: to retry it, fix the cause and reopen it by hand`,
+  decision: 'unmeasured',
+  reason: `not measured (${candidate.measurementStatus}): ${candidate.measurementDetail || 'no detail given'}`,
 })))
 
 const outcomes = await parallel(decisions.map((d) => () =>

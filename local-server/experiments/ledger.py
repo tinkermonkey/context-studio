@@ -14,7 +14,7 @@ line per experiment (accepted and rejected), in the exact shape specified by
 `dev` and `holdout` are the extraction benchmark's measures and `guard` the
 triple corpus's (entries before the 2026-11 baseline reset carry triple-corpus
 metrics in `dev`/`holdout`). All three are null for a candidate that could not
-be measured.
+be measured (`decision: "unmeasured"`).
 
 Entries may also carry an optional `bootstrap` field — the Wave 1 DR
 bootstrap-scenario diagnostics (`karpathy_loop_dr_ontology_design.md` §5,
@@ -109,7 +109,13 @@ REQUIRED_FIELDS = (
 
 BASELINE_RESET_DECISION = "baseline_reset"
 
-VALID_DECISIONS = ("accepted", "rejected", BASELINE_RESET_DECISION)
+# An experiment that ran but could not be measured or verified (a failed
+# recording, a stale cassette, a verifier that returned nothing). It is recorded
+# with its cost, and says nothing about the hypothesis: only "rejected" entries
+# keep a hypothesis from being selected again.
+UNMEASURED_DECISION = "unmeasured"
+
+VALID_DECISIONS = ("accepted", "rejected", UNMEASURED_DECISION, BASELINE_RESET_DECISION)
 
 
 class LedgerEntryError(ValueError):
@@ -122,7 +128,7 @@ def validate_entry(entry: dict[str, Any]) -> None:
 
     Raises:
         LedgerEntryError: If a required field is missing, or `decision` is
-            not one of "accepted"/"rejected"/"baseline_reset".
+            not one of "accepted"/"rejected"/"unmeasured"/"baseline_reset".
     """
     missing = [field for field in REQUIRED_FIELDS if field not in entry]
     if missing:
@@ -281,11 +287,11 @@ def rejected_hypotheses(ledger_path: Optional[Union[Path, str]] = None) -> list[
     Return the distinct `hypothesis` strings of every rejected experiment
     recorded since the last baseline reset, in first-seen order.
 
-    Target selection (§4.3 step 2) excludes these unless the codebase has
-    materially changed in the relevant area — that judgment call is made by
-    the humans/agents driving the loop, not automated here. Rejections
-    recorded before a baseline reset (e.g. against the retired placeholder
-    ontology) are scoped out entirely: see `entries_since_last_baseline_reset`.
+    Target selection (§4.3 step 2) excludes these until the next baseline
+    reset. Rejections recorded before a baseline reset (e.g. against the
+    retired placeholder ontology) are scoped out entirely: see
+    `entries_since_last_baseline_reset`. An "unmeasured" entry is not a
+    rejection and is not returned.
     """
     seen: list[str] = []
     for entry in entries_since_last_baseline_reset(ledger_path):

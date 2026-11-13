@@ -141,7 +141,7 @@ One iteration:
 
 - **Verify (adversarial).** A reviewer sub-agent checks each candidate for gate integrity (see §6): no edits to the frozen paths; tests pass; the committed cassettes replay to the claimed scores; the diff does what the hypothesis says, and nothing in it is specific to a benchmark document. Candidates that fail verification are rejected regardless of score.
 
-- **Accept/reject.** The orchestrator applies the **accept gate** (§6) to every verified candidate; of those that pass, the one with the highest dev typed F1 is accepted (one per iteration: two candidates were each measured against the same incumbent, never together). Accepted → merge to the loop branch (its cassettes come with it), append ledger entry; the iteration ends with a stop, because the incumbent is measured on `main` and the change has to be promoted there first. A candidate that passes but is not the one accepted → discard worktree, no ledger entry, so it is drafted again against the new incumbent. Rejected, or could not be measured → discard worktree, append ledger entry with the reason.
+- **Accept/reject.** The orchestrator applies the **accept gate** (§6) to every verified candidate; of those that pass, the one with the highest dev typed F1 is accepted (one per iteration: two candidates were each measured against the same incumbent, never together). Accepted → merge to the loop branch (its cassettes come with it), append ledger entry; the iteration ends with a stop, because the incumbent is measured on `main` and the change has to be promoted there first. A candidate that passes but is not the one accepted → discard worktree, no ledger entry, so it is drafted again against the new incumbent. Rejected → discard worktree, append ledger entry with the reason; the hypothesis is not selected again. Could not be measured or verified (a failed recording, a stale cassette, a verifier that returned nothing) → discard worktree, append an `unmeasured` ledger entry; the hypothesis stays selectable.
 
 - **Stop check.** Stop when: the holdout document's typed floors are met (success); or K = 3 consecutive iterations produce no accepted change (plateau — escalate to human); or the backlog is exhausted; or the cost budget is exhausted; or a change was accepted and awaits promotion to `main`.
 
@@ -198,13 +198,13 @@ The original formulation, for the record:
 
 Additional guardrails:
 
-- **Negative-result memory:** every rejected experiment's hypothesis, diff summary, and scores go in the ledger (`local-server/experiments/ledger.jsonl`). Target selection excludes previously rejected hypotheses unless the codebase has materially changed in the relevant area.
+- **Negative-result memory:** every rejected experiment's hypothesis, diff summary, and scores go in the ledger (`local-server/experiments/ledger.jsonl`). Target selection excludes previously rejected hypotheses until the next baseline reset. A candidate that could not be measured or verified is recorded as `unmeasured`, not `rejected`, and stays selectable.
 
 - **Metric-gaming defense:** metrics/GT are frozen paths (gate rule 4). Changes to the measurement layer itself are allowed only as human-reviewed PRs outside the loop, and reset the incumbent baselines.
 
 - **One change per experiment:** an experimenter agent that bundles unrelated edits is rejected on verification — attribution is the whole point of the loop.
 
-- **Runaway defense:** worktrees are discarded on rejection; the loop branch only ever receives accepted, verified merges; iteration and cost caps are hard.
+- **Runaway defense:** worktrees are discarded on rejection; the loop branch only ever receives accepted, verified merges; the loop stops after three iterations without an accept, and does not start an iteration once the total cost cap is reached (§5).
 
 ## 7. Seeded hypothesis backlog
 

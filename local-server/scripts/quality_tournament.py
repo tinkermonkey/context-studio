@@ -180,6 +180,7 @@ def _cassette_use(variant: str) -> dict[str, int]:
         "misses": sum(p.misses for p in providers),
     }
 
+
 # Cassette location for the `default` LLM pipeline. This is the SAME path
 # convention the quality suite records to (see the `cassette_dir` fixture and
 # the `quality_llm_provider_factory` cassette-mode branch in
@@ -1373,6 +1374,11 @@ def _render_benchmark_section(
         lines.append(
             "_Stale: the pipeline's prompts changed since the cassettes were recorded. Record "
             "again with `python scripts/benchmark_replay.py --record --spend`._"
+        )
+    elif summary["status"] == "partial":
+        lines.append(
+            "_Partial: not every benchmark document was scored, so there are no dev or holdout "
+            "means. A document's `gold.json` is missing from the fixtures._"
         )
     else:
         lines.append(f"Failure counts over dev: {summary['failure_counts']}")
