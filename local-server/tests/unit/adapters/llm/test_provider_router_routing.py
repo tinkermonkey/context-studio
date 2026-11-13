@@ -9,6 +9,8 @@ Tests verify:
 - Initialization errors are logged and tolerated if at least one provider succeeds
 - ValueError is raised when all configured providers fail to initialize
 - An auth failure (401/403) falls through to the next provider that supports the model
+- A completion's failure that every request for the model will meet is raised as
+  the domain's error for it
 """
 
 from unittest.mock import Mock, patch
@@ -16,6 +18,11 @@ from unittest.mock import Mock, patch
 import pytest
 
 from adapters.llm.provider_router import LLMProviderRouter
+from domain.pipelines.exceptions import (
+    LLMRateLimitError,
+    LLMRequestRefusedError,
+    LLMTransientError,
+)
 from domain.pipelines.ports import LLMResponse
 
 
@@ -441,11 +448,15 @@ class TestLLMProviderRouterAuthFallback:
     @pytest.mark.parametrize(
         "error",
         [
-            FakeAuthError(429),
             FakeAuthError(400),
+            FakeAuthError(500),
             RuntimeError("boom"),
+            # The domain errors a provider raises itself (OpenRouterProvider)
+            LLMRequestRefusedError("OpenRouter API key is invalid or unauthorized"),
+            LLMRateLimitError("OpenRouter rate limit exceeded"),
+            LLMTransientError("OpenRouter API error: 503"),
         ],
-        ids=["rate-limit", "bad-request", "other"],
+        ids=["bad-request", "server-error", "other", "refused", "rate-limit", "transient"],
     )
     async def test_non_auth_errors_are_not_swallowed(self, use_async, error):
         anthropic = FailingLLMProvider(["claude-opus-4-7"], error)
@@ -466,9 +477,10 @@ class TestLLMProviderRouterAuthFallback:
         openrouter = FailingLLMProvider(["claude-opus-4-7"], last_error)
         router = self.create_router(anthropic=anthropic, openrouter=openrouter)
 
-        with pytest.raises(FakeAuthError) as exc_info:
+        with pytest.raises(LLMRequestRefusedError) as exc_info:
             await self.call(router, "claude-opus-4-7", use_async)
-        assert exc_info.value is last_error
+        assert str(exc_info.value) == "The openrouter provider rejected its API key"
+        assert exc_info.value.__cause__ is last_error
 
         # Later calls fail fast with a clear message naming the rejecting providers
         with pytest.raises(ValueError) as exc_info:
@@ -485,7 +497,36 @@ class TestLLMProviderRouterAuthFallback:
         openai = FailingLLMProvider(["gpt-4o"], RuntimeError("must not be called"))
         router = self.create_router(openai=openai, anthropic=anthropic)
 
-        with pytest.raises(FakeAuthError):
+        with pytest.raises(LLMRequestRefusedError, match="The anthropic provider rejected"):
             await self.call(router, "claude-opus-4-7", use_async)
 
         assert openai.calls == 0
+
+    @pytest.mark.parametrize("use_async", [False, True])
+    async def test_an_sdk_rate_limit_is_raised_as_the_domains_rate_limit(self, use_async):
+        error = FakeAuthError(429)
+        anthropic = FailingLLMProvider(["claude-opus-4-7"], error)
+        openrouter = FailingLLMProvider(["claude-opus-4-7"], RuntimeError("must not be called"))
+        router = self.create_router(anthropic=anthropic, openrouter=openrouter)
+
+        with pytest.raises(LLMRateLimitError) as exc_info:
+            await self.call(router, "claude-opus-4-7", use_async)
+
+        assert str(exc_info.value) == "The anthropic provider's rate limit was exceeded"
+        assert exc_info.value.__cause__ is error
+        # A rate limit is no rejected key: the provider stays in use, with no fall-through
+        assert openrouter.calls == 0
+        assert router._rejected_providers == set()
+
+    @pytest.mark.parametrize("use_async", [False, True])
+    async def test_an_sdk_unknown_model_is_raised_as_a_refusal(self, use_async):
+        error = FakeAuthError(404)
+        anthropic = FailingLLMProvider(["claude-opus-4-7"], error)
+        router = self.create_router(anthropic=anthropic)
+
+        with pytest.raises(LLMRequestRefusedError) as exc_info:
+            await self.call(router, "claude-opus-4-7", use_async)
+
+        assert str(exc_info.value) == "The anthropic provider has no model claude-opus-4-7"
+        assert exc_info.value.__cause__ is error
+        assert router._rejected_providers == set()

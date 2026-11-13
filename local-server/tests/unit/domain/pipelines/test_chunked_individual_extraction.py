@@ -6,7 +6,9 @@ chunk by chunk: offsets map back to the whole text, the same triple found in
 several chunks merges with every passage, progress is reported per chunk and a
 cancelled run stops before its next chunk. Pasted text is extracted in one call.
 An extraction that fails is never read as "found nothing": it fails the run
-(pasted text, or every chunk of a source) or is reported in failed_chunks.
+(pasted text, or every chunk of a source) or is reported in failed_chunks. A
+failure every later chunk would meet too (the provider refuses the run's
+requests) stops the run there. A failed run says what its model calls cost.
 """
 
 import os
@@ -230,6 +232,7 @@ class _Result:
     metadata: dict = field(default_factory=dict)
     failure_reason: str | None = None
     incomplete_response: bool = False
+    provider_refused: bool = False
 
 
 INCOMPLETE = (
@@ -240,20 +243,24 @@ INCOMPLETE = (
 
 SQL = "(sqlite3.OperationalError) database is locked [SQL: SELECT * FROM ontology_entities]"
 
+REFUSED = "OpenRouter API key is invalid or unauthorized"
+
 
 class _FakeExtraction:
     """
     Extracts one typing triple per 'Name.' sentence of the text it is given.
     The calls numbered in ``failing`` (from 1) fail instead, as the service
     reports an LLM response that stayed incomplete; those in ``broken`` fail
-    for another reason.
+    for another reason; those in ``refused`` fail as the service reports a
+    provider that refuses the model's requests.
     """
 
-    def __init__(self, on_call=None, failing=(), finds=True, broken=()):
+    def __init__(self, on_call=None, failing=(), finds=True, broken=(), refused=()):
         self.calls: list[str] = []
         self._on_call = on_call
         self._failing = set(failing)
         self._broken = set(broken)
+        self._refused = set(refused)
         self._finds = finds
 
     def extract_triples(
@@ -266,9 +273,17 @@ class _FakeExtraction:
             return _Result(
                 triples=[],
                 warnings=[f"Extraction failed: {INCOMPLETE}"],
-                metadata={"model": model, "tokens_used": 0, "duration_ms": 5},
+                metadata={"model": model, "tokens_used": 45, "duration_ms": 5},
                 failure_reason=INCOMPLETE,
                 incomplete_response=True,
+            )
+        if len(self.calls) in self._refused:
+            return _Result(
+                triples=[],
+                warnings=[f"Extraction failed: {REFUSED}"],
+                metadata={"model": model, "tokens_used": 0, "duration_ms": 2},
+                failure_reason=REFUSED,
+                provider_refused=True,
             )
         if len(self.calls) in self._broken:
             return _Result(triples=[], warnings=[f"Extraction failed: {SQL}"], failure_reason=SQL)
@@ -426,6 +441,104 @@ class TestFailedExtraction:
                 _state(text=_long_text(300), source_id="src-1")
             )
         assert proposer.triples == []
+
+
+class TestProviderThatRefusesTheRun:
+    """A failure every later chunk would meet too stops the run where it is met."""
+
+    @pytest.mark.parametrize("refused_at", [1, 2])
+    async def test_a_refusal_stops_the_run_before_the_next_chunk(self, refused_at):
+        extraction = _FakeExtraction(refused={refused_at})
+        writer = _StatusWriter()
+        proposer = _RecordingProposer()
+
+        with pytest.raises(ExtractionFailedError) as raised:
+            await _orchestrator(extraction, writer, proposer).execute(
+                _state(text=_long_text(300), source_id="src-1")  # 3 chunks
+            )
+
+        # No later chunk was tried
+        assert len(extraction.calls) == refused_at
+        assert str(raised.value) == (
+            f"Extraction stopped at chunk {refused_at} of 3, leaving {3 - refused_at} untried,"
+            f" because every later chunk would fail the same way: {REFUSED}"
+        )
+        # Nothing is proposed from a run that stopped
+        assert proposer.unread == []
+        assert writer.progress[-1] == (refused_at - 1, 3)
+
+    async def test_a_refusal_at_the_last_chunk_keeps_what_the_others_found(self):
+        # No chunk is left to spare, so it is a failed chunk like any other
+        extraction = _FakeExtraction(refused={3})
+        proposer = _RecordingProposer()
+
+        state = await _orchestrator(extraction, proposer=proposer).execute(
+            _state(text=_long_text(300), source_id="src-1")
+        )
+
+        assert state.current_status == PipelineRunStatus.COMPLETED
+        assert [c["failure_reason"] for c in state.result["failed_chunks"]] == [REFUSED]
+        # The refusal is written for the caller, so the note quotes it
+        assert state.result["warnings"][0].endswith(f"First failure: {REFUSED}")
+        assert proposer.unread == [state.result["warnings"][0]]
+
+    async def test_a_source_of_one_chunk_that_is_refused_fails_as_every_chunk(self):
+        extraction = _FakeExtraction(refused={1})
+        with pytest.raises(ExtractionFailedError, match=rf"every chunk \(1\): {REFUSED}"):
+            await _orchestrator(extraction).execute(
+                _state(text="Door one. Shelf two.", source_id="src-1")
+            )
+
+    async def test_pasted_text_that_is_refused_fails_with_the_reason(self):
+        extraction = _FakeExtraction(refused={1})
+        with pytest.raises(ExtractionFailedError, match=f"Extraction failed: {REFUSED}"):
+            await _orchestrator(extraction).execute(_state(text="Door one. Shelf two."))
+
+    async def test_a_failed_chunk_of_another_kind_does_not_stop_the_run(self):
+        extraction = _FakeExtraction(failing={1}, broken={2})
+        state = await _orchestrator(extraction).execute(
+            _state(text=_long_text(300), source_id="src-1")
+        )
+        assert len(extraction.calls) == 3
+        assert state.current_status == PipelineRunStatus.COMPLETED
+
+
+class TestFailedRunRecordsWhatItCost:
+    """The model calls of a failed run are on its error, which the executor records."""
+
+    async def test_pasted_text(self):
+        extraction = _FakeExtraction(failing={1})
+        with pytest.raises(ExtractionFailedError) as raised:
+            await _orchestrator(extraction).execute(_state(text="Door one. Shelf two."))
+        assert raised.value.llm_metadata == {"model": "m", "tokens_used": 45, "duration_ms": 5}
+
+    async def test_every_chunk_failed(self):
+        extraction = _FakeExtraction(failing={1, 3}, broken={2})
+        with pytest.raises(PipelineExecutionError) as raised:
+            await _orchestrator(extraction).execute(_state(text=_long_text(300), source_id="src-1"))
+        # The broken chunk's result has no metadata: it counts as nothing spent
+        assert raised.value.llm_metadata == {"model": "m", "tokens_used": 90, "duration_ms": 10}
+
+    async def test_a_stopped_run_counts_the_chunks_it_read_too(self):
+        extraction = _FakeExtraction(failing={1}, refused={3})
+        with pytest.raises(ExtractionFailedError) as raised:
+            await _orchestrator(extraction).execute(
+                _state(text=_long_text(400), source_id="src-1")  # 4 chunks
+            )
+        assert len(extraction.calls) == 3
+        # Chunk 1 failed (45), chunk 2 was read (10), chunk 3 was refused (0)
+        assert raised.value.llm_metadata == {"model": "m", "tokens_used": 55, "duration_ms": 12}
+
+    async def test_a_run_that_cannot_propose_what_it_read(self):
+        class _FailingProposer:
+            def propose_individuals(self, run_id, input_data, triples, unread=None):
+                raise RuntimeError("the proposal store is closed")
+
+        with pytest.raises(PipelineExecutionError, match="Proposing the extracted") as raised:
+            await _orchestrator(_FakeExtraction(), proposer=_FailingProposer()).execute(
+                _state(text=_long_text(300), source_id="src-1")
+            )
+        assert raised.value.llm_metadata == {"model": "m", "tokens_used": 30, "duration_ms": 15}
 
 
 class TestChunkedOrchestrator:

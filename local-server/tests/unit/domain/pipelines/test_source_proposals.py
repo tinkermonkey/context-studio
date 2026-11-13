@@ -154,9 +154,15 @@ class ChunkExtraction:
                 metadata={},
                 failure_reason=answer,
                 incomplete_response=answer == CUT_OFF,
+                provider_refused=False,
             )
         return SimpleNamespace(
-            triples=answer, warnings=[], metadata={}, failure_reason=None, incomplete_response=False
+            triples=answer,
+            warnings=[],
+            metadata={},
+            failure_reason=None,
+            incomplete_response=False,
+            provider_refused=False,
         )
 
 

@@ -41,6 +41,46 @@ class PipelineExternalServiceError(PipelineError):
     pass
 
 
+class LLMProviderError(PipelineExternalServiceError):
+    """
+    Raised by an LLMProvider that could not answer a request, where it knows
+    what kind of failure it met. The message is written for the run's caller:
+    it names the provider and what happened, and quotes no response body.
+    """
+
+    pass
+
+
+class LLMTransientError(LLMProviderError):
+    """
+    The same request may be answered if it is made again: a server error, a
+    timeout, a connection that failed, an error returned in place of a
+    completion.
+    """
+
+    pass
+
+
+class LLMRateLimitError(LLMTransientError):
+    """
+    The provider's rate limit turned the request away. It may be answered
+    after a wait; while the limit holds, every request for the model is turned
+    away, whatever it asks.
+    """
+
+    pass
+
+
+class LLMRequestRefusedError(LLMProviderError):
+    """
+    The provider will not answer this request however often it is made, nor
+    any other request for the model: it rejected the API key, has no such
+    model, or the account is out of credit.
+    """
+
+    pass
+
+
 class PipelineExecutionError(PipelineError):
     """
     Raised when internal orchestrator logic fails unexpectedly.
@@ -57,7 +97,8 @@ class PipelineExecutionError(PipelineError):
 class ExtractionFailedError(PipelineExecutionError):
     """
     Raised when a run's extraction failed because an LLM response stayed
-    incomplete. The message is that reason, written for the run's caller.
+    incomplete or the provider refuses the model's requests. The message is
+    that reason, written for the run's caller.
     """
 
     pass
