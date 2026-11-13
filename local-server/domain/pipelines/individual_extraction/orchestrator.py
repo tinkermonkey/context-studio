@@ -22,7 +22,14 @@ never read as "found nothing". Pasted text fails the run. A source carries on
 with its other chunks: the result's ``failed_chunks`` lists the chunks that
 failed, a warning and the proposal's rationale (or ``no_proposal_reason``) say
 so, the run's proposal supersedes no other proposal of the source, and it fails
-only when every chunk did. An ontology that doesn't exist is an input error.
+only when every chunk did. The exception is a failure every later chunk would
+meet too (the provider refuses the model's requests: a rejected key, an unknown
+model, a rate limit that turned every attempt away): the run stops there and
+fails, saying so, with no later chunk tried. A provider failure that outlasts
+its retries without being one of those (a server error, a timeout) fails its
+chunk only. The error of a run that fails on its
+extractions, or on proposing what they found, carries what its model calls cost
+(``llm_metadata``). An ontology that doesn't exist is an input error.
 """
 
 from __future__ import annotations
@@ -99,8 +106,9 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
     - A source: call it once per chunk, reporting progress per chunk and
       stopping at the next chunk when the run is cancelled, then merge
     - Populate PipelineRun.output_summary with triples, warnings and metadata
-    - A failed extraction fails the run (pasted text, or every chunk of a
-      source) or is reported in ``failed_chunks`` (some chunks of a source)
+    - A failed extraction fails the run (pasted text, every chunk of a source,
+      or a chunk refused as every later one would be) or is reported in
+      ``failed_chunks`` (some chunks of a source)
     """
 
     # The LLM stages and their default prompts (owned by the extraction
@@ -159,9 +167,12 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 or no ontology has ontology_id
             ExtractionFailedError: If the extraction failed (pasted text, or
                 every chunk of a source) because an LLM response stayed
-                incomplete; the message is the reason
+                incomplete or the provider did not answer, or a source's run
+                stopped at a chunk the provider refused as it would every later
+                one; the message is the reason
             PipelineExecutionError: If it failed for another reason, or
-                anything else fails
+                anything else fails. The llm_metadata of a failed extraction's
+                or a failed proposal's error is what the run's model calls cost
         """
         self._write_running_status()
 
@@ -267,7 +278,8 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                         )
                     except Exception as exc:
                         raise PipelineExecutionError(
-                            f"Proposing the extracted candidates failed: {exc}"
+                            f"Proposing the extracted candidates failed: {exc}",
+                            llm_metadata={k: metadata[k] for k in _SPENT_KEYS},
                         ) from exc
                     warnings = [*warnings, *outcome.warnings]
                     outcome_keys = {**outcome_keys, **outcome.to_json()}
@@ -281,7 +293,9 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                     dataset_id=state.input_data.get("dataset_id"),
                 )
                 if result.failure_reason:
-                    raise _failure([result], f"Extraction failed: {result.failure_reason}")
+                    raise _failure(
+                        [result], f"Extraction failed: {result.failure_reason}", model, [result]
+                    )
                 triples, warnings, metadata = result.triples, result.warnings, result.metadata
 
             # Populate result state
@@ -329,7 +343,9 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
 
         Progress is reported per chunk. Each chunk starts at an await, so a
         cancelled run stops before its next chunk. A chunk whose extraction
-        failed adds no triples and says why in its summary's failure_reason.
+        failed adds no triples and says why in its summary's failure_reason;
+        when it failed as every later chunk would too (the provider refuses the
+        model's requests), the run stops there.
 
         Returns:
             (merged triples, warnings, metadata, a sentence saying which chunks
@@ -337,7 +353,9 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
 
         Raises:
             ExtractionFailedError: If the extraction of every chunk failed
-                because an LLM response stayed incomplete
+                because an LLM response stayed incomplete or the provider did
+                not answer, or the provider refused a chunk before the last as
+                it would every later one
             PipelineExecutionError: If every chunk failed, some for another reason
         """
         total = len(chunks)
@@ -346,8 +364,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         warnings: list[str] = []
         chunk_summaries: list[dict[str, Any]] = []
         failures: list[tuple[Chunk, Any]] = []
-        tokens_used = 0
-        duration_ms = 0
+        results: list[Any] = []
         for done, chunk in enumerate(chunks, start=1):
             await asyncio.sleep(0)  # a cancelled run stops here
             result = self._extraction_service.extract_triples(
@@ -358,12 +375,20 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 stage_prompts=self._stage_prompts,
                 dataset_id=state.input_data.get("dataset_id"),
             )
+            results.append(result)
+            if result.failure_reason and result.provider_refused and done < total:
+                raise _failure(
+                    [result],
+                    f"Extraction stopped at chunk {done} of {total}, leaving {total - done}"
+                    " untried, because every later chunk would fail the same way:"
+                    f" {result.failure_reason}",
+                    state.model,
+                    results,
+                )
             chunk_triples.append((chunk, result.triples))
             if result.failure_reason:
                 failures.append((chunk, result))
             warnings.extend(f"Chunk {done} of {total}: {warning}" for warning in result.warnings)
-            tokens_used += int(result.metadata.get("tokens_used") or 0)
-            duration_ms += int(result.metadata.get("duration_ms") or 0)
             chunk_summaries.append(
                 {
                     "index": chunk.index,
@@ -380,14 +405,14 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
 
         if len(failures) == total:
             raise _failure(
-                [result for _, result in failures],
+                results,
                 f"Extraction failed for every chunk ({total}): {failures[0][1].failure_reason}",
+                state.model,
+                results,
             )
 
         metadata = {
-            "model": state.model,
-            "tokens_used": tokens_used,
-            "duration_ms": duration_ms,
+            **_spent(state.model, results),
             "source_id": state.input_data.get("source_id"),
             "pages": state.input_data.get("pages"),
             "chunks": chunk_summaries,
@@ -396,15 +421,41 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         return merge_chunk_triples(chunk_triples, page_starts), warnings, metadata, unread
 
 
-def _failure(results: list[Any], message: str) -> PipelineExecutionError:
+def _failure(
+    failed: list[Any], message: str, model: str, results: list[Any]
+) -> PipelineExecutionError:
     """
     The error for failed extractions: one whose message its caller is told when
-    every failure is an LLM response that stayed incomplete, since any other
-    reason may quote an internal error.
+    the reason of every one of them was written for the caller, since any other
+    reason may quote an internal error. It carries what the run's extractions
+    (``results``: the failed ones and any that were read) cost.
     """
-    if all(result.incomplete_response for result in results):
-        return ExtractionFailedError(message)
-    return PipelineExecutionError(message)
+    told = all(_reason_is_for_caller(result) for result in failed)
+    error = ExtractionFailedError if told else PipelineExecutionError
+    return error(message, llm_metadata=_spent(model, results))
+
+
+def _reason_is_for_caller(result: Any) -> bool:
+    """
+    Whether a failed extraction's reason was written for the run's caller: an
+    LLM response that stayed incomplete, or an LLM provider that did not answer
+    (whether or not it would answer for another text). Any other reason may
+    quote an internal error.
+    """
+    return bool(result.incomplete_response or result.provider_failed or result.provider_refused)
+
+
+# The keys of a run's metadata that say what its model calls cost
+_SPENT_KEYS = ("model", "tokens_used", "duration_ms")
+
+
+def _spent(model: str, results: list[Any]) -> dict[str, Any]:
+    """What the extractions' model calls cost, those of failed extractions too."""
+    return {
+        "model": model,
+        "tokens_used": sum(int(r.metadata.get("tokens_used") or 0) for r in results),
+        "duration_ms": sum(int(r.metadata.get("duration_ms") or 0) for r in results),
+    }
 
 
 def _failed_chunks_note(failures: list[tuple[Chunk, Any]], total: int, run_id: str) -> str:
@@ -412,15 +463,15 @@ def _failed_chunks_note(failures: list[tuple[Chunk, Any]], total: int, run_id: s
     A sentence saying which chunks' extraction failed, so what they hold is
     missing. It leads the run's warnings and goes into its proposal, which
     reviewers and clients read, so it gives the first failure's reason only
-    when that is an LLM response that stayed incomplete: any other reason may
-    quote an internal error, and stays in the run's failed_chunks.
+    when that was written for the caller: any other reason may quote an
+    internal error, and stays in the run's failed_chunks.
     """
     numbers = ", ".join(str(chunk.index + 1) for chunk, _ in failures)
     noun = "chunk" if len(failures) == 1 else "chunks"
     first = failures[0][1]
     reason = (
         first.failure_reason
-        if first.incomplete_response
+        if _reason_is_for_caller(first)
         else f"an internal error, recorded in failed_chunks of run {run_id}"
     )
     return (

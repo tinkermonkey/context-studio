@@ -62,7 +62,19 @@ class LLMProvider(Protocol):
         timeout: float | None = None,
         seed: int | None = None,
     ) -> LLMResponse:
-        """Request a completion from an LLM."""
+        """
+        Request a completion from an LLM.
+
+        Raises:
+            LLMTransientError: The same request may be answered if made again
+                (a server error, a timeout); an LLMRateLimitError for a rate limit
+            LLMRequestRefusedError: Neither this nor any other request for the
+                model will be answered (a rejected key, an unknown model)
+            LLMProviderError: Another failure of a known kind, not worth asking
+                again (the provider's client already retried it). Like the two
+                above, its message is written for the run's caller
+            Exception: Any other failure, of a kind the provider does not know
+        """
         ...
 
     async def complete_async(
@@ -118,9 +130,16 @@ class TripleExtractionResult(Protocol):
     metadata: dict[str, Any]
     # Why the extraction failed (its triples are then empty); None when it succeeded
     failure_reason: str | None
-    # True when it failed because an LLM response stayed incomplete: that reason is
-    # written for the caller, while any other failure_reason may quote an internal error
+    # True when it failed because an LLM response stayed incomplete
     incomplete_response: bool
+    # True when it failed because the LLM provider did not answer a request. With
+    # this flag or incomplete_response the failure_reason is written for the
+    # caller, while any other may quote an internal error
+    provider_failed: bool
+    # True when that provider failure is one any other text would meet too: the
+    # provider refuses the model's requests (a rejected key, an unknown model)
+    # or its rate limit turned every attempt away. Never true without provider_failed
+    provider_refused: bool
 
 
 class ExtractionPort(Protocol):

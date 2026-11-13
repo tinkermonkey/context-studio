@@ -272,12 +272,21 @@ class TripleExtractionResult:
     Attributes:
         triples: List of extracted triple dictionaries
         warnings: List of warnings or validation issues encountered
-        metadata: Extraction metadata (model, tokens_used, duration_ms)
+        metadata: Extraction metadata (model, tokens_used, duration_ms);
+            tokens_used counts every LLM response received, also those of an
+            extraction that failed
         failure_reason: Why the extraction failed, in which case triples is
             empty; None when it succeeded (an empty success found nothing)
         incomplete_response: True when it failed because an LLM response
-            stayed incomplete; such a failure_reason is written for the caller,
-            while any other may quote an internal error
+            stayed incomplete
+        provider_failed: True when it failed because the LLM provider did not
+            answer a request (an LLMProviderError). With this flag or
+            incomplete_response the failure_reason is written for the caller;
+            any other may quote an internal error
+        provider_refused: True when that provider failure is one any other
+            text would meet too: the provider refuses the model's requests (a
+            rejected key, an unknown model) or its rate limit turned every
+            attempt away. Never true without provider_failed
     """
 
     triples: list[dict]
@@ -285,6 +294,8 @@ class TripleExtractionResult:
     metadata: dict[str, int | str]
     failure_reason: str | None = None
     incomplete_response: bool = False
+    provider_failed: bool = False
+    provider_refused: bool = False
 
 
 @dataclass(frozen=True)

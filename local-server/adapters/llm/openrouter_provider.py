@@ -22,12 +22,38 @@ from typing import Literal
 
 import httpx
 
-from domain.pipelines.exceptions import PipelineExternalServiceError
+from domain.pipelines.exceptions import (
+    LLMProviderError,
+    LLMRateLimitError,
+    LLMRequestRefusedError,
+    LLMTransientError,
+)
 from domain.pipelines.ports import LLMResponse
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+def _error_for_status(status: int, model: str) -> Exception:
+    """
+    The error for a status OpenRouter answered with, as an HTTP status or as
+    the code of an error body: one that says whether asking again can help.
+    """
+    if status == 401:
+        return LLMRequestRefusedError("OpenRouter API key is invalid or unauthorized")
+    if status == 402:
+        return LLMRequestRefusedError("OpenRouter account is out of credits")
+    if status == 404:
+        return LLMRequestRefusedError(f"Model not found on OpenRouter: {model}")
+    if status == 429:
+        return LLMRateLimitError("OpenRouter rate limit exceeded")
+    if status == 408 or status >= 500:
+        # The request timed out upstream, the model's provider is down, or none is available
+        return LLMTransientError(f"OpenRouter API error: {status}")
+    # Any other status (a bad request, flagged input) is about this request
+    # and would be answered the same way again
+    return RuntimeError(f"OpenRouter API error: {status}")
 
 
 class OpenRouterProvider:
@@ -107,9 +133,15 @@ class OpenRouterProvider:
             LLMResponse with generated content and metadata
 
         Raises:
-            ValueError: If model is invalid or API key is unauthorized
-            RuntimeError: For other HTTP errors
-            PipelineExternalServiceError: If request times out or connection fails
+            LLMRequestRefusedError: If the API key is rejected, the model is
+                unknown or the account is out of credits
+            LLMRateLimitError: If the rate limit turned the request away
+            LLMTransientError: If OpenRouter answered with a server error, an
+                error in place of a completion or a body that is not JSON, did
+                not answer in time, or could not be reached
+            LLMProviderError: If the request could not be written to the
+                connection, which asking again cannot change
+            RuntimeError: For other HTTP errors and malformed responses
         """
         # Check cache
         cache_key = self._make_cache_key(
@@ -154,13 +186,23 @@ class OpenRouterProvider:
             duration_ms = time.time() * 1000 - start_ms
 
             response.raise_for_status()
-            data = response.json()
+            try:
+                data = response.json()
+            except ValueError as e:
+                # An empty body, or one cut off or replaced on the way: not an answer
+                logger.error(
+                    f"OpenRouter answered {response.status_code} with a body that is"
+                    f" not JSON ({len(response.content)} bytes): {response.text[:500]}"
+                )
+                raise LLMTransientError("OpenRouter answered with a body that is not JSON") from e
 
             # Validate response structure
             if not isinstance(data, dict):
                 raise RuntimeError("OpenRouter response is not a JSON object")
 
             if "choices" not in data:
+                if data.get("error"):
+                    raise self._error_for_body(data["error"], model)
                 raise RuntimeError("OpenRouter response missing 'choices' field")
 
             choices = data["choices"]
@@ -217,24 +259,44 @@ class OpenRouterProvider:
             return llm_response
 
         except httpx.HTTPStatusError as e:
-            if e.response.status_code == 401:
-                raise ValueError("OpenRouter API key is invalid or unauthorized")
-            elif e.response.status_code == 404:
-                raise ValueError(f"Model not found on OpenRouter: {model}")
-            elif e.response.status_code == 429:
-                raise RuntimeError("OpenRouter rate limit exceeded")
-            else:
-                logger.error(f"OpenRouter API error: {e.response.status_code} {e.response.text}")
-                raise RuntimeError(f"OpenRouter API error: {e.response.status_code}")
-        except (httpx.TimeoutException, httpx.ConnectError) as e:
-            raise PipelineExternalServiceError(
-                f"External service error: {type(e).__name__}: {str(e)}"
-            ) from e
-        except RuntimeError:
+            logger.error(f"OpenRouter API error: {e.response.status_code} {e.response.text}")
+            raise _error_for_status(e.response.status_code, model) from e
+        except httpx.LocalProtocolError:
+            # The request itself could not be written (for one, an API key with
+            # a character no header may hold), so asking again cannot help. The
+            # error's text can quote the Authorization header, so it is neither
+            # shown, logged nor kept as the cause
+            logger.error("OpenRouter request could not be sent: LocalProtocolError")
+            raise LLMProviderError(
+                "OpenRouter request could not be sent: LocalProtocolError"
+            ) from None
+        except httpx.TransportError as e:
+            # No answer: a timeout, or a connection that failed or dropped. The
+            # message names the kind only: the error's text is not ours to show
+            logger.error(f"OpenRouter did not answer: {type(e).__name__}: {e}")
+            raise LLMTransientError(f"OpenRouter did not answer: {type(e).__name__}") from e
+        except httpx.DecodingError as e:
+            # The body could not be read under its declared content encoding
+            raise LLMTransientError("OpenRouter answered with a body that is not JSON") from e
+        except (RuntimeError, LLMProviderError):
             raise
         except Exception as e:
             logger.error(f"Unexpected error calling OpenRouter: {e}", exc_info=True)
             raise RuntimeError(f"Unexpected error: {type(e).__name__}: {e}")
+
+    @staticmethod
+    def _error_for_body(error: object, model: str) -> Exception:
+        """
+        The error for an HTTP 200 whose body is an error in place of a
+        completion, which OpenRouter sends when the model's provider failed
+        after the request was accepted. Its code, when it has one, is read as
+        an HTTP status would be; without one, asking again may help.
+        """
+        logger.error(f"OpenRouter returned an error in place of a completion: {error}")
+        code = error.get("code") if isinstance(error, dict) else None
+        if isinstance(code, int) and not isinstance(code, bool):
+            return _error_for_status(code, model)
+        return LLMTransientError("OpenRouter returned an error in place of a completion")
 
     def is_model_available(self, model: str) -> bool:
         """
@@ -310,9 +372,8 @@ class OpenRouterProvider:
             LLMResponse with generated content and metadata
 
         Raises:
-            ValueError: If model is invalid or API key is unauthorized
-            RuntimeError: For other HTTP errors
-            PipelineExternalServiceError: If request times out or connection fails
+            LLMRequestRefusedError, LLMRateLimitError, LLMTransientError,
+            LLMProviderError, RuntimeError: As complete() raises them
         """
         return await run_sync_in_executor(
             self.complete,

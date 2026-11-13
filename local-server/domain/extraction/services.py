@@ -15,7 +15,7 @@ import re
 import time
 from datetime import datetime, timezone
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Mapping
+from typing import TYPE_CHECKING, Any, Callable, Mapping
 from uuid import uuid4
 
 from domain.interchange.services import set_batch_run_context
@@ -26,7 +26,13 @@ from domain.ontology.ports import (
     SchemaVectorIndex,
 )
 from domain.pipelines.candidate_ids import mention_key
-from domain.pipelines.ports import LLMProvider
+from domain.pipelines.exceptions import (
+    LLMProviderError,
+    LLMRateLimitError,
+    LLMRequestRefusedError,
+    LLMTransientError,
+)
+from domain.pipelines.ports import LLMProvider, LLMResponse
 from domain.pipelines.stage_prompts import StagePrompt, render, resolve_stage_prompts
 from domain.ports import EventPublisher
 
@@ -58,8 +64,62 @@ from .value_objects import ExtractionLayerResult, LayerInput, LayerOutput, Sourc
 _logger = logging.getLogger(__name__)
 
 # How many times each triple-extraction call (identify, then derive) is made
-# before a response that is not the model's whole answer fails the extraction
+# before the extraction fails: an attempt is spent by a response that is not the
+# model's whole answer and by a provider failure that may pass
 _MAX_LLM_ATTEMPTS = 3
+
+# Seconds waited before the second attempt after a provider failure that may
+# pass; the wait doubles before each attempt after that
+_FIRST_RETRY_WAIT_SECONDS = 1.0
+
+
+def _no_whole_answer(
+    stage: str, failures: list[IncompleteLLMResponseError | LLMTransientError]
+) -> IncompleteLLMResponseError | LLMTransientError:
+    """
+    The failure of a stage whose every attempt got no whole answer, from why
+    each attempt failed, in order.
+
+    Attempts that all failed the same way are reported as that failure
+    outlasting them. Attempts that failed in different ways are reported by
+    the last, as an incomplete response or a provider failure that may pass:
+    never as a rate limit, since a rate limit that was not met every time did
+    not outlast the attempts and says nothing about the next text.
+    """
+    last = failures[-1]
+    incomplete = isinstance(last, IncompleteLLMResponseError)
+    if len({type(failure) for failure in failures}) > 1:
+        kind = IncompleteLLMResponseError if incomplete else LLMTransientError
+        message = (
+            f"The LLM gave no complete answer for {stage} in {len(failures)} attempts"
+            f" that failed in different ways, the last with: {last}"
+        )
+    elif incomplete:
+        kind = IncompleteLLMResponseError
+        message = (
+            f"The LLM response for {stage} was still incomplete after"
+            f" {len(failures)} attempts: {last}"
+        )
+    else:
+        kind = type(last)
+        message = f"The LLM request for {stage} still failed after {len(failures)} attempts: {last}"
+    failure = kind(message)
+    failure.__cause__ = last
+    return failure
+
+
+class _TokenTally:
+    """
+    The tokens of every LLM response one extraction received, whether or not
+    the extraction could use it.
+    """
+
+    def __init__(self) -> None:
+        self.total = 0
+
+    def add(self, response: LLMResponse) -> None:
+        self.total += response.tokens_in + response.tokens_out
+
 
 # Default prompts for the two LLM passes, used when no configuration overrides them.
 _DEFAULT_PROMPTS = resolve_stage_prompts(INDIVIDUAL_EXTRACTION_STAGES, None)
@@ -249,6 +309,7 @@ class ExtractionService:
         recog_margin: float = 0.05,
         recog_min_len: int = 4,
         recog_acronym_threshold: float = 0.95,
+        sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         """
         Initialize the service with port dependencies.
@@ -278,6 +339,8 @@ class ExtractionService:
             individual_recognizer: Optional port for resolving extracted individual
                 mentions to existing graph nodes. When provided, enables the
                 preview_recognition() method for recognition preview queries.
+            sleep: Waits the given seconds before an LLM call is made again
+                after a provider failure that may pass
         """
         if not 0.0 <= similarity_threshold <= 1.0:
             raise ValueError(
@@ -304,6 +367,7 @@ class ExtractionService:
         self._recog_margin = recog_margin
         self._recog_min_len = recog_min_len
         self._recog_acronym_threshold = recog_acronym_threshold
+        self._sleep = sleep
 
     def extract(self, text: str) -> ExtractionResult:
         """
@@ -564,10 +628,16 @@ class ExtractionService:
             Dictionary with keys:
                 - triples: list of extracted triples
                 - warnings: list of warnings or validation issues
-                - metadata: extraction metadata (model, tokens_used, duration_ms)
+                - metadata: extraction metadata (model, tokens_used, duration_ms);
+                  tokens_used counts every LLM response received, also those of
+                  an extraction that failed
                 - failure_reason: why the extraction failed (its triples are then
                   empty), e.g. an LLM response that stayed incomplete; None on success
                 - incomplete_response: True when that is why it failed
+                - provider_failed: True when it failed because the LLM provider
+                  did not answer a request
+                - provider_refused: True when that provider failure is one any
+                  other text would meet too (it refuses the model's requests)
 
         Raises:
             ExtractionError: If text validation fails
@@ -607,10 +677,12 @@ class ExtractionService:
         triples_extracted = 0
         triples_committed = 0
         warnings = []
-        tokens_used = 0
+        spent = _TokenTally()
         run_status = ExtractionRunStatus.COMPLETED
         failure_reason = None
         incomplete_response = False
+        provider_failed = False
+        provider_refused = False
 
         try:
             try:
@@ -621,20 +693,12 @@ class ExtractionService:
                 # LLM typing with spaCy noun-chunk extraction + vector retrieval +
                 # LLM confirmation, then reuses the same relationship derivation.
                 if self._extraction_mode == "nlp_grounded":
-                    (
-                        extracted_triples,
-                        tokens_used,
-                        extraction_warnings,
-                    ) = self._extract_triples_nlp_grounded(
-                        text, ontology, ontology_id, model, temperature, prompts, dataset_id
+                    extracted_triples, extraction_warnings = self._extract_triples_nlp_grounded(
+                        text, ontology, ontology_id, model, temperature, spent, prompts, dataset_id
                     )
                 else:
-                    (
-                        extracted_triples,
-                        tokens_used,
-                        extraction_warnings,
-                    ) = self._extract_triples_two_pass(
-                        text, ontology, ontology_id, model, temperature, prompts, dataset_id
+                    extracted_triples, extraction_warnings = self._extract_triples_two_pass(
+                        text, ontology, ontology_id, model, temperature, spent, prompts, dataset_id
                     )
                 triples_extracted = len(extracted_triples)
                 triples_committed = triples_extracted
@@ -642,14 +706,17 @@ class ExtractionService:
 
             except Exception as exc:
                 _logger.error(f"Triple extraction failed: {exc}", exc_info=exc)
-                tokens_used = 0
                 extracted_triples = []
                 run_status = ExtractionRunStatus.FAILED
                 failure_reason = str(exc) or type(exc).__name__
                 incomplete_response = isinstance(exc, IncompleteLLMResponseError)
+                provider_failed = isinstance(exc, LLMProviderError)
+                # A rate limit that reaches here was met by every attempt
+                provider_refused = isinstance(exc, (LLMRequestRefusedError, LLMRateLimitError))
                 warnings.append(f"Extraction failed: {failure_reason}")
 
-            # Update run record
+            # Update run record: the responses of a failed extraction cost tokens too
+            tokens_used = spent.total
             duration_ms = int((time.time() - start_time) * 1000)
             run = ExtractionRun(
                 id=run.id,
@@ -703,6 +770,8 @@ class ExtractionService:
             },
             failure_reason=failure_reason,
             incomplete_response=incomplete_response,
+            provider_failed=provider_failed,
+            provider_refused=provider_refused,
         )
 
     def _ontology_class_catalog(self, ontology) -> list[tuple[str, str]]:
@@ -858,9 +927,10 @@ class ExtractionService:
         ontology_id: str,
         model: str,
         temperature: float,
+        spent: _TokenTally,
         prompts: Mapping[str, StagePrompt] | None = None,
         dataset_id: str | None = None,
-    ) -> tuple[list[dict], int, list[str]]:
+    ) -> tuple[list[dict], list[str]]:
         """
         Run the two-pass individual-then-relationship extraction (design doc §7).
 
@@ -882,13 +952,16 @@ class ExtractionService:
         graph nodes (`_recognize_individuals`) so a mention that already exists
         adopts that node's canonical title instead of being re-created.
 
+        Args:
+            spent: Counts the tokens of every LLM response received
+
         Returns:
-            Tuple of (combined typing + relationship triples, total tokens used, warnings).
+            Tuple of (combined typing + relationship triples, warnings).
         """
         individual_system, individual_user = self._build_individual_extraction_prompt(
             text, ontology, (prompts or {}).get(IDENTIFY_INDIVIDUALS)
         )
-        individual_triples, tokens_used, parse_warnings = self._complete_triples(
+        individual_triples, parse_warnings = self._complete_triples(
             IDENTIFY_INDIVIDUALS,
             individual_system,
             individual_user,
@@ -896,16 +969,16 @@ class ExtractionService:
             temperature,
             text,
             ontology_id,
+            spent,
         )
         individual_triples = self._canonicalize_triples_against_ontology(
             individual_triples, ontology
         )
 
         individuals = self._identified_individuals(individual_triples)
-        relationship_triples, rel_tokens, rel_warnings = self._derive_relationships(
-            text, ontology, individuals, ontology_id, model, temperature, prompts
+        relationship_triples, rel_warnings = self._derive_relationships(
+            text, ontology, individuals, ontology_id, model, temperature, spent, prompts
         )
-        tokens_used += rel_tokens
         all_relationship_triples, typing_warnings = self._type_concept_objects(
             relationship_triples, individual_triples, ontology
         )
@@ -913,11 +986,11 @@ class ExtractionService:
             individual_triples + all_relationship_triples, ontology, dataset_id
         )
         all_warnings = parse_warnings + typing_warnings + rel_warnings
-        return combined, tokens_used, all_warnings
+        return combined, all_warnings
 
     def _derive_relationships(
-        self, text, ontology, individuals, ontology_id, model, temperature, prompts=None
-    ) -> tuple[list[dict], int, list[str]]:
+        self, text, ontology, individuals, ontology_id, model, temperature, spent, prompts=None
+    ) -> tuple[list[dict], list[str]]:
         """
         Derive relationships over already-identified individuals (shared pass 2).
 
@@ -927,14 +1000,14 @@ class ExtractionService:
         clamps to domain/range). Any typing triple the model re-emits is dropped
         so the identification pass stays the single source of typing. Skipped when
         fewer than two individuals were identified. Returns (relationship triples,
-        tokens used, warnings).
+        warnings); ``spent`` counts the tokens of every response received.
         """
         if len(individuals) < 2:
-            return [], 0, []
+            return [], []
         relationship_system, relationship_user = self._build_relationship_extraction_prompt(
             text, ontology, individuals, (prompts or {}).get(DERIVE_RELATIONSHIPS)
         )
-        relationship_triples, tokens, rel_warnings = self._complete_triples(
+        relationship_triples, rel_warnings = self._complete_triples(
             DERIVE_RELATIONSHIPS,
             relationship_system,
             relationship_user,
@@ -942,11 +1015,12 @@ class ExtractionService:
             temperature,
             text,
             ontology_id,
+            spent,
         )
         relationship_triples = [
             triple for triple in relationship_triples if not self._is_typing_triple(triple)
         ]
-        return relationship_triples, tokens, rel_warnings
+        return relationship_triples, rel_warnings
 
     def _complete_triples(
         self,
@@ -957,28 +1031,40 @@ class ExtractionService:
         temperature: float,
         text: str,
         ontology_id: str,
-    ) -> tuple[list[dict], int, list[str]]:
+        spent: _TokenTally,
+    ) -> tuple[list[dict], list[str]]:
         """
-        Ask the LLM for a stage's triples, asking again when the response is
-        not its whole answer.
+        Ask the LLM for a stage's triples, asking again when it got no whole
+        answer: the response was incomplete, or the provider failed in a way
+        that may pass.
 
         A response is the whole answer when it parses into the JSON asked for
         (an object with a ``triples`` list), whatever its finish_reason: an
         object cut short cannot parse. Any other response says nothing about
         the text, so it is never read as "no triples": the provider is told to
         forget it, so it is never served again from a response cache, and the
-        same call is made again, up to _MAX_LLM_ATTEMPTS times in all. A
-        complete first response is used as is.
+        same call is made again. A complete first response is used as is.
+
+        A provider failure that may pass (LLMTransientError: a rate limit, a
+        server error, a timeout) is asked again after a short wait. One that
+        cannot pass (a rejected key, an unknown model) or whose kind is not
+        known is raised at once.
+
+        Both kinds of attempt count toward the same _MAX_LLM_ATTEMPTS.
 
         Args:
             stage: The stage key (identify_individuals or derive_relationships),
                 named in the failure
+            spent: Counts the tokens of every response received, used or not
 
         Returns:
-            Tuple of (parsed triples, tokens used by every attempt, parse warnings).
+            Tuple of (parsed triples, parse warnings).
 
         Raises:
-            IncompleteLLMResponseError: If no attempt returned a complete response
+            IncompleteLLMResponseError: If the last attempt's response was incomplete
+            LLMTransientError: If the last attempt met a provider failure that
+                may pass; an LLMRateLimitError only when every attempt met the
+                rate limit
         """
         request = {
             "system_prompt": system_prompt,
@@ -988,15 +1074,26 @@ class ExtractionService:
             "max_tokens": 8000,
             "response_format": "json",
         }
-        tokens = 0
+        # Why each attempt got no whole answer, in order
+        failures: list[IncompleteLLMResponseError | LLMTransientError] = []
         for attempt in range(1, _MAX_LLM_ATTEMPTS + 1):
-            response = self._llm.complete(**request)
-            tokens += response.tokens_in + response.tokens_out
             try:
-                triples, warnings = self._parse_triple_extraction_response(
-                    response.content, text, ontology_id
+                response = self._llm.complete(**request)
+            except LLMTransientError as exc:
+                _logger.warning(
+                    "LLM request for %s failed, attempt %d of %d: %s",
+                    stage,
+                    attempt,
+                    _MAX_LLM_ATTEMPTS,
+                    exc,
                 )
-                return triples, tokens, warnings
+                failures.append(exc)
+                if attempt < _MAX_LLM_ATTEMPTS:
+                    self._sleep(_FIRST_RETRY_WAIT_SECONDS * 2 ** (attempt - 1))
+                continue
+            spent.add(response)
+            try:
+                return self._parse_triple_extraction_response(response.content, text, ontology_id)
             except IncompleteLLMResponseError as exc:
                 problem = f"{exc} (finish_reason={response.finish_reason})"
                 _logger.warning(
@@ -1007,10 +1104,8 @@ class ExtractionService:
                     problem,
                 )
                 self._llm.forget(**request)
-        raise IncompleteLLMResponseError(
-            f"The LLM response for {stage} was still incomplete after"
-            f" {_MAX_LLM_ATTEMPTS} attempts: {problem}"
-        )
+                failures.append(IncompleteLLMResponseError(problem))
+        raise _no_whole_answer(stage, failures)
 
     def _post_process_triples(
         self, triples: list[dict], ontology, dataset_id: str | None = None
@@ -1344,9 +1439,10 @@ class ExtractionService:
         ontology_id: str,
         model: str,
         temperature: float,
+        spent: _TokenTally,
         prompts: Mapping[str, StagePrompt] | None = None,
         dataset_id: str | None = None,
-    ) -> tuple[list[dict], int, list[str]]:
+    ) -> tuple[list[dict], list[str]]:
         """
         NLP-grounded extraction: spaCy leading edge + retrieval + LLM confirmation (#1141).
 
@@ -1370,20 +1466,23 @@ class ExtractionService:
         match) rather than typing (specific instance -> generic class). See
         `_recognize_individuals` (#1137).
 
+        Args:
+            spent: Counts the tokens of every LLM response received
+
         Returns:
-            Tuple of (combined typing + relationship triples, total tokens used, warnings).
+            Tuple of (combined typing + relationship triples, warnings).
         """
-        individual_triples, tokens_used, nlp_typing_warnings = self._type_individuals_nlp_grounded(
-            text, ontology, ontology_id, model, temperature
+        individual_triples, typing_tokens, nlp_typing_warnings = (
+            self._type_individuals_nlp_grounded(text, ontology, ontology_id, model, temperature)
         )
+        spent.total += typing_tokens
         individual_triples = self._canonicalize_triples_against_ontology(
             individual_triples, ontology
         )
         individuals = self._identified_individuals(individual_triples)
-        relationship_triples, rel_tokens, rel_warnings = self._derive_relationships(
-            text, ontology, individuals, ontology_id, model, temperature, prompts
+        relationship_triples, rel_warnings = self._derive_relationships(
+            text, ontology, individuals, ontology_id, model, temperature, spent, prompts
         )
-        tokens_used += rel_tokens
         all_relationship_triples, typing_warnings = self._type_concept_objects(
             relationship_triples, individual_triples, ontology
         )
@@ -1391,7 +1490,7 @@ class ExtractionService:
             individual_triples + all_relationship_triples, ontology, dataset_id
         )
         all_warnings = nlp_typing_warnings + typing_warnings + rel_warnings
-        return combined, tokens_used, all_warnings
+        return combined, all_warnings
 
     def _type_individuals_nlp_grounded(
         self, text: str, ontology, ontology_id: str, model: str, temperature: float

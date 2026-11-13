@@ -6,8 +6,7 @@ Tests verify:
 - Cache key generation with all parameters
 - Cache hit/miss behavior
 - LRU cache eviction
-- Error handling (401, 404, 429 status codes)
-- Timeout handling
+- Error handling: which failures may pass if asked again and which never will
 - Model availability checking
 - Response parsing and token counting
 """
@@ -21,7 +20,13 @@ import pytest
 
 from adapters.llm.openrouter_provider import OpenRouterProvider
 from domain.extraction.services import ExtractionService
-from domain.pipelines.exceptions import PipelineExternalServiceError
+from domain.pipelines.exceptions import (
+    LLMProviderError,
+    LLMRateLimitError,
+    LLMRequestRefusedError,
+    LLMTransientError,
+    PipelineExternalServiceError,
+)
 from domain.pipelines.ports import LLMResponse
 
 
@@ -871,7 +876,11 @@ class TestOpenRouterAsyncCompletion:
 
 @pytest.mark.llm
 class TestOpenRouterErrorHandling:
-    """Tests for error handling."""
+    """
+    A failure says whether asking again can help: LLMTransientError (and its
+    LLMRateLimitError) may pass, LLMRequestRefusedError never will, and any
+    other error is of a kind the provider does not know.
+    """
 
     @staticmethod
     def create_provider_with_mock_client():
@@ -880,105 +889,231 @@ class TestOpenRouterErrorHandling:
         provider._client = Mock(spec=httpx.Client)
         return provider
 
-    def test_complete_handles_401_invalid_key(self):
-        """Complete raises ValueError on 401 Unauthorized."""
-        provider = self.create_provider_with_mock_client()
-
+    @classmethod
+    def provider_answering_status(cls, status_code):
+        provider = cls.create_provider_with_mock_client()
         mock_response = Mock()
-        mock_response.status_code = 401
-        mock_response.text = "Unauthorized"
+        mock_response.status_code = status_code
+        mock_response.text = "the response body"
         mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
-            "401 Unauthorized", request=Mock(), response=mock_response
+            f"HTTP {status_code}", request=Mock(), response=mock_response
         )
         provider._client.post.return_value = mock_response
+        return provider
 
-        with pytest.raises(ValueError) as exc_info:
-            provider.complete(
-                system_prompt="sys",
-                user_prompt="user",
-                model="gpt-4",
-            )
-
-        assert "OpenRouter API key is invalid or unauthorized" in str(exc_info.value)
-
-    def test_complete_handles_404_model_not_found(self):
-        """Complete raises ValueError on 404 Model Not Found."""
-        provider = self.create_provider_with_mock_client()
-
+    @classmethod
+    def provider_answering_body(cls, body):
+        provider = cls.create_provider_with_mock_client()
         mock_response = Mock()
-        mock_response.status_code = 404
-        mock_response.text = "Model not found"
-        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
-            "404 Not Found", request=Mock(), response=mock_response
-        )
+        mock_response.status_code = 200
+        mock_response.json.return_value = body
         provider._client.post.return_value = mock_response
+        return provider
 
-        with pytest.raises(ValueError) as exc_info:
-            provider.complete(
-                system_prompt="sys",
-                user_prompt="user",
-                model="unknown-model",
-            )
+    @staticmethod
+    def complete(provider, model="gpt-4"):
+        return provider.complete(system_prompt="sys", user_prompt="user", model=model)
 
-        assert "Model not found on OpenRouter" in str(exc_info.value)
-        assert "unknown-model" in str(exc_info.value)
+    @pytest.mark.parametrize(
+        "status_code, message",
+        [
+            (401, "OpenRouter API key is invalid or unauthorized"),
+            (402, "OpenRouter account is out of credits"),
+            (404, "Model not found on OpenRouter: unknown-model"),
+        ],
+    )
+    def test_a_status_no_retry_can_change_is_a_refusal(self, status_code, message):
+        provider = self.provider_answering_status(status_code)
+        with pytest.raises(LLMRequestRefusedError) as exc_info:
+            self.complete(provider, model="unknown-model")
+        assert str(exc_info.value) == message
+        assert not isinstance(exc_info.value, LLMTransientError)
 
     def test_complete_handles_429_rate_limit(self):
-        """Complete raises RuntimeError on 429 Rate Limited."""
-        provider = self.create_provider_with_mock_client()
+        provider = self.provider_answering_status(429)
+        with pytest.raises(LLMRateLimitError) as exc_info:
+            self.complete(provider)
+        assert str(exc_info.value) == "OpenRouter rate limit exceeded"
+        # A rate limit may pass, so it is asked again like any transient failure
+        assert isinstance(exc_info.value, LLMTransientError)
 
-        mock_response = Mock()
-        mock_response.status_code = 429
-        mock_response.text = "Rate limited"
-        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
-            "429 Too Many Requests", request=Mock(), response=mock_response
-        )
-        provider._client.post.return_value = mock_response
+    @pytest.mark.parametrize("status_code", [408, 500, 502, 503, 504])
+    def test_a_server_error_or_upstream_timeout_may_pass(self, status_code):
+        provider = self.provider_answering_status(status_code)
+        with pytest.raises(LLMTransientError) as exc_info:
+            self.complete(provider)
+        assert str(exc_info.value) == f"OpenRouter API error: {status_code}"
+        assert not isinstance(exc_info.value, LLMRateLimitError)
 
+    @pytest.mark.parametrize("status_code", [400, 403, 422])
+    def test_another_client_error_is_about_the_request_and_not_asked_again(self, status_code):
+        provider = self.provider_answering_status(status_code)
         with pytest.raises(RuntimeError) as exc_info:
-            provider.complete(
-                system_prompt="sys",
-                user_prompt="user",
-                model="gpt-4",
-            )
+            self.complete(provider)
+        assert str(exc_info.value) == f"OpenRouter API error: {status_code}"
 
-        assert "OpenRouter rate limit exceeded" in str(exc_info.value)
+    def test_the_response_body_of_an_error_is_never_in_its_message(self):
+        for status_code in (401, 429, 500, 400):
+            provider = self.provider_answering_status(status_code)
+            with pytest.raises(Exception) as exc_info:
+                self.complete(provider)
+            assert "the response body" not in str(exc_info.value)
 
-    def test_complete_handles_generic_http_error(self):
-        """Complete raises RuntimeError on other HTTP errors."""
+    @pytest.mark.parametrize(
+        "failure",
+        [
+            httpx.TimeoutException("Request timeout"),
+            httpx.ReadTimeout("timed out"),
+            httpx.ConnectError("connection refused"),
+            httpx.ReadError("connection reset"),
+            httpx.RemoteProtocolError("server disconnected"),
+        ],
+    )
+    def test_no_answer_may_pass(self, failure):
         provider = self.create_provider_with_mock_client()
+        provider._client.post.side_effect = failure
 
-        mock_response = Mock()
-        mock_response.status_code = 500
-        mock_response.text = "Internal Server Error"
-        mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
-            "500 Internal Server Error", request=Mock(), response=mock_response
+        with pytest.raises(LLMTransientError) as exc_info:
+            self.complete(provider)
+
+        # The message names the kind of failure and none of the error's text,
+        # which is the HTTP client's and may hold anything
+        assert str(exc_info.value) == f"OpenRouter did not answer: {type(failure).__name__}"
+        assert exc_info.value.__cause__ is failure
+        # Callers that handle any external service failure still catch it
+        assert isinstance(exc_info.value, PipelineExternalServiceError)
+
+    # What httpx raises for an API key with a character no header may hold (a
+    # trailing newline from a paste): its text quotes the Authorization header
+    KEY = "sk-or-v1-0123456789abcdef"
+    ILLEGAL_HEADER = f"Illegal header value b'Bearer {KEY}\\n'"
+
+    def test_a_request_that_cannot_be_written_is_not_asked_again_and_quotes_no_key(self, caplog):
+        provider = self.create_provider_with_mock_client()
+        provider._client.post.side_effect = httpx.LocalProtocolError(self.ILLEGAL_HEADER)
+
+        with caplog.at_level("DEBUG"), pytest.raises(LLMProviderError) as exc_info:
+            self.complete(provider)
+
+        # Asking again cannot help, and it says nothing of the next request
+        assert not isinstance(exc_info.value, (LLMTransientError, LLMRequestRefusedError))
+        assert str(exc_info.value) == "OpenRouter request could not be sent: LocalProtocolError"
+        # The key is in the message of no error in the chain, and in no log line
+        error = exc_info.value
+        while error is not None:
+            assert self.KEY not in str(error)
+            error = error.__cause__
+        assert "OpenRouter request could not be sent" in caplog.text
+        assert self.KEY not in caplog.text
+
+    def test_a_key_the_http_client_quotes_never_reaches_the_extractions_caller(self):
+        provider = self.create_provider_with_mock_client()
+        provider._client.post.side_effect = httpx.LocalProtocolError(self.ILLEGAL_HEADER)
+        repo = Mock()
+        repo.get_taxonomy.return_value = SimpleNamespace(id="tax-1", title="Tools")
+        repo.list_concept_schemes.return_value = []
+        repo.list_property_definitions.return_value = []
+        waits = []
+        service = ExtractionService(
+            ontology_repo=repo,
+            embedding_service=None,
+            llm=provider,
+            nlp=None,
+            reference_sources=[],
+            event_publisher=Mock(),
+            extraction_repo=None,
+            extraction_run_repo=Mock(),
+            sleep=waits.append,
         )
-        provider._client.post.return_value = mock_response
 
-        with pytest.raises(RuntimeError) as exc_info:
-            provider.complete(
-                system_prompt="sys",
-                user_prompt="user",
-                model="gpt-4",
-            )
+        result = service.extract_triples("Nextflow runs on Slurm.", "tax-1", "gpt-4", 0.0)
 
-        assert "OpenRouter API error: 500" in str(exc_info.value)
+        # One request, no waits: the reason is shown to the caller, without the key
+        assert provider._client.post.call_count == 1
+        assert waits == []
+        assert result.failure_reason == "OpenRouter request could not be sent: LocalProtocolError"
+        assert self.KEY not in " ".join(result.warnings)
+        assert result.provider_failed is True
+        assert result.provider_refused is False
 
-    def test_complete_handles_timeout(self):
-        """Complete wraps httpx.TimeoutException in PipelineExternalServiceError."""
+    @pytest.mark.parametrize(
+        "body",
+        [
+            {"error": {"message": "Provider returned error", "code": 502}},
+            {"error": {"message": "Upstream timed out", "code": 408}},
+            {"error": {"message": "Internal Server Error"}},  # no code
+            {"error": {"message": "overloaded", "code": "overloaded"}},  # not a status
+            {"error": "something went wrong"},
+        ],
+    )
+    def test_an_error_body_in_place_of_a_completion_may_pass(self, body):
+        provider = self.provider_answering_body(body)
+        with pytest.raises(LLMTransientError) as exc_info:
+            self.complete(provider)
+        assert not isinstance(exc_info.value, LLMRateLimitError)
+        # The body's own message is logged, never quoted
+        assert "Provider returned error" not in str(exc_info.value)
+
+    @pytest.mark.parametrize(
+        "content",
+        [
+            b"",
+            b"<html>Bad gateway: the secret upstream page</html>",
+            b'{"choices": [{"mess',
+            b"\xff\xfe",
+        ],
+        ids=["empty", "html", "cut-off", "not-text"],
+    )
+    def test_a_200_whose_body_is_not_json_may_pass(self, content):
         provider = self.create_provider_with_mock_client()
+        provider._client.post.return_value = httpx.Response(
+            200,
+            content=content,
+            request=httpx.Request("POST", "https://openrouter.ai/api/v1/chat/completions"),
+        )
 
-        provider._client.post.side_effect = httpx.TimeoutException("Request timeout")
+        with pytest.raises(LLMTransientError) as exc_info:
+            self.complete(provider)
 
-        with pytest.raises(PipelineExternalServiceError) as exc_info:
-            provider.complete(
-                system_prompt="sys",
-                user_prompt="user",
-                model="gpt-4",
-            )
+        assert not isinstance(exc_info.value, LLMRateLimitError)
+        # The body is logged, never quoted
+        assert str(exc_info.value) == "OpenRouter answered with a body that is not JSON"
 
-        assert "TimeoutException" in str(exc_info.value)
+    def test_a_body_that_cannot_be_decoded_may_pass(self):
+        provider = self.create_provider_with_mock_client()
+        failure = httpx.DecodingError("Error -3 while decompressing data")
+        provider._client.post.side_effect = failure
+
+        with pytest.raises(LLMTransientError) as exc_info:
+            self.complete(provider)
+
+        assert str(exc_info.value) == "OpenRouter answered with a body that is not JSON"
+        assert exc_info.value.__cause__ is failure
+
+    def test_an_error_body_is_read_by_its_code_as_a_status_would_be(self):
+        with pytest.raises(LLMRateLimitError):
+            self.complete(self.provider_answering_body({"error": {"code": 429}}))
+        with pytest.raises(LLMRequestRefusedError, match="invalid or unauthorized"):
+            self.complete(self.provider_answering_body({"error": {"code": 401}}))
+        with pytest.raises(LLMRequestRefusedError, match="out of credits"):
+            self.complete(self.provider_answering_body({"error": {"code": 402}}))
+        with pytest.raises(RuntimeError, match="OpenRouter API error: 400"):
+            self.complete(self.provider_answering_body({"error": {"code": 400}}))
+
+    def test_a_failure_is_not_cached_so_the_next_call_asks_again(self):
+        provider = self.provider_answering_body({"error": {"code": 502}})
+        with pytest.raises(LLMTransientError):
+            self.complete(provider)
+
+        good = Mock()
+        good.status_code = 200
+        good.json.return_value = {
+            "choices": [{"message": {"content": "hello"}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 3, "completion_tokens": 1},
+        }
+        provider._client.post.return_value = good
+        assert self.complete(provider).content == "hello"
+        assert provider._client.post.call_count == 2
 
     def test_complete_handles_unexpected_error(self):
         """Complete wraps unexpected errors in RuntimeError."""

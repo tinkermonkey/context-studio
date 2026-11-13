@@ -7,7 +7,8 @@ A PDF source is extracted through POST /api/sources/{id}/extract; the run
 reads it chunk by chunk and ends in one proposal whose operations carry their
 passages and near matches; applying it with "use existing" records provenance.
 Re-extracting supersedes the earlier proposal. The source's last_extraction
-follows the runs.
+follows the runs. A run whose provider refuses its requests stops at its first
+chunk, and a failed run records what its model calls cost.
 """
 
 import json
@@ -39,6 +40,12 @@ from domain.extraction.services import ExtractionService
 from domain.extraction.sources import SourceService
 from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineRunStatus
+from domain.pipelines.exceptions import (
+    LLMProviderError,
+    LLMRateLimitError,
+    LLMRequestRefusedError,
+    LLMTransientError,
+)
 from domain.pipelines.individual_extraction.bootstrap import register_individual_extraction
 from domain.pipelines.ports import LLMResponse
 from domain.pipelines.registry import (
@@ -593,3 +600,175 @@ class TestTwoPassExtractionToProposal:
         text = client.get(f"/api/sources/{source['id']}/text").json()["text"]
         [link_evidence] = made_by.evidence
         assert text[link_evidence["start"] : link_evidence["end"]] == "WRF555SDFZ is made by Acme"
+
+
+def _long_pages(count):
+    """Pages of about 7000 characters of plain sentences: a chunk each."""
+    return [
+        [
+            f"Section {page} line {line} names the WRF555SDFZ ice maker once more."
+            for line in range(110)
+        ]
+        for page in range(count)
+    ]
+
+
+class RefusingLLM:
+    """A provider that rejects its API key, counting the requests it was sent."""
+
+    def __init__(self):
+        self.calls = 0
+
+    def complete(self, *args, **kwargs):
+        self.calls += 1
+        raise LLMRequestRefusedError("OpenRouter API key is invalid or unauthorized")
+
+
+class NeverRelatingLLM(TwoPassLLM):
+    """Answers the identify pass; every answer to the derive pass is cut short."""
+
+    def __init__(self):
+        self.calls = 0
+
+    def complete(self, system_prompt, user_prompt, model, **_):
+        self.calls += 1
+        response = super().complete(system_prompt, user_prompt, model)
+        if "identify the individuals" in system_prompt:
+            return response
+        return LLMResponse(response.content[:30], 10, 20, 5, finish_reason="length", model=model)
+
+    def forget(self, **request):
+        pass
+
+
+class FailingFirstLLM(TwoPassLLM):
+    """Fails its first requests with these errors, in order, then answers."""
+
+    def __init__(self, *failures):
+        self._failures = list(failures)
+        self.calls = 0
+
+    def complete(self, system_prompt, user_prompt, model, **_):
+        self.calls += 1
+        if self._failures:
+            raise self._failures.pop(0)
+        return super().complete(system_prompt, user_prompt, model)
+
+
+def _run_to_end(client, app, house, pages):
+    """Extract a PDF of these pages and return its run once it has ended."""
+    source = add_pdf(client, house, pages=pages)
+    [run] = extract(client, source["id"]).json()["runs"]
+    app.state.executor.start()
+    return wait_for(lambda: finished(app, run["run_id"]))
+
+
+class TestFailedExtractionRun:
+    """
+    The real orchestrator and extraction service over a provider that fails,
+    run by the executor: what the stored run says of the failure and its cost.
+    """
+
+    @pytest.fixture()
+    def extraction(self, parts, llm):
+        return ExtractionService(
+            ontology_repo=parts.repo,
+            embedding_service=FakeEmbeddingService(),
+            llm=llm,
+            nlp=Mock(),
+            reference_sources=[],
+            event_publisher=InProcessEventPublisher(),
+            extraction_repo=Mock(),
+            extraction_run_repo=Mock(),
+            sleep=lambda seconds: None,
+        )
+
+    class TestProviderDownForTheFirstChunk:
+        """Chunk 1 is lost to provider failures; the provider then answers."""
+
+        ATTEMPTS = {
+            "server errors": (
+                [LLMTransientError("OpenRouter API error: 503")] * 3,
+                "The LLM request for identify_individuals still failed after 3 attempts:"
+                " OpenRouter API error: 503",
+            ),
+            # The rate limit was met once, by the last attempt, and never asked again
+            "a rate limit at the last attempt": (
+                [
+                    LLMTransientError("OpenRouter API error: 503"),
+                    LLMTransientError("OpenRouter API error: 503"),
+                    LLMRateLimitError("OpenRouter rate limit exceeded"),
+                ],
+                "The LLM gave no complete answer for identify_individuals in 3 attempts"
+                " that failed in different ways, the last with: OpenRouter rate limit exceeded",
+            ),
+            # A direct provider's outage, which its SDK already retried: one request
+            "an outage the SDK retried": (
+                [LLMProviderError("The anthropic provider answered with a server error: 529")],
+                "The anthropic provider answered with a server error: 529",
+            ),
+        }
+
+        @pytest.fixture(params=list(ATTEMPTS))
+        def attempts(self, request):
+            return self.ATTEMPTS[request.param]
+
+        @pytest.fixture()
+        def llm(self, attempts):
+            return FailingFirstLLM(*attempts[0])
+
+        def test_the_run_goes_on_and_tells_the_caller_why_the_chunk_failed(
+            self, client, app, house, llm, attempts
+        ):
+            done = _run_to_end(client, app, house, _long_pages(4))
+
+            reason = attempts[1]
+            assert done.status is PipelineRunStatus.COMPLETED, done.failure_reason
+            total = done.items_total
+            assert total >= 3
+            # The failed requests for chunk 1, then two passes for each later chunk
+            assert llm.calls == len(attempts[0]) + 2 * (total - 1)
+            failed = done.output_summary["failed_chunks"]
+            assert [(c["index"], c["failure_reason"]) for c in failed] == [(0, reason)]
+            assert done.output_summary["warnings"][0] == (
+                f"Extraction failed for 1 of {total} chunks (chunk 1), so what they hold is"
+                f" missing. First failure: {reason}"
+            )
+
+    class TestRejectedKey:
+        @pytest.fixture()
+        def llm(self):
+            return RefusingLLM()
+
+        def test_the_run_stops_at_its_first_chunk_and_says_why(self, client, app, house, llm):
+            done = _run_to_end(client, app, house, _long_pages(4))
+
+            assert done.status is PipelineRunStatus.FAILED
+            assert done.items_total >= 3
+            # One request in all, not one per chunk
+            assert llm.calls == 1
+            assert done.failure_reason == (
+                f"Extraction stopped at chunk 1 of {done.items_total}, leaving"
+                f" {done.items_total - 1} untried, because every later chunk would fail the"
+                " same way: OpenRouter API key is invalid or unauthorized"
+            )
+            assert done.proposal_id is None
+            assert done.llm_metadata["tokens_used"] == 0
+
+    class TestRelationshipPassThatNeverCompletes:
+        @pytest.fixture()
+        def llm(self):
+            return NeverRelatingLLM()
+
+        def test_the_failed_run_records_the_tokens_of_every_attempt(self, client, app, house, llm):
+            done = _run_to_end(client, app, house, (PAGE_1, PAGE_2))
+
+            assert done.status is PipelineRunStatus.FAILED
+            assert done.failure_reason.startswith(
+                "Extraction failed for every chunk (1): The LLM response for"
+                " derive_relationships was still incomplete after 3 attempts"
+            )
+            # The identify call and the three derive attempts, 30 tokens each
+            assert llm.calls == 4
+            assert done.llm_metadata["tokens_used"] == 120
+            assert done.llm_metadata["model"]

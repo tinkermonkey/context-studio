@@ -7,6 +7,12 @@ requests to the appropriate provider based on model availability. When a provide
 rejects its API key (HTTP 401/403), the request falls through to the next provider
 that supports the model, and the rejecting provider is skipped from then on. Chat
 turns also fall through, for that call only, when a provider can't be reached.
+A completion that fails because the last provider rejected its key, has no such
+model, is rate limited, or failed to answer (a server error, a timeout, no
+connection) raises the domain's LLMProviderError for it, so a run can tell a
+failure every request will meet from one about a single request, and can tell
+its caller what happened. So does every later completion for a model left with
+no provider by rejected keys.
 
 This adapter implements the LLMProvider port and is used by the Knowledge Extraction
 and LLM Pipeline services.
@@ -26,6 +32,11 @@ from adapters.llm.openrouter_provider import OpenRouterProvider
 from domain.chat.entities import ChatMessage
 from domain.chat.ports import ChatModel
 from domain.chat.value_objects import ModelEvent, ToolSpec
+from domain.pipelines.exceptions import (
+    LLMProviderError,
+    LLMRateLimitError,
+    LLMRequestRefusedError,
+)
 from domain.pipelines.ports import LLMProvider, LLMResponse
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
@@ -41,6 +52,45 @@ _AUTH_FAILURE_STATUSES = (401, 403)
 def _is_auth_failure(error: Exception) -> bool:
     """Return True if the error is a provider rejecting its API key."""
     return getattr(error, "status_code", None) in _AUTH_FAILURE_STATUSES
+
+
+# The SDKs' errors for a request that got no answer in time; they subclass the
+# SDKs' connection errors
+_TIMEOUT_ERRORS = (anthropic.APITimeoutError, openai.APITimeoutError)
+
+
+def _completion_error(name: str, model: str, error: Exception) -> Exception:
+    """
+    What a provider's failed completion is raised as. The domain errors
+    OpenRouterProvider raises itself are returned as they are. An SDK error
+    (OpenAI, Anthropic) of a known kind becomes the domain's error for it, with
+    a fixed message that names the provider and the kind and never quotes the
+    SDK error's text:
+
+    - an HTTP status that every request for the model will meet is a refusal
+      or the rate limit;
+    - a server error, a timeout or a failed connection is a plain
+      LLMProviderError, neither a refusal nor one to ask again: the SDK has
+      already retried it.
+
+    Any other error is returned as it is.
+    """
+    if isinstance(error, LLMProviderError):
+        return error
+    status = getattr(error, "status_code", None)
+    if status in _AUTH_FAILURE_STATUSES:
+        return LLMRequestRefusedError(f"The {name} provider rejected its API key")
+    if status == 404:
+        return LLMRequestRefusedError(f"The {name} provider has no model {model}")
+    if status == 429:
+        return LLMRateLimitError(f"The {name} provider's rate limit was exceeded")
+    if isinstance(status, int) and (status == 408 or status >= 500):
+        return LLMProviderError(f"The {name} provider answered with a server error: {status}")
+    if isinstance(error, _TIMEOUT_ERRORS):
+        return LLMProviderError(f"The {name} provider did not answer in time")
+    if isinstance(error, _CONNECTION_ERRORS):
+        return LLMProviderError(f"The {name} provider could not be reached")
+    return error
 
 
 # Errors meaning "the provider could not be reached or did not answer in time":
@@ -70,8 +120,8 @@ class LLMProviderRouter:
 
     Providers are tried in registration order (openai, anthropic, openrouter). If a
     provider rejects its API key, the router logs a warning, stops using that
-    provider, and tries the next provider that supports the model. Other errors are
-    raised unchanged.
+    provider, and tries the next provider that supports the model. A completion's
+    other errors are raised as _completion_error gives them.
 
     `stream_chat` implements the ChatModel port for tool-calling chat with the same
     provider order and auth fallback, over the providers that have a streaming chat
@@ -181,12 +231,16 @@ class LLMProviderRouter:
             LLMResponse with the completion
 
         Raises:
-            ValueError: If no provider is available for the requested model
-            Exception: The provider's own error for non-auth failures, or the last
-                provider's auth error if every supporting provider rejected its key
+            ValueError: If no configured provider supports the requested model
+            LLMRequestRefusedError: If every supporting provider rejected its key,
+                now or in an earlier call, or the provider has no such model
+            LLMRateLimitError: If the provider's rate limit turned the request away
+            LLMProviderError: If the provider failed to answer in another known
+                way (a server error, a timeout, no connection)
+            Exception: The provider's own error for any other failure
         """
         auth_error: Exception | None = None
-        for name, provider in self._providers_for(model):
+        for name, provider in self._completion_providers(model):
             try:
                 return provider.complete(
                     system_prompt=system_prompt,
@@ -200,12 +254,15 @@ class LLMProviderRouter:
                 )
             except Exception as e:
                 if not _is_auth_failure(e):
-                    raise
+                    failure = _completion_error(name, model, e)
+                    if failure is e:
+                        raise
+                    raise failure from e
                 self._reject_provider(name, e)
                 auth_error = e
         # Every supporting provider rejected its API key
         assert auth_error is not None
-        raise auth_error
+        raise _completion_error(name, model, auth_error) from auth_error
 
     def supports_model(self, model: str) -> bool:
         """Whether a chat-capable provider that hasn't rejected its key serves the model."""
@@ -319,6 +376,26 @@ class LLMProviderRouter:
             raise ValueError(message)
         return candidates
 
+    def _completion_providers(self, model: str) -> list[tuple[str, LLMProvider]]:
+        """
+        The providers to try for a completion: those _providers_for lists.
+
+        Raises:
+            LLMRequestRefusedError: If the model has no usable provider because
+                every provider that supports it rejected its API key, which
+                every later completion for the model will meet too
+            ValueError: If no configured provider supports the model
+        """
+        try:
+            return self._providers_for(model)
+        except ValueError as error:
+            if any(
+                name in self._rejected_providers and provider.is_model_available(model)
+                for name, provider in self._providers.items()
+            ):
+                raise LLMRequestRefusedError(str(error)) from error
+            raise
+
     def _reject_provider(self, name: str, error: Exception) -> None:
         """Stop routing to a provider that rejected its API key, with a warning."""
         self._rejected_providers.add(name)
@@ -414,12 +491,16 @@ class LLMProviderRouter:
             LLMResponse with the completion
 
         Raises:
-            ValueError: If no provider is available for the requested model
-            Exception: The provider's own error for non-auth failures, or the last
-                provider's auth error if every supporting provider rejected its key
+            ValueError: If no configured provider supports the requested model
+            LLMRequestRefusedError: If every supporting provider rejected its key,
+                now or in an earlier call, or the provider has no such model
+            LLMRateLimitError: If the provider's rate limit turned the request away
+            LLMProviderError: If the provider failed to answer in another known
+                way (a server error, a timeout, no connection)
+            Exception: The provider's own error for any other failure
         """
         auth_error: Exception | None = None
-        for name, provider in self._providers_for(model):
+        for name, provider in self._completion_providers(model):
             try:
                 # Use the provider's async method if it has one, otherwise run the
                 # sync method in an executor
@@ -447,9 +528,12 @@ class LLMProviderRouter:
                 )
             except Exception as e:
                 if not _is_auth_failure(e):
-                    raise
+                    failure = _completion_error(name, model, e)
+                    if failure is e:
+                        raise
+                    raise failure from e
                 self._reject_provider(name, e)
                 auth_error = e
         # Every supporting provider rejected its API key
         assert auth_error is not None
-        raise auth_error
+        raise _completion_error(name, model, auth_error) from auth_error

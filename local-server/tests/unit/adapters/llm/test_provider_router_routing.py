@@ -9,13 +9,24 @@ Tests verify:
 - Initialization errors are logged and tolerated if at least one provider succeeds
 - ValueError is raised when all configured providers fail to initialize
 - An auth failure (401/403) falls through to the next provider that supports the model
+- A completion's failure that every request for the model will meet is raised as
+  the domain's error for it
 """
 
 from unittest.mock import Mock, patch
 
+import anthropic as anthropic_sdk
+import httpx
+import openai as openai_sdk
 import pytest
 
 from adapters.llm.provider_router import LLMProviderRouter
+from domain.pipelines.exceptions import (
+    LLMProviderError,
+    LLMRateLimitError,
+    LLMRequestRefusedError,
+    LLMTransientError,
+)
 from domain.pipelines.ports import LLMResponse
 
 
@@ -441,11 +452,15 @@ class TestLLMProviderRouterAuthFallback:
     @pytest.mark.parametrize(
         "error",
         [
-            FakeAuthError(429),
             FakeAuthError(400),
+            FakeAuthError(422),
             RuntimeError("boom"),
+            # The domain errors a provider raises itself (OpenRouterProvider)
+            LLMRequestRefusedError("OpenRouter API key is invalid or unauthorized"),
+            LLMRateLimitError("OpenRouter rate limit exceeded"),
+            LLMTransientError("OpenRouter API error: 503"),
         ],
-        ids=["rate-limit", "bad-request", "other"],
+        ids=["bad-request", "unprocessable", "other", "refused", "rate-limit", "transient"],
     )
     async def test_non_auth_errors_are_not_swallowed(self, use_async, error):
         anthropic = FailingLLMProvider(["claude-opus-4-7"], error)
@@ -466,12 +481,14 @@ class TestLLMProviderRouterAuthFallback:
         openrouter = FailingLLMProvider(["claude-opus-4-7"], last_error)
         router = self.create_router(anthropic=anthropic, openrouter=openrouter)
 
-        with pytest.raises(FakeAuthError) as exc_info:
+        with pytest.raises(LLMRequestRefusedError) as exc_info:
             await self.call(router, "claude-opus-4-7", use_async)
-        assert exc_info.value is last_error
+        assert str(exc_info.value) == "The openrouter provider rejected its API key"
+        assert exc_info.value.__cause__ is last_error
 
-        # Later calls fail fast with a clear message naming the rejecting providers
-        with pytest.raises(ValueError) as exc_info:
+        # Later calls are refused too, with no request sent, naming the
+        # rejecting providers: a run still learns that every request will fail
+        with pytest.raises(LLMRequestRefusedError) as exc_info:
             await self.call(router, "claude-opus-4-7", use_async)
         message = str(exc_info.value)
         assert "No provider available for model: claude-opus-4-7" in message
@@ -480,12 +497,140 @@ class TestLLMProviderRouterAuthFallback:
         assert openrouter.calls == 1
 
     @pytest.mark.parametrize("use_async", [False, True])
+    async def test_a_model_no_provider_supports_is_not_a_refusal(self, use_async):
+        # A rejected key elsewhere does not make an unsupported model a refusal:
+        # no provider that supports it was ever asked
+        anthropic = FailingLLMProvider(["claude-opus-4-7"], FakeAuthError())
+        router = self.create_router(anthropic=anthropic)
+        with pytest.raises(LLMRequestRefusedError):
+            await self.call(router, "claude-opus-4-7", use_async)
+
+        with pytest.raises(ValueError, match="No provider available for model: gpt-4o"):
+            await self.call(router, "gpt-4o", use_async)
+
+    async def test_chat_for_a_model_left_without_a_provider_is_still_a_value_error(self):
+        # Chat reports a ValueError's message to the user as it is
+        anthropic = FailingLLMProvider(["claude-opus-4-7"], FakeAuthError())
+        router = self.create_router(anthropic=anthropic)
+        with pytest.raises(LLMRequestRefusedError):
+            await self.call(router, "claude-opus-4-7", use_async=False)
+
+        with pytest.raises(ValueError, match="rejected their API key: anthropic"):
+            async for _ in router.stream_chat(
+                system="", messages=[], tools=[], model="claude-opus-4-7"
+            ):
+                pass
+
+    _REQUEST = httpx.Request("POST", "https://api.example.invalid/v1/messages")
+    _SECRET = "sk-ant-0123456789abcdef"
+
+    # A failure of the direct provider that outlasted the SDK's own retries,
+    # as the SDK raises it, with a text that must not be shown
+    SDK_OUTAGES = {
+        "anthropic-overloaded": (
+            lambda: anthropic_sdk.InternalServerError(
+                f"Overloaded {TestLLMProviderRouterAuthFallback._SECRET}",
+                response=httpx.Response(529, request=TestLLMProviderRouterAuthFallback._REQUEST),
+                body=None,
+            ),
+            "The anthropic provider answered with a server error: 529",
+        ),
+        "openai-unavailable": (
+            lambda: openai_sdk.InternalServerError(
+                f"upstream {TestLLMProviderRouterAuthFallback._SECRET}",
+                response=httpx.Response(503, request=TestLLMProviderRouterAuthFallback._REQUEST),
+                body=None,
+            ),
+            "The anthropic provider answered with a server error: 503",
+        ),
+        "anthropic-timeout": (
+            lambda: anthropic_sdk.APITimeoutError(
+                request=TestLLMProviderRouterAuthFallback._REQUEST
+            ),
+            "The anthropic provider did not answer in time",
+        ),
+        "openai-timeout": (
+            lambda: openai_sdk.APITimeoutError(request=TestLLMProviderRouterAuthFallback._REQUEST),
+            "The anthropic provider did not answer in time",
+        ),
+        "anthropic-connection": (
+            lambda: anthropic_sdk.APIConnectionError(
+                message=f"Illegal header value b'{TestLLMProviderRouterAuthFallback._SECRET}'",
+                request=TestLLMProviderRouterAuthFallback._REQUEST,
+            ),
+            "The anthropic provider could not be reached",
+        ),
+        "openai-connection": (
+            lambda: openai_sdk.APIConnectionError(
+                message=f"Illegal header value b'{TestLLMProviderRouterAuthFallback._SECRET}'",
+                request=TestLLMProviderRouterAuthFallback._REQUEST,
+            ),
+            "The anthropic provider could not be reached",
+        ),
+    }
+
+    @pytest.mark.parametrize("use_async", [False, True])
+    @pytest.mark.parametrize("outage", list(SDK_OUTAGES))
+    async def test_an_sdk_outage_is_a_provider_failure_with_a_fixed_message(
+        self, use_async, outage
+    ):
+        make_error, message = self.SDK_OUTAGES[outage]
+        error = make_error()
+        anthropic = FailingLLMProvider(["claude-opus-4-7"], error)
+        openrouter = FailingLLMProvider(["claude-opus-4-7"], RuntimeError("must not be called"))
+        router = self.create_router(anthropic=anthropic, openrouter=openrouter)
+
+        with pytest.raises(LLMProviderError) as exc_info:
+            await self.call(router, "claude-opus-4-7", use_async)
+
+        # Named by provider and kind, with none of the SDK error's text
+        assert str(exc_info.value) == message
+        assert self._SECRET not in str(exc_info.value)
+        assert exc_info.value.__cause__ is error
+        # The SDK already retried it, and the next request may be answered:
+        # neither one to ask again nor a refusal
+        assert type(exc_info.value) is LLMProviderError
+        assert not isinstance(exc_info.value, (LLMTransientError, LLMRequestRefusedError))
+        # No rejected key: the provider stays in use, with no fall-through
+        assert openrouter.calls == 0
+        assert router._rejected_providers == set()
+
+    @pytest.mark.parametrize("use_async", [False, True])
     async def test_providers_not_supporting_model_are_not_tried(self, use_async):
         anthropic = FailingLLMProvider(["claude-opus-4-7"], FakeAuthError())
         openai = FailingLLMProvider(["gpt-4o"], RuntimeError("must not be called"))
         router = self.create_router(openai=openai, anthropic=anthropic)
 
-        with pytest.raises(FakeAuthError):
+        with pytest.raises(LLMRequestRefusedError, match="The anthropic provider rejected"):
             await self.call(router, "claude-opus-4-7", use_async)
 
         assert openai.calls == 0
+
+    @pytest.mark.parametrize("use_async", [False, True])
+    async def test_an_sdk_rate_limit_is_raised_as_the_domains_rate_limit(self, use_async):
+        error = FakeAuthError(429)
+        anthropic = FailingLLMProvider(["claude-opus-4-7"], error)
+        openrouter = FailingLLMProvider(["claude-opus-4-7"], RuntimeError("must not be called"))
+        router = self.create_router(anthropic=anthropic, openrouter=openrouter)
+
+        with pytest.raises(LLMRateLimitError) as exc_info:
+            await self.call(router, "claude-opus-4-7", use_async)
+
+        assert str(exc_info.value) == "The anthropic provider's rate limit was exceeded"
+        assert exc_info.value.__cause__ is error
+        # A rate limit is no rejected key: the provider stays in use, with no fall-through
+        assert openrouter.calls == 0
+        assert router._rejected_providers == set()
+
+    @pytest.mark.parametrize("use_async", [False, True])
+    async def test_an_sdk_unknown_model_is_raised_as_a_refusal(self, use_async):
+        error = FakeAuthError(404)
+        anthropic = FailingLLMProvider(["claude-opus-4-7"], error)
+        router = self.create_router(anthropic=anthropic)
+
+        with pytest.raises(LLMRequestRefusedError) as exc_info:
+            await self.call(router, "claude-opus-4-7", use_async)
+
+        assert str(exc_info.value) == "The anthropic provider has no model claude-opus-4-7"
+        assert exc_info.value.__cause__ is error
+        assert router._rejected_providers == set()
