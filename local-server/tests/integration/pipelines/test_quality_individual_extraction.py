@@ -349,6 +349,23 @@ def cassette_dir():
     return Path(__file__).parent.parent / "fixtures" / "cassettes" / "individual_extraction"
 
 
+# What the fake LLM answers in the apply round-trip: one individual of a class
+# the test ontology holds, quoted from the fixture's text
+_ROUNDTRIP_RESPONSE = json.dumps(
+    {
+        "triples": [
+            {
+                "subject": {"kind": "individual", "label": "Nextflow"},
+                "predicate": {"label": "is_a"},
+                "object": {"kind": "class", "label": "Entity"},
+                "confidence": 0.9,
+                "provenance": {"raw": "Nextflow"},
+            }
+        ]
+    }
+)
+
+
 class TestQualityIndividualExtraction:
     """Quality test suite for individual_extraction pipeline."""
 
@@ -510,7 +527,13 @@ class TestQualityIndividualExtraction:
 
         # Use a simple (grounded) fixture for round-trip testing — the
         # FakeLLMProvider returns a canned response, so any input text works.
-        fixture_input = load_fixture("individual_extraction", "arxiv_kubernetes_energy_monitoring")
+        # The fixture names the DR taxonomy; this repo holds only the test one,
+        # and a run on an ontology that doesn't exist fails.
+        fixture_input = {
+            **load_fixture("individual_extraction", "arxiv_kubernetes_energy_monitoring"),
+            "ontology_id": "test-ontology-123",
+        }
+        extraction_service._llm = FakeLLMProvider(response_content=_ROUNDTRIP_RESPONSE)
         run_id = str(uuid4())
 
         # First execution: run -> apply -> snapshot
@@ -520,6 +543,7 @@ class TestQualityIndividualExtraction:
             input_data=fixture_input,
         )
         result_state1 = await orchestrator.execute(state1)
+        assert result_state1.result["triples"], "the run extracted nothing to apply"
 
         # Create a mock PipelineRun for apply service
         mock_run1 = PipelineRun(
