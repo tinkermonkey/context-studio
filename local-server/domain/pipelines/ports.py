@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Literal, Mapping, Protocol
+from typing import TYPE_CHECKING, Any, Literal, Mapping, Protocol
 
 from .entities import (
     Batch,
@@ -20,6 +20,9 @@ from .entities import (
     PipelineType,
     SourceRun,
 )
+
+if TYPE_CHECKING:
+    from domain.extraction.entities import Mention, MentionsResult, TypingPrompt, TypingResult
 
 # ============================================================================
 # LLM provider value types and port
@@ -171,6 +174,65 @@ class ExtractionPort(Protocol):
         {"system", "user"}); None uses the default prompts. dataset_id scopes
         recognition to the dataset the run extracts into.
         """
+        ...
+
+    # Find-then-type extraction: the calls FindThenTypeOrchestrator makes in
+    # place of extract_triples (see domain/extraction/find_then_type.py).
+
+    def find_mentions(
+        self,
+        text: str,
+        ontology_id: str,
+        model: str,
+        temperature: float,
+        stage_prompts: Mapping[str, Any] | None = None,
+    ) -> "MentionsResult":
+        """
+        List what a text mentions, typing nothing: one LLM call. A
+        failure_reason on the result means the text was not read.
+        """
+        ...
+
+    def typing_prompt(
+        self, ontology_id: str, stage_prompts: Mapping[str, Any] | None = None
+    ) -> "TypingPrompt":
+        """The prompt that types a run's mentions (the whole class catalog), built once."""
+        ...
+
+    def type_mention(
+        self,
+        prompt: "TypingPrompt",
+        context: str,
+        mention: "Mention",
+        model: str,
+        temperature: float,
+    ) -> "TypingResult":
+        """
+        Type one mention: one LLM call that reads nothing but its arguments,
+        so calls can be made from several threads at once. A class_ref of None
+        with no failure_reason means the mention is not something to record.
+        """
+        ...
+
+    def relate(
+        self,
+        text: str,
+        typing_triples: list[dict[str, Any]],
+        ontology_id: str,
+        model: str,
+        temperature: float,
+        stage_prompts: Mapping[str, Any] | None = None,
+    ) -> TripleExtractionResult:
+        """
+        State the relationships a text asserts between the individuals of the
+        given typing triples: one LLM call (none with fewer than two).
+        """
+        ...
+
+    def recognize(
+        self, triples: list[dict[str, Any]], ontology_id: str, dataset_id: str | None = None
+    ) -> list[dict[str, Any]]:
+        """Resolve the triples' individuals to existing graph nodes, in the given order."""
         ...
 
 

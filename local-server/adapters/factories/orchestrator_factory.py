@@ -18,6 +18,9 @@ from domain.pipelines.claim_triage.orchestrator import (
     ClaimTriageState,
 )
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
+from domain.pipelines.individual_extraction.find_then_type import (
+    FindThenTypeOrchestrator,
+)
 from domain.pipelines.individual_extraction.open_orchestrator import (
     OpenIndividualExtractionOrchestrator,
 )
@@ -56,11 +59,11 @@ from domain.pipelines.schema_node_grounding.orchestrator import (
     SchemaGroundingOrchestrator,
     SchemaGroundingState,
 )
-from domain.pipelines.source_proposals import SourceProposer
 from domain.pipelines.schema_relationship_reflection.orchestrator import (
     RelationshipReflectionOrchestrator,
     RelationshipReflectionState,
 )
+from domain.pipelines.source_proposals import SourceProposer
 from utils.logger import get_logger
 
 _logger = get_logger(__name__)
@@ -83,20 +86,25 @@ def _source_proposer(services: dict[str, Any]) -> SourceProposer | None:
     return SourceProposer(proposal_service, ontology_repo)
 
 
-def _build_individual_extraction(
-    llm_provider: LLMProvider, services: dict[str, Any]
-) -> PipelineOrchestrator:
-    extraction_service = services.get("extraction_service")
-    if not extraction_service:
-        raise ValueError("extraction_service is required for IndividualExtractionOrchestrator")
-    return IndividualExtractionOrchestrator(
-        llm_provider=llm_provider,
-        extraction_service=extraction_service,
-        run_id=services.get("run_id"),
-        status_writer=services.get("status_writer"),
-        config=services.get("config"),
-        proposer=_source_proposer(services),
-    )
+def _individual_extraction_builder(
+    orchestrator_class: type[IndividualExtractionOrchestrator],
+) -> Callable[[LLMProvider, dict[str, Any]], PipelineOrchestrator]:
+    """The builder of an individual extraction orchestrator over the extraction service."""
+
+    def build(llm_provider: LLMProvider, services: dict[str, Any]) -> PipelineOrchestrator:
+        extraction_service = services.get("extraction_service")
+        if not extraction_service:
+            raise ValueError(f"extraction_service is required for {orchestrator_class.__name__}")
+        return orchestrator_class(
+            llm_provider=llm_provider,
+            extraction_service=extraction_service,
+            run_id=services.get("run_id"),
+            status_writer=services.get("status_writer"),
+            config=services.get("config"),
+            proposer=_source_proposer(services),
+        )
+
+    return build
 
 
 def _build_schema_extraction(
@@ -298,7 +306,10 @@ _ORCHESTRATOR_BUILDERS: dict[
     Callable[[LLMProvider, dict[str, Any]], PipelineOrchestrator],
 ] = {
     NoOpPipelineOrchestrator: _build_noop,
-    IndividualExtractionOrchestrator: _build_individual_extraction,
+    IndividualExtractionOrchestrator: _individual_extraction_builder(
+        IndividualExtractionOrchestrator
+    ),
+    FindThenTypeOrchestrator: _individual_extraction_builder(FindThenTypeOrchestrator),
     OpenIndividualExtractionOrchestrator: _build_open_individual_extraction,
     SchemaExtractionOrchestrator: _build_schema_extraction,
     OpenSchemaExtractionOrchestrator: _build_open_schema_extraction,

@@ -33,15 +33,19 @@ from domain.ports import EventPublisher
 if TYPE_CHECKING:
     from domain.extraction.ports import IndividualRecognizer
 
-from . import layers
+from . import find_then_type, layers
 from .entities import (
     ExtractedEntity,
     ExtractionResult,
     ExtractionRun,
     ExtractionRunStatus,
+    Mention,
+    MentionsResult,
     RecognitionPreviewHit,
     RecognitionPreviewResult,
     TripleExtractionResult,
+    TypingPrompt,
+    TypingResult,
 )
 from .events import ExtractionCompleted
 from .exceptions import ExtractionError, IncompleteLLMResponseError, InvalidInputError
@@ -54,7 +58,14 @@ from .ports import (
     NLPProcessor,
     ReferenceSource,
 )
-from .prompts import DERIVE_RELATIONSHIPS, IDENTIFY_INDIVIDUALS, INDIVIDUAL_EXTRACTION_STAGES
+from .prompts import (
+    DERIVE_RELATIONSHIPS,
+    FIND_MENTIONS,
+    FIND_THEN_TYPE_STAGES,
+    IDENTIFY_INDIVIDUALS,
+    INDIVIDUAL_EXTRACTION_STAGES,
+    TYPE_MENTION,
+)
 from .span_resolution import resolve_span
 from .value_objects import ExtractionLayerResult, LayerInput, LayerOutput, SourceSpan
 
@@ -283,7 +294,7 @@ class ExtractionService:
         """
         if not 0.0 <= similarity_threshold <= 1.0:
             raise ValueError(
-                "similarity_threshold must be between 0.0 and 1.0, got" f" {similarity_threshold}"
+                f"similarity_threshold must be between 0.0 and 1.0, got {similarity_threshold}"
             )
         self._ontology_repo = ontology_repo
         self._embedding_service = embedding_service
@@ -712,6 +723,201 @@ class ExtractionService:
             provider_failed=provider_failed,
             provider_refused=provider_refused,
         )
+
+    # Find-then-type extraction (domain/extraction/find_then_type.py): the calls
+    # the orchestrator makes in place of extract_triples. None of them keeps an
+    # ExtractionRun: the pipeline run carries what the calls cost.
+
+    def find_mentions(
+        self,
+        text: str,
+        ontology_id: str,
+        model: str,
+        temperature: float,
+        stage_prompts: Mapping[str, Any] | None = None,
+    ) -> MentionsResult:
+        """
+        List what a text mentions, typing nothing (the find stage): one LLM call.
+
+        Args:
+            text: The text (a chunk of a source, or a pasted text)
+            ontology_id: ID of the target ontology
+            stage_prompts: A configuration's prompt overrides for the
+                find-then-type stages; None uses the defaults
+
+        Returns:
+            The mentions with their passages; a failure_reason when the text
+            could not be read (it then lists no mentions)
+
+        Raises:
+            ExtractionError: If the text is empty
+            InvalidInputError: If no ontology has ontology_id
+            ValueError: If temperature is out of range
+        """
+        if not text or not text.strip():
+            raise ExtractionError("Text cannot be empty")
+        if not 0.0 <= temperature <= 2.0:
+            raise ValueError(f"temperature must be 0.0–2.0, got {temperature}")
+        ontology = self._taxonomy(ontology_id)
+        prompts = resolve_stage_prompts(FIND_THEN_TYPE_STAGES, stage_prompts)
+        kinds = [
+            (scheme.title, scheme.description or "")
+            for scheme in self._ontology_repo.list_concept_schemes(
+                taxonomy_id=str(ontology.id), limit=None
+            )
+        ]
+        return find_then_type.find_mentions(
+            self._llm,
+            self._sleep,
+            text,
+            find_then_type.kinds_grounding(ontology.title, kinds),
+            model,
+            temperature,
+            prompts[FIND_MENTIONS],
+        )
+
+    def typing_prompt(
+        self, ontology_id: str, stage_prompts: Mapping[str, Any] | None = None
+    ) -> TypingPrompt:
+        """
+        The prompt that types a run's mentions: the ontology's whole class
+        catalog with definitions, read once per run.
+
+        Raises:
+            InvalidInputError: If no ontology has ontology_id
+        """
+        ontology = self._taxonomy(ontology_id)
+        prompts = resolve_stage_prompts(FIND_THEN_TYPE_STAGES, stage_prompts)
+        classes: dict[str, find_then_type.CatalogClass] = {}
+        for scheme in self._ontology_repo.list_concept_schemes(
+            taxonomy_id=str(ontology.id), limit=None
+        ):
+            for cls in self._ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None):
+                if cls.derived:
+                    continue  # computed by its client, never an extraction target
+                reference = _canonical_class_ref(cls)
+                if reference and reference not in classes:
+                    classes[reference] = find_then_type.CatalogClass(
+                        reference, cls.title or reference, scheme.title, cls.description or ""
+                    )
+        return find_then_type.build_typing_prompt(
+            ontology.title, list(classes.values()), prompts[TYPE_MENTION]
+        )
+
+    def type_mention(
+        self,
+        prompt: TypingPrompt,
+        context: str,
+        mention: Mention,
+        model: str,
+        temperature: float,
+    ) -> TypingResult:
+        """
+        Type one mention against the run's class catalog (the type stage): one
+        LLM call. It reads no repository, so calls can be made side by side.
+
+        Args:
+            prompt: The run's typing prompt (typing_prompt)
+            context: The text around the mention
+
+        Returns:
+            The class reference, or None when the mention is not something to
+            record; a failure_reason when it could not be typed
+        """
+        return find_then_type.type_mention(
+            self._llm, self._sleep, prompt, context, mention, model, temperature
+        )
+
+    def relate(
+        self,
+        text: str,
+        typing_triples: list[dict],
+        ontology_id: str,
+        model: str,
+        temperature: float,
+        stage_prompts: Mapping[str, Any] | None = None,
+    ) -> TripleExtractionResult:
+        """
+        State the relationships a text asserts between typed individuals (pass
+        2 of the two-pass shape): one LLM call, none with fewer than two
+        individuals.
+
+        Only relationships between two of the given individuals are kept. Pass
+        2 may name a new concept as a relationship's object and type it by the
+        relationship's range; here the type stage is the one way an individual
+        gets its class, so such a relationship is left out.
+
+        Args:
+            text: The text the individuals were found in
+            typing_triples: The individuals' typing triples (find_then_type.typing_triple)
+
+        Returns:
+            The relationship triples, each with its relationship type where the
+            ontology has one; a failure_reason when the text could not be read
+
+        Raises:
+            InvalidInputError: If no ontology has ontology_id
+        """
+        ontology = self._taxonomy(ontology_id)
+        prompts = resolve_stage_prompts(FIND_THEN_TYPE_STAGES, stage_prompts)
+        spent = _TokenTally()
+        started = time.time()
+        triples: list[dict] = []
+        warnings: list[str] = []
+        failed: dict[str, Any] = {}
+        try:
+            individuals = self._identified_individuals(typing_triples)
+            relationships, derive_warnings = self._derive_relationships(
+                text, ontology, individuals, ontology_id, model, temperature, spent, prompts
+            )
+            stamped, stamp_warnings = self._type_concept_objects(
+                relationships, typing_triples, ontology
+            )
+            known = {label.lower() for label, _ in individuals}
+            triples = [
+                triple
+                for triple in stamped
+                if not self._is_typing_triple(triple)
+                and all(
+                    str((triple.get(end) or {}).get("label", "")).strip().lower() in known
+                    for end in ("subject", "object")
+                )
+            ]
+            warnings = derive_warnings + stamp_warnings
+        except Exception as exc:
+            _logger.error(f"Relationship extraction failed: {exc}", exc_info=exc)
+            failed = failure_fields(exc)
+            warnings = [f"Extraction failed: {failed['failure_reason']}"]
+        return TripleExtractionResult(
+            triples=[_serialize_triple_provenance(triple) for triple in triples],
+            warnings=warnings,
+            metadata={
+                "model": model,
+                "tokens_used": spent.total,
+                "duration_ms": int((time.time() - started) * 1000),
+            },
+            **failed,
+        )
+
+    def recognize(
+        self, triples: list[dict], ontology_id: str, dataset_id: str | None = None
+    ) -> list[dict]:
+        """
+        Resolve the individuals of a run's triples to existing graph nodes
+        (`_recognize_individuals`), inside the run's dataset. The triples are
+        returned in the order given.
+
+        Raises:
+            InvalidInputError: If no ontology has ontology_id
+        """
+        return self._recognize_individuals(triples, self._taxonomy(ontology_id), dataset_id)
+
+    def _taxonomy(self, ontology_id: str):
+        """The ontology a run extracts against."""
+        ontology = self._ontology_repo.get_taxonomy(ontology_id)
+        if not ontology:
+            raise InvalidInputError(f"Ontology {ontology_id} not found")
+        return ontology
 
     def _ontology_class_catalog(self, ontology) -> list[tuple[str, str]]:
         """

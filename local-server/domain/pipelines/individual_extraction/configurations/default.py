@@ -30,7 +30,7 @@ def get_default_config() -> dict:
     """
     config = _load_config_from_file("extraction-default.json")
     config["description"] = (
-        "Default individual extraction pipeline with Anthropic Claude Opus " "(Wave A compatible)"
+        "Default individual extraction pipeline with Anthropic Claude Opus (Wave A compatible)"
     )
     return config
 
@@ -47,4 +47,23 @@ def get_openrouter_config() -> dict:
     """
     config = _load_config_from_file("extraction-openrouter-default.json")
     config["description"] = "Individual extraction pipeline with OpenRouter Gemini 3 Flash"
+    return config
+
+
+def get_find_then_type_config() -> dict:
+    """
+    Return the configuration of the find-then-type implementation.
+
+    Loads extraction-find-then-type.json, which uses Claude Haiku 5.5 through
+    the Anthropic provider: that provider caches the class catalog every typing
+    call of a run shares, which is what keeps one call per mention affordable.
+
+    Returns:
+        Configuration dict with LLM settings (Anthropic provider)
+    """
+    config = _load_config_from_file("extraction-find-then-type.json")
+    config["description"] = (
+        "Find-then-type individual extraction with Claude Haiku 5.5: finds what the "
+        "text mentions, then types each mention against the whole class catalog"
+    )
     return config

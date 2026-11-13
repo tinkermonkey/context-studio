@@ -284,19 +284,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                     warnings = [*warnings, *outcome.warnings]
                     outcome_keys = {**outcome_keys, **outcome.to_json()}
             else:
-                result = self._extraction_service.extract_triples(
-                    text=text,
-                    ontology_id=ontology_id,
-                    model=model,
-                    temperature=temperature,
-                    stage_prompts=self._stage_prompts,
-                    dataset_id=state.input_data.get("dataset_id"),
-                )
-                if result.failure_reason:
-                    raise _failure(
-                        [result], f"Extraction failed: {result.failure_reason}", model, [result]
-                    )
-                triples, warnings, metadata = result.triples, result.warnings, result.metadata
+                triples, warnings, metadata = await self._extract_text(state)
 
             # Populate result state
             state = replace(
@@ -334,6 +322,34 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             ) from exc
 
         return state
+
+    async def _extract_text(
+        self, state: IndividualExtractionState
+    ) -> tuple[list[dict[str, Any]], list[str], dict[str, Any]]:
+        """
+        Extract a pasted text in one call.
+
+        Returns:
+            (triples, warnings, metadata)
+
+        Raises:
+            ExtractionFailedError: If the extraction failed because an LLM
+                response stayed incomplete or the provider did not answer
+            PipelineExecutionError: If it failed for another reason
+        """
+        result = self._extraction_service.extract_triples(
+            text=state.source_text,
+            ontology_id=state.ontology_id,
+            model=state.model,
+            temperature=state.temperature,
+            stage_prompts=self._stage_prompts,
+            dataset_id=state.input_data.get("dataset_id"),
+        )
+        if result.failure_reason:
+            raise _failure(
+                [result], f"Extraction failed: {result.failure_reason}", state.model, [result]
+            )
+        return result.triples, result.warnings, result.metadata
 
     async def _extract_by_chunk(
         self, state: IndividualExtractionState, chunks: list[Chunk], page_starts: list[int]
