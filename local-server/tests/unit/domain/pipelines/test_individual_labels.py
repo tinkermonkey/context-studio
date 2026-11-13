@@ -387,6 +387,42 @@ class TestPlannedIndividuals:
         assert relationship.fields["target_id"] == "$i2"
         assert result.skipped == []
 
+    @pytest.mark.parametrize(
+        "class_label, starts, made_by",
+        [
+            # The business: it folds into the name with the suffix
+            ("house_business", [[1], [110, 150]], ["$i2"]),
+            # The product, which nothing is made by
+            ("house_appliance", [[1, 150], [110]], []),
+        ],
+    )
+    def test_a_head_word_mention_folds_into_the_form_of_its_class(
+        self, repo, house, class_label, starts, made_by
+    ):
+        result = plan(
+            repo,
+            house,
+            [
+                typing("Wikimedia Enterprise", "house_appliance", [passage("Enterprise", 1, 1)]),
+                typing("Wikimedia Enterprise LLC", "house_business", [passage("LLC", 110, 2)]),
+                typing("Enterprise", class_label, [passage("Enterprise", 150, 2)]),
+                typing("Kitchen sink", "house_appliance"),
+                relation("Kitchen sink", house["made_by"], "Enterprise"),
+            ],
+        )
+        creates = [o.draft for o in result.operations if o.draft.kind == "individual"]
+        assert [d.fields["title"] for d in creates] == [
+            "Wikimedia Enterprise",
+            "Wikimedia Enterprise LLC",
+            "Kitchen sink",
+        ]
+        assert [[e["start"] for e in d.evidence] for d in creates[:2]] == starts
+        # A relationship end named by the head word is the mention it folded into
+        targets = [
+            o.draft.fields["target_id"] for o in result.operations if o.draft.kind == "relationship"
+        ]
+        assert targets == made_by
+
     def test_relationships_resolve_any_form_of_the_name(self, repo, house):
         result = plan(
             repo,

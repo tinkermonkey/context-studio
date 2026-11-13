@@ -348,8 +348,10 @@ def _fold_head_words(
     Fold each one-word mention into the multi-word mention it is the head word
     of ("bracket" into "Mounting Bracket"), when there is exactly one such
     mention, it was typed with every class of the one-word mention, and the
-    one-word mention isn't an existing individual. The folded mention's
-    evidence, confidences and alternatives join the other's.
+    one-word mention isn't an existing individual. The head word is the
+    name's: a corporate suffix kept in the other mention's key is not a word
+    ("enterprise" is the head word of "Wikimedia Enterprise LLC"). The folded
+    mention's evidence, confidences and alternatives join the other's.
 
     Returns:
         Each folded mention's key -> the key it was folded into
@@ -361,7 +363,8 @@ def _fold_head_words(
         heads = [
             key
             for key, other in individuals.items()
-            if head_word(key) == short and set(individual.class_ids) <= set(other.class_ids)
+            if head_word(without_corporate_mark(key)) == short
+            and set(individual.class_ids) <= set(other.class_ids)
         ]
         if len(heads) != 1:
             continue
