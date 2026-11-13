@@ -69,6 +69,10 @@ logger = get_logger(__name__)
 
 _T = TypeVar("_T")
 
+# Where a re-queued run's llm_metadata keeps what its earlier attempts recorded
+# there, oldest first
+EARLIER_ATTEMPTS = "earlier_attempts"
+
 # Map domain type to ORM class
 _PIPELINE_TYPE_TO_ORM = {
     PipelineType.NO_OP: NoOpPipelineRun,
@@ -501,7 +505,10 @@ class PipelineRepository:
             run_id: Pipeline run ID
             input_summary: Input metadata dict
             output_summary: Output counts/metrics dict
-            llm_metadata: LLM metadata dict
+            llm_metadata: LLM metadata dict of the run's current attempt. It
+                replaces what the attempt recorded before; what earlier attempts
+                of a re-queued run recorded (``earlier_attempts``, see requeue)
+                is kept beside it
 
         Returns:
             True if updated, False if not found
@@ -520,6 +527,9 @@ class PipelineRepository:
             if output_summary is not None:
                 orm_obj.output_summary = output_summary  # type: ignore[assignment]
             if llm_metadata is not None:
+                earlier = (orm_obj.llm_metadata or {}).get(EARLIER_ATTEMPTS)
+                if earlier:
+                    llm_metadata = {**llm_metadata, EARLIER_ATTEMPTS: earlier}
                 orm_obj.llm_metadata = llm_metadata  # type: ignore[assignment]
 
             session.flush()
@@ -825,6 +835,11 @@ class PipelineRepository:
         Set a CANCELLED, FAILED or INTERRUPTED run that carries an input back to
         PENDING, clearing its progress, failure reason, start time and proposal.
 
+        What the ended attempt recorded in llm_metadata (the cost of its model
+        calls) moves to the end of llm_metadata's ``earlier_attempts`` list,
+        which is then all llm_metadata holds: the run keeps what each earlier
+        attempt spent, and none of it reads as the next attempt's.
+
         Args:
             run_id: The run
             input_updates: Values to set in its stored input, such as who re-queued it
@@ -858,6 +873,13 @@ class PipelineRepository:
             orm_obj.items_done = None  # type: ignore[assignment]
             orm_obj.items_total = None  # type: ignore[assignment]
             orm_obj.proposal_id = None  # type: ignore[assignment]
+            ended_attempt = dict(orm_obj.llm_metadata or {})
+            earlier = list(ended_attempt.pop(EARLIER_ATTEMPTS, []))
+            if ended_attempt:
+                earlier.append(ended_attempt)
+            orm_obj.llm_metadata = (  # type: ignore[assignment]
+                {EARLIER_ATTEMPTS: earlier} if earlier else {}
+            )
             return True
 
         return self._write("re-queue a pipeline run", requeue)

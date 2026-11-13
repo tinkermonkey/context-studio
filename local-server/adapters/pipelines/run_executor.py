@@ -288,15 +288,17 @@ class BackgroundRunExecutor:
         except Exception as exc:
             _logger.exception("Pipeline run %s failed", run.id)
             reason = str(exc) or type(exc).__name__
+            spent = getattr(exc, "llm_metadata", None)
+            if spent:
+                # The model calls made before the failure still cost money and time.
+                # Recorded before the run reads as failed: from then on it can be
+                # re-queued, and this would land on its next attempt
+                self._record(lambda: self._runs.update_summaries(run.id, llm_metadata=dict(spent)))
             self._record(
                 lambda: self._runs.update_failure_info(
                     run.id, reason, output_summary={"error": reason}
                 )
             )
-            spent = getattr(exc, "llm_metadata", None)
-            if spent:
-                # The model calls made before the failure still cost money and time
-                self._record(lambda: self._runs.update_summaries(run.id, llm_metadata=dict(spent)))
         self._refresh_batch(run.batch_run_id, finished=True)
 
     async def _run_pipeline(self, run: PipelineRun, input_data: dict[str, Any]) -> None:

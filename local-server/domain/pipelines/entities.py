@@ -118,7 +118,10 @@ class PipelineRun:
             configuration_slug to uniquely identify a pinned configuration)
         input_summary: JSON dict with input metadata (small)
         output_summary: JSON dict with output counts and metrics
-        llm_metadata: JSON dict with model, tokens_used, duration_ms
+        llm_metadata: JSON dict with what the model calls of the run's current
+            attempt cost (model, tokens_used, duration_ms; the keys depend on the
+            pipeline type). On a re-queued run, earlier_attempts lists what each
+            earlier attempt recorded here, oldest first
         status: Current status (pending | running | completed | failed | cancelled)
         created_at: UTC timestamp of run creation
         started_at: UTC timestamp when run actually started executing (RUNNING status)
