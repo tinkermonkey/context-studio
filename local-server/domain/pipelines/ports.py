@@ -284,7 +284,8 @@ class PipelineRunRepository(Protocol):
             run_id: Pipeline run ID
             input_summary: Input metadata dict
             output_summary: Output counts/metrics dict
-            llm_metadata: LLM metadata dict
+            llm_metadata: LLM metadata dict of the run's current attempt; what
+                earlier attempts of a re-queued run recorded is kept beside it
 
         Returns:
             True if updated, False if not found

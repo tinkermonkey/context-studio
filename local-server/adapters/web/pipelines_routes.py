@@ -23,6 +23,7 @@ No business logic lives here—all validation and constraints are in the domain 
 Error handling translates domain exceptions to appropriate HTTP responses.
 """  # noqa: E501
 
+import asyncio
 from datetime import datetime, timezone
 from typing import Any, Optional
 
@@ -112,6 +113,7 @@ from domain.pipelines.exceptions import (
     PipelineInputError,
     PipelineStorageError,
 )
+from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -125,6 +127,7 @@ from domain.pipelines.stage_prompts import (
 )
 from domain.versioning.exceptions import RevertConflictError
 from domain.versioning.services import VersioningService
+from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
 
 router = APIRouter(prefix="/api/pipelines", tags=["pipelines"])
@@ -1008,6 +1011,11 @@ def _resolve_run_dataset(request: Request, ptype: PipelineType, data: dict[str, 
         raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
 
+def _execute_on_own_loop(orchestrator: PipelineOrchestrator, state: PipelineState) -> PipelineState:
+    """Run the orchestrator to its end on an event loop of the calling thread's own."""
+    return asyncio.run(orchestrator.execute(state))
+
+
 @router.post(
     "/{pipeline_type}/run",
     response_model=PipelineRunResponse,
@@ -1061,7 +1069,7 @@ async def run_pipeline(
 
     Raises:
         HTTPException: 400 for invalid input, 404 for missing config/impl, 500 for execution errors
-    """
+    """  # noqa: E501
     try:
         ptype = PipelineType(pipeline_type)
     except ValueError:
@@ -1178,9 +1186,14 @@ async def run_pipeline(
         llm_provider=llm_provider,
     )
 
-    # Execute the pipeline
+    # Execute the pipeline on a worker thread with its own event loop, as a
+    # background run is (run_executor.py). Orchestrators block: LLM calls and
+    # the waits between their retries, NLP, embeddings, database reads. On the
+    # server's loop that would stall every other request for as long as the
+    # run takes. Repositories open a session per call, so the run's reads and
+    # writes use connections of that thread's own.
     try:
-        result_state = await orchestrator.execute(state)
+        result_state = await run_sync_in_executor(_execute_on_own_loop, orchestrator, state)
     except (
         PipelineStorageError,
         PipelineInputError,
