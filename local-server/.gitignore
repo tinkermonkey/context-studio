@@ -36,6 +36,9 @@ tests/integration/fixtures/pipelines/_metrics/quality_loop_*.jsonl
 # Loop B variant-tournament telemetry (generated; run-specific timestamps/run-ids)
 tests/integration/fixtures/pipelines/_metrics/quality_tournament_*.jsonl
 
+# Recognition-episode telemetry the variant tournament writes on every run (generated)
+tests/integration/fixtures/pipelines/_metrics/individual_recognition.jsonl
+
 # Schema node grounding quality test metrics (generated artifacts)
 tests/integration/fixtures/pipelines/_metrics/schema_node_grounding.jsonl
 
