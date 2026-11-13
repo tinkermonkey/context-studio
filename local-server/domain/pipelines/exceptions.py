@@ -45,7 +45,13 @@ class LLMProviderError(PipelineExternalServiceError):
     """
     Raised by an LLMProvider that could not answer a request, where it knows
     what kind of failure it met. The message is written for the run's caller:
-    it names the provider and what happened, and quotes no response body.
+    it names the provider and the kind of failure, and quotes neither a
+    response body nor the text of a client library's error (which may hold
+    anything, the API key included).
+
+    Raised as itself, it is a failure that is neither worth asking again (the
+    provider's client already retried it, or a retry cannot change it) nor one
+    every other request will meet.
     """
 
     pass

@@ -21,6 +21,7 @@ import pytest
 from adapters.llm.openrouter_provider import OpenRouterProvider
 from domain.extraction.services import ExtractionService
 from domain.pipelines.exceptions import (
+    LLMProviderError,
     LLMRateLimitError,
     LLMRequestRefusedError,
     LLMTransientError,
@@ -975,10 +976,65 @@ class TestOpenRouterErrorHandling:
         with pytest.raises(LLMTransientError) as exc_info:
             self.complete(provider)
 
-        assert type(failure).__name__ in str(exc_info.value)
+        # The message names the kind of failure and none of the error's text,
+        # which is the HTTP client's and may hold anything
+        assert str(exc_info.value) == f"OpenRouter did not answer: {type(failure).__name__}"
         assert exc_info.value.__cause__ is failure
         # Callers that handle any external service failure still catch it
         assert isinstance(exc_info.value, PipelineExternalServiceError)
+
+    # What httpx raises for an API key with a character no header may hold (a
+    # trailing newline from a paste): its text quotes the Authorization header
+    KEY = "sk-or-v1-0123456789abcdef"
+    ILLEGAL_HEADER = f"Illegal header value b'Bearer {KEY}\\n'"
+
+    def test_a_request_that_cannot_be_written_is_not_asked_again_and_quotes_no_key(self, caplog):
+        provider = self.create_provider_with_mock_client()
+        provider._client.post.side_effect = httpx.LocalProtocolError(self.ILLEGAL_HEADER)
+
+        with caplog.at_level("DEBUG"), pytest.raises(LLMProviderError) as exc_info:
+            self.complete(provider)
+
+        # Asking again cannot help, and it says nothing of the next request
+        assert not isinstance(exc_info.value, (LLMTransientError, LLMRequestRefusedError))
+        assert str(exc_info.value) == "OpenRouter request could not be sent: LocalProtocolError"
+        # The key is in the message of no error in the chain, and in no log line
+        error = exc_info.value
+        while error is not None:
+            assert self.KEY not in str(error)
+            error = error.__cause__
+        assert "OpenRouter request could not be sent" in caplog.text
+        assert self.KEY not in caplog.text
+
+    def test_a_key_the_http_client_quotes_never_reaches_the_extractions_caller(self):
+        provider = self.create_provider_with_mock_client()
+        provider._client.post.side_effect = httpx.LocalProtocolError(self.ILLEGAL_HEADER)
+        repo = Mock()
+        repo.get_taxonomy.return_value = SimpleNamespace(id="tax-1", title="Tools")
+        repo.list_concept_schemes.return_value = []
+        repo.list_property_definitions.return_value = []
+        waits = []
+        service = ExtractionService(
+            ontology_repo=repo,
+            embedding_service=None,
+            llm=provider,
+            nlp=None,
+            reference_sources=[],
+            event_publisher=Mock(),
+            extraction_repo=None,
+            extraction_run_repo=Mock(),
+            sleep=waits.append,
+        )
+
+        result = service.extract_triples("Nextflow runs on Slurm.", "tax-1", "gpt-4", 0.0)
+
+        # One request, no waits: the reason is shown to the caller, without the key
+        assert provider._client.post.call_count == 1
+        assert waits == []
+        assert result.failure_reason == "OpenRouter request could not be sent: LocalProtocolError"
+        assert self.KEY not in " ".join(result.warnings)
+        assert result.provider_failed is True
+        assert result.provider_refused is False
 
     @pytest.mark.parametrize(
         "body",

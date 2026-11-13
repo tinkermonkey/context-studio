@@ -23,6 +23,7 @@ import pytest
 from domain.extraction.entities import ExtractionRunStatus
 from domain.extraction.services import _MAX_LLM_ATTEMPTS, ExtractionService
 from domain.pipelines.exceptions import (
+    LLMProviderError,
     LLMRateLimitError,
     LLMRequestRefusedError,
     LLMTransientError,
@@ -66,6 +67,8 @@ TIMEOUT = LLMTransientError("OpenRouter did not answer: ReadTimeout")
 RATE_LIMIT = LLMRateLimitError("OpenRouter rate limit exceeded")
 BAD_KEY = LLMRequestRefusedError("OpenRouter API key is invalid or unauthorized")
 NO_MODEL = LLMRequestRefusedError("Model not found on OpenRouter: model-1")
+# A failure the provider's client already retried: neither transient nor a refusal
+SDK_OUTAGE = LLMProviderError("The anthropic provider answered with a server error: 529")
 
 
 class _ScriptedLLM:
@@ -313,6 +316,19 @@ class TestFailureThatCannotPass:
         assert result.provider_failed is True
         assert result.provider_refused is True
         assert result.incomplete_response is False
+        assert run.status == ExtractionRunStatus.FAILED
+
+    def test_a_failure_the_providers_client_already_retried_is_not_asked_again(self):
+        llm = _ScriptedLLM(SDK_OUTAGE, IDENTIFIED, RELATED)
+        result, run, waits = _extract(llm)
+        assert len(llm.calls) == 1
+        assert waits == []
+        assert result.triples == []
+        # Its reason is the provider's, written for the caller
+        assert result.failure_reason == str(SDK_OUTAGE)
+        assert result.provider_failed is True
+        # The next text may be answered
+        assert result.provider_refused is False
         assert run.status == ExtractionRunStatus.FAILED
 
     def test_a_failure_of_no_known_kind_is_not_asked_again(self):

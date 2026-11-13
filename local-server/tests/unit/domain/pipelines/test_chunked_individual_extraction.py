@@ -511,6 +511,16 @@ class TestProviderThatRefusesTheRun:
         with pytest.raises(ExtractionFailedError, match=f"Extraction failed: {REFUSED}"):
             await _orchestrator(extraction).execute(_state(text="Door one. Shelf two."))
 
+    async def test_a_refusal_is_told_to_the_caller_whatever_else_its_result_says(self):
+        # Another implementation of the port may mark a refusal without also
+        # marking it a provider failure
+        class _RefusedOnly:
+            def extract_triples(self, text, ontology_id, model, temperature, **_):
+                return _Result(triples=[], failure_reason=REFUSED, provider_refused=True)
+
+        with pytest.raises(ExtractionFailedError, match=f"Extraction failed: {REFUSED}"):
+            await _orchestrator(_RefusedOnly()).execute(_state(text="Door one. Shelf two."))
+
     async def test_a_failed_chunk_of_another_kind_does_not_stop_the_run(self):
         extraction = _FakeExtraction(failing={1}, broken={2})
         state = await _orchestrator(extraction).execute(

@@ -41,6 +41,7 @@ from domain.extraction.sources import SourceService
 from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import (
+    LLMProviderError,
     LLMRateLimitError,
     LLMRequestRefusedError,
     LLMTransientError,
@@ -683,7 +684,7 @@ class TestFailedExtractionRun:
         )
 
     class TestProviderDownForTheFirstChunk:
-        """Three attempts fail and are spent on chunk 1; the provider then answers."""
+        """Chunk 1 is lost to provider failures; the provider then answers."""
 
         ATTEMPTS = {
             "server errors": (
@@ -700,6 +701,11 @@ class TestFailedExtractionRun:
                 ],
                 "The LLM gave no complete answer for identify_individuals in 3 attempts"
                 " that failed in different ways, the last with: OpenRouter rate limit exceeded",
+            ),
+            # A direct provider's outage, which its SDK already retried: one request
+            "an outage the SDK retried": (
+                [LLMProviderError("The anthropic provider answered with a server error: 529")],
+                "The anthropic provider answered with a server error: 529",
             ),
         }
 
@@ -720,8 +726,8 @@ class TestFailedExtractionRun:
             assert done.status is PipelineRunStatus.COMPLETED, done.failure_reason
             total = done.items_total
             assert total >= 3
-            # Three attempts for chunk 1, then two passes for each later chunk
-            assert llm.calls == 3 + 2 * (total - 1)
+            # The failed requests for chunk 1, then two passes for each later chunk
+            assert llm.calls == len(attempts[0]) + 2 * (total - 1)
             failed = done.output_summary["failed_chunks"]
             assert [(c["index"], c["failure_reason"]) for c in failed] == [(0, reason)]
             assert done.output_summary["warnings"][0] == (

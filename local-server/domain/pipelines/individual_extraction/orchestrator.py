@@ -442,7 +442,7 @@ def _reason_is_for_caller(result: Any) -> bool:
     (whether or not it would answer for another text). Any other reason may
     quote an internal error.
     """
-    return bool(result.incomplete_response or result.provider_failed)
+    return bool(result.incomplete_response or result.provider_failed or result.provider_refused)
 
 
 # The keys of a run's metadata that say what its model calls cost

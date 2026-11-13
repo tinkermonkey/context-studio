@@ -8,9 +8,11 @@ rejects its API key (HTTP 401/403), the request falls through to the next provid
 that supports the model, and the rejecting provider is skipped from then on. Chat
 turns also fall through, for that call only, when a provider can't be reached.
 A completion that fails because the last provider rejected its key, has no such
-model or is rate limited raises the domain's LLMProviderError for it, so a run
-can tell a failure every request will meet from one about a single request. So
-does every later completion for a model left with no provider by rejected keys.
+model, is rate limited, or failed to answer (a server error, a timeout, no
+connection) raises the domain's LLMProviderError for it, so a run can tell a
+failure every request will meet from one about a single request, and can tell
+its caller what happened. So does every later completion for a model left with
+no provider by rejected keys.
 
 This adapter implements the LLMProvider port and is used by the Knowledge Extraction
 and LLM Pipeline services.
@@ -30,7 +32,11 @@ from adapters.llm.openrouter_provider import OpenRouterProvider
 from domain.chat.entities import ChatMessage
 from domain.chat.ports import ChatModel
 from domain.chat.value_objects import ModelEvent, ToolSpec
-from domain.pipelines.exceptions import LLMRateLimitError, LLMRequestRefusedError
+from domain.pipelines.exceptions import (
+    LLMProviderError,
+    LLMRateLimitError,
+    LLMRequestRefusedError,
+)
 from domain.pipelines.ports import LLMProvider, LLMResponse
 from utils.async_executor import run_sync_in_executor
 from utils.logger import get_logger
@@ -48,14 +54,29 @@ def _is_auth_failure(error: Exception) -> bool:
     return getattr(error, "status_code", None) in _AUTH_FAILURE_STATUSES
 
 
+# The SDKs' errors for a request that got no answer in time; they subclass the
+# SDKs' connection errors
+_TIMEOUT_ERRORS = (anthropic.APITimeoutError, openai.APITimeoutError)
+
+
 def _completion_error(name: str, model: str, error: Exception) -> Exception:
     """
-    What a provider's failed completion is raised as. An SDK error (OpenAI,
-    Anthropic) whose HTTP status says every request for the model will meet it
-    becomes the domain's error for it. Any other error is returned as it is:
-    the domain errors OpenRouterProvider raises itself, and an SDK's server
-    errors, timeouts and failed connections, which the SDK has already retried.
+    What a provider's failed completion is raised as. The domain errors
+    OpenRouterProvider raises itself are returned as they are. An SDK error
+    (OpenAI, Anthropic) of a known kind becomes the domain's error for it, with
+    a fixed message that names the provider and the kind and never quotes the
+    SDK error's text:
+
+    - an HTTP status that every request for the model will meet is a refusal
+      or the rate limit;
+    - a server error, a timeout or a failed connection is a plain
+      LLMProviderError, neither a refusal nor one to ask again: the SDK has
+      already retried it.
+
+    Any other error is returned as it is.
     """
+    if isinstance(error, LLMProviderError):
+        return error
     status = getattr(error, "status_code", None)
     if status in _AUTH_FAILURE_STATUSES:
         return LLMRequestRefusedError(f"The {name} provider rejected its API key")
@@ -63,6 +84,12 @@ def _completion_error(name: str, model: str, error: Exception) -> Exception:
         return LLMRequestRefusedError(f"The {name} provider has no model {model}")
     if status == 429:
         return LLMRateLimitError(f"The {name} provider's rate limit was exceeded")
+    if isinstance(status, int) and (status == 408 or status >= 500):
+        return LLMProviderError(f"The {name} provider answered with a server error: {status}")
+    if isinstance(error, _TIMEOUT_ERRORS):
+        return LLMProviderError(f"The {name} provider did not answer in time")
+    if isinstance(error, _CONNECTION_ERRORS):
+        return LLMProviderError(f"The {name} provider could not be reached")
     return error
 
 
@@ -208,6 +235,8 @@ class LLMProviderRouter:
             LLMRequestRefusedError: If every supporting provider rejected its key,
                 now or in an earlier call, or the provider has no such model
             LLMRateLimitError: If the provider's rate limit turned the request away
+            LLMProviderError: If the provider failed to answer in another known
+                way (a server error, a timeout, no connection)
             Exception: The provider's own error for any other failure
         """
         auth_error: Exception | None = None
@@ -466,6 +495,8 @@ class LLMProviderRouter:
             LLMRequestRefusedError: If every supporting provider rejected its key,
                 now or in an earlier call, or the provider has no such model
             LLMRateLimitError: If the provider's rate limit turned the request away
+            LLMProviderError: If the provider failed to answer in another known
+                way (a server error, a timeout, no connection)
             Exception: The provider's own error for any other failure
         """
         auth_error: Exception | None = None

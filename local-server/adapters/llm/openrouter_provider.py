@@ -139,6 +139,8 @@ class OpenRouterProvider:
             LLMTransientError: If OpenRouter answered with a server error, an
                 error in place of a completion or a body that is not JSON, did
                 not answer in time, or could not be reached
+            LLMProviderError: If the request could not be written to the
+                connection, which asking again cannot change
             RuntimeError: For other HTTP errors and malformed responses
         """
         # Check cache
@@ -259,11 +261,20 @@ class OpenRouterProvider:
         except httpx.HTTPStatusError as e:
             logger.error(f"OpenRouter API error: {e.response.status_code} {e.response.text}")
             raise _error_for_status(e.response.status_code, model) from e
+        except httpx.LocalProtocolError:
+            # The request itself could not be written (for one, an API key with
+            # a character no header may hold), so asking again cannot help. The
+            # error's text can quote the Authorization header, so it is neither
+            # shown, logged nor kept as the cause
+            logger.error("OpenRouter request could not be sent: LocalProtocolError")
+            raise LLMProviderError(
+                "OpenRouter request could not be sent: LocalProtocolError"
+            ) from None
         except httpx.TransportError as e:
-            # No answer: a timeout, or a connection that failed or dropped
-            raise LLMTransientError(
-                f"OpenRouter did not answer: {type(e).__name__}: {str(e)}"
-            ) from e
+            # No answer: a timeout, or a connection that failed or dropped. The
+            # message names the kind only: the error's text is not ours to show
+            logger.error(f"OpenRouter did not answer: {type(e).__name__}: {e}")
+            raise LLMTransientError(f"OpenRouter did not answer: {type(e).__name__}") from e
         except httpx.DecodingError as e:
             # The body could not be read under its declared content encoding
             raise LLMTransientError("OpenRouter answered with a body that is not JSON") from e
@@ -362,7 +373,7 @@ class OpenRouterProvider:
 
         Raises:
             LLMRequestRefusedError, LLMRateLimitError, LLMTransientError,
-            RuntimeError: As complete() raises them
+            LLMProviderError, RuntimeError: As complete() raises them
         """
         return await run_sync_in_executor(
             self.complete,

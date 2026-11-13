@@ -70,6 +70,9 @@ class LLMProvider(Protocol):
                 (a server error, a timeout); an LLMRateLimitError for a rate limit
             LLMRequestRefusedError: Neither this nor any other request for the
                 model will be answered (a rejected key, an unknown model)
+            LLMProviderError: Another failure of a known kind, not worth asking
+                again (the provider's client already retried it). Like the two
+                above, its message is written for the run's caller
             Exception: Any other failure, of a kind the provider does not know
         """
         ...
