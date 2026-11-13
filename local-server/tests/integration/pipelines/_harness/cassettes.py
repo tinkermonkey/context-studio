@@ -219,7 +219,8 @@ class RecordingLLMProvider:
         self._delegate = delegate
         self._cassette_path = Path(cassette_path)
         self._recordings: dict[str, dict[str, Any]] = {}
-        self._failed_calls = 0
+        # Prompts whose latest call raised, so they have no usable recording
+        self._unanswered: set[str] = set()
 
     def complete(
         self,
@@ -246,8 +247,9 @@ class RecordingLLMProvider:
                 seed=seed,
             )
         except Exception:
-            self._failed_calls += 1
+            self._unanswered.add(key)
             raise
+        self._unanswered.discard(key)
         self._recordings[key] = {
             "content": response.content,
             "tokens_in": response.tokens_in,
@@ -282,8 +284,9 @@ class RecordingLLMProvider:
                 seed=seed,
             )
         except Exception:
-            self._failed_calls += 1
+            self._unanswered.add(key)
             raise
+        self._unanswered.discard(key)
         self._recordings[key] = {
             "content": response.content,
             "tokens_in": response.tokens_in,
@@ -337,17 +340,18 @@ class RecordingLLMProvider:
     @property
     def incomplete_count(self) -> int:
         """
-        Number of calls the provider cut short, errored on, or raised from.
+        Number of prompts whose latest call the provider cut short, errored on,
+        or raised from.
 
         A response that stops for its length, or with a provider error part-way
-        through, is usually not valid JSON, and the pipeline then treats the call
-        as having found nothing; a call that raises (a rate limit, a timeout) is
-        caught by the pipeline and treated the same way, and leaves no recording
-        at all. Saved to a cassette, either would stand as the pipeline's answer
-        from then on, so callers should check this before `flush()` and record
-        again when it is not 0.
+        through, is usually not valid JSON, and a call that raises (a rate limit,
+        a timeout) leaves no recording at all. Saved to a cassette, either would
+        stand as the pipeline's answer from then on, so callers should check this
+        before `flush()` and record again when it is not 0. A prompt the pipeline
+        asked again and then got a whole answer for is not counted: the cassette
+        holds that answer.
         """
-        return self._failed_calls + sum(
+        return len(self._unanswered) + sum(
             1 for r in self._recordings.values() if r["finish_reason"] in _INCOMPLETE_FINISHES
         )
 

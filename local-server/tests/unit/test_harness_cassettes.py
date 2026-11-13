@@ -331,13 +331,37 @@ class TestRecordingLLMProvider:
         with tempfile.TemporaryDirectory() as tmpdir:
             recorder = RecordingLLMProvider(FailingProvider(), Path(tmpdir) / "test.json")
             with pytest.raises(RuntimeError):
-                recorder.complete(system_prompt="sys", user_prompt="user", model="test")
+                recorder.complete(system_prompt="sys", user_prompt="one", model="test")
             with pytest.raises(RuntimeError):
                 asyncio.run(
-                    recorder.complete_async(system_prompt="sys", user_prompt="user", model="test")
+                    recorder.complete_async(system_prompt="sys", user_prompt="two", model="test")
                 )
             assert recorder.call_count == 0
             assert recorder.incomplete_count == 2
+
+    def test_incomplete_count_leaves_out_a_call_answered_when_asked_again(self):
+        """A prompt that raised and was then answered is in the cassette whole."""
+
+        class FailsOnceProvider(FakeLLMProvider):
+            def __init__(self):
+                super().__init__()
+                self.failures_left = 1
+
+            def complete(self, *args, **kwargs):
+                if self.failures_left:
+                    self.failures_left -= 1
+                    raise RuntimeError("rate limit exceeded")
+                return super().complete(*args, **kwargs)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            recorder = RecordingLLMProvider(FailsOnceProvider(), Path(tmpdir) / "test.json")
+            with pytest.raises(RuntimeError):
+                recorder.complete(system_prompt="sys", user_prompt="user", model="test")
+            assert recorder.incomplete_count == 1
+
+            recorder.complete(system_prompt="sys", user_prompt="user", model="test")
+            assert recorder.call_count == 1
+            assert recorder.incomplete_count == 0
 
     def test_same_prompt_uses_same_key(self):
         """Same prompt hashes to same cassette key."""
