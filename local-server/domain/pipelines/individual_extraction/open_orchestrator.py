@@ -799,7 +799,16 @@ class OpenIndividualExtractionOrchestrator(PipelineOrchestrator):
                     )
                     choice = ""
 
-            if not choice or choice.lower() == "none":
+            if not choice:
+                # No class was answered (an empty answer, or one cut short while the
+                # model was still thinking): that is not "none of the candidates"
+                _logger.error(
+                    "NLP-grounded typing for chunk '%s' got no class answer (finish_reason=%s)",
+                    label,
+                    response.finish_reason,
+                )
+                return None, True
+            if choice.lower() == "none":
                 return None, False
 
             choice_lower = choice.lower()

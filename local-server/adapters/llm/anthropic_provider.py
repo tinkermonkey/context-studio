@@ -26,6 +26,17 @@ logger = get_logger(__name__)
 tracer = trace.get_tracer(__name__)
 
 
+def _response_text(response: Any) -> str:
+    """
+    The text of a Messages API response: its text blocks, joined.
+
+    A response's content is a list of blocks, and text is not always the first:
+    models that think by default (Claude Sonnet 5.5 among them) open with a
+    thinking block, which has no text. A response with no text block is "".
+    """
+    return "".join(block.text for block in response.content or [] if block.type == "text")
+
+
 class AnthropicProvider:
     """
     LLM provider for Anthropic Claude models.
@@ -136,7 +147,7 @@ class AnthropicProvider:
                 span.set_attribute("llm.tokens.output", response.usage.output_tokens)
 
                 return LLMResponse(
-                    content=response.content[0].text if response.content else "",
+                    content=_response_text(response),
                     tokens_in=response.usage.input_tokens,
                     tokens_out=response.usage.output_tokens,
                     duration_ms=duration_ms,

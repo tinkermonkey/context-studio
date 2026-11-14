@@ -7,6 +7,8 @@ Tests verify:
 - `seed` is never sent (the Messages API has no seed parameter)
 - The real installed SDK accepts the request the provider builds and puts
   `temperature` in the request JSON (guards against SDK signature drift)
+- The response's text is read from its text blocks, wherever they are: a model
+  that thinks by default opens its response with a thinking block
 """
 
 import json
@@ -19,7 +21,7 @@ from adapters.llm.anthropic_provider import AnthropicProvider
 
 def _fake_message(text: str = "ok") -> SimpleNamespace:
     return SimpleNamespace(
-        content=[SimpleNamespace(text=text)],
+        content=[SimpleNamespace(type="text", text=text)],
         usage=SimpleNamespace(input_tokens=3, output_tokens=4),
         stop_reason="end_turn",
     )
@@ -126,3 +128,96 @@ class TestAnthropicProviderRequest:
         assert body.get("temperature") == expected_temperature
         assert "seed" not in body
         assert body["model"] == model
+
+
+def _sdk_provider(content: list[dict]) -> AnthropicProvider:
+    """A provider whose real SDK client is answered with the given content blocks."""
+    anthropic = pytest.importorskip("anthropic")
+    httpx2 = pytest.importorskip("httpx2")
+
+    def handler(request):
+        return httpx2.Response(
+            200,
+            json={
+                "id": "msg_test",
+                "type": "message",
+                "role": "assistant",
+                "model": "claude-sonnet-5-5",
+                "content": content,
+                "stop_reason": "end_turn",
+                "stop_sequence": None,
+                "usage": {"input_tokens": 1, "output_tokens": 2},
+            },
+        )
+
+    provider = AnthropicProvider("test-key")
+    provider._client = anthropic.Anthropic(
+        api_key="test-key",
+        http_client=httpx2.Client(transport=httpx2.MockTransport(handler)),
+        max_retries=0,
+    )
+    return provider
+
+
+@pytest.mark.llm
+class TestAnthropicProviderResponseText:
+    """What AnthropicProvider returns as the content of a response."""
+
+    THINKING = {"type": "thinking", "thinking": "", "signature": "sig"}
+
+    @pytest.mark.parametrize("use_async", [False, True])
+    async def test_text_after_a_thinking_block_is_returned(self, use_async):
+        """A response that opens with a thinking block still yields its text."""
+        provider, messages = _provider_with_fake_client()
+        messages.create = lambda **kwargs: SimpleNamespace(
+            content=[
+                SimpleNamespace(type="thinking", thinking="Let me see.", signature="sig"),
+                SimpleNamespace(type="text", text='{"triples": []}'),
+            ],
+            usage=SimpleNamespace(input_tokens=3, output_tokens=4),
+            stop_reason="end_turn",
+        )
+        kwargs = {"system_prompt": "sys", "user_prompt": "hi", "model": "claude-sonnet-5-5"}
+
+        if use_async:
+            response = await provider.complete_async(**kwargs)
+        else:
+            response = provider.complete(**kwargs)
+
+        assert response.content == '{"triples": []}'
+        assert response.finish_reason == "end_turn"
+
+    def test_thinking_block_from_the_installed_sdk_is_skipped(self):
+        """The real SDK's thinking block has no `text`; reading it used to raise."""
+        provider = _sdk_provider([self.THINKING, {"type": "text", "text": "hi"}])
+
+        response = provider.complete(
+            system_prompt="sys", user_prompt="hi", model="claude-sonnet-5-5"
+        )
+
+        assert response.content == "hi"
+
+    def test_text_blocks_are_joined_in_order(self):
+        provider = _sdk_provider(
+            [
+                {"type": "text", "text": "one "},
+                self.THINKING,
+                {"type": "text", "text": "two"},
+            ]
+        )
+
+        response = provider.complete(
+            system_prompt="sys", user_prompt="hi", model="claude-sonnet-5-5"
+        )
+
+        assert response.content == "one two"
+
+    @pytest.mark.parametrize("content", [[], [THINKING]])
+    def test_a_response_with_no_text_block_is_empty(self, content):
+        provider = _sdk_provider(content)
+
+        response = provider.complete(
+            system_prompt="sys", user_prompt="hi", model="claude-sonnet-5-5"
+        )
+
+        assert response.content == ""
