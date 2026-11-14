@@ -27,8 +27,10 @@
 
   .runs-table-header {
     display: grid;
-    grid-template-columns: 140px minmax(0, 1fr) minmax(0, 1.6fr) 120px 160px 90px;
-    gap: 16px;
+    grid-template-columns:
+      minmax(120px, 1.2fr) minmax(96px, 0.8fr) minmax(96px, 1.6fr)
+      104px 150px 76px;
+    gap: 12px;
     padding: 12px;
     border-bottom: 1px solid rgb(var(--canvas-border));
     font-size: 12px;
@@ -44,8 +46,10 @@
 
   .runs-table-row {
     display: grid;
-    grid-template-columns: 140px minmax(0, 1fr) minmax(0, 1.6fr) 120px 160px 90px;
-    gap: 16px;
+    grid-template-columns:
+      minmax(120px, 1.2fr) minmax(96px, 0.8fr) minmax(96px, 1.6fr)
+      104px 150px 76px;
+    gap: 12px;
     padding: 12px;
     border-bottom: 1px solid rgb(var(--canvas-border));
     cursor: pointer;
@@ -61,6 +65,8 @@
   }
 
   .runs-table-cell {
+    /* Canvas text: without it the cell inherits the shell's light text. */
+    color: rgb(var(--canvas-fg-1));
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

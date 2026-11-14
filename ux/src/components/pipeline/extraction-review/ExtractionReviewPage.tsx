@@ -297,12 +297,14 @@ export function ExtractionReviewPage({
             idPrefix="extraction-review-schema"
             legend="Schema extraction"
             disabled={anyRunning}
+            placement="top-start"
           />
           <ImplementationConfigPicker
             selection={individualSelection}
             idPrefix="extraction-review-individual"
             legend="Individual extraction"
             disabled={anyRunning}
+            placement="top-start"
           />
         </div>
         {runText && text !== runText && (

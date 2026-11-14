@@ -218,10 +218,19 @@ function RunsPageContent({
                       .join(" ")}
                   </Chip>
                 </div>
-                <div className="runs-table-cell" data-testid={`run-implementation-${run.id}`}>
+                {/* The full value is in the title: beside the drawer the columns are narrow. */}
+                <div
+                  className="runs-table-cell"
+                  title={run.implementation_id}
+                  data-testid={`run-implementation-${run.id}`}
+                >
                   {run.implementation_id || "—"}
                 </div>
-                <div className="runs-table-cell" data-testid={`run-configuration-${run.id}`}>
+                <div
+                  className="runs-table-cell"
+                  title={run.configuration_ref}
+                  data-testid={`run-configuration-${run.id}`}
+                >
                   {run.configuration_ref
                     ? `${run.configuration_ref} v${run.configuration_version}`
                     : "—"}

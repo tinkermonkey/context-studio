@@ -1,4 +1,5 @@
 import { Field, Select } from "@tinkermonkey/heimdall-ui";
+import type { DropdownPlacement } from "@tinkermonkey/heimdall-ui";
 import type { PipelineSelection } from "@/hooks/usePipelineSelection";
 import "./ImplementationConfigPicker.css";
 
@@ -10,6 +11,11 @@ export interface ImplementationConfigPickerProps {
   /** Names the run being selected for, where a page starts more than one. */
   legend?: string;
   disabled?: boolean;
+  /**
+   * Where the option lists open. They are not portaled, so a picker at the
+   * bottom of a Panel (which clips its content) opens upwards.
+   */
+  placement?: DropdownPlacement;
   /** Called after either choice changes, e.g. to clear a start error. */
   onChange?: () => void;
 }
@@ -26,6 +32,7 @@ export function ImplementationConfigPicker({
   idPrefix,
   legend,
   disabled = false,
+  placement,
   onChange,
 }: ImplementationConfigPickerProps) {
   const { implementations, configurations, implementation, configuration } = selection;
@@ -66,6 +73,7 @@ export function ImplementationConfigPicker({
               onChange?.();
             }}
             placeholder={SERVER_DEFAULT}
+            placement={placement}
             ariaLabel={named("Implementation")}
             disabled={disabled || implementations.length === 0}
             error={!!selection.implementationsError}
@@ -97,6 +105,7 @@ export function ImplementationConfigPicker({
               onChange?.();
             }}
             placeholder={SERVER_DEFAULT}
+            placement={placement}
             ariaLabel={named("Configuration")}
             disabled={disabled || configurations.length === 0}
             error={!!selection.configurationsError}
