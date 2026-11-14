@@ -10,16 +10,18 @@ declared at registration (domain/pipelines/registry.py and each pipeline's
 bootstrap.py) and read here, so no caller spells one.
 
 Every entry point that starts a run (the run API, the batch route, source
-extraction, the chat and MCP tools, scripts) selects through PipelineResolver,
-and everything that executes one gives its orchestrator
-PipelineSelection.run_input(): the run's input with the configuration's model,
-temperature and output-token limit filled in wherever the input names none.
+extraction, the chat and MCP tools, scripts) selects through PipelineResolver
+and gives the run PipelineSelection.run_input(): its input with the
+configuration's model, temperature and output-token limit filled in wherever
+the input names none. A run that waits to execute is stored with that input,
+so it executes with the parameters it was accepted with whatever happens to
+the configuration meanwhile.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from domain.pipelines.entities import PipelineType
@@ -39,6 +41,12 @@ from domain.pipelines.registry import (
 # tokens one call may produce.
 RUN_PARAMETERS = ("model", "temperature", "max_tokens")
 
+# The largest output-token limit a configuration may set: what every provider
+# can send in one request. The Anthropic client refuses a request that does not
+# stream above about 21,000 (it would expect the response to take over ten
+# minutes), before sending anything.
+MAX_OUTPUT_TOKENS = 20000
+
 
 @dataclass(frozen=True)
 class PipelineSelection:
@@ -50,12 +58,17 @@ class PipelineSelection:
         implementation_id: The implementation
         implementation: Its orchestrator class
         configuration: The configuration version the run is pinned to
+        parameters: The model, temperature and output-token limit the
+            configuration gives a run (RUN_PARAMETERS). One the configuration
+            leaves unset is the implementation's default configuration's; one
+            neither sets is absent.
     """
 
     pipeline_type: PipelineType
     implementation_id: str
     implementation: type[Any]
     configuration: ConfigurationVersion
+    parameters: Mapping[str, Any] = field(default_factory=dict)
 
     @property
     def configuration_ref(self) -> str:
@@ -71,14 +84,13 @@ class PipelineSelection:
         """
         The input the orchestrator executes with: `input_data`, with the
         configuration's model, temperature and output-token limit
-        (RUN_PARAMETERS) filled in. A parameter the input gives wins, so a
+        (`parameters`) filled in. A parameter the input gives wins, so a
         caller can still run a configuration with another model.
         """
         filled = dict(input_data)
-        for key in RUN_PARAMETERS:
+        for key, configured in self.parameters.items():
             given = filled.get(key)
-            configured = self.config.get(key)
-            if (given is None or given == "") and configured is not None:
+            if given is None or given == "":
                 filled[key] = configured
         return filled
 
@@ -175,7 +187,47 @@ class PipelineResolver:
                     else " (the implementation has no enabled configuration)"
                 )
             )
-        return PipelineSelection(pipeline_type, implementation_id, implementation, configuration)
+        return self._selection(pipeline_type, implementation_id, implementation, configuration)
+
+    def parameters(
+        self, pipeline_type: PipelineType, implementation_id: str, config: Mapping[str, Any]
+    ) -> dict[str, Any]:
+        """
+        The run parameters (RUN_PARAMETERS) a configuration of the
+        implementation gives a run: its own, and for one it leaves unset (a
+        user-created configuration need not set a temperature or an output
+        limit) the implementation's default configuration's.
+        """
+        default_ref = self._configurations.default_configuration(pipeline_type, implementation_id)
+        default = (
+            self._configurations.get_latest(pipeline_type, implementation_id, default_ref)
+            if default_ref
+            else None
+        )
+        inherited = default.config if default else {}
+        resolved = {}
+        for key in RUN_PARAMETERS:
+            value = config.get(key)
+            if value is None:
+                value = inherited.get(key)
+            if value is not None:
+                resolved[key] = value
+        return resolved
+
+    def _selection(
+        self,
+        pipeline_type: PipelineType,
+        implementation_id: str,
+        implementation: type[Any],
+        configuration: ConfigurationVersion,
+    ) -> PipelineSelection:
+        return PipelineSelection(
+            pipeline_type,
+            implementation_id,
+            implementation,
+            configuration,
+            self.parameters(pipeline_type, implementation_id, configuration.config),
+        )
 
     def implementation(
         self, pipeline_type: PipelineType, implementation_id: str | None = None
@@ -232,7 +284,7 @@ class PipelineResolver:
         )
         if implementation is None or configuration is None:
             return None
-        return PipelineSelection(pipeline_type, implementation_id, implementation, configuration)
+        return self._selection(pipeline_type, implementation_id, implementation, configuration)
 
     def check_defaults(self) -> None:
         """

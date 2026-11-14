@@ -103,6 +103,7 @@ def _individual_extraction_builder(
             status_writer=services.get("status_writer"),
             config=services.get("config"),
             proposer=_source_proposer(services),
+            configuration_ref=services.get("configuration_ref"),
         )
 
     return build
@@ -466,7 +467,8 @@ def create_selected_run(
     Everything that executes a run (the run API, the background worker,
     scripts) builds it here, so the model, temperature and output-token limit
     are the configuration's wherever the run's input names none
-    (PipelineSelection.run_input).
+    (PipelineSelection.run_input). A run stored to execute later already
+    carries them in its input, as it was accepted.
 
     Args:
         selection: The run's implementation and pinned configuration
@@ -479,11 +481,32 @@ def create_selected_run(
     Raises:
         ValueError: If the orchestrator class is unknown or required dependencies are missing
     """
-    orchestrator = create_orchestrator(selection.implementation, llm_provider, services)
+    orchestrator = create_orchestrator(
+        selection.implementation,
+        llm_provider,
+        {**services, "configuration_ref": selection.configuration_ref},
+    )
     state = create_pipeline_state(
         run_id, selection.pipeline_type, selection.run_input(input_data), llm_provider
     )
     return orchestrator, state
+
+
+def run_llm_metadata(state: PipelineState, result_state: PipelineState) -> dict[str, Any]:
+    """
+    What a finished run records about its model calls: what its orchestrator
+    reported (tokens, latency, the model where it says so), and otherwise the
+    model the run executed with, so every run says which model it used.
+
+    Args:
+        state: The state the run was executed with (create_selected_run)
+        result_state: The state its orchestrator returned
+    """
+    metadata = dict(result_state.llm_metadata or {})
+    model = state.input_data.get("model")
+    if model and not metadata.get("model"):
+        metadata["model"] = model
+    return metadata
 
 
 def _source_summary(input_data: dict[str, Any]) -> dict[str, Any]:

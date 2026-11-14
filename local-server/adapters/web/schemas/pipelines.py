@@ -45,6 +45,7 @@ from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag, model_val
 
 from adapters.web.schemas.extraction import SourceSpanSchema
 from domain.pipelines.apply_result import SkipReason
+from domain.pipelines.selection import MAX_OUTPUT_TOKENS
 
 
 class PipelineTypeResponse(BaseModel):
@@ -105,22 +106,49 @@ class ConfigurationResponse(BaseModel):
     config: dict[str, Any] = Field(..., description="Configuration data")
 
 
-# The largest output-token limit a configuration may set
-MAX_OUTPUT_TOKENS = 64000
+MAX_TOKENS_DESCRIPTION = (
+    "The most output tokens one model call of a run may produce. A model that thinks"
+    " before it answers spends part of it thinking, so it needs well above what the"
+    " answer takes (the system configurations of Claude 5.5 models use 16000-20000)."
+    f" At most {MAX_OUTPUT_TOKENS}: what every provider can send in one request"
+)
 
 
 class PipelineConfigurationParameters(BaseModel):
-    """LLM parameters for a pipeline configuration."""
+    """
+    The LLM parameters in effect for a pipeline configuration: what its runs
+    use. A temperature or output limit a user-created configuration leaves
+    unset is shown as the implementation's default configuration's.
+    """
 
     temperature: float = Field(default=0.4, ge=0.0, le=2.0, description="Sampling temperature")
     max_tokens: int = Field(
-        default=800,
+        default=800, ge=64, le=MAX_OUTPUT_TOKENS, description=MAX_TOKENS_DESCRIPTION
+    )
+    top_p: float = Field(default=0.9, ge=0.0, le=1.0, description="Nucleus sampling probability")
+
+
+class PipelineConfigurationParameterSettings(BaseModel):
+    """
+    The LLM parameters a user-created configuration sets. A temperature or
+    output limit left out (or null) is unset: its runs use the value of the
+    implementation's default configuration, never a default of this form.
+    """
+
+    temperature: Optional[float] = Field(
+        default=None,
+        ge=0.0,
+        le=2.0,
+        description=(
+            "Sampling temperature; the implementation's default configuration's when omitted"
+        ),
+    )
+    max_tokens: Optional[int] = Field(
+        default=None,
         ge=64,
         le=MAX_OUTPUT_TOKENS,
         description=(
-            "The most output tokens one model call of a run may produce. A model that thinks"
-            " before it answers spends part of it thinking, so it needs well above what the"
-            " answer takes (the system configurations of Claude 5.5 models use 16000-20000)"
+            MAX_TOKENS_DESCRIPTION + ". The implementation's default configuration's when omitted"
         ),
     )
     top_p: float = Field(default=0.9, ge=0.0, le=1.0, description="Nucleus sampling probability")
@@ -165,8 +193,8 @@ class PipelineConfigurationCreateRequest(BaseModel):
     stage_prompts: Optional[dict[str, Optional[StagePromptPayload]]] = Field(
         None, description=STAGE_PROMPTS_FIELD_DESCRIPTION
     )
-    parameters: PipelineConfigurationParameters = Field(
-        default_factory=PipelineConfigurationParameters,
+    parameters: PipelineConfigurationParameterSettings = Field(
+        default_factory=PipelineConfigurationParameterSettings,
         description="LLM generation parameters",
     )
     enabled: bool = Field(default=True, description="Whether this configuration is active")
@@ -182,8 +210,12 @@ class PipelineConfigurationUpdateRequest(BaseModel):
     stage_prompts: Optional[dict[str, Optional[StagePromptPayload]]] = Field(
         None, description=STAGE_PROMPTS_FIELD_DESCRIPTION
     )
-    parameters: PipelineConfigurationParameters = Field(
-        ..., description="LLM generation parameters"
+    parameters: PipelineConfigurationParameterSettings = Field(
+        default_factory=PipelineConfigurationParameterSettings,
+        description=(
+            "LLM generation parameters; the configuration's `parameter_settings` to keep"
+            " them as they are. Omitted, the temperature and output limit are unset"
+        ),
     )
     enabled: bool = Field(..., description="Whether this configuration is active")
 
@@ -206,7 +238,22 @@ class PipelineConfigurationResponse(BaseModel):
         description="The prompts sent at each LLM stage; null when the implementation has none",
     )
     parameters: Optional[PipelineConfigurationParameters] = Field(
-        None, description="LLM generation parameters"
+        None,
+        description=(
+            "The LLM parameters in effect: what the configuration's runs use, a value it"
+            " leaves unset shown as the implementation's default configuration's. Null for"
+            " a configuration whose runs take no temperature or output limit"
+        ),
+    )
+    parameter_settings: Optional[PipelineConfigurationParameterSettings] = Field(
+        None,
+        description=(
+            "What the configuration itself sets, in the shape of the create and update"
+            " bodies' `parameters`: a null temperature or max_tokens is unset, and its run"
+            " then uses the value in `parameters`. Send this back as `parameters` when"
+            " updating, so a value that is inherited stays inherited. Null where"
+            " `parameters` is null"
+        ),
     )
     enabled: bool = Field(
         default=True,

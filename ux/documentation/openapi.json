@@ -5554,7 +5554,7 @@
           "pipelines"
         ],
         "summary": "Delete Configuration",
-        "description": "Soft-delete a user pipeline configuration.\n\nThe in-memory registry entry is preserved for run traceability.\nThe configuration will no longer appear in list responses.\n\nArgs:\n    config_id: The configuration UUID\n    request: FastAPI request\n\nRaises:\n    HTTPException: 404 if not found or already deleted",
+        "description": "Soft-delete a user pipeline configuration.\n\nThe configuration no longer appears in list responses and no run can be\nstarted with it. Its versions stay in the in-memory registry for the runs\nalready pinned to them.\n\nArgs:\n    config_id: The configuration UUID\n    request: FastAPI request\n\nRaises:\n    HTTPException: 404 if not found or already deleted",
         "operationId": "delete_configuration_api_pipeline_configurations__config_id__delete",
         "parameters": [
           {
@@ -16771,7 +16771,7 @@
             "description": "Stage key -> prompts to use instead of the defaults; a stage that is left out, null, or equal to the default uses the default. Only for implementations with stages."
           },
           "parameters": {
-            "$ref": "#/components/schemas/PipelineConfigurationParameters",
+            "$ref": "#/components/schemas/PipelineConfigurationParameterSettings",
             "description": "LLM generation parameters"
           },
           "enabled": {
@@ -16790,6 +16790,49 @@
         "title": "PipelineConfigurationCreateRequest",
         "description": "Request body for creating a new user pipeline configuration."
       },
+      "PipelineConfigurationParameterSettings": {
+        "properties": {
+          "temperature": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 2.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature",
+            "description": "Sampling temperature; the implementation's default configuration's when omitted"
+          },
+          "max_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 20000.0,
+                "minimum": 64.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Tokens",
+            "description": "The most output tokens one model call of a run may produce. A model that thinks before it answers spends part of it thinking, so it needs well above what the answer takes (the system configurations of Claude 5.5 models use 16000-20000). At most 20000: what every provider can send in one request. The implementation's default configuration's when omitted"
+          },
+          "top_p": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Top P",
+            "description": "Nucleus sampling probability",
+            "default": 0.9
+          }
+        },
+        "type": "object",
+        "title": "PipelineConfigurationParameterSettings",
+        "description": "The LLM parameters a user-created configuration sets. A temperature or\noutput limit left out (or null) is unset: its runs use the value of the\nimplementation's default configuration, never a default of this form."
+      },
       "PipelineConfigurationParameters": {
         "properties": {
           "temperature": {
@@ -16802,10 +16845,10 @@
           },
           "max_tokens": {
             "type": "integer",
-            "maximum": 64000.0,
+            "maximum": 20000.0,
             "minimum": 64.0,
             "title": "Max Tokens",
-            "description": "The most output tokens one model call of a run may produce. A model that thinks before it answers spends part of it thinking, so it needs well above what the answer takes (the system configurations of Claude 5.5 models use 16000-20000)",
+            "description": "The most output tokens one model call of a run may produce. A model that thinks before it answers spends part of it thinking, so it needs well above what the answer takes (the system configurations of Claude 5.5 models use 16000-20000). At most 20000: what every provider can send in one request",
             "default": 800
           },
           "top_p": {
@@ -16819,7 +16862,7 @@
         },
         "type": "object",
         "title": "PipelineConfigurationParameters",
-        "description": "LLM parameters for a pipeline configuration."
+        "description": "The LLM parameters in effect for a pipeline configuration: what its runs\nuse. A temperature or output limit a user-created configuration leaves\nunset is shown as the implementation's default configuration's."
       },
       "PipelineConfigurationResponse": {
         "properties": {
@@ -16908,7 +16951,18 @@
                 "type": "null"
               }
             ],
-            "description": "LLM generation parameters"
+            "description": "The LLM parameters in effect: what the configuration's runs use, a value it leaves unset shown as the implementation's default configuration's. Null for a configuration whose runs take no temperature or output limit"
+          },
+          "parameter_settings": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PipelineConfigurationParameterSettings"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the configuration itself sets, in the shape of the create and update bodies' `parameters`: a null temperature or max_tokens is unset, and its run then uses the value in `parameters`. Send this back as `parameters` when updating, so a value that is inherited stays inherited. Null where `parameters` is null"
           },
           "enabled": {
             "type": "boolean",
@@ -17027,8 +17081,8 @@
             "description": "Stage key -> prompts to use instead of the defaults; a stage that is left out, null, or equal to the default uses the default. Only for implementations with stages."
           },
           "parameters": {
-            "$ref": "#/components/schemas/PipelineConfigurationParameters",
-            "description": "LLM generation parameters"
+            "$ref": "#/components/schemas/PipelineConfigurationParameterSettings",
+            "description": "LLM generation parameters; the configuration's `parameter_settings` to keep them as they are. Omitted, the temperature and output limit are unset"
           },
           "enabled": {
             "type": "boolean",
@@ -17041,7 +17095,6 @@
           "name",
           "provider",
           "model",
-          "parameters",
           "enabled"
         ],
         "title": "PipelineConfigurationUpdateRequest",

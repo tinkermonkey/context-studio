@@ -58,6 +58,7 @@ from domain.pipelines.orchestration.base import (
     MODEL_REQUIRED,
     PipelineOrchestrator,
     PipelineState,
+    llm_parameters,
 )
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 from domain.pipelines.schema_extraction.apply_service import (
@@ -467,21 +468,6 @@ class SchemaExtractionState(PipelineState):
     skipped: dict[str, Any] = field(default_factory=dict)
 
 
-def _llm_parameters(state: PipelineState, stage_max_tokens: int) -> dict[str, Any]:
-    """
-    The model, temperature and output-token limit of a stage's LLM call: the
-    run's, which are its configuration's unless its input names its own (see
-    domain/pipelines/selection.py). A run that names no limit leaves the stage
-    its own.
-    """
-    data = state.input_data
-    return {
-        "model": data["model"],
-        "temperature": data.get("temperature") or 0.0,
-        "max_tokens": data.get("max_tokens") or stage_max_tokens,
-    }
-
-
 class SchemaExtractionOrchestrator(PipelineOrchestrator):
     """
     Orchestrator for schema extraction using an 8-stage execution flow.
@@ -521,9 +507,8 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         """
         super().__init__(llm_provider, run_id, status_writer)
         self._ontology_repo = ontology_repo
-        self._prompts = resolve_stage_prompts(
-            self.STAGE_PROMPTS, (config or {}).get("stage_prompts")
-        )
+        self._config = config or {}
+        self._prompts = resolve_stage_prompts(self.STAGE_PROMPTS, self._config.get("stage_prompts"))
         self._proposer = proposer
 
     async def execute(self, state: PipelineState) -> PipelineState:
@@ -557,7 +542,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             )
             raise exc
 
-        if not schema_state.input_data.get("model"):
+        if not (schema_state.input_data.get("model") or self._config.get("model")):
             exc = PipelineInputError(MODEL_REQUIRED)
             schema_state = replace(
                 schema_state,
@@ -770,7 +755,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             response = await self._call_llm(
                 system_prompt=prompt.system,
                 user_prompt=user_prompt,
-                **_llm_parameters(state, 2000),
+                **llm_parameters(state.input_data, self._config, 2000),
             )
 
             chunk_candidates: list[str] = []
@@ -849,7 +834,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         response = await self._call_llm(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            **_llm_parameters(state, 3000),
+            **llm_parameters(state.input_data, self._config, 3000),
             response_format="json",
         )
 
@@ -959,7 +944,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         response = await self._call_llm(
             system_prompt=prompt.system,
             user_prompt=user_prompt,
-            **_llm_parameters(state, 4000),
+            **llm_parameters(state.input_data, self._config, 4000),
             response_format="json",
         )
         state = replace(state, existing_classes=existing)
@@ -1095,7 +1080,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         response = await self._call_llm(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            **_llm_parameters(state, 4000),
+            **llm_parameters(state.input_data, self._config, 4000),
             response_format="json",
         )
         if response.finish_reason == "length":
@@ -1215,7 +1200,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         response = await self._call_llm(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            **_llm_parameters(state, 2000),
+            **llm_parameters(state.input_data, self._config, 2000),
             response_format="json",
         )
 

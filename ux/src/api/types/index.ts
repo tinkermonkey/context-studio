@@ -2612,8 +2612,9 @@ export interface paths {
      * Delete Configuration
      * @description Soft-delete a user pipeline configuration.
      *
-     *     The in-memory registry entry is preserved for run traceability.
-     *     The configuration will no longer appear in list responses.
+     *     The configuration no longer appears in list responses and no run can be
+     *     started with it. Its versions stay in the in-memory registry for the runs
+     *     already pinned to them.
      *
      *     Args:
      *         config_id: The configuration UUID
@@ -8542,7 +8543,7 @@ export interface components {
         [key: string]: components["schemas"]["StagePromptPayload"] | null;
       } | null;
       /** @description LLM generation parameters */
-      parameters?: components["schemas"]["PipelineConfigurationParameters"];
+      parameters?: components["schemas"]["PipelineConfigurationParameterSettings"];
       /**
        * Enabled
        * @description Whether this configuration is active
@@ -8551,8 +8552,34 @@ export interface components {
       enabled: boolean;
     };
     /**
+     * PipelineConfigurationParameterSettings
+     * @description The LLM parameters a user-created configuration sets. A temperature or
+     *     output limit left out (or null) is unset: its runs use the value of the
+     *     implementation's default configuration, never a default of this form.
+     */
+    PipelineConfigurationParameterSettings: {
+      /**
+       * Temperature
+       * @description Sampling temperature; the implementation's default configuration's when omitted
+       */
+      temperature?: number | null;
+      /**
+       * Max Tokens
+       * @description The most output tokens one model call of a run may produce. A model that thinks before it answers spends part of it thinking, so it needs well above what the answer takes (the system configurations of Claude 5.5 models use 16000-20000). At most 20000: what every provider can send in one request. The implementation's default configuration's when omitted
+       */
+      max_tokens?: number | null;
+      /**
+       * Top P
+       * @description Nucleus sampling probability
+       * @default 0.9
+       */
+      top_p: number;
+    };
+    /**
      * PipelineConfigurationParameters
-     * @description LLM parameters for a pipeline configuration.
+     * @description The LLM parameters in effect for a pipeline configuration: what its runs
+     *     use. A temperature or output limit a user-created configuration leaves
+     *     unset is shown as the implementation's default configuration's.
      */
     PipelineConfigurationParameters: {
       /**
@@ -8563,7 +8590,7 @@ export interface components {
       temperature: number;
       /**
        * Max Tokens
-       * @description The most output tokens one model call of a run may produce. A model that thinks before it answers spends part of it thinking, so it needs well above what the answer takes (the system configurations of Claude 5.5 models use 16000-20000)
+       * @description The most output tokens one model call of a run may produce. A model that thinks before it answers spends part of it thinking, so it needs well above what the answer takes (the system configurations of Claude 5.5 models use 16000-20000). At most 20000: what every provider can send in one request
        * @default 800
        */
       max_tokens: number;
@@ -8624,8 +8651,10 @@ export interface components {
        * @description The prompts sent at each LLM stage; null when the implementation has none
        */
       stage_prompts?: components["schemas"]["StagePromptView"][] | null;
-      /** @description LLM generation parameters */
+      /** @description The LLM parameters in effect: what the configuration's runs use, a value it leaves unset shown as the implementation's default configuration's. Null for a configuration whose runs take no temperature or output limit */
       parameters?: components["schemas"]["PipelineConfigurationParameters"] | null;
+      /** @description What the configuration itself sets, in the shape of the create and update bodies' `parameters`: a null temperature or max_tokens is unset, and its run then uses the value in `parameters`. Send this back as `parameters` when updating, so a value that is inherited stays inherited. Null where `parameters` is null */
+      parameter_settings?: components["schemas"]["PipelineConfigurationParameterSettings"] | null;
       /**
        * Enabled
        * @description Whether this configuration is active; a disabled one starts no run
@@ -8691,8 +8720,8 @@ export interface components {
       stage_prompts?: {
         [key: string]: components["schemas"]["StagePromptPayload"] | null;
       } | null;
-      /** @description LLM generation parameters */
-      parameters: components["schemas"]["PipelineConfigurationParameters"];
+      /** @description LLM generation parameters; the configuration's `parameter_settings` to keep them as they are. Omitted, the temperature and output limit are unset */
+      parameters?: components["schemas"]["PipelineConfigurationParameterSettings"];
       /**
        * Enabled
        * @description Whether this configuration is active

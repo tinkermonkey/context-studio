@@ -458,7 +458,8 @@ class TestBatchCancelAndResume:
         # The executor isn't started, so the run waits with its input
         claimed, input_data = repo.claim_next_pending()
         assert claimed.id == run.id
-        assert input_data == {"items": 0, "requested_via": "api"}
+        # Stored with the model it was accepted with (its configuration's)
+        assert input_data == {"items": 0, "requested_via": "api", "model": "test-model"}
 
 
 class _ScriptedOrchestrator:
@@ -563,7 +564,8 @@ class TestRequeuedRunSpend:
 
         done = self._wait_for_status(repo, run, PipelineRunStatus.COMPLETED)
 
-        assert done.llm_metadata == {"earlier_attempts": [FIRST_ATTEMPT]}
+        # The completed attempt reports no spend of its own, only the model it ran with
+        assert done.llm_metadata == {"model": "test-model", "earlier_attempts": [FIRST_ATTEMPT]}
         # The completed attempt's own tokens are where they always were, counted once
         assert done.output_summary["metadata"]["tokens_used"] == 40
 
@@ -576,7 +578,11 @@ class TestRequeuedRunSpend:
 
         done = self._wait_for_status(repo, run, PipelineRunStatus.COMPLETED)
 
-        assert done.llm_metadata == {**triage_cost, "earlier_attempts": [FIRST_ATTEMPT]}
+        assert done.llm_metadata == {
+            **triage_cost,
+            "model": "test-model",
+            "earlier_attempts": [FIRST_ATTEMPT],
+        }
 
     def test_failed_then_failed_records_each_attempts_spend(self, executor, run_attempts):
         run, repo = run_attempts(_fails(120, 7), _fails(300, 11))
@@ -681,3 +687,87 @@ class TestStoredInput:
             executor.stop()
         assert seen["text"] == text
         assert seen["ontology_id"] == "tax-1"
+
+
+class TestPinnedConfiguration:
+    """A run executes the configuration version, and the parameters, it was accepted with."""
+
+    @pytest.fixture
+    def built_with(self, monkeypatch):
+        """Captures the configuration each orchestrator is built with and the input it executes."""
+        seen: dict = {}
+
+        class RecordingOrchestrator:
+            async def execute(self, state):
+                seen["input"] = dict(state.input_data)
+                state.current_status = PipelineRunStatus.COMPLETED
+                state.result = {}
+                return state
+
+        def create(orchestrator_class, llm_provider, services=None):
+            seen["config"] = dict((services or {})["config"])
+            return RecordingOrchestrator()
+
+        monkeypatch.setattr("adapters.factories.orchestrator_factory.create_orchestrator", create)
+        return seen
+
+    def test_submit_pins_the_latest_version_of_the_configuration(self, executor, session_factory):
+        executor._configurations.register(
+            PipelineType.NO_OP, "default", "default", {"model": "second-model"}
+        )
+
+        run = submit_noop(executor)
+
+        stored = PipelineRepository(session_factory).get(run.id)
+        assert (stored.configuration_slug, stored.configuration_version) == ("default", 2)
+
+    def test_the_worker_executes_the_pinned_version_not_a_later_one(
+        self, executor, session_factory, built_with
+    ):
+        run = submit_noop(executor)
+        # The configuration changes while the run waits for a worker
+        executor._configurations.register(
+            PipelineType.NO_OP, "default", "default", {"model": "later-model", "marker": "later"}
+        )
+        executor.start()
+
+        wait_for(lambda: status_of(session_factory, run.id) == PipelineRunStatus.COMPLETED)
+
+        assert built_with["config"] == {"model": "test-model"}
+        assert built_with["input"]["model"] == "test-model"
+
+    def test_the_run_is_stored_with_the_parameters_it_was_accepted_with(
+        self, executor, session_factory
+    ):
+        executor._configurations.register(
+            PipelineType.NO_OP,
+            "default",
+            "default",
+            {"model": "accepted-model", "temperature": 0.2, "max_tokens": 1234},
+        )
+
+        run = submit_noop(executor)
+
+        _, stored_input = PipelineRepository(session_factory).claim_next_pending()
+        assert run.configuration_version == 2
+        assert {key: stored_input[key] for key in ("model", "temperature", "max_tokens")} == {
+            "model": "accepted-model",
+            "temperature": 0.2,
+            "max_tokens": 1234,
+        }
+
+    def test_a_model_the_caller_names_is_what_is_stored(self, executor, session_factory):
+        run = executor.submit(PipelineType.NO_OP, None, None, {"model": "callers-model"})
+
+        _, stored_input = PipelineRepository(session_factory).claim_next_pending()
+        assert run.id
+        assert stored_input["model"] == "callers-model"
+
+    def test_a_finished_run_records_the_model_it_used(self, executor, session_factory):
+        run = submit_noop(executor)
+        executor.start()
+
+        wait_for(lambda: status_of(session_factory, run.id) == PipelineRunStatus.COMPLETED)
+
+        # The no-op orchestrator reports nothing about its model calls
+        assert PipelineRepository(session_factory).get(run.id).llm_metadata["model"] == "test-model"

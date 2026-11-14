@@ -146,6 +146,9 @@ class TestRunApi:
         assert run["configuration_ref"] == "extraction-default"
         assert run["status"] == "completed"
         assert extraction.parameters() == DEFAULT_PARAMETERS
+        # The run records the model it used, and each extraction its configuration
+        assert run["llm_metadata"]["model"] == DEFAULT_PARAMETERS["model"]
+        assert extraction.calls[0]["configuration_ref"] == "extraction-default"
 
     def test_a_named_configuration_supplies_the_runs_parameters(self, client, extraction):
         response = client.post(

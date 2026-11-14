@@ -23,7 +23,7 @@ from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
 )
-from domain.pipelines.selection import PipelineResolver
+from domain.pipelines.selection import MAX_OUTPUT_TOKENS, PipelineResolver
 
 EXTRACTION = PipelineType.INDIVIDUAL_EXTRACTION
 
@@ -273,10 +273,11 @@ class TestRunInput:
         assert run_input["model"] == "haiku"
         assert run_input["temperature"] == 0.0
 
-    def test_a_parameter_the_configuration_lacks_is_left_out(self, resolver):
-        run_input = resolver.resolve(EXTRACTION, None, "two-pass-gemini").run_input({"text": "t"})
+    def test_a_parameter_no_configuration_of_the_implementation_sets_is_left_out(self, resolver):
+        # find-then-type's default configuration sets a model only
+        run_input = resolver.resolve(EXTRACTION, "find_then_type").run_input({"text": "t"})
 
-        assert run_input == {"text": "t", "model": "gemini"}
+        assert run_input == {"text": "t", "model": "haiku"}
 
     def test_the_input_given_is_not_changed(self, resolver):
         given = {"text": "t"}
@@ -286,8 +287,149 @@ class TestRunInput:
         assert given == {"text": "t"}
 
 
+class TestInheritedParameters:
+    """A configuration need not set a temperature or an output limit of its own."""
+
+    def test_what_a_configuration_leaves_unset_is_the_implementations_default(
+        self, resolver, registries
+    ):
+        _, configurations = registries
+        configurations.register(EXTRACTION, "default", "mine", {"model": "my-model"})
+
+        selection = resolver.resolve(EXTRACTION, None, "mine")
+
+        assert selection.parameters == {
+            "model": "my-model",
+            "temperature": 0.0,
+            "max_tokens": 20000,
+        }
+        assert selection.run_input({"text": "t"}) == {
+            "text": "t",
+            "model": "my-model",
+            "temperature": 0.0,
+            "max_tokens": 20000,
+        }
+
+    def test_what_it_sets_is_its_own(self, resolver, registries):
+        _, configurations = registries
+        configurations.register(
+            EXTRACTION, "default", "mine", {"model": "m", "temperature": 0.7, "max_tokens": 900}
+        )
+
+        assert resolver.resolve(EXTRACTION, None, "mine").parameters == {
+            "model": "m",
+            "temperature": 0.7,
+            "max_tokens": 900,
+        }
+
+    def test_a_parameter_no_configuration_sets_is_absent(self, resolver):
+        # find-then-type's default sets a model only
+        assert resolver.resolve(EXTRACTION, "find_then_type").parameters == {"model": "haiku"}
+
+    def test_a_pinned_run_gets_them_the_same_way(self, resolver, registries):
+        _, configurations = registries
+        configurations.register(EXTRACTION, "default", "mine", {"model": "my-model"})
+
+        pinned = resolver.pinned(EXTRACTION, "default", "mine", 1)
+
+        assert pinned.parameters["max_tokens"] == 20000
+
+
+class TestStoredVersions:
+    """A stored configuration is registered under the version its record holds."""
+
+    def test_it_registers_as_the_version_given(self, registries):
+        _, configurations = registries
+
+        registered = configurations.register(
+            EXTRACTION, "default", "mine", {"model": "m"}, version=3
+        )
+
+        assert registered.version == 3
+        assert configurations.get_latest(EXTRACTION, "default", "mine").version == 3
+        # Earlier versions, whose content is not kept, are not registered at all
+        assert configurations.get_version(EXTRACTION, "default", "mine", 1) is None
+
+    def test_the_next_version_follows_it(self, registries):
+        _, configurations = registries
+        configurations.register(EXTRACTION, "default", "mine", {"model": "m"}, version=3)
+
+        assert configurations.register(EXTRACTION, "default", "mine", {"model": "n"}).version == 4
+
+    def test_a_version_not_above_the_latest_is_refused(self, registries):
+        _, configurations = registries
+        configurations.register(EXTRACTION, "default", "mine", {"model": "m"}, version=3)
+
+        with pytest.raises(ValueError, match="already registered at version 3"):
+            configurations.register(EXTRACTION, "default", "mine", {"model": "n"}, version=3)
+
+
+class TestRetiredConfiguration:
+    """A deleted configuration starts no new run and is not offered as one that can."""
+
+    def test_it_is_refused_and_not_listed(self, resolver, registries):
+        _, configurations = registries
+
+        assert configurations.retire(EXTRACTION, "default", "two-pass-gemini") is True
+
+        with pytest.raises(UnknownConfigurationError) as error:
+            resolver.resolve(EXTRACTION, None, "two-pass-gemini")
+        assert str(error.value) == (
+            "'two-pass-gemini' is not a configuration of the 'default' implementation of"
+            " individual_extraction (one of: two-pass-haiku)"
+        )
+        assert [ref for ref, _ in configurations.list_configs(EXTRACTION, "default")] == [
+            "two-pass-haiku"
+        ]
+
+    def test_a_run_already_pinned_to_it_still_finds_its_version(self, resolver, registries):
+        _, configurations = registries
+        configurations.retire(EXTRACTION, "default", "two-pass-gemini")
+
+        assert resolver.pinned(EXTRACTION, "default", "two-pass-gemini", 1) is not None
+
+    def test_the_default_configuration_cannot_be_retired(self, registries):
+        _, configurations = registries
+
+        with pytest.raises(ValueError, match="cannot be retired"):
+            configurations.retire(EXTRACTION, "default", "two-pass-haiku")
+
+    def test_one_that_is_not_registered_is_not_retired(self, registries):
+        _, configurations = registries
+
+        assert configurations.retire(EXTRACTION, "default", "no-such") is False
+
+
 class TestRegisteredPipelines:
     """What the app and the scripts register (domain/pipelines/bootstrap.py)."""
+
+    def test_registration_fails_when_a_default_is_missing(self, monkeypatch):
+        # register_pipelines checks what registration promises (check_defaults)
+        def register_without_defaults(impl_registry, config_registry):
+            impl_registry.register_impl(PipelineType.NOTES_TO_CLAIMS, "default", TwoPass)
+            config_registry.register(PipelineType.NOTES_TO_CLAIMS, "default", "default", {})
+
+        monkeypatch.setattr(
+            "domain.pipelines.bootstrap.register_notes_to_claims", register_without_defaults
+        )
+
+        with pytest.raises(ValueError) as error:
+            register_pipelines(PipelineImplementationRegistry(), PipelineConfigurationRegistry())
+
+        assert "notes_to_claims has no default implementation" in str(error.value)
+        assert "notes_to_claims:default has no default configuration" in str(error.value)
+
+    def test_no_configuration_sets_a_limit_a_provider_cannot_send(self, registered):
+        implementations, configurations, _ = registered
+
+        limits = [
+            latest.config["max_tokens"]
+            for pipeline_type, implementation_id in implementations.list_all()
+            for _, latest in configurations.list_configs(pipeline_type, implementation_id)
+            if latest.config.get("max_tokens") is not None
+        ]
+
+        assert limits and max(limits) <= MAX_OUTPUT_TOKENS == 20000
 
     @pytest.fixture(scope="class")
     def registered(self):
@@ -340,17 +482,24 @@ class TestRegisteredPipelines:
         # Claude 5.5 models think before answering; 8000 output tokens ran out on real chunks
         assert config["max_tokens"] >= 16000
 
-    def test_no_configuration_is_registered_twice_under_another_name(self, registered):
-        _, configurations, _ = registered
+    def test_definition_refinements_default_name_still_resolves_without_being_the_default(
+        self, registered
+    ):
+        # Runs were started and pinned under the name "default"; it stays a
+        # registered name of the same configuration, not the implementation's default
+        _, configurations, resolver = registered
+        refinement = PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT
 
-        refs = [
-            ref
-            for ref, _ in configurations.list_configs(
-                PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT, "default"
-            )
-        ]
+        named = resolver.resolve(refinement, None, "default")
+        unnamed = resolver.resolve(refinement)
 
-        assert refs == ["definition-refinement-default"]
+        assert named.configuration_ref == "default"
+        assert unnamed.configuration_ref == "definition-refinement-default"
+        assert named.config == unnamed.config
+        assert resolver.pinned(refinement, "default", "default", 1) is not None
+        assert configurations.default_configuration(refinement, "default") == (
+            "definition-refinement-default"
+        )
 
     def test_implementations_that_can_extract_a_source(self, registered):
         _, _, resolver = registered

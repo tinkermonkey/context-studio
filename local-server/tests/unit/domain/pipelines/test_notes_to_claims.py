@@ -37,6 +37,8 @@ from tests.fakes.fake_claim_repository import FakeClaimRepository
 from tests.fakes.fake_note_splitter import FakeNoteSplitter
 from tests.fakes.fake_ontology_repository import FakeOntologyRepository
 
+MODEL = "splitting-model"
+
 T = "t"
 WHEN = datetime(2026, 11, 9, 12, 0, tzinfo=timezone.utc)
 
@@ -157,7 +159,8 @@ def make(repo, claims, llm, proposals=None, writer=None, config=None):
         ontology_repo=repo,
         claim_service=claims,
         proposal_service=proposals,
-        config=config,
+        # The run's model is its configuration's: the orchestrator has none of its own
+        config={"model": MODEL, **(config or {})},
         run_id="run-1",
         status_writer=writer,
     )
@@ -177,9 +180,49 @@ def stored(claims, **filters):
 
 
 CALLBACK_NOTE = (
-    "The callback's map-key name has no attribute. The 'uses api.server' relationship is"
-    " dubious."
+    "The callback's map-key name has no attribute. The 'uses api.server' relationship is dubious."
 )
+
+
+NOTES = {"notes": [{"ref": "node:api.callback", "subject": "api_callback", "text": CALLBACK_NOTE}]}
+ONE_CLAIM = {"map-key": [split("api_callback has no attribute.", "api_callback")]}
+
+
+class TestRunParameters:
+    """The split's model, temperature and output limit are the run's."""
+
+    def test_the_configurations_are_used(self, repo, claims):
+        llm = FakeNoteSplitter(ONE_CLAIM)
+
+        state = run(make(repo, claims, llm, config={"temperature": 0.2, "max_tokens": 3000}), NOTES)
+
+        (call,) = llm.calls
+        assert (call["model"], call["temperature"], call["max_tokens"]) == (MODEL, 0.2, 3000)
+        assert state.llm_metadata["model"] == MODEL
+
+    def test_what_the_runs_input_names_wins(self, repo, claims):
+        llm = FakeNoteSplitter(ONE_CLAIM)
+
+        state = run(make(repo, claims, llm), NOTES, model="named", temperature=0.5, max_tokens=900)
+
+        (call,) = llm.calls
+        assert (call["model"], call["temperature"], call["max_tokens"]) == ("named", 0.5, 900)
+        assert state.llm_metadata["model"] == "named"
+
+    def test_no_limit_named_is_the_stages_own(self, repo, claims):
+        llm = FakeNoteSplitter(ONE_CLAIM)
+
+        run(make(repo, claims, llm), NOTES)
+
+        assert llm.calls[0]["max_tokens"] == 4000
+
+    def test_it_has_no_model_of_its_own(self, repo, claims):
+        orchestrator = NotesToClaimsOrchestrator(
+            llm_provider=FakeNoteSplitter(ONE_CLAIM), ontology_repo=repo, claim_service=claims
+        )
+
+        with pytest.raises(PipelineInputError, match="model is required"):
+            run(orchestrator, NOTES)
 
 
 class TestSplit:
@@ -228,7 +271,7 @@ class TestSplit:
         assert state.result["unresolved_refs"] == 2
         assert state.result["status"] == "completed"
         assert state.llm_metadata["tokens_in"] == 100
-        assert state.llm_metadata["model"] == "google/gemini-3-flash-preview"
+        assert state.llm_metadata["model"] == MODEL
         assert writer.running and writer.progress == [(0, 1), (1, 1)]
 
     def test_the_prompt_is_dr_split_notes_with_context_studio_identifiers(self, repo, claims):
