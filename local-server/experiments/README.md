@@ -51,6 +51,7 @@ type accuracy, relationship recall, and the failure counts Loop C selects target
 # from local-server/, venv active
 python scripts/benchmark_replay.py                    # offline: replay the cassettes, score
 python scripts/benchmark_replay.py --record --spend   # record with the live LLM (cheap model)
+python scripts/benchmark_replay.py --implementation find_then_type   # the other implementation
 
 # against a running server (./dev.sh)
 python scripts/extraction_benchmark.py validate
@@ -109,6 +110,45 @@ difference is individuals proposed in several classes at once (GitLab Workhorse 
 document's typed F1 0.156 to 0.184. About 86% of the individuals an identify call names are the
 same from one take to the next. The accept gate's margins (0.02 on dev, 0.04 on the holdout
 document) are set above that; a gain inside it is not a result.
+
+### The find-then-type implementation (recorded 2026-11-13, Claude Haiku 5.5)
+
+`--implementation find_then_type` runs the benchmark through `FindThenTypeOrchestrator`
+(`domain/pipelines/individual_extraction/find_then_type.py`): each chunk is read once for what it
+mentions, each distinct mention of the source is typed once against every class of the ontology,
+and pass 2 relates the typed individuals of each chunk. It has its own cassettes
+(`tests/integration/fixtures/cassettes/extraction_benchmark_find_then_type/`), recorded with
+`claude-haiku-5-5` through the Anthropic provider: 604 calls for the three documents, of which 570
+are typing calls that share one cached system prompt (the catalog, about 19k tokens), about $0.30
+in all and two to four minutes a document.
+
+The catalog lists each class with the first 260 characters of its definition, not the whole of it
+(`_DEFINITION_CHARS` in `domain/extraction/find_then_type.py`). The 193 definitions of the pinned
+DR ontology run from 584 to 1482 characters, so about a quarter of their text is offered, and the
+part that says which class to use instead is cut from nearly all of them. Offering more of a
+definition is an untried change; it changes the prompt, so the cassettes would be recorded again.
+
+| | found F1 | typed F1 | recall (core) | precision | type accuracy | relationship recall |
+|---|---|---|---|---|---|---|
+| `edit_check` (dev) | 0.433 | 0.389 | 0.513 (0.738) | 0.375 | 0.897 | 0.094 |
+| `gitlab_architecture` (dev) | 0.635 | 0.541 | 0.607 (0.889) | 0.667 | 0.851 | 0.265 |
+| `wikimedia_enterprise` (holdout) | 0.513 | 0.481 | 0.485 (0.658) | 0.545 | 0.938 | 0.036 |
+| **dev mean** | **0.534** | **0.465** | 0.560 (0.814) | 0.521 | 0.874 | 0.180 |
+
+Dev failure counts: 18 core and 67 supporting individuals missed, 15 mistyped, 93 spurious, 9
+known distractors extracted, 109 relationships missed. Against the baseline above, the gain is in
+typing (an individual has one class, chosen from the whole catalog) and in recall (statements are
+found); what it proposes that gold does not hold is now the largest count.
+
+This is one recording. The models it runs on take no temperature, so a second take will differ;
+how much has not been measured, and the two-pass shape's margins above do not carry over. Loop C
+still measures and optimises the `default` implementation: the tournament does not run this one.
+`tests/integration/pipelines/test_extraction_benchmark_replay.py` replays these cassettes, so a
+change that makes them stale fails that test until they are recorded again:
+
+```bash
+python scripts/benchmark_replay.py --record --spend --implementation find_then_type
+```
 
 Where the baseline loses, on the dev documents: 126 gold individuals not found (41 of them core),
 52 found but not typed correctly, 57 predictions that match nothing, 8 known distractors

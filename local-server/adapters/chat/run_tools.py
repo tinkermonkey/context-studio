@@ -176,7 +176,8 @@ class GetRunTool(ToolBase):
         " says why, and skipped_by_reason counts the candidates it skipped for each"
         " reason. An extraction of a source that could not read some of its chunks"
         " still completes: failed_chunks lists them with each failure_reason, what"
-        " they hold is missing from the proposal, and that proposal supersedes no"
+        " they hold (or the part the failure_reason names) is missing from the proposal,"
+        " and that proposal supersedes no"
         " other proposal of the source. Review a proposal with get_proposal."
     )
     input_schema = {

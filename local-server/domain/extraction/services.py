@@ -26,100 +26,49 @@ from domain.ontology.ports import (
     SchemaVectorIndex,
 )
 from domain.pipelines.candidate_ids import mention_key
-from domain.pipelines.exceptions import (
-    LLMProviderError,
-    LLMRateLimitError,
-    LLMRequestRefusedError,
-    LLMTransientError,
-)
-from domain.pipelines.ports import LLMProvider, LLMResponse
+from domain.pipelines.ports import LLMProvider
 from domain.pipelines.stage_prompts import StagePrompt, render, resolve_stage_prompts
 from domain.ports import EventPublisher
 
 if TYPE_CHECKING:
     from domain.extraction.ports import IndividualRecognizer
 
-from . import layers
+from . import find_then_type, layers
 from .entities import (
     ExtractedEntity,
     ExtractionResult,
     ExtractionRun,
     ExtractionRunStatus,
+    Mention,
+    MentionsResult,
     RecognitionPreviewHit,
     RecognitionPreviewResult,
     TripleExtractionResult,
+    TypingPrompt,
+    TypingResult,
 )
 from .events import ExtractionCompleted
 from .exceptions import ExtractionError, IncompleteLLMResponseError, InvalidInputError
+from .llm_calls import TokenTally as _TokenTally
+from .llm_calls import complete_parsed, failure_fields
 from .ports import (
     ExtractionRepository,
     ExtractionRunRepository,
     NLPProcessor,
     ReferenceSource,
 )
-from .prompts import DERIVE_RELATIONSHIPS, IDENTIFY_INDIVIDUALS, INDIVIDUAL_EXTRACTION_STAGES
+from .prompts import (
+    DERIVE_RELATIONSHIPS,
+    FIND_MENTIONS,
+    FIND_THEN_TYPE_STAGES,
+    IDENTIFY_INDIVIDUALS,
+    INDIVIDUAL_EXTRACTION_STAGES,
+    TYPE_MENTION,
+)
 from .span_resolution import resolve_span
 from .value_objects import ExtractionLayerResult, LayerInput, LayerOutput, SourceSpan
 
 _logger = logging.getLogger(__name__)
-
-# How many times each triple-extraction call (identify, then derive) is made
-# before the extraction fails: an attempt is spent by a response that is not the
-# model's whole answer and by a provider failure that may pass
-_MAX_LLM_ATTEMPTS = 3
-
-# Seconds waited before the second attempt after a provider failure that may
-# pass; the wait doubles before each attempt after that
-_FIRST_RETRY_WAIT_SECONDS = 1.0
-
-
-def _no_whole_answer(
-    stage: str, failures: list[IncompleteLLMResponseError | LLMTransientError]
-) -> IncompleteLLMResponseError | LLMTransientError:
-    """
-    The failure of a stage whose every attempt got no whole answer, from why
-    each attempt failed, in order.
-
-    Attempts that all failed the same way are reported as that failure
-    outlasting them. Attempts that failed in different ways are reported by
-    the last, as an incomplete response or a provider failure that may pass:
-    never as a rate limit, since a rate limit that was not met every time did
-    not outlast the attempts and says nothing about the next text.
-    """
-    last = failures[-1]
-    incomplete = isinstance(last, IncompleteLLMResponseError)
-    if len({type(failure) for failure in failures}) > 1:
-        kind = IncompleteLLMResponseError if incomplete else LLMTransientError
-        message = (
-            f"The LLM gave no complete answer for {stage} in {len(failures)} attempts"
-            f" that failed in different ways, the last with: {last}"
-        )
-    elif incomplete:
-        kind = IncompleteLLMResponseError
-        message = (
-            f"The LLM response for {stage} was still incomplete after"
-            f" {len(failures)} attempts: {last}"
-        )
-    else:
-        kind = type(last)
-        message = f"The LLM request for {stage} still failed after {len(failures)} attempts: {last}"
-    failure = kind(message)
-    failure.__cause__ = last
-    return failure
-
-
-class _TokenTally:
-    """
-    The tokens of every LLM response one extraction received, whether or not
-    the extraction could use it.
-    """
-
-    def __init__(self) -> None:
-        self.total = 0
-
-    def add(self, response: LLMResponse) -> None:
-        self.total += response.tokens_in + response.tokens_out
-
 
 # Default prompts for the two LLM passes, used when no configuration overrides them.
 _DEFAULT_PROMPTS = resolve_stage_prompts(INDIVIDUAL_EXTRACTION_STAGES, None)
@@ -344,7 +293,7 @@ class ExtractionService:
         """
         if not 0.0 <= similarity_threshold <= 1.0:
             raise ValueError(
-                "similarity_threshold must be between 0.0 and 1.0, got" f" {similarity_threshold}"
+                f"similarity_threshold must be between 0.0 and 1.0, got {similarity_threshold}"
             )
         self._ontology_repo = ontology_repo
         self._embedding_service = embedding_service
@@ -708,11 +657,11 @@ class ExtractionService:
                 _logger.error(f"Triple extraction failed: {exc}", exc_info=exc)
                 extracted_triples = []
                 run_status = ExtractionRunStatus.FAILED
-                failure_reason = str(exc) or type(exc).__name__
-                incomplete_response = isinstance(exc, IncompleteLLMResponseError)
-                provider_failed = isinstance(exc, LLMProviderError)
-                # A rate limit that reaches here was met by every attempt
-                provider_refused = isinstance(exc, (LLMRequestRefusedError, LLMRateLimitError))
+                failed = failure_fields(exc)
+                failure_reason = failed["failure_reason"]
+                incomplete_response = failed["incomplete_response"]
+                provider_failed = failed["provider_failed"]
+                provider_refused = failed["provider_refused"]
                 warnings.append(f"Extraction failed: {failure_reason}")
 
             # Update run record: the responses of a failed extraction cost tokens too
@@ -773,6 +722,201 @@ class ExtractionService:
             provider_failed=provider_failed,
             provider_refused=provider_refused,
         )
+
+    # Find-then-type extraction (domain/extraction/find_then_type.py): the calls
+    # the orchestrator makes in place of extract_triples. None of them keeps an
+    # ExtractionRun: the pipeline run carries what the calls cost.
+
+    def find_mentions(
+        self,
+        text: str,
+        ontology_id: str,
+        model: str,
+        temperature: float,
+        stage_prompts: Mapping[str, Any] | None = None,
+    ) -> MentionsResult:
+        """
+        List what a text mentions, typing nothing (the find stage): one LLM call.
+
+        Args:
+            text: The text (a chunk of a source, or a pasted text)
+            ontology_id: ID of the target ontology
+            stage_prompts: A configuration's prompt overrides for the
+                find-then-type stages; None uses the defaults
+
+        Returns:
+            The mentions with their passages; a failure_reason when the text
+            could not be read (it then lists no mentions)
+
+        Raises:
+            ExtractionError: If the text is empty
+            InvalidInputError: If no ontology has ontology_id
+            ValueError: If temperature is out of range
+        """
+        if not text or not text.strip():
+            raise ExtractionError("Text cannot be empty")
+        if not 0.0 <= temperature <= 2.0:
+            raise ValueError(f"temperature must be 0.0–2.0, got {temperature}")
+        ontology = self._taxonomy(ontology_id)
+        prompts = resolve_stage_prompts(FIND_THEN_TYPE_STAGES, stage_prompts)
+        kinds = [
+            (scheme.title, scheme.description or "")
+            for scheme in self._ontology_repo.list_concept_schemes(
+                taxonomy_id=str(ontology.id), limit=None
+            )
+        ]
+        return find_then_type.find_mentions(
+            self._llm,
+            self._sleep,
+            text,
+            find_then_type.kinds_grounding(ontology.title, kinds),
+            model,
+            temperature,
+            prompts[FIND_MENTIONS],
+        )
+
+    def typing_prompt(
+        self, ontology_id: str, stage_prompts: Mapping[str, Any] | None = None
+    ) -> TypingPrompt:
+        """
+        The prompt that types a run's mentions: the ontology's whole class
+        catalog with definitions, read once per run.
+
+        Raises:
+            InvalidInputError: If no ontology has ontology_id
+        """
+        ontology = self._taxonomy(ontology_id)
+        prompts = resolve_stage_prompts(FIND_THEN_TYPE_STAGES, stage_prompts)
+        classes: dict[str, find_then_type.CatalogClass] = {}
+        for scheme in self._ontology_repo.list_concept_schemes(
+            taxonomy_id=str(ontology.id), limit=None
+        ):
+            for cls in self._ontology_repo.list_classes(concept_scheme_id=scheme.id, limit=None):
+                if cls.derived:
+                    continue  # computed by its client, never an extraction target
+                reference = _canonical_class_ref(cls)
+                if reference and reference not in classes:
+                    classes[reference] = find_then_type.CatalogClass(
+                        reference, cls.title or reference, scheme.title, cls.description or ""
+                    )
+        return find_then_type.build_typing_prompt(
+            ontology.title, list(classes.values()), prompts[TYPE_MENTION]
+        )
+
+    def type_mention(
+        self,
+        prompt: TypingPrompt,
+        context: str,
+        mention: Mention,
+        model: str,
+        temperature: float,
+    ) -> TypingResult:
+        """
+        Type one mention against the run's class catalog (the type stage): one
+        LLM call. It reads no repository, so calls can be made side by side.
+
+        Args:
+            prompt: The run's typing prompt (typing_prompt)
+            context: The text around the mention
+
+        Returns:
+            The class reference, or None when the mention is not something to
+            record; a failure_reason when it could not be typed
+        """
+        return find_then_type.type_mention(
+            self._llm, self._sleep, prompt, context, mention, model, temperature
+        )
+
+    def relate(
+        self,
+        text: str,
+        typing_triples: list[dict],
+        ontology_id: str,
+        model: str,
+        temperature: float,
+        stage_prompts: Mapping[str, Any] | None = None,
+    ) -> TripleExtractionResult:
+        """
+        State the relationships a text asserts between typed individuals (pass
+        2 of the two-pass shape): one LLM call, none with fewer than two
+        individuals.
+
+        Only relationships between two of the given individuals are kept. Pass
+        2 may name a new concept as a relationship's object and type it by the
+        relationship's range; here the type stage is the one way an individual
+        gets its class, so such a relationship is left out.
+
+        Args:
+            text: The text the individuals were found in
+            typing_triples: The individuals' typing triples (find_then_type.typing_triple)
+
+        Returns:
+            The relationship triples, each with its relationship type where the
+            ontology has one; a failure_reason when the text could not be read
+
+        Raises:
+            InvalidInputError: If no ontology has ontology_id
+        """
+        ontology = self._taxonomy(ontology_id)
+        prompts = resolve_stage_prompts(FIND_THEN_TYPE_STAGES, stage_prompts)
+        spent = _TokenTally()
+        started = time.time()
+        triples: list[dict] = []
+        warnings: list[str] = []
+        failed: dict[str, Any] = {}
+        try:
+            individuals = self._identified_individuals(typing_triples)
+            relationships, derive_warnings = self._derive_relationships(
+                text, ontology, individuals, ontology_id, model, temperature, spent, prompts
+            )
+            stamped, stamp_warnings = self._type_concept_objects(
+                relationships, typing_triples, ontology
+            )
+            known = {label.lower() for label, _ in individuals}
+            triples = [
+                triple
+                for triple in stamped
+                if not self._is_typing_triple(triple)
+                and all(
+                    str((triple.get(end) or {}).get("label", "")).strip().lower() in known
+                    for end in ("subject", "object")
+                )
+            ]
+            warnings = derive_warnings + stamp_warnings
+        except Exception as exc:
+            _logger.error(f"Relationship extraction failed: {exc}", exc_info=exc)
+            failed = failure_fields(exc)
+            warnings = [f"Extraction failed: {failed['failure_reason']}"]
+        return TripleExtractionResult(
+            triples=[_serialize_triple_provenance(triple) for triple in triples],
+            warnings=warnings,
+            metadata={
+                "model": model,
+                "tokens_used": spent.total,
+                "duration_ms": int((time.time() - started) * 1000),
+            },
+            **failed,
+        )
+
+    def recognize(
+        self, triples: list[dict], ontology_id: str, dataset_id: str | None = None
+    ) -> list[dict]:
+        """
+        Resolve the individuals of a run's triples to existing graph nodes
+        (`_recognize_individuals`), inside the run's dataset. The triples are
+        returned in the order given.
+
+        Raises:
+            InvalidInputError: If no ontology has ontology_id
+        """
+        return self._recognize_individuals(triples, self._taxonomy(ontology_id), dataset_id)
+
+    def _taxonomy(self, ontology_id: str):
+        """The ontology a run extracts against."""
+        ontology = self._ontology_repo.get_taxonomy(ontology_id)
+        if not ontology:
+            raise InvalidInputError(f"Ontology {ontology_id} not found")
+        return ontology
 
     def _ontology_class_catalog(self, ontology) -> list[tuple[str, str]]:
         """
@@ -1074,38 +1218,14 @@ class ExtractionService:
             "max_tokens": 8000,
             "response_format": "json",
         }
-        # Why each attempt got no whole answer, in order
-        failures: list[IncompleteLLMResponseError | LLMTransientError] = []
-        for attempt in range(1, _MAX_LLM_ATTEMPTS + 1):
-            try:
-                response = self._llm.complete(**request)
-            except LLMTransientError as exc:
-                _logger.warning(
-                    "LLM request for %s failed, attempt %d of %d: %s",
-                    stage,
-                    attempt,
-                    _MAX_LLM_ATTEMPTS,
-                    exc,
-                )
-                failures.append(exc)
-                if attempt < _MAX_LLM_ATTEMPTS:
-                    self._sleep(_FIRST_RETRY_WAIT_SECONDS * 2 ** (attempt - 1))
-                continue
-            spent.add(response)
-            try:
-                return self._parse_triple_extraction_response(response.content, text, ontology_id)
-            except IncompleteLLMResponseError as exc:
-                problem = f"{exc} (finish_reason={response.finish_reason})"
-                _logger.warning(
-                    "Incomplete LLM response for %s, attempt %d of %d: %s",
-                    stage,
-                    attempt,
-                    _MAX_LLM_ATTEMPTS,
-                    problem,
-                )
-                self._llm.forget(**request)
-                failures.append(IncompleteLLMResponseError(problem))
-        raise _no_whole_answer(stage, failures)
+        return complete_parsed(
+            self._llm,
+            self._sleep,
+            stage,
+            request,
+            lambda content: self._parse_triple_extraction_response(content, text, ontology_id),
+            spent,
+        )
 
     def _post_process_triples(
         self, triples: list[dict], ontology, dataset_id: str | None = None

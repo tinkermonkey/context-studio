@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Mapping
 from uuid import uuid4
 
 if TYPE_CHECKING:
@@ -106,7 +106,7 @@ class ProcessingMetrics:
             raise ValueError(f"entities_found must be non-negative, got {self.entities_found}")
         if self.relationships_found < 0:
             raise ValueError(
-                "relationships_found must be non-negative, got" f" {self.relationships_found}"
+                f"relationships_found must be non-negative, got {self.relationships_found}"
             )
         if self.error_count < 0:
             raise ValueError(f"error_count must be non-negative, got {self.error_count}")
@@ -299,6 +299,91 @@ class TripleExtractionResult:
 
 
 @dataclass(frozen=True)
+class Mention:
+    """
+    Something a text mentions that may be an individual, before it is typed.
+
+    Attributes:
+        name: What to call it: for a thing the name the text uses, for a
+            statement a short paraphrase
+        kind: "thing" (something the text names) or "statement" (something the
+            text asserts: a goal, a requirement, a finding)
+        quote: The passage that says what it is or states it, as placed in the
+            text; None when the passage the LLM quoted is not in the text
+        start: Offset of the passage's first character in the text; None when
+            the passage was not placed exactly
+        end: Offset just past the passage's last character; None with start
+    """
+
+    name: str
+    kind: str
+    quote: str | None = None
+    start: int | None = None
+    end: int | None = None
+
+
+@dataclass
+class MentionsResult:
+    """
+    The mentions found in one text (the find stage of find-then-type extraction).
+
+    ``metadata`` and the failure fields read as on TripleExtractionResult: a
+    failure_reason means the text was not read, never that it mentions nothing.
+    """
+
+    mentions: list[Mention]
+    warnings: list[str]
+    metadata: dict[str, int | str]
+    failure_reason: str | None = None
+    incomplete_response: bool = False
+    provider_failed: bool = False
+    provider_refused: bool = False
+
+
+@dataclass(frozen=True)
+class TypingPrompt:
+    """
+    The prompt that types one mention against a taxonomy's whole class catalog,
+    built once per run.
+
+    Attributes:
+        system: The system prompt, the catalog included: the same for every
+            mention of the run, so a provider can cache it
+        user: The user prompt template ({context}, {name}, {quote})
+        class_refs: The class references an answer may name, each under its
+            lowercased form
+    """
+
+    system: str
+    user: str
+    class_refs: Mapping[str, str]
+
+
+@dataclass
+class TypingResult:
+    """
+    The class one mention was typed with (the type stage).
+
+    Attributes:
+        class_ref: The reference of the class the mention is an instance of;
+            None when it is not something to record, or when typing failed
+        confidence: How sure the answer is, 0..1
+        metadata: model, tokens_used, duration_ms of the call and its retries
+        failure_reason and the three flags: as on TripleExtractionResult. A
+            failure_reason means the mention was not typed, never that it is
+            not something to record.
+    """
+
+    class_ref: str | None
+    confidence: float
+    metadata: dict[str, int | str]
+    failure_reason: str | None = None
+    incomplete_response: bool = False
+    provider_failed: bool = False
+    provider_refused: bool = False
+
+
+@dataclass(frozen=True)
 class RecognitionPreviewHit:
     """
     A preview of what would happen if an extracted individual mention were applied.
@@ -350,9 +435,7 @@ class RecognitionPreviewHit:
                     "will_match_existing=False requires no resolved_individual_id/title"
                 )
             if self.match_method or self.match_score is not None:
-                raise ValueError(
-                    "will_match_existing=False requires no match_method/score"
-                )
+                raise ValueError("will_match_existing=False requires no match_method/score")
 
 
 @dataclass(frozen=True)

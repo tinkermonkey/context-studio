@@ -21,7 +21,8 @@ sys.path.append(
 import pytest
 
 from domain.extraction.entities import ExtractionRunStatus
-from domain.extraction.services import _MAX_LLM_ATTEMPTS, ExtractionService
+from domain.extraction.llm_calls import MAX_LLM_ATTEMPTS as _MAX_LLM_ATTEMPTS
+from domain.extraction.services import ExtractionService
 from domain.pipelines.exceptions import (
     LLMProviderError,
     LLMRateLimitError,

@@ -21,7 +21,8 @@ import pytest
 
 from domain.extraction.entities import ExtractionRunStatus
 from domain.extraction.exceptions import InvalidInputError
-from domain.extraction.services import _MAX_LLM_ATTEMPTS, ExtractionService
+from domain.extraction.llm_calls import MAX_LLM_ATTEMPTS as _MAX_LLM_ATTEMPTS
+from domain.extraction.services import ExtractionService
 from domain.pipelines.ports import LLMResponse
 
 TEXT = "Nextflow runs on Slurm."

@@ -1,0 +1,1507 @@
+{
+  "a5bd344ca0ad4be73c895481e07eaf9d06dbc08972989e12cf025629ccfa587e": {
+    "content": "```json\n{\"mentions\": [\n{\"name\": \"Edit Check\", \"kind\": \"thing\", \"quote\": \"# Edit check\\n\\nOffer people actionable feedback about Wikipedia policies while they are editing.\"},\n{\"name\": \"Editing Team\", \"kind\": \"thing\", \"quote\": \"The Editing Team is working on a set of improvements for the visual editor\"},\n{\"name\": \"Wikimedia Foundation's Product Department\", \"kind\": \"thing\", \"quote\": \"why the Wikimedia Foundation's Product Department is prioritizing this work.\"},\n{\"name\": \"Editing team/Community Conversations\", \"kind\": \"thing\", \"quote\": \"Watch Editing team/Community Conversations for scheduled meetings about this project.\"},\n{\"name\": \"Reference check\", \"kind\": \"thing\", \"quote\": \"- **Reference check**\"},\n{\"name\": \"Link check and Reference reliability\", \"kind\": \"thing\", \"quote\": \"- **Link check and Reference reliability**\"},\n{\"name\": \"Paste Check\", \"kind\": \"thing\", \"quote\": \"- **Paste Check**\"},\n{\"name\": \"Tone check\", \"kind\": \"thing\", \"quote\": \"The Editing team works on new Checks:\\n\\n- **Tone check**\"},\n{\"name\": \"Suggestion Mode\", \"kind\": \"thing\", \"quote\": \"The Editing team works on the related features:\\n\\n- **Suggestion Mode**\"},\n{\"name\": \"TextMatch\", \"kind\": \"thing\", \"quote\": \"- **TextMatch**\"},\n{\"name\": \"Glossary of the terms\", \"kind\": \"thing\", \"quote\": \"- Glossary of the terms we use\"},\n{\"name\": \"Checks' configuration\", \"kind\": \"thing\", \"quote\": \"- Checks' configuration\"},\n{\"name\": \"Visual editor\", \"kind\": \"thing\", \"quote\": \"new functionality within the visual editor (desktop and mobile)\"},\n{\"name\": \"Newcomers and Junior Contributors from Sub-Saharan Africa\", \"kind\": \"thing\", \"quote\": \"Newcomers and Junior Contributors from Sub-Saharan Africa will feel safe and confident enough while editing\"},\n{\"name\": \"Moderators at English and French Wikipedias\", \"kind\": \"thing\", \"quote\": \"Moderators at the English and French Wikipedias will notice improvements in the quality of edits\"},\n{\"name\": \"A/B experiment\", \"kind\": \"thing\", \"quote\": \"The A/B experiment was launched on 15 wikis and is collecting data.\"},\n{\"name\": \"Add an image suggestion type\", \"kind\": \"thing\", \"quote\": \"A new experimental suggestion type, \\\"Add an image\\\", has been created using the same functionality as the Growth team's version.\"},\n{\"name\": \"Add a link suggestion type\", \"kind\": \"thing\", \"quote\": \"Work is also ongoing on improving the functionality of the \\\"Add a link\\\" suggestion type\"},\n{\"name\": \"LLM trained on English Wikipedia's Manual of Style\", \"kind\": \"thing\", \"quote\": \"There is ongoing investigation into whether an LLM trained on English Wikipedia's Manual of Style can generate reliable types of suggestions.\"},\n{\"name\": \"Help:Suggestion mode page\", \"kind\": \"thing\", \"quote\": \"There are some inspiring examples of how communities are currently using it listed in the Help:Suggestion mode page.\"},\n{\"name\": \"Beta Feature for Suggestion Mode\", \"kind\": \"thing\", \"quote\": \"The feature has been available as a Beta Feature globally since early March and at English Wikipedia since early February.\"},\n{\"name\": \"ignoreQuotedContent setting\", \"kind\": \"thing\", \"quote\": \"Better detection of quotations for the `ignoreQuotedContent` setting\"},\n{\"name\": \"addReference suggestions\", \"kind\": \"thing\", \"quote\": \"Better detection of existing references for the `addReference` suggestions\"},\n{\"name\": \"Hide suggestions toggle-button\", \"kind\": \"thing\", \"quote\": \"Addition of a toggle-button to hide suggestions temporarily\"},\n{\"name\": \"Special:EditChecks\", \"kind\": \"thing\", \"quote\": \"Clearer and more accurate details in `Special:EditChecks` which shows the local configuration\"},\n{\"name\": \"Edit-tags for published edits\", \"kind\": \"thing\", \"quote\": \"Two new edit-tags added to published edits\"},\n{\"name\": \"Growth team\", \"kind\": \"thing\", \"quote\": \"using the same functionality as the Growth team's version.\"},\n{\"name\": \"Suggestion storage\", \"kind\": \"thing\", \"quote\": \"The team is building a way for Suggestions to be stored more efficiently\"},\n{\"name\": \"Read mode suggestion count\", \"kind\": \"thing\", \"quote\": \"as well as showing the existence & count to editors in an article's \\\"Read\\\" mode.\"},\n{\"name\": \"Newcomer A/B experiment at about 20 Wikipedias\", \"kind\": \"thing\", \"quote\": \"We are now preparing for an A/B experiment with newcomers at ~20 Wikipedias\"},\n{\"name\": \"Administrators at Wikipedias\", \"kind\": \"thing\", \"quote\": \"Administrators at all Wikipedias can help to configure this tool\"},\n{\"name\": \"Help:Suggestion mode for administrators\", \"kind\": \"thing\", \"quote\": \"(see Help:Suggestion mode#For administrators)\"},\n{\"name\": \"Talk page for feedback\", \"kind\": \"thing\", \"quote\": \"*Please let us know on the talk page.*\"},\n{\"name\": \"Project objectives\", \"kind\": \"statement\", \"quote\": \"## Objectives\\n\\n1. Newcomers and Junior Contributors from Sub-Saharan Africa will feel safe and confident enough\"},\n{\"name\": \"Moderators configure how Edit Check presents policies\", \"kind\": \"statement\", \"quote\": \"be motivated to configure how Edit Check presents policies to them.\"},\n{\"name\": \"Help newcomers understand Wikipedia policies\", \"kind\": \"statement\", \"quote\": \"to help new volunteers understand and follow some of the policies and guidelines necessary to make constructive changes\"},\n{\"name\": \"Check for new content without references\", \"kind\": \"statement\", \"quote\": \"detect when people are attempting to add *new* content to an existing article *without* a corresponding reference and prompt them to do so.\"},\n{\"name\": \"Measure impact on constructive edits and retention\", \"kind\": \"statement\", \"quote\": \"to measure what kind of impact the tool has on the percentage of constructive (un-reverted) edits by newcomers, as well as editor-retention\"},\n{\"name\": \"LLMs effective at checking web sources\", \"kind\": \"statement\", \"quote\": \"This research confirmed that in English LLMs are effective at evaluating whether web-based sources corroborate claims on Wikipedia.\"},\n{\"name\": \"Next investigate LLM effectiveness in other languages\", \"kind\": \"statement\", \"quote\": \"Next, the team will investigate how effective this method is in other languages.\"},\n{\"name\": \"Suggestion Mode improvements since beta\", \"kind\": \"statement\", \"quote\": \"Improvements to the tool since then include: Better detection of quotations\"},\n{\"name\": \"Clarify actions presented to experienced editors\", \"kind\": \"statement\", \"quote\": \"The focus right now is clarifying what actions and instructions Suggestion Mode will present to experienced editors\"},\n{\"name\": \"Communities create custom local suggestion types\", \"kind\": \"statement\", \"quote\": \"Some communities have started to use the textMatch feature to create custom local types of Suggestion.\"},\n{\"name\": \"Suggestions to be reusable by other features\", \"kind\": \"statement\", \"quote\": \"so that in the future the suggestions can be used by, or shown within, other software features\"},\n{\"name\": \"Add link suggestion to become default global type\", \"kind\": \"statement\", \"quote\": \"so that it can become a default global suggestion type in the future.\"}\n]}\n```",
+    "tokens_in": 2805,
+    "tokens_out": 2948,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "e1e81719c991ac7e0a6eb8690e67fda3fb55f37876db6b37a19fe6907ccc6f2d": {
+    "content": "{\"mentions\": [\n{\"name\": \"Visual editor\", \"kind\": \"thing\", \"quote\": \"The visual editor's growing popularity among people who are new to editing Wikipedia\"},\n{\"name\": \"Wikipedia\", \"kind\": \"thing\", \"quote\": \"publish changes to Wikipedia.\"},\n{\"name\": \"Edit Check\", \"kind\": \"thing\", \"quote\": \"the initial reference Edit Check becoming activated if/when all of the following conditions are met\"},\n{\"name\": \"Multi-Check\", \"kind\": \"thing\", \"quote\": \"To learn whether the Multi-Check was effective at causing, newcomers to publish new content edits\"},\n{\"name\": \"Reference Check\", \"kind\": \"thing\", \"quote\": \"deployed to all wikis where Reference Check is currently available on June 25, 2025.\"},\n{\"name\": \"Edit filter\", \"kind\": \"thing\", \"quote\": \"drawing inspiration from how the Edit filter and Growth Team Community configuration systems\"},\n{\"name\": \"Growth Team Community configuration system\", \"kind\": \"thing\", \"quote\": \"how the Edit filter and Growth Team Community configuration systems afford volunteers the ability to audit and configure\"},\n{\"name\": \"Editing Team\", \"kind\": \"thing\", \"quote\": \"The Editing Team is centering the needs of people in this work who are:\"},\n{\"name\": \"Inexperienced volunteers\", \"kind\": \"thing\", \"quote\": \"the changes inexperienced volunteers publish often break established best practices\"},\n{\"name\": \"Experienced volunteers and moderators\", \"kind\": \"thing\", \"quote\": \"Experienced volunteers/moderators \u2013 need to do more work reverting low-quality edits\"},\n{\"name\": \"Wikipedia projects\", \"kind\": \"thing\", \"quote\": \"Wikipedia projects \u2013 struggle to grow and diversify their volunteer populations\"},\n{\"name\": \"Newcomers\", \"kind\": \"thing\", \"quote\": \"Newcomers are two times more likely to live in Africa or Asia.\"},\n{\"name\": \"Junior Contributors\", \"kind\": \"thing\", \"quote\": \"newcomers and Junior Contributors find the guidance Edit Check is presenting them with\"},\n{\"name\": \"Mobile visual editor\", \"kind\": \"thing\", \"quote\": \"introduce a new step within the *mobile* visual editor's publishing workflow\"},\n{\"name\": \"Desktop edit checks\", \"kind\": \"thing\", \"quote\": \"Edit checks are shown at the side on Desktop.\"},\n{\"name\": \"Main namespace (NS:0)\", \"kind\": \"thing\", \"quote\": \"The changes described in \\\"1.\\\" and \\\"2.\\\" are happening on a page within the main namespace (NS:0)\"},\n{\"name\": \"Editcheck init code\", \"kind\": \"thing\", \"quote\": \"The conditions above are implemented and maintained in code here: editcheck/init.js\"},\n{\"name\": \"Multi-Check A/B test\", \"kind\": \"thing\", \"quote\": \"we ran an A/B test with 12 Wikipedias.\"},\n{\"name\": \"Sub-Saharan Africa audience\", \"kind\": \"thing\", \"quote\": \"Living in Sub-Saharan Africa\"},\n{\"name\": \"Reference heuristic\", \"kind\": \"thing\", \"quote\": \"minimizes the likelihood of false positives and is implemented in ways that empower volunteers, on a per-project basis, to evolve the heuristic\"},\n{\"name\": \"Phabricator task T329988\", \"kind\": \"thing\", \"quote\": \"You can learn more about the assumptions that informed the thinking above in phab:T329988#8654867.\"},\n{\"name\": \"Phabricator task T327959\", \"kind\": \"thing\", \"quote\": \"Work to implement the above is ongoing in phab:T327959.\"},\n{\"name\": \"Preventing reverts and undesirable outcomes\", \"kind\": \"statement\", \"quote\": \"lead to undesirable outcomes for inexperienced volunteers, experienced volunteers, and Wikipedia projects as a whole\"},\n{\"name\": \"Visual editor does not show policies\", \"kind\": \"statement\", \"quote\": \"the visual editor and other editing interfaces do not make people aware of the Wikipedia policies and guidelines\"},\n{\"name\": \"Relevant feedback during editing\", \"kind\": \"statement\", \"quote\": \"Offering inexperienced volunteers relevant and actionable feedback about Wikipedia policies in the precious moments when they are in the midst of making a change\"},\n{\"name\": \"Moderators configure feedback\", \"kind\": \"statement\", \"quote\": \"Equipping moderators with a new ability to specify the feedback inexperienced volunteers are presented with while they are editing\"},\n{\"name\": \"Newcomers feel safe when they predict alignment with policy\", \"kind\": \"statement\", \"quote\": \"will feel safe and motivated making changes to Wikipedia if they can accurately predict whether the changes they are attempting to make are aligned with existing Wikipedia policies\"},\n{\"name\": \"Norms made legible and actionable\", \"kind\": \"statement\", \"quote\": \"we first need to make the norms and standards that are currently in place legible and actionable to people while they are editing\"},\n{\"name\": \"Limited initial rule set for intuitive experience\", \"kind\": \"statement\", \"quote\": \"The Editing Team arrived at the decision to *start* with a relatively limited and straightforward set of rules\"},\n{\"name\": \"Avoid unnecessary prompts for sources\", \"kind\": \"statement\", \"quote\": \"Decrease the likelihood that Edit Check is creating more work for experienced volunteers by prompting newcomers and Junior Contributors to add sources when they are not needed\"},\n{\"name\": \"Moderators configure activation\", \"kind\": \"statement\", \"quote\": \"it is crucial that moderators be empowered to configure when, and for whom, Edit Check becomes activated.\"},\n{\"name\": \"Volunteers audit and review Edit Check\", \"kind\": \"statement\", \"quote\": \"Edit Check will enable volunteers, on a per project basis to: Audit and edit the logic that determines when the reference Edit Check becomes activated\"},\n{\"name\": \"Multi-Check increased referenced edits\", \"kind\": \"statement\", \"quote\": \"Multi-Check caused statistically significant increases in the proportion of edits that include a reference and are not reverted within 48 hours\"},\n{\"name\": \"Newcomer underrepresentation from Sub-Saharan Africa\", \"kind\": \"statement\", \"quote\": \"people from Sub-Saharan Africa represent only 1% of active unique editors, despite representing 15% of the global population\"}\n]}",
+    "tokens_in": 3301,
+    "tokens_out": 2460,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "8110457cda269a6a1c82687ba9ba15a0cb75e4a832129059d8df4d9542cb3887": {
+    "content": "```json\n{\"mentions\": [\n{\"name\": \"Multi-Check\", \"kind\": \"thing\", \"quote\": \"Users are more likely to include at least one reference with their new content edits when multi-check (references) is available.\"},\n{\"name\": \"Reference Check\", \"kind\": \"thing\", \"quote\": \"Users in the `test` group were shown the Reference Check notice prompting them to decide whether the new content they were adding need a reference\"},\n{\"name\": \"Reference Edit Check\", \"kind\": \"thing\", \"quote\": \"To learn whether the Reference Edit Check is effective at causing **newcomers to make edits they intended and experienced volunteers value**\"},\n{\"name\": \"Edit Check\", \"kind\": \"thing\", \"quote\": \"In December 2024, we released a new design for the Edit Check desktop experience.\"},\n{\"name\": \"Siderail\", \"kind\": \"thing\", \"quote\": \"This change shifted Edit Checks from appearing *within* articles to appearing *alongside* them, in a new \\\"siderail.\\\"\"},\n{\"name\": \"Editing Team\", \"kind\": \"thing\", \"quote\": \"what the Editing Team is planning in response, and more details about the test's design.\"},\n{\"name\": \"Reference Check A/B Test\", \"kind\": \"thing\", \"quote\": \"we conducted an A/B test with 15 Wikipedias.\"},\n{\"name\": \"Multi-Check Phase 1 Impact Analysis\", \"kind\": \"thing\", \"quote\": \"### Multi-Check Phase 1 Impact Analysis\"},\n{\"name\": \"Wikipedias in test\", \"kind\": \"thing\", \"quote\": \"11 Wikipedias participated in the test.\"},\n{\"name\": \"Test group\", \"kind\": \"thing\", \"quote\": \"50% of users were randomly assigned to a `test` group\"},\n{\"name\": \"Control group\", \"kind\": \"thing\", \"quote\": \"50% were assigned to a `control` group.\"},\n{\"name\": \"Desktop platform\", \"kind\": \"thing\", \"quote\": \"There was a higher observed decrease in edit completion rate on mobile compared to desktop.\"},\n{\"name\": \"Mobile platform\", \"kind\": \"thing\", \"quote\": \"The highest observed increase was on mobile where contributors are **4.2 times more likely**\"},\n{\"name\": \"Sub-Saharan Africa contributors segment\", \"kind\": \"thing\", \"quote\": \"New content edits by contributors from Sub-Saharan Africa are **53% less likely** to be reverted when Reference Check is shown\"},\n{\"name\": \"Proportion of new content edits with a reference\", \"kind\": \"thing\", \"quote\": \"*Proportion of new content edits with a reference*\"},\n{\"name\": \"Proportion of users publishing a new content edit with a reference\", \"kind\": \"thing\", \"quote\": \"*Proportion of users that publish at least one new content edit with a reference*\"},\n{\"name\": \"Revert rate\", \"kind\": \"thing\", \"quote\": \"*Revert Rate*\"},\n{\"name\": \"Edit completion rate\", \"kind\": \"thing\", \"quote\": \"**Edit Completion Rate**\"},\n{\"name\": \"Block rate\", \"kind\": \"thing\", \"quote\": \"**Block Rate**\"},\n{\"name\": \"False negative rate\", \"kind\": \"thing\", \"quote\": \"**False Negative Rate**\"},\n{\"name\": \"False positive rate\", \"kind\": \"thing\", \"quote\": \"**False Positive Rate**\"},\n{\"name\": \"Constructive retention rate\", \"kind\": \"thing\", \"quote\": \"**Constructive Retention Rate**\"},\n{\"name\": \"Constructive new content edit\", \"kind\": \"thing\", \"quote\": \"publish a new content edit that includes a reference and is constructive (not reverted within 48 hours).\"},\n{\"name\": \"Guardrails\", \"kind\": \"thing\", \"quote\": \"*Guardrails*\"},\n{\"name\": \"Leading indicators\", \"kind\": \"thing\", \"quote\": \"#### Leading Indicators (T388731)\"},\n{\"name\": \"Multi-check edits shown 2 to 5 reference checks\", \"kind\": \"thing\", \"quote\": \"the majority of edits (73%) were shown between **2 to 5 Reference Checks**.\"},\n{\"name\": \"Multi-check does not disrupt editors\", \"kind\": \"statement\", \"quote\": \"indicating that multiple checks are not causing significant disruption or confusion to the editors.\"},\n{\"name\": \"Reference Check increases quality without disruption\", \"kind\": \"statement\", \"quote\": \"Reference Check caused an **increase in the quality of edits** newcomers publish and **did not cause any significant disruption**.\"},\n{\"name\": \"Reference Check likely net positive as default-on\", \"kind\": \"statement\", \"quote\": \"offering Reference Check as a default-on feature would have a net positive impact on all wikis\"},\n{\"name\": \"Multi-check increases inclusion of references\", \"kind\": \"statement\", \"quote\": \"Edits that were shown multiple Reference Checks in a session are **1.3 times** more likely to include at least one new reference\"},\n{\"name\": \"No significant change in revert rate from multi-check overall\", \"kind\": \"statement\", \"quote\": \"Overall, we did not identify any significant changes in new content edit revert rate between the control and test group.\"},\n{\"name\": \"No decrease in edit completion from multi-checks\", \"kind\": \"statement\", \"quote\": \"There were **no decreases** in edit completion rate for up to 5 reference checks\"},\n{\"name\": \"Design change to siderail is net positive\", \"kind\": \"statement\", \"quote\": \"The findings above suggest this design change has been net positive.\"},\n{\"name\": \"Reference Check increases edits with references\", \"kind\": \"statement\", \"quote\": \"People shown the Reference Check are **2.2 times more likely** to publish a new content edit that includes a reference and is constructive\"},\n{\"name\": \"Reference Check reduces revert rate\", \"kind\": \"statement\", \"quote\": \"New content edit revert rate **decreased by 8.6%** if Reference Check was available.\"},\n{\"name\": \"Reference Check improves constructive retention\", \"kind\": \"statement\", \"quote\": \"are **16 percent more likely** to return to make a non-reverted edit in their second month\"},\n{\"name\": \"Reference Check lowers edit completion overall\", \"kind\": \"statement\", \"quote\": \"Overall, there was a **10% decrease** in edit completion rate for edits where Reference Check was shown.\"},\n{\"name\": \"Low false negative rate\", \"kind\": \"statement\", \"quote\": \"There was a low false negative rate. Only **1.8%** of all published new content edits in the test group did not include a new reference\"},\n{\"name\": \"Few contributors decline citing no need for reference\", \"kind\": \"statement\", \"quote\": \"This was the least selected decline option overall.\"},\n{\"name\": \"Design change reduced revert rate of reference-check edits\", \"kind\": \"statement\", \"quote\": \"The revert rate of new content edits where Reference Check was activated decreased by **15.7%**.\"}\n]}\n```",
+    "tokens_in": 3340,
+    "tokens_out": 2890,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "0299fa9ee36f8222508c61d011311a7a7ba7121b9d621e010b67591f91eaf245": {
+    "content": "{\"mentions\": [\n{\"name\": \"Edit Check project\", \"kind\": \"thing\", \"quote\": \"The viability of the features introduced as part of the Edit Check project depends on the impacts it causes and averts.\"},\n{\"name\": \"Timing of analysis\", \"kind\": \"thing\", \"quote\": \"This analysis was completed on 16 April 2024\"},\n{\"name\": \"Participating wikis\", \"kind\": \"thing\", \"quote\": \"analyzed engagement data at the 11 participating wikis from 18 February 2024 through 4 April 2024\"},\n{\"name\": \"Newcomers and Junior Contributors\", \"kind\": \"thing\", \"quote\": \"Increase the quality of edits newcomers and Junior Contributors editing from within Sub-Saharan Africa publish in the main namespace\"},\n{\"name\": \"Sub-Saharan Africa contributors (SSA)\", \"kind\": \"thing\", \"quote\": \"newcomers and Junior Contributors editing from within Sub-Saharan Africa will accompany the new content they are adding with a reference\"},\n{\"name\": \"Experienced volunteers\", \"kind\": \"thing\", \"quote\": \"Comments/reports from experienced volunteers about the quality of edits\"},\n{\"name\": \"New and developing volunteers\", \"kind\": \"thing\", \"quote\": \"new and developing volunteers make that include a reference\"},\n{\"name\": \"Edit Check default configurations\", \"kind\": \"thing\", \"quote\": \"Experienced volunteers will independently audit and iterate upon Edit Check's default configurations\"},\n{\"name\": \"Visual editor\", \"kind\": \"thing\", \"quote\": \"because the visual editor will prompt them to do so in cases where they have not done so themselves\"},\n{\"name\": \"Revision risk score\", \"kind\": \"thing\", \"quote\": \"or have a *high* revision risk score\"},\n{\"name\": \"Edit Check feedback and calls to action\", \"kind\": \"thing\", \"quote\": \"Newcomers and Junior Contributors find the feedback and calls to action Edit Check presents them with to be: Helpful Supportive Motivating\"},\n{\"name\": \"A/B test\", \"kind\": \"thing\", \"quote\": \"Evaluation Method(s) ... A/B test, qualitative feedback (e.g. talk page discussions, false positive reporting)\"},\n{\"name\": \"Qualitative feedback channels\", \"kind\": \"thing\", \"quote\": \"Qualitative feedback via channels like:Community Calls, talk pages, event organizers, etc.\"},\n{\"name\": \"Qualitative review by Edting team\", \"kind\": \"thing\", \"quote\": \"Qualitative assessment by the Edting team\"},\n{\"name\": \"event.action init and saveSuccess events\", \"kind\": \"thing\", \"quote\": \"Proportion of edits that are started (`event.action` = `init`) that are successfully published (`event.action` = `saveSuccess`).\"},\n{\"name\": \"event.action abort with abandon type\", \"kind\": \"thing\", \"quote\": \"indicated by `event.action` = `abort` and `event.abort_type` = `abandon`\"},\n{\"name\": \"Deployment process\", \"kind\": \"thing\", \"quote\": \"## Deployment process\"},\n{\"name\": \"Increase edit quality impact\", \"kind\": \"statement\", \"quote\": \"Increase the quality of edits newcomers and Junior Contributors editing from within Sub-Saharan Africa publish in the main namespace\"},\n{\"name\": \"Increase likelihood of including references\", \"kind\": \"statement\", \"quote\": \"Increase the likelihood that newcomers and Junior Contributors editing from within Sub-Saharan Africa will accompany the new content they are adding with a reference\"},\n{\"name\": \"Newcomers feel safe and confident\", \"kind\": \"statement\", \"quote\": \"Newcomers and Junior Contributors editing from within Sub-Saharan Africa will report feeling safe and confident making changes to Wikipedia\"},\n{\"name\": \"Experienced volunteers audit defaults for productive edits\", \"kind\": \"statement\", \"quote\": \"to ensure Edit Check is causing newcomers and Junior Contributors to make productive edits\"},\n{\"name\": \"Visual editor raises reference awareness\", \"kind\": \"statement\", \"quote\": \"Newcomers and Junior Contributors will be more aware of the need to add a reference when contributing new content\"},\n{\"name\": \"Edit quality decreases\", \"kind\": \"statement\", \"quote\": \"Edit quality decreases\"},\n{\"name\": \"Edits harder to patrol\", \"kind\": \"statement\", \"quote\": \"Edits become more difficult to patrol because unreliable citations are difficult to detect\"},\n{\"name\": \"Edit completion rate drastically decreases\", \"kind\": \"statement\", \"quote\": \"Edit completion rate drastically decreases\"},\n{\"name\": \"Edit abandonment rate drastically increases\", \"kind\": \"statement\", \"quote\": \"Edit abandonment rate drastically increases\"},\n{\"name\": \"Blocks increase\", \"kind\": \"statement\", \"quote\": \"Blocks increase | Proportion of contributors blocked after publishing an edit where Edit Check was shown is significantly higher\"},\n{\"name\": \"High false positive or false negative rates\", \"kind\": \"statement\", \"quote\": \"High false positive or false negative rates\"},\n{\"name\": \"Edit Check too resource intensive to scale\", \"kind\": \"statement\", \"quote\": \"Edit Check is too resource intensive to scale\"}\n]}",
+    "tokens_in": 2439,
+    "tokens_out": 2580,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "25d95df42e8a998d081798edf078db6134995a4c0caf5bee86969e1c41f2d149": {
+    "content": "```json\n{\"mentions\": [\n{\"name\": \"Volunteer anti-vandalism efforts\", \"kind\": \"statement\", \"quote\": \"Volunteers throughout the movement have a long history of working to:\"},\n{\"name\": \"Proactively educate and guide newcomers\", \"kind\": \"statement\", \"quote\": \"**Proactively** educate and guide newcomers to make changes they feel proud of and changes that improve Wikipedia\"},\n{\"name\": \"Prevent destructive changes\", \"kind\": \"statement\", \"quote\": \"**Prevent** people from publishing destructive changes, *and*\"},\n{\"name\": \"React to and moderate changes\", \"kind\": \"statement\", \"quote\": \"**React** to and moderate changes to Wikipedia articles.\"},\n{\"name\": \"Editing Team project inspired by these efforts\", \"kind\": \"statement\", \"quote\": \"The Editing Team and this project have been inspired by these efforts, some of which are listed below.\"},\n{\"name\": \"WikiNPOV Drift Detector\", \"kind\": \"thing\", \"quote\": \"WikiNPOV Drift Detector: ML tool for detecting neutrality drift in Wikipedia articles over time\"},\n{\"name\": \"WikiProject AI Tools\", \"kind\": \"thing\", \"quote\": \"Wikipedia:WikiProject_AI_Tools | Constructive uses of LLMs and AI to support editors.\"},\n{\"name\": \"ProVe\", \"kind\": \"thing\", \"quote\": \"A tool that provides information about the quality of the references of Wikidata items\"},\n{\"name\": \"Copying check script\", \"kind\": \"thing\", \"quote\": \"User:SodiumJS/copying-check.js | Client-side copying detector\"},\n{\"name\": \"AI article improvement suggestions wish\", \"kind\": \"thing\", \"quote\": \"Wish: Apply AI to article improvement suggestions on the homepage\"},\n{\"name\": \"Mopping with the tap open discussion\", \"kind\": \"thing\", \"quote\": \"Wikimedia-l: Mopping with the tap open | A discussion wherein Romaine describes a pattern of people who are new adding information to Wikipedia without citing source(s).\"},\n{\"name\": \"Eno-Prompt\", \"kind\": \"thing\", \"quote\": \"Model: meta:Eno-Prompt | A project to train a fine-tuned open-source LLM (large language model) that will detect disinformation based on linguistic analysis.\"},\n{\"name\": \"Counter-Misinformation Dynamics paper\", \"kind\": \"thing\", \"quote\": \"Paper: Counter-Misinformation Dynamics: The Case of Wikipedia Editing Communities during the 2024 US Presidential Elections\"},\n{\"name\": \"Editnotices as pop-ups wish\", \"kind\": \"thing\", \"quote\": \"Wish: Make editnotices display as pop-ups\"},\n{\"name\": \"Spelling checker tool\", \"kind\": \"thing\", \"quote\": \"Corrector ortogr\u00e1fico, Helferlein/Rechtschreibpr\u00fcfung, \u05d5\u05d9\u05e7\u05d9\u05e4\u05d3\u05d9\u05d4:\u05e1\u05e7\u05e8\u05d9\u05e4\u05d8\u05d9\u05dd/\u05d1\u05d5\u05d3\u05e7 \u05d0\u05d9\u05d5\u05ea, Revisor_ortogr\u00e1fico | A tool that checks pages loaded in the browser against a list of common spelling errors.\"},\n{\"name\": \"Error Finder\", \"kind\": \"thing\", \"quote\": \"Error Finder | A tool to find common errors in Persian texts\"},\n{\"name\": \"Copy-paste warning wish\", \"kind\": \"thing\", \"quote\": \"Wish: Warn when large amount of content has been copy-pasted\"},\n{\"name\": \"Articles without sources WikiProject\", \"kind\": \"thing\", \"quote\": \"fr:Projet:Articles sans sources ( along with 3 other wikiprojects) | A WikiProject intended to add sources to articles that need them\"},\n{\"name\": \"CopyPatrol\", \"kind\": \"thing\", \"quote\": \"CopyPatrol | Tool that allows you to see recent Wikipedia edits that are flagged as possible copyright violations\"},\n{\"name\": \"Automatically Neutralizing Subjective Bias paper\", \"kind\": \"thing\", \"quote\": \"paper: Automatically Neutralizing Subjective Bias in Text | Method for automatically bringing inappropriately subjective text into a neutral point of view\"},\n{\"name\": \"Citation watchlist\", \"kind\": \"thing\", \"quote\": \"Wikipedia:Citation watchlist | User script that adds visual indicators to watchlist and recent changes entries when unreliable sources are added to articles.\"},\n{\"name\": \"Internet Archive Reference Explorer\", \"kind\": \"thing\", \"quote\": \"Internet Archive Reference Explorer | Explore references included in Wikipedia articles via a range of criteria\"},\n{\"name\": \"WikiScore\", \"kind\": \"thing\", \"quote\": \"WikiScore | A tool created to validate edits and count scores of participants in wikicontests.\"},\n{\"name\": \"Earwig's Copyvio Detector\", \"kind\": \"thing\", \"quote\": \"Earwig's **Copyvio Detector** | This tool attempts to detect copyright violations in articles.\"},\n{\"name\": \"CiteUnseen\", \"kind\": \"thing\", \"quote\": \"CiteUnseen | A user script that adds categorical icons to Wikipedia citations\"},\n{\"name\": \"Credibility bot\", \"kind\": \"thing\", \"quote\": \"Credibility bot | Monitors and collects data on source usage within Wikipedia articles\"},\n{\"name\": \"Salebot\", \"kind\": \"thing\", \"quote\": \"Salebot ( French Wikipedia) | A counter-vandalism bot that uses regex to identify issues.\"},\n{\"name\": \"Edit intros\", \"kind\": \"thing\", \"quote\": \"Edit intros ( English Wikipedia) | A message is shown automatically when editing a page categorized as either Category:Living people or Category:Possibly living people.\"},\n{\"name\": \"Edit notices more visible in Visual Editor\", \"kind\": \"thing\", \"quote\": \"Make edit notices more visible in Visual Editor\"},\n{\"name\": \"Automatic source quality detection\", \"kind\": \"thing\", \"quote\": \"Internet Archive Reference Explorer | Automatically detect source quality | Ocaasi\"},\n{\"name\": \"Reference requirement for new articles wish\", \"kind\": \"thing\", \"quote\": \"Wish: Reference requirement for new article creation | Require new article to include references\"},\n{\"name\": \"Edit Notices\", \"kind\": \"thing\", \"quote\": \"Edit Notices | Enables individual volunteers and projects to display a custom notice above the edit form\"},\n{\"name\": \"Page notices\", \"kind\": \"thing\", \"quote\": \"Page notices\"},\n{\"name\": \"Maintenance templates\", \"kind\": \"thing\", \"quote\": \"Maintenance templates\"},\n{\"name\": \"Extension:AbuseFilter\", \"kind\": \"thing\", \"quote\": \"Extension:AbuseFilter | Enables privileged users to set specific actions to be taken when actions by users, such as edits, match certain criteria.\"},\n{\"name\": \"Extension:Disambiguator\", \"kind\": \"thing\", \"quote\": \"Extension:Disambiguator | Displays a notification in the 2006/2010 *wikitext* editor whenever one adds a link to a disambiguation page.\"},\n{\"name\": \"ORES\", \"kind\": \"thing\", \"quote\": \"ORES |  | Halfak (WMF)\"},\n{\"name\": \"Suggested Edits\", \"kind\": \"thing\", \"quote\": \"Suggested Edits |  |  |\"},\n{\"name\": \"CiteHighlighter\", \"kind\": \"thing\", \"quote\": \"CiteHighlighter | Highlights 1800 sources green, yellow, or red depending on their reliability.\"},\n{\"name\": \"Checkwiki\", \"kind\": \"thing\", \"quote\": \"Checkwiki | Helps clean up syntax and other errors in the source code of Wikipedia\"},\n{\"name\": \"Edit Diff Tagging\", \"kind\": \"thing\", \"quote\": \"Edit Diff Tagging | Showcases all the different tags that can be automatically determined (generally via basic heuristics) for a given Wikipedia edit diff.\"},\n{\"name\": \"CivilityCheck\", \"kind\": \"thing\", \"quote\": \"CivilityCheck | A project to evaluate the civility in the comments of Wikipedia discussions in order to address the problem of abuse\"},\n{\"name\": \"BOTutor\", \"kind\": \"thing\", \"quote\": \"BOTutor | A bot that sends a message to people who attempt to publish an edit that triggers an existing set of rules\"},\n{\"name\": \"Gadget-autocomplete.js\", \"kind\": \"thing\", \"quote\": \"Gadget-autocomplete.js |  | \u05e2\u05e8\u05df\"},\n{\"name\": \"Text reactions proposal\", \"kind\": \"thing\", \"quote\": \"Text reactions | A *proposal* that would make it possible for the editing interface to *react* to what the people enter in the editing area\"},\n{\"name\": \"Editwizard\", \"kind\": \"thing\", \"quote\": \"Editwizard | A step-by-step process for guiding newcomers to source the content they are attempting to add to Wikipedia articles\"},\n{\"name\": \"Headbomb/unreliable\", \"kind\": \"thing\", \"quote\": \"Headbomb/unreliable | \\\" The script breaks down links to various sources in different 'severities' of unreliability.\"},\n{\"name\": \"The Wikipedia Adventure\", \"kind\": \"thing\", \"quote\": \"The Wikipedia Adventure | Game based on the tech of Extension:GuidedTour that teaches basic wikitext markup and the rules about reliable sources and neutral point of view.\"},\n{\"name\": \"Help:Introduction\", \"kind\": \"thing\", \"quote\": \"w:Help:Introduction | The primary tutorial for new editors at English Wikipedia, covering both policies and technical how-to for VisualEditor and wiki markup.\"},\n{\"name\": \"HighlightUnreferencedPassages\", \"kind\": \"thing\", \"quote\": \"User:Phlsph7/ HighlightUnreferencedPassages | A user script to highlight passages that lack references with a red background.\"}\n]}\n```",
+    "tokens_in": 3743,
+    "tokens_out": 3595,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a654abe7509f5b4a716b07cf7a6ee311c1922e36c7bfb9a6d60809737657d041": {
+    "content": "{\"mentions\": [{\"name\": \"Unreferenced passage identification tool\", \"kind\": \"thing\", \"quote\": \"Its main purpose is to help users quickly identify unreferenced passages, paragraphs, and sections in mainspace articles and drafts\"}, {\"name\": \"Visual editor\", \"kind\": \"thing\", \"quote\": \"Add notice to the visual editor that unsourced edits may be reverted\"}, {\"name\": \"Publish changes dialogue\", \"kind\": \"thing\", \"quote\": \"A notice in the \\\"Publish changes\\\" dialogue of the visual editor that states that unsourced edits will be reverted\"}, {\"name\": \"SpamBlacklist\", \"kind\": \"thing\", \"quote\": \"Warn when the url added as reference is registered in the SpamBlacklist\"}, {\"name\": \"Edit Filter #686\", \"kind\": \"thing\", \"quote\": \"Edit Filter that is triggered when a new user possibly adding unreferenced material to BLP\"}, {\"name\": \"BLP\", \"kind\": \"thing\", \"quote\": \"Edit Filter that is triggered when a new user possibly adding unreferenced material to BLP\"}, {\"name\": \"WikiLearn\", \"kind\": \"thing\", \"quote\": \"WikiLearn | Platform for training\"}, {\"name\": \"DannyS712/copyvio-check.js\", \"kind\": \"thing\", \"quote\": \"Automatically checks the copyvio percentage of new pages in the background and displays this info with a link to the report\"}, {\"name\": \"Page curation toolbar\", \"kind\": \"thing\", \"quote\": \"displays this info with a link to the report in the 'info' panel of the Page curation toolbar\"}, {\"name\": \"XLinkBot\", \"kind\": \"thing\", \"quote\": \"A bot that warns people who have added an external link that is inappropriate in some way.\"}, {\"name\": \"Unsourced edits will be reverted\", \"kind\": \"statement\", \"quote\": \"A notice in the \\\"Publish changes\\\" dialogue of the visual editor that states that unsourced edits will be reverted\"}, {\"name\": \"Warning suppressed for SpamBlacklisted URLs when saving\", \"kind\": \"statement\", \"quote\": \"Warn when the url added as reference is registered in the SpamBlacklist, and thus prevent the warning from appearing when saving the page.\"}, {\"name\": \"Edit filter triggers on new users adding unreferenced BLP material\", \"kind\": \"statement\", \"quote\": \"Edit Filter that is triggered when a new user possibly adding unreferenced material to BLP\"}, {\"name\": \"Copyvio check runs automatically in background\", \"kind\": \"statement\", \"quote\": \"Automatically checks the copyvio percentage of new pages in the background\"}, {\"name\": \"XLinkBot warns about inappropriate external links\", \"kind\": \"statement\", \"quote\": \"A bot that warns people who have added an external link that is inappropriate in some way.\"}]}",
+    "tokens_in": 1256,
+    "tokens_out": 1969,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d27f232b325353c874beebdd84ee7c36ee3161b4c3719116a07200ac712b1357": {
+    "content": "{\"class\": \"product.softwarecapability\", \"confidence\": 0.5}",
+    "tokens_in": 19988,
+    "tokens_out": 410,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c5d42b2beeadb477fdff5b82a1e34c49613e81a6e8d583e659fb84a2566758e3": {
+    "content": "{\"class\": \"product.feature\", \"confidence\": 0.7}",
+    "tokens_in": 20167,
+    "tokens_out": 132,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "002d71013a4e926a49ee24fdbc903fe8b82f62a9743c93dba45a088021224a09": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.8}",
+    "tokens_in": 20150,
+    "tokens_out": 105,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "18acbff82f99ecb7c948c5c87b89ebd000f89e1b2d776191e459e3ccd9ed6d04": {
+    "content": "{\"class\": \"product.feature\", \"confidence\": 0.7}",
+    "tokens_in": 20190,
+    "tokens_out": 181,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "77f2dd1122298550df271b086b53379c53d46113dbe1e7c1b1abecc6784fb040": {
+    "content": "{\"class\": \"product.feature\", \"confidence\": 0.8}",
+    "tokens_in": 20191,
+    "tokens_out": 136,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "4b7bcafd44b77fbdb71dc3002f94eb88738b2cd6f8240e39c69da024db4038c6": {
+    "content": "{\"class\": \"business.businessactor\", \"confidence\": 0.7}",
+    "tokens_in": 20027,
+    "tokens_out": 190,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "aacc86515bddbc9bdcd8b57716a3df122427f2c714ad332a9c3a1d52844cadad": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20170,
+    "tokens_out": 134,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "3f294bea054ea008c5a9686f4d4bb41b7156acb6e86ba9a35242063adc391349": {
+    "content": "{\"class\": \"product.feature\", \"confidence\": 0.7}",
+    "tokens_in": 20220,
+    "tokens_out": 153,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ef32f5679d358a09a6bf938ff634009847d67384c4c96e73a8cc86a406405c12": {
+    "content": "{\"class\": \"product.feature\", \"confidence\": 0.6}",
+    "tokens_in": 20230,
+    "tokens_out": 159,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "cac4ba1883071368ef77f4d84ebf34b83cd9850e45acbb860222437136709c08": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20249,
+    "tokens_out": 65,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "8a04b87c243584db1e3b9e7bc8a419be430429f6ad038a7454f5707f7c0c5859": {
+    "content": "{\"class\": \"product.feature\", \"confidence\": 0.7}",
+    "tokens_in": 20244,
+    "tokens_out": 164,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "0b660c506f30326f4cd13e663476742cde28aefac3732902bbf1705265285415": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20254,
+    "tokens_out": 63,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9785a192e746e2793a2ffc1818badd6a2060f3839d73917d236ef89bcdb7ea53": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.8}",
+    "tokens_in": 20336,
+    "tokens_out": 176,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a9d81aacbc59c7b910c2321ae635985eb9ca80caf7f17c54caf9926761a2e50f": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.8}",
+    "tokens_in": 20364,
+    "tokens_out": 140,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "e7267628197081cc4ac7cc4b3effc0fefe32f106fbeddf7a8b9f430de4177b4d": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20320,
+    "tokens_out": 169,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f7ee95dac64db10e7b416e302dadd108d15a859c0a0193831d8e40b8e562a651": {
+    "content": "{\"class\": \"product.feature\", \"confidence\": 0.6}",
+    "tokens_in": 20356,
+    "tokens_out": 192,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f945bcc46be03e1b781ebe34f46f59b5651169406e9462cab85205db823b1dd0": {
+    "content": "{\"class\": \"product.feature\", \"confidence\": 0.4}",
+    "tokens_in": 20327,
+    "tokens_out": 287,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a47f1f7d17f784d1e68df95c7d4dd50c712cb6660fc707ffb7e26a10d87fc8fe": {
+    "content": "{\"class\": \"ux.view\", \"confidence\": 0.35}",
+    "tokens_in": 20122,
+    "tokens_out": 408,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f0f1e935ed7d07a4de622c34ff91e7d78a9ccf41327ad07b0ba2a7d6524d6df8": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20356,
+    "tokens_out": 69,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "cc0097226a0974bfb0c059acb7a76a9c53f736e2df95f24b27bb40b9e06ec93d": {
+    "content": "{\"class\": \"product.feature\", \"confidence\": 0.5}",
+    "tokens_in": 20341,
+    "tokens_out": 213,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "5582c4a24bfd75335c3b86de31217e69c6e31c0da4f3a10bd1123f7ab2d519a3": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20358,
+    "tokens_out": 227,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "e267cd71cb072a90d0010749c280069d3b70996bee7c5e966098535849b6cfca": {
+    "content": "{\"class\": \"ux.actioncomponent\", \"confidence\": 0.8}",
+    "tokens_in": 20323,
+    "tokens_out": 183,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "24b1682fe3be130012cc67938e36df9f97c2afd90aba31a80899e1f1d9592c75": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20317,
+    "tokens_out": 320,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "df1e744e35fe8802b56b246efdb931a15f7998346ef10b37aaedf61e72137dcd": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.4}",
+    "tokens_in": 20320,
+    "tokens_out": 333,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "73b40fbab6674e3cc551e1018be23516f49f7ba7b7bbfad1f5ebcb906e4e3410": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20309,
+    "tokens_out": 103,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "e0321456a1e3a3745ac51baa3f7251a1128ec12d616981d768958951af890b93": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20306,
+    "tokens_out": 109,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "410b94e4f2f3708d47bc7b5cb95dfb1d1fd24a8dd52a4a4a76b12898e93a4756": {
+    "content": "{\"class\": \"ux.view\", \"confidence\": 0.4}",
+    "tokens_in": 20344,
+    "tokens_out": 294,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "b69ffc55c05b911e91b7cafef4abaa5f5cbcd377dbda7e15e6db68f9cb4e21fa": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20306,
+    "tokens_out": 231,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "0fb6497dd7f03b966caadafa19c3f89973ed3a9c9e003ee77d08b364c23f6902": {
+    "content": "{\"class\": \"product.feature\", \"confidence\": 0.4}",
+    "tokens_in": 20312,
+    "tokens_out": 297,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c46eccd33fcaa534cbea617dd89d674e48f1db4419d1aa0c04dbaf63deaaedfc": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20347,
+    "tokens_out": 159,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "aa87d3bac762b667c9d5259f397a6ed6ee4caa67226efbca52ce7aa6081d75bc": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20206,
+    "tokens_out": 85,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "b9f6d6a1a9e12a9d86fb93381fe9349b441363942832aa50738cb45acaf59763": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20314,
+    "tokens_out": 138,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "65211d7e9cac57f2a7d929015bd017ebb4d0e1d66f5f43a6d628477b90ac8dc2": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.6}",
+    "tokens_in": 20334,
+    "tokens_out": 288,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "7b4d638bec14536f1235010159146ed42901311ff81c27f25bc808e363b781d0": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.6}",
+    "tokens_in": 20094,
+    "tokens_out": 161,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "8448e4ed49ac4a6430f069547aabb7c540a6b58d09c6d8f9eee20bd98917648c": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.5}",
+    "tokens_in": 20318,
+    "tokens_out": 362,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "b0f3f40c69d6a4883a537a662de3eef2effad7547d2908b53438b2003a9b307d": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.5}",
+    "tokens_in": 20327,
+    "tokens_out": 336,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "3b62d63f67fbb043664cf52722583f775c20b81e6047d5da5774b38cdd6aa27c": {
+    "content": "{\"class\": \"product.feature\", \"confidence\": 0.6}",
+    "tokens_in": 20027,
+    "tokens_out": 271,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "baba76ffc927aa0f3ee772f52455dc75de4c022d5bb9a0754df9a6c7aaeb3168": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.4}",
+    "tokens_in": 20369,
+    "tokens_out": 387,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "6d40e5ec8e960f23c13849be0f44443748744c94eb7be342e6ee1d852ad1429b": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20318,
+    "tokens_out": 183,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "63cfdfb73e2b7f0897a741865122f36a902c379e391189644d4583180068304f": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.45}",
+    "tokens_in": 20346,
+    "tokens_out": 287,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a5b0ca871047673d3f19bc09088c3806c56d680e54c6d9c8e533fe6a3563f0cc": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20345,
+    "tokens_out": 108,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "95ab32721a276eb2324693bf51553eb99891f44bea5639c29b10b4ba379e1aa5": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20316,
+    "tokens_out": 210,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ebb63ec279a7f15c6710ff4318f857af1b64283348ba57b02799555416948d47": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20342,
+    "tokens_out": 92,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "faaea114e9c3e4d15ce0949bae4d6685e495b027cb59df1058b3e33b236bfc62": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20325,
+    "tokens_out": 71,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "15aa1311a8da1a0aa357dc9c7382d1b5a28fc96058f3d609534ae66e57ed091f": {
+    "content": "{\"class\": \"product.feature\", \"confidence\": 0.6}",
+    "tokens_in": 20166,
+    "tokens_out": 120,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "90c53c57b62fd2514283c7b2dc4d940c8edeaf46cbfbd978481a7b8de2f14b0b": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20343,
+    "tokens_out": 106,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a02a2c55fedf1310e0ba042a7052f29d5ab18a7902a4a23b45565a5bf834c762": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20005,
+    "tokens_out": 220,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "145a51d4dc6e69a7783f26816b53961a8c0ebece69763c4bec4475ea53cfc460": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.5}",
+    "tokens_in": 20318,
+    "tokens_out": 360,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "7ba1e284da893232bc36dc22d982ed472b122f4a8e7a8180de7ced3208d958ba": {
+    "content": "{\"class\": \"product.feature\", \"confidence\": 0.5}",
+    "tokens_in": 20304,
+    "tokens_out": 345,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2b15349c06ded25e5e726a4aa3540aa43528ef3f5ee654ecdade89c23032a1c7": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.85}",
+    "tokens_in": 20109,
+    "tokens_out": 110,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f3ee7bb24ed173409fb2585728a5ec195f1883a4bdb329b2fa2b0e49ad26519c": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.6}",
+    "tokens_in": 20122,
+    "tokens_out": 141,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9539fa15e5c580108ed96e1a84bd5f6b363c4753c44e3af8bd0249079fe29ea5": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.8}",
+    "tokens_in": 19916,
+    "tokens_out": 210,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "530ed3222c927e737a92a7217f05ddf738eeb29305ee8d47124e8d5baf78cfc1": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.5}",
+    "tokens_in": 20315,
+    "tokens_out": 246,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "fde701488cc790753e8c27d66df1a9f5eac0d6fcf554bc278ec6ee1739ae4617": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.7}",
+    "tokens_in": 20327,
+    "tokens_out": 256,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "169962ca650b232f3215972e29db79093f876de4d322a8bffd2236f0c5389cd9": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.6}",
+    "tokens_in": 20325,
+    "tokens_out": 141,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c891e8e1211e0540a51137bcb93120647da0b2cb4f13e6a052fd77e8144a647c": {
+    "content": "{\"class\": \"ux.uxapplication\", \"confidence\": 0.5}",
+    "tokens_in": 20245,
+    "tokens_out": 356,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "962d003639f515040023d4bf01be9c63eb45c51ffe9d8ed3e8698284262c2616": {
+    "content": "{\"class\": \"product.feature\", \"confidence\": 0.55}",
+    "tokens_in": 20183,
+    "tokens_out": 342,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9041d20c128d6a0706f7cd327222ee540bbc40933ed941b2454c3d71fed76c43": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20347,
+    "tokens_out": 273,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "0478ea7dd4a07c10bf0f0cb21b5b4d0dc0e0007572167b2f7625d376f0e624c9": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20100,
+    "tokens_out": 156,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "5e72d84f0aca23197d3d8ce37966f50ba8a0368c5686c66e7350554e6288cf6e": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.7}",
+    "tokens_in": 20307,
+    "tokens_out": 170,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "73adb452992f484b9fe95d4ac005552ec7b2ea69047f85109d9ae48bdb64e4c5": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20339,
+    "tokens_out": 73,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "66527d19dc3124f5eccc4469a28409b691600e76e6f3d6cf16b60a7409f3bba8": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20279,
+    "tokens_out": 80,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "53a594ae01c9110c564573b8c95d7716be21883e1f916993013f0466744e4e2b": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.7}",
+    "tokens_in": 20079,
+    "tokens_out": 175,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f4c60d7ec711e31848d700be8fc9d09ff7016bfaa66299ecbb591e2158d30f40": {
+    "content": "{\"class\": \"security.condition\", \"confidence\": 0.3}",
+    "tokens_in": 20392,
+    "tokens_out": 332,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "37a7be9242115c59a2571f84dcdc11b729dc46aeb61fa93f16a84cebc6e7c224": {
+    "content": "{\"class\": \"motivation.requirement\", \"confidence\": 0.5}",
+    "tokens_in": 20368,
+    "tokens_out": 251,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "28eab70d60930277dd77ebb41bdcda42902333376d08a6763a8165a3fe8d6d3d": {
+    "content": "{\"class\": \"product.softwarecapability\", \"confidence\": 0.5}",
+    "tokens_in": 20334,
+    "tokens_out": 264,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "e24908ce9b71f9703988b9d293194a5a5f1bcdd5fb319c369615028212cb0359": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.55}",
+    "tokens_in": 20171,
+    "tokens_out": 433,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "27e7159e3f92d5171477fcf3e81dd33d4cac84f1a89073765d180ddde121de30": {
+    "content": "{\"class\": \"motivation.outcome\", \"confidence\": 0.5}",
+    "tokens_in": 20377,
+    "tokens_out": 315,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "025923fb21f1440bda55404945e4170cd95185fe3e0332083b394dc3e938c3d0": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.55}",
+    "tokens_in": 20327,
+    "tokens_out": 218,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "501db3974780e5f239500cffa6fa4b673bb96b523bb5e3b551ca62bf304e4c44": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.6}",
+    "tokens_in": 20394,
+    "tokens_out": 186,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f8c9aad21facc846c44f0c3809b52f8e9ec7d335ec3e4e8c046bb13984ae7e97": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 19918,
+    "tokens_out": 242,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9ed922e47d6b486566036ab7ccb60a62a1d88f347512d8416e28b1588c2426a1": {
+    "content": "{\"class\": \"motivation.requirement\", \"confidence\": 0.6}",
+    "tokens_in": 20348,
+    "tokens_out": 333,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "5adf779cd6fcedc8118683bd14345f3178e7c0d54fb01a15c8a35d715015fa29": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.5}",
+    "tokens_in": 20059,
+    "tokens_out": 285,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "21d6aac8a63b2b628de2442c7fea6eda58c7e263f4e4870152bb163e7324a15b": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.6}",
+    "tokens_in": 20376,
+    "tokens_out": 286,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2c28b9cad57c489119e1b2a9bfd33030ed6b483bc92163d503978626ad319077": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.35}",
+    "tokens_in": 20351,
+    "tokens_out": 674,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a2daca00303755e6a5a0b7b349821b6132350a23d04a976951d4248388fce7f4": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20326,
+    "tokens_out": 78,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "aa2e7e1b689ae35c95e99a89654941973e0f9d8cad607f35a3c2ba574285acd1": {
+    "content": "{\"class\": \"ux.subview\", \"confidence\": 0.5}",
+    "tokens_in": 20371,
+    "tokens_out": 248,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d6368c6f44adf53674726078e78ebcf4788ae393518a87f147fe6422cfc541de": {
+    "content": "{\"class\": \"product.feature\", \"confidence\": 0.6}",
+    "tokens_in": 20379,
+    "tokens_out": 326,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "51039413655d5b6fc8488760b45658252d82ce8068a10f067cd44e19ed60949d": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20059,
+    "tokens_out": 155,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "aa6530b60050755998d5d62106c80b022a9edaa022ce0589824f5ee3ef7ddc3e": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20353,
+    "tokens_out": 258,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "8f79a0d46d2850c545c26dca330172660fc5d6930332911412069209bbe7bc3c": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20043,
+    "tokens_out": 132,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "647c1606790fccc007d79fead596ac9d24b8fcce0a7e9f6331bf887299611aa7": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20314,
+    "tokens_out": 88,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "199511bc3746bd998bd82a8ea9ba62123f6fac3190e0fbd4b5c47b01947fb513": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20015,
+    "tokens_out": 153,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "46630bc7bb8b7b22afa67da2cd07b706fa131673773f1c14c51b97502c18d59c": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20321,
+    "tokens_out": 184,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "6d1a2217c3d354926a0596f163a1206e5451dedb1615173eb3bb5bb58eda9029": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.35}",
+    "tokens_in": 20358,
+    "tokens_out": 268,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ef75aa4de6a38e5f5930bbf4441fe59d1c79f5cfcf474ae6ee70737eac199793": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 19915,
+    "tokens_out": 343,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "12023aaafae97561cdc4c3466b8ea5385c612ac66c1b754949f382b03b405eee": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.4}",
+    "tokens_in": 20174,
+    "tokens_out": 322,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ee67edbfbb1c9e81012f2571c459f1de507117e6d5a44b56fd35e8f3548f8bba": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20230,
+    "tokens_out": 158,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "526da652919f925044e5314040139b0e7d3e88e046b5c239a809652cd5d8debd": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20297,
+    "tokens_out": 312,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "b0e4fe892f09dac980d760e7b20e5765c8b23bfb654c84ddc15c626ff2019ec2": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.5}",
+    "tokens_in": 20025,
+    "tokens_out": 333,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "738fbd2d760d8745dba98127793af62f0880276d9e37601ac8a048ae0c372e2f": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20121,
+    "tokens_out": 238,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "88a52d4e99bdf627be4197f4d985a7ea837651160a6d8a356c400f22e0d1c8bd": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20283,
+    "tokens_out": 111,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9e6f4330bf7b57eba4a8a07d3761d52ec4ad4d6aeb3bece56575aef5e5870727": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20199,
+    "tokens_out": 54,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "753960e5b14ecfcf9170a6a8dc013e0dd8dd47044a49f8e05f1343696c394890": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20183,
+    "tokens_out": 342,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c1643b568e9b74db9d78311ccb70713d278e9fde8af8ca81bc4e89c3672c04bf": {
+    "content": "{\"class\": \"motivation.outcome\", \"confidence\": 0.4}",
+    "tokens_in": 20323,
+    "tokens_out": 334,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "166c1ec4e517caea113a8113e6394e2942248da14c875be7ea1cebd4f6d58c91": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.6}",
+    "tokens_in": 20347,
+    "tokens_out": 169,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "91f71eb78b23ddf721480966890dc039fc3b8828aa652f773a3ba4cdc4998eb1": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.5}",
+    "tokens_in": 20326,
+    "tokens_out": 148,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "4cf0ea716ff373f5542dbaacfb54f5534c24d5aba685098edc5cc6c32da73e85": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.55}",
+    "tokens_in": 20298,
+    "tokens_out": 562,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ae8f5d69d9512fd1f41cb4f9a868e29e55e45475d61a63097e6b4bf976c018da": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.35}",
+    "tokens_in": 20347,
+    "tokens_out": 378,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2de681c651e115f43c389cd2947d06b6b4fc5c8e3ad8189f84c3829d59ca0722": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.5}",
+    "tokens_in": 20374,
+    "tokens_out": 291,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c63ee6208b9673e1796fa28360c8cfe7dbb96551fa0749daf556e1fb3debe177": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.7}",
+    "tokens_in": 20027,
+    "tokens_out": 252,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "7239bb6073cecf0d6c4555857d242624a83b086dbe2926ee370559768254094b": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.6}",
+    "tokens_in": 20104,
+    "tokens_out": 141,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "3f9a9be578e71e67386e9d8ea7ba5cd9f464d140bcb256de25feefafc6767cf9": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.6}",
+    "tokens_in": 20256,
+    "tokens_out": 179,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2604849392ad6f941e1ce13666d771028f92d8d976e7f02cf630d3bc3ec147b1": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.6}",
+    "tokens_in": 20332,
+    "tokens_out": 208,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "01437ce3116d0211ead38877746df6d906e3e2b94909936ad0827004b5283703": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.5}",
+    "tokens_in": 20346,
+    "tokens_out": 250,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "76a9493f1e8bc84e402dbcbbf74bdf586e13a2a039ef5613232ef6914df3daea": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.6}",
+    "tokens_in": 20326,
+    "tokens_out": 264,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "dd6094f544a7377320d11ffc50f7b79de7da4f136240ac6037df708b8e63eaf4": {
+    "content": "{\"class\": \"motivation.outcome\", \"confidence\": 0.5}",
+    "tokens_in": 20333,
+    "tokens_out": 277,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "160faa8d9da414681c76a057197a27ebbb35e0ad6cd7ca65cbc2dcafe1c26bcb": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.6}",
+    "tokens_in": 20205,
+    "tokens_out": 221,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "84038effaebb2e8a5ec829bd102be6c3476a867bc6035dc5ed7f791851943b22": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.5}",
+    "tokens_in": 20342,
+    "tokens_out": 335,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9caba5c607cd2456bf3205c6e86de2e54b1727cc358fed1be430a279f5fe1994": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.4}",
+    "tokens_in": 20085,
+    "tokens_out": 216,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d371e2c59ffb29fb2199f355de5a57005fab512dfe46bbe3349923113916f207": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.6}",
+    "tokens_in": 20376,
+    "tokens_out": 232,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "b9a46ee165497e9519df1ae110970f4603e78c8ed16ba81cd82185b80a460874": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 19965,
+    "tokens_out": 126,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "74d9362ab8fdced709f6954dc20eab5731272ec06e7711f3648de0e50854a7a2": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.8}",
+    "tokens_in": 20407,
+    "tokens_out": 134,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "1fdfa04e7f8304067e39ede23a8ee400e0f4fbb82f61871093550e3a3f65bd94": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.6}",
+    "tokens_in": 20249,
+    "tokens_out": 282,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c2d58a05d90767743be50e4a4193bbd8187f2a37ab4da47452394f7d3d0d5b03": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.4}",
+    "tokens_in": 20049,
+    "tokens_out": 426,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "bbd0b93a900cbb92467e122e7cd9f4df21b00cf6be673a8b9059c623f43fa2a5": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20014,
+    "tokens_out": 304,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "7bc06f2bc026c479c969e1de0a4e7f18f2c548ea13ed7c2d4f8634f249dece2c": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.8}",
+    "tokens_in": 20295,
+    "tokens_out": 131,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f56cf1bd62a7f7649d39cd40867dcf9f843154d2b5273395ba4cab35bcdaa1df": {
+    "content": "{\"class\": \"motivation.stakeholder\", \"confidence\": 0.55}",
+    "tokens_in": 20335,
+    "tokens_out": 333,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "7cbae31a33bfb3a8bda22b393e814fc7963d51dd3ae5af153cd67300deec7877": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20291,
+    "tokens_out": 136,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "10b22d67adb6114d8dadc42918c9352f0112482d93c7b0c64650fc43f7705561": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20359,
+    "tokens_out": 205,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "4eb9a30c97859e21cd7986ca80d0189c234444a936ac7dcdb4080bff05c639d5": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20258,
+    "tokens_out": 114,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "3f0d0ae2db8ef6879c6c7dd65c95b291916c8f4757c2b6bfa783ad8f73fd93c5": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20355,
+    "tokens_out": 404,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c04f47c2eb55b62548dce7873bb75a3ac06e631d30e5cc83ee55a74cfcf48d3a": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20411,
+    "tokens_out": 411,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9d7471a0c36dcbb7fd8d7205d38e68f2e8dbee6223bc9d9316a4ff1187b20510": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 19949,
+    "tokens_out": 81,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "cab8b8c6085aa232d8c37a7e63ce4f9e300703ad52399671ca610cb728bac55d": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20294,
+    "tokens_out": 141,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d366adeb7f589c5f6b3654dd39fb57b1dd7ddef6dc3f1b2b872a66fda015d2e5": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 19975,
+    "tokens_out": 234,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a442f5e11a757bbbd8de7535f96bd5496723c3c6efd9e6ac55eb66a8d40c47ca": {
+    "content": "{\"class\": \"apm.logrecord\", \"confidence\": 0.5}",
+    "tokens_in": 20394,
+    "tokens_out": 302,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "afad8071417f8b7f1df1c8b4d3160d1b8fdaece05f05ec47b4675658056640e2": {
+    "content": "{\"class\": \"motivation.outcome\", \"confidence\": 0.8}",
+    "tokens_in": 20415,
+    "tokens_out": 127,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "879762d3147c6a9d4e34f0f10b6b27703371466a3592e606ff13f3ac82d695bc": {
+    "content": "{\"class\": \"motivation.outcome\", \"confidence\": 0.7}",
+    "tokens_in": 20245,
+    "tokens_out": 283,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "3c22c2728ba51b23f6503d9548e90265ad1b8f829a42333251bcd4f11b45461d": {
+    "content": "{\"class\": \"motivation.outcome\", \"confidence\": 0.8}",
+    "tokens_in": 20413,
+    "tokens_out": 182,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "6ce5d3259eee59ee05c4bcb054342a9d005cf9f66e271c4bdcf34bcc0cabb176": {
+    "content": "{\"class\": \"motivation.outcome\", \"confidence\": 0.5}",
+    "tokens_in": 20375,
+    "tokens_out": 304,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "040ed26c1724cf4b292b867c0019059b4b70899a34f6f4fec764b9032c689f65": {
+    "content": "{\"class\": \"motivation.outcome\", \"confidence\": 0.5}",
+    "tokens_in": 20367,
+    "tokens_out": 363,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "64696c1251b2fcd41b77f36260905c6b39296d37dad0e3c7b33f04c08f6f9352": {
+    "content": "{\"class\": \"motivation.outcome\", \"confidence\": 0.6}",
+    "tokens_in": 20335,
+    "tokens_out": 290,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "338bf0b0cdeb8080815162db2f3975282af6db5e4a1c9032e866b82506cdbac5": {
+    "content": "{\"class\": \"motivation.outcome\", \"confidence\": 0.8}",
+    "tokens_in": 20325,
+    "tokens_out": 128,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "984a85cc1d333ddb50c43126a1cab56e05216a284ca12b2b23721a2d463e9de4": {
+    "content": "{\"class\": \"motivation.outcome\", \"confidence\": 0.6}",
+    "tokens_in": 20337,
+    "tokens_out": 258,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ae7337cb1bc53d740ef4b01ff7a3dd1b51a46da03235a678771a2d0c15d7f220": {
+    "content": "{\"class\": \"motivation.outcome\", \"confidence\": 0.6}",
+    "tokens_in": 20366,
+    "tokens_out": 227,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9d73131dc4b4ef9f60f1349d99c7b5d0f46948380021d22a12709e3cc4c8623e": {
+    "content": "{\"class\": \"motivation.outcome\", \"confidence\": 0.6}",
+    "tokens_in": 20275,
+    "tokens_out": 270,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "fe3aec10b3c0b70485206d2a14e4def7623786b6517c7ae634d6cb0aa4949e11": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 19999,
+    "tokens_out": 118,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "1f7f9cab406a975a16f76b1baddd910a4889d3ac80af1aa85471fce624db736b": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.6}",
+    "tokens_in": 20035,
+    "tokens_out": 205,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "6041cfe19d0877bb039d172b20a7a680b703fe18be009b53fefbdbb3e0947c50": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20061,
+    "tokens_out": 282,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "7029968a05a5f4200c8e1d9c27e4c0b612720c261e39b8bedce7274dbe1199c5": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.5}",
+    "tokens_in": 20054,
+    "tokens_out": 221,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "39efd474cc8d74d325e4630404c4605207b063354c360fc031c409d5d908ccc3": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 20063,
+    "tokens_out": 70,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "48cfcca3105085c63444c98ce48b9c7bd3e8f4daa7cb488c845583aad20e0bb9": {
+    "content": "{\"class\": \"motivation.assessment\", \"confidence\": 0.45}",
+    "tokens_in": 20174,
+    "tokens_out": 338,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "44a203f7c383574319a2b711792bf9e5e4eeddb5285e6ff30929fcab051579ab": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20123,
+    "tokens_out": 123,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "73fabb2e76a3a9c32cebb9e71b116f64593acd48ab81f032c5f500ef828fbf25": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20355,
+    "tokens_out": 173,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d920c51eaae3bfb207c062b7be2112909e2ab528e397bde312e479ce4b78408d": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.75}",
+    "tokens_in": 20222,
+    "tokens_out": 244,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ded648ae317429b163204728ac5d10a7dcc3c12bd27edc52585dd98e762aa905": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20327,
+    "tokens_out": 174,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "579e3e4493ce8780b8c9017857d263d2254782bf41fa1df996b4f2ccbba842c3": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20450,
+    "tokens_out": 189,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a695ebe7612f54c8c8a229e56babd3e752d83babaa96d196ab2a587be845f444": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20535,
+    "tokens_out": 133,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "be5f3bdc265d71ef374d3c6ac01acc7dff9b4099b5df821cda92dc766a4e3a39": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20435,
+    "tokens_out": 181,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "3e65cca452ce5faf26f3ed90fba71dbbae702e222e1b2cb6ebfd0e31b85c95eb": {
+    "content": "{\"class\": \"motivation.requirement\", \"confidence\": 0.55}",
+    "tokens_in": 20452,
+    "tokens_out": 148,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "9ccffefce764e3b9ff773f6470bcc23eadbdde948387708ee145470f34558c59": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20524,
+    "tokens_out": 155,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "df63bff6ed842e96c0056c4af5074b5655a5a2088dd3a5d9e9f94f7352ff4cdc": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.55}",
+    "tokens_in": 20543,
+    "tokens_out": 256,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "92e0e3529f975c5f552aa21e38c0bdfaad17ef006ce279d4f8680341c53c0ad2": {
+    "content": "{\"class\": \"motivation.requirement\", \"confidence\": 0.4}",
+    "tokens_in": 20494,
+    "tokens_out": 281,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c3a51702cd3a63260a8251351a4cac059d2101c797eb1bf3c600cc0fd2e87c7e": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20598,
+    "tokens_out": 343,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "19b3d9a3b32607b1ae00dee4d1626b9ef25a2771e56a45ae13e1d35e398a1221": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20475,
+    "tokens_out": 335,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "26142989c1e270fe82f29e475cb93ce31816555022bb1fa61ac6b1f17a101150": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20532,
+    "tokens_out": 199,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "b92447899f81cf655da8a24178bac635eb81ab3e5bc3953bc1a30d992d1a3765": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20539,
+    "tokens_out": 182,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "851623eea12eb0948301618f0f8d0fc334c7aa584f93a3854172426a09fba835": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20553,
+    "tokens_out": 185,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d7a468cb2e68a4e0012e6d4c19b094c7730d42628818e2265ccb8df765c22b40": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20478,
+    "tokens_out": 283,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "5863e6961270afd6f2e47aa6a6996d29dfdd3d186c9500f77de260c98b1251f5": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.55}",
+    "tokens_in": 20535,
+    "tokens_out": 354,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "bd791a0f47595061ae8c9689081601f0fef378aff12505cc755775ae5e3c5c4d": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20438,
+    "tokens_out": 362,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "4d1d5ce90bf225793b6ed809cb16c5388887e4f1dd04b779ab6e33d6024ef062": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20440,
+    "tokens_out": 278,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "b135ec906faf269d8a0214d4f3e7f0d5f0f1f650750a8080f1efc349e162a2c1": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.5}",
+    "tokens_in": 20454,
+    "tokens_out": 399,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "61787ad3205fc3f70019530f82bba603df62aa27f6d0a30f2f6f7364e1ef3865": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.35}",
+    "tokens_in": 20437,
+    "tokens_out": 384,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "cd44ac58f959d92a38edfc12fe0ace2b6281e13eea57cf83d1c26401e3c72d00": {
+    "content": "{\"class\": \"product.feature\", \"confidence\": 0.5}",
+    "tokens_in": 20511,
+    "tokens_out": 204,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d35cad6a57ab71c6e88883015e1185782cf6f94f0a0104b1f831ac923b988fd3": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.45}",
+    "tokens_in": 20452,
+    "tokens_out": 322,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "38fe4e88bb5fbe151cc898a981e5da9031167f4f9d6bd38e938c7365a94d41e9": {
+    "content": "{\"class\": \"motivation.requirement\", \"confidence\": 0.5}",
+    "tokens_in": 20446,
+    "tokens_out": 240,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "b6bf02081a2f976418986c81a5cc2ac47a8ad8ae7e9180d83dc823b881da09ed": {
+    "content": "{\"class\": \"motivation.goal\", \"confidence\": 0.45}",
+    "tokens_in": 20453,
+    "tokens_out": 314,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d4a0e8ae97f88fdc1cc0719040b2dfc22ee0d681b809fb8163e1622c4172fad7": {
+    "content": "{\"class\": \"product.softwarecapability\", \"confidence\": 0.4}",
+    "tokens_in": 20454,
+    "tokens_out": 396,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "38bce6e2970b7556b251325ff3cfa91a92301036b4d7e19507b4a8296bb80c9c": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20402,
+    "tokens_out": 189,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d84ffe6ca339a470df17b39897e83242cc0f331bb094a8a5ff2e3b2e418b4366": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20421,
+    "tokens_out": 205,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "bfcb17b6fcf106ba058689ecaaddf3cc5ffe3239af71ff54d2d55d4d3a0e5a65": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.6}",
+    "tokens_in": 20501,
+    "tokens_out": 298,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "36698ac18d6469024cd29da352befd9b807afca4d1d801bd05a391a94f2a076c": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.5}",
+    "tokens_in": 20466,
+    "tokens_out": 556,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2c519eb40b762f50a8a47de3261a6d7c2322ac0ee98278c77397cd0092fc5ebe": {
+    "content": "{\"class\": \"security.policyrule\", \"confidence\": 0.4}",
+    "tokens_in": 20496,
+    "tokens_out": 384,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "089b3ca590cf5b48fd14f3f9809f3e3ed5f853d85da34c4b402a5917ee2e1999": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.8}",
+    "tokens_in": 20466,
+    "tokens_out": 195,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "022ed051b79ea1f5589ce5071a3deff1737ba58bc50aa3d5c40eaa13e42bbb51": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.4}",
+    "tokens_in": 20421,
+    "tokens_out": 271,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "92874cc0219dd7b2219733219cb2d85575a14eda59191264f6ff8cf326bcfd95": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.35}",
+    "tokens_in": 20541,
+    "tokens_out": 198,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "5a4994777e88c5c760081ea2e43db3bf2b94ed13ad8d9baf67f0433bf9524cc9": {
+    "content": "{\"class\": \"product.feature\", \"confidence\": 0.35}",
+    "tokens_in": 20428,
+    "tokens_out": 502,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "007f0047105da59a090920c681d7a64f87f816d9e94c4c215e74284216907ac6": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 20472,
+    "tokens_out": 319,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "4d5d86f2511c2e30e471ccdba9d6b488616e3530f7b3a25d6ed49a13899b29a8": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20524,
+    "tokens_out": 313,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ae0dd0bb38ed4eea74f732b10befa3abe585c9305bacb0f422616ca207e79517": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.35}",
+    "tokens_in": 20478,
+    "tokens_out": 229,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "c8ac8771e4bf365cb165906fe6a83c29bf7ef6ad64ec1c8bfba5d3570908d854": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20519,
+    "tokens_out": 331,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "90b85faa1c94b339353f2487aed0f378ed28fe4156a0e842cdc4187e37932edf": {
+    "content": "{\"class\": \"product.feature\", \"confidence\": 0.4}",
+    "tokens_in": 20538,
+    "tokens_out": 432,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "2eb9d2e5d64ff1279f5fa20a3396123ab362c911fce343e340da19ebb15c57e2": {
+    "content": "{\"class\": \"product.userworkflow\", \"confidence\": 0.5}",
+    "tokens_in": 20495,
+    "tokens_out": 377,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "6c5d7d029fc36cc3ac5b1c282ad3323948fa6f87fe31bf886c2655190f78aaca": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.45}",
+    "tokens_in": 20061,
+    "tokens_out": 155,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ff3b8bab3bdd857d1ceb5c962bd66cb9096cfb278adc5963886038a0351e9fb8": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.45}",
+    "tokens_in": 20416,
+    "tokens_out": 345,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d393c6945d4bfc35bf55161210c64d35c00b5584d4541ccc38374d9550ed4afc": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 20186,
+    "tokens_out": 229,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "81165982e71ee450508a876cf902bb6f553d6155df23c294d9ec455f3da01597": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 20304,
+    "tokens_out": 386,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "94496e591804dc114c3b5ee0ecfca42726c739d87398516089ad7edec0d23575": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.85}",
+    "tokens_in": 19947,
+    "tokens_out": 73,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a860b84311906505d17acc1f81d408d969760b1d99d515c446f2d7cb1901d62a": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.9}",
+    "tokens_in": 19949,
+    "tokens_out": 86,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a2d428946edbd2bb1cc2a03c709532340b74d71c85269e44333579bdae998cc2": {
+    "content": "{\"class\": \"ux.view\", \"confidence\": 0.6}",
+    "tokens_in": 19961,
+    "tokens_out": 183,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "5d578af20c18d5592b0e9905466f83c2884d25a7cdb2390c8662f6dcf832e854": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 19971,
+    "tokens_out": 286,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "4d2474b74dbb3a13ee91b4f602410ae73e933ef4919fb4629ac5b626c7ffee5f": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 19934,
+    "tokens_out": 353,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "a8c1d040e24a8648aba107707fe1a1028e6d9ea2e1aa875941df89b730ecf337": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.6}",
+    "tokens_in": 19954,
+    "tokens_out": 463,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "f53883975283028fd435fc9d63bc555b72acd6e2e9fad00679fb216452aae227": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.5}",
+    "tokens_in": 19945,
+    "tokens_out": 386,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "94b90a3e691599d0d7174afae31cc45d5c7700a8f24892f4aa245d638643b68d": {
+    "content": "{\"class\": \"technology.artifact\", \"confidence\": 0.5}",
+    "tokens_in": 19962,
+    "tokens_out": 508,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "870e10202f316439ef3f9a667b67c55b018686481cdf4e6316b2445ba8d7b73e": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 19952,
+    "tokens_out": 286,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "d31c171c3f746bc2ea6dc7c26a457de92464d11e2377e68bb27534b68bbc27ec": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.45}",
+    "tokens_in": 19964,
+    "tokens_out": 402,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "00ed8aa08ecd7080de924f73508fd85e14f42d5ff4675ab0c752b8e16e12e08c": {
+    "content": "{\"class\": \"motivation.requirement\", \"confidence\": 0.4}",
+    "tokens_in": 19981,
+    "tokens_out": 320,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "92783ae39dddb516795d5fab7b36205eedb68a2ce08d3bbdb89bd9c5c805e81c": {
+    "content": "{\"class\": \"security.policyrule\", \"confidence\": 0.4}",
+    "tokens_in": 19968,
+    "tokens_out": 412,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "01aa6777138e9c0f111086cf2b6e505e069453ab0d0ff67ba2c129f703198163": {
+    "content": "{\"class\": \"application.applicationcomponent\", \"confidence\": 0.45}",
+    "tokens_in": 19955,
+    "tokens_out": 288,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "cedd481005ce17fbdc2d3becf67653d831b3c02d6136dd63e246254be7db0969": {
+    "content": "{\"class\": \"none\", \"confidence\": 0.7}",
+    "tokens_in": 19950,
+    "tokens_out": 432,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "4cb463caac264d5f4ed9cde266f7467616e436beb7644f3e3e29dc3c89b72f57": {
+    "content": "```json\n{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"reference-check\", \"label\": \"Reference check\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"edit-check\", \"label\": \"Edit Check\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 726, \"text_offset_end\": 798, \"raw\": \"Several features are available within Edit Check:\\n\\n- **Reference check**\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"link-check-and-reference-reliability\", \"label\": \"Link check and Reference reliability\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"edit-check\", \"label\": \"Edit Check\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 799, \"text_offset_end\": 840, \"raw\": \"- **Link check and Reference reliability**\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"paste-check\", \"label\": \"Paste Check\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"edit-check\", \"label\": \"Edit Check\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 842, \"text_offset_end\": 859, \"raw\": \"- **Paste Check**\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"tone-check\", \"label\": \"Tone check\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"edit-check\", \"label\": \"Edit Check\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 861, \"text_offset_end\": 915, \"raw\": \"The Editing team works on new Checks:\\n\\n- **Tone check**\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"edit-check\", \"label\": \"Edit Check\"},\n      \"predicate\": {\"property_definition_id\": \"supports\", \"label\": \"supports\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"help-newcomers-understand-wikipedia-policies\", \"label\": \"Help newcomers understand Wikipedia policies\"},\n      \"confidence\": 0.75,\n      \"provenance\": {\"text_offset_start\": 14, \"text_offset_end\": 97, \"raw\": \"Offer people actionable feedback about Wikipedia policies while they are editing.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"edit-check\", \"label\": \"Edit Check\"},\n      \"predicate\": {\"property_definition_id\": \"supports\", \"label\": \"supports\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"moderators-configure-how-edit-check-presents-policies\", \"label\": \"Moderators configure how Edit Check presents policies\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 2100, \"text_offset_end\": 2200, \"raw\": \"a complimentary set of features that will enable moderators to configure the user experience newcomers and Junior Contributors will see\"}\n    }\n  ]\n}\n```",
+    "tokens_in": 4118,
+    "tokens_out": 5561,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "7567bc47ba0beef07766924ea91c036e734350d34c8b12573c909a955cfec55d": {
+    "content": "```json\n{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"edit-check\", \"label\": \"Edit Check\"},\n      \"predicate\": {\"property_definition_id\": \"satisfies\", \"label\": \"satisfies\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"relevant-feedback-during-editing\", \"label\": \"Relevant feedback during editing\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 2010, \"text_offset_end\": 2180, \"raw\": \"Offering inexperienced volunteers relevant and actionable feedback about Wikipedia policies in the precious moments when they are in the midst of making a change using the visual editor.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"edit-check\", \"label\": \"Edit Check\"},\n      \"predicate\": {\"property_definition_id\": \"supports\", \"label\": \"supports\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"avoid-unnecessary-prompts-for-sources\", \"label\": \"Avoid unnecessary prompts for sources\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 3390, \"text_offset_end\": 3520, \"raw\": \"Decrease the likelihood that Edit Check is creating more work for experienced volunteers by prompting newcomers and Junior Contributors to add sources when they are not needed\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"edit-check\", \"label\": \"Edit Check\"},\n      \"predicate\": {\"property_definition_id\": \"satisfies\", \"label\": \"satisfies\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"moderators-configure-activation\", \"label\": \"Moderators configure activation\"},\n      \"confidence\": 0.55,\n      \"provenance\": {\"text_offset_start\": 4010, \"text_offset_end\": 4150, \"raw\": \"Edit Check will enable volunteers, on a per project basis to:\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"desktop-edit-checks\", \"label\": \"Desktop edit checks\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"edit-check\", \"label\": \"Edit Check\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 3950, \"text_offset_end\": 4000, \"raw\": \"Edit checks are shown at the side on Desktop.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"inexperienced-volunteers\", \"label\": \"Inexperienced volunteers\"},\n      \"predicate\": {\"property_definition_id\": \"associated-with\", \"label\": \"associated-with\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"relevant-feedback-during-editing\", \"label\": \"Relevant feedback during editing\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 2010, \"text_offset_end\": 2070, \"raw\": \"Offering inexperienced volunteers relevant and actionable feedback\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"newcomers\", \"label\": \"Newcomers\"},\n      \"predicate\": {\"property_definition_id\": \"associated-with\", \"label\": \"associated-with\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"newcomers-feel-safe\", \"label\": \"Newcomers feel safe when they predict alignment with policy\"},\n      \"confidence\": 0.55,\n      \"provenance\": {\"text_offset_start\": 2500, \"text_offset_end\": 2700, \"raw\": \"people who are new, particularly people who have historically been excluded from and harmed by established power structures, will feel safe and motivated making changes to Wikipedia\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"experienced-volunteers-and-moderators\", \"label\": \"Experienced volunteers and moderators\"},\n      \"predicate\": {\"property_definition_id\": \"associated-with\", \"label\": \"associated-with\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"moderators-configure-activation\", \"label\": \"Moderators configure activation\"},\n      \"confidence\": 0.55,\n      \"provenance\": {\"text_offset_start\": 3700, \"text_offset_end\": 3830, \"raw\": \"The Editing Team thinks it is crucial that moderators be empowered to configure when, and for whom, Edit Check becomes activated.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"visual-editor-does-not-show-policies\", \"label\": \"Visual editor does not show policies\"},\n      \"predicate\": {\"property_definition_id\": \"influence\", \"label\": \"influence\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"relevant-feedback-during-editing\", \"label\": \"Relevant feedback during editing\"},\n      \"confidence\": 0.45,\n      \"provenance\": {\"text_offset_start\": 560, \"text_offset_end\": 690, \"raw\": \"The trouble is that the visual editor and other editing interfaces do not make people aware of the Wikipedia policies and guidelines they are expected to follow.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"editing-team\", \"label\": \"Editing Team\"},\n      \"predicate\": {\"property_definition_id\": \"references\", \"label\": \"references\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"newcomers\", \"label\": \"Newcomers\"},\n      \"confidence\": 0.4,\n      \"provenance\": {\"text_offset_start\": 1000, \"text_offset_end\": 1100, \"raw\": \"The Editing Team is centering the needs of people in this work who are:\"}\n    }\n  ]\n}\n```",
+    "tokens_in": 4680,
+    "tokens_out": 5238,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "ab5ae2c280886dad5518516aeca492c39cb78cd6d76c7c5ddd4f7a918d664513": {
+    "content": "```json\n{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"reference-edit-check\", \"label\": \"Reference Edit Check\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"edit-check\", \"label\": \"Edit Check\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 1280, \"text_offset_end\": 1370, \"raw\": \"To learn whether the Reference Edit Check is effective at causing **newcomers to make edits they intended and experienced volunteers value**\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"multi-check\", \"label\": \"Multi-Check\"},\n      \"predicate\": {\"property_definition_id\": \"depends-on\", \"label\": \"depends-on\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"reference-check\", \"label\": \"Reference Check\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 520, \"text_offset_end\": 600, \"raw\": \"Edits that were shown multiple Reference Checks in a session are **1.3 times** more likely\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"multi-check-increases-inclusion-of-references\", \"label\": \"Multi-check increases inclusion of references\"},\n      \"predicate\": {\"property_definition_id\": \"influence\", \"label\": \"influence\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"proportion-of-users-publishing-new-content-edit-with-reference\", \"label\": \"Proportion of users publishing a new content edit with a reference\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 170, \"text_offset_end\": 300, \"raw\": \"Overall, there was a **5.5% increase** in the proportion of distinct users who published a new content edit with a reference when multi-check was available.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"no-decrease-edit-completion-multi-checks\", \"label\": \"No decrease in edit completion from multi-checks\"},\n      \"predicate\": {\"property_definition_id\": \"influence\", \"label\": \"influence\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"multi-check-does-not-disrupt-editors\", \"label\": \"Multi-check does not disrupt editors\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 1040, \"text_offset_end\": 1190, \"raw\": \"indicating that multiple checks are not causing significant disruption or confusion to the editors.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"reference-check-increases-edits-with-references\", \"label\": \"Reference Check increases edits with references\"},\n      \"predicate\": {\"property_definition_id\": \"influence\", \"label\": \"influence\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"constructive-new-content-edit\", \"label\": \"Constructive new content edit\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 2790, \"text_offset_end\": 2960, \"raw\": \"People shown the Reference Check are **2.2 times more likely** to publish a new content edit that includes a reference and is constructive\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"sub-saharan-africa-contributors-segment\", \"label\": \"Sub-Saharan Africa contributors segment\"},\n      \"predicate\": {\"property_definition_id\": \"influence\", \"label\": \"influence\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"reference-check-reduces-revert-rate\", \"label\": \"Reference Check reduces revert rate\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 3260, \"text_offset_end\": 3420, \"raw\": \"New content edits by contributors from Sub-Saharan Africa are **53% less likely** to be reverted when Reference Check is shown to eligible edits.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"design-change-reduced-revert-rate\", \"label\": \"Design change reduced revert rate of reference-check edits\"},\n      \"predicate\": {\"property_definition_id\": \"influence\", \"label\": \"influence\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"design-change-to-siderail-net-positive\", \"label\": \"Design change to siderail is net positive\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 1990, \"text_offset_end\": 2090, \"raw\": \"The revert rate of new content edits where Reference Check was activated decreased by **15.7%**.\"}\n    }\n  ]\n}\n```",
+    "tokens_in": 4357,
+    "tokens_out": 4271,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "257f61489dc1e24a0df7dc806a113850ea1f79d851b520c0cc5d1cfc40f72583": {
+    "content": "```json\n{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Newcomers and Junior Contributors\", \"label\": \"Newcomers and Junior Contributors\"},\n      \"predicate\": {\"property_definition_id\": \"associated-with\", \"label\": \"associated-with\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Increase edit quality impact\", \"label\": \"Increase edit quality impact\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 560, \"text_offset_end\": 690, \"raw\": \"Increase the quality of edits newcomers and Junior Contributors editing from within Sub-Saharan Africa publish in the main namespace\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Newcomers and Junior Contributors\", \"label\": \"Newcomers and Junior Contributors\"},\n      \"predicate\": {\"property_definition_id\": \"associated-with\", \"label\": \"associated-with\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Increase likelihood of including references\", \"label\": \"Increase likelihood of including references\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 760, \"text_offset_end\": 920, \"raw\": \"Increase the likelihood that newcomers and Junior Contributors editing from within Sub-Saharan Africa will accompany the new content they are adding with a reference\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Newcomers and Junior Contributors\", \"label\": \"Newcomers and Junior Contributors\"},\n      \"predicate\": {\"property_definition_id\": \"associated-with\", \"label\": \"associated-with\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Newcomers feel safe and confident\", \"label\": \"Newcomers feel safe and confident\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 1080, \"text_offset_end\": 1215, \"raw\": \"Newcomers and Junior Contributors editing from within Sub-Saharan Africa will report feeling safe and confident making changes to Wikipedia\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Experienced volunteers\", \"label\": \"Experienced volunteers\"},\n      \"predicate\": {\"property_definition_id\": \"associated-with\", \"label\": \"associated-with\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Experienced volunteers audit defaults for productive edits\", \"label\": \"Experienced volunteers audit defaults for productive edits\"},\n      \"confidence\": 0.85,\n      \"provenance\": {\"text_offset_start\": 1280, \"text_offset_end\": 1385, \"raw\": \"Experienced volunteers will independently audit and iterate upon Edit Check's default configurations\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Newcomers and Junior Contributors\", \"label\": \"Newcomers and Junior Contributors\"},\n      \"predicate\": {\"property_definition_id\": \"associated-with\", \"label\": \"associated-with\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Visual editor raises reference awareness\", \"label\": \"Visual editor raises reference awareness\"},\n      \"confidence\": 0.8,\n      \"provenance\": {\"text_offset_start\": 1500, \"text_offset_end\": 1700, \"raw\": \"Newcomers and Junior Contributors will be more aware of the need to add a reference when contributing new content because the visual editor will prompt them to do so in cases where they have not done so themselves.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Visual editor\", \"label\": \"Visual editor\"},\n      \"predicate\": {\"property_definition_id\": \"supports\", \"label\": \"supports\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Visual editor raises reference awareness\", \"label\": \"Visual editor raises reference awareness\"},\n      \"confidence\": 0.75,\n      \"provenance\": {\"text_offset_start\": 1600, \"text_offset_end\": 1700, \"raw\": \"because the visual editor will prompt them to do so in cases where they have not done so themselves\"}\n    }\n  ]\n}\n```",
+    "tokens_in": 3345,
+    "tokens_out": 3444,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "3d49289c868cae7403b526678d43226d1022c06279178517e3bad2acb0448050": {
+    "content": "```json\n{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Extension:AbuseFilter\", \"label\": \"Extension:AbuseFilter\"},\n      \"predicate\": {\"property_definition_id\": \"triggers\", \"label\": \"triggers\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"specific actions to be taken\", \"label\": \"specific actions to be taken\"},\n      \"confidence\": 0.7,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"Enables privileged users to set specific actions to be taken when actions by users, such as edits, match certain criteria.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Extension:AbuseFilter\", \"label\": \"Extension:AbuseFilter\"},\n      \"predicate\": {\"property_definition_id\": \"uses\", \"label\": \"uses\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"certain criteria\", \"label\": \"certain criteria\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"such as edits, match certain criteria.\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Editwizard\", \"label\": \"Editwizard\"},\n      \"predicate\": {\"property_definition_id\": \"composes\", \"label\": \"composes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"step-by-step process\", \"label\": \"step-by-step process\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"Editwizard | A step-by-step process for guiding newcomers to source the content they are attempting to add to Wikipedia articles\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Editwizard\", \"label\": \"Editwizard\"},\n      \"predicate\": {\"property_definition_id\": \"delivers\", \"label\": \"delivers\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"newcomers sourcing content\", \"label\": \"newcomers sourcing content\"},\n      \"confidence\": 0.55,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"A step-by-step process for guiding newcomers to source the content they are attempting to add to Wikipedia articles\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Editnotices as pop-ups wish\", \"label\": \"Editnotices as pop-ups wish\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"awareness of contentious-topic editing risk\", \"label\": \"awareness of contentious-topic editing risk\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"Make people aware when they are at risk of changing an article volunteers consider to be about a contentious topic\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Copy-paste warning wish\", \"label\": \"Copy-paste warning wish\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"warning for copy-pasted content\", \"label\": \"warning for copy-pasted content\"},\n      \"confidence\": 0.5,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"A wish to warn people who are pasting text into Wikipedia and to annotate edits in which this occurs\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Reference requirement for new articles wish\", \"label\": \"Reference requirement for new articles wish\"},\n      \"predicate\": {\"property_definition_id\": \"realizes\", \"label\": \"realizes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"referenced new articles\", \"label\": \"referenced new articles\"},\n      \"confidence\": 0.45,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"Wish: Reference requirement for new article creation | Require new article to include references\"}\n    },\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Edit notices more visible in Visual Editor\", \"label\": \"Edit notices more visible in Visual Editor\"},\n      \"predicate\": {\"property_definition_id\": \"influence\", \"label\": \"influence\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"people internalizing edit notice information\", \"label\": \"people internalizing edit notice information\"},\n      \"confidence\": 0.45,\n      \"provenance\": {\"text_offset_start\": 0, \"text_offset_end\": 0, \"raw\": \"How might we make it so people who are in the midst of an edit are likely to see and \\\"internalize\\\" the information that is currently presented within Edit Notices?\"}\n    }\n  ]\n}\n```",
+    "tokens_in": 4832,
+    "tokens_out": 3621,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  },
+  "fea09d1519aa366fa0dd9180fbd6179658a4ef89b9d93c2ba5a441de308045da": {
+    "content": "```json\n{\n  \"triples\": [\n    {\n      \"subject\": {\"kind\": \"individual\", \"id\": \"Visual editor\", \"label\": \"Visual editor\"},\n      \"predicate\": {\"property_definition_id\": \"composes-subview\", \"label\": \"composes\"},\n      \"object\": {\"kind\": \"individual\", \"id\": \"Publish changes dialogue\", \"label\": \"Publish changes dialogue\"},\n      \"confidence\": 0.6,\n      \"provenance\": {\"text_offset_start\": 223, \"text_offset_end\": 286, \"raw\": \"A notice in the \\\"Publish changes\\\" dialogue of the visual editor\"}\n    }\n  ]\n}\n```",
+    "tokens_in": 2039,
+    "tokens_out": 1803,
+    "model": "claude-haiku-5-5",
+    "finish_reason": "end_turn"
+  }
+}

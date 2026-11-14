@@ -11,6 +11,7 @@ prompt→response pairs indexed by prompt hash.
 
 import hashlib
 import json
+import threading
 from pathlib import Path
 from typing import Any, Literal
 
@@ -390,8 +391,11 @@ class CassetteLLMProvider:
         # Calls answered and calls with no recording. Callers that catch
         # CassetteStaleError (the extraction service does, returning no triples)
         # must check `misses`, or a stale cassette reads as a pipeline scoring 0.
+        # Replayed calls can come from several threads at once (find-then-type
+        # extraction types its mentions side by side).
         self.calls = 0
         self.misses = 0
+        self._counting = threading.Lock()
 
     def complete(
         self,
@@ -406,10 +410,12 @@ class CassetteLLMProvider:
     ) -> LLMResponse:
         """Replay a response from the cassette."""
         key = _compute_prompt_hash(system_prompt, user_prompt, model, temperature, seed)
-        self.calls += 1
+        with self._counting:
+            self.calls += 1
+            if key not in self._cassette:
+                self.misses += 1
 
         if key not in self._cassette:
-            self.misses += 1
             raise CassetteStaleError(
                 f"No recorded response for prompt hash {key[:12]}... "
                 f"Cassette may be stale or test inputs changed. "

@@ -123,9 +123,10 @@ class PipelineTypeRegistry:
                 "failed_chunks": (
                     "list[dict] — a run on a source: the chunks whose extraction failed"
                     " (for one, an LLM response that stayed incomplete), as in"
-                    " metadata.chunks; what they hold is missing from triples and the"
+                    " metadata.chunks; what they hold, or part of it (each failure_reason says"
+                    " which), is missing from triples and the"
                     " proposal, and that proposal supersedes no other proposal of the source."
-                    " Absent when none; a run fails when every chunk did"
+                    " Absent when none; a run fails when every chunk failed whole"
                 ),
                 "metadata": (
                     "dict — model, tokens_used, duration_ms; chunked runs add source_id,"

@@ -19,9 +19,11 @@ sys.path.append(
 from domain.pipelines.ports import LLMResponse
 from scripts.benchmark_replay import (
     DEV_DOCUMENTS,
+    FIND_THEN_TYPE,
     HOLDOUT_DOCUMENTS,
     DocumentResult,
     benchmark_ontology,
+    cassette_path,
     extract_document,
     replay_document,
     summarize,
@@ -189,3 +191,85 @@ def test_a_document_whose_extraction_failed_is_not_scored():
     summary = summarize([failed])
     assert summary["status"] == "failed"
     assert summary["dev"] == {}
+
+
+class FindThenTypeStub:
+    """
+    Answers the find stage with one named thing whenever its name is in the
+    chunk, the type stage with a class of the catalog, and relate with nothing.
+    """
+
+    def __init__(self, name: str, class_ref: str) -> None:
+        self._name = name
+        self._class_ref = class_ref
+        self.finds = 0
+        self.catalogs: set[str] = set()
+        self.typed: list[str] = []
+
+    def complete(self, system_prompt, user_prompt, model, **_: object) -> LLMResponse:
+        content = json.dumps({"triples": []})
+        if user_prompt.startswith("List the elements"):
+            self.finds += 1
+            mentions = []
+            if self._name in user_prompt:
+                mentions = [{"name": self._name, "kind": "thing", "quote": self._name}]
+            content = json.dumps({"mentions": mentions})
+        elif "Candidate: " in user_prompt:
+            self.catalogs.add(system_prompt)
+            self.typed.append(user_prompt.split("Candidate: ")[1].splitlines()[0])
+            assert f"- {self._class_ref}: " in system_prompt, "the catalog lists the class"
+            content = json.dumps({"class": self._class_ref, "confidence": 0.9})
+        return LLMResponse(
+            content=content,
+            tokens_in=1,
+            tokens_out=1,
+            duration_ms=0.0,
+            finish_reason="stop",
+            model=model,
+        )
+
+    def forget(self, **_: object) -> None:
+        pass
+
+
+async def test_find_then_type_types_a_mention_once_against_the_whole_catalog(ontology):
+    provider = FindThenTypeStub("Wikimedia Foundation", ACTOR)
+    individuals, relationships = await extract_document(
+        ontology, provider, DOCUMENT, implementation=FIND_THEN_TYPE
+    )
+
+    assert provider.finds > 1, "the document should be read chunk by chunk"
+    assert provider.typed == ["Wikimedia Foundation"], "one typing call for the whole source"
+    (catalog,) = provider.catalogs
+    offered = set(re.findall(r"^- ([a-z\-]+\.[a-z]+): ", catalog, re.MULTILINE))
+    assert offered == set(ontology.class_refs.values()), "every class of the taxonomy is offered"
+    assert [(i.title, i.class_refs) for i in individuals] == [("Wikimedia Foundation", (ACTOR,))]
+    assert len(individuals[0].evidence) > 1, "a passage from each chunk that mentions it"
+    assert relationships == []
+
+
+async def test_a_document_without_a_find_then_type_cassette_is_not_scored(tmp_path, monkeypatch):
+    monkeypatch.setattr("scripts.benchmark_replay.CASSETTE_DIR", tmp_path / "extraction_benchmark")
+    result = await replay_document(DOCUMENT, implementation=FIND_THEN_TYPE)
+    assert (result.status, result.score) == ("not_recorded", None)
+
+
+def test_the_two_implementations_keep_their_cassettes_apart():
+    default, find_then_type = cassette_path(DOCUMENT), cassette_path(DOCUMENT, FIND_THEN_TYPE)
+    assert default.parent.name == "extraction_benchmark"
+    assert find_then_type.parent.name == "extraction_benchmark_find_then_type"
+    assert default.parent.parent == find_then_type.parent.parent
+
+
+@pytest.mark.parametrize("document", sorted([*DEV_DOCUMENTS, *HOLDOUT_DOCUMENTS]))
+async def test_find_then_type_recordings_replay_and_keep_their_gain(ontology, document):
+    """
+    The recorded find-then-type runs answer today's prompts, and score well
+    above the two-pass baseline's typed F1 (0.07 to 0.16 on these documents).
+    """
+    result = await replay_document(document, implementation=FIND_THEN_TYPE)
+
+    assert result.status == "scored", result
+    assert result.misses == 0
+    assert result.score.metrics["typed_f1"] > 0.3
+    assert result.score.metrics["type_accuracy"] > 0.6
