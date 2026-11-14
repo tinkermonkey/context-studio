@@ -35,14 +35,13 @@ from sqlalchemy.exc import IntegrityError, OperationalError
 from adapters.factories.orchestrator_factory import (
     build_orchestrator_services,
     build_run_specific_data,
-    create_orchestrator,
-    create_pipeline_state,
+    create_selected_run,
 )
 from adapters.persistence.sqlite.pipeline_config_repo import (
     PipelineConfigurationRepository,
     registry_config,
 )
-from adapters.pipelines.run_executor import BackgroundRunExecutor, UnknownPipelineError
+from adapters.pipelines.run_executor import BackgroundRunExecutor
 from adapters.web.dependencies import get_versioning_service
 from adapters.web.schemas.extraction import (
     RecognitionPreviewHitSchema,
@@ -107,10 +106,12 @@ from domain.pipelines.entities import (
 )
 from domain.pipelines.exceptions import (
     ApplySelectionError,
+    ConfigurationDisabledError,
     ExtractionFailedError,
     PipelineExecutionError,
     PipelineExternalServiceError,
     PipelineInputError,
+    PipelineSelectionError,
     PipelineStorageError,
 )
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
@@ -120,6 +121,7 @@ from domain.pipelines.registry import (
     PipelineTypeRegistry,
 )
 from domain.pipelines.requested_via import REQUESTED_VIA, RequestedVia
+from domain.pipelines.selection import PipelineResolver
 from domain.pipelines.stage_prompts import (
     StageDefinition,
     resolve_stage_prompts,
@@ -145,6 +147,30 @@ def _from_api(input_data: dict[str, Any]) -> dict[str, Any]:
     caller sent: only the MCP tools may start a run for a mirrored taxonomy's client.
     """
     return {**input_data, REQUESTED_VIA: RequestedVia.API.value}
+
+
+# What selects a run; recorded on the run itself, not in its input
+_SELECTION_FIELDS = {"implementation_id", "configuration_ref"}
+
+
+def _resolver(request: Request) -> PipelineResolver:
+    """The resolver over the app's registries: what a run executes, defaults included."""
+    return PipelineResolver(
+        request.app.state.implementation_registry, request.app.state.config_registry
+    )
+
+
+def _selection_http_error(exc: PipelineSelectionError) -> HTTPException:
+    """
+    404 for an implementation or configuration that isn't there (or is another
+    implementation's), 422 for a disabled configuration. The detail names what is valid.
+    """
+    status_code = (
+        http_status.HTTP_422_UNPROCESSABLE_CONTENT
+        if isinstance(exc, ConfigurationDisabledError)
+        else http_status.HTTP_404_NOT_FOUND
+    )
+    return HTTPException(status_code=status_code, detail=str(exc))
 
 
 def _normalize_provenance(provenance_data: Any) -> list[SourceSpanSchema]:
@@ -677,16 +703,24 @@ async def list_implementations(
         )
 
     impl_registry: PipelineImplementationRegistry = request.app.state.implementation_registry
-    impls = impl_registry.list_by_type(ptype)
+    config_registry: PipelineConfigurationRegistry = request.app.state.config_registry
+    default_implementation = impl_registry.default_implementation(ptype)
 
-    return [
-        ImplementationResponse(
-            id=impl_id,
-            pipeline_type=ptype.value,
-            source_configuration=getattr(impl, "SOURCE_CONFIGURATION", None),
+    responses = []
+    for impl_id, impl in impl_registry.list_by_type(ptype).items():
+        default_configuration = config_registry.default_configuration(ptype, impl_id)
+        extracts_sources = bool(getattr(impl, "EXTRACTS_SOURCES", False))
+        responses.append(
+            ImplementationResponse(
+                id=impl_id,
+                pipeline_type=ptype.value,
+                is_default=impl_id == default_implementation,
+                default_configuration=default_configuration,
+                extracts_sources=extracts_sources,
+                source_configuration=default_configuration if extracts_sources else None,
+            )
         )
-        for impl_id, impl in impls.items()
-    ]
+    return responses
 
 
 def _impl_stages(
@@ -755,6 +789,7 @@ def _system_config_to_response(
     config_ref: str,
     version_obj: Any,
     stages: tuple[StageDefinition, ...] | None = None,
+    is_default: bool = False,
 ) -> PipelineConfigurationResponse:
     """Convert an in-memory system configuration to a response schema."""
     cfg = version_obj.config
@@ -778,6 +813,7 @@ def _system_config_to_response(
         stage_prompts=_stage_prompt_views(stages, cfg.get("stage_prompts")),
         parameters=params,
         enabled=cfg.get("enabled", True),
+        is_default=is_default,
         version=version_obj.version,
         is_system=True,
         created_at=None,
@@ -786,7 +822,7 @@ def _system_config_to_response(
 
 
 def _db_config_to_response(
-    record: Any, stages: tuple[StageDefinition, ...] | None = None
+    record: Any, stages: tuple[StageDefinition, ...] | None = None, is_default: bool = False
 ) -> PipelineConfigurationResponse:
     """Convert a DB pipeline configuration record to a response schema."""
 
@@ -814,6 +850,7 @@ def _db_config_to_response(
             top_p=record.top_p,
         ),
         enabled=record.enabled,
+        is_default=is_default,
         version=record.version,
         is_system=False,
         created_at=_parse_dt(record.created_at),
@@ -888,13 +925,18 @@ async def list_configurations(
     # System configs from the in-memory registry, excluding user-owned refs (active or deleted)
     system_configs = config_registry.list_configs(ptype, impl_id)
     stages = _impl_stages(impl_registry, ptype, impl_id)
+    default_ref = config_registry.default_configuration(ptype, impl_id)
     result: list[PipelineConfigurationResponse] = [
-        _system_config_to_response(ptype.value, impl_id, config_ref, version_obj, stages)
+        _system_config_to_response(
+            ptype.value, impl_id, config_ref, version_obj, stages, config_ref == default_ref
+        )
         for config_ref, version_obj in system_configs
         if config_ref not in known_user_refs
     ]
 
-    result.extend(_db_config_to_response(r, stages) for r in user_configs)
+    result.extend(
+        _db_config_to_response(r, stages, r.config_ref == default_ref) for r in user_configs
+    )
     return result
 
 
@@ -1083,8 +1125,10 @@ async def run_pipeline(
             detail=f"Invalid pipeline type: {pipeline_type}",
         )
 
+    # The run's input: the body without what selects the run or how it is returned
+    input_data = _from_api(request_body.model_dump(exclude={"run_async"} | _SELECTION_FIELDS))
+
     if request_body.run_async:
-        input_data = _from_api(request_body.model_dump(exclude={"run_async"}))
         _resolve_run_dataset(request, ptype, input_data)
         try:
             run = _run_executor(request).submit(
@@ -1094,8 +1138,8 @@ async def run_pipeline(
                 input_data,
                 specific_data=build_run_specific_data(ptype, input_data),
             )
-        except UnknownPipelineError as e:
-            raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail=str(e)) from e
+        except PipelineSelectionError as e:
+            raise _selection_http_error(e) from e
         except PipelineStorageError as e:
             status_code, message = _handle_domain_error(e)
             raise HTTPException(status_code=status_code, detail=message) from e
@@ -1104,32 +1148,18 @@ async def run_pipeline(
 
     repo = request.app.state.pipeline_run_repo
     batch_repo = request.app.state.batch_repo
-    impl_registry = request.app.state.implementation_registry
     config_registry = request.app.state.config_registry
     llm_provider = request.app.state.llm_router
 
-    # Verify implementation exists
-    impl_class = impl_registry.get(ptype, request_body.implementation_id)
-    if impl_class is None:
-        raise HTTPException(
-            status_code=http_status.HTTP_404_NOT_FOUND,
-            detail=f"Implementation not found: {ptype.value}:{request_body.implementation_id}",
+    # The implementation and configuration named, or the registered defaults.
+    # The run is pinned to the configuration's latest version, stored with it.
+    try:
+        selection = _resolver(request).resolve(
+            ptype, request_body.implementation_id, request_body.configuration_ref
         )
-
-    # Verify configuration exists. get_latest() retrieves the current version,
-    # which is stored in the database along with the run. After a server restart,
-    # get_version(slug, version) can re-resolve the same configuration because
-    # configs are deterministically re-registered from code at startup.
-    # This ensures that runs can always resolve their pinned (slug, version) pair
-    # even across server restarts.
-    config_version = config_registry.get_latest(
-        ptype, request_body.implementation_id, request_body.configuration_ref
-    )
-    if config_version is None:
-        raise HTTPException(
-            status_code=http_status.HTTP_404_NOT_FOUND,
-            detail=f"Configuration not found: {request_body.configuration_ref}",
-        )
+    except PipelineSelectionError as e:
+        raise _selection_http_error(e) from e
+    config_version = selection.configuration
 
     # Create a batch for this single-run submission
     try:
@@ -1139,8 +1169,6 @@ async def run_pipeline(
         status_code, message = _handle_domain_error(e)
         raise HTTPException(status_code=status_code, detail=message) from e
 
-    # Extract input data from request body (now includes type-specific fields)
-    input_data = _from_api(request_body.model_dump(exclude={"run_async"}))
     _resolve_run_dataset(request, ptype, input_data)
 
     # Persist pipeline run to database only after validation succeeds
@@ -1149,8 +1177,8 @@ async def run_pipeline(
         run = repo.create(
             batch_run_id=batch_id,
             pipeline_type=ptype,
-            implementation_id=request_body.implementation_id,
-            configuration_ref=request_body.configuration_ref,
+            implementation_id=selection.implementation_id,
+            configuration_ref=config_version.config_ref,
             configuration_slug=config_version.config_ref,
             configuration_version=config_version.version,
             specific_data=specific_data or None,
@@ -1159,7 +1187,7 @@ async def run_pipeline(
         # Mark this configuration version as referenced by this run
         config_registry.mark_version_referenced(
             ptype,
-            request_body.implementation_id,
+            selection.implementation_id,
             config_version.config_ref,
             config_version.version,
         )
@@ -1172,24 +1200,16 @@ async def run_pipeline(
     # Prepare services for orchestrator instantiation, including status writer
     services = build_orchestrator_services(request.app.state, config_version.config, run_id, repo)
 
-    # Instantiate orchestrator with dependencies (validates service dependencies)
+    # Instantiate the orchestrator (validates service dependencies) and its
+    # initial state: the model, temperature and output limit are the
+    # configuration's unless the input names its own
     try:
-        orchestrator = create_orchestrator(
-            orchestrator_class=impl_class,
-            llm_provider=llm_provider,
-            services=services,
+        orchestrator, state = create_selected_run(
+            selection, llm_provider, services, run_id, input_data
         )
     except ValueError as e:
         status_code, message = _handle_domain_error(e)
         raise HTTPException(status_code=status_code, detail=message) from e
-
-    # Create initial state for execution with the actual run ID
-    state = create_pipeline_state(
-        run_id=run_id,
-        pipeline_type=ptype,
-        input_data=input_data,
-        llm_provider=llm_provider,
-    )
 
     # Execute the pipeline on a worker thread with its own event loop, as a
     # background run is (run_executor.py). Orchestrators block: LLM calls and
@@ -2377,8 +2397,7 @@ async def enqueue_batch_runs(
     """
     batch_repo = request.app.state.batch_repo
     pipeline_run_repo = request.app.state.pipeline_run_repo
-    config_registry = request.app.state.config_registry
-    impl_registry = request.app.state.implementation_registry
+    resolver = _resolver(request)
 
     # Verify batch exists
     batch = batch_repo.get(batch_id)
@@ -2399,8 +2418,6 @@ async def enqueue_batch_runs(
     try:
         for run_data in runs_data:
             pipeline_type_str = run_data.get("pipeline_type")
-            impl_id = run_data.get("implementation_id", "default")
-            config_ref = run_data.get("configuration_ref", "default")
 
             try:
                 ptype = PipelineType(pipeline_type_str)
@@ -2410,20 +2427,15 @@ async def enqueue_batch_runs(
                     detail=f"Invalid pipeline type: {pipeline_type_str}",
                 )
 
-            # Validate implementation exists
-            impl = impl_registry.get(ptype, impl_id)
-            if not impl:
-                raise HTTPException(
-                    status_code=http_status.HTTP_404_NOT_FOUND,
-                    detail=f"Implementation not found: {impl_id}",
+            # The implementation and configuration named, or the registered defaults
+            try:
+                selection = resolver.resolve(
+                    ptype, run_data.get("implementation_id"), run_data.get("configuration_ref")
                 )
-
-            config_version = config_registry.get_latest(ptype, impl_id, config_ref)
-            if not config_version:
-                raise HTTPException(
-                    status_code=http_status.HTTP_404_NOT_FOUND,
-                    detail=f"Configuration not found: {config_ref}",
-                )
+            except PipelineSelectionError as e:
+                raise _selection_http_error(e) from e
+            impl_id = selection.implementation_id
+            config_version = selection.configuration
 
             specific_source = dict(run_data.get("specific_data") or {})
             run_input = (
@@ -2439,7 +2451,7 @@ async def enqueue_batch_runs(
                 batch_run_id=batch_id,
                 pipeline_type=ptype,
                 implementation_id=impl_id,
-                configuration_ref=config_ref,
+                configuration_ref=config_version.config_ref,
                 configuration_slug=config_version.config_ref,
                 configuration_version=config_version.version,
                 specific_data=specific_data or None,

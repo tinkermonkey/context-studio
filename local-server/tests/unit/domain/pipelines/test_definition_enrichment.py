@@ -148,7 +148,7 @@ def make(repo, proposals, llm, writer=None, config=None):
     return DefinitionRefinementOrchestrator(
         llm_provider=llm,
         traversal=None,
-        config=config,
+        config=config or {"model": "m"},
         run_id="run-1",
         status_writer=writer,
         ontology_repo=repo,

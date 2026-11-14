@@ -27,8 +27,7 @@ def register_schema_node_definition_refinement(
 
     Registers:
     1. DefinitionRefinementOrchestrator as the "default" implementation
-    2. Default configuration, as "definition-refinement-default" and "default",
-       using OpenRouter + Gemini 3 Flash
+    2. Default configuration: "definition-refinement-default" using OpenRouter + Gemini 3 Flash
 
     Args:
         impl_registry: PipelineImplementationRegistry instance (optional)
@@ -39,14 +38,14 @@ def register_schema_node_definition_refinement(
             PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
             "default",
             DefinitionRefinementOrchestrator,
+            default=True,
         )
 
     if config_registry is not None:
-        # Also under "default", the configuration the MCP run_refinement tool asks for
-        for name in ("definition-refinement-default", "default"):
-            config_registry.register(
-                PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
-                "default",
-                name,
-                get_default_config(),
-            )
+        config_registry.register(
+            PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,
+            "default",
+            "definition-refinement-default",
+            get_default_config(),
+            default=True,
+        )

@@ -14,8 +14,11 @@ from datetime import datetime, timezone
 from typing import Any, Literal
 
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
+from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.ports import LLMProvider, LLMResponse, PipelineRunStatusWriter
 from domain.pipelines.stage_prompts import StageDefinition
+
+MODEL_REQUIRED = "model is required: the run's configuration names none, nor does its input"
 
 
 @dataclass
@@ -47,6 +50,21 @@ class PipelineState:
     llm_metadata: dict[str, Any] = field(default_factory=dict)
 
 
+def run_model(*named: Any) -> str:
+    """
+    The model a run's LLM calls use: the first one named, in the order given
+    (what the caller passed, the run's input, the run's configuration). A run
+    started through PipelineResolver always has its configuration's.
+
+    Raises:
+        PipelineInputError: If none is named; orchestrators have no model of their own
+    """
+    for model in named:
+        if model:
+            return str(model)
+    raise PipelineInputError(MODEL_REQUIRED)
+
+
 class PipelineOrchestrator(ABC):
     """
     Abstract base for pipeline orchestration implementations.
@@ -59,10 +77,9 @@ class PipelineOrchestrator(ABC):
     # domain/pipelines/stage_prompts.py); empty for pipelines without them.
     STAGE_PROMPTS: tuple[StageDefinition, ...] = ()
 
-    # The configuration a source is extracted with when none is named (see
-    # domain/pipelines/source_extraction.py); None for an implementation that
-    # cannot extract a source.
-    SOURCE_CONFIGURATION: str | None = None
+    # Whether it can extract a source: read it chunk by chunk and end in one
+    # change proposal (see domain/pipelines/source_extraction.py).
+    EXTRACTS_SOURCES: bool = False
 
     def __init__(
         self,

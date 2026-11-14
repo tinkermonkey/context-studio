@@ -171,13 +171,16 @@ class ExtractionPort(Protocol):
         temperature: float,
         stage_prompts: Mapping[str, Any] | None = None,
         dataset_id: str | None = None,
+        max_tokens: int | None = None,
     ) -> TripleExtractionResult:
         """
         Extract RDF triples from text scoped to a specific ontology.
 
         stage_prompts are a configuration's prompt overrides (stage key ->
         {"system", "user"}); None uses the default prompts. dataset_id scopes
-        recognition to the dataset the run extracts into.
+        recognition to the dataset the run extracts into. max_tokens is the
+        most output tokens one LLM call may produce (here and in the calls
+        below); None leaves each stage its own limit.
         """
         ...
 
@@ -191,6 +194,7 @@ class ExtractionPort(Protocol):
         model: str,
         temperature: float,
         stage_prompts: Mapping[str, Any] | None = None,
+        max_tokens: int | None = None,
     ) -> "MentionsResult":
         """
         List what a text mentions, typing nothing: one LLM call. A
@@ -211,6 +215,7 @@ class ExtractionPort(Protocol):
         mention: "Mention",
         model: str,
         temperature: float,
+        max_tokens: int | None = None,
     ) -> "TypingResult":
         """
         Type one mention: one LLM call that reads nothing but its arguments,
@@ -227,6 +232,7 @@ class ExtractionPort(Protocol):
         model: str,
         temperature: float,
         stage_prompts: Mapping[str, Any] | None = None,
+        max_tokens: int | None = None,
     ) -> TripleExtractionResult:
         """
         State the relationships a text asserts between the individuals of the
@@ -626,11 +632,18 @@ class PipelineRunSubmitter(Protocol):
     def submit(
         self,
         pipeline_type: PipelineType,
-        implementation_id: str,
-        configuration_ref: str,
+        implementation_id: str | None,
+        configuration_ref: str | None,
         input_data: dict[str, Any],
     ) -> PipelineRun:
-        """Store a PENDING run with its input for a worker to execute; return it."""
+        """
+        Store a PENDING run with its input for a worker to execute; return it.
+        An implementation or configuration left None is the default one (see
+        domain/pipelines/selection.py).
+
+        Raises:
+            PipelineSelectionError: If what was named cannot be selected
+        """
         ...
 
 

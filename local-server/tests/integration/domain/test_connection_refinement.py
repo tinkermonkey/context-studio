@@ -107,6 +107,7 @@ class TestConnectionRefinementOrchestrator:
         orchestrator = ConnectionRefinementOrchestrator(
             llm_provider=llm,
             traversal=traversal,
+            config={"model": "test-model"},
         )
 
         state = PipelineState(
@@ -127,6 +128,7 @@ class TestConnectionRefinementOrchestrator:
         orchestrator = ConnectionRefinementOrchestrator(
             llm_provider=llm,
             traversal=traversal,
+            config={"model": "test-model"},
         )
 
         state = PipelineState(
@@ -151,6 +153,7 @@ class TestConnectionRefinementOrchestrator:
         orchestrator = ConnectionRefinementOrchestrator(
             llm_provider=llm,
             traversal=traversal,
+            config={"model": "test-model"},
         )
 
         state = PipelineState(
@@ -193,6 +196,7 @@ class TestConnectionRefinementOrchestrator:
         orchestrator = ConnectionRefinementOrchestrator(
             llm_provider=llm,
             traversal=traversal,
+            config={"model": "test-model"},
         )
 
         state = PipelineState(
@@ -233,6 +237,7 @@ class TestConnectionRefinementOrchestrator:
         orchestrator = ConnectionRefinementOrchestrator(
             llm_provider=llm,
             traversal=traversal,
+            config={"model": "test-model"},
         )
 
         state = PipelineState(
@@ -259,6 +264,7 @@ class TestConnectionRefinementOrchestrator:
         orchestrator = ConnectionRefinementOrchestrator(
             llm_provider=llm,
             traversal=traversal,
+            config={"model": "test-model"},
         )
 
         state = PipelineState(

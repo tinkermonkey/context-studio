@@ -108,3 +108,25 @@ class ExtractionFailedError(PipelineExecutionError):
     """
 
     pass
+
+
+class PipelineSelectionError(PipelineError, ValueError):
+    """
+    Raised when what a run was asked to execute cannot be selected (see
+    domain/pipelines/selection.py). The message names what is valid.
+    """
+
+
+class UnknownImplementationError(PipelineSelectionError):
+    """The pipeline type has no such implementation, or none to default to."""
+
+
+class UnknownConfigurationError(PipelineSelectionError):
+    """
+    The implementation has no such configuration (it may be another
+    implementation's), or none to default to.
+    """
+
+
+class ConfigurationDisabledError(PipelineSelectionError):
+    """The configuration is disabled, so no run may start with it."""

@@ -63,6 +63,7 @@ from domain.pipelines.schema_relationship_reflection.orchestrator import (
     RelationshipReflectionOrchestrator,
     RelationshipReflectionState,
 )
+from domain.pipelines.selection import PipelineSelection
 from domain.pipelines.source_proposals import SourceProposer
 from utils.logger import get_logger
 
@@ -450,6 +451,39 @@ def create_pipeline_state(
         llm_provider=llm_provider,
         result=None,
     )
+
+
+def create_selected_run(
+    selection: PipelineSelection,
+    llm_provider: LLMProvider,
+    services: dict[str, Any],
+    run_id: str,
+    input_data: dict[str, Any],
+) -> tuple[PipelineOrchestrator, PipelineState]:
+    """
+    The orchestrator and initial state that execute a run of `selection`.
+
+    Everything that executes a run (the run API, the background worker,
+    scripts) builds it here, so the model, temperature and output-token limit
+    are the configuration's wherever the run's input names none
+    (PipelineSelection.run_input).
+
+    Args:
+        selection: The run's implementation and pinned configuration
+        llm_provider: LLM provider for completions
+        services: Services dict for create_orchestrator, built with the
+            selection's configuration (build_orchestrator_services)
+        run_id: Pipeline run ID
+        input_data: The run's input as the caller gave it
+
+    Raises:
+        ValueError: If the orchestrator class is unknown or required dependencies are missing
+    """
+    orchestrator = create_orchestrator(selection.implementation, llm_provider, services)
+    state = create_pipeline_state(
+        run_id, selection.pipeline_type, selection.run_input(input_data), llm_provider
+    )
+    return orchestrator, state
 
 
 def _source_summary(input_data: dict[str, Any]) -> dict[str, Any]:

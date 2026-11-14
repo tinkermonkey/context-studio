@@ -79,9 +79,12 @@ class FakeExtraction:
     def __init__(self, house):
         self.house = house
         self.calls = 0
+        # The (model, output-token limit) each call was asked to use
+        self.parameters: set = set()
 
-    def extract_triples(self, text, ontology_id, model, temperature, **_):
+    def extract_triples(self, text, ontology_id, model, temperature, max_tokens=None, **_):
         self.calls += 1
+        self.parameters.add((model, max_tokens))
         triples = []
         if "WRF555SDFZ" in text:
             start = text.index("WRF555SDFZ")
@@ -219,8 +222,7 @@ def app(tmp_path, factory, parts, house, extraction):
     app.state.source_extraction_service = SourceExtractionService(
         sources=sources,
         ontology_repo=parts.repo,
-        implementations=implementations,
-        configurations=configurations,
+        resolver=executor.resolver,
         submitter=executor,
         runs=runs,
         proposals=parts.proposals_repo,
@@ -330,6 +332,50 @@ class TestExtractRoute:
         assert stored.implementation_id == "find_then_type"
         assert stored.configuration_ref == "extraction-find-then-type"
         assert stored.input_summary["source_id"] == source["id"]
+
+    def test_a_source_run_executes_with_its_configurations_model_and_limit(
+        self, client, app, house, extraction
+    ):
+        source = add_pdf(client, house)
+        [run] = extract(
+            client, source["id"], configuration_ref="extraction-openrouter-default"
+        ).json()["runs"]
+        app.state.executor.start()
+
+        done = wait_for(lambda: finished(app, run["run_id"]))
+
+        assert done.status is PipelineRunStatus.COMPLETED, done.failure_reason
+        assert extraction.parameters == {("google/gemini-3-flash-preview", 8000)}
+
+    def test_the_schema_run_is_chosen_as_any_run_is(self, client, app, house):
+        source = add_pdf(client, house)
+
+        named = extract(
+            client,
+            source["id"],
+            schema=True,
+            schema_implementation_id="default",
+            schema_configuration_ref="schema-extraction-default",
+        )
+        another_implementations = extract(
+            client, source["id"], schema=True, schema_configuration_ref="schema-extraction-open-v1"
+        )
+        cannot_extract = extract(
+            client, source["id"], schema=True, schema_implementation_id="open_v1"
+        )
+
+        assert named.status_code == 202, named.text
+        schema_run = app.state.runs.get(named.json()["runs"][1]["run_id"])
+        assert (schema_run.implementation_id, schema_run.configuration_ref) == (
+            "default",
+            "schema-extraction-default",
+        )
+        assert another_implementations.status_code == 422
+        assert "is a configuration of the open_v1 implementation" in (
+            another_implementations.json()["detail"]
+        )
+        assert cannot_extract.status_code == 422
+        assert "can extract a source (one of: default)" in cannot_extract.json()["detail"]
 
     @pytest.mark.parametrize(
         "body, names",

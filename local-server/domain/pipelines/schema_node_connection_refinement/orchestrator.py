@@ -19,6 +19,7 @@ from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputErr
 from domain.pipelines.orchestration.base import (
     PipelineOrchestrator,
     PipelineState,
+    run_model,
 )
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
@@ -212,8 +213,7 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
         Returns:
             List of connection deltas with operation, subjects, and rationale
         """
-        if model is None:
-            model = self._config.get("model", "google/gemini-3-flash-preview")
+        model = run_model(model, self._config.get("model"))
         if temperature is None:
             temperature = self._config.get("temperature", 0.0)
         max_tokens = self._config.get("max_tokens", 2000)

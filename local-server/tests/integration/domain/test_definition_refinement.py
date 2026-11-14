@@ -92,6 +92,7 @@ class TestDefinitionRefinementOrchestrator:
         orchestrator = DefinitionRefinementOrchestrator(
             llm_provider=llm,
             traversal=traversal,
+            config={"model": "test-model"},
         )
 
         state = PipelineState(
@@ -112,6 +113,7 @@ class TestDefinitionRefinementOrchestrator:
         orchestrator = DefinitionRefinementOrchestrator(
             llm_provider=llm,
             traversal=traversal,
+            config={"model": "test-model"},
         )
 
         state = PipelineState(
@@ -147,6 +149,7 @@ class TestDefinitionRefinementOrchestrator:
         orchestrator = DefinitionRefinementOrchestrator(
             llm_provider=llm,
             traversal=traversal,
+            config={"model": "test-model"},
         )
 
         state = PipelineState(
@@ -174,6 +177,7 @@ class TestDefinitionRefinementOrchestrator:
         orchestrator = DefinitionRefinementOrchestrator(
             llm_provider=llm,
             traversal=traversal,
+            config={"model": "test-model"},
         )
 
         state = PipelineState(

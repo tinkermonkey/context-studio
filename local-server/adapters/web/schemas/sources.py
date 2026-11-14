@@ -117,17 +117,33 @@ class SourceExtractRequest(BaseModel):
         None,
         max_length=255,
         description=(
-            "The individual-extraction implementation that reads the source, one whose"
-            " source_configuration is set (GET /api/pipelines/types/individual_extraction/"
-            "implementations); default when omitted"
+            "The individual-extraction implementation that reads the source, one that"
+            " extracts_sources (GET /api/pipelines/types/individual_extraction/"
+            "implementations); the type's default implementation when omitted"
         ),
     )
     configuration_ref: Optional[str] = Field(
         None,
         max_length=255,
         description=(
-            "An individual-extraction configuration of the implementation; the"
-            " implementation's source_configuration when omitted"
+            "An individual-extraction configuration of the implementation; its default"
+            " configuration when omitted"
+        ),
+    )
+    schema_implementation_id: Optional[str] = Field(
+        None,
+        max_length=255,
+        description=(
+            "With schema: the schema-extraction implementation, one that extracts_sources;"
+            " the type's default implementation when omitted"
+        ),
+    )
+    schema_configuration_ref: Optional[str] = Field(
+        None,
+        max_length=255,
+        description=(
+            "With schema: a schema-extraction configuration of that implementation; its"
+            " default configuration when omitted"
         ),
     )
     pages: Optional[str] = Field(

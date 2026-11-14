@@ -149,7 +149,7 @@ def _schema_state() -> SchemaExtractionState:
     return SchemaExtractionState(
         run_id="run-1",
         pipeline_type=PipelineType.SCHEMA_EXTRACTION,
-        input_data={"documents": ["The Gateway routes requests."]},
+        input_data={"documents": ["The Gateway routes requests."], "model": "m"},
     )
 
 

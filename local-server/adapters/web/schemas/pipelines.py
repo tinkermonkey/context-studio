@@ -65,11 +65,32 @@ class ImplementationResponse(BaseModel):
 
     id: str = Field(..., description="Implementation identifier")
     pipeline_type: str = Field(..., description="Pipeline type for this implementation")
+    is_default: bool = Field(
+        False,
+        description=(
+            "The pipeline type's default implementation: the one a run uses when it names"
+            " none. A type has exactly one"
+        ),
+    )
+    default_configuration: Optional[str] = Field(
+        None,
+        description=(
+            "The implementation's default configuration (its config_ref): the one a run uses"
+            " when it names none"
+        ),
+    )
+    extracts_sources: bool = Field(
+        False,
+        description=(
+            "It can extract a source (POST /api/sources/{id}/extract): read it chunk by chunk"
+            " and end in one change proposal"
+        ),
+    )
     source_configuration: Optional[str] = Field(
         None,
         description=(
-            "The configuration a source is extracted with when none is named (POST"
-            " /api/sources/{id}/extract); null for an implementation that cannot extract a source"
+            "Superseded by extracts_sources and default_configuration, and kept until the"
+            " Extract page reads those: default_configuration when extracts_sources, else null"
         ),
     )
 
@@ -84,11 +105,24 @@ class ConfigurationResponse(BaseModel):
     config: dict[str, Any] = Field(..., description="Configuration data")
 
 
+# The largest output-token limit a configuration may set
+MAX_OUTPUT_TOKENS = 64000
+
+
 class PipelineConfigurationParameters(BaseModel):
     """LLM parameters for a pipeline configuration."""
 
     temperature: float = Field(default=0.4, ge=0.0, le=2.0, description="Sampling temperature")
-    max_tokens: int = Field(default=800, ge=64, le=4096, description="Maximum tokens to generate")
+    max_tokens: int = Field(
+        default=800,
+        ge=64,
+        le=MAX_OUTPUT_TOKENS,
+        description=(
+            "The most output tokens one model call of a run may produce. A model that thinks"
+            " before it answers spends part of it thinking, so it needs well above what the"
+            " answer takes (the system configurations of Claude 5.5 models use 16000-20000)"
+        ),
+    )
     top_p: float = Field(default=0.9, ge=0.0, le=1.0, description="Nucleus sampling probability")
 
 
@@ -174,7 +208,16 @@ class PipelineConfigurationResponse(BaseModel):
     parameters: Optional[PipelineConfigurationParameters] = Field(
         None, description="LLM generation parameters"
     )
-    enabled: bool = Field(default=True, description="Whether this configuration is active")
+    enabled: bool = Field(
+        default=True,
+        description="Whether this configuration is active; a disabled one starts no run",
+    )
+    is_default: bool = Field(
+        False,
+        description=(
+            "The implementation's default configuration: the one a run uses when it names none"
+        ),
+    )
     version: int = Field(..., description="Configuration version number")
     is_system: bool = Field(..., description="True for code-defined system configurations")
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
@@ -205,12 +248,20 @@ class PipelineRunRequest(BaseModel):
 
     model_config = ConfigDict(extra="allow", populate_by_name=True)
 
-    implementation_id: str = Field(
-        default="default",
-        description="Implementation identifier (defaults to 'default')",
+    implementation_id: Optional[str] = Field(
+        default=None,
+        description=(
+            "Implementation identifier; the pipeline type's default implementation when"
+            " omitted (GET /api/pipelines/types/{type}/implementations marks it is_default)"
+        ),
     )
-    configuration_ref: str = Field(
-        default="default", description="Configuration reference (defaults to 'default')"
+    configuration_ref: Optional[str] = Field(
+        default=None,
+        description=(
+            "One of the implementation's configurations; its default configuration when"
+            " omitted. Its model, temperature and output-token limit are the run's unless"
+            " the body names its own (model, temperature, max_tokens)"
+        ),
     )
     run_async: Optional[bool] = Field(
         default=None,
@@ -817,9 +868,10 @@ class EnqueueBatchRunsRequest(BaseModel):
         ...,
         min_length=1,
         description=(
-            "Run specs to enqueue: pipeline_type, implementation_id, configuration_ref, "
-            "specific_data, and input_data (a run given an input_data is executed by "
-            "the background workers; one without stays pending)"
+            "Run specs to enqueue: pipeline_type, implementation_id (the type's default "
+            "implementation when omitted), configuration_ref (that implementation's default "
+            "configuration when omitted), specific_data, and input_data (a run given an "
+            "input_data is executed by the background workers; one without stays pending)"
         ),
     )
     idempotency_key: Optional[str] = Field(None, description="Optional idempotency key for replay")

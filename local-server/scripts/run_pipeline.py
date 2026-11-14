@@ -2,39 +2,43 @@
 """
 Command-line harness for invoking pipelines.
 
-Usage:
-    python -m local_server.scripts.run_pipeline \\
+A run is selected as everywhere else (domain/pipelines/selection.py): by
+pipeline type, implementation and configuration. An implementation left out is
+the type's default; a configuration left out is the implementation's default.
+The run's model, temperature and output-token limit are the configuration's
+unless the input file names its own.
+
+Usage (from local-server/, venv active):
+    python scripts/run_pipeline.py \\
         --type individual_extraction \\
-        --config extraction-default \\
         --input /path/to/input.json \\
-        --output /path/to/output.json \\
-        [--implementation default] \\
+        [--implementation find_then_type] \\
+        [--configuration extraction-find-then-type] \\
+        [--output /path/to/output.json] \\
         [--dry-run] \\
         [--log-iteration <log_path>]
 
 Examples:
-    # Run individual extraction
-    python -m local_server.scripts.run_pipeline \\
+    # Run individual extraction with its default implementation and configuration
+    python scripts/run_pipeline.py \\
         --type individual_extraction \\
-        --config extraction-default \\
         --input examples/input.json \\
         --output /tmp/output.json \\
         --log-iteration logs/my-iteration-log.md
 
-    # Dry-run to validate configuration
-    python -m local_server.scripts.run_pipeline \\
+    # Dry-run: say what would run, and stop
+    python scripts/run_pipeline.py \\
         --type individual_extraction \\
-        --config extraction-default \\
         --input examples/input.json \\
         --dry-run
 
-    # Use a specific implementation
-    python -m local_server.scripts.run_pipeline \\
-        --type schema_extraction \\
-        --implementation custom-impl \\
-        --config schema-v2 \\
-        --input examples/schema-input.json \\
-        --output /tmp/schema-output.json
+    # Name the implementation and one of its configurations
+    python scripts/run_pipeline.py \\
+        --type individual_extraction \\
+        --implementation default \\
+        --configuration extraction-openrouter-default \\
+        --input examples/input.json \\
+        --output /tmp/output.json
 """
 
 import argparse
@@ -51,10 +55,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
 from adapters.events.in_process import InProcessEventPublisher
-from adapters.factories.orchestrator_factory import (
-    create_orchestrator,
-    create_pipeline_state,
-)
+from adapters.factories.orchestrator_factory import create_selected_run
 from adapters.llm.provider_router import LLMProviderRouter
 from adapters.nlp.spacy_processor import SpacyNLPProcessor
 from adapters.persistence.sqlite.connection import DatabaseManager
@@ -73,7 +74,9 @@ from config import get_settings
 from domain.extraction.ports import ReferenceSource
 from domain.extraction.services import ExtractionService
 from domain.ontology.ports import OntologyRepository
+from domain.pipelines.bootstrap import register_pipelines
 from domain.pipelines.entities import PipelineType
+from domain.pipelines.exceptions import PipelineSelectionError
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -99,13 +102,13 @@ def main() -> int:
     )
     parser.add_argument(
         "--implementation",
-        default="default",
-        help="Implementation identifier (default: 'default')",
+        help="Implementation identifier (default: the pipeline type's default implementation)",
     )
     parser.add_argument(
+        "--configuration",
         "--config",
-        default="default",
-        help="Configuration reference (default: 'default')",
+        dest="configuration",
+        help="Configuration reference (default: the implementation's default configuration)",
     )
     parser.add_argument(
         "--input",
@@ -133,6 +136,8 @@ def main() -> int:
     # Initialize variables with defaults to avoid NameError in exception handler
     ptype = None
     input_data = None
+    # What was selected to run, for the iteration log (as named until it is resolved)
+    selected = {"implementation": args.implementation, "configuration": args.configuration}
 
     try:
         # Validate pipeline type
@@ -143,8 +148,6 @@ def main() -> int:
             return 1
 
         _logger.info(f"Pipeline type: {ptype.value}")
-        _logger.info(f"Implementation: {args.implementation}")
-        _logger.info(f"Configuration: {args.config}")
 
         # Load input
         input_path = Path(args.input)
@@ -156,32 +159,29 @@ def main() -> int:
             input_data = json.load(f)
         _logger.info(f"Loaded input from {input_path}")
 
-        # Initialize registries
-        type_registry = PipelineTypeRegistry()
-        impl_registry = PipelineImplementationRegistry()
-        config_registry = PipelineConfigurationRegistry()
-
-        # Verify pipeline type is registered
-        type_def = type_registry.get_type(ptype)
-        if type_def is None:
+        # Register the pipelines as the app does, and select what runs: the
+        # implementation and configuration named, or the registered defaults
+        if PipelineTypeRegistry().get_type(ptype) is None:
             _logger.error(f"Pipeline type not registered: {ptype.value}")
             return 1
-
-        # Verify implementation is registered
-        impl_class = impl_registry.get(ptype, args.implementation)
-        if impl_class is None:
-            _logger.error(f"Implementation not found: {ptype.value}:{args.implementation}")
+        resolver = register_pipelines(
+            PipelineImplementationRegistry(), PipelineConfigurationRegistry()
+        )
+        try:
+            selection = resolver.resolve(ptype, args.implementation, args.configuration)
+        except PipelineSelectionError as exc:
+            _logger.error(str(exc))
             return 1
-        _logger.info(f"Implementation class: {impl_class.__name__}")
-
-        # Verify configuration is registered
-        config_version = config_registry.get_latest(ptype, args.implementation, args.config)
-        if config_version is None:
-            _logger.error(
-                f"Configuration not found: {ptype.value}:{args.implementation}:{args.config}"
-            )
-            return 1
-        _logger.info(f"Configuration version: {config_version.version}")
+        selected["implementation"] = selection.implementation_id
+        selected["configuration"] = selection.configuration_ref
+        config = selection.config
+        _logger.info(
+            f"Implementation: {selection.implementation_id} ({selection.implementation.__name__})"
+        )
+        _logger.info(
+            f"Configuration: {selection.configuration_ref} v{selection.configuration.version}"
+            f" (model {config.get('model')})"
+        )
 
         # Dry-run: stop here
         if args.dry_run:
@@ -259,6 +259,7 @@ def main() -> int:
 
         # Prepare services dict for orchestrator factory
         services: dict[str, Any] = {
+            "config": config,
             "extraction_service": extraction_service,
             "ontology_repo": ontology_repo,
             "extraction_repo": extraction_repo,
@@ -270,8 +271,8 @@ def main() -> int:
             ),
             "scorer": GroundingScorer(embedding_service=embedding_service),
             "grounding_config": {
-                "top_n": config_version.config.get("top_n", 10),
-                "weights": config_version.config.get(
+                "top_n": config.get("top_n", 10),
+                "weights": config.get(
                     "weights",
                     {
                         "source_score": 0.3,
@@ -280,23 +281,14 @@ def main() -> int:
                     },
                 ),
             },
-            "refinement_config": config_version.config,
+            "refinement_config": config,
         }
 
-        # Instantiate and execute implementation
+        # Instantiate the implementation and its state: the configuration's
+        # model, temperature and output limit, unless the input names its own
         _logger.info("Instantiating implementation...")
-        orchestrator = create_orchestrator(
-            orchestrator_class=impl_class,
-            llm_provider=llm_provider,
-            services=services,
-        )
-
-        # Create pipeline state with input data
-        state = create_pipeline_state(
-            run_id="script-run",
-            pipeline_type=ptype,
-            input_data=input_data,
-            llm_provider=llm_provider,
+        orchestrator, state = create_selected_run(
+            selection, llm_provider, services, "script-run", input_data
         )
 
         _logger.info("Executing pipeline...")
@@ -319,8 +311,8 @@ def main() -> int:
         if args.log_iteration is not None:
             _append_iteration_log(
                 ptype=ptype,
-                impl_id=args.implementation,
-                config_ref=args.config,
+                impl_id=str(selected["implementation"]),
+                config_ref=str(selected["configuration"]),
                 input_data=input_data,
                 result=result,
                 error=None,
@@ -337,8 +329,8 @@ def main() -> int:
             try:
                 _append_iteration_log(
                     ptype=ptype,
-                    impl_id=args.implementation,
-                    config_ref=args.config,
+                    impl_id=str(selected["implementation"]),
+                    config_ref=str(selected["configuration"]),
                     input_data=input_data,
                     result=None,
                     error=str(exc),

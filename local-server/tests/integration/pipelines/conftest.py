@@ -228,6 +228,7 @@ def impl_registry():
         PipelineType.NO_OP,
         "default",
         NoOpPipelineOrchestrator,
+        default=True,
     )
     # Register schema extraction
     register_schema_extraction(registry, None)  # config_registry param will be None here

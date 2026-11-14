@@ -55,6 +55,7 @@ from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
 from domain.pipelines.llm_json import extract_json
 from domain.pipelines.orchestration.base import (
+    MODEL_REQUIRED,
     PipelineOrchestrator,
     PipelineState,
 )
@@ -466,6 +467,21 @@ class SchemaExtractionState(PipelineState):
     skipped: dict[str, Any] = field(default_factory=dict)
 
 
+def _llm_parameters(state: PipelineState, stage_max_tokens: int) -> dict[str, Any]:
+    """
+    The model, temperature and output-token limit of a stage's LLM call: the
+    run's, which are its configuration's unless its input names its own (see
+    domain/pipelines/selection.py). A run that names no limit leaves the stage
+    its own.
+    """
+    data = state.input_data
+    return {
+        "model": data["model"],
+        "temperature": data.get("temperature") or 0.0,
+        "max_tokens": data.get("max_tokens") or stage_max_tokens,
+    }
+
+
 class SchemaExtractionOrchestrator(PipelineOrchestrator):
     """
     Orchestrator for schema extraction using an 8-stage execution flow.
@@ -477,6 +493,9 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
     # The LLM stages and their default prompts; a configuration's
     # ``stage_prompts`` override them.
     STAGE_PROMPTS = SCHEMA_EXTRACTION_STAGES
+
+    # It reads a source's text and proposes its candidates to the taxonomy
+    EXTRACTS_SOURCES = True
 
     def __init__(
         self,
@@ -531,6 +550,15 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             exc = PipelineInputError(
                 "documents is required and must contain at least one non-empty document"
             )
+            schema_state = replace(
+                schema_state,
+                current_status=PipelineRunStatus.FAILED,
+                result={"error": str(exc)},
+            )
+            raise exc
+
+        if not schema_state.input_data.get("model"):
+            exc = PipelineInputError(MODEL_REQUIRED)
             schema_state = replace(
                 schema_state,
                 current_status=PipelineRunStatus.FAILED,
@@ -742,8 +770,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
             response = await self._call_llm(
                 system_prompt=prompt.system,
                 user_prompt=user_prompt,
-                model=state.input_data.get("model", "google/gemini-3-flash-preview"),
-                temperature=0.0,
+                **_llm_parameters(state, 2000),
             )
 
             chunk_candidates: list[str] = []
@@ -822,9 +849,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         response = await self._call_llm(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            model=state.input_data.get("model", "google/gemini-3-flash-preview"),
-            temperature=0.0,
-            max_tokens=3000,
+            **_llm_parameters(state, 3000),
             response_format="json",
         )
 
@@ -934,9 +959,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         response = await self._call_llm(
             system_prompt=prompt.system,
             user_prompt=user_prompt,
-            model=state.input_data.get("model", "google/gemini-3-flash-preview"),
-            temperature=0.0,
-            max_tokens=4000,
+            **_llm_parameters(state, 4000),
             response_format="json",
         )
         state = replace(state, existing_classes=existing)
@@ -1072,9 +1095,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         response = await self._call_llm(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            model=state.input_data.get("model", "google/gemini-3-flash-preview"),
-            temperature=0.0,
-            max_tokens=4000,
+            **_llm_parameters(state, 4000),
             response_format="json",
         )
         if response.finish_reason == "length":
@@ -1194,9 +1215,7 @@ class SchemaExtractionOrchestrator(PipelineOrchestrator):
         response = await self._call_llm(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            model=state.input_data.get("model", "google/gemini-3-flash-preview"),
-            temperature=0.0,
-            max_tokens=2000,
+            **_llm_parameters(state, 2000),
             response_format="json",
         )
 

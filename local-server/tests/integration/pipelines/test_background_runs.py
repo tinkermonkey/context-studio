@@ -23,10 +23,14 @@ from adapters.persistence.sqlite.connection import (
 )
 from adapters.persistence.sqlite.models import Base
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
-from adapters.pipelines.run_executor import BackgroundRunExecutor, UnknownPipelineError
+from adapters.pipelines.run_executor import BackgroundRunExecutor
 from adapters.web.pipelines_routes import router
 from domain.pipelines.entities import BatchStatus, PipelineRunStatus, PipelineType
-from domain.pipelines.exceptions import PipelineExecutionError
+from domain.pipelines.exceptions import (
+    PipelineExecutionError,
+    UnknownConfigurationError,
+    UnknownImplementationError,
+)
 from domain.pipelines.orchestration.noop import NoOpPipelineOrchestrator
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
@@ -47,9 +51,13 @@ def session_factory():
 def make_executor(session_factory, llm=None, workers=1) -> BackgroundRunExecutor:
     """An executor over the no-op pipeline (default implementation and configuration)."""
     implementations = PipelineImplementationRegistry()
-    implementations.register_impl(PipelineType.NO_OP, "default", NoOpPipelineOrchestrator)
+    implementations.register_impl(
+        PipelineType.NO_OP, "default", NoOpPipelineOrchestrator, default=True
+    )
     configurations = PipelineConfigurationRegistry()
-    configurations.register(PipelineType.NO_OP, "default", "default", {"model": "test-model"})
+    configurations.register(
+        PipelineType.NO_OP, "default", "default", {"model": "test-model"}, default=True
+    )
     return BackgroundRunExecutor(
         runs=PipelineRepository(session_factory),
         batches=BatchRepository(session_factory),
@@ -150,10 +158,15 @@ class TestExecution:
         assert status_of(session_factory, bare.id) == PipelineRunStatus.PENDING
 
     def test_unknown_configuration_is_refused(self, executor):
-        with pytest.raises(UnknownPipelineError):
+        with pytest.raises(UnknownConfigurationError, match="'missing' is not a configuration"):
             executor.submit(PipelineType.NO_OP, "default", "missing", {})
-        with pytest.raises(UnknownPipelineError):
+        with pytest.raises(UnknownImplementationError, match="'default' is not an implementation"):
             executor.submit(PipelineType.SCHEMA_EXTRACTION, "default", "default", {})
+
+    def test_nothing_named_is_the_registered_default(self, executor):
+        run = executor.submit(PipelineType.NO_OP, None, None, {})
+
+        assert (run.implementation_id, run.configuration_ref) == ("default", "default")
 
     def test_two_workers_never_run_the_same_run_twice(self, session_factory):
         executor = make_executor(session_factory, workers=2)
@@ -503,7 +516,7 @@ class TestRequeuedRunSpend:
         def start(*attempts):
             orchestrator = _ScriptedOrchestrator(attempts)
             monkeypatch.setattr(
-                "adapters.pipelines.run_executor.create_orchestrator",
+                "adapters.factories.orchestrator_factory.create_orchestrator",
                 lambda *args, **kwargs: orchestrator,
             )
             run = submit_noop(executor)
@@ -623,10 +636,17 @@ class TestStoredInput:
     ):
         executor = make_executor(session_factory)
         executor._implementations.register_impl(
-            PipelineType.INDIVIDUAL_EXTRACTION, "default", NoOpPipelineOrchestrator
+            PipelineType.INDIVIDUAL_EXTRACTION,
+            "default",
+            NoOpPipelineOrchestrator,
+            default=True,
         )
         executor._configurations.register(
-            PipelineType.INDIVIDUAL_EXTRACTION, "default", "default", {"model": "test-model"}
+            PipelineType.INDIVIDUAL_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+            default=True,
         )
         seen = {}
 
@@ -638,7 +658,7 @@ class TestStoredInput:
                 return state
 
         monkeypatch.setattr(
-            "adapters.pipelines.run_executor.create_orchestrator",
+            "adapters.factories.orchestrator_factory.create_orchestrator",
             lambda *args, **kwargs: RecordingOrchestrator(),
         )
         text = "Alice works at Acme."
