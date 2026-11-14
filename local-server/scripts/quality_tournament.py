@@ -1164,7 +1164,8 @@ def _render_stale_section(
             "",
             "Re-record before reading any number for these variants (both call the live LLM): "
             "`python scripts/record_default_cassettes.py --record` for `default*`, "
-            "`python scripts/record_individual_canonicalization_cassettes.py` for `open_v1`.",
+            "`python scripts/record_individual_canonicalization_cassettes.py --record --spend` "
+            "for `open_v1`.",
         ]
     lines.append("")
     return "\n".join(lines)

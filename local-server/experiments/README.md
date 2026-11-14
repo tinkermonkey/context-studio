@@ -145,7 +145,8 @@ cassette would replay that one-off failure as the pipeline's answer from then on
 Stale on `main` as of 2026-11-14: the `open_v1` variant's canonicalization cassettes (70 of 104
 calls have no recording). No benchmark target and no guard reads them, so the tournament flags
 them and exits 0, and Loop C names them to its agents as stale before the change; record them with
-`python scripts/record_individual_canonicalization_cassettes.py` if `open_v1`'s numbers matter.
+`python scripts/record_individual_canonicalization_cassettes.py --record --spend` (with no flags it
+only prints what it would record) if `open_v1`'s numbers matter.
 
 ### The baseline (recorded 2026-11-12, `default` with `extraction-openrouter-default`, scored on main at c55e3494)
 

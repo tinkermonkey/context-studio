@@ -15,16 +15,23 @@ prompt — and therefore its cassette hash — matches at replay time. Scenarios
 whose ontology does not resolve (or that surface no candidate titles) make no
 LLM call and get no cassette; the stage self-skips for them at replay too.
 
-Usage:
-    python scripts/record_individual_canonicalization_cassettes.py
+SAFETY: with no flags (or `--dry-run`) it makes no LLM call, builds no
+ontology and writes nothing: it prints which scenarios it would run, the model
+and the cassette paths. Recording calls the live LLM, which costs money, and
+overwrites the committed cassettes: it needs both `--record` and `--spend`.
 
-Requires a live LLM provider (OPENAI_API_KEY, ANTHROPIC_API_KEY, or
+Usage (from local-server/, venv active):
+    python scripts/record_individual_canonicalization_cassettes.py                   # dry run
+    python scripts/record_individual_canonicalization_cassettes.py --record --spend  # LIVE
+
+Recording requires a live LLM provider (OPENAI_API_KEY, ANTHROPIC_API_KEY, or
 OPENROUTER_API_KEY). Re-run only when the canonicalization prompt or the eval
 ontology vocabulary changes.
 """
 
 from __future__ import annotations
 
+import argparse
 import asyncio
 import os
 import sys
@@ -103,16 +110,13 @@ async def _record() -> int:
     # The run's model, temperature and output-token limit are the open_v1
     # default configuration's (the resolver's), as the tournament replays them;
     # never the corpus fixture's pinned model
-    selection = benchmark_replay.pipeline_resolver().resolve(
-        benchmark_replay.PIPELINE_TYPE, "open_v1"
-    )
+    selection = _selection()
     config = {**selection.config, "llm_canonicalization": True}
 
     _CASSETTE_DIR.mkdir(parents=True, exist_ok=True)
     recorded = 0
     for scenario in _SCENARIOS:
-        cassette_path = _CASSETTE_DIR / f"{_CASSETTE_PREFIX}{scenario}.json"
-        provider = RecordingLLMProvider(real_provider, cassette_path)
+        provider = RecordingLLMProvider(real_provider, cassette_path_for(scenario))
         orch = selection.implementation(
             llm_provider=provider,
             nlp_processor=nlp,
@@ -138,8 +142,50 @@ async def _record() -> int:
     return 0
 
 
-def main() -> int:
-    """Record canonicalization cassettes for every individual-extraction scenario."""
+def _selection():
+    """What the recording runs: open_v1's default configuration, through the resolver."""
+    return benchmark_replay.pipeline_resolver().resolve(benchmark_replay.PIPELINE_TYPE, "open_v1")
+
+
+def cassette_path_for(scenario: str) -> Path:
+    """Where a scenario's canonicalization cassette is."""
+    return _CASSETTE_DIR / f"{_CASSETTE_PREFIX}{scenario}.json"
+
+
+def print_plan() -> None:
+    """The dry run: what a recording would run and write. No LLM call, no ontology build."""
+    model = _selection().parameters.get("model")
+    print("DRY RUN -- no LLM calls will be made. Pass --record --spend to record for real.\n")
+    print(f"cassette directory: {_CASSETTE_DIR}\n")
+    for scenario in _SCENARIOS:
+        print(f"  {scenario:<38} -> {cassette_path_for(scenario).name}")
+    print(
+        f"\nWould run {len(_SCENARIOS)} scenario(s), at most one live LLM call each "
+        "(a scenario with no candidate titles makes none), and overwrite their cassettes."
+    )
+    print(f"Model: {model}, from open_v1's default configuration.")
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Print the plan, or record canonicalization cassettes with --record --spend."""
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Print what would be recorded (the default)"
+    )
+    parser.add_argument(
+        "--record", action="store_true", help="Record with the live LLM (costs money)"
+    )
+    parser.add_argument("--spend", action="store_true", help="Confirm --record may call the LLM")
+    args = parser.parse_args(argv)
+    if args.record and args.dry_run:
+        parser.error("--record and --dry-run are opposites")
+    if not args.record:
+        print_plan()
+        return 0
+    if not args.spend:
+        raise SystemExit("--record calls the live LLM, which costs money; pass --spend to go ahead")
     return asyncio.run(_record())
 
 
