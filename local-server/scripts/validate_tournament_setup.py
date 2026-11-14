@@ -1,20 +1,31 @@
 #!/usr/bin/env python
 """
-Validate that the A/B tournament infrastructure for grounded_v1 is ready.
+Check that the tournament has what it replays: the triple corpus's cassettes
+for the `default` variants, and the benchmark cassettes of the target its
+benchmark pass would run.
 
-This script has two modes:
-1. Lightweight (default): Verifies cassette files exist and are valid JSON
-2. Full (--full): Additionally validates variants are registered and models work
+The target is chosen as in `scripts/quality_tournament.py` and
+`scripts/benchmark_replay.py`: `--implementation` and `--configuration`, each
+defaulting through the pipeline registry.
+
+Two modes:
+1. Lightweight (default): the cassette files exist and are valid JSON
+2. Full (--full): additionally builds the variant registry (loads the models)
+
+A cassette that exists but no longer answers the pipeline's prompts is not
+caught here: the tournament itself reports that (STALE CASSETTES, exit 3).
 
 Usage (from local-server/, venv active):
-    python scripts/validate_tournament_setup.py           # lightweight file check
-    python scripts/validate_tournament_setup.py --full    # full integration check
+    python scripts/validate_tournament_setup.py
+    python scripts/validate_tournament_setup.py --implementation find_then_type
+    python scripts/validate_tournament_setup.py --full
 """
 
 import argparse
 import json
 import os
 import sys
+from pathlib import Path
 
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
@@ -23,71 +34,63 @@ os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 local_server = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, local_server)
 
+from scripts import benchmark_replay  # noqa: E402
 from scripts.quality_tournament import (  # noqa: E402
-    _GROUNDED_CASSETTE_DIR,
-    _GROUNDED_PROMOTION_SOFT_F1_THRESHOLD,
-    _GROUNDED_PROMOTION_STRICT_F1_THRESHOLD,
-    _GROUNDED_REPLAY_SCENARIOS,
-    _grounded_cassettes_present,
+    _DEFAULT_REPLAY_SCENARIOS,
+    _default_cassette_path,
     build_registry,
+    triple_corpus_target,
 )
+from tests.integration.pipelines._harness.benchmark import benchmark_documents  # noqa: E402
+
+# The variants the tournament registers when their recordings are present
+EXPECTED_VARIANTS = ("open_v1", "default", "default+grounding")
 
 
-def validate_cassettes_lightweight() -> bool:
-    """Lightweight: Verify cassette files exist and contain valid JSON."""
-    print("\n=== Cassette File Validation (Lightweight) ===\n")
-
-    if not _GROUNDED_CASSETTE_DIR.exists():
-        print(f"✗ Cassette directory missing: {_GROUNDED_CASSETTE_DIR}")
+def check_cassettes(label: str, paths: dict[str, Path]) -> bool:
+    """Every named cassette file exists and holds valid JSON."""
+    print(f"\n=== {label} ===\n")
+    problems = 0
+    for name, path in paths.items():
+        if not path.exists():
+            print(f"  ✗ {name} (missing: {path})")
+            problems += 1
+            continue
+        try:
+            json.loads(path.read_text())
+        except json.JSONDecodeError as exc:
+            print(f"  ✗ {name} (invalid JSON: {exc})")
+            problems += 1
+            continue
+        print(f"  ✓ {name}")
+    if problems:
+        print(f"\n✗ {problems} of {len(paths)} cassettes missing or invalid")
         return False
-
-    print(f"Cassette directory: {_GROUNDED_CASSETTE_DIR}")
-    print(f"Required scenarios: {len(_GROUNDED_REPLAY_SCENARIOS)}")
-
-    missing = []
-    invalid_json = []
-    for scenario in _GROUNDED_REPLAY_SCENARIOS:
-        cassette_file = _GROUNDED_CASSETTE_DIR / f"individual_grounded_typing_{scenario}.json"
-        if not cassette_file.exists():
-            print(f"  ✗ {scenario} (missing)")
-            missing.append(scenario)
-        else:
-            try:
-                with open(cassette_file) as f:
-                    json.load(f)
-                print(f"  ✓ {scenario}")
-            except json.JSONDecodeError as e:
-                print(f"  ✗ {scenario} (invalid JSON: {e})")
-                invalid_json.append(scenario)
-
-    if missing:
-        print(f"\nMissing {len(missing)} cassettes")
-        return False
-
-    if invalid_json:
-        print(f"\nInvalid JSON in {len(invalid_json)} cassettes")
-        return False
-
-    print(f"\n✓ All {len(_GROUNDED_REPLAY_SCENARIOS)} cassettes present and valid")
+    print(f"\n✓ All {len(paths)} cassettes present and valid")
     return True
 
 
-def validate_cassettes_full() -> bool:
-    """Full validation: cassettes exist, valid JSON, and replay can register."""
-    if not validate_cassettes_lightweight():
-        return False
-
-    # Also verify _grounded_cassettes_present() agrees
-    if not _grounded_cassettes_present():
-        print("\n✗ Cassettes present but _grounded_cassettes_present() returned False")
-        return False
-
-    return True
+def validate_triple_corpus_cassettes() -> bool:
+    """The cassettes the `default` and `default+grounding` variants replay."""
+    target = triple_corpus_target()
+    return check_cassettes(
+        f"Triple corpus: {target.implementation} with {target.configuration} ({target.model})",
+        {scenario: _default_cassette_path(scenario) for scenario in _DEFAULT_REPLAY_SCENARIOS},
+    )
 
 
-def validate_variants_full() -> bool:
-    """Full validation: Load models and verify all tournament variants are registered."""
-    print("\n=== Variant Registration (Full) ===\n")
+def validate_benchmark_cassettes(target: benchmark_replay.BenchmarkTarget) -> bool:
+    """The cassettes the benchmark pass replays for the chosen target."""
+    return check_cassettes(
+        f"Benchmark: {target.implementation} with {target.configuration} ({target.model}), "
+        f"{benchmark_replay.cassette_dir(target).name}/",
+        {d: benchmark_replay.cassette_path(d, target) for d in benchmark_documents()},
+    )
+
+
+def validate_variants() -> bool:
+    """Load the models and check that every expected tournament variant registers."""
+    print("\n=== Variant registration ===\n")
 
     from adapters.embedding.caching_embedding_service import CachingEmbeddingService
     from adapters.embedding.sentence_transformer import SentenceTransformerEmbedding
@@ -106,100 +109,69 @@ def validate_variants_full() -> bool:
         print(f"✗ Failed to build registry: {exc}")
         return False
 
-    print(f"Total variants: {len(registry)}")
+    for name in EXPECTED_VARIANTS:
+        variant = registry.get(name)
+        if variant is None:
+            print(f"  ✗ {name} not registered")
+            continue
+        print(
+            f"  ✓ {name:<20} implementation {variant.implementation}, configuration "
+            f"{variant.configuration}, model {variant.model}"
+        )
 
-    expected_variants = {"open_v1", "default", "default+grounding", "grounded_v1"}
-    actual_variants = set(registry.keys())
-
-    for variant_name in sorted(expected_variants):
-        if variant_name in actual_variants:
-            variant = registry[variant_name]
-            knob_count = sum(len(v) for v in variant.knob_space.values())
-            print(f"  ✓ {variant_name:<20} ({knob_count} knob options)")
-        else:
-            print(f"  ✗ {variant_name} not registered")
-
-    missing = expected_variants - actual_variants
+    missing = [name for name in EXPECTED_VARIANTS if name not in registry]
     if missing:
         print(f"\n✗ {len(missing)} variant(s) not registered: {missing}")
         return False
-
-    print(f"\n✓ All {len(expected_variants)} variants registered")
+    print(f"\n✓ All {len(EXPECTED_VARIANTS)} variants registered")
     return True
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Validate A/B tournament infrastructure for grounded_v1"
+        description="Check that the tournament's recordings are in place"
+    )
+    parser.add_argument(
+        "--implementation",
+        help="The implementation the benchmark pass would run (the registry's default)",
+    )
+    parser.add_argument(
+        "--configuration",
+        help="The implementation's configuration (the one its recordings were made with)",
     )
     parser.add_argument(
         "--full",
         action="store_true",
         default=False,
-        help=(
-            "Run full validation including model loading (slower). "
-            "Default is lightweight file check."
-        ),
+        help="Also build the variant registry, which loads the models (slower)",
     )
     args = parser.parse_args()
 
-    print("=" * 70)
-    if args.full:
-        print("A/B TOURNAMENT SETUP VALIDATION (FULL)")
-    else:
-        print("A/B TOURNAMENT SETUP VALIDATION (LIGHTWEIGHT)")
-    print("=" * 70)
-
-    if args.full:
-        results = {
-            "Cassettes": validate_cassettes_full(),
-            "Variants": validate_variants_full(),
-        }
-    else:
-        results = {
-            "Cassettes": validate_cassettes_lightweight(),
-        }
-
-    print("\n" + "=" * 70)
-    print("VALIDATION SUMMARY")
-    print("=" * 70 + "\n")
-
-    all_passed = all(results.values())
-    for check_name, passed in results.items():
-        status = "✓ PASS" if passed else "✗ FAIL"
-        print(f"{status}: {check_name}")
-
-    # Validate A/B promotion decision infrastructure
-    print("\n=== A/B Evaluation Promotion Criteria ===\n")
-    print("grounded_v1 will be promoted to default status if:")
-    print(f"  - Strict-F1 ≥ {_GROUNDED_PROMOTION_STRICT_F1_THRESHOLD:.3f} AND")
-    print(f"  - Soft-F1 ≥ {_GROUNDED_PROMOTION_SOFT_F1_THRESHOLD:.3f}")
-    print("\nPromotion decision logic: _evaluate_grounded_v1_promotion()")
-
-    if all_passed:
-        print("\n" + "=" * 70)
-        print("✓ SUCCESS: Tournament infrastructure is ready")
-        print("=" * 70)
-        if args.full:
-            print("\nYou can now run the tournament with:")
-            print("  python scripts/quality_tournament.py --pipeline individual")
-            print("\nThe tournament will evaluate all 4 variants:")
-            print("  - open_v1: Rule-based spaCy triple extraction")
-            print("  - default: LLM-based extraction (phase-1 model via OpenRouter)")
-            print("  - default+grounding: LLM + soft-match dedup")
-            print("  - grounded_v1: NLP-grounded typing with LLM confirmation")
-            print("\nVariants will be ranked by dev soft-F1, and grounded_v1 will be")
-            print("compared against promotion criteria for automatic A/B decision.")
-        else:
-            print("\nCassettes are in place for grounded_v1 variant.")
-            print("Run with --full flag to validate variants and models can load:")
-            print("  python scripts/validate_tournament_setup.py --full")
-        return 0
-    else:
-        print("\n" + "=" * 70)
-        print("✗ FAILURE: Some validation checks failed")
-        print("=" * 70)
+    try:
+        target = benchmark_replay.resolve_target(args.implementation, args.configuration)
+    except benchmark_replay.UnknownTargetError as exc:
+        print(f"ERROR: {exc}")
         return 1
+
+    results = {
+        "Triple-corpus cassettes": validate_triple_corpus_cassettes(),
+        "Benchmark cassettes": validate_benchmark_cassettes(target),
+    }
+    if args.full:
+        results["Variants"] = validate_variants()
+
+    print("\n=== Summary ===\n")
+    for check_name, passed in results.items():
+        print(f"{'✓ PASS' if passed else '✗ FAIL'}: {check_name}")
+
+    if not all(results.values()):
+        print("\n✗ The tournament cannot measure this target as it stands")
+        return 1
+    print("\n✓ Recordings are in place. Run the tournament with:")
+    print(f"  python scripts/quality_tournament.py --pipeline individual {target.flags}")
+    if not args.full:
+        print("Pass --full to also check that the variants register and the models load.")
+    return 0
 
 
 if __name__ == "__main__":

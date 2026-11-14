@@ -38,6 +38,7 @@ class MetricsEmitter:
         duration_ms: float = 0.0,
         tokens_in: int = 0,
         tokens_out: int = 0,
+        labels: dict[str, str] | None = None,
     ) -> None:
         """
         Emit a single metrics row to JSONL.
@@ -55,8 +56,12 @@ class MetricsEmitter:
             duration_ms: Execution duration in milliseconds
             tokens_in: Input token count
             tokens_out: Output token count
+            labels: Further fields that say what the row is for (for one, the
+                implementation and the tournament variant that was run); they
+                never replace a field above
         """
         row = {
+            **(labels or {}),
             "schema_version": 1,
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "run_id": self._run_id,
@@ -158,7 +163,7 @@ class FloorGate:
             else:
                 if actual_value < floor_value:
                     failures.append(
-                        f"{metric_name}={actual_value:.4f} below " f"floor {floor_value:.4f}"
+                        f"{metric_name}={actual_value:.4f} below floor {floor_value:.4f}"
                     )
 
         if failures:
@@ -207,9 +212,7 @@ class ABReport:
             value_a_str = f"{value_a:.4f}" if not math.isnan(value_a) else "N/A"
             value_b_str = f"{value_b:.4f}" if not math.isnan(value_b) else "N/A"
 
-            lines.append(
-                f"{metric_name.ljust(20)}" f"{value_a_str:<15}" f"{value_b_str:<15}" f"{delta_str}"
-            )
+            lines.append(f"{metric_name.ljust(20)}{value_a_str:<15}{value_b_str:<15}{delta_str}")
 
         return "\n".join(lines)
 

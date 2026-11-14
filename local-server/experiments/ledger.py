@@ -5,17 +5,40 @@ Read/write helpers for `local-server/experiments/ledger.jsonl` — one JSON
 line per experiment (accepted and rejected), in the exact shape specified by
 `documentation/karpathy_loop_design.md` §8:
 
-    {"experiment_id": "...", "iteration": 12, "hypothesis": "full_class_catalog",
+    {"experiment_id": "12-default-full_class_catalog", "iteration": 12,
+     "implementation": "default", "configuration": "extraction-openrouter-default",
+     "hypothesis": "full_class_catalog",
      "variant": "default+full_class_catalog", "diff_stat": "...", "base_commit": "...",
      "dev": {"typed_f1": 0.41, "f1": 0.58}, "holdout": {"typed_f1": 0.37, "f1": 0.55},
-     "guard": {"strict_f1": 0.92, "soft_f1": 0.93},
+     "guard": {"applies": true, "strict_f1": 0.92, "soft_f1": 0.93},
      "decision": "accepted", "reason": "", "cost_usd": 0.11, "agent": "worktree-2"}
+
+`implementation` and `configuration` say what the experiment refined and
+measured: the pipeline implementation and the configuration it ran with, the
+pair every run is selected by. An experiment entry must carry both.
 
 `dev` and `holdout` are the extraction benchmark's measures and `guard` the
 triple corpus's (entries before the 2026-11 baseline reset carry triple-corpus
-metrics in `dev`/`holdout`). A `decision: "unmeasured"` entry has all three
-null when the candidate could not be measured, and its claimed numbers when it
-was measured but the verifier returned nothing.
+metrics in `dev`/`holdout`). The guard applies only to the target the triple
+corpus has recordings of (the two-pass implementation, id `default`, with
+`extraction-openrouter-default`); for any other target the entry records
+`"guard": {"applies": false, "reason": "..."}`, never another target's
+number. A `decision: "unmeasured"` entry has all three null when the candidate
+could not be measured, and its claimed numbers when it was measured but the
+verifier returned nothing.
+
+**Rejections are scoped by implementation and configuration; acceptances by
+implementation.** A hypothesis is a change to one implementation's code. A
+rejection was a judgement made with one configuration's model, so
+`rejected_hypotheses` takes both: `cross_chunk_relationships` rejected for
+`default` is still open for `find_then_type`, and one rejected for `default`
+with `extraction-openrouter-default` is still open for `default` with
+`extraction-default`. An acceptance merged the change into the
+implementation's code, which every configuration of it runs, so
+`accepted_hypotheses` takes the implementation alone: a merged hypothesis is
+not drafted and paid for again under another configuration. An entry written
+before the fields existed has neither and counts for every one (all such
+entries predate the 2026-11 baseline reset, so none is read today).
 
 Entries may also carry an optional `bootstrap` field — the Wave 1 DR
 bootstrap-scenario diagnostics (`karpathy_loop_dr_ontology_design.md` §5,
@@ -38,7 +61,11 @@ e.g. the DR ontology import replacing the placeholder 3-class ontology
 (`documentation/karpathy_loop_dr_ontology_design.md` §9). Every ledger read
 that feeds a loop decision is scoped through `entries_since_last_baseline_reset`
 so entries recorded before the most recent reset are excluded automatically;
-`rejected_hypotheses` already does this. This is a mechanism, not a
+`rejected_hypotheses` already does this. A reset that names an
+`implementation` (and, with it, a `configuration`) resets that history only
+(its recordings were made again, its margins re-measured); one that names none
+resets every history (the gold files, the scorer or the ontology changed).
+This is a mechanism, not a
 documented convention: a pre-reset rejection cannot silently suppress
 retrying the same hypothesis after the baseline it was rejected under no
 longer exists. Any future spec-version upgrade (DR or otherwise) is expected
@@ -65,10 +92,14 @@ has shell access but no in-process import of this package — see
     python experiments/ledger.py append --stdin <<'EOF'
     <json entry>
     EOF
-    python experiments/ledger.py rejected-hypotheses
-    python experiments/ledger.py accepted-hypotheses
+    python experiments/ledger.py rejected-hypotheses --implementation find_then_type \
+        --configuration extraction-find-then-type
+    python experiments/ledger.py accepted-hypotheses --implementation find_then_type
     python experiments/ledger.py baseline-reset --ontology-context dr_spec --spec-version 0.8.4 \
         --base-commit "$(git rev-parse HEAD)" 'Replaced the placeholder ontology with the DR spec.'
+    python experiments/ledger.py baseline-reset --ontology-context extraction_benchmark \
+        --implementation find_then_type --configuration extraction-find-then-type \
+        --base-commit "$(git rev-parse HEAD)" 'Recorded find_then_type again; margins re-measured.'
 
 `append --stdin` exists because ledger entries routinely embed free-form LLM
 text (verifier/reject reasons) that may contain apostrophes, backticks, or
@@ -108,6 +139,10 @@ REQUIRED_FIELDS = (
     "agent",
 )
 
+# What an experiment refined and measured. Required of an experiment entry; a
+# baseline reset carries them only when it is one implementation's.
+TARGET_FIELDS = ("implementation", "configuration")
+
 BASELINE_RESET_DECISION = "baseline_reset"
 
 # An experiment that ran but could not be measured or verified (a failed
@@ -128,8 +163,9 @@ def validate_entry(entry: dict[str, Any]) -> None:
     Validate `entry` against the ledger shape in karpathy_loop_design.md §8.
 
     Raises:
-        LedgerEntryError: If a required field is missing, or `decision` is
-            not one of "accepted"/"rejected"/"unmeasured"/"baseline_reset".
+        LedgerEntryError: If a required field is missing, `decision` is not
+            one of "accepted"/"rejected"/"unmeasured"/"baseline_reset", or an
+            experiment entry does not name its implementation and configuration.
     """
     missing = [field for field in REQUIRED_FIELDS if field not in entry]
     if missing:
@@ -138,6 +174,12 @@ def validate_entry(entry: dict[str, Any]) -> None:
         raise LedgerEntryError(
             f"ledger entry 'decision' must be one of {VALID_DECISIONS}, got {entry['decision']!r}"
         )
+    if entry["decision"] != BASELINE_RESET_DECISION:
+        unnamed = [field for field in TARGET_FIELDS if not entry.get(field)]
+        if unnamed:
+            raise LedgerEntryError(
+                f"an experiment entry must say what it refined; missing or empty: {unnamed}"
+            )
 
 
 def append_entry(entry: dict[str, Any], ledger_path: Optional[Union[Path, str]] = None) -> None:
@@ -195,6 +237,9 @@ def append_baseline_reset(
     iteration: int = 0,
     agent: str = "system",
     ledger_path: Optional[Union[Path, str]] = None,
+    implementation: Optional[str] = None,
+    configuration: Optional[str] = None,
+    baseline: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
     """
     Append a baseline-reset checkpoint entry to the ledger.
@@ -216,6 +261,13 @@ def append_baseline_reset(
             the baseline is tied to one (e.g. the DR spec's own
             `specVersion`). None for resets not tied to a versioned spec.
         base_commit: The repository commit this reset was recorded against.
+        implementation: The one implementation whose history this resets
+            (with the configuration it is measured with); None resets every
+            implementation's.
+        configuration: That implementation's configuration.
+        baseline: The incumbent scores at this reset, for the record (dev,
+            holdout, guard, failure counts; per implementation when the reset
+            is every implementation's).
 
     Returns:
         The entry that was appended.
@@ -236,30 +288,66 @@ def append_baseline_reset(
         "ontology_context": ontology_context,
         "spec_version": spec_version,
     }
+    if implementation:
+        entry["implementation"] = implementation
+        if configuration:
+            entry["configuration"] = configuration
+    if baseline is not None:
+        entry["baseline"] = baseline
     append_entry(entry, ledger_path=ledger_path)
     return entry
 
 
+def _within(entry: dict[str, Any], field: str, wanted: Optional[str]) -> bool:
+    """Whether an entry is in scope for a field: unscoped reads and unnamed entries always are."""
+    return wanted is None or entry.get(field) in (None, wanted)
+
+
+def _resets(reset: dict[str, Any], entry: dict[str, Any]) -> bool:
+    """Whether a baseline reset covers an entry: what the reset names is what the entry refined."""
+    return all(reset.get(field) in (None, entry.get(field)) for field in TARGET_FIELDS)
+
+
 def entries_since_last_baseline_reset(
     ledger_path: Optional[Union[Path, str]] = None,
+    implementation: Optional[str] = None,
+    configuration: Optional[str] = None,
 ) -> list[dict[str, Any]]:
     """
-    Return every ledger entry recorded after the most recent baseline-reset
-    checkpoint (the checkpoint entry itself is excluded), or every entry if
-    no checkpoint has been recorded yet.
+    Return the experiment entries no later baseline-reset checkpoint covers
+    (checkpoints themselves are excluded), in file order.
+
+    A checkpoint that names nothing covers every entry before it. One that
+    names an implementation, or an implementation and a configuration, covers
+    only the earlier entries that refined that: one implementation's reset
+    leaves another's history standing, and one configuration's leaves the same
+    implementation's other configurations standing.
+
+    With an `implementation` (and a `configuration`), only the entries of that
+    implementation (with that configuration) are returned, plus those written
+    before entries named either.
 
     Every ledger read that feeds a loop decision should be scoped through
     this function instead of `read_entries` directly, so pre-reset entries
     never silently influence a post-reset decision.
     """
     entries = read_entries(ledger_path)
-    last_reset_index = None
-    for index, entry in enumerate(entries):
+    live: list[dict[str, Any]] = []
+    # Walk backwards, so each entry meets only the resets recorded after it
+    later_resets: list[dict[str, Any]] = []
+    for entry in reversed(entries):
         if entry.get("decision") == BASELINE_RESET_DECISION:
-            last_reset_index = index
-    if last_reset_index is None:
-        return entries
-    return entries[last_reset_index + 1 :]
+            later_resets.append(entry)
+            continue
+        if not _within(entry, "implementation", implementation):
+            continue
+        if not _within(entry, "configuration", configuration):
+            continue
+        if any(_resets(reset, entry) for reset in later_resets):
+            continue
+        live.append(entry)
+    live.reverse()
+    return live
 
 
 def latest_baseline_reset(
@@ -283,10 +371,33 @@ def latest_baseline_reset(
     return matches[-1] if matches else None
 
 
-def rejected_hypotheses(ledger_path: Optional[Union[Path, str]] = None) -> list[str]:
+def _decided_hypotheses(
+    decision: str,
+    ledger_path: Optional[Union[Path, str]],
+    implementation: Optional[str],
+    configuration: Optional[str],
+) -> list[str]:
+    """Distinct hypotheses with that decision since the last reset, in first-seen order."""
+    seen: list[str] = []
+    for entry in entries_since_last_baseline_reset(ledger_path, implementation, configuration):
+        hypothesis = entry.get("hypothesis")
+        if entry.get("decision") == decision and hypothesis is not None and hypothesis not in seen:
+            seen.append(hypothesis)
+    return seen
+
+
+def rejected_hypotheses(
+    ledger_path: Optional[Union[Path, str]] = None,
+    implementation: Optional[str] = None,
+    configuration: Optional[str] = None,
+) -> list[str]:
     """
     Return the distinct `hypothesis` strings of every rejected experiment
     recorded since the last baseline reset, in first-seen order.
+
+    Hypothesis ids are scoped by implementation and configuration: pass what
+    is being refined to get its rejections only. Without either, everyone's
+    are returned.
 
     Target selection (§4.3 step 2) excludes these until the next baseline
     reset. Rejections recorded before a baseline reset (e.g. against the
@@ -294,22 +405,18 @@ def rejected_hypotheses(ledger_path: Optional[Union[Path, str]] = None) -> list[
     `entries_since_last_baseline_reset`. An "unmeasured" entry is not a
     rejection and is not returned.
     """
-    seen: list[str] = []
-    for entry in entries_since_last_baseline_reset(ledger_path):
-        hypothesis = entry.get("hypothesis")
-        if (
-            entry.get("decision") == "rejected"
-            and hypothesis is not None
-            and hypothesis not in seen
-        ):
-            seen.append(hypothesis)
-    return seen
+    return _decided_hypotheses("rejected", ledger_path, implementation, configuration)
 
 
-def accepted_hypotheses(ledger_path: Optional[Union[Path, str]] = None) -> list[str]:
+def accepted_hypotheses(
+    ledger_path: Optional[Union[Path, str]] = None,
+    implementation: Optional[str] = None,
+) -> list[str]:
     """
     Return the distinct `hypothesis` strings of every accepted experiment
-    recorded since the last baseline reset, in first-seen order.
+    recorded since the last baseline reset, in first-seen order, scoped by
+    implementation only: the merged change is the implementation's code,
+    which every one of its configurations runs.
 
     Target selection (§4.3 step 2) excludes these: an accepted hypothesis is
     already merged into the incumbent, so re-drafting it produces a candidate
@@ -319,16 +426,7 @@ def accepted_hypotheses(ledger_path: Optional[Union[Path, str]] = None) -> list[
     ontology/corpus swap makes a previously-merged hypothesis retryable again,
     since the incumbent it was merged into no longer exists.
     """
-    seen: list[str] = []
-    for entry in entries_since_last_baseline_reset(ledger_path):
-        hypothesis = entry.get("hypothesis")
-        if (
-            entry.get("decision") == "accepted"
-            and hypothesis is not None
-            and hypothesis not in seen
-        ):
-            seen.append(hypothesis)
-    return seen
+    return _decided_hypotheses("accepted", ledger_path, implementation, None)
 
 
 def _main(argv: Optional[list[str]] = None) -> int:
@@ -357,9 +455,27 @@ def _main(argv: Optional[list[str]] = None) -> int:
         " (use with a quoted heredoc: `<<'EOF' ... EOF`).",
     )
 
-    subparsers.add_parser("rejected-hypotheses", help="Print rejected hypotheses, one per line")
-
-    subparsers.add_parser("accepted-hypotheses", help="Print accepted hypotheses, one per line")
+    for command, decided in (
+        ("rejected-hypotheses", "rejected"),
+        ("accepted-hypotheses", "accepted"),
+    ):
+        decided_parser = subparsers.add_parser(
+            command, help=f"Print {decided} hypotheses, one per line"
+        )
+        decided_parser.add_argument(
+            "--implementation",
+            default=None,
+            help="The implementation being refined: hypothesis ids are scoped by it."
+            " Omit for every implementation's",
+        )
+        if decided == "rejected":
+            # An acceptance is merged code, which every configuration runs
+            decided_parser.add_argument(
+                "--configuration",
+                default=None,
+                help="The configuration it is measured with: rejections are scoped by it"
+                " too. Omit for every configuration's",
+            )
 
     baseline_reset_parser = subparsers.add_parser(
         "baseline-reset", help="Append a baseline-reset checkpoint entry"
@@ -378,6 +494,16 @@ def _main(argv: Optional[list[str]] = None) -> int:
         "--base-commit",
         default="unknown",
         help="Repository commit this reset was recorded against",
+    )
+    baseline_reset_parser.add_argument(
+        "--implementation",
+        default=None,
+        help="Reset this implementation's history only; omit to reset every implementation's",
+    )
+    baseline_reset_parser.add_argument(
+        "--configuration",
+        default=None,
+        help="The configuration that implementation is measured with",
     )
     baseline_reset_parser.add_argument("--iteration", type=int, default=0)
     baseline_reset_parser.add_argument("--agent", default="system")
@@ -420,12 +546,14 @@ def _main(argv: Optional[list[str]] = None) -> int:
         return 0
 
     if args.command == "rejected-hypotheses":
-        for hypothesis in rejected_hypotheses(ledger_path=args.ledger_path):
+        for hypothesis in rejected_hypotheses(
+            args.ledger_path, args.implementation, args.configuration
+        ):
             print(hypothesis)
         return 0
 
     if args.command == "accepted-hypotheses":
-        for hypothesis in accepted_hypotheses(ledger_path=args.ledger_path):
+        for hypothesis in accepted_hypotheses(args.ledger_path, args.implementation):
             print(hypothesis)
         return 0
 
@@ -445,6 +573,8 @@ def _main(argv: Optional[list[str]] = None) -> int:
             iteration=args.iteration,
             agent=args.agent,
             ledger_path=args.ledger_path,
+            implementation=args.implementation,
+            configuration=args.configuration,
         )
         path = args.ledger_path or LEDGER_PATH
         print(f"appended baseline-reset checkpoint '{entry['experiment_id']}' to {path}")
