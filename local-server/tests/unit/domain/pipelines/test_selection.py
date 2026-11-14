@@ -181,6 +181,43 @@ class TestResolve:
         )
         assert "(one of: two-pass-haiku)" in str(unknown.value)
 
+    def test_leaving_the_configuration_out_is_no_way_around_a_disabled_default(
+        self, resolver, registries
+    ):
+        _, configurations = registries
+        configurations.register(
+            EXTRACTION,
+            "default",
+            "two-pass-haiku",
+            {"model": "haiku", "enabled": False},
+            default=True,
+        )
+
+        with pytest.raises(ConfigurationDisabledError) as error:
+            resolver.resolve(EXTRACTION)
+
+        assert str(error.value) == (
+            "No configuration was named and the default one, 'two-pass-haiku', of the 'default'"
+            " implementation of individual_extraction is disabled (enabled: two-pass-gemini)"
+        )
+
+    def test_an_implementation_with_no_enabled_configuration_says_so(self, resolver, registries):
+        _, configurations = registries
+        configurations.register(
+            EXTRACTION,
+            "find_then_type",
+            "find-then-type",
+            {"model": "haiku", "enabled": False},
+            default=True,
+        )
+
+        with pytest.raises(ConfigurationDisabledError) as error:
+            resolver.resolve(EXTRACTION, "find_then_type")
+
+        assert str(error.value).endswith(
+            "is disabled (the implementation has no enabled configuration)"
+        )
+
     def test_selection_errors_are_input_errors_of_the_caller(self):
         # Entry points that answer a ValueError as bad input answer these too
         assert issubclass(PipelineSelectionError, ValueError)

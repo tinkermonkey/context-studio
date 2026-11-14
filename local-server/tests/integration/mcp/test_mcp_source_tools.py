@@ -650,11 +650,27 @@ class TestExtractSource:
                 ({"source_id": ready["id"], "configuration": "nope"}, "'nope' is not"),
                 (
                     {"source_id": ready["id"], "implementation": "nope"},
-                    "'nope' is not an implementation of individual_extraction",
+                    "'nope' is not an individual-extraction implementation that can extract a"
+                    " source (one of: default, find_then_type)",
                 ),
                 (
                     {"source_id": ready["id"], "implementation": "open_v1"},
                     "can extract a source (one of: default, find_then_type)",
+                ),
+                (
+                    # Naming its own configuration does not let it through
+                    {
+                        "source_id": ready["id"],
+                        "implementation": "open_v1",
+                        "configuration": "extraction-open-v1",
+                    },
+                    "can extract a source (one of: default, find_then_type)",
+                ),
+                (
+                    # find_then_type's configuration without naming find_then_type
+                    {"source_id": ready["id"], "configuration": "extraction-find-then-type"},
+                    "is a configuration of the find_then_type implementation, not of the"
+                    " 'default' implementation",
                 ),
                 (
                     {

@@ -184,6 +184,32 @@ class TestImplementationChoice:
     @pytest.mark.parametrize(
         "implementation_id, configuration_ref",
         [
+            # Its own configuration: registered, so only the implementation check refuses it
+            ("open_v1", "extraction-open-v1"),
+            ("no_such", "extraction-default"),
+            ("no_such", "no-such-configuration"),
+        ],
+    )
+    def test_naming_a_configuration_does_not_let_such_an_implementation_through(
+        self, service, submitter, source, implementation_id, configuration_ref
+    ):
+        with pytest.raises(
+            ValueError,
+            match=f"'{implementation_id}' is not an individual-extraction implementation that"
+            r" can extract a source \(one of: default, find_then_type\)",
+        ):
+            service.extract(
+                source.id,
+                "home",
+                configuration_ref=configuration_ref,
+                implementation_id=implementation_id,
+            )
+
+        assert submitter.submitted == []
+
+    @pytest.mark.parametrize(
+        "implementation_id, configuration_ref",
+        [
             ("find_then_type", "extraction-default"),
             ("default", "extraction-find-then-type"),
             (None, "extraction-find-then-type"),
@@ -214,6 +240,29 @@ class TestImplementationChoice:
 
         with pytest.raises(ValueError, match="is disabled"):
             service.extract(source.id, "home", configuration_ref="extraction-openrouter-default")
+
+        assert submitter.submitted == []
+
+    def test_a_disabled_default_starts_no_run_when_no_configuration_is_named(
+        self, service, submitter, source, registries
+    ):
+        # What the Extract page sends when an implementation has no enabled
+        # configuration to offer: no configuration at all
+        _, configurations = registries
+        configurations.register(
+            PipelineType.INDIVIDUAL_EXTRACTION,
+            "find_then_type",
+            "extraction-find-then-type",
+            {"model": "m", "enabled": False},
+            default=True,
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="No configuration was named and the default one, 'extraction-find-then-type',"
+            ".*is disabled \\(the implementation has no enabled configuration\\)",
+        ):
+            service.extract(source.id, "home", implementation_id="find_then_type")
 
         assert submitter.submitted == []
 

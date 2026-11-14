@@ -140,10 +140,12 @@ class SourceExtractionService:
             SourceNotReadyError: If the source is fetching, failed or removed
             ValueError: If the page selection is malformed, names pages the
                 source lacks or holds no text (or only skipped sections, when
-                skip_boilerplate), or an implementation can't extract a source
-            PipelineSelectionError: (a ValueError) If an implementation isn't
-                one of its type's, or a configuration isn't one of its
-                implementation's or is disabled
+                skip_boilerplate), or an implementation isn't one of its
+                type's that can extract a source (whether or not a
+                configuration is named)
+            PipelineSelectionError: (a ValueError) If a configuration isn't
+                one of its implementation's or is disabled, the
+                implementation's default included
             PipelineInputError: If `schema` is asked of a taxonomy that mirrors
                 an external source, other than by its client over MCP
         """
@@ -265,22 +267,26 @@ class SourceExtractionService:
         configuration named, or the registered defaults.
 
         Raises:
-            ValueError: If the implementation can't extract a source
-            PipelineSelectionError: If the implementation or configuration
-                can't be selected
+            ValueError: If the implementation isn't one of the type's that can
+                extract a source (the message lists those)
+            PipelineSelectionError: If the type has no default implementation,
+                or the configuration can't be selected
         """
-        implementation_id, implementation = self._resolver.implementation(
-            pipeline_type, implementation_id
+        # Checked whether or not a configuration is named: the implementation
+        # must be one of the type's that can extract a source
+        able = sorted(
+            impl_id
+            for impl_id, impl in self._resolver.implementations(pipeline_type).items()
+            if getattr(impl, "EXTRACTS_SOURCES", False)
         )
-        if not getattr(implementation, "EXTRACTS_SOURCES", False):
-            able = sorted(
-                impl_id
-                for impl_id, impl in self._resolver.implementations(pipeline_type).items()
-                if getattr(impl, "EXTRACTS_SOURCES", False)
-            )
+        if not implementation_id:
+            implementation_id, _ = self._resolver.implementation(pipeline_type)
+        if implementation_id not in able:
+            label = pipeline_type.value.replace("_", "-")
+            article = "an" if label[0] in "aeiou" else "a"
             raise ValueError(
-                f"{implementation_id!r} is not an implementation of {pipeline_type.value} that"
-                f" can extract a source (one of: {', '.join(able)})"
+                f"{implementation_id!r} is not {article} {label} implementation that can"
+                f" extract a source (one of: {', '.join(able)})"
             )
         return self._resolver.resolve(pipeline_type, implementation_id, configuration_ref)
 

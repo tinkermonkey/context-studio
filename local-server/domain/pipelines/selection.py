@@ -115,7 +115,8 @@ class PipelineResolver:
             UnknownConfigurationError: If the implementation has no such
                 configuration (the message says whose it is, when it is
                 another implementation's), or none is named and it has no default
-            ConfigurationDisabledError: If the configuration is disabled
+            ConfigurationDisabledError: If the configuration is disabled, also
+                when it is the default one of a run that named none
         """
         implementation_id, implementation = self.implementation(pipeline_type, implementation_id)
         registered = self._implementations.list_by_type(pipeline_type)
@@ -126,7 +127,8 @@ class PipelineResolver:
             for ref, latest in self._configurations.list_configs(pipeline_type, implementation_id)
             if latest.config.get("enabled") is not False
         ]
-        if configuration_ref is None or configuration_ref == "":
+        named = bool(configuration_ref)
+        if not named:
             configuration_ref = self._configurations.default_configuration(
                 pipeline_type, implementation_id
             )
@@ -157,10 +159,21 @@ class PipelineResolver:
                 + (f" (one of: {_listed(own)})" if own else " (it has none)")
             )
         if configuration.config.get("enabled") is False:
+            # The default is refused as a named one is: leaving the
+            # configuration out is no way around its being disabled
+            which = (
+                f"The {configuration_ref!r} configuration"
+                if named
+                else f"No configuration was named and the default one, {configuration_ref!r},"
+            )
             raise ConfigurationDisabledError(
-                f"The {configuration_ref!r} configuration of the {implementation_id!r}"
-                f" implementation of {pipeline_type.value} is disabled"
-                + (f" (enabled: {_listed(own)})" if own else "")
+                f"{which} of the {implementation_id!r} implementation of"
+                f" {pipeline_type.value} is disabled"
+                + (
+                    f" (enabled: {_listed(own)})"
+                    if own
+                    else " (the implementation has no enabled configuration)"
+                )
             )
         return PipelineSelection(pipeline_type, implementation_id, implementation, configuration)
 

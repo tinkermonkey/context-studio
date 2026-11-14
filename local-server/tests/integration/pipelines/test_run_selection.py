@@ -226,6 +226,30 @@ class TestRunApi:
         assert app.state.pipeline_run_repo.list() == []
         assert extraction.calls == []
 
+    @pytest.mark.parametrize("run_async", [False, True])
+    def test_a_disabled_default_is_not_used_for_a_run_that_names_nothing(
+        self, client, app, registries, extraction, run_async
+    ):
+        _, configurations = registries
+        configurations.register(
+            EXTRACTION,
+            "default",
+            "extraction-default",
+            {"model": "m", "enabled": False},
+            default=True,
+        )
+
+        response = client.post(RUN, json={**BODY, "async": run_async})
+
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+        assert response.json()["detail"] == (
+            "No configuration was named and the default one, 'extraction-default', of the"
+            " 'default' implementation of individual_extraction is disabled"
+            " (enabled: extraction-openrouter-default)"
+        )
+        assert app.state.pipeline_run_repo.list() == []
+        assert extraction.calls == []
+
     def test_a_background_run_executes_with_its_configurations_model(self, client, app, extraction):
         app.state.run_executor.start()
 

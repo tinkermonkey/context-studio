@@ -43,6 +43,7 @@ from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
 )
+from domain.pipelines.schema_extraction.bootstrap import register_schema_extraction
 from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionOrchestrator
 from domain.pipelines.schema_node_grounding.orchestrator import (
     SchemaGroundingOrchestrator,
@@ -232,6 +233,29 @@ class TestPipelineImplementationEndpoints:
                 "source_configuration": None,
             },
         ]
+
+    def test_schema_extractions_default_can_extract_a_source_too(self, client, registries):
+        """The capability is the implementation's, whatever the pipeline type."""
+        register_schema_extraction(
+            registries["implementation_registry"], registries["config_registry"]
+        )
+
+        response = client.get("/api/pipelines/types/schema_extraction/implementations")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert {
+            i["id"]: (
+                i["is_default"],
+                i["default_configuration"],
+                i["extracts_sources"],
+                i["source_configuration"],
+            )
+            for i in response.json()
+        } == {
+            "default": (True, "schema-extraction-default", True, "schema-extraction-default"),
+            # It has a default configuration, and cannot extract a source
+            "open_v1": (False, "schema-extraction-open-v1", False, None),
+        }
 
     def test_the_configurations_listing_marks_the_default(self, client, registries):
         register_individual_extraction(

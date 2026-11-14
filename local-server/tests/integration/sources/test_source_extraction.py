@@ -383,6 +383,16 @@ class TestExtractRoute:
             ({"implementation_id": "no_such"}, "no_such"),
             # Registered for individual extraction, but it cannot extract a source
             ({"implementation_id": "open_v1"}, "open_v1"),
+            # Naming its own configuration does not let it through
+            (
+                {"implementation_id": "open_v1", "configuration_ref": "extraction-open-v1"},
+                "'open_v1' is not an individual-extraction implementation that can extract",
+            ),
+            (
+                {"implementation_id": "no_such", "configuration_ref": "extraction-default"},
+                "'no_such' is not an individual-extraction implementation that can extract a"
+                " source (one of: default, find_then_type)",
+            ),
             (
                 {"implementation_id": "find_then_type", "configuration_ref": "extraction-default"},
                 "extraction-default",
