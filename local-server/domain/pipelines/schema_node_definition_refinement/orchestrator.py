@@ -27,6 +27,7 @@ from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputErr
 from domain.pipelines.orchestration.base import (
     PipelineOrchestrator,
     PipelineState,
+    run_model,
 )
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 from domain.pipelines.refinement.neighborhood import (
@@ -228,9 +229,7 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
         if taxonomy is None:
             raise PipelineInputError(f"No taxonomy {taxonomy_id}")
         ensure_may_propose_to(taxonomy, state.input_data)
-        model = state.input_data.get("model") or self._config.get(
-            "model", "google/gemini-3-flash-preview"
-        )
+        model = run_model(state.input_data.get("model"), self._config.get("model"))
         temperature = state.input_data.get("temperature")
         if temperature is None:
             temperature = self._config.get("temperature", 0.0)
@@ -301,8 +300,7 @@ class DefinitionRefinementOrchestrator(PipelineOrchestrator):
         Returns:
             List of candidate definitions with rationale and confidence (0-3 candidates)
         """
-        if model is None:
-            model = self._config.get("model", "google/gemini-3-flash-preview")
+        model = run_model(model, self._config.get("model"))
         if temperature is None:
             temperature = self._config.get("temperature", 0.0)
         max_tokens = self._config.get("max_tokens", 2000)

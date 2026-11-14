@@ -28,17 +28,9 @@ from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.ports import OntologyRepository
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus, PipelineType, SourceRun
 from domain.pipelines.ports import PipelineRunSubmitter, SourceRunReader
-from domain.pipelines.registry import (
-    PipelineConfigurationRegistry,
-    PipelineImplementationRegistry,
-)
 from domain.pipelines.requested_via import REQUESTED_VIA, RequestedVia, ensure_may_propose_to
+from domain.pipelines.selection import PipelineResolver, PipelineSelection
 from domain.versioning.ports import ChangeProposalRepository
-
-# The individual-extraction implementation a source is extracted with when none is named
-DEFAULT_IMPLEMENTATION = "default"
-SCHEMA_IMPLEMENTATION = "default"
-SCHEMA_CONFIGURATION = "schema-extraction-default"
 
 
 @dataclass(frozen=True)
@@ -87,16 +79,14 @@ class SourceExtractionService:
         self,
         sources: SourceRepository,
         ontology_repo: OntologyRepository,
-        implementations: PipelineImplementationRegistry,
-        configurations: PipelineConfigurationRegistry,
+        resolver: PipelineResolver,
         submitter: PipelineRunSubmitter,
         runs: SourceRunReader,
         proposals: ChangeProposalRepository,
     ) -> None:
         self._sources = sources
         self._repo = ontology_repo
-        self._implementations = implementations
-        self._configurations = configurations
+        self._resolver = resolver
         self._submitter = submitter
         self._runs = runs
         self._proposals = proposals
@@ -111,6 +101,8 @@ class SourceExtractionService:
         requested_via: RequestedVia = RequestedVia.API,
         skip_boilerplate: bool = True,
         implementation_id: str | None = None,
+        schema_implementation_id: str | None = None,
+        schema_configuration_ref: str | None = None,
     ) -> list[PipelineRun]:
         """
         Start extracting a source: an individual-extraction run, and with
@@ -121,8 +113,8 @@ class SourceExtractionService:
             dataset: The dataset of the source's taxonomy the individuals go
                 into (identifier or id)
             configuration_ref: The individual-extraction configuration, one of
-                the implementation's; the implementation's own for sources
-                when omitted. Its model is the run's model.
+                the implementation's; its default when omitted. Its model,
+                temperature and output limit are the run's.
             pages: A page selection such as "12-30" or "1-3, 7"; all pages
                 when omitted
             schema: Also suggest schema changes (classes and relationship types)
@@ -131,8 +123,13 @@ class SourceExtractionService:
                 contact sections and its copies in other languages (see
                 domain/extraction/section_filter.py); false extracts everything
             implementation_id: The individual-extraction implementation that
-                reads the source, one that can extract a source; `default`
-                when omitted
+                reads the source, one that can extract a source; the type's
+                default when omitted
+            schema_implementation_id: With `schema`, the schema-extraction
+                implementation, one that can extract a source; the type's
+                default when omitted
+            schema_configuration_ref: With `schema`, one of that
+                implementation's configurations; its default when omitted
 
         Returns:
             The pending runs, individual extraction first
@@ -143,9 +140,12 @@ class SourceExtractionService:
             SourceNotReadyError: If the source is fetching, failed or removed
             ValueError: If the page selection is malformed, names pages the
                 source lacks or holds no text (or only skipped sections, when
-                skip_boilerplate), the implementation isn't an
-                individual-extraction implementation that can extract a source,
-                or the configuration isn't one of that implementation's
+                skip_boilerplate), or an implementation isn't one of its
+                type's that can extract a source (whether or not a
+                configuration is named)
+            PipelineSelectionError: (a ValueError) If a configuration isn't
+                one of its implementation's or is disabled, the
+                implementation's default included
             PipelineInputError: If `schema` is asked of a taxonomy that mirrors
                 an external source, other than by its client over MCP
         """
@@ -157,26 +157,15 @@ class SourceExtractionService:
         pages = self._checked_pages(source, pages)
         if skip_boilerplate:
             self._check_text_left(source, pages)
-        implementation_id = implementation_id or DEFAULT_IMPLEMENTATION
-        # Checked whether or not a configuration is named: the implementation must be able to
-        source_configuration = self._source_configuration(implementation_id)
-        individual_ref = configuration_ref or source_configuration
-        individual = self._configurations.get_latest(
-            PipelineType.INDIVIDUAL_EXTRACTION, implementation_id, individual_ref
+        individual = self._source_selection(
+            PipelineType.INDIVIDUAL_EXTRACTION, implementation_id, configuration_ref
         )
-        if individual is None:
-            raise ValueError(
-                f"{individual_ref!r} is not a configuration of the {implementation_id!r}"
-                " individual-extraction implementation"
-            )
-        schema_config = None
+        schema_selection = None
         if schema:
             ensure_may_propose_to(taxonomy, {REQUESTED_VIA: requested_via.value})
-            schema_config = self._configurations.get_latest(
-                PipelineType.SCHEMA_EXTRACTION, SCHEMA_IMPLEMENTATION, SCHEMA_CONFIGURATION
+            schema_selection = self._source_selection(
+                PipelineType.SCHEMA_EXTRACTION, schema_implementation_id, schema_configuration_ref
             )
-            if schema_config is None:
-                raise ValueError(f"No schema-extraction configuration {SCHEMA_CONFIGURATION!r}")
 
         common: dict[str, Any] = {
             "source_id": source.id,
@@ -193,32 +182,32 @@ class SourceExtractionService:
             "extraction_started_at": datetime.now(timezone.utc).isoformat(),
             REQUESTED_VIA: requested_via.value,
         }
+        # Each run's model, temperature and output limit are its configuration's,
+        # filled in when it executes (PipelineSelection.run_input)
         runs = [
             self._submitter.submit(
                 PipelineType.INDIVIDUAL_EXTRACTION,
-                implementation_id,
-                individual_ref,
+                individual.implementation_id,
+                individual.configuration_ref,
                 {
                     **common,
                     "text": source.text,
                     "ontology_id": taxonomy.id,
                     "ontology_name": taxonomy.title,
-                    **_model(individual.config),
                 },
             )
         ]
-        if schema_config is not None:
+        if schema_selection is not None:
             runs.append(
                 self._submitter.submit(
                     PipelineType.SCHEMA_EXTRACTION,
-                    SCHEMA_IMPLEMENTATION,
-                    SCHEMA_CONFIGURATION,
+                    schema_selection.implementation_id,
+                    schema_selection.configuration_ref,
                     {
                         **common,
                         "documents": [source.text],
                         "scope": taxonomy.id,
                         "scope_name": taxonomy.title,
-                        **_model(schema_config.config),
                     },
                 )
             )
@@ -267,27 +256,39 @@ class SourceExtractionService:
             for source_id, runs in latest.items()
         }
 
-    def _source_configuration(self, implementation_id: str) -> str:
+    def _source_selection(
+        self,
+        pipeline_type: PipelineType,
+        implementation_id: str | None,
+        configuration_ref: str | None,
+    ) -> PipelineSelection:
         """
-        The configuration an implementation extracts a source with when none is named.
+        What a run of the type on a source executes: the implementation and
+        configuration named, or the registered defaults.
 
         Raises:
-            ValueError: If it isn't an individual-extraction implementation
-                that can extract a source
+            ValueError: If the implementation isn't one of the type's that can
+                extract a source (the message lists those)
+            PipelineSelectionError: If the type has no default implementation,
+                or the configuration can't be selected
         """
-        registered = self._implementations.list_by_type(PipelineType.INDIVIDUAL_EXTRACTION)
-        configuration = getattr(registered.get(implementation_id), "SOURCE_CONFIGURATION", None)
-        if configuration is None:
-            able = sorted(
-                impl_id
-                for impl_id, impl in registered.items()
-                if getattr(impl, "SOURCE_CONFIGURATION", None)
-            )
+        # Checked whether or not a configuration is named: the implementation
+        # must be one of the type's that can extract a source
+        able = sorted(
+            impl_id
+            for impl_id, impl in self._resolver.implementations(pipeline_type).items()
+            if getattr(impl, "EXTRACTS_SOURCES", False)
+        )
+        if not implementation_id:
+            implementation_id, _ = self._resolver.implementation(pipeline_type)
+        if implementation_id not in able:
+            label = pipeline_type.value.replace("_", "-")
+            article = "an" if label[0] in "aeiou" else "a"
             raise ValueError(
-                f"{implementation_id!r} is not an individual-extraction implementation that"
-                f" can extract a source (one of: {', '.join(able)})"
+                f"{implementation_id!r} is not {article} {label} implementation that can"
+                f" extract a source (one of: {', '.join(able)})"
             )
-        return str(configuration)
+        return self._resolver.resolve(pipeline_type, implementation_id, configuration_ref)
 
     def _ready_source(self, source_id: str) -> Source:
         source = self._sources.get(source_id)
@@ -357,9 +358,3 @@ def normalized_pages(pages: str) -> str:
         else:
             merged.append([first, last])
     return ", ".join(str(first) if first == last else f"{first}-{last}" for first, last in merged)
-
-
-def _model(config: dict[str, Any]) -> dict[str, Any]:
-    """The configuration's model as run input, as the run route takes it."""
-    model = config.get("model")
-    return {"model": model} if isinstance(model, str) and model else {}

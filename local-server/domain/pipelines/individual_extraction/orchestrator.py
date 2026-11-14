@@ -59,6 +59,7 @@ from domain.pipelines.exceptions import (
 )
 from domain.pipelines.individual_extraction.chunk_merge import merge_chunk_triples
 from domain.pipelines.orchestration.base import (
+    MODEL_REQUIRED,
     PipelineOrchestrator,
     PipelineState,
 )
@@ -86,6 +87,8 @@ class IndividualExtractionState(PipelineState):
     ontology_id: str = ""
     model: str = ""
     temperature: float = 0.0
+    # The most output tokens one model call may produce; None leaves each stage its own limit
+    max_tokens: int | None = None
     extracted_triples: list[dict[str, Any]] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -116,7 +119,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
     STAGE_PROMPTS = INDIVIDUAL_EXTRACTION_STAGES
 
     # It reads a source chunk by chunk and proposes what it finds
-    SOURCE_CONFIGURATION = "extraction-default"
+    EXTRACTS_SOURCES = True
 
     def __init__(
         self,
@@ -155,6 +158,10 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 - ontology_id: Target ontology identifier
                 - model: LLM model name
                 - temperature: Sampling temperature (0.0–2.0)
+                - max_tokens: The most output tokens one model call may produce
+                  (model, temperature and max_tokens are the run's
+                  configuration's unless the caller names its own; see
+                  domain/pipelines/selection.py)
                 - dataset_id: Optional dataset recognition is scoped to
                 - source_id, page_starts, headings, pages: Optional; any of
                   them extracts the text chunk by chunk (see the registry's
@@ -194,7 +201,8 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         text = state.input_data.get("text", "")
         ontology_id = state.input_data.get("ontology_id", "")
         model = state.input_data.get("model", "")
-        temperature = state.input_data.get("temperature", 0.0)
+        temperature = state.input_data.get("temperature") or 0.0
+        max_tokens = state.input_data.get("max_tokens")
 
         # Validate required inputs
         if not text or not text.strip():
@@ -214,7 +222,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             )
             raise exc
         if not model:
-            exc = PipelineInputError("model is required")
+            exc = PipelineInputError(MODEL_REQUIRED)
             state = replace(
                 state,
                 current_status=PipelineRunStatus.FAILED,
@@ -257,6 +265,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             ontology_id=ontology_id,
             model=model,
             temperature=temperature,
+            max_tokens=max_tokens,
             current_status=PipelineRunStatus.RUNNING,
         )
 
@@ -347,6 +356,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             temperature=state.temperature,
             stage_prompts=self._stage_prompts,
             dataset_id=state.input_data.get("dataset_id"),
+            max_tokens=state.max_tokens,
         )
         if result.failure_reason:
             raise _failure(
@@ -393,6 +403,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 temperature=state.temperature,
                 stage_prompts=self._stage_prompts,
                 dataset_id=state.input_data.get("dataset_id"),
+                max_tokens=state.max_tokens,
             )
             results.append(result)
             if result.failure_reason and result.provider_refused and done < total:

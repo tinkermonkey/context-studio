@@ -38,6 +38,7 @@ def register_schema_node_connection_refinement(
             PipelineType.SCHEMA_NODE_CONNECTION_REFINEMENT,
             "default",
             ConnectionRefinementOrchestrator,
+            default=True,
         )
 
     if config_registry is not None:
@@ -46,4 +47,5 @@ def register_schema_node_connection_refinement(
             "default",
             "connection-refinement-default",
             get_default_config(),
+            default=True,
         )

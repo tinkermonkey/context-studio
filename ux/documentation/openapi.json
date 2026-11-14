@@ -9214,7 +9214,7 @@
           "sources"
         ],
         "summary": "Extract Source",
-        "description": "Extract a ready source into proposals, in the background: an\nindividual-extraction run (of `implementation_id`; `default` when omitted)\nthat reads it chunk by chunk (the chunks are the run's items) and ends in\none proposal for review in the dataset; with\n`schema`, a schema-extraction run over the same text too, with its own\nproposal. Follow the runs with GET /api/pipelines/runs/{id}, or the\nsource's `last_extraction`. Unless `skip_boilerplate` is false, the\nsource's warranty, safety, legal and contact sections and its copies in\nother languages are skipped; each run's output says what was.",
+        "description": "Extract a ready source into proposals, in the background: an\nindividual-extraction run (of `implementation_id` and `configuration_ref`;\nthe registered defaults when omitted)\nthat reads it chunk by chunk (the chunks are the run's items) and ends in\none proposal for review in the dataset; with\n`schema`, a schema-extraction run over the same text too (of\n`schema_implementation_id` and `schema_configuration_ref`), with its own\nproposal. Follow the runs with GET /api/pipelines/runs/{id}, or the\nsource's `last_extraction`. Unless `skip_boilerplate` is false, the\nsource's warranty, safety, legal and contact sections and its copies in\nother languages are skipped; each run's output says what was.",
         "operationId": "extract_source_api_sources__source_id__extract_post",
         "parameters": [
           {
@@ -9255,7 +9255,7 @@
             "description": "The source is fetching, failed or removed; or schema extraction was asked of a taxonomy whose client proposes its schema changes"
           },
           "422": {
-            "description": "A bad page range, an implementation that can't extract a source, or a configuration that isn't one of the implementation's"
+            "description": "A bad page range, an implementation that is unknown or can't extract a source, or a configuration that isn't one of the implementation's or is disabled"
           },
           "503": {
             "description": "Background pipeline runs are not available"
@@ -13504,7 +13504,7 @@
             "type": "array",
             "minItems": 1,
             "title": "Runs",
-            "description": "Run specs to enqueue: pipeline_type, implementation_id, configuration_ref, specific_data, and input_data (a run given an input_data is executed by the background workers; one without stays pending)"
+            "description": "Run specs to enqueue: pipeline_type, implementation_id (the type's default implementation when omitted), configuration_ref (that implementation's default configuration when omitted), specific_data, and input_data (a run given an input_data is executed by the background workers; one without stays pending)"
           },
           "idempotency_key": {
             "anyOf": [
@@ -14853,6 +14853,30 @@
             "title": "Pipeline Type",
             "description": "Pipeline type for this implementation"
           },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "The pipeline type's default implementation: the one a run uses when it names none. A type has exactly one",
+            "default": false
+          },
+          "default_configuration": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Configuration",
+            "description": "The implementation's default configuration (its config_ref): the one a run uses when it names none"
+          },
+          "extracts_sources": {
+            "type": "boolean",
+            "title": "Extracts Sources",
+            "description": "It can extract a source (POST /api/sources/{id}/extract): read it chunk by chunk and end in one change proposal",
+            "default": false
+          },
           "source_configuration": {
             "anyOf": [
               {
@@ -14863,7 +14887,7 @@
               }
             ],
             "title": "Source Configuration",
-            "description": "The configuration a source is extracted with when none is named (POST /api/sources/{id}/extract); null for an implementation that cannot extract a source"
+            "description": "Superseded by extracts_sources and default_configuration, and kept until the Extract page reads those: default_configuration when extracts_sources, else null"
           }
         },
         "type": "object",
@@ -16778,10 +16802,10 @@
           },
           "max_tokens": {
             "type": "integer",
-            "maximum": 4096.0,
+            "maximum": 64000.0,
             "minimum": 64.0,
             "title": "Max Tokens",
-            "description": "Maximum tokens to generate",
+            "description": "The most output tokens one model call of a run may produce. A model that thinks before it answers spends part of it thinking, so it needs well above what the answer takes (the system configurations of Claude 5.5 models use 16000-20000)",
             "default": 800
           },
           "top_p": {
@@ -16889,8 +16913,14 @@
           "enabled": {
             "type": "boolean",
             "title": "Enabled",
-            "description": "Whether this configuration is active",
+            "description": "Whether this configuration is active; a disabled one starts no run",
             "default": true
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "The implementation's default configuration: the one a run uses when it names none",
+            "default": false
           },
           "version": {
             "type": "integer",
@@ -17020,16 +17050,28 @@
       "PipelineRunRequest": {
         "properties": {
           "implementation_id": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Implementation Id",
-            "description": "Implementation identifier (defaults to 'default')",
-            "default": "default"
+            "description": "Implementation identifier; the pipeline type's default implementation when omitted (GET /api/pipelines/types/{type}/implementations marks it is_default)"
           },
           "configuration_ref": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Configuration Ref",
-            "description": "Configuration reference (defaults to 'default')",
-            "default": "default"
+            "description": "One of the implementation's configurations; its default configuration when omitted. Its model, temperature and output-token limit are the run's unless the body names its own (model, temperature, max_tokens)"
           },
           "async": {
             "anyOf": [
@@ -20233,7 +20275,7 @@
               }
             ],
             "title": "Implementation Id",
-            "description": "The individual-extraction implementation that reads the source, one whose source_configuration is set (GET /api/pipelines/types/individual_extraction/implementations); default when omitted"
+            "description": "The individual-extraction implementation that reads the source, one that extracts_sources (GET /api/pipelines/types/individual_extraction/implementations); the type's default implementation when omitted"
           },
           "configuration_ref": {
             "anyOf": [
@@ -20246,7 +20288,33 @@
               }
             ],
             "title": "Configuration Ref",
-            "description": "An individual-extraction configuration of the implementation; the implementation's source_configuration when omitted"
+            "description": "An individual-extraction configuration of the implementation; its default configuration when omitted"
+          },
+          "schema_implementation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schema Implementation Id",
+            "description": "With schema: the schema-extraction implementation, one that extracts_sources; the type's default implementation when omitted"
+          },
+          "schema_configuration_ref": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schema Configuration Ref",
+            "description": "With schema: a schema-extraction configuration of that implementation; its default configuration when omitted"
           },
           "pages": {
             "anyOf": [

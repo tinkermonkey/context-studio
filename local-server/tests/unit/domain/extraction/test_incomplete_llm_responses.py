@@ -64,10 +64,12 @@ class _ScriptedLLM:
     def __init__(self, *responses):
         self._responses = list(responses)
         self.calls: list[str] = []
+        self.limits: list[int | None] = []
         self.forgotten: list[dict] = []
 
     def complete(self, system_prompt, user_prompt, model, **kwargs):
         self.calls.append(user_prompt)
+        self.limits.append(kwargs.get("max_tokens"))
         content, finish_reason = self._responses.pop(0)
         return LLMResponse(
             content=content,
@@ -132,7 +134,7 @@ class _Publisher:
         return []
 
 
-def _extract(llm, ontology_id="tax-1"):
+def _extract(llm, ontology_id="tax-1", **parameters):
     run_repo = _RunRepo()
     service = ExtractionService(
         ontology_repo=_BareOntologyRepo(),
@@ -144,7 +146,7 @@ def _extract(llm, ontology_id="tax-1"):
         extraction_repo=None,
         extraction_run_repo=run_repo,
     )
-    result = service.extract_triples(TEXT, ontology_id, "model-1", 0.0)
+    result = service.extract_triples(TEXT, ontology_id, "model-1", 0.0, **parameters)
     return result, run_repo.run
 
 
@@ -323,3 +325,24 @@ class TestUnknownOntology:
         with pytest.raises(InvalidInputError, match="Ontology missing not found"):
             _extract(llm, ontology_id="missing")
         assert llm.calls == []
+
+
+class TestOutputLimit:
+    """How many output tokens each stage's call may produce."""
+
+    def test_the_limit_given_is_asked_of_both_stages(self):
+        # A model that thinks before it answers needs more than its answer takes:
+        # the run's configuration says how much
+        llm = _ScriptedLLM((IDENTIFIED, "stop"), (RELATED, "stop"))
+
+        result, _ = _extract(llm, max_tokens=20000)
+
+        assert _labels(result) == EXPECTED
+        assert llm.limits == [20000, 20000]
+
+    def test_a_caller_that_names_none_gets_the_stages_own(self):
+        llm = _ScriptedLLM((IDENTIFIED, "stop"), (RELATED, "stop"))
+
+        _extract(llm)
+
+        assert llm.limits == [8000, 8000]

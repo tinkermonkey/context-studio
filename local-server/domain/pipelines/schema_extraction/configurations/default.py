@@ -16,7 +16,8 @@ def get_default_config() -> dict:
         "provider": "openrouter",
         "model": "google/gemini-3-flash-preview",
         "temperature": 0.0,
-        "max_tokens": 2000,
+        # The most output tokens one stage's call may produce (the largest a stage needs)
+        "max_tokens": 4000,
         "confidence_threshold": 0.5,
         "description": "Default schema extraction pipeline with OpenRouter Gemini 3 Flash",
     }

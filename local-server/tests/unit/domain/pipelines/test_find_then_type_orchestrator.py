@@ -110,6 +110,8 @@ class _FakeExtraction:
         self.typed: list[str] = []
         self.related: list[str] = []
         self.prompts_built = 0
+        # The output-token limit each find, type and relate call was given
+        self.limits: set = set()
         self.stage_prompts: list = []
         self.type_threads: set[int] = set()
         self.in_flight = 0
@@ -117,8 +119,11 @@ class _FakeExtraction:
         self.first_done_before_others_start = None
         self._lock = threading.Lock()
 
-    def find_mentions(self, text, ontology_id, model, temperature, stage_prompts=None):
+    def find_mentions(
+        self, text, ontology_id, model, temperature, stage_prompts=None, max_tokens=None
+    ):
         self.found.append(text)
+        self.limits.add(("find", max_tokens))
         self.stage_prompts.append(stage_prompts)
         how = self._find.get(len(self.found))
         if how:
@@ -141,11 +146,12 @@ class _FakeExtraction:
         self.stage_prompts.append(stage_prompts)
         return SimpleNamespace(system="the catalog")
 
-    def type_mention(self, prompt, context, mention, model, temperature):
+    def type_mention(self, prompt, context, mention, model, temperature, max_tokens=None):
         with self._lock:
             if self.first_done_before_others_start is None and self.typed:
                 self.first_done_before_others_start = self.in_flight == 0
             self.typed.append(mention.name)
+            self.limits.add(("type", max_tokens))
             self.type_threads.add(threading.get_ident())
             self.in_flight += 1
             self.most_in_flight = max(self.most_in_flight, self.in_flight)
@@ -170,8 +176,18 @@ class _FakeExtraction:
             with self._lock:
                 self.in_flight -= 1
 
-    def relate(self, text, typing_triples, ontology_id, model, temperature, stage_prompts=None):
+    def relate(
+        self,
+        text,
+        typing_triples,
+        ontology_id,
+        model,
+        temperature,
+        stage_prompts=None,
+        max_tokens=None,
+    ):
         self.related.append(text)
+        self.limits.add(("relate", max_tokens))
         self.stage_prompts.append(stage_prompts)
         how = self._relate.get(len(self.related))
         if how:
@@ -271,6 +287,21 @@ def _typing_triples(triples):
 
 
 class TestFindThenTypeFlow:
+    async def test_the_runs_output_limit_is_every_calls(self):
+        # The run's configuration sets it (PipelineSelection.run_input)
+        extraction = _FakeExtraction()
+
+        await _run(extraction, source_id="src-1", max_tokens=16000)
+
+        assert extraction.limits == {("find", 16000), ("type", 16000), ("relate", 16000)}
+
+    async def test_a_run_that_names_no_limit_leaves_each_stage_its_own(self):
+        extraction = _FakeExtraction()
+
+        await _run(extraction)
+
+        assert extraction.limits == {("find", None), ("type", None), ("relate", None)}
+
     async def test_a_source_is_found_typed_and_related_and_merged(self):
         extraction = _FakeExtraction()
         writer = _StatusWriter()

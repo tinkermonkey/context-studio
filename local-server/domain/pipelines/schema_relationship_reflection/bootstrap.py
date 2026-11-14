@@ -26,6 +26,7 @@ def register_schema_relationship_reflection(
             PipelineType.SCHEMA_RELATIONSHIP_REFLECTION,
             "default",
             RelationshipReflectionOrchestrator,
+            default=True,
         )
     if config_registry is not None:
         config_registry.register(
@@ -33,4 +34,5 @@ def register_schema_relationship_reflection(
             "default",
             "default",
             get_default_config(),
+            default=True,
         )
