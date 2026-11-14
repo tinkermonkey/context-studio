@@ -1623,7 +1623,8 @@ class ExtractionService:
         The LLM's only job is disambiguation-in-context: it picks the best-fitting
         candidate (by its exact ontology reference) or "none" — it never invents a
         class. Returns ``(chosen SchemaMatch | None, tokens_used, had_llm_error)``.
-        had_llm_error indicates whether an LLM provider error occurred.
+        had_llm_error indicates whether an LLM provider error occurred, or the
+        response named no class at all (which is not the answer "none").
         """
         candidates: list[tuple[str, Any]] = []
         lines: list[str] = []
@@ -1678,7 +1679,17 @@ class ExtractionService:
                         response.content[:500] if response.content else "empty",
                     )
                     choice = ""
-            if not choice or choice.lower() == "none":
+            if not choice:
+                # No class was answered (an empty answer, or one cut short while the
+                # model was still thinking): that is not "none of the candidates"
+                _logger.error(
+                    "NLP-grounded typing for chunk '%s' got no class answer "
+                    "(finish_reason=%s)",
+                    label,
+                    response.finish_reason,
+                )
+                return None, tokens, True
+            if choice.lower() == "none":
                 return None, tokens, False
             choice_lower = choice.lower()
             for ref, match in candidates:

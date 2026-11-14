@@ -171,7 +171,7 @@ class TestAnthropicProviderResponseText:
         provider, messages = _provider_with_fake_client()
         messages.create = lambda **kwargs: SimpleNamespace(
             content=[
-                SimpleNamespace(type="thinking", thinking="", signature="sig"),
+                SimpleNamespace(type="thinking", thinking="Let me see.", signature="sig"),
                 SimpleNamespace(type="text", text='{"triples": []}'),
             ],
             usage=SimpleNamespace(input_tokens=3, output_tokens=4),

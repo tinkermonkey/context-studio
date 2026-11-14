@@ -304,6 +304,34 @@ class TestConfirmClassForChunk:
         assert had_error is False
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize("content", ["", "I think", '{"class": ""}'])
+    async def test_confirm_class_reports_an_answer_that_names_no_class(self, content):
+        """An empty or cut-short answer is an error, not the answer 'none'."""
+        orchestrator = OpenIndividualExtractionOrchestrator(
+            llm_provider=FakeLLMProvider([content]),
+            nlp_processor=Mock(),
+            embedding_service=Mock(),
+            schema_index=Mock(),
+            ontology_repo=Mock(),
+        )
+        matches = [
+            Mock(
+                external_id="technology.node",
+                identifier="tech_node",
+                label="Technology",
+                entity_id="id1",
+                score=0.85,
+            ),
+        ]
+
+        chosen, had_error = await orchestrator._confirm_class_for_chunk(
+            "random", "This is a random word.", matches
+        )
+
+        assert chosen is None
+        assert had_error is True
+
+    @pytest.mark.asyncio
     async def test_confirm_class_returns_none_for_empty_candidates(self):
         """No candidates yields None (LLM never called)."""
         orchestrator = OpenIndividualExtractionOrchestrator(
