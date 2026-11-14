@@ -49,6 +49,7 @@ from domain.pipelines.schema_extraction.orchestrator import (
     CandidateClass,
     SchemaExtractionState,
 )
+from domain.pipelines.selection import RUN_PARAMETERS
 from tests.fixtures.pipeline_fixtures import load_expected_output, load_fixture
 from tests.integration.pipelines._harness.cassettes import RecordingLLMProvider
 from tests.integration.pipelines.test_quality_schema_extraction import (
@@ -62,8 +63,17 @@ RULE_MODE_MEAN_CLASS_JACCARD_FLOOR = 0.30
 
 
 def _pipeline_input(scenario: str) -> dict:
+    """
+    An open_v1 run's input from a scenario's fixture.
+
+    The fixture pins the model and temperature the `default` pipeline's
+    recordings were made with (claude-opus-4-7). An open_v1 run names neither:
+    it takes its configuration's, which is what its own cassettes were
+    recorded with. Named in the input they would override the configuration,
+    as for every pipeline (domain/pipelines/selection.py).
+    """
     fixture = load_fixture("schema_extraction", scenario)
-    pipeline_input = dict(fixture)
+    pipeline_input = {key: value for key, value in fixture.items() if key not in RUN_PARAMETERS}
     if "text" in pipeline_input and "documents" not in pipeline_input:
         pipeline_input["documents"] = [pipeline_input.pop("text")]
     return pipeline_input
@@ -348,9 +358,7 @@ async def test_open_v1_llm_synthesis_quality(quality_llm_provider_factory):
             clusterer=clusterer,
             config={**get_open_v1_config(), "synthesis_mode": "llm"},
         )
-        fixture = dict(load_fixture("schema_extraction", scenario))
-        if "text" in fixture and "documents" not in fixture:
-            fixture["documents"] = [fixture.pop("text")]
+        fixture = _pipeline_input(scenario)
         state = SchemaExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
@@ -385,9 +393,7 @@ async def test_open_v1_llm_synthesis_quality(quality_llm_provider_factory):
             clusterer=clusterer,
             config={**get_open_v1_config(), "synthesis_mode": "rule"},
         )
-        fixture = dict(load_fixture("schema_extraction", scenario))
-        if "text" in fixture and "documents" not in fixture:
-            fixture["documents"] = [fixture.pop("text")]
+        fixture = _pipeline_input(scenario)
         state = SchemaExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.SCHEMA_EXTRACTION,
