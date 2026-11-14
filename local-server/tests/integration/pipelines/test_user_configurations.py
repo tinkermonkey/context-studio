@@ -144,7 +144,8 @@ def update(client, configuration: dict, **fields) -> dict:
         "name": configuration["name"],
         "provider": configuration["provider"],
         "model": configuration["model"],
-        "parameters": configuration["parameters"],
+        # What it sets, sent back as it came: an unset value stays unset
+        "parameters": configuration["parameter_settings"],
         "enabled": True,
         **fields,
     }
@@ -246,6 +247,84 @@ class TestUnsetParameters:
 
         assert listed.status_code == status.HTTP_200_OK, listed.text
         assert max(c["parameters"]["max_tokens"] for c in listed.json()) == 20000
+
+
+class TestParameterSettings:
+    """A response says what a configuration sets, beside what is in effect."""
+
+    def test_an_unset_value_is_null_in_the_settings_and_a_number_in_effect(self, server):
+        configuration = create(server(), parameters={"temperature": 0.5})
+
+        assert configuration["parameter_settings"] == {
+            "temperature": 0.5,
+            "max_tokens": None,
+            "top_p": 0.9,
+        }
+        assert configuration["parameters"] == {
+            "temperature": 0.5,
+            "max_tokens": DEFAULT_MAX_TOKENS,
+            "top_p": 0.9,
+        }
+
+    def test_saving_the_settings_back_keeps_an_inherited_value_inherited(
+        self, server, extraction, databases
+    ):
+        client = server()
+        configuration = create(client)
+
+        # As an editor that saves one field at a time does: rename, settings as they came
+        renamed = update(client, configuration, name="Renamed")
+
+        (record,) = PipelineConfigurationRepository(databases.operations).list_all()
+        assert (record.name, record.temperature, record.max_tokens) == ("Renamed", None, None)
+        assert renamed["parameter_settings"] == configuration["parameter_settings"]
+        assert renamed["parameters"]["max_tokens"] == DEFAULT_MAX_TOKENS
+
+    def test_saving_the_values_in_effect_sets_them(self, server, databases):
+        client = server()
+        configuration = create(client)
+
+        saved = update(client, configuration, parameters=configuration["parameters"])
+
+        (record,) = PipelineConfigurationRepository(databases.operations).list_all()
+        assert (record.temperature, record.max_tokens) == (DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS)
+        assert saved["parameter_settings"]["max_tokens"] == DEFAULT_MAX_TOKENS
+
+    def test_an_update_that_names_no_parameters_leaves_them_unset(self, server, databases):
+        client = server()
+        configuration = create(client, parameters={"temperature": 0.3, "max_tokens": 12000})
+
+        response = client.put(
+            f"/api/pipeline_configurations/{configuration['id']}",
+            json={"name": "Mine", "provider": "anthropic", "model": "my-model", "enabled": True},
+        )
+
+        assert response.status_code == status.HTTP_200_OK, response.text
+        assert response.json()["parameter_settings"] == {
+            "temperature": None,
+            "max_tokens": None,
+            "top_p": 0.9,
+        }
+
+    def test_a_system_configuration_shows_what_it_sets(self, server):
+        listed = {c["config_ref"]: c for c in server().get(CONFIGURATIONS).json()}
+
+        default = listed["extraction-default"]
+        assert default["parameter_settings"] == default["parameters"]
+        assert default["parameters"]["max_tokens"] == DEFAULT_MAX_TOKENS
+
+    def test_a_type_whose_runs_take_no_parameters_shows_none(self, server):
+        client = server()
+        triage = "/api/pipelines/types/claim_triage/implementations/default/configurations"
+
+        created = client.post(
+            triage, json={"name": "Mine", "provider": "anthropic", "model": "unused"}
+        )
+        listed = client.get(triage).json()
+
+        assert created.status_code == status.HTTP_201_CREATED, created.text
+        # Claim triage asks a decision model: its configurations set no temperature or limit
+        assert [(c["parameters"], c["parameter_settings"]) for c in listed] == [(None, None)] * 2
 
 
 class TestAcrossAnEditAndARestart:

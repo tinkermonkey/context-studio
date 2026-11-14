@@ -8651,8 +8651,10 @@ export interface components {
        * @description The prompts sent at each LLM stage; null when the implementation has none
        */
       stage_prompts?: components["schemas"]["StagePromptView"][] | null;
-      /** @description LLM generation parameters */
+      /** @description The LLM parameters in effect: what the configuration's runs use, a value it leaves unset shown as the implementation's default configuration's. Null for a configuration whose runs take no temperature or output limit */
       parameters?: components["schemas"]["PipelineConfigurationParameters"] | null;
+      /** @description What the configuration itself sets, in the shape of the create and update bodies' `parameters`: a null temperature or max_tokens is unset, and its run then uses the value in `parameters`. Send this back as `parameters` when updating, so a value that is inherited stays inherited. Null where `parameters` is null */
+      parameter_settings?: components["schemas"]["PipelineConfigurationParameterSettings"] | null;
       /**
        * Enabled
        * @description Whether this configuration is active; a disabled one starts no run
@@ -8718,8 +8720,8 @@ export interface components {
       stage_prompts?: {
         [key: string]: components["schemas"]["StagePromptPayload"] | null;
       } | null;
-      /** @description LLM generation parameters */
-      parameters: components["schemas"]["PipelineConfigurationParameterSettings"];
+      /** @description LLM generation parameters; the configuration's `parameter_settings` to keep them as they are. Omitted, the temperature and output limit are unset */
+      parameters?: components["schemas"]["PipelineConfigurationParameterSettings"];
       /**
        * Enabled
        * @description Whether this configuration is active

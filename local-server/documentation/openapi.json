@@ -16951,7 +16951,18 @@
                 "type": "null"
               }
             ],
-            "description": "LLM generation parameters"
+            "description": "The LLM parameters in effect: what the configuration's runs use, a value it leaves unset shown as the implementation's default configuration's. Null for a configuration whose runs take no temperature or output limit"
+          },
+          "parameter_settings": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PipelineConfigurationParameterSettings"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the configuration itself sets, in the shape of the create and update bodies' `parameters`: a null temperature or max_tokens is unset, and its run then uses the value in `parameters`. Send this back as `parameters` when updating, so a value that is inherited stays inherited. Null where `parameters` is null"
           },
           "enabled": {
             "type": "boolean",
@@ -17071,7 +17082,7 @@
           },
           "parameters": {
             "$ref": "#/components/schemas/PipelineConfigurationParameterSettings",
-            "description": "LLM generation parameters"
+            "description": "LLM generation parameters; the configuration's `parameter_settings` to keep them as they are. Omitted, the temperature and output limit are unset"
           },
           "enabled": {
             "type": "boolean",
@@ -17084,7 +17095,6 @@
           "name",
           "provider",
           "model",
-          "parameters",
           "enabled"
         ],
         "title": "PipelineConfigurationUpdateRequest",

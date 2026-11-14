@@ -67,6 +67,7 @@ from adapters.web.schemas.pipelines import (
     NodeReference,
     PipelineConfigurationCreateRequest,
     PipelineConfigurationParameters,
+    PipelineConfigurationParameterSettings,
     PipelineConfigurationResponse,
     PipelineConfigurationUpdateRequest,
     PipelineRunRequest,
@@ -795,10 +796,16 @@ def _system_config_to_response(
     """Convert an in-memory system configuration to a response schema."""
     cfg = version_obj.config
     params = None
+    settings = None
     if any(k in cfg for k in ("temperature", "max_tokens", "top_p")):
         params = PipelineConfigurationParameters(
             temperature=cfg.get("temperature", 0.4),
             max_tokens=cfg.get("max_tokens", 800),
+            top_p=cfg.get("top_p", 0.9),
+        )
+        settings = PipelineConfigurationParameterSettings(
+            temperature=cfg.get("temperature"),
+            max_tokens=cfg.get("max_tokens"),
             top_p=cfg.get("top_p", 0.9),
         )
     provider = cfg.get("llm_provider") or cfg.get("provider")
@@ -813,6 +820,7 @@ def _system_config_to_response(
         model=cfg.get("model"),
         stage_prompts=_stage_prompt_views(stages, cfg.get("stage_prompts")),
         parameters=params,
+        parameter_settings=settings,
         enabled=cfg.get("enabled", True),
         is_default=is_default,
         version=version_obj.version,
@@ -839,6 +847,8 @@ def _db_config_to_response(
         )
     except ValueError:  # a record of a pipeline type that no longer exists
         in_effect = registry_config(record)
+    # A type whose runs take neither (its configurations set none) shows no parameters
+    takes_parameters = "temperature" in in_effect or "max_tokens" in in_effect
     shown = PipelineConfigurationParameters()
 
     def _parse_dt(s: Optional[str]) -> Optional[datetime]:
@@ -863,7 +873,16 @@ def _db_config_to_response(
             temperature=in_effect.get("temperature", shown.temperature),
             max_tokens=in_effect.get("max_tokens", shown.max_tokens),
             top_p=record.top_p,
-        ),
+        )
+        if takes_parameters
+        else None,
+        parameter_settings=PipelineConfigurationParameterSettings(
+            temperature=record.temperature,
+            max_tokens=record.max_tokens,
+            top_p=record.top_p,
+        )
+        if takes_parameters
+        else None,
         enabled=record.enabled,
         is_default=is_default,
         version=record.version,
