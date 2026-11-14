@@ -3785,13 +3785,16 @@ selectors:
     description: 'Extract page: "Extracting" panel while the run is pending or running'
   - selector: extract-progress-headline
     component: src/components/sources/ExtractRunPanel.tsx
-    description: 'Extract page: "Chunk N of M" headline (aria-live)'
+    description: 'Extract page: progress headline (aria-live): "Chunk N of M", or the stage and its count for a run that reports one'
   - selector: extract-cancel-run
     component: src/components/sources/ExtractRunPanel.tsx
     description: 'Extract page: "Cancel run" button'
   - selector: extract-progress-bar
     component: src/components/sources/ExtractRunPanel.tsx
-    description: 'Extract page: chunk progress bar (role=progressbar)'
+    description: 'Extract page: progress bar (role=progressbar) of chunks read, or of the stage a run reports'
+  - selector: extract-stage-steps
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Extract page: stages of a run that reports them (find-then-type): done, in progress, waiting'
   - selector: extract-run-tally
     component: src/components/sources/ExtractRunPanel.tsx
     description: 'Extract page: run id, pipeline and configuration under the progress bar'
@@ -3894,6 +3897,9 @@ selectors:
   - selector: sources-table
     component: src/components/sources/SourcesPage.tsx
     description: 'Sources page: sources table wrapper (aria-busy while loading)'
+  - selector: extract-stage-step-*
+    component: src/components/sources/ExtractRunPanel.tsx
+    description: 'Extract page: one stage of the run, with the stage key as suffix (find_mentions, type_mention, derive_relationships); aria-current=step on the one in progress'
   - selector: extract-chunk-*
     component: src/components/sources/ChunkList.tsx
     description: 'Extract page: one chunk row, with dynamic 1-based chunk number suffix; a failed chunk has its reason at extract-chunk-<n>-reason'

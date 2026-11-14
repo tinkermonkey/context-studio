@@ -7824,6 +7824,21 @@ export interface components {
        */
       items_total?: number | null;
       /**
+       * Stage
+       * @description The stage the run last reported being in (find_then_type: find_mentions, type_mention, derive_relationships); null when its implementation reports none
+       */
+      stage?: string | null;
+      /**
+       * Stage Done
+       * @description How far through that stage the run is, in what the stage counts
+       */
+      stage_done?: number | null;
+      /**
+       * Stage Total
+       * @description What the stage counts, in all
+       */
+      stage_total?: number | null;
+      /**
        * Proposal Id
        * @description The proposal the run produced
        */
@@ -8800,6 +8815,21 @@ export interface components {
        * @description Work items the run will process (null until known)
        */
       items_total?: number | null;
+      /**
+       * Stage
+       * @description The stage the run last reported being in: the key of one of its implementation's stages (find_then_type: find_mentions, type_mention, derive_relationships). Null when the implementation reports no stages
+       */
+      stage?: string | null;
+      /**
+       * Stage Done
+       * @description How far through that stage the run is, in what the stage counts (find_mentions and derive_relationships: chunks; type_mention: distinct mentions)
+       */
+      stage_done?: number | null;
+      /**
+       * Stage Total
+       * @description What the stage counts, in all
+       */
+      stage_total?: number | null;
       /**
        * Proposal Id
        * @description The change proposal the run produced, if it produced one

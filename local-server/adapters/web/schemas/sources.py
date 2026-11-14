@@ -71,6 +71,17 @@ class LastExtractionRunSchema(BaseModel):
     status: PipelineRunStatus
     items_done: Optional[int] = Field(None, description="Chunks done; null until reported")
     items_total: Optional[int] = Field(None, description="Chunks in all; null until known")
+    stage: Optional[str] = Field(
+        None,
+        description=(
+            "The stage the run last reported being in (find_then_type: find_mentions, "
+            "type_mention, derive_relationships); null when its implementation reports none"
+        ),
+    )
+    stage_done: Optional[int] = Field(
+        None, description="How far through that stage the run is, in what the stage counts"
+    )
+    stage_total: Optional[int] = Field(None, description="What the stage counts, in all")
     proposal_id: Optional[str] = Field(None, description="The proposal the run produced")
     operations: Optional[int] = Field(None, description="How many operations that proposal has")
 
@@ -82,6 +93,9 @@ class LastExtractionRunSchema(BaseModel):
             status=run.status,
             items_done=run.items_done,
             items_total=run.items_total,
+            stage=run.stage,
+            stage_done=run.stage_done,
+            stage_total=run.stage_total,
             proposal_id=run.proposal_id,
             operations=run.operations,
         )

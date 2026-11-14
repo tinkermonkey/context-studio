@@ -26,7 +26,7 @@ from adapters.pipelines.run_executor import BackgroundRunExecutor, UnknownPipeli
 from domain.chat.value_objects import EntityRef, ToolOutcome
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.services import OntologyService
-from domain.pipelines.entities import PipelineRun, PipelineType
+from domain.pipelines.entities import PipelineRun, PipelineRunStatus, PipelineType
 from domain.pipelines.requested_via import REQUESTED_VIA, RequestedVia
 
 PIPELINES = [t.value for t in PipelineType]
@@ -46,7 +46,9 @@ def run_payload(run: PipelineRun) -> dict[str, Any]:
     skipped for each reason (skipped_by_reason). A run on a source counts the
     sections it left unread for each reason (skipped_sections_by_reason) and
     lists the chunks whose extraction failed (failed_chunks), which its
-    proposal lacks.
+    proposal lacks. A run whose implementation reports stages says which it
+    last reported and how far through it the run is (stage, stage_done,
+    stage_total).
     """
     summary = run.output_summary or {}
     return {
@@ -56,6 +58,9 @@ def run_payload(run: PipelineRun) -> dict[str, Any]:
         "status": run.status.value,
         "items_done": run.items_done,
         "items_total": run.items_total,
+        "stage": run.stage,
+        "stage_done": run.stage_done,
+        "stage_total": run.stage_total,
         "proposal_id": run.proposal_id,
         "no_proposal_reason": summary.get("no_proposal_reason"),
         "skipped_by_reason": summary.get("skipped_by_reason") or {},
@@ -170,7 +175,11 @@ class GetRunTool(ToolBase):
     description = (
         "Get a pipeline run started with run_refinement or extract_source: its status"
         " (pending, running, completed, failed, cancelled, or interrupted by a server"
-        " restart), progress (items_done of items_total), failure_reason, and the"
+        " restart), progress (items_done of items_total; a run that reports the stage"
+        " it is in also gives stage with stage_done of stage_total: a find_then_type"
+        " extraction is in find_mentions then derive_relationships, both counted in"
+        " chunks, with type_mention between them, counted in distinct mentions, and its"
+        " items_done stays 0 until relationships are read), failure_reason, and the"
         " proposal_id of the change proposal it produced (null until then). A completed"
         " run with a null proposal_id proposed nothing and is done: no_proposal_reason"
         " says why, and skipped_by_reason counts the candidates it skipped for each"
@@ -196,6 +205,8 @@ class GetRunTool(ToolBase):
             return error_outcome(f"No pipeline run found with id {run_id!r}.", "Run not found")
         payload = run_payload(run)
         progress = f" ({run.items_done}/{run.items_total})" if run.items_total else ""
+        if run.status == PipelineRunStatus.RUNNING and run.stage:
+            progress += f", {run.stage} {run.stage_done}/{run.stage_total}"
         reason = payload["no_proposal_reason"]
         nothing = f", nothing proposed: {reason}" if reason and not run.proposal_id else ""
         failed = len(payload["failed_chunks"])

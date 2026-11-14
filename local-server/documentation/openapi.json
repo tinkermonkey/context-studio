@@ -15615,6 +15615,42 @@
             "title": "Items Total",
             "description": "Chunks in all; null until known"
           },
+          "stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage",
+            "description": "The stage the run last reported being in (find_then_type: find_mentions, type_mention, derive_relationships); null when its implementation reports none"
+          },
+          "stage_done": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Done",
+            "description": "How far through that stage the run is, in what the stage counts"
+          },
+          "stage_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Total",
+            "description": "What the stage counts, in all"
+          },
           "proposal_id": {
             "anyOf": [
               {
@@ -17195,6 +17231,42 @@
             ],
             "title": "Items Total",
             "description": "Work items the run will process (null until known)"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage",
+            "description": "The stage the run last reported being in: the key of one of its implementation's stages (find_then_type: find_mentions, type_mention, derive_relationships). Null when the implementation reports no stages"
+          },
+          "stage_done": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Done",
+            "description": "How far through that stage the run is, in what the stage counts (find_mentions and derive_relationships: chunks; type_mention: distinct mentions)"
+          },
+          "stage_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Total",
+            "description": "What the stage counts, in all"
           },
           "proposal_id": {
             "anyOf": [

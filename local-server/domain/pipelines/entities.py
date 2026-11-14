@@ -130,6 +130,10 @@ class PipelineRun:
             without a text input); provenance span offsets index into it
         items_done: Work items finished so far (None until the run reports progress)
         items_total: Work items the run will process (None until known)
+        stage: The stage the run last reported being in: the key of one of its
+            implementation's stages (None when the implementation reports none)
+        stage_done, stage_total: How far through that stage the run is, in
+            what the stage counts (None with stage)
         proposal_id: The change proposal the run produced, when it produced one
     """
 
@@ -150,6 +154,9 @@ class PipelineRun:
     source_text: str | None = None
     items_done: int | None = None
     items_total: int | None = None
+    stage: str | None = None
+    stage_done: int | None = None
+    stage_total: int | None = None
     proposal_id: str | None = None
 
     def __post_init__(self) -> None:
@@ -462,6 +469,8 @@ class SourceRun:
         dataset_id: The dataset the call extracts into
         created_at: When it was submitted
         items_done, items_total: Its progress (chunks), when it reports any
+        stage, stage_done, stage_total: The stage it last reported and how far
+            through it the run is, when its implementation reports stages
         proposal_id: The proposal it produced, once it has
     """
 
@@ -474,4 +483,7 @@ class SourceRun:
     created_at: datetime
     items_done: int | None = None
     items_total: int | None = None
+    stage: str | None = None
+    stage_done: int | None = None
+    stage_total: int | None = None
     proposal_id: str | None = None

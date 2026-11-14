@@ -391,7 +391,8 @@ class ExtractSourceTool(_SourceTool):
     description = (
         "Extract a ready source into change proposals, in the background, and return the"
         " runs at once: an individual_extraction run that reads the source chunk by chunk"
-        " (items_done of items_total are chunks) and proposes individuals and their"
+        " (items_done of items_total are chunks; get_run also gives the stage a run is"
+        " in when its implementation reports one) and proposes individuals and their"
         " relationships, each with the passage it came from and any near matches to"
         " existing individuals; with schema true, a schema_extraction run over the same"
         " text too, proposing classes and relationship types. Each run ends in its own"

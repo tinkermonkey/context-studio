@@ -8,6 +8,7 @@ and pipeline run management via REST API.
 import asyncio
 import tempfile
 import threading
+from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -1207,6 +1208,35 @@ class TestRunStatusLifecycle:
         # For successful runs, these should be null/None
         # (started_at is set, but failure_reason should be null)
         assert body["failure_reason"] is None
+
+    def test_a_running_run_exposes_the_stage_it_reported(self, client, pipeline_run_repo):
+        """GET /api/pipelines/runs/{run_id} gives the stage beside the chunk count."""
+        run = pipeline_run_repo.create(
+            batch_run_id=create_batch_row(pipeline_run_repo._session_factory, "batch-stage"),
+            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
+            implementation_id="find_then_type",
+            configuration_ref="extraction-find-then-type",
+            configuration_slug="extraction-find-then-type",
+            configuration_version=1,
+            specific_data={"source_text_hash": "hash"},
+        )
+        pipeline_run_repo.update_running_status(run.id, datetime.now(timezone.utc))
+        pipeline_run_repo.update_progress(run.id, 0, 4)
+
+        before = client.get(f"/api/pipelines/runs/{run.id}").json()
+        assert (before["stage"], before["stage_done"], before["stage_total"]) == (None, None, None)
+
+        assert pipeline_run_repo.update_stage(run.id, "type_mention", 40, 166) is True
+        assert pipeline_run_repo.update_stage("no-such-run", "type_mention", 1, 2) is False
+
+        body = client.get(f"/api/pipelines/runs/{run.id}").json()
+        assert body["status"] == "running"
+        assert (body["items_done"], body["items_total"]) == (0, 4)
+        assert (body["stage"], body["stage_done"], body["stage_total"]) == (
+            "type_mention",
+            40,
+            166,
+        )
 
     def test_run_status_transitions_to_completed(self, client, registries):
         """A successful run transitions to COMPLETED status."""

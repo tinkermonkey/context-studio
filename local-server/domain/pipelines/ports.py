@@ -619,6 +619,10 @@ class PipelineRunStatusWriter(Protocol):
         """Record how many work items the run has finished, out of how many."""
         ...
 
+    def update_stage(self, run_id: str, stage: str, stage_done: int, stage_total: int) -> bool:
+        """Record the stage the run is in and how far through it the run is."""
+        ...
+
 
 class PipelineRunSubmitter(Protocol):
     """Port for queueing a pipeline run to execute in the background."""

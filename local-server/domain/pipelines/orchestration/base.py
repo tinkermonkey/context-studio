@@ -115,6 +115,17 @@ class PipelineOrchestrator(ABC):
         if self._run_id and self._status_writer:
             self._status_writer.update_progress(self._run_id, items_done, items_total)
 
+    def _report_stage(self, stage: str, stage_done: int, stage_total: int) -> None:
+        """
+        Record the stage the run is in and how far through it: stage_done of
+        stage_total of whatever the stage counts. It says what a run is doing
+        while its work items (see _report_progress) stay where they are.
+
+        Only writes if both run_id and status_writer are available.
+        """
+        if self._run_id and self._status_writer:
+            self._status_writer.update_stage(self._run_id, stage, stage_done, stage_total)
+
     @abstractmethod
     async def execute(self, state: PipelineState) -> PipelineState:
         """

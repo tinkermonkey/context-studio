@@ -872,6 +872,9 @@ class PipelineRepository:
             orm_obj.started_at = None  # type: ignore[assignment]
             orm_obj.items_done = None  # type: ignore[assignment]
             orm_obj.items_total = None  # type: ignore[assignment]
+            orm_obj.stage = None  # type: ignore[assignment]
+            orm_obj.stage_done = None  # type: ignore[assignment]
+            orm_obj.stage_total = None  # type: ignore[assignment]
             orm_obj.proposal_id = None  # type: ignore[assignment]
             ended_attempt = dict(orm_obj.llm_metadata or {})
             earlier = list(ended_attempt.pop(EARLIER_ATTEMPTS, []))
@@ -901,6 +904,25 @@ class PipelineRepository:
             return True
 
         return self._write("update pipeline run progress", update)
+
+    def update_stage(self, run_id: str, stage: str, stage_done: int, stage_total: int) -> bool:
+        """
+        Record the stage the run is in and how far through it the run is.
+
+        Returns:
+            True if updated, False if not found
+        """
+
+        def update(session: Session) -> bool:
+            orm_obj = session.query(PipelineRun).filter(PipelineRun.id == run_id).first()
+            if not orm_obj:
+                return False
+            orm_obj.stage = stage  # type: ignore[assignment]
+            orm_obj.stage_done = stage_done  # type: ignore[assignment]
+            orm_obj.stage_total = stage_total  # type: ignore[assignment]
+            return True
+
+        return self._write("update pipeline run stage", update)
 
     def set_proposal_id(self, run_id: str, proposal_id: str) -> bool:
         """
@@ -944,6 +966,9 @@ class PipelineRepository:
                     PipelineRun.created_at,
                     PipelineRun.items_done,
                     PipelineRun.items_total,
+                    PipelineRun.stage,
+                    PipelineRun.stage_done,
+                    PipelineRun.stage_total,
                     PipelineRun.proposal_id,
                 )
                 .filter(source_id.in_(list(source_ids)))
@@ -968,6 +993,9 @@ class PipelineRepository:
                 ),
                 items_done=items_done,
                 items_total=items_total,
+                stage=stage,
+                stage_done=stage_done,
+                stage_total=stage_total,
                 proposal_id=proposal_id,
             )
             for (
@@ -980,6 +1008,9 @@ class PipelineRepository:
                 created_at,
                 items_done,
                 items_total,
+                stage,
+                stage_done,
+                stage_total,
                 proposal_id,
             ) in rows
         ]
@@ -1055,6 +1086,9 @@ class PipelineRepository:
             "source_text": orm_obj.source_text,
             "items_done": orm_obj.items_done,
             "items_total": orm_obj.items_total,
+            "stage": orm_obj.stage,
+            "stage_done": orm_obj.stage_done,
+            "stage_total": orm_obj.stage_total,
             "proposal_id": orm_obj.proposal_id,
         }
 

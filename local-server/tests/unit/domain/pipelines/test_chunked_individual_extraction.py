@@ -319,12 +319,16 @@ class _FakeExtraction:
 class _StatusWriter:
     def __init__(self):
         self.progress: list[tuple[int, int | None]] = []
+        self.stages: list[tuple[str, int, int]] = []
 
     def update_running_status(self, run_id, started_at):
         pass
 
     def update_progress(self, run_id, items_done, items_total):
         self.progress.append((items_done, items_total))
+
+    def update_stage(self, run_id, stage, stage_done, stage_total):
+        self.stages.append((stage, stage_done, stage_total))
 
 
 def _state(**input_data):
@@ -636,6 +640,8 @@ class TestChunkedOrchestrator:
         total = len(extraction.calls)
         assert total == 3
         assert writer.progress == [(0, 3), (1, 3), (2, 3), (3, 3)]
+        # The two-pass shape reports chunks only: its run has no stage
+        assert writer.stages == []
         assert state.current_status == PipelineRunStatus.COMPLETED
 
         triples = state.result["triples"]
