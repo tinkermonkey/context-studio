@@ -1914,8 +1914,8 @@ export interface paths {
      * @description Invoke a pipeline by type.
      *
      *     The request body structure depends on the pipeline type. Supported types:
-     *     - individual_extraction: requires text and ontology_id. With the default
-     *       implementation, an unknown ontology_id is a 400, and an extraction that
+     *     - individual_extraction: requires text and ontology_id. With the find-then-type
+     *       and two-pass implementations, an unknown ontology_id is a 400, and an extraction that
      *       fails because an LLM response stays incomplete is a 500 whose detail
      *       gives the reason; with async either fails the run instead
      *     - schema_extraction: requires documents, optional scope
@@ -2613,8 +2613,8 @@ export interface paths {
      * @description Soft-delete a user pipeline configuration.
      *
      *     The configuration no longer appears in list responses and no run can be
-     *     started with it. Its versions stay in the in-memory registry for the runs
-     *     already pinned to them.
+     *     started with it. A run still queued with it fails, saying its configuration
+     *     was deleted after it was queued.
      *
      *     Args:
      *         config_id: The configuration UUID
@@ -8576,24 +8576,48 @@ export interface components {
       top_p: number;
     };
     /**
+     * PipelineConfigurationParameterValues
+     * @description What a configuration itself sets, as stored: a null temperature or
+     *     max_tokens is unset. The shape of PipelineConfigurationParameterSettings,
+     *     without its bounds: a listing shows a stored value as it is.
+     */
+    PipelineConfigurationParameterValues: {
+      /**
+       * Temperature
+       * @description Sampling temperature; null = unset
+       */
+      temperature?: number | null;
+      /**
+       * Max Tokens
+       * @description Output-token limit; null = unset
+       */
+      max_tokens?: number | null;
+      /**
+       * Top P
+       * @description Nucleus sampling probability
+       * @default 0.9
+       */
+      top_p: number;
+    };
+    /**
      * PipelineConfigurationParameters
      * @description The LLM parameters in effect for a pipeline configuration: what its runs
-     *     use. A temperature or output limit a user-created configuration leaves
-     *     unset is shown as the implementation's default configuration's.
+     *     are given. A temperature or output limit the configuration leaves unset is
+     *     its implementation's default configuration's; one neither sets is null,
+     *     and a run is then given none. Stored values are shown as they are, not
+     *     checked against the bounds new values must meet.
      */
     PipelineConfigurationParameters: {
       /**
        * Temperature
-       * @description Sampling temperature
-       * @default 0.4
+       * @description Sampling temperature in effect; null when none is set
        */
-      temperature: number;
+      temperature?: number | null;
       /**
        * Max Tokens
-       * @description The most output tokens one model call of a run may produce. A model that thinks before it answers spends part of it thinking, so it needs well above what the answer takes (the system configurations of Claude 5.5 models use 16000-20000). At most 20000: what every provider can send in one request
-       * @default 800
+       * @description Output-token limit in effect: the most output tokens one model call of a run may produce; null when none is set
        */
-      max_tokens: number;
+      max_tokens?: number | null;
       /**
        * Top P
        * @description Nucleus sampling probability
@@ -8651,10 +8675,10 @@ export interface components {
        * @description The prompts sent at each LLM stage; null when the implementation has none
        */
       stage_prompts?: components["schemas"]["StagePromptView"][] | null;
-      /** @description The LLM parameters in effect: what the configuration's runs use, a value it leaves unset shown as the implementation's default configuration's. Null for a configuration whose runs take no temperature or output limit */
+      /** @description The LLM parameters in effect: what the configuration's runs are given, a value it leaves unset shown as the implementation's default configuration's (null when that sets none either). Null for a configuration whose runs take no temperature or output limit */
       parameters?: components["schemas"]["PipelineConfigurationParameters"] | null;
       /** @description What the configuration itself sets, in the shape of the create and update bodies' `parameters`: a null temperature or max_tokens is unset, and its run then uses the value in `parameters`. Send this back as `parameters` when updating, so a value that is inherited stays inherited. Null where `parameters` is null */
-      parameter_settings?: components["schemas"]["PipelineConfigurationParameterSettings"] | null;
+      parameter_settings?: components["schemas"]["PipelineConfigurationParameterValues"] | null;
       /**
        * Enabled
        * @description Whether this configuration is active; a disabled one starts no run
@@ -8740,7 +8764,7 @@ export interface components {
       implementation_id?: string | null;
       /**
        * Configuration Ref
-       * @description One of the implementation's configurations; its default configuration when omitted. Its model, temperature and output-token limit are the run's unless the body names its own (model, temperature, max_tokens)
+       * @description One of the implementation's configurations; its default configuration when omitted. Its model, temperature and output-token limit are the run's unless the body names its own (model, temperature, max_tokens; max_tokens at most 20000, above which the run is refused with a 422)
        */
       configuration_ref?: string | null;
       /**

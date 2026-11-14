@@ -130,3 +130,10 @@ class UnknownConfigurationError(PipelineSelectionError):
 
 class ConfigurationDisabledError(PipelineSelectionError):
     """The configuration is disabled, so no run may start with it."""
+
+
+class RunParameterError(PipelineSelectionError):
+    """
+    A run was given a parameter no run can execute with: an output-token limit
+    above what a provider can be asked for, in its input or in its configuration.
+    """

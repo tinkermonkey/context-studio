@@ -529,6 +529,21 @@ class TestListAndGet:
 
 
 class TestExtractSource:
+    async def test_nothing_named_extracts_with_find_then_type(self, setup, house):
+        async with mcp_client(setup.workspace, write_tools=setup.tools()) as client:
+            _, source, _ = await call(client, "add_source", add_text(house))
+
+            is_error, started, _ = await call(client, "extract_source", {"source_id": source["id"]})
+
+        assert is_error is False, started
+        [run] = started["runs"]
+        stored = setup.runs.get(run["run_id"])
+        # Individual extraction's default implementation and its default configuration
+        assert (stored.implementation_id, stored.configuration_ref) == (
+            "find_then_type",
+            "extraction-find-then-type",
+        )
+
     async def test_the_implementation_and_configuration_can_be_named(self, setup, house):
         async with mcp_client(setup.workspace, write_tools=setup.tools()) as client:
             _, source, _ = await call(client, "add_source", add_text(house))
@@ -561,7 +576,10 @@ class TestExtractSource:
         async with mcp_client(setup.workspace, write_tools=setup.tools()) as client:
             _, source, _ = await call(client, "add_source", add_text(house))
 
-            is_error, started, _ = await call(client, "extract_source", {"source_id": source["id"]})
+            # The two-pass implementation, by its id (the fake stands in for its service)
+            is_error, started, _ = await call(
+                client, "extract_source", {"source_id": source["id"], "implementation": "default"}
+            )
             assert is_error is False
             [run] = started["runs"]
             assert (run["pipeline"], run["status"]) == ("individual_extraction", "pending")
@@ -667,10 +685,10 @@ class TestExtractSource:
                     "can extract a source (one of: default, find_then_type)",
                 ),
                 (
-                    # find_then_type's configuration without naming find_then_type
-                    {"source_id": ready["id"], "configuration": "extraction-find-then-type"},
-                    "is a configuration of the find_then_type implementation, not of the"
-                    " 'default' implementation",
+                    # Two-pass's configuration without naming two-pass ("default")
+                    {"source_id": ready["id"], "configuration": "extraction-default"},
+                    "is a configuration of the default implementation, not of the"
+                    " 'find_then_type' implementation",
                 ),
                 (
                     {

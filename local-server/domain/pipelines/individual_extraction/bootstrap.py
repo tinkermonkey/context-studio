@@ -1,8 +1,8 @@
 """
 Bootstrap module for Individual Extraction pipeline registration.
 
-Provides functions to register the default individual extraction implementation
-and configurations with the pipeline registries.
+Provides the function that registers the individual extraction implementations
+and their configurations with the pipeline registries.
 """
 
 from domain.pipelines.entities import PipelineType
@@ -34,44 +34,51 @@ def register_individual_extraction(
     config_registry: PipelineConfigurationRegistry | None = None,
 ) -> None:
     """
-    Register the default individual extraction implementation and configurations.
+    Register the individual extraction implementations and their configurations.
 
     Registers:
-    1. IndividualExtractionOrchestrator as the "default" implementation (the
-       type's default), OpenIndividualExtractionOrchestrator as "open_v1" and
-       FindThenTypeOrchestrator as "find_then_type"
-    2. Their configurations (the first of each implementation is its default):
+    1. FindThenTypeOrchestrator as "find_then_type", the type's default
+       implementation: what a run executes when it names none. On the
+       extraction benchmark it types far more of what it finds than two-pass
+       does with the same model (dev typed F1 0.465 against 0.09 with Claude
+       Haiku 5.5).
+    2. IndividualExtractionOrchestrator, the two-pass implementation, under
+       the id "default". The id is a name only: it is not the type's default
+       implementation, and runs when a run names it.
+    3. OpenIndividualExtractionOrchestrator as "open_v1".
+    4. Their configurations (the first of each implementation is its default):
+       - "extraction-find-then-type": find-then-type (Anthropic/Claude Haiku 5.5)
        - "extraction-default": two-pass (Anthropic/Claude Haiku 5.5)
        - "extraction-openrouter-default": two-pass (OpenRouter/Gemini 3 Flash)
        - "extraction-open-v1": the open spaCy-based pipeline
-       - "extraction-find-then-type": find-then-type (Anthropic/Claude Haiku 5.5)
 
     Args:
         impl_registry: PipelineImplementationRegistry instance (optional)
         config_registry: PipelineConfigurationRegistry instance (optional)
     """
-    # Register implementations (LLM-only "default" + open spaCy "open_v1")
+    # Register implementations: find-then-type is the type's default; two-pass
+    # keeps the id "default", which no longer says it is
     if impl_registry is not None:
+        impl_registry.register_impl(
+            PipelineType.INDIVIDUAL_EXTRACTION,
+            "find_then_type",
+            FindThenTypeOrchestrator,
+            default=True,
+        )
         impl_registry.register_impl(
             PipelineType.INDIVIDUAL_EXTRACTION,
             "default",
             IndividualExtractionOrchestrator,
-            default=True,
         )
         impl_registry.register_impl(
             PipelineType.INDIVIDUAL_EXTRACTION,
             "open_v1",
             OpenIndividualExtractionOrchestrator,
         )
-        impl_registry.register_impl(
-            PipelineType.INDIVIDUAL_EXTRACTION,
-            "find_then_type",
-            FindThenTypeOrchestrator,
-        )
 
     # Register configurations
     if config_registry is not None:
-        # The default implementation's default config (Anthropic/Claude Haiku 5.5)
+        # Two-pass's default config (Anthropic/Claude Haiku 5.5)
         config_registry.register(
             PipelineType.INDIVIDUAL_EXTRACTION,
             "default",
@@ -80,7 +87,7 @@ def register_individual_extraction(
             default=True,
         )
 
-        # OpenRouter default config (Gemini 3 Flash)
+        # Two-pass with OpenRouter (Gemini 3 Flash)
         config_registry.register(
             PipelineType.INDIVIDUAL_EXTRACTION,
             "default",

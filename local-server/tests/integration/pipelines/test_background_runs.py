@@ -633,7 +633,8 @@ class TestRequeuedRunSpend:
             lambda: (r := repo.get(run.id)).failure_reason == "the worker hit a bug" and r
         )
         assert died.status == PipelineRunStatus.FAILED
-        assert died.llm_metadata == {"earlier_attempts": [FIRST_ATTEMPT]}
+        # No spend of its own: only the model the attempt was given
+        assert died.llm_metadata == {"model": "test-model", "earlier_attempts": [FIRST_ATTEMPT]}
 
 
 class TestStoredInput:

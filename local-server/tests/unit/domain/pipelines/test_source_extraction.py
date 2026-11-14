@@ -106,11 +106,22 @@ def service(registries, submitter, source, repo):
 
 
 class TestImplementationChoice:
-    def test_default_reads_a_source_when_none_is_named(self, service, submitter, source):
+    def test_find_then_type_reads_a_source_when_none_is_named(self, service, submitter, source):
         service.extract(source.id, "home")
 
         [run] = submitter.submitted
         assert run.pipeline_type is PipelineType.INDIVIDUAL_EXTRACTION
+        # The type's default implementation and that implementation's default configuration
+        assert run.implementation_id == "find_then_type"
+        assert run.configuration_ref == "extraction-find-then-type"
+
+    def test_the_implementation_named_default_is_two_pass_and_still_reads_a_source(
+        self, service, submitter, source
+    ):
+        # The id "default" is the two-pass implementation's name, not the type's default
+        service.extract(source.id, "home", implementation_id="default")
+
+        [run] = submitter.submitted
         assert run.implementation_id == "default"
         assert run.configuration_ref == "extraction-default"
 
@@ -156,10 +167,15 @@ class TestImplementationChoice:
         assert run.implementation_id == "find_then_type"
         assert run.configuration_ref == "find-then-type-other-model"
 
-    def test_a_configuration_of_the_default_implementation_still_works(
+    def test_another_configuration_of_the_named_implementation_is_used(
         self, service, submitter, source
     ):
-        service.extract(source.id, "home", configuration_ref="extraction-openrouter-default")
+        service.extract(
+            source.id,
+            "home",
+            configuration_ref="extraction-openrouter-default",
+            implementation_id="default",
+        )
 
         [run] = submitter.submitted
         assert run.implementation_id == "default"
@@ -211,7 +227,8 @@ class TestImplementationChoice:
         [
             ("find_then_type", "extraction-default"),
             ("default", "extraction-find-then-type"),
-            (None, "extraction-find-then-type"),
+            # Nothing named is find-then-type, so two-pass's configuration is another's
+            (None, "extraction-default"),
             ("find_then_type", "no-such-configuration"),
         ],
     )
@@ -238,7 +255,12 @@ class TestImplementationChoice:
         )
 
         with pytest.raises(ValueError, match="is disabled"):
-            service.extract(source.id, "home", configuration_ref="extraction-openrouter-default")
+            service.extract(
+                source.id,
+                "home",
+                configuration_ref="extraction-openrouter-default",
+                implementation_id="default",
+            )
 
         assert submitter.submitted == []
 

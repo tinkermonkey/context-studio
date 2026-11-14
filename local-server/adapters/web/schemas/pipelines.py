@@ -117,15 +117,35 @@ MAX_TOKENS_DESCRIPTION = (
 class PipelineConfigurationParameters(BaseModel):
     """
     The LLM parameters in effect for a pipeline configuration: what its runs
-    use. A temperature or output limit a user-created configuration leaves
-    unset is shown as the implementation's default configuration's.
+    are given. A temperature or output limit the configuration leaves unset is
+    its implementation's default configuration's; one neither sets is null,
+    and a run is then given none. Stored values are shown as they are, not
+    checked against the bounds new values must meet.
     """
 
-    temperature: float = Field(default=0.4, ge=0.0, le=2.0, description="Sampling temperature")
-    max_tokens: int = Field(
-        default=800, ge=64, le=MAX_OUTPUT_TOKENS, description=MAX_TOKENS_DESCRIPTION
+    temperature: Optional[float] = Field(
+        None, description="Sampling temperature in effect; null when none is set"
     )
-    top_p: float = Field(default=0.9, ge=0.0, le=1.0, description="Nucleus sampling probability")
+    max_tokens: Optional[int] = Field(
+        None,
+        description=(
+            "Output-token limit in effect: the most output tokens one model call of a run"
+            " may produce; null when none is set"
+        ),
+    )
+    top_p: float = Field(default=0.9, description="Nucleus sampling probability")
+
+
+class PipelineConfigurationParameterValues(BaseModel):
+    """
+    What a configuration itself sets, as stored: a null temperature or
+    max_tokens is unset. The shape of PipelineConfigurationParameterSettings,
+    without its bounds: a listing shows a stored value as it is.
+    """
+
+    temperature: Optional[float] = Field(None, description="Sampling temperature; null = unset")
+    max_tokens: Optional[int] = Field(None, description="Output-token limit; null = unset")
+    top_p: float = Field(default=0.9, description="Nucleus sampling probability")
 
 
 class PipelineConfigurationParameterSettings(BaseModel):
@@ -240,12 +260,13 @@ class PipelineConfigurationResponse(BaseModel):
     parameters: Optional[PipelineConfigurationParameters] = Field(
         None,
         description=(
-            "The LLM parameters in effect: what the configuration's runs use, a value it"
-            " leaves unset shown as the implementation's default configuration's. Null for"
-            " a configuration whose runs take no temperature or output limit"
+            "The LLM parameters in effect: what the configuration's runs are given, a value"
+            " it leaves unset shown as the implementation's default configuration's (null"
+            " when that sets none either). Null for a configuration whose runs take no"
+            " temperature or output limit"
         ),
     )
-    parameter_settings: Optional[PipelineConfigurationParameterSettings] = Field(
+    parameter_settings: Optional[PipelineConfigurationParameterValues] = Field(
         None,
         description=(
             "What the configuration itself sets, in the shape of the create and update"
@@ -307,7 +328,8 @@ class PipelineRunRequest(BaseModel):
         description=(
             "One of the implementation's configurations; its default configuration when"
             " omitted. Its model, temperature and output-token limit are the run's unless"
-            " the body names its own (model, temperature, max_tokens)"
+            " the body names its own (model, temperature, max_tokens; max_tokens at most"
+            f" {MAX_OUTPUT_TOKENS}, above which the run is refused with a 422)"
         ),
     )
     run_async: Optional[bool] = Field(
