@@ -185,14 +185,19 @@ export function useExtractionReviewRuns({
   }, []);
 
   /**
-   * Runs one type again on the text that was last run, with the selection its
-   * picker shows now: after a failure the picker is free again, and what it
-   * shows is what must run.
+   * Runs one type again on the text that was last run, with what the page
+   * shows now: the type's selection, and (for the individual run) the
+   * dataset. After a failure the form is free again, and what it shows is
+   * what must run.
    */
   const rerun = useCallback(
-    (kind: ReviewKind, selection: RunSelectionFields) => {
+    (kind: ReviewKind, current: { selection: RunSelectionFields; datasetId?: string }) => {
       if (!lastRequest) return Promise.resolve();
-      const next = { ...lastRequest, [kind]: selection };
+      const next: ExtractionReviewRequest = {
+        ...lastRequest,
+        [kind]: current.selection,
+        ...(kind === "individual" ? { datasetId: current.datasetId } : {}),
+      };
       setLastRequest(next);
       return runOne(kind, next);
     },

@@ -27,6 +27,36 @@ describe("useRunDataset", () => {
     await waitFor(() => expect(result.current.datasets).toEqual([alpha]));
     expect(result.current.required).toBe(false);
     expect(result.current.missing).toBe(false);
+    expect(result.current.ready).toBe(true);
+    expect(result.current.fields).toEqual({});
+  });
+
+  it("is not ready while the taxonomy's datasets are being read", async () => {
+    let serve: (d: ReturnType<typeof createDataset>[]) => void = () => {};
+    vi.spyOn(ontologyService, "listDatasets").mockImplementation(
+      () => new Promise((resolve) => (serve = resolve)),
+    );
+    const { result } = renderHook(() => useRunDataset("tax-a"), { wrapper });
+    // Not "nothing required": whether one must be named is not known yet.
+    expect(result.current.loading).toBe(true);
+    expect(result.current.ready).toBe(false);
+    expect(result.current.required).toBe(false);
+
+    act(() => serve([alpha, beta]));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.required).toBe(true);
+    expect(result.current.ready).toBe(false);
+    act(() => result.current.select("ds-a"));
+    expect(result.current.ready).toBe(true);
+  });
+
+  it("reports a list that could not be read and is never ready", async () => {
+    vi.spyOn(ontologyService, "listDatasets").mockRejectedValue(new Error("boom"));
+    const { result } = renderHook(() => useRunDataset("tax-a"), { wrapper });
+    await waitFor(() => expect(result.current.loadError).toBe("boom"));
+    expect(result.current.loading).toBe(false);
+    expect(result.current.ready).toBe(false);
+    expect(result.current.datasets).toEqual([]);
     expect(result.current.fields).toEqual({});
   });
 
@@ -55,5 +85,7 @@ describe("useRunDataset", () => {
     await waitFor(() => expect(ontologyService.listDatasets).toHaveBeenCalled());
     expect(result.current.datasets).toEqual([]);
     expect(result.current.required).toBe(false);
+    expect(result.current.loading).toBe(false);
+    expect(result.current.ready).toBe(true);
   });
 });

@@ -123,6 +123,8 @@ export function ConfigEditor({
   const isEdit = mode === "edit";
   const active = isCreate || isEdit;
 
+  // Bumped when a failed save puts the form back to what is saved, so typed fields start over.
+  const [resets, setResets] = useState(0);
   const [draft, setDraft] = useState<DraftConfig>(() =>
     makeDraft(isCreate ? null : config, template),
   );
@@ -246,6 +248,11 @@ export function ConfigEditor({
         });
       } catch (err) {
         toast("error", err instanceof Error ? err.message : "Failed to save");
+        // The change was not saved: show what is, so the form and the server
+        // agree and the next save does not quietly drop what the form shows.
+        setDraft(makeDraft(latestSaved.current ?? config));
+        setInvalidParams(new Set());
+        setResets((n) => n + 1);
       }
     });
     return saveQueue.current;
@@ -300,7 +307,7 @@ export function ConfigEditor({
   const isSystemConfig = !isCreate && (config?.is_system ?? false);
   const editable = active && !isSystemConfig;
   // Typed parameter fields start over with another configuration or mode.
-  const fieldsKey = `${config?.id ?? "new"}-${mode}`;
+  const fieldsKey = `${config?.id ?? "new"}-${mode}-${resets}`;
   /**
    * Says a value in effect is not the configuration's own: the default
    * configuration's, or none at all when that sets none either.
@@ -508,6 +515,8 @@ export function ConfigEditor({
 
           {!isCreate && config?.stage_prompts && (
             <StagePromptsSection
+              // Starts over from the saved prompts when a failed save resets the form.
+              key={`stage-prompts-${fieldsKey}`}
               stages={config.stage_prompts}
               editable={isEdit && !isSystemConfig}
               onSave={(body) => {

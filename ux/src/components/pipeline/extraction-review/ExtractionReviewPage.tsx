@@ -171,6 +171,7 @@ export function ExtractionReviewPage({
       taxonomyId: taxonomy.id,
       taxonomyLabel: `${taxonomy.title} · ${taxonomy.identifier}`,
     });
+    if (!dataset.ready) return;
     void runs.start({
       text,
       taxonomy: { id: taxonomy.id, label: taxonomy.title },
@@ -178,6 +179,19 @@ export function ExtractionReviewPage({
       datasetId: dataset.dataset?.id,
       schema: selectionRequestFields(schemaSelection),
       individual: selectionRequestFields(individualSelection),
+    });
+  };
+
+  /** Re-run the individual run with the selection and dataset the form shows now. */
+  const rerunIndividual = () => {
+    if (dataset.missing) {
+      setErrors((prev) => ({ ...prev, dataset: DATASET_REQUIRED }));
+      return;
+    }
+    if (!dataset.ready) return;
+    void runs.rerun("individual", {
+      selection: selectionRequestFields(individualSelection),
+      datasetId: dataset.dataset?.id,
     });
   };
 
@@ -218,8 +232,9 @@ export function ExtractionReviewPage({
             <Button
               variant="primary"
               onClick={run}
-              disabled={anyRunning}
-              aria-busy={anyRunning}
+              // Not before the taxonomy's datasets are read: whether one must be named is unknown.
+              disabled={anyRunning || dataset.loading || !!dataset.loadError}
+              aria-busy={anyRunning || dataset.loading}
               data-testid="extraction-review-run"
             >
               <Icon name="zap" size={13} /> {anyRunning ? "Running…" : "Run extraction"}
@@ -374,7 +389,9 @@ export function ExtractionReviewPage({
           slot={runs.schema}
           text={runText}
           scope={reviewScope}
-          onRetry={() => void runs.rerun("schema", selectionRequestFields(schemaSelection))}
+          onRetry={() =>
+            void runs.rerun("schema", { selection: selectionRequestFields(schemaSelection) })
+          }
         />
       </div>
       <div
@@ -387,7 +404,7 @@ export function ExtractionReviewPage({
           slot={runs.individual}
           text={runText}
           scope={reviewScope}
-          onRetry={() => void runs.rerun("individual", selectionRequestFields(individualSelection))}
+          onRetry={rerunIndividual}
         />
       </div>
     </div>

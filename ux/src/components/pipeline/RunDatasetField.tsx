@@ -14,16 +14,22 @@ export interface RunDatasetFieldProps {
 
 export const DATASET_REQUIRED = "Select a dataset";
 
+/** The field's error: the list could not be read, or the given validation error. */
+const fieldError = (run: RunDataset, error?: string) =>
+  run.loadError ? `Could not load the datasets: ${run.loadError}` : error;
+
 /**
  * Chooses the dataset a run extracts into: its individuals are matched and
- * created there. Renders nothing unless the
- * taxonomy has two or more datasets: with one, the dataset is implied.
+ * created there. Renders nothing while the taxonomy has one dataset (it is
+ * implied) or its list is still loading; shows the error when the list could
+ * not be read, since whether one must be chosen is then unknown.
  */
 export function RunDatasetField({ run, id, error, disabled, onChange }: RunDatasetFieldProps) {
-  if (!run.required) return null;
+  if (!run.required && !run.loadError) return null;
   const errorId = `${id}-error`;
+  const shown = fieldError(run, error);
   return (
-    <Field label="Dataset" htmlFor={id} required error={error} errorId={errorId}>
+    <Field label="Dataset" htmlFor={id} required error={shown} errorId={errorId}>
       <Select
         id={id}
         value={run.dataset?.id ?? ""}
@@ -33,8 +39,8 @@ export function RunDatasetField({ run, id, error, disabled, onChange }: RunDatas
         }}
         placeholder="Select a dataset"
         ariaLabel="Dataset"
-        disabled={disabled}
-        error={!!error}
+        disabled={disabled || !!run.loadError}
+        error={!!shown}
         data-testid={id}
       >
         {run.datasets.map((d) => (

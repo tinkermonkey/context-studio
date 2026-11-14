@@ -127,7 +127,14 @@ export function IndividualExtractionWizard() {
       <Button
         type="submit"
         variant="primary"
-        disabled={isSubmitting || !sourceText.trim() || !selectedOntology}
+        // Not before the taxonomy's datasets are read: whether one must be named is unknown.
+        disabled={
+          isSubmitting ||
+          !sourceText.trim() ||
+          !selectedOntology ||
+          dataset.loading ||
+          !!dataset.loadError
+        }
         aria-busy={isSubmitting}
         data-testid="individual-extraction-submit"
       >

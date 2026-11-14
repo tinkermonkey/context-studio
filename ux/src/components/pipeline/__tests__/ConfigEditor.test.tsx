@@ -15,7 +15,8 @@ vi.mock("@/api/hooks/pipeline/useConfigurationMutations", () => ({
   useDeleteConfiguration: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
-vi.mock("@/components/ui/Toast", () => ({ useToasts: () => ({ toast: vi.fn() }) }));
+const { toast } = vi.hoisted(() => ({ toast: vi.fn() }));
+vi.mock("@/components/ui/Toast", () => ({ useToasts: () => ({ toast }) }));
 
 // The providers the server reports, and the models of the registered configurations.
 vi.mock("@/api/hooks/admin/useHealth", () => ({
@@ -123,6 +124,27 @@ describe("ConfigEditor stage prompts", () => {
         stage_prompts: { disambiguation: { system: STAGE.system, user: STAGE.user } },
       }),
     );
+  });
+
+  it("duplicates what a configuration sets, keeping inherited values inherited", async () => {
+    // It sets its own temperature and inherits the output limit (16000 in effect).
+    renderEditor(
+      makeConfig({
+        is_system: true,
+        parameters: { temperature: 0.3, max_tokens: 16000, top_p: 0.9 },
+        parameter_settings: { temperature: 0.3, max_tokens: null, top_p: 0.9 },
+      }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Configuration actions" }));
+    await userEvent.click(await screen.findByText("Duplicate"));
+
+    await waitFor(() => expect(mutations.create).toHaveBeenCalledTimes(1));
+    // The settings, not the values in effect: the copy keeps following the default's limit.
+    expect(mutations.create.mock.calls[0][0].parameters).toEqual({
+      temperature: 0.3,
+      max_tokens: null,
+      top_p: 0.9,
+    });
   });
 
   it("sends the current stage prompts when another field is saved", async () => {
@@ -513,5 +535,55 @@ describe("ConfigEditor parameters", () => {
     await userEvent.click(screen.getByTestId("config-create-btn"));
     await waitFor(() => expect(mutations.create).toHaveBeenCalledTimes(1));
     expect(mutations.create.mock.calls[0][0].parameters).toBeUndefined();
+  });
+});
+
+describe("ConfigEditor after a failed save", () => {
+  beforeEach(() => {
+    mutations.create.mockReset();
+    mutations.update.mockReset();
+    toast.mockReset();
+  });
+
+  it("puts the form back to what is saved, so the next save and the form agree", async () => {
+    const saved = makeConfig({
+      parameters: { temperature: 0.4, max_tokens: 800, top_p: 0.9 },
+      parameter_settings: { temperature: 0.4, max_tokens: 800, top_p: 0.9 },
+    });
+    mutations.update
+      .mockRejectedValueOnce(new Error("The server refused it"))
+      .mockImplementation(async ({ body }) =>
+        makeConfig({ parameter_settings: body.parameters, version: 2 }),
+      );
+    renderEditor(saved, "edit");
+
+    const maxTokens = screen.getByTestId("config-max-tokens-input");
+    await userEvent.clear(maxTokens);
+    await userEvent.type(maxTokens, "16000");
+    await userEvent.tab();
+    await waitFor(() => expect(mutations.update).toHaveBeenCalledTimes(1));
+    expect(toast).toHaveBeenCalledWith("error", "The server refused it");
+    // Not saved, so not shown: the field holds the saved limit again.
+    await waitFor(() => expect(screen.getByTestId("config-max-tokens-input")).toHaveValue(800));
+
+    fireEvent.change(screen.getByRole("slider", { name: "Top-p" }), { target: { value: "0.5" } });
+    await waitFor(() => expect(mutations.update).toHaveBeenCalledTimes(2));
+    expect(mutations.update.mock.calls[1][0].body.parameters).toEqual({
+      temperature: 0.4,
+      max_tokens: 800,
+      top_p: 0.5,
+    });
+    expect(screen.getByTestId("config-max-tokens-input")).toHaveValue(800);
+  });
+
+  it("puts a failed name change back too", async () => {
+    mutations.update.mockRejectedValueOnce(new Error("Name taken"));
+    renderEditor(makeConfig({ name: "Copy" }), "edit");
+
+    const name = screen.getByTestId("config-name-input");
+    await userEvent.type(name, " two");
+    await userEvent.tab();
+    await waitFor(() => expect(toast).toHaveBeenCalledWith("error", "Name taken"));
+    await waitFor(() => expect(name).toHaveValue("Copy"));
   });
 });

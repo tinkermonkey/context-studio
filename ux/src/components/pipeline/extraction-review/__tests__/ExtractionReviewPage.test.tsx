@@ -402,6 +402,158 @@ describe("ExtractionReviewPage", () => {
     );
   });
 
+  it("re-runs a failed schema run with the selection its picker shows now", async () => {
+    // A second schema implementation, so the schema picker has a choice to make.
+    server.use(
+      http.get("*/api/pipelines/types/:type/implementations", ({ params }) =>
+        HttpResponse.json([
+          { id: "schema_alt", pipeline_type: params.type, is_default: false },
+          { id: "base", pipeline_type: params.type, is_default: true },
+        ]),
+      ),
+      http.get("*/api/pipelines/types/:type/implementations/:impl/configurations", ({ params }) =>
+        HttpResponse.json(
+          params.impl === "schema_alt"
+            ? [
+                config(String(params.type), "schema_alt", "schema-alt-main", {
+                  is_default: true,
+                }),
+              ]
+            : CONFIGS.filter(
+                (c) => c.pipeline_type === params.type && c.implementation_id === params.impl,
+              ),
+        ),
+      ),
+      // The schema run fails; the individual one completes.
+      http.post("*/api/pipelines/:type/run", async ({ params, request }) => {
+        runBodies[String(params.type)] = (await request.json()) as Record<string, unknown>;
+        if (params.type === "schema_extraction")
+          return HttpResponse.json({ detail: "schema run failed" }, { status: 400 });
+        return HttpResponse.json(makeRun({ id: "run-i", pipeline_type: "individual_extraction" }));
+      }),
+      http.get("*/api/pipelines/runs/run-i/individual-extraction-candidates", () =>
+        HttpResponse.json(TRIPLES),
+      ),
+      http.post("*/api/pipelines/runs/run-i/recognition-preview", () =>
+        HttpResponse.json(RECOGNITION),
+      ),
+    );
+    await renderPage();
+    await userEvent.type(screen.getByTestId("extraction-review-text"), XR_TEXT);
+    await userEvent.click(screen.getByTestId("extraction-review-run"));
+    const failed = await screen.findByTestId("extraction-review-schema-failed");
+    expect(runBodies.schema_extraction).toMatchObject({
+      implementation_id: "base",
+      configuration_ref: "schema-extraction-default",
+    });
+    const individualBody = runBodies.individual_extraction;
+
+    await userEvent.selectOptions(
+      screen.getByTestId("extraction-review-schema-implementation"),
+      "schema_alt",
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("extraction-review-schema-configuration")).toHaveValue(
+        "schema-alt-main",
+      ),
+    );
+    await userEvent.click(within(failed).getByRole("button", { name: /Re-run schema_extraction/ }));
+
+    await waitFor(() =>
+      expect(runBodies.schema_extraction).toMatchObject({
+        implementation_id: "schema_alt",
+        configuration_ref: "schema-alt-main",
+        documents: [XR_TEXT],
+      }),
+    );
+    // Only the schema run was started again.
+    expect(runBodies.individual_extraction).toBe(individualBody);
+  });
+
+  it("re-runs a failed individual run into the dataset chosen since", async () => {
+    mockRuns("fail");
+    server.use(
+      http.get("*/api/datasets", () =>
+        HttpResponse.json([
+          { id: "ds-a", taxonomy_id: "tax-dr", identifier: "alpha" },
+          { id: "ds-b", taxonomy_id: "tax-dr", identifier: "beta" },
+        ]),
+      ),
+    );
+    await renderPage();
+    const dataset = await screen.findByTestId("extraction-review-dataset");
+    await userEvent.selectOptions(dataset, "ds-a");
+    await userEvent.type(screen.getByTestId("extraction-review-text"), XR_TEXT);
+    await userEvent.click(screen.getByTestId("extraction-review-run"));
+    await userEvent.click(screen.getByRole("tab", { name: "Individual extraction" }));
+    const failed = await screen.findByTestId("extraction-review-individual-failed");
+    expect(runBodies.individual_extraction).toMatchObject({ dataset_id: "ds-a" });
+
+    await userEvent.selectOptions(dataset, "ds-b");
+    await userEvent.click(
+      within(failed).getByRole("button", { name: /Re-run individual_extraction/ }),
+    );
+    await waitFor(() =>
+      expect(runBodies.individual_extraction).toMatchObject({ dataset_id: "ds-b", text: XR_TEXT }),
+    );
+  });
+
+  it("starts no run until the taxonomy's datasets are read", async () => {
+    mockRuns("ok");
+    let serve: () => void = () => {};
+    server.use(
+      http.get(
+        "*/api/datasets",
+        () =>
+          new Promise<Response>((resolve) => {
+            serve = () =>
+              resolve(
+                HttpResponse.json([
+                  { id: "ds-a", taxonomy_id: "tax-dr", identifier: "alpha" },
+                  { id: "ds-b", taxonomy_id: "tax-dr", identifier: "beta" },
+                ]),
+              );
+          }),
+      ),
+    );
+    await renderPage();
+    await userEvent.type(screen.getByTestId("extraction-review-text"), XR_TEXT);
+    // Whether a dataset must be named is not known yet: Run waits.
+    const run = screen.getByTestId("extraction-review-run");
+    expect(run).toBeDisabled();
+    expect(run).toHaveAttribute("aria-busy", "true");
+    expect(runBodies).toEqual({});
+
+    serve();
+    // Several datasets: Run is free again and asks for one.
+    expect(await screen.findByTestId("extraction-review-dataset")).toBeInTheDocument();
+    expect(run).toBeEnabled();
+    await userEvent.click(run);
+    expect(
+      screen.getByText("Select a dataset", { selector: "[id$='-error']" }),
+    ).toBeInTheDocument();
+    expect(runBodies).toEqual({});
+  });
+
+  it("starts no run when the taxonomy's datasets could not be read, and says why", async () => {
+    mockRuns("ok");
+    server.use(
+      http.get("*/api/datasets", () => HttpResponse.json({ detail: "boom" }, { status: 500 })),
+    );
+    await renderPage();
+    await userEvent.type(screen.getByTestId("extraction-review-text"), XR_TEXT);
+
+    const dataset = await screen.findByTestId("extraction-review-dataset");
+    expect(dataset).toBeDisabled();
+    expect(dataset).toHaveClass("select--error");
+    expect(screen.getByText(/^Could not load the datasets/)).toHaveAttribute(
+      "id",
+      "extraction-review-dataset-error",
+    );
+    expect(screen.getByTestId("extraction-review-run")).toBeDisabled();
+    expect(runBodies).toEqual({});
+  });
+
   it("warns that highlights are stale once the paragraph changes after a run", async () => {
     mockRuns("ok");
     await renderPage();

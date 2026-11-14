@@ -206,6 +206,35 @@ describe("run wizards", () => {
     });
   });
 
+  it("individual extraction cannot start before the taxonomy's datasets are read", async () => {
+    let serve: (d: ReturnType<typeof createDataset>[]) => void = () => {};
+    vi.spyOn(ontologyService, "listDatasets").mockImplementation(
+      () => new Promise((resolve) => (serve = resolve)),
+    );
+    renderWizard("individual_extraction");
+    await FILL.individual_extraction.fill();
+    const submit = screen.getByTestId("individual-extraction-submit");
+    expect(submit).toBeDisabled();
+
+    serve([createDataset({ id: "ds-only", taxonomy_id: "Taxonomy-1" })]);
+    await waitFor(() => expect(submit).toBeEnabled());
+  });
+
+  it("individual extraction cannot start when the datasets could not be read", async () => {
+    vi.spyOn(ontologyService, "listDatasets").mockRejectedValue(new Error("boom"));
+    renderWizard("individual_extraction");
+    await FILL.individual_extraction.fill();
+
+    const dataset = await screen.findByTestId("individual-extraction-dataset");
+    expect(dataset).toBeDisabled();
+    expect(screen.getByText("Could not load the datasets: boom")).toHaveAttribute(
+      "id",
+      "individual-extraction-dataset-error",
+    );
+    expect(screen.getByTestId("individual-extraction-submit")).toBeDisabled();
+    expect(runPipeline).not.toHaveBeenCalled();
+  });
+
   it("individual extraction asks for the dataset when the taxonomy has several", async () => {
     vi.spyOn(ontologyService, "listDatasets").mockResolvedValue([
       createDataset({ id: "ds-a", taxonomy_id: "Taxonomy-1", identifier: "alpha" }),
