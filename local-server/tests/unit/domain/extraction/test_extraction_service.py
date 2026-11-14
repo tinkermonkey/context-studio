@@ -640,6 +640,31 @@ class TestNlpGroundedTyping:
         assert triples == []
         assert warnings == []
 
+    @pytest.mark.parametrize("content", ["", "I think", '{"class": ""}'])
+    def test_a_response_that_names_no_class_is_an_error_not_a_decline(self, content):
+        """An empty or cut-short answer is counted as a failed call, not as "none"."""
+        from domain.pipelines.ports import LLMResponse
+
+        class CutShortLLM:
+            def complete(self, system_prompt, user_prompt, model, **kwargs):
+                return LLMResponse(
+                    content=content,
+                    model=model,
+                    tokens_in=5,
+                    tokens_out=200,
+                    duration_ms=1.0,
+                    finish_reason="max_tokens",
+                )
+
+        service = self._service(schema_index=_OneMatchIndex(), llm=CutShortLLM())
+        triples, tokens, warnings = service._type_individuals_nlp_grounded(
+            "Kubernetes runs pods.", _Ontology(), "onto", "m", 0.0
+        )
+        assert triples == []
+        assert tokens == 205  # the call is still paid for
+        assert len(warnings) == 1
+        assert "NLP-grounded typing FAILED" in warnings[0]
+
     def test_aggregate_llm_error_warning_when_all_chunks_fail(self):
         """When all chunks fail with LLM errors, an aggregate warning is returned."""
 
