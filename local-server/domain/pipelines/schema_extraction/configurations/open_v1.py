@@ -92,7 +92,8 @@ class SchemaOpenV1Config:
             confidence_critical=_unit_interval(config, "confidence_critical", 0.8),
             confidence_important=_unit_interval(config, "confidence_important", 0.6),
             confidence_contextual=_unit_interval(config, "confidence_contextual", 0.4),
-            model=str(config.get("model", "google/gemini-3-flash-preview")),
+            # No model of its own: a run's is its configuration's or its input's
+            model=str(config.get("model") or ""),
             temperature=_non_negative(config, "temperature", 0.0),
             max_tokens=_positive_int(config, "max_tokens", 1500),
         )

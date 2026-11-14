@@ -9,6 +9,7 @@ this module provides the structure only.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Literal
@@ -16,6 +17,7 @@ from typing import Any, Literal
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
 from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.ports import LLMProvider, LLMResponse, PipelineRunStatusWriter
+from domain.pipelines.selection import RUN_PARAMETERS
 from domain.pipelines.stage_prompts import StageDefinition
 
 MODEL_REQUIRED = "model is required: the run's configuration names none, nor does its input"
@@ -63,6 +65,52 @@ def run_model(*named: Any) -> str:
         if model:
             return str(model)
     raise PipelineInputError(MODEL_REQUIRED)
+
+
+def llm_parameters(
+    input_data: Mapping[str, Any],
+    config: Mapping[str, Any] | None,
+    stage_max_tokens: int | None = None,
+) -> dict[str, Any]:
+    """
+    The model, temperature and output-token limit of a run's LLM call, by the
+    one rule every orchestrator follows: what the run's input names, then what
+    the configuration the orchestrator was built with names. A run started
+    through PipelineResolver carries its configuration's values in its input,
+    so the second only matters to a caller that built the orchestrator itself.
+    A call with no limit named gets its stage's own.
+
+    Args:
+        input_data: The run's input
+        config: The configuration the orchestrator was built with, if any
+        stage_max_tokens: The stage's own output-token limit
+
+    Returns:
+        ``model``, ``temperature`` and ``max_tokens`` (None when no limit is
+        named and the stage has none of its own), as _call_llm takes them
+
+    Raises:
+        PipelineInputError: If no model is named
+    """
+    config = config or {}
+    temperature = input_data.get("temperature")
+    if temperature is None:
+        temperature = config.get("temperature")
+    return {
+        "model": run_model(input_data.get("model"), config.get("model")),
+        "temperature": 0.0 if temperature is None else temperature,
+        "max_tokens": input_data.get("max_tokens") or config.get("max_tokens") or stage_max_tokens,
+    }
+
+
+def implementation_settings(config: Mapping[str, Any]) -> dict[str, Any]:
+    """
+    A configuration's settings other than the run parameters (model,
+    temperature, output-token limit): what an orchestrator built with no
+    configuration may take from its implementation's default one. Never a
+    model: a run's model is its configuration's or its input's.
+    """
+    return {key: value for key, value in config.items() if key not in RUN_PARAMETERS}
 
 
 class PipelineOrchestrator(ABC):

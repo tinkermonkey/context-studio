@@ -183,7 +183,7 @@ class SourceExtractionService:
             REQUESTED_VIA: requested_via.value,
         }
         # Each run's model, temperature and output limit are its configuration's,
-        # filled in when it executes (PipelineSelection.run_input)
+        # stored with it when it is submitted (PipelineSelection.run_input)
         runs = [
             self._submitter.submit(
                 PipelineType.INDIVIDUAL_EXTRACTION,

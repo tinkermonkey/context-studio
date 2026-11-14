@@ -59,9 +59,9 @@ from domain.pipelines.exceptions import (
 )
 from domain.pipelines.individual_extraction.chunk_merge import merge_chunk_triples
 from domain.pipelines.orchestration.base import (
-    MODEL_REQUIRED,
     PipelineOrchestrator,
     PipelineState,
+    llm_parameters,
 )
 from domain.pipelines.ports import ExtractionPort, LLMProvider, PipelineRunStatusWriter
 
@@ -129,6 +129,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         status_writer: PipelineRunStatusWriter | None = None,
         config: dict[str, Any] | None = None,
         proposer: "SourceProposer | None" = None,
+        configuration_ref: str | None = None,
     ) -> None:
         """
         Initialize the orchestrator.
@@ -142,10 +143,14 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 default stage prompts
             proposer: Proposes a run on a source as one change proposal; without
                 one, a source run proposes nothing
+            configuration_ref: The reference of that configuration, recorded
+                with each extraction
         """
         super().__init__(llm_provider, run_id, status_writer)
         self._extraction_service = extraction_service
-        self._stage_prompts = (config or {}).get("stage_prompts")
+        self._config = config or {}
+        self._configuration_ref = configuration_ref
+        self._stage_prompts = self._config.get("stage_prompts")
         self._proposer = proposer
 
     async def execute(self, state: PipelineState) -> PipelineState:
@@ -200,9 +205,6 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         # Extract input parameters
         text = state.input_data.get("text", "")
         ontology_id = state.input_data.get("ontology_id", "")
-        model = state.input_data.get("model", "")
-        temperature = state.input_data.get("temperature") or 0.0
-        max_tokens = state.input_data.get("max_tokens")
 
         # Validate required inputs
         if not text or not text.strip():
@@ -221,14 +223,17 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 result={"error": str(exc)},
             )
             raise exc
-        if not model:
-            exc = PipelineInputError(MODEL_REQUIRED)
+        try:
+            # The run's model, temperature and output limit; no limit named
+            # leaves each stage of the extraction its own
+            parameters = llm_parameters(state.input_data, self._config)
+        except PipelineInputError as exc:
             state = replace(
                 state,
                 current_status=PipelineRunStatus.FAILED,
                 result={"error": str(exc)},
             )
-            raise exc
+            raise
 
         is_source = any(state.input_data.get(key) is not None for key in _SOURCE_KEYS)
         page_starts: list[int] = []
@@ -263,9 +268,9 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             source_text=text,
             source_text_hash=hashlib.sha256(text.encode()).hexdigest(),
             ontology_id=ontology_id,
-            model=model,
-            temperature=temperature,
-            max_tokens=max_tokens,
+            model=parameters["model"],
+            temperature=parameters["temperature"],
+            max_tokens=parameters["max_tokens"],
             current_status=PipelineRunStatus.RUNNING,
         )
 
@@ -357,6 +362,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             stage_prompts=self._stage_prompts,
             dataset_id=state.input_data.get("dataset_id"),
             max_tokens=state.max_tokens,
+            configuration_ref=self._configuration_ref,
         )
         if result.failure_reason:
             raise _failure(
@@ -404,6 +410,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 stage_prompts=self._stage_prompts,
                 dataset_id=state.input_data.get("dataset_id"),
                 max_tokens=state.max_tokens,
+                configuration_ref=self._configuration_ref,
             )
             results.append(result)
             if result.failure_reason and result.provider_refused and done < total:

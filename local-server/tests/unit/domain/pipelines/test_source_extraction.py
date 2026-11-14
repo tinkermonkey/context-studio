@@ -4,8 +4,8 @@ extraction, and schema extraction when asked) is selected as any run is: the
 implementation and configuration named, or the registered defaults. An
 implementation that is not registered, or that cannot extract a source, and a
 configuration of another implementation are input errors that start no run.
-The runs' inputs carry no model: each run's is its configuration's, filled in
-when it executes.
+The service puts no model in a run's input: the submitter stores each run with
+its configuration's.
 """
 
 from types import SimpleNamespace
@@ -126,9 +126,8 @@ class TestImplementationChoice:
         assert run.input_data["source_id"] == source.id
 
     def test_the_runs_input_names_no_model_of_its_own(self, service, submitter, source):
-        # The model is the configuration's, filled in when the run executes
-        # (PipelineSelection.run_input): a stored input that named one would
-        # read as the caller overriding the configuration
+        # The service names none: the submitter stores each run with its
+        # configuration's (PipelineSelection.run_input)
         service.extract(source.id, "home", schema=True)
 
         individual, schema = submitter.submitted

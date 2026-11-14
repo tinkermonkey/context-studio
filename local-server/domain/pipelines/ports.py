@@ -172,6 +172,7 @@ class ExtractionPort(Protocol):
         stage_prompts: Mapping[str, Any] | None = None,
         dataset_id: str | None = None,
         max_tokens: int | None = None,
+        configuration_ref: str | None = None,
     ) -> TripleExtractionResult:
         """
         Extract RDF triples from text scoped to a specific ontology.
@@ -180,7 +181,8 @@ class ExtractionPort(Protocol):
         {"system", "user"}); None uses the default prompts. dataset_id scopes
         recognition to the dataset the run extracts into. max_tokens is the
         most output tokens one LLM call may produce (here and in the calls
-        below); None leaves each stage its own limit.
+        below); None leaves each stage its own limit. configuration_ref is
+        the run's configuration, recorded with the extraction.
         """
         ...
 

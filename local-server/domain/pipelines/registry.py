@@ -487,6 +487,8 @@ class PipelineConfigurationRegistry:
         self._referenced_versions: set[tuple[PipelineType, str, str, int]] = set()
         # Each implementation's default configuration
         self._defaults: dict[tuple[PipelineType, str], str] = {}
+        # Configurations no new run may start with (see retire)
+        self._retired: set[tuple[PipelineType, str, str]] = set()
 
     def register(
         self,
@@ -495,6 +497,7 @@ class PipelineConfigurationRegistry:
         config_ref: str,
         config: dict[str, Any],
         default: bool = False,
+        version: int | None = None,
     ) -> ConfigurationVersion:
         """
         Register or update a configuration.
@@ -502,6 +505,12 @@ class PipelineConfigurationRegistry:
         If config_ref exists, increments version and stores as new version.
         Otherwise, creates version 1. A configuration registered as its
         implementation's default stays the default through later versions.
+
+        A stored (user-created) configuration is registered under the version
+        its record holds, so the version a run was pinned to names the same
+        content before and after a restart: at startup the record's latest
+        content is registered as its stored version, and earlier versions,
+        whose content is not kept, are not registered at all.
 
         Configuration versions are immutable by design: ConfigurationVersion is a frozen
         dataclass and versions are stored in an append-only list. Existing versions cannot
@@ -514,12 +523,15 @@ class PipelineConfigurationRegistry:
             config: Configuration dict
             default: It is the implementation's default configuration: the one
                 a run uses when none is named. An implementation has exactly one.
+            version: The version to register it as (a stored configuration's
+                own); the next one when omitted
 
         Returns:
             ConfigurationVersion just registered
 
         Raises:
-            ValueError: If the implementation has another default configuration
+            ValueError: If the implementation has another default
+                configuration, or `version` is not above the latest registered
         """
         key = (pipeline_type, implementation_id, config_ref)
         versions = self._configs.get(key, [])
@@ -536,6 +548,13 @@ class PipelineConfigurationRegistry:
         # list, existing versions cannot be mutated. Only new versions can be registered.
 
         next_version = (versions[-1].version + 1) if versions else 1
+        if version is not None:
+            if versions and version <= versions[-1].version:
+                raise ValueError(
+                    f"{pipeline_type.value}:{implementation_id}:{config_ref} is already"
+                    f" registered at version {versions[-1].version}, not below {version}"
+                )
+            next_version = version
 
         version_obj = ConfigurationVersion(
             pipeline_type=pipeline_type,
@@ -548,6 +567,30 @@ class PipelineConfigurationRegistry:
         self._configs[key] = versions + [version_obj]
         return version_obj
 
+    def retire(self, pipeline_type: PipelineType, implementation_id: str, config_ref: str) -> bool:
+        """
+        Retire a configuration (a deleted user configuration): no new run can
+        be started with it and it is no longer listed (get_latest and
+        list_configs leave it out). Its versions stay for the runs already
+        pinned to them (get_version), until the process ends.
+
+        Returns:
+            True if it was registered
+
+        Raises:
+            ValueError: If it is its implementation's default configuration
+        """
+        if self._defaults.get((pipeline_type, implementation_id)) == config_ref:
+            raise ValueError(
+                f"{config_ref} is the default configuration of"
+                f" {pipeline_type.value}:{implementation_id} and cannot be retired"
+            )
+        key = (pipeline_type, implementation_id, config_ref)
+        if key not in self._configs:
+            return False
+        self._retired.add(key)
+        return True
+
     def default_configuration(
         self, pipeline_type: PipelineType, implementation_id: str
     ) -> str | None:
@@ -557,10 +600,10 @@ class PipelineConfigurationRegistry:
     def get_latest(
         self, pipeline_type: PipelineType, implementation_id: str, config_ref: str
     ) -> ConfigurationVersion | None:
-        """Get the latest version of a configuration."""
+        """Get the latest version of a configuration; None for one that is retired."""
         key = (pipeline_type, implementation_id, config_ref)
         versions = self._configs.get(key, [])
-        return versions[-1] if versions else None
+        return versions[-1] if versions and key not in self._retired else None
 
     def get_version(
         self,
@@ -580,10 +623,16 @@ class PipelineConfigurationRegistry:
     def list_configs(
         self, pipeline_type: PipelineType, implementation_id: str
     ) -> list[tuple[str, ConfigurationVersion]]:
-        """List (config_ref, latest_version) pairs for a type/impl combo."""
+        """List (config_ref, latest_version) pairs for a type/impl combo, retired ones left out."""
         result = []
-        for (ptype, impl_id, config_ref), versions in self._configs.items():
-            if ptype == pipeline_type and impl_id == implementation_id and versions:
+        for key, versions in self._configs.items():
+            ptype, impl_id, config_ref = key
+            if (
+                ptype == pipeline_type
+                and impl_id == implementation_id
+                and versions
+                and key not in self._retired
+            ):
                 result.append((config_ref, versions[-1]))
         return result
 

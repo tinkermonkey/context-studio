@@ -106,6 +106,9 @@ def _serialize_triple_provenance(triple: dict) -> dict:
 # large taxonomies; the imported DR spec has ~186 classes, comfortably under it.
 _MAX_CATALOG_CLASSES = 300
 
+# What an ExtractionRun records as its configuration when its caller names none
+UNNAMED_CONFIGURATION = "(none)"
+
 # The most output tokens one call of the two-pass stages may produce when the
 # caller names no limit. A run's configuration names its own (max_tokens): a
 # model that thinks before it answers needs more than its answer takes.
@@ -562,6 +565,7 @@ class ExtractionService:
         stage_prompts: Mapping[str, Any] | None = None,
         dataset_id: str | None = None,
         max_tokens: int | None = None,
+        configuration_ref: str | None = None,
     ) -> TripleExtractionResult:
         """
         Extract RDF triples from text, scoped to a specific ontology.
@@ -580,6 +584,8 @@ class ExtractionService:
                 missing stage uses the default prompts
             max_tokens: The most output tokens one LLM call may produce (the
                 run's configuration's); 8000 when None
+            configuration_ref: The configuration the run executes with, recorded
+                on its ExtractionRun; a caller outside a pipeline run has none
 
         Returns:
             Dictionary with keys:
@@ -620,7 +626,7 @@ class ExtractionService:
             id=run_id,
             source_document_uri=None,
             source_text_hash=text_hash,
-            pipeline_config_ref="extraction-default",
+            pipeline_config_ref=configuration_ref or UNNAMED_CONFIGURATION,
             model=model,
             temperature=temperature,
         )

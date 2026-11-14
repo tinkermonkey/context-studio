@@ -23,6 +23,7 @@ from adapters.factories.orchestrator_factory import (
     build_orchestrator_services,
     build_run_specific_data,
     create_selected_run,
+    run_llm_metadata,
 )
 from adapters.persistence.sqlite.batch_repo import BatchRepository
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
@@ -170,6 +171,10 @@ class BackgroundRunExecutor:
         config_version = selection.configuration
         if specific_data is None:
             specific_data = build_run_specific_data(pipeline_type, input_data)
+        # Stored with the model, temperature and output limit it was accepted
+        # with: it executes with those, whatever happens to the configuration
+        # before a worker (or a re-queue after a restart) gets to it
+        input_data = selection.run_input(input_data)
 
         if pipeline_type == _TEXT_IN_SOURCE_TEXT:
             # The text is kept once, as the run's source_text; restored when claimed
@@ -331,7 +336,7 @@ class BackgroundRunExecutor:
         self._runs.update_summaries(
             run_id=run.id,
             output_summary=output_summary,
-            llm_metadata=dict(result_state.llm_metadata or {}),
+            llm_metadata=run_llm_metadata(state, result_state),
         )
         proposal_id = output_summary.get("proposal_id")
         if isinstance(proposal_id, str) and proposal_id:

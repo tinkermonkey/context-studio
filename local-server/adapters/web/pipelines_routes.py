@@ -36,6 +36,7 @@ from adapters.factories.orchestrator_factory import (
     build_orchestrator_services,
     build_run_specific_data,
     create_selected_run,
+    run_llm_metadata,
 )
 from adapters.persistence.sqlite.pipeline_config_repo import (
     PipelineConfigurationRepository,
@@ -822,9 +823,23 @@ def _system_config_to_response(
 
 
 def _db_config_to_response(
-    record: Any, stages: tuple[StageDefinition, ...] | None = None, is_default: bool = False
+    request: Request,
+    record: Any,
+    stages: tuple[StageDefinition, ...] | None = None,
+    is_default: bool = False,
 ) -> PipelineConfigurationResponse:
-    """Convert a DB pipeline configuration record to a response schema."""
+    """
+    Convert a DB pipeline configuration record to a response schema. Its
+    parameters are those in effect: a temperature or output limit the record
+    leaves unset is the implementation's default configuration's.
+    """
+    try:
+        in_effect = _resolver(request).parameters(
+            PipelineType(record.pipeline_type), record.implementation_id, registry_config(record)
+        )
+    except ValueError:  # a record of a pipeline type that no longer exists
+        in_effect = registry_config(record)
+    shown = PipelineConfigurationParameters()
 
     def _parse_dt(s: Optional[str]) -> Optional[datetime]:
         if not s:
@@ -845,8 +860,8 @@ def _db_config_to_response(
         model=record.model,
         stage_prompts=_stage_prompt_views(stages, record.stage_prompts),
         parameters=PipelineConfigurationParameters(
-            temperature=record.temperature,
-            max_tokens=record.max_tokens,
+            temperature=in_effect.get("temperature", shown.temperature),
+            max_tokens=in_effect.get("max_tokens", shown.max_tokens),
             top_p=record.top_p,
         ),
         enabled=record.enabled,
@@ -935,7 +950,8 @@ async def list_configurations(
     ]
 
     result.extend(
-        _db_config_to_response(r, stages, r.config_ref == default_ref) for r in user_configs
+        _db_config_to_response(request, r, stages, r.config_ref == default_ref)
+        for r in user_configs
     )
     return result
 
@@ -1012,9 +1028,11 @@ async def create_configuration(
     )
 
     # Register in the in-memory registry so runs can use it immediately
-    config_registry.register(ptype, impl_id, record.config_ref, registry_config(record))
+    config_registry.register(
+        ptype, impl_id, record.config_ref, registry_config(record), version=record.version
+    )
 
-    return _db_config_to_response(record, stages)
+    return _db_config_to_response(request, record, stages)
 
 
 # ==================== Pipeline Execution ====================
@@ -1270,7 +1288,7 @@ async def run_pipeline(
         repo.update_summaries(
             run_id=run_id,
             output_summary=output_summary,
-            llm_metadata=dict(result_state.llm_metadata or {}),
+            llm_metadata=run_llm_metadata(state, result_state),
         )
         proposal_id = output_summary.get("proposal_id")
         if isinstance(proposal_id, str) and proposal_id:
@@ -2447,6 +2465,9 @@ async def enqueue_batch_runs(
                 if data is not None:
                     _resolve_run_dataset(request, ptype, data)
             specific_data = build_run_specific_data(ptype, specific_source)
+            if run_input is not None:
+                # Stored with the parameters it was accepted with, as a submitted run is
+                run_input = selection.run_input(run_input)
             run = pipeline_run_repo.create(
                 batch_run_id=batch_id,
                 pipeline_type=ptype,
@@ -2648,7 +2669,7 @@ async def get_configuration(
             status_code=http_status.HTTP_404_NOT_FOUND,
             detail=f"Configuration not found: {config_id}",
         )
-    return _db_config_to_response(record, _record_stages(request, record))
+    return _db_config_to_response(request, record, _record_stages(request, record))
 
 
 @config_router.put(
@@ -2718,7 +2739,11 @@ async def update_configuration(
     try:
         ptype = PipelineType(record.pipeline_type)
         config_registry.register(
-            ptype, record.implementation_id, record.config_ref, registry_config(record)
+            ptype,
+            record.implementation_id,
+            record.config_ref,
+            registry_config(record),
+            version=record.version,
         )
     except Exception as exc:
         _logger.error(
@@ -2731,7 +2756,7 @@ async def update_configuration(
             "Pipeline runs may use stale configuration until server restart.",
         ) from exc
 
-    return _db_config_to_response(record, stages)
+    return _db_config_to_response(request, record, stages)
 
 
 @config_router.delete(
@@ -2745,8 +2770,9 @@ async def delete_configuration(
     """
     Soft-delete a user pipeline configuration.
 
-    The in-memory registry entry is preserved for run traceability.
-    The configuration will no longer appear in list responses.
+    The configuration no longer appears in list responses and no run can be
+    started with it. Its versions stay in the in-memory registry for the runs
+    already pinned to them.
 
     Args:
         config_id: The configuration UUID
@@ -2762,9 +2788,18 @@ async def delete_configuration(
         )
 
     config_repo: PipelineConfigurationRepository = request.app.state.pipeline_config_repo
+    record = config_repo.get(config_id)
     deleted = config_repo.soft_delete(config_id)
-    if not deleted:
+    if not deleted or record is None:
         raise HTTPException(
             status_code=http_status.HTTP_404_NOT_FOUND,
             detail=f"Configuration not found: {config_id}",
         )
+    # No run can be started with it from here on, and it is no longer named as
+    # one that can; runs already pinned to it still find their version
+    try:
+        request.app.state.config_registry.retire(
+            PipelineType(record.pipeline_type), record.implementation_id, record.config_ref
+        )
+    except ValueError as exc:
+        _logger.error(f"Deleted configuration {config_id} stays registered: {exc}")

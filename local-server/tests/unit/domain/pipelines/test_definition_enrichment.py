@@ -194,6 +194,31 @@ class TestEnrichment:
         # Nothing changed in the taxonomy itself
         assert repo.get_class(dr["operation"].id).description == "An operation."
 
+    def test_the_runs_input_names_the_model_temperature_and_limit(self, repo, proposals, dr):
+        llm = ScriptedLLM({"api_operation": OPERATION_ANSWER})
+        run(
+            make(repo, proposals, llm, config={"model": "m-1", "max_tokens": 2500}),
+            dr["taxonomy"].id,
+            ["api_operation"],
+            model="named",
+            temperature=0.3,
+            max_tokens=700,
+        )
+
+        _, _, _, model, kwargs = llm.calls[0]
+        assert (model, kwargs["temperature"], kwargs["max_tokens"]) == ("named", 0.3, 700)
+
+    def test_what_the_input_leaves_out_is_the_configurations(self, repo, proposals, dr):
+        llm = ScriptedLLM({"api_operation": OPERATION_ANSWER})
+        run(
+            make(repo, proposals, llm, config={"model": "m-1", "max_tokens": 2500}),
+            dr["taxonomy"].id,
+            ["api_operation"],
+        )
+
+        _, _, _, model, kwargs = llm.calls[0]
+        assert (model, kwargs["temperature"], kwargs["max_tokens"]) == ("m-1", 0.0, 2500)
+
     def test_the_prompt_carries_the_scheme_siblings_and_the_class(self, repo, proposals, dr):
         llm = ScriptedLLM({"api_operation": OPERATION_ANSWER})
         run(

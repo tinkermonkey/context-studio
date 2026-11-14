@@ -41,8 +41,10 @@ class PipelineConfiguration(OperationsBase):  # type: ignore[valid-type,misc]
     # Stage key -> {"system"?, "user"?}: only the prompts that differ from the
     # implementation's defaults (see domain/pipelines/stage_prompts.py)
     stage_prompts: Optional[dict] = Column(JSON)  # type: ignore[assignment]
-    temperature: float = Column(Float, nullable=False, default=0.4)  # type: ignore[assignment]
-    max_tokens: int = Column(Integer, nullable=False, default=800)  # type: ignore[assignment]
+    # Unset (NULL) means the implementation's default configuration's value
+    # (domain/pipelines/selection.py), never a default of this table's own
+    temperature: Optional[float] = Column(Float, nullable=True)  # type: ignore[assignment]
+    max_tokens: Optional[int] = Column(Integer, nullable=True)  # type: ignore[assignment]
     top_p: float = Column(Float, nullable=False, default=0.9)  # type: ignore[assignment]
     enabled: bool = Column(Boolean, nullable=False, default=True)  # type: ignore[assignment]
     version: int = Column(Integer, nullable=False, default=1)  # type: ignore[assignment]

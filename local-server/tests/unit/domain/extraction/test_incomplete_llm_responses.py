@@ -346,3 +346,21 @@ class TestOutputLimit:
         _extract(llm)
 
         assert llm.limits == [8000, 8000]
+
+
+class TestRecordedConfiguration:
+    """An ExtractionRun records the configuration it ran with, not a spelled default."""
+
+    def test_the_configuration_given_is_recorded(self):
+        llm = _ScriptedLLM((IDENTIFIED, "stop"), (RELATED, "stop"))
+
+        _, run = _extract(llm, configuration_ref="extraction-openrouter-default")
+
+        assert run.pipeline_config_ref == "extraction-openrouter-default"
+
+    def test_a_caller_outside_a_pipeline_run_records_none(self):
+        llm = _ScriptedLLM((IDENTIFIED, "stop"), (RELATED, "stop"))
+
+        _, run = _extract(llm)
+
+        assert run.pipeline_config_ref == "(none)"

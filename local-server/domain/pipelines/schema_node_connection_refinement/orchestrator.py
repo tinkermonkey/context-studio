@@ -19,7 +19,7 @@ from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputErr
 from domain.pipelines.orchestration.base import (
     PipelineOrchestrator,
     PipelineState,
-    run_model,
+    llm_parameters,
 )
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 from domain.pipelines.refinement.neighborhood import SchemaNeighborhoodTraversal
@@ -132,15 +132,14 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
             state = replace(state, scope_label=neighborhood.class_label)
 
             # Step 2-5: Propose and rank deltas
-            model = state.input_data.get("model")
-            temperature = state.input_data.get("temperature")
             deltas = await self._propose_deltas(
                 neighborhood,
                 current_connections,
                 groundings,
                 extraction_usages,
-                model=model,
-                temperature=temperature,
+                model=state.input_data.get("model"),
+                temperature=state.input_data.get("temperature"),
+                max_tokens=state.input_data.get("max_tokens"),
             )
             state = replace(state, deltas=deltas)
 
@@ -198,6 +197,7 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
         extraction_usages: list[dict[str, Any]],
         model: str | None = None,
         temperature: float | None = None,
+        max_tokens: int | None = None,
     ) -> list[dict[str, Any]]:
         """
         Propose connection deltas.
@@ -207,16 +207,22 @@ class ConnectionRefinementOrchestrator(PipelineOrchestrator):
             current_connections: Existing connections
             groundings: External groundings (optional)
             extraction_usages: Extraction usage examples (optional)
-            model: LLM model to use (overrides config)
-            temperature: Temperature for LLM (overrides config)
+            model, temperature, max_tokens: What the run's input names; what
+                it leaves out is the configuration's (llm_parameters)
 
         Returns:
             List of connection deltas with operation, subjects, and rationale
         """
-        model = run_model(model, self._config.get("model"))
-        if temperature is None:
-            temperature = self._config.get("temperature", 0.0)
-        max_tokens = self._config.get("max_tokens", 2000)
+        parameters = llm_parameters(
+            {"model": model, "temperature": temperature, "max_tokens": max_tokens},
+            self._config,
+            2000,
+        )
+        model, temperature, max_tokens = (
+            parameters["model"],
+            parameters["temperature"],
+            parameters["max_tokens"],
+        )
 
         # Build context prompt
         context_parts = [
