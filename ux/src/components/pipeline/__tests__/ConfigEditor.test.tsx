@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ConfigEditor } from "../ConfigEditor";
 import type { PipelineConfiguration as Config } from "@/api/services/pipeline";
@@ -298,6 +298,41 @@ describe("ConfigEditor provider and model", () => {
       max_tokens: 20000,
       top_p: 0.9,
     });
+  });
+
+  it("keeps a saved output-token limit when a slider is moved afterwards", async () => {
+    mutations.update
+      .mockReset()
+      .mockImplementation(async ({ body }) =>
+        makeConfig({ parameters: body.parameters, version: 2 }),
+      );
+    // The configuration prop still holds 0.4 / 800 for both saves: nothing refetched yet.
+    renderEditor(
+      makeConfig({ parameters: { temperature: 0.4, max_tokens: 800, top_p: 0.9 } }),
+      "edit",
+    );
+
+    const maxTokens = screen.getByTestId("config-max-tokens-input");
+    await userEvent.clear(maxTokens);
+    await userEvent.type(maxTokens, "16000");
+    await userEvent.tab();
+    await waitFor(() => expect(mutations.update).toHaveBeenCalledTimes(1));
+    expect(mutations.update.mock.calls[0][0].body.parameters).toEqual({
+      temperature: 0.4,
+      max_tokens: 16000,
+      top_p: 0.9,
+    });
+
+    fireEvent.change(screen.getByRole("slider", { name: "Temperature" }), {
+      target: { value: "0" },
+    });
+    await waitFor(() => expect(mutations.update).toHaveBeenCalledTimes(2));
+    expect(mutations.update.mock.calls[1][0].body.parameters).toEqual({
+      temperature: 0,
+      max_tokens: 16000,
+      top_p: 0.9,
+    });
+    expect(maxTokens).toHaveValue(16000);
   });
 
   it("refuses an output-token limit outside the API's range until it is corrected", async () => {

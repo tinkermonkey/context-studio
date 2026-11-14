@@ -158,7 +158,7 @@ export function DefinitionRefinementWizard() {
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="definition-refinement-loading">
-          Running pipeline — this may take up to a minute
+          Starting the run — it opens in Runs, where its progress shows
         </FormCallout>
       )}
 
@@ -169,7 +169,7 @@ export function DefinitionRefinementWizard() {
         aria-busy={isSubmitting}
         data-testid="definition-refinement-submit"
       >
-        {isSubmitting ? "Running…" : "Run Pipeline"}
+        {isSubmitting ? "Starting…" : "Run Pipeline"}
       </Button>
     </form>
   );

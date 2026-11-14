@@ -107,7 +107,7 @@ describe("SchemaCandidateReview — review", () => {
     expect(within(panel).queryByText("submits")).not.toBeInTheDocument();
     expect(screen.getByTestId("extraction-review-schema-run-meta")).toHaveTextContent("run-s");
     expect(screen.getByTestId("extraction-review-schema-run-meta")).toHaveTextContent(
-      "schema-extraction-default v1 · 11.0s",
+      "schema_extraction · default · schema-extraction-default v1 · 11.0s",
     );
     expect(screen.getByText("CLASSES").closest(".stat-tile")).toHaveClass("stat-tile--violet");
   });

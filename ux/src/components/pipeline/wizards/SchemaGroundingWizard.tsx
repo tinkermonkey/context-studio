@@ -10,11 +10,13 @@ import "./Wizards.css";
 
 type PipelineRunRequest = components["schemas"]["PipelineRunRequest"];
 
+// The names the server's grounding adapter registers its sources under
+// (case-sensitive; an unknown name is refused).
 const KNOWLEDGE_SOURCES = [
-  { id: "dbpedia", label: "DBpedia" },
-  { id: "conceptnet", label: "ConceptNet" },
-  { id: "wikidata", label: "Wikidata" },
-  { id: "schema_org", label: "Schema.org" },
+  { id: "dbpedia", name: "DBpedia" },
+  { id: "conceptnet", name: "ConceptNet" },
+  { id: "wikidata", name: "Wikidata" },
+  { id: "schema_org", name: "schema.org" },
 ];
 
 export function SchemaGroundingWizard() {
@@ -24,15 +26,16 @@ export function SchemaGroundingWizard() {
   });
   const selection = usePipelineSelection("schema_node_grounding");
 
-  const [selectedNodes, setSelectedNodes] = useState<Entity[]>([]);
+  // One node per run: the pipeline grounds one label.
+  const [selectedNode, setSelectedNode] = useState<Entity | null>(null);
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [nodeType, setNodeType] = useState<"Class" | "PropertyDefinition">("Class");
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (selectedNodes.length === 0) {
-      newErrors.nodes = "At least one target node is required";
+    if (!selectedNode) {
+      newErrors.nodes = "A target node is required";
     }
 
     if (selectedSources.length === 0) {
@@ -58,7 +61,10 @@ export function SchemaGroundingWizard() {
     try {
       const request: PipelineRunRequest = {
         ...selectionRequestFields(selection),
-        nodes: selectedNodes.map((n) => ({ id: n.id })),
+        // The label is what is grounded; the id says which node the result is for.
+        node_id: selectedNode!.id,
+        node_label: selectedNode!.label,
+        node_type: nodeType,
         sources: selectedSources,
       };
 
@@ -67,11 +73,6 @@ export function SchemaGroundingWizard() {
       const errorMessage = error instanceof Error ? error.message : "Failed to run pipeline";
       toast("error", errorMessage);
     }
-  };
-
-  const handleNodeSelect = (entities: Entity[]) => {
-    setSelectedNodes(entities);
-    setErrors((prev) => ({ ...prev, nodes: undefined }));
   };
 
   const toggleSource = (sourceId: string) => {
@@ -88,7 +89,7 @@ export function SchemaGroundingWizard() {
           value={nodeType}
           onChange={(value) => {
             setNodeType(value as "Class" | "PropertyDefinition");
-            setSelectedNodes([]);
+            setSelectedNode(null);
             setErrors((prev) => ({ ...prev, nodes: undefined }));
           }}
           options={[
@@ -99,12 +100,14 @@ export function SchemaGroundingWizard() {
         />
       </Field>
 
-      <Field label="Target Nodes" required error={errors.nodes} errorId="nodes-error">
+      <Field label="Target Node" required error={errors.nodes} errorId="nodes-error">
         <EntitySearchPicker
           entityType={nodeType}
-          selectedIds={selectedNodes.map((n) => n.id)}
-          onSelectMultiple={handleNodeSelect}
-          multiSelect
+          selectedId={selectedNode?.id}
+          onSelect={(entity) => {
+            setSelectedNode(entity);
+            setErrors((prev) => ({ ...prev, nodes: undefined }));
+          }}
           placeholder={`Search ${nodeType === "Class" ? "classes" : "property definitions"} to ground…`}
           aria-invalid={!!errors.nodes}
           aria-describedby={errors.nodes ? "nodes-error" : undefined}
@@ -125,12 +128,12 @@ export function SchemaGroundingWizard() {
             <label key={source.id} className="sources-label">
               <input
                 type="checkbox"
-                checked={selectedSources.includes(source.id)}
-                onChange={() => toggleSource(source.id)}
+                checked={selectedSources.includes(source.name)}
+                onChange={() => toggleSource(source.name)}
                 disabled={isSubmitting}
                 data-testid={`schema-grounding-source-${source.id}`}
               />
-              {source.label}
+              {source.name}
             </label>
           ))}
         </div>
@@ -144,18 +147,18 @@ export function SchemaGroundingWizard() {
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="schema-grounding-loading">
-          Running pipeline — this may take up to a minute
+          Starting the run — it opens in Runs, where its progress shows
         </FormCallout>
       )}
 
       <Button
         type="submit"
         variant="primary"
-        disabled={isSubmitting || selectedNodes.length === 0 || selectedSources.length === 0}
+        disabled={isSubmitting || !selectedNode || selectedSources.length === 0}
         aria-busy={isSubmitting}
         data-testid="schema-grounding-submit"
       >
-        {isSubmitting ? "Running…" : "Run Pipeline"}
+        {isSubmitting ? "Starting…" : "Run Pipeline"}
       </Button>
     </form>
   );

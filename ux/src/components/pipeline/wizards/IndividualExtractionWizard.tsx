@@ -3,7 +3,9 @@ import { Button, Field, FormCallout } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
 import { selectionRequestFields, usePipelineSelection } from "@/hooks/usePipelineSelection";
+import { useRunDataset } from "@/hooks/useRunDataset";
 import { ImplementationConfigPicker } from "../ImplementationConfigPicker";
+import { DATASET_REQUIRED, RunDatasetField } from "../RunDatasetField";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
 import type { components } from "@/api/types";
 import "./Wizards.css";
@@ -19,6 +21,7 @@ export function IndividualExtractionWizard() {
 
   const [sourceText, setSourceText] = useState("");
   const [selectedOntology, setSelectedOntology] = useState<Entity | null>(null);
+  const dataset = useRunDataset(selectedOntology?.id);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -29,6 +32,10 @@ export function IndividualExtractionWizard() {
 
     if (!selectedOntology?.id) {
       newErrors.ontologyId = "Target ontology is required";
+    }
+
+    if (dataset.missing) {
+      newErrors.dataset = DATASET_REQUIRED;
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -50,6 +57,7 @@ export function IndividualExtractionWizard() {
     try {
       const request: PipelineRunRequest = {
         ...selectionRequestFields(selection),
+        ...dataset.fields,
         text: sourceText,
         ontology_id: selectedOntology!.id,
         ontology_name: selectedOntology!.label,
@@ -96,6 +104,14 @@ export function IndividualExtractionWizard() {
         />
       </Field>
 
+      <RunDatasetField
+        run={dataset}
+        id="individual-extraction-dataset"
+        error={errors.dataset}
+        disabled={isSubmitting}
+        onChange={() => setErrors((prev) => ({ ...prev, dataset: undefined }))}
+      />
+
       <ImplementationConfigPicker
         selection={selection}
         idPrefix="individual-extraction"
@@ -104,7 +120,7 @@ export function IndividualExtractionWizard() {
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="individual-extraction-loading">
-          Running pipeline — this may take up to a minute
+          Starting the run — it opens in Runs, where its progress shows
         </FormCallout>
       )}
 
@@ -115,7 +131,7 @@ export function IndividualExtractionWizard() {
         aria-busy={isSubmitting}
         data-testid="individual-extraction-submit"
       >
-        {isSubmitting ? "Running…" : "Run Pipeline"}
+        {isSubmitting ? "Starting…" : "Run Pipeline"}
       </Button>
     </form>
   );

@@ -52,7 +52,9 @@ describe("PipelinesPage", () => {
       "aria-selected",
       "false",
     );
-    await waitFor(() => expect(screen.getByTestId("pipeline-implementation")).toHaveValue("two_step"));
+    await waitFor(() =>
+      expect(screen.getByTestId("pipeline-implementation")).toHaveValue("two_step"),
+    );
 
     await userEvent.click(screen.getByTestId("pipeline-run-btn"));
     expect(onRun).toHaveBeenCalledWith("individual_extraction");

@@ -104,6 +104,11 @@ beforeEach(() => {
         ]),
       ),
     ),
+    // One dataset per taxonomy: the dataset is implied and no choice is offered.
+    http.get("*/api/datasets", ({ request }) => {
+      const tax = new URL(request.url).searchParams.get("taxonomy_id");
+      return HttpResponse.json([{ id: `ds-${tax}`, taxonomy_id: tax, identifier: "default" }]);
+    }),
     http.get("*/api/schemes", ({ request }) => {
       const tax = new URL(request.url).searchParams.get("taxonomy_id");
       return HttpResponse.json(
@@ -253,9 +258,15 @@ describe("ExtractionReviewPage", () => {
       text: XR_TEXT,
       ontology_id: "tax-dr",
     });
+    // Both start in the background, so a long run outlives no request timeout.
+    expect(runBodies.schema_extraction).toMatchObject({ async: true });
+    expect(runBodies.individual_extraction).toMatchObject({ async: true });
     // The model is the configuration's: the page never sends one.
     expect(runBodies.schema_extraction).not.toHaveProperty("model");
     expect(runBodies.individual_extraction).not.toHaveProperty("model");
+    // One dataset: it is implied, so none is offered or sent.
+    expect(screen.queryByTestId("extraction-review-dataset")).not.toBeInTheDocument();
+    expect(runBodies.individual_extraction).not.toHaveProperty("dataset_id");
 
     await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-0-yes"));
     await userEvent.click(screen.getByRole("tab", { name: "Individual extraction" }));
@@ -320,6 +331,75 @@ describe("ExtractionReviewPage", () => {
     await userEvent.click(screen.getByRole("tab", { name: "Individual extraction" }));
     const failed = await screen.findByTestId("extraction-review-individual-failed");
     expect(within(failed).getByRole("alert")).toHaveTextContent("model is required");
+  });
+
+  it("asks which dataset to extract into when the taxonomy has several", async () => {
+    mockRuns("ok");
+    server.use(
+      http.get("*/api/datasets", () =>
+        HttpResponse.json([
+          { id: "ds-a", taxonomy_id: "tax-dr", identifier: "alpha" },
+          { id: "ds-b", taxonomy_id: "tax-dr", identifier: "beta" },
+        ]),
+      ),
+    );
+    await renderPage();
+    const dataset = await screen.findByTestId("extraction-review-dataset");
+    expect(dataset).toHaveAccessibleName("Dataset");
+    await userEvent.type(screen.getByTestId("extraction-review-text"), XR_TEXT);
+
+    // Neither run starts until a dataset is chosen.
+    await userEvent.click(screen.getByTestId("extraction-review-run"));
+    expect(screen.getByText("Select a dataset", { selector: "[id$='-error']" })).toHaveAttribute(
+      "id",
+      "extraction-review-dataset-error",
+    );
+    expect(runBodies).toEqual({});
+
+    await userEvent.selectOptions(dataset, "ds-b");
+    expect(
+      screen.queryByText("Select a dataset", { selector: "[id$='-error']" }),
+    ).not.toBeInTheDocument();
+    await userEvent.click(screen.getByTestId("extraction-review-run"));
+    await screen.findByTestId("extraction-review-schema-candidates");
+    expect(runBodies.individual_extraction).toMatchObject({ dataset_id: "ds-b" });
+    // The schema run reads no dataset.
+    expect(runBodies.schema_extraction).not.toHaveProperty("dataset_id");
+  });
+
+  it("re-runs a failed type with the selection its picker shows now", async () => {
+    mockRuns("fail");
+    await renderPage();
+    await userEvent.type(screen.getByTestId("extraction-review-text"), XR_TEXT);
+    await userEvent.click(screen.getByTestId("extraction-review-run"));
+    await userEvent.click(screen.getByRole("tab", { name: "Individual extraction" }));
+    const failed = await screen.findByTestId("extraction-review-individual-failed");
+    expect(runBodies.individual_extraction).toMatchObject({
+      implementation_id: "base",
+      configuration_ref: "extraction-default",
+    });
+
+    // The run is over, so the picker is free again: choose another implementation.
+    await userEvent.selectOptions(
+      screen.getByTestId("extraction-review-individual-implementation"),
+      "two_step",
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("extraction-review-individual-configuration")).toHaveValue(
+        "extraction-two-step",
+      ),
+    );
+    await userEvent.click(
+      within(failed).getByRole("button", { name: /Re-run individual_extraction/ }),
+    );
+
+    await waitFor(() =>
+      expect(runBodies.individual_extraction).toMatchObject({
+        implementation_id: "two_step",
+        configuration_ref: "extraction-two-step",
+        text: XR_TEXT,
+      }),
+    );
   });
 
   it("warns that highlights are stale once the paragraph changes after a run", async () => {

@@ -64,6 +64,38 @@ describe("useExtractionReviewRuns polling", () => {
     expect(calls).toEqual(settled);
   });
 
+  it("re-runs one type with a new selection and keeps the other type's request", async () => {
+    const runPipeline = vi
+      .spyOn(pipelineService, "runPipeline")
+      .mockImplementation(async (type) => run(`run-${type}`, type, "completed"));
+    const { result } = renderHook(() => useExtractionReviewRuns(), { wrapper });
+    await act(async () => {
+      await result.current.start(REQUEST);
+    });
+    runPipeline.mockClear();
+
+    await act(async () => {
+      await result.current.rerun("individual", {
+        implementation_id: "base",
+        configuration_ref: "individual-alt",
+      });
+    });
+    expect(runPipeline).toHaveBeenCalledTimes(1);
+    expect(runPipeline).toHaveBeenCalledWith(
+      "individual_extraction",
+      expect.objectContaining({
+        implementation_id: "base",
+        configuration_ref: "individual-alt",
+        text: REQUEST.text,
+      }),
+    );
+    // What was last run is what a later re-run of the other type replays.
+    expect(result.current.lastRequest).toMatchObject({
+      schema: REQUEST.schema,
+      individual: { implementation_id: "base", configuration_ref: "individual-alt" },
+    });
+  });
+
   it("polls a running run opened by id", async () => {
     let polls = 0;
     vi.spyOn(pipelineService, "getRun").mockImplementation(async (id) => {

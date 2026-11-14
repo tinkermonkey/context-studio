@@ -23,7 +23,9 @@ import {
 import { usePipelineRun } from "@/api/hooks/pipeline/usePipelineRuns";
 import { useExtractionExamples } from "@/api/hooks/pipeline/useExtractionExamples";
 import { selectionRequestFields, usePipelineSelection } from "@/hooks/usePipelineSelection";
+import { useRunDataset } from "@/hooks/useRunDataset";
 import { ImplementationConfigPicker } from "../ImplementationConfigPicker";
+import { DATASET_REQUIRED, RunDatasetField } from "../RunDatasetField";
 import { ExampleRuns } from "./ExampleRuns";
 import { SchemaCandidateReview } from "./SchemaCandidateReview";
 import { IndividualCandidateReview } from "./IndividualCandidateReview";
@@ -45,6 +47,7 @@ export interface ReviewScope {
 interface FormErrors {
   text?: string;
   taxonomy?: string;
+  dataset?: string;
 }
 
 const TEXT_REQUIRED = "Paste a paragraph to extract from";
@@ -89,6 +92,8 @@ export function ExtractionReviewPage({
     taxonomies[0]?.id ||
     "";
   const taxonomy = taxonomies.find((t) => t.id === taxonomyId);
+  // The individual run extracts into one dataset; a taxonomy with several needs it named.
+  const dataset = useRunDataset(taxonomyId || undefined);
 
   // Each run is selected on its own: the two types share no implementation list.
   const schemaSelection = usePipelineSelection("schema_extraction");
@@ -157,6 +162,7 @@ export function ExtractionReviewPage({
     const next: FormErrors = {};
     if (!text.trim()) next.text = TEXT_REQUIRED;
     if (!taxonomy) next.taxonomy = "Select a taxonomy";
+    if (dataset.missing) next.dataset = DATASET_REQUIRED;
     setErrors(next);
     setAttempted(true);
     if (Object.keys(next).length > 0 || !taxonomy) return;
@@ -169,6 +175,7 @@ export function ExtractionReviewPage({
       text,
       taxonomy: { id: taxonomy.id, label: taxonomy.title },
       exampleId: example && !exampleEdited ? example.id : undefined,
+      datasetId: dataset.dataset?.id,
       schema: selectionRequestFields(schemaSelection),
       individual: selectionRequestFields(individualSelection),
     });
@@ -289,6 +296,13 @@ export function ExtractionReviewPage({
                 ))}
               </Select>
             </Field>
+            <RunDatasetField
+              run={dataset}
+              id="extraction-review-dataset"
+              error={errors.dataset}
+              disabled={anyRunning}
+              onChange={() => setErrors((prev) => ({ ...prev, dataset: undefined }))}
+            />
           </div>
         </div>
         <div className="xr-pickers" data-testid="extraction-review-pickers">
@@ -360,7 +374,7 @@ export function ExtractionReviewPage({
           slot={runs.schema}
           text={runText}
           scope={reviewScope}
-          onRetry={() => void runs.rerun("schema")}
+          onRetry={() => void runs.rerun("schema", selectionRequestFields(schemaSelection))}
         />
       </div>
       <div
@@ -373,7 +387,7 @@ export function ExtractionReviewPage({
           slot={runs.individual}
           text={runText}
           scope={reviewScope}
-          onRetry={() => void runs.rerun("individual")}
+          onRetry={() => void runs.rerun("individual", selectionRequestFields(individualSelection))}
         />
       </div>
     </div>

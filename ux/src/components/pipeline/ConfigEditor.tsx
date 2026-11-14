@@ -90,6 +90,11 @@ function makeDraft(
   };
 }
 
+/** A change to save: parameters are merged one by one onto the latest saved ones. */
+type SavePatch = Partial<Omit<DraftConfig, "parameters">> & {
+  parameters?: Partial<PipelineConfigurationParameters>;
+};
+
 interface ConfigEditorProps {
   pipelineType: string;
   implId: string;
@@ -163,13 +168,13 @@ export function ConfigEditor({
     }
   }, [config]);
 
-  // Current display values: draft for create, config for view/edit
+  // Current display values: the draft while creating or editing, the configuration otherwise
   const displayName = isCreate ? draft.name : (config?.name ?? "");
   const displayDesc = isCreate ? draft.description : (config?.description ?? "");
   const displayProvider = isCreate ? draft.provider : (config?.provider ?? "");
   const displayModel = isCreate ? draft.model : (config?.model ?? "");
   const displayEnabled = isCreate ? draft.enabled : (config?.enabled ?? true);
-  const displayParams = isCreate ? draft.parameters : (config?.parameters ?? DEFAULT_PARAMS);
+  const displayParams = active ? draft.parameters : (config?.parameters ?? DEFAULT_PARAMS);
 
   const setField = (k: keyof DraftConfig, v: unknown) => setDraft((d) => ({ ...d, [k]: v }));
 
@@ -189,7 +194,7 @@ export function ConfigEditor({
     }
     const saved = (latestSaved.current ?? config)?.parameters;
     if (isCreate || maxTokens === saved?.max_tokens) return;
-    void handleSaveField({ parameters: { ...(saved ?? displayParams), max_tokens: maxTokens } });
+    void handleSaveField({ parameters: { max_tokens: maxTokens } });
   };
 
   /** Save a text field on blur, unless it still holds what was last saved. */
@@ -209,12 +214,22 @@ export function ConfigEditor({
     if (model !== (latestSaved.current ?? config)?.model) void handleSaveField({ model });
   };
 
-  /** Save a change; stagePrompts replaces every stage's prompts when given. */
-  const handleSaveField = (patch: Partial<DraftConfig>, stagePrompts?: StagePromptsBody) => {
+  /**
+   * Save a change; stagePrompts replaces every stage's prompts when given.
+   * Every save starts from the latest saved configuration, read when its turn
+   * in the queue comes: an update replaces the whole configuration, so a save
+   * built from an older copy would undo the save before it.
+   */
+  const handleSaveField = (patch: SavePatch, stagePrompts?: StagePromptsBody) => {
     if (isCreate || !config || config.is_system) return Promise.resolve();
     saveQueue.current = saveQueue.current.then(async () => {
       const base = latestSaved.current ?? config;
-      const updated = { ...makeDraft(base), ...patch };
+      const saved = makeDraft(base);
+      const updated = {
+        ...saved,
+        ...patch,
+        parameters: { ...saved.parameters, ...patch.parameters },
+      };
       try {
         latestSaved.current = await updateMutation.mutateAsync({
           configId: base.id,
@@ -503,7 +518,7 @@ export function ConfigEditor({
                 fmt={(v) => v.toFixed(2)}
                 onChange={(v) => {
                   setParam("temperature", v);
-                  void handleSaveField({ parameters: { ...displayParams, temperature: v } });
+                  void handleSaveField({ parameters: { temperature: v } });
                 }}
               />
               {active && !isSystemConfig ? (
@@ -556,7 +571,7 @@ export function ConfigEditor({
                 fmt={(v) => v.toFixed(2)}
                 onChange={(v) => {
                   setParam("top_p", v);
-                  void handleSaveField({ parameters: { ...displayParams, top_p: v } });
+                  void handleSaveField({ parameters: { top_p: v } });
                 }}
               />
             </div>

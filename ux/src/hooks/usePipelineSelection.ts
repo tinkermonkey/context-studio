@@ -18,8 +18,9 @@ export interface PipelineSelection {
   implementations: PipelineImplementation[];
   /** The enabled configurations of the selected implementation. */
   configurations: PipelineConfiguration[];
-  /** Undefined until the list loads, or when the default is not among those offered. */
+  /** Undefined only until the list loads, or when nothing is offered. */
   implementation?: PipelineImplementation;
+  /** Undefined only until the list loads, or when the implementation has no enabled configuration. */
   configuration?: PipelineConfiguration;
   selectImplementation: (id: string) => void;
   selectConfiguration: (configRef: string) => void;
@@ -33,26 +34,41 @@ const message = (error: unknown, fallback: string) =>
 /**
  * The selection for a run of `pipelineType`. Until the user chooses, it is the
  * server's: the implementation and the configuration the API marks `is_default`.
- * A disabled configuration is never offered or selected.
+ * A disabled configuration is never offered or selected. Where the default is
+ * not among those offered (the default implementation filtered out, or a
+ * disabled default configuration) the first offered one is selected instead,
+ * so the request always names what the picker shows: the server refuses a run
+ * that leaves such a choice to it.
  */
 export function usePipelineSelection(
   pipelineType: string,
   { offers }: PipelineSelectionOptions = {},
 ): PipelineSelection {
   const [implementationChoice, setImplementationChoice] = useState<string>();
-  const [configurationChoice, setConfigurationChoice] = useState<string>();
+  // A config_ref is unique within one implementation only, so the choice
+  // names the implementation it was made for and holds for no other.
+  const [configurationChoice, setConfigurationChoice] = useState<{
+    implementationId: string;
+    configRef: string;
+  }>();
 
   const implementationsQuery = usePipelineImplementations(pipelineType);
   const implementations = (implementationsQuery.data ?? []).filter((i) => !offers || offers(i));
   const implementation =
     implementations.find((i) => i.id === implementationChoice) ??
-    implementations.find((i) => i.is_default);
+    implementations.find((i) => i.is_default) ??
+    implementations[0];
 
   const configurationsQuery = usePipelineConfigurations(pipelineType, implementation?.id ?? "");
   const configurations = (configurationsQuery.data ?? []).filter((c) => c.enabled !== false);
+  const chosenRef =
+    configurationChoice?.implementationId === implementation?.id
+      ? configurationChoice?.configRef
+      : undefined;
   const configuration =
-    configurations.find((c) => c.config_ref === configurationChoice) ??
-    configurations.find((c) => c.is_default);
+    configurations.find((c) => c.config_ref === chosenRef) ??
+    configurations.find((c) => c.is_default) ??
+    configurations[0];
 
   return {
     pipelineType,
@@ -60,12 +76,11 @@ export function usePipelineSelection(
     configurations,
     implementation,
     configuration,
-    selectImplementation: (id) => {
-      setImplementationChoice(id);
-      // A configuration belongs to one implementation.
-      setConfigurationChoice(undefined);
+    selectImplementation: setImplementationChoice,
+    selectConfiguration: (configRef) => {
+      if (implementation)
+        setConfigurationChoice({ implementationId: implementation.id, configRef });
     },
-    selectConfiguration: setConfigurationChoice,
     implementationsError: implementationsQuery.isError
       ? message(implementationsQuery.error, "Failed to load implementations")
       : undefined,

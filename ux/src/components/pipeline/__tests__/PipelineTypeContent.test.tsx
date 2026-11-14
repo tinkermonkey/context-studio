@@ -144,7 +144,13 @@ describe("PipelineTypeContent", () => {
       expect(pipelineService.createConfiguration).toHaveBeenCalledWith(
         TYPE,
         "two_step",
-        expect.objectContaining({ name: "Mine", provider: "anthropic", model: "model-c" }),
+        expect.objectContaining({
+          name: "Mine",
+          provider: "anthropic",
+          model: "model-c",
+          // The implementation's default configuration's parameters, not the editor's own.
+          parameters: { temperature: 0, max_tokens: 2000, top_p: 0.9 },
+        }),
       ),
     );
     await waitFor(() =>

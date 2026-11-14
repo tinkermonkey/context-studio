@@ -33,6 +33,8 @@ export interface ExtractionReviewRequest {
   taxonomy: ReviewScopeRef;
   /** The library example the text came from, while it is unedited. */
   exampleId?: string;
+  /** The dataset individuals are extracted into, where the taxonomy has several. */
+  datasetId?: string;
   /** Each run has its own implementation and configuration. */
   schema: RunSelectionFields;
   individual: RunSelectionFields;
@@ -50,10 +52,17 @@ export function reviewKindOf(pipelineType: string): ReviewKind | null {
   return null;
 }
 
+/**
+ * Both runs start in the background (`async`): the pending run comes back at
+ * once and is polled, so a run that takes longer than a request may (a long
+ * text, a slower implementation) is not cut off by the client's timeout while
+ * the server carries on.
+ */
 function buildRunRequest(kind: ReviewKind, req: ExtractionReviewRequest): PipelineRunRequest {
   if (kind === "schema") {
     return {
       ...req.schema,
+      async: true,
       documents: [req.text],
       scope: req.taxonomy.id,
       scope_name: req.taxonomy.label,
@@ -62,6 +71,8 @@ function buildRunRequest(kind: ReviewKind, req: ExtractionReviewRequest): Pipeli
   }
   return {
     ...req.individual,
+    async: true,
+    ...(req.datasetId ? { dataset_id: req.datasetId } : {}),
     text: req.text,
     ontology_id: req.taxonomy.id,
     ontology_name: req.taxonomy.label,
@@ -173,8 +184,18 @@ export function useExtractionReviewRuns({
     setSlots((s) => ({ ...s, [kind]: slotFromRun(run) }));
   }, []);
 
+  /**
+   * Runs one type again on the text that was last run, with the selection its
+   * picker shows now: after a failure the picker is free again, and what it
+   * shows is what must run.
+   */
   const rerun = useCallback(
-    (kind: ReviewKind) => (lastRequest ? runOne(kind, lastRequest) : Promise.resolve()),
+    (kind: ReviewKind, selection: RunSelectionFields) => {
+      if (!lastRequest) return Promise.resolve();
+      const next = { ...lastRequest, [kind]: selection };
+      setLastRequest(next);
+      return runOne(kind, next);
+    },
     [lastRequest, runOne],
   );
 

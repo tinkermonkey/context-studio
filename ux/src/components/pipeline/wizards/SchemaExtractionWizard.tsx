@@ -97,7 +97,7 @@ export function SchemaExtractionWizard() {
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="schema-extraction-loading">
-          Running pipeline — this may take up to a minute
+          Starting the run — it opens in Runs, where its progress shows
         </FormCallout>
       )}
 
@@ -108,7 +108,7 @@ export function SchemaExtractionWizard() {
         aria-busy={isSubmitting}
         data-testid="schema-extraction-submit"
       >
-        {isSubmitting ? "Running…" : "Run Pipeline"}
+        {isSubmitting ? "Starting…" : "Run Pipeline"}
       </Button>
     </form>
   );

@@ -139,7 +139,7 @@ export function ConnectionRefinementWizard() {
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="connection-refinement-loading">
-          Running pipeline — this may take up to a minute
+          Starting the run — it opens in Runs, where its progress shows
         </FormCallout>
       )}
 
@@ -150,7 +150,7 @@ export function ConnectionRefinementWizard() {
         aria-busy={isSubmitting}
         data-testid="connection-refinement-submit"
       >
-        {isSubmitting ? "Running…" : "Run Pipeline"}
+        {isSubmitting ? "Starting…" : "Run Pipeline"}
       </Button>
     </form>
   );
