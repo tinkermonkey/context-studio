@@ -49,9 +49,11 @@ type accuracy, relationship recall, and the failure counts Loop C selects target
 
 ```bash
 # from local-server/, venv active
-python scripts/benchmark_replay.py                    # offline: replay the cassettes, score
-python scripts/benchmark_replay.py --record --spend   # record with the live LLM (cheap model)
-python scripts/benchmark_replay.py --implementation find_then_type   # the other implementation
+python scripts/benchmark_replay.py                                   # offline: replay the cassettes, score
+python scripts/benchmark_replay.py --implementation find_then_type   # another implementation
+python scripts/benchmark_replay.py --all                             # every target that has recordings
+python scripts/benchmark_replay.py --record --spend --implementation find_then_type \
+    --configuration extraction-find-then-type                        # record with the live LLM
 
 # against a running server (./dev.sh)
 python scripts/extraction_benchmark.py validate
@@ -60,9 +62,36 @@ python scripts/extraction_benchmark.py run --document edit_check --spend # extra
 python scripts/extraction_benchmark.py score --document edit_check --proposal <id>
 ```
 
-`benchmark_replay.py` runs the `default` pipeline in process, each document as a source (chunked,
+**What it runs is chosen like any run:** an implementation of individual extraction and one of its
+configurations (`--implementation`, `--configuration`). The orchestrator comes from the pipeline
+implementation registry and the model, temperature and stage prompts from the configuration, as
+`domain/pipelines/individual_extraction/bootstrap.py` registers them; the script names no model.
+A configuration's stage prompts are the ones sent, so a prompt-only variant is a configuration.
+With no flags the target is the type's default implementation, with the configuration its
+recordings were made with:
+
+| target | recordings | recorded with |
+|---|---|---|
+| `default` + `extraction-openrouter-default` | `cassettes/extraction_benchmark/` | `google/gemini-3-flash-preview`, 2026-11-12 |
+| `find_then_type` + `extraction-find-then-type` | `cassettes/extraction_benchmark_find_then_type/` | `claude-haiku-5-5`, 2026-11-13 |
+
+The `default` implementation's benchmark is pinned to `extraction-openrouter-default` by name
+(`RECORDED_WITH` in the script), not to the implementation's default configuration: its default,
+`extraction-default`, moved from Claude Opus to Claude Haiku on 2026-11-14, and the cassette key
+includes the model. Measuring `default` with `extraction-default` is another target
+(`--configuration extraction-default`) with a folder of its own
+(`extraction_benchmark__extraction-default/`), and needs its own recording. In general a target's
+folder is `extraction_benchmark` (`default`) or `extraction_benchmark_<implementation>`, plus
+`__<configuration>` for a configuration other than the one the implementation's benchmark runs
+with. The registry has no lookup that states its defaults yet, so the script reads them as the
+first implementation, and each implementation's first configuration, that the bootstrap registers
+(`default_implementation`, `default_configuration`: the only two places).
+
+`benchmark_replay.py` runs the target in process, each document as a source (chunked,
 merged, planned), against the pinned DR spec the gold files were made for, with real embeddings
-and a schema index so the class catalog offered per chunk is the one the app would offer. It
+and a schema index so the class catalog offered is the one the app would offer. It prints the
+target it resolved (`target: implementation …, configuration …, model …`), and its `--json`
+summary carries the same three fields. It
 reports `not_recorded` or `stale` instead of numbers when the cassettes are missing or no longer
 answer the prompts, and `failed` when the extraction itself failed with every prompt answered (a
 run with a failed chunk is not scored), and exits 2. A run over some of the documents
@@ -74,22 +103,36 @@ configuration's model and stage prompts, and a real proposal left in the review 
 
 ## Prerequisites to a full run
 
-Both cassette sets must answer the current prompts. The cassette key hashes the whole prompt, so
-any change to a prompt or to what feeds it (the class catalog, the predicate list, chunking, the
-DR spec snapshot) invalidates them; the tournament then exits 3 and Loop C stops at Evaluate until
-both are recorded again:
+The recordings the chosen target reads must answer the current prompts: its benchmark cassettes,
+and, for `default`, the triple corpus's (the guard). The cassette key hashes the whole prompt and
+the model, so any change to a prompt, to what feeds it (the class catalog, the predicate list,
+chunking, the DR spec snapshot) or to the model of the configuration invalidates them; the
+tournament then exits 3 and Loop C stops at Evaluate until they are recorded again:
 
 ```bash
-python scripts/record_default_cassettes.py --record
-python scripts/benchmark_replay.py --record --spend
+python scripts/benchmark_replay.py --record --spend --implementation <id> --configuration <ref>
+python scripts/record_default_cassettes.py --record      # the triple corpus (default variants)
+python scripts/validate_tournament_setup.py --implementation <id>   # offline: are the files there?
 ```
 
-Both were recorded on 2026-11-12 with `google/gemini-3-flash-preview` (34 calls each, about 150k
-tokens per set). Either recorder refuses to save a response the provider cut short or errored on
-part-way: the pipeline reads such a response as "found nothing", and a cassette would replay that
-one-off failure as the pipeline's answer from then on.
+A change to a part the implementations share makes every implementation's recordings stale. The
+relationship stage is one: `FIND_THEN_TYPE_STAGES` reuses the two-pass shape's
+`derive_relationships` stage (`domain/extraction/prompts.py`), and chunking, merging and planning
+are common code. `python scripts/benchmark_replay.py --all` replays every recorded target and
+exits non-zero if any is stale; `tests/integration/pipelines/test_extraction_benchmark_replay.py`
+replays both committed sets in CI.
 
-### The baseline (recorded 2026-11-12, `default` pipeline, scored on main at c55e3494)
+The `default` sets were recorded on 2026-11-12 with `google/gemini-3-flash-preview` (34 calls
+each, about 150k tokens per set). Either recorder refuses to save a response the provider cut
+short or errored on part-way: the pipeline reads such a response as "found nothing", and a
+cassette would replay that one-off failure as the pipeline's answer from then on.
+
+Stale on `main` as of 2026-11-14: the `open_v1` variant's canonicalization cassettes (70 of 104
+calls have no recording). No benchmark target and no guard reads them, so the tournament flags
+them and exits 0, and Loop C names them to its agents as stale before the change; record them with
+`python scripts/record_individual_canonicalization_cassettes.py` if `open_v1`'s numbers matter.
+
+### The baseline (recorded 2026-11-12, `default` with `extraction-openrouter-default`, scored on main at c55e3494)
 
 | | found F1 | typed F1 | recall (core) | precision | type accuracy | relationship recall |
 |---|---|---|---|---|---|---|
@@ -125,8 +168,9 @@ in all and two to four minutes a document.
 The catalog lists each class with the first 260 characters of its definition, not the whole of it
 (`_DEFINITION_CHARS` in `domain/extraction/find_then_type.py`). The 193 definitions of the pinned
 DR ontology run from 584 to 1482 characters, so about a quarter of their text is offered, and the
-part that says which class to use instead is cut from nearly all of them. Offering more of a
-definition is an untried change; it changes the prompt, so the cassettes would be recorded again.
+part that says which class to use instead is cut from nearly all of them. Offering whole
+definitions was tried on 2026-11-14 (a scratch run, find answers held fixed) and gained nothing:
+dev typed F1 0.446.
 
 | | found F1 | typed F1 | recall (core) | precision | type accuracy | relationship recall |
 |---|---|---|---|---|---|---|
@@ -140,11 +184,35 @@ known distractors extracted, 109 relationships missed. Against the baseline abov
 typing (an individual has one class, chosen from the whole catalog) and in recall (statements are
 found); what it proposes that gold does not hold is now the largest count.
 
-This is one recording. The models it runs on take no temperature, so a second take will differ;
-how much has not been measured, and the two-pass shape's margins above do not carry over. Loop C
-still measures and optimises the `default` implementation: the tournament does not run this one.
-`tests/integration/pipelines/test_extraction_benchmark_replay.py` replays these cassettes, so a
-change that makes them stale fails that test until they are recorded again:
+**What is known of its noise, and what is not** (scratch runs, 2026-11-14, one take each, the find
+answers held fixed so only typing varied):
+
+- Typing the same 570 mentions again with the unchanged prompt changed 16.5% of the answers. Dev
+  typed F1 came out 0.476 against the committed 0.465, the holdout document's 0.442 against 0.481.
+- Typing answers "none" for about a quarter of the mentions whose name matches a gold individual
+  (45 of 180), the same ones each time. Its reasons are that the mention is "only a heading or
+  table label here" or "only cited in passing": a mention is typed from its first placed occurrence
+  only (`_Candidate.typed_in`). Loosening the "none" rule by wording alone lost (13 more right, 24
+  more wrong, 78 more mentions recorded that gold does not hold; dev typed F1 0.41). Typing a
+  mention from all of its occurrences is untried, and heads the backlog.
+- The relate stage hit its 8,000 output-token limit on the GitLab document in two of four takes
+  (a failed chunk, so that take is not scored), and relationship recall on the Edit check document
+  came out between 0.00 and 0.09.
+- Not measured: how much a full re-recording (find, type and relate) moves the scores. The find
+  stage's noise is unknown.
+
+Loop C can refine this implementation (`args: {implementation: "find_then_type"}`, below), with
+gate margins that are **provisional**: epsilon 0.03 and holdout slack 0.06, set from the typing
+figures above, not from re-recordings. Before its verdicts on `find_then_type` can be trusted,
+three recordings of the unchanged implementation are needed (about $0.30 each), as were made for
+`default`, to replace those margins with measured ones; and the relate stage has to stop hitting
+its output limit, or about half the recordings of the GitLab document will fail and their
+experiments end `unmeasured`. The triple-corpus guard does not apply to it: that corpus has no
+recordings of this implementation.
+
+`tests/integration/pipelines/test_extraction_benchmark_replay.py` replays these cassettes and the
+`default` ones, so a change that makes either set stale fails that test until they are recorded
+again:
 
 ```bash
 python scripts/benchmark_replay.py --record --spend --implementation find_then_type
@@ -161,9 +229,13 @@ calling anything.
 ## Loop B: `scripts/quality_tournament.py`
 
 `python scripts/quality_tournament.py --pipeline individual` runs the variant
-tournament (§4.2): every registered variant (see the module docstring and
-`build_registry()` in that script for which variants are registered today and
-why) is Loop-A-tuned on dev, then scored on the full corpus. Output:
+tournament (§4.2): every registered variant (`open_v1`, `default`,
+`default+grounding`; see `build_registry()` in that script) is Loop-A-tuned on
+dev, then scored on the full corpus. Each variant says what it runs: an
+implementation, a configuration and the model that configuration names, read
+from the pipeline registry. The `default` variants run the `default`
+implementation with `extraction-openrouter-default`, the configuration the
+triple corpus was recorded with. Output:
 
 - a per-variant error report pair in `reports/tournament_<variant>_<run_id>.{json,md}`
   (same shape as above — produced by the same `_harness/error_report.py` code);
@@ -171,15 +243,30 @@ why) is Loop-A-tuned on dev, then scored on the full corpus. Output:
   mean dev soft-F1 with strict-F1 and the §3.1 diagnostics alongside;
 - a scoreboard telemetry row per variant in
   `tests/integration/fixtures/pipelines/_metrics/quality_tournament_individual_extraction.jsonl`
-  (gitignored, same JSONL schema `quality_loop.py` uses).
+  (gitignored, same JSONL schema `quality_loop.py` uses). A row's `model` is
+  the model that ran and its `config_ref` the configuration; `implementation`
+  and `variant` name the rest.
 
-The run ends with the benchmark pass (above): a "Benchmark" section in the digest,
-`reports/tournament_<run_id>_benchmark.json` with each document's score and the lists behind it,
-and `benchmark_dev` / `benchmark_holdout` rows in the telemetry file.
+The run ends with the benchmark pass (above) for one target, chosen with `--implementation` and
+`--configuration` (the same defaults as `benchmark_replay.py`):
+
+```bash
+python scripts/quality_tournament.py --implementation find_then_type --passes 1 --restarts 1
+```
+
+It adds a "Benchmark" section to the digest, headed by the implementation, configuration and model
+that ran; `reports/tournament_<run_id>_benchmark.json` with those three fields, each document's
+score and the lists behind it, and a `guard` object; and `benchmark_dev` / `benchmark_holdout` rows
+in the telemetry file. `guard` is the triple corpus's measure for the target: the dev strict-F1 and
+soft-F1 of the variant that runs the target's implementation (`default`), or `{"applies": false,
+"reason": …}` for an implementation no variant runs (`find_then_type`). Loop C reads the guard from
+there, never from a row of the scoreboard.
 
 A variant whose cassettes no longer answer its prompts is flagged in a "STALE CASSETTES" section
-at the top of the digest and the run exits 3. The extraction service turns a missing recording
-into "no triples", so before this check a stale cassette set read as a pipeline scoring 0.
+at the top of the digest. The run exits 3 when the stale recordings are the chosen target's: its
+benchmark cassettes, or a variant that runs its implementation. Any other stale variant is
+flagged only. The extraction service turns a missing recording into "no triples", so before this
+check a stale cassette set read as a pipeline scoring 0.
 
 Each run also scores every variant's tuned config against the Wave 1 DR
 bootstrap scenarios (`dataset_split.py`'s `DR_BOOTSTRAP_SCENARIOS`,
@@ -229,38 +316,73 @@ what the `individual_recognition` episode corpus measures instead).
 refinement cycle. Each invocation of the Workflow runs exactly **one**
 iteration:
 
-1. **Evaluate** — runs Loop B and reads the incumbent's benchmark measures (dev: `edit_check`,
-   `gitlab_architecture`; holdout: `wikimedia_enterprise`), its failure counts, and the triple
-   corpus's guard measure (the `default` variant's dev strict-F1). A stale or missing recording
-   ends the iteration with `status: "error"` before anything is spent.
-2. **Select** — reads `ledger.jsonl` for hypotheses already decided, ranks the benchmark's failure
-   kinds (`missed_core`, `missed_supporting`, `mistyped`, `spurious`, `excluded_extracted`,
-   `relationship_missed`) by count and maps the top ones to the seeded backlog (design doc §7).
-   Hypotheses marked `blocked` are never selected: the gate reads the individuals' found F1 and
-   typed F1 only, so a change that moves nothing but relationships or confidences cannot pass it.
+The iteration refines one implementation, measured with one of its configurations:
+`args.implementation` and `args.configuration`, each defaulting through the pipeline registry as
+in `benchmark_replay.py`. With neither, the workflow passes no flag to the scripts and reads what
+they resolved from the benchmark report. An implementation needs two things in the workflow
+script: a backlog (`BACKLOGS`) and gate margins (`GATE_MARGINS`). `default` and `find_then_type`
+have both; for any other the iteration stops with an error instead of borrowing another's.
+
+1. **Evaluate** — runs Loop B for the target and reads the incumbent's benchmark measures (dev:
+   `edit_check`, `gitlab_architecture`; holdout: `wikimedia_enterprise`), its failure counts, and
+   the triple corpus's guard measure from the benchmark report's `guard` object. A stale or missing
+   recording of the target ends the iteration with `status: "error"` before anything is spent;
+   recordings the target does not read that are stale on `main` are noted (`staleElsewhere`).
+2. **Select** — reads `ledger.jsonl` for the hypotheses already decided for this implementation
+   (ids are scoped by implementation), ranks the benchmark's failure kinds (`missed_core`,
+   `missed_supporting`, `mistyped`, `spurious`, `excluded_extracted`, `relationship_missed`) by
+   count and maps the top ones to the implementation's backlog (design doc §7). Hypotheses marked
+   `blocked` are never selected: the gate reads the individuals' found F1 and typed F1 only, so a
+   change that moves nothing but relationships or confidences cannot pass it.
 3. **Experiment** — fans out one experimenter agent per hypothesis, each in its own git worktree,
-   each implementing exactly one change. A change to a prompt, or to what feeds one, records both
-   cassette sets again on its branch. The candidate is measured by the same steps as the incumbent.
-   One that cannot be measured (stale recordings, a failed run) is recorded in the ledger as
-   `unmeasured` with that reason and its worktree is discarded; the hypothesis stays selectable.
+   each implementing exactly one change. A change to a prompt, or to what feeds one, records again,
+   on its branch, every cassette set it made stale: the target's benchmark, any other
+   implementation's benchmark (the change touched a shared part), and the triple corpus. The
+   candidate is measured by the same steps as the incumbent. One that cannot be measured (stale
+   recordings, a failed run) is recorded in the ledger as `unmeasured` with that reason and its
+   worktree is discarded; the hypothesis stays selectable.
 4. **Verify** — an adversarial agent checks each candidate: none of the frozen paths changed (the
    harness, the gold extractions, the schema snapshots, the tournament and benchmark scripts, the
-   ledger), nothing in the diff is specific to a benchmark document, tests reproduce, the committed
-   cassettes replay to every number the gate reads (dev found F1 and typed F1, holdout typed F1,
-   the triple corpus's dev strict-F1), one change, and the diff matches the hypothesis.
-5. **Decide** — the accept gate (design doc §6) on every verified candidate: benchmark dev found
-   F1 improves by > 0.02 with typed F1 not regressing, or typed F1 improves by > 0.02 with found
-   F1 dipping at most 0.05; the holdout document's typed F1 does not drop by more than 0.04; the
-   triple corpus's dev strict-F1 does not drop by more than 0.02. A missing number fails the
-   gate. Of the candidates that pass, the one with the highest dev typed F1 is accepted: merged
-   into `experiment/karpathy-loop` with a ledger entry. Others that pass are discarded without a
-   ledger entry, so they are drafted again against the new incumbent. Everything else → discard
-   the worktree, append a ledger entry with the reason.
+   ledger), nothing in the diff is specific to a benchmark document, tests reproduce, **every**
+   recorded benchmark target still replays (`benchmark_replay.py --all`: a shared part changed
+   without re-recording the other implementation fails here), the target's committed cassettes
+   replay to every number the gate reads (dev found F1 and typed F1, holdout typed F1, and the
+   guard as the benchmark report states it), nothing is stale that was not stale on `main`, no
+   cassette file was deleted (a recording is made again, never removed), one change, and the diff
+   matches the hypothesis. Whether the guard applies is checked against the implementation's
+   margins before anything is spent: a report cannot switch it off.
+5. **Decide** — the accept gate (design doc §6) on every verified candidate, with the
+   implementation's margins: benchmark dev found F1 improves by more than epsilon with typed F1
+   not regressing, or typed F1 improves by more than epsilon with found F1 dipping at most 0.05;
+   the holdout document's typed F1 does not drop by more than the holdout slack; where the guard
+   applies, the triple corpus's dev strict-F1 does not drop by more than 0.02. A missing number
+   fails the gate. Of the candidates that pass, the one with the highest dev typed F1 is accepted:
+   merged into `experiment/karpathy-loop` with a ledger entry. Others that pass are discarded
+   without a ledger entry, so they are drafted again against the new incumbent. Everything else →
+   discard the worktree, append a ledger entry with the reason. Every entry records the
+   implementation, the configuration, the margins used and whether they were provisional, the
+   guard (or that it did not apply) and what the verifier saw of the other benchmark targets.
+
+| implementation | epsilon | holdout slack | guard | from |
+|---|---|---|---|---|
+| `default` | 0.02 | 0.04 | dev strict-F1, slack 0.02 | three recordings of the unchanged implementation (above) |
+| `find_then_type` | 0.03 (provisional) | 0.06 (provisional) | not applicable | typing noise only, two takes; full re-recording noise not measured |
+
+To run one iteration against `find_then_type`:
+
+```
+Workflow  scriptPath: .claude/workflows/karpathy-loop.js
+          args: {"implementation": "find_then_type", "iteration": 1}
+```
+
+Its result carries `provisionalMargins: true`: an accept or a reject under provisional margins is
+not yet a trusted verdict (see "The find-then-type implementation" above for what is missing).
 
 Invoke it with the `Workflow` tool by `scriptPath` (`.claude/workflows/karpathy-loop.js`; a
 workflow launched by `name` can run a stale cached copy), e.g. `args: {iteration: 1}`. Each call
 is one iteration: call it repeatedly (e.g. via `/loop`) and thread state through `args` from the
-previous call's return value (`iteration`, `consecutiveNoAccept`, `hypothesisCount`,
+previous call's return value (`implementation`, `configuration`, `iteration`,
+`consecutiveNoAccept`, `hypothesisCount`,
 `integrationBranch`, `holdoutFloors`, `maxConsecutiveNoAccept`, `cumulativeCostUsd`,
 `totalBudgetUsd`). The returned `status` (`"stopped"` / `"accepted"` / `"no_accept"` / `"error"`)
 and `stop` field tell the driver whether to keep iterating: halt whenever `stop` is not null.
@@ -272,8 +394,9 @@ change has to be promoted from the integration branch to `main`, by PR, before t
 iteration. Ledger entries are appended in the main checkout's working tree and are not committed
 by the loop: commit `experiments/ledger.jsonl` with the promotion.
 
-`node .claude/workflows/karpathy-loop.mechanics.test.mjs` checks the gate, target selection and
-the prompts' frozen-path lists without running any agent.
+`node .claude/workflows/karpathy-loop.mechanics.test.mjs` checks the gate, the margins and
+backlogs of each implementation, target selection, and that the prompts measure, record and
+verify the chosen target, without running any agent.
 
 ## `ledger.py` / `ledger.jsonl`
 
@@ -286,10 +409,17 @@ package — can record a decision without hand-writing JSON:
 
 ```bash
 # from local-server/, venv active
-python experiments/ledger.py append '{"experiment_id": "12-copular", ...}'
-python experiments/ledger.py rejected-hypotheses
-python experiments/ledger.py accepted-hypotheses
+python experiments/ledger.py append '{"experiment_id": "12-default-copular", ...}'
+python experiments/ledger.py rejected-hypotheses --implementation find_then_type
+python experiments/ledger.py accepted-hypotheses --implementation find_then_type
 ```
+
+An experiment entry must name the `implementation` and `configuration` it refined and measured
+(`append` refuses one that does not), and **hypothesis ids are scoped by implementation**: the two
+commands above list one implementation's entries, so `cross_chunk_relationships` rejected for
+`default` is still open for `find_then_type`. Without `--implementation` they list everyone's.
+Where the triple-corpus guard does not apply, the entry's `guard` is `{"applies": false,
+"reason": …}`, not another implementation's number.
 
 Target selection (§4.3 step 2) excludes both sets: a rejected hypothesis
 already failed, and an accepted one is already merged into the incumbent, so
@@ -312,10 +442,23 @@ import, recording the imported `spec_version`; re-running the import against
 an unchanged `spec_version` does not append a duplicate
 (`record_baseline_reset_if_new`).
 
+A reset that names an `implementation` (`--implementation`, `--configuration`)
+resets that implementation's history only: use it when one implementation's
+recordings are made again or its margins re-measured. One that names none
+resets every implementation's: the gold files, the scorer or the ontology
+changed.
+
+The 2026-11-14 reset records the change that made the measurement scripts
+select what they run by implementation and configuration
+(`scripts/quality_tournament.py` and `scripts/benchmark_replay.py` are frozen
+paths, changed by a reviewed PR outside the loop). No score moved: its
+`baseline` field holds `default`'s unchanged baseline and `find_then_type`'s
+first one, each under its implementation, with the margins each is judged by.
+
 `rejected_hypotheses()` and `accepted_hypotheses()` (and any future ledger
 read that feeds a loop decision) are scoped through
 `entries_since_last_baseline_reset()`, which excludes every entry recorded
-before the most recent checkpoint. This is the mechanism — not a documented
+before the most recent checkpoint that applies. This is the mechanism — not a documented
 convention — behind the rule that pre-reset dev/holdout scores never judge
 post-reset experiments: a hypothesis rejected against a since-retired baseline
 is eligible for retry immediately after the reset, with no manual ledger

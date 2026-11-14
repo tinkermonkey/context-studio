@@ -29,10 +29,11 @@ SAFETY: the default behavior (no flag, or `--dry-run`) makes ZERO live LLM
 calls. It only prints which scenarios and cassette paths would be recorded, the
 model id, and the total call count. Live recording -- which spends real money --
 requires the explicit `--record` flag. The corpus fixtures pin
-`model=claude-opus-4-7`, but recording overrides it to the phase-1 default model
-(`quality_tournament.DEFAULT_PIPELINE_MODEL`, currently OpenRouter Gemini Flash);
-the tournament's `default`-variant replay applies the SAME override so the
-cassette keys (which include the model) match.
+`model=claude-opus-4-7`, but recording overrides it to the model of
+`quality_tournament.triple_corpus_target()`: the `default` implementation's
+configuration `extraction-openrouter-default` (OpenRouter Gemini Flash), read
+from the pipeline registry. The tournament's `default`-variant replay applies the
+SAME override so the cassette keys (which include the model) match.
 
 Usage (from local-server/, venv active):
     python scripts/record_default_cassettes.py            # dry run (default, no calls)
@@ -105,15 +106,16 @@ def print_plan(scenarios: list[str]) -> None:
     (the phase-1 override, not the fixture-pinned model), and the cassette path
     that WOULD be written, then the total live-call count.
     """
-    from scripts.quality_tournament import DEFAULT_PIPELINE_MODEL
+    from scripts.quality_tournament import triple_corpus_target
 
+    target = triple_corpus_target()
     print("DRY RUN -- no LLM calls will be made. Pass --record to record for real.\n")
     print(f"cassette directory: {_CASSETTE_DIR}\n")
 
     for scenario in scenarios:
         context = ontology_context_for(scenario)
         print(
-            f"  {scenario:<38} [{context.value:<11}] model={DEFAULT_PIPELINE_MODEL}\n"
+            f"  {scenario:<38} [{context.value:<11}] model={target.model}\n"
             f"      -> {cassette_path_for(scenario)}"
         )
 
@@ -122,8 +124,8 @@ def print_plan(scenarios: list[str]) -> None:
         f"= {len(scenarios)} live LLM call(s) (one per scenario)."
     )
     print(
-        f"Model: {DEFAULT_PIPELINE_MODEL} (phase-1 override of the fixture-pinned "
-        "claude-opus-4-7; routes to OpenRouter)."
+        f"Model: {target.model}, from configuration {target.configuration} (replaces the "
+        "fixture-pinned claude-opus-4-7)."
     )
 
 
@@ -164,12 +166,13 @@ def record_all(scenarios: list[str]) -> int:
         DefaultPipelineOntologyResolver,
         dr_spec_available,
     )
-    from scripts.quality_tournament import DEFAULT_PIPELINE_MODEL
+    from scripts.quality_tournament import triple_corpus_target
     from tests.fakes.fake_embedding_service import FakeEmbeddingService
     from tests.fakes.fake_nlp_processor import FakeNLPProcessor
     from tests.fakes.fake_reference_source import FakeReferenceSource
     from tests.integration.pipelines._harness.cassettes import RecordingLLMProvider
 
+    target = triple_corpus_target()
     settings = get_settings()
     llm_config = settings.llm
     if (
@@ -202,7 +205,7 @@ def record_all(scenarios: list[str]) -> int:
 
     print(
         f"RECORDING {len(scenarios)} scenario(s) "
-        f"= {len(scenarios)} live LLM call(s). Model: {DEFAULT_PIPELINE_MODEL}"
+        f"= {len(scenarios)} live LLM call(s). Model: {target.model}"
     )
     print(f"cassette directory: {_CASSETTE_DIR}\n")
 
@@ -252,10 +255,11 @@ def record_all(scenarios: list[str]) -> int:
         # perturb the cassette key.
         fixture_input = dict(load_fixture("individual_extraction", scenario))
         fixture_input["ontology_id"] = taxonomy.id
-        # Override the fixture-pinned model (claude-opus-4-7) to the phase-1
-        # default model. The cassette key includes the model, so this MUST match
-        # the same override in quality_tournament._make_default_variant's replay.
-        fixture_input["model"] = DEFAULT_PIPELINE_MODEL
+        # Override the fixture-pinned model (claude-opus-4-7) to the model of the
+        # configuration these cassettes are recorded with. The cassette key
+        # includes the model, so this MUST match the same override in
+        # quality_tournament._make_default_variant's replay.
+        fixture_input["model"] = target.model
 
         state = IndividualExtractionState(
             run_id=str(uuid4()),

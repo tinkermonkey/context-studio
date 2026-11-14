@@ -1,7 +1,9 @@
 # Karpathy Loop — Automated Refinement of Individual Extraction
 
-**Status:** Implemented (loop built and run; refinement paused at a clean baseline) **Date:** 2026-07-05 **Scope:** `local-server/` individual-extraction pipelines (`default` LLM, `open_v1`, and hybrids) **Companion analysis:** `local-server/documentation/claudes_thoughts/individual_extraction_design_analysis.md` **Outcome record:** `documentation/individual_extraction_refinement_learnings.md`
+**Status:** Implemented (loop built and run; refinement paused at a clean baseline) **Date:** 2026-07-05 **Scope:** `local-server/` individual-extraction implementations (`default` two-pass LLM, `find_then_type`, `open_v1`) **Companion analysis:** `local-server/documentation/claudes_thoughts/individual_extraction_design_analysis.md` **Outcome record:** `documentation/individual_extraction_refinement_learnings.md`
 
+> **Update (2026-11-14):** the loop no longer assumes the `default` implementation. What it measures and refines is chosen the way every run is chosen: a pipeline implementation and one of its configurations (`--implementation`, `--configuration` on the scripts; `implementation`, `configuration` in the workflow's `args`), with the orchestrator and the model read from the pipeline registry and its configurations. The backlog, the gate margins and the ledger's hypothesis ids are per implementation, and the triple-corpus guard applies only to an implementation that corpus has recordings of. `find_then_type` (merged 2026-11-14, dev typed F1 0.465 against the two-pass shape's 0.114) can be refined, with margins that are provisional until its re-recording noise is measured (§6).
+>
 > **Update (2026-11):** the loop's objective moved to the **extraction benchmark** (§3.4): three long real documents with hand-made gold extractions, run through the same path a user's source takes. On the short-passage triple corpus the `default` pipeline had reached the old exit criterion and exhausted its backlog (every remaining "ceiling" was a measurement artifact), so the loop had nothing left to climb there. That corpus is now the regression guard. §4.3, §5, §6 and §7 below describe the loop as it runs today; earlier results are kept where they explain a decision.
 >
 > **Update (2026-07):** the loop has been built and run. The `default` pipeline described in §1/§7 as single-pass and scoring 0.0 is now a **grounded two-pass LLM pipeline** (class-catalog grounding → per-class-pair predicate clamp) scoring dev strict-F1 ≈ 0.66 on the grounded corpus, and the scored split is DR-grounded only (§3.3). §7 records which backlog hypotheses landed, were rejected, or remain open. §1 below is retained as the original problem statement.
@@ -50,7 +52,7 @@ Format: JSON per run at `local-server/experiments/reports/<run_id>.json`; a shor
 
 The scored split is **DR-grounded only** (see `karpathy_loop_dr_ontology_design.md`). The 10 legacy software-architecture-concept "placeholder" scenarios — which ran against a throwaway 3-class ontology and tested free-form concept extraction rather than grounded identification — were removed from scoring (recorded with a `SEPARATE_CONTEXT` disposition, no longer scored). They were the sole source of the surface-convention (casing/pluralization) "failures"; the consolidated learnings doc has the full account.
 
-- **Dev (6) / holdout (2)** split of the SME-authored DR-grounded scenarios, fixed by name in `dataset_split.py`. Loop A tunes knobs on dev. Since 2026-11 this corpus is Loop C's **regression guard**, not its objective (§6): the `default` variant's dev strict-F1 may not drop.
+- **Dev (6) / holdout (2)** split of the SME-authored DR-grounded scenarios, fixed by name in `dataset_split.py`. Loop A tunes knobs on dev. Since 2026-11 this corpus is Loop C's **regression guard**, not its objective (§6): the `default` variant's dev strict-F1 may not drop. Its cassettes are recordings of the `default` implementation, so it guards that implementation only; for any other the guard does not apply (§6).
 
 - **Corpus growth:** grow and human-review the grounded (Wave 2/3 SME-authored) corpus so both the holdout veto and strict-F1 become statistically trustworthy. This supersedes the earlier plan to promote the arxiv `fixture_*.json` files as placeholder-ontology scenarios.
 
@@ -77,7 +79,7 @@ A run is scored on the individuals that would reach the review queue (`_harness/
 
 Relationships are scored on recall only: gold holds the relationships the text states most plainly, not every one a run could correctly derive.
 
-The benchmark runs two ways. Offline, `scripts/benchmark_replay.py` runs the `default` pipeline in process over each document as a source (headings read, text chunked, each chunk extracted, chunks merged, operations planned) against the pinned DR spec the gold files were made for, answering every LLM call from a cassette; the tournament ends with this pass. Against a running server, `scripts/extraction_benchmark.py run` extracts a document with any pipeline configuration and scores the proposal it produces, and `load` puts the gold extractions into the workspace as datasets.
+The benchmark runs two ways. Offline, `scripts/benchmark_replay.py` runs one **target**, an implementation with one of its configurations (`--implementation`, `--configuration`), in process over each document as a source (headings read, text chunked, each chunk extracted, chunks merged, operations planned) against the pinned DR spec the gold files were made for, answering every LLM call from a cassette; the tournament ends with this pass for the target it was given. The orchestrator is the implementation registry's and the model, temperature and stage prompts are the configuration's. With no flags the target is the type's default implementation with the configuration its recordings were made with. Each target has its own cassette folder; two are recorded: `default` with `extraction-openrouter-default` (Gemini 3 Flash, pinned by name so that a change to the implementation's default configuration does not make the recordings stale) and `find_then_type` with `extraction-find-then-type` (Claude Haiku 5.5). Against a running server, `scripts/extraction_benchmark.py run` extracts a document with any pipeline configuration and scores the proposal it produces, and `load` puts the gold extractions into the workspace as datasets.
 
 The gold files, the schema snapshots and the scorer are measurement: frozen for experiments (§6), changed only by a human-reviewed PR, with a `baseline_reset` in the ledger.
 
@@ -109,7 +111,7 @@ Output: best knob config for the variant + telemetry rows (existing JSONL emitte
 
 Reintroduces the legacy POC's strongest asset (the `rag_experiments` parallel-variant harness) on the new stack:
 
-- A **variant registry** maps names to (orchestrator implementation, base config, knob space). Today: `default` (the incumbent the loop refines), `default+grounding` and `open_v1`.
+- A **variant registry** maps names to (orchestrator implementation, base config, knob space). Today: `default`, `default+grounding` and `open_v1`. Each variant states the pipeline implementation and configuration it runs and takes its orchestrator and model from the pipeline registry (the `default` variants: the `default` implementation with `extraction-openrouter-default`). No variant runs `find_then_type`: the triple corpus has no recordings of it.
 
 - The tournament runner evaluates every registered variant on all dev scenarios (Loop A tunes each variant's knobs first), then ranks by soft-F1 with strict-F1 and the §3.1 diagnostics displayed alongside.
 
@@ -117,29 +119,29 @@ Reintroduces the legacy POC's strongest asset (the `rag_experiments` parallel-va
 
 One invocation: `python scripts/quality_tournament.py --pipeline individual` (new script beside `quality_loop.py`).
 
-The run ends with the benchmark pass (§3.4) and writes its summary beside the digest (`tournament_<run_id>_benchmark.json`).
+The run ends with the benchmark pass (§3.4) for the target given by `--implementation` and `--configuration`, and writes its summary beside the digest (`tournament_<run_id>_benchmark.json`): what was run (implementation, configuration, model), the scores, and the triple-corpus guard for that target (`guard`: the dev scores of the variant that runs the target's implementation, or `applies: false` with the reason when no variant does). Telemetry rows and digest sections are labeled with what ran: a row's `model` is the model and its `config_ref` the configuration.
 
-**A stale recording is not a score.** The extraction service turns a cassette miss into "no triples", so a variant whose cassettes no longer answer its prompts used to read as a pipeline scoring 0 (it happened in 2026-09 and again by 2026-11, unnoticed both times). The tournament now counts misses: a stale variant is flagged at the top of the digest and the run exits non-zero; the benchmark pass reports `stale` or `not_recorded` instead of numbers.
+**A stale recording is not a score.** The extraction service turns a cassette miss into "no triples", so a variant whose cassettes no longer answer its prompts used to read as a pipeline scoring 0 (it happened in 2026-09 and again by 2026-11, unnoticed both times). The tournament now counts misses: a stale variant is flagged at the top of the digest, and the run exits non-zero when the stale recordings are the chosen target's (its benchmark cassettes, or a variant that runs its implementation); the benchmark pass reports `stale` or `not_recorded` instead of numbers.
 
 ### 4.3 Loop C — Claude Code refinement (the Karpathy loop proper)
 
-One iteration:
+One iteration refines one implementation, measured with one of its configurations (`args.implementation`, `args.configuration`; each defaults through the pipeline registry, and the workflow then reads what the scripts resolved from the benchmark report). The implementation must have a backlog and gate margins in the workflow script; without them the iteration stops with an error rather than use another implementation's.
 
-- **Evaluate.** Run Loop B. Read the incumbent's benchmark measures (dev, holdout), its failure counts, and the triple corpus's guard measure. If any recording is stale or missing the iteration stops with an error before it spends anything.
+- **Evaluate.** Run Loop B for the target. Read the incumbent's benchmark measures (dev, holdout), its failure counts, and the triple corpus's guard measure as the benchmark report states it (it may not apply). If a recording the target reads is stale or missing the iteration stops with an error before it spends anything.
 
-- **Select targets.** Rank the benchmark's failure kinds by count and map the top ones to backlog hypotheses (§7). Consult the ledger to exclude hypotheses already decided.
+- **Select targets.** Rank the benchmark's failure kinds by count and map the top ones to the implementation's backlog hypotheses (§7). Consult the ledger to exclude hypotheses already decided for this implementation.
 
 - **Propose & implement (fan-out).** Spawn N experimenter sub-agents (N ≈ 2–4), each in an **isolated git worktree**, each assigned one hypothesis — either from the seeded backlog (§7) or derived from the error report. Each agent:
 
 - implements exactly one change (code, prompt, or knob-space edit) on its branch;
 
-- if the change touches an LLM prompt, or anything that feeds one (the class catalog, the predicate list, chunking), records both cassette sets again with the live LLM (cost-capped — see §5);
+- if the change touches an LLM prompt, or anything that feeds one (the class catalog, the predicate list, chunking), records again with the live LLM every cassette set it made stale (cost-capped — see §5): the target's benchmark, the triple corpus, and, when the change is to a part the implementations share (the relationship stage, chunking, merging, planning), the other implementation's benchmark;
 
 - runs the unit/integration tests relevant to its change;
 
 - returns: diff summary, the candidate's benchmark and guard measures (taken by the same steps as the incumbent's), and how the failure counts moved.
 
-- **Verify (adversarial).** A reviewer sub-agent checks each candidate for gate integrity (see §6): no edits to the frozen paths; tests pass; the committed cassettes replay to the claimed scores; the diff does what the hypothesis says, and nothing in it is specific to a benchmark document. Candidates that fail verification are rejected regardless of score.
+- **Verify (adversarial).** A reviewer sub-agent checks each candidate for gate integrity (see §6): no edits to the frozen paths; tests pass; the committed cassettes replay to the claimed scores; every other recorded benchmark target still replays (`benchmark_replay.py --all`), so a change to a shared part that left another implementation's recordings stale fails; nothing is stale that was not stale on `main`, and no cassette file was deleted; the diff does what the hypothesis says, and nothing in it is specific to a benchmark document. Candidates that fail verification are rejected regardless of score.
 
 - **Accept/reject.** The orchestrator applies the **accept gate** (§6) to every verified candidate; of those that pass, the one with the highest dev typed F1 is accepted (one per iteration: two candidates were each measured against the same incumbent, never together). Accepted → merge to the loop branch (its cassettes come with it), append ledger entry; the iteration ends with a stop, because the incumbent is measured on `main` and the change has to be promoted there first. A candidate that passes but is not the one accepted → discard worktree, no ledger entry, so it is drafted again against the new incumbent. Rejected → discard worktree, append ledger entry with the reason; the hypothesis is not selected again. Could not be measured or verified (a failed recording, a stale cassette, a verifier that returned nothing) → discard worktree, append an `unmeasured` ledger entry; the hypothesis stays selectable and may be drafted again next iteration (nothing counts repeats: a hypothesis that keeps failing to measure shows in the ledger, and the loop halts for a human after every accept and after three iterations without one).
 
@@ -163,9 +165,9 @@ Loop C maps directly onto Claude Code's multi-agent primitives; no new orchestra
 
 - **Cassette-first:** Loops A and B never make live calls. Only Loop C step 3 records.
 
-- **Two cassette sets, two recorders:** the triple corpus (`cassettes/individual_extraction_default/`, `python scripts/record_default_cassettes.py --record`) and the benchmark (`cassettes/extraction_benchmark/`, `python scripts/benchmark_replay.py --record --spend`). The cassette key hashes the whole prompt, so a change to a prompt, or to anything that feeds one (the class catalog offered, the predicate list, how a source is chunked, the DR spec snapshot), invalidates the recordings it touches; anyone making such a change on `main` re-records in the same PR.
+- **Cassette sets and recorders:** the triple corpus (`cassettes/individual_extraction_default/`, `python scripts/record_default_cassettes.py --record`; recordings of the `default` implementation) and one benchmark set per target (`cassettes/extraction_benchmark/` for `default`, `cassettes/extraction_benchmark_find_then_type/` for `find_then_type`; `python scripts/benchmark_replay.py --record --spend --implementation <id> --configuration <ref>`). The cassette key hashes the whole prompt and the model, so a change to a prompt, to anything that feeds one (the class catalog offered, the predicate list, how a source is chunked, the DR spec snapshot) or to the configuration's model invalidates the recordings it touches; anyone making such a change on `main` re-records in the same PR. The relationship stage is shared (`FIND_THEN_TYPE_STAGES` reuses the two-pass `derive_relationships` stage), as are chunking, merging and planning: a change there invalidates every implementation's set. CI replays both benchmark sets (`test_extraction_benchmark_replay.py`).
 
-- **Refresh policy:** an experiment that changes a prompt records both sets on its branch; an accepted candidate's cassettes come to the integration branch with its merge. Recording uses the cheap model (gemini-flash class) unless an experiment specifically targets model choice. The benchmark is about 17 chunks, so two calls each.
+- **Refresh policy:** an experiment that changes a prompt records, on its branch, every set it made stale; an accepted candidate's cassettes come to the integration branch with its merge. A recording uses the model of its target's configuration (Gemini 3 Flash for `default`, Claude Haiku 5.5 for `find_then_type`); a change of model is a change of configuration, so another target. The `default` benchmark is about 17 chunks, two calls each; `find_then_type` makes about 600 calls (570 typing calls against one cached catalog), about $0.30.
 
 - **Budget:** each experimenter estimates what its recording cost; the workflow sums those into `cumulativeCostUsd` and refuses to start an iteration once that reaches the total-run cap set at launch (`totalBudgetUsd`). The cap is checked before an iteration, so the last one can overrun it by up to one iteration's recordings; agent tokens are not counted.
 
@@ -173,11 +175,20 @@ Loop C maps directly onto Claude Code's multi-agent primitives; no new orchestra
 
 ## 6. Accept gate and guardrails
 
-An experiment is **accepted** iff it improves the benchmark's dev documents and collapses neither the holdout document nor the triple corpus. The gate reads the benchmark's found F1 (coverage) and typed F1 (exactness) where the text below, written for the triple corpus, says soft-F1 and strict-F1; the reasoning is unchanged:
+An experiment is **accepted** iff it improves the benchmark's dev documents and collapses neither the holdout document nor (where it applies) the triple corpus. The margins are per implementation (`GATE_MARGINS` in the workflow), because they have to sit above what re-recording the same implementation moves the score, and that is a property of the implementation and its model:
 
-- **Improvement (benchmark dev):** found F1 improves by more than ε and typed F1 does not regress at all (coverage-driven), **or** typed F1 improves by more than ε and found F1 dips by at most COVERAGE_SLACK = 0.05 (exactness-driven). ε = 0.02 here, not the triple corpus's 0.005: every experiment that changes a prompt re-records, and three recordings of the unchanged incumbent (2026-11-12, temperature 0) ranged over 0.006 on dev found F1 and 0.009 on dev typed F1.
-- **No holdout collapse:** typed F1 on the holdout document ≥ incumbent − 0.04 (the same three recordings ranged over 0.028 on it). One document is a noisy veto: a rejection on this ground alone deserves a human look before the hypothesis is written off.
-- **Guard:** the triple corpus's dev strict-F1 for the `default` variant ≥ incumbent − 0.02 (GUARD_SLACK).
+| implementation | ε | holdout slack | guard | status | from |
+|---|---|---|---|---|---|
+| `default` | 0.02 | 0.04 | dev strict-F1 ≥ incumbent − 0.02 | measured | three recordings of the unchanged implementation (2026-11-12, Gemini 3 Flash): dev found F1 ranged over 0.006, dev typed F1 over 0.009, holdout typed F1 over 0.028 |
+| `find_then_type` | 0.03 | 0.06 | not applicable | **provisional** | typing noise only (2026-11-14, Claude Haiku 5.5, find answers held fixed, two takes): 16.5% of typing answers changed; dev typed F1 0.465 vs 0.476, holdout typed F1 0.481 vs 0.442. The margins are those spreads scaled as `default`'s were and rounded up |
+
+What `find_then_type`'s margins lack is the measurement `default`'s rest on: **full re-recording noise**, three recordings of the unchanged implementation with every stage (find, type, relate) recorded again. Until it is made, an accept or a reject for `find_then_type` is provisional too: every ledger entry records the margins it was judged by and whether they were provisional, and the workflow's result says so (`provisionalMargins`). An implementation with no margins cannot be refined: the iteration stops.
+
+**The guard, by implementation.** The triple corpus holds recordings of the `default` implementation only. The tournament states the guard for the target in its benchmark report: for `default`, the `default` variant's dev scores; for an implementation no variant runs, `applies: false` with the reason. The gate then reads no guard number, on either side, and the ledger entry records that the guard did not apply (`"guard": {"applies": false, "reason": …}`). It never reads the `default` row for another implementation: a change to `find_then_type` alone cannot move that row, so reading it would pass every candidate while saying nothing. What does protect the other implementation is the verifier's replay of every recorded benchmark target (§4.3): a change to a shared part must leave both implementations' recordings answering, and the other target's scores are written into the ledger entry (`other_targets`) for the human who promotes the change. They are not gated. The gate reads the benchmark's found F1 (coverage) and typed F1 (exactness) where the text below, written for the triple corpus, says soft-F1 and strict-F1; the reasoning is unchanged:
+
+- **Improvement (benchmark dev):** found F1 improves by more than ε and typed F1 does not regress at all (coverage-driven), **or** typed F1 improves by more than ε and found F1 dips by at most `coverageSlack` = 0.05 (exactness-driven). ε is the implementation's (table above), not the triple corpus's 0.005: every experiment that changes a prompt re-records.
+- **No holdout collapse:** typed F1 on the holdout document ≥ incumbent − the implementation's holdout slack. One document is a noisy veto: a rejection on this ground alone deserves a human look before the hypothesis is written off.
+- **Guard:** where it applies (above), the triple corpus's dev strict-F1 for the `default` variant ≥ incumbent − 0.02 (`guardSlack`).
 - **Integrity:** the diff touches none of the frozen paths: `tests/integration/pipelines/_harness/`, `tests/integration/fixtures/pipelines/extraction_benchmark/`, `tests/integration/fixtures/pipelines/individual_extraction/`, `tests/integration/fixtures/dr_spec/`, `scripts/quality_tournament.py`, `scripts/benchmark_replay.py`, `scripts/extraction_benchmark.py`, `experiments/ledger.jsonl`; and no prompt or code change names a benchmark document.
 - **Health:** the tests for what the change touched pass, and the domain-purity check passes (`scripts/check_domain_imports.py`). The full backend suite runs in CI when the change is promoted to `main`.
 - **Fail closed:** a missing number fails the gate, and the verifier reproduces every number the gate reads before it is applied.
@@ -234,9 +245,11 @@ Loop C started from ranked hypotheses rather than a cold start (full rationale i
 
 - **Definition-driven / retrieval-based TYPING — found NOT viable as baseline (#1141, #1138).** Generic ArchiMate class definitions don't embed near specific instance names (e.g. "Nextflow"→`applicationcomponent` ranks 32/186), so vector retrieval is the wrong tool for *typing*. Retained as a component behind an `extraction_mode` flag but not baseline; the right use of vector retrieval is *recognition* (above).
 
-### Benchmark backlog (2026-11, seeded in `.claude/workflows/karpathy-loop.js`)
+### Benchmark backlogs (2026-11, seeded in `.claude/workflows/karpathy-loop.js`)
 
-Each maps to the benchmark failure kinds it should move.
+One backlog per implementation (`BACKLOGS`): a hypothesis is a change to one implementation's shape, and the ledger scopes hypothesis ids by implementation. Each hypothesis maps to the benchmark failure kinds it should move.
+
+**`default` (the two-pass shape):**
 
 - **Offer the whole class catalog** (`full_class_catalog`). Measured before any LLM call: for 150 of the 297 gold individuals, neither the gold class nor an acceptable one is among the 50 classes the identify prompt offers for the chunk that evidences the individual (Wikimedia Enterprise 60 of 99, where no motivation-layer class is ever offered; Edit check 40 of 76; GitLab 50 of 122). The prompt tells the model to pick the closest listed class, so those are mistyped by construction. The whole catalog is 193 references and titles.
 - **Class definitions in the prompt** (`class_definitions_in_prompt`). The prompt lists `reference (Title)` only; DR's definitions and their "Use X instead when…" guidance never reach the model.
@@ -248,7 +261,20 @@ Each maps to the benchmark failure kinds it should move.
 - **One class per individual at merge** (`one_class_per_individual_at_merge`).
 - **Relationships across chunks** (`cross_chunk_relationships`). Blocked in the workflow's backlog: the gate reads no relationship measure, so this change could not pass it however well it works. Unblock it when relationship recall becomes a gate measure.
 
-**Baseline (recorded 2026-11-12 with `google/gemini-3-flash-preview`):** dev found F1 0.411, typed F1 0.114; holdout found F1 0.326, typed F1 0.156; triple-corpus guard dev strict-F1 0.932. On the dev documents 126 gold individuals are not found (41 core), 52 are found but not typed correctly (16 of those carry an accepted class beside one that is not: the pipeline proposes an individual in every class any chunk typed it with), 57 predictions match nothing, and 133 of 136 stated relationships are missing. Statements are the largest gap: 2 of the dev documents' 41 motivation-layer individuals are found, and 1 of the holdout document's 43. Per-document numbers and the run-to-run spread are in `local-server/experiments/README.md`.
+**`find_then_type`.** It already offers the whole class catalog with the opening of each definition, finds statements as individuals and gives an individual one class, so `full_class_catalog`, `class_definitions_in_prompt`, `statement_individuals` and `one_class_per_individual_at_merge` are not in its backlog. Its backlog is written from the committed recording's dev failure counts (18 core and 67 supporting individuals missed, 15 mistyped, 93 spurious, 109 relationships missed) and from scratch runs on 2026-11-14 in which the find answers were held fixed and only typing varied:
+
+- **Type a mention from all of its occurrences** (`type_from_all_occurrences`). Typing answers "none" for about a quarter of the mentions whose name matches a gold individual (45 of 180), the same ones each take, giving as its reason that the mention is "only a heading or table label here" or "only cited in passing". A mention is typed from its first placed occurrence only (`_Candidate.typed_in`).
+- **Structure in the typing context** (`structure_in_typing_context`): the passage's heading path and, in a table, the header row. Find is told to include what is named only in a table or a diagram; typing sees a 1,200-character window and is told to answer "none" for a repeat of a heading.
+- **A scope question before the class** (`scope_question_at_typing`). 93 predictions on the dev documents match nothing in gold, the largest count that is not relationships; whether a mention belongs in the model is decided only as a side effect of whether some class fits.
+- **A majority of three typing calls** (`typing_majority_vote`). A repeat of the same typing call changes about one answer in six (16.5%).
+- **Keep the relate stage inside its output limit** (`relate_within_output_limit`), blocked. With Claude Haiku 5.5 the relate answer was cut at 8,000 output tokens on the GitLab document in two of four takes (a failed chunk: the take is not scored), and relationship recall on the Edit check document came out between 0.00 and 0.09. The gate reads no relationship measure, so the loop cannot credit this; it also decides whether a recording of the GitLab document succeeds, so it is worth doing by hand, outside the loop, before the loop is run against this implementation in earnest. The relate stage is shared with `default`.
+- **Relationships across chunks** (`cross_chunk_relationships`), blocked, as for `default`.
+
+Tried in those scratch runs and not in the backlog: whole class definitions in the catalog instead of their first 260 characters (no gain: dev typed F1 0.446), and loosening the typing prompt's "none" rule by wording alone (13 more right, 24 more wrong, 78 more mentions recorded that gold does not hold: dev typed F1 0.41).
+
+**Baseline of `find_then_type` (recorded 2026-11-13 with `claude-haiku-5-5`, configuration `extraction-find-then-type`):** dev found F1 0.534, typed F1 0.465; holdout found F1 0.513, typed F1 0.481; the triple-corpus guard does not apply.
+
+**Baseline of `default` (recorded 2026-11-12 with `google/gemini-3-flash-preview`, configuration `extraction-openrouter-default`):** dev found F1 0.411, typed F1 0.114; holdout found F1 0.326, typed F1 0.156; triple-corpus guard dev strict-F1 0.932. On the dev documents 126 gold individuals are not found (41 core), 52 are found but not typed correctly (16 of those carry an accepted class beside one that is not: the pipeline proposes an individual in every class any chunk typed it with), 57 predictions match nothing, and 133 of 136 stated relationships are missing. Statements are the largest gap: 2 of the dev documents' 41 motivation-layer individuals are found, and 1 of the holdout document's 43. Per-document numbers and the run-to-run spread are in `local-server/experiments/README.md`.
 
 Found while building the benchmark, not loop hypotheses: a response the provider errors on part-way (OpenRouter `finish_reason: "error"`) or cuts at the 8,000-token output limit fails to parse and is treated as a chunk with no individuals, with only a warning (it happened on the first recording: a chunk that yields about 30 individuals came back empty); the merge key drops corporate suffixes, so "Wikimedia Enterprise" (the product) and "Wikimedia Enterprise LLC" (the legal entity) would merge into one individual; and applying a proposal re-reads all its operations for each one applied, so a 2,000-operation proposal (a schema bundle) takes minutes.
 
@@ -264,8 +290,8 @@ Found while building the benchmark, not loop hypotheses: a response the provider
 local-server/
 ├── scripts/
 │   ├── quality_loop.py            # Loop A (extended: soft-F1 objective, wider space, restarts)
-│   ├── quality_tournament.py      # Loop B; ends with the benchmark pass
-│   ├── benchmark_replay.py        # the default pipeline over the benchmark documents, from cassettes (or --record)
+│   ├── quality_tournament.py      # Loop B; ends with the benchmark pass for --implementation / --configuration
+│   ├── benchmark_replay.py        # an implementation + configuration over the benchmark documents, from cassettes (or --record)
 │   ├── extraction_benchmark.py    # validate / load / score / run against a running server
 │   └── record_default_cassettes.py  # re-record the triple corpus
 ├── experiments/
@@ -279,16 +305,22 @@ local-server/
     └── fixtures/.../_metrics/*.jsonl   # existing telemetry (unchanged schema, new metric keys)
 ```
 
-Ledger entry shape (one line per experiment; `dev` and `holdout` are benchmark measures, `guard` the triple corpus; entries before the 2026-11 baseline reset carry triple-corpus metrics in `dev`/`holdout`; the numbers here are illustrative):
+Ledger entry shape (one line per experiment; `implementation` and `configuration` say what was refined and measured, and hypothesis ids are scoped by implementation; `dev` and `holdout` are benchmark measures, `guard` the triple corpus, or `{"applies": false, "reason": …}` where it does not apply; `margins` the gate margins the decision was made by; `other_targets` what the verifier saw of every other recorded benchmark target; entries before the 2026-11 baseline reset carry triple-corpus metrics in `dev`/`holdout`; the numbers here are illustrative):
 
 ```json
-{"experiment_id": "...", "iteration": 12, "hypothesis": "full_class_catalog",
+{"experiment_id": "12-default-full_class_catalog", "iteration": 12,
+ "implementation": "default", "configuration": "extraction-openrouter-default",
+ "model": "google/gemini-3-flash-preview", "hypothesis": "full_class_catalog",
  "variant": "default+full_class_catalog", "diff_stat": "...", "base_commit": "...",
  "dev": {"typed_f1": 0.41, "f1": 0.58, "recall_core": 0.66, "type_accuracy": 0.71},
  "holdout": {"typed_f1": 0.37, "f1": 0.55},
- "guard": {"strict_f1": 0.92, "soft_f1": 0.93},
+ "guard": {"applies": true, "variant": "default", "strict_f1": 0.92, "soft_f1": 0.93},
+ "margins": {"epsilon": 0.02, "holdout_slack": 0.04, "coverage_slack": 0.05, "guard_slack": 0.02, "provisional": false},
+ "other_targets": [{"implementation": "find_then_type", "configuration": "extraction-find-then-type", "status": "scored", "devTypedF1": 0.465, "devFoundF1": 0.534}],
  "decision": "accepted", "reason": "", "cost_usd": 0.11, "agent": "worktree-2"}
 ```
+
+A `baseline_reset` entry that names an `implementation` resets that implementation's history only; one that names none resets every implementation's. The 2026-11-14 entry records the change that made the measurement scripts select by implementation and configuration (frozen paths, changed outside the loop): no score moved, and its `baseline` field holds both implementations' baselines.
 
 ## 9. Build plan
 

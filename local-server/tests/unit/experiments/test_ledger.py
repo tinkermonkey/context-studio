@@ -35,6 +35,8 @@ def _entry(**overrides):
     base = {
         "experiment_id": "1-copular_appositive_handling",
         "iteration": 1,
+        "implementation": "default",
+        "configuration": "extraction-openrouter-default",
         "hypothesis": "copular_appositive_handling",
         "variant": "open_v1+copular",
         "diff_stat": "1 file changed, 20 insertions(+)",
@@ -469,6 +471,172 @@ class TestRejectedHypothesesScopedToBaselineReset:
             ledger_path=ledger_path,
         )
         assert rejected_hypotheses(ledger_path) == ["a"]
+
+
+class TestEntriesNameWhatTheyRefined:
+    @pytest.mark.parametrize("field", ["implementation", "configuration"])
+    @pytest.mark.parametrize("decision", ["accepted", "rejected", "unmeasured"])
+    def test_an_experiment_entry_without_its_target_is_refused(self, field, decision):
+        entry = _entry(decision=decision)
+        del entry[field]
+        with pytest.raises(LedgerEntryError, match=field):
+            validate_entry(entry)
+        with pytest.raises(LedgerEntryError, match=field):
+            validate_entry(_entry(decision=decision, **{field: ""}))
+
+    def test_a_baseline_reset_needs_no_target(self, tmp_path):
+        ledger_path = tmp_path / "ledger.jsonl"
+        entry = append_baseline_reset("new spec", "dr_spec", ledger_path=ledger_path)
+        assert "implementation" not in entry and "configuration" not in entry
+        validate_entry(entry)
+
+    def test_a_guard_that_does_not_apply_is_recorded_as_such(self, tmp_path):
+        ledger_path = tmp_path / "ledger.jsonl"
+        guard = {"applies": False, "reason": "no triple-corpus recordings of find_then_type"}
+        append_entry(
+            _entry(implementation="find_then_type", guard=guard, decision="rejected"),
+            ledger_path=ledger_path,
+        )
+        assert read_entries(ledger_path)[0]["guard"] == guard
+
+
+class TestHypothesesScopedByImplementation:
+    def _ledger(self, tmp_path):
+        ledger_path = tmp_path / "ledger.jsonl"
+        for implementation, hypothesis, decision in [
+            ("default", "cross_chunk_relationships", "rejected"),
+            ("default", "full_class_catalog", "accepted"),
+            ("find_then_type", "type_from_all_occurrences", "rejected"),
+            ("find_then_type", "full_class_catalog", "rejected"),
+        ]:
+            append_entry(
+                _entry(
+                    experiment_id=f"1-{implementation}-{hypothesis}",
+                    implementation=implementation,
+                    hypothesis=hypothesis,
+                    decision=decision,
+                ),
+                ledger_path=ledger_path,
+            )
+        return ledger_path
+
+    def test_a_rejection_under_one_implementation_leaves_the_id_open_under_another(self, tmp_path):
+        ledger_path = self._ledger(tmp_path)
+        assert rejected_hypotheses(ledger_path, "default") == ["cross_chunk_relationships"]
+        assert rejected_hypotheses(ledger_path, "find_then_type") == [
+            "type_from_all_occurrences",
+            "full_class_catalog",
+        ]
+        assert accepted_hypotheses(ledger_path, "default") == ["full_class_catalog"]
+        assert accepted_hypotheses(ledger_path, "find_then_type") == []
+
+    def test_without_an_implementation_every_one_is_read(self, tmp_path):
+        ledger_path = self._ledger(tmp_path)
+        assert rejected_hypotheses(ledger_path) == [
+            "cross_chunk_relationships",
+            "type_from_all_occurrences",
+            "full_class_catalog",
+        ]
+
+    def test_an_implementation_with_no_entries_has_no_history(self, tmp_path):
+        ledger_path = self._ledger(tmp_path)
+        assert rejected_hypotheses(ledger_path, "open_v1") == []
+        assert accepted_hypotheses(ledger_path, "open_v1") == []
+
+    def test_an_entry_written_before_the_field_counts_for_every_implementation(self, tmp_path):
+        ledger_path = tmp_path / "ledger.jsonl"
+        legacy = _entry(hypothesis="gap_fill_stage", decision="rejected")
+        del legacy["implementation"], legacy["configuration"]
+        ledger_path.write_text(json.dumps(legacy) + "\n")
+        assert rejected_hypotheses(ledger_path, "default") == ["gap_fill_stage"]
+        assert rejected_hypotheses(ledger_path, "find_then_type") == ["gap_fill_stage"]
+
+    def test_a_reset_that_names_an_implementation_resets_only_its_history(self, tmp_path):
+        ledger_path = self._ledger(tmp_path)
+        entry = append_baseline_reset(
+            "find_then_type recorded again",
+            "extraction_benchmark",
+            ledger_path=ledger_path,
+            implementation="find_then_type",
+            configuration="extraction-find-then-type",
+            baseline={"dev": {"typed_f1": 0.47}},
+        )
+        assert entry["implementation"] == "find_then_type"
+        assert entry["configuration"] == "extraction-find-then-type"
+        assert entry["baseline"] == {"dev": {"typed_f1": 0.47}}
+        assert rejected_hypotheses(ledger_path, "find_then_type") == []
+        assert rejected_hypotheses(ledger_path, "default") == ["cross_chunk_relationships"]
+        assert accepted_hypotheses(ledger_path, "default") == ["full_class_catalog"]
+        # Read without an implementation, only a reset of everything counts
+        assert len(entries_since_last_baseline_reset(ledger_path)) == 4
+
+    def test_a_reset_that_names_no_implementation_resets_every_history(self, tmp_path):
+        ledger_path = self._ledger(tmp_path)
+        append_baseline_reset("new gold files", "extraction_benchmark", ledger_path=ledger_path)
+        for implementation in ("default", "find_then_type", None):
+            assert rejected_hypotheses(ledger_path, implementation) == []
+            assert accepted_hypotheses(ledger_path, implementation) == []
+
+    def test_reads_never_return_a_reset_entry(self, tmp_path):
+        ledger_path = self._ledger(tmp_path)
+        append_baseline_reset(
+            "find_then_type recorded again",
+            "extraction_benchmark",
+            ledger_path=ledger_path,
+            implementation="find_then_type",
+        )
+        for implementation in ("default", "find_then_type", None):
+            entries = entries_since_last_baseline_reset(ledger_path, implementation)
+            assert all(e["decision"] != BASELINE_RESET_DECISION for e in entries)
+
+    def test_cli_lists_one_implementations_hypotheses(self, tmp_path, capsys):
+        ledger_path = self._ledger(tmp_path)
+        exit_code = ledger_cli(
+            [
+                "--ledger-path",
+                str(ledger_path),
+                "rejected-hypotheses",
+                "--implementation",
+                "find_then_type",
+            ]
+        )
+        assert exit_code == 0
+        assert capsys.readouterr().out.split() == [
+            "type_from_all_occurrences",
+            "full_class_catalog",
+        ]
+        ledger_cli(
+            [
+                "--ledger-path",
+                str(ledger_path),
+                "accepted-hypotheses",
+                "--implementation",
+                "default",
+            ]
+        )
+        assert capsys.readouterr().out.split() == ["full_class_catalog"]
+
+    def test_cli_baseline_reset_can_name_an_implementation(self, tmp_path, capsys):
+        ledger_path = self._ledger(tmp_path)
+        exit_code = ledger_cli(
+            [
+                "--ledger-path",
+                str(ledger_path),
+                "baseline-reset",
+                "--ontology-context",
+                "extraction_benchmark",
+                "--implementation",
+                "find_then_type",
+                "--configuration",
+                "extraction-find-then-type",
+                "recorded again",
+            ]
+        )
+        assert exit_code == 0
+        reset = read_entries(ledger_path)[-1]
+        assert reset["implementation"] == "find_then_type"
+        assert reset["configuration"] == "extraction-find-then-type"
+        assert rejected_hypotheses(ledger_path, "find_then_type") == []
 
 
 class TestCli:

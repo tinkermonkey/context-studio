@@ -27,20 +27,26 @@ Loop A/B never make live LLM calls (§4.1/§5) — every variant here must be
 fully replayable from recorded cassettes or, like `open_v1`, use no LLM at
 all. See `build_registry()` for which variants are registered today and why.
 
-A variant whose cassettes no longer answer its prompts is reported as STALE at
-the top of the digest, and when it is a `default*` variant (the ones Loop C
-reads) the run exits with `EXIT_STALE_CASSETTES`: the pipelines swallow a
-missing recording, so without that check a stale cassette set reads as a
-pipeline scoring low.
+The run ends with the benchmark pass (`scripts/benchmark_replay.py`): one
+target, an implementation of the pipeline type with one of its configurations
+(`--implementation`, `--configuration`, each defaulting through the pipeline
+registry as in that script), over the long benchmark documents, scored on the
+individuals it finds against hand-made gold extractions. Its dev and holdout
+rows (`benchmark_dev`, `benchmark_holdout`) are what Loop C optimises. The
+triple corpus above is Loop C's regression guard for an implementation a
+variant here runs (`default`); for one no variant runs (`find_then_type`) the
+guard does not apply, and the benchmark report says so (`guard.applies`).
 
-The run ends with the benchmark pass (`scripts/benchmark_replay.py`): the
-default pipeline over the long benchmark documents, scored on the individuals
-it finds against hand-made gold extractions. Its dev and holdout rows
-(`benchmark_dev`, `benchmark_holdout`) are what Loop C optimises; the triple
-corpus above is its regression guard.
+A variant whose cassettes no longer answer its prompts is reported as STALE at
+the top of the digest. The run exits with `EXIT_STALE_CASSETTES` when the
+stale recordings are the chosen target's: its benchmark cassettes, or a
+variant that runs its implementation. The pipelines swallow a missing
+recording, so without that check a stale cassette set reads as a pipeline
+scoring low.
 
 Usage (from local-server/, venv active):
     python scripts/quality_tournament.py --pipeline individual
+    python scripts/quality_tournament.py --implementation find_then_type
 """
 
 import argparse
@@ -56,7 +62,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Awaitable, Callable, cast
+from typing import Any, Awaitable, Callable
 from uuid import uuid4
 
 from adapters.embedding.caching_embedding_service import CachingEmbeddingService
@@ -74,26 +80,17 @@ from adapters.persistence.sqlite.extraction_run_repo import (
 from adapters.persistence.sqlite.models import Base
 from domain.extraction.services import ExtractionService
 from domain.ontology.ports import EmbeddingService
-from domain.pipelines.entities import PipelineRunStatus, PipelineType
+from domain.pipelines.entities import PipelineType
 from domain.pipelines.exceptions import PipelineExecutionError
-from domain.pipelines.individual_extraction.configurations.open_v1 import (
-    get_open_v1_config,
-)
-from domain.pipelines.individual_extraction.open_orchestrator import (
-    OpenIndividualExtractionOrchestrator,
-)
 from domain.pipelines.individual_extraction.orchestrator import (
-    IndividualExtractionOrchestrator,
     IndividualExtractionState,
 )
-from domain.pipelines.ports import LLMProvider
 from scripts import benchmark_replay
 from scripts.default_pipeline_ontology import (
     DefaultPipelineOntologyResolver,
     dr_spec_available,
 )
 from scripts.eval_ontology import build_eval_ontology
-from scripts.eval_ontology_definition_coverage import check_definition_coverage
 from scripts.quality_loop import (
     _INDIVIDUAL_SPACE,
     _METRICS_DIR,
@@ -156,10 +153,6 @@ _TOURNAMENT_PIPELINE_TAG = "quality_tournament_individual_extraction"
 # are not a measurement, and nothing downstream should read them as one.
 EXIT_STALE_CASSETTES = 3
 
-# The variants Loop C reads numbers from. Stale cassettes for one of these end
-# the run with EXIT_STALE_CASSETTES; for any other variant they are only flagged.
-_GATING_VARIANT_PREFIX = "default"
-
 # Every cassette provider a variant replayed from. The pipelines catch a missing
 # recording (the extraction service returns no triples, open_v1 skips its label
 # canonicalization), so without counting each provider's misses a stale cassette
@@ -191,8 +184,8 @@ def _cassette_use(variant: str) -> dict[str, int]:
 # Dedicated directory for the `default` LLM pipeline's cassettes, SEPARATE from
 # the quality suite's own `cassettes/individual_extraction/` set: those are
 # recorded against each fixture's pinned model (claude-opus-4-7), whereas the
-# default variant replays cassettes recorded against the phase-1 override model
-# (DEFAULT_PIPELINE_MODEL). Sharing a path would collide (see
+# default variant replays cassettes recorded against the model of
+# triple_corpus_target(). Sharing a path would collide (see
 # scripts/record_default_cassettes.py).
 _DEFAULT_CASSETTE_DIR = (
     Path(__file__).parent.parent
@@ -204,15 +197,23 @@ _DEFAULT_CASSETTE_DIR = (
 )
 _DEFAULT_CASSETTE_PREFIX = "individual_extraction_"
 
-# Phase-1 model for the `default` LLM pipeline. The corpus fixtures pin
-# claude-opus-4-7, but the `default` variant is recorded and replayed against
-# this cheaper OpenRouter model for the first tournament phase (cost: pennies vs
-# dollars). The cassette key includes the model, so the recorder
-# (scripts/record_default_cassettes.py) and this replay MUST override the
-# fixture model to the SAME value or every replay misses. To switch models,
-# change this one constant and re-record. `google/…` routes to OpenRouter via
-# LLMProviderRouter (OpenAI/Anthropic only accept their own model lists).
-DEFAULT_PIPELINE_MODEL = "google/gemini-3-flash-preview"
+# The implementation the `default` / `default+grounding` variants run, and the
+# triple corpus's cassettes were recorded with.
+TRIPLE_CORPUS_IMPLEMENTATION = "default"
+
+
+def triple_corpus_target() -> benchmark_replay.BenchmarkTarget:
+    """
+    What the `default*` variants run: the implementation above with the
+    configuration its recordings were made with (benchmark_replay.RECORDED_WITH).
+
+    The corpus fixtures pin claude-opus-4-7; the recorder
+    (scripts/record_default_cassettes.py) and the replay here both replace it
+    with this target's model. The cassette key includes the model, so the two
+    MUST use the same one or every replay misses: both read it from here.
+    """
+    return benchmark_replay.resolve_target(TRIPLE_CORPUS_IMPLEMENTATION)
+
 
 # Cassette location for the `open_v1` LLM label-canonicalization call. One file
 # per scenario named `individual_canon_<scenario>.json`, recorded by
@@ -249,11 +250,6 @@ _RECOGNITION_EPISODES_DIR = (
 # _metrics/<pipeline_type>.jsonl, so this determines the file name.
 _RECOGNITION_PIPELINE_TAG = "individual_recognition"
 
-# A/B Evaluation promotion criteria for grounded_v1 vs default baseline (Phase 4).
-# grounded_v1 must meet or exceed the threshold on BOTH metrics to be promoted.
-_GROUNDED_PROMOTION_STRICT_F1_THRESHOLD = 0.941
-_GROUNDED_PROMOTION_SOFT_F1_THRESHOLD = 0.952
-
 
 def _canon_cassette_path(scenario: str) -> Path:
     """Return the recorded-cassette path for one `open_v1` canonicalization scenario."""
@@ -266,35 +262,6 @@ def _canon_cassette_provider(scenario: str) -> CassetteLLMProvider | None:
     return _track("open_v1", CassetteLLMProvider(path)) if path.exists() else None
 
 
-# Cassette location for the `grounded_v1` NLP-grounded typing variant's per-chunk
-# confirm calls. One file per scenario named `individual_grounded_typing_<scenario>.json`,
-# recorded by scripts/record_grounded_cassettes.py against the eval ontology this
-# tournament grounds against. The per-chunk typing prompt is built only from scenario-fixed
-# inputs (spaCy chunks + their vector-retrieved candidate titles), so one recording per
-# scenario replays across the whole knob sweep. When a scenario has no cassette the
-# provider is None and the grounded typing stage self-skips.
-_GROUNDED_CASSETTE_DIR = (
-    Path(__file__).parent.parent
-    / "tests"
-    / "integration"
-    / "fixtures"
-    / "cassettes"
-    / "individual_grounded_typing"
-)
-_GROUNDED_CASSETTE_PREFIX = "individual_grounded_typing_"
-
-
-def _grounded_cassette_path(scenario: str) -> Path:
-    """Return the recorded-cassette path for one `grounded_v1` scenario."""
-    return _GROUNDED_CASSETTE_DIR / f"{_GROUNDED_CASSETTE_PREFIX}{scenario}.json"
-
-
-def _grounded_cassette_provider(scenario: str) -> CassetteLLMProvider | None:
-    """Cassette provider for a scenario's grounded typing calls, or None if unrecorded."""
-    path = _grounded_cassette_path(scenario)
-    return _track("grounded_v1", CassetteLLMProvider(path)) if path.exists() else None
-
-
 # Every scenario the `default` variant is asked to replay across a full
 # tournament run: the dev/holdout corpus plus the always-reported diagnostic
 # groups (see `_run_variant` and `dataset_split.REPLAY_SCENARIOS`). The guard in
@@ -302,9 +269,6 @@ def _grounded_cassette_provider(scenario: str) -> CassetteLLMProvider | None:
 # these, so an admitted variant can never crash mid-tournament on a missing
 # recording.
 _DEFAULT_REPLAY_SCENARIOS = list(REPLAY_SCENARIOS)
-
-# Every scenario the `grounded_v1` variant is asked to replay (identical to default).
-_GROUNDED_REPLAY_SCENARIOS = list(REPLAY_SCENARIOS)
 
 RunScenario = Callable[[dict[str, Any], str], Awaitable[list[dict]]]
 
@@ -324,20 +288,6 @@ def _default_cassettes_present() -> bool:
     `_REPLAY_PROVIDERS`).
     """
     return all(_default_cassette_path(scenario).exists() for scenario in _DEFAULT_REPLAY_SCENARIOS)
-
-
-def _grounded_cassettes_present() -> bool:
-    """
-    Report whether the `grounded_v1` NLP-grounded typing variant can be replayed fully offline.
-
-    True only when a recorded cassette exists for every scenario the variant
-    would replay (`_GROUNDED_REPLAY_SCENARIOS`). The guard in `build_registry`
-    admits `grounded_v1` only once cassettes exist for all scenarios, so an
-    admitted variant can never crash mid-tournament on a missing recording.
-    """
-    return all(
-        _grounded_cassette_path(scenario).exists() for scenario in _GROUNDED_REPLAY_SCENARIOS
-    )
 
 
 @dataclass(frozen=True)
@@ -365,6 +315,12 @@ class Variant:
     base_config: dict[str, Any]
     knob_space: dict[str, list]
     run_scenario: RunScenario
+    # What the variant runs, for the telemetry rows and the digest: the
+    # implementation and configuration it is built from and the model its LLM
+    # calls ask for. A variant is these plus the knobs of base_config.
+    implementation: str = ""
+    configuration: str = ""
+    model: str = ""
 
 
 _REGISTRY: dict[str, Variant] = {}
@@ -394,9 +350,18 @@ def _make_open_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -> Va
     into the grounding stage so the schema-grounding knobs move the metric;
     grounding self-skips per scenario when the ontology can't be resolved.
     """
+    implementations, configurations = benchmark_replay.pipeline_registries()
+    implementation = "open_v1"
+    configuration = benchmark_replay.default_configuration(implementation)
+    orchestrator = implementations.get(benchmark_replay.PIPELINE_TYPE, implementation)
+    registered = configurations.get_latest(
+        benchmark_replay.PIPELINE_TYPE, implementation, configuration
+    )
+    if orchestrator is None or registered is None:
+        raise RuntimeError(f"the pipeline registry has no {implementation!r} implementation")
 
     async def run_scenario(config: dict[str, Any], scenario: str) -> list[dict]:
-        orch = OpenIndividualExtractionOrchestrator(
+        orch = orchestrator(
             llm_provider=_canon_cassette_provider(scenario),
             nlp_processor=nlp,
             embedding_service=embedding,
@@ -418,112 +383,12 @@ def _make_open_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -> Va
     # switch it back off if it fails to help.
     return Variant(
         name="open_v1",
-        base_config={**get_open_v1_config(), "llm_canonicalization": True},
+        base_config={**registered.config, "llm_canonicalization": True},
         knob_space=dict(_INDIVIDUAL_SPACE),
         run_scenario=run_scenario,
-    )
-
-
-def _make_grounded_v1_variant(nlp, embedding, eval_repo=None, eval_index=None) -> Variant:
-    """
-    Build the `grounded_v1` variant: the NLP-grounded typing individual extraction pipeline.
-
-    Uses ExtractionService with extraction_mode="nlp_grounded", which replaces the
-    LLM pass-1 identification with spaCy noun chunks + vector retrieval + LLM
-    confirmation for typing, while reusing the shared LLM pass-2 relationship
-    extraction (design §1141, issue #1141). Replays entirely from recorded
-    cassettes for both per-chunk typing confirms and pass-2 relationship calls,
-    so the variant can be evaluated offline without live LLM calls (Loop A/B constraint).
-
-    `eval_repo`/`eval_index` wire the imported ontology (scripts/eval_ontology.py)
-    into the typing stage for candidate class retrieval; typing self-skips per
-    scenario when the ontology can't be resolved.
-    """
-
-    async def run_scenario(config: dict[str, Any], scenario: str) -> list[dict]:
-        cassette_provider = _grounded_cassette_provider(scenario)
-        assert cassette_provider is not None, f"Cassette not found for scenario {scenario}"
-        engine = create_local_db_engine("sqlite:///:memory:")
-        Base.metadata.create_all(engine)
-        session_factory = create_session_factory(engine)
-        extraction_service = ExtractionService(
-            ontology_repo=eval_repo,
-            embedding_service=embedding,
-            llm=cast(LLMProvider, cassette_provider),
-            nlp=nlp,
-            reference_sources=[FakeReferenceSource()],
-            event_publisher=InProcessEventPublisher(),
-            extraction_repo=SQLiteExtractionRepository(session_factory),
-            extraction_run_repo=SQLiteExtractionRunRepository(session_factory),
-            similarity_threshold=config.get("similarity_threshold", 0.85),
-            schema_index=eval_index,
-            extraction_mode="nlp_grounded",
-        )
-        orch = IndividualExtractionOrchestrator(
-            llm_provider=cast(LLMProvider, cassette_provider),
-            extraction_service=extraction_service,
-        )
-        fixture = dict(load_fixture("individual_extraction", scenario))
-        # ExtractionService.extract_triples() resolves ontology_id via
-        # OntologyRepository.get_taxonomy(), which looks up by the taxonomy's
-        # real id (a UUID) -- NOT by symbolic identifier. The fixture pins the
-        # symbolic identifier ("dr_spec"), so it must be resolved to the actual
-        # taxonomy id here first, the same way `_make_default_variant` resolves
-        # and overrides `ontology_id` for the `default` variant. If this
-        # resolution fails (e.g. the DR spec checkout is absent -- see
-        # eval_ontology.build_eval_ontology), extract_triples would fail with
-        # "Ontology dr_spec not found", catch that internally, and silently
-        # return zero triples -- a harness bug indistinguishable on the
-        # scoreboard from a genuine pipeline miss. Fail loudly instead: this is
-        # a precondition for a trustworthy score, not a runtime possibility to
-        # degrade past.
-        taxonomy = eval_repo.get_by_identifier(fixture["ontology_id"])
-        if taxonomy is None:
-            raise RuntimeError(
-                f"grounded_v1 harness: ontology identifier {fixture['ontology_id']!r} "
-                f"did not resolve in eval_repo for scenario {scenario!r} (DR spec "
-                "checkout missing?) -- refusing to score this scenario, since "
-                "extract_triples would silently return zero triples for it."
-            )
-        fixture["ontology_id"] = taxonomy.id
-        state = IndividualExtractionState(
-            run_id=str(uuid4()),
-            pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
-            input_data=fixture,
-        )
-        result_state = await orch.execute(state)
-        # extract_triples() catches its own internal failures (LLM errors,
-        # JSON parse failures, etc.) and returns a COMPLETED state with zero
-        # triples rather than raising -- so a clean-looking empty result here
-        # can mean either "the pipeline genuinely found nothing" or "something
-        # broke inside extract_triples." Surface the latter loudly rather than
-        # let it read as a legitimate zero score.
-        if result_state.current_status != PipelineRunStatus.COMPLETED:
-            raise RuntimeError(
-                f"grounded_v1 harness: scenario {scenario!r} did not complete "
-                f"(status={result_state.current_status})"
-            )
-        warnings = (result_state.result or {}).get("warnings") or []
-        failure_warnings = [w for w in warnings if str(w).startswith("Extraction failed:")]
-        if failure_warnings:
-            raise RuntimeError(
-                f"grounded_v1 harness: scenario {scenario!r} completed but "
-                f"extract_triples reported an internal failure: {failure_warnings}"
-            )
-        return (result_state.result or {}).get("triples", [])
-
-    # Base config for nlp_grounded mode.
-    # Every key appears in knob_space (as single-valued) so coordinate_ascent's
-    # restart jitter can never drop a key (see Variant.knob_space docstring).
-    grounded_base_config = {
-        "similarity_threshold": 0.85,
-    }
-
-    return Variant(
-        name="grounded_v1",
-        base_config=grounded_base_config,
-        knob_space={key: [value] for key, value in grounded_base_config.items()},
-        run_scenario=run_scenario,
+        implementation=implementation,
+        configuration=configuration,
+        model=str(registered.config.get("model") or ""),
     )
 
 
@@ -536,8 +401,10 @@ def _make_default_variant(
     Build a `default` LLM-pipeline variant that replays entirely from cassettes.
 
     `run_scenario` reconstructs the exact wiring the recorder captured against
-    (`scripts/record_default_cassettes.py`): the real
-    `IndividualExtractionOrchestrator` over an `ExtractionService` with
+    (`scripts/record_default_cassettes.py`): the orchestrator of
+    `triple_corpus_target()` (the registry's `default` implementation, with the
+    model of the configuration its cassettes were recorded with) over an
+    `ExtractionService` with
     `FakeEmbeddingService` / `FakeNLPProcessor` / `FakeReferenceSource`, but with
     a `CassetteLLMProvider` in place of the live provider — so no live LLM call
     is ever made (§4.1/§5). Crucially it resolves each scenario's ontology
@@ -557,7 +424,8 @@ def _make_default_variant(
     list) so `coordinate_ascent`'s wholesale, restart-time config replacement
     can never drop a fixed key (see `Variant.knob_space`).
     """
-    name = "default+grounding" if grounding else "default"
+    target = triple_corpus_target()
+    name = f"{target.implementation}+grounding" if grounding else target.implementation
     base_config: dict[str, Any] = {
         "ground_to_schema": grounding,
         "require_schema_match": grounding,
@@ -581,17 +449,17 @@ def _make_default_variant(
             extraction_run_repo=SQLiteExtractionRunRepository(session_factory),
             similarity_threshold=config.get("similarity_threshold", 0.85),
         )
-        orch = IndividualExtractionOrchestrator(
+        orch = target.orchestrator(
             llm_provider=provider,
             extraction_service=extraction_service,
         )
         fixture = dict(load_fixture("individual_extraction", scenario))
         # Resolve to the SAME taxonomy the recorder used (its title is the only
         # ontology-derived value in the prompt hash) and override the
-        # fixture-pinned model to the phase-1 default — both must match
+        # fixture-pinned model to the target's — both must match
         # record_default_cassettes.py or the cassette key misses.
         fixture["ontology_id"] = taxonomy.id
-        fixture["model"] = DEFAULT_PIPELINE_MODEL
+        fixture["model"] = target.model
         state = IndividualExtractionState(
             run_id=str(uuid4()),
             pipeline_type=PipelineType.INDIVIDUAL_EXTRACTION,
@@ -613,6 +481,9 @@ def _make_default_variant(
         base_config=base_config,
         knob_space={key: [value] for key, value in base_config.items()},
         run_scenario=run_scenario,
+        implementation=target.implementation,
+        configuration=target.configuration,
+        model=target.model,
     )
 
 
@@ -641,17 +512,17 @@ def build_registry(nlp, embedding, eval_repo=None, eval_index=None) -> dict[str,
       in the prompt (`ExtractionService._build_individual_extraction_prompt`),
       not in these knobs.
 
-    - 'grounded_v1': the NLP-grounded typing variant (`ExtractionService` in
-      `nlp_grounded` mode), admitted under the same guard. Its cassettes
-      (`individual_grounded_typing/`) were removed when the prompts gained
-      source spans (#1243), so it does not register today; its last scored
-      result was a clear STAY (retrieval-based typing underperforms the
-      default), recorded in individual_extraction_refinement_learnings.md.
+    `default`/`default+grounding` register whenever their cassettes exist. To
+    re-record after a change to the two-pass prompts, or to anything that feeds
+    them (the class catalog, the predicate vocabulary), use
+    `scripts/record_default_cassettes.py --record`.
 
-    `default`/`default+grounding` register whenever their cassettes exist. The
-    two-pass `default` is the incumbent Loop C refines. To re-record after a
-    change to its prompts, or to anything that feeds them (the class catalog,
-    the predicate vocabulary), use `scripts/record_default_cassettes.py --record`.
+    No variant runs `find_then_type`: the triple corpus has no recordings of
+    it, so it is measured by the benchmark pass alone (`--implementation`). The
+    earlier `grounded_v1` variant (retrieval-based typing) is gone: its
+    cassettes were removed when the prompts gained source spans (#1243), and its
+    last scored result was a clear STAY, recorded in
+    individual_extraction_refinement_learnings.md.
     """
     register_variant(_make_open_v1_variant(nlp, embedding, eval_repo, eval_index))
 
@@ -678,26 +549,6 @@ def build_registry(nlp, embedding, eval_repo=None, eval_index=None) -> dict[str,
             "nothing for this offline tournament to replay. Record them via "
             "`python scripts/record_default_cassettes.py --record` "
             "and the 'default'/'default+grounding' variants register automatically."
-        )
-
-    if _grounded_cassettes_present() and dr_spec_available():
-        # Register the grounded_v1 variant under the same guard as default:
-        # cassettes must exist for all replay scenarios AND the DR spec checkout
-        # must be present (grounded_v1's replay set includes DR scenarios).
-        register_variant(_make_grounded_v1_variant(nlp, embedding, eval_repo, eval_index))
-    elif _grounded_cassettes_present():
-        print(
-            "note: 'grounded_v1' NLP-grounded typing variant has recorded cassettes "
-            "but the DR spec checkout is absent, so its DR-context replay scenarios "
-            "cannot be rebuilt — not registering 'grounded_v1'."
-        )
-    else:
-        print(
-            "note: 'grounded_v1' NLP-grounded typing variant not registered — no "
-            f"recorded cassettes found under {_GROUNDED_CASSETTE_DIR} for all "
-            f"{len(_GROUNDED_REPLAY_SCENARIOS)} replay scenarios. Record them via "
-            "`scripts/record_grounded_cassettes.py --record` "
-            "and the 'grounded_v1' variant registers automatically."
         )
 
     return registered_variants()
@@ -923,86 +774,6 @@ async def _build_recognition_reports(
     return reports
 
 
-def _evaluate_grounded_v1_promotion(results: list[dict[str, Any]]) -> dict[str, Any]:
-    """
-    Evaluate A/B promotion decision for grounded_v1 vs default baseline (Phase 4).
-
-    Compares grounded_v1 dev metrics against the promotion thresholds:
-    - strict-F1 ≥ 0.941 AND soft-F1 ≥ 0.952 → PROMOTE to default status
-    - Otherwise → STAY with current default
-
-    Returns a dict with:
-    - "grounded_v1_found": bool — whether grounded_v1 is in results
-    - "decision": str — "PROMOTE", "STAY", or "INCOMPLETE"
-    - "reason": str — explanation of the decision
-    - "grounded_v1_metrics": dict — grounded_v1's dev metrics (if found)
-    - "comparison": dict — side-by-side comparison with thresholds (if found)
-    """
-    grounded_result = next((r for r in results if r["variant"] == "grounded_v1"), None)
-
-    decision_dict = {
-        "grounded_v1_found": grounded_result is not None,
-        "decision": "INCOMPLETE",
-        "reason": "",
-        "grounded_v1_metrics": {},
-        "comparison": {},
-    }
-
-    if not grounded_result:
-        decision_dict["reason"] = (
-            "grounded_v1 not in tournament results — "
-            "cassettes not recorded or DR spec checkout unavailable"
-        )
-        return decision_dict
-
-    grounded_metrics = grounded_result["dev"]
-    decision_dict["grounded_v1_metrics"] = grounded_metrics
-
-    strict_f1 = grounded_metrics.get("strict_f1", 0.0)
-    soft_f1 = grounded_metrics.get("soft_f1", 0.0)
-
-    decision_dict["comparison"] = {
-        "strict_f1": {
-            "value": strict_f1,
-            "threshold": _GROUNDED_PROMOTION_STRICT_F1_THRESHOLD,
-            "meets_threshold": strict_f1 >= _GROUNDED_PROMOTION_STRICT_F1_THRESHOLD,
-        },
-        "soft_f1": {
-            "value": soft_f1,
-            "threshold": _GROUNDED_PROMOTION_SOFT_F1_THRESHOLD,
-            "meets_threshold": soft_f1 >= _GROUNDED_PROMOTION_SOFT_F1_THRESHOLD,
-        },
-    }
-
-    if (
-        strict_f1 >= _GROUNDED_PROMOTION_STRICT_F1_THRESHOLD
-        and soft_f1 >= _GROUNDED_PROMOTION_SOFT_F1_THRESHOLD
-    ):
-        decision_dict["decision"] = "PROMOTE"
-        decision_dict["reason"] = (
-            f"grounded_v1 meets promotion criteria: "
-            f"strict-F1={strict_f1:.3f} (≥ {_GROUNDED_PROMOTION_STRICT_F1_THRESHOLD:.3f}), "
-            f"soft-F1={soft_f1:.3f} (≥ {_GROUNDED_PROMOTION_SOFT_F1_THRESHOLD:.3f})"
-        )
-    else:
-        decision_dict["decision"] = "STAY"
-        missing_criteria = []
-        if strict_f1 < _GROUNDED_PROMOTION_STRICT_F1_THRESHOLD:
-            missing_criteria.append(
-                f"strict-F1={strict_f1:.3f} < {_GROUNDED_PROMOTION_STRICT_F1_THRESHOLD:.3f}"
-            )
-        if soft_f1 < _GROUNDED_PROMOTION_SOFT_F1_THRESHOLD:
-            missing_criteria.append(
-                f"soft-F1={soft_f1:.3f} < {_GROUNDED_PROMOTION_SOFT_F1_THRESHOLD:.3f}"
-            )
-        decision_dict["reason"] = (
-            f"grounded_v1 does not meet promotion criteria: {', '.join(missing_criteria)}. "
-            "Stay with current default pipeline."
-        )
-
-    return decision_dict
-
-
 def _aggregate_recognition(reports: dict[str, RecognitionMetrics]) -> dict[str, float]:
     """
     Mean dedup precision/recall/F1 + node-count ratio across recognition episodes.
@@ -1083,19 +854,24 @@ async def _run_variant(
     print(f"\n== Loop A: tuning '{variant.name}' on dev ({restarts} restarts x {passes} passes) ==")
     evaluate = _make_dev_evaluator(variant, embed_fn)
     loop_a_emitter = MetricsEmitter(_METRICS_DIR)
-    best_config, _base_metrics, _best_metrics, base_primary, best_primary, evals = (
-        await coordinate_ascent(
-            evaluate,
-            variant.base_config,
-            variant.knob_space,
-            "soft_f1",
-            loop_a_emitter,
-            f"quality_tournament_loopA_{variant.name}",
-            passes,
-            floor_key="strict_f1",
-            restarts=restarts,
-            rng=random.Random(seed),
-        )
+    (
+        best_config,
+        _base_metrics,
+        _best_metrics,
+        base_primary,
+        best_primary,
+        evals,
+    ) = await coordinate_ascent(
+        evaluate,
+        variant.base_config,
+        variant.knob_space,
+        "soft_f1",
+        loop_a_emitter,
+        f"quality_tournament_loopA_{variant.name}",
+        passes,
+        floor_key="strict_f1",
+        restarts=restarts,
+        rng=random.Random(seed),
     )
     print(
         f"   baseline soft_f1={base_primary:.3f}  tuned soft_f1={best_primary:.3f}  "
@@ -1143,6 +919,9 @@ async def _run_variant(
 
     return {
         "variant": variant.name,
+        "implementation": variant.implementation,
+        "configuration": variant.configuration,
+        "model": variant.model,
         "tuned_config": best_config,
         "tuned_knobs": tuned_knobs,
         "dev": _aggregate(scenario_reports, "dev"),
@@ -1159,13 +938,8 @@ def _render_scoreboard_digest(
     run_id: str,
     results: list[dict[str, Any]],
     recognition_reports: dict[str, RecognitionMetrics],
-) -> tuple[str, dict[str, Any]]:
-    """Markdown scoreboard: variants ranked by dev soft-F1, diagnostics alongside (§4.2).
-
-    Returns:
-        tuple of (digest_markdown, promotion_decision) where promotion_decision contains
-        the A/B evaluation result for grounded_v1 vs default.
-    """
+) -> str:
+    """Markdown scoreboard: variants ranked by dev soft-F1, diagnostics alongside (§4.2)."""
     lines = [f"# Individual extraction variant tournament — {run_id}", ""]
     lines.append(
         "Ranked by mean dev soft-F1 (the Loop A/B hill-climbing signal, §3.1). "
@@ -1176,30 +950,6 @@ def _render_scoreboard_digest(
     )
     lines.append("")
 
-    # Add A/B evaluation decision section
-    promotion_decision = _evaluate_grounded_v1_promotion(results)
-    lines.append("## A/B Evaluation: grounded_v1 vs default baseline")
-    lines.append("")
-    lines.append(f"**Decision**: {promotion_decision['decision']}")
-    lines.append("")
-    lines.append(f"**Reason**: {promotion_decision['reason']}")
-    lines.append("")
-    if promotion_decision["grounded_v1_found"]:
-        comparison = promotion_decision["comparison"]
-        lines.append("### Promotion Criteria")
-        lines.append("")
-        strict_status = "✓ PASS" if comparison["strict_f1"]["meets_threshold"] else "✗ FAIL"
-        lines.append(
-            f"- **Strict-F1**: {comparison['strict_f1']['value']:.3f} "
-            f"(threshold: {comparison['strict_f1']['threshold']:.3f}) — {strict_status}"
-        )
-        soft_status = "✓ PASS" if comparison["soft_f1"]["meets_threshold"] else "✗ FAIL"
-        lines.append(
-            f"- **Soft-F1**: {comparison['soft_f1']['value']:.3f} "
-            f"(threshold: {comparison['soft_f1']['threshold']:.3f}) — {soft_status}"
-        )
-        lines.append("")
-    lines.append("")
     lines.append(
         "| rank | variant | dev strict-F1 | dev soft-F1 | candidate_recall | "
         "predicate_recall | label_acc (strict/soft) | holdout strict-F1 | holdout soft-F1 |"
@@ -1214,6 +964,17 @@ def _render_scoreboard_digest(
             f"{holdout['strict_f1']:.3f} | {holdout['soft_f1']:.3f} |"
         )
     lines.append("")
+
+    ran = [r for r in results if r.get("implementation")]
+    if ran:
+        lines.append("## What each variant ran")
+        lines.append("")
+        for result in ran:
+            lines.append(
+                f"- **{result['variant']}**: implementation `{result['implementation']}`, "
+                f"configuration `{result['configuration']}`, model `{result['model']}`"
+            )
+        lines.append("")
 
     lines.append("## Winning knobs per variant")
     lines.append("")
@@ -1312,12 +1073,11 @@ def _render_scoreboard_digest(
             )
     else:
         lines.append(
-            "_Skipped -- DR spec checkout or episode cassettes not available in this "
-            "environment._"
+            "_Skipped -- DR spec checkout or episode cassettes not available in this environment._"
         )
     lines.append("")
 
-    return "\n".join(lines), promotion_decision
+    return "\n".join(lines)
 
 
 def _stale_variants(results: list[dict[str, Any]]) -> dict[str, dict[str, int]]:
@@ -1326,9 +1086,23 @@ def _stale_variants(results: list[dict[str, Any]]) -> dict[str, dict[str, int]]:
     return {variant: counts for variant, counts in use.items() if counts["misses"]}
 
 
-def _render_stale_section(stale: dict[str, dict[str, int]]) -> str:
-    """A warning for the top of the digest, empty when no variant is stale."""
-    if not stale:
+def _stale_for_target(
+    stale: dict[str, dict[str, int]],
+    variants: dict[str, Variant],
+    target: benchmark_replay.BenchmarkTarget,
+) -> list[str]:
+    """The stale variants that run the target's implementation: the ones that end the run."""
+    return sorted(v for v in stale if variants[v].implementation == target.implementation)
+
+
+def _render_stale_section(
+    stale: dict[str, dict[str, int]],
+    benchmark_results: list[benchmark_replay.DocumentResult] | None = None,
+    target: benchmark_replay.BenchmarkTarget | None = None,
+) -> str:
+    """A warning for the top of the digest, empty when no recording is stale."""
+    stale_documents = [r for r in benchmark_results or [] if r.status == "stale"]
+    if not stale and not stale_documents:
         return ""
     lines = ["## STALE CASSETTES: the scores below are not a measurement", ""]
     for variant, use in sorted(stale.items()):
@@ -1337,27 +1111,85 @@ def _render_stale_section(stale: dict[str, dict[str, int]]) -> str:
             "Its prompts have changed since the cassettes were recorded; each missed call "
             "returned nothing."
         )
-    lines += [
-        "",
-        "Re-record before reading any number for these variants (both call the live LLM): "
-        "`python scripts/record_default_cassettes.py --record` for `default*`, "
-        "`python scripts/record_individual_canonicalization_cassettes.py` for `open_v1`.",
-        "",
-    ]
+    if stale_documents and target is not None:
+        misses = sum(r.misses for r in stale_documents)
+        calls = sum(r.calls for r in stale_documents)
+        lines.append(
+            f"- benchmark, `{target.implementation}` with `{target.configuration}`: {misses} of "
+            f"{calls} LLM calls had no recorded response ("
+            f"{', '.join(r.document_id for r in stale_documents)}). Record again with "
+            f"`python scripts/benchmark_replay.py --record --spend {target.flags}`."
+        )
+    if stale:
+        lines += [
+            "",
+            "Re-record before reading any number for these variants (both call the live LLM): "
+            "`python scripts/record_default_cassettes.py --record` for `default*`, "
+            "`python scripts/record_individual_canonicalization_cassettes.py` for `open_v1`.",
+        ]
+    lines.append("")
     return "\n".join(lines)
 
 
+def _guard(
+    results: list[dict[str, Any]],
+    stale: dict[str, dict[str, int]],
+    target: benchmark_replay.BenchmarkTarget,
+) -> dict[str, Any]:
+    """
+    The triple corpus's guard measure for the benchmark target: the dev scores
+    of the variant that runs the target's implementation as it is (the variant
+    named after it).
+
+    The guard applies only to an implementation the triple corpus has
+    recordings of. For any other, `applies` is false and says why: a reader
+    must record that the guard was not applicable, never take another
+    implementation's row for it. When it applies but the variant did not
+    register or its cassettes are stale, there is no number, and `status` says
+    which.
+    """
+    if target.implementation != TRIPLE_CORPUS_IMPLEMENTATION:
+        return {
+            "applies": False,
+            "reason": (
+                f"the triple corpus has no recordings of the {target.implementation} "
+                f"implementation: its variants run {TRIPLE_CORPUS_IMPLEMENTATION}"
+            ),
+        }
+    guard: dict[str, Any] = {"applies": True, "variant": target.implementation}
+    row = next((r for r in results if r["variant"] == target.implementation), None)
+    if row is None:
+        return {**guard, "status": "not_registered"}
+    if row["variant"] in stale:
+        return {**guard, "status": "stale"}
+    return {
+        **guard,
+        "status": "scored",
+        "configuration": row["configuration"],
+        "model": row["model"],
+        "strict_f1": row["dev"]["strict_f1"],
+        "soft_f1": row["dev"]["soft_f1"],
+    }
+
+
 def _render_benchmark_section(
-    results: list[benchmark_replay.DocumentResult], summary: dict[str, Any], report_path: Path
+    results: list[benchmark_replay.DocumentResult],
+    summary: dict[str, Any],
+    report_path: Path,
+    target: benchmark_replay.BenchmarkTarget,
+    guard: dict[str, Any],
 ) -> str:
-    """The default pipeline on the benchmark documents (extraction_benchmark fixtures)."""
+    """The benchmark target on the benchmark documents (extraction_benchmark fixtures)."""
+    record = f"python scripts/benchmark_replay.py --record --spend {target.flags}"
     lines = [
-        "## Benchmark: default pipeline on the benchmark documents",
+        f"## Benchmark: `{target.implementation}` with `{target.configuration}` "
+        f"({target.model}) on the benchmark documents",
         "",
         "Long real documents run as sources (chunked, merged, planned as proposal operations) "
         "and scored on the individuals found against hand-made gold extractions. "
         f"Dev: {', '.join(benchmark_replay.DEV_DOCUMENTS)}. "
-        f"Holdout: {', '.join(benchmark_replay.HOLDOUT_DOCUMENTS)}.",
+        f"Holdout: {', '.join(benchmark_replay.HOLDOUT_DOCUMENTS)}. "
+        f"Recordings: `{benchmark_replay.cassette_dir(target).name}/`.",
         "",
         "| document | status | recall | core recall | precision | type accuracy | typed F1 "
         "| relationship recall |",
@@ -1375,14 +1207,11 @@ def _render_benchmark_section(
         )
     lines.append("")
     if summary["status"] == "not_recorded":
-        lines.append(
-            "_Not recorded: `python scripts/benchmark_replay.py --record --spend` records the "
-            "cassettes (calls the live LLM)._"
-        )
+        lines.append(f"_Not recorded: `{record}` records the cassettes (calls the live LLM)._")
     elif summary["status"] == "stale":
         lines.append(
             "_Stale: the pipeline's prompts changed since the cassettes were recorded. Record "
-            "again with `python scripts/benchmark_replay.py --record --spend`._"
+            f"again with `{record}`._"
         )
     elif summary["status"] == "failed":
         failed = "; ".join(f"{r.document_id}: {r.detail}" for r in results if r.status == "failed")
@@ -1396,27 +1225,81 @@ def _render_benchmark_section(
         if summary["failure_counts"]:
             lines.append(f"Failure counts over dev: {summary['failure_counts']}")
     else:
+        dev, holdout = summary["dev"], summary["holdout"]
+        lines.append(
+            f"Dev typed F1 {dev['typed_f1']:.3f}, found F1 {dev['f1']:.3f}; "
+            f"holdout typed F1 {holdout['typed_f1']:.3f}, found F1 {holdout['f1']:.3f}."
+        )
         lines.append(f"Failure counts over dev: {summary['failure_counts']}")
         lines.append(f"Detail: `{report_path}`")
+    lines.append("")
+    if not guard["applies"]:
+        lines.append(f"Triple-corpus guard: not applicable ({guard['reason']}).")
+    elif guard["status"] == "scored":
+        lines.append(
+            f"Triple-corpus guard: the `{guard['variant']}` variant's dev strict-F1 "
+            f"{guard['strict_f1']:.3f}, soft-F1 {guard['soft_f1']:.3f}."
+        )
+    else:
+        lines.append(
+            f"Triple-corpus guard: the `{guard['variant']}` variant has no score "
+            f"({guard['status']})."
+        )
     lines.append("")
     return "\n".join(lines)
 
 
 def _write_benchmark_report(
-    run_id: str, results: list[benchmark_replay.DocumentResult], summary: dict[str, Any]
+    run_id: str,
+    results: list[benchmark_replay.DocumentResult],
+    summary: dict[str, Any],
+    guard: dict[str, Any],
 ) -> Path:
-    """Write the benchmark summary and each document's score lists for Loop C to read."""
+    """
+    Write what Loop C reads: the benchmark summary (which says what was run),
+    each document's score lists, and the triple-corpus guard for that target.
+    """
     path = _EXPERIMENTS_REPORTS_DIR / f"{run_id}_benchmark.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         **summary,
+        "guard": guard,
         "scores": {r.document_id: r.score.to_json() for r in results if r.score is not None},
     }
     path.write_text(json.dumps(payload, indent=1, ensure_ascii=False))
     return path
 
 
+def _emit_scoreboard_row(
+    emitter: MetricsEmitter, fixture_id: str, ran: dict[str, Any], metrics: dict[str, float]
+) -> None:
+    """
+    One scoreboard telemetry row, labeled with what was run: the model and the
+    configuration, with the implementation and (for a triple-corpus row) the
+    variant beside them.
+    """
+    labels = {"implementation": ran["implementation"]}
+    if ran.get("variant"):
+        labels["variant"] = ran["variant"]
+    emitter.emit(
+        pipeline_type=_TOURNAMENT_PIPELINE_TAG,
+        fixture_id=fixture_id,
+        model=ran["model"],
+        config_ref=ran["configuration"],
+        config_version=1,
+        metrics=metrics,
+        mode="offline",
+        source="quality_tournament",
+        labels=labels,
+    )
+
+
 async def _amain(args) -> int:
+    try:
+        target = benchmark_replay.resolve_target(args.implementation, args.configuration)
+    except benchmark_replay.UnknownTargetError as exc:
+        print(f"ERROR: {exc}")
+        return 1
     nlp = SpacyNLPProcessor()
     if not nlp.is_ready():
         print("ERROR: spaCy model not loaded. Run: python -m spacy download en_core_web_sm")
@@ -1442,9 +1325,6 @@ async def _amain(args) -> int:
 
     eval_repo, eval_index = build_eval_ontology(embedding)
 
-    print("\n══ Class Definition Coverage Check (grounded_v1 readiness) ══")
-    check_definition_coverage(embedding=embedding, ontology_repo=eval_repo)
-
     registry = build_registry(nlp, embedding, eval_repo, eval_index)
     if not registry:
         print("ERROR: no variants registered")
@@ -1466,8 +1346,7 @@ async def _amain(args) -> int:
     # it is never read by the `sort(key=...)` call above, so a recognition
     # regression alone can never flip which variant ranks first.
     print(
-        "\n== recognition diagnostics (issue #1142, always reported, never gates "
-        "accept/reject) =="
+        "\n== recognition diagnostics (issue #1142, always reported, never gates accept/reject) =="
     )
     recognition_reports = await _build_recognition_reports(embedding)
     for episode, metrics in recognition_reports.items():
@@ -1481,121 +1360,48 @@ async def _amain(args) -> int:
         result["recognition"] = recognition_summary
     _emit_recognition_metrics(recognition_reports)
 
+    # One row per variant and group. "dev" and "holdout" are the scored split;
+    # "bootstrap", "wave4" and "arxiv" are diagnostic-only groups
+    # (karpathy_loop_dr_ontology_design.md §5/§8, RELABELED_ARXIV_SCENARIOS),
+    # each under its own fixture_id so nothing downstream reads one as an input
+    # to the accept gate.
     scoreboard_emitter = MetricsEmitter(_METRICS_DIR)
     for result in results:
-        scoreboard_emitter.emit(
-            pipeline_type=_TOURNAMENT_PIPELINE_TAG,
-            fixture_id="dev",
-            model=result["variant"],
-            config_ref=result["variant"],
-            config_version=1,
-            metrics=result["dev"],
-            mode="offline",
-            source="quality_tournament",
-        )
-        scoreboard_emitter.emit(
-            pipeline_type=_TOURNAMENT_PIPELINE_TAG,
-            fixture_id="holdout",
-            model=result["variant"],
-            config_ref=result["variant"],
-            config_version=1,
-            metrics=result["holdout"],
-            mode="offline",
-            source="quality_tournament",
-        )
-        # Diagnostic-only (karpathy_loop_dr_ontology_design.md §5): logged for
-        # visibility under its own fixture_id so a reader of this JSONL never
-        # mistakes it for a dev/holdout row, but nothing downstream (Loop C's
-        # evaluate step, the accept gate) reads "bootstrap" rows as an input
-        # to meets_floor/improved_locally.
-        scoreboard_emitter.emit(
-            pipeline_type=_TOURNAMENT_PIPELINE_TAG,
-            fixture_id="bootstrap",
-            model=result["variant"],
-            config_ref=result["variant"],
-            config_version=1,
-            metrics=result["bootstrap"],
-            mode="offline",
-            source="quality_tournament",
-        )
-        # Diagnostic-only (karpathy_loop_dr_ontology_design.md §8, #1109
-        # Phase 8): same mechanism as "bootstrap" above -- logged under its
-        # own fixture_id so nothing downstream ever reads a "wave4" row as an
-        # input to meets_floor/improved_locally.
-        scoreboard_emitter.emit(
-            pipeline_type=_TOURNAMENT_PIPELINE_TAG,
-            fixture_id="wave4",
-            model=result["variant"],
-            config_ref=result["variant"],
-            config_version=1,
-            metrics=result["wave4"],
-            mode="offline",
-            source="quality_tournament",
-        )
-        # Diagnostic-only: the DR-relabeled arxiv scenarios (moved out of the
-        # scored split — see RELABELED_ARXIV_SCENARIOS in dataset_split.py).
-        # Logged under its own fixture_id so nothing downstream reads an "arxiv"
-        # row as an input to meets_floor/improved_locally.
-        scoreboard_emitter.emit(
-            pipeline_type=_TOURNAMENT_PIPELINE_TAG,
-            fixture_id="arxiv",
-            model=result["variant"],
-            config_ref=result["variant"],
-            config_version=1,
-            metrics=result["arxiv"],
-            mode="offline",
-            source="quality_tournament",
-        )
+        for group in ("dev", "holdout", "bootstrap", "wave4", "arxiv"):
+            _emit_scoreboard_row(scoreboard_emitter, group, result, result[group])
 
     run_id = f"tournament_{generate_run_id()}"
 
-    print("\n== benchmark: default pipeline on the benchmark documents ==")
-    benchmark_results = await benchmark_replay.replay_all()
+    print(
+        f"\n== benchmark: implementation {target.implementation}, configuration "
+        f"{target.configuration}, model {target.model} =="
+    )
+    benchmark_results = await benchmark_replay.replay_all(target=target)
     benchmark_replay.print_results(benchmark_results)
-    benchmark_summary = benchmark_replay.summarize(benchmark_results)
-    benchmark_path = _write_benchmark_report(run_id, benchmark_results, benchmark_summary)
+    benchmark_summary = benchmark_replay.summarize(benchmark_results, target)
+    stale = _stale_variants(results)
+    guard = _guard(results, stale, target)
+    benchmark_path = _write_benchmark_report(run_id, benchmark_results, benchmark_summary, guard)
     if benchmark_summary["status"] == "scored":
         for split in ("dev", "holdout"):
-            scoreboard_emitter.emit(
-                pipeline_type=_TOURNAMENT_PIPELINE_TAG,
-                fixture_id=f"benchmark_{split}",
-                model="default",
-                config_ref="default",
-                config_version=1,
-                metrics=benchmark_summary[split],
-                mode="offline",
-                source="quality_tournament",
+            _emit_scoreboard_row(
+                scoreboard_emitter,
+                f"benchmark_{split}",
+                target.describe(),
+                benchmark_summary[split],
             )
 
-    stale = _stale_variants(results)
-    digest, promotion_decision = _render_scoreboard_digest(run_id, results, recognition_reports)
     digest = (
-        _render_stale_section(stale)
-        + digest
+        _render_stale_section(stale, benchmark_results, target)
+        + _render_scoreboard_digest(run_id, results, recognition_reports)
         + "\n"
-        + _render_benchmark_section(benchmark_results, benchmark_summary, benchmark_path)
+        + _render_benchmark_section(
+            benchmark_results, benchmark_summary, benchmark_path, target, guard
+        )
     )
     digest_path = _EXPERIMENTS_REPORTS_DIR / f"{run_id}.md"
     digest_path.parent.mkdir(parents=True, exist_ok=True)
     digest_path.write_text(digest)
-
-    # A/B Evaluation: Print promotion decision (Phase 4)
-    print("\n══ A/B EVALUATION: grounded_v1 vs default ══")
-    print(f"Decision: {promotion_decision['decision']}")
-    print(f"Reason: {promotion_decision['reason']}")
-    if promotion_decision["grounded_v1_found"]:
-        comparison = promotion_decision["comparison"]
-        print("\nMetrics:")
-        strict_status = "PASS" if comparison["strict_f1"]["meets_threshold"] else "FAIL"
-        print(
-            f"  Strict-F1: {comparison['strict_f1']['value']:.3f} "
-            f"(threshold: {comparison['strict_f1']['threshold']:.3f}) — {strict_status}"
-        )
-        soft_status = "PASS" if comparison["soft_f1"]["meets_threshold"] else "FAIL"
-        print(
-            f"  Soft-F1:   {comparison['soft_f1']['value']:.3f} "
-            f"(threshold: {comparison['soft_f1']['threshold']:.3f}) — {soft_status}"
-        )
 
     print("\n══ scoreboard (ranked by dev soft-F1) ══")
     print(digest)
@@ -1604,11 +1410,23 @@ async def _amain(args) -> int:
     print(f"benchmark: {benchmark_path} ({benchmark_summary['status']})")
     if stale:
         print(f"\nWARNING: stale cassettes for {sorted(stale)}: not a measurement.")
-    if any(variant.startswith(_GATING_VARIANT_PREFIX) for variant in stale):
+    # The gate is the chosen target's recordings: its benchmark cassettes and
+    # the variants that run its implementation. Any other stale variant is
+    # flagged above and in the digest.
+    gating = _stale_for_target(stale, registry, target)
+    if gating:
         print(
-            "ERROR: the default pipeline's cassettes are stale. Re-record with "
+            f"ERROR: the triple-corpus cassettes of {gating} are stale (they run the "
+            f"{target.implementation} implementation). Re-record with "
             "scripts/record_default_cassettes.py --record."
         )
+    if benchmark_summary["status"] == "stale":
+        print(
+            f"ERROR: the benchmark cassettes of {target.implementation} with "
+            f"{target.configuration} are stale. Re-record with "
+            f"scripts/benchmark_replay.py --record --spend {target.flags}."
+        )
+    if gating or benchmark_summary["status"] == "stale":
         return EXIT_STALE_CASSETTES
     return 0
 
@@ -1617,7 +1435,23 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Loop B variant tournament runner (karpathy_loop_design.md §4.2)"
     )
-    parser.add_argument("--pipeline", choices=["individual"], default="individual")
+    parser.add_argument(
+        "--pipeline",
+        choices=["individual"],
+        default="individual",
+        help="The pipeline type; individual extraction is the one with a tournament",
+    )
+    parser.add_argument(
+        "--implementation",
+        help="The implementation the benchmark pass runs (the registry's default)",
+    )
+    parser.add_argument(
+        "--configuration",
+        help=(
+            "The implementation's configuration the benchmark pass runs with (the one its "
+            "recordings were made with, else its default)"
+        ),
+    )
     parser.add_argument(
         "--passes",
         type=int,

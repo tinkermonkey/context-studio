@@ -1,14 +1,16 @@
 """
-The offline benchmark replay (scripts/benchmark_replay.py): the ontology it
-builds is the one the gold extractions were made against, and a document runs
-through chunking, extraction, merging and planning into scored predictions
-without any network access.
+The offline benchmark replay (scripts/benchmark_replay.py): what it runs is an
+implementation and a configuration read from the pipeline registry, the
+ontology it builds is the one the gold extractions were made against, and a
+document runs through chunking, extraction, merging and planning into scored
+predictions without any network access.
 """
 
 import json
 import os
 import re
 import sys
+from dataclasses import replace
 
 import pytest
 
@@ -16,16 +18,29 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 )
 
+from domain.pipelines.individual_extraction.bootstrap import register_individual_extraction
 from domain.pipelines.ports import LLMResponse
+from domain.pipelines.registry import (
+    PipelineConfigurationRegistry,
+    PipelineImplementationRegistry,
+)
 from scripts.benchmark_replay import (
     DEV_DOCUMENTS,
-    FIND_THEN_TYPE,
     HOLDOUT_DOCUMENTS,
+    PIPELINE_TYPE,
+    RECORDED_WITH,
     DocumentResult,
+    UnknownTargetError,
     benchmark_ontology,
+    cassette_dir,
     cassette_path,
+    default_configuration,
+    default_implementation,
     extract_document,
+    pipeline_registries,
+    recorded_targets,
     replay_document,
+    resolve_target,
     summarize,
 )
 from tests.integration.pipelines._harness.benchmark import (
@@ -39,6 +54,10 @@ from tests.integration.pipelines._harness.benchmark import (
 
 DOCUMENT = "wikimedia_enterprise"
 ACTOR = "business.businessactor"
+# The implementations with committed recordings, by their registry ids
+TWO_PASS = "default"
+FIND_THEN_TYPE = "find_then_type"
+ALL_DOCUMENTS = sorted([*DEV_DOCUMENTS, *HOLDOUT_DOCUMENTS])
 _OFFERED = re.compile(r"^- ([a-z\-]+\.[a-z]+) \(", re.MULTILINE)
 
 
@@ -52,8 +71,11 @@ class StubProvider:
         self._name = name
         self._preferred = preferred_class
         self.offered: list[set[str]] = []
+        # (system prompt, model, temperature) of every call
+        self.calls: list[tuple[str, str, object]] = []
 
-    def complete(self, system_prompt, user_prompt, model, **_: object) -> LLMResponse:
+    def complete(self, system_prompt, user_prompt, model, **kwargs: object) -> LLMResponse:
+        self.calls.append((system_prompt, model, kwargs.get("temperature")))
         triples = []
         if "Identify the individuals" in user_prompt:
             offered = set(_OFFERED.findall(user_prompt))
@@ -235,7 +257,7 @@ class FindThenTypeStub:
 async def test_find_then_type_types_a_mention_once_against_the_whole_catalog(ontology):
     provider = FindThenTypeStub("Wikimedia Foundation", ACTOR)
     individuals, relationships = await extract_document(
-        ontology, provider, DOCUMENT, implementation=FIND_THEN_TYPE
+        ontology, provider, DOCUMENT, resolve_target(FIND_THEN_TYPE)
     )
 
     assert provider.finds > 1, "the document should be read chunk by chunk"
@@ -250,24 +272,173 @@ async def test_find_then_type_types_a_mention_once_against_the_whole_catalog(ont
 
 async def test_a_document_without_a_find_then_type_cassette_is_not_scored(tmp_path, monkeypatch):
     monkeypatch.setattr("scripts.benchmark_replay.CASSETTE_DIR", tmp_path / "extraction_benchmark")
-    result = await replay_document(DOCUMENT, implementation=FIND_THEN_TYPE)
+    result = await replay_document(DOCUMENT, resolve_target(FIND_THEN_TYPE))
     assert (result.status, result.score) == ("not_recorded", None)
 
 
-def test_the_two_implementations_keep_their_cassettes_apart():
-    default, find_then_type = cassette_path(DOCUMENT), cassette_path(DOCUMENT, FIND_THEN_TYPE)
+# -- what runs: an implementation and a configuration, from the registry -----
+
+
+def test_with_nothing_asked_for_the_target_is_the_registrys_default_implementation():
+    implementations, configurations = pipeline_registries()
+    target = resolve_target()
+
+    assert target.implementation == default_implementation()
+    assert target.implementation == next(iter(implementations.list_by_type(PIPELINE_TYPE)))
+    assert target.orchestrator is implementations.get(PIPELINE_TYPE, target.implementation)
+    registered = configurations.get_latest(
+        PIPELINE_TYPE, target.implementation, target.configuration
+    )
+    assert target.config == registered.config
+    assert target.model == registered.config["model"], "the model is the configuration's"
+
+
+def test_the_default_benchmark_runs_with_the_configuration_its_recordings_were_made_with():
+    target = resolve_target(TWO_PASS)
+
+    assert RECORDED_WITH[TWO_PASS] == "extraction-openrouter-default"
+    assert target.configuration == "extraction-openrouter-default"
+    assert target.configuration != default_configuration(TWO_PASS), "pinned by name, not by default"
+    assert cassette_dir(target).name == "extraction_benchmark"
+
+
+def test_a_new_default_configuration_does_not_move_the_default_benchmark(monkeypatch):
+    """`extraction-default` changing model leaves the recorded target as it was."""
+    before = resolve_target(TWO_PASS)
+    implementations = PipelineImplementationRegistry()
+    configurations = PipelineConfigurationRegistry()
+    register_individual_extraction(implementations, configurations)
+    moved = {**configurations.get_latest(PIPELINE_TYPE, TWO_PASS, "extraction-default").config}
+    moved["model"] = "another-model"
+    configurations.register(PIPELINE_TYPE, TWO_PASS, "extraction-default", moved)
+    monkeypatch.setattr(
+        "scripts.benchmark_replay.pipeline_registries", lambda: (implementations, configurations)
+    )
+
+    after = resolve_target(TWO_PASS)
+    assert (after.configuration, after.model) == (before.configuration, before.model)
+    assert cassette_dir(after) == cassette_dir(before)
+    # Asked for by name, the moved configuration is another target with its own folder
+    asked = resolve_target(TWO_PASS, "extraction-default")
+    assert asked.model == "another-model"
+    assert cassette_dir(asked).name == "extraction_benchmark__extraction-default"
+
+
+def test_an_implementation_with_no_pin_runs_with_its_default_configuration():
+    _, configurations = pipeline_registries()
+    target = resolve_target(FIND_THEN_TYPE)
+
+    assert FIND_THEN_TYPE not in RECORDED_WITH
+    assert target.configuration == default_configuration(FIND_THEN_TYPE)
+    registered = configurations.get_latest(PIPELINE_TYPE, FIND_THEN_TYPE, target.configuration)
+    assert target.model == registered.config["model"]
+    assert cassette_dir(target).name == "extraction_benchmark_find_then_type"
+
+
+def test_a_configuration_asked_for_by_name_is_the_one_run():
+    _, configurations = pipeline_registries()
+    target = resolve_target(TWO_PASS, "extraction-default")
+
+    registered = configurations.get_latest(PIPELINE_TYPE, TWO_PASS, "extraction-default")
+    assert target.config == registered.config
+    assert target.flags == "--implementation default --configuration extraction-default"
+    assert cassette_dir(target).name == "extraction_benchmark__extraction-default"
+    other = replace(resolve_target(FIND_THEN_TYPE), configuration="extraction-other")
+    assert cassette_dir(other).name == "extraction_benchmark_find_then_type__extraction-other"
+
+
+@pytest.mark.parametrize(
+    "implementation, configuration, message",
+    [
+        ("no_such", None, "no implementation 'no_such'"),
+        # A configuration of another implementation is not one of this one's
+        (TWO_PASS, "extraction-find-then-type", "no configuration 'extraction-find-then-type'"),
+        (FIND_THEN_TYPE, "extraction-default", "no configuration 'extraction-default'"),
+        # Registered, but it does not extract a source chunk by chunk
+        ("open_v1", None, "the benchmark cannot run it"),
+    ],
+)
+def test_a_target_the_benchmark_cannot_run_is_refused(implementation, configuration, message):
+    with pytest.raises(UnknownTargetError, match=message):
+        resolve_target(implementation, configuration)
+
+
+def test_each_committed_recording_belongs_to_a_registered_target():
+    recorded = {(t.implementation, t.configuration) for t in recorded_targets()}
+    assert recorded == {
+        (TWO_PASS, "extraction-openrouter-default"),
+        (FIND_THEN_TYPE, "extraction-find-then-type"),
+    }
+    default, find_then_type = (
+        cassette_path(DOCUMENT),
+        cassette_path(DOCUMENT, resolve_target(FIND_THEN_TYPE)),
+    )
     assert default.parent.name == "extraction_benchmark"
     assert find_then_type.parent.name == "extraction_benchmark_find_then_type"
     assert default.parent.parent == find_then_type.parent.parent
+    assert default.exists() and find_then_type.exists()
 
 
-@pytest.mark.parametrize("document", sorted([*DEV_DOCUMENTS, *HOLDOUT_DOCUMENTS]))
+async def test_the_run_uses_its_configurations_model_temperature_and_stage_prompts(ontology):
+    """A prompt-only experiment is a configuration: its stage prompts are the ones sent."""
+    base = resolve_target(TWO_PASS)
+    config = {
+        **base.config,
+        "model": "a-configured-model",
+        "temperature": 0.3,
+        "stage_prompts": {"identify_individuals": {"system": "CONFIGURED IDENTIFY PROMPT"}},
+    }
+    provider = StubProvider("Wikimedia Foundation", ACTOR)
+    await extract_document(ontology, provider, DOCUMENT, replace(base, config=config))
+
+    assert provider.calls
+    assert {model for _, model, _ in provider.calls} == {"a-configured-model"}
+    assert {temperature for _, _, temperature in provider.calls} == {0.3}
+    assert "CONFIGURED IDENTIFY PROMPT" in {system for system, _, _ in provider.calls}
+
+    plain = StubProvider("Wikimedia Foundation", ACTOR)
+    await extract_document(ontology, plain, DOCUMENT, base)
+    assert {model for _, model, _ in plain.calls} == {base.model}
+    assert {temperature for _, _, temperature in plain.calls} == {base.temperature}
+    assert "CONFIGURED IDENTIFY PROMPT" not in {system for system, _, _ in plain.calls}
+
+
+def test_a_summary_says_what_was_run():
+    target = resolve_target(FIND_THEN_TYPE)
+    summary = summarize([DocumentResult("edit_check", "not_recorded")], target)
+    assert summary["implementation"] == FIND_THEN_TYPE
+    assert summary["configuration"] == target.configuration
+    assert summary["model"] == target.model
+    assert "implementation" not in summarize([])
+
+
+# -- the committed recordings still answer today's prompts --------------------
+
+
+@pytest.mark.parametrize("document", ALL_DOCUMENTS)
+async def test_default_recordings_replay(ontology, document):
+    """
+    The recorded runs of the `default` implementation answer today's prompts
+    with the model of the configuration they were recorded with. A change to
+    the two-pass prompts, to what feeds them, or to that configuration's model
+    fails here until they are recorded again
+    (`python scripts/benchmark_replay.py --record --spend --implementation default`).
+    """
+    result = await replay_document(document, resolve_target(TWO_PASS))
+
+    assert result.status == "scored", result
+    assert result.misses == 0
+    assert result.calls > 0
+    assert result.score.metrics["recall"] > 0
+
+
+@pytest.mark.parametrize("document", ALL_DOCUMENTS)
 async def test_find_then_type_recordings_replay_and_keep_their_gain(ontology, document):
     """
     The recorded find-then-type runs answer today's prompts, and score well
     above the two-pass baseline's typed F1 (0.07 to 0.16 on these documents).
     """
-    result = await replay_document(document, implementation=FIND_THEN_TYPE)
+    result = await replay_document(document, resolve_target(FIND_THEN_TYPE))
 
     assert result.status == "scored", result
     assert result.misses == 0
