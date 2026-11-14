@@ -23,6 +23,7 @@ from adapters.factories.orchestrator_factory import (
     build_orchestrator_services,
     build_run_specific_data,
     create_selected_run,
+    failed_run_llm_metadata,
     run_llm_metadata,
 )
 from adapters.persistence.sqlite.batch_repo import BatchRepository
@@ -43,7 +44,10 @@ _TEXT_IN_SOURCE_TEXT = PipelineType.INDIVIDUAL_EXTRACTION
 
 
 class UnknownPipelineError(LookupError):
-    """What a stored run was pinned to (implementation, configuration version) is gone."""
+    """
+    What a stored run was pinned to (implementation, configuration version) is
+    gone: the configuration was edited or deleted after the run was queued.
+    """
 
 
 class BackgroundRunExecutor:
@@ -317,10 +321,7 @@ class BackgroundRunExecutor:
             run.configuration_version,
         )
         if selection is None:
-            raise UnknownPipelineError(
-                f"Pipeline {run.pipeline_type.value}:{run.implementation_id} with configuration "
-                f"{run.configuration_slug} v{run.configuration_version} is no longer registered"
-            )
+            raise UnknownPipelineError(self._no_longer_runnable(run))
         services = build_orchestrator_services(
             self._app_state, selection.config, run.id, self._runs
         )
@@ -328,7 +329,13 @@ class BackgroundRunExecutor:
             selection, self._llm_provider, services, run.id, input_data
         )
 
-        result_state = await orchestrator.execute(state)
+        try:
+            result_state = await orchestrator.execute(state)
+        except Exception as exc:
+            # A failed run says which model it was given, as a completed one does
+            # (recorded with the failure by _execute)
+            exc.llm_metadata = failed_run_llm_metadata(state, exc)  # type: ignore[attr-defined]
+            raise
 
         output_summary = dict(result_state.result or {})
         if result_state.parse_warnings:
@@ -342,6 +349,27 @@ class BackgroundRunExecutor:
         if isinstance(proposal_id, str) and proposal_id:
             self._runs.set_proposal_id(run.id, proposal_id)
         self._runs.update_status(run.id, result_state.current_status)
+
+    def _no_longer_runnable(self, run: PipelineRun) -> str:
+        """
+        Why a queued run can no longer execute as it was accepted. A run
+        executes the configuration version it was accepted with, and a stored
+        configuration keeps only its latest content: once it is edited or
+        deleted, a run still queued with the earlier version has nothing to
+        run with, whether or not the server restarted in between.
+        """
+        what = f"{run.pipeline_type.value}:{run.implementation_id}"
+        if self._implementations.get(run.pipeline_type, run.implementation_id) is None:
+            return (
+                f"The implementation {what} is no longer registered, so this run cannot"
+                " execute. Submit it again with an implementation that is."
+            )
+        return (
+            f"The configuration {run.configuration_slug!r} of {what} was changed or deleted"
+            f" after this run was queued: version {run.configuration_version}, which the run"
+            " was accepted with, no longer exists, so the run cannot execute as it was"
+            " accepted. Submit the run again."
+        )
 
     # ==================== Bookkeeping ====================
 

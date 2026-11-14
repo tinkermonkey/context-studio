@@ -32,6 +32,7 @@ from adapters.pipelines.run_executor import BackgroundRunExecutor
 from adapters.web.pipelines_routes import router
 from domain.pipelines.bootstrap import register_pipelines
 from domain.pipelines.entities import PipelineRunStatus, PipelineType
+from domain.pipelines.exceptions import PipelineExecutionError
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -42,27 +43,48 @@ from scripts import run_pipeline
 EXTRACTION = PipelineType.INDIVIDUAL_EXTRACTION
 RUN = "/api/pipelines/individual_extraction/run"
 BODY = {"text": "Ada Lovelace wrote the first program.", "ontology_id": "tax-1"}
-# What the registered default configuration of the default implementation sets
-DEFAULT_PARAMETERS = {"model": "claude-haiku-5-5", "temperature": 0.0, "max_tokens": 20000}
+# Individual extraction's default implementation is find-then-type; what its
+# default configuration (extraction-find-then-type) sets
+DEFAULT_PARAMETERS = {"model": "claude-haiku-5-5", "temperature": 0.0, "max_tokens": 16000}
+# The two-pass implementation is registered under the id "default": a name, not
+# the type's default. What its default configuration (extraction-default) sets
+TWO_PASS = {"implementation_id": "default"}
+TWO_PASS_PARAMETERS = {"model": "claude-haiku-5-5", "temperature": 0.0, "max_tokens": 20000}
 
 
 class RecordingExtraction:
-    """Stands in for the extraction service: records what each call was asked to use."""
+    """
+    Stands in for the extraction service: records what each call was asked to
+    use. It finds nothing in any text, by either implementation's calls.
+    """
 
     def __init__(self) -> None:
         self.calls: list[dict] = []
+        # Which of the service's calls were made: extract_triples is two-pass's,
+        # find_mentions find-then-type's
+        self.made: list[str] = []
 
-    def extract_triples(self, **kwargs):
+    def _nothing(self, call: str, kwargs: dict, **result):
+        self.made.append(call)
         self.calls.append(kwargs)
         return SimpleNamespace(
-            triples=[],
             warnings=[],
             metadata={"model": kwargs["model"], "tokens_used": 0, "duration_ms": 1},
             failure_reason=None,
             incomplete_response=False,
             provider_failed=False,
             provider_refused=False,
+            **result,
         )
+
+    def extract_triples(self, **kwargs):
+        return self._nothing("extract_triples", kwargs, triples=[])
+
+    def find_mentions(self, **kwargs):
+        return self._nothing("find_mentions", kwargs, mentions=[])
+
+    def recognize(self, triples, ontology_id, dataset_id=None):
+        return triples
 
     def parameters(self) -> dict:
         """The model, temperature and output limit of the one call made."""
@@ -134,7 +156,7 @@ def finished(app, run_id, timeout=10.0):
 
 
 class TestRunApi:
-    def test_nothing_named_runs_the_defaults_with_the_configurations_model(
+    def test_nothing_named_runs_find_then_type_with_its_configurations_model(
         self, client, extraction
     ):
         # No implementation, no configuration and no model in the body
@@ -142,17 +164,30 @@ class TestRunApi:
 
         assert response.status_code == status.HTTP_201_CREATED, response.text
         run = response.json()
+        assert run["implementation_id"] == "find_then_type"
+        assert run["configuration_ref"] == "extraction-find-then-type"
+        assert run["status"] == "completed"
+        assert extraction.made == ["find_mentions"]
+        assert extraction.parameters() == DEFAULT_PARAMETERS
+        # The run records the model it used
+        assert run["llm_metadata"]["model"] == DEFAULT_PARAMETERS["model"]
+
+    def test_the_implementation_named_default_is_two_pass_and_still_runs(self, client, extraction):
+        # "default" is the two-pass implementation's id, no longer the type's default
+        response = client.post(RUN, json={**BODY, **TWO_PASS})
+
+        assert response.status_code == status.HTTP_201_CREATED, response.text
+        run = response.json()
         assert run["implementation_id"] == "default"
         assert run["configuration_ref"] == "extraction-default"
-        assert run["status"] == "completed"
-        assert extraction.parameters() == DEFAULT_PARAMETERS
-        # The run records the model it used, and each extraction its configuration
-        assert run["llm_metadata"]["model"] == DEFAULT_PARAMETERS["model"]
+        assert extraction.made == ["extract_triples"]
+        assert extraction.parameters() == TWO_PASS_PARAMETERS
+        # Each extraction records the configuration it ran with
         assert extraction.calls[0]["configuration_ref"] == "extraction-default"
 
     def test_a_named_configuration_supplies_the_runs_parameters(self, client, extraction):
         response = client.post(
-            RUN, json={**BODY, "configuration_ref": "extraction-openrouter-default"}
+            RUN, json={**BODY, **TWO_PASS, "configuration_ref": "extraction-openrouter-default"}
         )
 
         assert response.status_code == status.HTTP_201_CREATED, response.text
@@ -220,7 +255,8 @@ class TestRunApi:
         )
 
         response = client.post(
-            RUN, json={**BODY, "configuration_ref": "switched-off", "async": run_async}
+            RUN,
+            json={**BODY, **TWO_PASS, "configuration_ref": "switched-off", "async": run_async},
         )
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
@@ -242,7 +278,7 @@ class TestRunApi:
             default=True,
         )
 
-        response = client.post(RUN, json={**BODY, "async": run_async})
+        response = client.post(RUN, json={**BODY, **TWO_PASS, "async": run_async})
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         assert response.json()["detail"] == (
@@ -260,11 +296,72 @@ class TestRunApi:
 
         assert response.status_code == status.HTTP_202_ACCEPTED, response.text
         pending = response.json()
-        assert pending["implementation_id"] == "default"
-        assert pending["configuration_ref"] == "extraction-default"
+        assert pending["implementation_id"] == "find_then_type"
+        assert pending["configuration_ref"] == "extraction-find-then-type"
         run = finished(app, pending["id"])
         assert run.status == PipelineRunStatus.COMPLETED, run.failure_reason
+        assert extraction.made == ["find_mentions"]
         assert extraction.parameters() == DEFAULT_PARAMETERS
+
+    @pytest.mark.parametrize("run_async", [False, True])
+    def test_a_limit_in_the_body_above_what_a_provider_can_send_is_refused(
+        self, client, app, extraction, run_async
+    ):
+        # The Anthropic client refuses a request that does not stream above ~21,000
+        response = client.post(RUN, json={**BODY, "max_tokens": 30000, "async": run_async})
+
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+        assert response.json()["detail"] == (
+            "The run's input names max_tokens 30000: the output-token limit of a run is a"
+            " whole number from 1 to 20000, the most every provider can be asked for in one"
+            " request"
+        )
+        assert app.state.pipeline_run_repo.list() == []
+        assert extraction.calls == []
+
+    def test_a_limit_in_the_body_within_the_bound_is_the_runs(self, client, extraction):
+        response = client.post(RUN, json={**BODY, "max_tokens": 20000})
+
+        assert response.status_code == status.HTTP_201_CREATED, response.text
+        assert extraction.parameters()["max_tokens"] == 20000
+
+    @pytest.mark.parametrize("run_async", [False, True])
+    def test_a_configuration_whose_stored_limit_is_above_the_bound_starts_no_run(
+        self, client, app, registries, extraction, run_async
+    ):
+        # Only a row written under an earlier bound, or by hand, can hold one
+        _, configurations = registries
+        configurations.register(
+            EXTRACTION, "default", "too-much", {"model": "m", "max_tokens": 64000}
+        )
+
+        response = client.post(
+            RUN, json={**BODY, **TWO_PASS, "configuration_ref": "too-much", "async": run_async}
+        )
+
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+        assert response.json()["detail"] == (
+            "The 'too-much' configuration sets max_tokens 64000: the output-token limit of a"
+            " run is a whole number from 1 to 20000, the most every provider can be asked for"
+            " in one request; edit the configuration, or name a limit in the run's input"
+        )
+        assert app.state.pipeline_run_repo.list() == []
+        assert extraction.calls == []
+
+    def test_a_limit_named_in_the_body_lets_such_a_configuration_run(
+        self, client, registries, extraction
+    ):
+        _, configurations = registries
+        configurations.register(
+            EXTRACTION, "default", "too-much", {"model": "m", "max_tokens": 64000}
+        )
+
+        response = client.post(
+            RUN, json={**BODY, **TWO_PASS, "configuration_ref": "too-much", "max_tokens": 9000}
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED, response.text
+        assert extraction.parameters()["max_tokens"] == 9000
 
     @pytest.mark.parametrize(
         "pipeline_type",
@@ -314,8 +411,63 @@ class TestBatchRoute:
         (run_id,) = response.json()["run_ids"]
         run = finished(app, run_id)
         assert run.status == PipelineRunStatus.COMPLETED, run.failure_reason
-        assert (run.implementation_id, run.configuration_ref) == ("default", "extraction-default")
+        assert (run.implementation_id, run.configuration_ref) == (
+            "find_then_type",
+            "extraction-find-then-type",
+        )
         assert extraction.parameters() == DEFAULT_PARAMETERS
+
+    def test_a_run_is_stored_with_the_version_and_parameters_it_was_accepted_with(
+        self, client, app, registries, batch_id
+    ):
+        # A second version of two-pass's default configuration: the run is pinned
+        # to it, and stored with its parameters, when it is enqueued
+        _, configurations = registries
+        configurations.register(
+            EXTRACTION,
+            "default",
+            "extraction-default",
+            {"model": "second-model", "temperature": 0.2, "max_tokens": 1234},
+            default=True,
+        )
+
+        response = client.post(
+            f"/api/pipelines/batches/{batch_id}/runs",
+            json={
+                "runs": [{"pipeline_type": "individual_extraction", **TWO_PASS, "input_data": BODY}]
+            },
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED, response.text
+        # The workers are not started: the run waits as it was stored
+        stored, stored_input = app.state.pipeline_run_repo.claim_next_pending()
+        assert stored.id == response.json()["run_ids"][0]
+        assert (stored.configuration_slug, stored.configuration_version) == (
+            "extraction-default",
+            2,
+        )
+        assert {key: stored_input[key] for key in ("model", "temperature", "max_tokens")} == {
+            "model": "second-model",
+            "temperature": 0.2,
+            "max_tokens": 1234,
+        }
+
+    def test_a_limit_above_what_a_provider_can_send_is_refused(self, client, app, batch_id):
+        response = client.post(
+            f"/api/pipelines/batches/{batch_id}/runs",
+            json={
+                "runs": [
+                    {
+                        "pipeline_type": "individual_extraction",
+                        "input_data": {**BODY, "max_tokens": 30000},
+                    }
+                ]
+            },
+        )
+
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+        assert "from 1 to 20000" in response.json()["detail"]
+        assert app.state.pipeline_run_repo.list() == []
 
     def test_a_configuration_of_another_implementation_is_refused(self, client, app, batch_id):
         response = client.post(
@@ -440,3 +592,52 @@ class TestRunPipelineScript:
             )
             == 1
         )
+
+
+class _FailingOrchestrator:
+    """Fails as an orchestrator that reports nothing about its model calls does."""
+
+    async def execute(self, state):
+        raise PipelineExecutionError("The model's answer could not be used")
+
+
+class TestFailedRunRecordsItsModel:
+    """A failed run says which model it was given, as a completed one does."""
+
+    @pytest.fixture(autouse=True)
+    def failing(self, monkeypatch):
+        monkeypatch.setattr(
+            "adapters.factories.orchestrator_factory.create_orchestrator",
+            lambda *args, **kwargs: _FailingOrchestrator(),
+        )
+
+    @pytest.mark.parametrize(
+        "pipeline, model",
+        [
+            ("schema_extraction", "google/gemini-3-flash-preview"),
+            ("schema_node_definition_refinement", "google/gemini-3-flash-preview"),
+            ("individual_extraction", "claude-haiku-5-5"),
+        ],
+    )
+    def test_a_synchronous_run(self, client, app, pipeline, model):
+        response = client.post(f"/api/pipelines/{pipeline}/run", json={})
+
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+        (run,) = app.state.pipeline_run_repo.list()
+        assert run.status == PipelineRunStatus.FAILED
+        assert run.llm_metadata == {"model": model}
+
+    def test_a_background_run(self, client, app):
+        app.state.run_executor.start()
+
+        pending = client.post("/api/pipelines/schema_extraction/run", json={"async": True}).json()
+
+        run = finished(app, pending["id"])
+        assert run.status == PipelineRunStatus.FAILED
+        assert run.llm_metadata == {"model": "google/gemini-3-flash-preview"}
+
+    def test_a_model_named_in_the_body_is_the_one_recorded(self, client, app):
+        client.post("/api/pipelines/schema_extraction/run", json={"model": "named-model"})
+
+        (run,) = app.state.pipeline_run_repo.list()
+        assert run.llm_metadata == {"model": "named-model"}

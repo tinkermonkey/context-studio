@@ -16,9 +16,12 @@ from domain.pipelines.entities import PipelineType
 from domain.pipelines.exceptions import (
     ConfigurationDisabledError,
     PipelineSelectionError,
+    RunParameterError,
     UnknownConfigurationError,
     UnknownImplementationError,
 )
+from domain.pipelines.individual_extraction.find_then_type import FindThenTypeOrchestrator
+from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionOrchestrator
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -350,6 +353,19 @@ class TestStoredVersions:
         # Earlier versions, whose content is not kept, are not registered at all
         assert configurations.get_version(EXTRACTION, "default", "mine", 1) is None
 
+    def test_an_edit_leaves_only_the_edited_version(self, registries):
+        # A stored configuration keeps its latest content alone, so a run pinned
+        # to the earlier version finds nothing, before a restart as after one
+        _, configurations = registries
+        configurations.register(EXTRACTION, "default", "mine", {"model": "m"}, version=1)
+
+        configurations.register(EXTRACTION, "default", "mine", {"model": "edited"}, version=2)
+
+        assert configurations.get_version(EXTRACTION, "default", "mine", 1) is None
+        assert configurations.get_latest(EXTRACTION, "default", "mine").config == {
+            "model": "edited"
+        }
+
     def test_the_next_version_follows_it(self, registries):
         _, configurations = registries
         configurations.register(EXTRACTION, "default", "mine", {"model": "m"}, version=3)
@@ -364,13 +380,13 @@ class TestStoredVersions:
             configurations.register(EXTRACTION, "default", "mine", {"model": "n"}, version=3)
 
 
-class TestRetiredConfiguration:
-    """A deleted configuration starts no new run and is not offered as one that can."""
+class TestRemovedConfiguration:
+    """A deleted configuration starts no run and is not offered as one that can."""
 
     def test_it_is_refused_and_not_listed(self, resolver, registries):
         _, configurations = registries
 
-        assert configurations.retire(EXTRACTION, "default", "two-pass-gemini") is True
+        assert configurations.remove(EXTRACTION, "default", "two-pass-gemini") is True
 
         with pytest.raises(UnknownConfigurationError) as error:
             resolver.resolve(EXTRACTION, None, "two-pass-gemini")
@@ -382,22 +398,62 @@ class TestRetiredConfiguration:
             "two-pass-haiku"
         ]
 
-    def test_a_run_already_pinned_to_it_still_finds_its_version(self, resolver, registries):
+    def test_a_run_still_pinned_to_it_finds_nothing(self, resolver, registries):
+        # As after a restart, which does not load a deleted configuration
         _, configurations = registries
-        configurations.retire(EXTRACTION, "default", "two-pass-gemini")
+        configurations.remove(EXTRACTION, "default", "two-pass-gemini")
 
-        assert resolver.pinned(EXTRACTION, "default", "two-pass-gemini", 1) is not None
+        assert resolver.pinned(EXTRACTION, "default", "two-pass-gemini", 1) is None
 
-    def test_the_default_configuration_cannot_be_retired(self, registries):
-        _, configurations = registries
-
-        with pytest.raises(ValueError, match="cannot be retired"):
-            configurations.retire(EXTRACTION, "default", "two-pass-haiku")
-
-    def test_one_that_is_not_registered_is_not_retired(self, registries):
+    def test_the_default_configuration_cannot_be_removed(self, registries):
         _, configurations = registries
 
-        assert configurations.retire(EXTRACTION, "default", "no-such") is False
+        with pytest.raises(ValueError, match="cannot be removed"):
+            configurations.remove(EXTRACTION, "default", "two-pass-haiku")
+
+    def test_one_that_is_not_registered_is_not_removed(self, registries):
+        _, configurations = registries
+
+        assert configurations.remove(EXTRACTION, "default", "no-such") is False
+
+
+class TestOutputLimit:
+    """The output-token limit a run executes with is one a provider can be asked for."""
+
+    def test_a_limit_the_input_names_above_the_bound_is_refused(self, resolver):
+        with pytest.raises(RunParameterError) as error:
+            resolver.resolve(EXTRACTION).run_input({"max_tokens": MAX_OUTPUT_TOKENS + 1})
+
+        assert str(error.value) == (
+            "The run's input names max_tokens 20001: the output-token limit of a run is a"
+            " whole number from 1 to 20000, the most every provider can be asked for in one"
+            " request"
+        )
+
+    @pytest.mark.parametrize("limit", [0, -5, "many", 1.5, True])
+    def test_a_limit_that_is_not_a_positive_whole_number_is_refused(self, resolver, limit):
+        with pytest.raises(RunParameterError, match="whole number from 1 to 20000"):
+            resolver.resolve(EXTRACTION).run_input({"max_tokens": limit})
+
+    def test_the_bound_itself_is_accepted(self, resolver):
+        run_input = resolver.resolve(EXTRACTION).run_input({"max_tokens": MAX_OUTPUT_TOKENS})
+
+        assert run_input["max_tokens"] == MAX_OUTPUT_TOKENS
+
+    def test_a_configuration_that_sets_one_above_the_bound_cannot_run(self, resolver, registries):
+        _, configurations = registries
+        configurations.register(
+            EXTRACTION, "default", "too-much", {"model": "m", "max_tokens": 64000}
+        )
+        selection = resolver.resolve(EXTRACTION, None, "too-much")
+
+        with pytest.raises(RunParameterError, match="The 'too-much' configuration sets max_tokens"):
+            selection.run_input({"text": "t"})
+        # A limit named in the input is the run's, and lets it run
+        assert selection.run_input({"max_tokens": 9000})["max_tokens"] == 9000
+
+    def test_a_run_given_no_limit_at_all_has_none(self, resolver):
+        assert "max_tokens" not in resolver.resolve(EXTRACTION, "find_then_type").run_input({})
 
 
 class TestRegisteredPipelines:
@@ -446,8 +502,38 @@ class TestRegisteredPipelines:
         assert set(runnable) == set(PipelineType) - {PipelineType.NO_OP}
         for pipeline_type in runnable:
             selection = resolver.resolve(pipeline_type)
-            assert selection.implementation_id == "default"
             assert selection.config.get("enabled") is not False
+
+    def test_individual_extraction_defaults_to_find_then_type(self, registered):
+        implementations, _, resolver = registered
+
+        selection = resolver.resolve(EXTRACTION)
+
+        assert implementations.default_implementation(EXTRACTION) == "find_then_type"
+        assert selection.implementation is FindThenTypeOrchestrator
+        assert selection.configuration_ref == "extraction-find-then-type"
+        assert selection.parameters == {
+            "model": "claude-haiku-5-5",
+            "temperature": 0.0,
+            "max_tokens": 16000,
+        }
+
+    def test_the_implementation_named_default_is_two_pass_not_the_default(self, registered):
+        # The id is a name only: two-pass runs when a run names it
+        implementations, _, resolver = registered
+
+        selection = resolver.resolve(EXTRACTION, "default")
+
+        assert selection.implementation is IndividualExtractionOrchestrator
+        assert selection.configuration_ref == "extraction-default"
+        assert implementations.default_implementation(EXTRACTION) != "default"
+
+    def test_every_other_type_still_defaults_to_its_default_implementation(self, registered):
+        implementations, _, resolver = registered
+
+        others = [t for t in resolver.runnable_types() if t is not EXTRACTION]
+
+        assert {implementations.default_implementation(t) for t in others} == {"default"}
 
     def test_every_implementation_has_a_default_configuration_of_its_own(self, registered):
         implementations, configurations, resolver = registered
@@ -472,10 +558,13 @@ class TestRegisteredPipelines:
             "find_then_type": "extraction-find-then-type",
         }
 
-    def test_individual_extraction_defaults_to_haiku_with_room_to_think(self, registered):
+    @pytest.mark.parametrize("implementation_id", ["find_then_type", "default"])
+    def test_individual_extraction_runs_on_haiku_with_room_to_think(
+        self, registered, implementation_id
+    ):
         _, _, resolver = registered
 
-        config = resolver.resolve(EXTRACTION).config
+        config = resolver.resolve(EXTRACTION, implementation_id).config
 
         assert config["provider"] == "anthropic"
         assert config["model"] == "claude-haiku-5-5"

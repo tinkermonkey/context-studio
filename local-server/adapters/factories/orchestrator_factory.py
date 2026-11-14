@@ -509,6 +509,24 @@ def run_llm_metadata(state: PipelineState, result_state: PipelineState) -> dict[
     return metadata
 
 
+def failed_run_llm_metadata(state: PipelineState, error: BaseException) -> dict[str, Any]:
+    """
+    What a failed run records about its model calls: what the failure carries
+    (the tokens and time its calls cost before it failed), and otherwise the
+    model the run executed with, so a failed run says which model it was
+    given as a completed one does.
+
+    Args:
+        state: The state the run was executed with (create_selected_run)
+        error: What its orchestrator raised
+    """
+    metadata = dict(getattr(error, "llm_metadata", None) or {})
+    model = state.input_data.get("model")
+    if model and not metadata.get("model"):
+        metadata["model"] = model
+    return metadata
+
+
 def _source_summary(input_data: dict[str, Any]) -> dict[str, Any]:
     """
     What an extraction run records in its input_summary about where it reads

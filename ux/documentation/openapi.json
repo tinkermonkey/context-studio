@@ -4161,7 +4161,7 @@
           "pipelines"
         ],
         "summary": "Run Pipeline",
-        "description": "Invoke a pipeline by type.\n\nThe request body structure depends on the pipeline type. Supported types:\n- individual_extraction: requires text and ontology_id. With the default\n  implementation, an unknown ontology_id is a 400, and an extraction that\n  fails because an LLM response stays incomplete is a 500 whose detail\n  gives the reason; with async either fails the run instead\n- schema_extraction: requires documents, optional scope\n- schema_node_grounding: requires node_id (a class) or node_label; optional\n  sources (default: the configuration's sources). An unknown node_id is a 400;\n  with async it fails the run instead\n- schema_node_definition_refinement: requires node_id (a class or a property\n  definition) and current_definition, optional groundings and extraction_usages\n- schema_node_connection_refinement: requires scope_id and\n  current_connections, optional groundings and extraction_usages\n- schema_relationship_reflection: requires taxonomy_id, optional scope (a\n  scheme id or identifier, or relationship type ids); proposes its change\n  plan as a change proposal (the run's proposal_id)\n\nCreates a pipeline run, executes it with the registered implementation,\nand returns the run with execution results. A run whose execution fails is\na 500 whose detail ends with the failed run's id; the run records the reason. With `async: true` the run is\nstored pending and returned at once (202); a background worker executes it.\n\nArgs:\n    pipeline_type: The pipeline type (e.g., individual_extraction)\n    request_body: Type-specific request payload\n    request: FastAPI request (for service access)\n\nReturns:\n    PipelineRunResponse with the executed PipelineRun\n\nRaises:\n    HTTPException: 400 for invalid input, 404 for missing config/impl, 500 for execution errors",
+        "description": "Invoke a pipeline by type.\n\nThe request body structure depends on the pipeline type. Supported types:\n- individual_extraction: requires text and ontology_id. With the find-then-type\n  and two-pass implementations, an unknown ontology_id is a 400, and an extraction that\n  fails because an LLM response stays incomplete is a 500 whose detail\n  gives the reason; with async either fails the run instead\n- schema_extraction: requires documents, optional scope\n- schema_node_grounding: requires node_id (a class) or node_label; optional\n  sources (default: the configuration's sources). An unknown node_id is a 400;\n  with async it fails the run instead\n- schema_node_definition_refinement: requires node_id (a class or a property\n  definition) and current_definition, optional groundings and extraction_usages\n- schema_node_connection_refinement: requires scope_id and\n  current_connections, optional groundings and extraction_usages\n- schema_relationship_reflection: requires taxonomy_id, optional scope (a\n  scheme id or identifier, or relationship type ids); proposes its change\n  plan as a change proposal (the run's proposal_id)\n\nCreates a pipeline run, executes it with the registered implementation,\nand returns the run with execution results. A run whose execution fails is\na 500 whose detail ends with the failed run's id; the run records the reason. With `async: true` the run is\nstored pending and returned at once (202); a background worker executes it.\n\nArgs:\n    pipeline_type: The pipeline type (e.g., individual_extraction)\n    request_body: Type-specific request payload\n    request: FastAPI request (for service access)\n\nReturns:\n    PipelineRunResponse with the executed PipelineRun\n\nRaises:\n    HTTPException: 400 for invalid input, 404 for missing config/impl, 500 for execution errors",
         "operationId": "run_pipeline_api_pipelines__pipeline_type__run_post",
         "parameters": [
           {
@@ -5554,7 +5554,7 @@
           "pipelines"
         ],
         "summary": "Delete Configuration",
-        "description": "Soft-delete a user pipeline configuration.\n\nThe configuration no longer appears in list responses and no run can be\nstarted with it. Its versions stay in the in-memory registry for the runs\nalready pinned to them.\n\nArgs:\n    config_id: The configuration UUID\n    request: FastAPI request\n\nRaises:\n    HTTPException: 404 if not found or already deleted",
+        "description": "Soft-delete a user pipeline configuration.\n\nThe configuration no longer appears in list responses and no run can be\nstarted with it. A run still queued with it fails, saying its configuration\nwas deleted after it was queued.\n\nArgs:\n    config_id: The configuration UUID\n    request: FastAPI request\n\nRaises:\n    HTTPException: 404 if not found or already deleted",
         "operationId": "delete_configuration_api_pipeline_configurations__config_id__delete",
         "parameters": [
           {
@@ -16833,28 +16833,71 @@
         "title": "PipelineConfigurationParameterSettings",
         "description": "The LLM parameters a user-created configuration sets. A temperature or\noutput limit left out (or null) is unset: its runs use the value of the\nimplementation's default configuration, never a default of this form."
       },
-      "PipelineConfigurationParameters": {
+      "PipelineConfigurationParameterValues": {
         "properties": {
           "temperature": {
-            "type": "number",
-            "maximum": 2.0,
-            "minimum": 0.0,
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Temperature",
-            "description": "Sampling temperature",
-            "default": 0.4
+            "description": "Sampling temperature; null = unset"
           },
           "max_tokens": {
-            "type": "integer",
-            "maximum": 20000.0,
-            "minimum": 64.0,
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Max Tokens",
-            "description": "The most output tokens one model call of a run may produce. A model that thinks before it answers spends part of it thinking, so it needs well above what the answer takes (the system configurations of Claude 5.5 models use 16000-20000). At most 20000: what every provider can send in one request",
-            "default": 800
+            "description": "Output-token limit; null = unset"
           },
           "top_p": {
             "type": "number",
-            "maximum": 1.0,
-            "minimum": 0.0,
+            "title": "Top P",
+            "description": "Nucleus sampling probability",
+            "default": 0.9
+          }
+        },
+        "type": "object",
+        "title": "PipelineConfigurationParameterValues",
+        "description": "What a configuration itself sets, as stored: a null temperature or\nmax_tokens is unset. The shape of PipelineConfigurationParameterSettings,\nwithout its bounds: a listing shows a stored value as it is."
+      },
+      "PipelineConfigurationParameters": {
+        "properties": {
+          "temperature": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature",
+            "description": "Sampling temperature in effect; null when none is set"
+          },
+          "max_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Tokens",
+            "description": "Output-token limit in effect: the most output tokens one model call of a run may produce; null when none is set"
+          },
+          "top_p": {
+            "type": "number",
             "title": "Top P",
             "description": "Nucleus sampling probability",
             "default": 0.9
@@ -16862,7 +16905,7 @@
         },
         "type": "object",
         "title": "PipelineConfigurationParameters",
-        "description": "The LLM parameters in effect for a pipeline configuration: what its runs\nuse. A temperature or output limit a user-created configuration leaves\nunset is shown as the implementation's default configuration's."
+        "description": "The LLM parameters in effect for a pipeline configuration: what its runs\nare given. A temperature or output limit the configuration leaves unset is\nits implementation's default configuration's; one neither sets is null,\nand a run is then given none. Stored values are shown as they are, not\nchecked against the bounds new values must meet."
       },
       "PipelineConfigurationResponse": {
         "properties": {
@@ -16951,12 +16994,12 @@
                 "type": "null"
               }
             ],
-            "description": "The LLM parameters in effect: what the configuration's runs use, a value it leaves unset shown as the implementation's default configuration's. Null for a configuration whose runs take no temperature or output limit"
+            "description": "The LLM parameters in effect: what the configuration's runs are given, a value it leaves unset shown as the implementation's default configuration's (null when that sets none either). Null for a configuration whose runs take no temperature or output limit"
           },
           "parameter_settings": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/PipelineConfigurationParameterSettings"
+                "$ref": "#/components/schemas/PipelineConfigurationParameterValues"
               },
               {
                 "type": "null"
@@ -17124,7 +17167,7 @@
               }
             ],
             "title": "Configuration Ref",
-            "description": "One of the implementation's configurations; its default configuration when omitted. Its model, temperature and output-token limit are the run's unless the body names its own (model, temperature, max_tokens)"
+            "description": "One of the implementation's configurations; its default configuration when omitted. Its model, temperature and output-token limit are the run's unless the body names its own (model, temperature, max_tokens; max_tokens at most 20000, above which the run is refused with a 422)"
           },
           "async": {
             "anyOf": [

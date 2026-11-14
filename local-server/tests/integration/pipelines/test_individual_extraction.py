@@ -290,14 +290,23 @@ class TestIndividualExtractionRegistration:
         assert config.config["model"] == "google/gemini-3-flash-preview"
         assert config.version == 1
 
-    def test_extraction_default_is_the_default_implementations_default(
+    def test_find_then_type_is_the_types_default_and_default_is_only_a_name(
         self, registered_extraction
     ):
-        """A run that names nothing uses 'default' with 'extraction-default'."""
+        """
+        A run that names nothing uses find-then-type; the two-pass implementation
+        keeps the id 'default' and its own default configuration.
+        """
         impl_registry, config_registry = registered_extraction
 
         assert impl_registry.default_implementation(PipelineType.INDIVIDUAL_EXTRACTION) == (
-            "default"
+            "find_then_type"
+        )
+        assert (
+            config_registry.default_configuration(
+                PipelineType.INDIVIDUAL_EXTRACTION, "find_then_type"
+            )
+            == "extraction-find-then-type"
         )
         assert (
             config_registry.default_configuration(PipelineType.INDIVIDUAL_EXTRACTION, "default")

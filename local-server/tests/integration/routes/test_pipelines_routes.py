@@ -208,9 +208,10 @@ class TestPipelineImplementationEndpoints:
         assert response.status_code == status.HTTP_200_OK
         assert sorted(response.json(), key=lambda i: i["id"]) == [
             {
+                # Two-pass: its id is a name, it is not the type's default
                 "id": "default",
                 "pipeline_type": "individual_extraction",
-                "is_default": True,
+                "is_default": False,
                 "default_configuration": "extraction-default",
                 "extracts_sources": True,
                 "source_configuration": "extraction-default",
@@ -218,7 +219,7 @@ class TestPipelineImplementationEndpoints:
             {
                 "id": "find_then_type",
                 "pipeline_type": "individual_extraction",
-                "is_default": False,
+                "is_default": True,
                 "default_configuration": "extraction-find-then-type",
                 "extracts_sources": True,
                 "source_configuration": "extraction-find-then-type",

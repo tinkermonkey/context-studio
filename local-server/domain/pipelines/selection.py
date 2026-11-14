@@ -27,6 +27,7 @@ from typing import Any
 from domain.pipelines.entities import PipelineType
 from domain.pipelines.exceptions import (
     ConfigurationDisabledError,
+    RunParameterError,
     UnknownConfigurationError,
     UnknownImplementationError,
 )
@@ -86,12 +87,31 @@ class PipelineSelection:
         configuration's model, temperature and output-token limit
         (`parameters`) filled in. A parameter the input gives wins, so a
         caller can still run a configuration with another model.
+
+        Raises:
+            RunParameterError: If the output-token limit the run would execute
+                with, named in its input or set by its configuration, is not a
+                whole number from 1 to MAX_OUTPUT_TOKENS
         """
         filled = dict(input_data)
+        named = filled.get("max_tokens") is not None
         for key, configured in self.parameters.items():
             given = filled.get(key)
             if given is None or given == "":
                 filled[key] = configured
+        limit = filled.get("max_tokens")
+        if limit is not None and not _is_output_limit(limit):
+            whose = (
+                "The run's input names"
+                if named
+                else f"The {self.configuration_ref!r} configuration sets"
+            )
+            raise RunParameterError(
+                f"{whose} max_tokens {limit!r}: the output-token limit of a run is a whole"
+                f" number from 1 to {MAX_OUTPUT_TOKENS}, the most every provider can be asked"
+                " for in one request"
+                + ("" if named else "; edit the configuration, or name a limit in the run's input")
+            )
         return filled
 
 
@@ -310,6 +330,12 @@ class PipelineResolver:
                     )
         if missing:
             raise ValueError("Pipeline registration is incomplete: " + "; ".join(missing))
+
+
+def _is_output_limit(value: Any) -> bool:
+    return (
+        isinstance(value, int) and not isinstance(value, bool) and 1 <= value <= MAX_OUTPUT_TOKENS
+    )
 
 
 def _listed(names: Any) -> str:

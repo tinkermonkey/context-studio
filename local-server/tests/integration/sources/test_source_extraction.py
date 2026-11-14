@@ -265,7 +265,44 @@ def finished(app, run_id):
 
 
 def extract(client, source_id, **body):
-    return client.post(f"/api/sources/{source_id}/extract", json={"dataset": "home", **body})
+    """
+    Extract a source with the two-pass implementation, whose service the fakes
+    here stand in for, unless the body names another. Its id is "default": a
+    name, not the type's default (see TestDefaultImplementation).
+    """
+    return client.post(
+        f"/api/sources/{source_id}/extract",
+        json={"dataset": "home", "implementation_id": "default", **body},
+    )
+
+
+class TestDefaultImplementation:
+    def test_nothing_named_extracts_with_find_then_type(self, client, app, house):
+        source = add_pdf(client, house)
+
+        response = client.post(f"/api/sources/{source['id']}/extract", json={"dataset": "home"})
+
+        assert response.status_code == 202, response.text
+        [run] = response.json()["runs"]
+        stored = app.state.runs.get(run["run_id"])
+        # Individual extraction's default implementation and its default configuration
+        assert stored.implementation_id == "find_then_type"
+        assert stored.configuration_ref == "extraction-find-then-type"
+
+    def test_naming_default_extracts_with_two_pass(self, client, app, house):
+        source = add_pdf(client, house)
+
+        response = client.post(
+            f"/api/sources/{source['id']}/extract",
+            json={"dataset": "home", "implementation_id": "default"},
+        )
+
+        assert response.status_code == 202, response.text
+        stored = app.state.runs.get(response.json()["runs"][0]["run_id"])
+        assert (stored.implementation_id, stored.configuration_ref) == (
+            "default",
+            "extraction-default",
+        )
 
 
 class TestExtractRoute:
@@ -371,8 +408,9 @@ class TestExtractRoute:
             "schema-extraction-default",
         )
         assert another_implementations.status_code == 422
-        assert "is a configuration of the open_v1 implementation" in (
-            another_implementations.json()["detail"]
+        assert (
+            "is a configuration of the open_v1 implementation"
+            in (another_implementations.json()["detail"])
         )
         assert cannot_extract.status_code == 422
         assert "can extract a source (one of: default)" in cannot_extract.json()["detail"]

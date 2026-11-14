@@ -42,9 +42,21 @@ from domain.pipelines.registry import (
 EXTRACTION = PipelineType.INDIVIDUAL_EXTRACTION
 CONFIGURATIONS = "/api/pipelines/types/individual_extraction/implementations/default/configurations"
 RUN = "/api/pipelines/individual_extraction/run"
-BODY = {"text": "Ada Lovelace wrote the first program.", "ontology_id": "tax-1"}
-# What extraction-default, the implementation's default configuration, sets
+# The configurations here are of the two-pass implementation, whose id is "default"
+# (a name: individual extraction's default implementation is find-then-type)
+BODY = {
+    "text": "Ada Lovelace wrote the first program.",
+    "ontology_id": "tax-1",
+    "implementation_id": "default",
+}
+# What extraction-default, that implementation's default configuration, sets
 DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS = 0.0, 20000
+# Why a run queued with an earlier version of a stored configuration fails
+CHANGED = (
+    "The configuration {ref!r} of individual_extraction:default was changed or deleted after"
+    " this run was queued: version 1, which the run was accepted with, no longer exists, so"
+    " the run cannot execute as it was accepted. Submit the run again."
+)
 
 
 class RecordingExtraction:
@@ -328,21 +340,63 @@ class TestParameterSettings:
 
 
 class TestAcrossAnEditAndARestart:
-    def test_a_queued_run_keeps_the_parameters_it_was_submitted_with(self, server, extraction):
+    def test_a_queued_run_is_stored_with_the_parameters_it_was_submitted_with(
+        self, server, extraction
+    ):
         client = server()
         configuration = create(client, model="first-model")
         pending = client.post(
             RUN, json={**BODY, "configuration_ref": configuration["config_ref"], "async": True}
         ).json()
-
-        # Edited while the run waits; the workers have not started
-        update(client, configuration, model="edited-model")
         client.app.state.run_executor.start()
 
         run = finished(client, pending["id"])
         assert run.status == PipelineRunStatus.COMPLETED, run.failure_reason
         assert extraction.parameters() == [("first-model", DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS)]
         assert run.llm_metadata["model"] == "first-model"
+
+    @pytest.mark.parametrize("restart", [False, True], ids=["no restart", "restart"])
+    def test_a_run_queued_before_its_configuration_was_edited_fails_saying_so(
+        self, server, extraction, restart
+    ):
+        client = server()
+        configuration = create(client, model="first-model")
+        pending = client.post(
+            RUN, json={**BODY, "configuration_ref": configuration["config_ref"], "async": True}
+        ).json()
+
+        # Edited while the run waits; only the latest content of a stored
+        # configuration is kept, so the version the run was accepted with is gone
+        update(client, configuration, model="edited-model")
+        if restart:
+            client = server()
+        client.app.state.run_executor.start()
+
+        run = finished(client, pending["id"])
+        assert run.status == PipelineRunStatus.FAILED
+        assert run.failure_reason == CHANGED.format(ref=configuration["config_ref"])
+        # It did not run with the edited configuration instead
+        assert extraction.calls == []
+
+    @pytest.mark.parametrize("restart", [False, True], ids=["no restart", "restart"])
+    def test_a_run_queued_before_its_configuration_was_deleted_fails_saying_so(
+        self, server, extraction, restart
+    ):
+        client = server()
+        configuration = create(client)
+        pending = client.post(
+            RUN, json={**BODY, "configuration_ref": configuration["config_ref"], "async": True}
+        ).json()
+
+        client.delete(f"/api/pipeline_configurations/{configuration['id']}")
+        if restart:
+            client = server()
+        client.app.state.run_executor.start()
+
+        run = finished(client, pending["id"])
+        assert run.status == PipelineRunStatus.FAILED
+        assert run.failure_reason == CHANGED.format(ref=configuration["config_ref"])
+        assert extraction.calls == []
 
     def test_a_run_pinned_to_the_latest_version_runs_after_a_restart(self, server, extraction):
         client = server()
@@ -361,25 +415,6 @@ class TestAcrossAnEditAndARestart:
         run = finished(client, pending["id"])
         assert run.status == PipelineRunStatus.COMPLETED, run.failure_reason
         assert extraction.parameters() == [("third-model", DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS)]
-
-    def test_a_run_pinned_to_a_version_that_is_gone_fails_and_never_runs_another(
-        self, server, extraction
-    ):
-        client = server()
-        configuration = create(client, model="first-model")
-        pending = client.post(
-            RUN, json={**BODY, "configuration_ref": configuration["config_ref"], "async": True}
-        ).json()
-        update(client, configuration, model="edited-model")
-
-        client = server()  # restart: only the latest version's content is stored
-        client.app.state.run_executor.start()
-
-        run = finished(client, pending["id"])
-        assert run.status == PipelineRunStatus.FAILED
-        assert "v1 is no longer registered" in run.failure_reason
-        # It did not run with the edited configuration instead
-        assert extraction.calls == []
 
     def test_a_restart_registers_a_configuration_under_its_stored_version(self, server):
         client = server()
@@ -412,16 +447,63 @@ class TestDeletedConfiguration:
         assert configuration["config_ref"] not in other.json()["detail"]
         assert extraction.calls == []
 
-    def test_a_run_already_pinned_to_it_still_executes(self, server, extraction):
+
+class TestListingStoredValues:
+    """A listing shows stored values as they are; it is a run that is refused."""
+
+    def test_a_stored_limit_above_the_bound_is_listed_not_an_error(
+        self, server, databases, extraction
+    ):
+        # Only a row written under an earlier bound, or by hand, can hold one
+        PipelineConfigurationRepository(databases.operations).create(
+            pipeline_type=EXTRACTION.value,
+            implementation_id="default",
+            name="Too much",
+            provider="anthropic",
+            model="m",
+            max_tokens=64000,
+        )
         client = server()
-        configuration = create(client)
-        pending = client.post(
-            RUN, json={**BODY, "configuration_ref": configuration["config_ref"], "async": True}
-        ).json()
 
-        client.delete(f"/api/pipeline_configurations/{configuration['id']}")
-        client.app.state.run_executor.start()
+        listed = client.get(CONFIGURATIONS)
+        run = client.post(RUN, json={**BODY, "configuration_ref": "cfg_too_much"})
 
-        run = finished(client, pending["id"])
-        assert run.status == PipelineRunStatus.COMPLETED, run.failure_reason
-        assert extraction.parameters() == [("my-model", DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS)]
+        assert listed.status_code == status.HTTP_200_OK, listed.text
+        stored = next(c for c in listed.json() if c["config_ref"] == "cfg_too_much")
+        assert stored["parameters"]["max_tokens"] == 64000
+        assert stored["parameter_settings"]["max_tokens"] == 64000
+        assert client.get(f"/api/pipeline_configurations/{stored['id']}").status_code == 200
+        # The run, not the listing, is what the bound refuses
+        assert run.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+        assert "The 'cfg_too_much' configuration sets max_tokens 64000" in run.json()["detail"]
+        assert extraction.calls == []
+
+    def test_a_value_nothing_sets_is_null_not_a_placeholder(self, server):
+        client = server()
+        # An implementation whose default configuration sets a temperature and no limit
+        client.app.state.implementation_registry.register_impl(EXTRACTION, "probe", object)
+        client.app.state.config_registry.register(
+            EXTRACTION, "probe", "probe-default", {"model": "m", "temperature": 0.2}, default=True
+        )
+        client.app.state.config_registry.register(
+            EXTRACTION, "probe", "probe-other", {"model": "n"}
+        )
+
+        listed = client.get(
+            "/api/pipelines/types/individual_extraction/implementations/probe/configurations"
+        )
+
+        assert listed.status_code == status.HTTP_200_OK, listed.text
+        shown = {c["config_ref"]: (c["parameters"], c["parameter_settings"]) for c in listed.json()}
+        assert shown == {
+            # No limit is set anywhere: the run is given none, and none is shown
+            "probe-default": (
+                {"temperature": 0.2, "max_tokens": None, "top_p": 0.9},
+                {"temperature": 0.2, "max_tokens": None, "top_p": 0.9},
+            ),
+            # It sets neither: its temperature in effect is the default configuration's
+            "probe-other": (
+                {"temperature": 0.2, "max_tokens": None, "top_p": 0.9},
+                {"temperature": None, "max_tokens": None, "top_p": 0.9},
+            ),
+        }

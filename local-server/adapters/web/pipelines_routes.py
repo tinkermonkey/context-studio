@@ -24,6 +24,7 @@ Error handling translates domain exceptions to appropriate HTTP responses.
 """  # noqa: E501
 
 import asyncio
+from collections.abc import Mapping
 from datetime import datetime, timezone
 from typing import Any, Optional
 
@@ -36,6 +37,7 @@ from adapters.factories.orchestrator_factory import (
     build_orchestrator_services,
     build_run_specific_data,
     create_selected_run,
+    failed_run_llm_metadata,
     run_llm_metadata,
 )
 from adapters.persistence.sqlite.pipeline_config_repo import (
@@ -67,7 +69,7 @@ from adapters.web.schemas.pipelines import (
     NodeReference,
     PipelineConfigurationCreateRequest,
     PipelineConfigurationParameters,
-    PipelineConfigurationParameterSettings,
+    PipelineConfigurationParameterValues,
     PipelineConfigurationResponse,
     PipelineConfigurationUpdateRequest,
     PipelineRunRequest,
@@ -115,6 +117,7 @@ from domain.pipelines.exceptions import (
     PipelineInputError,
     PipelineSelectionError,
     PipelineStorageError,
+    RunParameterError,
 )
 from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
 from domain.pipelines.registry import (
@@ -165,11 +168,12 @@ def _resolver(request: Request) -> PipelineResolver:
 def _selection_http_error(exc: PipelineSelectionError) -> HTTPException:
     """
     404 for an implementation or configuration that isn't there (or is another
-    implementation's), 422 for a disabled configuration. The detail names what is valid.
+    implementation's), 422 for a disabled configuration or an output-token limit
+    no run can execute with. The detail names what is valid.
     """
     status_code = (
         http_status.HTTP_422_UNPROCESSABLE_CONTENT
-        if isinstance(exc, ConfigurationDisabledError)
+        if isinstance(exc, (ConfigurationDisabledError, RunParameterError))
         else http_status.HTTP_404_NOT_FOUND
     )
     return HTTPException(status_code=status_code, detail=str(exc))
@@ -785,8 +789,32 @@ def _stored_stage_prompts(
         ) from exc
 
 
+def _parameter_views(
+    in_effect: Mapping[str, Any], own: Mapping[str, Any], top_p: float
+) -> tuple[PipelineConfigurationParameters | None, PipelineConfigurationParameterValues | None]:
+    """
+    A configuration's parameters as a response shows them: those in effect
+    (what its runs are given; null where nothing sets a value) and those it
+    sets itself. (None, None) for a configuration whose runs take neither a
+    temperature nor an output limit.
+    """
+    if in_effect.get("temperature") is None and in_effect.get("max_tokens") is None:
+        return None, None
+    return (
+        PipelineConfigurationParameters(
+            temperature=in_effect.get("temperature"),
+            max_tokens=in_effect.get("max_tokens"),
+            top_p=top_p,
+        ),
+        PipelineConfigurationParameterValues(
+            temperature=own.get("temperature"), max_tokens=own.get("max_tokens"), top_p=top_p
+        ),
+    )
+
+
 def _system_config_to_response(
-    pipeline_type: str,
+    request: Request,
+    pipeline_type: PipelineType,
     impl_id: str,
     config_ref: str,
     version_obj: Any,
@@ -795,24 +823,14 @@ def _system_config_to_response(
 ) -> PipelineConfigurationResponse:
     """Convert an in-memory system configuration to a response schema."""
     cfg = version_obj.config
-    params = None
-    settings = None
-    if any(k in cfg for k in ("temperature", "max_tokens", "top_p")):
-        params = PipelineConfigurationParameters(
-            temperature=cfg.get("temperature", 0.4),
-            max_tokens=cfg.get("max_tokens", 800),
-            top_p=cfg.get("top_p", 0.9),
-        )
-        settings = PipelineConfigurationParameterSettings(
-            temperature=cfg.get("temperature"),
-            max_tokens=cfg.get("max_tokens"),
-            top_p=cfg.get("top_p", 0.9),
-        )
+    params, settings = _parameter_views(
+        _resolver(request).parameters(pipeline_type, impl_id, cfg), cfg, cfg.get("top_p", 0.9)
+    )
     provider = cfg.get("llm_provider") or cfg.get("provider")
     return PipelineConfigurationResponse(
-        id=f"{pipeline_type}:{impl_id}:{config_ref}",
+        id=f"{pipeline_type.value}:{impl_id}:{config_ref}",
         config_ref=config_ref,
-        pipeline_type=pipeline_type,
+        pipeline_type=pipeline_type.value,
         implementation_id=impl_id,
         name=cfg.get("name") or config_ref,
         description=cfg.get("description"),
@@ -839,17 +857,17 @@ def _db_config_to_response(
     """
     Convert a DB pipeline configuration record to a response schema. Its
     parameters are those in effect: a temperature or output limit the record
-    leaves unset is the implementation's default configuration's.
+    leaves unset is the implementation's default configuration's. Stored
+    values are shown as they are, whatever bound new values must meet.
     """
+    own = registry_config(record)
     try:
         in_effect = _resolver(request).parameters(
-            PipelineType(record.pipeline_type), record.implementation_id, registry_config(record)
+            PipelineType(record.pipeline_type), record.implementation_id, own
         )
     except ValueError:  # a record of a pipeline type that no longer exists
-        in_effect = registry_config(record)
-    # A type whose runs take neither (its configurations set none) shows no parameters
-    takes_parameters = "temperature" in in_effect or "max_tokens" in in_effect
-    shown = PipelineConfigurationParameters()
+        in_effect = own
+    params, settings = _parameter_views(in_effect, own, record.top_p)
 
     def _parse_dt(s: Optional[str]) -> Optional[datetime]:
         if not s:
@@ -869,20 +887,8 @@ def _db_config_to_response(
         provider=record.provider,
         model=record.model,
         stage_prompts=_stage_prompt_views(stages, record.stage_prompts),
-        parameters=PipelineConfigurationParameters(
-            temperature=in_effect.get("temperature", shown.temperature),
-            max_tokens=in_effect.get("max_tokens", shown.max_tokens),
-            top_p=record.top_p,
-        )
-        if takes_parameters
-        else None,
-        parameter_settings=PipelineConfigurationParameterSettings(
-            temperature=record.temperature,
-            max_tokens=record.max_tokens,
-            top_p=record.top_p,
-        )
-        if takes_parameters
-        else None,
+        parameters=params,
+        parameter_settings=settings,
         enabled=record.enabled,
         is_default=is_default,
         version=record.version,
@@ -962,7 +968,7 @@ async def list_configurations(
     default_ref = config_registry.default_configuration(ptype, impl_id)
     result: list[PipelineConfigurationResponse] = [
         _system_config_to_response(
-            ptype.value, impl_id, config_ref, version_obj, stages, config_ref == default_ref
+            request, ptype, impl_id, config_ref, version_obj, stages, config_ref == default_ref
         )
         for config_ref, version_obj in system_configs
         if config_ref not in known_user_refs
@@ -1122,8 +1128,8 @@ async def run_pipeline(
     Invoke a pipeline by type.
 
     The request body structure depends on the pipeline type. Supported types:
-    - individual_extraction: requires text and ontology_id. With the default
-      implementation, an unknown ontology_id is a 400, and an extraction that
+    - individual_extraction: requires text and ontology_id. With the find-then-type
+      and two-pass implementations, an unknown ontology_id is a 400, and an extraction that
       fails because an LLM response stays incomplete is a 500 whose detail
       gives the reason; with async either fails the run instead
     - schema_extraction: requires documents, optional scope
@@ -1194,6 +1200,10 @@ async def run_pipeline(
         selection = _resolver(request).resolve(
             ptype, request_body.implementation_id, request_body.configuration_ref
         )
+        # The model, temperature and output limit the run executes with: the
+        # configuration's unless the body names its own. Settled here, before a
+        # run is stored: a limit no provider can be asked for is refused
+        input_data = selection.run_input(input_data)
     except PipelineSelectionError as e:
         raise _selection_http_error(e) from e
     config_version = selection.configuration
@@ -1268,9 +1278,9 @@ async def run_pipeline(
             message = f"{message} (run {run_id})"
         try:
             repo.update_failure_info(run_id, str(exc), output_summary={"error": message})
-            spent = getattr(exc, "llm_metadata", None)
+            spent = failed_run_llm_metadata(state, exc)
             if spent:
-                repo.update_summaries(run_id=run_id, llm_metadata=dict(spent))
+                repo.update_summaries(run_id=run_id, llm_metadata=spent)
             # Update batch timestamps and status when run fails
             batch_repo.update_completed_at(batch_id)
             batch_repo.update_status(batch_id, batch_repo.compute_aggregate_status(batch_id))
@@ -1283,6 +1293,9 @@ async def run_pipeline(
         message = f"{message} (run {run_id})"
         try:
             repo.update_failure_info(run_id, str(exc), output_summary={"error": str(exc)})
+            spent = failed_run_llm_metadata(state, exc)
+            if spent:
+                repo.update_summaries(run_id=run_id, llm_metadata=spent)
             # Update batch timestamps and status when run fails
             batch_repo.update_completed_at(batch_id)
             batch_repo.update_status(batch_id, batch_repo.compute_aggregate_status(batch_id))
@@ -2486,7 +2499,10 @@ async def enqueue_batch_runs(
             specific_data = build_run_specific_data(ptype, specific_source)
             if run_input is not None:
                 # Stored with the parameters it was accepted with, as a submitted run is
-                run_input = selection.run_input(run_input)
+                try:
+                    run_input = selection.run_input(run_input)
+                except PipelineSelectionError as e:
+                    raise _selection_http_error(e) from e
             run = pipeline_run_repo.create(
                 batch_run_id=batch_id,
                 pipeline_type=ptype,
@@ -2790,8 +2806,8 @@ async def delete_configuration(
     Soft-delete a user pipeline configuration.
 
     The configuration no longer appears in list responses and no run can be
-    started with it. Its versions stay in the in-memory registry for the runs
-    already pinned to them.
+    started with it. A run still queued with it fails, saying its configuration
+    was deleted after it was queued.
 
     Args:
         config_id: The configuration UUID
@@ -2814,10 +2830,10 @@ async def delete_configuration(
             status_code=http_status.HTTP_404_NOT_FOUND,
             detail=f"Configuration not found: {config_id}",
         )
-    # No run can be started with it from here on, and it is no longer named as
-    # one that can; runs already pinned to it still find their version
+    # No run can be started with it from here on, it is no longer named as one
+    # that can, and a run still queued with it fails saying it was deleted
     try:
-        request.app.state.config_registry.retire(
+        request.app.state.config_registry.remove(
             PipelineType(record.pipeline_type), record.implementation_id, record.config_ref
         )
     except ValueError as exc:
