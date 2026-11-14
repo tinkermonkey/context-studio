@@ -55,7 +55,6 @@ function makeConfig(overrides: Partial<Config> = {}): Config {
     is_default: false,
     version: 1,
     is_system: false,
-    is_default: false,
     created_at: null,
     updated_at: null,
     ...overrides,
