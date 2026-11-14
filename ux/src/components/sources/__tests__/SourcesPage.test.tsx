@@ -327,6 +327,28 @@ describe("SourcesPage", () => {
     expect(call.search({})).toEqual({ run: "run-1234abcd", schemaRun: "run-schema" });
   });
 
+  it.each([
+    [{ stage: "find_mentions", stage_done: 1, stage_total: 4 }, "finding mentions, chunk 2 of 4"],
+    [{ stage: "type_mention", stage_done: 40, stage_total: 166 }, "typing mentions, 40 of 166"],
+    [
+      { stage: "derive_relationships", stage_done: 2, stage_total: 4, items_done: 2 },
+      "reading relationships, chunk 3 of 4",
+    ],
+  ])("shows the stage a running extraction says it is in: %o", async (stage, text) => {
+    const running = createSource({
+      last_extraction: createLastExtraction([
+        createLastExtractionRun({ items_done: 0, items_total: 4, ...stage }),
+      ]),
+    });
+    serve({ sources: [running] });
+    render(<SourcesPage onTaxonomyChange={vi.fn()} />);
+
+    const cell = await screen.findByTestId("source-last-extraction-src-1");
+    expect(cell).toHaveTextContent("Extracting…");
+    expect(cell).toHaveTextContent(text);
+    expect(cell).not.toHaveTextContent("chunk 1 of 4");
+  });
+
   it("re-reads the list while an extraction runs, and stops once it finishes", async () => {
     let calls = 0;
     const withRun = (status: LastExtractionRun["status"]) =>

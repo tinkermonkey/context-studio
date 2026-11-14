@@ -466,9 +466,106 @@ describe("ExtractSourcePage — progress and result", () => {
     expect(within(screen.getByTestId("extract-chunk-3")).getByText("waiting")).toHaveClass(
       "chip--neutral",
     );
+    // A run that reports chunks only has no stages to show
+    expect(bar).toHaveAttribute("aria-label", "33% of chunks read");
+    expect(screen.queryByTestId("extract-stage-steps")).not.toBeInTheDocument();
 
     await user.click(screen.getByTestId("extract-cancel-run"));
     await waitFor(() => expect(cancelled).toEqual(["run-1234abcd"]));
+  });
+
+  describe("a run that says which stage it is in (find-then-type)", () => {
+    const staged = (stage: string, stage_done: number, stage_total: number, items_done = 0) =>
+      createRun({
+        implementation_id: "find_then_type",
+        configuration_ref: "extraction-find-then-type",
+        items_done,
+        items_total: 4,
+        stage,
+        stage_done,
+        stage_total,
+      });
+    const chip = (testId: string, text: string) =>
+      within(screen.getByTestId(testId)).getByText(text);
+    const step = (stage: string) => screen.getByTestId(`extract-stage-step-${stage}`);
+
+    it("shows the chunks being searched while it finds mentions", async () => {
+      serve({ runs: { "run-1234abcd": staged("find_mentions", 1, 4) } });
+      renderPage({ runId: "run-1234abcd" });
+
+      const headline = await screen.findByTestId("extract-progress-headline");
+      await waitFor(() => expect(headline).toHaveTextContent("Finding mentions: chunk 2 of 4"));
+      expect(headline).toHaveAttribute("aria-live", "polite");
+      const bar = screen.getByTestId("extract-progress-bar");
+      expect(bar).toHaveAttribute("aria-valuenow", "25");
+      expect(bar).toHaveAttribute("aria-label", "25% of chunks searched for mentions");
+
+      const steps = screen.getByTestId("extract-stage-steps");
+      expect(steps).toHaveAttribute("aria-label", "Stages of the run");
+      expect(within(steps).getAllByRole("listitem")).toHaveLength(3);
+      expect(step("find_mentions")).toHaveAttribute("aria-current", "step");
+      expect(step("find_mentions")).toHaveClass("extract-run__stage--current");
+      expect(step("find_mentions")).toHaveTextContent("Find mentions");
+      expect(chip("extract-stage-step-find_mentions", "in progress")).toHaveClass("chip--amber");
+      expect(step("type_mention")).not.toHaveAttribute("aria-current");
+      expect(step("type_mention")).toHaveClass("extract-run__stage--waiting");
+      expect(chip("extract-stage-step-type_mention", "waiting")).toHaveClass("chip--neutral");
+      expect(chip("extract-stage-step-derive_relationships", "waiting")).toHaveClass(
+        "chip--neutral",
+      );
+
+      expect(chip("extract-chunk-1", "mentions found")).toHaveClass("chip--cyan");
+      expect(chip("extract-chunk-2", "finding mentions")).toHaveClass("chip--amber");
+      expect(chip("extract-chunk-3", "waiting")).toHaveClass("chip--neutral");
+      expect(chip("extract-chunk-4", "waiting")).toHaveClass("chip--neutral");
+    });
+
+    it("counts the mentions typed while no chunk moves", async () => {
+      serve({ runs: { "run-1234abcd": staged("type_mention", 40, 166) } });
+      renderPage({ runId: "run-1234abcd" });
+
+      const headline = await screen.findByTestId("extract-progress-headline");
+      await waitFor(() => expect(headline).toHaveTextContent("Typing mentions: 40 of 166"));
+      const bar = screen.getByTestId("extract-progress-bar");
+      expect(bar).toHaveAttribute("aria-valuenow", "24");
+      expect(bar).toHaveAttribute("aria-label", "24% of mentions typed");
+
+      expect(chip("extract-stage-step-find_mentions", "done")).toHaveClass("chip--emerald");
+      expect(step("find_mentions")).toHaveClass("extract-run__stage--done");
+      expect(step("type_mention")).toHaveAttribute("aria-current", "step");
+      expect(step("type_mention")).toHaveTextContent("Type mentions");
+      expect(chip("extract-stage-step-derive_relationships", "waiting")).toHaveClass(
+        "chip--neutral",
+      );
+
+      // Every chunk is searched; none is read, and none reads as being read
+      for (const n of [1, 2, 3, 4]) {
+        expect(chip(`extract-chunk-${n}`, "mentions found")).toHaveClass("chip--cyan");
+      }
+      expect(screen.queryByText("reading")).not.toBeInTheDocument();
+    });
+
+    it("shows the chunks read while it reads relationships", async () => {
+      serve({ runs: { "run-1234abcd": staged("derive_relationships", 1, 4, 1) } });
+      renderPage({ runId: "run-1234abcd" });
+
+      const headline = await screen.findByTestId("extract-progress-headline");
+      await waitFor(() =>
+        expect(headline).toHaveTextContent("Reading relationships: chunk 2 of 4"),
+      );
+      const bar = screen.getByTestId("extract-progress-bar");
+      expect(bar).toHaveAttribute("aria-valuenow", "25");
+      expect(bar).toHaveAttribute("aria-label", "25% of chunks read");
+
+      expect(chip("extract-stage-step-find_mentions", "done")).toHaveClass("chip--emerald");
+      expect(chip("extract-stage-step-type_mention", "done")).toHaveClass("chip--emerald");
+      expect(step("derive_relationships")).toHaveAttribute("aria-current", "step");
+      expect(step("derive_relationships")).toHaveTextContent("Read relationships");
+
+      expect(chip("extract-chunk-1", "read")).toHaveClass("chip--emerald");
+      expect(chip("extract-chunk-2", "reading relationships")).toHaveClass("chip--amber");
+      expect(chip("extract-chunk-3", "mentions found")).toHaveClass("chip--cyan");
+    });
   });
 
   it("ends on the proposal with its counts and a warning for empty chunks", async () => {

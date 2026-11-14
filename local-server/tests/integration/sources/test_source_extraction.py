@@ -7,11 +7,13 @@ A PDF source is extracted through POST /api/sources/{id}/extract; the run
 reads it chunk by chunk and ends in one proposal whose operations carry their
 passages and near matches; applying it with "use existing" records provenance.
 Re-extracting supersedes the earlier proposal. The source's last_extraction
-follows the runs. A run whose provider refuses its requests stops at its first
-chunk, and a failed run records what its model calls cost.
+follows the runs, and says which stage a find-then-type run is in. A run whose
+provider refuses its requests stops at its first chunk, and a failed run
+records what its model calls cost.
 """
 
 import json
+import threading
 import time
 from types import SimpleNamespace
 from unittest.mock import Mock
@@ -36,6 +38,7 @@ from adapters.pipelines.run_executor import BackgroundRunExecutor
 from adapters.sources.file_store import LocalSourceFileStore
 from adapters.sources.readers import source_readers
 from adapters.web.sources_routes import router
+from domain.extraction.entities import Mention
 from domain.extraction.services import ExtractionService
 from domain.extraction.sources import SourceService
 from domain.ontology.services import OntologyService
@@ -435,6 +438,10 @@ class TestExtractionToProposal:
                 "status": "completed",
                 "items_done": 1,
                 "items_total": 1,
+                # The default implementation reports chunks only
+                "stage": None,
+                "stage_done": None,
+                "stage_total": None,
                 "proposal_id": proposal.id,
                 "operations": 3,
             }
@@ -556,6 +563,105 @@ class TestExtractionToProposal:
             "individual_extraction",
             "schema_extraction",
         ]
+
+
+class HeldTypingExtraction:
+    """
+    The find-then-type calls over the guide: find lists the model and its
+    maker, type holds every call until ``release`` is set, relate states that
+    the one is made by the other.
+    """
+
+    NAMES = ("WRF555SDFZ", "Acme")
+
+    def __init__(self, house):
+        self.house = house
+        self.typing = threading.Event()
+        self.release = threading.Event()
+
+    def _result(self, **fields):
+        return SimpleNamespace(
+            warnings=[],
+            metadata={"tokens_used": 1},
+            failure_reason=None,
+            incomplete_response=False,
+            provider_failed=False,
+            provider_refused=False,
+            **fields,
+        )
+
+    def find_mentions(self, text, ontology_id, model, temperature, stage_prompts=None):
+        mentions = [
+            Mention(name, "thing", name, text.index(name), text.index(name) + len(name))
+            for name in self.NAMES
+            if name in text
+        ]
+        return self._result(mentions=mentions)
+
+    def typing_prompt(self, ontology_id, stage_prompts=None):
+        return SimpleNamespace(system="the catalog")
+
+    def type_mention(self, prompt, context, mention, model, temperature):
+        self.typing.set()
+        assert self.release.wait(10), "the test never let the typing go on"
+        class_ref = "house_appliance" if mention.name == "WRF555SDFZ" else "Business"
+        return self._result(class_ref=class_ref, confidence=0.9)
+
+    def relate(self, text, typing_triples, ontology_id, model, temperature, stage_prompts=None):
+        start = text.index("made by Acme")
+        triple = {
+            "subject": {"kind": "individual", "id": "", "label": "WRF555SDFZ"},
+            "predicate": {"property_definition_id": self.house["made_by"], "label": "made_by"},
+            "object": {"kind": "individual", "id": "", "label": "Acme"},
+            "confidence": 0.86,
+            "provenance": {"quote": "made by Acme", "start": start, "end": start + 12},
+        }
+        return self._result(triples=[triple])
+
+    def recognize(self, triples, ontology_id, dataset_id=None):
+        return triples
+
+
+class TestFindThenTypeStage:
+    """A find-then-type run on a source says which stage it is in while it runs."""
+
+    @pytest.fixture()
+    def extraction(self, house):
+        held = HeldTypingExtraction(house)
+        yield held
+        held.release.set()
+
+    def test_a_running_run_exposes_its_stage_beside_the_chunk_count(
+        self, client, app, house, extraction
+    ):
+        source = add_pdf(client, house)
+        [run] = extract(client, source["id"], implementation_id="find_then_type").json()["runs"]
+        app.state.executor.start()
+        assert extraction.typing.wait(10)
+
+        def last_run():
+            last = client.get(f"/api/sources/{source['id']}").json()["last_extraction"]
+            return last["runs"][0]
+
+        # The find is over and the first typing call is held: no chunk is done
+        typing = wait_for(lambda: last_run()["stage"] == "type_mention" and last_run())
+        assert typing["status"] == "running"
+        assert (typing["items_done"], typing["items_total"]) == (0, 1)
+        assert (typing["stage_done"], typing["stage_total"]) == (0, 2)
+        stored = app.state.runs.get(run["run_id"])
+        assert (stored.stage, stored.stage_done, stored.stage_total) == ("type_mention", 0, 2)
+        listed = client.get("/api/sources", params={"taxonomy_id": house["taxonomy"]}).json()
+        assert listed["items"][0]["last_extraction"]["runs"][0]["stage"] == "type_mention"
+
+        extraction.release.set()
+        done = wait_for(lambda: finished(app, run["run_id"]))
+
+        assert done.status is PipelineRunStatus.COMPLETED, done.failure_reason
+        assert (done.items_done, done.items_total) == (1, 1)
+        # The stage it last reported: its one chunk's relationships were read
+        assert (done.stage, done.stage_done, done.stage_total) == ("derive_relationships", 1, 1)
+        assert last_run()["stage"] == "derive_relationships"
+        assert done.proposal_id
 
 
 class TwoPassLLM:

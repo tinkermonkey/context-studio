@@ -1,6 +1,8 @@
 """
 Unit tests for what get_run reports of a run on a source whose chunks failed:
 the payload lists failed_chunks, and the summary never reads as a clean run.
+And of a run that reports the stage it is in: the payload gives the stage, and
+the summary of a running run says it beside the chunk count.
 """
 
 import json
@@ -23,12 +25,14 @@ class _Runs:
 
 def _run(**fields):
     return PipelineRun(
-        id="run-1",
-        batch_run_id="batch-1",
-        status=PipelineRunStatus.COMPLETED,
-        items_done=3,
-        items_total=3,
-        **fields,
+        **{
+            "id": "run-1",
+            "batch_run_id": "batch-1",
+            "status": PipelineRunStatus.COMPLETED,
+            "items_done": 3,
+            "items_total": 3,
+            **fields,
+        }
     )
 
 
@@ -66,3 +70,40 @@ def test_summary_of_a_whole_run_is_unchanged():
     )
     assert outcome.summary == "Run completed (3/3)"
     assert "failed_chunks" in GetRunTool.description
+
+
+TYPING = {
+    "status": PipelineRunStatus.RUNNING,
+    "items_done": 0,
+    "items_total": 4,
+    "stage": "type_mention",
+    "stage_done": 40,
+    "stage_total": 166,
+}
+
+
+def test_payload_gives_the_stage_beside_the_chunk_count():
+    payload = run_payload(_run(**TYPING))
+    assert (payload["items_done"], payload["items_total"]) == (0, 4)
+    assert (payload["stage"], payload["stage_done"], payload["stage_total"]) == (
+        "type_mention",
+        40,
+        166,
+    )
+
+
+def test_payload_of_a_run_that_reports_no_stage_has_none():
+    payload = run_payload(_run())
+    assert (payload["stage"], payload["stage_done"], payload["stage_total"]) == (None, None, None)
+
+
+def test_summary_of_a_running_run_says_its_stage():
+    outcome = GetRunTool(_Runs(_run(**TYPING))).run({"run_id": "run-1"})
+    assert outcome.summary == "Run running (0/4), type_mention 40/166"
+    assert "stage_done of stage_total" in GetRunTool.description
+
+
+def test_summary_of_a_finished_run_leaves_its_last_stage_out():
+    run = _run(stage="derive_relationships", stage_done=3, stage_total=3, proposal_id="prop-1")
+    outcome = GetRunTool(_Runs(run)).run({"run_id": "run-1"})
+    assert outcome.summary == "Run completed (3/3)"

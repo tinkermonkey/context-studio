@@ -3,7 +3,9 @@ Unit tests for FindThenTypeOrchestrator.
 
 The shape finds each chunk's mentions, types each distinct mention of the
 source once (calls side by side), relates the typed individuals of each chunk,
-and hands the two-pass shape's triples to the same merge and proposer. Nothing
+and hands the two-pass shape's triples to the same merge and proposer. Each of
+the three is reported as the run's stage, with how far through it the run is,
+beside a chunk count that moves only when relationships are read. Nothing
 that failed reads as "found nothing": a failed part makes its chunk a failed
 chunk, and the run fails when every find or every typing call failed, or at
 once when the provider refuses the model's requests while finding or typing.
@@ -205,12 +207,20 @@ class _FakeExtraction:
 class _StatusWriter:
     def __init__(self):
         self.progress: list = []
+        self.stages: list = []
+        # Every write in order: ("progress" | the stage's key, done, total)
+        self.writes: list = []
 
     def update_running_status(self, run_id, started_at):
         pass
 
     def update_progress(self, run_id, items_done, items_total):
         self.progress.append((items_done, items_total))
+        self.writes.append(("progress", items_done, items_total))
+
+    def update_stage(self, run_id, stage, stage_done, stage_total):
+        self.stages.append((stage, stage_done, stage_total))
+        self.writes.append((stage, stage_done, stage_total))
 
 
 class _Proposer:
@@ -328,6 +338,64 @@ class TestFindThenTypeFlow:
         await _run(_FakeExtraction(), writer)
 
         assert writer.progress == [(0, 3), (1, 3), (2, 3), (3, 3)]
+
+    async def test_each_stage_is_reported_with_how_far_through_it_the_run_is(self):
+        extraction = _FakeExtraction()
+        writer = _StatusWriter()
+
+        await _run(extraction, writer)
+
+        mentions = len(extraction.typed)  # distinct mentions: each is typed once
+        assert mentions > 3
+        assert writer.stages == [
+            # Chunks searched for mentions
+            *[("find_mentions", done, 3) for done in range(4)],
+            # Distinct mentions typed
+            *[("type_mention", done, mentions) for done in range(mentions + 1)],
+            # Chunks whose relationships are read
+            *[("derive_relationships", done, 3) for done in range(4)],
+        ]
+
+    async def test_no_chunk_is_done_until_its_relationships_are_read(self):
+        writer = _StatusWriter()
+
+        await _run(_FakeExtraction(), writer)
+
+        first_relate = writer.writes.index(("derive_relationships", 0, 3))
+        before = writer.writes[:first_relate]
+        assert [w for w in before if w[0] == "progress"] == [("progress", 0, 3)]
+        assert {w[0] for w in before} == {"progress", "find_mentions", "type_mention"}
+        # From there the chunk count and the stage move together
+        assert writer.writes[first_relate:] == [
+            ("derive_relationships", 0, 3),
+            ("progress", 1, 3),
+            ("derive_relationships", 1, 3),
+            ("progress", 2, 3),
+            ("derive_relationships", 2, 3),
+            ("progress", 3, 3),
+            ("derive_relationships", 3, 3),
+        ]
+
+    async def test_the_typing_stage_counts_the_calls_that_returned(self):
+        # A refused call stops the typing: the stage stays at the calls that were made
+        extraction = _FakeExtraction(type={"Part003": "refused"}, type_delay=0.01)
+        writer = _StatusWriter()
+
+        with pytest.raises(ExtractionFailedError):
+            await _run(extraction, writer)
+
+        typing = [(done, total) for stage, done, total in writer.stages if stage == "type_mention"]
+        total = typing[0][1]
+        assert typing == [(done, total) for done in range(len(extraction.typed) + 1)]
+        assert len(extraction.typed) < total
+        assert writer.stages[-1][0] == "type_mention"
+
+    async def test_a_failed_find_still_counts_its_chunk_as_searched(self):
+        writer = _StatusWriter()
+
+        await _run(_FakeExtraction(find={2: "incomplete"}), writer)
+
+        assert writer.stages[:4] == [("find_mentions", done, 3) for done in range(4)]
 
     async def test_the_run_s_cost_is_every_call_s(self):
         state = await _run(_FakeExtraction())
@@ -630,6 +698,7 @@ class TestPastedText:
 
         assert extraction.found == [self.PASTED]
         assert writer.progress == []
+        assert writer.stages == []
         assert len(_typing_triples(state.result["triples"])) == 41
         metadata = state.result["metadata"]
         assert "chunks" not in metadata

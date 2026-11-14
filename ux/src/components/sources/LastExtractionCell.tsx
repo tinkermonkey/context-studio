@@ -7,6 +7,7 @@ import { sourcesCopy } from "./copy";
 import {
   extractionRunIds,
   noProposalSummary,
+  runProgress,
   skippedText,
   type ExtractionRunIds,
 } from "./sourceModel";
@@ -20,9 +21,11 @@ interface LastExtractionCellProps {
   onFollowRun: (runs: ExtractionRunIds) => void;
 }
 
+/** A running run's progress: the stage it is in when it says one, else its chunks. */
 function progressText(run: LastExtractionRun): string {
-  const total = run.items_total ?? 0;
-  return total > 0 ? copy.runProgress(run.items_done ?? 0, total) : copy.runStarting;
+  const { stage, done, total, chunks } = runProgress(run);
+  if (chunks <= 0) return copy.runStarting;
+  return stage ? copy.stageProgress[stage](done, total) : copy.runProgress(done, total);
 }
 
 /** How a run that stopped before finishing ended: interrupted, failed or cancelled. */

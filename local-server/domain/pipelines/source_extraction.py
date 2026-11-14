@@ -51,6 +51,8 @@ class LastExtractionRun:
         pipeline: individual_extraction or schema_extraction
         status: Where it stands
         items_done, items_total: Chunks done, of how many (None until reported)
+        stage, stage_done, stage_total: The stage it last reported and how far
+            through it the run is (None when its implementation reports none)
         proposal_id: The proposal it produced, once it has
         operations: How many operations that proposal has
     """
@@ -62,6 +64,9 @@ class LastExtractionRun:
     items_total: int | None
     proposal_id: str | None
     operations: int | None
+    stage: str | None = None
+    stage_done: int | None = None
+    stage_total: int | None = None
 
 
 @dataclass(frozen=True)
@@ -256,6 +261,9 @@ class SourceExtractionService:
                         status=r.status,
                         items_done=r.items_done,
                         items_total=r.items_total,
+                        stage=r.stage,
+                        stage_done=r.stage_done,
+                        stage_total=r.stage_total,
                         proposal_id=r.proposal_id,
                         operations=counts.get(r.proposal_id) if r.proposal_id else None,
                     )

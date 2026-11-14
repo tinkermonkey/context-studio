@@ -342,6 +342,22 @@ class PipelineRunResponse(BaseModel):
     items_total: Optional[int] = Field(
         None, description="Work items the run will process (null until known)"
     )
+    stage: Optional[str] = Field(
+        None,
+        description=(
+            "The stage the run last reported being in: the key of one of its "
+            "implementation's stages (find_then_type: find_mentions, type_mention, "
+            "derive_relationships). Null when the implementation reports no stages"
+        ),
+    )
+    stage_done: Optional[int] = Field(
+        None,
+        description=(
+            "How far through that stage the run is, in what the stage counts (find_mentions "
+            "and derive_relationships: chunks; type_mention: distinct mentions)"
+        ),
+    )
+    stage_total: Optional[int] = Field(None, description="What the stage counts, in all")
     proposal_id: Optional[str] = Field(
         None, description="The change proposal the run produced, if it produced one"
     )

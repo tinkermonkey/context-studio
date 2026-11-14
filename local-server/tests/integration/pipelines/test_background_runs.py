@@ -408,6 +408,7 @@ class TestBatchCancelAndResume:
         repo = PipelineRepository(session_factory)
         run = submit_noop(executor)
         repo.update_progress(run.id, 3, 7)
+        repo.update_stage(run.id, "type_mention", 2, 9)
         repo.set_proposal_id(run.id, "proposal-1")
         repo.update_failure_info(run.id, "boom")
         bare = repo.create(
@@ -426,6 +427,7 @@ class TestBatchCancelAndResume:
         resumed = repo.get(run.id)
         assert resumed.status == PipelineRunStatus.PENDING
         assert (resumed.items_done, resumed.items_total, resumed.proposal_id) == (None, None, None)
+        assert (resumed.stage, resumed.stage_done, resumed.stage_total) == (None, None, None)
         assert resumed.failure_reason is None
         assert repo.get(bare.id).status == PipelineRunStatus.FAILED
 

@@ -40,7 +40,11 @@ Failures keep the rules of the two-pass shape. Nothing that failed reads as
 A run with failed chunks proposes what it has as a partial proposal, which
 supersedes no other proposal of the source. Progress is counted in chunks, as
 for the two-pass shape: a chunk is done when its relationships are read, so
-the count stays at 0 while mentions are found and typed.
+the count stays at 0 while mentions are found and typed. What the run is doing
+meanwhile is its stage, reported beside the chunk count: the stage's key (one
+of STAGE_PROMPTS) with how far through it the run is, in chunks searched while
+finding, distinct mentions typed while typing, and chunks whose relationships
+are read while relating.
 """
 
 from __future__ import annotations
@@ -53,7 +57,12 @@ from typing import Any
 from domain.extraction.chunking import Chunk
 from domain.extraction.entities import Mention
 from domain.extraction.find_then_type import mention_context, typing_triple
-from domain.extraction.prompts import FIND_THEN_TYPE_STAGES
+from domain.extraction.prompts import (
+    DERIVE_RELATIONSHIPS,
+    FIND_MENTIONS,
+    FIND_THEN_TYPE_STAGES,
+    TYPE_MENTION,
+)
 from domain.pipelines.exceptions import PipelineExecutionError
 from domain.pipelines.individual_extraction.chunk_merge import merge_chunk_triples
 from domain.pipelines.individual_extraction.labels import LabelKeys, has_corporate_suffix
@@ -109,6 +118,8 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
       its next chunk
     - Type each distinct mention once, calls side by side
     - Relate the typed individuals of each chunk in turn, reporting progress
+    - Each of the three is reported as the run's stage, with how far through
+      it the run is
     - Recognize the triples' individuals and merge the triples over the text
     """
 
@@ -176,8 +187,8 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
     ]:
         """
         The whole flow over the given chunks. ``report`` is False for a pasted
-        text, which is one chunk: no progress is reported, and no message
-        speaks of chunks.
+        text, which is one chunk: no progress or stage is reported, and no
+        message speaks of chunks.
 
         Returns:
             (merged triples, warnings, metadata, the failed chunks with why,
@@ -192,6 +203,7 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
 
         if report:
             self._report_progress(0, total)
+            self._report_stage(FIND_MENTIONS, 0, total)
         spent: list[Any] = []  # every call's result: what the run cost
         warnings: list[str] = []
         # Per chunk, why it is a failed chunk: (reason, the result that failed)
@@ -225,6 +237,8 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
                 problems[index].append((result.failure_reason, result))
             warnings.extend(where(index) + w for w in result.warnings)
             found.append(result.mentions)
+            if report:
+                self._report_stage(FIND_MENTIONS, index + 1, total)
         if all(problems):
             raise _failure(
                 [failed for chunk in problems for _, failed in chunk],
@@ -240,7 +254,7 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
         # 2. Type each distinct mention once
         candidates = _candidates(found)
         try:
-            await self._type(state, texts, candidates, spent)
+            await self._type(state, texts, candidates, spent, report)
         except Exception as exc:
             raise PipelineExecutionError(
                 "Typing what the text mentions failed", llm_metadata=_spent(state.model, spent)
@@ -289,6 +303,8 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
                 )
 
         # 3. Relate, per chunk
+        if report:
+            self._report_stage(DERIVE_RELATIONSHIPS, 0, total)
         refusal: str | None = None
         for index, text in enumerate(texts):
             await asyncio.sleep(0)  # a cancelled run stops here
@@ -323,6 +339,7 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
                 )
             if report:
                 self._report_progress(index + 1, total)
+                self._report_stage(DERIVE_RELATIONSHIPS, index + 1, total)
 
         # Recognition reads the graph: once, over every chunk's triples
         every_triple = [triple for triples in chunk_triples for triple in triples]
@@ -386,10 +403,13 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
         texts: list[str],
         candidates: list[_Candidate],
         spent: list[Any],
+        report: bool,
     ) -> None:
         """
         Type every candidate, _TYPING_CONCURRENCY calls at a time, each on a
-        worker thread (the call reads nothing but its arguments).
+        worker thread (the call reads nothing but its arguments). With
+        ``report``, the stage says how many of the candidates' calls have
+        returned, after each one.
 
         The first call is made alone: it is the one that writes the catalog to
         a provider's cache, which the others then read. Once a call is refused
@@ -401,9 +421,12 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
         prompt = self._extraction_service.typing_prompt(state.ontology_id, self._stage_prompts)
         gate = asyncio.Semaphore(_TYPING_CONCURRENCY)
         stopped = False
+        returned = 0  # typing calls that have come back
+        if report:
+            self._report_stage(TYPE_MENTION, 0, len(candidates))
 
         async def type_one(candidate: _Candidate) -> None:
-            nonlocal stopped
+            nonlocal stopped, returned
             index, mention = candidate.typed_in
             async with gate:
                 if stopped:
@@ -417,6 +440,9 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
                     state.temperature,
                 )
                 spent.append(candidate.typing)
+                returned += 1
+                if report:
+                    self._report_stage(TYPE_MENTION, returned, len(candidates))
                 if candidate.typing.failure_reason and candidate.typing.provider_refused:
                     stopped = True
 

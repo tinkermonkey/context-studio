@@ -619,6 +619,9 @@ def _to_response(run: PipelineRun, include_source_text: bool = True) -> Pipeline
             "source_text": run.source_text if include_source_text else None,
             "items_done": run.items_done,
             "items_total": run.items_total,
+            "stage": run.stage,
+            "stage_done": run.stage_done,
+            "stage_total": run.stage_total,
             "proposal_id": run.proposal_id,
         }
     )

@@ -18,9 +18,13 @@ import {
   noProposalSummary,
   proposalCounts,
   runChunks,
+  runProgress,
   skippedText,
+  stageSteps,
   type ChipTone,
   type NoProposalSummary,
+  type RunStage,
+  type StageStepState,
 } from "./sourceModel";
 import type { components } from "@/api/types";
 
@@ -85,6 +89,36 @@ function SchemaRunLine({
   );
 }
 
+const STEP_TONE: Record<StageStepState, ChipTone> = {
+  done: "emerald",
+  current: "amber",
+  waiting: "neutral",
+};
+
+/** The stages of a run that reports them: which are done, which it is in, which wait. */
+function StageSteps({ current }: { current: RunStage }) {
+  return (
+    <ol
+      className="extract-run__stages"
+      aria-label={copy.stagesLabel}
+      data-testid="extract-stage-steps"
+    >
+      {stageSteps(current).map(({ stage, state }, i) => (
+        <li
+          key={stage}
+          className={`extract-run__stage extract-run__stage--${state}`}
+          aria-current={state === "current" ? "step" : undefined}
+          data-testid={`extract-stage-step-${stage}`}
+        >
+          <span className="extract-run__stage-n">{i + 1}</span>
+          <span className="extract-run__stage-label">{copy.stages[stage].label}</span>
+          <Chip variant={STEP_TONE[state]}>{copy.stageState[state]}</Chip>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 function RunningPanel({
   run,
   schemaRun,
@@ -94,9 +128,10 @@ function RunningPanel({
 }: Pick<ExtractRunPanelProps, "schemaRun" | "onCancel" | "cancelling" | "onReview"> & {
   run?: PipelineRun;
 }) {
-  const total = run?.items_total ?? 0;
-  const done = run?.items_done ?? 0;
-  const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+  const { stage, done, total, percent, chunks } = runProgress(run);
+  // A stage says what the run is doing; a run with none is reading its chunks.
+  const words = stage ? copy.stages[stage] : undefined;
+  const headline = words ? words.headline(done, total) : copy.chunkHeadline(done, total);
   return (
     <Panel
       title={copy.runningTitle}
@@ -110,7 +145,7 @@ function RunningPanel({
             aria-live="polite"
             data-testid="extract-progress-headline"
           >
-            {total > 0 ? copy.chunkHeadline(done, total) : copy.starting}
+            {chunks > 0 ? headline : copy.starting}
           </span>
           <Button
             variant="secondary"
@@ -122,11 +157,12 @@ function RunningPanel({
             {copy.cancelRun}
           </Button>
         </div>
+        {stage && <StageSteps current={stage} />}
         <ProgressBar
           percent={percent}
           color="amber"
           height={6}
-          label={copy.percentLabel(percent)}
+          label={words ? words.percentLabel(percent) : copy.percentLabel(percent)}
           data-testid="extract-progress-bar"
         />
         {run && (
@@ -345,8 +381,9 @@ function StoppedPanel({
 }
 
 /**
- * A started extraction: progress by chunk, then its proposal, or why it
- * stopped. Any state but pending or running is final.
+ * A started extraction: progress by chunk (and by stage, for a run that says
+ * which it is in), then its proposal, or why it stopped. Any state but pending
+ * or running is final.
  */
 export function ExtractRunPanel(props: ExtractRunPanelProps) {
   const { run, runError } = props;

@@ -59,6 +59,14 @@ export const sourcesCopy = {
     removeLabel: (title: string) => `Remove ${title}`,
     openProposal: "Open proposal",
     runProgress: (done: number, total: number) => `chunk ${Math.min(done + 1, total)} of ${total}`,
+    /** A run that says which stage it is in; `done` and `total` are the stage's own count. */
+    stageProgress: {
+      find_mentions: (done: number, total: number) =>
+        `finding mentions, chunk ${Math.min(done + 1, total)} of ${total}`,
+      type_mention: (done: number, total: number) => `typing mentions, ${done} of ${total}`,
+      derive_relationships: (done: number, total: number) =>
+        `reading relationships, chunk ${Math.min(done + 1, total)} of ${total}`,
+    },
     runStarting: "starting",
     followRun: "Extracting…",
     noCandidates: "No candidates found",
@@ -131,6 +139,31 @@ export const sourcesCopy = {
     chunkHeadline: (done: number, total: number) =>
       `Chunk ${Math.min(done + 1, total)} of ${total}`,
     percentLabel: (percent: number) => `${percent}% of chunks read`,
+    /**
+     * A run that says which stage it is in (find-then-type): what it is doing
+     * and how far through that it is. A chunk is read once its relationships are.
+     */
+    stages: {
+      find_mentions: {
+        label: "Find mentions",
+        headline: (done: number, total: number) =>
+          `Finding mentions: chunk ${Math.min(done + 1, total)} of ${total}`,
+        percentLabel: (percent: number) => `${percent}% of chunks searched for mentions`,
+      },
+      type_mention: {
+        label: "Type mentions",
+        headline: (done: number, total: number) => `Typing mentions: ${done} of ${total}`,
+        percentLabel: (percent: number) => `${percent}% of mentions typed`,
+      },
+      derive_relationships: {
+        label: "Read relationships",
+        headline: (done: number, total: number) =>
+          `Reading relationships: chunk ${Math.min(done + 1, total)} of ${total}`,
+        percentLabel: (percent: number) => `${percent}% of chunks read`,
+      },
+    },
+    stagesLabel: "Stages of the run",
+    stageState: { done: "done", current: "in progress", waiting: "waiting" },
     cancelRun: "Cancel run",
     cancelFailed: "Could not cancel the run.",
     schemaRun: "Schema suggestions",
@@ -177,6 +210,10 @@ export const sourcesCopy = {
     waiting: "waiting",
     reading: "reading",
     read: "read",
+    /** A staged run (find-then-type): the chunk is being searched, or has been. */
+    finding: "finding mentions",
+    searched: "mentions found",
+    readingRelationships: "reading relationships",
     found: (n: number) => `${n} found`,
     failed: "failed",
     /** A chunk that failed in part: what it still gave. */

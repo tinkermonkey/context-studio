@@ -187,6 +187,87 @@ export function formatUsd(usd: number): string {
   return usd < 0.01 ? "under $0.01" : `$${usd.toFixed(2)}`;
 }
 
+/**
+ * The stages a find-then-type run reports, in the order it runs them: it finds
+ * what each chunk mentions, types each distinct mention of the source, then
+ * reads each chunk's relationships. Other implementations report none.
+ */
+export const RUN_STAGES = ["find_mentions", "type_mention", "derive_relationships"] as const;
+
+export type RunStage = (typeof RUN_STAGES)[number];
+
+/** What a run says of its progress: on a run, and on a source's last extraction. */
+export interface RunProgressFields {
+  items_done?: number | null;
+  items_total?: number | null;
+  stage?: string | null;
+  stage_done?: number | null;
+  stage_total?: number | null;
+}
+
+export interface RunProgress {
+  /** The stage the run is in; undefined for a run that reports chunks only. */
+  stage?: RunStage;
+  /**
+   * How far through it the run is: chunks searched (find_mentions), distinct
+   * mentions typed (type_mention), chunks read (derive_relationships, and a
+   * run with no stage).
+   */
+  done: number;
+  total: number;
+  percent: number;
+  /** Chunks whose every part is read, of how many: a run's items, whatever its stage. */
+  chunksRead: number;
+  chunks: number;
+}
+
+/**
+ * Where a running run stands. A run that reports a stage this page knows is
+ * measured in that stage's own count; any other in chunks read, as before
+ * stages were reported.
+ */
+export function runProgress(run?: RunProgressFields): RunProgress {
+  const chunks = run?.items_total ?? 0;
+  const chunksRead = run?.items_done ?? 0;
+  const stage = RUN_STAGES.find((known) => known === run?.stage);
+  const total = stage ? (run?.stage_total ?? 0) : chunks;
+  const done = stage ? (run?.stage_done ?? 0) : chunksRead;
+  const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+  return { stage, done, total, percent, chunksRead, chunks };
+}
+
+export type StageStepState = "done" | "current" | "waiting";
+
+/** Each stage of a staged run, as passed, under way or still to come. */
+export function stageSteps(current: RunStage): { stage: RunStage; state: StageStepState }[] {
+  const at = RUN_STAGES.indexOf(current);
+  return RUN_STAGES.map((stage, i) => ({
+    stage,
+    state: i < at ? "done" : i === at ? "current" : "waiting",
+  }));
+}
+
+export type ChunkState = "waiting" | "finding" | "searched" | "reading" | "read";
+
+/**
+ * What each chunk of a running run is at. A run with no stage reads its chunks
+ * one after another. A staged run searches every chunk for mentions first,
+ * types the mentions of the whole source (no chunk moves meanwhile), then
+ * reads each chunk's relationships.
+ */
+export function chunkStates(progress: RunProgress, running: boolean): ChunkState[] {
+  const { stage, done, chunks, chunksRead } = progress;
+  return Array.from({ length: chunks }, (_, i): ChunkState => {
+    if (stage === "find_mentions") {
+      return i < done ? "searched" : running && i === done ? "finding" : "waiting";
+    }
+    if (stage === "type_mention") return "searched";
+    if (i < chunksRead) return "read";
+    if (running && i === chunksRead) return "reading";
+    return stage ? "searched" : "waiting";
+  });
+}
+
 /** "p. 3", "pp. 3–5", or "" without pages. */
 export function pageRangeLabel(first?: number | null, last?: number | null): string {
   if (!first) return "";
