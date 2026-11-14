@@ -4161,7 +4161,7 @@
           "pipelines"
         ],
         "summary": "Run Pipeline",
-        "description": "Invoke a pipeline by type.\n\nThe request body structure depends on the pipeline type. Supported types:\n- individual_extraction: requires text and ontology_id. With the default\n  implementation, an unknown ontology_id is a 400, and an extraction that\n  fails because an LLM response stays incomplete is a 500 whose detail\n  gives the reason; with async either fails the run instead\n- schema_extraction: requires documents, optional scope\n- schema_node_grounding: requires node_id (a class) or node_label; optional\n  sources (default: the configuration's sources). An unknown node_id is a 400;\n  with async it fails the run instead\n- schema_node_definition_refinement: requires node_id (a class or a property\n  definition) and current_definition, optional groundings and extraction_usages\n- schema_node_connection_refinement: requires scope_id and\n  current_connections, optional groundings and extraction_usages\n- schema_relationship_reflection: requires taxonomy_id, optional scope (a\n  scheme id or identifier, or relationship type ids); proposes its change\n  plan as a change proposal (the run's proposal_id)\n\nCreates a pipeline run, executes it with the registered implementation,\nand returns the run with execution results. A run whose execution fails is\na 500 whose detail ends with the failed run's id; the run records the reason. With `async: true` the run is\nstored pending and returned at once (202); a background worker executes it.\n\nArgs:\n    pipeline_type: The pipeline type (e.g., individual_extraction)\n    request_body: Type-specific request payload\n    request: FastAPI request (for service access)\n\nReturns:\n    PipelineRunResponse with the executed PipelineRun\n\nRaises:\n    HTTPException: 400 for invalid input, 404 for missing config/impl, 500 for execution errors",
+        "description": "Invoke a pipeline by type.\n\nThe request body structure depends on the pipeline type. Supported types:\n- individual_extraction: requires text and ontology_id. With the find-then-type\n  and two-pass implementations, an unknown ontology_id is a 400, and an extraction that\n  fails because an LLM response stays incomplete is a 500 whose detail\n  gives the reason; with async either fails the run instead\n- schema_extraction: requires documents, optional scope\n- schema_node_grounding: requires node_id (a class) or node_label; optional\n  sources (default: the configuration's sources). An unknown node_id is a 400;\n  with async it fails the run instead\n- schema_node_definition_refinement: requires node_id (a class or a property\n  definition) and current_definition, optional groundings and extraction_usages\n- schema_node_connection_refinement: requires scope_id and\n  current_connections, optional groundings and extraction_usages\n- schema_relationship_reflection: requires taxonomy_id, optional scope (a\n  scheme id or identifier, or relationship type ids); proposes its change\n  plan as a change proposal (the run's proposal_id)\n\nCreates a pipeline run, executes it with the registered implementation,\nand returns the run with execution results. A run whose execution fails is\na 500 whose detail ends with the failed run's id; the run records the reason. With `async: true` the run is\nstored pending and returned at once (202); a background worker executes it.\n\nArgs:\n    pipeline_type: The pipeline type (e.g., individual_extraction)\n    request_body: Type-specific request payload\n    request: FastAPI request (for service access)\n\nReturns:\n    PipelineRunResponse with the executed PipelineRun\n\nRaises:\n    HTTPException: 400 for invalid input, 404 for missing config/impl, 500 for execution errors",
         "operationId": "run_pipeline_api_pipelines__pipeline_type__run_post",
         "parameters": [
           {
@@ -5554,7 +5554,7 @@
           "pipelines"
         ],
         "summary": "Delete Configuration",
-        "description": "Soft-delete a user pipeline configuration.\n\nThe in-memory registry entry is preserved for run traceability.\nThe configuration will no longer appear in list responses.\n\nArgs:\n    config_id: The configuration UUID\n    request: FastAPI request\n\nRaises:\n    HTTPException: 404 if not found or already deleted",
+        "description": "Soft-delete a user pipeline configuration.\n\nThe configuration no longer appears in list responses and no run can be\nstarted with it. A run still queued with it fails, saying its configuration\nwas deleted after it was queued.\n\nArgs:\n    config_id: The configuration UUID\n    request: FastAPI request\n\nRaises:\n    HTTPException: 404 if not found or already deleted",
         "operationId": "delete_configuration_api_pipeline_configurations__config_id__delete",
         "parameters": [
           {
@@ -9214,7 +9214,7 @@
           "sources"
         ],
         "summary": "Extract Source",
-        "description": "Extract a ready source into proposals, in the background: an\nindividual-extraction run (of `implementation_id`; `default` when omitted)\nthat reads it chunk by chunk (the chunks are the run's items) and ends in\none proposal for review in the dataset; with\n`schema`, a schema-extraction run over the same text too, with its own\nproposal. Follow the runs with GET /api/pipelines/runs/{id}, or the\nsource's `last_extraction`. Unless `skip_boilerplate` is false, the\nsource's warranty, safety, legal and contact sections and its copies in\nother languages are skipped; each run's output says what was.",
+        "description": "Extract a ready source into proposals, in the background: an\nindividual-extraction run (of `implementation_id` and `configuration_ref`;\nthe registered defaults when omitted)\nthat reads it chunk by chunk (the chunks are the run's items) and ends in\none proposal for review in the dataset; with\n`schema`, a schema-extraction run over the same text too (of\n`schema_implementation_id` and `schema_configuration_ref`), with its own\nproposal. Follow the runs with GET /api/pipelines/runs/{id}, or the\nsource's `last_extraction`. Unless `skip_boilerplate` is false, the\nsource's warranty, safety, legal and contact sections and its copies in\nother languages are skipped; each run's output says what was.",
         "operationId": "extract_source_api_sources__source_id__extract_post",
         "parameters": [
           {
@@ -9255,7 +9255,7 @@
             "description": "The source is fetching, failed or removed; or schema extraction was asked of a taxonomy whose client proposes its schema changes"
           },
           "422": {
-            "description": "A bad page range, an implementation that can't extract a source, or a configuration that isn't one of the implementation's"
+            "description": "A bad page range, an implementation that is unknown or can't extract a source, or a configuration that isn't one of the implementation's or is disabled"
           },
           "503": {
             "description": "Background pipeline runs are not available"
@@ -13504,7 +13504,7 @@
             "type": "array",
             "minItems": 1,
             "title": "Runs",
-            "description": "Run specs to enqueue: pipeline_type, implementation_id, configuration_ref, specific_data, and input_data (a run given an input_data is executed by the background workers; one without stays pending)"
+            "description": "Run specs to enqueue: pipeline_type, implementation_id (the type's default implementation when omitted), configuration_ref (that implementation's default configuration when omitted), specific_data, and input_data (a run given an input_data is executed by the background workers; one without stays pending)"
           },
           "idempotency_key": {
             "anyOf": [
@@ -14853,6 +14853,30 @@
             "title": "Pipeline Type",
             "description": "Pipeline type for this implementation"
           },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "The pipeline type's default implementation: the one a run uses when it names none. A type has exactly one",
+            "default": false
+          },
+          "default_configuration": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Configuration",
+            "description": "The implementation's default configuration (its config_ref): the one a run uses when it names none"
+          },
+          "extracts_sources": {
+            "type": "boolean",
+            "title": "Extracts Sources",
+            "description": "It can extract a source (POST /api/sources/{id}/extract): read it chunk by chunk and end in one change proposal",
+            "default": false
+          },
           "source_configuration": {
             "anyOf": [
               {
@@ -14863,7 +14887,7 @@
               }
             ],
             "title": "Source Configuration",
-            "description": "The configuration a source is extracted with when none is named (POST /api/sources/{id}/extract); null for an implementation that cannot extract a source"
+            "description": "Superseded by extracts_sources and default_configuration, and kept until the Extract page reads those: default_configuration when extracts_sources, else null"
           }
         },
         "type": "object",
@@ -16747,7 +16771,7 @@
             "description": "Stage key -> prompts to use instead of the defaults; a stage that is left out, null, or equal to the default uses the default. Only for implementations with stages."
           },
           "parameters": {
-            "$ref": "#/components/schemas/PipelineConfigurationParameters",
+            "$ref": "#/components/schemas/PipelineConfigurationParameterSettings",
             "description": "LLM generation parameters"
           },
           "enabled": {
@@ -16766,23 +16790,35 @@
         "title": "PipelineConfigurationCreateRequest",
         "description": "Request body for creating a new user pipeline configuration."
       },
-      "PipelineConfigurationParameters": {
+      "PipelineConfigurationParameterSettings": {
         "properties": {
           "temperature": {
-            "type": "number",
-            "maximum": 2.0,
-            "minimum": 0.0,
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 2.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Temperature",
-            "description": "Sampling temperature",
-            "default": 0.4
+            "description": "Sampling temperature; the implementation's default configuration's when omitted"
           },
           "max_tokens": {
-            "type": "integer",
-            "maximum": 4096.0,
-            "minimum": 64.0,
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 20000.0,
+                "minimum": 64.0
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Max Tokens",
-            "description": "Maximum tokens to generate",
-            "default": 800
+            "description": "The most output tokens one model call of a run may produce. A model that thinks before it answers spends part of it thinking, so it needs well above what the answer takes (the system configurations of Claude 5.5 models use 16000-20000). At most 20000: what every provider can send in one request. The implementation's default configuration's when omitted"
           },
           "top_p": {
             "type": "number",
@@ -16794,8 +16830,82 @@
           }
         },
         "type": "object",
+        "title": "PipelineConfigurationParameterSettings",
+        "description": "The LLM parameters a user-created configuration sets. A temperature or\noutput limit left out (or null) is unset: its runs use the value of the\nimplementation's default configuration, never a default of this form."
+      },
+      "PipelineConfigurationParameterValues": {
+        "properties": {
+          "temperature": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature",
+            "description": "Sampling temperature; null = unset"
+          },
+          "max_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Tokens",
+            "description": "Output-token limit; null = unset"
+          },
+          "top_p": {
+            "type": "number",
+            "title": "Top P",
+            "description": "Nucleus sampling probability",
+            "default": 0.9
+          }
+        },
+        "type": "object",
+        "title": "PipelineConfigurationParameterValues",
+        "description": "What a configuration itself sets, as stored: a null temperature or\nmax_tokens is unset. The shape of PipelineConfigurationParameterSettings,\nwithout its bounds: a listing shows a stored value as it is."
+      },
+      "PipelineConfigurationParameters": {
+        "properties": {
+          "temperature": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature",
+            "description": "Sampling temperature in effect; null when none is set"
+          },
+          "max_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Tokens",
+            "description": "Output-token limit in effect: the most output tokens one model call of a run may produce; null when none is set"
+          },
+          "top_p": {
+            "type": "number",
+            "title": "Top P",
+            "description": "Nucleus sampling probability",
+            "default": 0.9
+          }
+        },
+        "type": "object",
         "title": "PipelineConfigurationParameters",
-        "description": "LLM parameters for a pipeline configuration."
+        "description": "The LLM parameters in effect for a pipeline configuration: what its runs\nare given. A temperature or output limit the configuration leaves unset is\nits implementation's default configuration's; one neither sets is null,\nand a run is then given none. Stored values are shown as they are, not\nchecked against the bounds new values must meet."
       },
       "PipelineConfigurationResponse": {
         "properties": {
@@ -16884,13 +16994,30 @@
                 "type": "null"
               }
             ],
-            "description": "LLM generation parameters"
+            "description": "The LLM parameters in effect: what the configuration's runs are given, a value it leaves unset shown as the implementation's default configuration's (null when that sets none either). Null for a configuration whose runs take no temperature or output limit"
+          },
+          "parameter_settings": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PipelineConfigurationParameterValues"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the configuration itself sets, in the shape of the create and update bodies' `parameters`: a null temperature or max_tokens is unset, and its run then uses the value in `parameters`. Send this back as `parameters` when updating, so a value that is inherited stays inherited. Null where `parameters` is null"
           },
           "enabled": {
             "type": "boolean",
             "title": "Enabled",
-            "description": "Whether this configuration is active",
+            "description": "Whether this configuration is active; a disabled one starts no run",
             "default": true
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "The implementation's default configuration: the one a run uses when it names none",
+            "default": false
           },
           "version": {
             "type": "integer",
@@ -16997,8 +17124,8 @@
             "description": "Stage key -> prompts to use instead of the defaults; a stage that is left out, null, or equal to the default uses the default. Only for implementations with stages."
           },
           "parameters": {
-            "$ref": "#/components/schemas/PipelineConfigurationParameters",
-            "description": "LLM generation parameters"
+            "$ref": "#/components/schemas/PipelineConfigurationParameterSettings",
+            "description": "LLM generation parameters; the configuration's `parameter_settings` to keep them as they are. Omitted, the temperature and output limit are unset"
           },
           "enabled": {
             "type": "boolean",
@@ -17011,7 +17138,6 @@
           "name",
           "provider",
           "model",
-          "parameters",
           "enabled"
         ],
         "title": "PipelineConfigurationUpdateRequest",
@@ -17020,16 +17146,28 @@
       "PipelineRunRequest": {
         "properties": {
           "implementation_id": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Implementation Id",
-            "description": "Implementation identifier (defaults to 'default')",
-            "default": "default"
+            "description": "Implementation identifier; the pipeline type's default implementation when omitted (GET /api/pipelines/types/{type}/implementations marks it is_default)"
           },
           "configuration_ref": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Configuration Ref",
-            "description": "Configuration reference (defaults to 'default')",
-            "default": "default"
+            "description": "One of the implementation's configurations; its default configuration when omitted. Its model, temperature and output-token limit are the run's unless the body names its own (model, temperature, max_tokens; max_tokens at most 20000, above which the run is refused with a 422)"
           },
           "async": {
             "anyOf": [
@@ -20233,7 +20371,7 @@
               }
             ],
             "title": "Implementation Id",
-            "description": "The individual-extraction implementation that reads the source, one whose source_configuration is set (GET /api/pipelines/types/individual_extraction/implementations); default when omitted"
+            "description": "The individual-extraction implementation that reads the source, one that extracts_sources (GET /api/pipelines/types/individual_extraction/implementations); the type's default implementation when omitted"
           },
           "configuration_ref": {
             "anyOf": [
@@ -20246,7 +20384,33 @@
               }
             ],
             "title": "Configuration Ref",
-            "description": "An individual-extraction configuration of the implementation; the implementation's source_configuration when omitted"
+            "description": "An individual-extraction configuration of the implementation; its default configuration when omitted"
+          },
+          "schema_implementation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schema Implementation Id",
+            "description": "With schema: the schema-extraction implementation, one that extracts_sources; the type's default implementation when omitted"
+          },
+          "schema_configuration_ref": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schema Configuration Ref",
+            "description": "With schema: a schema-extraction configuration of that implementation; its default configuration when omitted"
           },
           "pages": {
             "anyOf": [

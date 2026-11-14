@@ -113,7 +113,6 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
     """
 
     STAGE_PROMPTS = FIND_THEN_TYPE_STAGES
-    SOURCE_CONFIGURATION = "extraction-find-then-type"
 
     async def _extract_text(
         self, state: IndividualExtractionState
@@ -207,6 +206,7 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
                 model=state.model,
                 temperature=state.temperature,
                 stage_prompts=self._stage_prompts,
+                max_tokens=state.max_tokens,
             )
             spent.append(result)
             if result.failure_reason and result.provider_refused:
@@ -302,6 +302,7 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
                     model=state.model,
                     temperature=state.temperature,
                     stage_prompts=self._stage_prompts,
+                    max_tokens=state.max_tokens,
                 )
                 spent.append(result)
                 warnings.extend(where(index) + w for w in result.warnings)
@@ -415,6 +416,7 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
                     mention,
                     state.model,
                     state.temperature,
+                    state.max_tokens,
                 )
                 spent.append(candidate.typing)
                 if candidate.typing.failure_reason and candidate.typing.provider_refused:

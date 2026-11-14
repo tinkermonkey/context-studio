@@ -45,6 +45,7 @@ from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag, model_val
 
 from adapters.web.schemas.extraction import SourceSpanSchema
 from domain.pipelines.apply_result import SkipReason
+from domain.pipelines.selection import MAX_OUTPUT_TOKENS
 
 
 class PipelineTypeResponse(BaseModel):
@@ -65,11 +66,32 @@ class ImplementationResponse(BaseModel):
 
     id: str = Field(..., description="Implementation identifier")
     pipeline_type: str = Field(..., description="Pipeline type for this implementation")
+    is_default: bool = Field(
+        False,
+        description=(
+            "The pipeline type's default implementation: the one a run uses when it names"
+            " none. A type has exactly one"
+        ),
+    )
+    default_configuration: Optional[str] = Field(
+        None,
+        description=(
+            "The implementation's default configuration (its config_ref): the one a run uses"
+            " when it names none"
+        ),
+    )
+    extracts_sources: bool = Field(
+        False,
+        description=(
+            "It can extract a source (POST /api/sources/{id}/extract): read it chunk by chunk"
+            " and end in one change proposal"
+        ),
+    )
     source_configuration: Optional[str] = Field(
         None,
         description=(
-            "The configuration a source is extracted with when none is named (POST"
-            " /api/sources/{id}/extract); null for an implementation that cannot extract a source"
+            "Superseded by extracts_sources and default_configuration, and kept until the"
+            " Extract page reads those: default_configuration when extracts_sources, else null"
         ),
     )
 
@@ -84,11 +106,71 @@ class ConfigurationResponse(BaseModel):
     config: dict[str, Any] = Field(..., description="Configuration data")
 
 
-class PipelineConfigurationParameters(BaseModel):
-    """LLM parameters for a pipeline configuration."""
+MAX_TOKENS_DESCRIPTION = (
+    "The most output tokens one model call of a run may produce. A model that thinks"
+    " before it answers spends part of it thinking, so it needs well above what the"
+    " answer takes (the system configurations of Claude 5.5 models use 16000-20000)."
+    f" At most {MAX_OUTPUT_TOKENS}: what every provider can send in one request"
+)
 
-    temperature: float = Field(default=0.4, ge=0.0, le=2.0, description="Sampling temperature")
-    max_tokens: int = Field(default=800, ge=64, le=4096, description="Maximum tokens to generate")
+
+class PipelineConfigurationParameters(BaseModel):
+    """
+    The LLM parameters in effect for a pipeline configuration: what its runs
+    are given. A temperature or output limit the configuration leaves unset is
+    its implementation's default configuration's; one neither sets is null,
+    and a run is then given none. Stored values are shown as they are, not
+    checked against the bounds new values must meet.
+    """
+
+    temperature: Optional[float] = Field(
+        None, description="Sampling temperature in effect; null when none is set"
+    )
+    max_tokens: Optional[int] = Field(
+        None,
+        description=(
+            "Output-token limit in effect: the most output tokens one model call of a run"
+            " may produce; null when none is set"
+        ),
+    )
+    top_p: float = Field(default=0.9, description="Nucleus sampling probability")
+
+
+class PipelineConfigurationParameterValues(BaseModel):
+    """
+    What a configuration itself sets, as stored: a null temperature or
+    max_tokens is unset. The shape of PipelineConfigurationParameterSettings,
+    without its bounds: a listing shows a stored value as it is.
+    """
+
+    temperature: Optional[float] = Field(None, description="Sampling temperature; null = unset")
+    max_tokens: Optional[int] = Field(None, description="Output-token limit; null = unset")
+    top_p: float = Field(default=0.9, description="Nucleus sampling probability")
+
+
+class PipelineConfigurationParameterSettings(BaseModel):
+    """
+    The LLM parameters a user-created configuration sets. A temperature or
+    output limit left out (or null) is unset: its runs use the value of the
+    implementation's default configuration, never a default of this form.
+    """
+
+    temperature: Optional[float] = Field(
+        default=None,
+        ge=0.0,
+        le=2.0,
+        description=(
+            "Sampling temperature; the implementation's default configuration's when omitted"
+        ),
+    )
+    max_tokens: Optional[int] = Field(
+        default=None,
+        ge=64,
+        le=MAX_OUTPUT_TOKENS,
+        description=(
+            MAX_TOKENS_DESCRIPTION + ". The implementation's default configuration's when omitted"
+        ),
+    )
     top_p: float = Field(default=0.9, ge=0.0, le=1.0, description="Nucleus sampling probability")
 
 
@@ -131,8 +213,8 @@ class PipelineConfigurationCreateRequest(BaseModel):
     stage_prompts: Optional[dict[str, Optional[StagePromptPayload]]] = Field(
         None, description=STAGE_PROMPTS_FIELD_DESCRIPTION
     )
-    parameters: PipelineConfigurationParameters = Field(
-        default_factory=PipelineConfigurationParameters,
+    parameters: PipelineConfigurationParameterSettings = Field(
+        default_factory=PipelineConfigurationParameterSettings,
         description="LLM generation parameters",
     )
     enabled: bool = Field(default=True, description="Whether this configuration is active")
@@ -148,8 +230,12 @@ class PipelineConfigurationUpdateRequest(BaseModel):
     stage_prompts: Optional[dict[str, Optional[StagePromptPayload]]] = Field(
         None, description=STAGE_PROMPTS_FIELD_DESCRIPTION
     )
-    parameters: PipelineConfigurationParameters = Field(
-        ..., description="LLM generation parameters"
+    parameters: PipelineConfigurationParameterSettings = Field(
+        default_factory=PipelineConfigurationParameterSettings,
+        description=(
+            "LLM generation parameters; the configuration's `parameter_settings` to keep"
+            " them as they are. Omitted, the temperature and output limit are unset"
+        ),
     )
     enabled: bool = Field(..., description="Whether this configuration is active")
 
@@ -172,9 +258,34 @@ class PipelineConfigurationResponse(BaseModel):
         description="The prompts sent at each LLM stage; null when the implementation has none",
     )
     parameters: Optional[PipelineConfigurationParameters] = Field(
-        None, description="LLM generation parameters"
+        None,
+        description=(
+            "The LLM parameters in effect: what the configuration's runs are given, a value"
+            " it leaves unset shown as the implementation's default configuration's (null"
+            " when that sets none either). Null for a configuration whose runs take no"
+            " temperature or output limit"
+        ),
     )
-    enabled: bool = Field(default=True, description="Whether this configuration is active")
+    parameter_settings: Optional[PipelineConfigurationParameterValues] = Field(
+        None,
+        description=(
+            "What the configuration itself sets, in the shape of the create and update"
+            " bodies' `parameters`: a null temperature or max_tokens is unset, and its run"
+            " then uses the value in `parameters`. Send this back as `parameters` when"
+            " updating, so a value that is inherited stays inherited. Null where"
+            " `parameters` is null"
+        ),
+    )
+    enabled: bool = Field(
+        default=True,
+        description="Whether this configuration is active; a disabled one starts no run",
+    )
+    is_default: bool = Field(
+        False,
+        description=(
+            "The implementation's default configuration: the one a run uses when it names none"
+        ),
+    )
     version: int = Field(..., description="Configuration version number")
     is_system: bool = Field(..., description="True for code-defined system configurations")
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
@@ -205,12 +316,21 @@ class PipelineRunRequest(BaseModel):
 
     model_config = ConfigDict(extra="allow", populate_by_name=True)
 
-    implementation_id: str = Field(
-        default="default",
-        description="Implementation identifier (defaults to 'default')",
+    implementation_id: Optional[str] = Field(
+        default=None,
+        description=(
+            "Implementation identifier; the pipeline type's default implementation when"
+            " omitted (GET /api/pipelines/types/{type}/implementations marks it is_default)"
+        ),
     )
-    configuration_ref: str = Field(
-        default="default", description="Configuration reference (defaults to 'default')"
+    configuration_ref: Optional[str] = Field(
+        default=None,
+        description=(
+            "One of the implementation's configurations; its default configuration when"
+            " omitted. Its model, temperature and output-token limit are the run's unless"
+            " the body names its own (model, temperature, max_tokens; max_tokens at most"
+            f" {MAX_OUTPUT_TOKENS}, above which the run is refused with a 422)"
+        ),
     )
     run_async: Optional[bool] = Field(
         default=None,
@@ -817,9 +937,10 @@ class EnqueueBatchRunsRequest(BaseModel):
         ...,
         min_length=1,
         description=(
-            "Run specs to enqueue: pipeline_type, implementation_id, configuration_ref, "
-            "specific_data, and input_data (a run given an input_data is executed by "
-            "the background workers; one without stays pending)"
+            "Run specs to enqueue: pipeline_type, implementation_id (the type's default "
+            "implementation when omitted), configuration_ref (that implementation's default "
+            "configuration when omitted), specific_data, and input_data (a run given an "
+            "input_data is executed by the background workers; one without stays pending)"
         ),
     )
     idempotency_key: Optional[str] = Field(None, description="Optional idempotency key for replay")

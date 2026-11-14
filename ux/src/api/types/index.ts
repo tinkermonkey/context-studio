@@ -1914,8 +1914,8 @@ export interface paths {
      * @description Invoke a pipeline by type.
      *
      *     The request body structure depends on the pipeline type. Supported types:
-     *     - individual_extraction: requires text and ontology_id. With the default
-     *       implementation, an unknown ontology_id is a 400, and an extraction that
+     *     - individual_extraction: requires text and ontology_id. With the find-then-type
+     *       and two-pass implementations, an unknown ontology_id is a 400, and an extraction that
      *       fails because an LLM response stays incomplete is a 500 whose detail
      *       gives the reason; with async either fails the run instead
      *     - schema_extraction: requires documents, optional scope
@@ -2612,8 +2612,9 @@ export interface paths {
      * Delete Configuration
      * @description Soft-delete a user pipeline configuration.
      *
-     *     The in-memory registry entry is preserved for run traceability.
-     *     The configuration will no longer appear in list responses.
+     *     The configuration no longer appears in list responses and no run can be
+     *     started with it. A run still queued with it fails, saying its configuration
+     *     was deleted after it was queued.
      *
      *     Args:
      *         config_id: The configuration UUID
@@ -4210,10 +4211,12 @@ export interface paths {
     /**
      * Extract Source
      * @description Extract a ready source into proposals, in the background: an
-     *     individual-extraction run (of `implementation_id`; `default` when omitted)
+     *     individual-extraction run (of `implementation_id` and `configuration_ref`;
+     *     the registered defaults when omitted)
      *     that reads it chunk by chunk (the chunks are the run's items) and ends in
      *     one proposal for review in the dataset; with
-     *     `schema`, a schema-extraction run over the same text too, with its own
+     *     `schema`, a schema-extraction run over the same text too (of
+     *     `schema_implementation_id` and `schema_configuration_ref`), with its own
      *     proposal. Follow the runs with GET /api/pipelines/runs/{id}, or the
      *     source's `last_extraction`. Unless `skip_boilerplate` is false, the
      *     source's warranty, safety, legal and contact sections and its copies in
@@ -6604,7 +6607,7 @@ export interface components {
     EnqueueBatchRunsRequest: {
       /**
        * Runs
-       * @description Run specs to enqueue: pipeline_type, implementation_id, configuration_ref, specific_data, and input_data (a run given an input_data is executed by the background workers; one without stays pending)
+       * @description Run specs to enqueue: pipeline_type, implementation_id (the type's default implementation when omitted), configuration_ref (that implementation's default configuration when omitted), specific_data, and input_data (a run given an input_data is executed by the background workers; one without stays pending)
        */
       runs: {
         [key: string]: unknown;
@@ -7418,8 +7421,25 @@ export interface components {
        */
       pipeline_type: string;
       /**
+       * Is Default
+       * @description The pipeline type's default implementation: the one a run uses when it names none. A type has exactly one
+       * @default false
+       */
+      is_default: boolean;
+      /**
+       * Default Configuration
+       * @description The implementation's default configuration (its config_ref): the one a run uses when it names none
+       */
+      default_configuration?: string | null;
+      /**
+       * Extracts Sources
+       * @description It can extract a source (POST /api/sources/{id}/extract): read it chunk by chunk and end in one change proposal
+       * @default false
+       */
+      extracts_sources: boolean;
+      /**
        * Source Configuration
-       * @description The configuration a source is extracted with when none is named (POST /api/sources/{id}/extract); null for an implementation that cannot extract a source
+       * @description Superseded by extracts_sources and default_configuration, and kept until the Extract page reads those: default_configuration when extracts_sources, else null
        */
       source_configuration?: string | null;
     };
@@ -8523,7 +8543,7 @@ export interface components {
         [key: string]: components["schemas"]["StagePromptPayload"] | null;
       } | null;
       /** @description LLM generation parameters */
-      parameters?: components["schemas"]["PipelineConfigurationParameters"];
+      parameters?: components["schemas"]["PipelineConfigurationParameterSettings"];
       /**
        * Enabled
        * @description Whether this configuration is active
@@ -8532,22 +8552,72 @@ export interface components {
       enabled: boolean;
     };
     /**
+     * PipelineConfigurationParameterSettings
+     * @description The LLM parameters a user-created configuration sets. A temperature or
+     *     output limit left out (or null) is unset: its runs use the value of the
+     *     implementation's default configuration, never a default of this form.
+     */
+    PipelineConfigurationParameterSettings: {
+      /**
+       * Temperature
+       * @description Sampling temperature; the implementation's default configuration's when omitted
+       */
+      temperature?: number | null;
+      /**
+       * Max Tokens
+       * @description The most output tokens one model call of a run may produce. A model that thinks before it answers spends part of it thinking, so it needs well above what the answer takes (the system configurations of Claude 5.5 models use 16000-20000). At most 20000: what every provider can send in one request. The implementation's default configuration's when omitted
+       */
+      max_tokens?: number | null;
+      /**
+       * Top P
+       * @description Nucleus sampling probability
+       * @default 0.9
+       */
+      top_p: number;
+    };
+    /**
+     * PipelineConfigurationParameterValues
+     * @description What a configuration itself sets, as stored: a null temperature or
+     *     max_tokens is unset. The shape of PipelineConfigurationParameterSettings,
+     *     without its bounds: a listing shows a stored value as it is.
+     */
+    PipelineConfigurationParameterValues: {
+      /**
+       * Temperature
+       * @description Sampling temperature; null = unset
+       */
+      temperature?: number | null;
+      /**
+       * Max Tokens
+       * @description Output-token limit; null = unset
+       */
+      max_tokens?: number | null;
+      /**
+       * Top P
+       * @description Nucleus sampling probability
+       * @default 0.9
+       */
+      top_p: number;
+    };
+    /**
      * PipelineConfigurationParameters
-     * @description LLM parameters for a pipeline configuration.
+     * @description The LLM parameters in effect for a pipeline configuration: what its runs
+     *     are given. A temperature or output limit the configuration leaves unset is
+     *     its implementation's default configuration's; one neither sets is null,
+     *     and a run is then given none. Stored values are shown as they are, not
+     *     checked against the bounds new values must meet.
      */
     PipelineConfigurationParameters: {
       /**
        * Temperature
-       * @description Sampling temperature
-       * @default 0.4
+       * @description Sampling temperature in effect; null when none is set
        */
-      temperature: number;
+      temperature?: number | null;
       /**
        * Max Tokens
-       * @description Maximum tokens to generate
-       * @default 800
+       * @description Output-token limit in effect: the most output tokens one model call of a run may produce; null when none is set
        */
-      max_tokens: number;
+      max_tokens?: number | null;
       /**
        * Top P
        * @description Nucleus sampling probability
@@ -8605,14 +8675,22 @@ export interface components {
        * @description The prompts sent at each LLM stage; null when the implementation has none
        */
       stage_prompts?: components["schemas"]["StagePromptView"][] | null;
-      /** @description LLM generation parameters */
+      /** @description The LLM parameters in effect: what the configuration's runs are given, a value it leaves unset shown as the implementation's default configuration's (null when that sets none either). Null for a configuration whose runs take no temperature or output limit */
       parameters?: components["schemas"]["PipelineConfigurationParameters"] | null;
+      /** @description What the configuration itself sets, in the shape of the create and update bodies' `parameters`: a null temperature or max_tokens is unset, and its run then uses the value in `parameters`. Send this back as `parameters` when updating, so a value that is inherited stays inherited. Null where `parameters` is null */
+      parameter_settings?: components["schemas"]["PipelineConfigurationParameterValues"] | null;
       /**
        * Enabled
-       * @description Whether this configuration is active
+       * @description Whether this configuration is active; a disabled one starts no run
        * @default true
        */
       enabled: boolean;
+      /**
+       * Is Default
+       * @description The implementation's default configuration: the one a run uses when it names none
+       * @default false
+       */
+      is_default: boolean;
       /**
        * Version
        * @description Configuration version number
@@ -8666,8 +8744,8 @@ export interface components {
       stage_prompts?: {
         [key: string]: components["schemas"]["StagePromptPayload"] | null;
       } | null;
-      /** @description LLM generation parameters */
-      parameters: components["schemas"]["PipelineConfigurationParameters"];
+      /** @description LLM generation parameters; the configuration's `parameter_settings` to keep them as they are. Omitted, the temperature and output limit are unset */
+      parameters?: components["schemas"]["PipelineConfigurationParameterSettings"];
       /**
        * Enabled
        * @description Whether this configuration is active
@@ -8681,16 +8759,14 @@ export interface components {
     PipelineRunRequest: {
       /**
        * Implementation Id
-       * @description Implementation identifier (defaults to 'default')
-       * @default default
+       * @description Implementation identifier; the pipeline type's default implementation when omitted (GET /api/pipelines/types/{type}/implementations marks it is_default)
        */
-      implementation_id: string;
+      implementation_id?: string | null;
       /**
        * Configuration Ref
-       * @description Configuration reference (defaults to 'default')
-       * @default default
+       * @description One of the implementation's configurations; its default configuration when omitted. Its model, temperature and output-token limit are the run's unless the body names its own (model, temperature, max_tokens; max_tokens at most 20000, above which the run is refused with a 422)
        */
-      configuration_ref: string;
+      configuration_ref?: string | null;
       /**
        * Async
        * @description Return the pending run at once (202) and execute it in the background; poll GET /api/pipelines/runs/{id} for status and progress
@@ -10527,14 +10603,24 @@ export interface components {
       dataset: string;
       /**
        * Implementation Id
-       * @description The individual-extraction implementation that reads the source, one whose source_configuration is set (GET /api/pipelines/types/individual_extraction/implementations); default when omitted
+       * @description The individual-extraction implementation that reads the source, one that extracts_sources (GET /api/pipelines/types/individual_extraction/implementations); the type's default implementation when omitted
        */
       implementation_id?: string | null;
       /**
        * Configuration Ref
-       * @description An individual-extraction configuration of the implementation; the implementation's source_configuration when omitted
+       * @description An individual-extraction configuration of the implementation; its default configuration when omitted
        */
       configuration_ref?: string | null;
+      /**
+       * Schema Implementation Id
+       * @description With schema: the schema-extraction implementation, one that extracts_sources; the type's default implementation when omitted
+       */
+      schema_implementation_id?: string | null;
+      /**
+       * Schema Configuration Ref
+       * @description With schema: a schema-extraction configuration of that implementation; its default configuration when omitted
+       */
+      schema_configuration_ref?: string | null;
       /**
        * Pages
        * @description Pages to extract, such as "12-30" or "1-3, 7"
@@ -16932,7 +17018,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description A bad page range, an implementation that can't extract a source, or a configuration that isn't one of the implementation's */
+      /** @description A bad page range, an implementation that is unknown or can't extract a source, or a configuration that isn't one of the implementation's or is disabled */
       422: {
         headers: {
           [name: string]: unknown;

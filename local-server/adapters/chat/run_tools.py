@@ -22,16 +22,18 @@ from adapters.chat.tools import (
 )
 from adapters.factories.orchestrator_factory import build_run_specific_data
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
-from adapters.pipelines.run_executor import BackgroundRunExecutor, UnknownPipelineError
+from adapters.pipelines.run_executor import BackgroundRunExecutor
 from domain.chat.value_objects import EntityRef, ToolOutcome
 from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.services import OntologyService
 from domain.pipelines.entities import PipelineRun, PipelineType
+from domain.pipelines.exceptions import PipelineSelectionError
 from domain.pipelines.requested_via import REQUESTED_VIA, RequestedVia
 
-PIPELINES = [t.value for t in PipelineType]
-# Its defaults don't fit extraction (no configuration is registered as 'default', and
-# it needs ontology_id and model), so clients extract a source instead (#1451).
+# What selects a run; recorded on the run itself, not in its input
+_SELECTION_OPTIONS = ("implementation_id", "configuration_ref")
+# A pass refines a taxonomy by scope; extraction reads a text into a dataset (it
+# needs text and ontology_id), so clients extract a source instead (#1451).
 INDIVIDUAL_EXTRACTION_REFUSED = (
     "run_refinement can't start individual_extraction. To extract from a document over"
     " MCP, add it with add_source, then call extract_source; get_run follows the runs it"
@@ -83,30 +85,12 @@ class RunRefinementTool(ToolBase):
         " A pass never changes the taxonomy: its changes come back as a change proposal"
         " for a person to review, and get_run returns that proposal_id when the run"
         " finishes. scope says what to refine (passed to the pipeline as is); options"
-        " holds the pipeline's other inputs, plus implementation_id and"
-        " configuration_ref (both default to 'default'). A taxonomy that mirrors a"
+        " holds the pipeline's other inputs, plus implementation_id (the pipeline's"
+        " default implementation when omitted) and configuration_ref (that"
+        " implementation's default configuration when omitted). A taxonomy that mirrors a"
         " client's source only accepts passes its client starts over MCP. "
         + INDIVIDUAL_EXTRACTION_REFUSED
     )
-    input_schema = {
-        "type": "object",
-        "properties": {
-            "taxonomy_id": {"type": "string", "description": "Taxonomy to refine"},
-            "pipeline": {
-                "type": "string",
-                "enum": PIPELINES,
-                "description": "Pipeline type to run",
-            },
-            "scope": {
-                "description": "What to refine, e.g. entity ids or a layer (pipeline-specific)",
-            },
-            "options": {
-                "type": "object",
-                "description": "Other pipeline inputs, implementation_id, configuration_ref",
-            },
-        },
-        "required": ["taxonomy_id", "pipeline"],
-    }
 
     def __init__(
         self,
@@ -117,12 +101,35 @@ class RunRefinementTool(ToolBase):
         self._executor = executor
         self._ontology = ontology
         self._requested_via = requested_via
+        # The pipelines offered are those with an implementation registered to run
+        self._pipelines = [t.value for t in executor.resolver.runnable_types()]
+        self.input_schema = {
+            "type": "object",
+            "properties": {
+                "taxonomy_id": {"type": "string", "description": "Taxonomy to refine"},
+                "pipeline": {
+                    "type": "string",
+                    "enum": self._pipelines,
+                    "description": "Pipeline type to run",
+                },
+                "scope": {
+                    "description": (
+                        "What to refine, e.g. entity ids or a layer (pipeline-specific)"
+                    ),
+                },
+                "options": {
+                    "type": "object",
+                    "description": "Other pipeline inputs, implementation_id, configuration_ref",
+                },
+            },
+            "required": ["taxonomy_id", "pipeline"],
+        }
 
     def run(self, args: dict[str, Any]) -> ToolOutcome:
         taxonomy_id = required_str(args, "taxonomy_id")
         pipeline = required_str(args, "pipeline")
-        if pipeline not in PIPELINES:
-            raise ToolArgumentError(f"'pipeline' must be one of {', '.join(PIPELINES)}")
+        if pipeline not in self._pipelines:
+            raise ToolArgumentError(f"'pipeline' must be one of {', '.join(self._pipelines)}")
         options = args.get("options") or {}
         if not isinstance(options, dict):
             raise ToolArgumentError("'options' must be an object")
@@ -136,14 +143,14 @@ class RunRefinementTool(ToolBase):
         ptype = PipelineType(pipeline)
         if ptype is PipelineType.INDIVIDUAL_EXTRACTION:
             return error_outcome(INDIVIDUAL_EXTRACTION_REFUSED, "Pipeline not started here")
-        implementation_id = str(options.get("implementation_id") or "default")
-        configuration_ref = str(options.get("configuration_ref") or "default")
+        # The implementation and configuration named, or the registered defaults
+        implementation_id, configuration_ref = (
+            str(options[key]) if options.get(key) else None for key in _SELECTION_OPTIONS
+        )
         input_data = {
-            **options,
+            **{key: value for key, value in options.items() if key not in _SELECTION_OPTIONS},
             "taxonomy_id": taxonomy_id,
             "scope": args.get("scope"),
-            "implementation_id": implementation_id,
-            "configuration_ref": configuration_ref,
             # After the options, so a caller can't claim another entry point
             REQUESTED_VIA: self._requested_via.value,
         }
@@ -155,7 +162,7 @@ class RunRefinementTool(ToolBase):
                 input_data,
                 specific_data=build_run_specific_data(ptype, input_data),
             )
-        except UnknownPipelineError as e:
+        except PipelineSelectionError as e:
             return error_outcome(str(e), "Pipeline not found")
         return ToolOutcome(
             content=dumps(run_payload(run)),

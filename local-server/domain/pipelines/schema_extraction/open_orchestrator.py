@@ -39,7 +39,12 @@ from domain.extraction.value_objects import SourceSpan
 from domain.ontology.ports import EmbeddingService
 from domain.pipelines.entities import PipelineRunStatus
 from domain.pipelines.exceptions import PipelineExecutionError, PipelineInputError
-from domain.pipelines.orchestration.base import PipelineOrchestrator, PipelineState
+from domain.pipelines.orchestration.base import (
+    PipelineOrchestrator,
+    PipelineState,
+    implementation_settings,
+    llm_parameters,
+)
 from domain.pipelines.ports import LLMProvider, PipelineRunStatusWriter
 from domain.pipelines.schema_extraction.configurations.open_v1 import (
     SchemaOpenV1Config,
@@ -109,11 +114,19 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
         self._clusterer = clusterer
         self._ontology_repo = ontology_repo
         self._reference_source = reference_source
-        self._cfg = SchemaOpenV1Config.from_dict(config or get_open_v1_config())
+        # Built with no configuration it takes open_v1's settings, but no model:
+        # a call's model, temperature and output limit are the run's
+        # (llm_parameters: its input, then the configuration given here)
+        self._config = config or {}
+        self._run_input: dict[str, Any] = {}
+        self._cfg = SchemaOpenV1Config.from_dict(
+            config or implementation_settings(get_open_v1_config())
+        )
 
     async def execute(self, state: PipelineState) -> PipelineState:
         """Run the open schema-extraction pipeline and populate state.result."""
         self._write_running_status()
+        self._run_input = state.input_data
 
         documents = state.input_data.get("documents", [])
         if not documents or not any(d.strip() for d in documents if isinstance(d, str)):
@@ -437,9 +450,7 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
         response = await self._call_llm(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            model=self._cfg.model,
-            temperature=self._cfg.temperature,
-            max_tokens=self._cfg.max_tokens,
+            **llm_parameters(self._run_input, self._config, self._cfg.max_tokens),
         )
         try:
             parsed = json.loads(_extract_json_obj(response.content))
@@ -473,9 +484,7 @@ class OpenSchemaExtractionOrchestrator(PipelineOrchestrator):
         response = await self._call_llm(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            model=self._cfg.model,
-            temperature=self._cfg.temperature,
-            max_tokens=self._cfg.max_tokens,
+            **llm_parameters(self._run_input, self._config, self._cfg.max_tokens),
         )
         out: dict[str, dict[str, str]] = {}
         try:

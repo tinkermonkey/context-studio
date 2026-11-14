@@ -42,6 +42,7 @@ function makeConfig(overrides: Partial<Config> = {}): Config {
     stage_prompts: [STAGE],
     parameters: { temperature: 0, max_tokens: 2000, top_p: 0.9 },
     enabled: true,
+    is_default: false,
     version: 1,
     is_system: false,
     created_at: null,

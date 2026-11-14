@@ -1,8 +1,9 @@
 """
 Individual Extraction pipeline implementation.
 
-Migrates Wave A's extraction logic into the new pipeline framework as the
-default IndividualExtraction implementation.
+The individual extraction implementations: find-then-type (the type's default),
+two-pass (registered under the id "default", which is a name only) and the
+open spaCy-based open_v1.
 """
 
 from domain.pipelines.individual_extraction.bootstrap import (

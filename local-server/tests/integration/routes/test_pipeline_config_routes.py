@@ -71,7 +71,9 @@ def impl_registry():
         "default",
         object,  # placeholder — CRUD routes don't invoke it
     )
-    reg.register_impl(PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator)
+    reg.register_impl(
+        PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator, default=True
+    )
     return reg
 
 

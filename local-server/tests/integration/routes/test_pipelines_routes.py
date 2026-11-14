@@ -43,6 +43,7 @@ from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
 )
+from domain.pipelines.schema_extraction.bootstrap import register_schema_extraction
 from domain.pipelines.schema_extraction.orchestrator import SchemaExtractionOrchestrator
 from domain.pipelines.schema_node_grounding.orchestrator import (
     SchemaGroundingOrchestrator,
@@ -56,7 +57,7 @@ from tests.utils.datasets import save_in_dataset
 from tests.utils.parent_rows import create_batch_row
 
 # Constant for mocking the orchestrator creation function
-ORCHESTRATOR_PATCH_PATH = "adapters.web.pipelines_routes.create_orchestrator"
+ORCHESTRATOR_PATCH_PATH = "adapters.factories.orchestrator_factory.create_orchestrator"
 
 
 @pytest.fixture
@@ -191,19 +192,85 @@ class TestPipelineImplementationEndpoints:
         assert isinstance(body, list)
         assert len(body) == 0
 
-    def test_an_implementation_names_the_configuration_it_extracts_a_source_with(
+    def test_the_listing_says_which_implementation_and_configuration_are_the_defaults(
         self, client, registries
     ):
-        """Implementations that can extract a source name their configuration for it."""
-        register_individual_extraction(registries["implementation_registry"], None)
+        """
+        What a picker needs: the type's default implementation, each
+        implementation's default configuration, and which can extract a source.
+        """
+        register_individual_extraction(
+            registries["implementation_registry"], registries["config_registry"]
+        )
 
         response = client.get("/api/pipelines/types/individual_extraction/implementations")
 
         assert response.status_code == status.HTTP_200_OK
-        assert {i["id"]: i["source_configuration"] for i in response.json()} == {
-            "default": "extraction-default",
-            "find_then_type": "extraction-find-then-type",
-            "open_v1": None,
+        assert sorted(response.json(), key=lambda i: i["id"]) == [
+            {
+                # Two-pass: its id is a name, it is not the type's default
+                "id": "default",
+                "pipeline_type": "individual_extraction",
+                "is_default": False,
+                "default_configuration": "extraction-default",
+                "extracts_sources": True,
+                "source_configuration": "extraction-default",
+            },
+            {
+                "id": "find_then_type",
+                "pipeline_type": "individual_extraction",
+                "is_default": True,
+                "default_configuration": "extraction-find-then-type",
+                "extracts_sources": True,
+                "source_configuration": "extraction-find-then-type",
+            },
+            {
+                "id": "open_v1",
+                "pipeline_type": "individual_extraction",
+                "is_default": False,
+                "default_configuration": "extraction-open-v1",
+                "extracts_sources": False,
+                # Kept for the Extract page: null where no source can be extracted
+                "source_configuration": None,
+            },
+        ]
+
+    def test_schema_extractions_default_can_extract_a_source_too(self, client, registries):
+        """The capability is the implementation's, whatever the pipeline type."""
+        register_schema_extraction(
+            registries["implementation_registry"], registries["config_registry"]
+        )
+
+        response = client.get("/api/pipelines/types/schema_extraction/implementations")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert {
+            i["id"]: (
+                i["is_default"],
+                i["default_configuration"],
+                i["extracts_sources"],
+                i["source_configuration"],
+            )
+            for i in response.json()
+        } == {
+            "default": (True, "schema-extraction-default", True, "schema-extraction-default"),
+            # It has a default configuration, and cannot extract a source
+            "open_v1": (False, "schema-extraction-open-v1", False, None),
+        }
+
+    def test_the_configurations_listing_marks_the_default(self, client, registries):
+        register_individual_extraction(
+            registries["implementation_registry"], registries["config_registry"]
+        )
+
+        response = client.get(
+            "/api/pipelines/types/individual_extraction/implementations/default/configurations"
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert {c["config_ref"]: c["is_default"] for c in response.json()} == {
+            "extraction-default": True,
+            "extraction-openrouter-default": False,
         }
 
 
@@ -301,13 +368,17 @@ class TestPipelineRunEndpoints:
         """POST /api/pipelines/{type}/run with valid config succeeds."""
 
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model", "batch_size": 32},
+            default=True,
         )
 
         # Mock orchestrator to avoid needing actual services
@@ -342,13 +413,17 @@ class TestPipelineRunEndpoints:
 
         # Register implementation and configuration
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
 
         # Mock orchestrator to avoid needing actual services
@@ -391,13 +466,17 @@ class TestPipelineRunEndpoints:
 
         # Register implementation and configuration
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
 
         # Mock orchestrator to avoid needing actual services
@@ -436,22 +515,30 @@ class TestPipelineRunEndpoints:
 
         # Register implementations and configurations for two types
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_NODE_GROUNDING, "default", SchemaGroundingOrchestrator
+            PipelineType.SCHEMA_NODE_GROUNDING,
+            "default",
+            SchemaGroundingOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_NODE_GROUNDING,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
 
         # Create runs of both types
@@ -487,13 +574,17 @@ class TestPipelineRunEndpoints:
 
         # Register implementation and configuration
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
 
         # Create a run
@@ -530,10 +621,17 @@ class TestPipelineRunEndpoints:
     def test_list_runs_filters_by_extraction_example(self, client, registries):
         """GET /api/pipelines/runs?example_id= lists only runs started from that example."""
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
-            PipelineType.SCHEMA_EXTRACTION, "default", "default", {"model": "test-model"}
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            "default",
+            {"model": "test-model"},
+            default=True,
         )
         body = {
             "documents": ["doc1"],
@@ -575,13 +673,17 @@ class TestPipelineRunEndpoints:
 
         # Register implementation and configuration
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
 
         # Create two runs: one that will be applied, one that won't
@@ -642,13 +744,17 @@ class TestPipelineRunEndpoints:
 
         # Register implementation and configuration
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
 
         response = client.post(
@@ -690,7 +796,10 @@ class TestSchemaGroundingRunFromNodeId:
     def grounding_client(self, client, registries):
         """A client with grounding registered and a class 'Bicycle' in the ontology."""
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_NODE_GROUNDING, "default", SchemaGroundingOrchestrator
+            PipelineType.SCHEMA_NODE_GROUNDING,
+            "default",
+            SchemaGroundingOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_NODE_GROUNDING,
@@ -799,13 +908,17 @@ class TestPipelineErrorHandling:
         """Test that PipelineStorageError during create returns 500 with generic message."""
         # Register a test implementation and configuration
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
 
         # Mock the repo to raise PipelineStorageError
@@ -835,13 +948,17 @@ class TestPipelineErrorHandling:
         """Test that PipelineInputError from orchestrator returns 400."""
         # Register implementation and configuration
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
 
         # Mock orchestrator to raise PipelineInputError
@@ -868,13 +985,17 @@ class TestPipelineErrorHandling:
         """Test that PipelineExternalServiceError from orchestrator returns 503."""
         # Register implementation and configuration
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
 
         # Mock orchestrator to raise PipelineExternalServiceError
@@ -903,13 +1024,17 @@ class TestPipelineErrorHandling:
         """Test that PipelineExecutionError from orchestrator returns 500."""
         # Register implementation and configuration
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
 
         # Mock orchestrator to raise PipelineExecutionError
@@ -939,13 +1064,17 @@ class TestPipelineErrorHandling:
         """Test that generic PipelineExecutionError from orchestrator returns 500."""
         # Register implementation and configuration
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
 
         # Mock orchestrator to raise generic PipelineExecutionError
@@ -972,13 +1101,17 @@ class TestPipelineErrorHandling:
         """Test that parse_warnings from orchestrator are included in output_summary."""
         # Register implementation and configuration
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
 
         # Create a mock state with parse warnings
@@ -1025,13 +1158,17 @@ class TestConfigurationVersioning:
     def test_run_stores_configuration_version(self, client, registries):
         """A created run stores configuration_slug and configuration_version."""
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model", "version": 1},
+            default=True,
         )
 
         response = client.post(
@@ -1054,7 +1191,10 @@ class TestConfigurationVersioning:
     def test_run_resolves_correct_configuration_version(self, client, registries):
         """A run with (slug, v1) continues to resolve v1 after (slug, v2) is registered."""
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
 
         # Register v1
@@ -1063,6 +1203,7 @@ class TestConfigurationVersioning:
             "default",
             "default",
             {"model": "test-model-v1"},
+            default=True,
         )
         assert v1.version == 1
 
@@ -1084,6 +1225,7 @@ class TestConfigurationVersioning:
             "default",
             "default",
             {"model": "test-model-v2"},
+            default=True,
         )
         assert v2.version == 2
 
@@ -1143,13 +1285,17 @@ class TestConfigurationVersioning:
     def test_run_response_includes_configuration_fields(self, client, registries):
         """GET /api/pipelines/runs/{run_id} includes configuration_slug and version."""
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
 
         # Create run
@@ -1178,13 +1324,17 @@ class TestRunStatusLifecycle:
     def test_run_response_includes_status_fields(self, client, registries):
         """GET /api/pipelines/runs/{run_id} includes started_at and failure_reason fields."""
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
 
         # Create and retrieve run
@@ -1211,13 +1361,17 @@ class TestRunStatusLifecycle:
     def test_run_status_transitions_to_completed(self, client, registries):
         """A successful run transitions to COMPLETED status."""
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
 
         response = client.post(
@@ -1235,13 +1389,17 @@ class TestRunStatusLifecycle:
     def test_run_failure_persists_failure_reason(self, client, registries):
         """When orchestrator fails, FAILED status and failure_reason are persisted."""
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
 
         # Mock orchestrator to raise an exception
@@ -1280,13 +1438,17 @@ class TestRunStatusLifecycle:
     def test_run_transition_writes_started_at_before_orchestrator(self, client, registries):
         """RUNNING status and started_at timestamp are written before orchestrator executes."""
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
 
         response = client.post(
@@ -1319,13 +1481,17 @@ class TestRunStatusLifecycle:
         import threading
 
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
 
         repo = client.app.state.pipeline_run_repo
@@ -1412,13 +1578,17 @@ class TestRunStatusLifecycle:
         FAILED status and failure_reason are persisted in finally block.
         """
         registries["implementation_registry"].register_impl(
-            PipelineType.SCHEMA_EXTRACTION, "default", SchemaExtractionOrchestrator
+            PipelineType.SCHEMA_EXTRACTION,
+            "default",
+            SchemaExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
             PipelineType.SCHEMA_EXTRACTION,
             "default",
             "default",
             {"model": "test-model"},
+            default=True,
         )
 
         # Mock orchestrator to raise an exception
@@ -1493,7 +1663,10 @@ class TestIndividualExtractionFailures:
     def _post(client, registries, extraction):
         ptype = PipelineType.INDIVIDUAL_EXTRACTION
         registries["implementation_registry"].register_impl(
-            ptype, "default", IndividualExtractionOrchestrator
+            ptype,
+            "default",
+            IndividualExtractionOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(ptype, "default", "default", {"model": "m"})
         client.app.state.ontology_repo.get_taxonomy.return_value = None
@@ -1621,10 +1794,17 @@ class TestSynchronousRunLeavesTheEventLoopFree:
     ):
         llm = _BlockingLLM()
         registries["implementation_registry"].register_impl(
-            PipelineType.NO_OP, "default", NoOpPipelineOrchestrator
+            PipelineType.NO_OP,
+            "default",
+            NoOpPipelineOrchestrator,
+            default=True,
         )
         registries["config_registry"].register(
-            PipelineType.NO_OP, "default", "default", {"model": "test-model"}
+            PipelineType.NO_OP,
+            "default",
+            "default",
+            {"model": "test-model"},
+            default=True,
         )
         app = FastAPI()
         app.include_router(router)
@@ -1672,7 +1852,9 @@ class TestRunSourceText:
         return mock_orchestrator
 
     def _run(self, client, registries, ptype, orchestrator_class, body):
-        registries["implementation_registry"].register_impl(ptype, "default", orchestrator_class)
+        registries["implementation_registry"].register_impl(
+            ptype, "default", orchestrator_class, default=True
+        )
         registries["config_registry"].register(ptype, "default", "default", {"model": "m"})
         with patch(ORCHESTRATOR_PATCH_PATH, return_value=self._completed_orchestrator()):
             response = client.post(

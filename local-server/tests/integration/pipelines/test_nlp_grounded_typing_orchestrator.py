@@ -114,6 +114,7 @@ class TestNLPGroundedTypingIntegration:
         )
 
         config = {
+            "model": "test-model",
             "nlp_grounded_typing": True,
             "nlp_typing_top_k": 8,
             "nlp_typing_threshold": 0.2,

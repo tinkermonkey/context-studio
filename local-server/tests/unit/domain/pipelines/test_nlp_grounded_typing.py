@@ -11,6 +11,7 @@ import pytest
 from domain.extraction.ports import NounChunkSpan, OpenExtractionResult, OpenToken
 from domain.pipelines.individual_extraction.configurations.open_v1 import (
     IndividualOpenV1Config,
+    get_open_v1_config,
 )
 from domain.pipelines.individual_extraction.open_orchestrator import (
     OpenIndividualExtractionOrchestrator,
@@ -248,6 +249,7 @@ class TestConfirmClassForChunk:
             embedding_service=Mock(),
             schema_index=Mock(),
             ontology_repo=Mock(),
+            config={"model": "test-model"},
         )
 
         matches = [
@@ -284,6 +286,7 @@ class TestConfirmClassForChunk:
             embedding_service=Mock(),
             schema_index=Mock(),
             ontology_repo=Mock(),
+            config={"model": "test-model"},
         )
 
         matches = [
@@ -313,6 +316,7 @@ class TestConfirmClassForChunk:
             embedding_service=Mock(),
             schema_index=Mock(),
             ontology_repo=Mock(),
+            config={"model": "test-model"},
         )
         matches = [
             Mock(
@@ -340,6 +344,7 @@ class TestConfirmClassForChunk:
             embedding_service=Mock(),
             schema_index=Mock(),
             ontology_repo=Mock(),
+            config={"model": "test-model"},
         )
 
         matches = [
@@ -373,6 +378,7 @@ class TestConfirmClassForChunk:
             embedding_service=Mock(),
             schema_index=Mock(),
             ontology_repo=Mock(),
+            config={"model": "test-model"},
         )
 
         matches = [
@@ -401,6 +407,7 @@ class TestConfirmClassForChunk:
             embedding_service=Mock(),
             schema_index=Mock(),
             ontology_repo=Mock(),
+            config={"model": "test-model"},
         )
 
         matches = [
@@ -492,6 +499,7 @@ class TestNLPGroundedTyping:
             embedding_service=Mock(),
             schema_index=Mock(),
             ontology_repo=Mock(),
+            config={"model": "test-model"},
         )
 
         triples = [{"subject": {"label": "test"}, "predicate": {"label": "test"}}]
@@ -624,6 +632,8 @@ class TestNLPGroundedTyping:
             embedding_service=embedding_service,
             schema_index=schema_index,
             ontology_repo=ontology_repo,
+            # open_v1's registered settings and model: the orchestrator has no model of its own
+            config=get_open_v1_config(),
         )
 
         open_result = nlp_processor.process_open.return_value

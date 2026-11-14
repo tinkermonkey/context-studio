@@ -531,6 +531,9 @@ def cmd_run(args: argparse.Namespace) -> int:
     )
     source = _add_source(api, schema, identifier, args.document, gold["document"]["title"])
     body: dict[str, Any] = {"dataset": identifier, "skip_boilerplate": not args.keep_boilerplate}
+    # What is left out is the registered default (domain/pipelines/selection.py)
+    if args.implementation:
+        body["implementation_id"] = args.implementation
     if args.configuration:
         body["configuration_ref"] = args.configuration
     started = api.post(f"/api/sources/{source['id']}/extract", body)
@@ -549,11 +552,15 @@ def cmd_run(args: argparse.Namespace) -> int:
     proposal = api.get(f"/api/proposals/{run['proposal_id']}")
     individuals, relationships = predictions_from_proposal(proposal, schema, api)
     result = score(load_gold(args.document), individuals, relationships)
+    # What the run executed with, as the run records it
+    stored = api.get(f"/api/pipelines/runs/{run_id}")
     details = {
         "run": run_id,
         "proposal": run["proposal_id"],
         "dataset": identifier,
-        "configuration": args.configuration or "extraction-default",
+        "implementation": stored["implementation_id"],
+        "configuration": stored["configuration_ref"],
+        "model": (stored.get("llm_metadata") or {}).get("model"),
     }
     report = write_report(result, args.label, details)
     print_summary(result)
@@ -604,8 +611,15 @@ def main() -> int:
     common(run)
     run.add_argument("--document", required=True)
     run.add_argument(
+        "--implementation",
+        help=(
+            "An individual-extraction implementation that can extract a source; the"
+            " pipeline's default implementation if omitted"
+        ),
+    )
+    run.add_argument(
         "--configuration",
-        help="An individual-extraction configuration; extraction-default if omitted",
+        help=("One of that implementation's configurations; its default configuration if omitted"),
     )
     run.add_argument(
         "--keep-boilerplate", action="store_true", help="Do not skip boilerplate sections"
