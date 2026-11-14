@@ -158,7 +158,9 @@ class SourceExtractionService:
         if skip_boilerplate:
             self._check_text_left(source, pages)
         implementation_id = implementation_id or DEFAULT_IMPLEMENTATION
-        individual_ref = configuration_ref or self._source_configuration(implementation_id)
+        # Checked whether or not a configuration is named: the implementation must be able to
+        source_configuration = self._source_configuration(implementation_id)
+        individual_ref = configuration_ref or source_configuration
         individual = self._configurations.get_latest(
             PipelineType.INDIVIDUAL_EXTRACTION, implementation_id, individual_ref
         )

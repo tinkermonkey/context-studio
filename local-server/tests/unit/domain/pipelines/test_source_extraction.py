@@ -178,6 +178,32 @@ class TestImplementationChoice:
     @pytest.mark.parametrize(
         "implementation_id, configuration_ref",
         [
+            # Its own configuration: registered, so only the implementation check refuses it
+            ("open_v1", "extraction-open-v1"),
+            ("no_such", "extraction-default"),
+            ("no_such", "no-such-configuration"),
+        ],
+    )
+    def test_naming_a_configuration_does_not_let_such_an_implementation_through(
+        self, service, submitter, source, implementation_id, configuration_ref
+    ):
+        with pytest.raises(
+            ValueError,
+            match=f"'{implementation_id}' is not an individual-extraction implementation that"
+            r" can extract a source \(one of: default, find_then_type\)",
+        ):
+            service.extract(
+                source.id,
+                "home",
+                configuration_ref=configuration_ref,
+                implementation_id=implementation_id,
+            )
+
+        assert submitter.submitted == []
+
+    @pytest.mark.parametrize(
+        "implementation_id, configuration_ref",
+        [
             ("find_then_type", "extraction-default"),
             ("default", "extraction-find-then-type"),
             (None, "extraction-find-then-type"),
