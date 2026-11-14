@@ -50,6 +50,20 @@ export type CandidateItem =
   | components["schemas"]["GroundingCandidate"]
   | components["schemas"]["RefinementCandidate"];
 
+/** What a configuration itself sets; a null temperature or max_tokens is left to the default configuration. */
+export type ParameterSettings = components["schemas"]["PipelineConfigurationParameterSettings"];
+
+/** The range the API accepts for one parameter, as its schema states it. */
+export interface NumberBounds {
+  minimum?: number;
+  maximum?: number;
+}
+export type ParameterBounds = Partial<Record<keyof ParameterSettings, NumberBounds>>;
+
+interface SchemaProperty extends NumberBounds {
+  anyOf?: NumberBounds[];
+}
+
 const SCHEMA_CANDIDATE_TYPES = new Set([
   "schema_class",
   "schema_property",
@@ -96,6 +110,32 @@ class PipelineService extends BaseService {
     return this.get<PipelineConfigurationResponse[]>(
       `/api/pipelines/types/${type}/implementations/${implId}/configurations`,
     );
+  }
+
+  /**
+   * The bounds the API puts on a configuration's parameters, read from the
+   * schema the server publishes so the form and the server cannot disagree.
+   */
+  async getParameterBounds(): Promise<ParameterBounds> {
+    const spec = await this.get<{
+      components?: { schemas?: Record<string, { properties?: Record<string, SchemaProperty> }> };
+    }>("/openapi.json");
+    const properties =
+      spec.components?.schemas?.PipelineConfigurationParameterSettings?.properties ?? {};
+    const bounds: ParameterBounds = {};
+    for (const [name, property] of Object.entries(properties)) {
+      // An optional parameter is "a number or null": the number variant carries the range.
+      const ranged = [property, ...(property.anyOf ?? [])].find(
+        (p) => p.minimum !== undefined || p.maximum !== undefined,
+      );
+      if (ranged) {
+        bounds[name as keyof ParameterSettings] = {
+          minimum: ranged.minimum,
+          maximum: ranged.maximum,
+        };
+      }
+    }
+    return bounds;
   }
 
   // Configuration CRUD

@@ -4,7 +4,6 @@ import {
   Field,
   TextInput,
   TextArea,
-  NumberInput,
   Select,
   Chip,
   VersionPill,
@@ -22,50 +21,41 @@ import {
   useDeleteConfiguration,
 } from "@/api/hooks/pipeline/useConfigurationMutations";
 import { useRegisteredModels } from "@/api/hooks/pipeline/useRegisteredModels";
+import { useParameterBounds } from "@/api/hooks/pipeline/useParameterBounds";
 import { useHealth } from "@/api/hooks/admin/useHealth";
-import type { PipelineConfiguration } from "@/api/services/pipeline";
+import type { ParameterSettings, PipelineConfiguration } from "@/api/services/pipeline";
+import { ParamNumberField } from "./ParamNumberField";
 import { ParamSlider } from "./ParamSlider";
 import { StagePromptsSection } from "./StagePromptsSection";
 import { stagePromptsBody, type StagePromptsBody } from "./stagePrompts";
-import type { components } from "@/api/types";
 import "./ConfigEditor.css";
 
 type PipelineConfigurationResponse = PipelineConfiguration;
-type PipelineConfigurationParameters = components["schemas"]["PipelineConfigurationParameters"];
 
 const MODEL_REQUIRED = "A model is required";
-// The API's bounds on a configuration's output-token limit (PipelineConfigurationParameters.max_tokens).
-const MIN_OUTPUT_TOKENS = 64;
-const MAX_OUTPUT_TOKENS = 64000;
-const MAX_TOKENS_RANGE = `A whole number from ${MIN_OUTPUT_TOKENS} to ${MAX_OUTPUT_TOKENS}`;
 
-/** The output-token limit typed into the field, or undefined when it is not one the API takes. */
-function parseMaxTokens(text: string): number | undefined {
-  const value = Number(text);
-  const valid =
-    text.trim() !== "" &&
-    Number.isInteger(value) &&
-    value >= MIN_OUTPUT_TOKENS &&
-    value <= MAX_OUTPUT_TOKENS;
-  return valid ? value : undefined;
-}
-
-const DEFAULT_PARAMS: PipelineConfigurationParameters = {
-  temperature: 0.4,
-  max_tokens: 800,
-  top_p: 0.9,
-};
+/** The parameters of a configuration that may be left to the default configuration. */
+type InheritableParameter = "temperature" | "max_tokens";
 
 interface DraftConfig {
   name: string;
   description: string;
   provider: string;
   model: string;
-  parameters: PipelineConfigurationParameters;
+  /**
+   * What the configuration itself sets: a null temperature or max_tokens is
+   * left to the implementation's default configuration. Null as a whole for a
+   * pipeline whose runs take no LLM parameters.
+   */
+  parameters: ParameterSettings | null;
   enabled: boolean;
 }
 
-/** The editable copy of a configuration; a new one starts from `template`. */
+/**
+ * The editable copy of a configuration. A new one takes its provider and model
+ * from `template` (the implementation's default configuration) and sets no
+ * temperature or output limit of its own, so it follows the default's.
+ */
 function makeDraft(
   config: PipelineConfigurationResponse | null,
   template?: PipelineConfigurationResponse | null,
@@ -76,7 +66,9 @@ function makeDraft(
       description: "",
       provider: template?.provider ?? "",
       model: template?.model ?? "",
-      parameters: { ...(template?.parameters ?? DEFAULT_PARAMS) },
+      parameters: template?.parameters
+        ? { temperature: null, max_tokens: null, top_p: template.parameters.top_p }
+        : null,
       enabled: true,
     };
   }
@@ -85,14 +77,14 @@ function makeDraft(
     description: config.description ?? "",
     provider: config.provider ?? "",
     model: config.model ?? "",
-    parameters: config.parameters ?? { ...DEFAULT_PARAMS },
+    parameters: config.parameter_settings ?? null,
     enabled: config.enabled ?? true,
   };
 }
 
 /** A change to save: parameters are merged one by one onto the latest saved ones. */
 type SavePatch = Partial<Omit<DraftConfig, "parameters">> & {
-  parameters?: Partial<PipelineConfigurationParameters>;
+  parameters?: Partial<ParameterSettings>;
 };
 
 interface ConfigEditorProps {
@@ -135,24 +127,23 @@ export function ConfigEditor({
     makeDraft(isCreate ? null : config, template),
   );
   const [modelError, setModelError] = useState<string>();
-  const [maxTokensText, setMaxTokensText] = useState(() => String(draft.parameters.max_tokens));
-  const [maxTokensError, setMaxTokensError] = useState<string>();
+  // Parameter fields holding text the API would refuse: nothing is created while any does.
+  const [invalidParams, setInvalidParams] = useState<ReadonlySet<InheritableParameter>>(new Set());
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Providers are the server's; models are suggestions only (any id may be typed).
   const { data: health } = useHealth();
   const registeredModels = useRegisteredModels(pipelineType);
+  const bounds = useParameterBounds();
 
   const createMutation = useCreateConfiguration(pipelineType, implId);
   const updateMutation = useUpdateConfiguration(pipelineType, implId);
   const deleteMutation = useDeleteConfiguration(pipelineType, implId);
 
   useEffect(() => {
-    const next = makeDraft(isCreate ? null : config, template);
-    setDraft(next);
-    setMaxTokensText(String(next.parameters.max_tokens));
+    setDraft(makeDraft(isCreate ? null : config, template));
     setModelError(undefined);
-    setMaxTokensError(undefined);
+    setInvalidParams(new Set());
   }, [config?.id, mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Saves run one after another, each built on the previous save's result:
@@ -174,27 +165,34 @@ export function ConfigEditor({
   const displayProvider = isCreate ? draft.provider : (config?.provider ?? "");
   const displayModel = isCreate ? draft.model : (config?.model ?? "");
   const displayEnabled = isCreate ? draft.enabled : (config?.enabled ?? true);
-  const displayParams = active ? draft.parameters : (config?.parameters ?? DEFAULT_PARAMS);
+  // The values in effect: shown read-only, and as what an unset field inherits.
+  const effective = config?.parameters ?? null;
+  const inherited = template?.parameters ?? effective;
 
   const setField = (k: keyof DraftConfig, v: unknown) => setDraft((d) => ({ ...d, [k]: v }));
 
-  const setParam = (k: keyof PipelineConfigurationParameters, v: number) =>
-    setDraft((d) => ({ ...d, parameters: { ...d.parameters, [k]: v } }));
+  const setParam = <K extends keyof ParameterSettings>(k: K, v: ParameterSettings[K]) =>
+    setDraft((d) => (d.parameters ? { ...d, parameters: { ...d.parameters, [k]: v } } : d));
+
+  /** Save a temperature or output limit (null: back to the default's), unless it is what is saved. */
+  const commitParam = (k: InheritableParameter, v: number | null) => {
+    const saved = (latestSaved.current ?? config)?.parameter_settings;
+    if (isCreate || (saved?.[k] ?? null) === v) return;
+    void handleSaveField({ parameters: { [k]: v } });
+  };
+
+  const setParamValid = (k: InheritableParameter, valid: boolean) =>
+    setInvalidParams((prev) => {
+      if (prev.has(k) !== valid) return prev;
+      const next = new Set(prev);
+      if (valid) next.delete(k);
+      else next.add(k);
+      return next;
+    });
 
   const handleProviderChange = (v: string) => {
     setField("provider", v);
     if (!isCreate) void handleSaveField({ provider: v });
-  };
-
-  const handleMaxTokensBlur = () => {
-    const maxTokens = parseMaxTokens(maxTokensText);
-    if (maxTokens === undefined) {
-      setMaxTokensError(MAX_TOKENS_RANGE);
-      return;
-    }
-    const saved = (latestSaved.current ?? config)?.parameters;
-    if (isCreate || maxTokens === saved?.max_tokens) return;
-    void handleSaveField({ parameters: { max_tokens: maxTokens } });
   };
 
   /** Save a text field on blur, unless it still holds what was last saved. */
@@ -228,7 +226,9 @@ export function ConfigEditor({
       const updated = {
         ...saved,
         ...patch,
-        parameters: { ...saved.parameters, ...patch.parameters },
+        // What the configuration sets, never the values in effect: an
+        // inherited temperature or output limit stays inherited.
+        parameters: saved.parameters ? { ...saved.parameters, ...patch.parameters } : null,
       };
       try {
         latestSaved.current = await updateMutation.mutateAsync({
@@ -240,7 +240,7 @@ export function ConfigEditor({
             model: updated.model,
             // Always sent: the update replaces the whole configuration
             stage_prompts: stagePrompts ?? stagePromptsBody(base.stage_prompts),
-            parameters: updated.parameters,
+            parameters: updated.parameters ?? undefined,
             enabled: updated.enabled,
           },
         });
@@ -258,7 +258,7 @@ export function ConfigEditor({
         description: draft.description || undefined,
         provider: draft.provider,
         model: draft.model.trim(),
-        parameters: draft.parameters,
+        parameters: draft.parameters ?? undefined,
         enabled: draft.enabled,
       });
       onCreated(result);
@@ -287,7 +287,8 @@ export function ConfigEditor({
         provider: config.provider ?? "",
         model: config.model ?? "",
         stage_prompts: stagePromptsBody(config.stage_prompts),
-        parameters: config.parameters ?? { ...DEFAULT_PARAMS },
+        // The copy sets what the original sets, and inherits what it inherits.
+        parameters: config.parameter_settings ?? undefined,
         enabled: config.enabled,
       });
       onDuplicate?.(result);
@@ -297,12 +298,20 @@ export function ConfigEditor({
   };
 
   const isSystemConfig = !isCreate && (config?.is_system ?? false);
+  const editable = active && !isSystemConfig;
+  // Typed parameter fields start over with another configuration or mode.
+  const fieldsKey = `${config?.id ?? "new"}-${mode}`;
+  /** A value in effect, marked when the configuration does not set it itself. */
+  const withInherited = (shown: string, k: InheritableParameter) =>
+    config?.parameter_settings && config.parameter_settings[k] == null
+      ? `${shown} · inherited`
+      : shown;
   const validNew =
     isCreate &&
     draft.name.trim() !== "" &&
     draft.provider !== "" &&
     draft.model.trim() !== "" &&
-    parseMaxTokens(maxTokensText) !== undefined;
+    invalidParams.size === 0;
   // The server's providers, plus this configuration's own if the server no longer lists it.
   const providerOptions = [
     ...new Set([
@@ -504,78 +513,88 @@ export function ConfigEditor({
             />
           )}
 
-          {/* Parameters */}
-          <section>
-            <div className="cfg-section-title">Parameters</div>
-            <div className="cfg-params-grid">
-              <ParamSlider
-                active={active && !isSystemConfig}
-                label="Temperature"
-                value={displayParams.temperature ?? 0.4}
-                min={0}
-                max={2}
-                step={0.05}
-                fmt={(v) => v.toFixed(2)}
-                onChange={(v) => {
-                  setParam("temperature", v);
-                  void handleSaveField({ parameters: { temperature: v } });
-                }}
-              />
-              {active && !isSystemConfig ? (
-                // A limit runs to tens of thousands: typed, not dragged.
-                <Field
+          {/* Parameters: none for a pipeline whose runs take no temperature or output limit */}
+          {editable && draft.parameters && (
+            <section data-testid="config-parameters">
+              <div className="cfg-section-title">Parameters</div>
+              <div className="cfg-params-grid">
+                <ParamNumberField
+                  key={`temperature-${fieldsKey}`}
+                  id="config-temperature"
+                  label="Temperature"
+                  value={draft.parameters.temperature ?? null}
+                  inherited={inherited?.temperature}
+                  bounds={bounds.temperature}
+                  onChange={(v) => setParam("temperature", v)}
+                  onValidChange={(valid) => setParamValid("temperature", valid)}
+                  onCommit={(v) => commitParam("temperature", v)}
+                />
+                <ParamNumberField
+                  key={`max-tokens-${fieldsKey}`}
+                  id="config-max-tokens"
                   label="Max tokens"
-                  htmlFor="config-max-tokens"
-                  error={maxTokensError}
-                  errorId="config-max-tokens-error"
-                  className="cfg-param-field"
-                >
-                  <NumberInput
-                    id="config-max-tokens"
-                    mono
-                    min={MIN_OUTPUT_TOKENS}
-                    max={MAX_OUTPUT_TOKENS}
-                    step={1}
-                    value={maxTokensText}
-                    onChange={(e) => {
-                      setMaxTokensText(e.target.value);
-                      setMaxTokensError(undefined);
-                      const maxTokens = parseMaxTokens(e.target.value);
-                      if (maxTokens !== undefined) setParam("max_tokens", maxTokens);
-                    }}
-                    onBlur={handleMaxTokensBlur}
-                    error={!!maxTokensError}
-                    aria-invalid={!!maxTokensError}
-                    aria-describedby={maxTokensError ? "config-max-tokens-error" : undefined}
-                    data-testid="config-max-tokens-input"
-                  />
-                </Field>
-              ) : (
+                  integer
+                  value={draft.parameters.max_tokens ?? null}
+                  inherited={inherited?.max_tokens}
+                  bounds={bounds.max_tokens}
+                  onChange={(v) => setParam("max_tokens", v)}
+                  onValidChange={(valid) => setParamValid("max_tokens", valid)}
+                  onCommit={(v) => commitParam("max_tokens", v)}
+                />
                 <ParamSlider
-                  label="Max tokens"
-                  value={displayParams.max_tokens ?? 800}
-                  min={MIN_OUTPUT_TOKENS}
-                  max={MAX_OUTPUT_TOKENS}
-                  step={1}
-                  fmt={(v) => Math.round(v)}
+                  active
+                  label="Top-p"
+                  value={draft.parameters.top_p}
+                  min={bounds.top_p?.minimum ?? 0}
+                  max={bounds.top_p?.maximum ?? 1}
+                  step={0.01}
+                  fmt={(v) => v.toFixed(2)}
+                  onChange={(v) => {
+                    setParam("top_p", v);
+                    void handleSaveField({ parameters: { top_p: v } });
+                  }}
+                />
+              </div>
+              <p className="cfg-params-note">
+                An empty Temperature or Max tokens follows the implementation&apos;s default
+                configuration.
+              </p>
+            </section>
+          )}
+          {!editable && effective && (
+            <section data-testid="config-parameters">
+              <div className="cfg-section-title">Parameters</div>
+              <div className="cfg-params-grid">
+                <ParamSlider
+                  label="Temperature"
+                  value={effective.temperature}
+                  min={bounds.temperature?.minimum ?? 0}
+                  max={bounds.temperature?.maximum ?? Math.max(effective.temperature, 1)}
+                  step={0.05}
+                  fmt={(v) => withInherited(v.toFixed(2), "temperature")}
                   onChange={() => {}}
                 />
-              )}
-              <ParamSlider
-                active={active && !isSystemConfig}
-                label="Top-p"
-                value={displayParams.top_p ?? 0.9}
-                min={0}
-                max={1}
-                step={0.01}
-                fmt={(v) => v.toFixed(2)}
-                onChange={(v) => {
-                  setParam("top_p", v);
-                  void handleSaveField({ parameters: { top_p: v } });
-                }}
-              />
-            </div>
-          </section>
+                <ParamSlider
+                  label="Max tokens"
+                  value={effective.max_tokens}
+                  min={bounds.max_tokens?.minimum ?? 0}
+                  max={bounds.max_tokens?.maximum ?? effective.max_tokens}
+                  step={1}
+                  fmt={(v) => withInherited(String(Math.round(v)), "max_tokens")}
+                  onChange={() => {}}
+                />
+                <ParamSlider
+                  label="Top-p"
+                  value={effective.top_p}
+                  min={bounds.top_p?.minimum ?? 0}
+                  max={bounds.top_p?.maximum ?? 1}
+                  step={0.01}
+                  fmt={(v) => v.toFixed(2)}
+                  onChange={() => {}}
+                />
+              </div>
+            </section>
+          )}
 
           {/* Create actions */}
           {isCreate && (

@@ -66,6 +66,9 @@ function renderContent(props: Partial<Parameters<typeof PipelineTypeContent>[0]>
   vi.spyOn(adminService, "getHealth").mockResolvedValue({
     llm_providers_available: ["anthropic"],
   } as Awaited<ReturnType<typeof adminService.getHealth>>);
+  vi.spyOn(pipelineService, "getParameterBounds").mockResolvedValue({
+    max_tokens: { minimum: 64, maximum: 20000 },
+  });
   const onSelect = vi.fn();
   render(<PipelineTypeContent pipelineType={TYPE} onSelect={onSelect} {...props} />);
   return { onSelect };
@@ -137,6 +140,7 @@ describe("PipelineTypeContent", () => {
     expect(add).toHaveAccessibleName("New configuration of two_step");
     await userEvent.click(add);
     expect(screen.getByTestId("config-model-input")).toHaveValue("model-c");
+    expect(screen.getByTestId("config-max-tokens-input")).toHaveAttribute("placeholder", "2000");
 
     await userEvent.type(screen.getByTestId("config-name-input"), "Mine");
     await userEvent.click(screen.getByTestId("config-create-btn"));
@@ -148,8 +152,9 @@ describe("PipelineTypeContent", () => {
           name: "Mine",
           provider: "anthropic",
           model: "model-c",
-          // The implementation's default configuration's parameters, not the editor's own.
-          parameters: { temperature: 0, max_tokens: 2000, top_p: 0.9 },
+          // It sets no temperature or output limit of its own: it follows the
+          // implementation's default configuration (shown as what it inherits).
+          parameters: { temperature: null, max_tokens: null, top_p: 0.9 },
         }),
       ),
     );

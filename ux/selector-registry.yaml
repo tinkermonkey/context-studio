@@ -3964,9 +3964,27 @@ selectors:
   - selector: extract-schema-configuration-model
     component: components/pipeline/ImplementationConfigPicker.tsx
     description: Provider and model of the selected configuration (Extract page schema run)
-  - selector: config-max-tokens-input
-    component: components/pipeline/ConfigEditor.tsx
-    description: Number input for a configuration output-token limit
   - selector: param-slider-*
     component: components/pipeline/ParamSlider.tsx
     description: A configuration parameter slider or its read-only bar (pattern matches param-slider-{label})
+  - selector: config-temperature
+    component: components/pipeline/ParamNumberField.tsx
+    description: Temperature field of a configuration (label, input, inherited hint)
+  - selector: config-temperature-input
+    component: components/pipeline/ParamNumberField.tsx
+    description: Number input for a configuration temperature; empty follows the default configuration
+  - selector: config-max-tokens
+    component: components/pipeline/ParamNumberField.tsx
+    description: Output-token limit field of a configuration (label, input, inherited hint)
+  - selector: config-max-tokens-input
+    component: components/pipeline/ParamNumberField.tsx
+    description: Number input for a configuration output-token limit; empty follows the default configuration
+  - selector: config-parameters
+    component: components/pipeline/ConfigEditor.tsx
+    description: Parameters section of a configuration; absent for pipelines whose runs take no LLM parameters
+  - selector: extraction-review-dataset
+    component: components/pipeline/RunDatasetField.tsx
+    description: Dataset select for the review page individual run; shown when the taxonomy has several datasets
+  - selector: individual-extraction-dataset
+    component: components/pipeline/RunDatasetField.tsx
+    description: Dataset select of the individual extraction run wizard; shown when the taxonomy has several datasets
