@@ -462,9 +462,12 @@ describe("ConfigEditor parameters", () => {
   it("marks an inherited value in the read-only view", () => {
     renderEditor(inheriting());
     expect(screen.queryByTestId("config-max-tokens-input")).not.toBeInTheDocument();
-    expect(screen.getByTestId("param-slider-max-tokens")).toHaveTextContent("16000 · inherited");
-    expect(screen.getByTestId("param-slider-temperature")).toHaveTextContent("0.30");
-    expect(screen.getByTestId("param-slider-temperature")).not.toHaveTextContent("inherited");
+    const maxTokens = screen.getByTestId("param-slider-max-tokens");
+    expect(maxTokens).toHaveTextContent("16000");
+    expect(within(maxTokens).getByText("inherited")).toHaveClass("param-slider__note");
+    const temperature = screen.getByTestId("param-slider-temperature");
+    expect(temperature).toHaveTextContent("0.30");
+    expect(within(temperature).queryByText("inherited")).not.toBeInTheDocument();
   });
 
   it("shows no parameters for a pipeline whose configurations carry none", async () => {

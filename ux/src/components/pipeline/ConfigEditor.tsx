@@ -301,11 +301,9 @@ export function ConfigEditor({
   const editable = active && !isSystemConfig;
   // Typed parameter fields start over with another configuration or mode.
   const fieldsKey = `${config?.id ?? "new"}-${mode}`;
-  /** A value in effect, marked when the configuration does not set it itself. */
-  const withInherited = (shown: string, k: InheritableParameter) =>
-    config?.parameter_settings && config.parameter_settings[k] == null
-      ? `${shown} · inherited`
-      : shown;
+  /** Says a value in effect is not the configuration's own. */
+  const inheritedNote = (k: InheritableParameter) =>
+    config?.parameter_settings && config.parameter_settings[k] == null ? "inherited" : undefined;
   const validNew =
     isCreate &&
     draft.name.trim() !== "" &&
@@ -571,7 +569,8 @@ export function ConfigEditor({
                   min={bounds.temperature?.minimum ?? 0}
                   max={bounds.temperature?.maximum ?? Math.max(effective.temperature, 1)}
                   step={0.05}
-                  fmt={(v) => withInherited(v.toFixed(2), "temperature")}
+                  fmt={(v) => v.toFixed(2)}
+                  note={inheritedNote("temperature")}
                   onChange={() => {}}
                 />
                 <ParamSlider
@@ -580,7 +579,8 @@ export function ConfigEditor({
                   min={bounds.max_tokens?.minimum ?? 0}
                   max={bounds.max_tokens?.maximum ?? effective.max_tokens}
                   step={1}
-                  fmt={(v) => withInherited(String(Math.round(v)), "max_tokens")}
+                  fmt={(v) => Math.round(v)}
+                  note={inheritedNote("max_tokens")}
                   onChange={() => {}}
                 />
                 <ParamSlider

@@ -197,9 +197,12 @@ export function PipelineTypeContent({
                       />
                       <span className="pipeline-cfg-body">
                         <span className="pipeline-cfg-name">{cfg.name}</span>
-                        <span className="pipeline-cfg-model">
-                          {cfg.provider} · {cfg.model}
-                        </span>
+                        {/* A pipeline that runs no LLM has neither. */}
+                        {(cfg.provider || cfg.model) && (
+                          <span className="pipeline-cfg-model">
+                            {[cfg.provider, cfg.model].filter(Boolean).join(" · ")}
+                          </span>
+                        )}
                       </span>
                       <span className="pipeline-cfg-badges">
                         {cfg.is_default && <Chip variant="cyan">default</Chip>}

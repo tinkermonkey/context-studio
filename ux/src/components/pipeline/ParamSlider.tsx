@@ -7,6 +7,8 @@ interface ParamSliderProps {
   fmt: (v: number) => string | number;
   onChange: (v: number) => void;
   active?: boolean;
+  /** A word about the value under the bar, e.g. that it is inherited. */
+  note?: string;
 }
 
 export function ParamSlider({
@@ -18,6 +20,7 @@ export function ParamSlider({
   fmt,
   onChange,
   active,
+  note,
 }: ParamSliderProps) {
   return (
     <div
@@ -47,6 +50,7 @@ export function ParamSlider({
           />
         </div>
       )}
+      {note && <span className="param-slider__note">{note}</span>}
     </div>
   );
 }
