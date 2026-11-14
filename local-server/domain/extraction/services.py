@@ -49,7 +49,6 @@ from .entities import (
 )
 from .events import ExtractionCompleted
 from .exceptions import ExtractionError, IncompleteLLMResponseError, InvalidInputError
-from .llm_calls import MAX_LLM_ATTEMPTS as _MAX_LLM_ATTEMPTS  # noqa: F401 (tests read it here)
 from .llm_calls import TokenTally as _TokenTally
 from .llm_calls import complete_parsed, failure_fields
 from .ports import (

@@ -73,6 +73,11 @@ class LLMProvider(Protocol):
         byte, and put what varies in the user prompt. tokens_in counts every
         input token of the response, cached or not.
 
+        complete and forget may be called from several threads at once (a
+        pipeline that types many mentions asks side by side), so a provider
+        that keeps state between calls, a response cache for one, must be
+        safe for that.
+
         Raises:
             LLMTransientError: The same request may be answered if made again
                 (a server error, a timeout); an LLMRateLimitError for a rate limit
