@@ -6,8 +6,9 @@ against a shortlist of class names. This shape splits that:
 
 - **find** lists what a text mentions, each with its passage, typing nothing;
 - **type** asks, for one mention at a time, which one class of the ontology it
-  is an instance of, offering the whole class catalog with definitions, or
-  none when it is not something to record.
+  is an instance of, offering every class of the ontology with the opening of
+  its definition (_DEFINITION_CHARS characters), or none when it is not
+  something to record.
 
 The catalog is the system prompt of every typing call of a run, byte for byte,
 so a provider that caches system prompts reads it once. Each function here
@@ -21,6 +22,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import re
 import time
 from typing import Any, Callable, NamedTuple, Sequence
@@ -39,7 +41,9 @@ _logger = logging.getLogger(__name__)
 # Characters of text sent on each side of a mention's passage when it is typed
 CONTEXT_WINDOW_CHARS = 1200
 
-# Characters of a class definition (and of a kind's description) put in a prompt
+# Characters of a class definition (and of a kind's description) put in a prompt:
+# its opening, not the whole of it. A definition's later text (what to use
+# instead, what tells the class apart) is not offered
 _DEFINITION_CHARS = 260
 
 # The find answer lists every mention of a chunk with a quote each; models that
@@ -87,7 +91,9 @@ def build_typing_prompt(
     listed = sorted(classes, key=lambda cls: cls.reference)
     lines = [f"Ontology: {ontology_title}", "", "Classes (reference: title (kind): definition):"]
     lines += [
-        f"- {cls.reference}: {cls.title} ({cls.kind}): {_brief(cls.definition)}" for cls in listed
+        f"- {cls.reference}: {_one_line(cls.title)} ({_one_line(cls.kind)}):"
+        f" {_brief(cls.definition)}"
+        for cls in listed
     ]
     return TypingPrompt(
         system=render(prompt.system, {"catalog": "\n".join(lines)}),
@@ -244,7 +250,9 @@ def parse_mentions(content: str, text: str) -> tuple[list[Mention], list[str]]:
     without a passage, and a warning says how many were.
 
     Raises:
-        IncompleteLLMResponseError: If the answer is not such an object
+        IncompleteLLMResponseError: If the answer is not such an object, or
+            lists items of which none is a mention with a name: that is not
+            an answer, and never read as "mentions nothing"
     """
     listed = _json_object(content).get("mentions")
     if not isinstance(listed, list):
@@ -271,6 +279,8 @@ def parse_mentions(content: str, text: str) -> tuple[list[Mention], list[str]]:
                 end=span.end,
             )
         )
+    if listed and not mentions:
+        raise IncompleteLLMResponseError(f"none of the {len(listed)} mentions it lists has a name")
     warnings = (
         [f"The passage of {unplaced} of {len(mentions)} mentions was not found in the text"]
         if unplaced
@@ -302,7 +312,9 @@ def parse_typing(content: str, class_refs: Any) -> tuple[str | None, float]:
         raise IncompleteLLMResponseError(f"it names a class the ontology does not list ({named})")
     try:
         confidence = float(answer.get("confidence", _DEFAULT_CONFIDENCE))
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
+        confidence = _DEFAULT_CONFIDENCE
+    if math.isnan(confidence):
         confidence = _DEFAULT_CONFIDENCE
     return (None if key == NONE_ANSWER else class_refs[key]), max(0.0, min(1.0, confidence))
 
@@ -321,9 +333,13 @@ def _json_object(content: str) -> dict[str, Any]:
     return data
 
 
+def _one_line(text: str | None) -> str:
+    return " ".join((text or "").split())
+
+
 def _brief(text: str | None) -> str:
     """A definition on one line, cut to the length a prompt lists it at."""
-    return " ".join((text or "").split())[:_DEFINITION_CHARS]
+    return _one_line(text)[:_DEFINITION_CHARS]
 
 
 def _spent(model: str, spent: TokenTally, started: float) -> dict[str, int | str]:

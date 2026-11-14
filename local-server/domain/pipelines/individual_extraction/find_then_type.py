@@ -7,10 +7,13 @@ result, same proposal), with pass 1 done differently:
 1. **Find**: each chunk is read once for what it mentions, typing nothing.
 2. **Type**: the mentions are merged over the whole source by their label key
    (labels.LabelKeys, the rule the triples are merged by), and each distinct
-   one is typed once, against the ontology's whole class catalog with
-   definitions: one class, or none when it is not something to record. An
-   individual so has one class however many chunks mention it. Typing calls
-   run side by side; they share one system prompt, which a provider can cache.
+   one is typed once, against every class of the ontology with the opening of
+   its definition: one class, or none when it is not something to record. An
+   individual so has one class however many chunks mention it. A name with a
+   corporate suffix is typed apart from the same name without one ("Acme LLC",
+   "Acme"): the merge makes them one individual when they get the same class.
+   Typing calls run side by side; they share one system prompt, which a
+   provider can cache.
 3. **Relate**: pass 2, per chunk, between the individuals typed in it.
 
 The result is the triples the two-pass shape gives: a typing triple for each
@@ -29,7 +32,9 @@ Failures keep the rules of the two-pass shape. Nothing that failed reads as
 - the run fails when every chunk's find failed or every typing call failed,
   and at once when the provider refuses the model's requests while finding or
   typing (every later call would fail the same way). A refusal while relating
-  costs the relationships of that chunk and the later ones, not what was typed;
+  costs the relationships of that chunk and the later ones, not what was typed.
+  A run so completes even when every chunk is a failed chunk for its
+  relationships: it keeps the individuals;
 - a pasted text has no part to carry on with: any of these fails its run.
 
 A run with failed chunks proposes what it has as a partial proposal, which
@@ -51,7 +56,7 @@ from domain.extraction.find_then_type import mention_context, typing_triple
 from domain.extraction.prompts import FIND_THEN_TYPE_STAGES
 from domain.pipelines.exceptions import PipelineExecutionError
 from domain.pipelines.individual_extraction.chunk_merge import merge_chunk_triples
-from domain.pipelines.individual_extraction.labels import LabelKeys
+from domain.pipelines.individual_extraction.labels import LabelKeys, has_corporate_suffix
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
     IndividualExtractionState,
@@ -64,6 +69,9 @@ _logger = logging.getLogger(__name__)
 
 # Typing calls in flight at once
 _TYPING_CONCURRENCY = 6
+
+# Metadata a run on a source has and a run on a pasted text does not
+_CHUNKED_ONLY = ("chunks", "source_id", "pages")
 
 
 @dataclass
@@ -126,7 +134,7 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
             raise _failure(
                 [failure], f"Extraction failed: {failure.failure_reason}", state.model, spent
             )
-        return triples, warnings, {k: v for k, v in metadata.items() if k != "chunks"}
+        return triples, warnings, {k: v for k, v in metadata.items() if k not in _CHUNKED_ONLY}
 
     async def _extract_by_chunk(
         self, state: IndividualExtractionState, chunks: list[Chunk], page_starts: list[int]
@@ -166,7 +174,9 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
         list[Any],
     ]:
         """
-        The whole flow over the given chunks.
+        The whole flow over the given chunks. ``report`` is False for a pasted
+        text, which is one chunk: no progress is reported, and no message
+        speaks of chunks.
 
         Returns:
             (merged triples, warnings, metadata, the failed chunks with why,
@@ -175,6 +185,10 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
         service = self._extraction_service
         total = len(chunks)
         texts = [state.source_text[chunk.start : chunk.end] for chunk in chunks]
+
+        def where(index: int) -> str:
+            return f"Chunk {index + 1} of {total}: " if report else ""
+
         if report:
             self._report_progress(0, total)
         spent: list[Any] = []  # every call's result: what the run cost
@@ -197,26 +211,39 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
             if result.failure_reason and result.provider_refused:
                 raise _failure(
                     [result],
-                    f"Extraction stopped at chunk {index + 1} of {total}, because every later"
-                    f" call would fail the same way: {result.failure_reason}",
+                    (
+                        f"Extraction stopped at chunk {index + 1} of {total}, because every"
+                        f" later call would fail the same way: {result.failure_reason}"
+                        if report
+                        else f"Extraction failed: {result.failure_reason}"
+                    ),
                     state.model,
                     spent,
                 )
             if result.failure_reason:
                 problems[index].append((result.failure_reason, result))
-            warnings.extend(f"Chunk {index + 1} of {total}: {w}" for w in result.warnings)
+            warnings.extend(where(index) + w for w in result.warnings)
             found.append(result.mentions)
         if all(problems):
             raise _failure(
                 [failed for chunk in problems for _, failed in chunk],
-                f"Extraction failed for every chunk ({total}): {problems[0][0][0]}",
+                (
+                    f"Extraction failed for every chunk ({total}): {problems[0][0][0]}"
+                    if report
+                    else f"Extraction failed: {problems[0][0][0]}"
+                ),
                 state.model,
                 spent,
             )
 
         # 2. Type each distinct mention once
         candidates = _candidates(found)
-        await self._type(state, texts, candidates, spent)
+        try:
+            await self._type(state, texts, candidates, spent)
+        except Exception as exc:
+            raise PipelineExecutionError(
+                "Typing what the text mentions failed", llm_metadata=_spent(state.model, spent)
+            ) from exc
         asked = [c for c in candidates if c.typing is not None]
         untyped = [c for c in asked if c.typing.failure_reason]
         refused = next((c for c in untyped if c.typing.provider_refused), None)
@@ -264,7 +291,9 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
         refusal: str | None = None
         for index, text in enumerate(texts):
             await asyncio.sleep(0)  # a cancelled run stops here
-            if refusal is None and chunk_triples[index]:
+            if not _has_relationships_to_read(chunk_triples[index]):
+                pass
+            elif refusal is None:
                 result = service.relate(
                     text=text,
                     typing_triples=chunk_triples[index],
@@ -274,7 +303,7 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
                     stage_prompts=self._stage_prompts,
                 )
                 spent.append(result)
-                warnings.extend(f"Chunk {index + 1} of {total}: {w}" for w in result.warnings)
+                warnings.extend(where(index) + w for w in result.warnings)
                 if result.failure_reason:
                     problems[index].append(
                         (f"Its relationships could not be read: {result.failure_reason}", result)
@@ -283,7 +312,7 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
                         refusal = result.failure_reason
                 else:
                     chunk_triples[index] = chunk_triples[index] + result.triples
-            elif refusal is not None and chunk_triples[index]:
+            else:
                 # Every later call would fail the same way: none is made
                 problems[index].append(
                     (
@@ -391,7 +420,15 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
                     stopped = True
 
         await type_one(candidates[0])
-        await asyncio.gather(*(type_one(candidate) for candidate in candidates[1:]))
+        tasks = [asyncio.ensure_future(type_one(candidate)) for candidate in candidates[1:]]
+        try:
+            await asyncio.gather(*tasks)
+        except BaseException:
+            # A call that raised, or a cancelled run: the calls not yet made are not made
+            for task in tasks:
+                task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+            raise
 
 
 def _candidates(found: list[list[Mention]]) -> list[_Candidate]:
@@ -399,15 +436,24 @@ def _candidates(found: list[list[Mention]]) -> list[_Candidate]:
     The distinct mentions of a source, in order of first appearance: mentions
     whose names share a label key are one, whatever their kind, since that is
     how their triples will be merged.
+
+    A name with a corporate suffix is kept apart from the same name without
+    one: whether "Wikimedia Enterprise LLC" (a business) and "Wikimedia
+    Enterprise" (a product) are one individual depends on the classes they are
+    typed with, which the merge of their triples decides (LabelKeys' ``typed``).
     """
     keys = LabelKeys(mention.name for mentions in found for mention in mentions)
-    candidates: dict[str, _Candidate] = {}
+    candidates: dict[tuple[str, bool], _Candidate] = {}
     for index, mentions in enumerate(found):
         for mention in mentions:
-            candidates.setdefault(keys.key(mention.name), _Candidate()).found.append(
-                (index, mention)
-            )
+            key = (keys.key(mention.name), has_corporate_suffix(mention.name))
+            candidates.setdefault(key, _Candidate()).found.append((index, mention))
     return list(candidates.values())
+
+
+def _has_relationships_to_read(typing_triples: list[dict[str, Any]]) -> bool:
+    """Whether a chunk's typed individuals are two or more: relate asks nothing for fewer."""
+    return len({triple["subject"]["label"] for triple in typing_triples}) > 1
 
 
 def _chunk_failure(problems: list[tuple[str, Any]]) -> _ChunkFailure:

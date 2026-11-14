@@ -123,6 +123,14 @@ class TestParseMentions:
 
         assert [(m.name, m.kind) for m in mentions] == [("Puma", "thing")]
 
+    @pytest.mark.parametrize(
+        "items",
+        [["Workhorse", "Puma"], [{"label": "Workhorse"}], [{"name": None, "quote": "Puma"}]],
+    )
+    def test_an_answer_whose_items_are_all_unusable_is_not_no_mentions(self, items):
+        with pytest.raises(IncompleteLLMResponseError, match="has a name"):
+            parse_mentions(_found(*items), TEXT)
+
     def test_an_answer_wrapped_in_a_code_fence_is_read(self):
         mentions, _ = parse_mentions(f"```json\n{_found(WORKHORSE)}\n```", TEXT)
 
@@ -179,6 +187,12 @@ class TestParseTyping:
     def test_a_missing_confidence_is_the_middle(self):
         assert parse_typing('{"class": "motivation.goal"}', self.REFS) == ("motivation.goal", 0.5)
 
+    @pytest.mark.parametrize("confidence", ["NaN", "1" + "0" * 400, '"high"', "null"])
+    def test_a_confidence_that_is_no_number_is_the_middle(self, confidence):
+        answer = f'{{"class": "motivation.goal", "confidence": {confidence}}}'
+
+        assert parse_typing(answer, self.REFS) == ("motivation.goal", 0.5)
+
 
 class TestTypingPrompt:
     def test_the_catalog_lists_every_class_by_reference_with_its_definition(self):
@@ -208,6 +222,13 @@ class TestTypingPrompt:
         line = next(line for line in prompt.system.splitlines() if line.startswith("- a.b:"))
         assert len(line) < 300
         assert "  " not in line
+
+    def test_a_title_of_several_lines_is_put_on_one(self):
+        split = CatalogClass("a.b", "Bee\nhive", "A\n layer", "Where bees live.")
+
+        prompt = build_typing_prompt("T", [split], PROMPTS[TYPE_MENTION])
+
+        assert "- a.b: Bee hive (A layer): Where bees live." in prompt.system.splitlines()
 
     def test_the_find_prompt_is_told_the_kinds_the_ontology_records(self):
         grounding = kinds_grounding("DR", [("Motivation Layer", "Why."), ("API Layer", "")])

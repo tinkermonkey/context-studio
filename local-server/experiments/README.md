@@ -115,17 +115,23 @@ document) are set above that; a gain inside it is not a result.
 
 `--implementation find_then_type` runs the benchmark through `FindThenTypeOrchestrator`
 (`domain/pipelines/individual_extraction/find_then_type.py`): each chunk is read once for what it
-mentions, each distinct mention of the source is typed once against the whole class catalog with
-definitions, and pass 2 relates the typed individuals of each chunk. It has its own cassettes
+mentions, each distinct mention of the source is typed once against every class of the ontology,
+and pass 2 relates the typed individuals of each chunk. It has its own cassettes
 (`tests/integration/fixtures/cassettes/extraction_benchmark_find_then_type/`), recorded with
-`claude-haiku-5-5` through the Anthropic provider: 604 calls for the three documents, of which 583
+`claude-haiku-5-5` through the Anthropic provider: 604 calls for the three documents, of which 570
 are typing calls that share one cached system prompt (the catalog, about 19k tokens), about $0.30
 in all and two to four minutes a document.
+
+The catalog lists each class with the first 260 characters of its definition, not the whole of it
+(`_DEFINITION_CHARS` in `domain/extraction/find_then_type.py`). The 193 definitions of the pinned
+DR ontology run from 584 to 1482 characters, so about a quarter of their text is offered, and the
+part that says which class to use instead is cut from nearly all of them. Offering more of a
+definition is an untried change; it changes the prompt, so the cassettes would be recorded again.
 
 | | found F1 | typed F1 | recall (core) | precision | type accuracy | relationship recall |
 |---|---|---|---|---|---|---|
 | `edit_check` (dev) | 0.433 | 0.389 | 0.513 (0.738) | 0.375 | 0.897 | 0.094 |
-| `gitlab_architecture` (dev) | 0.636 | 0.541 | 0.607 (0.889) | 0.667 | 0.851 | 0.265 |
+| `gitlab_architecture` (dev) | 0.635 | 0.541 | 0.607 (0.889) | 0.667 | 0.851 | 0.265 |
 | `wikimedia_enterprise` (holdout) | 0.513 | 0.481 | 0.485 (0.658) | 0.545 | 0.938 | 0.036 |
 | **dev mean** | **0.534** | **0.465** | 0.560 (0.814) | 0.521 | 0.874 | 0.180 |
 

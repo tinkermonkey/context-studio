@@ -16,6 +16,7 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 )
 
+import asyncio
 import re
 import threading
 import time
@@ -41,7 +42,7 @@ INCOMPLETE = (
 REFUSED = "The anthropic provider rejected its API key"
 SQL = "(sqlite3.OperationalError) database is locked [SQL: SELECT * FROM ontology_entities]"
 
-_NAME = re.compile(r"\b(?:Part\d{3}|Gateway|Skipme)\b")
+_NAME = re.compile(r"\b(?:Part\d{3}|Gateway|Skipme|Acme LLC|Acme)\b")
 
 
 @dataclass
@@ -77,20 +78,34 @@ class _FakeExtraction:
     sentences.
 
     Find lists each distinct name of the text it is given, with the name as
-    its passage. Type gives every name the class "app.component", except
-    "Skipme", which is not something to record. Relate states one relationship
-    between the first two individuals it is given.
+    its passage. Type gives every name the class "app.component" (or its class
+    in ``classes``), except "Skipme", which is not something to record. Relate
+    states one relationship between the first two individuals it is given.
+    Recognize stamps each individual with the id "known-<label>".
 
     ``find``, ``relate``: call number (from 1) -> "incomplete", "refused" or
-    "broken", for calls that fail. ``type``: name -> the same.
+    "broken", for calls that fail. ``type``: name -> the same, or "raises" for
+    a call that raises.
     """
 
-    def __init__(self, find=None, type=None, relate=None, recognize_error=None, type_delay=0.0):
+    def __init__(
+        self,
+        find=None,
+        type=None,
+        relate=None,
+        recognize_error=None,
+        type_delay=0.0,
+        classes=None,
+    ):
         self._find = find or {}
         self._type = type or {}
         self._relate = relate or {}
         self._recognize_error = recognize_error
         self._type_delay = type_delay
+        self._classes = classes or {}
+        self.recognized_in: list = []
+        # How many typing calls had started when one was refused or raised
+        self.typed_at_stop = None
         self.found: list[str] = []
         self.typed: list[str] = []
         self.related: list[str] = []
@@ -140,18 +155,24 @@ class _FakeExtraction:
             assert prompt.system == "the catalog"
             assert mention.name in context
             how = self._type.get(mention.name)
+            if how in ("refused", "raises"):
+                self.typed_at_stop = len(self.typed)
+            if how == "raises":
+                raise RuntimeError("the typing call raised")
             if how:
                 return _failed(how, 7)
             spent = {"model": model, "tokens_used": 10, "duration_ms": 2}
             if mention.name == "Skipme":
                 return _Result(class_ref=None, metadata=spent)
-            return _Result(class_ref="app.component", confidence=0.9, metadata=spent)
+            class_ref = self._classes.get(mention.name, "app.component")
+            return _Result(class_ref=class_ref, confidence=0.9, metadata=spent)
         finally:
             with self._lock:
                 self.in_flight -= 1
 
     def relate(self, text, typing_triples, ontology_id, model, temperature, stage_prompts=None):
         self.related.append(text)
+        self.stage_prompts.append(stage_prompts)
         how = self._relate.get(len(self.related))
         if how:
             return _failed(how, 30)
@@ -174,7 +195,11 @@ class _FakeExtraction:
     def recognize(self, triples, ontology_id, dataset_id=None):
         if self._recognize_error:
             raise self._recognize_error
-        return triples
+        self.recognized_in.append(dataset_id)
+        return [
+            {**t, "subject": {**t["subject"], "id": f"known-{t['subject']['label']}"}}
+            for t in triples
+        ]
 
 
 class _StatusWriter:
@@ -274,7 +299,12 @@ class TestFindThenTypeFlow:
         assert sorted(extraction.typed) == sorted(set(extraction.typed))
         gateway = _typing_triples(state.result["triples"])["Gateway"]
         assert len(gateway["passages"]) == 3  # one passage per chunk it is mentioned in
-        assert [t["subject"]["label"] for t in state.result["triples"]].count("Gateway") >= 1
+        typings = [
+            t
+            for t in state.result["triples"]
+            if t["predicate"]["label"] == "is_a" and t["subject"]["label"] == "Gateway"
+        ]
+        assert len(typings) == 1
 
     async def test_a_mention_that_is_not_something_to_record_is_left_out(self):
         extraction = _FakeExtraction()
@@ -336,7 +366,8 @@ class TestFindThenTypeFlow:
 
         await orchestrator.execute(_state(text=SOURCE, source_id="src-1"))
 
-        assert extraction.stage_prompts == [prompts] * 4  # three finds and the typing prompt
+        # Three finds, the typing prompt and three relates
+        assert extraction.stage_prompts == [prompts] * 7
 
     def test_its_stages_are_find_type_and_relate(self):
         assert [stage.key for stage in FindThenTypeOrchestrator.STAGE_PROMPTS] == [
@@ -353,9 +384,11 @@ class TestFindThenTypeFlow:
 
         candidates = _candidates(found)
 
+        # A corporate suffix keeps a name apart: the classes decide, at the merge
         assert [[m.name for _, m in c.found] for c in candidates] == [
             ["screws (D)", "Screw"],
-            ["Moen Inc.", "Moen"],
+            ["Moen Inc."],
+            ["Moen"],
         ]
         # Typed where its passage was placed, else where it was first found
         assert candidates[0].typed_in[1].name == "Screw"
@@ -481,6 +514,46 @@ class TestFailedParts:
         assert "mentions could not be typed (Part000)" in reason
         assert reason.endswith(f"; Its relationships could not be read: {INCOMPLETE}")
 
+    async def test_a_mention_of_several_chunks_that_could_not_be_typed_fails_one_chunk(self):
+        extraction = _FakeExtraction(type={"Gateway": "incomplete"})
+
+        state = await _run(extraction)
+
+        assert "Gateway" not in _typing_triples(state.result["triples"])
+        failed = state.result["failed_chunks"]
+        assert [c["index"] for c in failed] == [0]  # the chunk it was typed in
+        assert "mentions could not be typed (Gateway)" in failed[0]["failure_reason"]
+
+    async def test_a_find_refused_at_the_last_chunk_fails_the_run(self):
+        extraction = _FakeExtraction(find={3: "refused"})
+
+        with pytest.raises(ExtractionFailedError) as raised:
+            await _run(extraction)
+
+        assert str(raised.value).startswith("Extraction stopped at chunk 3 of 3,")
+        assert extraction.typed == []
+
+    async def test_after_a_refused_relate_a_chunk_with_nothing_to_relate_is_not_failed(self):
+        # Two chunks of parts, then one that names the gateway only
+        filler = "y" * 58 + "."
+        text = " ".join([_text(200, every=None)] + [filler] * 95 + ["Gateway"] + [filler] * 5)
+        extraction = _FakeExtraction(relate={1: "refused"})
+
+        state = await _run(extraction, text=text)
+
+        assert len(extraction.found) == 3
+        assert "Gateway" in _typing_triples(state.result["triples"])
+        assert [c["index"] for c in state.result["failed_chunks"]] == [0, 1]
+
+    async def test_a_run_whose_every_relate_failed_completes_with_its_individuals(self):
+        extraction = _FakeExtraction(relate={1: "incomplete", 2: "incomplete", 3: "incomplete"})
+
+        state = await _run(extraction)
+
+        assert state.current_status == PipelineRunStatus.COMPLETED
+        assert len(state.result["failed_chunks"]) == 3
+        assert len(_typing_triples(state.result["triples"])) == 301
+
     async def test_a_failure_to_recognize_fails_the_run_with_what_it_cost(self):
         extraction = _FakeExtraction(recognize_error=RuntimeError(SQL))
 
@@ -526,7 +599,8 @@ class TestProviderThatRefusesTheRun:
         with pytest.raises(ExtractionFailedError):
             await _run(extraction)
 
-        assert len(extraction.typed) < 301
+        # Only a call already let in when the refusal came back is still made
+        assert len(extraction.typed) <= extraction.typed_at_stop + _TYPING_CONCURRENCY
 
     async def test_a_refused_relate_costs_the_later_relationships_not_what_was_typed(self):
         extraction = _FakeExtraction(relate={2: "refused"})
@@ -580,9 +654,113 @@ class TestPastedText:
         with pytest.raises(ExtractionFailedError) as raised:
             await _orchestrator(extraction).execute(_state(text=self.PASTED))
 
-        message = str(raised.value)
-        assert message in (
-            f"Extraction failed: {reason}",
-            f"Extraction failed for every chunk (1): {reason}",
-        )
+        assert str(raised.value) == f"Extraction failed: {reason}"
         assert raised.value.llm_metadata["tokens_used"] > 0
+
+    @pytest.mark.parametrize(
+        "failing, message",
+        [
+            ({"find": {1: "refused"}}, f"Extraction failed: {REFUSED}"),
+            (
+                {"type": {"Part000": "refused"}},
+                "Extraction stopped while typing what the text mentions (1 of 41 asked),"
+                f" because every later call would fail the same way: {REFUSED}",
+            ),
+            (
+                {"relate": {1: "refused"}},
+                f"Extraction failed: Its relationships could not be read: {REFUSED}",
+            ),
+        ],
+    )
+    async def test_a_refused_part_fails_the_run_without_speaking_of_chunks(self, failing, message):
+        extraction = _FakeExtraction(**failing)
+
+        with pytest.raises(ExtractionFailedError) as raised:
+            await _orchestrator(extraction).execute(_state(text=self.PASTED))
+
+        assert str(raised.value) == message
+        assert raised.value.llm_metadata["tokens_used"] > 0
+
+    async def test_its_warnings_and_metadata_do_not_speak_of_chunks(self):
+        state = await _orchestrator(_FakeExtraction()).execute(_state(text=self.PASTED))
+
+        assert state.result["warnings"] == ["a find warning"]
+        assert not {"chunks", "source_id", "pages"} & set(state.result["metadata"])
+
+
+class TestCorporateSuffix:
+    TEXT = "Acme sells parts. Acme LLC owns the brand. Part001 is one of them."
+
+    async def test_a_name_and_its_corporate_form_are_typed_apart(self):
+        extraction = _FakeExtraction(
+            classes={"Acme": "product.product", "Acme LLC": "business.business"}
+        )
+
+        state = await _orchestrator(extraction).execute(_state(text=self.TEXT))
+
+        assert sorted(extraction.typed) == ["Acme", "Acme LLC", "Part001"]
+        typed = _typing_triples(state.result["triples"])
+        assert typed["Acme"]["object"]["label"] == "product.product"
+        assert typed["Acme LLC"]["object"]["label"] == "business.business"
+
+    async def test_the_two_forms_with_one_class_are_one_individual(self):
+        extraction = _FakeExtraction(
+            classes={"Acme": "business.business", "Acme LLC": "business.business"}
+        )
+
+        state = await _orchestrator(extraction).execute(_state(text=self.TEXT))
+
+        typed = _typing_triples(state.result["triples"])
+        assert sorted(typed) == ["Acme", "Part001"]
+        assert len(typed["Acme"]["passages"]) == 2
+
+
+class TestRecognitionAndPages:
+    async def test_the_recognized_triples_are_the_ones_merged(self):
+        extraction = _FakeExtraction()
+
+        state = await _run(extraction, source_id="src-1", dataset_id="ds-1")
+
+        assert extraction.recognized_in == ["ds-1"]  # once, over every chunk's triples
+        typed = _typing_triples(state.result["triples"])
+        assert typed["Gateway"]["subject"]["id"] == "known-Gateway"
+        assert all(t["subject"]["id"] == f"known-{label}" for label, t in typed.items())
+
+    async def test_passages_carry_the_page_they_are_on(self):
+        state = await _run(_FakeExtraction(), source_id="src-1", page_starts=[0, 9000])
+
+        typed = _typing_triples(state.result["triples"])
+        assert typed["Part000"]["passages"][0]["page"] == 1
+        assert typed["Part299"]["passages"][0]["page"] == 2
+
+
+class TestStoppingTheTyping:
+    async def test_a_typing_call_that_raises_fails_the_run_and_makes_no_further_call(self):
+        extraction = _FakeExtraction(type={"Part020": "raises"}, type_delay=0.001)
+
+        with pytest.raises(PipelineExecutionError) as raised:
+            await _run(extraction)
+
+        assert str(raised.value) == "Typing what the text mentions failed"
+        assert raised.value.llm_metadata["tokens_used"] >= 300  # the finds, at least
+        made = len(extraction.typed)
+        assert made <= extraction.typed_at_stop + _TYPING_CONCURRENCY
+        await asyncio.sleep(0.05)
+        assert len(extraction.typed) == made
+        assert extraction.related == []
+
+    async def test_a_cancelled_run_makes_no_further_typing_call(self):
+        extraction = _FakeExtraction(type_delay=0.005)
+        run = asyncio.ensure_future(_run(extraction))
+        while len(extraction.typed) < 10:
+            await asyncio.sleep(0.001)
+
+        run.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await run
+
+        made = len(extraction.typed)
+        assert made < 301
+        await asyncio.sleep(0.05)
+        assert len(extraction.typed) == made
+        assert extraction.related == []

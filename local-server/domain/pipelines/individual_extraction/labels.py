@@ -107,7 +107,7 @@ class LabelKeys:
         plain: dict[str, set[Hashable]] = {}
         corporate: dict[str, set[Hashable]] = {}
         for label, class_id in typed:
-            forms = corporate if _has_corporate_suffix(label) else plain
+            forms = corporate if has_corporate_suffix(label) else plain
             forms.setdefault(individual_key(label), set()).add(class_id)
         self._corporate = {
             key
@@ -119,7 +119,7 @@ class LabelKeys:
         """A label's merge key among these labels."""
         name = individual_key(label)
         key = name
-        if name in self._corporate and _has_corporate_suffix(label):
+        if name in self._corporate and has_corporate_suffix(label):
             key = f"{name} {_CORPORATE_MARK}"
         letter = _diagram_letter(label)
         return f"{key} ({letter.lower()})" if letter and name in self._lettered else key
@@ -199,7 +199,7 @@ def _ends_with_corporate_suffix(tokens: list[str]) -> bool:
     return len(tokens) > 1 and tokens[-1].lower().strip(".,") in _CORPORATE_SUFFIXES
 
 
-def _has_corporate_suffix(label: str | None) -> bool:
+def has_corporate_suffix(label: str | None) -> bool:
     """Whether a label ends with a corporate suffix that `individual_key` drops."""
     return _ends_with_corporate_suffix(_APOSTROPHES.sub("", surface_label(label)).split())
 
