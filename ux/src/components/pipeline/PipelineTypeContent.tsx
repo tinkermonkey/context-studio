@@ -143,6 +143,9 @@ export function PipelineTypeContent({
                 size="sm"
                 icon
                 onClick={handleNewConfig}
+                // A new configuration starts from the implementation's default one,
+                // so it waits for the list that says which that is.
+                disabled={!configurations}
                 title="New configuration"
                 aria-label={`New configuration of ${implId}`}
                 data-testid="pipeline-new-config-btn"

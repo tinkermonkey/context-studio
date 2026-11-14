@@ -158,6 +158,35 @@ describe("PipelineTypeContent", () => {
     );
   });
 
+  it("does not offer a new configuration until the list that seeds it has loaded", async () => {
+    vi.spyOn(pipelineService, "listImplementations").mockResolvedValue(IMPLEMENTATIONS);
+    let serve: (configs: PipelineConfiguration[]) => void = () => {};
+    vi.spyOn(pipelineService, "listConfigurations").mockImplementation(
+      () => new Promise((resolve) => (serve = resolve)),
+    );
+    vi.spyOn(adminService, "getHealth").mockResolvedValue(
+      {} as Awaited<ReturnType<typeof adminService.getHealth>>,
+    );
+    render(<PipelineTypeContent pipelineType={TYPE} onSelect={vi.fn()} />);
+
+    const add = await screen.findByTestId("pipeline-new-config-btn");
+    expect(add).toBeDisabled();
+    serve(CONFIGURATIONS.classic);
+    await waitFor(() => expect(add).toBeEnabled());
+  });
+
+  it("keeps a new configuration unavailable when the list could not be read", async () => {
+    vi.spyOn(pipelineService, "listImplementations").mockResolvedValue(IMPLEMENTATIONS);
+    vi.spyOn(pipelineService, "listConfigurations").mockRejectedValue(new Error("boom"));
+    vi.spyOn(adminService, "getHealth").mockResolvedValue(
+      {} as Awaited<ReturnType<typeof adminService.getHealth>>,
+    );
+    render(<PipelineTypeContent pipelineType={TYPE} onSelect={vi.fn()} />);
+
+    expect(await screen.findByText("Failed to load configurations")).toBeInTheDocument();
+    expect(screen.getByTestId("pipeline-new-config-btn")).toBeDisabled();
+  });
+
   it("offers Run only for a type that has a run wizard", async () => {
     const onRun = vi.fn();
     renderContent({ onRun });
