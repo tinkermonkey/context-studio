@@ -15,6 +15,7 @@ import { useTaxonomy } from "@/api/hooks/ontology/useTaxonomies";
 import { useSource } from "@/api/hooks/sources/useSource";
 import {
   useExtractionConfigurations,
+  useExtractionImplementations,
   useExtractSource,
 } from "@/api/hooks/sources/useExtractSource";
 import {
@@ -47,6 +48,8 @@ type DatasetResponse = components["schemas"]["DatasetResponse"];
 
 const copy = sourcesCopy.extract;
 const SERVER_DEFAULT = "";
+/** The implementation the server extracts with when none is named. */
+const DEFAULT_IMPLEMENTATION = "default";
 
 export interface ExtractSourcePageProps {
   sourceId: string;
@@ -76,7 +79,7 @@ interface ConfigureFormProps {
   onPagesChange: (pages: number[]) => void;
 }
 
-/** Dataset, configuration, page range and schema option, with a rough estimate. */
+/** Dataset, implementation, configuration, page range and schema option, with a rough estimate. */
 function ConfigureForm({
   source,
   datasets,
@@ -86,8 +89,9 @@ function ConfigureForm({
   onPagesChange,
 }: ConfigureFormProps) {
   const extract = useExtractSource();
-  const { configurations } = useExtractionConfigurations();
+  const { implementations } = useExtractionImplementations();
   const [dataset, setDataset] = useState(source.dataset_id);
+  const [implementationChoice, setImplementationChoice] = useState<string | undefined>(undefined);
   const [configChoice, setConfigChoice] = useState<string | undefined>(undefined);
   const [schema, setSchema] = useState(false);
   const [skipBoilerplate, setSkipBoilerplate] = useState(true);
@@ -98,7 +102,18 @@ function ConfigureForm({
   const schemaOffered = mirrored === false;
   const suggestSchema = schema && schemaOffered;
 
-  const configRef = configChoice ?? configurations[0]?.config_ref ?? SERVER_DEFAULT;
+  const implementation =
+    implementations.find((i) => i.id === implementationChoice) ??
+    implementations.find((i) => i.id === DEFAULT_IMPLEMENTATION) ??
+    implementations[0];
+  const implementationId = implementation?.id ?? SERVER_DEFAULT;
+  const { configurations } = useExtractionConfigurations(implementationId);
+  // Unless one is chosen: the configuration the implementation extracts a source with.
+  const configRef =
+    configChoice ??
+    configurations.find((c) => c.config_ref === implementation?.source_configuration)?.config_ref ??
+    configurations[0]?.config_ref ??
+    SERVER_DEFAULT;
   const config = configurations.find((c) => c.config_ref === configRef);
   const parsed = parsePages(pages, source.pages);
   const chars = "pages" in parsed ? charsInPages(source, parsed.pages) : source.chars;
@@ -126,6 +141,7 @@ function ConfigureForm({
         sourceId: source.id,
         body: {
           dataset,
+          ...(implementationId ? { implementation_id: implementationId } : {}),
           ...(configRef ? { configuration_ref: configRef } : {}),
           ...(spec ? { pages: spec } : {}),
           schema: suggestSchema,
@@ -158,6 +174,32 @@ function ConfigureForm({
             aria-label={copy.datasetLabel}
             data-testid="extract-dataset"
           />
+        </Field>
+
+        <Field
+          label={copy.implementationLabel}
+          htmlFor="extract-implementation"
+          hint={copy.implementationHint}
+        >
+          <Select
+            id="extract-implementation"
+            value={implementationId}
+            onChange={(v) => {
+              setImplementationChoice(v);
+              // A configuration belongs to one implementation.
+              setConfigChoice(undefined);
+              setStartError(undefined);
+            }}
+            placeholder={copy.implementationPlaceholder}
+            ariaLabel={copy.implementationLabel}
+            data-testid="extract-implementation"
+          >
+            {implementations.map((i) => (
+              <Select.Item key={i.id} value={i.id}>
+                {i.id}
+              </Select.Item>
+            ))}
+          </Select>
         </Field>
 
         <Field label={copy.configLabel} htmlFor="extract-config" hint={copy.configHint}>

@@ -9214,7 +9214,7 @@
           "sources"
         ],
         "summary": "Extract Source",
-        "description": "Extract a ready source into proposals, in the background: an\nindividual-extraction run that reads it chunk by chunk (the chunks are the\nrun's items) and ends in one proposal for review in the dataset; with\n`schema`, a schema-extraction run over the same text too, with its own\nproposal. Follow the runs with GET /api/pipelines/runs/{id}, or the\nsource's `last_extraction`. Unless `skip_boilerplate` is false, the\nsource's warranty, safety, legal and contact sections and its copies in\nother languages are skipped; each run's output says what was.",
+        "description": "Extract a ready source into proposals, in the background: an\nindividual-extraction run (of `implementation_id`; `default` when omitted)\nthat reads it chunk by chunk (the chunks are the run's items) and ends in\none proposal for review in the dataset; with\n`schema`, a schema-extraction run over the same text too, with its own\nproposal. Follow the runs with GET /api/pipelines/runs/{id}, or the\nsource's `last_extraction`. Unless `skip_boilerplate` is false, the\nsource's warranty, safety, legal and contact sections and its copies in\nother languages are skipped; each run's output says what was.",
         "operationId": "extract_source_api_sources__source_id__extract_post",
         "parameters": [
           {
@@ -9255,7 +9255,7 @@
             "description": "The source is fetching, failed or removed; or schema extraction was asked of a taxonomy whose client proposes its schema changes"
           },
           "422": {
-            "description": "A bad page range, or a configuration that can't extract a source"
+            "description": "A bad page range, an implementation that can't extract a source, or a configuration that isn't one of the implementation's"
           },
           "503": {
             "description": "Background pipeline runs are not available"
@@ -14852,6 +14852,18 @@
             "type": "string",
             "title": "Pipeline Type",
             "description": "Pipeline type for this implementation"
+          },
+          "source_configuration": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Configuration",
+            "description": "The configuration a source is extracted with when none is named (POST /api/sources/{id}/extract); null for an implementation that cannot extract a source"
           }
         },
         "type": "object",
@@ -20210,6 +20222,19 @@
             "title": "Dataset",
             "description": "The dataset (identifier or id)"
           },
+          "implementation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Implementation Id",
+            "description": "The individual-extraction implementation that reads the source, one whose source_configuration is set (GET /api/pipelines/types/individual_extraction/implementations); default when omitted"
+          },
           "configuration_ref": {
             "anyOf": [
               {
@@ -20221,7 +20246,7 @@
               }
             ],
             "title": "Configuration Ref",
-            "description": "An individual-extraction configuration; extraction-default when omitted"
+            "description": "An individual-extraction configuration of the implementation; the implementation's source_configuration when omitted"
           },
           "pages": {
             "anyOf": [

@@ -113,10 +113,22 @@ class SourceExtractRequest(BaseModel):
     dataset: str = Field(
         ..., min_length=1, max_length=255, description="The dataset (identifier or id)"
     )
+    implementation_id: Optional[str] = Field(
+        None,
+        max_length=255,
+        description=(
+            "The individual-extraction implementation that reads the source, one whose"
+            " source_configuration is set (GET /api/pipelines/types/individual_extraction/"
+            "implementations); default when omitted"
+        ),
+    )
     configuration_ref: Optional[str] = Field(
         None,
         max_length=255,
-        description="An individual-extraction configuration; extraction-default when omitted",
+        description=(
+            "An individual-extraction configuration of the implementation; the"
+            " implementation's source_configuration when omitted"
+        ),
     )
     pages: Optional[str] = Field(
         None, max_length=200, description='Pages to extract, such as "12-30" or "1-3, 7"'

@@ -34,6 +34,7 @@ from domain.pipelines.exceptions import (
     PipelineInputError,
     PipelineStorageError,
 )
+from domain.pipelines.individual_extraction.bootstrap import register_individual_extraction
 from domain.pipelines.individual_extraction.orchestrator import (
     IndividualExtractionOrchestrator,
 )
@@ -189,6 +190,21 @@ class TestPipelineImplementationEndpoints:
         body = response.json()
         assert isinstance(body, list)
         assert len(body) == 0
+
+    def test_an_implementation_names_the_configuration_it_extracts_a_source_with(
+        self, client, registries
+    ):
+        """Implementations that can extract a source name their configuration for it."""
+        register_individual_extraction(registries["implementation_registry"], None)
+
+        response = client.get("/api/pipelines/types/individual_extraction/implementations")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert {i["id"]: i["source_configuration"] for i in response.json()} == {
+            "default": "extraction-default",
+            "find_then_type": "extraction-find-then-type",
+            "open_v1": None,
+        }
 
 
 class TestPipelineConfigurationEndpoints:

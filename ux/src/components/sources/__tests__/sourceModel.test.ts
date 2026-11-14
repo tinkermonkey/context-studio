@@ -12,6 +12,7 @@ import {
   extractionRunIds,
   failedChunks,
   failedChunksWarning,
+  isPartlyRead,
   formatCount,
   formatRange,
   formatUsd,
@@ -198,6 +199,34 @@ describe("sourceModel", () => {
         "Extraction failed for 2 of 3 chunks: chunks 2 and 3. What they hold is missing.",
       );
       expect(emptyChunksWarning(chunks)).toBe("Chunk 1 gave no candidates.");
+    });
+
+    it("says a failed chunk that still gave candidates lacks only part of what it holds", () => {
+      const chunks = chunksOf(
+        { triples: 4 },
+        { heading: "Parts", triples: 3, failed: "Its relationships could not be read: cut short." },
+        { triples: 2 },
+      );
+      expect(failedChunks(chunks).map(isPartlyRead)).toEqual([true]);
+      expect(failedChunksWarning(chunks)).toBe(
+        "Extraction failed in part for 1 of 3 chunks: chunk 2 (Parts). Part of what it holds is missing.",
+      );
+      expect(emptyChunksWarning(chunks)).toBe("");
+    });
+
+    it("says so of several chunks, and covers both kinds when they are mixed", () => {
+      const partly = {
+        triples: 3,
+        failed: "1 of its 4 mentions could not be typed (Acme): cut short.",
+      };
+      expect(failedChunksWarning(chunksOf(partly, partly, { triples: 1 }))).toBe(
+        "Extraction failed in part for 2 of 3 chunks: chunks 1 and 2. Part of what they hold is missing.",
+      );
+      const whole = { triples: 0, failed: "The response was cut short." };
+      expect(chunksOf(whole).map(isPartlyRead)).toEqual([false]);
+      expect(failedChunksWarning(chunksOf(partly, whole, { triples: 1 }))).toBe(
+        "Extraction failed for 2 of 3 chunks: chunks 1 and 2. What they hold, or part of it, is missing.",
+      );
     });
   });
 

@@ -95,8 +95,12 @@ export const sourcesCopy = {
     datasetLabel: "Dataset",
     datasetHint:
       "The proposal, and every individual it creates, belongs to this dataset. Near matches are looked for here.",
-    configLabel: "Individual extraction",
-    configHint: "Individuals and relationships, typed by the taxonomy's class definitions.",
+    implementationLabel: "Individual extraction",
+    implementationHint:
+      "How individuals and relationships are read from the text and typed by the taxonomy's class definitions.",
+    implementationPlaceholder: "Server default",
+    configLabel: "Configuration",
+    configHint: "The model and prompts the implementation runs with.",
     configPlaceholder: "Server default",
     schemaLabel: "Also suggest schema changes",
     schemaHint:
@@ -131,7 +135,7 @@ export const sourcesCopy = {
     cancelFailed: "Could not cancel the run.",
     schemaRun: "Schema suggestions",
     doneTitle: "Proposal ready",
-    /** Some chunks failed, so the proposal lacks what they hold. */
+    /** Some chunks failed, so the proposal lacks what they hold, or part of it. */
     partialDoneTitle: "Partial proposal ready",
     doneSubtitle: (title: string, dataset?: string) =>
       dataset ? `Extraction: ${title} · dataset ${dataset}` : `Extraction: ${title}`,
@@ -175,6 +179,8 @@ export const sourcesCopy = {
     read: "read",
     found: (n: number) => `${n} found`,
     failed: "failed",
+    /** A chunk that failed in part: what it still gave. */
+    partlyRead: (n: number) => `${n} found, incomplete`,
     note: "Split at headings, about 8k characters each, never mid-sentence. Candidates found in several chunks merge into one operation with every passage as evidence.",
   },
 } as const;
