@@ -17,6 +17,18 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from tests.integration.pipelines._harness.cassettes import _compute_prompt_hash
 
 
+def fixture_model(fixture_input: dict, scenario: str) -> str:
+    """
+    The model a scenario's cassette is keyed with: the one its input fixture
+    pins, which is what the quality suite replaying these cassettes sends.
+    Nothing here supplies a model a fixture leaves out.
+    """
+    model = fixture_input.get("model")
+    if not isinstance(model, str) or not model:
+        raise ValueError(f"fixture {scenario} names no model")
+    return model
+
+
 def regenerate_definition_cassettes():
     """Regenerate cassettes for definition refinement."""
     cassettes_dir = (
@@ -52,7 +64,7 @@ def regenerate_definition_cassettes():
             fixture_expected = json.load(f)
 
         # Extract the prompts that would be generated
-        model = fixture_input.get("model", "claude-opus-4-7")
+        model = fixture_model(fixture_input, scenario)
         temperature = fixture_input.get("temperature", 0.0)
 
         # Get expected response
@@ -143,7 +155,7 @@ def regenerate_connection_cassettes():
             fixture_expected = json.load(f)
 
         # Extract the prompts that would be generated
-        model = fixture_input.get("model", "claude-opus-4-7")
+        model = fixture_model(fixture_input, scenario)
         temperature = fixture_input.get("temperature", 0.0)
 
         # Get expected response

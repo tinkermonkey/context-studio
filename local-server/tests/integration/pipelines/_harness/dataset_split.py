@@ -349,12 +349,12 @@ SCENARIO_ONTOLOGY.update(
 )
 
 # Every corpus scenario a cassette-replayed tournament variant (`default`,
-# `grounded_v1`) is run against: the scored dev/holdout split plus the
+# `default+grounding`) is run against: the scored dev/holdout split plus the
 # always-reported Wave 1 bootstrap, Wave 4 informal and relabeled-arxiv
-# diagnostic groups. The single source of truth for the cassette recorders
-# (`scripts/record_*_cassettes.py`) and the tournament's replay guards
+# diagnostic groups. The single source of truth for the cassette recorder
+# (`scripts/record_default_cassettes.py`) and the tournament's replay guard
 # (`scripts/quality_tournament.py`) -- add a new replayed group HERE so the
-# recorders and the guard cannot drift apart (issue #1259). Ordered and
+# recorder and the guard cannot drift apart (issue #1259). Ordered and
 # de-duplicated (the groups are disjoint today).
 REPLAY_SCENARIOS: list[str] = list(
     dict.fromkeys(

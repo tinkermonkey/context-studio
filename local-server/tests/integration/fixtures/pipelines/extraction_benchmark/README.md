@@ -136,6 +136,13 @@ behind them (missed, mistyped, spurious, duplicates, known distractors). The rul
 - A relationship's ends are resolved by any name of an individual the run found, so a
   relationship stated under an alias counts. A title the run gave to two found statements names
   neither.
-Offline, the variant tournament scores each variant on these documents from recorded LLM
-responses, and `scripts/benchmark_replay.py --implementation find_then_type` scores the
-find-then-type implementation from its own recordings; see `experiments/README.md`.
+
+Offline, `scripts/benchmark_replay.py` scores one target on these documents from recorded LLM
+responses: an implementation of individual extraction with one of its configurations
+(`--implementation`, `--configuration`, each defaulting through the pipeline registry). Two
+targets are recorded: `default` with `extraction-openrouter-default` (Gemini 3 Flash,
+`cassettes/extraction_benchmark/`) and `find_then_type` with `extraction-find-then-type` (Claude
+Haiku 5.5, `cassettes/extraction_benchmark_find_then_type/`); `--all` replays both. The variant
+tournament ends with the same pass for the target it is given, and
+`tests/integration/pipelines/test_extraction_benchmark_replay.py` replays both sets in CI, so a
+change that makes either stale fails until it is recorded again. See `experiments/README.md`.
