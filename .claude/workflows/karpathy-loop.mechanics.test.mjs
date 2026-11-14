@@ -3,8 +3,11 @@
  * Standalone mechanics check for karpathy-loop.js's pure decision-logic
  * functions (documentation/karpathy_loop_design.md §4.3/§6): `clamp`,
  * `meetsFloors`, `selectTargets`, `acceptGate`, `isMeasured`, `gateCandidates`
- * and `stopAfter`, the per-implementation backlogs and gate margins, and the
- * prompts the agents are given.
+ * and `stopAfter`, the per-implementation backlogs and gate margins, what the
+ * script decides from the verifier's report (`standingOf`, `othersStanding`,
+ * `ranTheTarget`, `decideAll`), and the prompts the agents are given. The
+ * last section runs the whole script, orchestration included, against stub
+ * agents.
  *
  * karpathy-loop.js cannot be executed directly by plain Node: it is a
  * Workflow script whose top-level body uses host-injected bindings
@@ -49,14 +52,14 @@ function loadPureDeclarations() {
   const sandbox = { console };
   vm.createContext(sandbox);
   vm.runInContext(
-    `${declarations}\nglobalThis.__mechanics = { clamp, meetsFloors, selectTargets, acceptGate, BACKLOGS, GATE_MARGINS, TARGET_NAME, FAILURE_KINDS, FROZEN_PATHS, DEFAULT_HOLDOUT_FLOORS, evaluatePrompt, experimentPrompt, verifyPrompt, decidePrompt, ledgerReadPrompt, isMeasured, hasGuard, guardAgreesWithMargins, gateCandidates, stopAfter };`,
+    `${declarations}\nglobalThis.__mechanics = { clamp, meetsFloors, selectTargets, acceptGate, BACKLOGS, GATE_MARGINS, TARGET_NAME, FAILURE_KINDS, FROZEN_PATHS, DEFAULT_HOLDOUT_FLOORS, evaluatePrompt, experimentPrompt, verifyPrompt, decidePrompt, ledgerReadPrompt, isMeasured, hasGuard, guardAgreesWithMargins, gateCandidates, stopAfter, marginsFor, backlogFor, own, tt, othersStanding, ranTheTarget, standingOf, decideAll, baselineProblems, recordingAdvice };`,
     sandbox,
     { filename: SOURCE_PATH },
   );
   return sandbox.__mechanics;
 }
 
-const { clamp, meetsFloors, selectTargets, acceptGate, BACKLOGS, GATE_MARGINS, TARGET_NAME, FAILURE_KINDS, FROZEN_PATHS, DEFAULT_HOLDOUT_FLOORS, evaluatePrompt, experimentPrompt, verifyPrompt, decidePrompt, ledgerReadPrompt, isMeasured, hasGuard, guardAgreesWithMargins, gateCandidates, stopAfter } =
+const { clamp, meetsFloors, selectTargets, acceptGate, BACKLOGS, GATE_MARGINS, TARGET_NAME, FAILURE_KINDS, FROZEN_PATHS, DEFAULT_HOLDOUT_FLOORS, evaluatePrompt, experimentPrompt, verifyPrompt, decidePrompt, ledgerReadPrompt, isMeasured, hasGuard, guardAgreesWithMargins, gateCandidates, stopAfter, marginsFor, backlogFor, own, tt, othersStanding, ranTheTarget, standingOf, decideAll, baselineProblems, recordingAdvice } =
   loadPureDeclarations();
 
 // The measured margins of the `default` implementation: the gate tests below
@@ -266,11 +269,67 @@ test("acceptGate never treats a guard as not applicable on the candidate's word 
   assert.equal(result.passes, false);
   assert.ok(result.reasons[0].includes("candidate guard.strict_f1"));
 });
-test("acceptGate fails closed without margins, and without a guard margin where the guard applies", () => {
+test("acceptGate fails closed without margins", () => {
   assert.equal(acceptGate(candidateAt({ f1: 0.6 }), incumbentAt(), undefined).passes, false);
-  const result = acceptGate(candidateAt({ f1: 0.6 }), incumbentAt(), GATE_MARGINS.find_then_type);
-  assert.equal(result.passes, false);
-  assert.ok(result.reasons[0].includes("guardSlack"));
+  assert.equal(acceptGate(candidateAt({ f1: 0.6 }), incumbentAt(), {}).passes, false);
+});
+test("acceptGate decides whether the guard applies from the margins, not from either report", () => {
+  // Both sides say "not applicable" under margins that have a guard: no pass.
+  const dodgedIncumbent = { ...incumbentAt(), guard: NOT_APPLICABLE };
+  const dodgedCandidate = { ...candidateAt({ f1: 0.6 }), guard: NOT_APPLICABLE };
+  assert.equal(gate(dodgedCandidate, dodgedIncumbent).passes, false);
+  // A guard number beside a claim that it does not apply is still a claim.
+  const claim = { applies: false, strict_f1: 0.9 };
+  const both = gate({ ...candidateAt({ f1: 0.6 }), guard: claim }, { ...incumbentAt(), guard: claim });
+  assert.equal(both.passes, false);
+  assert.ok(both.reasons[0].includes("applies to this target by its margins"));
+  // Margins without a guard: both sides must say it does not apply.
+  const noGuard = GATE_MARGINS.find_then_type;
+  const measured = acceptGate(candidateAt({ typed_f1: 0.5 }), incumbentAt(), noGuard);
+  assert.equal(measured.passes, false);
+  assert.ok(measured.reasons[0].includes("not measured the same way"));
+});
+test("acceptGate compares in whole ten-thousandths: a gain of exactly epsilon is never an improvement", () => {
+  // In floating point 0.4948 - 0.4648 > 0.03 and 0.495 - 0.465 is not.
+  const margins = GATE_MARGINS.find_then_type;
+  for (const [from, to] of [[0.4648, 0.4948], [0.465, 0.495], [0.1138, 0.1438], [0.3, 0.33]]) {
+    const incumbent = { ...incumbentAt({ f1: 0.5, typed_f1: from }), guard: NOT_APPLICABLE };
+    const exact = { ...candidateAt({ f1: 0.5, typed_f1: to }), guard: NOT_APPLICABLE };
+    assert.equal(gate(exact, incumbent, margins).passes, false, `${from} to ${to} is exactly epsilon`);
+    const over = { ...candidateAt({ f1: 0.5, typed_f1: to + 0.0001 }), guard: NOT_APPLICABLE };
+    assert.equal(gate(over, incumbent, margins).passes, true, `${from} to ${to + 0.0001} is more than epsilon`);
+  }
+  assert.equal(tt(0.4948) - tt(0.4648), tt(0.03));
+});
+
+// -- margins and history belong to an implementation AND a configuration ----
+
+test("only an entry of the maps counts as an implementation", () => {
+  for (const name of ["constructor", "toString", "hasOwnProperty", "__proto__", "", undefined, null, 7]) {
+    assert.equal(backlogFor(name), null, `${String(name)} has a backlog`);
+    assert.equal(marginsFor({ implementation: name, configuration: "c" }), null, `${String(name)} has margins`);
+    assert.equal(own(GATE_MARGINS, name), false);
+  }
+  assert.ok(backlogFor("find_then_type") === BACKLOGS.find_then_type);
+});
+test("every set of margins names the configuration it was measured with", () => {
+  assert.equal(GATE_MARGINS.default.configuration, "extraction-openrouter-default");
+  assert.equal(GATE_MARGINS.find_then_type.configuration, "extraction-find-then-type");
+  assert.ok(marginsFor({ implementation: "default", configuration: "extraction-openrouter-default" }) === GATE_MARGINS.default);
+});
+test("a configuration the margins were not measured with gets them as provisional ones, and no guard", () => {
+  const margins = marginsFor({ implementation: "default", configuration: "extraction-default" });
+  assert.equal(margins.provisional, true);
+  assert.equal(margins.guardSlack, null);
+  assert.equal(margins.epsilon, GATE_MARGINS.default.epsilon);
+  assert.ok(margins.basis.includes("extraction-openrouter-default"));
+  assert.ok(margins.missing.includes("extraction-default"));
+  // The measured set itself is untouched.
+  assert.equal(GATE_MARGINS.default.provisional, false);
+  assert.equal(GATE_MARGINS.default.guardSlack, 0.02);
+  // So a guard reported for that configuration contradicts its margins.
+  assert.equal(guardAgreesWithMargins({ applies: true, strict_f1: 0.93 }, margins), false);
+  assert.equal(guardAgreesWithMargins(NOT_APPLICABLE, margins), true);
 });
 
 // -- gateCandidates (§4.3 step 5) and what follows a decision ---------------
@@ -373,6 +432,20 @@ test("the find_then_type backlog does not re-list what that implementation does 
     assert.ok(!/whole (class )?definition/i.test(hyp.summary), `${hyp.id} re-lists whole definitions`);
   }
 });
+test("a hypothesis that cannot be measured as the harness stands is blocked, with the reason", () => {
+  const vote = BACKLOGS.find_then_type.find((h) => h.id === "typing_majority_vote");
+  assert.equal(vote.blocked, true);
+  assert.ok(vote.summary.includes("seed"));
+  const counts = { mistyped: 99, spurious: 93, missed_supporting: 67 };
+  const targets = selectTargets(counts, [], [], BACKLOGS.find_then_type.length, BACKLOGS.find_then_type);
+  assert.ok(!targets.some((t) => t.id === "typing_majority_vote"));
+});
+test("the scope hypothesis asks for a new answer shape, not a re-wording of the rule the prompts already state", () => {
+  const scope = BACKLOGS.find_then_type.find((h) => h.id === "scope_question_at_typing");
+  assert.ok(scope.summary.includes("already state a scope rule"));
+  assert.ok(scope.summary.includes("separate field"));
+  assert.ok(!scope.summary.includes("side effect of whether some class fits"));
+});
 test("selectTargets draws from the backlog it is given and from no other", () => {
   const counts = { missed_supporting: 67, spurious: 93, missed_core: 18, mistyped: 15 };
   const own = new Set(BACKLOGS.find_then_type.map((h) => h.id));
@@ -459,9 +532,12 @@ const EVALUATION = {
   holdout: { typed_f1: 0.1 },
   guard: { applies: true, variant: "default", strict_f1: 0.9 },
   staleElsewhere: ["open_v1"],
+  otherTargets: [],
+  otherGuards: [],
 };
 const FTT_EVALUATION = { ...EVALUATION, ...FTT_TARGET, guard: NOT_APPLICABLE };
 const CANDIDATE = {
+  ...DEFAULT_TARGET,
   hypothesisId: "full_class_catalog",
   summary: "offer every class",
   worktreePath: "/tmp/wt",
@@ -474,7 +550,7 @@ const CANDIDATE = {
   holdout: { typed_f1: 0.1 },
   guard: { applies: true, variant: "default", strict_f1: 0.9 },
 };
-const FTT_CANDIDATE = { ...CANDIDATE, hypothesisId: "type_from_all_occurrences", guard: NOT_APPLICABLE };
+const FTT_CANDIDATE = { ...CANDIDATE, ...FTT_TARGET, hypothesisId: "type_from_all_occurrences", guard: NOT_APPLICABLE };
 const HYPOTHESIS = { id: "x", summary: "y", targetKind: "mistyped" };
 
 // The JSON a decide prompt hands to `ledger.py append --stdin`.
@@ -567,9 +643,24 @@ test("an experiment that touches a shared part owes every recording it made stal
   for (const [candidate, target] of [[CANDIDATE, DEFAULT_TARGET], [FTT_CANDIDATE, FTT_TARGET]]) {
     const verify = verifyPrompt(candidate, target, []);
     assert.ok(verify.includes("python scripts/benchmark_replay.py --all --json"));
-    assert.ok(verify.includes("every benchmark target that has recordings, not only this one"));
-    assert.ok(verify.includes("otherTargets"));
+    assert.ok(verify.includes("every benchmark target that has recordings,"));
+    assert.ok(verify.includes("otherTargets") && verify.includes("otherGuards") && verify.includes("measuredModel"));
+    // The verifier reports the other targets; the script judges them.
+    assert.ok(verify.includes("do not fail"));
   }
+});
+test("the incumbent's measurement takes the baseline of every other recorded target", () => {
+  const evaluate = evaluatePrompt(FTT_TARGET);
+  assert.ok(evaluate.includes("python scripts/benchmark_replay.py --all --json"));
+  assert.ok(evaluate.includes("`otherTargets`"));
+  assert.ok(evaluate.includes("`otherGuards` is the benchmark JSON's `other_guards` list"));
+  assert.ok(evaluate.includes("Exit 4"));
+});
+test("what says which orchestrator and model a target runs is frozen", () => {
+  for (const needle of ["local-server/configs/", "domain/pipelines/registry.py", "individual_extraction/bootstrap.py", "individual_extraction/configurations/"]) {
+    assert.ok(FROZEN_PATHS.some((p) => p.includes(needle)), `nothing freezes ${needle}`);
+  }
+  assert.ok(experimentPrompt(HYPOTHESIS, FTT_EVALUATION).includes("local-server/configs/"));
 });
 test("recordings already stale on main are named, and a candidate may add none", () => {
   const experiment = experimentPrompt(HYPOTHESIS, EVALUATION);
@@ -580,10 +671,10 @@ test("recordings already stale on main are named, and a candidate may add none",
   assert.ok(verifyPrompt(CANDIDATE, DEFAULT_TARGET, []).includes("(nothing)"));
   assert.ok(verifyPrompt(CANDIDATE, DEFAULT_TARGET, undefined).includes("(nothing)"));
 });
-test("the ledger is read for the implementation being refined", () => {
-  const prompt = ledgerReadPrompt("find_then_type");
-  assert.ok(prompt.includes("ledger.py rejected-hypotheses --implementation find_then_type"));
-  assert.ok(prompt.includes("ledger.py accepted-hypotheses --implementation find_then_type"));
+test("the ledger is read for the implementation and the configuration being refined", () => {
+  const prompt = ledgerReadPrompt(FTT_TARGET);
+  assert.ok(prompt.includes(`ledger.py rejected-hypotheses ${FTT_FLAGS}\``));
+  assert.ok(prompt.includes(`ledger.py accepted-hypotheses ${FTT_FLAGS}\``));
 });
 
 test("the verifier reproduces every number the gate reads", () => {
@@ -600,12 +691,16 @@ test("an accepted candidate is merged without checking a branch out in the repos
   assert.ok(decide.includes("ledger.py append --stdin"));
 });
 test("a ledger entry records what was refined, the margins it was judged by, and a guard that did not apply", () => {
-  const others = [{ implementation: "default", configuration: "extraction-openrouter-default", status: "scored", devTypedF1: 0.114, devFoundF1: 0.411 }];
+  const others = {
+    targets: [{ implementation: "default", configuration: "extraction-openrouter-default", status: "scored", dev_typed_f1: { before: 0.1138, after: 0.1138 }, dev_f1: { before: 0.4112, after: 0.4112 } }],
+    guards: [{ implementation: "default", configuration: "extraction-openrouter-default", status: "scored", strict_f1: { before: 0.9319, after: 0.9319 } }],
+  };
   const entry = ledgerEntryOf(decidePrompt(FTT_CANDIDATE, "rejected", "no gain", 2, "experiment/x", FTT_TARGET, GATE_MARGINS.find_then_type, others));
   assert.equal(entry.experiment_id, "2-find_then_type-type_from_all_occurrences");
   assert.equal(entry.implementation, "find_then_type");
   assert.equal(entry.configuration, "extraction-find-then-type");
-  assert.equal(entry.model, "claude-haiku-5-5");
+  assert.equal(entry.model, "claude-haiku-5-5", "the model the candidate's measurement ran");
+  assert.equal(entry.incumbent_model, "claude-haiku-5-5");
   assert.equal(entry.variant, "find_then_type+type_from_all_occurrences");
   assert.equal(entry.guard.applies, false);
   assert.ok(entry.guard.reason);
@@ -613,6 +708,12 @@ test("a ledger entry records what was refined, the margins it was judged by, and
   assert.equal(entry.margins.epsilon, GATE_MARGINS.find_then_type.epsilon);
   assert.equal(entry.margins.guard_slack, null);
   assert.equal(entry.other_targets[0].implementation, "default");
+  assert.equal(entry.other_targets[0].dev_typed_f1.before, 0.1138);
+  assert.equal(entry.other_guards[0].strict_f1.after, 0.9319);
+  // A candidate measured with another model is recorded with that model.
+  const swapped = ledgerEntryOf(decidePrompt({ ...FTT_CANDIDATE, model: "claude-opus-5-5" }, "unmeasured", "another model", 2, "experiment/x", FTT_TARGET, GATE_MARGINS.find_then_type, others));
+  assert.equal(swapped.model, "claude-opus-5-5");
+  assert.equal(swapped.incumbent_model, "claude-haiku-5-5");
 
   const measured = ledgerEntryOf(decidePrompt(CANDIDATE, "accepted", "ok", 1, "experiment/x", DEFAULT_TARGET, DEFAULT_MARGINS, []));
   assert.equal(measured.implementation, "default");
@@ -634,6 +735,336 @@ test("a deferred candidate is discarded without a ledger entry; an unmeasured on
   const entry = ledgerEntryOf(recorded);
   assert.equal(entry.guard, null);
   assert.equal(entry.implementation, "default");
+});
+
+// -- what the script decides from the verifier's report ---------------------
+
+const DEFAULT_OTHER = { implementation: "default", configuration: "extraction-openrouter-default", model: "google/gemini-3-flash-preview", status: "scored", devTypedF1: 0.1138, devFoundF1: 0.4112 };
+const DEFAULT_OTHER_GUARD = { implementation: "default", configuration: "extraction-openrouter-default", status: "scored", strict_f1: 0.9319, soft_f1: 0.9433 };
+// find_then_type on main: default's benchmark and the triple corpus are the other things a change could move.
+const FTT_INCUMBENT = {
+  ...FTT_TARGET,
+  measurementStatus: "scored",
+  errorReportPath: "experiments/reports/tournament_x_benchmark.json",
+  scoreboardPath: "experiments/reports/tournament_x.md",
+  dev: { typed_f1: 0.4648, f1: 0.5343, typed_precision: 0.5, typed_recall: 0.45 },
+  holdout: { typed_f1: 0.4813, typed_precision: 0.51, typed_recall: 0.455 },
+  guard: NOT_APPLICABLE,
+  failureCounts: { relationship_missed: 109, spurious: 93, missed_supporting: 67, missed_core: 18, mistyped: 15, excluded_extracted: 9 },
+  staleElsewhere: ["open_v1"],
+  otherTargets: [DEFAULT_OTHER],
+  otherGuards: [DEFAULT_OTHER_GUARD],
+};
+function fttCandidate(overrides = {}) {
+  return {
+    ...FTT_TARGET,
+    hypothesisId: "type_from_all_occurrences",
+    summary: "type from every occurrence",
+    worktreePath: "/tmp/wt",
+    branchName: "wt-1",
+    baseCommit: "abc",
+    changedFiles: ["local-server/domain/pipelines/individual_extraction/find_then_type.py"],
+    diffStat: "1 file changed",
+    changesPrompts: true,
+    cassettesRecorded: true,
+    recordingCostUsd: 0.3,
+    testsPassed: true,
+    failureCountsDelta: "",
+    measurementStatus: "scored",
+    dev: { typed_f1: 0.52, f1: 0.56 },
+    holdout: { typed_f1: 0.5 },
+    guard: NOT_APPLICABLE,
+    ...overrides,
+  };
+}
+function passingVerdict(overrides = {}) {
+  return {
+    hypothesisId: "type_from_all_occurrences",
+    integrityOk: true,
+    forbiddenPathHits: [],
+    testsReproduced: true,
+    scoresReproduced: true,
+    singleChangeOk: true,
+    diffMatchesHypothesis: true,
+    measuredModel: FTT_TARGET.model,
+    otherTargets: [{ ...DEFAULT_OTHER }],
+    otherGuards: [{ ...DEFAULT_OTHER_GUARD }],
+    verdict: "pass",
+    reason: "",
+    ...overrides,
+  };
+}
+function standing(candidateOverrides, verdictOverrides) {
+  return standingOf({ candidate: fttCandidate(candidateOverrides), verdict: passingVerdict(verdictOverrides) }, FTT_INCUMBENT, FTT_TARGET);
+}
+
+test("a candidate whose verifier reproduced everything, with every other target as it was, is verified", () => {
+  const result = standing();
+  assert.equal(result.status, "verified");
+  assert.equal(result.others.targets[0].dev_typed_f1.before, 0.1138);
+  assert.equal(result.others.targets[0].dev_typed_f1.after, 0.1138);
+  assert.equal(result.others.guards[0].strict_f1.after, 0.9319);
+});
+test("a verdict of pass is not enough: another target left stale, or not reported, is unmeasured and never accepted", () => {
+  const stale = standing({}, { otherTargets: [{ ...DEFAULT_OTHER, status: "stale", devTypedF1: undefined }] });
+  assert.equal(stale.status, "unmeasured");
+  assert.ok(stale.reason.includes("default with extraction-openrouter-default is stale"));
+  assert.equal(stale.others.targets[0].status, "stale");
+  const silent = standing({}, { otherTargets: [] });
+  assert.equal(silent.status, "unmeasured");
+  assert.ok(silent.reason.includes("not_replayed"));
+  const missing = standing({}, { otherTargets: undefined });
+  assert.equal(missing.status, "unmeasured");
+  const staleGuard = standing({}, { otherGuards: [{ ...DEFAULT_OTHER_GUARD, status: "stale", strict_f1: undefined }] });
+  assert.equal(staleGuard.status, "unmeasured");
+  assert.ok(staleGuard.reason.includes("triple corpus"));
+});
+test("a stale other target is unmeasured, not rejected, even when the verifier also failed the candidate", () => {
+  const result = standing({}, {
+    verdict: "fail",
+    scoresReproduced: false,
+    reason: "default went stale",
+    otherTargets: [{ ...DEFAULT_OTHER, status: "stale", devTypedF1: undefined }],
+  });
+  assert.equal(result.status, "unmeasured");
+});
+test("a change that damages another recorded target is rejected, by that target's own margin", () => {
+  // default's epsilon is 0.02: a drop of exactly that is tolerated, more is not.
+  const within = standing({}, { otherTargets: [{ ...DEFAULT_OTHER, devTypedF1: 0.0938 }] });
+  assert.equal(within.status, "verified");
+  const beyond = standing({}, { otherTargets: [{ ...DEFAULT_OTHER, devTypedF1: 0.0937 }] });
+  assert.equal(beyond.status, "rejected");
+  assert.ok(beyond.reason.includes("damages another recorded target"));
+  assert.equal(beyond.others.targets[0].dev_typed_f1.after, 0.0937);
+  // The triple corpus guards default when find_then_type is refined by a shared change.
+  const guard = standing({}, { otherGuards: [{ ...DEFAULT_OTHER_GUARD, strict_f1: 0.9118 }] });
+  assert.equal(guard.status, "rejected");
+  assert.ok(guard.reason.includes("triple-corpus strict-F1"));
+  assert.equal(standing({}, { otherGuards: [{ ...DEFAULT_OTHER_GUARD, strict_f1: 0.9119 }] }).status, "verified");
+});
+test("another target with no margins of its own is allowed no drop at all", () => {
+  const unknown = { implementation: "third", configuration: "extraction-third", status: "scored", devTypedF1: 0.3, devFoundF1: 0.4 };
+  const evaluation = { otherTargets: [unknown], otherGuards: [] };
+  const same = othersStanding(evaluation, { otherTargets: [{ ...unknown }], otherGuards: [] });
+  assert.equal(same.status, "ok");
+  const lower = othersStanding(evaluation, { otherTargets: [{ ...unknown, devTypedF1: 0.2999 }], otherGuards: [] });
+  assert.equal(lower.status, "regressed");
+});
+test("a candidate measured with another model is unmeasured: a change of model is not an experiment", () => {
+  const byReport = standing({ model: "claude-opus-5-5" });
+  assert.equal(byReport.status, "unmeasured");
+  assert.ok(byReport.reason.includes("claude-opus-5-5"));
+  const byReplay = standing({}, { measuredModel: "claude-opus-5-5" });
+  assert.equal(byReplay.status, "unmeasured");
+  assert.equal(standing({ model: undefined }).status, "unmeasured");
+  assert.equal(standing({}, { measuredModel: undefined }).status, "unmeasured");
+  assert.equal(standing({ configuration: "extraction-other" }).status, "unmeasured");
+  assert.equal(ranTheTarget(fttCandidate(), passingVerdict(), FTT_TARGET).ok, true);
+});
+test("a failed check is a rejection, and no verdict at all is unmeasured", () => {
+  for (const flag of ["integrityOk", "testsReproduced", "scoresReproduced", "singleChangeOk", "diffMatchesHypothesis"]) {
+    assert.equal(standing({}, { [flag]: false }).status, "rejected", flag);
+  }
+  assert.equal(standing({}, { verdict: "fail" }).status, "rejected");
+  assert.equal(standing({}, { forbiddenPathHits: ["local-server/configs/extraction-find-then-type.json"] }).status, "rejected");
+  assert.equal(standingOf({ candidate: fttCandidate(), verdict: null }, FTT_INCUMBENT, FTT_TARGET).status, "unmeasured");
+});
+test("decideAll accepts the best verified candidate and records what each change did to the other targets", () => {
+  const margins = marginsFor(FTT_TARGET);
+  const good = { candidate: fttCandidate({ hypothesisId: "good" }), verdict: passingVerdict() };
+  const stale = { candidate: fttCandidate({ hypothesisId: "stale", dev: { typed_f1: 0.6, f1: 0.6 } }), verdict: passingVerdict({ otherTargets: [] }) };
+  const flat = { candidate: fttCandidate({ hypothesisId: "flat", dev: { typed_f1: 0.47, f1: 0.535 } }), verdict: passingVerdict() };
+  const failed = fttCandidate({ hypothesisId: "failed", measurementStatus: "stale" });
+  const { decisions, best } = decideAll([good, stale, flat], [failed], FTT_INCUMBENT, FTT_TARGET, margins);
+  const byId = Object.fromEntries(decisions.map((d) => [d.candidate.hypothesisId, d]));
+  assert.equal(best.candidate.hypothesisId, "good");
+  assert.equal(byId.good.decision, "accepted");
+  assert.equal(byId.stale.decision, "unmeasured", "the higher score with a stale other target is not accepted");
+  assert.equal(byId.flat.decision, "rejected");
+  assert.equal(byId.failed.decision, "unmeasured");
+  assert.equal(byId.good.others.targets.length, 1);
+  assert.equal(byId.failed.others, null);
+});
+test("the iteration does not start when something else a change could move has no score on main", () => {
+  assert.equal(baselineProblems(FTT_INCUMBENT).length, 0);
+  assert.equal(baselineProblems({ ...FTT_INCUMBENT, otherTargets: [{ ...DEFAULT_OTHER, status: "stale", devTypedF1: undefined }] }).length, 1);
+  assert.equal(baselineProblems({ ...FTT_INCUMBENT, otherGuards: [{ ...DEFAULT_OTHER_GUARD, status: "not_registered", strict_f1: undefined }] }).length, 1);
+  assert.equal(baselineProblems({ ...FTT_INCUMBENT, otherTargets: undefined }).length, 1);
+  assert.equal(baselineProblems({ ...FTT_INCUMBENT, otherTargets: [], otherGuards: [] }).length, 0);
+});
+test("the triple corpus is offered for recording only to a target it guards", () => {
+  assert.ok(recordingAdvice(DEFAULT_TARGET).includes("record_default_cassettes.py --record"));
+  assert.ok(!recordingAdvice(FTT_TARGET).includes("record_default_cassettes.py"));
+  assert.ok(recordingAdvice(FTT_TARGET).includes(`benchmark_replay.py --record --spend ${FTT_FLAGS}`));
+  assert.ok(!recordingAdvice({ implementation: "default", configuration: "extraction-default" }).includes("record_default_cassettes.py"));
+});
+
+// -- the whole script, orchestration included, against stub agents ----------
+// What the pure-function tests above cannot see: that the orchestration calls
+// them, in which order, and what it returns on each path.
+
+const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+const WORKFLOW = new AsyncFunction("args", "agent", "phase", "parallel", "log", fs.readFileSync(SOURCE_PATH, "utf8").replace("export const meta", "const meta"));
+
+// Answers each step by the label the script gives it; `answers` may replace
+// any step's answer or, for experiments and verifiers, give one per hypothesis.
+async function runWorkflow(args, answers = {}) {
+  const calls = [];
+  const agent = async (prompt, opts) => {
+    const [step, id] = opts.label.split(":");
+    calls.push({ step, id, prompt });
+    const answer = answers[step];
+    if (typeof answer === "function") return answer(id, prompt);
+    if (answer !== undefined) return answer;
+    if (step === "evaluate") return FTT_INCUMBENT;
+    if (step === "select") return { rejectedHypotheses: [], acceptedHypotheses: [] };
+    if (step === "experiment") return fttCandidate({ hypothesisId: id });
+    if (step === "verify") return passingVerdict({ hypothesisId: id });
+    if (step === "decide") return { hypothesisId: id, decision: "recorded", ledgerAppended: true };
+    throw new Error(`unexpected step ${opts.label}`);
+  };
+  const parallel = (thunks) => Promise.all(thunks.map((thunk) => thunk()));
+  const result = await WORKFLOW(args, agent, () => {}, parallel, () => {});
+  return { result, calls, steps: calls.map((c) => c.step) };
+}
+
+async function asyncTest(name, fn) {
+  try {
+    await fn();
+    passCount += 1;
+    console.log(`ok - ${name}`);
+  } catch (err) {
+    failCount += 1;
+    console.error(`FAIL - ${name}`);
+    console.error(err);
+  }
+}
+
+const ASKED = { implementation: "find_then_type", iteration: 4 };
+
+await asyncTest("run: an iteration on find_then_type accepts a verified gain and returns the target it refined", async () => {
+  const { result, calls } = await runWorkflow(ASKED);
+  assert.equal(result.status, "accepted");
+  assert.equal(result.implementation, "find_then_type");
+  assert.equal(result.configuration, "extraction-find-then-type");
+  assert.equal(result.provisionalMargins, true);
+  assert.equal(result.iteration, 4);
+  assert.ok(result.stop.reason.includes("promote"));
+  const select = calls.find((c) => c.step === "select");
+  assert.ok(select.prompt.includes(`rejected-hypotheses ${FTT_FLAGS}`));
+  const decided = result.decisions.map((d) => d.decision).sort();
+  assert.deepEqual(decided, ["accepted", "deferred", "deferred"]);
+});
+await asyncTest("run: a verifier that passes a candidate with another target stale does not get it accepted or rejected", async () => {
+  const { result, calls } = await runWorkflow(ASKED, {
+    verify: (id) => passingVerdict({ hypothesisId: id, otherTargets: [{ ...DEFAULT_OTHER, status: "stale", devTypedF1: undefined }] }),
+  });
+  assert.equal(result.status, "no_accept");
+  assert.ok(result.decisions.length > 0);
+  for (const d of result.decisions) assert.equal(d.decision, "unmeasured");
+  for (const c of calls.filter((c) => c.step === "decide")) {
+    assert.ok(c.prompt.includes('"decision":"unmeasured"'));
+    assert.ok(!c.prompt.includes("git merge --no-ff"));
+  }
+});
+await asyncTest("run: a verifier that reports no other targets at all does not get the candidate accepted", async () => {
+  const { result } = await runWorkflow(ASKED, { verify: (id) => passingVerdict({ hypothesisId: id, otherTargets: undefined, otherGuards: undefined }) });
+  assert.equal(result.status, "no_accept");
+  for (const d of result.decisions) assert.equal(d.decision, "unmeasured");
+});
+await asyncTest("run: a gain that is only a change of model is not accepted, and the ledger records the model that ran", async () => {
+  const { result, calls } = await runWorkflow(ASKED, {
+    experiment: (id) => fttCandidate({ hypothesisId: id, model: "claude-opus-5-5", dev: { typed_f1: 0.6, f1: 0.6 } }),
+    verify: (id) => passingVerdict({ hypothesisId: id, measuredModel: "claude-opus-5-5" }),
+  });
+  assert.equal(result.status, "no_accept");
+  for (const d of result.decisions) assert.equal(d.decision, "unmeasured");
+  const entry = ledgerEntryOf(calls.find((c) => c.step === "decide").prompt);
+  assert.equal(entry.model, "claude-opus-5-5");
+  assert.equal(entry.incumbent_model, "claude-haiku-5-5");
+});
+await asyncTest("run: a shared change that damages default is rejected though find_then_type gains", async () => {
+  const { result } = await runWorkflow(ASKED, {
+    verify: (id) => passingVerdict({ hypothesisId: id, otherTargets: [{ ...DEFAULT_OTHER, devTypedF1: 0.05 }] }),
+  });
+  assert.equal(result.status, "no_accept");
+  for (const d of result.decisions) {
+    assert.equal(d.decision, "rejected");
+    assert.ok(d.reason.includes("damages another recorded target"));
+  }
+});
+await asyncTest("run: nothing is spent when another recorded target is not scored on main", async () => {
+  const { result, steps } = await runWorkflow(ASKED, {
+    evaluate: { ...FTT_INCUMBENT, otherTargets: [{ ...DEFAULT_OTHER, status: "stale", devTypedF1: undefined }] },
+  });
+  assert.equal(result.status, "error");
+  assert.deepEqual(steps, ["evaluate"]);
+  assert.equal(result.implementation, "find_then_type");
+});
+await asyncTest("run: an incumbent that reports a guard number where the margins have none stops before spending", async () => {
+  const { result, steps } = await runWorkflow(ASKED, { evaluate: { ...FTT_INCUMBENT, guard: { applies: true, strict_f1: 0.93 } } });
+  assert.equal(result.status, "error");
+  assert.ok(result.stop.reason.includes("disagree"));
+  assert.deepEqual(steps, ["evaluate"]);
+});
+await asyncTest("run: default with a configuration its margins were not measured with runs provisional, with no guard", async () => {
+  const other = { implementation: "default", configuration: "extraction-default", model: "claude-opus-4-7" };
+  const incumbent = { ...FTT_INCUMBENT, ...other, otherTargets: [DEFAULT_OTHER], otherGuards: [DEFAULT_OTHER_GUARD] };
+  const { result, calls } = await runWorkflow({ implementation: "default", configuration: "extraction-default" }, {
+    evaluate: incumbent,
+    experiment: (id) => fttCandidate({ ...other, hypothesisId: id }),
+    verify: (id) => passingVerdict({ hypothesisId: id, measuredModel: other.model }),
+  });
+  assert.equal(result.provisionalMargins, true);
+  assert.equal(result.configuration, "extraction-default");
+  assert.ok(calls.find((c) => c.step === "select").prompt.includes("--implementation default --configuration extraction-default"));
+  const entry = ledgerEntryOf(calls.find((c) => c.step === "decide").prompt);
+  assert.equal(entry.margins.provisional, true);
+  assert.equal(entry.margins.guard_slack, null);
+  assert.equal(entry.guard.applies, false);
+  // The same target reporting the Gemini recordings' guard as its own is stopped.
+  const borrowed = await runWorkflow({ implementation: "default", configuration: "extraction-default" }, {
+    evaluate: { ...incumbent, guard: { applies: true, strict_f1: 0.9319 } },
+  });
+  assert.equal(borrowed.result.status, "error");
+});
+await asyncTest("run: every path returns the target, so a driver threading args never falls back to the registry default", async () => {
+  const paths = [
+    await runWorkflow({ ...ASKED, consecutiveNoAccept: 3 }),
+    await runWorkflow({ ...ASKED, cumulativeCostUsd: 5, totalBudgetUsd: 5 }),
+    await runWorkflow(ASKED, { evaluate: null }),
+    await runWorkflow(ASKED, { evaluate: { ...FTT_INCUMBENT, measurementStatus: "stale", dev: undefined } }),
+    await runWorkflow(ASKED, { experiment: () => null }),
+    await runWorkflow(ASKED, { select: { rejectedHypotheses: BACKLOGS.find_then_type.map((h) => h.id), acceptedHypotheses: [] } }),
+    await runWorkflow(ASKED, { evaluate: { ...FTT_INCUMBENT, holdout: { typed_f1: 0.6, typed_precision: 0.7, typed_recall: 0.6 } } }),
+    await runWorkflow(ASKED),
+  ];
+  for (const { result } of paths) {
+    assert.equal(result.implementation, "find_then_type", `${result.status}: ${result.reason}`);
+    assert.ok("configuration" in result && "provisionalMargins" in result, result.status);
+    assert.equal(result.iteration, 4);
+  }
+  // With nothing asked for, the target is what the measurement resolved.
+  const resolved = await runWorkflow({}, { experiment: () => null });
+  assert.equal(resolved.result.implementation, "find_then_type");
+  assert.equal(resolved.result.configuration, "extraction-find-then-type");
+  assert.equal(resolved.result.provisionalMargins, true);
+});
+await asyncTest("run: the advice for an unmeasured find_then_type incumbent does not offer the triple-corpus recorder", async () => {
+  const { result } = await runWorkflow(ASKED, { evaluate: { ...FTT_INCUMBENT, measurementStatus: "stale", dev: undefined } });
+  assert.equal(result.status, "error");
+  assert.ok(result.reason.includes(`benchmark_replay.py --record --spend ${FTT_FLAGS}`));
+  assert.ok(!result.reason.includes("record_default_cassettes.py"));
+});
+await asyncTest("run: a name that is not an entry of the maps is refused before anything is measured", async () => {
+  for (const implementation of ["constructor", "toString", "no_such", "bad name"]) {
+    const { result, steps } = await runWorkflow({ implementation });
+    assert.equal(result.status, "error", implementation);
+    assert.deepEqual(steps, []);
+  }
+  const { result, steps } = await runWorkflow({}, { evaluate: { ...FTT_INCUMBENT, implementation: "constructor" } });
+  assert.equal(result.status, "error");
+  assert.deepEqual(steps, ["evaluate"]);
 });
 
 console.log(`\n${passCount} passed, ${failCount} failed`);

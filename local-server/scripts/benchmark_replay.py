@@ -117,15 +117,19 @@ CASSETTE_DIR = (
 # The implementation whose recordings are in CASSETTE_DIR itself: the first
 # benchmark recorded, before the implementation could be chosen.
 UNSUFFIXED_IMPLEMENTATION = "default"
-# The configuration an implementation's committed recordings were made with,
-# where that is not the implementation's default configuration. The `default`
+# The configuration each implementation's committed recordings were made with,
+# by name. The cassette key includes the model, so naming the configuration
+# keeps the recordings answering whatever the implementation's default
+# configuration becomes, and whatever is registered before it: the `default`
 # implementation's benchmark and triple-corpus cassettes were recorded with
-# Gemini 3 Flash, which is `extraction-openrouter-default`; the cassette key
-# includes the model, so naming the configuration here keeps those recordings
-# answering whatever `extraction-default` becomes (it moved from Claude Opus to
-# Claude Haiku on 2026-11-14). To measure another configuration, ask for it
-# with --configuration: it gets a cassette folder of its own.
-RECORDED_WITH: dict[str, str] = {"default": "extraction-openrouter-default"}
+# Gemini 3 Flash, which is `extraction-openrouter-default`, not its default
+# configuration `extraction-default` (which PR #1598 moves from Claude Opus to
+# Claude Haiku). To measure another configuration, ask for it with
+# --configuration: it gets a cassette folder of its own.
+RECORDED_WITH: dict[str, str] = {
+    "default": "extraction-openrouter-default",
+    "find_then_type": "extraction-find-then-type",
+}
 
 
 class UnknownTargetError(ValueError):
@@ -329,7 +333,6 @@ async def extract_document(
     provider: LLMProvider,
     document_id: str,
     target: BenchmarkTarget | None = None,
-    model: str | None = None,
 ) -> tuple[list[Predicted], list[PredictedRelationship]]:
     """
     Extract one benchmark document as a source and return what a proposal
@@ -337,8 +340,8 @@ async def extract_document(
 
     The run is the target's: its implementation's orchestrator, given its
     configuration (so the configuration's stage prompts are the ones sent), with
-    the configuration's model and temperature. ``model`` replaces the
-    configuration's model, for recording with another one.
+    the configuration's model and temperature. Another model is another
+    configuration, so another target with recordings of its own.
     """
     target = target or resolve_target()
     data = (BENCHMARK_DIR / document_id / "source.md").read_bytes()
@@ -363,7 +366,7 @@ async def extract_document(
         input_data={
             "text": source.text,
             "ontology_id": ontology.taxonomy_id,
-            "model": model or target.model,
+            "model": target.model,
             "temperature": target.temperature,
             "headings": [
                 {"start": h.start, "title": h.title, "level": h.level} for h in source.headings
@@ -515,15 +518,8 @@ def summarize(
     }
 
 
-async def record_document(
-    document_id: str, target: BenchmarkTarget, model: str | None = None
-) -> DocumentResult:
-    """
-    Extract one document with the live LLM, recording every call, and score it.
-
-    ``model`` records with a model other than the target's configuration names;
-    replay asks for the configuration's, so such a recording reads as stale.
-    """
+async def record_document(document_id: str, target: BenchmarkTarget) -> DocumentResult:
+    """Extract one document with the live LLM, recording every call, and score it."""
     from adapters.llm.provider_router import LLMProviderRouter
     from config import get_config_manager
 
@@ -540,7 +536,7 @@ async def record_document(
     recorder = RecordingLLMProvider(router, path)
     try:
         individuals, relationships = await extract_document(
-            benchmark_ontology(), cast(LLMProvider, recorder), document_id, target, model=model
+            benchmark_ontology(), cast(LLMProvider, recorder), document_id, target
         )
     except PipelineExecutionError as exc:
         raise SystemExit(f"{document_id}: {exc}; nothing was saved. Record it again.") from exc
@@ -554,25 +550,27 @@ async def record_document(
     return DocumentResult(document_id, "scored", result, calls=recorder.call_count)
 
 
-def print_results(results: list[DocumentResult]) -> None:
+def print_results(results: list[DocumentResult], file: Any = None) -> None:
     for r in results:
         if r.score is None:
             detail = f" ({r.misses} of {r.calls} calls have no recording)" if r.misses else ""
             detail = detail or (f" ({r.detail})" if r.detail else "")
-            print(f"{r.document_id:<24} {r.status}{detail}")
+            print(f"{r.document_id:<24} {r.status}{detail}", file=file)
             continue
         m = r.score.metrics
         print(
             f"{r.document_id:<24} recall {m['recall']:.3f} (core {m['recall_core']:.3f})  "
             f"precision {m['precision']:.3f}  type accuracy {m['type_accuracy']:.3f}  "
-            f"typed F1 {m['typed_f1']:.3f}  relationship recall {m['relationship_recall']:.3f}"
+            f"typed F1 {m['typed_f1']:.3f}  relationship recall {m['relationship_recall']:.3f}",
+            file=file,
         )
 
 
-def print_target(target: BenchmarkTarget) -> None:
+def print_target(target: BenchmarkTarget, file: Any = None) -> None:
     print(
         f"target: implementation {target.implementation}, configuration {target.configuration}, "
-        f"model {target.model} (cassettes: {cassette_dir(target).name}/)"
+        f"model {target.model} (cassettes: {cassette_dir(target).name}/)",
+        file=file,
     )
 
 
@@ -580,6 +578,11 @@ def print_summary(summary: dict[str, Any]) -> None:
     print(f"status: {summary['status']}")
     if summary["dev"]:
         print(f"dev typed F1 {summary['dev']['typed_f1']:.3f}, found F1 {summary['dev']['f1']:.3f}")
+
+
+def is_scored(summary: dict[str, Any]) -> bool:
+    """Whether a run's numbers can be read: every document asked for was scored."""
+    return summary["status"] in ("scored", "partial")
 
 
 def main() -> int:
@@ -607,53 +610,58 @@ def main() -> int:
         action="store_true",
         help="Replay every target that has recordings; exits 0 only when all of them score",
     )
+    parser.add_argument("--model", help=argparse.SUPPRESS)
     parser.add_argument(
-        "--model", help="The model to record with (the configuration's own by default)"
+        "--json",
+        action="store_true",
+        help="Print the summary as JSON: standard output holds the JSON and nothing else",
     )
-    parser.add_argument("--json", action="store_true", help="Print the summary as JSON")
     args = parser.parse_args()
+    if args.model:
+        # A recording made with another model would overwrite the configuration's
+        # own and replay as stale from then on; on replay the flag did nothing
+        raise SystemExit(
+            "--model is not taken: a run uses its configuration's model. Register a "
+            "configuration that names the model and pass --configuration; it gets a cassette "
+            "folder of its own"
+        )
     documents = args.document or benchmark_documents()
+    # With --json the lines for people go to standard error
+    progress = sys.stderr if args.json else None
     if args.all:
         if args.record or args.implementation or args.configuration:
-            raise SystemExit(
-                "--all replays every recorded target; it takes no target and no --record"
-            )
+            raise SystemExit("--all replays every recorded target: no target, no --record")
         summaries = []
         for target in recorded_targets():
-            print_target(target)
+            print_target(target, progress)
             results = asyncio.run(replay_all(documents, target))
-            print_results(results)
+            print_results(results, progress)
             summaries.append(summarize(results, target))
             if not args.json:
                 print_summary(summaries[-1])
         if args.json:
             print(json.dumps({"targets": summaries}, indent=1))
-        return 0 if all(s["status"] in ("scored", "partial") for s in summaries) else 2
+        return 0 if all(is_scored(s) for s in summaries) else 2
     try:
         target = resolve_target(args.implementation, args.configuration)
     except UnknownTargetError as exc:
         raise SystemExit(str(exc)) from exc
-    print_target(target)
+    print_target(target, progress)
     if args.record:
         if not args.spend:
             raise SystemExit(
                 "--record calls the live LLM, which costs money; pass --spend to go ahead"
             )
-        if args.model and args.model != target.model:
-            print(
-                f"note: replay expects {target.model} (configuration {target.configuration}); "
-                f"cassettes recorded with {args.model} will read as stale"
-            )
-        results = [asyncio.run(record_document(d, target, args.model)) for d in documents]
+        results = [asyncio.run(record_document(d, target)) for d in documents]
     else:
         results = asyncio.run(replay_all(documents, target))
-    print_results(results)
+    print_results(results, progress)
     summary = summarize(results, target)
     if args.json:
         print(json.dumps(summary, indent=1))
     else:
         print_summary(summary)
-    return 0 if summary["status"] in ("scored", "partial") else 2
+    return 0 if is_scored(summary) else 2
 
 
 if __name__ == "__main__":

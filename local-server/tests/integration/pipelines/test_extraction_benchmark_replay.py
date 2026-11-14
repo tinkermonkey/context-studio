@@ -24,6 +24,7 @@ from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
 )
+from scripts import benchmark_replay
 from scripts.benchmark_replay import (
     DEV_DOCUMENTS,
     HOLDOUT_DOCUMENTS,
@@ -324,15 +325,45 @@ def test_a_new_default_configuration_does_not_move_the_default_benchmark(monkeyp
     assert cassette_dir(asked).name == "extraction_benchmark__extraction-default"
 
 
-def test_an_implementation_with_no_pin_runs_with_its_default_configuration():
+def test_every_recorded_implementation_is_pinned_to_the_configuration_it_was_recorded_with():
     _, configurations = pipeline_registries()
     target = resolve_target(FIND_THEN_TYPE)
 
-    assert FIND_THEN_TYPE not in RECORDED_WITH
-    assert target.configuration == default_configuration(FIND_THEN_TYPE)
+    assert RECORDED_WITH[FIND_THEN_TYPE] == "extraction-find-then-type"
+    assert target.configuration == "extraction-find-then-type"
     registered = configurations.get_latest(PIPELINE_TYPE, FIND_THEN_TYPE, target.configuration)
     assert target.model == registered.config["model"]
     assert cassette_dir(target).name == "extraction_benchmark_find_then_type"
+    assert {t.implementation for t in recorded_targets()} == set(RECORDED_WITH)
+
+
+def test_a_configuration_registered_first_does_not_inherit_the_recordings(monkeypatch):
+    """A new first (default) configuration of find_then_type is another target, another folder."""
+    before = resolve_target(FIND_THEN_TYPE)
+    implementations = PipelineImplementationRegistry()
+    configurations = PipelineConfigurationRegistry()
+    newer = {**before.config, "model": "another-model"}
+    configurations.register(PIPELINE_TYPE, FIND_THEN_TYPE, "extraction-find-then-type-2", newer)
+    register_individual_extraction(implementations, configurations)
+    monkeypatch.setattr(
+        "scripts.benchmark_replay.pipeline_registries", lambda: (implementations, configurations)
+    )
+
+    assert default_configuration(FIND_THEN_TYPE) == "extraction-find-then-type-2"
+    after = resolve_target(FIND_THEN_TYPE)
+    assert (after.configuration, after.model) == (before.configuration, before.model)
+    assert cassette_dir(after) == cassette_dir(before)
+    asked = resolve_target(FIND_THEN_TYPE, "extraction-find-then-type-2")
+    assert cassette_dir(asked).name == (
+        "extraction_benchmark_find_then_type__extraction-find-then-type-2"
+    )
+
+
+def test_an_implementation_with_no_recordings_runs_with_its_default_configuration(monkeypatch):
+    monkeypatch.setattr("scripts.benchmark_replay.RECORDED_WITH", {})
+    for implementation in (TWO_PASS, FIND_THEN_TYPE):
+        target = resolve_target(implementation)
+        assert target.configuration == default_configuration(implementation)
 
 
 def test_a_configuration_asked_for_by_name_is_the_one_run():
@@ -414,6 +445,22 @@ def test_a_summary_says_what_was_run():
 
 # -- the committed recordings still answer today's prompts --------------------
 
+# Dev means of the committed recordings: what experiments/README.md and the
+# ledger's 2026-11-14 baseline_reset entry state.
+COMMITTED_DEV = {
+    TWO_PASS: {"typed_f1": 0.1138, "f1": 0.4112},
+    FIND_THEN_TYPE: {"typed_f1": 0.4648, "f1": 0.5343},
+}
+_REPLAYED: dict[tuple[str, str], DocumentResult] = {}
+
+
+async def replayed(implementation: str, document: str) -> DocumentResult:
+    """A committed recording's replay, made once for the tests below."""
+    key = (implementation, document)
+    if key not in _REPLAYED:
+        _REPLAYED[key] = await replay_document(document, resolve_target(implementation))
+    return _REPLAYED[key]
+
 
 @pytest.mark.parametrize("document", ALL_DOCUMENTS)
 async def test_default_recordings_replay(ontology, document):
@@ -424,7 +471,7 @@ async def test_default_recordings_replay(ontology, document):
     fails here until they are recorded again
     (`python scripts/benchmark_replay.py --record --spend --implementation default`).
     """
-    result = await replay_document(document, resolve_target(TWO_PASS))
+    result = await replayed(TWO_PASS, document)
 
     assert result.status == "scored", result
     assert result.misses == 0
@@ -438,9 +485,176 @@ async def test_find_then_type_recordings_replay_and_keep_their_gain(ontology, do
     The recorded find-then-type runs answer today's prompts, and score well
     above the two-pass baseline's typed F1 (0.07 to 0.16 on these documents).
     """
-    result = await replay_document(document, resolve_target(FIND_THEN_TYPE))
+    result = await replayed(FIND_THEN_TYPE, document)
 
     assert result.status == "scored", result
     assert result.misses == 0
     assert result.score.metrics["typed_f1"] > 0.3
     assert result.score.metrics["type_accuracy"] > 0.6
+
+
+@pytest.mark.parametrize("implementation", sorted(COMMITTED_DEV))
+async def test_committed_recordings_score_what_the_baselines_state(ontology, implementation):
+    """
+    A change that leaves every prompt as it was (merging, planning,
+    recognition, scoring) replays without a stale cassette and can still move
+    the scores. This pins them.
+    """
+    target = resolve_target(implementation)
+    results = [await replayed(implementation, document) for document in ALL_DOCUMENTS]
+    summary = summarize(results, target)
+
+    assert summary["status"] == "scored", summary["documents"]
+    for measure, committed in COMMITTED_DEV[implementation].items():
+        assert summary["dev"][measure] == pytest.approx(committed, abs=0.0005), (
+            f"dev {measure} of {implementation} with {target.configuration} is "
+            f"{summary['dev'][measure]}, and the committed baseline says {committed}. Nothing was "
+            "recorded again, so a change to code after the LLM calls moved the score. If that "
+            "is intended, update COMMITTED_DEV here, the tables in experiments/README.md and "
+            "documentation/karpathy_loop_design.md, and record the new baseline in the ledger "
+            "(experiments/ledger.py baseline-reset)."
+        )
+
+
+# -- the command line -------------------------------------------------------
+
+
+def _fake_replays(statuses: dict[str, str] | None = None):
+    """A replay_all that scores every document, unless told otherwise per implementation."""
+    seen: list[tuple[str, str, tuple[str, ...]]] = []
+
+    async def replay_all(documents=None, target=None):
+        seen.append((target.implementation, target.configuration, tuple(documents)))
+        status = (statuses or {}).get(target.implementation, "scored")
+        if status == "scored":
+            return [
+                DocumentResult(d, "scored", score(load_gold(d), []), calls=1) for d in documents
+            ]
+        return [DocumentResult(d, status, calls=3, misses=3) for d in documents]
+
+    return replay_all, seen
+
+
+def _run_main(monkeypatch, argv: list[str], statuses: dict[str, str] | None = None):
+    replay_all, seen = _fake_replays(statuses)
+    monkeypatch.setattr(benchmark_replay, "replay_all", replay_all)
+    monkeypatch.setattr(sys, "argv", ["benchmark_replay.py", *argv])
+    return benchmark_replay.main(), seen
+
+
+def test_main_with_no_flags_replays_the_registrys_default_target(monkeypatch, capsys):
+    exit_code, seen = _run_main(monkeypatch, [])
+    out = capsys.readouterr().out
+
+    assert exit_code == 0
+    assert seen == [(TWO_PASS, "extraction-openrouter-default", tuple(benchmark_documents()))]
+    assert "target: implementation default, configuration extraction-openrouter-default" in out
+    assert "status: scored" in out
+    assert "dev typed F1 0.000, found F1 0.000" in out
+
+
+def test_main_runs_the_target_its_flags_name(monkeypatch, capsys):
+    argv = ["--implementation", FIND_THEN_TYPE, "--configuration", "extraction-find-then-type"]
+    exit_code, seen = _run_main(monkeypatch, argv)
+
+    assert exit_code == 0
+    assert [(i, c) for i, c, _ in seen] == [(FIND_THEN_TYPE, "extraction-find-then-type")]
+    assert "cassettes: extraction_benchmark_find_then_type/" in capsys.readouterr().out
+
+    _, seen = _run_main(monkeypatch, ["--configuration", "extraction-default"])
+    assert [(i, c) for i, c, _ in seen] == [(TWO_PASS, "extraction-default")]
+
+
+@pytest.mark.parametrize("status", ["stale", "not_recorded", "failed"])
+def test_main_exits_non_zero_when_the_target_was_not_scored(monkeypatch, capsys, status):
+    exit_code, _ = _run_main(monkeypatch, [], {TWO_PASS: status})
+    assert exit_code == 2
+    assert f"status: {status}" in capsys.readouterr().out
+
+
+def test_main_over_some_documents_is_partial_and_exits_zero(monkeypatch, capsys):
+    exit_code, seen = _run_main(monkeypatch, ["--document", "edit_check"])
+    assert exit_code == 0
+    assert seen[0][2] == ("edit_check",)
+    assert "status: partial" in capsys.readouterr().out
+
+
+def test_main_json_puts_only_the_json_on_standard_output(monkeypatch, capsys):
+    exit_code, _ = _run_main(monkeypatch, ["--json", "--implementation", FIND_THEN_TYPE])
+    captured = capsys.readouterr()
+    summary = json.loads(captured.out)
+
+    assert exit_code == 0
+    assert summary["implementation"] == FIND_THEN_TYPE
+    assert summary["configuration"] == "extraction-find-then-type"
+    assert summary["status"] == "scored"
+    assert "target: implementation find_then_type" in captured.err
+    assert "edit_check" in captured.err
+
+
+def test_main_all_replays_every_recorded_target(monkeypatch, capsys):
+    exit_code, seen = _run_main(monkeypatch, ["--all", "--json"])
+    captured = capsys.readouterr()
+    targets = json.loads(captured.out)["targets"]
+
+    assert exit_code == 0
+    assert [(i, c) for i, c, _ in seen] == [
+        (TWO_PASS, "extraction-openrouter-default"),
+        (FIND_THEN_TYPE, "extraction-find-then-type"),
+    ]
+    assert [(t["implementation"], t["status"]) for t in targets] == [
+        (TWO_PASS, "scored"),
+        (FIND_THEN_TYPE, "scored"),
+    ]
+    assert captured.err.count("target: implementation") == 2
+
+
+def test_main_all_exits_non_zero_when_any_target_is_not_scored(monkeypatch, capsys):
+    exit_code, _ = _run_main(monkeypatch, ["--all"], {TWO_PASS: "stale"})
+    out = capsys.readouterr().out
+
+    assert exit_code == 2
+    assert "status: stale" in out and "status: scored" in out
+
+
+@pytest.mark.parametrize(
+    "argv, message",
+    [
+        (["--implementation", "no_such"], "no implementation 'no_such'"),
+        (["--implementation", "open_v1"], "the benchmark cannot run it"),
+        (["--implementation", FIND_THEN_TYPE, "--configuration", "extraction-default"], "no conf"),
+        (["--all", "--implementation", TWO_PASS], "--all replays every recorded target"),
+        (["--all", "--record", "--spend"], "--all replays every recorded target"),
+        (["--record"], "pass --spend"),
+        # On replay the flag did nothing; with --record it overwrote the committed cassette
+        (["--model", "another-model"], "--model is not taken"),
+        (["--record", "--spend", "--model", "another-model"], "--model is not taken"),
+    ],
+)
+def test_main_refuses_what_it_cannot_do(monkeypatch, argv, message):
+    recorded: list[str] = []
+
+    async def record_document(document_id, target):
+        recorded.append(document_id)
+
+    monkeypatch.setattr(benchmark_replay, "record_document", record_document)
+    with pytest.raises(SystemExit) as raised:
+        _run_main(monkeypatch, argv)
+    assert message in str(raised.value)
+    assert recorded == [], "nothing may be recorded by a refused call"
+
+
+def test_main_records_each_document_of_the_target_only_with_spend(monkeypatch, capsys):
+    recorded: list[tuple[str, str]] = []
+
+    async def record_document(document_id, target):
+        recorded.append((document_id, target.configuration))
+        return DocumentResult(document_id, "scored", score(load_gold(document_id), []), calls=1)
+
+    monkeypatch.setattr(benchmark_replay, "record_document", record_document)
+    argv = ["--record", "--spend", "--implementation", FIND_THEN_TYPE, "--document", "edit_check"]
+    exit_code, replays = _run_main(monkeypatch, argv)
+
+    assert exit_code == 0
+    assert recorded == [("edit_check", "extraction-find-then-type")]
+    assert replays == [], "a recording is not replayed"

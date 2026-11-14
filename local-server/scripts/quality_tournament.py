@@ -33,14 +33,19 @@ target, an implementation of the pipeline type with one of its configurations
 registry as in that script), over the long benchmark documents, scored on the
 individuals it finds against hand-made gold extractions. Its dev and holdout
 rows (`benchmark_dev`, `benchmark_holdout`) are what Loop C optimises. The
-triple corpus above is Loop C's regression guard for an implementation a
-variant here runs (`default`); for one no variant runs (`find_then_type`) the
-guard does not apply, and the benchmark report says so (`guard.applies`).
+triple corpus above is Loop C's regression guard for the implementation and
+configuration it was recorded with (`default` with
+`extraction-openrouter-default`); for any other target the guard does not
+apply, and the benchmark report says so (`guard.applies`) and lists the
+corpus's measure under `other_guards` instead.
 
 A variant whose cassettes no longer answer its prompts is reported as STALE at
 the top of the digest. The run exits with `EXIT_STALE_CASSETTES` when the
 stale recordings are the chosen target's: its benchmark cassettes, or a
-variant that runs its implementation. The pipelines swallow a missing
+variant that runs its implementation. It exits with
+`EXIT_BENCHMARK_NOT_SCORED` when the target's benchmark has no score for
+another reason (not recorded, a document missing, the extraction failed).
+The pipelines swallow a missing
 recording, so without that check a stale cassette set reads as a pipeline
 scoring low.
 
@@ -152,6 +157,11 @@ _TOURNAMENT_PIPELINE_TAG = "quality_tournament_individual_extraction"
 # Exit code when a variant's cassettes no longer answer its prompts: its scores
 # are not a measurement, and nothing downstream should read them as one.
 EXIT_STALE_CASSETTES = 3
+
+# Exit code when the chosen target's benchmark was not scored for another
+# reason (not recorded, a document missing, the extraction itself failed): the
+# benchmark report's `status` says which.
+EXIT_BENCHMARK_NOT_SCORED = 4
 
 # Every cassette provider a variant replayed from. The pipelines catch a missing
 # recording (the extraction service returns no triples, open_v1 skips its label
@@ -452,6 +462,7 @@ def _make_default_variant(
         orch = target.orchestrator(
             llm_provider=provider,
             extraction_service=extraction_service,
+            config=dict(target.config),
         )
         fixture = dict(load_fixture("individual_extraction", scenario))
         # Resolve to the SAME taxonomy the recorder used (its title is the only
@@ -1095,6 +1106,19 @@ def _stale_for_target(
     return sorted(v for v in stale if variants[v].implementation == target.implementation)
 
 
+def _exit_code(gating: list[str], benchmark_status: str) -> int:
+    """
+    The run's exit code from what happened to the chosen target: stale
+    recordings of its own first, then a benchmark with no score for any other
+    reason. Zero only when the target's numbers can be read.
+    """
+    if gating or benchmark_status == "stale":
+        return EXIT_STALE_CASSETTES
+    if benchmark_status != "scored":
+        return EXIT_BENCHMARK_NOT_SCORED
+    return 0
+
+
 def _render_stale_section(
     stale: dict[str, dict[str, int]],
     benchmark_results: list[benchmark_replay.DocumentResult] | None = None,
@@ -1131,45 +1155,83 @@ def _render_stale_section(
     return "\n".join(lines)
 
 
+def _triple_corpus_measure(
+    results: list[dict[str, Any]], stale: dict[str, dict[str, int]]
+) -> dict[str, Any]:
+    """
+    What the triple corpus measured: the dev scores of the variant that runs
+    its implementation as it is (the variant named after it), with the
+    implementation, configuration and model that variant ran. When the variant
+    did not register or its cassettes are stale there is no number, and
+    `status` says which.
+    """
+    recorded = triple_corpus_target()
+    measure: dict[str, Any] = {
+        "variant": recorded.implementation,
+        "implementation": recorded.implementation,
+        "configuration": recorded.configuration,
+        "model": recorded.model,
+    }
+    row = next((r for r in results if r["variant"] == recorded.implementation), None)
+    if row is None:
+        return {**measure, "status": "not_registered"}
+    if row["variant"] in stale:
+        return {**measure, "status": "stale"}
+    return {
+        **measure,
+        "status": "scored",
+        "strict_f1": row["dev"]["strict_f1"],
+        "soft_f1": row["dev"]["soft_f1"],
+    }
+
+
+def _guard_applies(target: benchmark_replay.BenchmarkTarget) -> bool:
+    """The triple corpus guards the one implementation and configuration it was recorded with."""
+    recorded = triple_corpus_target()
+    return (target.implementation, target.configuration) == (
+        recorded.implementation,
+        recorded.configuration,
+    )
+
+
 def _guard(
     results: list[dict[str, Any]],
     stale: dict[str, dict[str, int]],
     target: benchmark_replay.BenchmarkTarget,
 ) -> dict[str, Any]:
     """
-    The triple corpus's guard measure for the benchmark target: the dev scores
-    of the variant that runs the target's implementation as it is (the variant
-    named after it).
+    The triple corpus's guard measure for the benchmark target.
 
-    The guard applies only to an implementation the triple corpus has
-    recordings of. For any other, `applies` is false and says why: a reader
-    must record that the guard was not applicable, never take another
-    implementation's row for it. When it applies but the variant did not
-    register or its cassettes are stale, there is no number, and `status` says
-    which.
+    The guard applies only to the implementation and configuration the triple
+    corpus has recordings of. For any other target, `applies` is false and says
+    why: a reader must record that the guard was not applicable, never take the
+    recorded target's row for it (the report's `other_guards` holds that row,
+    under its own name).
     """
-    if target.implementation != TRIPLE_CORPUS_IMPLEMENTATION:
-        return {
-            "applies": False,
-            "reason": (
-                f"the triple corpus has no recordings of the {target.implementation} "
-                f"implementation: its variants run {TRIPLE_CORPUS_IMPLEMENTATION}"
-            ),
-        }
-    guard: dict[str, Any] = {"applies": True, "variant": target.implementation}
-    row = next((r for r in results if r["variant"] == target.implementation), None)
-    if row is None:
-        return {**guard, "status": "not_registered"}
-    if row["variant"] in stale:
-        return {**guard, "status": "stale"}
+    if _guard_applies(target):
+        return {"applies": True, **_triple_corpus_measure(results, stale)}
+    recorded = triple_corpus_target()
     return {
-        **guard,
-        "status": "scored",
-        "configuration": row["configuration"],
-        "model": row["model"],
-        "strict_f1": row["dev"]["strict_f1"],
-        "soft_f1": row["dev"]["soft_f1"],
+        "applies": False,
+        "reason": (
+            f"the triple corpus has no recordings of {target.implementation} with "
+            f"{target.configuration}: its variants run {recorded.implementation} with "
+            f"{recorded.configuration}"
+        ),
     }
+
+
+def _other_guards(
+    results: list[dict[str, Any]],
+    stale: dict[str, dict[str, int]],
+    target: benchmark_replay.BenchmarkTarget,
+) -> list[dict[str, Any]]:
+    """
+    The triple corpus's measure when it is not the target's guard: it still
+    says whether a change made for the target damaged the implementation the
+    corpus was recorded with (a change to a part the implementations share).
+    """
+    return [] if _guard_applies(target) else [_triple_corpus_measure(results, stale)]
 
 
 def _render_benchmark_section(
@@ -1254,16 +1316,19 @@ def _write_benchmark_report(
     results: list[benchmark_replay.DocumentResult],
     summary: dict[str, Any],
     guard: dict[str, Any],
+    other_guards: list[dict[str, Any]] | None = None,
 ) -> Path:
     """
     Write what Loop C reads: the benchmark summary (which says what was run),
-    each document's score lists, and the triple-corpus guard for that target.
+    each document's score lists, the triple-corpus guard for that target, and
+    the triple corpus's measure of another target when it is not this one's.
     """
     path = _EXPERIMENTS_REPORTS_DIR / f"{run_id}_benchmark.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         **summary,
         "guard": guard,
+        "other_guards": other_guards or [],
         "scores": {r.document_id: r.score.to_json() for r in results if r.score is not None},
     }
     path.write_text(json.dumps(payload, indent=1, ensure_ascii=False))
@@ -1381,7 +1446,13 @@ async def _amain(args) -> int:
     benchmark_summary = benchmark_replay.summarize(benchmark_results, target)
     stale = _stale_variants(results)
     guard = _guard(results, stale, target)
-    benchmark_path = _write_benchmark_report(run_id, benchmark_results, benchmark_summary, guard)
+    benchmark_path = _write_benchmark_report(
+        run_id,
+        benchmark_results,
+        benchmark_summary,
+        guard,
+        _other_guards(results, stale, target),
+    )
     if benchmark_summary["status"] == "scored":
         for split in ("dev", "holdout"):
             _emit_scoreboard_row(
@@ -1426,9 +1497,13 @@ async def _amain(args) -> int:
             f"{target.configuration} are stale. Re-record with "
             f"scripts/benchmark_replay.py --record --spend {target.flags}."
         )
-    if gating or benchmark_summary["status"] == "stale":
-        return EXIT_STALE_CASSETTES
-    return 0
+    exit_code = _exit_code(gating, benchmark_summary["status"])
+    if exit_code == EXIT_BENCHMARK_NOT_SCORED:
+        print(
+            f"ERROR: the benchmark of {target.implementation} with {target.configuration} was "
+            f"not scored ({benchmark_summary['status']}); see {benchmark_path}."
+        )
+    return exit_code
 
 
 def main() -> int:

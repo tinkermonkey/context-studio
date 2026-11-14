@@ -22,11 +22,15 @@ import scripts.quality_tournament as quality_tournament
 from scripts import benchmark_replay
 from scripts.benchmark_replay import DocumentResult, resolve_target, summarize
 from scripts.quality_tournament import (
+    EXIT_BENCHMARK_NOT_SCORED,
+    EXIT_STALE_CASSETTES,
     Variant,
     _amain,
     _emit_scoreboard_row,
+    _exit_code,
     _guard,
     _make_default_variant,
+    _other_guards,
     _render_benchmark_section,
     _render_scoreboard_digest,
     _render_stale_section,
@@ -117,13 +121,40 @@ class TestGuard:
         assert "find_then_type" in guard["reason"]
         assert "strict_f1" not in guard
 
+    def test_the_guard_does_not_apply_to_another_configuration_of_the_recorded_implementation(
+        self,
+    ):
+        """The triple corpus was recorded with one configuration; its row is that one's."""
+        target = resolve_target(TWO_PASS, "extraction-default")
+        guard = _guard([_row("default", 0.93)], {}, target)
+
+        assert guard["applies"] is False
+        assert "extraction-default" in guard["reason"]
+        assert "extraction-openrouter-default" in guard["reason"]
+        assert "strict_f1" not in guard
+
+    def test_the_corpus_measure_is_reported_under_its_own_name_when_it_is_not_the_targets(self):
+        results = [_row("default", 0.93)]
+        for target in (
+            resolve_target(FIND_THEN_TYPE),
+            resolve_target(TWO_PASS, "extraction-default"),
+        ):
+            (other,) = _other_guards(results, {}, target)
+            assert (other["implementation"], other["configuration"]) == (
+                TWO_PASS,
+                "extraction-openrouter-default",
+            )
+            assert (other["status"], other["strict_f1"]) == ("scored", 0.93)
+        assert _other_guards(results, {}, resolve_target(TWO_PASS)) == []
+        stale = {"default": {"calls": 17, "misses": 3}}
+        (other,) = _other_guards(results, stale, resolve_target(FIND_THEN_TYPE))
+        assert other["status"] == "stale" and "strict_f1" not in other
+
     def test_a_guard_that_applies_but_has_no_score_says_why(self):
         target = resolve_target(TWO_PASS)
-        assert _guard([_row("open_v1")], {}, target) == {
-            "applies": True,
-            "variant": "default",
-            "status": "not_registered",
-        }
+        unregistered = _guard([_row("open_v1")], {}, target)
+        assert (unregistered["applies"], unregistered["status"]) == (True, "not_registered")
+        assert "strict_f1" not in unregistered
         stale = {"default": {"calls": 17, "misses": 3}}
         assert _guard([_row("default")], stale, target)["status"] == "stale"
         assert "strict_f1" not in _guard([_row("default")], stale, target)
@@ -156,6 +187,25 @@ class TestStaleGate:
         assert "`find_then_type` with `extraction-find-then-type`: 12 of 40" in section
         assert f"benchmark_replay.py --record --spend {target.flags}" in section
         assert "record_default_cassettes" not in section
+
+    @pytest.mark.parametrize(
+        "gating, status, expected",
+        [
+            ([], "scored", 0),
+            (["default"], "scored", EXIT_STALE_CASSETTES),
+            ([], "stale", EXIT_STALE_CASSETTES),
+            (["default"], "not_recorded", EXIT_STALE_CASSETTES),
+            ([], "not_recorded", EXIT_BENCHMARK_NOT_SCORED),
+            ([], "failed", EXIT_BENCHMARK_NOT_SCORED),
+            ([], "partial", EXIT_BENCHMARK_NOT_SCORED),
+        ],
+    )
+    def test_the_run_exits_zero_only_when_the_targets_numbers_can_be_read(
+        self, gating, status, expected
+    ):
+        assert _exit_code(gating, status) == expected
+        assert 0 not in (EXIT_STALE_CASSETTES, EXIT_BENCHMARK_NOT_SCORED)
+        assert EXIT_STALE_CASSETTES != EXIT_BENCHMARK_NOT_SCORED
 
     def test_nothing_stale_renders_nothing(self):
         scored = [DocumentResult("edit_check", "not_recorded")]
@@ -235,8 +285,11 @@ class TestLabels:
         monkeypatch.setattr(quality_tournament, "_EXPERIMENTS_REPORTS_DIR", tmp_path)
         target = resolve_target(FIND_THEN_TYPE)
         results = [DocumentResult("edit_check", "not_recorded")]
-        guard = _guard([_row("default")], {}, target)
-        path = _write_benchmark_report("run-1", results, summarize(results, target), guard)
+        rows = [_row("default", 0.93)]
+        guard = _guard(rows, {}, target)
+        path = _write_benchmark_report(
+            "run-1", results, summarize(results, target), guard, _other_guards(rows, {}, target)
+        )
 
         report = json.loads(path.read_text())
         assert report["implementation"] == FIND_THEN_TYPE
@@ -244,6 +297,8 @@ class TestLabels:
         assert report["model"] == target.model
         assert report["status"] == "not_recorded"
         assert report["guard"]["applies"] is False
+        (other,) = report["other_guards"]
+        assert (other["implementation"], other["strict_f1"]) == (TWO_PASS, 0.93)
 
 
 class TestTargetFlags:

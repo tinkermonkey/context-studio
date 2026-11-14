@@ -159,7 +159,6 @@ def record_all(scenarios: list[str]) -> int:
     from domain.pipelines.entities import PipelineType
     from domain.pipelines.exceptions import PipelineExecutionError
     from domain.pipelines.individual_extraction import (
-        IndividualExtractionOrchestrator,
         IndividualExtractionState,
     )
     from scripts.default_pipeline_ontology import (
@@ -244,9 +243,12 @@ def record_all(scenarios: list[str]) -> int:
             extraction_repo=SQLiteExtractionRepository(session_factory),
             extraction_run_repo=SQLiteExtractionRunRepository(session_factory),
         )
-        orchestrator = IndividualExtractionOrchestrator(
+        # The orchestrator and configuration the tournament's replay uses
+        # (quality_tournament._make_default_variant): both come from the target
+        orchestrator = target.orchestrator(
             llm_provider=recording_provider,
             extraction_service=extraction_service,
+            config=dict(target.config),
         )
 
         # Load the fixture and point its ontology_id at the built taxonomy so

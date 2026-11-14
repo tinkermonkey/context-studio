@@ -501,6 +501,11 @@ class TestEntriesNameWhatTheyRefined:
 
 
 class TestHypothesesScopedByImplementation:
+    CONFIGURATIONS = {
+        "default": "extraction-openrouter-default",
+        "find_then_type": "extraction-find-then-type",
+    }
+
     def _ledger(self, tmp_path):
         ledger_path = tmp_path / "ledger.jsonl"
         for implementation, hypothesis, decision in [
@@ -513,6 +518,7 @@ class TestHypothesesScopedByImplementation:
                 _entry(
                     experiment_id=f"1-{implementation}-{hypothesis}",
                     implementation=implementation,
+                    configuration=self.CONFIGURATIONS[implementation],
                     hypothesis=hypothesis,
                     decision=decision,
                 ),
@@ -567,8 +573,10 @@ class TestHypothesesScopedByImplementation:
         assert rejected_hypotheses(ledger_path, "find_then_type") == []
         assert rejected_hypotheses(ledger_path, "default") == ["cross_chunk_relationships"]
         assert accepted_hypotheses(ledger_path, "default") == ["full_class_catalog"]
-        # Read without an implementation, only a reset of everything counts
-        assert len(entries_since_last_baseline_reset(ledger_path)) == 4
+        # Read without an implementation, the entries that reset covers are gone too
+        unscoped = entries_since_last_baseline_reset(ledger_path)
+        assert {e["implementation"] for e in unscoped} == {"default"}
+        assert len(unscoped) == 2
 
     def test_a_reset_that_names_no_implementation_resets_every_history(self, tmp_path):
         ledger_path = self._ledger(tmp_path)
@@ -588,6 +596,75 @@ class TestHypothesesScopedByImplementation:
         for implementation in ("default", "find_then_type", None):
             entries = entries_since_last_baseline_reset(ledger_path, implementation)
             assert all(e["decision"] != BASELINE_RESET_DECISION for e in entries)
+
+    def _two_configurations(self, tmp_path):
+        ledger_path = tmp_path / "ledger.jsonl"
+        for configuration, hypothesis, decision in [
+            ("extraction-openrouter-default", "full_class_catalog", "rejected"),
+            ("extraction-openrouter-default", "chunk_context_header", "accepted"),
+            ("extraction-default", "layer_guidance_in_prompt", "rejected"),
+        ]:
+            append_entry(
+                _entry(
+                    experiment_id=f"1-default-{hypothesis}",
+                    configuration=configuration,
+                    hypothesis=hypothesis,
+                    decision=decision,
+                ),
+                ledger_path=ledger_path,
+            )
+        return ledger_path
+
+    def test_a_rejection_under_one_configuration_leaves_the_id_open_under_another(self, tmp_path):
+        ledger_path = self._two_configurations(tmp_path)
+        assert rejected_hypotheses(ledger_path, "default", "extraction-openrouter-default") == [
+            "full_class_catalog"
+        ]
+        assert rejected_hypotheses(ledger_path, "default", "extraction-default") == [
+            "layer_guidance_in_prompt"
+        ]
+        assert accepted_hypotheses(ledger_path, "default", "extraction-default") == []
+        assert accepted_hypotheses(ledger_path, "default", "extraction-openrouter-default") == [
+            "chunk_context_header"
+        ]
+        # Without a configuration, the implementation's whole history is read
+        assert rejected_hypotheses(ledger_path, "default") == [
+            "full_class_catalog",
+            "layer_guidance_in_prompt",
+        ]
+
+    def test_a_reset_that_names_a_configuration_resets_only_its_history(self, tmp_path):
+        ledger_path = self._two_configurations(tmp_path)
+        append_baseline_reset(
+            "default recorded again with extraction-default",
+            "extraction_benchmark",
+            ledger_path=ledger_path,
+            implementation="default",
+            configuration="extraction-default",
+        )
+        assert rejected_hypotheses(ledger_path, "default", "extraction-default") == []
+        assert rejected_hypotheses(ledger_path, "default", "extraction-openrouter-default") == [
+            "full_class_catalog"
+        ]
+        # A reset of one configuration is not a reset of the implementation
+        assert rejected_hypotheses(ledger_path, "default") == ["full_class_catalog"]
+        assert accepted_hypotheses(ledger_path, "default") == ["chunk_context_header"]
+
+    def test_cli_lists_one_configurations_hypotheses(self, tmp_path, capsys):
+        ledger_path = self._two_configurations(tmp_path)
+        exit_code = ledger_cli(
+            [
+                "--ledger-path",
+                str(ledger_path),
+                "rejected-hypotheses",
+                "--implementation",
+                "default",
+                "--configuration",
+                "extraction-default",
+            ]
+        )
+        assert exit_code == 0
+        assert capsys.readouterr().out.split() == ["layer_guidance_in_prompt"]
 
     def test_cli_lists_one_implementations_hypotheses(self, tmp_path, capsys):
         ledger_path = self._ledger(tmp_path)
