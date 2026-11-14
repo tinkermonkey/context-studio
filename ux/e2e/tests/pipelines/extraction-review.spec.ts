@@ -463,7 +463,14 @@ test.describe("Extraction review", () => {
     expect(schemaRun.request.documents).toEqual([TEXT]);
     expect(schemaRun.request.scope).toBe(seed.tax.id);
     expect(schemaRun.request.concept_scheme_id).toBeUndefined();
-    expect(schemaRun.request.implementation_id).toBe("default");
+    // The implementation the server marks as the type's default, whatever it is called.
+    const schemaImplementations = await apiRequest<{ id: string; is_default: boolean }[]>(
+      page,
+      "/api/pipelines/types/schema_extraction/implementations",
+    );
+    expect(schemaRun.request.implementation_id).toBe(
+      schemaImplementations.find((i) => i.is_default)?.id,
+    );
 
     // Nothing written yet.
     expect(await classTitles(page, seed.scheme.id)).toEqual([

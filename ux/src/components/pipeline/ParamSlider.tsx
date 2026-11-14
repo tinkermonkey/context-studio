@@ -1,6 +1,7 @@
 interface ParamSliderProps {
   label: string;
-  value: number;
+  /** Null: nothing sets this parameter, so there is no value to show. */
+  value: number | null;
   min: number;
   max: number;
   step: number;
@@ -29,9 +30,9 @@ export function ParamSlider({
     >
       <div className="param-slider__header">
         <span className="param-slider__label">{label}</span>
-        <span className="param-slider__value">{fmt(value)}</span>
+        <span className="param-slider__value">{value === null ? "—" : fmt(value)}</span>
       </div>
-      {active ? (
+      {value === null ? null : active ? (
         <input
           type="range"
           className="param-slider__input"

@@ -470,6 +470,27 @@ describe("ConfigEditor parameters", () => {
     expect(within(temperature).queryByText("inherited")).not.toBeInTheDocument();
   });
 
+  it("says so when nothing sets a parameter, instead of showing a value", () => {
+    // Neither the configuration nor its implementation's default sets an output limit.
+    const unlimited = makeConfig({
+      parameters: { temperature: 0, max_tokens: null, top_p: 0.9 },
+      parameter_settings: { temperature: 0, max_tokens: null, top_p: 0.9 },
+    });
+    const { unmount } = renderEditor(unlimited);
+    const shown = screen.getByTestId("param-slider-max-tokens");
+    expect(shown).toHaveTextContent("—");
+    expect(within(shown).getByText("none set")).toHaveClass("param-slider__note");
+    expect(shown.querySelector(".param-slider__bar")).toBeNull();
+    unmount();
+
+    renderEditor(unlimited, "edit", unlimited);
+    const maxTokens = screen.getByTestId("config-max-tokens-input");
+    expect(maxTokens).toHaveValue(null);
+    expect(maxTokens).not.toHaveAttribute("placeholder");
+    expect(screen.getByTestId("config-max-tokens")).toHaveTextContent("none set");
+    expect(screen.getByTestId("config-max-tokens")).not.toHaveTextContent("inherited");
+  });
+
   it("shows no parameters for a pipeline whose configurations carry none", async () => {
     const bare = makeConfig({
       provider: null,

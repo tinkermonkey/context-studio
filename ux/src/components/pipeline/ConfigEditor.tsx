@@ -301,9 +301,14 @@ export function ConfigEditor({
   const editable = active && !isSystemConfig;
   // Typed parameter fields start over with another configuration or mode.
   const fieldsKey = `${config?.id ?? "new"}-${mode}`;
-  /** Says a value in effect is not the configuration's own. */
-  const inheritedNote = (k: InheritableParameter) =>
-    config?.parameter_settings && config.parameter_settings[k] == null ? "inherited" : undefined;
+  /**
+   * Says a value in effect is not the configuration's own: the default
+   * configuration's, or none at all when that sets none either.
+   */
+  const inheritedNote = (k: InheritableParameter) => {
+    if (!config?.parameter_settings || config.parameter_settings[k] != null) return undefined;
+    return effective?.[k] == null ? "none set" : "inherited";
+  };
   const validNew =
     isCreate &&
     draft.name.trim() !== "" &&
@@ -565,9 +570,9 @@ export function ConfigEditor({
               <div className="cfg-params-grid">
                 <ParamSlider
                   label="Temperature"
-                  value={effective.temperature}
+                  value={effective.temperature ?? null}
                   min={bounds.temperature?.minimum ?? 0}
-                  max={bounds.temperature?.maximum ?? Math.max(effective.temperature, 1)}
+                  max={bounds.temperature?.maximum ?? Math.max(effective.temperature ?? 0, 1)}
                   step={0.05}
                   fmt={(v) => v.toFixed(2)}
                   note={inheritedNote("temperature")}
@@ -575,9 +580,9 @@ export function ConfigEditor({
                 />
                 <ParamSlider
                   label="Max tokens"
-                  value={effective.max_tokens}
+                  value={effective.max_tokens ?? null}
                   min={bounds.max_tokens?.minimum ?? 0}
-                  max={bounds.max_tokens?.maximum ?? effective.max_tokens}
+                  max={bounds.max_tokens?.maximum ?? effective.max_tokens ?? 0}
                   step={1}
                   fmt={(v) => Math.round(v)}
                   note={inheritedNote("max_tokens")}

@@ -8,7 +8,7 @@ export interface ParamNumberFieldProps {
   label: string;
   /** What the configuration sets; null when it leaves the value to the default configuration. */
   value: number | null;
-  /** The value in effect while none is set: the implementation's default configuration's. */
+  /** The value in effect while none is set: the default configuration's, if it sets one. */
   inherited?: number | null;
   /** The range the API accepts; unchecked here when not known. */
   bounds?: NumberBounds;
@@ -45,7 +45,8 @@ function rangeMessage(integer: boolean, { minimum, maximum }: NumberBounds): str
 /**
  * A typed LLM parameter of a configuration that may be left unset. Empty means
  * unset: the run then uses the default configuration's value, which shows as
- * the placeholder. Mount it with a key that changes with the configuration.
+ * the placeholder ("none set" when that sets none either). Mount it with a key
+ * that changes with the configuration.
  */
 export function ParamNumberField({
   id,
@@ -62,12 +63,14 @@ export function ParamNumberField({
   const [error, setError] = useState<string>();
   const errorId = `${id}-error`;
   const unset = text.trim() === "";
+  // The default configuration sets none either: a run is then given none.
+  const nothingToInherit = inherited === null || inherited === undefined;
 
   return (
     <Field
       label={label}
       htmlFor={id}
-      hint={unset ? "inherited" : undefined}
+      hint={unset ? (nothingToInherit ? "none set" : "inherited") : undefined}
       error={error}
       errorId={errorId}
       className="cfg-param-field"
@@ -80,7 +83,7 @@ export function ParamNumberField({
         max={bounds.maximum}
         step={integer ? 1 : "any"}
         value={text}
-        placeholder={inherited === null || inherited === undefined ? undefined : String(inherited)}
+        placeholder={nothingToInherit ? undefined : String(inherited)}
         onChange={(e) => {
           setText(e.target.value);
           setError(undefined);

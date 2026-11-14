@@ -165,7 +165,7 @@ Individual-tab highlight segments:
 
 - **Preconditions**: as TC1; `intercepted = await routeRunsToSeededOutput(...)`. Navigate, `fill(TEXT)`, click Run, wait for `extraction-review-schema-run-meta` to contain `COMPLETED`.
 - **Steps**:
-  1. Assert `extraction-review-schema-run-meta` contains `intercepted.schema_extraction.run.id`. Assert the intercepted request: `documents` equals `[TEXT]`, `scope === tax.id`, no `concept_scheme_id`, `implementation_id === "default"`.
+  1. Assert `extraction-review-schema-run-meta` contains `intercepted.schema_extraction.run.id`. Assert the intercepted request: `documents` equals `[TEXT]`, `scope === tax.id`, no `concept_scheme_id`, `implementation_id` equal to the id of the implementation `GET /api/pipelines/types/schema_extraction/implementations` marks `is_default`.
   2. **Nothing written yet**: `GET /api/classes?concept_scheme_id={scheme.id}` titles (sorted) equal `["Application Component", "Application Interface", "Application Service"]`.
   3. Classes filter is active by default: `extraction-review-schema-decision-class-0`, `-class-1`, `-class-2` are visible; `extraction-review-schema-decision-property-0` has count 0.
   4. Click `...-decision-class-0-yes`, `...-decision-class-1-yes`, `...-decision-class-2-no`. Assert each has `aria-pressed="true"`.
