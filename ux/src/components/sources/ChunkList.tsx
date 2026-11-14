@@ -1,7 +1,7 @@
 import { Chip } from "@tinkermonkey/heimdall-ui";
 import { hasRunStatus } from "@/api/hooks/pipeline/runStatus";
 import { sourcesCopy } from "./copy";
-import { pageRangeLabel, runChunks, type ChipTone } from "./sourceModel";
+import { isPartlyRead, pageRangeLabel, runChunks, type ChipTone } from "./sourceModel";
 import type { components } from "@/api/types";
 
 type PipelineRun = components["schemas"]["PipelineRunResponse"];
@@ -25,9 +25,13 @@ function chunkRows(run: PipelineRun): ChunkRow[] {
       n: c.index + 1,
       title: c.heading || copy.chunk(c.index + 1),
       pages: pageRangeLabel(c.page_first, c.page_last),
-      // A failed chunk was not read: it is not one that held nothing.
+      // A failed chunk was not read, or not all of it: it is not one that held nothing (more).
       ...(c.failure_reason
-        ? { state: copy.failed, tone: "rose" as const, failure: c.failure_reason }
+        ? {
+            state: isPartlyRead(c) ? copy.partlyRead(c.triples) : copy.failed,
+            tone: isPartlyRead(c) ? ("amber" as const) : ("rose" as const),
+            failure: c.failure_reason,
+          }
         : {
             state: copy.found(c.triples),
             tone: c.triples > 0 ? ("emerald" as const) : ("neutral" as const),
@@ -59,7 +63,8 @@ interface ChunkListProps {
 
 /**
  * The run's chunks. A finished run lists each chunk's heading, pages and
- * candidate count, or that its extraction failed and why; a running one shows
+ * candidate count, or that its extraction failed (whole, or in part with the
+ * candidates it still gave) and why; a running one shows
  * which chunks are read, which is being read and which wait. Before a run,
  * only the estimated count shows.
  */

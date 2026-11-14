@@ -136,6 +136,7 @@ class TestDefinitionRefinementExecution:
         orchestrator = DefinitionRefinementOrchestrator(
             llm_provider=FakeLLMProvider(response_content="[]"),
             traversal=traversal,
+            config={"model": "test-model"},
         )
         state = DefinitionRefinementState(
             run_id=str(uuid4()),
@@ -150,6 +151,7 @@ class TestDefinitionRefinementExecution:
         orchestrator = DefinitionRefinementOrchestrator(
             llm_provider=FakeLLMProvider(response_content="[]"),
             traversal=traversal,
+            config={"model": "test-model"},
         )
         state = DefinitionRefinementState(
             run_id=str(uuid4()),
@@ -190,6 +192,7 @@ class TestDefinitionRefinementExecution:
         orchestrator = DefinitionRefinementOrchestrator(
             llm_provider=FakeLLMProvider(response_content=_refinement_response(canon_definitions)),
             traversal=traversal,
+            config={"model": "test-model"},
         )
         state = DefinitionRefinementState(
             run_id=str(uuid4()),
@@ -234,6 +237,7 @@ class TestDefinitionRefinementExecution:
         orchestrator = DefinitionRefinementOrchestrator(
             llm_provider=FakeLLMProvider(response_content=_refinement_response(too_many)),
             traversal=traversal,
+            config={"model": "test-model"},
         )
         state = DefinitionRefinementState(
             run_id=str(uuid4()),
@@ -263,6 +267,7 @@ class TestDefinitionRefinementExecution:
         orchestrator = DefinitionRefinementOrchestrator(
             llm_provider=FakeLLMProvider(response_content=json.dumps(wrapped)),
             traversal=traversal,
+            config={"model": "test-model"},
         )
         state = DefinitionRefinementState(
             run_id=str(uuid4()),
@@ -291,7 +296,9 @@ class TestDefinitionRefinementViaHarness:
             '{"definitions": ' '[{"label": "Microservice", ' '"definition": "A small service"}]}'
         )
         llm_provider = FakeLLMProvider(response_content=llm_response)
-        orchestrator = DefinitionRefinementOrchestrator(llm_provider=llm_provider, traversal=None)
+        orchestrator = DefinitionRefinementOrchestrator(
+            llm_provider=llm_provider, traversal=None, config={"model": "test-model"}
+        )
 
         actual, expected = await run_pipeline_against_fixture(
             orchestrator,
@@ -342,7 +349,9 @@ def _run_refinement(traversal, node_id: str) -> tuple[DefinitionRefinementState,
             [{"definition": "Refined.", "rationale": "r", "sources_used": [], "confidence": 0.8}]
         )
     )
-    orchestrator = DefinitionRefinementOrchestrator(llm_provider=llm, traversal=traversal)
+    orchestrator = DefinitionRefinementOrchestrator(
+        llm_provider=llm, traversal=traversal, config={"model": "test-model"}
+    )
     state = DefinitionRefinementState(
         run_id=str(uuid4()),
         pipeline_type=PipelineType.SCHEMA_NODE_DEFINITION_REFINEMENT,

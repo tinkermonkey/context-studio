@@ -61,6 +61,7 @@ from domain.pipelines.individual_extraction.chunk_merge import merge_chunk_tripl
 from domain.pipelines.orchestration.base import (
     PipelineOrchestrator,
     PipelineState,
+    llm_parameters,
 )
 from domain.pipelines.ports import ExtractionPort, LLMProvider, PipelineRunStatusWriter
 
@@ -86,6 +87,8 @@ class IndividualExtractionState(PipelineState):
     ontology_id: str = ""
     model: str = ""
     temperature: float = 0.0
+    # The most output tokens one model call may produce; None leaves each stage its own limit
+    max_tokens: int | None = None
     extracted_triples: list[dict[str, Any]] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -115,6 +118,9 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
     # context); a configuration's ``stage_prompts`` override them.
     STAGE_PROMPTS = INDIVIDUAL_EXTRACTION_STAGES
 
+    # It reads a source chunk by chunk and proposes what it finds
+    EXTRACTS_SOURCES = True
+
     def __init__(
         self,
         llm_provider: LLMProvider,
@@ -123,6 +129,7 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         status_writer: PipelineRunStatusWriter | None = None,
         config: dict[str, Any] | None = None,
         proposer: "SourceProposer | None" = None,
+        configuration_ref: str | None = None,
     ) -> None:
         """
         Initialize the orchestrator.
@@ -136,10 +143,14 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 default stage prompts
             proposer: Proposes a run on a source as one change proposal; without
                 one, a source run proposes nothing
+            configuration_ref: The reference of that configuration, recorded
+                with each extraction
         """
         super().__init__(llm_provider, run_id, status_writer)
         self._extraction_service = extraction_service
-        self._stage_prompts = (config or {}).get("stage_prompts")
+        self._config = config or {}
+        self._configuration_ref = configuration_ref
+        self._stage_prompts = self._config.get("stage_prompts")
         self._proposer = proposer
 
     async def execute(self, state: PipelineState) -> PipelineState:
@@ -152,6 +163,10 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 - ontology_id: Target ontology identifier
                 - model: LLM model name
                 - temperature: Sampling temperature (0.0–2.0)
+                - max_tokens: The most output tokens one model call may produce
+                  (model, temperature and max_tokens are the run's
+                  configuration's unless the caller names its own; see
+                  domain/pipelines/selection.py)
                 - dataset_id: Optional dataset recognition is scoped to
                 - source_id, page_starts, headings, pages: Optional; any of
                   them extracts the text chunk by chunk (see the registry's
@@ -190,8 +205,6 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
         # Extract input parameters
         text = state.input_data.get("text", "")
         ontology_id = state.input_data.get("ontology_id", "")
-        model = state.input_data.get("model", "")
-        temperature = state.input_data.get("temperature", 0.0)
 
         # Validate required inputs
         if not text or not text.strip():
@@ -210,14 +223,17 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 result={"error": str(exc)},
             )
             raise exc
-        if not model:
-            exc = PipelineInputError("model is required")
+        try:
+            # The run's model, temperature and output limit; no limit named
+            # leaves each stage of the extraction its own
+            parameters = llm_parameters(state.input_data, self._config)
+        except PipelineInputError as exc:
             state = replace(
                 state,
                 current_status=PipelineRunStatus.FAILED,
                 result={"error": str(exc)},
             )
-            raise exc
+            raise
 
         is_source = any(state.input_data.get(key) is not None for key in _SOURCE_KEYS)
         page_starts: list[int] = []
@@ -252,8 +268,9 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             source_text=text,
             source_text_hash=hashlib.sha256(text.encode()).hexdigest(),
             ontology_id=ontology_id,
-            model=model,
-            temperature=temperature,
+            model=parameters["model"],
+            temperature=parameters["temperature"],
+            max_tokens=parameters["max_tokens"],
             current_status=PipelineRunStatus.RUNNING,
         )
 
@@ -344,6 +361,8 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
             temperature=state.temperature,
             stage_prompts=self._stage_prompts,
             dataset_id=state.input_data.get("dataset_id"),
+            max_tokens=state.max_tokens,
+            configuration_ref=self._configuration_ref,
         )
         if result.failure_reason:
             raise _failure(
@@ -390,6 +409,8 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
                 temperature=state.temperature,
                 stage_prompts=self._stage_prompts,
                 dataset_id=state.input_data.get("dataset_id"),
+                max_tokens=state.max_tokens,
+                configuration_ref=self._configuration_ref,
             )
             results.append(result)
             if result.failure_reason and result.provider_refused and done < total:

@@ -6,6 +6,11 @@ Three registries enable runtime enumeration and instantiation:
 2. PipelineImplementationRegistry — maps (type, impl_id) → implementation class
 3. PipelineConfigurationRegistry — maps (type, impl_id, config_ref) → configuration object
    (versioned; once referenced by a run, the version is immutable)
+
+Defaults are declared here, at registration, and nowhere else: each pipeline
+type has one default implementation and each implementation one default
+configuration. Callers that name no implementation or configuration get these
+through PipelineResolver (domain/pipelines/selection.py).
 """
 
 from __future__ import annotations
@@ -326,28 +331,31 @@ class PipelineImplementationRegistry:
     def __init__(self) -> None:
         """Initialize the implementation registry."""
         self._implementations: dict[tuple[PipelineType, str], type[Any]] = {}
+        # Each pipeline type's default implementation
+        self._defaults: dict[PipelineType, str] = {}
 
     def register(
-        self, pipeline_type: PipelineType, impl_id: str
+        self, pipeline_type: PipelineType, impl_id: str, default: bool = False
     ) -> Callable[[type[Any]], type[Any]]:
         """
         Decorator to register an implementation.
 
         Example:
-            @registry.register(PipelineType.INDIVIDUAL_EXTRACTION, "default")
-            class IndividualExtractionImpl:
+            @registry.register(PipelineType.INDIVIDUAL_EXTRACTION, "find_then_type", default=True)
+            class FindThenTypeImpl:
                 ...
 
         Args:
             pipeline_type: Type of pipeline
             impl_id: Implementation identifier
+            default: It is the type's default implementation
 
         Returns:
             Decorator function
         """
 
         def decorator(cls: type[Any]) -> type[Any]:
-            self.register_impl(pipeline_type, impl_id, cls)
+            self.register_impl(pipeline_type, impl_id, cls, default=default)
             return cls
 
         return decorator
@@ -357,6 +365,7 @@ class PipelineImplementationRegistry:
         pipeline_type: PipelineType,
         impl_id: str,
         impl_class: type[Any],
+        default: bool = False,
     ) -> None:
         """
         Register an implementation class.
@@ -365,14 +374,27 @@ class PipelineImplementationRegistry:
             pipeline_type: Type of pipeline
             impl_id: Implementation identifier
             impl_class: Implementation class
+            default: It is the type's default implementation: the one a run
+                uses when none is named. A type has exactly one.
 
         Raises:
-            ValueError: If already registered
+            ValueError: If already registered, or the type has another default
         """
         key = (pipeline_type, impl_id)
         if key in self._implementations:
             raise ValueError(f"Implementation already registered: {pipeline_type.value}:{impl_id}")
+        if default and pipeline_type in self._defaults:
+            raise ValueError(
+                f"{pipeline_type.value} already has a default implementation:"
+                f" {self._defaults[pipeline_type]}"
+            )
         self._implementations[key] = impl_class
+        if default:
+            self._defaults[pipeline_type] = impl_id
+
+    def default_implementation(self, pipeline_type: PipelineType) -> str | None:
+        """The type's default implementation, or None when none is registered as it."""
+        return self._defaults.get(pipeline_type)
 
     def get(self, pipeline_type: PipelineType, impl_id: str) -> type[Any] | None:
         """Get an implementation class."""
@@ -463,6 +485,8 @@ class PipelineConfigurationRegistry:
         # Used to document the immutability contract and enable testing of the
         # architectural constraint that version-referenced configs cannot change
         self._referenced_versions: set[tuple[PipelineType, str, str, int]] = set()
+        # Each implementation's default configuration
+        self._defaults: dict[tuple[PipelineType, str], str] = {}
 
     def register(
         self,
@@ -470,12 +494,22 @@ class PipelineConfigurationRegistry:
         implementation_id: str,
         config_ref: str,
         config: dict[str, Any],
+        default: bool = False,
+        version: int | None = None,
     ) -> ConfigurationVersion:
         """
         Register or update a configuration.
 
         If config_ref exists, increments version and stores as new version.
-        Otherwise, creates version 1.
+        Otherwise, creates version 1. A configuration registered as its
+        implementation's default stays the default through later versions.
+
+        A stored (user-created) configuration is registered under the version
+        its record holds (`version`), and only that version is registered:
+        its record keeps the latest content alone, so an earlier version has
+        no content to run with, before a restart or after one. A run still
+        pinned to an earlier version finds nothing (get_version) and fails
+        saying its configuration was changed.
 
         Configuration versions are immutable by design: ConfigurationVersion is a frozen
         dataclass and versions are stored in an append-only list. Existing versions cannot
@@ -486,21 +520,41 @@ class PipelineConfigurationRegistry:
             implementation_id: Implementation identifier
             config_ref: Configuration reference (slug)
             config: Configuration dict
+            default: It is the implementation's default configuration: the one
+                a run uses when none is named. An implementation has exactly one.
+            version: The version to register it as (a stored configuration's
+                own); the next one when omitted
 
         Returns:
             ConfigurationVersion just registered
 
         Raises:
-            ValueError: If a referenced version would be mutated
+            ValueError: If the implementation has another default
+                configuration, or `version` is not above the latest registered
         """
         key = (pipeline_type, implementation_id, config_ref)
         versions = self._configs.get(key, [])
+        if default:
+            current = self._defaults.setdefault((pipeline_type, implementation_id), config_ref)
+            if current != config_ref:
+                raise ValueError(
+                    f"{pipeline_type.value}:{implementation_id} already has a default"
+                    f" configuration: {current}"
+                )
 
         # Create a new version (incrementing the version number).
         # Since ConfigurationVersion is a frozen dataclass and stored in an append-only
         # list, existing versions cannot be mutated. Only new versions can be registered.
 
         next_version = (versions[-1].version + 1) if versions else 1
+        if version is not None:
+            if versions and version <= versions[-1].version:
+                raise ValueError(
+                    f"{pipeline_type.value}:{implementation_id}:{config_ref} is already"
+                    f" registered at version {versions[-1].version}, not below {version}"
+                )
+            next_version = version
+            versions = []  # the earlier versions' content is not kept
 
         version_obj = ConfigurationVersion(
             pipeline_type=pipeline_type,
@@ -512,6 +566,32 @@ class PipelineConfigurationRegistry:
 
         self._configs[key] = versions + [version_obj]
         return version_obj
+
+    def remove(self, pipeline_type: PipelineType, implementation_id: str, config_ref: str) -> bool:
+        """
+        Forget a configuration (a deleted user configuration): no run can be
+        started with it, it is no longer listed, and a run still pinned to it
+        finds nothing and fails saying its configuration was deleted, as it
+        would after a restart.
+
+        Returns:
+            True if it was registered
+
+        Raises:
+            ValueError: If it is its implementation's default configuration
+        """
+        if self._defaults.get((pipeline_type, implementation_id)) == config_ref:
+            raise ValueError(
+                f"{config_ref} is the default configuration of"
+                f" {pipeline_type.value}:{implementation_id} and cannot be removed"
+            )
+        return self._configs.pop((pipeline_type, implementation_id, config_ref), None) is not None
+
+    def default_configuration(
+        self, pipeline_type: PipelineType, implementation_id: str
+    ) -> str | None:
+        """The implementation's default configuration, or None when none is registered as it."""
+        return self._defaults.get((pipeline_type, implementation_id))
 
     def get_latest(
         self, pipeline_type: PipelineType, implementation_id: str, config_ref: str

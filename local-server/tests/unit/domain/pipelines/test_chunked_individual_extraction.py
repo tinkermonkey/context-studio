@@ -272,7 +272,15 @@ class _FakeExtraction:
         self._finds = finds
 
     def extract_triples(
-        self, text, ontology_id, model, temperature, stage_prompts=None, dataset_id=None
+        self,
+        text,
+        ontology_id,
+        model,
+        temperature,
+        stage_prompts=None,
+        dataset_id=None,
+        max_tokens=None,
+        configuration_ref=None,
     ):
         self.calls.append(text)
         if self._on_call:

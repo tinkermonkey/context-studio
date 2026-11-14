@@ -164,12 +164,10 @@ from domain.ontology.events import (
 # Import domain services
 from domain.ontology.ports import OntologyRepository
 from domain.ontology.services import OntologyService
-from domain.pipelines.claim_triage import register_claim_triage
-from domain.pipelines.individual_extraction import register_individual_extraction
+from domain.pipelines.bootstrap import register_pipelines
 from domain.pipelines.individual_extraction.apply_service import (
     IndividualExtractionApplyService,
 )
-from domain.pipelines.notes_to_claims import register_notes_to_claims
 from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
@@ -179,31 +177,20 @@ from domain.pipelines.requested_via import RequestedVia
 from domain.pipelines.schema_extraction.apply_service import (
     SchemaExtractionApplyService,
 )
-from domain.pipelines.schema_extraction.bootstrap import register_schema_extraction
 from domain.pipelines.schema_extraction.recognition_preview import (
     SchemaRecognitionPreviewService,
 )
 from domain.pipelines.source_extraction import SourceExtractionService
-from domain.pipelines.schema_node_connection_refinement import (
-    register_schema_node_connection_refinement,
-)
 from domain.pipelines.schema_node_connection_refinement.apply_service import (
     SchemaConnectionRefinementApplyService,
-)
-from domain.pipelines.schema_node_definition_refinement import (
-    register_schema_node_definition_refinement,
 )
 from domain.pipelines.schema_node_definition_refinement.apply_service import (
     SchemaDefinitionRefinementApplyService,
 )
-from domain.pipelines.schema_node_grounding import register_schema_node_grounding
 from domain.pipelines.schema_node_grounding.apply_service import (
     SchemaGroundingApplyService,
 )
 from domain.pipelines.schema_node_grounding.scoring import GroundingScorer
-from domain.pipelines.schema_relationship_reflection import (
-    register_schema_relationship_reflection,
-)
 from domain.versioning.approval_policy import ApprovalPolicyService
 from domain.versioning.bundle_import import BundleImportService
 from domain.versioning.claims import ClaimService
@@ -450,19 +437,11 @@ async def lifespan(app: FastAPI):
         )
         logger.info("ExtractionService created and wired with adapters")
 
-        # Register individual extraction pipeline implementation
-        register_individual_extraction(
-            impl_registry=implementation_registry,
-            config_registry=config_registry,
-        )
-        logger.info("Individual extraction pipeline registered")
-
-        # Register schema extraction pipeline implementation
-        register_schema_extraction(
-            impl_registry=implementation_registry,
-            config_registry=config_registry,
-        )
-        logger.info("Schema extraction pipeline registered")
+        # Register every pipeline's implementations and system configurations,
+        # with the defaults a run gets when it names none (traversal and other
+        # dependencies are injected when an orchestrator is instantiated)
+        pipeline_resolver = register_pipelines(implementation_registry, config_registry)
+        logger.info("Pipelines registered")
 
         # Create schema node grounding orchestrator
         grounding_adapter = GroundingAdapter(
@@ -483,43 +462,6 @@ async def lifespan(app: FastAPI):
             embedding_service=embedding_service,
             error_callback=log_embedding_error,
         )
-        register_schema_node_grounding(
-            impl_registry=implementation_registry,
-            config_registry=config_registry,
-        )
-        logger.info("Schema node grounding pipeline registered")
-
-        # Register definition and connection refinement pipelines
-        # Note: traversal dependencies will be injected at orchestrator instantiation time
-        register_schema_node_definition_refinement(
-            impl_registry=implementation_registry,
-            config_registry=config_registry,
-        )
-        logger.info("Schema node definition refinement pipeline registered")
-
-        register_schema_node_connection_refinement(
-            impl_registry=implementation_registry,
-            config_registry=config_registry,
-        )
-        logger.info("Schema node connection refinement pipeline registered")
-
-        register_schema_relationship_reflection(
-            impl_registry=implementation_registry,
-            config_registry=config_registry,
-        )
-        logger.info("Schema relationship reflection pipeline registered")
-
-        register_claim_triage(
-            impl_registry=implementation_registry,
-            config_registry=config_registry,
-        )
-        logger.info("Claim triage pipeline registered")
-
-        register_notes_to_claims(
-            impl_registry=implementation_registry,
-            config_registry=config_registry,
-        )
-        logger.info("Notes-to-claims pipeline registered")
 
         # Load user-created pipeline configurations from DB into the in-memory registry
         try:
@@ -930,7 +872,7 @@ async def lifespan(app: FastAPI):
         app.state.source_extraction_service = SourceExtractionService(
             sources=SQLiteSourceRepository(local_session_factory),
             ontology_repo=cast(OntologyRepository, ontology_repo),
-            configurations=config_registry,
+            resolver=pipeline_resolver,
             submitter=app.state.run_executor,
             runs=pipeline_run_repo,
             proposals=proposal_repo,

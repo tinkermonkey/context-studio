@@ -27,7 +27,8 @@ class TestRegistryInvariance:
             impl_registry.register_impl(
                 PipelineType.NO_OP,
                 "default",
-                object,  # Different class, same key
+                object,  # Different class, same key,
+                default=True,
             )
 
     def test_config_registry_allows_version_updates(self, config_registry):

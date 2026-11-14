@@ -40,16 +40,23 @@ def _now_iso() -> str:
 
 
 def registry_config(record: PipelineConfiguration) -> dict:
-    """The configuration dict a stored record registers in the in-memory registry."""
-    return {
+    """
+    The configuration dict a stored record registers in the in-memory registry.
+    A temperature or output limit the record leaves unset is left out: a run
+    then takes the implementation's default configuration's (PipelineResolver).
+    """
+    config = {
         "provider": record.provider,
         "model": record.model,
         "stage_prompts": record.stage_prompts or {},
-        "temperature": record.temperature,
-        "max_tokens": record.max_tokens,
         "top_p": record.top_p,
         "enabled": record.enabled,
     }
+    if record.temperature is not None:
+        config["temperature"] = record.temperature
+    if record.max_tokens is not None:
+        config["max_tokens"] = record.max_tokens
+    return config
 
 
 def load_user_configurations(
@@ -57,8 +64,10 @@ def load_user_configurations(
 ) -> int:
     """
     Register every stored user configuration in the in-memory registry (at
-    startup). A record that won't register is logged and skipped. Returns how
-    many registered.
+    startup), each under its stored version: the version a run was pinned to
+    then names the same content before and after a restart, and a version
+    whose content is no longer kept is not registered. A record that won't
+    register is logged and skipped. Returns how many registered.
     """
     loaded = 0
     for record in repo.list_all():
@@ -68,6 +77,7 @@ def load_user_configurations(
                 record.implementation_id,
                 record.config_ref,
                 registry_config(record),
+                version=record.version,
             )
             loaded += 1
         except Exception as exc:  # noqa: BLE001 - one bad record mustn't stop startup
@@ -93,12 +103,16 @@ class PipelineConfigurationRepository:
         model: str,
         description: Optional[str] = None,
         stage_prompts: Optional[dict] = None,
-        temperature: float = 0.4,
-        max_tokens: int = 800,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
         top_p: float = 0.9,
         enabled: bool = True,
     ) -> PipelineConfiguration:
-        """Create and persist a new user pipeline configuration."""
+        """
+        Create and persist a new user pipeline configuration. A temperature or
+        output limit left None is unset: its runs take the implementation's
+        default configuration's.
+        """
         config_id = str(uuid.uuid4())
         base_ref = _slugify_name(name)
         existing_refs = self.list_known_config_refs(pipeline_type, implementation_id)
@@ -205,8 +219,8 @@ class PipelineConfigurationRepository:
         model: str,
         description: Optional[str] = None,
         stage_prompts: Optional[dict] = None,
-        temperature: float = 0.4,
-        max_tokens: int = 800,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
         top_p: float = 0.9,
         enabled: bool = True,
     ) -> Optional[PipelineConfiguration]:

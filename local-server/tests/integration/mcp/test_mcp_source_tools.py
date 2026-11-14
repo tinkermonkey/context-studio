@@ -106,7 +106,7 @@ def setup(tmp_path, factory, parts, house, roots):
     extraction = SourceExtractionService(
         sources=sources_repo,
         ontology_repo=parts.repo,
-        configurations=configurations,
+        resolver=executor.resolver,
         submitter=executor,
         runs=runs,
         proposals=parts.proposals_repo,
@@ -529,12 +529,57 @@ class TestListAndGet:
 
 
 class TestExtractSource:
+    async def test_nothing_named_extracts_with_find_then_type(self, setup, house):
+        async with mcp_client(setup.workspace, write_tools=setup.tools()) as client:
+            _, source, _ = await call(client, "add_source", add_text(house))
+
+            is_error, started, _ = await call(client, "extract_source", {"source_id": source["id"]})
+
+        assert is_error is False, started
+        [run] = started["runs"]
+        stored = setup.runs.get(run["run_id"])
+        # Individual extraction's default implementation and its default configuration
+        assert (stored.implementation_id, stored.configuration_ref) == (
+            "find_then_type",
+            "extraction-find-then-type",
+        )
+
+    async def test_the_implementation_and_configuration_can_be_named(self, setup, house):
+        async with mcp_client(setup.workspace, write_tools=setup.tools()) as client:
+            _, source, _ = await call(client, "add_source", add_text(house))
+
+            is_error, started, _ = await call(
+                client,
+                "extract_source",
+                {
+                    "source_id": source["id"],
+                    "implementation": "find_then_type",
+                    "schema": True,
+                    "schema_configuration": "schema-extraction-default",
+                },
+            )
+
+        assert is_error is False, started
+        individual, schema = (setup.runs.get(run["run_id"]) for run in started["runs"])
+        # Each run names its implementation and configuration, or gets the registered default
+        assert (individual.implementation_id, individual.configuration_ref) == (
+            "find_then_type",
+            "extraction-find-then-type",
+        )
+        assert (schema.implementation_id, schema.configuration_ref) == (
+            "default",
+            "schema-extraction-default",
+        )
+
     async def test_extraction_ends_in_a_proposal_for_review(self, setup, parts, house):
         setup.executor.start()
         async with mcp_client(setup.workspace, write_tools=setup.tools()) as client:
             _, source, _ = await call(client, "add_source", add_text(house))
 
-            is_error, started, _ = await call(client, "extract_source", {"source_id": source["id"]})
+            # The two-pass implementation, by its id (the fake stands in for its service)
+            is_error, started, _ = await call(
+                client, "extract_source", {"source_id": source["id"], "implementation": "default"}
+            )
             assert is_error is False
             [run] = started["runs"]
             assert (run["pipeline"], run["status"]) == ("individual_extraction", "pending")
@@ -621,6 +666,42 @@ class TestExtractSource:
                 ({"source_id": ready["id"], "pages": "two"}, ""),
                 ({"source_id": ready["id"], "dataset": "garage"}, "garage"),
                 ({"source_id": ready["id"], "configuration": "nope"}, "'nope' is not"),
+                (
+                    {"source_id": ready["id"], "implementation": "nope"},
+                    "'nope' is not an individual-extraction implementation that can extract a"
+                    " source (one of: default, find_then_type)",
+                ),
+                (
+                    {"source_id": ready["id"], "implementation": "open_v1"},
+                    "can extract a source (one of: default, find_then_type)",
+                ),
+                (
+                    # Naming its own configuration does not let it through
+                    {
+                        "source_id": ready["id"],
+                        "implementation": "open_v1",
+                        "configuration": "extraction-open-v1",
+                    },
+                    "can extract a source (one of: default, find_then_type)",
+                ),
+                (
+                    # Two-pass's configuration without naming two-pass ("default")
+                    {"source_id": ready["id"], "configuration": "extraction-default"},
+                    "is a configuration of the default implementation, not of the"
+                    " 'find_then_type' implementation",
+                ),
+                (
+                    {
+                        "source_id": ready["id"],
+                        "implementation": "find_then_type",
+                        "configuration": "extraction-default",
+                    },
+                    "is a configuration of the default implementation",
+                ),
+                (
+                    {"source_id": ready["id"], "schema": True, "schema_implementation": "open_v1"},
+                    "can extract a source (one of: default)",
+                ),
                 ({"source_id": ready["id"], "schema": "yes"}, "boolean"),
             ):
                 is_error, payload, _ = await call(client, "extract_source", arguments)

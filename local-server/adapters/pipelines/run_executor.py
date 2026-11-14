@@ -22,8 +22,9 @@ from typing import Any, Callable
 from adapters.factories.orchestrator_factory import (
     build_orchestrator_services,
     build_run_specific_data,
-    create_orchestrator,
-    create_pipeline_state,
+    create_selected_run,
+    failed_run_llm_metadata,
+    run_llm_metadata,
 )
 from adapters.persistence.sqlite.batch_repo import BatchRepository
 from adapters.persistence.sqlite.pipeline_run_repo import PipelineRepository
@@ -33,6 +34,7 @@ from domain.pipelines.registry import (
     PipelineConfigurationRegistry,
     PipelineImplementationRegistry,
 )
+from domain.pipelines.selection import PipelineResolver
 from utils.logger import get_logger
 
 _logger = get_logger(__name__)
@@ -42,7 +44,10 @@ _TEXT_IN_SOURCE_TEXT = PipelineType.INDIVIDUAL_EXTRACTION
 
 
 class UnknownPipelineError(LookupError):
-    """The requested pipeline implementation or configuration is not registered."""
+    """
+    What a stored run was pinned to (implementation, configuration version) is
+    gone: the configuration was edited or deleted after the run was queued.
+    """
 
 
 class BackgroundRunExecutor:
@@ -75,6 +80,7 @@ class BackgroundRunExecutor:
         self._batches = batches
         self._implementations = implementations
         self._configurations = configurations
+        self._resolver = PipelineResolver(implementations, configurations)
         self._llm_provider = llm_provider
         self._app_state = app_state
         self._workers = max(1, workers)
@@ -84,6 +90,11 @@ class BackgroundRunExecutor:
         self._threads: list[threading.Thread] = []
         self._active: dict[str, tuple[asyncio.AbstractEventLoop, asyncio.Task]] = {}
         self._lock = threading.Lock()
+
+    @property
+    def resolver(self) -> PipelineResolver:
+        """What this executor's runs are selected with: its registries' resolver."""
+        return self._resolver
 
     # ==================== Lifecycle ====================
 
@@ -133,8 +144,8 @@ class BackgroundRunExecutor:
     def submit(
         self,
         pipeline_type: PipelineType,
-        implementation_id: str,
-        configuration_ref: str,
+        implementation_id: str | None,
+        configuration_ref: str | None,
         input_data: dict[str, Any],
         specific_data: dict[str, Any] | None = None,
     ) -> PipelineRun:
@@ -143,8 +154,9 @@ class BackgroundRunExecutor:
 
         Args:
             pipeline_type: The pipeline type
-            implementation_id: Registered implementation
-            configuration_ref: Registered configuration (its latest version is pinned)
+            implementation_id: The implementation; the type's default when None
+            configuration_ref: One of the implementation's configurations (its
+                latest version is pinned); its default when None
             input_data: The pipeline's input
             specific_data: Type-specific run fields; built from the input by
                 build_run_specific_data when omitted
@@ -153,20 +165,20 @@ class BackgroundRunExecutor:
             The PENDING run
 
         Raises:
-            UnknownPipelineError: The implementation or configuration is not registered
+            PipelineSelectionError: The implementation or configuration is not
+                registered, the configuration is another implementation's or
+                is disabled (see domain/pipelines/selection.py)
             PipelineStorageError: The run could not be stored
         """
+        selection = self._resolver.resolve(pipeline_type, implementation_id, configuration_ref)
+        implementation_id = selection.implementation_id
+        config_version = selection.configuration
         if specific_data is None:
             specific_data = build_run_specific_data(pipeline_type, input_data)
-        if self._implementations.get(pipeline_type, implementation_id) is None:
-            raise UnknownPipelineError(
-                f"Implementation not found: {pipeline_type.value}:{implementation_id}"
-            )
-        config_version = self._configurations.get_latest(
-            pipeline_type, implementation_id, configuration_ref
-        )
-        if config_version is None:
-            raise UnknownPipelineError(f"Configuration not found: {configuration_ref}")
+        # Stored with the model, temperature and output limit it was accepted
+        # with: it executes with those, whatever happens to the configuration
+        # before a worker (or a re-queue after a restart) gets to it
+        input_data = selection.run_input(input_data)
 
         if pipeline_type == _TEXT_IN_SOURCE_TEXT:
             # The text is kept once, as the run's source_text; restored when claimed
@@ -176,7 +188,7 @@ class BackgroundRunExecutor:
             batch_run_id=batch.id,
             pipeline_type=pipeline_type,
             implementation_id=implementation_id,
-            configuration_ref=configuration_ref,
+            configuration_ref=config_version.config_ref,
             configuration_slug=config_version.config_ref,
             configuration_version=config_version.version,
             specific_data=specific_data or None,
@@ -302,25 +314,28 @@ class BackgroundRunExecutor:
         self._refresh_batch(run.batch_run_id, finished=True)
 
     async def _run_pipeline(self, run: PipelineRun, input_data: dict[str, Any]) -> None:
-        impl_class = self._implementations.get(run.pipeline_type, run.implementation_id)
-        config_version = self._configurations.get_version(
+        selection = self._resolver.pinned(
             run.pipeline_type,
             run.implementation_id,
             run.configuration_slug,
             run.configuration_version,
         )
-        if impl_class is None or config_version is None:
-            raise UnknownPipelineError(
-                f"Pipeline {run.pipeline_type.value}:{run.implementation_id} with configuration "
-                f"{run.configuration_slug} v{run.configuration_version} is no longer registered"
-            )
+        if selection is None:
+            raise UnknownPipelineError(self._no_longer_runnable(run))
         services = build_orchestrator_services(
-            self._app_state, config_version.config, run.id, self._runs
+            self._app_state, selection.config, run.id, self._runs
         )
-        orchestrator = create_orchestrator(impl_class, self._llm_provider, services)
-        state = create_pipeline_state(run.id, run.pipeline_type, input_data, self._llm_provider)
+        orchestrator, state = create_selected_run(
+            selection, self._llm_provider, services, run.id, input_data
+        )
 
-        result_state = await orchestrator.execute(state)
+        try:
+            result_state = await orchestrator.execute(state)
+        except Exception as exc:
+            # A failed run says which model it was given, as a completed one does
+            # (recorded with the failure by _execute)
+            exc.llm_metadata = failed_run_llm_metadata(state, exc)  # type: ignore[attr-defined]
+            raise
 
         output_summary = dict(result_state.result or {})
         if result_state.parse_warnings:
@@ -328,12 +343,33 @@ class BackgroundRunExecutor:
         self._runs.update_summaries(
             run_id=run.id,
             output_summary=output_summary,
-            llm_metadata=dict(result_state.llm_metadata or {}),
+            llm_metadata=run_llm_metadata(state, result_state),
         )
         proposal_id = output_summary.get("proposal_id")
         if isinstance(proposal_id, str) and proposal_id:
             self._runs.set_proposal_id(run.id, proposal_id)
         self._runs.update_status(run.id, result_state.current_status)
+
+    def _no_longer_runnable(self, run: PipelineRun) -> str:
+        """
+        Why a queued run can no longer execute as it was accepted. A run
+        executes the configuration version it was accepted with, and a stored
+        configuration keeps only its latest content: once it is edited or
+        deleted, a run still queued with the earlier version has nothing to
+        run with, whether or not the server restarted in between.
+        """
+        what = f"{run.pipeline_type.value}:{run.implementation_id}"
+        if self._implementations.get(run.pipeline_type, run.implementation_id) is None:
+            return (
+                f"The implementation {what} is no longer registered, so this run cannot"
+                " execute. Submit it again with an implementation that is."
+            )
+        return (
+            f"The configuration {run.configuration_slug!r} of {what} was changed or deleted"
+            f" after this run was queued: version {run.configuration_version}, which the run"
+            " was accepted with, no longer exists, so the run cannot execute as it was"
+            " accepted. Submit the run again."
+        )
 
     # ==================== Bookkeeping ====================
 

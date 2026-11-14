@@ -263,7 +263,7 @@ class TestIndividualExtractionRegistration:
         assert impl_class == IndividualExtractionOrchestrator
 
     def test_extraction_default_config_registered(self, registered_extraction):
-        """Wave A 'extraction-default' configuration is registered (Anthropic/Claude)."""
+        """'extraction-default' is registered: Claude Haiku 5.5 through Anthropic."""
         _, config_registry = registered_extraction
 
         config = config_registry.get_latest(
@@ -273,7 +273,7 @@ class TestIndividualExtractionRegistration:
         )
         assert config is not None
         assert config.config["provider"] == "anthropic"
-        assert config.config["model"] == "claude-opus-4-7"
+        assert config.config["model"] == "claude-haiku-5-5"
         assert config.version == 1
 
     def test_extraction_openrouter_config_registered(self, registered_extraction):
@@ -290,18 +290,28 @@ class TestIndividualExtractionRegistration:
         assert config.config["model"] == "google/gemini-3-flash-preview"
         assert config.version == 1
 
-    def test_configurations_preserve_wave_a_model_choices(self, registered_extraction):
-        """Wave A configuration preserves original model; no silent upgrades."""
-        _, config_registry = registered_extraction
+    def test_find_then_type_is_the_types_default_and_default_is_only_a_name(
+        self, registered_extraction
+    ):
+        """
+        A run that names nothing uses find-then-type; the two-pass implementation
+        keeps the id 'default' and its own default configuration.
+        """
+        impl_registry, config_registry = registered_extraction
 
-        wave_a_config = config_registry.get_latest(
-            PipelineType.INDIVIDUAL_EXTRACTION,
-            "default",
-            "extraction-default",
+        assert impl_registry.default_implementation(PipelineType.INDIVIDUAL_EXTRACTION) == (
+            "find_then_type"
         )
-        # Verify Wave A's original Anthropic config is unchanged
-        assert wave_a_config.config["provider"] == "anthropic"
-        assert "claude-opus" in wave_a_config.config["model"]
+        assert (
+            config_registry.default_configuration(
+                PipelineType.INDIVIDUAL_EXTRACTION, "find_then_type"
+            )
+            == "extraction-find-then-type"
+        )
+        assert (
+            config_registry.default_configuration(PipelineType.INDIVIDUAL_EXTRACTION, "default")
+            == "extraction-default"
+        )
 
 
 class TestOrchestratorExecution:

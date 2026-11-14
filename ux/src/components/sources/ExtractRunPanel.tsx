@@ -186,7 +186,7 @@ function DonePanel({
   const counts = proposal ? proposalCounts(proposal) : undefined;
   const empty = run.proposal_id ? undefined : noProposalSummary(run);
   const chunks = runChunks(run);
-  // Chunks whose extraction failed: what they hold is missing from the result.
+  // Chunks whose extraction failed: what they hold, or part of it, is missing from the result.
   const failed = failedChunksWarning(chunks);
   // When no chunk found anything the panel says so; naming every chunk would repeat it.
   const warning = empty && !empty.candidatesFound ? "" : emptyChunksWarning(chunks);

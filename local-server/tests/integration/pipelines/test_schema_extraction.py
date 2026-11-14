@@ -111,7 +111,9 @@ class _SchemaExtractionMockLLM:
 def schema_client(pipeline_run_repo, batch_repo):
     """FastAPI test client wired with a schema-aware mock LLM."""
     impl_registry = PipelineImplementationRegistry()
-    impl_registry.register_impl(PipelineType.NO_OP, "default", NoOpPipelineOrchestrator)
+    impl_registry.register_impl(
+        PipelineType.NO_OP, "default", NoOpPipelineOrchestrator, default=True
+    )
     register_schema_extraction(impl_registry, None)
 
     config_registry = PipelineConfigurationRegistry()

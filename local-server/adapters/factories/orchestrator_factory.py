@@ -63,6 +63,7 @@ from domain.pipelines.schema_relationship_reflection.orchestrator import (
     RelationshipReflectionOrchestrator,
     RelationshipReflectionState,
 )
+from domain.pipelines.selection import PipelineSelection
 from domain.pipelines.source_proposals import SourceProposer
 from utils.logger import get_logger
 
@@ -102,6 +103,7 @@ def _individual_extraction_builder(
             status_writer=services.get("status_writer"),
             config=services.get("config"),
             proposer=_source_proposer(services),
+            configuration_ref=services.get("configuration_ref"),
         )
 
     return build
@@ -450,6 +452,79 @@ def create_pipeline_state(
         llm_provider=llm_provider,
         result=None,
     )
+
+
+def create_selected_run(
+    selection: PipelineSelection,
+    llm_provider: LLMProvider,
+    services: dict[str, Any],
+    run_id: str,
+    input_data: dict[str, Any],
+) -> tuple[PipelineOrchestrator, PipelineState]:
+    """
+    The orchestrator and initial state that execute a run of `selection`.
+
+    Everything that executes a run (the run API, the background worker,
+    scripts) builds it here, so the model, temperature and output-token limit
+    are the configuration's wherever the run's input names none
+    (PipelineSelection.run_input). A run stored to execute later already
+    carries them in its input, as it was accepted.
+
+    Args:
+        selection: The run's implementation and pinned configuration
+        llm_provider: LLM provider for completions
+        services: Services dict for create_orchestrator, built with the
+            selection's configuration (build_orchestrator_services)
+        run_id: Pipeline run ID
+        input_data: The run's input as the caller gave it
+
+    Raises:
+        ValueError: If the orchestrator class is unknown or required dependencies are missing
+    """
+    orchestrator = create_orchestrator(
+        selection.implementation,
+        llm_provider,
+        {**services, "configuration_ref": selection.configuration_ref},
+    )
+    state = create_pipeline_state(
+        run_id, selection.pipeline_type, selection.run_input(input_data), llm_provider
+    )
+    return orchestrator, state
+
+
+def run_llm_metadata(state: PipelineState, result_state: PipelineState) -> dict[str, Any]:
+    """
+    What a finished run records about its model calls: what its orchestrator
+    reported (tokens, latency, the model where it says so), and otherwise the
+    model the run executed with, so every run says which model it used.
+
+    Args:
+        state: The state the run was executed with (create_selected_run)
+        result_state: The state its orchestrator returned
+    """
+    metadata = dict(result_state.llm_metadata or {})
+    model = state.input_data.get("model")
+    if model and not metadata.get("model"):
+        metadata["model"] = model
+    return metadata
+
+
+def failed_run_llm_metadata(state: PipelineState, error: BaseException) -> dict[str, Any]:
+    """
+    What a failed run records about its model calls: what the failure carries
+    (the tokens and time its calls cost before it failed), and otherwise the
+    model the run executed with, so a failed run says which model it was
+    given as a completed one does.
+
+    Args:
+        state: The state the run was executed with (create_selected_run)
+        error: What its orchestrator raised
+    """
+    metadata = dict(getattr(error, "llm_metadata", None) or {})
+    model = state.input_data.get("model")
+    if model and not metadata.get("model"):
+        metadata["model"] = model
+    return metadata
 
 
 def _source_summary(input_data: dict[str, Any]) -> dict[str, Any]:

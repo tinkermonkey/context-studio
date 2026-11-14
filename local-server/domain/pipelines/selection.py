@@ -1,0 +1,342 @@
+"""
+Selecting what a pipeline run executes.
+
+A run is selected by (pipeline type, implementation, configuration). The
+configuration carries everything else that varies: provider, model,
+temperature, output-token limit, stage prompts and the implementation's own
+settings. An implementation left unnamed is the type's default; a
+configuration left unnamed is the implementation's default. Both defaults are
+declared at registration (domain/pipelines/registry.py and each pipeline's
+bootstrap.py) and read here, so no caller spells one.
+
+Every entry point that starts a run (the run API, the batch route, source
+extraction, the chat and MCP tools, scripts) selects through PipelineResolver
+and gives the run PipelineSelection.run_input(): its input with the
+configuration's model, temperature and output-token limit filled in wherever
+the input names none. A run that waits to execute is stored with that input,
+so it executes with the parameters it was accepted with whatever happens to
+the configuration meanwhile.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from typing import Any
+
+from domain.pipelines.entities import PipelineType
+from domain.pipelines.exceptions import (
+    ConfigurationDisabledError,
+    RunParameterError,
+    UnknownConfigurationError,
+    UnknownImplementationError,
+)
+from domain.pipelines.registry import (
+    ConfigurationVersion,
+    PipelineConfigurationRegistry,
+    PipelineImplementationRegistry,
+)
+
+# What a configuration sets for every model call of a run, under the same keys
+# in the configuration and in the run's input. `max_tokens` is the most output
+# tokens one call may produce.
+RUN_PARAMETERS = ("model", "temperature", "max_tokens")
+
+# The largest output-token limit a configuration may set: what every provider
+# can send in one request. The Anthropic client refuses a request that does not
+# stream above about 21,000 (it would expect the response to take over ten
+# minutes), before sending anything.
+MAX_OUTPUT_TOKENS = 20000
+
+
+@dataclass(frozen=True)
+class PipelineSelection:
+    """
+    What a run executes: an implementation and one version of a configuration.
+
+    Attributes:
+        pipeline_type: The pipeline type
+        implementation_id: The implementation
+        implementation: Its orchestrator class
+        configuration: The configuration version the run is pinned to
+        parameters: The model, temperature and output-token limit the
+            configuration gives a run (RUN_PARAMETERS). One the configuration
+            leaves unset is the implementation's default configuration's; one
+            neither sets is absent.
+    """
+
+    pipeline_type: PipelineType
+    implementation_id: str
+    implementation: type[Any]
+    configuration: ConfigurationVersion
+    parameters: Mapping[str, Any] = field(default_factory=dict)
+
+    @property
+    def configuration_ref(self) -> str:
+        """The configuration's reference."""
+        return self.configuration.config_ref
+
+    @property
+    def config(self) -> dict[str, Any]:
+        """The configuration's settings."""
+        return self.configuration.config
+
+    def run_input(self, input_data: Mapping[str, Any]) -> dict[str, Any]:
+        """
+        The input the orchestrator executes with: `input_data`, with the
+        configuration's model, temperature and output-token limit
+        (`parameters`) filled in. A parameter the input gives wins, so a
+        caller can still run a configuration with another model.
+
+        Raises:
+            RunParameterError: If the output-token limit the run would execute
+                with, named in its input or set by its configuration, is not a
+                whole number from 1 to MAX_OUTPUT_TOKENS
+        """
+        filled = dict(input_data)
+        named = filled.get("max_tokens") is not None
+        for key, configured in self.parameters.items():
+            given = filled.get(key)
+            if given is None or given == "":
+                filled[key] = configured
+        limit = filled.get("max_tokens")
+        if limit is not None and not _is_output_limit(limit):
+            whose = (
+                "The run's input names"
+                if named
+                else f"The {self.configuration_ref!r} configuration sets"
+            )
+            raise RunParameterError(
+                f"{whose} max_tokens {limit!r}: the output-token limit of a run is a whole"
+                f" number from 1 to {MAX_OUTPUT_TOKENS}, the most every provider can be asked"
+                " for in one request"
+                + ("" if named else "; edit the configuration, or name a limit in the run's input")
+            )
+        return filled
+
+
+class PipelineResolver:
+    """Turns (type, implementation or none, configuration or none) into what a run executes."""
+
+    def __init__(
+        self,
+        implementations: PipelineImplementationRegistry,
+        configurations: PipelineConfigurationRegistry,
+    ) -> None:
+        self._implementations = implementations
+        self._configurations = configurations
+
+    def resolve(
+        self,
+        pipeline_type: PipelineType,
+        implementation_id: str | None = None,
+        configuration_ref: str | None = None,
+    ) -> PipelineSelection:
+        """
+        Select what a new run executes.
+
+        Args:
+            pipeline_type: The pipeline type
+            implementation_id: The implementation; the type's default when omitted
+            configuration_ref: One of the implementation's configurations; its
+                default when omitted. The run is pinned to its latest version.
+
+        Raises:
+            UnknownImplementationError: If the type has no such implementation,
+                or none is named and it has no default
+            UnknownConfigurationError: If the implementation has no such
+                configuration (the message says whose it is, when it is
+                another implementation's), or none is named and it has no default
+            ConfigurationDisabledError: If the configuration is disabled, also
+                when it is the default one of a run that named none
+        """
+        implementation_id, implementation = self.implementation(pipeline_type, implementation_id)
+        registered = self._implementations.list_by_type(pipeline_type)
+
+        # What a run may be started with: the implementation's enabled configurations
+        own = [
+            ref
+            for ref, latest in self._configurations.list_configs(pipeline_type, implementation_id)
+            if latest.config.get("enabled") is not False
+        ]
+        named = bool(configuration_ref)
+        if not named:
+            configuration_ref = self._configurations.default_configuration(
+                pipeline_type, implementation_id
+            )
+            if configuration_ref is None:
+                raise UnknownConfigurationError(
+                    f"The {implementation_id!r} implementation of {pipeline_type.value} has no"
+                    " default configuration"
+                    + (f"; name one of: {_listed(own)}" if own else " and none to run with")
+                )
+        configuration = self._configurations.get_latest(
+            pipeline_type, implementation_id, configuration_ref
+        )
+        if configuration is None:
+            owners = [
+                other
+                for other in registered
+                if other != implementation_id
+                and self._configurations.get_latest(pipeline_type, other, configuration_ref)
+            ]
+            whose = (
+                f"is a configuration of the {_listed(owners)} implementation, not of"
+                if owners
+                else "is not a configuration of"
+            )
+            raise UnknownConfigurationError(
+                f"{configuration_ref!r} {whose} the {implementation_id!r} implementation of"
+                f" {pipeline_type.value}"
+                + (f" (one of: {_listed(own)})" if own else " (it has none)")
+            )
+        if configuration.config.get("enabled") is False:
+            # The default is refused as a named one is: leaving the
+            # configuration out is no way around its being disabled
+            which = (
+                f"The {configuration_ref!r} configuration"
+                if named
+                else f"No configuration was named and the default one, {configuration_ref!r},"
+            )
+            raise ConfigurationDisabledError(
+                f"{which} of the {implementation_id!r} implementation of"
+                f" {pipeline_type.value} is disabled"
+                + (
+                    f" (enabled: {_listed(own)})"
+                    if own
+                    else " (the implementation has no enabled configuration)"
+                )
+            )
+        return self._selection(pipeline_type, implementation_id, implementation, configuration)
+
+    def parameters(
+        self, pipeline_type: PipelineType, implementation_id: str, config: Mapping[str, Any]
+    ) -> dict[str, Any]:
+        """
+        The run parameters (RUN_PARAMETERS) a configuration of the
+        implementation gives a run: its own, and for one it leaves unset (a
+        user-created configuration need not set a temperature or an output
+        limit) the implementation's default configuration's.
+        """
+        default_ref = self._configurations.default_configuration(pipeline_type, implementation_id)
+        default = (
+            self._configurations.get_latest(pipeline_type, implementation_id, default_ref)
+            if default_ref
+            else None
+        )
+        inherited = default.config if default else {}
+        resolved = {}
+        for key in RUN_PARAMETERS:
+            value = config.get(key)
+            if value is None:
+                value = inherited.get(key)
+            if value is not None:
+                resolved[key] = value
+        return resolved
+
+    def _selection(
+        self,
+        pipeline_type: PipelineType,
+        implementation_id: str,
+        implementation: type[Any],
+        configuration: ConfigurationVersion,
+    ) -> PipelineSelection:
+        return PipelineSelection(
+            pipeline_type,
+            implementation_id,
+            implementation,
+            configuration,
+            self.parameters(pipeline_type, implementation_id, configuration.config),
+        )
+
+    def implementation(
+        self, pipeline_type: PipelineType, implementation_id: str | None = None
+    ) -> tuple[str, type[Any]]:
+        """
+        An implementation of the type and its orchestrator class: the one
+        named, or the type's default.
+
+        Raises:
+            UnknownImplementationError: If the type has no such implementation,
+                or none is named and it has no default
+        """
+        implementation_id = implementation_id or self._implementations.default_implementation(
+            pipeline_type
+        )
+        registered = self._implementations.list_by_type(pipeline_type)
+        if implementation_id is None:
+            raise UnknownImplementationError(
+                f"{pipeline_type.value} has no default implementation"
+                + (f"; name one of: {_listed(registered)}" if registered else " and none to run")
+            )
+        implementation = registered.get(implementation_id)
+        if implementation is None:
+            raise UnknownImplementationError(
+                f"{implementation_id!r} is not an implementation of {pipeline_type.value}"
+                + (f" (one of: {_listed(registered)})" if registered else " (it has none)")
+            )
+        return implementation_id, implementation
+
+    def implementations(self, pipeline_type: PipelineType) -> dict[str, type[Any]]:
+        """The type's implementations: id -> orchestrator class."""
+        return self._implementations.list_by_type(pipeline_type)
+
+    def runnable_types(self) -> list[PipelineType]:
+        """The pipeline types that have an implementation to run, in PipelineType's order."""
+        registered = {pipeline_type for pipeline_type, _ in self._implementations.list_all()}
+        return [pipeline_type for pipeline_type in PipelineType if pipeline_type in registered]
+
+    def pinned(
+        self,
+        pipeline_type: PipelineType,
+        implementation_id: str,
+        configuration_ref: str,
+        version: int,
+    ) -> PipelineSelection | None:
+        """
+        What a stored run executes: its implementation and the configuration
+        version it was pinned to when it was accepted (a configuration disabled
+        since then still runs it). None when either is no longer registered.
+        """
+        implementation = self._implementations.get(pipeline_type, implementation_id)
+        configuration = self._configurations.get_version(
+            pipeline_type, implementation_id, configuration_ref, version
+        )
+        if implementation is None or configuration is None:
+            return None
+        return self._selection(pipeline_type, implementation_id, implementation, configuration)
+
+    def check_defaults(self) -> None:
+        """
+        Check what registration promises: every pipeline type with an
+        implementation has a default one, and every implementation a default
+        configuration that is registered.
+
+        Raises:
+            ValueError: Naming each type or implementation that lacks its default
+        """
+        missing: list[str] = []
+        by_type: dict[PipelineType, list[str]] = {}
+        for pipeline_type, implementation_id in self._implementations.list_all():
+            by_type.setdefault(pipeline_type, []).append(implementation_id)
+        for pipeline_type, implementation_ids in by_type.items():
+            if self._implementations.default_implementation(pipeline_type) is None:
+                missing.append(f"{pipeline_type.value} has no default implementation")
+            for implementation_id in implementation_ids:
+                ref = self._configurations.default_configuration(pipeline_type, implementation_id)
+                if ref is None:
+                    missing.append(
+                        f"{pipeline_type.value}:{implementation_id} has no default configuration"
+                    )
+        if missing:
+            raise ValueError("Pipeline registration is incomplete: " + "; ".join(missing))
+
+
+def _is_output_limit(value: Any) -> bool:
+    return (
+        isinstance(value, int) and not isinstance(value, bool) and 1 <= value <= MAX_OUTPUT_TOKENS
+    )
+
+
+def _listed(names: Any) -> str:
+    return ", ".join(sorted(names))

@@ -50,11 +50,7 @@ from domain.ontology.exceptions import (
 )
 from domain.pipelines.exceptions import PipelineInputError
 from domain.pipelines.requested_via import RequestedVia
-from domain.pipelines.source_extraction import (
-    DEFAULT_CONFIGURATION,
-    LastExtraction,
-    SourceExtractionService,
-)
+from domain.pipelines.source_extraction import LastExtraction, SourceExtractionService
 
 _REVIEW = (
     "A person decides each operation in Context Studio's review queue; these tools never decide."
@@ -399,9 +395,11 @@ class ExtractSourceTool(_SourceTool):
         " completed without one: its no_proposal_reason says why), then read the proposal"
         " with get_proposal. " + _REVIEW + " dataset defaults to the"
         " source's; pages selects pages, such as '12-30' or '1-3, 7' (all by default);"
-        f" configuration names an individual-extraction configuration ({DEFAULT_CONFIGURATION}"
-        " by default). Warranty, safety, legal and contact sections and copies in other"
-        " languages are skipped unless skip_boilerplate is false; get_run's"
+        " implementation and configuration choose what reads the source, and"
+        " schema_implementation and schema_configuration what proposes schema changes"
+        " (each pipeline's default implementation and that implementation's default"
+        " configuration when omitted). Warranty, safety, legal and contact sections and"
+        " copies in other languages are skipped unless skip_boilerplate is false; get_run's"
         " skipped_sections_by_reason counts them. Extracting again supersedes the source's"
         " earlier proposal."
     )
@@ -416,9 +414,27 @@ class ExtractSourceTool(_SourceTool):
                     " source's by default"
                 ),
             },
+            "implementation": {
+                "type": "string",
+                "description": (
+                    "Individual-extraction implementation, one that can extract a source"
+                    " (the pipeline's default implementation when omitted)"
+                ),
+            },
             "configuration": {
                 "type": "string",
-                "description": f"Individual-extraction configuration ({DEFAULT_CONFIGURATION})",
+                "description": (
+                    "One of that implementation's configurations (its default"
+                    " configuration when omitted)"
+                ),
+            },
+            "schema_implementation": {
+                "type": "string",
+                "description": "With schema: the schema-extraction implementation",
+            },
+            "schema_configuration": {
+                "type": "string",
+                "description": "With schema: one of that implementation's configurations",
             },
             "pages": {"type": "string", "description": "Pages, e.g. '12-30' or '1-3, 7'"},
             "schema": {
@@ -453,6 +469,9 @@ class ExtractSourceTool(_SourceTool):
             schema=schema,
             requested_via=RequestedVia.MCP,
             skip_boilerplate=skip_boilerplate,
+            implementation_id=optional_str(args, "implementation"),
+            schema_implementation_id=optional_str(args, "schema_implementation"),
+            schema_configuration_ref=optional_str(args, "schema_configuration"),
         )
         payload = {
             "source_id": source_id,

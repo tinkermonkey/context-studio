@@ -203,7 +203,12 @@ export interface RunChunk {
   page_last?: number | null;
   heading?: string | null;
   triples: number;
-  /** Why the chunk's extraction failed; unset when it was read. What a failed chunk holds is missing. */
+  /**
+   * Why the chunk's extraction failed; unset when it was read. What a failed
+   * chunk holds is missing: all of it, or part of it when it still has triples
+   * (find-then-type keeps a chunk's individuals when only its relationships,
+   * or the typing of some mentions, failed).
+   */
   failure_reason?: string | null;
 }
 
@@ -245,16 +250,30 @@ export function emptyChunksWarning(chunks: RunChunk[]): string {
   return `${capitalized(namedChunks(empty))} gave no candidates.`;
 }
 
+/** A failed chunk that still gave candidates: only part of what it holds is missing. */
+export function isPartlyRead(chunk: RunChunk): boolean {
+  return !!chunk.failure_reason && chunk.triples > 0;
+}
+
 /**
  * "Extraction failed for 2 of 3 chunks: chunks 2 and 3 (Warranty, Index). What
- * they hold is missing.", or "" when no chunk failed.
+ * they hold is missing.", or "" when no chunk failed. When every failed chunk
+ * still gave candidates it failed in part, and part of what they hold is
+ * missing; each chunk's own reason says which part.
  */
 export function failedChunksWarning(chunks: RunChunk[]): string {
   const failed = failedChunks(chunks);
   if (failed.length === 0) return "";
   const total = chunks.length === 1 ? "1 chunk" : `${chunks.length} chunks`;
-  const missing = failed.length === 1 ? "What it holds is missing." : "What they hold is missing.";
-  return `Extraction failed for ${failed.length} of ${total}: ${namedChunks(failed)}. ${missing}`;
+  const partly = failed.filter(isPartlyRead).length;
+  const hold = failed.length === 1 ? "it holds" : "they hold";
+  const [lead, missing] =
+    partly === 0
+      ? ["Extraction failed for", `What ${hold} is missing.`]
+      : partly === failed.length
+        ? ["Extraction failed in part for", `Part of what ${hold} is missing.`]
+        : ["Extraction failed for", `What ${hold}, or part of it, is missing.`];
+  return `${lead} ${failed.length} of ${total}: ${namedChunks(failed)}. ${missing}`;
 }
 
 export interface ProposalCounts {

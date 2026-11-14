@@ -777,6 +777,7 @@ class TestMirroredTaxonomy:
                 "documents": ["A water filter."],
                 "scope": house["taxonomy"],
                 "source_id": SOURCE,
+                "model": "m",
                 **({"requested_via": via} if via else {}),
             },
         )

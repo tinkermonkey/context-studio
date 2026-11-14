@@ -79,9 +79,12 @@ class FakeExtraction:
     def __init__(self, house):
         self.house = house
         self.calls = 0
+        # The (model, output-token limit) each call was asked to use
+        self.parameters: set = set()
 
-    def extract_triples(self, text, ontology_id, model, temperature, **_):
+    def extract_triples(self, text, ontology_id, model, temperature, max_tokens=None, **_):
         self.calls += 1
+        self.parameters.add((model, max_tokens))
         triples = []
         if "WRF555SDFZ" in text:
             start = text.index("WRF555SDFZ")
@@ -219,7 +222,7 @@ def app(tmp_path, factory, parts, house, extraction):
     app.state.source_extraction_service = SourceExtractionService(
         sources=sources,
         ontology_repo=parts.repo,
-        configurations=configurations,
+        resolver=executor.resolver,
         submitter=executor,
         runs=runs,
         proposals=parts.proposals_repo,
@@ -262,7 +265,44 @@ def finished(app, run_id):
 
 
 def extract(client, source_id, **body):
-    return client.post(f"/api/sources/{source_id}/extract", json={"dataset": "home", **body})
+    """
+    Extract a source with the two-pass implementation, whose service the fakes
+    here stand in for, unless the body names another. Its id is "default": a
+    name, not the type's default (see TestDefaultImplementation).
+    """
+    return client.post(
+        f"/api/sources/{source_id}/extract",
+        json={"dataset": "home", "implementation_id": "default", **body},
+    )
+
+
+class TestDefaultImplementation:
+    def test_nothing_named_extracts_with_find_then_type(self, client, app, house):
+        source = add_pdf(client, house)
+
+        response = client.post(f"/api/sources/{source['id']}/extract", json={"dataset": "home"})
+
+        assert response.status_code == 202, response.text
+        [run] = response.json()["runs"]
+        stored = app.state.runs.get(run["run_id"])
+        # Individual extraction's default implementation and its default configuration
+        assert stored.implementation_id == "find_then_type"
+        assert stored.configuration_ref == "extraction-find-then-type"
+
+    def test_naming_default_extracts_with_two_pass(self, client, app, house):
+        source = add_pdf(client, house)
+
+        response = client.post(
+            f"/api/sources/{source['id']}/extract",
+            json={"dataset": "home", "implementation_id": "default"},
+        )
+
+        assert response.status_code == 202, response.text
+        stored = app.state.runs.get(response.json()["runs"][0]["run_id"])
+        assert (stored.implementation_id, stored.configuration_ref) == (
+            "default",
+            "extraction-default",
+        )
 
 
 class TestExtractRoute:
@@ -317,6 +357,97 @@ class TestExtractRoute:
         assert (
             extract(client, source["id"], configuration_ref="extraction-open-v1").status_code == 422
         )
+
+    def test_a_named_implementation_runs_with_its_own_configuration(self, client, app, house):
+        source = add_pdf(client, house)
+
+        response = extract(client, source["id"], implementation_id="find_then_type")
+
+        assert response.status_code == 202, response.text
+        [run] = response.json()["runs"]
+        stored = app.state.runs.get(run["run_id"])
+        assert stored.implementation_id == "find_then_type"
+        assert stored.configuration_ref == "extraction-find-then-type"
+        assert stored.input_summary["source_id"] == source["id"]
+
+    def test_a_source_run_executes_with_its_configurations_model_and_limit(
+        self, client, app, house, extraction
+    ):
+        source = add_pdf(client, house)
+        [run] = extract(
+            client, source["id"], configuration_ref="extraction-openrouter-default"
+        ).json()["runs"]
+        app.state.executor.start()
+
+        done = wait_for(lambda: finished(app, run["run_id"]))
+
+        assert done.status is PipelineRunStatus.COMPLETED, done.failure_reason
+        assert extraction.parameters == {("google/gemini-3-flash-preview", 8000)}
+
+    def test_the_schema_run_is_chosen_as_any_run_is(self, client, app, house):
+        source = add_pdf(client, house)
+
+        named = extract(
+            client,
+            source["id"],
+            schema=True,
+            schema_implementation_id="default",
+            schema_configuration_ref="schema-extraction-default",
+        )
+        another_implementations = extract(
+            client, source["id"], schema=True, schema_configuration_ref="schema-extraction-open-v1"
+        )
+        cannot_extract = extract(
+            client, source["id"], schema=True, schema_implementation_id="open_v1"
+        )
+
+        assert named.status_code == 202, named.text
+        schema_run = app.state.runs.get(named.json()["runs"][1]["run_id"])
+        assert (schema_run.implementation_id, schema_run.configuration_ref) == (
+            "default",
+            "schema-extraction-default",
+        )
+        assert another_implementations.status_code == 422
+        assert (
+            "is a configuration of the open_v1 implementation"
+            in (another_implementations.json()["detail"])
+        )
+        assert cannot_extract.status_code == 422
+        assert "can extract a source (one of: default)" in cannot_extract.json()["detail"]
+
+    @pytest.mark.parametrize(
+        "body, names",
+        [
+            ({"implementation_id": "no_such"}, "no_such"),
+            # Registered for individual extraction, but it cannot extract a source
+            ({"implementation_id": "open_v1"}, "open_v1"),
+            # Naming its own configuration does not let it through
+            (
+                {"implementation_id": "open_v1", "configuration_ref": "extraction-open-v1"},
+                "'open_v1' is not an individual-extraction implementation that can extract",
+            ),
+            (
+                {"implementation_id": "no_such", "configuration_ref": "extraction-default"},
+                "'no_such' is not an individual-extraction implementation that can extract a"
+                " source (one of: default, find_then_type)",
+            ),
+            (
+                {"implementation_id": "find_then_type", "configuration_ref": "extraction-default"},
+                "extraction-default",
+            ),
+        ],
+    )
+    def test_an_implementation_that_cannot_extract_the_source_is_unprocessable(
+        self, client, app, house, body, names
+    ):
+        source = add_pdf(client, house)
+
+        response = extract(client, source["id"], **body)
+
+        assert response.status_code == 422, response.text
+        assert names in response.json()["detail"]
+        listed = client.get(f"/api/sources/{source['id']}").json()
+        assert listed["last_extraction"] is None
 
     def test_a_source_of_boilerplate_only_is_extracted_only_when_asked(self, client, app, house):
         source = add_pdf(client, house, pages=(FRENCH_PAGE,), name="fr.pdf")
