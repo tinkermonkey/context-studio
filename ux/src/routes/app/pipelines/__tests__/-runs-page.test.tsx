@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { render } from "@/test/test-utils";
 import { pipelineService } from "@/api/services/pipeline";
@@ -77,6 +77,30 @@ describe("RunsPage", () => {
     expect(within(table).getByTestId("run-implementation-run-2")).toHaveTextContent(/^classic$/);
     expect(within(table).getByTestId("run-configuration-run-2")).toHaveTextContent(/^—$/);
   });
+
+  it("keeps reading the list while a run is in flight, so its row shows how it ended", async () => {
+    const list = (status: string) => ({
+      items: [run({ status })],
+      total: 1,
+      limit: 25,
+      offset: 0,
+    });
+    const listRuns = vi
+      .spyOn(pipelineService, "listRuns")
+      .mockResolvedValueOnce(list("running"))
+      .mockResolvedValue(list("completed"));
+    render(<RunsPage />);
+
+    const row = await screen.findByTestId("run-row-run-1");
+    expect(within(row).getByText("running")).toBeInTheDocument();
+    await waitFor(() => expect(within(row).getByText("completed")).toBeInTheDocument(), {
+      timeout: 4000,
+    });
+    // Nothing is in flight any more: the list is left alone.
+    const calls = listRuns.mock.calls.length;
+    await new Promise((resolve) => setTimeout(resolve, 2200));
+    expect(listRuns.mock.calls.length).toBe(calls);
+  }, 10_000);
 
   it("selects a run through the URL", async () => {
     render(<RunsPage />);

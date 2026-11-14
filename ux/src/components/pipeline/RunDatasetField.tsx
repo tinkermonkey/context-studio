@@ -15,21 +15,15 @@ export interface RunDatasetFieldProps {
 export const DATASET_REQUIRED = "Select a dataset";
 
 /**
- * Chooses the dataset a run extracts into. Renders nothing unless the
+ * Chooses the dataset a run extracts into: its individuals are matched and
+ * created there. Renders nothing unless the
  * taxonomy has two or more datasets: with one, the dataset is implied.
  */
 export function RunDatasetField({ run, id, error, disabled, onChange }: RunDatasetFieldProps) {
   if (!run.required) return null;
   const errorId = `${id}-error`;
   return (
-    <Field
-      label="Dataset"
-      htmlFor={id}
-      hint="Individuals are matched and created in it"
-      required
-      error={error}
-      errorId={errorId}
-    >
+    <Field label="Dataset" htmlFor={id} required error={error} errorId={errorId}>
       <Select
         id={id}
         value={run.dataset?.id ?? ""}
