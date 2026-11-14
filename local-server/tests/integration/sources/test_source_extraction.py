@@ -219,6 +219,7 @@ def app(tmp_path, factory, parts, house, extraction):
     app.state.source_extraction_service = SourceExtractionService(
         sources=sources,
         ontology_repo=parts.repo,
+        implementations=implementations,
         configurations=configurations,
         submitter=executor,
         runs=runs,
@@ -317,6 +318,42 @@ class TestExtractRoute:
         assert (
             extract(client, source["id"], configuration_ref="extraction-open-v1").status_code == 422
         )
+
+    def test_a_named_implementation_runs_with_its_own_configuration(self, client, app, house):
+        source = add_pdf(client, house)
+
+        response = extract(client, source["id"], implementation_id="find_then_type")
+
+        assert response.status_code == 202, response.text
+        [run] = response.json()["runs"]
+        stored = app.state.runs.get(run["run_id"])
+        assert stored.implementation_id == "find_then_type"
+        assert stored.configuration_ref == "extraction-find-then-type"
+        assert stored.input_summary["source_id"] == source["id"]
+
+    @pytest.mark.parametrize(
+        "body, names",
+        [
+            ({"implementation_id": "no_such"}, "no_such"),
+            # Registered for individual extraction, but it cannot extract a source
+            ({"implementation_id": "open_v1"}, "open_v1"),
+            (
+                {"implementation_id": "find_then_type", "configuration_ref": "extraction-default"},
+                "extraction-default",
+            ),
+        ],
+    )
+    def test_an_implementation_that_cannot_extract_the_source_is_unprocessable(
+        self, client, app, house, body, names
+    ):
+        source = add_pdf(client, house)
+
+        response = extract(client, source["id"], **body)
+
+        assert response.status_code == 422, response.text
+        assert names in response.json()["detail"]
+        listed = client.get(f"/api/sources/{source['id']}").json()
+        assert listed["last_extraction"] is None
 
     def test_a_source_of_boilerplate_only_is_extracted_only_when_asked(self, client, app, house):
         source = add_pdf(client, house, pages=(FRENCH_PAGE,), name="fr.pdf")

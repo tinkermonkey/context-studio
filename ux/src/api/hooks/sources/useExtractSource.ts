@@ -2,13 +2,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
 import { sourcesService, type ExtractSourceRequest } from "@/api/services/sources";
 import { usePipelineConfigurations } from "@/api/hooks/pipeline/usePipelineConfigurations";
+import { usePipelineImplementations } from "@/api/hooks/pipeline/usePipelineImplementations";
 
 const INDIVIDUAL_EXTRACTION = "individual_extraction";
-/**
- * The only implementation that extracts a source chunk by chunk; the server
- * refuses (422) a configuration of any other, e.g. open_v1.
- */
-export const SOURCE_EXTRACTION_IMPLEMENTATION = "default";
 
 /** Start extraction on a source; the runs it starts carry on in the background. */
 export function useExtractSource() {
@@ -23,15 +19,25 @@ export function useExtractSource() {
 }
 
 /**
- * The enabled individual_extraction configurations source extraction can use:
- * the `default` implementation's, from the same query the paste-text review
- * page reads.
+ * The individual_extraction implementations that can extract a source: those
+ * that name the configuration they extract one with. The server refuses (422)
+ * any other, e.g. one that reads pasted text only.
  */
-export function useExtractionConfigurations() {
-  const { data, isLoading } = usePipelineConfigurations(
-    INDIVIDUAL_EXTRACTION,
-    SOURCE_EXTRACTION_IMPLEMENTATION,
-  );
+export function useExtractionImplementations() {
+  const { data, isLoading } = usePipelineImplementations(INDIVIDUAL_EXTRACTION);
+  return {
+    implementations: (data ?? []).filter((i) => !!i.source_configuration),
+    isLoading,
+  };
+}
+
+/**
+ * The enabled individual_extraction configurations of the implementation a
+ * source is extracted with, from the same query the paste-text review page
+ * reads. None until an implementation is chosen.
+ */
+export function useExtractionConfigurations(implementationId: string) {
+  const { data, isLoading } = usePipelineConfigurations(INDIVIDUAL_EXTRACTION, implementationId);
   return {
     configurations: (data ?? []).filter((c) => c.enabled !== false),
     isLoading,

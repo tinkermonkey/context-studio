@@ -40,13 +40,39 @@ const disabledConfig = createConfiguration({
   config_ref: "extraction-disabled",
   enabled: false,
 });
-// open_v1 doesn't chunk: the extract endpoint refuses its configurations.
+// open_v1 can't extract a source: the extract endpoint refuses it.
 const openConfig = createConfiguration({
   id: "cfg-2",
   config_ref: "extraction-open-v1",
   implementation_id: "open_v1",
   model: null,
 });
+// Listed before the configuration find_then_type extracts a source with.
+const findThenTypeOtherConfig = createConfiguration({
+  id: "cfg-5",
+  config_ref: "find-then-type-other-model",
+  implementation_id: "find_then_type",
+  model: "claude-sonnet",
+});
+const findThenTypeConfig = createConfiguration({
+  id: "cfg-6",
+  config_ref: "extraction-find-then-type",
+  implementation_id: "find_then_type",
+  model: "claude-haiku",
+});
+const IMPLEMENTATIONS = [
+  { id: "open_v1", pipeline_type: "individual_extraction", source_configuration: null },
+  {
+    id: "find_then_type",
+    pipeline_type: "individual_extraction",
+    source_configuration: "extraction-find-then-type",
+  },
+  {
+    id: "default",
+    pipeline_type: "individual_extraction",
+    source_configuration: "extraction-default",
+  },
+];
 
 const server = setupServer();
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
@@ -60,6 +86,7 @@ interface ServeOptions {
   source?: Source;
   taxonomy?: ReturnType<typeof createTaxonomy>;
   configs?: PipelineConfiguration[];
+  implementations?: typeof IMPLEMENTATIONS | (() => Response);
   runs?: Record<string, PipelineRun | (() => PipelineRun)>;
   extract?: () => Response;
 }
@@ -67,7 +94,15 @@ interface ServeOptions {
 function serve({
   source = createSource(),
   taxonomy = house,
-  configs = [defaultConfig, openRouterConfig, disabledConfig, openConfig],
+  configs = [
+    defaultConfig,
+    openRouterConfig,
+    disabledConfig,
+    openConfig,
+    findThenTypeOtherConfig,
+    findThenTypeConfig,
+  ],
+  implementations = IMPLEMENTATIONS,
   runs = {},
   extract,
 }: ServeOptions = {}) {
@@ -80,7 +115,9 @@ function serve({
     http.get("*/api/taxonomies/:id", () => HttpResponse.json(taxonomy)),
     http.get("*/api/datasets", () => HttpResponse.json([home, cabin])),
     http.get("*/api/pipelines/types/individual_extraction/implementations", () =>
-      HttpResponse.json([{ id: "default" }, { id: "open_v1" }]),
+      typeof implementations === "function"
+        ? implementations()
+        : HttpResponse.json(implementations),
     ),
     http.get(
       "*/api/pipelines/types/individual_extraction/implementations/:impl/configurations",
@@ -161,10 +198,19 @@ describe("ExtractSourcePage — configure", () => {
       "aria-checked",
       "true",
     );
+    // The implementations that can extract a source, `default` chosen: open_v1 can't.
+    const implementation = screen.getByTestId("extract-implementation");
+    expect(implementation).toHaveAccessibleName("Individual extraction");
+    await waitFor(() => expect(implementation).toHaveValue("default"));
+    expect(
+      within(implementation)
+        .getAllByRole("option")
+        .map((o) => o.getAttribute("value")),
+    ).toEqual(["find_then_type", "default"]);
     const config = screen.getByTestId("extract-config");
-    expect(config).toHaveAccessibleName("Individual extraction");
+    expect(config).toHaveAccessibleName("Configuration");
     await waitFor(() => expect(config).toHaveValue("extraction-default"));
-    // Only the default implementation's enabled configurations: open_v1 doesn't chunk.
+    // Only the chosen implementation's enabled configurations.
     expect(
       within(config)
         .getAllByRole("option")
@@ -247,6 +293,7 @@ describe("ExtractSourcePage — configure", () => {
     expect(extractBodies).toEqual([
       {
         dataset: "ds-cabin",
+        implementation_id: "default",
         configuration_ref: "extraction-openrouter-default",
         pages: "1-2",
         schema: true,
@@ -256,6 +303,75 @@ describe("ExtractSourcePage — configure", () => {
     expect(onRunsStarted).toHaveBeenCalledWith([
       { run_id: "run-1234abcd", pipeline: "individual_extraction" },
     ]);
+  });
+
+  it("extracts with another implementation and its own configuration", async () => {
+    const { extractBodies, configRequests } = serve();
+    const user = userEvent.setup();
+    renderPage();
+
+    const implementation = await screen.findByTestId("extract-implementation");
+    const config = screen.getByTestId("extract-config");
+    await waitFor(() => expect(config).toHaveValue("extraction-default"));
+    await user.selectOptions(config, "extraction-openrouter-default");
+
+    await user.selectOptions(implementation, "find_then_type");
+
+    // The configuration chosen for the other implementation is dropped for this
+    // one's own for sources, though it is not the first listed.
+    expect(implementation).toHaveValue("find_then_type");
+    await waitFor(() => expect(config).toHaveValue("extraction-find-then-type"));
+    expect(
+      within(config)
+        .getAllByRole("option")
+        .map((o) => o.getAttribute("value")),
+    ).toEqual(["find-then-type-other-model", "extraction-find-then-type"]);
+    expect(configRequests).toEqual(["default", "find_then_type"]);
+
+    await user.click(screen.getByTestId("extract-start"));
+    await waitFor(() => expect(extractBodies).toHaveLength(1));
+    expect(extractBodies[0]).toEqual({
+      dataset: "ds-home",
+      implementation_id: "find_then_type",
+      configuration_ref: "extraction-find-then-type",
+      schema: false,
+      skip_boilerplate: true,
+    });
+  });
+
+  it("clears a start error when another implementation is chosen", async () => {
+    serve({
+      extract: () =>
+        HttpResponse.json({ detail: "The provider refused the request." }, { status: 422 }),
+    });
+    const user = userEvent.setup();
+    renderPage();
+
+    const implementation = await screen.findByTestId("extract-implementation");
+    await waitFor(() => expect(implementation).toHaveValue("default"));
+    await user.click(screen.getByTestId("extract-start"));
+    expect(await screen.findByTestId("extract-start-error")).toHaveTextContent(
+      "The provider refused the request.",
+    );
+
+    await user.selectOptions(implementation, "find_then_type");
+    expect(screen.queryByText("The provider refused the request.")).not.toBeInTheDocument();
+  });
+
+  it("leaves the implementation to the server when the list can't be read", async () => {
+    const { extractBodies, configRequests } = serve({
+      implementations: () => HttpResponse.json({ detail: "boom" }, { status: 500 }),
+    });
+    const user = userEvent.setup();
+    renderPage();
+
+    const implementation = await screen.findByTestId("extract-implementation");
+    expect(within(implementation).queryAllByRole("option")).toHaveLength(0);
+    await user.click(screen.getByTestId("extract-start"));
+
+    await waitFor(() => expect(extractBodies).toHaveLength(1));
+    expect(extractBodies[0]).toEqual({ dataset: "ds-home", schema: false, skip_boilerplate: true });
+    expect(configRequests).toEqual([]);
   });
 
   it("skips boilerplate by default, and can read it too", async () => {
@@ -551,7 +667,42 @@ function chunksWithFailures(found: number[], failed: Record<number, string>) {
 
 const CUT_SHORT = "The model's answer was cut short after 3 attempts.";
 
+const RELATIONSHIPS_UNREAD = `Its relationships could not be read: ${CUT_SHORT}`;
+
 describe("ExtractSourcePage — a run some of whose chunks failed", () => {
+  it("shows what a chunk that failed in part still gave, and that part is missing", async () => {
+    // find-then-type keeps a chunk's individuals when only its relationships failed.
+    const chunks = chunksWithFailures([5, 4, 2], { 1: RELATIONSHIPS_UNREAD });
+    serve({
+      runs: {
+        "run-1234abcd": createRun({
+          implementation_id: "find_then_type",
+          status: "completed",
+          items_done: 3,
+          proposal_id: "prop-1",
+          output_summary: { metadata: { chunks }, failed_chunks: [chunks[1]] },
+        }),
+      },
+    });
+    renderPage({ runId: "run-1234abcd" });
+
+    const done = await screen.findByTestId("extract-done-panel");
+    expect(done).toHaveTextContent("Partial proposal ready");
+    const failed = screen.getByTestId("extract-failed-chunks");
+    expect(failed).toHaveClass("form-callout--error");
+    expect(failed).toHaveTextContent(
+      "Extraction failed in part for 1 of 3 chunks: chunk 2. Part of what it holds is missing.",
+    );
+    expect(failed).not.toHaveTextContent("What it holds is missing");
+
+    const chunk2 = screen.getByTestId("extract-chunk-2");
+    expect(chunk2).toHaveClass("chunk-list__row", "chunk-list__row--failed");
+    expect(within(chunk2).getByText("4 found, incomplete")).toHaveClass("chip--amber");
+    expect(within(chunk2).queryByText("failed")).not.toBeInTheDocument();
+    expect(screen.getByTestId("extract-chunk-2-reason")).toHaveTextContent(RELATIONSHIPS_UNREAD);
+    expect(screen.queryByTestId("extract-empty-chunks")).not.toBeInTheDocument();
+  });
+
   it("marks one failed chunk of three and calls the proposal partial", async () => {
     const chunks = chunksWithFailures([5, 0, 0], { 1: CUT_SHORT });
     serve({

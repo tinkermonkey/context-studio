@@ -4210,8 +4210,9 @@ export interface paths {
     /**
      * Extract Source
      * @description Extract a ready source into proposals, in the background: an
-     *     individual-extraction run that reads it chunk by chunk (the chunks are the
-     *     run's items) and ends in one proposal for review in the dataset; with
+     *     individual-extraction run (of `implementation_id`; `default` when omitted)
+     *     that reads it chunk by chunk (the chunks are the run's items) and ends in
+     *     one proposal for review in the dataset; with
      *     `schema`, a schema-extraction run over the same text too, with its own
      *     proposal. Follow the runs with GET /api/pipelines/runs/{id}, or the
      *     source's `last_extraction`. Unless `skip_boilerplate` is false, the
@@ -7416,6 +7417,11 @@ export interface components {
        * @description Pipeline type for this implementation
        */
       pipeline_type: string;
+      /**
+       * Source Configuration
+       * @description The configuration a source is extracted with when none is named (POST /api/sources/{id}/extract); null for an implementation that cannot extract a source
+       */
+      source_configuration?: string | null;
     };
     /**
      * ImportConflictResponse
@@ -10520,8 +10526,13 @@ export interface components {
        */
       dataset: string;
       /**
+       * Implementation Id
+       * @description The individual-extraction implementation that reads the source, one whose source_configuration is set (GET /api/pipelines/types/individual_extraction/implementations); default when omitted
+       */
+      implementation_id?: string | null;
+      /**
        * Configuration Ref
-       * @description An individual-extraction configuration; extraction-default when omitted
+       * @description An individual-extraction configuration of the implementation; the implementation's source_configuration when omitted
        */
       configuration_ref?: string | null;
       /**
@@ -16921,7 +16932,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description A bad page range, or a configuration that can't extract a source */
+      /** @description A bad page range, an implementation that can't extract a source, or a configuration that isn't one of the implementation's */
       422: {
         headers: {
           [name: string]: unknown;

@@ -115,6 +115,9 @@ class IndividualExtractionOrchestrator(PipelineOrchestrator):
     # context); a configuration's ``stage_prompts`` override them.
     STAGE_PROMPTS = INDIVIDUAL_EXTRACTION_STAGES
 
+    # It reads a source chunk by chunk and proposes what it finds
+    SOURCE_CONFIGURATION = "extraction-default"
+
     def __init__(
         self,
         llm_provider: LLMProvider,

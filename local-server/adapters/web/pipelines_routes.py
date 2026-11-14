@@ -680,7 +680,12 @@ async def list_implementations(
     impls = impl_registry.list_by_type(ptype)
 
     return [
-        ImplementationResponse(id=impl_id, pipeline_type=ptype.value) for impl_id in impls.keys()
+        ImplementationResponse(
+            id=impl_id,
+            pipeline_type=ptype.value,
+            source_configuration=getattr(impl, "SOURCE_CONFIGURATION", None),
+        )
+        for impl_id, impl in impls.items()
     ]
 
 

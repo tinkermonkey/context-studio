@@ -28,13 +28,15 @@ from domain.ontology.exceptions import EntityNotFoundError
 from domain.ontology.ports import OntologyRepository
 from domain.pipelines.entities import PipelineRun, PipelineRunStatus, PipelineType, SourceRun
 from domain.pipelines.ports import PipelineRunSubmitter, SourceRunReader
-from domain.pipelines.registry import PipelineConfigurationRegistry
+from domain.pipelines.registry import (
+    PipelineConfigurationRegistry,
+    PipelineImplementationRegistry,
+)
 from domain.pipelines.requested_via import REQUESTED_VIA, RequestedVia, ensure_may_propose_to
 from domain.versioning.ports import ChangeProposalRepository
 
-# The individual-extraction implementation that reads a source chunk by chunk
-SOURCE_IMPLEMENTATION = "default"
-DEFAULT_CONFIGURATION = "extraction-default"
+# The individual-extraction implementation a source is extracted with when none is named
+DEFAULT_IMPLEMENTATION = "default"
 SCHEMA_IMPLEMENTATION = "default"
 SCHEMA_CONFIGURATION = "schema-extraction-default"
 
@@ -85,6 +87,7 @@ class SourceExtractionService:
         self,
         sources: SourceRepository,
         ontology_repo: OntologyRepository,
+        implementations: PipelineImplementationRegistry,
         configurations: PipelineConfigurationRegistry,
         submitter: PipelineRunSubmitter,
         runs: SourceRunReader,
@@ -92,6 +95,7 @@ class SourceExtractionService:
     ) -> None:
         self._sources = sources
         self._repo = ontology_repo
+        self._implementations = implementations
         self._configurations = configurations
         self._submitter = submitter
         self._runs = runs
@@ -106,6 +110,7 @@ class SourceExtractionService:
         schema: bool = False,
         requested_via: RequestedVia = RequestedVia.API,
         skip_boilerplate: bool = True,
+        implementation_id: str | None = None,
     ) -> list[PipelineRun]:
         """
         Start extracting a source: an individual-extraction run, and with
@@ -115,9 +120,9 @@ class SourceExtractionService:
             source_id: The source; it must be ready and not removed
             dataset: The dataset of the source's taxonomy the individuals go
                 into (identifier or id)
-            configuration_ref: The individual-extraction configuration (of the
-                default implementation); `extraction-default` when omitted.
-                Its model is the run's model.
+            configuration_ref: The individual-extraction configuration, one of
+                the implementation's; the implementation's own for sources
+                when omitted. Its model is the run's model.
             pages: A page selection such as "12-30" or "1-3, 7"; all pages
                 when omitted
             schema: Also suggest schema changes (classes and relationship types)
@@ -125,6 +130,9 @@ class SourceExtractionService:
             skip_boilerplate: Leave out the source's warranty, safety, legal and
                 contact sections and its copies in other languages (see
                 domain/extraction/section_filter.py); false extracts everything
+            implementation_id: The individual-extraction implementation that
+                reads the source, one that can extract a source; `default`
+                when omitted
 
         Returns:
             The pending runs, individual extraction first
@@ -135,8 +143,9 @@ class SourceExtractionService:
             SourceNotReadyError: If the source is fetching, failed or removed
             ValueError: If the page selection is malformed, names pages the
                 source lacks or holds no text (or only skipped sections, when
-                skip_boilerplate), or the configuration isn't an
-                individual-extraction configuration that can read a source
+                skip_boilerplate), the implementation isn't an
+                individual-extraction implementation that can extract a source,
+                or the configuration isn't one of that implementation's
             PipelineInputError: If `schema` is asked of a taxonomy that mirrors
                 an external source, other than by its client over MCP
         """
@@ -148,14 +157,15 @@ class SourceExtractionService:
         pages = self._checked_pages(source, pages)
         if skip_boilerplate:
             self._check_text_left(source, pages)
-        individual_ref = configuration_ref or DEFAULT_CONFIGURATION
+        implementation_id = implementation_id or DEFAULT_IMPLEMENTATION
+        individual_ref = configuration_ref or self._source_configuration(implementation_id)
         individual = self._configurations.get_latest(
-            PipelineType.INDIVIDUAL_EXTRACTION, SOURCE_IMPLEMENTATION, individual_ref
+            PipelineType.INDIVIDUAL_EXTRACTION, implementation_id, individual_ref
         )
         if individual is None:
             raise ValueError(
-                f"{individual_ref!r} is not an individual-extraction configuration that can"
-                f" extract a source (one of the {SOURCE_IMPLEMENTATION!r} implementation)"
+                f"{individual_ref!r} is not a configuration of the {implementation_id!r}"
+                " individual-extraction implementation"
             )
         schema_config = None
         if schema:
@@ -184,7 +194,7 @@ class SourceExtractionService:
         runs = [
             self._submitter.submit(
                 PipelineType.INDIVIDUAL_EXTRACTION,
-                SOURCE_IMPLEMENTATION,
+                implementation_id,
                 individual_ref,
                 {
                     **common,
@@ -254,6 +264,28 @@ class SourceExtractionService:
             )
             for source_id, runs in latest.items()
         }
+
+    def _source_configuration(self, implementation_id: str) -> str:
+        """
+        The configuration an implementation extracts a source with when none is named.
+
+        Raises:
+            ValueError: If it isn't an individual-extraction implementation
+                that can extract a source
+        """
+        registered = self._implementations.list_by_type(PipelineType.INDIVIDUAL_EXTRACTION)
+        configuration = getattr(registered.get(implementation_id), "SOURCE_CONFIGURATION", None)
+        if configuration is None:
+            able = sorted(
+                impl_id
+                for impl_id, impl in registered.items()
+                if getattr(impl, "SOURCE_CONFIGURATION", None)
+            )
+            raise ValueError(
+                f"{implementation_id!r} is not an individual-extraction implementation that"
+                f" can extract a source (one of: {', '.join(able)})"
+            )
+        return str(configuration)
 
     def _ready_source(self, source_id: str) -> Source:
         source = self._sources.get(source_id)

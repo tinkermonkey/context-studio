@@ -65,6 +65,13 @@ class ImplementationResponse(BaseModel):
 
     id: str = Field(..., description="Implementation identifier")
     pipeline_type: str = Field(..., description="Pipeline type for this implementation")
+    source_configuration: Optional[str] = Field(
+        None,
+        description=(
+            "The configuration a source is extracted with when none is named (POST"
+            " /api/sources/{id}/extract); null for an implementation that cannot extract a source"
+        ),
+    )
 
 
 class ConfigurationResponse(BaseModel):

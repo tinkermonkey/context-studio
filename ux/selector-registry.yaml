@@ -3843,9 +3843,12 @@ selectors:
   - selector: extract-dataset
     component: src/components/sources/ExtractSourcePage.tsx
     description: 'Extract page: dataset segmented control'
+  - selector: extract-implementation
+    component: src/components/sources/ExtractSourcePage.tsx
+    description: 'Extract page: individual extraction implementation select (those that can extract a source)'
   - selector: extract-config
     component: src/components/sources/ExtractSourcePage.tsx
-    description: 'Extract page: individual extraction configuration select'
+    description: "Extract page: configuration select, the chosen implementation's configurations"
   - selector: extract-schema-toggle
     component: src/components/sources/ExtractSourcePage.tsx
     description: 'Extract page: "Also suggest schema changes" checkbox; disabled for a mirrored taxonomy'

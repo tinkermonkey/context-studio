@@ -59,6 +59,11 @@ class PipelineOrchestrator(ABC):
     # domain/pipelines/stage_prompts.py); empty for pipelines without them.
     STAGE_PROMPTS: tuple[StageDefinition, ...] = ()
 
+    # The configuration a source is extracted with when none is named (see
+    # domain/pipelines/source_extraction.py); None for an implementation that
+    # cannot extract a source.
+    SOURCE_CONFIGURATION: str | None = None
+
     def __init__(
         self,
         llm_provider: LLMProvider | None,

@@ -930,6 +930,7 @@ async def lifespan(app: FastAPI):
         app.state.source_extraction_service = SourceExtractionService(
             sources=SQLiteSourceRepository(local_session_factory),
             ontology_repo=cast(OntologyRepository, ontology_repo),
+            implementations=implementation_registry,
             configurations=config_registry,
             submitter=app.state.run_executor,
             runs=pipeline_run_repo,

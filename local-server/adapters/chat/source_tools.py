@@ -49,12 +49,12 @@ from domain.ontology.exceptions import (
     EntityNotFoundError,
 )
 from domain.pipelines.exceptions import PipelineInputError
+from domain.pipelines.individual_extraction.orchestrator import IndividualExtractionOrchestrator
 from domain.pipelines.requested_via import RequestedVia
-from domain.pipelines.source_extraction import (
-    DEFAULT_CONFIGURATION,
-    LastExtraction,
-    SourceExtractionService,
-)
+from domain.pipelines.source_extraction import LastExtraction, SourceExtractionService
+
+# The configuration extract_source runs with when none is named
+DEFAULT_CONFIGURATION = IndividualExtractionOrchestrator.SOURCE_CONFIGURATION
 
 _REVIEW = (
     "A person decides each operation in Context Studio's review queue; these tools never decide."

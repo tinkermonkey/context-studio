@@ -106,6 +106,7 @@ def setup(tmp_path, factory, parts, house, roots):
     extraction = SourceExtractionService(
         sources=sources_repo,
         ontology_repo=parts.repo,
+        implementations=implementations,
         configurations=configurations,
         submitter=executor,
         runs=runs,

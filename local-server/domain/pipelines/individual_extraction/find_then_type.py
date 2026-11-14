@@ -113,6 +113,7 @@ class FindThenTypeOrchestrator(IndividualExtractionOrchestrator):
     """
 
     STAGE_PROMPTS = FIND_THEN_TYPE_STAGES
+    SOURCE_CONFIGURATION = "extraction-find-then-type"
 
     async def _extract_text(
         self, state: IndividualExtractionState
