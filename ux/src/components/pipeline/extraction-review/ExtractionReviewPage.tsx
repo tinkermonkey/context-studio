@@ -11,8 +11,6 @@ import {
   TextArea,
 } from "@tinkermonkey/heimdall-ui";
 import { useTaxonomies } from "@/api/hooks/ontology/useTaxonomies";
-import { usePipelineImplementations } from "@/api/hooks/pipeline/usePipelineImplementations";
-import { usePipelineConfigurations } from "@/api/hooks/pipeline/usePipelineConfigurations";
 import {
   useIndividualExtractionCandidates,
   useSchemaExtractionCandidates,
@@ -24,6 +22,10 @@ import {
 } from "@/api/hooks/pipeline/useExtractionReviewRuns";
 import { usePipelineRun } from "@/api/hooks/pipeline/usePipelineRuns";
 import { useExtractionExamples } from "@/api/hooks/pipeline/useExtractionExamples";
+import { selectionRequestFields, usePipelineSelection } from "@/hooks/usePipelineSelection";
+import { useRunDataset } from "@/hooks/useRunDataset";
+import { ImplementationConfigPicker } from "../ImplementationConfigPicker";
+import { DATASET_REQUIRED, RunDatasetField } from "../RunDatasetField";
 import { ExampleRuns } from "./ExampleRuns";
 import { SchemaCandidateReview } from "./SchemaCandidateReview";
 import { IndividualCandidateReview } from "./IndividualCandidateReview";
@@ -45,29 +47,10 @@ export interface ReviewScope {
 interface FormErrors {
   text?: string;
   taxonomy?: string;
-  config?: string;
+  dataset?: string;
 }
 
 const TEXT_REQUIRED = "Paste a paragraph to extract from";
-
-type ConfigLike = {
-  config_ref: string;
-  version: number;
-  enabled?: boolean;
-  provider?: string | null;
-  model?: string | null;
-};
-const firstEnabled = (configs?: ConfigLike[]) =>
-  configs?.find((c) => c.enabled !== false) ?? configs?.[0];
-/** Prefer the individual config that uses the same provider + model as the schema config. */
-const pairedConfig = (configs: ConfigLike[] | undefined, partner?: ConfigLike) =>
-  configs?.find(
-    (c) =>
-      c.enabled !== false &&
-      partner?.model &&
-      c.provider === partner.provider &&
-      c.model === partner.model,
-  ) ?? firstEnabled(configs);
 
 export interface ExtractionReviewPageProps {
   onOpenRunHistory?: () => void;
@@ -84,7 +67,6 @@ export function ExtractionReviewPage({
 }: ExtractionReviewPageProps) {
   const [text, setText] = useState("");
   const [taxonomyChoice, setTaxonomyChoice] = useState("");
-  const [implChoice, setImplChoice] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   // After the first run attempt, an emptied paragraph re-shows its error on blur.
   const [attempted, setAttempted] = useState(false);
@@ -110,18 +92,12 @@ export function ExtractionReviewPage({
     taxonomies[0]?.id ||
     "";
   const taxonomy = taxonomies.find((t) => t.id === taxonomyId);
+  // The individual run extracts into one dataset; a taxonomy with several needs it named.
+  const dataset = useRunDataset(taxonomyId || undefined);
 
-  const { data: schemaImpls } = usePipelineImplementations("schema_extraction");
-  const { data: individualImpls } = usePipelineImplementations("individual_extraction");
-  const sharedImpls = (schemaImpls ?? []).filter((i) =>
-    (individualImpls ?? []).some((j) => j.id === i.id),
-  );
-  const implId =
-    implChoice || sharedImpls.find((i) => i.id === "default")?.id || sharedImpls[0]?.id || "";
-  const { data: schemaConfigs } = usePipelineConfigurations("schema_extraction", implId);
-  const { data: individualConfigs } = usePipelineConfigurations("individual_extraction", implId);
-  const schemaConfig = firstEnabled(schemaConfigs);
-  const individualConfig = pairedConfig(individualConfigs, schemaConfig);
+  // Each run is selected on its own: the two types share no implementation list.
+  const schemaSelection = usePipelineSelection("schema_extraction");
+  const individualSelection = usePipelineSelection("individual_extraction");
 
   const runs = useExtractionReviewRuns();
 
@@ -186,7 +162,7 @@ export function ExtractionReviewPage({
     const next: FormErrors = {};
     if (!text.trim()) next.text = TEXT_REQUIRED;
     if (!taxonomy) next.taxonomy = "Select a taxonomy";
-    if (!schemaConfig || !individualConfig) next.config = "Select a configuration";
+    if (dataset.missing) next.dataset = DATASET_REQUIRED;
     setErrors(next);
     setAttempted(true);
     if (Object.keys(next).length > 0 || !taxonomy) return;
@@ -195,15 +171,27 @@ export function ExtractionReviewPage({
       taxonomyId: taxonomy.id,
       taxonomyLabel: `${taxonomy.title} · ${taxonomy.identifier}`,
     });
+    if (!dataset.ready) return;
     void runs.start({
       text,
       taxonomy: { id: taxonomy.id, label: taxonomy.title },
       exampleId: example && !exampleEdited ? example.id : undefined,
-      implementationId: implId,
-      schemaConfigRef: schemaConfig!.config_ref,
-      individualConfigRef: individualConfig!.config_ref,
-      schemaModel: schemaConfig!.model,
-      individualModel: individualConfig!.model,
+      datasetId: dataset.dataset?.id,
+      schema: selectionRequestFields(schemaSelection),
+      individual: selectionRequestFields(individualSelection),
+    });
+  };
+
+  /** Re-run the individual run with the selection and dataset the form shows now. */
+  const rerunIndividual = () => {
+    if (dataset.missing) {
+      setErrors((prev) => ({ ...prev, dataset: DATASET_REQUIRED }));
+      return;
+    }
+    if (!dataset.ready) return;
+    void runs.rerun("individual", {
+      selection: selectionRequestFields(individualSelection),
+      datasetId: dataset.dataset?.id,
     });
   };
 
@@ -244,8 +232,9 @@ export function ExtractionReviewPage({
             <Button
               variant="primary"
               onClick={run}
-              disabled={anyRunning}
-              aria-busy={anyRunning}
+              // Not before the taxonomy's datasets are read: whether one must be named is unknown.
+              disabled={anyRunning || dataset.loading || !!dataset.loadError}
+              aria-busy={anyRunning || dataset.loading}
               data-testid="extraction-review-run"
             >
               <Icon name="zap" size={13} /> {anyRunning ? "Running…" : "Run extraction"}
@@ -322,31 +311,30 @@ export function ExtractionReviewPage({
                 ))}
               </Select>
             </Field>
-            <Field label="Configuration" error={errors.config}>
-              <Select
-                value={implId}
-                onChange={(v) => {
-                  setImplChoice(v);
-                  setErrors((prev) => ({ ...prev, config: undefined }));
-                }}
-                placeholder="Select a configuration"
-                ariaLabel="Configuration"
-                error={!!errors.config}
-                data-testid="extraction-review-config"
-              >
-                {sharedImpls.map((i) => (
-                  <Select.Item key={i.id} value={i.id}>
-                    {i.id}
-                  </Select.Item>
-                ))}
-              </Select>
-            </Field>
-            {schemaConfig && individualConfig && (
-              <span className="xr-mono-muted" data-testid="extraction-review-config-refs">
-                {`${schemaConfig.config_ref} v${schemaConfig.version} · ${individualConfig.config_ref} v${individualConfig.version}`}
-              </span>
-            )}
+            <RunDatasetField
+              run={dataset}
+              id="extraction-review-dataset"
+              error={errors.dataset}
+              disabled={anyRunning}
+              onChange={() => setErrors((prev) => ({ ...prev, dataset: undefined }))}
+            />
           </div>
+        </div>
+        <div className="xr-pickers" data-testid="extraction-review-pickers">
+          <ImplementationConfigPicker
+            selection={schemaSelection}
+            idPrefix="extraction-review-schema"
+            legend="Schema extraction"
+            disabled={anyRunning}
+            placement="top-start"
+          />
+          <ImplementationConfigPicker
+            selection={individualSelection}
+            idPrefix="extraction-review-individual"
+            legend="Individual extraction"
+            disabled={anyRunning}
+            placement="top-start"
+          />
         </div>
         {runText && text !== runText && (
           <>
@@ -401,7 +389,9 @@ export function ExtractionReviewPage({
           slot={runs.schema}
           text={runText}
           scope={reviewScope}
-          onRetry={() => void runs.rerun("schema")}
+          onRetry={() =>
+            void runs.rerun("schema", { selection: selectionRequestFields(schemaSelection) })
+          }
         />
       </div>
       <div
@@ -414,7 +404,7 @@ export function ExtractionReviewPage({
           slot={runs.individual}
           text={runText}
           scope={reviewScope}
-          onRetry={() => void runs.rerun("individual")}
+          onRetry={rerunIndividual}
         />
       </div>
     </div>

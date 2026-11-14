@@ -3,9 +3,9 @@ import { Button, Field, FormCallout } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
 import { useClass } from "@/api/hooks/ontology/useClasses";
-import { ImplementationConfigPicker, decodeConfigSelection } from "../ImplementationConfigPicker";
+import { selectionRequestFields, usePipelineSelection } from "@/hooks/usePipelineSelection";
+import { ImplementationConfigPicker } from "../ImplementationConfigPicker";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
-import { BatchToggle } from "./BatchToggle";
 import { type RelationshipPreview } from "./types";
 import type { components } from "@/api/types";
 import "./Wizards.css";
@@ -17,12 +17,10 @@ export function DefinitionRefinementWizard() {
   const { isSubmitting, errors, setErrors, handleSubmit } = useRunWizard({
     type: "schema_node_definition_refinement",
   });
+  const selection = usePipelineSelection("schema_node_definition_refinement");
 
   const [selectedNode, setSelectedNode] = useState<Entity | null>(null);
   const [currentDefinition, setCurrentDefinition] = useState("");
-  const [implementationId, setImplementationId] = useState("");
-  const [configRef, setConfigRef] = useState("");
-  const [runAsBatch, setRunAsBatch] = useState(false);
 
   const { data: selectedNodeDetails } = useClass(selectedNode?.id || "");
 
@@ -48,14 +46,6 @@ export function DefinitionRefinementWizard() {
       newErrors.currentDefinition = "Current definition is required";
     }
 
-    if (!implementationId.trim()) {
-      newErrors.implementationId = "Implementation is required";
-    }
-
-    if (!configRef.trim()) {
-      newErrors.configRef = "Configuration is required";
-    }
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return false;
@@ -73,13 +63,10 @@ export function DefinitionRefinementWizard() {
     }
 
     try {
-      const { configRef: configRefPart } = decodeConfigSelection(configRef);
       const request: PipelineRunRequest = {
-        implementation_id: implementationId,
-        configuration_ref: configRefPart,
+        ...selectionRequestFields(selection),
         node_id: selectedNode!.id,
         current_definition: currentDefinition,
-        run_as_batch: runAsBatch,
       };
 
       await handleSubmit(request);
@@ -164,33 +151,14 @@ export function DefinitionRefinementWizard() {
       </Field>
 
       <ImplementationConfigPicker
-        pipelineType="schema_node_definition_refinement"
-        selectedImplementationId={implementationId}
-        selectedConfigRef={configRef}
-        onSelectImplementation={(id) => {
-          setImplementationId(id);
-          setErrors((prev) => ({ ...prev, implementationId: undefined }));
-          setConfigRef("");
-        }}
-        onSelectConfig={(compositeValue) => {
-          setConfigRef(compositeValue);
-          setErrors((prev) => ({ ...prev, configRef: undefined }));
-        }}
+        selection={selection}
+        idPrefix="definition-refinement"
         disabled={isSubmitting}
-        implementationError={errors.implementationId}
-        configError={errors.configRef}
-      />
-
-      <BatchToggle
-        checked={runAsBatch}
-        onChange={setRunAsBatch}
-        disabled={isSubmitting}
-        testIdPrefix="definition-refinement"
       />
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="definition-refinement-loading">
-          Running pipeline — this may take up to a minute
+          Starting the run — it opens in Runs, where its progress shows
         </FormCallout>
       )}
 
@@ -201,7 +169,7 @@ export function DefinitionRefinementWizard() {
         aria-busy={isSubmitting}
         data-testid="definition-refinement-submit"
       >
-        {isSubmitting ? "Running…" : "Run Pipeline"}
+        {isSubmitting ? "Starting…" : "Run Pipeline"}
       </Button>
     </form>
   );

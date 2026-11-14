@@ -1,0 +1,34 @@
+@layer app {
+  .impl-config-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    /* A fieldset otherwise sizes to its content and overflows a grid column. */
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .impl-config-picker__legend {
+    padding: 0;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgb(var(--canvas-fg-2));
+  }
+
+  /* Side by side where there is room, stacked in a narrow column. */
+  .impl-config-picker__fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    align-items: start;
+  }
+
+  .impl-config-picker__model {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: rgb(var(--canvas-fg-3));
+  }
+}

@@ -25,7 +25,7 @@ describe("Class drawer suggester run requests", () => {
     vi.restoreAllMocks();
   });
 
-  it("grounds the class by id with the registered grounding configuration", async () => {
+  it("grounds the class by id, leaving the selection to the server", async () => {
     const runPipeline = mockCompletedRun([
       {
         candidate_type: "grounding",
@@ -42,8 +42,6 @@ describe("Class drawer suggester run requests", () => {
     await userEvent.click(screen.getByRole("button", { name: /Suggest grounding/ }));
 
     expect(runPipeline).toHaveBeenCalledWith("schema_node_grounding", {
-      implementation_id: "default",
-      configuration_ref: "grounding-default",
       node_id: "cls-1",
     });
     const card = await screen.findByTestId("grounding-proposal-0");
@@ -55,15 +53,13 @@ describe("Class drawer suggester run requests", () => {
     );
   });
 
-  it("refines connections with the class as scope and the registered configuration", async () => {
+  it("refines connections with the class as scope, leaving the selection to the server", async () => {
     const runPipeline = mockCompletedRun([]);
 
     renderWithProviders(<RelationshipSuggester classId="cls-1" />);
     await userEvent.click(screen.getByRole("button", { name: /Suggest relationships/ }));
 
     expect(runPipeline).toHaveBeenCalledWith("schema_node_connection_refinement", {
-      implementation_id: "default",
-      configuration_ref: "connection-refinement-default",
       scope_id: "cls-1",
     });
   });
@@ -94,15 +90,13 @@ describe("Class drawer suggester run requests", () => {
     );
   });
 
-  it("refines the definition with the registered configuration", async () => {
+  it("refines the definition, leaving the selection to the server", async () => {
     const runPipeline = mockCompletedRun([]);
 
     renderWithProviders(<SuggestField entityId="cls-1" value="A vehicle." onChange={vi.fn()} />);
     await userEvent.click(screen.getByRole("button", { name: /Suggest/ }));
 
     expect(runPipeline).toHaveBeenCalledWith("schema_node_definition_refinement", {
-      implementation_id: "default",
-      configuration_ref: "definition-refinement-default",
       node_id: "cls-1",
       current_definition: "A vehicle.",
     });

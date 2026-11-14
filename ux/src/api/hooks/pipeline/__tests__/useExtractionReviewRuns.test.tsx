@@ -22,9 +22,9 @@ const run = (id: string, pipeline_type: string, status: string, failure_reason?:
 const REQUEST: ExtractionReviewRequest = {
   text: "Context Studio is a local-first app.",
   taxonomy: { id: "tax-1", label: "Tax" },
-  implementationId: "default",
-  schemaConfigRef: "schema-default",
-  individualConfigRef: "individual-default",
+  datasetId: "ds-first",
+  schema: { implementation_id: "base", configuration_ref: "schema-main" },
+  individual: { implementation_id: "two_step", configuration_ref: "individual-main" },
 };
 
 describe("useExtractionReviewRuns polling", () => {
@@ -63,6 +63,75 @@ describe("useExtractionReviewRuns polling", () => {
     const settled = { ...calls };
     await new Promise((r) => setTimeout(r, 100));
     expect(calls).toEqual(settled);
+  });
+
+  it("re-runs the individual run with the selection and dataset given now", async () => {
+    const runPipeline = vi
+      .spyOn(pipelineService, "runPipeline")
+      .mockImplementation(async (type) => run(`run-${type}`, type, "completed"));
+    const { result } = renderHook(() => useExtractionReviewRuns(), { wrapper });
+    await act(async () => {
+      await result.current.start(REQUEST);
+    });
+    expect(runPipeline).toHaveBeenCalledWith(
+      "individual_extraction",
+      expect.objectContaining({ dataset_id: "ds-first" }),
+    );
+    runPipeline.mockClear();
+
+    await act(async () => {
+      await result.current.rerun("individual", {
+        selection: { implementation_id: "base", configuration_ref: "individual-alt" },
+        datasetId: "ds-second",
+      });
+    });
+    expect(runPipeline).toHaveBeenCalledTimes(1);
+    expect(runPipeline).toHaveBeenCalledWith(
+      "individual_extraction",
+      expect.objectContaining({
+        implementation_id: "base",
+        configuration_ref: "individual-alt",
+        dataset_id: "ds-second",
+        text: REQUEST.text,
+      }),
+    );
+    // What was last run is what a later re-run of the other type replays.
+    expect(result.current.lastRequest).toMatchObject({
+      schema: REQUEST.schema,
+      datasetId: "ds-second",
+      individual: { implementation_id: "base", configuration_ref: "individual-alt" },
+    });
+  });
+
+  it("re-runs the schema run with the selection given now, leaving the dataset as it was", async () => {
+    const runPipeline = vi
+      .spyOn(pipelineService, "runPipeline")
+      .mockImplementation(async (type) => run(`run-${type}`, type, "completed"));
+    const { result } = renderHook(() => useExtractionReviewRuns(), { wrapper });
+    await act(async () => {
+      await result.current.start(REQUEST);
+    });
+    runPipeline.mockClear();
+
+    await act(async () => {
+      await result.current.rerun("schema", {
+        selection: { implementation_id: "other", configuration_ref: "schema-alt" },
+      });
+    });
+    expect(runPipeline).toHaveBeenCalledTimes(1);
+    const [type, body] = runPipeline.mock.calls[0];
+    expect(type).toBe("schema_extraction");
+    expect(body).toMatchObject({
+      implementation_id: "other",
+      configuration_ref: "schema-alt",
+      documents: [REQUEST.text],
+    });
+    // The schema run reads no dataset.
+    expect(body).not.toHaveProperty("dataset_id");
+    expect(result.current.lastRequest).toMatchObject({
+      datasetId: "ds-first",
+      individual: REQUEST.individual,
+    });
   });
 
   it("polls a running run opened by id", async () => {

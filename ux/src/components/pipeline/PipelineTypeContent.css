@@ -1,29 +1,37 @@
 @layer app {
-  .pipeline-type-detail {
+  .pipeline-type-content {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-  }
-
-  .pipeline-detail-content {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .pipeline-detail-layout {
-    display: grid;
-    grid-template-columns: 200px 280px;
     gap: 14px;
-    align-items: start;
+    min-width: 0;
   }
 
-  .pipeline-detail-layout.has-editor {
-    grid-template-columns: 200px 280px 1fr;
+  /* Implementation selector and the type's Run action */
+  .pipeline-type-toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .pipeline-type-toolbar__implementation {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pipeline-type-toolbar__implementation .select {
+    width: 340px;
   }
 
   /* Config list column */
   .pipeline-cfg-list-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .pipeline-cfg-list {
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -112,9 +120,8 @@
     font-size: 13px;
     font-weight: 500;
     color: rgb(var(--canvas-fg-1));
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    /* A config_ref-like name wraps rather than hiding its end behind an ellipsis. */
+    overflow-wrap: anywhere;
   }
 
   .pipeline-cfg-model {
@@ -148,32 +155,16 @@
     margin: 0;
   }
 
-  /* PipelineTypeContent — no implementations column */
   .pipeline-type-content-layout {
     display: grid;
-    grid-template-columns: 280px;
+    /* Wide enough for a name beside its default, system and version marks. */
+    grid-template-columns: 340px minmax(0, 1fr);
     gap: 14px;
     align-items: start;
   }
 
-  .pipeline-type-content-layout.has-editor {
-    grid-template-columns: 280px 1fr;
-  }
-
-  /* Responsive */
-  @media (max-width: 1440px) {
-    .pipeline-detail-layout {
-      grid-template-columns: 180px 260px;
-    }
-
-    .pipeline-detail-layout.has-editor {
-      grid-template-columns: 180px 260px 1fr;
-    }
-  }
-
   @media (max-width: 900px) {
-    .pipeline-detail-layout,
-    .pipeline-detail-layout.has-editor {
+    .pipeline-type-content-layout {
       grid-template-columns: 1fr;
     }
   }

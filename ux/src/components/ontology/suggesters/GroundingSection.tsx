@@ -8,7 +8,6 @@ import {
 } from "@/api/hooks/pipeline/usePipelineRuns";
 import { useToasts } from "@/components/ui/Toast";
 import { provenanceText } from "./provenanceText";
-import { GROUNDING_CONFIG_REF } from "./defaultConfigs";
 import type { components } from "@/api/types";
 import { hasRunStatus } from "@/api/hooks/pipeline/runStatus";
 import "./Suggesters.css";
@@ -58,9 +57,8 @@ export function GroundingSection({
     try {
       const result = await runMutation.mutateAsync({
         type: "schema_node_grounding",
+        // Nothing is named: the server runs the type's default implementation and configuration.
         request: {
-          implementation_id: "default",
-          configuration_ref: GROUNDING_CONFIG_REF,
           node_id: classId,
         },
       });

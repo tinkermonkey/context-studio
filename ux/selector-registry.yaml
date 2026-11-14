@@ -1462,25 +1462,6 @@ selectors:
     description: Create/edit pipeline modal on the pipelines page
 
   # Pipelines — type cards and detail page
-  - selector: pipeline-type-run-button-*
-    component: components/pipeline/PipelineTypeCard.tsx
-    description: Run button on pipeline type card with dynamic pipeline type suffix
-  - selector: pipeline-type-detail-page
-    component: components/pipeline/PipelineTypeDetail.tsx
-    description: Root container for the pipeline type detail page
-
-  # Pipelines — implementation and configuration lists
-  - selector: pipeline-implementation-list
-    component: components/pipeline/ImplementationList.tsx
-    description: List of pipeline implementations and their configurations
-  - selector: pipeline-configuration-list
-    component: components/pipeline/ConfigurationList.tsx
-    description: List of saved pipeline configurations
-  - selector: pipeline-configuration-drawer
-    component: components/pipeline/ConfigurationDrawer.tsx
-    description: Drawer showing configuration details and edit options
-
-  # Pipelines — run wizard
   - selector: pipeline-run-wizard
     component: components/pipeline/wizards/*.tsx
     description: Root container for run wizard (varies by pipeline type)
@@ -1493,11 +1474,6 @@ selectors:
   - selector: pipeline-run-target-picker
     component: components/pipeline/wizards/*.tsx
     description: Target entity/node picker in the run wizard
-  - selector: implementation-config-picker
-    component: components/pipeline/ImplementationConfigPicker.tsx
-    description: Root container for implementation and configuration selection in run wizards
-
-  # Pipelines — runs page and filtering
   - selector: runs-filter-bar
     component: routes/app/pipelines/runs.tsx
     description: Filter bar on the pipeline runs page
@@ -1634,9 +1610,6 @@ selectors:
     description: Row-actions trigger per individual row (suffix = individual id)
 
   # Testids produced by Heimdall components that our tests query directly
-  - selector: pipeline-run-btn
-    component: components/pipeline/PipelineCard.tsx
-    description: Run button rendered by the Heimdall PipelineCard
   - selector: key-input-*
     component: components/pipeline/PipelineDetailPanel.tsx
     description: Per-row key input rendered by the Heimdall KeyValueEditor (suffix = row id)
@@ -1733,31 +1706,6 @@ selectors:
     description: Hex color text input paired with the color picker on the taxonomy form
 
   # Pipelines Hub
-  - selector: pipeline-types-grid
-    component: src/components/pipeline/PipelineHubContent.tsx
-    description: Grid container displaying all pipeline type cards
-  - selector: pipeline-type-card-*
-    component: src/components/pipeline/PipelineTypeCard.tsx
-    description: Individual pipeline type card with name, description, and run controls (wildcard matches pipeline-type-card-{type_identifier})
-  - selector: pipeline-run-status-*
-    component: src/components/pipeline/PipelineTypeCard.tsx
-    description: Run status chip and timestamp display on card (wildcard matches pipeline-run-status-{type_identifier})
-  - selector: pipeline-run-button-*
-    component: src/components/pipeline/PipelineTypeCard.tsx
-    description: Run button to navigate to execution wizard (wildcard matches pipeline-run-button-{type_identifier})
-
-  # Pipeline Type Detail
-  - selector: implementation-list
-    component: src/components/pipeline/ImplementationList.tsx
-    description: Left pane list of implementations for the selected pipeline type
-  - selector: configuration-list
-    component: src/components/pipeline/ConfigurationList.tsx
-    description: Center pane list of versioned configurations for the selected implementation
-  - selector: configuration-drawer-*
-    component: src/components/pipeline/ConfigurationDrawer.tsx
-    description: Right pane inspector showing read-only configuration details with dynamic ID suffix (pattern matches configuration-drawer-{ref}-{version})
-
-  # Pipeline Run Wizards
   - selector: schema-extraction-wizard
     component: components/pipeline/wizards/SchemaExtractionWizard.tsx
     description: Schema extraction pipeline wizard form
@@ -1776,13 +1724,6 @@ selectors:
   - selector: schema-extraction-loading
     component: components/pipeline/wizards/SchemaExtractionWizard.tsx
     description: Loading state message in schema extraction wizard
-  - selector: schema-extraction-batch-toggle
-    component: components/pipeline/wizards/SchemaExtractionWizard.tsx
-    description: Container for run as batch toggle in schema extraction wizard
-  - selector: schema-extraction-batch-checkbox
-    component: components/pipeline/wizards/SchemaExtractionWizard.tsx
-    description: Checkbox to enable batch execution in schema extraction wizard
-
   - selector: individual-extraction-wizard
     component: components/pipeline/wizards/IndividualExtractionWizard.tsx
     description: Individual extraction pipeline wizard form
@@ -1801,13 +1742,6 @@ selectors:
   - selector: individual-extraction-loading
     component: components/pipeline/wizards/IndividualExtractionWizard.tsx
     description: Loading state message in individual extraction wizard
-  - selector: individual-extraction-batch-toggle
-    component: components/pipeline/wizards/IndividualExtractionWizard.tsx
-    description: Container for run as batch toggle in individual extraction wizard
-  - selector: individual-extraction-batch-checkbox
-    component: components/pipeline/wizards/IndividualExtractionWizard.tsx
-    description: Checkbox to enable batch execution in individual extraction wizard
-
   - selector: schema-grounding-wizard
     component: components/pipeline/wizards/SchemaGroundingWizard.tsx
     description: Schema grounding pipeline wizard form
@@ -1841,13 +1775,6 @@ selectors:
   - selector: schema-grounding-loading
     component: components/pipeline/wizards/SchemaGroundingWizard.tsx
     description: Loading state message in schema grounding wizard
-  - selector: schema-grounding-batch-toggle
-    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
-    description: Container for run as batch toggle in schema grounding wizard
-  - selector: schema-grounding-batch-checkbox
-    component: components/pipeline/wizards/SchemaGroundingWizard.tsx
-    description: Checkbox to enable batch execution in schema grounding wizard
-
   - selector: definition-refinement-wizard
     component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
     description: Definition refinement pipeline wizard form
@@ -1869,13 +1796,6 @@ selectors:
   - selector: definition-refinement-loading
     component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
     description: Loading state message in definition refinement wizard
-  - selector: definition-refinement-batch-toggle
-    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
-    description: Container for run as batch toggle in definition refinement wizard
-  - selector: definition-refinement-batch-checkbox
-    component: components/pipeline/wizards/DefinitionRefinementWizard.tsx
-    description: Checkbox to enable batch execution in definition refinement wizard
-
   - selector: connection-refinement-wizard
     component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
     description: Connection refinement pipeline wizard form
@@ -1894,21 +1814,6 @@ selectors:
   - selector: connection-refinement-loading
     component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
     description: Loading state message in connection refinement wizard
-  - selector: connection-refinement-batch-toggle
-    component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
-    description: Container for run as batch toggle in connection refinement wizard
-  - selector: connection-refinement-batch-checkbox
-    component: components/pipeline/wizards/ConnectionRefinementWizard.tsx
-    description: Checkbox to enable batch execution in connection refinement wizard
-
-  - selector: implementation-select
-    component: components/pipeline/ImplementationConfigPicker.tsx
-    description: Implementation dropdown selector shared across all wizards
-  - selector: configuration-select
-    component: components/pipeline/ImplementationConfigPicker.tsx
-    description: Configuration dropdown selector shared across all wizards
-
-  # Pipeline Runs Page
   - selector: runs-page
     component: routes/app/pipelines/runs.tsx
     description: Main pipeline runs list page container
@@ -2553,9 +2458,6 @@ selectors:
   - selector: config-provider-select
     component: src/components/pipeline/ConfigEditor.tsx
     description: LLM provider selector (openai, anthropic or openrouter)
-  - selector: config-model-select
-    component: src/components/pipeline/ConfigEditor.tsx
-    description: Model identifier selector for the chosen LLM provider
   - selector: config-status-control
     component: src/components/pipeline/ConfigEditor.tsx
     description: Toggle control for enabling or disabling a pipeline configuration
@@ -2583,12 +2485,6 @@ selectors:
   - selector: pipeline-cfg-empty-inspector
     component: src/components/pipeline/PipelineTypeContent.tsx
     description: Placeholder shown in the inspector column when no configuration is selected
-  - selector: pipeline-new-config-btn
-    component: src/components/pipeline/PipelineTypeDetail.tsx
-    description: Button to open the create-new-configuration form in the detail view
-  - selector: pipeline-new-config-icon-btn
-    component: src/components/pipeline/PipelineTypeDetail.tsx
-    description: Icon-only button to create a new configuration in the configs list header
   - selector: pipeline-type-no-selection
     component: src/routes/app/pipelines/index.tsx
     description: Empty state shown in the right panel when no pipeline type is selected
@@ -2675,12 +2571,6 @@ selectors:
   - selector: extraction-review-example-runs
     component: src/components/pipeline/extraction-review/ExampleRuns.tsx
     description: "Earlier extraction runs started from the picked example; a row opens that run"
-  - selector: extraction-review-config
-    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
-    description: "Configuration (implementation) select shared by both runs"
-  - selector: extraction-review-config-refs
-    component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
-    description: "Resolved configuration refs and versions for the two pipeline types"
   - selector: extraction-review-stale
     component: src/components/pipeline/extraction-review/ExtractionReviewPage.tsx
     description: "Warning shown when the paragraph changed since the last run or the opened run"
@@ -3843,12 +3733,6 @@ selectors:
   - selector: extract-dataset
     component: src/components/sources/ExtractSourcePage.tsx
     description: 'Extract page: dataset segmented control'
-  - selector: extract-implementation
-    component: src/components/sources/ExtractSourcePage.tsx
-    description: 'Extract page: individual extraction implementation select (those that can extract a source)'
-  - selector: extract-config
-    component: src/components/sources/ExtractSourcePage.tsx
-    description: "Extract page: configuration select, the chosen implementation's configurations"
   - selector: extract-schema-toggle
     component: src/components/sources/ExtractSourcePage.tsx
     description: 'Extract page: "Also suggest schema changes" checkbox; disabled for a mirrored taxonomy'
@@ -3933,3 +3817,174 @@ selectors:
   - selector: dashboard-daemon-status
     component: src/routes/app/index.tsx
     description: 'Dashboard: the API health (graph daemon healthy, degraded or unavailable); a degraded one lists its issues in the tooltip'
+  - selector: config-model-input
+    component: components/pipeline/ConfigEditor.tsx
+    description: Free-text model id of a configuration, with suggestions from the registered configurations
+  - selector: config-model-options
+    component: components/pipeline/ConfigEditor.tsx
+    description: Datalist of suggested model ids for the configuration model input
+  - selector: pipeline-implementation
+    component: components/pipeline/PipelineTypeContent.tsx
+    description: Select of the implementation whose configurations the Pipelines page shows
+  - selector: pipeline-implementation-default
+    component: components/pipeline/PipelineTypeContent.tsx
+    description: Chip marking the shown implementation as the pipeline type default
+  - selector: pipeline-cfg-list
+    component: components/pipeline/PipelineTypeContent.tsx
+    description: Listbox of the shown implementation configurations
+  - selector: pipeline-new-config-btn
+    component: components/pipeline/PipelineTypeContent.tsx
+    description: Button to create a configuration of the shown implementation
+  - selector: pipeline-run-btn
+    component: components/pipeline/PipelineTypeContent.tsx
+    description: Button opening the run wizard of the selected pipeline type
+  - selector: pipeline-type-content-*
+    component: components/pipeline/PipelineTypeContent.tsx
+    description: Implementations and configurations of a pipeline type (pattern matches pipeline-type-content-{pipelineType})
+  - selector: pipeline-type-list-item-*
+    component: routes/app/pipelines/index.tsx
+    description: Pipeline type option in the Pipelines page list (pattern matches pipeline-type-list-item-{pipelineType})
+  - selector: pipelines-all-runs
+    component: routes/app/pipelines/index.tsx
+    description: Button opening the pipeline runs list from the Pipelines page
+  - selector: run-implementation-*
+    component: routes/app/pipelines/runs.tsx
+    description: Implementation cell of a run row (pattern matches run-implementation-{runId})
+  - selector: run-configuration-*
+    component: routes/app/pipelines/runs.tsx
+    description: Configuration cell of a run row (pattern matches run-configuration-{runId})
+  - selector: extraction-review-pickers
+    component: components/pipeline/extraction-review/ExtractionReviewPage.tsx
+    description: Row holding the schema run and individual run pickers
+  - selector: extract-picker
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation and configuration picker group (Extract page individual run)
+  - selector: extract-implementation
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation select of the shared picker (Extract page individual run)
+  - selector: extract-configuration
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Configuration select of the shared picker (Extract page individual run)
+  - selector: extract-configuration-model
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Provider and model of the selected configuration (Extract page individual run)
+  - selector: extraction-review-schema-picker
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation and configuration picker group (Extraction review schema run)
+  - selector: extraction-review-schema-implementation
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation select of the shared picker (Extraction review schema run)
+  - selector: extraction-review-schema-configuration
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Configuration select of the shared picker (Extraction review schema run)
+  - selector: extraction-review-schema-configuration-model
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Provider and model of the selected configuration (Extraction review schema run)
+  - selector: extraction-review-individual-picker
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation and configuration picker group (Extraction review individual run)
+  - selector: extraction-review-individual-implementation
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation select of the shared picker (Extraction review individual run)
+  - selector: extraction-review-individual-configuration
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Configuration select of the shared picker (Extraction review individual run)
+  - selector: extraction-review-individual-configuration-model
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Provider and model of the selected configuration (Extraction review individual run)
+  - selector: schema-extraction-picker
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation and configuration picker group (schema extraction run wizard)
+  - selector: schema-extraction-implementation
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation select of the shared picker (schema extraction run wizard)
+  - selector: schema-extraction-configuration
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Configuration select of the shared picker (schema extraction run wizard)
+  - selector: schema-extraction-configuration-model
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Provider and model of the selected configuration (schema extraction run wizard)
+  - selector: individual-extraction-picker
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation and configuration picker group (individual extraction run wizard)
+  - selector: individual-extraction-implementation
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation select of the shared picker (individual extraction run wizard)
+  - selector: individual-extraction-configuration
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Configuration select of the shared picker (individual extraction run wizard)
+  - selector: individual-extraction-configuration-model
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Provider and model of the selected configuration (individual extraction run wizard)
+  - selector: schema-grounding-picker
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation and configuration picker group (schema grounding run wizard)
+  - selector: schema-grounding-implementation
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation select of the shared picker (schema grounding run wizard)
+  - selector: schema-grounding-configuration
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Configuration select of the shared picker (schema grounding run wizard)
+  - selector: schema-grounding-configuration-model
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Provider and model of the selected configuration (schema grounding run wizard)
+  - selector: definition-refinement-picker
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation and configuration picker group (definition refinement run wizard)
+  - selector: definition-refinement-implementation
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation select of the shared picker (definition refinement run wizard)
+  - selector: definition-refinement-configuration
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Configuration select of the shared picker (definition refinement run wizard)
+  - selector: definition-refinement-configuration-model
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Provider and model of the selected configuration (definition refinement run wizard)
+  - selector: connection-refinement-picker
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation and configuration picker group (connection refinement run wizard)
+  - selector: connection-refinement-implementation
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation select of the shared picker (connection refinement run wizard)
+  - selector: connection-refinement-configuration
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Configuration select of the shared picker (connection refinement run wizard)
+  - selector: connection-refinement-configuration-model
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Provider and model of the selected configuration (connection refinement run wizard)
+  - selector: extract-schema-picker
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation and configuration picker group (Extract page schema run)
+  - selector: extract-schema-implementation
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Implementation select of the shared picker (Extract page schema run)
+  - selector: extract-schema-configuration
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Configuration select of the shared picker (Extract page schema run)
+  - selector: extract-schema-configuration-model
+    component: components/pipeline/ImplementationConfigPicker.tsx
+    description: Provider and model of the selected configuration (Extract page schema run)
+  - selector: param-slider-*
+    component: components/pipeline/ParamSlider.tsx
+    description: A configuration parameter slider or its read-only bar (pattern matches param-slider-{label})
+  - selector: config-temperature
+    component: components/pipeline/ParamNumberField.tsx
+    description: Temperature field of a configuration (label, input, inherited hint)
+  - selector: config-temperature-input
+    component: components/pipeline/ParamNumberField.tsx
+    description: Number input for a configuration temperature; empty follows the default configuration
+  - selector: config-max-tokens
+    component: components/pipeline/ParamNumberField.tsx
+    description: Output-token limit field of a configuration (label, input, inherited hint)
+  - selector: config-max-tokens-input
+    component: components/pipeline/ParamNumberField.tsx
+    description: Number input for a configuration output-token limit; empty follows the default configuration
+  - selector: config-parameters
+    component: components/pipeline/ConfigEditor.tsx
+    description: Parameters section of a configuration; absent for pipelines whose runs take no LLM parameters
+  - selector: extraction-review-dataset
+    component: components/pipeline/RunDatasetField.tsx
+    description: Dataset select for the review page individual run; shown when the taxonomy has several datasets
+  - selector: individual-extraction-dataset
+    component: components/pipeline/RunDatasetField.tsx
+    description: Dataset select of the individual extraction run wizard; shown when the taxonomy has several datasets

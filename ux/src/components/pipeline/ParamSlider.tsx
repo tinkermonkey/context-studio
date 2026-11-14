@@ -1,12 +1,15 @@
 interface ParamSliderProps {
   label: string;
-  value: number;
+  /** Null: nothing sets this parameter, so there is no value to show. */
+  value: number | null;
   min: number;
   max: number;
   step: number;
   fmt: (v: number) => string | number;
   onChange: (v: number) => void;
   active?: boolean;
+  /** A word about the value under the bar, e.g. that it is inherited. */
+  note?: string;
 }
 
 export function ParamSlider({
@@ -18,6 +21,7 @@ export function ParamSlider({
   fmt,
   onChange,
   active,
+  note,
 }: ParamSliderProps) {
   return (
     <div
@@ -26,9 +30,9 @@ export function ParamSlider({
     >
       <div className="param-slider__header">
         <span className="param-slider__label">{label}</span>
-        <span className="param-slider__value">{fmt(value)}</span>
+        <span className="param-slider__value">{value === null ? "—" : fmt(value)}</span>
       </div>
-      {active ? (
+      {value === null ? null : active ? (
         <input
           type="range"
           className="param-slider__input"
@@ -47,6 +51,7 @@ export function ParamSlider({
           />
         </div>
       )}
+      {note && <span className="param-slider__note">{note}</span>}
     </div>
   );
 }

@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Button, Field, FormCallout } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
-import { ImplementationConfigPicker, decodeConfigSelection } from "../ImplementationConfigPicker";
+import { selectionRequestFields, usePipelineSelection } from "@/hooks/usePipelineSelection";
+import { ImplementationConfigPicker } from "../ImplementationConfigPicker";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
-import { BatchToggle } from "./BatchToggle";
 import type { components } from "@/api/types";
 import "./Wizards.css";
 
@@ -15,26 +15,16 @@ export function SchemaExtractionWizard() {
   const { isSubmitting, errors, setErrors, handleSubmit } = useRunWizard({
     type: "schema_extraction",
   });
+  const selection = usePipelineSelection("schema_extraction");
 
   const [document, setDocument] = useState("");
   const [selectedScope, setSelectedScope] = useState<Entity | null>(null);
-  const [implementationId, setImplementationId] = useState("");
-  const [configRef, setConfigRef] = useState("");
-  const [runAsBatch, setRunAsBatch] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (!document.trim()) {
       newErrors.document = "Document text is required";
-    }
-
-    if (!implementationId.trim()) {
-      newErrors.implementationId = "Implementation is required";
-    }
-
-    if (!configRef.trim()) {
-      newErrors.configRef = "Configuration is required";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -54,12 +44,9 @@ export function SchemaExtractionWizard() {
     }
 
     try {
-      const { configRef: configRefPart } = decodeConfigSelection(configRef);
       const request: PipelineRunRequest = {
-        implementation_id: implementationId,
-        configuration_ref: configRefPart,
+        ...selectionRequestFields(selection),
         documents: [document],
-        run_as_batch: runAsBatch,
         ...(selectedScope && {
           scope: selectedScope.id,
           scope_name: selectedScope.label,
@@ -103,33 +90,14 @@ export function SchemaExtractionWizard() {
       </Field>
 
       <ImplementationConfigPicker
-        pipelineType="schema_extraction"
-        selectedImplementationId={implementationId}
-        selectedConfigRef={configRef}
-        onSelectImplementation={(id) => {
-          setImplementationId(id);
-          setErrors((prev) => ({ ...prev, implementationId: undefined }));
-          setConfigRef("");
-        }}
-        onSelectConfig={(compositeValue) => {
-          setConfigRef(compositeValue);
-          setErrors((prev) => ({ ...prev, configRef: undefined }));
-        }}
+        selection={selection}
+        idPrefix="schema-extraction"
         disabled={isSubmitting}
-        implementationError={errors.implementationId}
-        configError={errors.configRef}
-      />
-
-      <BatchToggle
-        checked={runAsBatch}
-        onChange={setRunAsBatch}
-        disabled={isSubmitting}
-        testIdPrefix="schema-extraction"
       />
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="schema-extraction-loading">
-          Running pipeline — this may take up to a minute
+          Starting the run — it opens in Runs, where its progress shows
         </FormCallout>
       )}
 
@@ -140,7 +108,7 @@ export function SchemaExtractionWizard() {
         aria-busy={isSubmitting}
         data-testid="schema-extraction-submit"
       >
-        {isSubmitting ? "Running…" : "Run Pipeline"}
+        {isSubmitting ? "Starting…" : "Run Pipeline"}
       </Button>
     </form>
   );

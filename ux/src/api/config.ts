@@ -105,6 +105,7 @@ export const QUERY_KEYS = {
   pipelineConfigurations: (type: string, implId: string) =>
     ["pipeline-types", type, "implementations", implId, "configurations"] as const,
   pipelineConfiguration: (configId: string) => ["pipeline-configurations", configId] as const,
+  pipelineParameterBounds: ["pipeline-parameter-bounds"] as const,
   pipelineRuns: (params?: object) => ["pipeline-runs", params] as const,
   extractionExamples: () => ["extraction-examples"] as const,
   pipelineRun: (runId: string) => ["pipeline-runs", runId] as const,

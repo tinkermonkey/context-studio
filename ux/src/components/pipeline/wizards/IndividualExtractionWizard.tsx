@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Button, Field, FormCallout } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
-import { ImplementationConfigPicker, decodeConfigSelection } from "../ImplementationConfigPicker";
+import { selectionRequestFields, usePipelineSelection } from "@/hooks/usePipelineSelection";
+import { useRunDataset } from "@/hooks/useRunDataset";
+import { ImplementationConfigPicker } from "../ImplementationConfigPicker";
+import { DATASET_REQUIRED, RunDatasetField } from "../RunDatasetField";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
-import { BatchToggle } from "./BatchToggle";
 import type { components } from "@/api/types";
 import "./Wizards.css";
 
@@ -15,12 +17,11 @@ export function IndividualExtractionWizard() {
   const { isSubmitting, errors, setErrors, handleSubmit } = useRunWizard({
     type: "individual_extraction",
   });
+  const selection = usePipelineSelection("individual_extraction");
 
   const [sourceText, setSourceText] = useState("");
   const [selectedOntology, setSelectedOntology] = useState<Entity | null>(null);
-  const [implementationId, setImplementationId] = useState("");
-  const [configRef, setConfigRef] = useState("");
-  const [runAsBatch, setRunAsBatch] = useState(false);
+  const dataset = useRunDataset(selectedOntology?.id);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -33,12 +34,8 @@ export function IndividualExtractionWizard() {
       newErrors.ontologyId = "Target ontology is required";
     }
 
-    if (!implementationId.trim()) {
-      newErrors.implementationId = "Implementation is required";
-    }
-
-    if (!configRef.trim()) {
-      newErrors.configRef = "Configuration is required";
+    if (dataset.missing) {
+      newErrors.dataset = DATASET_REQUIRED;
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -58,14 +55,12 @@ export function IndividualExtractionWizard() {
     }
 
     try {
-      const { configRef: configRefPart } = decodeConfigSelection(configRef);
       const request: PipelineRunRequest = {
-        implementation_id: implementationId,
-        configuration_ref: configRefPart,
+        ...selectionRequestFields(selection),
+        ...dataset.fields,
         text: sourceText,
         ontology_id: selectedOntology!.id,
         ontology_name: selectedOntology!.label,
-        run_as_batch: runAsBatch,
       };
 
       await handleSubmit(request);
@@ -109,45 +104,41 @@ export function IndividualExtractionWizard() {
         />
       </Field>
 
-      <ImplementationConfigPicker
-        pipelineType="individual_extraction"
-        selectedImplementationId={implementationId}
-        selectedConfigRef={configRef}
-        onSelectImplementation={(id) => {
-          setImplementationId(id);
-          setErrors((prev) => ({ ...prev, implementationId: undefined }));
-          setConfigRef("");
-        }}
-        onSelectConfig={(compositeValue) => {
-          setConfigRef(compositeValue);
-          setErrors((prev) => ({ ...prev, configRef: undefined }));
-        }}
+      <RunDatasetField
+        run={dataset}
+        id="individual-extraction-dataset"
+        error={errors.dataset}
         disabled={isSubmitting}
-        implementationError={errors.implementationId}
-        configError={errors.configRef}
+        onChange={() => setErrors((prev) => ({ ...prev, dataset: undefined }))}
       />
 
-      <BatchToggle
-        checked={runAsBatch}
-        onChange={setRunAsBatch}
+      <ImplementationConfigPicker
+        selection={selection}
+        idPrefix="individual-extraction"
         disabled={isSubmitting}
-        testIdPrefix="individual-extraction"
       />
 
       {isSubmitting && (
         <FormCallout variant="info" data-testid="individual-extraction-loading">
-          Running pipeline — this may take up to a minute
+          Starting the run — it opens in Runs, where its progress shows
         </FormCallout>
       )}
 
       <Button
         type="submit"
         variant="primary"
-        disabled={isSubmitting || !sourceText.trim() || !selectedOntology}
+        // Not before the taxonomy's datasets are read: whether one must be named is unknown.
+        disabled={
+          isSubmitting ||
+          !sourceText.trim() ||
+          !selectedOntology ||
+          dataset.loading ||
+          !!dataset.loadError
+        }
         aria-busy={isSubmitting}
         data-testid="individual-extraction-submit"
       >
-        {isSubmitting ? "Running…" : "Run Pipeline"}
+        {isSubmitting ? "Starting…" : "Run Pipeline"}
       </Button>
     </form>
   );

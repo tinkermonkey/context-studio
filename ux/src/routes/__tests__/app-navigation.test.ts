@@ -49,7 +49,6 @@ describe("app navigation — pipelines", () => {
 
   it.each([
     ["/app/pipelines", "pipelines-types"],
-    ["/app/pipelines/types/individual_extraction", "pipelines-types"],
     ["/app/pipelines/types/individual_extraction/run", "pipelines-types"],
     ["/app/pipelines/runs", "pipelines-runs"],
     ["/app/pipelines/batches/abc-123", "pipelines-runs"],
@@ -60,10 +59,6 @@ describe("app navigation — pipelines", () => {
   it.each([
     ["/app/pipelines", ["Pipelines", "Pipeline Types"]],
     ["/app/pipelines/runs", ["Pipelines", "Runs"]],
-    [
-      "/app/pipelines/types/individual_extraction",
-      ["Pipelines", "Pipeline Types", "individual_extraction"],
-    ],
     [
       "/app/pipelines/types/individual_extraction/run",
       ["Pipelines", "Pipeline Types", "individual_extraction", "Run"],
@@ -90,15 +85,17 @@ describe("app navigation — pipelines", () => {
   });
 
   it("decodes encoded type segments and tolerates malformed ones", () => {
-    expect(getBreadcrumbLabels("/app/pipelines/types/my%20type")).toEqual([
+    expect(getBreadcrumbLabels("/app/pipelines/types/my%20type/run")).toEqual([
       "Pipelines",
       "Pipeline Types",
       "my type",
+      "Run",
     ]);
-    expect(getBreadcrumbLabels("/app/pipelines/types/%E0%A4%A")).toEqual([
+    expect(getBreadcrumbLabels("/app/pipelines/types/%E0%A4%A/run")).toEqual([
       "Pipelines",
       "Pipeline Types",
       "%E0%A4%A",
+      "Run",
     ]);
   });
 
