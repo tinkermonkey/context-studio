@@ -16,9 +16,9 @@ import type { Source } from "@/api/services/sources";
 import { ExtractSourcePage, type ExtractSourcePageProps } from "../ExtractSourcePage";
 import { createConfiguration, createRun, createSource } from "./fixtures";
 import type { components } from "@/api/types";
+import type { PipelineConfiguration } from "@/api/services/pipeline";
 
 type PipelineRun = components["schemas"]["PipelineRunResponse"];
-type PipelineConfiguration = components["schemas"]["PipelineConfigurationResponse"];
 
 const { toastSpy } = vi.hoisted(() => ({ toastSpy: vi.fn() }));
 vi.mock("@/components/ui/Toast", () => ({
@@ -29,7 +29,8 @@ vi.mock("@/components/ui/Toast", () => ({
 const house = createTaxonomy({ id: "tax-house", identifier: "house", title: "House" });
 const home = createDataset({ id: "ds-home", taxonomy_id: "tax-house", identifier: "home" });
 const cabin = createDataset({ id: "ds-cabin", taxonomy_id: "tax-house", identifier: "cabin" });
-const defaultConfig = createConfiguration();
+// The configuration the API marks as its implementation's default.
+const defaultConfig = createConfiguration({ is_default: true });
 const openRouterConfig = createConfiguration({
   id: "cfg-3",
   config_ref: "extraction-openrouter-default",
@@ -47,7 +48,7 @@ const openConfig = createConfiguration({
   implementation_id: "open_v1",
   model: null,
 });
-// Listed before the configuration find_then_type extracts a source with.
+// Listed before find_then_type's default configuration.
 const findThenTypeOtherConfig = createConfiguration({
   id: "cfg-5",
   config_ref: "find-then-type-other-model",
@@ -59,20 +60,50 @@ const findThenTypeConfig = createConfiguration({
   config_ref: "extraction-find-then-type",
   implementation_id: "find_then_type",
   model: "claude-haiku",
+  is_default: true,
 });
+// The default implementation is listed last: the page may not rely on the order.
 const IMPLEMENTATIONS = [
-  { id: "open_v1", pipeline_type: "individual_extraction", source_configuration: null },
+  {
+    id: "open_v1",
+    pipeline_type: "individual_extraction",
+    source_configuration: null,
+    is_default: false,
+    extracts_sources: false,
+  },
   {
     id: "find_then_type",
     pipeline_type: "individual_extraction",
     source_configuration: "extraction-find-then-type",
+    is_default: false,
+    extracts_sources: true,
   },
   {
     id: "default",
     pipeline_type: "individual_extraction",
     source_configuration: "extraction-default",
+    is_default: true,
+    extracts_sources: true,
   },
 ];
+// The schema run is selected on its own, from the schema_extraction implementations.
+const SCHEMA_IMPLEMENTATIONS = [
+  { id: "open_v1", pipeline_type: "schema_extraction", is_default: false, extracts_sources: false },
+  { id: "default", pipeline_type: "schema_extraction", is_default: true, extracts_sources: true },
+];
+const schemaAltConfig = createConfiguration({
+  id: "cfg-s2",
+  config_ref: "schema-extraction-alt",
+  pipeline_type: "schema_extraction",
+  model: "claude-opus",
+});
+const schemaConfig = createConfiguration({
+  id: "cfg-s1",
+  config_ref: "schema-extraction-default",
+  pipeline_type: "schema_extraction",
+  model: "gemini-flash",
+  is_default: true,
+});
 
 const server = setupServer();
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
@@ -87,6 +118,7 @@ interface ServeOptions {
   taxonomy?: ReturnType<typeof createTaxonomy>;
   configs?: PipelineConfiguration[];
   implementations?: typeof IMPLEMENTATIONS | (() => Response);
+  schemaConfigs?: PipelineConfiguration[];
   runs?: Record<string, PipelineRun | (() => PipelineRun)>;
   extract?: () => Response;
 }
@@ -103,6 +135,7 @@ function serve({
     findThenTypeConfig,
   ],
   implementations = IMPLEMENTATIONS,
+  schemaConfigs = [schemaAltConfig, schemaConfig],
   runs = {},
   extract,
 }: ServeOptions = {}) {
@@ -125,6 +158,14 @@ function serve({
         configRequests.push(params.impl as string);
         return HttpResponse.json(configs.filter((c) => c.implementation_id === params.impl));
       },
+    ),
+    http.get("*/api/pipelines/types/schema_extraction/implementations", () =>
+      HttpResponse.json(SCHEMA_IMPLEMENTATIONS),
+    ),
+    http.get(
+      "*/api/pipelines/types/schema_extraction/implementations/:impl/configurations",
+      ({ params }) =>
+        HttpResponse.json(schemaConfigs.filter((c) => c.implementation_id === params.impl)),
     ),
     http.post("*/api/sources/:id/extract", async ({ request }) => {
       extractBodies.push(await request.json());
@@ -200,15 +241,16 @@ describe("ExtractSourcePage — configure", () => {
     );
     // The implementations that can extract a source, `default` chosen: open_v1 can't.
     const implementation = screen.getByTestId("extract-implementation");
-    expect(implementation).toHaveAccessibleName("Individual extraction");
+    expect(implementation).toHaveAccessibleName("Individual extraction: implementation");
+    expect(screen.getByTestId("extract-picker")).toHaveAccessibleName("Individual extraction");
     await waitFor(() => expect(implementation).toHaveValue("default"));
     expect(
       within(implementation)
         .getAllByRole("option")
         .map((o) => o.getAttribute("value")),
     ).toEqual(["find_then_type", "default"]);
-    const config = screen.getByTestId("extract-config");
-    expect(config).toHaveAccessibleName("Configuration");
+    const config = screen.getByTestId("extract-configuration");
+    expect(config).toHaveAccessibleName("Individual extraction: configuration");
     await waitFor(() => expect(config).toHaveValue("extraction-default"));
     // Only the chosen implementation's enabled configurations.
     expect(
@@ -234,8 +276,14 @@ describe("ExtractSourcePage — configure", () => {
     serve({
       configs: [
         createConfiguration({
+          is_default: true,
           parameters: { price_per_mtok_in: 3, price_per_mtok_out: 15 } as never,
         }),
+      ],
+      // The schema run is priced by its own configuration; this one has no price.
+      schemaConfigs: [
+        schemaAltConfig,
+        { ...schemaConfig, parameters: { price_per_mtok_in: 3, price_per_mtok_out: 15 } as never },
       ],
     });
     const user = userEvent.setup();
@@ -250,7 +298,17 @@ describe("ExtractSourcePage — configure", () => {
     await waitFor(() => expect(schema).toBeEnabled());
     await user.click(schema);
     expect(estimate).toHaveTextContent("Two runs, two proposals");
-    expect(estimate).toHaveTextContent("Rough estimate: about 3–5 chunks, $0.13–$0.20.");
+    await waitFor(() =>
+      expect(estimate).toHaveTextContent("Rough estimate: about 3–5 chunks, $0.13–$0.20."),
+    );
+
+    // A schema configuration without a price: there is no total to show.
+    await user.selectOptions(
+      screen.getByTestId("extract-schema-configuration"),
+      "schema-extraction-alt",
+    );
+    expect(estimate).toHaveTextContent("Rough estimate: about 3–5 chunks. Two runs");
+    expect(estimate).not.toHaveTextContent("$");
   });
 
   it("narrows the estimate to a page range, and validates it on start", async () => {
@@ -278,15 +336,35 @@ describe("ExtractSourcePage — configure", () => {
     const user = userEvent.setup();
     const { onRunsStarted } = renderPage();
 
-    const config = await screen.findByTestId("extract-config");
+    const config = await screen.findByTestId("extract-configuration");
     await waitFor(() => expect(within(config).getAllByRole("option")).toHaveLength(2));
     await user.selectOptions(config, "extraction-openrouter-default");
     await user.click(
       within(screen.getByTestId("extract-dataset")).getByRole("radio", { name: "cabin" }),
     );
     await user.type(screen.getByTestId("extract-pages"), "1-2");
+    // The schema run's picker is offered only once a schema run is asked for.
     await waitFor(() => expect(screen.getByTestId("extract-schema-toggle")).toBeEnabled());
+    expect(screen.queryByTestId("extract-schema-picker")).not.toBeInTheDocument();
     await user.click(screen.getByTestId("extract-schema-toggle"));
+    expect(screen.getByTestId("extract-schema-picker")).toHaveAccessibleName("Schema extraction");
+    const schemaImplementation = screen.getByTestId("extract-schema-implementation");
+    await waitFor(() => expect(schemaImplementation).toHaveValue("default"));
+    // Only implementations that can extract a source are offered.
+    expect(
+      within(schemaImplementation)
+        .getAllByRole("option")
+        .map((o) => o.getAttribute("value")),
+    ).toEqual(["default"]);
+    await waitFor(() =>
+      expect(screen.getByTestId("extract-schema-configuration")).toHaveValue(
+        "schema-extraction-default",
+      ),
+    );
+    await user.selectOptions(
+      screen.getByTestId("extract-schema-configuration"),
+      "schema-extraction-alt",
+    );
     await user.click(screen.getByTestId("extract-start"));
 
     await waitFor(() => expect(onRunsStarted).toHaveBeenCalled());
@@ -295,6 +373,8 @@ describe("ExtractSourcePage — configure", () => {
         dataset: "ds-cabin",
         implementation_id: "default",
         configuration_ref: "extraction-openrouter-default",
+        schema_implementation_id: "default",
+        schema_configuration_ref: "schema-extraction-alt",
         pages: "1-2",
         schema: true,
         skip_boilerplate: true,
@@ -311,14 +391,14 @@ describe("ExtractSourcePage — configure", () => {
     renderPage();
 
     const implementation = await screen.findByTestId("extract-implementation");
-    const config = screen.getByTestId("extract-config");
+    const config = screen.getByTestId("extract-configuration");
     await waitFor(() => expect(config).toHaveValue("extraction-default"));
     await user.selectOptions(config, "extraction-openrouter-default");
 
     await user.selectOptions(implementation, "find_then_type");
 
     // The configuration chosen for the other implementation is dropped for this
-    // one's own for sources, though it is not the first listed.
+    // one's default, though it is not the first listed.
     expect(implementation).toHaveValue("find_then_type");
     await waitFor(() => expect(config).toHaveValue("extraction-find-then-type"));
     expect(

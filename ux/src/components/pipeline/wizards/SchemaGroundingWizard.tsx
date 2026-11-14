@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Button, Field, FormCallout, SegmentedControl } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
-import { ImplementationConfigPicker, decodeConfigSelection } from "../ImplementationConfigPicker";
+import { selectionRequestFields, usePipelineSelection } from "@/hooks/usePipelineSelection";
+import { ImplementationConfigPicker } from "../ImplementationConfigPicker";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
-import { BatchToggle } from "./BatchToggle";
 import type { components } from "@/api/types";
 import "./Wizards.css";
 
@@ -22,13 +22,11 @@ export function SchemaGroundingWizard() {
   const { isSubmitting, errors, setErrors, handleSubmit } = useRunWizard({
     type: "schema_node_grounding",
   });
+  const selection = usePipelineSelection("schema_node_grounding");
 
   const [selectedNodes, setSelectedNodes] = useState<Entity[]>([]);
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
-  const [implementationId, setImplementationId] = useState("");
-  const [configRef, setConfigRef] = useState("");
   const [nodeType, setNodeType] = useState<"Class" | "PropertyDefinition">("Class");
-  const [runAsBatch, setRunAsBatch] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -39,14 +37,6 @@ export function SchemaGroundingWizard() {
 
     if (selectedSources.length === 0) {
       newErrors.sources = "At least one knowledge source is required";
-    }
-
-    if (!implementationId.trim()) {
-      newErrors.implementationId = "Implementation is required";
-    }
-
-    if (!configRef.trim()) {
-      newErrors.configRef = "Configuration is required";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -66,13 +56,10 @@ export function SchemaGroundingWizard() {
     }
 
     try {
-      const { configRef: configRefPart } = decodeConfigSelection(configRef);
       const request: PipelineRunRequest = {
-        implementation_id: implementationId,
-        configuration_ref: configRefPart,
+        ...selectionRequestFields(selection),
         nodes: selectedNodes.map((n) => ({ id: n.id })),
         sources: selectedSources,
-        run_as_batch: runAsBatch,
       };
 
       await handleSubmit(request);
@@ -150,28 +137,9 @@ export function SchemaGroundingWizard() {
       </Field>
 
       <ImplementationConfigPicker
-        pipelineType="schema_node_grounding"
-        selectedImplementationId={implementationId}
-        selectedConfigRef={configRef}
-        onSelectImplementation={(id) => {
-          setImplementationId(id);
-          setErrors((prev) => ({ ...prev, implementationId: undefined }));
-          setConfigRef("");
-        }}
-        onSelectConfig={(compositeValue) => {
-          setConfigRef(compositeValue);
-          setErrors((prev) => ({ ...prev, configRef: undefined }));
-        }}
+        selection={selection}
+        idPrefix="schema-grounding"
         disabled={isSubmitting}
-        implementationError={errors.implementationId}
-        configError={errors.configRef}
-      />
-
-      <BatchToggle
-        checked={runAsBatch}
-        onChange={setRunAsBatch}
-        disabled={isSubmitting}
-        testIdPrefix="schema-grounding"
       />
 
       {isSubmitting && (

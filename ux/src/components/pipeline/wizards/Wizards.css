@@ -20,17 +20,6 @@
     resize: vertical;
   }
 
-  .wizard-select {
-    width: 100%;
-    padding: 8px 12px;
-    border-radius: 4px;
-    border: 1px solid rgb(var(--canvas-fg-4));
-    background-color: rgb(var(--canvas-bg));
-    font-size: var(--text-sm);
-    font-family: inherit;
-    color: rgb(var(--canvas-fg-1));
-  }
-
   .sources-label {
     display: flex;
     align-items: center;
@@ -128,25 +117,5 @@
 
   .neighborhood-preview table tbody tr:last-child td {
     border-bottom: none;
-  }
-
-  .batch-toggle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 0;
-  }
-
-  .batch-toggle-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: var(--text-sm);
-    color: rgb(var(--canvas-fg-1));
-    cursor: pointer;
-  }
-
-  .batch-toggle-label input[type="checkbox"] {
-    cursor: pointer;
   }
 }

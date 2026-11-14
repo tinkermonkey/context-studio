@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Button, Field, FormCallout } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
-import { ImplementationConfigPicker, decodeConfigSelection } from "../ImplementationConfigPicker";
+import { selectionRequestFields, usePipelineSelection } from "@/hooks/usePipelineSelection";
+import { ImplementationConfigPicker } from "../ImplementationConfigPicker";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
-import { BatchToggle } from "./BatchToggle";
 import type { components } from "@/api/types";
 import "./Wizards.css";
 
@@ -15,12 +15,10 @@ export function IndividualExtractionWizard() {
   const { isSubmitting, errors, setErrors, handleSubmit } = useRunWizard({
     type: "individual_extraction",
   });
+  const selection = usePipelineSelection("individual_extraction");
 
   const [sourceText, setSourceText] = useState("");
   const [selectedOntology, setSelectedOntology] = useState<Entity | null>(null);
-  const [implementationId, setImplementationId] = useState("");
-  const [configRef, setConfigRef] = useState("");
-  const [runAsBatch, setRunAsBatch] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -31,14 +29,6 @@ export function IndividualExtractionWizard() {
 
     if (!selectedOntology?.id) {
       newErrors.ontologyId = "Target ontology is required";
-    }
-
-    if (!implementationId.trim()) {
-      newErrors.implementationId = "Implementation is required";
-    }
-
-    if (!configRef.trim()) {
-      newErrors.configRef = "Configuration is required";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -58,14 +48,11 @@ export function IndividualExtractionWizard() {
     }
 
     try {
-      const { configRef: configRefPart } = decodeConfigSelection(configRef);
       const request: PipelineRunRequest = {
-        implementation_id: implementationId,
-        configuration_ref: configRefPart,
+        ...selectionRequestFields(selection),
         text: sourceText,
         ontology_id: selectedOntology!.id,
         ontology_name: selectedOntology!.label,
-        run_as_batch: runAsBatch,
       };
 
       await handleSubmit(request);
@@ -110,28 +97,9 @@ export function IndividualExtractionWizard() {
       </Field>
 
       <ImplementationConfigPicker
-        pipelineType="individual_extraction"
-        selectedImplementationId={implementationId}
-        selectedConfigRef={configRef}
-        onSelectImplementation={(id) => {
-          setImplementationId(id);
-          setErrors((prev) => ({ ...prev, implementationId: undefined }));
-          setConfigRef("");
-        }}
-        onSelectConfig={(compositeValue) => {
-          setConfigRef(compositeValue);
-          setErrors((prev) => ({ ...prev, configRef: undefined }));
-        }}
+        selection={selection}
+        idPrefix="individual-extraction"
         disabled={isSubmitting}
-        implementationError={errors.implementationId}
-        configError={errors.configRef}
-      />
-
-      <BatchToggle
-        checked={runAsBatch}
-        onChange={setRunAsBatch}
-        disabled={isSubmitting}
-        testIdPrefix="individual-extraction"
       />
 
       {isSubmitting && (

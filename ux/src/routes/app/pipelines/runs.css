@@ -27,7 +27,7 @@
 
   .runs-table-header {
     display: grid;
-    grid-template-columns: 140px 1fr 120px 160px 90px;
+    grid-template-columns: 140px minmax(0, 1fr) minmax(0, 1.6fr) 120px 160px 90px;
     gap: 16px;
     padding: 12px;
     border-bottom: 1px solid rgb(var(--canvas-border));
@@ -44,7 +44,7 @@
 
   .runs-table-row {
     display: grid;
-    grid-template-columns: 140px 1fr 120px 160px 90px;
+    grid-template-columns: 140px minmax(0, 1fr) minmax(0, 1.6fr) 120px 160px 90px;
     gap: 16px;
     padding: 12px;
     border-bottom: 1px solid rgb(var(--canvas-border));

@@ -196,6 +196,7 @@ function RunsPageContent({
             <div className="runs-table-header">
               <div className="runs-table-header-cell">Pipeline Type</div>
               <div className="runs-table-header-cell">Implementation</div>
+              <div className="runs-table-header-cell">Configuration</div>
               <div className="runs-table-header-cell">Status</div>
               <div className="runs-table-header-cell">Started</div>
               <div className="runs-table-header-cell">Candidates</div>
@@ -217,7 +218,14 @@ function RunsPageContent({
                       .join(" ")}
                   </Chip>
                 </div>
-                <div className="runs-table-cell">{run.configuration_slug || "—"}</div>
+                <div className="runs-table-cell" data-testid={`run-implementation-${run.id}`}>
+                  {run.implementation_id || "—"}
+                </div>
+                <div className="runs-table-cell" data-testid={`run-configuration-${run.id}`}>
+                  {run.configuration_ref
+                    ? `${run.configuration_ref} v${run.configuration_version}`
+                    : "—"}
+                </div>
                 <div className="runs-table-cell">
                   <Chip
                     variant={

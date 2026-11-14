@@ -290,7 +290,9 @@ async function openReview(page: Page): Promise<void> {
   await expect(page.getByTestId("extraction-review-taxonomy")).toContainText(TAXONOMY_LABEL);
   // Extraction is not scoped to a concept scheme: the form only picks a taxonomy.
   await expect(page.getByTestId("extraction-review-scheme")).toHaveCount(0);
-  await expect(page.getByTestId("extraction-review-config-refs")).toBeVisible();
+  // Each run has its own implementation and configuration picker.
+  await expect(page.getByTestId("extraction-review-schema-picker")).toBeVisible();
+  await expect(page.getByTestId("extraction-review-individual-picker")).toBeVisible();
 }
 
 async function runExtraction(page: Page): Promise<void> {
@@ -392,7 +394,8 @@ test.describe("Extraction review", () => {
     const posts = countRunPosts(page);
 
     await openReview(page);
-    await expect(page.getByTestId("extraction-review-config-refs")).toContainText(
+    // The server's default configuration of the default implementation is preselected.
+    await expect(page.getByTestId("extraction-review-schema-configuration")).toContainText(
       "schema-extraction-default",
     );
 

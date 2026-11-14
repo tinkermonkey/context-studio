@@ -22,9 +22,8 @@ const run = (id: string, pipeline_type: string, status: string, failure_reason?:
 const REQUEST: ExtractionReviewRequest = {
   text: "Context Studio is a local-first app.",
   taxonomy: { id: "tax-1", label: "Tax" },
-  implementationId: "default",
-  schemaConfigRef: "schema-default",
-  individualConfigRef: "individual-default",
+  schema: { implementation_id: "base", configuration_ref: "schema-main" },
+  individual: { implementation_id: "two_step", configuration_ref: "individual-main" },
 };
 
 describe("useExtractionReviewRuns polling", () => {

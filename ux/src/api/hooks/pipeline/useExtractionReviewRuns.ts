@@ -21,18 +21,21 @@ export interface ReviewScopeRef {
   label: string;
 }
 
+/** What one run is selected by; a part left out is the server's default. */
+export interface RunSelectionFields {
+  implementation_id?: string;
+  configuration_ref?: string;
+}
+
 /** Everything one "Run extraction" click needs; kept so a single tab can be re-run. */
 export interface ExtractionReviewRequest {
   text: string;
   taxonomy: ReviewScopeRef;
   /** The library example the text came from, while it is unedited. */
   exampleId?: string;
-  implementationId: string;
-  schemaConfigRef: string;
-  individualConfigRef: string;
-  /** Model from the chosen configuration; the pipelines read it from the run input. */
-  schemaModel?: string | null;
-  individualModel?: string | null;
+  /** Each run has its own implementation and configuration. */
+  schema: RunSelectionFields;
+  individual: RunSelectionFields;
 }
 
 const PIPELINE_TYPE: Record<ReviewKind, string> = {
@@ -50,24 +53,20 @@ export function reviewKindOf(pipelineType: string): ReviewKind | null {
 function buildRunRequest(kind: ReviewKind, req: ExtractionReviewRequest): PipelineRunRequest {
   if (kind === "schema") {
     return {
-      implementation_id: req.implementationId,
-      configuration_ref: req.schemaConfigRef,
+      ...req.schema,
       documents: [req.text],
       scope: req.taxonomy.id,
       scope_name: req.taxonomy.label,
-      ...(req.schemaModel ? { model: req.schemaModel } : {}),
       ...(req.exampleId ? { example_id: req.exampleId } : {}),
-    } as PipelineRunRequest;
+    };
   }
   return {
-    implementation_id: req.implementationId,
-    configuration_ref: req.individualConfigRef,
+    ...req.individual,
     text: req.text,
     ontology_id: req.taxonomy.id,
     ontology_name: req.taxonomy.label,
-    ...(req.individualModel ? { model: req.individualModel } : {}),
     ...(req.exampleId ? { example_id: req.exampleId } : {}),
-  } as PipelineRunRequest;
+  };
 }
 
 function slotFromRun(run: PipelineRunResponse): ReviewRunSlot {

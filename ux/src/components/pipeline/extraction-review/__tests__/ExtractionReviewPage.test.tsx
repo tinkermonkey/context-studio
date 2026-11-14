@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
@@ -20,17 +20,41 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 const page = <T,>(items: T[]) => ({ items, total: items.length, limit: 100, offset: 0 });
-const config = (type: string, ref: string, model: string, provider = "openrouter") => ({
-  id: `${type}:default:${ref}`,
+// The default implementation is not called "default" and is not listed first:
+// the page may rely on neither.
+const config = (
+  type: string,
+  implementation: string,
+  ref: string,
+  overrides: Record<string, unknown> = {},
+) => ({
+  id: `${type}:${implementation}:${ref}`,
   config_ref: ref,
   pipeline_type: type,
-  implementation_id: "default",
+  implementation_id: implementation,
   name: ref,
-  provider,
-  model,
+  provider: "openrouter",
+  model: "gemini-flash",
   enabled: true,
+  is_default: false,
   version: 1,
+  ...overrides,
 });
+const CONFIGS = [
+  config("schema_extraction", "base", "schema-extraction-default", { is_default: true }),
+  config("individual_extraction", "base", "extraction-openrouter-default"),
+  config("individual_extraction", "base", "extraction-default", {
+    is_default: true,
+    provider: "anthropic",
+    model: "opus",
+  }),
+  config("individual_extraction", "base", "extraction-disabled", { enabled: false }),
+  config("individual_extraction", "two_step", "extraction-two-step", {
+    is_default: true,
+    provider: "anthropic",
+    model: "haiku",
+  }),
+];
 
 let runBodies: Record<string, Record<string, unknown>> = {};
 let runListQueries: URLSearchParams[] = [];
@@ -91,16 +115,19 @@ beforeEach(() => {
       );
     }),
     http.get("*/api/pipelines/types/:type/implementations", ({ params }) =>
-      HttpResponse.json([{ id: "default", pipeline_type: params.type }]),
+      HttpResponse.json([
+        // Only individual extraction has the second implementation.
+        ...(params.type === "individual_extraction"
+          ? [{ id: "two_step", pipeline_type: params.type, is_default: false }]
+          : []),
+        { id: "base", pipeline_type: params.type, is_default: true },
+      ]),
     ),
-    http.get("*/api/pipelines/types/:type/implementations/default/configurations", ({ params }) =>
+    http.get("*/api/pipelines/types/:type/implementations/:impl/configurations", ({ params }) =>
       HttpResponse.json(
-        params.type === "schema_extraction"
-          ? [config("schema_extraction", "schema-extraction-default", "gemini-flash")]
-          : [
-              config("individual_extraction", "extraction-default", "opus", "anthropic"),
-              config("individual_extraction", "extraction-openrouter-default", "gemini-flash"),
-            ],
+        CONFIGS.filter(
+          (c) => c.pipeline_type === params.type && c.implementation_id === params.impl,
+        ),
       ),
     ),
   );
@@ -130,9 +157,23 @@ function mockRuns(individual: "ok" | "fail") {
   );
 }
 
+/** Both pickers show the server's default selection. */
+async function selectionLoaded() {
+  await waitFor(() =>
+    expect(screen.getByTestId("extraction-review-schema-configuration")).toHaveValue(
+      "schema-extraction-default",
+    ),
+  );
+  await waitFor(() =>
+    expect(screen.getByTestId("extraction-review-individual-configuration")).toHaveValue(
+      "extraction-default",
+    ),
+  );
+}
+
 async function renderPage() {
   renderWithProviders(<ExtractionReviewPage />);
-  await screen.findByTestId("extraction-review-config-refs");
+  await selectionLoaded();
 }
 
 describe("ExtractionReviewPage", () => {
@@ -140,10 +181,32 @@ describe("ExtractionReviewPage", () => {
     await renderPage();
     expect(screen.getByTestId("extraction-review-page")).toBeInTheDocument();
     expect(screen.getByTestId("extraction-review-taxonomy")).toHaveValue("tax-dr");
-    // Individual config is paired with the schema config by provider + model.
-    expect(screen.getByTestId("extraction-review-config-refs")).toHaveTextContent(
-      "schema-extraction-default v1 · extraction-openrouter-default v1",
+    // Each run has its own picker, on the server's default implementation and configuration.
+    const schemaPicker = screen.getByTestId("extraction-review-schema-picker");
+    expect(schemaPicker).toHaveAccessibleName("Schema extraction");
+    expect(within(schemaPicker).getByText("Implementation")).toBeInTheDocument();
+    expect(within(schemaPicker).getByText("Configuration")).toBeInTheDocument();
+    expect(screen.getByTestId("extraction-review-schema-implementation")).toHaveValue("base");
+    const individualPicker = screen.getByTestId("extraction-review-individual-picker");
+    expect(individualPicker).toHaveAccessibleName("Individual extraction");
+    const individualImplementation = screen.getByTestId(
+      "extraction-review-individual-implementation",
     );
+    expect(individualImplementation).toHaveValue("base");
+    expect(
+      within(individualImplementation)
+        .getAllByRole("option")
+        .map((o) => o.getAttribute("value")),
+    ).toEqual(["two_step", "base"]);
+    // A disabled configuration is not offered.
+    expect(
+      within(screen.getByTestId("extraction-review-individual-configuration"))
+        .getAllByRole("option")
+        .map((o) => o.getAttribute("value")),
+    ).toEqual(["extraction-openrouter-default", "extraction-default"]);
+    expect(
+      screen.getByTestId("extraction-review-individual-configuration-model"),
+    ).toHaveTextContent("anthropic · opus");
     expect(screen.getByTestId("extraction-review-schema-idle")).toBeInTheDocument();
     const tabs = screen.getByTestId("extraction-review-tabs");
     expect(tabs).toHaveAttribute("role", "tablist");
@@ -179,18 +242,20 @@ describe("ExtractionReviewPage", () => {
 
     expect(await screen.findByTestId("extraction-review-schema-candidates")).toBeInTheDocument();
     expect(runBodies.schema_extraction).toMatchObject({
-      implementation_id: "default",
+      implementation_id: "base",
       configuration_ref: "schema-extraction-default",
       documents: [XR_TEXT],
       scope: "tax-dr",
-      model: "gemini-flash",
     });
     expect(runBodies.individual_extraction).toMatchObject({
-      configuration_ref: "extraction-openrouter-default",
+      implementation_id: "base",
+      configuration_ref: "extraction-default",
       text: XR_TEXT,
       ontology_id: "tax-dr",
-      model: "gemini-flash",
     });
+    // The model is the configuration's: the page never sends one.
+    expect(runBodies.schema_extraction).not.toHaveProperty("model");
+    expect(runBodies.individual_extraction).not.toHaveProperty("model");
 
     await userEvent.click(screen.getByTestId("extraction-review-schema-decision-class-0-yes"));
     await userEvent.click(screen.getByRole("tab", { name: "Individual extraction" }));
@@ -218,6 +283,31 @@ describe("ExtractionReviewPage", () => {
       "aria-pressed",
       "true",
     );
+  });
+
+  it("runs each type with its own implementation and configuration", async () => {
+    mockRuns("ok");
+    await renderPage();
+    await userEvent.selectOptions(
+      screen.getByTestId("extraction-review-individual-implementation"),
+      "two_step",
+    );
+    const configuration = screen.getByTestId("extraction-review-individual-configuration");
+    await waitFor(() => expect(configuration).toHaveValue("extraction-two-step"));
+    // The schema run keeps its own selection.
+    expect(screen.getByTestId("extraction-review-schema-implementation")).toHaveValue("base");
+
+    await userEvent.type(screen.getByTestId("extraction-review-text"), XR_TEXT);
+    await userEvent.click(screen.getByTestId("extraction-review-run"));
+    await screen.findByTestId("extraction-review-schema-candidates");
+    expect(runBodies.individual_extraction).toMatchObject({
+      implementation_id: "two_step",
+      configuration_ref: "extraction-two-step",
+    });
+    expect(runBodies.schema_extraction).toMatchObject({
+      implementation_id: "base",
+      configuration_ref: "schema-extraction-default",
+    });
   });
 
   it("keeps one tab reviewable when the other run fails", async () => {
@@ -368,7 +458,7 @@ describe("ExtractionReviewPage — example library", () => {
   it("lists earlier extraction runs of the example and opens one", async () => {
     const onOpenRun = vi.fn();
     renderWithProviders(<ExtractionReviewPage onOpenRun={onOpenRun} />);
-    await screen.findByTestId("extraction-review-config-refs");
+    await selectionLoaded();
     await pickExample("glossary-note");
 
     const runs = await screen.findByTestId("extraction-review-example-runs");

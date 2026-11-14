@@ -1,8 +1,8 @@
 import type { LastExtraction, LastExtractionRun, Source } from "@/api/services/sources";
 import type { components } from "@/api/types";
+import type { PipelineConfiguration } from "@/api/services/pipeline";
 
 type PipelineRun = components["schemas"]["PipelineRunResponse"];
-type PipelineConfiguration = components["schemas"]["PipelineConfigurationResponse"];
 
 export function createSource(overrides?: Partial<Source>): Source {
   return {

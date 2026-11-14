@@ -146,7 +146,7 @@ Individual-tab highlight segments:
 - **Preconditions**: `seedDrScope(page)`; `routeRunsToSeededOutput(page, { schema_extraction: schemaOutput(), individual_extraction: individualOutput(seed) })`; run-POST counter attached. Navigate to `/app/pipelines/review`.
 - **Steps**:
   1. Wait for `extraction-review-page`.
-  2. Assert `extraction-review-taxonomy` contains `Documentation Robotics · dr_spec` (auto-picked over the earlier-created "Acme Glossary") and `extraction-review-scheme` is absent (extraction is not scoped to a scheme). Assert `extraction-review-config-refs` is visible and contains `schema-extraction-default`.
+  2. Assert `extraction-review-taxonomy` contains `Documentation Robotics · dr_spec` (auto-picked over the earlier-created "Acme Glossary") and `extraction-review-scheme` is absent (extraction is not scoped to a scheme). Assert `extraction-review-schema-picker` and `extraction-review-individual-picker` are visible and `extraction-review-schema-configuration` contains `schema-extraction-default` (the server's default configuration, preselected).
   3. Assert both tabs idle: `extraction-review-schema-idle` is visible; switch to the Individual tab, `extraction-review-individual-idle` is visible; switch back.
   4. With an empty paragraph, click `extraction-review-run`.
   5. Assert `getByText("Paste a paragraph to extract from", { exact: true })` is visible and `extraction-review-text` has `aria-invalid="true"`. Assert the run-POST counter is 0 for both types and `extraction-review-schema-idle` is still visible.
@@ -158,7 +158,7 @@ Individual-tab highlight segments:
   11. Assert `extraction-review-stale` is visible and `extraction-review-schema-source` still has text exactly `TEXT` (highlights show the text that was run).
   12. `fill(TEXT)`. Assert `extraction-review-stale` has count 0.
 - **Expected Result**: dr_spec is preferred. The empty-paragraph error blocks the run (no POST), clears on the first keystroke, and returns on blur. A valid run completes both tabs. Editing the text after the run shows the stale warning without changing the highlighted run text, and restoring the exact text clears it.
-- **Selectors Used**: `extraction-review-page`, `extraction-review-taxonomy`, `extraction-review-config-refs`, `extraction-review-run`, `extraction-review-text`, `extraction-review-tabs`, `extraction-review-schema-idle`, `extraction-review-individual-idle`, `extraction-review-schema-run-meta`, `extraction-review-schema-candidates`, `extraction-review-stale`, `extraction-review-schema-source`
+- **Selectors Used**: `extraction-review-page`, `extraction-review-taxonomy`, `extraction-review-schema-picker`, `extraction-review-individual-picker`, `extraction-review-schema-configuration`, `extraction-review-run`, `extraction-review-text`, `extraction-review-tabs`, `extraction-review-schema-idle`, `extraction-review-individual-idle`, `extraction-review-schema-run-meta`, `extraction-review-schema-candidates`, `extraction-review-stale`, `extraction-review-schema-source`
 - **Invariants Verified**: INV-7, INV-8, INV-1 (no run POST on invalid input)
 
 ### Test Case 2: Schema tab: review, span → inspector, confirm with orphan warning, apply result, persistence

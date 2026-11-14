@@ -4,6 +4,7 @@ import {
   Field,
   TextInput,
   TextArea,
+  NumberInput,
   Select,
   Chip,
   VersionPill,
@@ -20,26 +21,34 @@ import {
   useUpdateConfiguration,
   useDeleteConfiguration,
 } from "@/api/hooks/pipeline/useConfigurationMutations";
+import { useRegisteredModels } from "@/api/hooks/pipeline/useRegisteredModels";
+import { useHealth } from "@/api/hooks/admin/useHealth";
+import type { PipelineConfiguration } from "@/api/services/pipeline";
 import { ParamSlider } from "./ParamSlider";
 import { StagePromptsSection } from "./StagePromptsSection";
 import { stagePromptsBody, type StagePromptsBody } from "./stagePrompts";
 import type { components } from "@/api/types";
 import "./ConfigEditor.css";
 
-type PipelineConfigurationResponse = components["schemas"]["PipelineConfigurationResponse"];
+type PipelineConfigurationResponse = PipelineConfiguration;
 type PipelineConfigurationParameters = components["schemas"]["PipelineConfigurationParameters"];
 
-const PROVIDERS = [
-  { value: "openai", label: "OpenAI" },
-  { value: "anthropic", label: "Anthropic" },
-  { value: "openrouter", label: "OpenRouter" },
-];
+const MODEL_REQUIRED = "A model is required";
+// The API's bounds on a configuration's output-token limit (PipelineConfigurationParameters.max_tokens).
+const MIN_OUTPUT_TOKENS = 64;
+const MAX_OUTPUT_TOKENS = 64000;
+const MAX_TOKENS_RANGE = `A whole number from ${MIN_OUTPUT_TOKENS} to ${MAX_OUTPUT_TOKENS}`;
 
-const MODELS: Record<string, string[]> = {
-  openai: ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"],
-  anthropic: ["claude-3-5-sonnet", "claude-3-opus", "claude-3-sonnet", "claude-3-haiku"],
-  openrouter: ["google/gemini-3-flash-preview"],
-};
+/** The output-token limit typed into the field, or undefined when it is not one the API takes. */
+function parseMaxTokens(text: string): number | undefined {
+  const value = Number(text);
+  const valid =
+    text.trim() !== "" &&
+    Number.isInteger(value) &&
+    value >= MIN_OUTPUT_TOKENS &&
+    value <= MAX_OUTPUT_TOKENS;
+  return valid ? value : undefined;
+}
 
 const DEFAULT_PARAMS: PipelineConfigurationParameters = {
   temperature: 0.4,
@@ -56,22 +65,26 @@ interface DraftConfig {
   enabled: boolean;
 }
 
-function makeDraft(config: PipelineConfigurationResponse | null): DraftConfig {
+/** The editable copy of a configuration; a new one starts from `template`. */
+function makeDraft(
+  config: PipelineConfigurationResponse | null,
+  template?: PipelineConfigurationResponse | null,
+): DraftConfig {
   if (!config) {
     return {
       name: "",
       description: "",
-      provider: "openai",
-      model: "gpt-4o",
-      parameters: { ...DEFAULT_PARAMS },
+      provider: template?.provider ?? "",
+      model: template?.model ?? "",
+      parameters: { ...(template?.parameters ?? DEFAULT_PARAMS) },
       enabled: true,
     };
   }
   return {
     name: config.name ?? "",
     description: config.description ?? "",
-    provider: config.provider ?? "openai",
-    model: config.model ?? MODELS[config.provider ?? "openai"]?.[0] ?? "",
+    provider: config.provider ?? "",
+    model: config.model ?? "",
     parameters: config.parameters ?? { ...DEFAULT_PARAMS },
     enabled: config.enabled ?? true,
   };
@@ -81,11 +94,16 @@ interface ConfigEditorProps {
   pipelineType: string;
   implId: string;
   config: PipelineConfigurationResponse | null;
+  /**
+   * The configuration a new one starts from (provider, model, parameters):
+   * the implementation's default configuration.
+   */
+  template?: PipelineConfigurationResponse | null;
   mode: "view" | "edit" | "create";
   onEnterEdit: () => void;
   onDone: () => void;
-  onCreated: (id: string) => void;
-  onDuplicate?: (id: string) => void;
+  onCreated: (config: PipelineConfigurationResponse) => void;
+  onDuplicate?: (config: PipelineConfigurationResponse) => void;
   onCancel: () => void;
   onDeleted: () => void;
 }
@@ -94,6 +112,7 @@ export function ConfigEditor({
   pipelineType,
   implId,
   config,
+  template,
   mode,
   onEnterEdit,
   onDone,
@@ -107,15 +126,28 @@ export function ConfigEditor({
   const isEdit = mode === "edit";
   const active = isCreate || isEdit;
 
-  const [draft, setDraft] = useState<DraftConfig>(() => makeDraft(config));
+  const [draft, setDraft] = useState<DraftConfig>(() =>
+    makeDraft(isCreate ? null : config, template),
+  );
+  const [modelError, setModelError] = useState<string>();
+  const [maxTokensText, setMaxTokensText] = useState(() => String(draft.parameters.max_tokens));
+  const [maxTokensError, setMaxTokensError] = useState<string>();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Providers are the server's; models are suggestions only (any id may be typed).
+  const { data: health } = useHealth();
+  const registeredModels = useRegisteredModels(pipelineType);
 
   const createMutation = useCreateConfiguration(pipelineType, implId);
   const updateMutation = useUpdateConfiguration(pipelineType, implId);
   const deleteMutation = useDeleteConfiguration(pipelineType, implId);
 
   useEffect(() => {
-    setDraft(makeDraft(isCreate ? null : config));
+    const next = makeDraft(isCreate ? null : config, template);
+    setDraft(next);
+    setMaxTokensText(String(next.parameters.max_tokens));
+    setModelError(undefined);
+    setMaxTokensError(undefined);
   }, [config?.id, mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Saves run one after another, each built on the previous save's result:
@@ -134,7 +166,7 @@ export function ConfigEditor({
   // Current display values: draft for create, config for view/edit
   const displayName = isCreate ? draft.name : (config?.name ?? "");
   const displayDesc = isCreate ? draft.description : (config?.description ?? "");
-  const displayProvider = isCreate ? draft.provider : (config?.provider ?? "openai");
+  const displayProvider = isCreate ? draft.provider : (config?.provider ?? "");
   const displayModel = isCreate ? draft.model : (config?.model ?? "");
   const displayEnabled = isCreate ? draft.enabled : (config?.enabled ?? true);
   const displayParams = isCreate ? draft.parameters : (config?.parameters ?? DEFAULT_PARAMS);
@@ -145,10 +177,36 @@ export function ConfigEditor({
     setDraft((d) => ({ ...d, parameters: { ...d.parameters, [k]: v } }));
 
   const handleProviderChange = (v: string) => {
-    const firstModel = MODELS[v]?.[0] ?? "";
     setField("provider", v);
-    setField("model", firstModel);
-    if (!isCreate) void handleSaveField({ provider: v, model: firstModel });
+    if (!isCreate) void handleSaveField({ provider: v });
+  };
+
+  const handleMaxTokensBlur = () => {
+    const maxTokens = parseMaxTokens(maxTokensText);
+    if (maxTokens === undefined) {
+      setMaxTokensError(MAX_TOKENS_RANGE);
+      return;
+    }
+    const saved = (latestSaved.current ?? config)?.parameters;
+    if (isCreate || maxTokens === saved?.max_tokens) return;
+    void handleSaveField({ parameters: { ...(saved ?? displayParams), max_tokens: maxTokens } });
+  };
+
+  /** Save a text field on blur, unless it still holds what was last saved. */
+  const saveIfChanged = (field: "name" | "description", value: string) => {
+    const saved = latestSaved.current ?? config;
+    if (isCreate || !saved || value === (saved[field] ?? "")) return;
+    void handleSaveField({ [field]: value });
+  };
+
+  const handleModelBlur = (value: string) => {
+    const model = value.trim();
+    if (!model) {
+      setModelError(MODEL_REQUIRED);
+      return;
+    }
+    setField("model", model);
+    if (model !== (latestSaved.current ?? config)?.model) void handleSaveField({ model });
   };
 
   /** Save a change; stagePrompts replaces every stage's prompts when given. */
@@ -184,11 +242,11 @@ export function ConfigEditor({
         name: draft.name,
         description: draft.description || undefined,
         provider: draft.provider,
-        model: draft.model,
+        model: draft.model.trim(),
         parameters: draft.parameters,
         enabled: draft.enabled,
       });
-      onCreated(result.id);
+      onCreated(result);
     } catch (err) {
       toast("error", err instanceof Error ? err.message : "Failed to create configuration");
     }
@@ -211,21 +269,36 @@ export function ConfigEditor({
       const result = await createMutation.mutateAsync({
         name: `${config.name} (copy)`,
         description: config.description || undefined,
-        provider: config.provider ?? "openai",
+        provider: config.provider ?? "",
         model: config.model ?? "",
         stage_prompts: stagePromptsBody(config.stage_prompts),
         parameters: config.parameters ?? { ...DEFAULT_PARAMS },
         enabled: config.enabled,
       });
-      onDuplicate?.(result.id);
+      onDuplicate?.(result);
     } catch (err) {
       toast("error", err instanceof Error ? err.message : "Failed to duplicate configuration");
     }
   };
 
   const isSystemConfig = !isCreate && (config?.is_system ?? false);
-  const validNew = isCreate && draft.name.trim() !== "";
-  const modelOptions = MODELS[displayProvider] ?? [];
+  const validNew =
+    isCreate &&
+    draft.name.trim() !== "" &&
+    draft.provider !== "" &&
+    draft.model.trim() !== "" &&
+    parseMaxTokens(maxTokensText) !== undefined;
+  // The server's providers, plus this configuration's own if the server no longer lists it.
+  const providerOptions = [
+    ...new Set([
+      ...(health?.llm_providers_available ?? []),
+      ...(draft.provider ? [draft.provider] : []),
+    ]),
+  ];
+  const ofProvider = registeredModels.filter((m) => m.provider === draft.provider);
+  const modelSuggestions = [
+    ...new Set((ofProvider.length ? ofProvider : registeredModels).map((m) => m.model)),
+  ];
 
   // A system configuration is read-only: duplicate it to get an editable copy
   const rowMenuActions = isSystemConfig
@@ -271,6 +344,7 @@ export function ConfigEditor({
                 ) : (
                   <Chip variant="neutral">disabled</Chip>
                 )}
+                {config?.is_default && <Chip variant="cyan">default</Chip>}
                 <VersionPill>{config?.version ?? 1}</VersionPill>
               </>
             )}
@@ -297,11 +371,9 @@ export function ConfigEditor({
               <Field label="Name" required={isCreate}>
                 {active && !isSystemConfig ? (
                   <TextInput
-                    value={isCreate ? draft.name : (config?.name ?? "")}
+                    value={draft.name}
                     onChange={(e) => setField("name", e.target.value)}
-                    onBlur={(e) => {
-                      void handleSaveField({ name: e.target.value });
-                    }}
+                    onBlur={(e) => saveIfChanged("name", e.target.value)}
                     placeholder="Configuration name"
                     autoFocus={isCreate}
                     data-testid="config-name-input"
@@ -313,11 +385,9 @@ export function ConfigEditor({
               <Field label="Description">
                 {active && !isSystemConfig ? (
                   <TextArea
-                    value={isCreate ? draft.description : (config?.description ?? "")}
+                    value={draft.description}
                     onChange={(e) => setField("description", e.target.value)}
-                    onBlur={(e) => {
-                      void handleSaveField({ description: e.target.value });
-                    }}
+                    onBlur={(e) => saveIfChanged("description", e.target.value)}
                     placeholder="Optional description"
                     rows={2}
                     data-testid="config-description-input"
@@ -327,16 +397,19 @@ export function ConfigEditor({
                 )}
               </Field>
               <div className="cfg-editor__grid2">
-                <Field label="Provider">
+                <Field label="Provider" htmlFor="config-provider" required={isCreate}>
                   {active && !isSystemConfig ? (
                     <Select
-                      value={displayProvider}
+                      id="config-provider"
+                      value={draft.provider}
                       onChange={handleProviderChange}
+                      placeholder="Choose a provider"
+                      ariaLabel="Provider"
                       data-testid="config-provider-select"
                     >
-                      {PROVIDERS.map((p) => (
-                        <Select.Item key={p.value} value={p.value}>
-                          {p.label}
+                      {providerOptions.map((p) => (
+                        <Select.Item key={p} value={p}>
+                          {p}
                         </Select.Item>
                       ))}
                     </Select>
@@ -344,22 +417,39 @@ export function ConfigEditor({
                     <span className="cfg-mono-text">{displayProvider || "—"}</span>
                   )}
                 </Field>
-                <Field label="Model">
+                <Field
+                  label="Model"
+                  htmlFor="config-model"
+                  required={isCreate}
+                  error={modelError}
+                  errorId="config-model-error"
+                >
                   {active && !isSystemConfig ? (
-                    <Select
-                      value={displayModel}
-                      onChange={(v) => {
-                        setField("model", v);
-                        void handleSaveField({ model: v });
-                      }}
-                      data-testid="config-model-select"
-                    >
-                      {modelOptions.map((m) => (
-                        <Select.Item key={m} value={m}>
-                          {m}
-                        </Select.Item>
-                      ))}
-                    </Select>
+                    <>
+                      <TextInput
+                        id="config-model"
+                        mono
+                        list="config-model-options"
+                        value={draft.model}
+                        onChange={(e) => {
+                          setField("model", e.target.value);
+                          setModelError(undefined);
+                        }}
+                        onBlur={(e) => {
+                          if (!isCreate) handleModelBlur(e.target.value);
+                        }}
+                        placeholder="Model id"
+                        error={!!modelError}
+                        aria-invalid={!!modelError}
+                        aria-describedby={modelError ? "config-model-error" : undefined}
+                        data-testid="config-model-input"
+                      />
+                      <datalist id="config-model-options" data-testid="config-model-options">
+                        {modelSuggestions.map((m) => (
+                          <option key={m} value={m} />
+                        ))}
+                      </datalist>
+                    </>
                   ) : (
                     <span className="cfg-mono-text">{displayModel || "—"}</span>
                   )}
@@ -416,20 +506,46 @@ export function ConfigEditor({
                   void handleSaveField({ parameters: { ...displayParams, temperature: v } });
                 }}
               />
-              <ParamSlider
-                active={active && !isSystemConfig}
-                label="Max tokens"
-                value={displayParams.max_tokens ?? 800}
-                min={64}
-                max={4096}
-                step={32}
-                fmt={(v) => Math.round(v)}
-                onChange={(v) => {
-                  const rounded = Math.round(v);
-                  setParam("max_tokens", rounded);
-                  void handleSaveField({ parameters: { ...displayParams, max_tokens: rounded } });
-                }}
-              />
+              {active && !isSystemConfig ? (
+                // A limit runs to tens of thousands: typed, not dragged.
+                <Field
+                  label="Max tokens"
+                  htmlFor="config-max-tokens"
+                  error={maxTokensError}
+                  errorId="config-max-tokens-error"
+                  className="cfg-param-field"
+                >
+                  <NumberInput
+                    id="config-max-tokens"
+                    mono
+                    min={MIN_OUTPUT_TOKENS}
+                    max={MAX_OUTPUT_TOKENS}
+                    step={1}
+                    value={maxTokensText}
+                    onChange={(e) => {
+                      setMaxTokensText(e.target.value);
+                      setMaxTokensError(undefined);
+                      const maxTokens = parseMaxTokens(e.target.value);
+                      if (maxTokens !== undefined) setParam("max_tokens", maxTokens);
+                    }}
+                    onBlur={handleMaxTokensBlur}
+                    error={!!maxTokensError}
+                    aria-invalid={!!maxTokensError}
+                    aria-describedby={maxTokensError ? "config-max-tokens-error" : undefined}
+                    data-testid="config-max-tokens-input"
+                  />
+                </Field>
+              ) : (
+                <ParamSlider
+                  label="Max tokens"
+                  value={displayParams.max_tokens ?? 800}
+                  min={MIN_OUTPUT_TOKENS}
+                  max={MAX_OUTPUT_TOKENS}
+                  step={1}
+                  fmt={(v) => Math.round(v)}
+                  onChange={() => {}}
+                />
+              )}
               <ParamSlider
                 active={active && !isSystemConfig}
                 label="Top-p"

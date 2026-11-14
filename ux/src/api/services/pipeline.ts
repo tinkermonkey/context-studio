@@ -2,8 +2,20 @@ import { BaseService } from "./base";
 import type { components } from "@/api/types";
 
 type PipelineTypeResponse = components["schemas"]["PipelineTypeResponse"];
-type ImplementationResponse = components["schemas"]["ImplementationResponse"];
-type PipelineConfigurationResponse = components["schemas"]["PipelineConfigurationResponse"];
+// TEMPORARY: is_default / default_configuration are intersected here until the
+// generated types carry them (pipeline-selection backend branch).
+/** An implementation of a pipeline type; `is_default` marks the one the server runs when none is named. */
+export type PipelineImplementation = components["schemas"]["ImplementationResponse"] & {
+  is_default?: boolean;
+  default_configuration?: string | null;
+  extracts_sources?: boolean;
+};
+/** A configuration of an implementation; `is_default` marks the one its implementation runs with when none is named. */
+export type PipelineConfiguration = components["schemas"]["PipelineConfigurationResponse"] & {
+  is_default?: boolean;
+};
+type ImplementationResponse = PipelineImplementation;
+type PipelineConfigurationResponse = PipelineConfiguration;
 type PipelineConfigurationCreateRequest =
   components["schemas"]["PipelineConfigurationCreateRequest"];
 type PipelineConfigurationUpdateRequest =

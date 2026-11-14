@@ -3,9 +3,9 @@ import { Button, Field, FormCallout } from "@tinkermonkey/heimdall-ui";
 import { useToasts } from "@/components/ui/Toast";
 import { useRunWizard } from "@/api/hooks/pipeline/useRunWizard";
 import { useClass } from "@/api/hooks/ontology/useClasses";
-import { ImplementationConfigPicker, decodeConfigSelection } from "../ImplementationConfigPicker";
+import { selectionRequestFields, usePipelineSelection } from "@/hooks/usePipelineSelection";
+import { ImplementationConfigPicker } from "../ImplementationConfigPicker";
 import { EntitySearchPicker, type Entity } from "../EntitySearchPicker";
-import { BatchToggle } from "./BatchToggle";
 import { type RelationshipPreview } from "./types";
 import type { components } from "@/api/types";
 import "./Wizards.css";
@@ -17,11 +17,9 @@ export function ConnectionRefinementWizard() {
   const { isSubmitting, errors, setErrors, handleSubmit } = useRunWizard({
     type: "schema_node_connection_refinement",
   });
+  const selection = usePipelineSelection("schema_node_connection_refinement");
 
   const [selectedScope, setSelectedScope] = useState<Entity | null>(null);
-  const [implementationId, setImplementationId] = useState("");
-  const [configRef, setConfigRef] = useState("");
-  const [runAsBatch, setRunAsBatch] = useState(false);
 
   const { data: scopeClassDetails } = useClass(selectedScope?.id || "");
 
@@ -42,14 +40,6 @@ export function ConnectionRefinementWizard() {
       newErrors.scopeId = "Scope class is required";
     }
 
-    if (!implementationId.trim()) {
-      newErrors.implementationId = "Implementation is required";
-    }
-
-    if (!configRef.trim()) {
-      newErrors.configRef = "Configuration is required";
-    }
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return false;
@@ -67,12 +57,9 @@ export function ConnectionRefinementWizard() {
     }
 
     try {
-      const { configRef: configRefPart } = decodeConfigSelection(configRef);
       const request: PipelineRunRequest = {
-        implementation_id: implementationId,
-        configuration_ref: configRefPart,
+        ...selectionRequestFields(selection),
         scope_id: selectedScope!.id,
-        run_as_batch: runAsBatch,
       };
 
       await handleSubmit(request);
@@ -145,28 +132,9 @@ export function ConnectionRefinementWizard() {
       )}
 
       <ImplementationConfigPicker
-        pipelineType="schema_node_connection_refinement"
-        selectedImplementationId={implementationId}
-        selectedConfigRef={configRef}
-        onSelectImplementation={(id) => {
-          setImplementationId(id);
-          setErrors((prev) => ({ ...prev, implementationId: undefined }));
-          setConfigRef("");
-        }}
-        onSelectConfig={(compositeValue) => {
-          setConfigRef(compositeValue);
-          setErrors((prev) => ({ ...prev, configRef: undefined }));
-        }}
+        selection={selection}
+        idPrefix="connection-refinement"
         disabled={isSubmitting}
-        implementationError={errors.implementationId}
-        configError={errors.configRef}
-      />
-
-      <BatchToggle
-        checked={runAsBatch}
-        onChange={setRunAsBatch}
-        disabled={isSubmitting}
-        testIdPrefix="connection-refinement"
       />
 
       {isSubmitting && (

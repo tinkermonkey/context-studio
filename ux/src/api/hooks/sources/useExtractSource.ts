@@ -1,10 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/api/config";
 import { sourcesService, type ExtractSourceRequest } from "@/api/services/sources";
-import { usePipelineConfigurations } from "@/api/hooks/pipeline/usePipelineConfigurations";
-import { usePipelineImplementations } from "@/api/hooks/pipeline/usePipelineImplementations";
-
-const INDIVIDUAL_EXTRACTION = "individual_extraction";
+import type { PipelineImplementation } from "@/api/services/pipeline";
 
 /** Start extraction on a source; the runs it starts carry on in the background. */
 export function useExtractSource() {
@@ -19,27 +16,8 @@ export function useExtractSource() {
 }
 
 /**
- * The individual_extraction implementations that can extract a source: those
- * that name the configuration they extract one with. The server refuses (422)
- * any other, e.g. one that reads pasted text only.
+ * Whether an implementation can extract a source. The server refuses (422) one
+ * that cannot, e.g. one that reads pasted text only.
  */
-export function useExtractionImplementations() {
-  const { data, isLoading } = usePipelineImplementations(INDIVIDUAL_EXTRACTION);
-  return {
-    implementations: (data ?? []).filter((i) => !!i.source_configuration),
-    isLoading,
-  };
-}
-
-/**
- * The enabled individual_extraction configurations of the implementation a
- * source is extracted with, from the same query the paste-text review page
- * reads. None until an implementation is chosen.
- */
-export function useExtractionConfigurations(implementationId: string) {
-  const { data, isLoading } = usePipelineConfigurations(INDIVIDUAL_EXTRACTION, implementationId);
-  return {
-    configurations: (data ?? []).filter((c) => c.enabled !== false),
-    isLoading,
-  };
-}
+export const canExtractSource = (implementation: PipelineImplementation) =>
+  implementation.extracts_sources === true;

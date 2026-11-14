@@ -92,6 +92,14 @@
   }
 
   /* ParamSlider */
+  /* A parameter that is typed sits in the grid beside the sliders, labelled like them. */
+  .cfg-param-field .field__label {
+    font-size: 11px;
+    color: rgb(var(--canvas-fg-3));
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
   .param-slider {
     display: flex;
     flex-direction: column;

@@ -95,13 +95,8 @@ export const sourcesCopy = {
     datasetLabel: "Dataset",
     datasetHint:
       "The proposal, and every individual it creates, belongs to this dataset. Near matches are looked for here.",
-    implementationLabel: "Individual extraction",
-    implementationHint:
-      "How individuals and relationships are read from the text and typed by the taxonomy's class definitions.",
-    implementationPlaceholder: "Server default",
-    configLabel: "Configuration",
-    configHint: "The model and prompts the implementation runs with.",
-    configPlaceholder: "Server default",
+    individualRunLegend: "Individual extraction",
+    schemaRunLegend: "Schema extraction",
     schemaLabel: "Also suggest schema changes",
     schemaHint:
       "Runs schema extraction too. New classes and predicates go in a separate proposal, since schema changes follow the taxonomy's approval policy.",
